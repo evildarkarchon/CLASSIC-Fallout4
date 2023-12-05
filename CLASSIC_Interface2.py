@@ -53,7 +53,7 @@ def create_grid_layout(widgets, cols):
 # ================================================
 def custom_line_box(parent, geometry, object_name, text):
     line_edit = QtWidgets.QLineEdit(parent)
-    line_edit.setGeometry(geometry)
+    line_edit.setFixedSize(geometry[0], geometry[1])
     line_edit.setObjectName(object_name)
     line_edit.setText(text)
     return line_edit
@@ -62,7 +62,7 @@ def custom_line_box(parent, geometry, object_name, text):
 def custom_push_button(parent, geometry, object_name, text, font, tooltip="", callback=None):
     button = QtWidgets.QPushButton(parent)
     button.setObjectName(object_name)
-    button.setGeometry(geometry)
+    button.setFixedSize(geometry[0], geometry[1])
     button.setToolTip(tooltip)
     button.setText(text)
     button.setFont(font)
@@ -75,7 +75,7 @@ def custom_push_button(parent, geometry, object_name, text, font, tooltip="", ca
 
 def custom_frame(parent, geometry, frame_shape, frame_shadow, object_name):
     frame = QtWidgets.QFrame(parent)
-    frame.setGeometry(geometry)
+    frame.setFixedSize(geometry[0], geometry[1])
     frame.setFrameShape(frame_shape)
     frame.setFrameShadow(frame_shadow)
     frame.setObjectName(object_name)
@@ -84,7 +84,7 @@ def custom_frame(parent, geometry, frame_shape, frame_shadow, object_name):
 
 def custom_label(parent, geometry, text, font, object_name):
     label = QtWidgets.QLabel(parent)
-    label.setGeometry(geometry)
+    label.setFixedSize(geometry[0], geometry[1])
     label.setText(text)
     label.setFont(font)
     label.setObjectName(object_name)
@@ -134,7 +134,7 @@ def custom_popup_window(parent, title, text, height=250, callback=""):
 
 def custom_text_box(parent, geometry, text):
     text_browser = QtWidgets.QTextBrowser(parent)
-    text_browser.setGeometry(geometry)
+    text_browser.setFixedSize(geometry[0], geometry[1])
     text_browser.setObjectName("text_browser")
     text_browser.setText(text)
     text_browser.setStyleSheet("color: white; background: rgba(10, 10, 10, 0.75); border-radius: 10px; border : 1px solid white; font-size: 15px")
@@ -186,7 +186,7 @@ def custom_checkbox_widget(parent, pos_x=250, pos_y=250, size=25, check="", labe
 def custom_hover_button(parent, geometry, object_name, text, font, tooltip="", callback=None):
     hover_button = QtWidgets.QPushButton(parent)
     hover_button.setObjectName(object_name)
-    hover_button.setGeometry(geometry)
+    hover_button.setFixedSize(geometry[0], geometry[1])
     hover_button.setToolTip(tooltip)
     hover_button.setText(text)
     hover_button.setFont(font)
