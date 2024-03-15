@@ -316,7 +316,7 @@ def docs_generate_paths():
     xse_acronym_base = constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {constants.game}.yaml", f"Game_Info.XSE_Acronym")
     docs_path = constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Root_Folder_Docs")
 
-    constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Docs_Folder_XSE", fr"{docs_path}\{xse_acronym}")
+    constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Docs_Folder_XSE", fr"{docs_path}\{xse_acronym_base}")
     constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Docs_File_PapyrusLog", fr"{docs_path}\Logs\Script\Papyrus.0.log")
     constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Docs_File_WryeBashPC", fr"{docs_path}\ModChecker.html")
     constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Docs_File_XSE", fr"{docs_path}\{xse_acronym_base}\{xse_acronym.lower()}.log")
@@ -353,18 +353,19 @@ def game_generate_paths():
     logging.debug("- - - INITIATED GAME PATH GENERATION")
 
     game_path = constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Root_Folder_Game")
-    xse_acronym = constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {constants.game}.yaml", f"Game{constants.vr}_Info.XSE_Acronym")
+    # xse_acronym = constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {constants.game}.yaml", f"Game{constants.vr}_Info.XSE_Acronym")
+    xse_acronym_base = constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {constants.game}.yaml", f"Game_Info.XSE_Acronym")
 
     constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Game_Folder_Data", fr"{game_path}Data")
     constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Game_Folder_Scripts", fr"{game_path}Data\Scripts")
-    constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Game_Folder_Plugins", fr"{game_path}Data\{xse_acronym}\Plugins")
+    constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Game_Folder_Plugins", fr"{game_path}Data\{xse_acronym_base}\Plugins")
     constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Game_File_SteamINI", fr"{game_path}steam_api.ini")
     constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Game_File_EXE", fr"{game_path}{constants.game}{constants.vr}.exe")
     match constants.game:
         case "Fallout4" if not constants.vr:
-            constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", "Game_Info.Game_File_AddressLib", fr"{game_path}Data\{xse_acronym}\version-1-10-163-0.bin")
+            constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", "Game_Info.Game_File_AddressLib", fr"{game_path}Data\{xse_acronym_base}\version-1-10-163-0.bin")
         case "Fallout4" if constants.vr:
-            constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", "GameVR_Info.Game_File_AddressLib", fr"{game_path}Data\{xse_acronym}\version-1-2-72-0.csv")
+            constants.set_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", "GameVR_Info.Game_File_AddressLib", fr"{game_path}Data\{xse_acronym_base}\version-1-2-72-0.csv")
 
 
 # =========== CHECK GAME EXE FILE -> GET PATH AND HASHES ===========
@@ -582,6 +583,7 @@ def main_files_backup():
     backup_list = constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_AutoBackup")
     game_path = constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Root_Folder_Game")
     xse_acronym = constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {constants.game}.yaml", f"Game{constants.vr}_Info.XSE_Acronym")
+    xse_acronym_base = constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {game}.yaml", "Game_Info.XSE_Acronym")
     xse_log_file = constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {constants.game} Local.yaml", f"Game{constants.vr}_Info.Docs_File_XSE")
     xse_ver_latest = constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {constants.game}.yaml", f"Game{constants.vr}_Info.XSE_Ver_Latest")
     with open(xse_log_file, "r", encoding="utf-8", errors="ignore") as xse_log:
@@ -611,7 +613,7 @@ def main_files_backup():
     # Check for Script Extender updates since we also need local version for it.
     xse_links = []
     try:
-        response = requests.get(f"https://{xse_acronym.lower()}.silverlock.org", verify=False, timeout=10)
+        response = requests.get(f"https://{xse_acronym_base.lower()}.silverlock.org", verify=False, timeout=10)
         if response.status_code == 200:  # Check if request went through.
             soup = BeautifulSoup(response.text, 'html.parser')
             links = soup.find_all('a')  # Find all anchor tags (links) in HTML.
