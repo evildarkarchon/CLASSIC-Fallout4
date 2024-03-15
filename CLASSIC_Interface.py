@@ -156,10 +156,10 @@ def custom_checkbox_widget(parent, pos_x=250, pos_y=250, size=25, check="", labe
         nonlocal check
         # Toggle between images when label is clicked.
         if CMain.classic_settings(check):
-            CMain.yaml_settings("CLASSIC Settings.yaml", f"CLASSIC_Settings.{check}", False)
+            CMain.constants.set_constant_from_key_path("CLASSIC Settings.yaml", f"CLASSIC_Settings.{check}", False)
             image_label.setPixmap(pixmap0)
         else:
-            CMain.yaml_settings("CLASSIC Settings.yaml", f"CLASSIC_Settings.{check}", True)
+            CMain.constants.set_constant_from_key_path("CLASSIC Settings.yaml", f"CLASSIC_Settings.{check}", True)
             image_label.setPixmap(pixmap1)
 
     image_label.mousePressEvent = toggle_setting
@@ -391,21 +391,21 @@ class UiCLASSICMainWin(QtWidgets.QMainWindow):
         SCAN_folder = QFileDialog.getExistingDirectory()
         if SCAN_folder:
             self.Box_SelectedScan.setText(SCAN_folder)
-            CMain.yaml_settings("CLASSIC Settings.yaml", f"CLASSIC_Settings.SCAN Custom Path", SCAN_folder)
+            CMain.constants.set_constant_from_key_path("CLASSIC Settings.yaml", f"CLASSIC_Settings.SCAN Custom Path", SCAN_folder)
             self.Box_SelectedScan.setStyleSheet("color: black; font-family: Yu Gothic")
 
     def select_folder_mods(self):
         MODS_folder = QFileDialog.getExistingDirectory()
         if MODS_folder:
             self.Box_SelectedMods.setText(MODS_folder)
-            CMain.yaml_settings("CLASSIC Settings.yaml", f"CLASSIC_Settings.MODS Folder Path", MODS_folder)
+            CMain.constants.set_constant_from_key_path("CLASSIC Settings.yaml", f"CLASSIC_Settings.MODS Folder Path", MODS_folder)
             self.Box_SelectedMods.setStyleSheet("color: black; font-family: Yu Gothic")
 
     def select_folder_ini(self):
         INI_folder = QFileDialog.getExistingDirectory()  # QFileDialog.getOpenFileName(filter="*.ini")
         if INI_folder:
             QtWidgets.QMessageBox.information(self, "New INI Path Set", "You have set the new path to: \n" + INI_folder)
-            CMain.yaml_settings("CLASSIC Settings.yaml", f"CLASSIC_Settings.INI Folder Path", INI_folder)
+            CMain.constants.set_constant_from_key_path("CLASSIC Settings.yaml", f"CLASSIC_Settings.INI Folder Path", INI_folder)
 
         # ================== POP-UPS / WARNINGS =====================
 
@@ -418,12 +418,12 @@ class UiCLASSICMainWin(QtWidgets.QMainWindow):
             subprocess.Popen(["xdg-open", settings_file])
 
     def help_popup_main(self):
-        help_popup_text = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.help_popup_main")
+        help_popup_text = CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.help_popup_main")
         popup = custom_popup_window(self, title="NEED HELP?", text=help_popup_text, height=450, callback="https://discord.com/invite/7ZZbrsGQh4")
         popup.exec()
 
     def update_popup(self):
-        update_popup_text = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.update_popup_text")
+        update_popup_text = CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.update_popup_text")
         if CMain.classic_update_check():
             popup = custom_popup_window(self, title="CLASSIC UPDATE", text="You have the latest version of CLASSIC!")
             popup.exec()
@@ -556,7 +556,7 @@ class UiCLASSICBackups(QtWidgets.QMainWindow):
             os.system('xdg-open "CLASSIC Backup\\Game Files"')
 
     def help_popup_backup(self):
-        help_popup_text = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.help_popup_backup")
+        help_popup_text = CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.help_popup_backup")
         popup = custom_popup_window(self, title="NEED HELP?", text=help_popup_text, height=450, callback="https://discord.com/invite/7ZZbrsGQh4")
         popup.exec()
 
@@ -574,8 +574,8 @@ class UiCLASSICBackups(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     CMain.main_generate_required()
-    print(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.start_message"))
-    classic_ver = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Info.version")
+    print(CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.start_message"))
+    classic_ver = CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Info.version")
     app = QtWidgets.QApplication(sys.argv)
 
     # Add widgets of other "tabs" through function calls, not here.

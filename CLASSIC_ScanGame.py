@@ -75,9 +75,9 @@ def mod_toml_config(toml_path, section, key, new_value=None):
 # ================================================
 def check_crashgen_settings():
     message_list = []
-    plugins_path = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Game_Folder_Plugins")
-    crashgen_name = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.CRASHGEN_LogName")
-    xse_folder = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Docs_Folder_XSE")
+    plugins_path = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Game_Folder_Plugins")
+    crashgen_name = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {CMain.constants.game}.yaml", f"Game{CMain.constants.vr}_Info.CRASHGEN_LogName")
+    xse_folder = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Docs_Folder_XSE")
 
     crashgen_toml_og = Path(plugins_path).joinpath("Buffout4\\config.toml")
     crashgen_toml_vr = Path(plugins_path).joinpath("Buffout4.toml")
@@ -129,9 +129,9 @@ def check_crashgen_settings():
 def check_log_errors(folder_path):
     message_list = []
     errors_list = []
-    catch_errors = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "catch_log_errors")
-    ignore_logs_list = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "exclude_log_files")
-    ignore_logs_errors = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "exclude_log_errors")
+    catch_errors = CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "catch_log_errors")
+    ignore_logs_list = CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "exclude_log_files")
+    ignore_logs_errors = CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "exclude_log_errors")
 
     valid_log_files = [file for file in Path(folder_path).glob("*.log") if "crash-" not in file.name]
     for file in valid_log_files:
@@ -167,7 +167,7 @@ def check_log_errors(folder_path):
 # ================================================
 def check_xse_plugins():  # RESERVED | Might be expanded upon in the future.
     message_list = []
-    plugins_folder = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Game_Folder_Plugins")
+    plugins_folder = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Game_Folder_Plugins")
     adlib_versions = {"VR Mode": ("version-1-2-72-0.csv", "Virtual Reality (VR) version", "https://www.nexusmods.com/fallout4/mods/64879?tab=files"),
                       "Non-VR Mode": ("version-1-10-163-0.bin", "Non-VR (Regular) version", "https://www.nexusmods.com/fallout4/mods/47327?tab=files")}
 
@@ -200,7 +200,7 @@ def check_xse_plugins():  # RESERVED | Might be expanded upon in the future.
 # ================================================
 def papyrus_logging():
     message_list = []
-    papyrus_path = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Docs_File_PapyrusLog")
+    papyrus_path = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Docs_File_PapyrusLog")
 
     count_dumps = count_stacks = count_warnings = count_errors = 0
     if Path(papyrus_path).exists():
@@ -240,13 +240,13 @@ def papyrus_logging():
 # ================================================
 def scan_wryecheck():
     message_list = []
-    wrye_missinghtml = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", "Warnings_MODS.Warn_WRYE_MissingHTML")
-    wrye_plugincheck = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Docs_File_WryeBashPC")
-    wrye_warnings = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Warnings_WRYE")
+    wrye_missinghtml = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {CMain.constants.game}.yaml", "Warnings_MODS.Warn_WRYE_MissingHTML")
+    wrye_plugincheck = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Docs_File_WryeBashPC")
+    wrye_warnings = CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "Warnings_WRYE")
 
     if Path(wrye_plugincheck).is_file():
         message_list.extend(["\n✔️ WRYE BASH PLUGIN CHECKER REPORT WAS FOUND! ANALYZING CONTENTS... \n",
-                             f"  [This report is located in your Documents/My Games/{CMain.game} folder.] \n",
+                             f"  [This report is located in your Documents/My Games/{CMain.constants.game} folder.] \n",
                              "  [To hide this report, remove *ModChecker.html* from the same folder.] \n"])
         with open(wrye_plugincheck, "r", encoding="utf-8", errors="ignore") as WB_Check:
             WB_HTML = WB_Check.read()
@@ -308,7 +308,7 @@ def scan_wryecheck():
 def scan_mod_inis():  # Mod INI files check.
     message_list = []
     vsync_list = []
-    game_root = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Root_Folder_Game")
+    game_root = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Root_Folder_Game")
 
     for root, dirs, files in os.walk(game_root):
         for file in files:
@@ -322,7 +322,7 @@ def scan_mod_inis():  # Mod INI files check.
                                          "You can test your initial startup time difference by removing this setting from the INI file. \n-----\n"])
             match file.lower():
                 case "dxvk.conf":
-                    if mod_ini_config(ini_path, f"{CMain.game}.exe", "dxgi.syncInterval") is True:
+                    if mod_ini_config(ini_path, f"{CMain.constants.game}.exe", "dxgi.syncInterval") is True:
                         vsync_list.append(f"{ini_path} | SETTING: dxgi.syncInterval \n")
                 case "enblocal.ini":
                     if mod_ini_config(ini_path, "ENGINE", "ForceVSync") is True:
@@ -379,8 +379,8 @@ def scan_mods_unpacked():
     message_list = []
     cleanup_list = []
     modscan_list = []
-    xse_acronym = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.XSE_Acronym")
-    xse_scriptfiles = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.XSE_HashedScripts")
+    xse_acronym = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {CMain.constants.game}.yaml", f"Game{CMain.constants.vr}_Info.XSE_Acronym")
+    xse_scriptfiles = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {CMain.constants.game}.yaml", f"Game{CMain.constants.vr}_Info.XSE_HashedScripts")
 
     backup_path = "CLASSIC Backup/Cleaned Files"
     Path(backup_path).mkdir(parents=True, exist_ok=True)
@@ -455,12 +455,12 @@ def scan_mods_unpacked():
                         shutil.move(readme_file_path, new_file_path)
 
             print("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...")
-            message_list.append(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Reminders"))
+            message_list.append(CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Reminders"))
             message_list.append("========= RESULTS FROM UNPACKED / LOOSE FILES =========\n")
         else:
-            message_list.append(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Path_Invalid"))
+            message_list.append(CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Path_Invalid"))
     else:
-        message_list.append(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Path_Missing"))
+        message_list.append(CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Path_Missing"))
 
     modscan_unique_list = list(sorted(set(modscan_list)))
     message_output = "".join(message_list) + "".join(cleanup_list) + "".join(modscan_unique_list)
@@ -473,8 +473,8 @@ def scan_mods_unpacked():
 def scan_mods_archived():
     message_list = []
     modscan_list = []
-    xse_acronym = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.XSE_Acronym")
-    xse_scriptfiles = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.XSE_HashedScripts")
+    xse_acronym = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {CMain.constants.game}.yaml", f"Game{CMain.constants.vr}_Info.XSE_Acronym")
+    xse_scriptfiles = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {CMain.constants.game}.yaml", f"Game{CMain.constants.vr}_Info.XSE_HashedScripts")
 
     CLASSIC_folder = Path.cwd()
     bsarch_path = r"CLASSIC Data\BSArch.exe"
@@ -549,11 +549,11 @@ def scan_mods_archived():
                                 error_message = archived_list.stderr
                                 print("BSArch command failed with the following error:\n", error_message)
             else:
-                message_list.append(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_BSArch_Missing"))
+                message_list.append(CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_BSArch_Missing"))
         else:
-            message_list.append(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Path_Invalid"))
+            message_list.append(CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Path_Invalid"))
     else:
-        message_list.append(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Path_Missing"))
+        message_list.append(CMain.constants.get_constant_from_key_path("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Path_Missing"))
 
     modscan_unique_list = list(sorted(set(modscan_list)))
     message_output = "".join(message_list) + "".join(modscan_unique_list)
@@ -564,8 +564,8 @@ def scan_mods_archived():
 # BACKUP / RESTORE / REMOVE
 # ================================================
 def game_files_manage(classic_list, mode="BACKUP"):
-    manage_list = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"{classic_list}")
-    game_path = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Root_Folder_Game")
+    manage_list = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/databases/CLASSIC {CMain.constants.game}.yaml", f"{classic_list}")
+    game_path = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Root_Folder_Game")
 
     backup_path = f"CLASSIC Backup/Game Files/{classic_list}"
     Path(backup_path).mkdir(parents=True, exist_ok=True)
@@ -631,16 +631,16 @@ def game_files_manage(classic_list, mode="BACKUP"):
 # COMBINED RESULTS
 # ================================================
 def game_combined_result():
-    CMain.vrmode_check()
-    docs_path = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Root_Folder_Docs")
-    game_path = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Root_Folder_Game")
+    CMain.constants.vrmode_check()
+    docs_path = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Root_Folder_Docs")
+    game_path = CMain.constants.get_constant_from_key_path(f"CLASSIC Data/CLASSIC {CMain.constants.game} Local.yaml", f"Game{CMain.constants.vr}_Info.Root_Folder_Game")
     combined_return = [check_xse_plugins(), check_crashgen_settings(), check_log_errors(docs_path), check_log_errors(game_path), scan_wryecheck(), scan_mod_inis()]
     combined_result = "".join(combined_return)
     return combined_result
 
 
 def mods_combined_result():  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUDED IN AUTOSCAN REPORTS
-    CMain.vrmode_check()
+    CMain.constants.vrmode_check()
     combined_return = [scan_mods_unpacked(), scan_mods_archived()]
     combined_result = "".join(combined_return)
     return combined_result
