@@ -13,7 +13,9 @@ static void RunOptions(Options opts)
             throw new FileNotFoundException($"Database {opts.Database} not found");
         }
 
+#pragma warning disable CS8604 // Possible null reference argument.
         using var reader = new StreamReader(opts.File);
+#pragma warning restore CS8604 // Possible null reference argument.
         using var connection = new SQLiteConnection($"Data Source={opts.Database}");
         connection.Open();
         var command = connection.CreateCommand();
