@@ -17,50 +17,48 @@ void RunOptionsAndReturnExitCode(Options opts)
         }
 
 #pragma warning disable CS8604 // Possible null reference argument.
-        using (StreamReader? sr = new(path: opts.File))
-        using (SQLiteConnection? conn = new($"Data Source={opts.Db};Version=3;"))
+        using StreamReader? sr = new(path: opts.File);
+        using SQLiteConnection? conn = new($"Data Source={opts.Db};Version=3;");
+        conn.Open();
+        SQLiteCommand? cmd = new(conn);
+        if (!opts.Verbose)
         {
-            conn.Open();
-            SQLiteCommand? cmd = new(conn);
-            if (!opts.Verbose)
-            {
-                Console.WriteLine($"Adding FormIDs from {opts.File} to {opts.Table}");
-            }
+            Console.WriteLine($"Adding FormIDs from {opts.File} to {opts.Table}");
+        }
 
-            string? line;
-            while ((line = sr.ReadLine()) != null)
+        string? line;
+        while ((line = sr.ReadLine()) != null)
+        {
+            line = line.Trim();
+            if (line.Contains(" | "))
             {
-                line = line.Trim();
-                if (line.Contains(" | "))
-                {
 #pragma warning disable CA1861 // Avoid constant arrays as arguments
-                    var data = line.Split(separator: new string[] { " | " }, options: StringSplitOptions.None);
+                var data = line.Split(separator: new string[] { " | " }, options: StringSplitOptions.None);
 #pragma warning restore CA1861 // Avoid constant arrays as arguments
-                    if (opts.Verbose)
-                    {
-                        Console.WriteLine($"Adding {line} to {opts.Table}");
-                    }
+                if (opts.Verbose)
+                {
+                    Console.WriteLine($"Adding {line} to {opts.Table}");
+                }
 
-                    if (data.Length >= 3)
-                    {
-                        string? plugin = data[0];
-                        string? formid = data[1];
-                        string? entry = data[2];
-                        cmd.CommandText = $"INSERT INTO {opts.Table} (plugin, formid, entry) VALUES (@plugin, @formid, @entry)";
-                        cmd.Parameters.AddWithValue("@plugin", plugin);
-                        cmd.Parameters.AddWithValue("@formid", formid);
-                        cmd.Parameters.AddWithValue("@entry", entry);
-                        cmd.ExecuteNonQuery();
-                    }
+                if (data.Length >= 3)
+                {
+                    string? plugin = data[0];
+                    string? formid = data[1];
+                    string? entry = data[2];
+                    cmd.CommandText = $"INSERT INTO {opts.Table} (plugin, formid, entry) VALUES (@plugin, @formid, @entry)";
+                    cmd.Parameters.AddWithValue("@plugin", plugin);
+                    cmd.Parameters.AddWithValue("@formid", formid);
+                    cmd.Parameters.AddWithValue("@entry", entry);
+                    cmd.ExecuteNonQuery();
                 }
             }
+        }
 
-            if (conn.State == System.Data.ConnectionState.Open)
-            {
-                cmd.CommandText = "VACUUM";
-                cmd.ExecuteNonQuery();
-                Console.WriteLine("Optimizing database...");
-            }
+        if (conn.State == System.Data.ConnectionState.Open)
+        {
+            cmd.CommandText = "VACUUM";
+            cmd.ExecuteNonQuery();
+            Console.WriteLine("Optimizing database...");
         }
 #pragma warning restore CS8604 // Possible null reference argument.
     }
