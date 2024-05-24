@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34902.65
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "add_forms_to_db", "add_forms_to_db\add_forms_to_db.csproj", "{C620E232-7DFA-457D-AE5F-55F976A77AF8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "update_form_db", "update_form_db\update_form_db.csproj", "{AC1AEB2B-C950-4D34-B6A3-CA796BEE9C5E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CD693795-0713-45A3-9475-A29D697DB212}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C620E232-7DFA-457D-AE5F-55F976A77AF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C620E232-7DFA-457D-AE5F-55F976A77AF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C620E232-7DFA-457D-AE5F-55F976A77AF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C620E232-7DFA-457D-AE5F-55F976A77AF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC1AEB2B-C950-4D34-B6A3-CA796BEE9C5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC1AEB2B-C950-4D34-B6A3-CA796BEE9C5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC1AEB2B-C950-4D34-B6A3-CA796BEE9C5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC1AEB2B-C950-4D34-B6A3-CA796BEE9C5E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A52D1A12-15F3-4F29-B00A-A3659F6BF243}
+	EndGlobalSection
+EndGlobal
