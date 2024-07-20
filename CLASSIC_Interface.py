@@ -21,7 +21,7 @@ from functools import partial
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import QUrl, QTimer, Slot
 from PySide6.QtGui import QDesktopServices, QPixmap, QIcon
-from PySide6.QtWidgets import QDialog, QFileDialog, QSizePolicy, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import QDialog, QFileDialog, QSizePolicy, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QStyleFactory
 
 CMain.configure_logging()
 
@@ -39,12 +39,40 @@ bold_09.setBold(True)
 # ================================================
 # DEFINE WINDOW ELEMENT TEMPLATES HERE
 # ================================================
-def custom_line_box(parent, geometry, object_name, text):
+def custom_line_box(parent, geometry, object_name, placeholder_text):
     line_edit = QtWidgets.QLineEdit(parent)
     line_edit.setGeometry(geometry)
     line_edit.setObjectName(object_name)
-    line_edit.setText(text)
+    line_edit.setReadOnly(True)  # Make it read-only
+    line_edit.setPlaceholderText(placeholder_text)
+
+    # Use palette to get system colors
+    palette = line_edit.palette()
+    text_color = palette.color(QtGui.QPalette.Text)
+    background_color = palette.color(QtGui.QPalette.Base)
+
+    # Set style using system colors
+    line_edit.setStyleSheet(f"""
+        QLineEdit {{
+            color: {text_color.name()};
+            background-color: {background_color.name()};
+            border: 1px solid {text_color.name()};
+            border-radius: 5px;
+            padding: 2px 5px;
+        }}
+        QLineEdit::placeholder {{
+            color: rgba({text_color.red()}, {text_color.green()}, {text_color.blue()}, 128);
+        }}
+    """)
+
     return line_edit
+
+def update_line_box_text(line_edit, new_text):
+    if isinstance(new_text, str):
+        line_edit.setText(new_text)
+        line_edit.setStyleSheet(line_edit.styleSheet().replace("QLineEdit::placeholder", "QLineEdit:disabled"))
+    else:
+        return
 
 
 def custom_push_button(parent, geometry, object_name, text, font, tooltip="", callback=None):
@@ -272,12 +300,10 @@ class UiCLASSICMainWin(QtWidgets.QMainWindow):
         # CHECK EXISTING BROWSE PATHS
         SCAN_folder = CMain.classic_settings("SCAN Custom Path")
         if SCAN_folder:
-            self.Box_SelectedScan.setText(SCAN_folder.strip())
-            self.Box_SelectedScan.setStyleSheet("color: black")
+            update_line_box_text(self.Box_SelectedScan, SCAN_folder.strip())
         MODS_folder = CMain.classic_settings("MODS Folder Path")
         if MODS_folder:
-            self.Box_SelectedMods.setText(MODS_folder.strip())
-            self.Box_SelectedMods.setStyleSheet("color: black")
+            update_line_box_text(self.Box_SelectedMods, MODS_folder.strip())
 
         # SEGMENT - SETTINGS
         self.Line_Sep_Settings = custom_frame(self, QtCore.QRect(30, 360, 590, 20), QtWidgets.QFrame.Shape.HLine, QtWidgets.QFrame.Shadow.Sunken, "Line_Sep_Settings")
@@ -397,14 +423,14 @@ class UiCLASSICMainWin(QtWidgets.QMainWindow):
     def select_folder_scan(self):
         SCAN_folder = QFileDialog.getExistingDirectory()
         if SCAN_folder:
-            self.Box_SelectedScan.setText(SCAN_folder)
+            update_line_box_text(self.Box_SelectedScan, SCAN_folder)
             CMain.yaml_settings("CLASSIC Settings.yaml", f"CLASSIC_Settings.SCAN Custom Path", SCAN_folder)
             self.Box_SelectedScan.setStyleSheet("color: black; font-family: Yu Gothic")
 
     def select_folder_mods(self):
         MODS_folder = QFileDialog.getExistingDirectory()
         if MODS_folder:
-            self.Box_SelectedMods.setText(MODS_folder)
+            update_line_box_text(self.Box_SelectedMods, MODS_folder)
             CMain.yaml_settings("CLASSIC Settings.yaml", f"CLASSIC_Settings.MODS Folder Path", MODS_folder)
             self.Box_SelectedMods.setStyleSheet("color: black; font-family: Yu Gothic")
 
@@ -584,8 +610,6 @@ if __name__ == "__main__":
     print(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Interface.start_message"))
     classic_ver = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "CLASSIC_Info.version")
     app = QtWidgets.QApplication(sys.argv)
-    if platform.system() == "Windows":
-        app.setStyle("windowsvista")
 
     # Add widgets of other "tabs" through function calls, not here.
     screen_switch = QtWidgets.QStackedWidget()
