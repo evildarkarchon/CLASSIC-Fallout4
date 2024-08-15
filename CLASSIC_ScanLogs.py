@@ -8,6 +8,8 @@ import requests
 import sqlite3
 import CLASSIC_Main as CMain
 import CLASSIC_ScanGame as CGame
+from multiprocessing import cpu_count
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 from collections import Counter
 from pathlib import Path
@@ -146,24 +148,36 @@ def crashlogs_scan():
         game_files_check = ""
 
     # DETECT ONE WHOLE KEY (1 MOD) PER LOOP IN YAML DICT
-    def detect_mods_single(yaml_dict):
-        trigger_mod_found = False
-        for mod_name in yaml_dict:
-            mod_warn = yaml_dict.get(mod_name)
-            for plugin_name, plugin_fid in crashlog_plugins.items():
-                if mod_name.lower() in plugin_name.lower():
-                    autoscan_report.extend([f"[!] FOUND : [{plugin_fid}] ", mod_warn])
-                    trigger_mod_found = True
-                    break
-        return trigger_mod_found
 
-    # DETECT ONE SPLIT KEY (2 MODS) PER LOOP IN YAML DICT
-    def detect_mods_double(yaml_dict):
-        trigger_mod_found = False
-        for mod_name in yaml_dict:
-            mod_warn = yaml_dict.get(mod_name)
-            mod_split = mod_name.split(' | ', 1)
-            mod1_found = mod2_found = False
+    crashlog_list = crashlogs_get_files()
+    scan_failed_list = []
+    scan_folder = Path.cwd()
+    user_folder = Path.home()
+    scan_invalid_list = list(scan_folder.glob("crash-*.txt"))
+    stats_crashlog_scanned = stats_crashlog_incomplete = stats_crashlog_failed = 0
+    logging.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(crashlog_list)} FILES")
+    def scan_crashlog(crashlog_file):
+        autoscan_report = []
+        crashlog_plugins = {}
+        trigger_plugins_loaded = trigger_plugin_limit = trigger_scan_failed = False
+        def detect_mods_single(yaml_dict):
+            trigger_mod_found = False
+            for mod_name in yaml_dict:
+                mod_warn = yaml_dict.get(mod_name)
+                for plugin_name, plugin_fid in crashlog_plugins.items():
+                    if mod_name.lower() in plugin_name.lower():
+                        autoscan_report.extend([f"[!] FOUND : [{plugin_fid}] ", mod_warn])
+                        trigger_mod_found = True
+                        break
+            return trigger_mod_found
+
+        # DETECT ONE SPLIT KEY (2 MODS) PER LOOP IN YAML DICT
+        def detect_mods_double(yaml_dict):
+            trigger_mod_found = False
+            for mod_name in yaml_dict:
+                mod_warn = yaml_dict.get(mod_name)
+                mod_split = mod_name.split(' | ', 1)
+                mod1_found = mod2_found = False
             for plugin_name in crashlog_plugins:
                 if mod_split[0].lower() in plugin_name.lower():
                     mod1_found = True
@@ -174,39 +188,28 @@ def crashlogs_scan():
             if mod1_found and mod2_found:
                 autoscan_report.extend(["[!] CAUTION : ", mod_warn])
                 trigger_mod_found = True
-        return trigger_mod_found
+            return trigger_mod_found
 
-    # DETECT ONE IMPORTANT CORE AND GPU SPECIFIC MOD PER LOOP IN YAML DICT
-    def detect_mods_important(yaml_dict):
-        gpu_rival = "nvidia" if (crashlog_GPUAMD or crashlog_GPUI) else "amd" if crashlog_GPUNV else None
-        for mod_name in yaml_dict:
-            mod_warn = yaml_dict.get(mod_name)
-            mod_split = mod_name.split(' | ', 1)
-            mod_found = False
-            for plugin_name in crashlog_plugins:
-                if mod_split[0].lower() in plugin_name.lower():
-                    mod_found = True
-                    continue
-            if mod_found:
-                if gpu_rival and gpu_rival in mod_warn.lower():
-                    autoscan_report.extend([f"❓ {mod_split[1]} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n",
-                                            "IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n"])
+        # DETECT ONE IMPORTANT CORE AND GPU SPECIFIC MOD PER LOOP IN YAML DICT
+        def detect_mods_important(yaml_dict):
+            gpu_rival = "nvidia" if (crashlog_GPUAMD or crashlog_GPUI) else "amd" if crashlog_GPUNV else None
+            for mod_name in yaml_dict:
+                mod_warn = yaml_dict.get(mod_name)
+                mod_split = mod_name.split(' | ', 1)
+                mod_found = False
+                for plugin_name in crashlog_plugins:
+                    if mod_split[0].lower() in plugin_name.lower():
+                        mod_found = True
+                        continue
+                if mod_found:
+                    if gpu_rival and gpu_rival in mod_warn.lower():
+                        autoscan_report.extend([f"❓ {mod_split[1]} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n",
+                                                "IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n"])
+                    else:
+                        autoscan_report.extend([f"✔️ {mod_split[1]} is installed!\n\n"])
                 else:
-                    autoscan_report.extend([f"✔️ {mod_split[1]} is installed!\n\n"])
-            else:
-                if gpu_rival not in mod_warn.lower():
-                    autoscan_report.extend([f"❌ {mod_split[1]} is not installed!\n", mod_warn, "\n"])
-
-    crashlog_list = crashlogs_get_files()
-    scan_failed_list = []
-    scan_folder = Path.cwd()
-    user_folder = Path.home()
-    scan_invalid_list = list(scan_folder.glob("crash-*.txt"))
-    stats_crashlog_scanned = stats_crashlog_incomplete = stats_crashlog_failed = 0
-    logging.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(crashlog_list)} FILES")
-    for crashlog_file in crashlog_list:
-        autoscan_report = []
-        trigger_plugin_limit = trigger_plugins_loaded = trigger_scan_failed = False
+                    if gpu_rival not in mod_warn.lower():
+                        autoscan_report.extend([f"❌ {mod_split[1]} is not installed!\n", mod_warn, "\n"])
         with crashlog_file.open("r", encoding="utf-8", errors="ignore") as crash_log:
             crash_log.seek(0)  # DON'T FORGET WHEN READING FILE MULTIPLE TIMES
             crash_data = crash_log.readlines()
@@ -256,6 +259,7 @@ def crashlogs_scan():
         segment_system = crashlog_generate_segment("system specs:", "probable call stack:")
         segment_plugins = crashlog_generate_segment("plugins:", "???????")  # Non-existent value makes it go to last line.
         segment_callstack_intact = "".join(segment_callstack)
+        nonlocal stats_crashlog_scanned, stats_crashlog_incomplete, stats_crashlog_failed
         if not segment_plugins:
             stats_crashlog_incomplete += 1
         if len(crash_data) < 20:
@@ -290,7 +294,6 @@ def crashlogs_scan():
             ignore_plugins_list = False
 
         crashlog_GPUAMD = crashlog_GPUNV = False
-        crashlog_plugins = {}
         if CMain.game == "Fallout4":
             if any("Fallout4.esm" in elem for elem in segment_plugins):
                 trigger_plugins_loaded = True
@@ -687,6 +690,9 @@ def crashlogs_scan():
                 shutil.copy2(crashlog_file, crash_move)
             if autoscan_file.exists():
                 shutil.copy2(autoscan_file, scan_move)
+
+    with ThreadPoolExecutor(max_workers=cpu_count() - 1) as executor:
+        executor.map(scan_crashlog, crashlog_list)
 
     # CHECK FOR FAILED OR INVALID CRASH LOGS
     if scan_failed_list or scan_invalid_list:
