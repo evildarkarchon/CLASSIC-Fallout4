@@ -422,7 +422,9 @@ def crashlogs_scan():
         autoscan_report.extend(["====================================================\n",
                                 "CHECKING IF NECESSARY FILES/SETTINGS ARE CORRECT...\n",
                                 "====================================================\n"])
+
         Is_XCellPresent = any("x-cell-fo4.dll" in elem.lower() for elem in segment_xsemodules)
+
         if not CMain.classic_settings("FCX Mode"):
             autoscan_report.extend(["* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n",
                                     "[ FCX Mode can be enabled in the exe or CLASSIC Settings.yaml located in your CLASSIC folder. ] \n\n"])
