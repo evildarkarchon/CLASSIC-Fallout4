@@ -142,6 +142,11 @@ class YamlSettingsCache:
                 print(f"❌ ERROR (yaml_settings) : Trying to grab a None value for : '{key_path}'")
             return value
 
+    def as_dict(self, yaml_path):
+        # This is a convenience method to return the entire YAML file as a dictionary
+        # It's not to be used to update the YAML file, only to read.
+        return self.load_yaml(yaml_path)
+
 # Instantiate a global cache object
 yaml_cache = YamlSettingsCache()
 
@@ -227,7 +232,6 @@ def create_formid_db():
 
 def classic_data_extract():
     def open_zip():
-
         if getattr(sys, 'frozen', False):
             exedir = Path(sys.executable).parent
         else:

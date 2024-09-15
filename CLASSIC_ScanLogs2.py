@@ -1,0 +1,757 @@
+import os
+import regex as re
+import time
+import shutil
+import random
+import logging
+import requests
+import sqlite3
+import CLASSIC_Main as CMain
+import CLASSIC_ScanGame as CGame
+from urllib.parse import urlparse
+from collections import Counter
+from pathlib import Path
+
+query_cache = {}
+
+def get_entry(formid, plugin) -> str | None:
+    if (entry := query_cache.get((formid, plugin))) is not None:
+        return entry
+    if Path(f"CLASSIC Data/databases/{CMain.game} FormIDs.db").is_file():
+        with sqlite3.connect(f"CLASSIC Data/databases/{CMain.game} FormIDs.db") as conn:
+            c = conn.cursor()
+            c.execute(f'''SELECT entry FROM {CMain.game} WHERE formid=? AND plugin=? COLLATE nocase''', (formid, plugin))
+            entry = c.fetchone()
+            if entry:
+                if query_cache.get((formid, plugin)) is None:
+                    query_cache[(formid, plugin)] = entry[0]
+    return query_cache.get((formid, plugin))
+
+def crashlogs_get_files():  # Get paths of all available crash logs.
+    logging.debug("- - - INITIATED CRASH LOG FILE LIST GENERATION")
+    CLASSIC_folder = Path.cwd()
+    CUSTOM_folder = CMain.classic_settings("SCAN Custom Path")
+    XSE_folder = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Docs_Folder_XSE")
+
+    crash_files = []
+
+    if XSE_folder and Path(XSE_folder).exists():
+        xse_crash_files = tuple(Path(XSE_folder).glob("crash-*.log"))
+        for crash_file in xse_crash_files:
+            destination_file = CLASSIC_folder / crash_file.name
+            if not destination_file.is_file():
+                shutil.copy2(crash_file, destination_file)
+        crash_files.extend(xse_crash_files)
+
+    crash_files.extend(CLASSIC_folder.glob("crash-*.log"))
+
+    if CUSTOM_folder and Path(CUSTOM_folder).exists():
+        crash_files.extend(Path(CUSTOM_folder).glob("crash-*.log"))
+
+    return crash_files
+
+def crashlogs_reformat():  # Reformat plugin lists in crash logs, so that old and new CRASHGEN formats match.
+    CMain.vrmode_check()  # Only place where needed since crashlogs_reformat() runs first in crashlogs_scan()
+    logging.debug("- - - INITIATED CRASH LOG FILE REFORMAT")
+    xse_acronym = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.XSE_Acronym")
+    remove_list = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "exclude_log_records")
+    simple_logs = CMain.classic_settings("Simplify Logs")
+
+    crash_files = crashlogs_get_files()
+    plugin_pattern = re.compile(r'\[(.*?)]')
+    whitespace_pattern = re.compile(r'\s')
+
+    for file in crash_files:
+        with file.open("r", encoding="utf-8", errors="ignore") as crash_log:
+            crash_data = crash_log.readlines()
+
+        try:
+            index_plugins = next(index for index, item in enumerate(crash_data) if xse_acronym and xse_acronym not in item and "PLUGINS:" in item)
+        except StopIteration:
+            index_plugins = 1
+
+        if simple_logs:
+            crash_data = [line for line in crash_data if not any(string in line for string in remove_list)]
+
+        crash_data = [
+            plugin_pattern.sub(lambda x: "[" + whitespace_pattern.sub('0', x.group(1)) + "]", line) if index > index_plugins else line
+            for index, line in enumerate(crash_data)
+        ]
+
+        with file.open("w", encoding="utf-8", errors="ignore") as crash_log:
+            crash_log.writelines(crash_data)
+
+def crashlogs_scan():
+    pluginsearch = re.compile(r"\s*\[(FE:([0-9A-F]{3})?|[0-9A-F]{2})\]\s*([\w\s-]+\.es[pml])", flags=re.IGNORECASE)
+    # is_ng_log = re.compile(r"\s*\[([0-9A-F]{2})\]([^\s]+.*)", flags=re.IGNORECASE)
+    print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
+    crashlogs_reformat()
+
+    print("SCANNING CRASH LOGS, PLEASE WAIT...\n")
+    scan_start_time = time.perf_counter()
+    # ================================================
+    # Grabbing YAML values is time expensive, so keep these out of the main file loop.
+
+    # Use the yaml dictionary functionality so that the yaml file is only read once.
+    data_base_game = CMain.yaml_cache.as_dict(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml")
+    data_base_main = CMain.yaml_cache.as_dict("CLASSIC Data/databases/CLASSIC Main.yaml")
+    data_base_ignore = CMain.yaml_cache.as_dict("CLASSIC Ignore.yaml")
+
+    classic_game_hints = data_base_game.get("Game_Hints")
+    classic_records_list = data_base_main.get("catch_log_records")
+    classic_version = data_base_main.get("CLASSIC_Info").get("version")
+    classic_version_date = data_base_main.get("CLASSIC_Info")["version_date"]
+
+    crashgen_name = data_base_game.get("Game_Info").get("CRASHGEN_LogName")
+    crashgen_latest_og = data_base_game.get("Game_Info").get("CRASHGEN_LatestVer")
+    crashgen_latest_vr = data_base_game.get("GameVR_Info").get("CRASHGEN_LatestVer")
+    crashgen_ignore = data_base_game.get(f"Game{CMain.vr}_Info").get("CRASHGEN_Ignore")
+
+    warn_noplugins = data_base_game.get("Warnings_CRASHGEN").get("Warn_NOPlugins")
+    warn_outdated = data_base_game.get("Warnings_CRASHGEN").get("Warn_Outdated")
+    xse_acronym = data_base_game.get("Game_Info").get("XSE_Acronym")
+
+    game_ignore_plugins = data_base_game.get("Crashlog_Plugins_Exclude")
+    game_ignore_records = data_base_game.get("Crashlog_Records_Exclude")
+    suspects_error_list = data_base_game.get("Crashlog_Error_Check")
+    suspects_stack_list = data_base_game.get("Crashlog_Stack_Check")
+
+    autoscan_text = data_base_main.get("CLASSIC_Interface").get(f"autoscan_text_{CMain.game}")
+    remove_list = data_base_main.get("exclude_log_records")
+    ignore_list = data_base_ignore.get(f"CLASSIC_Ignore_{CMain.game}")
+
+    game_mods_conf = data_base_game.get("Mods_CONF")
+    game_mods_core = data_base_game.get("Mods_CORE")
+    game_mods_core_folon = data_base_game.get("Mods_CORE_FOLON") if CMain.game == "Fallout4" else None
+    game_mods_freq = data_base_game.get("Mods_FREQ")
+    game_mods_opc2 = data_base_game.get("Mods_OPC2")
+    game_mods_solu = data_base_game.get("Mods_SOLU")
+
+    # ================================================
+    if CMain.classic_settings("FCX Mode"):
+        main_files_check = CMain.main_combined_result()
+        game_files_check = CGame.game_combined_result()
+    else:
+        main_files_check = "❌ FCX Mode is disabled, skipping game files check... \n-----\n"
+        game_files_check = ""
+
+    # DETECT ONE WHOLE KEY (1 MOD) PER LOOP IN YAML DICT
+    def detect_mods_single(yaml_dict):
+        trigger_mod_found = False
+        for mod_name in yaml_dict:
+            mod_warn = yaml_dict.get(mod_name)
+            for plugin_name, plugin_fid in crashlog_plugins.items():
+                if mod_name.lower() in plugin_name.lower():
+                    autoscan_report.extend([f"[!] FOUND : [{plugin_fid}] ", mod_warn])
+                    trigger_mod_found = True
+                    break
+        return trigger_mod_found
+
+    # DETECT ONE SPLIT KEY (2 MODS) PER LOOP IN YAML DICT
+    def detect_mods_double(yaml_dict):
+        trigger_mod_found = False
+        for mod_name in yaml_dict:
+            mod_warn = yaml_dict.get(mod_name)
+            mod_split = mod_name.split(' | ', 1)
+            mod1_found = mod2_found = False
+            for plugin_name in crashlog_plugins:
+                if mod_split[0].lower() in plugin_name.lower():
+                    mod1_found = True
+                    continue
+                if mod_split[1].lower() in plugin_name.lower():
+                    mod2_found = True
+                    continue
+            if mod1_found and mod2_found:
+                autoscan_report.extend(["[!] CAUTION : ", mod_warn])
+                trigger_mod_found = True
+        return trigger_mod_found
+
+    # DETECT ONE IMPORTANT CORE AND GPU SPECIFIC MOD PER LOOP IN YAML DICT
+    def detect_mods_important(yaml_dict):
+        gpu_rival = "nvidia" if (crashlog_GPUAMD or crashlog_GPUI) else "amd" if crashlog_GPUNV else None
+        for mod_name in yaml_dict:
+            mod_warn = yaml_dict.get(mod_name)
+            mod_split = mod_name.split(' | ', 1)
+            mod_found = False
+            for plugin_name in crashlog_plugins:
+                if mod_split[0].lower() in plugin_name.lower():
+                    mod_found = True
+                    continue
+            if mod_found:
+                if gpu_rival and gpu_rival in mod_warn.lower():
+                    autoscan_report.extend([f"❓ {mod_split[1]} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n",
+                                            "IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n"])
+                else:
+                    autoscan_report.extend([f"✔️ {mod_split[1]} is installed!\n\n"])
+            else:
+                if gpu_rival not in mod_warn.lower():
+                    autoscan_report.extend([f"❌ {mod_split[1]} is not installed!\n", mod_warn, "\n"])
+
+    crashlog_list = crashlogs_get_files()
+    scan_failed_list = []
+    scan_folder = Path.cwd()
+    user_folder = Path.home()
+    scan_invalid_list = list(scan_folder.glob("crash-*.txt"))
+    stats_crashlog_scanned = stats_crashlog_incomplete = stats_crashlog_failed = 0
+    logging.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(crashlog_list)} FILES")
+    for crashlog_file in crashlog_list:
+        autoscan_report = []
+        trigger_plugin_limit = trigger_plugins_loaded = trigger_scan_failed = False
+        with crashlog_file.open("r", encoding="utf-8", errors="ignore") as crash_log:
+            crash_log.seek(0)  # DON'T FORGET WHEN READING FILE MULTIPLE TIMES
+            crash_data = crash_log.readlines()
+
+        autoscan_report.extend([f"{crashlog_file.name} -> AUTOSCAN REPORT GENERATED BY {classic_version} \n",
+                                "# FOR BEST VIEWING EXPERIENCE OPEN THIS FILE IN NOTEPAD++ OR SIMILAR # \n",
+                                "# PLEASE READ EVERYTHING CAREFULLY AND BEWARE OF FALSE POSITIVES # \n",
+                                "====================================================\n"])
+
+        # ================================================
+        # 1) CHECK EXISTENCE AND INDEXES OF EACH SEGMENT
+        # ================================================
+
+        # Set default index values incase actual index is not found.
+        index_crashgenver = index_mainerror = None
+        for index, item in enumerate(crash_data[:10]):
+            if crashgen_name and crashgen_name.lower() in item.lower():
+                index_crashgenver = index
+            if "unhandled exception" in item.lower():
+                index_mainerror = index
+            if index_crashgenver is not None and index_mainerror is not None:
+                break
+        index_crashgenver = index_crashgenver if index_crashgenver is not None else 1
+        index_mainerror = index_mainerror if index_mainerror is not None else 3
+
+        def crashlog_generate_segment(segment_start, segment_end):
+            index_start = index_end = None
+            for index, item in enumerate(crash_data):
+                if segment_start.lower() in item.lower():
+                    index_start = index + 1
+                if segment_end.lower() in item.lower() and xse_acronym.lower() not in item.lower():
+                    index_end = index - 1
+                if index_start is not None and index_end is not None:
+                    break
+            index_start = index_start if index_start is not None else 0
+            index_end = index_end if index_end is not None else len(crash_data)
+            return [s_line.strip() for s_line in crash_data[index_start:index_end] if all(item.lower() not in s_line.lower() for item in remove_list)]
+
+        # ================================================
+        # 2) GENERATE REQUIRED SEGMENTS FROM THE CRASH LOG
+        # ================================================
+        segment_allmodules = crashlog_generate_segment("modules:", f"{xse_acronym.lower()} plugins:")  # type: ignore
+        segment_xsemodules = crashlog_generate_segment(f"{xse_acronym.lower()} plugins:", "plugins:")  # type: ignore
+        segment_callstack = crashlog_generate_segment("probable call stack:", "modules:")
+        segment_crashgen = crashlog_generate_segment("[compatibility]", "system specs:")
+        segment_system = crashlog_generate_segment("system specs:", "probable call stack:")
+        segment_plugins = crashlog_generate_segment("plugins:", "???????")  # Non-existent value makes it go to last line.
+        segment_callstack_intact = "".join(segment_callstack)
+        if not segment_plugins:
+            stats_crashlog_incomplete += 1
+        if len(crash_data) < 20:
+            stats_crashlog_scanned -= 1
+            stats_crashlog_failed += 1
+            trigger_scan_failed = True
+
+        # ================== MAIN ERROR ==================
+        try:
+            crashlog_mainerror = crash_data[index_mainerror]
+            if "|" in crashlog_mainerror:
+                crashlog_errorsplit = crashlog_mainerror.split("|", 1)
+                autoscan_report.append(f"\nMain Error: {crashlog_errorsplit[0]}\n{crashlog_errorsplit[1]}\n")
+            else:
+                autoscan_report.append(f"\nMain Error: {crashlog_mainerror}\n")
+        except IndexError:
+            crashlog_mainerror = "UNKNOWN"
+            autoscan_report.append(f"\nMain Error: {crashlog_mainerror}\n")
+
+        # =============== CRASHGEN VERSION ===============
+        crashlog_crashgen = crash_data[index_crashgenver].strip()
+        autoscan_report.append(f"Detected {crashgen_name} Version: {crashlog_crashgen} \n")
+        if crashgen_latest_og == crashlog_crashgen or crashgen_latest_vr == crashlog_crashgen:
+            autoscan_report.append(f"* You have the latest version of {crashgen_name}! *\n\n")
+        else:
+            autoscan_report.append(f"{warn_outdated} \n")
+
+        # ======= REQUIRED LISTS, DICTS AND CHECKS =======
+        if ignore_list:
+            ignore_plugins_list = [item.lower() for item in ignore_list]
+        else:
+            ignore_plugins_list = False
+
+        crashlog_GPUAMD = crashlog_GPUNV = False
+        crashlog_plugins = {}
+        if CMain.game == "Fallout4":
+            if any("Fallout4.esm" in elem for elem in segment_plugins):
+                trigger_plugins_loaded = True
+            else:
+                stats_crashlog_incomplete += 1
+        elif CMain.game == "SkyrimSE":
+            if any("Skyrim.esm" in elem for elem in segment_plugins):
+                trigger_plugins_loaded = True
+            else:
+                stats_crashlog_incomplete += 1
+
+        # ================================================
+        # 3) CHECK EACH SEGMENT AND CREATE REQUIRED VALUES
+        # ================================================
+
+        # CHECK GPU TYPE FOR CRASH LOG
+        crashlog_GPUAMD = True if any("GPU #1" in elem and "AMD" in elem for elem in segment_system) else False
+        crashlog_GPUNV = True if any("GPU #1" in elem and "Nvidia" in elem for elem in segment_system) else False
+        crashlog_GPUI = True if not crashlog_GPUAMD and not crashlog_GPUNV else False
+
+        # IF LOADORDER FILE EXISTS, USE ITS PLUGINS
+        if os.path.exists("loadorder.txt"):
+            autoscan_report.extend(["* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
+                                    "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
+                                    "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n"])
+            with open("loadorder.txt", "r", encoding="utf-8", errors="ignore") as loadorder_file:
+                loadorder_data = loadorder_file.readlines()
+            for elem in loadorder_data[1:]:
+                if all(elem not in item for item in crashlog_plugins):
+                    crashlog_plugins[elem] = "LO"
+            trigger_plugins_loaded = True
+
+        else:  # OTHERWISE, USE PLUGINS FROM CRASH LOG
+            for elem in segment_plugins:
+                if "[FF]" in elem:
+                    trigger_plugin_limit = True
+                pluginmatch = pluginsearch.match(elem, concurrent=True)
+                if pluginmatch:
+                    plugin_fid = pluginmatch.group(1)
+                    plugin_name = pluginmatch.group(3)
+                    if plugin_name not in crashlog_plugins and plugin_fid:
+                        crashlog_plugins[plugin_name] = plugin_fid.replace(":", "")
+                    elif plugin_name and "dll" in plugin_name.lower():
+                        crashlog_plugins[plugin_name] = "DLL"
+                    else:
+                        crashlog_plugins[plugin_name] = "???"
+
+        for elem in segment_xsemodules:
+            # SOME IMPORTANT DLLs HAVE A VERSION, REMOVE IT
+            elem = elem.strip()
+            if ".dll v" in elem:
+                elem_parts = elem.split(" v", 1)
+                elem = elem_parts[0]
+            if all(elem not in item for item in crashlog_plugins):
+                crashlog_plugins[elem] = "DLL"
+
+        for elem in segment_allmodules:
+            # SOME IMPORTANT DLLs ONLY APPEAR UNDER ALL MODULES
+            if "vulkan" in elem.lower():
+                elem = elem.strip()
+                elem_parts = elem.split(' ', 1)
+                elem_parts[1] = "DLL"
+                if all(elem_parts[0] not in item for item in crashlog_plugins):
+                    crashlog_plugins[elem_parts[0]] = elem_parts[1]
+
+        # CHECK IF THERE ARE ANY PLUGINS IN THE IGNORE TOML
+        if ignore_plugins_list:
+            for item in ignore_plugins_list:
+                if any(item.lower() == plugin.lower() for plugin in crashlog_plugins):
+                    del crashlog_plugins[item]
+
+        autoscan_report.extend(["====================================================\n",
+                                "CHECKING IF LOG MATCHES ANY KNOWN CRASH SUSPECTS...\n",
+                                "====================================================\n"])
+
+        if ".dll" in crashlog_mainerror.lower() and "tbbmalloc" not in crashlog_mainerror.lower():
+            autoscan_report.extend(["* NOTICE : MAIN ERROR REPORTS THAT A DLL FILE WAS INVOLVED IN THIS CRASH! * \n",
+                                    "If that dll file belongs to a mod, that mod is a prime suspect for the crash. \n-----\n"])
+        max_warn_length = 30
+        trigger_suspect_found = False
+        for error in suspects_error_list:
+            error_split = error.split(" | ", 1)
+            if error_split[1] in crashlog_mainerror:
+                error_split[1] = error_split[1].ljust(max_warn_length, ".")
+                autoscan_report.append(f"# Checking for {error_split[1]} SUSPECT FOUND! > Severity : {error_split[0]} # \n-----\n")
+                trigger_suspect_found = True
+
+        for key in suspects_stack_list:
+            key_split = key.split(" | ", 1)
+            error_req_found = error_opt_found = stack_found = False
+            item_list = suspects_stack_list.get(key)
+            has_required_item = any("ME-REQ|" in elem for elem in item_list)
+            for item in item_list:
+                if "|" in item:
+                    item_split = item.split("|", 1)
+                    """if item_split[0] == "ME-REQ":
+                        if item_split[1] in crashlog_mainerror:
+                            error_req_found = True
+                    elif item_split[0] == "ME-OPT":
+                        if item_split[1] in crashlog_mainerror:
+                            error_opt_found = True
+                    elif item_split[0].isdecimal():
+                        if segment_callstack_intact.count(item_split[1]) >= int(item_split[0]):
+                            stack_found = True
+                    elif item_split[0] == "NOT":
+                        if item_split[1] in segment_callstack_intact:
+                            break"""
+
+                    match item_split[0]:
+                        case "ME-REQ":
+                            if item_split[1] in crashlog_mainerror:
+                                error_req_found = True
+                        case "ME-OPT":
+                            if item_split[1] in crashlog_mainerror:
+                                error_opt_found = True
+                        case "NOT":
+                            if item_split[1] in segment_callstack_intact:
+                                break
+                        case _ if item_split[0].isdecimal():
+                            if segment_callstack_intact.count(item_split[1]) >= int(item_split[0]):
+                                stack_found = True
+                else:
+                    if item in segment_callstack_intact:
+                        stack_found = True
+
+            # print(f"TEST: {error_req_found} | {error_opt_found} | {stack_found}")
+            if has_required_item:
+                if error_req_found:
+                    key_split[1] = key_split[1].ljust(max_warn_length, ".")
+                    autoscan_report.append(f"# Checking for {key_split[1]} SUSPECT FOUND! > Severity : {key_split[0]} # \n-----\n")
+                    trigger_suspect_found = True
+            else:
+                if error_opt_found or stack_found:
+                    key_split[1] = key_split[1].ljust(max_warn_length, ".")
+                    autoscan_report.append(f"# Checking for {key_split[1]} SUSPECT FOUND! > Severity : {key_split[0]} # \n-----\n")
+                    trigger_suspect_found = True
+
+        if trigger_suspect_found:
+            autoscan_report.extend(["* FOR DETAILED DESCRIPTIONS AND POSSIBLE SOLUTIONS TO ANY ABOVE DETECTED CRASH SUSPECTS *\n",
+                                    "* SEE: https://docs.google.com/document/d/17FzeIMJ256xE85XdjoPvv_Zi3C5uHeSTQh6wOZugs4c *\n\n"])
+        else:
+            autoscan_report.extend(["# FOUND NO CRASH ERRORS / SUSPECTS THAT MATCH THE CURRENT DATABASE #\n",
+                                    "Check below for mods that can cause frequent crashes and other problems.\n\n"])
+
+        autoscan_report.extend(["====================================================\n",
+                                "CHECKING IF NECESSARY FILES/SETTINGS ARE CORRECT...\n",
+                                "====================================================\n"])
+
+        Is_XCellPresent = any("x-cell-fo4.dll" in elem.lower() for elem in segment_xsemodules)
+        Is_BakaScrapheapPresent = any("bakascrapheap.dll" in elem.lower() for elem in segment_xsemodules)
+
+        if not CMain.classic_settings("FCX Mode"):
+            autoscan_report.extend(["* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n",
+                                    "[ FCX Mode can be enabled in the exe or CLASSIC Settings.yaml located in your CLASSIC folder. ] \n\n"])
+            if Is_XCellPresent:
+                crashgen_ignore.extend(["havokmemorysystem", "scaleformallocator", "smallblockallocator"])
+            def append_notice(report, setting, crashgen_name):
+                report.append(f"* NOTICE: The {setting} setting is currently disabled in your {crashgen_name} configuration. Please verify if this is intentional. *\n-----\n")
+
+            def append_caution(report, setting, crashgen_name, custom_message=None, custom_fix=None):
+                if custom_message:
+                    report.extend([f"# ❌ CAUTION: {custom_message} #\n",
+                                   f" FIX: {custom_fix}\n-----\n"])
+                else:
+                    report.extend([f"# ❌ CAUTION: The {setting} setting is enabled, which may cause conflicts. #\n",
+                                   f" FIX: Open the {crashgen_name} configuration file and set {setting} to FALSE to prevent potential issues.\n-----\n"])
+
+            def append_correct(report, setting, crashgen_name, custom_message=None):
+                if custom_message:
+                    report.append(f"✔️ {custom_message}\n-----\n")
+                else:
+                    report.append(f"✔️ The {setting} setting is correctly configured in your {crashgen_name} configuration.\n-----\n")
+
+            def check_setting(line, setting, report, crashgen_name, condition, custom_caution_message=None, custom_correct_message=None, custom_fix=None, correct_condition=False):
+                if f"{setting}:" in line.lower():
+                    if "true" in line.lower() and condition:
+                        if correct_condition is False:
+                            append_caution(report, setting, crashgen_name, custom_caution_message, custom_fix)
+                        else:
+                            append_correct(report, setting, crashgen_name, custom_correct_message)
+                    elif "false" in line.lower() and condition:
+                        if correct_condition is False:
+                            append_correct(report, setting, crashgen_name, custom_correct_message)
+                        else:
+                            append_caution(report, setting, crashgen_name, custom_caution_message, custom_fix)
+                    else:
+                        append_correct(report, setting, crashgen_name)
+
+            for line in segment_crashgen:
+                if "false" in line.lower() and all(elem.lower() not in line.lower() for elem in crashgen_ignore):
+                    line_split = line.split(":", 1)
+                    append_notice(autoscan_report, line_split[0].strip(), crashgen_name)
+
+                check_setting(line, "achievements", autoscan_report, crashgen_name,
+                              any(("achievements.dll" in elem.lower() or "unlimitedsurvivalmode.dll" in elem.lower()) for elem in segment_xsemodules),
+                              custom_caution_message="The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE",
+                              custom_correct_message="Achievements parameter is correctly configured in your settings!")
+
+                memorymanager_correct_message = "MemoryManager parameter is correctly configured in your settings!" if not Is_XCellPresent else "MemoryManager parameter is correctly configured for use with X-Cell!"
+                memorymanager_caution_message = "MemoryManager parameter is set to TRUE, which may conflict with Baka ScrapHeap or X-Cell"
+                memorymanager_fix = "Remove Baka ScrapHeap to prevent conflicts." if Is_BakaScrapheapPresent else None
+                memorymanager_correct_setting = True if not Is_XCellPresent and not Is_BakaScrapheapPresent else False
+                check_setting(line, "memorymanager", autoscan_report, crashgen_name,
+                              Is_BakaScrapheapPresent or Is_XCellPresent,
+                              custom_caution_message=memorymanager_caution_message,
+                              custom_correct_message=memorymanager_correct_message,
+                              custom_fix=memorymanager_fix,
+                              correct_condition=memorymanager_correct_setting)
+
+                check_setting(line, "bstexturestreamerlocalheap", autoscan_report, crashgen_name, Is_XCellPresent,
+                              custom_caution_message="X-Cell is installed, but BSTextureStreamerLocalHeap parameter is set to TRUE",
+                              custom_correct_message="BSTextureStreamerLocalHeap parameter is correctly configured for use with X-Cell!")
+
+                check_setting(line, "havokmemorysystem", autoscan_report, crashgen_name, Is_XCellPresent,
+                              custom_caution_message="X-Cell is installed, but HavokMemorySystem parameter is set to TRUE",
+                              custom_correct_message="HavokMemorySystem parameter is correctly configured for use with X-Cell!")
+
+                check_setting(line, "scaleformallocator", autoscan_report, crashgen_name, Is_XCellPresent,
+                              custom_caution_message="X-Cell is installed, but ScaleformAllocator parameter is set to TRUE",
+                              custom_correct_message="ScaleformAllocator parameter is correctly configured for use with X-Cell!")
+
+                check_setting(line, "smallblockallocator", autoscan_report, crashgen_name, Is_XCellPresent,
+                              custom_caution_message="X-Cell is installed, but SmallBlockAllocator parameter is set to TRUE",
+                              custom_correct_message="SmallBlockAllocator parameter is correctly configured for use with X-Cell!")
+
+                f4ee_correct_message = f"F4EE (Looks Menu) parameter is correctly configured in your {crashgen_name} settings!"
+                f4ee_caution_message = "Looks Menu is installed, but F4EE parameter is set to FALSE"
+                f4ee_fix = f"Open the {crashgen_name} configuration file and set F4EE to TRUE to ensure compatibility with Looks Menu."
+                check_setting(line, "f4ee", autoscan_report, crashgen_name, any("f4ee.dll" in elem.lower() for elem in segment_xsemodules),
+                              custom_caution_message=f4ee_caution_message,
+                              custom_correct_message=f4ee_correct_message,
+                              custom_fix=f4ee_fix,
+                              correct_condition=True)
+
+                """if "f4ee:" in line.lower():
+                    if "false" in line.lower() and any("f4ee.dll" in elem.lower() for elem in segment_xsemodules):
+                        autoscan_report.extend(["# ❌ CAUTION: Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE #\n",
+                                                f" FIX: Open the {crashgen_name} configuration file and set F4EE to TRUE to ensure compatibility with Looks Menu.\n-----\n"])
+                    else:
+                        autoscan_report.append(f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {crashgen_name} settings!\n-----\n")"""
+
+
+        else:
+            autoscan_report.extend(["* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n",
+                                    "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n"])
+
+        autoscan_report.append(main_files_check)
+        if game_files_check:
+            autoscan_report.append(game_files_check)
+
+        autoscan_report.extend(["====================================================\n",
+                                "CHECKING FOR MODS THAT CAN CAUSE FREQUENT CRASHES...\n",
+                                "====================================================\n"])
+
+        if trigger_plugins_loaded == True:
+            if detect_mods_single(game_mods_freq):
+                autoscan_report.extend(["# [!] CAUTION : ANY ABOVE DETECTED MODS HAVE A MUCH HIGHER CHANCE TO CRASH YOUR GAME! #\n",
+                                        "* YOU CAN DISABLE ANY / ALL OF THEM TEMPORARILY TO CONFIRM THEY CAUSED THIS CRASH. * \n\n"])
+            else:
+                autoscan_report.extend(["# FOUND NO PROBLEMATIC MODS THAT MATCH THE CURRENT DATABASE FOR THIS CRASH LOG #\n",
+                                        "THAT DOESN'T MEAN THERE AREN'T ANY! YOU SHOULD RUN PLUGIN CHECKER IN WRYE BASH \n",
+                                        "Plugin Checker Instructions: https://www.nexusmods.com/fallout4/articles/4141 \n\n"])
+        else:
+            autoscan_report.append(warn_noplugins)
+
+        autoscan_report.extend(["====================================================\n",
+                                "CHECKING FOR MODS THAT CONFLICT WITH OTHER MODS...\n",
+                                "====================================================\n"])
+
+        if trigger_plugins_loaded == True:
+            if detect_mods_double(game_mods_conf):
+                autoscan_report.extend(["# [!] CAUTION : FOUND MODS THAT ARE INCOMPATIBLE OR CONFLICT WITH YOUR OTHER MODS # \n",
+                                        "* YOU SHOULD CHOOSE WHICH MOD TO KEEP AND DISABLE OR COMPLETELY REMOVE THE OTHER MOD * \n\n"])
+            else:
+                autoscan_report.append("# FOUND NO MODS THAT ARE INCOMPATIBLE OR CONFLICT WITH YOUR OTHER MODS # \n\n")
+        else:
+            autoscan_report.append(warn_noplugins)
+
+        autoscan_report.extend(["====================================================\n",
+                                "CHECKING FOR MODS WITH SOLUTIONS & COMMUNITY PATCHES\n",
+                                "====================================================\n"])
+
+        if trigger_plugins_loaded == True:
+            if detect_mods_single(game_mods_solu):
+                autoscan_report.extend(["# [!] CAUTION : FOUND PROBLEMATIC MODS WITH SOLUTIONS AND COMMUNITY PATCHES # \n",
+                                        "[Due to limitations, CLASSIC will show warnings for some mods even if fixes or patches are already installed.] \n",
+                                        "[To hide these warnings, you can add their plugin names to the CLASSIC Ignore.yaml file. ONE PLUGIN PER LINE.] \n\n"])
+            else:
+                autoscan_report.append(f"# FOUND NO PROBLEMATIC MODS WITH AVAILABLE SOLUTIONS AND COMMUNITY PATCHES # \n\n")
+        else:
+            autoscan_report.append(warn_noplugins)
+
+        if CMain.game == "Fallout4":
+            autoscan_report.extend(["====================================================\n",
+                                    "CHECKING FOR MODS PATCHED THROUGH OPC INSTALLER...\n",
+                                    "====================================================\n"])
+
+            if trigger_plugins_loaded == True:
+                if detect_mods_single(game_mods_opc2):
+                    autoscan_report.extend(["\n* FOR PATCH REPOSITORY THAT PREVENTS CRASHES AND FIXES PROBLEMS IN THESE AND OTHER MODS,* \n",
+                                            "* VISIT OPTIMIZATION PATCHES COLLECTION: https://www.nexusmods.com/fallout4/mods/54872 * \n\n"])
+                else:
+                    autoscan_report.append("# FOUND NO PROBLEMATIC MODS THAT ARE ALREADY PATCHED THROUGH THE OPC INSTALLER # \n\n")
+            else:
+                autoscan_report.append(warn_noplugins)
+
+        autoscan_report.extend(["====================================================\n",
+                                "CHECKING IF IMPORTANT PATCHES & FIXES ARE INSTALLED\n",
+                                "====================================================\n"])
+
+        if trigger_plugins_loaded == True:
+            if any("londonworldspace" in plugin.lower() for plugin in crashlog_plugins):
+                detect_mods_important(game_mods_core_folon)
+            else:
+                detect_mods_important(game_mods_core)
+        else:
+            autoscan_report.append(warn_noplugins)
+
+        autoscan_report.extend(["====================================================\n",
+                                "SCANNING THE LOG FOR SPECIFIC (POSSIBLE) SUSPECTS...\n",
+                                "====================================================\n"])
+
+        if trigger_plugin_limit:
+            warn_plugin_limit = CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Plugin_Limit")
+            autoscan_report.append(warn_plugin_limit)
+
+        # ================================================
+
+        autoscan_report.append("# LIST OF (POSSIBLE) PLUGIN SUSPECTS #\n")
+        plugins_matches = []
+        for line in segment_callstack:
+            for plugin in crashlog_plugins:
+                if plugin.lower() in line.lower() and "modified by:" not in line.lower():
+                    if all(ignore.lower() not in plugin.lower() for ignore in game_ignore_plugins):
+                        plugins_matches.append(plugin)
+
+        if len(plugins_matches) >= 1:
+            plugins_found = dict(Counter(plugins_matches))
+            if len(plugins_found) >= 1:
+                for key, value in plugins_found.items():
+                    autoscan_report.append(f"- {key} | {value}\n")
+
+                autoscan_report.extend(["\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n",
+                                    f"These Plugins were caught by {crashgen_name} and some of them might be responsible for this crash.\n",
+                                    "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n"])
+        else:
+            autoscan_report.append("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n")
+
+        # ================================================
+        autoscan_report.append("# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n")
+        formids_matches = [line.replace('0x', '').strip() for line in segment_callstack if "id:" in line.lower() and "0xFF" not in line]
+        if formids_matches:
+            formids_found = dict(Counter(sorted(formids_matches)))
+            for formid_full, count in formids_found.items():
+                formid_split = formid_full.split(": ", 1)
+                for plugin, plugin_id in crashlog_plugins.items():
+                    if len(formid_split) >= 2 and str(plugin_id) == str(formid_split[1][:2]):
+                        if CMain.classic_settings("Show FormID Values"):
+                            if os.path.exists(f"CLASSIC Data/databases/{CMain.game} FormIDs.db"):
+                                report = get_entry(formid_split[1][2:], plugin)
+                                if report:
+                                    autoscan_report.append(f"- {formid_full} | [{plugin}] | {report} | {count}\n")
+                                else:
+                                    autoscan_report.append(f"- {formid_full} | [{plugin}] | {count}\n")
+                                    break
+                            else:
+                                with open(f"CLASSIC Data/databases/{CMain.game} FID Main.txt", encoding="utf-8", errors="ignore") as fid_main:
+                                    with open(f"CLASSIC Data/databases/{CMain.game} FID Mods.txt", encoding="utf-8", errors="ignore") as fid_mods:
+                                        line_match_main = next((line for line in fid_main if str(formid_split[1][2:]) in line and plugin.lower() in line.lower()), None)
+                                        line_match_mods = next((line for line in fid_mods if str(formid_split[1][2:]) in line and plugin.lower() in line.lower()), None)
+                                        if line_match_main:
+                                            line_split = line_match_main.split(" | ")
+                                            fid_report = line_split[2].strip()  # 0 - Plugin | 1 - FormID | 2 - FID Value
+                                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {fid_report} | {count}\n")
+                                        elif line_match_mods:
+                                            line_split = line_match_mods.split(" | ")
+                                            fid_report = line_split[2].strip()  # 0 - Plugin | 1 - FormID | 2 - FID Value
+                                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {fid_report} | {count}\n")
+                                        else:
+                                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {count}\n")
+                                            break
+                        else:
+                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {count}\n")
+                            break
+
+            autoscan_report.extend(["\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
+                                    f"These Form IDs were caught by {crashgen_name} and some of them might be related to this crash.\n",
+                                    "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n"])
+        else:
+            autoscan_report.append("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n")
+
+        # ================================================
+
+        autoscan_report.append("# LIST OF DETECTED (NAMED) RECORDS #\n")
+        records_matches = []
+        for line in segment_callstack:
+            if any(item.lower() in line.lower() for item in classic_records_list):
+                if all(record.lower() not in line.lower() for record in game_ignore_records):
+                    if "[RSP+" in line:
+                        line = line[30:].strip()
+                        records_matches.append(line)
+                    else:
+                        records_matches.append(line.strip())
+        if records_matches:
+            records_found = dict(Counter(sorted(records_matches)))
+            for record, count in records_found.items():
+                autoscan_report.append(f"- {record} | {count}\n")
+
+            autoscan_report.extend(["\n[Last number counts how many times each Named Record shows up in the crash log.]\n",
+                                    f"These records were caught by {crashgen_name} and some of them might be related to this crash.\n",
+                                    "Named records should give extra info on involved game objects, record types or mod files.\n\n"])
+        else:
+            autoscan_report.append("* COULDN'T FIND ANY NAMED RECORDS *\n\n")
+
+        # ============== AUTOSCAN REPORT END ==============
+        if CMain.game == "Fallout4":
+            autoscan_report.append(autoscan_text)
+        autoscan_report.append(f"{classic_version} | {classic_version_date} | END OF AUTOSCAN \n")
+
+        # CHECK IF SCAN FAILED
+        stats_crashlog_scanned += 1
+        if trigger_scan_failed:
+            scan_failed_list.append(crashlog_file.name)
+
+        # HIDE PERSONAL USERNAME
+        for line in autoscan_report:
+            if user_folder.name in line:
+                line.replace(f"{user_folder.parent}\\{user_folder.name}", "******").replace(f"{user_folder.parent}/{user_folder.name}", "******")
+
+        # WRITE AUTOSCAN REPORT TO FILE
+        autoscan_name = str(crashlog_file.with_name(crashlog_file.stem + "-AUTOSCAN.md"))
+        with open(autoscan_name, "w", encoding="utf-8", errors="ignore") as autoscan_file:
+            logging.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
+            autoscan_output = "".join(autoscan_report)
+            autoscan_file.write(autoscan_output)
+
+        if trigger_scan_failed and CMain.classic_settings("Move Unsolved Logs"):
+            backup_path = "CLASSIC Backup/Unsolved Logs"
+            Path(backup_path).mkdir(parents=True, exist_ok=True)
+            autoscan_file = crashlog_file.with_name(crashlog_file.stem + "-AUTOSCAN.md")
+            crash_move = Path(backup_path, crashlog_file.name)
+            scan_move = Path(backup_path, autoscan_file.name)
+
+            if crashlog_file.exists():
+                shutil.copy2(crashlog_file, crash_move)
+            if autoscan_file.exists():
+                shutil.copy2(autoscan_file, scan_move)
+
+    # CHECK FOR FAILED OR INVALID CRASH LOGS
+    if scan_failed_list or scan_invalid_list:
+        print("❌ NOTICE : CLASSIC WAS UNABLE TO PROPERLY SCAN THE FOLLOWING LOG(S):")
+        print('\n'.join(scan_failed_list))
+        if scan_invalid_list:
+            for file in scan_invalid_list:
+                print(f"{file}\n")
+        print("===============================================================================")
+        print("Most common reason for this are logs being incomplete or in the wrong format.")
+        print("Make sure that your crash log files have the .log file format, NOT .txt! \n")
+
+    # ================================================
+    # CRASH LOG SCAN COMPLETE / TERMINAL OUTPUT
+    # ================================================
+    logging.info("- - - COMPLETED CRASH LOG FILE SCAN >>> ALL AVAILABLE LOGS SCANNED")
+    print("SCAN COMPLETE! (IT MIGHT TAKE SEVERAL SECONDS FOR SCAN RESULTS TO APPEAR)")
+    print("SCAN RESULTS ARE AVAILABLE IN FILES NAMED crash-date-and-time-AUTOSCAN.md \n")
+    print(f"{random.choice(classic_game_hints)}\n-----")
+    print(f"Scanned all available logs in {str(time.perf_counter() - 0.5 - scan_start_time)[:5]} seconds.")
+    print(f"Number of Scanned Logs (No Autoscan Errors): {stats_crashlog_scanned}")
+    print(f"Number of Incomplete Logs (No Plugins List): {stats_crashlog_incomplete}")
+    print(f"Number of Failed Logs (Autoscan Can't Scan): {stats_crashlog_failed}\n-----")
+    if CMain.game == "Fallout4":
+        print(autoscan_text)
+    if stats_crashlog_scanned == 0 and stats_crashlog_incomplete == 0:
+        print("\n❌ CLAS found no crash logs to scan or the scan failed.")
+        print("    There are no statistics to show (at this time).\n")
