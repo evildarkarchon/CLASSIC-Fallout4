@@ -89,6 +89,19 @@ def mod_toml_config(toml_path, section, key, new_value=None):
 # CHECK BUFFOUT CONFIG SETTINGS
 # ================================================
 def check_crashgen_settings():
+    def check_and_update_toml(toml_path, section, key, expected_value, message_list, warning_message):
+        if mod_toml_config(toml_path, section, key) and expected_value:
+            message_list.extend(warning_message)
+            mod_toml_config(toml_path, section, key, expected_value)
+        else:
+            message_list.append(f"✔️ {key} parameter is correctly configured in your {crashgen_name} settings! \n-----\n")
+
+    def generate_warning_message(mod_name, key, expected_value, incorrect_value="TRUE"):
+        return [
+            f"# ❌ CAUTION : The {mod_name} Mod is installed, but {key} parameter is set to {incorrect_value} # \n",
+            f"    Auto Scanner will change this parameter to {expected_value} to prevent conflicts with {crashgen_name}. \n-----\n"
+        ]
+
     message_list = []
     plugins_path = CMain.yaml_settings(f"CLASSIC Data/CLASSIC {CMain.game} Local.yaml", f"Game{CMain.vr}_Info.Game_Folder_Plugins")
     crashgen_name = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.CRASHGEN_LogName")
@@ -96,78 +109,66 @@ def check_crashgen_settings():
 
     crashgen_toml_og = Path(plugins_path).joinpath("Buffout4\\config.toml")
     crashgen_toml_vr = Path(plugins_path).joinpath("Buffout4.toml")
-    if crashgen_toml_og.is_file():
-        crashgen_toml_main = crashgen_toml_og
-    elif crashgen_toml_vr.is_file():
-        crashgen_toml_main = crashgen_toml_vr
-    else:
-        crashgen_toml_main = ""
+    crashgen_toml_main = crashgen_toml_og if crashgen_toml_og.is_file() else crashgen_toml_vr if crashgen_toml_vr.is_file() else ""
 
     if crashgen_toml_og.is_file() and crashgen_toml_vr.is_file():
-        message_list.extend([f"# ❌ CAUTION : BOTH VERSIONS OF {crashgen_name.upper()} TOML SETTINGS FILES WERE FOUND! #\n",
-                             f"When editing {crashgen_name} toml settings, make sure you are editing the correct file. \n",
-                             f"Please recheck your {crashgen_name} installation and delete any obsolete files. \n-----\n"])
+        message_list.extend([
+            f"# ❌ CAUTION : BOTH VERSIONS OF {crashgen_name.upper()} TOML SETTINGS FILES WERE FOUND! #\n",
+            f"When editing {crashgen_name} toml settings, make sure you are editing the correct file. \n",
+            f"Please recheck your {crashgen_name} installation and delete any obsolete files. \n-----\n"
+        ])
 
-    IsXCellPresent = any("xcell" in file.lower() for file in xse_folder)
+    IsXCellPresent = any("x-cell" in file.lower() for file in xse_folder)
     IsBakaScrapHeapPresent = any("bakascrapheap" in file.lower() for file in xse_folder)
+
     if crashgen_toml_main:
-        if mod_toml_config(crashgen_toml_main, "Patches", "Achievements") and any("achievements" in file.lower() for file in xse_folder):
-            message_list.extend(["# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n",
-                                 f"    Auto Scanner will change this parameter to FALSE to prevent conflicts with {crashgen_name}. \n-----\n"])
-            mod_toml_config(crashgen_toml_main, "Patches", "Achievements", "False")
-        else:
-            message_list.append(f"✔️ Achievements parameter is correctly configured in your {crashgen_name} settings! \n-----\n")
+        check_and_update_toml(
+            crashgen_toml_main, "Patches", "Achievements",
+            "False" if any("achievements" in file.lower() for file in xse_folder) else None,
+            message_list, generate_warning_message("Achievements Mod and/or Unlimited Survival Mode", "Achievements", "FALSE")
+        )
 
-        if mod_toml_config(crashgen_toml_main, "Patches", "MemoryManager") and IsBakaScrapHeapPresent:
-            message_list.extend(["# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but MemoryManager parameter is set to TRUE # \n",
-                                 f"    Auto Scanner will change this parameter to FALSE to prevent conflicts with {crashgen_name}. \n-----\n"])
-            mod_toml_config(crashgen_toml_main, "Patches", "MemoryManager", "False")
-        elif mod_toml_config(crashgen_toml_main, "Patches", "MemoryManager") and IsXCellPresent:
-            message_list.extend(["# ❌ CAUTION : The X-Cell Mod is installed, but MemoryManager parameter is set to TRUE # \n",
-                                 f"    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell. \n-----\n"])
-            mod_toml_config(crashgen_toml_main, "Patches", "MemoryManager", "False")
-        else:
-            message_list.append(f"✔️ Memory Manager parameter is correctly configured in your {crashgen_name} settings! \n-----\n")
+        check_and_update_toml(
+            crashgen_toml_main, "Patches", "MemoryManager",
+            "False" if IsBakaScrapHeapPresent or IsXCellPresent else None,
+            message_list, generate_warning_message("Baka ScrapHeap or X-Cell", "MemoryManager", "FALSE")
+        )
 
-        if mod_toml_config(crashgen_toml_main, "Patches", "HavokMemorySystem") and IsXCellPresent:
-            message_list.extend(["# ❌ CAUTION : The X-Cell Mod is installed, but HavokMemorySystem parameter is set to TRUE # \n",
-                                 f"    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell. \n-----\n"])
-            mod_toml_config(crashgen_toml_main, "Patches", "HavokMemorySystem", "False")
-        else:
-            message_list.append(f"✔️ HavokMemorySystem parameter is correctly configured in your {crashgen_name} settings! \n-----\n")
+        check_and_update_toml(
+            crashgen_toml_main, "Patches", "HavokMemorySystem",
+            "False" if IsXCellPresent else None,
+            message_list, generate_warning_message("X-Cell", "HavokMemorySystem", "FALSE")
+        )
 
-        if mod_toml_config(crashgen_toml_main, "Patches", "BSTextireStreamerLocalHeap") and IsXCellPresent:
-            message_list.extend(["# ❌ CAUTION : The X-Cell Mod is installed, but BSTextireStreamerLocalHeap parameter is set to TRUE # \n",
-                                 f"    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell. \n-----\n"])
-            mod_toml_config(crashgen_toml_main, "Patches", "BSTextireStreamerLocalHeap", "False")
-        else:
-            message_list.append(f"✔️ BSTextireStreamerLocalHeap parameter is correctly configured in your {crashgen_name} settings! \n-----\n")
+        check_and_update_toml(
+            crashgen_toml_main, "Patches", "BSTextireStreamerLocalHeap",
+            "False" if IsXCellPresent else None,
+            message_list, generate_warning_message("X-Cell", "BSTextireStreamerLocalHeap", "FALSE")
+        )
 
-        if mod_toml_config(crashgen_toml_main, "Patches", "ScaleformAllocator") and IsXCellPresent:
-            message_list.extend(["# ❌ CAUTION : The X-Cell Mod is installed, but ScaleformAllocator parameter is set to TRUE # \n",
-                                 f"    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell. \n-----\n"])
-            mod_toml_config(crashgen_toml_main, "Patches", "ScaleFormAllocator", "False")
-        else:
-            message_list.append(f"✔️ ScaleformAllocator parameter is correctly configured in your {crashgen_name} settings! \n-----\n")
+        check_and_update_toml(
+            crashgen_toml_main, "Patches", "ScaleformAllocator",
+            "False" if IsXCellPresent else None,
+            message_list, generate_warning_message("X-Cell", "ScaleformAllocator", "FALSE")
+        )
 
-        if mod_toml_config(crashgen_toml_main, "Patches", "SmallBlockAllocator") and IsXCellPresent:
-            message_list.extend(["# ❌ CAUTION : The X-Cell Mod is installed, but SmallBlockAllocator parameter is set to TRUE # \n",
-                                 f"    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell. \n-----\n"])
-            mod_toml_config(crashgen_toml_main, "Patches", "SmallBlockAllocator", "False")
-        else:
-            message_list.append(f"✔️ SmallBlockAllocator parameter is correctly configured in your {crashgen_name} settings! \n-----\n")
+        check_and_update_toml(
+            crashgen_toml_main, "Patches", "SmallBlockAllocator",
+            "False" if IsXCellPresent else None,
+            message_list, generate_warning_message("X-Cell", "SmallBlockAllocator", "FALSE")
+        )
 
-
-        if mod_toml_config(crashgen_toml_main, "Compatibility", "F4EE") and any("f4ee" in file.lower() for file in xse_folder):
-            message_list.extend(["# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE # \n",
-                                 f"    Auto Scanner will change this parameter to TRUE to prevent bugs and crashes from Looks Menu. \n-----\n"])
-            mod_toml_config(crashgen_toml_main, "Compatibility", "F4EE", "True")
-        else:
-            message_list.append(f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {crashgen_name} settings! \n-----\n")
+        check_and_update_toml(
+            crashgen_toml_main, "Compatibility", "F4EE",
+            "True" if any("f4ee" in file.lower() for file in xse_folder) else None,
+            message_list, generate_warning_message("Looks Menu", "F4EE", "TRUE", "FALSE")
+        )
     else:
-        message_list.extend([f"# [!] NOTICE : Unable to find the {crashgen_name} config file, settings check will be skipped. # \n",
-                             f"  To ensure this check doesn't get skipped, {crashgen_name} has to be installed manually. \n",
-                             "  [ If you are using Mod Organizer 2, you need to run CLASSIC through a shortcut in MO2. ] \n-----\n"])
+        message_list.extend([
+            f"# [!] NOTICE : Unable to find the {crashgen_name} config file, settings check will be skipped. # \n",
+            f"  To ensure this check doesn't get skipped, {crashgen_name} has to be installed manually. \n",
+            "  [ If you are using Mod Organizer 2, you need to run CLASSIC through a shortcut in MO2. ] \n-----\n"
+        ])
 
     message_output = "".join(message_list)
     return message_output
@@ -423,6 +424,67 @@ def scan_mod_inis():  # Mod INI files check.
 # CHECK ALL UNPACKED / LOOSE MOD FILES
 # ================================================
 def scan_mods_unpacked():
+    def create_backup_directory(path):
+        Path(path).mkdir(parents=True, exist_ok=True)
+
+    def move_redundant_file(src, dest, cleanup_list):
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        cleanup_list.append(f"MOVED > {src} TO > {dest} \n")
+        shutil.move(src, dest)
+
+    def scan_for_animation_data(dirname, main_path, modscan_list):
+        if dirname.lower() == "animationfiledata":
+            root_main = main_path.split(os.path.sep)[1]
+            modscan_list.append(f"[-] NOTICE (ANIMDATA) : {root_main} > CONTAINS CUSTOM ANIMATION FILE DATA \n")
+
+    def scan_for_redundant_fomod(dirname, root, mod_path, backup_path, cleanup_list):
+        if dirname.lower() == "fomod":
+            fomod_folder_path = os.path.join(root, dirname)
+            relative_path = os.path.relpath(fomod_folder_path, mod_path)
+            new_folder_path = os.path.join(backup_path, relative_path)
+            move_redundant_file(fomod_folder_path, new_folder_path, cleanup_list)
+
+    def scan_for_invalid_dds(filename, root, modscan_list):
+        if ".dds" in filename.lower():
+            dds_file_path = os.path.join(root, filename)
+            with open(dds_file_path, 'rb') as dds_file:
+                dds_data = dds_file.read()
+            if dds_data[:4] == b'DDS ':
+                width = struct.unpack('<I', dds_data[12:16])[0]
+                height = struct.unpack('<I', dds_data[16:20])[0]
+                if width % 2 != 0 or height % 2 != 0:
+                    modscan_list.append(f"[!] CAUTION (DDS-DIMS) : {dds_file_path} > {width}x{height} > DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 \n")
+
+    def scan_for_invalid_texture_format(filename, root, modscan_list):
+        if (".tga" in filename.lower()) or (".png" in filename.lower()):
+            inv_file_path = os.path.join(root, filename)
+            modscan_list.append(f"[-] NOTICE (-FORMAT-) : {inv_file_path} > HAS THE WRONG TEXTURE FORMAT, SHOULD BE DDS \n")
+
+    def scan_for_invalid_sound_format(filename, main_path, modscan_list):
+        if (".mp3" in filename.lower()) or (".m4a" in filename.lower()):
+            root_main = main_path.split(os.path.sep)[1]
+            modscan_list.append(f"[-] NOTICE (-FORMAT-) : {root_main} > {filename} > HAS THE WRONG SOUND FORMAT, SHOULD BE XWM OR WAV \n")
+
+    def scan_for_script_extender_files(filename, root, main_path, xse_scriptfiles, xse_acronym, modscan_list):
+        if any(filename.lower() == key.lower() for key in xse_scriptfiles) and "workshop framework" not in root.lower():
+            xse_file_path = os.path.join(root, filename)
+            if f"Scripts\\{filename}" in xse_file_path:
+                root_main = main_path.split(os.path.sep)[1]
+                modscan_list.append(f"[!] CAUTION (XSE-COPY) : {root_main} > CONTAINS ONE OR SEVERAL COPIES OF *{xse_acronym}* SCRIPT FILES \n")
+
+    def scan_for_precombine_previs_files(filename, main_path, modscan_list):
+        if (".uvd" in filename.lower()) or ("_oc.nif" in filename.lower()):
+            root_main = main_path.split(os.path.sep)[1]
+            modscan_list.append(f"[!] CAUTION (-PREVIS-) : {root_main} > CONTAINS LOOSE PRECOMBINE / PREVIS FILES \n")
+
+    def scan_for_redundant_readme(filename, root, mod_path, backup_path, cleanup_list):
+        filter_names = ["readme", "changes", "changelog", "change log"]
+        if any(names.lower() in filename.lower() for names in filter_names) and filename.lower().endswith(".txt"):
+            readme_file_path = os.path.join(root, filename)
+            relative_path = os.path.relpath(readme_file_path, mod_path)
+            new_file_path = os.path.join(backup_path, relative_path)
+            move_redundant_file(readme_file_path, new_file_path, cleanup_list)
+
     message_list = []
     cleanup_list = []
     modscan_list = []
@@ -430,76 +492,26 @@ def scan_mods_unpacked():
     xse_scriptfiles = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.XSE_HashedScripts")
 
     backup_path = "CLASSIC Backup/Cleaned Files"
-    Path(backup_path).mkdir(parents=True, exist_ok=True)
+    create_backup_directory(backup_path)
     mod_path = CMain.classic_settings("MODS Folder Path")
+
     if mod_path:
         if Path(mod_path).exists():
-            filter_names = ["readme", "changes", "changelog", "change log"]
-            print("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES CLEANUP...")
+            print("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES SCANS...")
             for root, dirs, files in os.walk(mod_path, topdown=False):
                 for dirname in dirs:
                     main_path = root.replace(mod_path, "")
-                    # ================================================
-                    # DETECT MODS WITH AnimationFileData
-                    if dirname.lower() == "animationfiledata":
-                        root_main = main_path.split(os.path.sep)[1]
-                        modscan_list.append(f"[-] NOTICE (ANIMDATA) : {root_main} > CONTAINS CUSTOM ANIMATION FILE DATA \n")
-                    # ================================================
-                    # (RE)MOVE REDUNDANT FOMOD FOLDERS
-                    elif dirname.lower() == "fomod":
-                        fomod_folder_path = os.path.join(root, dirname)
-                        relative_path = os.path.relpath(fomod_folder_path, mod_path)
-                        new_folder_path = os.path.join(backup_path, relative_path)
-
-                        cleanup_list.append(f"MOVED > {fomod_folder_path} FOLDER TO > {backup_path} \n")
-                        shutil.move(fomod_folder_path, new_folder_path)
+                    scan_for_animation_data(dirname, main_path, modscan_list)
+                    scan_for_redundant_fomod(dirname, root, mod_path, backup_path, cleanup_list)
 
                 for filename in files:
                     main_path = root.replace(mod_path, "")
-                    # ================================================
-                    # DETECT DDS FILES WITH INCORRECT DIMENSIONS
-                    if ".dds" in filename.lower():
-                        dds_file_path = os.path.join(root, filename)
-                        with open(dds_file_path, 'rb') as dds_file:
-                            dds_data = dds_file.read()
-                        if dds_data[:4] == b'DDS ':
-                            width = struct.unpack('<I', dds_data[12:16])[0]
-                            height = struct.unpack('<I', dds_data[16:20])[0]
-                            if width % 2 != 0 or height % 2 != 0:
-                                modscan_list.append(f"[!] CAUTION (DDS-DIMS) : {dds_file_path} > {width}x{height} > DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 \n")
-                    # ================================================
-                    # DETECT INVALID TEXTURE FILE FORMATS
-                    elif (".tga" or ".png") in filename.lower():
-                        inv_file_path = os.path.join(root, filename)
-                        modscan_list.append(f"[-] NOTICE (-FORMAT-) : {inv_file_path} > HAS THE WRONG TEXTURE FORMAT, SHOULD BE DDS \n")
-                    # ================================================
-                    # DETECT INVALID SOUND FILE FORMATS
-                    elif (".mp3" or ".m4a") in filename.lower():
-                        root_main = main_path.split(os.path.sep)[1]
-                        modscan_list.append(f"[-] NOTICE (-FORMAT-) : {root_main} > {filename} > HAS THE WRONG SOUND FORMAT, SHOULD BE XWM OR WAV \n")
-                    # ================================================
-                    # DETECT MODS WITH SCRIPT EXTENDER FILE COPIES
-                    elif any(filename.lower() == key.lower() for key in xse_scriptfiles) and "workshop framework" not in root.lower():
-                        xse_file_path = os.path.join(root, filename)
-                        if f"Scripts\\{filename}" in xse_file_path:
-                            root_main = main_path.split(os.path.sep)[1]
-                            modscan_list.append(f"[!] CAUTION (XSE-COPY) : {root_main} > CONTAINS ONE OR SEVERAL COPIES OF *{xse_acronym}* SCRIPT FILES \n")
-                    # ================================================
-                    # DETECT MODS WITH PRECOMBINE / PREVIS FILES
-                    elif (".uvd" or "_oc.nif") in filename.lower():
-                        root_main = main_path.split(os.path.sep)[1]
-                        modscan_list.append(f"[!] CAUTION (-PREVIS-) : {root_main} > CONTAINS LOOSE PRECOMBINE / PREVIS FILES \n")
-                    # ================================================
-                    # (RE)MOVE REDUNDANT README / CHANGELOG FILES
-                    elif any(names.lower() in filename.lower() for names in filter_names) and filename.lower().endswith(".txt"):
-                        readme_file_path = os.path.join(root, filename)
-                        relative_path = os.path.relpath(readme_file_path, mod_path)
-                        new_file_path = os.path.join(backup_path, relative_path)
-
-                        # Create subdirectories if they don't exist.
-                        os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
-                        cleanup_list.append(f"MOVED > {readme_file_path} FILE TO > {backup_path} \n")
-                        shutil.move(readme_file_path, new_file_path)
+                    scan_for_invalid_dds(filename, root, modscan_list)
+                    scan_for_invalid_texture_format(filename, root, modscan_list)
+                    scan_for_invalid_sound_format(filename, main_path, modscan_list)
+                    scan_for_script_extender_files(filename, root, main_path, xse_scriptfiles, xse_acronym, modscan_list)
+                    scan_for_precombine_previs_files(filename, main_path, modscan_list)
+                    scan_for_redundant_readme(filename, root, mod_path, backup_path, cleanup_list)
 
             print("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...")
             message_list.append(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_Reminders"))
@@ -518,6 +530,44 @@ def scan_mods_unpacked():
 # CHECK ALL ARCHIVED / BA2 MOD FILES
 # ================================================
 def scan_mods_archived():
+    def run_bsarch_command(command):
+        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode != 0:
+            print(f"Command failed with error:\n{result.stderr}")
+        return result
+
+    def scan_for_invalid_dds_dimensions(output_list, main_path, modscan_list):
+        for index, line in enumerate(output_list):
+            if ".dds" in line.lower():
+                dds_meta = output_list[index + 2]
+                dds_meta_split = dds_meta.split(":")
+                width = dds_meta_split[1].replace("  Height", "").strip()
+                height = dds_meta_split[2].replace("  CubeMap", "").strip()
+                if width.isdecimal() and height.isdecimal():
+                    if int(width) % 2 != 0 or int(height) % 2 != 0:
+                        root_main = main_path.split(os.path.sep)[1]
+                        modscan_list.append(f"[!] CAUTION (DDS-DIMS) : ({root_main}) {line} > {width}x{height} > DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 \n")
+
+    def scan_for_invalid_texture_formats(line, main_path, modscan_list):
+        if (".tga" in line.lower()) or (".png" in line.lower()):
+            root_main = main_path.split(os.path.sep)[1]
+            modscan_list.append(f"[-] NOTICE (-FORMAT-) : ({root_main}) {line} > HAS THE WRONG TEXTURE FORMAT, SHOULD BE DDS \n")
+
+    def scan_for_invalid_sound_formats(archived_output, main_path, modscan_list):
+        if (".mp3" in archived_output.lower()) or (".m4a" in archived_output.lower()):
+            root_main = main_path.split(os.path.sep)[1]
+            modscan_list.append(f"[-] NOTICE (-FORMAT-) : {root_main} > BA2 ARCHIVE CONTAINS SOUND FILES IN THE WRONG FORMAT \n")
+
+    def scan_for_animation_data(archived_output, main_path, modscan_list):
+        if "animationfiledata" in archived_output.lower():
+            root_main = main_path.split(os.path.sep)[1]
+            modscan_list.append(f"[-] NOTICE (ANIMDATA) : {root_main} > BA2 ARCHIVE CONTAINS CUSTOM ANIMATION FILE DATA \n")
+
+    def scan_for_script_extender_files(archived_output, main_path, xse_scriptfiles, xse_acronym, modscan_list):
+        if any(f"scripts\\{key.lower()}" in archived_output.lower() for key in xse_scriptfiles) and "workshop framework" not in archived_output.lower():
+            root_main = main_path.split(os.path.sep)[1]
+            modscan_list.append(f"[!] CAUTION (XSE-COPY) : {root_main} > BA2 ARCHIVE CONTAINS ONE OR SEVERAL COPIES OF *{xse_acronym}* SCRIPT FILES \n")
+
     message_list = []
     modscan_list = []
     xse_acronym = CMain.yaml_settings(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml", f"Game{CMain.vr}_Info.XSE_Acronym")
@@ -527,6 +577,7 @@ def scan_mods_archived():
     bsarch_path = r"CLASSIC Data\BSArch.exe"
     bsarch_path_full = fr"{CLASSIC_folder}\{bsarch_path}"
     mod_path = CMain.classic_settings("MODS Folder Path")
+
     if mod_path:
         if Path(mod_path).exists():
             if Path(bsarch_path).exists():
@@ -534,67 +585,26 @@ def scan_mods_archived():
                 message_list.append("\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n")
                 for root, dirs, files in os.walk(mod_path, topdown=False):
                     for filename in files:
+                        main_path = root.replace(mod_path, "")
+                        ba2_file_path = os.path.join(root, filename)
                         if "textures.ba2" in filename.lower():
-                            main_path = root.replace(mod_path, "")
-                            ba2_file_path = os.path.join(root, filename)
                             command_dump = f'"{bsarch_path_full}" "{ba2_file_path}" -dump'
-
-                            archived_dump = subprocess.run(command_dump, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                            archived_dump = run_bsarch_command(command_dump)
                             if archived_dump.returncode == 0:
                                 archived_output = archived_dump.stdout
-                                # ================================================
-                                # DETECT DDS FILES WITH INCORRECT DIMENSIONS
                                 output_split = archived_output.split("\n")
                                 output_list = [item for item in output_split if item]
-                                for index, line in enumerate(output_list):
-                                    if ".dds" in line.lower():
-                                        dds_meta = output_list[index + 2]
-                                        dds_meta_split = dds_meta.split(":")
-                                        width = dds_meta_split[1].replace("  Height", "").strip()
-                                        height = dds_meta_split[2].replace("  CubeMap", "").strip()
-                                        if width.isdecimal() and height.isdecimal():
-                                            if int(width) % 2 != 0 or int(height) % 2 != 0:
-                                                root_main = main_path.split(os.path.sep)[1]
-                                                modscan_list.append(f"[!] CAUTION (DDS-DIMS) : ({root_main}) {line} > {width}x{height} > DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 \n")
-                                    # ================================================
-                                    # DETECT INVALID TEXTURE FILE FORMATS
-                                    elif (".tga" or ".png") in line.lower():
-                                        root_main = main_path.split(os.path.sep)[1]
-                                        modscan_list.append(f"[-] NOTICE (-FORMAT-) : ({root_main}) {line} > HAS THE WRONG TEXTURE FORMAT, SHOULD BE DDS \n")
-                            else:
-                                error_message = archived_dump.stderr
-                                print("Command failed with error:\n", error_message)
-
+                                scan_for_invalid_dds_dimensions(output_list, main_path, modscan_list)
+                                for line in output_list:
+                                    scan_for_invalid_texture_formats(line, main_path, modscan_list)
                         elif "main.ba2" in filename.lower():
-                            main_path = root.replace(mod_path, "")
-                            ba2_file_path = os.path.join(root, filename)
                             command_list = f'"{bsarch_path_full}" "{ba2_file_path}" -list'
-                            archived_list = subprocess.run(command_list, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                            archived_list = run_bsarch_command(command_list)
                             if archived_list.returncode == 0:
                                 archived_output = archived_list.stdout
-                                # ================================================
-                                # DETECT INVALID SOUND FILE FORMATS
-                                if (".mp3" or ".m4a") in archived_output.lower():
-                                    root_main = main_path.split(os.path.sep)[1]
-                                    modscan_list.append(f"[-] NOTICE (-FORMAT-) : {root_main} > BA2 ARCHIVE CONTAINS SOUND FILES IN THE WRONG FORMAT \n")
-                                # ================================================
-                                # DETECT MODS WITH AnimationFileData
-                                if "animationfiledata" in archived_output.lower():
-                                    root_main = main_path.split(os.path.sep)[1]
-                                    modscan_list.append(f"[-] NOTICE (ANIMDATA) : {root_main} > BA2 ARCHIVE CONTAINS CUSTOM ANIMATION FILE DATA \n")
-                                # ================================================
-                                # DETECT MODS WITH SCRIPT EXTENDER FILE COPIES
-                                if any(f"scripts\\{key.lower()}" in archived_output.lower() for key in xse_scriptfiles) and "workshop framework" not in root.lower():
-                                    root_main = main_path.split(os.path.sep)[1]
-                                    modscan_list.append(f"[!] CAUTION (XSE-COPY) : {root_main} > BA2 ARCHIVE CONTAINS ONE OR SEVERAL COPIES OF *{xse_acronym}* SCRIPT FILES \n")
-                                # ================================================
-                                # DETECT MODS WITH PRECOMBINE / PREVIS FILES
-                                if (".uvd" or "_oc.nif") in archived_output.lower() and "previs repair pack" not in root.lower():
-                                    root_main = main_path.split(os.path.sep)[1]
-                                    modscan_list.append(f"[-] NOTICE (-PREVIS-) : {root_main} > BA2 ARCHIVE CONTAINS CUSTOM PRECOMBINE / PREVIS FILES \n")
-                            else:
-                                error_message = archived_list.stderr
-                                print("BSArch command failed with the following error:\n", error_message)
+                                scan_for_invalid_sound_formats(archived_output, main_path, modscan_list)
+                                scan_for_animation_data(archived_output, main_path, modscan_list)
+                                scan_for_script_extender_files(archived_output, main_path, xse_scriptfiles, xse_acronym, modscan_list)
             else:
                 message_list.append(CMain.yaml_settings("CLASSIC Data/databases/CLASSIC Main.yaml", "Mods_Warn.Mods_BSArch_Missing"))
         else:

@@ -4,11 +4,9 @@ import time
 import shutil
 import random
 import logging
-import requests
 import sqlite3
 import CLASSIC_Main as CMain
 import CLASSIC_ScanGame as CGame
-from urllib.parse import urlparse
 from collections import Counter
 from pathlib import Path
 
@@ -96,27 +94,31 @@ def crashlogs_scan():
     data_base_game = CMain.yaml_cache.as_dict(f"CLASSIC Data/databases/CLASSIC {CMain.game}.yaml")
     data_base_main = CMain.yaml_cache.as_dict("CLASSIC Data/databases/CLASSIC Main.yaml")
     data_base_ignore = CMain.yaml_cache.as_dict("CLASSIC Ignore.yaml")
+    game_info = data_base_game.get(f"Game_Info")
+    gamevr_info = data_base_game.get("GameVR_Info")
+    crashgen_warnings = data_base_game.get("Warnings_CRASHGEN")
+    classic_interface = data_base_main.get("CLASSIC_Interface")
 
     classic_game_hints = data_base_game.get("Game_Hints")
     classic_records_list = data_base_main.get("catch_log_records")
-    classic_version = data_base_main.get("CLASSIC_Info").get("version")
-    classic_version_date = data_base_main.get("CLASSIC_Info")["version_date"]
+    classic_version = data_base_main["CLASSIC_Info"]["version"] if data_base_main.get("CLASSIC_Info") else "UNKNOWN"
+    classic_version_date = data_base_main["CLASSIC_Info"]["versiondate"] if data_base_main.get("CLASSIC_Info") else "UNKNOWN"
 
-    crashgen_name = data_base_game.get("Game_Info").get("CRASHGEN_LogName")
-    crashgen_latest_og = data_base_game.get("Game_Info").get("CRASHGEN_LatestVer")
-    crashgen_latest_vr = data_base_game.get("GameVR_Info").get("CRASHGEN_LatestVer")
-    crashgen_ignore = data_base_game.get(f"Game{CMain.vr}_Info").get("CRASHGEN_Ignore")
+    crashgen_name = game_info.get("CRASHGEN_LogName")
+    crashgen_latest_og = game_info.get("CRASHGEN_LatestVer")
+    crashgen_latest_vr = gamevr_info.get("CRASHGEN_LatestVer")
+    crashgen_ignore = gamevr_info.get("CRASHGEN_Ignore") if CMain.vr else game_info.get("CRASHGEN_Ignore")
 
-    warn_noplugins = data_base_game.get("Warnings_CRASHGEN").get("Warn_NOPlugins")
-    warn_outdated = data_base_game.get("Warnings_CRASHGEN").get("Warn_Outdated")
-    xse_acronym = data_base_game.get("Game_Info").get("XSE_Acronym")
+    warn_noplugins = crashgen_warnings.get("Warn_NOPlugins")
+    warn_outdated = crashgen_warnings.get("Warn_Outdated")
+    xse_acronym = game_info.get("XSE_Acronym")
 
     game_ignore_plugins = data_base_game.get("Crashlog_Plugins_Exclude")
     game_ignore_records = data_base_game.get("Crashlog_Records_Exclude")
     suspects_error_list = data_base_game.get("Crashlog_Error_Check")
     suspects_stack_list = data_base_game.get("Crashlog_Stack_Check")
 
-    autoscan_text = data_base_main.get("CLASSIC_Interface").get(f"autoscan_text_{CMain.game}")
+    autoscan_text = classic_interface.get(f"autoscan_text_{CMain.game}")
     remove_list = data_base_main.get("exclude_log_records")
     ignore_list = data_base_ignore.get(f"CLASSIC_Ignore_{CMain.game}")
 
@@ -186,6 +188,45 @@ def crashlogs_scan():
             else:
                 if gpu_rival not in mod_warn.lower():
                     autoscan_report.extend([f"❌ {mod_split[1]} is not installed!\n", mod_warn, "\n"])
+
+    def append_formid_report(autoscan_report, formid_full, plugin, report, count):
+            if report:
+                autoscan_report.append(f"- {formid_full} | [{plugin}] | {report} | {count}\n")
+            else:
+                autoscan_report.append(f"- {formid_full} | [{plugin}] | {count}\n")
+
+    def process_formid_from_db(formid_split, plugin, autoscan_report, formid_full, count):
+        report = get_entry(formid_split[1][2:], plugin)
+        append_formid_report(autoscan_report, formid_full, plugin, report, count)
+
+    def process_formid_from_txt(formid_split, plugin, autoscan_report, formid_full, count):
+        print("❌ FormID Database not found! Using TXT files instead. This will take a while...")
+        with open(f"CLASSIC Data/databases/{CMain.game} FID Main.txt", encoding="utf-8", errors="ignore") as fid_main, \
+             open(f"CLASSIC Data/databases/{CMain.game} FID Mods.txt", encoding="utf-8", errors="ignore") as fid_mods:
+
+            line_match_main = next((line for line in fid_main if str(formid_split[1][2:]) in line and plugin.lower() in line.lower()), None)
+            line_match_mods = next((line for line in fid_mods if str(formid_split[1][2:]) in line and plugin.lower() in line.lower()), None)
+
+            if line_match_main:
+                line_split = line_match_main.split(" | ")
+                fid_report = line_split[2].strip()
+                append_formid_report(autoscan_report, formid_full, plugin, fid_report, count)
+            elif line_match_mods:
+                line_split = line_match_mods.split(" | ")
+                fid_report = line_split[2].strip()
+                append_formid_report(autoscan_report, formid_full, plugin, fid_report, count)
+            else:
+                append_formid_report(autoscan_report, formid_full, plugin, None, count)
+
+    def process_formid(formid_split, plugin, plugin_id, autoscan_report, formid_full, count):
+        if len(formid_split) >= 2 and str(plugin_id) == str(formid_split[1][:2]):
+            if CMain.classic_settings("Show FormID Values"):
+                if os.path.exists(f"CLASSIC Data/databases/{CMain.game} FormIDs.db"):
+                    process_formid_from_db(formid_split, plugin, autoscan_report, formid_full, count)
+                else:
+                    process_formid_from_txt(formid_split, plugin, autoscan_report, formid_full, count)
+            else:
+                append_formid_report(autoscan_report, formid_full, plugin, None, count)
 
     crashlog_list = crashlogs_get_files()
     scan_failed_list = []
@@ -375,18 +416,6 @@ def crashlogs_scan():
             for item in item_list:
                 if "|" in item:
                     item_split = item.split("|", 1)
-                    """if item_split[0] == "ME-REQ":
-                        if item_split[1] in crashlog_mainerror:
-                            error_req_found = True
-                    elif item_split[0] == "ME-OPT":
-                        if item_split[1] in crashlog_mainerror:
-                            error_opt_found = True
-                    elif item_split[0].isdecimal():
-                        if segment_callstack_intact.count(item_split[1]) >= int(item_split[0]):
-                            stack_found = True
-                    elif item_split[0] == "NOT":
-                        if item_split[1] in segment_callstack_intact:
-                            break"""
 
                     match item_split[0]:
                         case "ME-REQ":
@@ -514,14 +543,6 @@ def crashlogs_scan():
                               custom_fix=f4ee_fix,
                               correct_condition=True)
 
-                """if "f4ee:" in line.lower():
-                    if "false" in line.lower() and any("f4ee.dll" in elem.lower() for elem in segment_xsemodules):
-                        autoscan_report.extend(["# ❌ CAUTION: Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE #\n",
-                                                f" FIX: Open the {crashgen_name} configuration file and set F4EE to TRUE to ensure compatibility with Looks Menu.\n-----\n"])
-                    else:
-                        autoscan_report.append(f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {crashgen_name} settings!\n-----\n")"""
-
-
         else:
             autoscan_report.extend(["* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n",
                                     "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n"])
@@ -629,47 +650,23 @@ def crashlogs_scan():
             autoscan_report.append("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n")
 
         # ================================================
-        autoscan_report.append("# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n")
-        formids_matches = [line.replace('0x', '').strip() for line in segment_callstack if "id:" in line.lower() and "0xFF" not in line]
-        if formids_matches:
-            formids_found = dict(Counter(sorted(formids_matches)))
-            for formid_full, count in formids_found.items():
-                formid_split = formid_full.split(": ", 1)
-                for plugin, plugin_id in crashlog_plugins.items():
-                    if len(formid_split) >= 2 and str(plugin_id) == str(formid_split[1][:2]):
-                        if CMain.classic_settings("Show FormID Values"):
-                            if os.path.exists(f"CLASSIC Data/databases/{CMain.game} FormIDs.db"):
-                                report = get_entry(formid_split[1][2:], plugin)
-                                if report:
-                                    autoscan_report.append(f"- {formid_full} | [{plugin}] | {report} | {count}\n")
-                                else:
-                                    autoscan_report.append(f"- {formid_full} | [{plugin}] | {count}\n")
-                                    break
-                            else:
-                                with open(f"CLASSIC Data/databases/{CMain.game} FID Main.txt", encoding="utf-8", errors="ignore") as fid_main:
-                                    with open(f"CLASSIC Data/databases/{CMain.game} FID Mods.txt", encoding="utf-8", errors="ignore") as fid_mods:
-                                        line_match_main = next((line for line in fid_main if str(formid_split[1][2:]) in line and plugin.lower() in line.lower()), None)
-                                        line_match_mods = next((line for line in fid_mods if str(formid_split[1][2:]) in line and plugin.lower() in line.lower()), None)
-                                        if line_match_main:
-                                            line_split = line_match_main.split(" | ")
-                                            fid_report = line_split[2].strip()  # 0 - Plugin | 1 - FormID | 2 - FID Value
-                                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {fid_report} | {count}\n")
-                                        elif line_match_mods:
-                                            line_split = line_match_mods.split(" | ")
-                                            fid_report = line_split[2].strip()  # 0 - Plugin | 1 - FormID | 2 - FID Value
-                                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {fid_report} | {count}\n")
-                                        else:
-                                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {count}\n")
-                                            break
-                        else:
-                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {count}\n")
-                            break
 
-            autoscan_report.extend(["\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
+        def scan_formids(segment_callstack, crashlog_plugins, autoscan_report):
+            formids_matches = [line.replace('0x', '').strip() for line in segment_callstack if "id:" in line.lower() and "0xFF" not in line]
+            if formids_matches:
+                formids_found = dict(Counter(sorted(formids_matches)))
+                for formid_full, count in formids_found.items():
+                    formid_split = formid_full.split(": ", 1)
+                    for plugin, plugin_id in crashlog_plugins.items():
+                        process_formid(formid_split, plugin, plugin_id, autoscan_report, formid_full, count)
+
+                autoscan_report.extend(["\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
                                     f"These Form IDs were caught by {crashgen_name} and some of them might be related to this crash.\n",
                                     "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n"])
-        else:
-            autoscan_report.append("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n")
+            else:
+                autoscan_report.append("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n")
+        autoscan_report.append("# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n")
+        scan_formids(segment_callstack, crashlog_plugins, autoscan_report)
 
         # ================================================
 
