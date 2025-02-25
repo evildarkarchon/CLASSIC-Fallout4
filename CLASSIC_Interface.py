@@ -419,18 +419,18 @@ class GameFilesScanWorker(QObject):
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.game_files_worker = None
-        self.crash_logs_worker = None
-        self.papyrus_button = None
-        self.game_files_button = None
-        self.crash_logs_button = None
-        self.output_redirector = None
-        self.output_text_box = None
-        self.scan_folder_edit = None
-        self.mods_folder_edit = None
-        self.pastebin_fetch_button = None
-        self.pastebin_id_input = None
-        self.pastebin_label = None
+        self.game_files_worker: GameFilesScanWorker | None = None
+        self.crash_logs_worker: CrashLogsScanWorker | None = None
+        self.papyrus_button: QPushButton | None = None
+        self.game_files_button: QPushButton | None = None
+        self.crash_logs_button: QPushButton | None = None
+        self.output_redirector: OutputRedirector | None = None
+        self.output_text_box: QTextEdit | None = None
+        self.scan_folder_edit: QLineEdit | None = None
+        self.mods_folder_edit: QLineEdit | None = None
+        self.pastebin_fetch_button: QPushButton | None = None
+        self.pastebin_id_input: QLineEdit | None = None
+        self.pastebin_label: QLabel | None = None
         self.papyrus_monitor_thread: QThread | None = None
         self.papyrus_monitor_worker: PapyrusMonitorWorker | None = None
         self._last_stats: PapyrusStats | None = None
@@ -687,7 +687,7 @@ QLabel {
         layout.addLayout(pastebin_layout)
 
     def fetch_pastebin_log(self) -> None:
-        input_text = self.pastebin_id_input.text().strip()
+        input_text = self.pastebin_id_input.text().strip() if self.pastebin_id_input is not None else ""
         url = input_text if self.pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
 
         # Create thread and worker
@@ -698,7 +698,7 @@ QLabel {
         # Connect signals
         pastebin_thread.started.connect(pastebin_worker.run)
         pastebin_worker.finished.connect(pastebin_thread.quit)
-        pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
+        pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}", QMessageBox.StandardButton.Ok))
         pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}", QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.NoButton))
 
         # Start thread
@@ -765,9 +765,7 @@ QLabel {
 
     def show_update_result(self, is_up_to_date: bool) -> None:
         if is_up_to_date:
-            QMessageBox.information(
-                self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!"
-            )
+            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)
         else:
             update_popup_text = CMain.yaml_settings(str, CMain.YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
             result = QMessageBox.question(
@@ -839,7 +837,8 @@ QLabel {
         layout.addSpacing(10)
 
         # Set the layout to be stretchable
-        layout.setStretchFactor(self.output_text_box, 1)
+        if self.output_text_box is not None:
+            layout.setStretchFactor(self.output_text_box, 1)
 
     def setup_backups_tab(self) -> None:
         layout = QVBoxLayout(self.backups_tab)
@@ -997,7 +996,7 @@ QLabel {
 
     def help_popup_backup(self) -> None:
         help_popup_text = CMain.yaml_settings(str, CMain.YAML.Main, "CLASSIC_Interface.help_popup_backup") or ""
-        QMessageBox.information(self, "NEED HELP?", help_popup_text)
+        QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
 
     @staticmethod
     def open_backup_folder() -> None:
@@ -1044,15 +1043,17 @@ QLabel {
             complete_lines = lines[:-1] if not ends_with_newline else lines
 
             if complete_lines:
-                current_text = self.output_text_box.toPlainText()
+                current_text = self.output_text_box.toPlainText() if self.output_text_box is not None else ""
 
                 # Append complete lines without extra newlines
                 new_text = current_text + "".join(complete_lines)
-                self.output_text_box.setPlainText(new_text)
+                if self.output_text_box is not None:
+                    self.output_text_box.setPlainText(new_text)
 
                 # Scroll to the bottom
-                scrollbar = self.output_text_box.verticalScrollBar()
-                scrollbar.setValue(scrollbar.maximum())
+                if self.output_text_box is not None:
+                    scrollbar = self.output_text_box.verticalScrollBar()
+                    scrollbar.setValue(scrollbar.maximum())
 
             # Keep the last incomplete line in the buffer if it's not complete
             self.output_buffer = lines[-1] if not ends_with_newline else ""
@@ -1063,12 +1064,13 @@ QLabel {
     def process_lines(self, lines: list[str]) -> None:
         for line in lines:
             stripped_line = line.rstrip()
-            if stripped_line or line.endswith("\n"):
+            if (stripped_line or line.endswith("\n")) and self.output_text_box is not None:
                 self.output_text_box.append(stripped_line)
 
         # Scroll to the bottom of the text box
-        scrollbar = self.output_text_box.verticalScrollBar()
-        scrollbar.setValue(scrollbar.maximum())
+        if self.output_text_box is not None:
+            scrollbar = self.output_text_box.verticalScrollBar()
+            scrollbar.setValue(scrollbar.maximum())
 
     def setup_output_redirection(self) -> None:
         self.output_redirector = OutputRedirector()
@@ -1436,7 +1438,7 @@ This feature is not fully implemented."""
 
     def help_popup_main(self) -> None:
         help_popup_text = CMain.yaml_settings(str, CMain.YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
-        QMessageBox.information(self, "NEED HELP?", help_popup_text)
+        QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
 
     @staticmethod
     def add_main_button(layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
@@ -1489,29 +1491,31 @@ This feature is not fully implemented."""
     def select_folder_scan(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder")
         if folder:
-            self.scan_folder_edit.setText(folder)
+            if self.scan_folder_edit is not None:
+                self.scan_folder_edit.setText(folder)
             CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
 
     def select_folder_mods(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
         if folder:
-            self.mods_folder_edit.setText(folder)
+            if self.mods_folder_edit is not None:
+                self.mods_folder_edit.setText(folder)
             CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.MODS Folder Path", folder)
 
     def initialize_folder_paths(self) -> None:
         scan_folder = CMain.classic_settings(str, "SCAN Custom Path")
         mods_folder = CMain.classic_settings(str, "MODS Folder Path")
 
-        if scan_folder:
+        if scan_folder and self.scan_folder_edit is not None:
             self.scan_folder_edit.setText(scan_folder)
-        if mods_folder:
+        if mods_folder and self.mods_folder_edit is not None:
             self.mods_folder_edit.setText(mods_folder)
 
     def select_folder_ini(self) -> None:
         folder = QFileDialog.getExistingDirectory(self)
         if folder:
             CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
-            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}")
+            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}", QMessageBox.StandardButton.Ok)
 
     @staticmethod
     def open_settings() -> None:
@@ -1576,7 +1580,7 @@ This feature is not fully implemented."""
 
     def toggle_papyrus_worker(self) -> None:
         """Start or stop the Papyrus monitoring"""
-        if self.papyrus_button.isChecked():
+        if self.papyrus_button and self.papyrus_button.isChecked():
             self.start_papyrus_monitoring()
         else:
             self.stop_papyrus_monitoring()
@@ -1595,8 +1599,9 @@ This feature is not fully implemented."""
             self.papyrus_monitor_worker.error.connect(self.handle_papyrus_error)
 
             # Start monitoring
-            self.papyrus_button.setText("STOP PAPYRUS MONITORING")
-            self.papyrus_button.setStyleSheet(
+            if self.papyrus_button:
+                self.papyrus_button.setText("STOP PAPYRUS MONITORING")
+                self.papyrus_button.setStyleSheet(
                 """
                 QPushButton {
                     color: black;
@@ -1624,8 +1629,9 @@ This feature is not fully implemented."""
             self.papyrus_monitor_worker = None
 
             # Update UI
-            self.papyrus_button.setText("START PAPYRUS MONITORING")
-            self.papyrus_button.setStyleSheet(
+            if self.papyrus_button:
+                self.papyrus_button.setText("START PAPYRUS MONITORING")
+                self.papyrus_button.setStyleSheet(
                 """
                 QPushButton {
                     color: black;
@@ -1637,8 +1643,9 @@ This feature is not fully implemented."""
                 }
                 """
             )
-            self.papyrus_button.setChecked(False)
-            self.output_text_box.append("\n=== Papyrus monitoring stopped ===\n")
+                self.papyrus_button.setChecked(False)
+            if self.output_text_box:
+                self.output_text_box.append("\n=== Papyrus monitoring stopped ===\n")
 
     def update_papyrus_stats(self, stats: PapyrusStats) -> None:
         """Update the UI with new Papyrus statistics"""
@@ -1650,10 +1657,11 @@ This feature is not fully implemented."""
             f"Number of Warnings: {stats.warnings}\n"
             f"Number of Errors: {stats.errors}\n"
         )
-        self.output_text_box.append(message)
+        if self.output_text_box:
+            self.output_text_box.append(message)
 
-        # Scroll to the bottom after adding the new message
-        self.output_text_box.verticalScrollBar().setValue(
+            # Scroll to the bottom after adding the new message
+            self.output_text_box.verticalScrollBar().setValue(
             self.output_text_box.verticalScrollBar().maximum()
         )
 
@@ -1661,8 +1669,10 @@ This feature is not fully implemented."""
 
     def handle_papyrus_error(self, error_msg: str) -> None:
         """Handle errors from the Papyrus monitor"""
-        self.output_text_box.append(f"\n❌ ERROR IN PAPYRUS MONITORING: {error_msg}\n")
-        self.papyrus_button.setChecked(False)
+        if self.output_text_box:
+            self.output_text_box.append(f"\n❌ ERROR IN PAPYRUS MONITORING: {error_msg}\n")
+        if self.papyrus_button:
+            self.papyrus_button.setChecked(False)
         if self.papyrus_monitor_worker and not self.papyrus_monitor_worker.error_sound_played:
             self.audio_player.play_error_signal.emit()
             self.papyrus_monitor_worker.error_sound_played = True
