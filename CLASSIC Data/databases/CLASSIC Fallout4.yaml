@@ -493,10 +493,6 @@ Mods_CORE:  # 0) MODS THAT EVERY PLAYER SHOULD HAVE INSTALLED
     This is a mandatory patch / fix required for almost all Nvidia GPUs.
     Link: https://www.nexusmods.com/fallout4/mods/48078?tab=files
 
-  NVIDIA_Reflex.dll | Nvidia Reflex Support: |
-    This is a highly recommended mod that can improve performance on Nvidia GPUs.
-    Link: https://www.nexusmods.com/fallout4/mods/64459?tab=files
-
 Mods_CORE_FOLON:
   CanarySaveFileMonitor | Canary Save File Monitor: |
     This is a highly recommended mod that can detect save file corruption.
@@ -510,9 +506,6 @@ Mods_CORE_FOLON:
   WeaponDebrisCrashFix.dll | Nvidia Weapon Debris Fix: |
     This is a mandatory patch / fix required for almost all Nvidia GPUs.
     Link: https://www.nexusmods.com/fallout4/mods/48078?tab=files
-  NVIDIA_Reflex.dll | Nvidia Reflex Support: |
-    This is a highly recommended mod that can improve performance on Nvidia GPUs.
-    Link: https://www.nexusmods.com/fallout4/mods/64459?tab=files
 
 
 Mods_FREQ:  # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
