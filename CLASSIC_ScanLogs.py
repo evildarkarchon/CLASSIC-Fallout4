@@ -200,71 +200,6 @@ def detect_mods_important(
         elif (gpu_rival and mod_warn) and gpu_rival not in mod_warn.lower():
             autoscan_report.extend((f"❌ {mod_split[1]} is not installed!\n", mod_warn, "\n"))
 
-
-# Replacement for crashlog_generate_segment()
-def find_segments(crash_data: list[str], xse_acronym: str, crashgen_name: str) -> tuple[str, str, str, list[list[str]]]:
-    """Divide the log up into segments."""
-    xse = xse_acronym.upper()
-    segment_boundaries = (
-        ("	[Compatibility]", "SYSTEM SPECS:"),  # segment_crashgen
-        ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),  # segment_system
-        ("PROBABLE CALL STACK:", "MODULES:"),  # segment_callstack
-        ("MODULES:", f"{xse} PLUGINS:"),  # segment_allmodules
-        (f"{xse} PLUGINS:", "PLUGINS:"),  # segment_xsemodules
-        ("PLUGINS:", "EOF"),  # segment_plugins
-    )
-    segment_index = 0
-    collect = False
-    segments: list[list[str]] = []
-    next_boundary = segment_boundaries[0][0]
-    index_start = 0
-    total = len(crash_data)
-    current_index = 0
-    crashlog_gameversion = None
-    crashlog_crashgen = None
-    crashlog_mainerror = None
-    game_root_name = CMain.yaml_settings(str, CMain.YAML.Game, f"Game_{CMain.gamevars["vr"]}Info.Main_Root_Name")
-    while current_index < total:
-        line = crash_data[current_index]
-        if crashlog_gameversion is None and game_root_name and line.startswith(game_root_name):
-            crashlog_gameversion = line.strip()
-        if crashlog_crashgen is None:
-            if line.startswith(crashgen_name):
-                crashlog_crashgen = line.strip()
-        elif crashlog_mainerror is None and line.startswith("Unhandled exception"):
-            crashlog_mainerror = line.replace("|", "\n", 1)
-
-        elif line.startswith(next_boundary):
-            if collect:
-                index_end = current_index - 1 if current_index > 0 else current_index
-                segments.append(crash_data[index_start:index_end])
-                segment_index += 1
-                if segment_index == len(segment_boundaries):
-                    break
-            else:
-                index_start = current_index + 1 if total > current_index else current_index
-            collect = not collect
-            next_boundary = segment_boundaries[segment_index][collect]
-            if collect:
-                if next_boundary == "EOF":
-                    segments.append(crash_data[index_start:])
-                    break
-            else:
-                # Don't increase current_index in case the current
-                # line is also the next start boundary
-                continue
-        current_index += 1
-        if collect and current_index == total:
-            segments.append(crash_data[index_start:])
-
-    segment_results = [[line.strip() for line in segment] for segment in segments] if segments else segments
-    missing_segments = len(segment_boundaries) - len(segment_results)
-    if missing_segments > 0:
-        segment_results.extend([[]] * missing_segments)
-    # Set default values incase actual index is not found.
-    return crashlog_gameversion or "UNKNOWN", crashlog_crashgen or "UNKNOWN", crashlog_mainerror or "UNKNOWN", segment_results
-
-
 def crashgen_version_gen(input_string: str) -> Version:
     input_string = input_string.strip()
     parts = input_string.split()
@@ -353,50 +288,180 @@ class ClassicScanLogsInfo:
         self.game_version_new = Version(CMain.yaml_settings(str, CMain.YAML.Game, "Game_Info.GameVersionNEW") or "0.0.0")
         self.game_version_vr = Version(CMain.yaml_settings(str, CMain.YAML.Game, "GameVR_Info.GameVersion") or "0.0.0")
 
+class ClassicScanLogs:
+    def __init__(self) -> None:
+        """
+        Initializes the CLASSIC_ScanLogs class.
+
+        This method performs the following tasks:
+        - Compiles a regular expression pattern for plugin search.
+        - Retrieves a list of crash log files.
+        - Prints a message indicating the start of crash log reformatting.
+        - Loads a list of log records to exclude from YAML settings.
+        - Reformats the crash logs based on the retrieved list and exclusion list.
+        - Loads various settings and data from YAML and other sources.
+        - Prints a message indicating the start of crash log scanning.
+        - Records the start time of the scan.
+
+        Attributes:
+            pluginsearch (re.Pattern): Compiled regex pattern for plugin search.
+            crashlog_list (list): List of crash log files.
+            remove_list (list): List of log records to exclude.
+            yamldata (ClassicScanLogsInfo): Instance containing scan log information.
+            xse_acronym (str): Lowercase acronym for XSE.
+            fcx_mode (bool): Flag indicating if FCX Mode is enabled.
+            show_formid_values (bool): Flag indicating if FormID values should be shown.
+            formid_db_exists (bool): Flag indicating if the FormID database exists.
+            move_unsolved_logs (bool): Flag indicating if unsolved logs should be moved.
+            lower_records (list): List of classic records in lowercase.
+            lower_ignore (list): List of game ignore records in lowercase.
+            lower_plugins_ignore (set): Set of game ignore plugins in lowercase.
+            ignore_plugins_list (set): Set of plugins to ignore in lowercase.
+            scan_start_time (float): Start time of the scan.
+            main_files_check (str): Results of the main files check.
+            game_files_check (str): Results of the game files check.
+            scan_failed_list (list): List of failed scans.
+            user_folder (Path): Path to the user's home folder.
+            stats_crashlog_scanned (int): Number of scanned crash logs.
+            stats_crashlog_incomplete (int): Number of incomplete crash logs.
+            stats_crashlog_failed (int): Number of failed crash logs.
+        """
+        self.pluginsearch = re.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)", flags=re.IGNORECASE)
+        self.crashlog_list = crashlogs_get_files()
+        print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
+        self.remove_list = CMain.yaml_settings(list[str], CMain.YAML.Main, "exclude_log_records") or []
+        crashlogs_reformat(self.crashlog_list, self.remove_list)
+        self.yamldata = ClassicScanLogsInfo()
+        self.xse_acronym = self.yamldata.xse_acronym.lower()
+        self.fcx_mode = CMain.classic_settings(bool, "FCX Mode")
+        self.show_formid_values = CMain.classic_settings(bool, "Show FormID Values")
+        self.formid_db_exists = any(db.is_file() for db in DB_PATHS)
+        self.move_unsolved_logs = CMain.classic_settings(bool, "Move Unsolved Logs")
+        self.lower_records = [record.lower() for record in self.yamldata.classic_records_list]
+        self.lower_ignore = [record.lower() for record in self.yamldata.game_ignore_records]
+        self.lower_plugins_ignore = {ignore.lower() for ignore in self.yamldata.game_ignore_plugins}
+        self.ignore_plugins_list = {item.lower() for item in self.yamldata.ignore_list} if self.yamldata.ignore_list else set()
+        print("SCANNING CRASH LOGS, PLEASE WAIT...\n")
+        self.scan_start_time = time.perf_counter()
+        self.crashlogs = SQLiteReader(self.crashlog_list)
+        self.main_files_check = ""
+        self.game_files_check = ""
+        self.scan_failed_list: list[str] = []
+        self.user_folder = Path.home()
+        self.stats_crashlog_scanned = 0
+        self.stats_crashlog_incomplete = 0
+        self.stats_crashlog_failed = 0
+        CMain.logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
+
+    def close_database(self) -> None:
+        """Close the SQLite database."""
+        self.crashlogs.close()
+
+    def fcx_mode_check(self) -> None:
+        """
+        Checks the FCX mode status and performs corresponding actions.
+
+        If FCX mode is enabled, it updates `main_files_check` and `game_files_check`
+        with the results from `CMain.main_combined_result()` and `CGame.game_combined_result()`
+        respectively. If FCX mode is disabled, it sets `main_files_check` to a message
+        indicating that FCX mode is disabled and skips the game files check, leaving
+        `game_files_check` empty.
+
+        Returns:
+            None
+        """
+        if self.fcx_mode:
+            self.main_files_check = CMain.main_combined_result()
+            self.game_files_check = CGame.game_combined_result()
+        else:
+            self.main_files_check = "❌ FCX Mode is disabled, skipping game files check... \n-----\n"
+            self.game_files_check = ""
+
+    def find_segments(self, crash_data: list[str], crashgen_name: str) -> tuple[str, str, str, list[list[str]]]:
+        """
+        Divide the log up into segments.
+        Args:
+            crash_data (list[str]): The list of strings representing the crash log data.
+            crashgen_name (str): The name of the crash generator to look for in the log.
+        Returns:
+            tuple[str, str, str, list[list[str]]]: A tuple containing:
+                - crashlog_gameversion (str): The game version found in the log or "UNKNOWN" if not found.
+                - crashlog_crashgen (str): The crash generator name found in the log or "UNKNOWN" if not found.
+                - crashlog_mainerror (str): The main error message found in the log or "UNKNOWN" if not found.
+                - segment_results (list[list[str]]): A list of lists, where each inner list represents a segment of the log.
+        """
+        xse = self.yamldata.xse_acronym.upper()
+        segment_boundaries = (
+            ("	[Compatibility]", "SYSTEM SPECS:"),  # segment_crashgen
+            ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),  # segment_system
+            ("PROBABLE CALL STACK:", "MODULES:"),  # segment_callstack
+            ("MODULES:", f"{xse} PLUGINS:"),  # segment_allmodules
+            (f"{xse} PLUGINS:", "PLUGINS:"),  # segment_xsemodules
+            ("PLUGINS:", "EOF"),  # segment_plugins
+        )
+        segment_index = 0
+        collect = False
+        segments: list[list[str]] = []
+        next_boundary = segment_boundaries[0][0]
+        index_start = 0
+        total = len(crash_data)
+        current_index = 0
+        crashlog_gameversion = None
+        crashlog_crashgen = None
+        crashlog_mainerror = None
+        game_root_name = CMain.yaml_settings(str, CMain.YAML.Game, f"Game_{CMain.gamevars["vr"]}Info.Main_Root_Name")
+        while current_index < total:
+            line = crash_data[current_index]
+            if crashlog_gameversion is None and game_root_name and line.startswith(game_root_name):
+                crashlog_gameversion = line.strip()
+            if crashlog_crashgen is None:
+                if line.startswith(crashgen_name):
+                    crashlog_crashgen = line.strip()
+            elif crashlog_mainerror is None and line.startswith("Unhandled exception"):
+                crashlog_mainerror = line.replace("|", "\n", 1)
+
+            elif line.startswith(next_boundary):
+                if collect:
+                    index_end = current_index - 1 if current_index > 0 else current_index
+                    segments.append(crash_data[index_start:index_end])
+                    segment_index += 1
+                    if segment_index == len(segment_boundaries):
+                        break
+                else:
+                    index_start = current_index + 1 if total > current_index else current_index
+                collect = not collect
+                next_boundary = segment_boundaries[segment_index][collect]
+                if collect:
+                    if next_boundary == "EOF":
+                        segments.append(crash_data[index_start:])
+                        break
+                else:
+                    # Don't increase current_index in case the current
+                    # line is also the next start boundary
+                    continue
+            current_index += 1
+            if collect and current_index == total:
+                segments.append(crash_data[index_start:])
+
+        segment_results = [[line.strip() for line in segment] for segment in segments] if segments else segments
+        missing_segments = len(segment_boundaries) - len(segment_results)
+        if missing_segments > 0:
+            segment_results.extend([[]] * missing_segments)
+        # Set default values incase actual index is not found.
+        return crashlog_gameversion or "UNKNOWN", crashlog_crashgen or "UNKNOWN", crashlog_mainerror or "UNKNOWN", segment_results
+
+
 # ================================================
 # CRASH LOG SCAN START
 # ================================================
 def crashlogs_scan() -> None:
-    pluginsearch = re.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)", flags=re.IGNORECASE)
-    crashlog_list = crashlogs_get_files()
-    print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
-    remove_list = CMain.yaml_settings(list[str], CMain.YAML.Main, "exclude_log_records") or []
-    crashlogs_reformat(crashlog_list, remove_list)
+    scanner = ClassicScanLogs()
+    yamldata = scanner.yamldata
 
-    print("SCANNING CRASH LOGS, PLEASE WAIT...\n")
-    scan_start_time = time.perf_counter()
-    # ================================================
-    # Grabbing YAML values is time expensive, so keep these out of the main file loop.
-    yamldata = ClassicScanLogsInfo()  # Moved to a class for better organization.
-
-    xse_acronym = yamldata.xse_acronym.lower()
-    fcx_mode = CMain.classic_settings(bool, "FCX Mode")
-    show_formid_values = CMain.classic_settings(bool, "Show FormID Values")
-    formid_db_exists = any(db.is_file() for db in DB_PATHS)
-    move_unsolved_logs = CMain.classic_settings(bool, "Move Unsolved Logs")
-    lower_records = [record.lower() for record in yamldata.classic_records_list]
-    lower_ignore = [record.lower() for record in yamldata.game_ignore_records]
-    lower_plugins_ignore = {ignore.lower() for ignore in yamldata.game_ignore_plugins}
-    ignore_plugins_list = {item.lower() for item in yamldata.ignore_list} if yamldata.ignore_list else set()
-    # ================================================
-    if fcx_mode:
-        main_files_check = CMain.main_combined_result()
-        game_files_check = CGame.game_combined_result()
-    else:
-        main_files_check = "❌ FCX Mode is disabled, skipping game files check... \n-----\n"
-        game_files_check = ""
-
-    scan_failed_list: list[str] = []
-    user_folder = Path.home()
-    stats_crashlog_scanned = stats_crashlog_incomplete = stats_crashlog_failed = 0
-    CMain.logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(crashlog_list)} FILES")
-
-    crashlogs = SQLiteReader(crashlog_list)
-
-    for crashlog_file in crashlog_list:
+    for crashlog_file in scanner.crashlog_list:
         autoscan_report: list[str] = []
         trigger_plugin_limit = trigger_limit_check_disabled = trigger_plugins_loaded = trigger_scan_failed = False
-        crash_data = crashlogs.read_log(crashlog_file.name)
+        crash_data = scanner.crashlogs.read_log(crashlog_file.name)
 
         autoscan_report.extend((
             f"{crashlog_file.name} -> AUTOSCAN REPORT GENERATED BY {yamldata.classic_version} \n",
@@ -420,7 +485,7 @@ def crashlogs_scan() -> None:
                 segment_xsemodules,
                 segment_plugins,
             ),
-        ) = find_segments(crash_data, xse_acronym, yamldata.crashgen_name)
+        ) = scanner.find_segments(crash_data, yamldata.crashgen_name)
         segment_callstack_intact = "".join(segment_callstack)
 
         game_version = crashgen_version_gen(crashlog_gameversion)
@@ -440,10 +505,10 @@ def crashlogs_scan() -> None:
                     crashgen[key] = True if value == " true" else False if value == " false" else int(value) if value.isdecimal() else value.strip()
 
         if not segment_plugins:
-            stats_crashlog_incomplete += 1
+            scanner.stats_crashlog_incomplete += 1
         if len(crash_data) < 20:
-            stats_crashlog_scanned -= 1
-            stats_crashlog_failed += 1
+            scanner.stats_crashlog_scanned -= 1
+            scanner.stats_crashlog_failed += 1
             trigger_scan_failed = True
 
         # ================== MAIN ERROR ==================
@@ -469,7 +534,7 @@ def crashlogs_scan() -> None:
         if any(esm_name in elem for elem in segment_plugins):
             trigger_plugins_loaded = True
         else:
-            stats_crashlog_incomplete += 1
+            scanner.stats_crashlog_incomplete += 1
 
         # ================================================
         # 2) CHECK EACH SEGMENT AND CREATE REQUIRED VALUES
@@ -503,7 +568,7 @@ def crashlogs_scan() -> None:
                         trigger_plugin_limit = True
                     elif game_version >= yamldata.game_version_new:
                         trigger_limit_check_disabled = True
-                pluginmatch = pluginsearch.match(elem, concurrent=True)
+                pluginmatch = scanner.pluginsearch.match(elem, concurrent=True)
                 if pluginmatch is not None:
                     plugin_fid = pluginmatch.group(1)
                     plugin_name = pluginmatch.group(3)
@@ -529,8 +594,8 @@ def crashlogs_scan() -> None:
         crashlog_plugins_lower = {plugin.lower() for plugin in crashlog_plugins}
 
         # CHECK IF THERE ARE ANY PLUGINS IN THE IGNORE YAML
-        if ignore_plugins_list:
-            for signal in ignore_plugins_list:
+        if scanner.ignore_plugins_list:
+            for signal in scanner.ignore_plugins_list:
                 if any(signal == plugin for plugin in crashlog_plugins_lower):
                     del crashlog_plugins[signal]
 
@@ -610,7 +675,7 @@ def crashlogs_scan() -> None:
         Has_XCell = ("x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules)
         Has_BakaScrapHeap = "bakascrapheap.dll" in xsemodules
 
-        if fcx_mode:
+        if scanner.fcx_mode:
             autoscan_report.extend((
                 "* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n",
                 "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n",
@@ -739,9 +804,9 @@ def crashlogs_scan() -> None:
                             f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {yamldata.crashgen_name} settings! \n-----\n"
                         )
 
-        autoscan_report.append(main_files_check)
-        if game_files_check:
-            autoscan_report.append(game_files_check)
+        autoscan_report.append(scanner.main_files_check)
+        if scanner.game_files_check:
+            autoscan_report.append(scanner.game_files_check)
 
         autoscan_report.extend((
             "====================================================\n",
@@ -854,7 +919,7 @@ def crashlogs_scan() -> None:
             plugin
             for line in segment_callstack_lower
             for plugin in crashlog_plugins_lower
-            if plugin in line and "modified by:" not in line and all(ignore not in plugin for ignore in lower_plugins_ignore)
+            if plugin in line and "modified by:" not in line and all(ignore not in plugin for ignore in scanner.lower_plugins_ignore)
         ]
 
         if plugins_matches:
@@ -882,7 +947,7 @@ def crashlogs_scan() -> None:
                     if plugin_id != formid_split[1][:2]:
                         continue
 
-                    if show_formid_values and formid_db_exists:
+                    if scanner.show_formid_values and scanner.formid_db_exists:
                         report = get_entry(formid_split[1][2:], plugin)
                         if report:
                             autoscan_report.append(f"- {formid_full} | [{plugin}] | {report} | {count}\n")
@@ -907,8 +972,8 @@ def crashlogs_scan() -> None:
         for line in segment_callstack:
             lower_line = line.lower()
 
-            if any(item in lower_line for item in lower_records) and all(
-                record not in lower_line for record in lower_ignore
+            if any(item in lower_line for item in scanner.lower_records) and all(
+                record not in lower_line for record in scanner.lower_ignore
             ):
                 if "[RSP+" in line:
                     records_matches.append(line[30:].strip())
@@ -933,14 +998,14 @@ def crashlogs_scan() -> None:
         autoscan_report.append(f"{yamldata.classic_version} | {yamldata.classic_version_date} | END OF AUTOSCAN \n")
 
         # CHECK IF SCAN FAILED
-        stats_crashlog_scanned += 1
+        scanner.stats_crashlog_scanned += 1
         if trigger_scan_failed:
-            scan_failed_list.append(crashlog_file.name)
+            scanner.scan_failed_list.append(crashlog_file.name)
 
         # HIDE PERSONAL USERNAME
-        user_name = user_folder.name
-        user_path_1 = f"{user_folder.parent}\\{user_folder.name}"
-        user_path_2 = f"{user_folder.parent}/{user_folder.name}"
+        user_name = scanner.user_folder.name
+        user_path_1 = f"{scanner.user_folder.parent}\\{scanner.user_folder.name}"
+        user_path_2 = f"{scanner.user_folder.parent}/{scanner.user_folder.name}"
         for line in autoscan_report:
             if user_name in line:
                 line.replace(user_path_1, "******").replace(user_path_2, "******")
@@ -952,7 +1017,7 @@ def crashlogs_scan() -> None:
             autoscan_output = "".join(autoscan_report)
             autoscan_file.write(autoscan_output)
 
-        if trigger_scan_failed and move_unsolved_logs:
+        if trigger_scan_failed and scanner.move_unsolved_logs:
             backup_path = Path("CLASSIC Backup/Unsolved Logs")
             backup_path.mkdir(parents=True, exist_ok=True)
             autoscan_filepath = crashlog_file.with_name(crashlog_file.stem + "-AUTOSCAN.md")
@@ -966,9 +1031,9 @@ def crashlogs_scan() -> None:
 
     # CHECK FOR FAILED OR INVALID CRASH LOGS
     scan_invalid_list = list(Path.cwd().glob("crash-*.txt"))
-    if scan_failed_list or scan_invalid_list:
+    if scanner.scan_failed_list or scan_invalid_list:
         print("❌ NOTICE : CLASSIC WAS UNABLE TO PROPERLY SCAN THE FOLLOWING LOG(S):")
-        print("\n".join(scan_failed_list))
+        print("\n".join(scanner.scan_failed_list))
         if scan_invalid_list:
             for file in scan_invalid_list:
                 print(f"{file}\n")
@@ -979,18 +1044,18 @@ def crashlogs_scan() -> None:
     # ================================================
     # CRASH LOG SCAN COMPLETE / TERMINAL OUTPUT
     # ================================================
-    crashlogs.close()
+    scanner.close_database()
     CMain.logger.info("- - - COMPLETED CRASH LOG FILE SCAN >>> ALL AVAILABLE LOGS SCANNED")
     print("SCAN COMPLETE! (IT MIGHT TAKE SEVERAL SECONDS FOR SCAN RESULTS TO APPEAR)")
     print("SCAN RESULTS ARE AVAILABLE IN FILES NAMED crash-date-and-time-AUTOSCAN.md \n")
     print(f"{random.choice(yamldata.classic_game_hints)}\n-----")
-    print(f"Scanned all available logs in {str(time.perf_counter() - 0.5 - scan_start_time)[:5]} seconds.")
-    print(f"Number of Scanned Logs (No Autoscan Errors): {stats_crashlog_scanned}")
-    print(f"Number of Incomplete Logs (No Plugins List): {stats_crashlog_incomplete}")
-    print(f"Number of Failed Logs (Autoscan Can't Scan): {stats_crashlog_failed}\n-----")
+    print(f"Scanned all available logs in {str(time.perf_counter() - 0.5 - scanner.scan_start_time)[:5]} seconds.")
+    print(f"Number of Scanned Logs (No Autoscan Errors): {scanner.stats_crashlog_scanned}")
+    print(f"Number of Incomplete Logs (No Plugins List): {scanner.stats_crashlog_incomplete}")
+    print(f"Number of Failed Logs (Autoscan Can't Scan): {scanner.stats_crashlog_failed}\n-----")
     if CMain.gamevars["game"] == "Fallout4":
         print(yamldata.autoscan_text)
-    if stats_crashlog_scanned == 0 and stats_crashlog_incomplete == 0:
+    if scanner.stats_crashlog_scanned == 0 and scanner.stats_crashlog_incomplete == 0:
         print("\n❌ CLASSIC found no crash logs to scan or the scan failed.")
         print("    There are no statistics to show (at this time).\n")
 
