@@ -450,6 +450,42 @@ class ClassicScanLogs:
         # Set default values incase actual index is not found.
         return crashlog_gameversion or "UNKNOWN", crashlog_crashgen or "UNKNOWN", crashlog_mainerror or "UNKNOWN", segment_results
 
+    def loadorder_scan_loadorder_txt(self) -> tuple[dict[str, str], bool]:
+        """Scan the loadorder.txt file for plugins."""
+        trigger_plugins_loaded = False
+        loadorder_path = Path("loadorder.txt")
+        crashlog_plugins: dict[str, str] = {}
+        if loadorder_path.exists():
+            with loadorder_path.open(encoding="utf-8", errors="ignore") as loadorder_file:
+                loadorder_data = loadorder_file.readlines()
+            for elem in loadorder_data[1:]:
+                if all(elem not in item for item in crashlog_plugins):
+                    crashlog_plugins[elem] = "LO"
+            trigger_plugins_loaded = True
+        return crashlog_plugins, trigger_plugins_loaded
+
+    def loadorder_scan_log(self, segment_plugins: list[str], game_version: Version) -> tuple[dict[str, str], bool, bool]:
+        """Scan the crash log for plugins."""
+        crashlog_plugins: dict[str, str] = {}
+        trigger_plugin_limit = trigger_limit_check_disabled = False
+        for elem in segment_plugins:
+            if "[FF]" in elem:
+                if game_version in (self.yamldata.game_version, self.yamldata.game_version_vr):
+                    trigger_plugin_limit = True
+                elif game_version >= self.yamldata.game_version_new:
+                    trigger_limit_check_disabled = True
+            pluginmatch = self.pluginsearch.match(elem, concurrent=True)
+            if pluginmatch is not None:
+                plugin_fid = pluginmatch.group(1)
+                plugin_name = pluginmatch.group(3)
+                if plugin_fid is not None and all(plugin_name not in item for item in crashlog_plugins):
+                    crashlog_plugins[plugin_name] = plugin_fid.replace(":", "")
+                elif plugin_name and "dll" in plugin_name.lower():
+                    crashlog_plugins[plugin_name] = "DLL"
+                else:
+                    crashlog_plugins[plugin_name] = "???"
+        return crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled
+
 
 # ================================================
 # CRASH LOG SCAN START
@@ -554,42 +590,20 @@ def crashlogs_scan() -> None:
                 "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
                 "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
             ))
-            with loadorder_path.open(encoding="utf-8", errors="ignore") as loadorder_file:
-                loadorder_data = loadorder_file.readlines()
-            for elem in loadorder_data[1:]:
-                if all(elem not in item for item in crashlog_plugins):
-                    crashlog_plugins[elem] = "LO"
-            trigger_plugins_loaded = True
+            loadorder_plugins, trigger_plugins_loaded = scanner.loadorder_scan_loadorder_txt()
+            crashlog_plugins = crashlog_plugins | loadorder_plugins
 
         else:  # OTHERWISE, USE PLUGINS FROM CRASH LOG
-            for elem in segment_plugins:
-                if "[FF]" in elem:
-                    if game_version in (yamldata.game_version, yamldata.game_version_vr):
-                        trigger_plugin_limit = True
-                    elif game_version >= yamldata.game_version_new:
-                        trigger_limit_check_disabled = True
-                pluginmatch = scanner.pluginsearch.match(elem, concurrent=True)
-                if pluginmatch is not None:
-                    plugin_fid = pluginmatch.group(1)
-                    plugin_name = pluginmatch.group(3)
-                    if plugin_fid is not None and all(plugin_name not in item for item in crashlog_plugins):
-                        crashlog_plugins[plugin_name] = plugin_fid.replace(":", "")
-                    elif plugin_name and "dll" in plugin_name.lower():
-                        crashlog_plugins[plugin_name] = "DLL"
-                    else:
-                        crashlog_plugins[plugin_name] = "???"
+            log_plugins, trigger_plugin_limit, trigger_limit_check_disabled = scanner.loadorder_scan_log(segment_plugins, game_version)
+            crashlog_plugins = crashlog_plugins | log_plugins
 
-        for elem in xsemodules:
-            if all(elem not in item for item in crashlog_plugins):
-                crashlog_plugins[elem] = "DLL"
+        crashlog_plugins.update({elem: "DLL" for elem in xsemodules if all(elem not in item for item in crashlog_plugins)})
 
         for elem in segment_allmodules:
             # SOME IMPORTANT DLLs ONLY APPEAR UNDER ALL MODULES
             if "vulkan" in elem.lower():
                 elem_parts = elem.strip().split(" ", 1)
-                elem_parts[1] = "DLL"
-                if all(elem_parts[0] not in item for item in crashlog_plugins):
-                    crashlog_plugins[elem_parts[0]] = elem_parts[1]
+                crashlog_plugins.update({elem_parts[0]: "DLL"})
 
         crashlog_plugins_lower = {plugin.lower() for plugin in crashlog_plugins}
 
@@ -618,7 +632,8 @@ def crashlogs_scan() -> None:
             if signal in crashlog_mainerror:
                 error_name = error_name.ljust(max_warn_length, ".")
                 autoscan_report.append(f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n")
-                trigger_suspect_found = True
+                if not trigger_suspect_found:
+                    trigger_suspect_found = True
 
         for error in yamldata.suspects_stack_list:
             error_severity, error_name = error.split(" | ", 1)

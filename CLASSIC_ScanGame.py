@@ -13,7 +13,12 @@ from typing import Any, Literal, TypedDict
 import chardet
 import iniparse
 import tomlkit
-from bs4 import BeautifulSoup, PageElement
+from bs4 import BeautifulSoup
+
+try:
+    from bs4 import PageElement
+except ImportError:
+    from bs4.element import PageElement  # noqa: TC002
 
 import CLASSIC_Main as CMain
 
