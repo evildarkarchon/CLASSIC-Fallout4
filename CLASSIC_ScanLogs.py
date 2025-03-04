@@ -720,6 +720,19 @@ class ClassicScanLogs:
                 else:
                     crashlog_plugins[plugin_name] = "???"
         return crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled
+    @staticmethod
+    def append_or_extend(value: str | list | tuple | set, autoscan_report: list[str]) -> None:
+        """
+        Append or extend the autoscan report with the given value.
+
+        Args:
+            value (str | list | tuple | set): The value to append or extend.
+            autoscan_report (list[str]): The autoscan report list to update.
+        """
+        if isinstance(value, list | tuple | set):
+            autoscan_report.extend(value)
+        else:
+            autoscan_report.append(value)
 
 
 # ================================================
