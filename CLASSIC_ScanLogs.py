@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
 
+import aiohttp
 import regex as re
 import requests
 from packaging.version import Version
@@ -50,6 +51,44 @@ def pastebin_fetch(url: str) -> None:
         pastebin_path.mkdir(parents=True, exist_ok=True)
     outfile = pastebin_path / f"crash-{urlparse(url).path.split("/")[-1]}.log"
     outfile.write_text(response.text, encoding="utf-8", errors="ignore")
+
+async def pastebin_fetch_async(url: str) -> None:
+    """
+    Asynchronously fetches the content from a given Pastebin URL and saves it to a local file.
+
+    If the URL does not point to the raw Pastebin content, it modifies the URL to point to the raw content.
+    The fetched content is saved in the "Crash Logs/Pastebin" directory with a filename derived from the Pastebin ID.
+
+    Args:
+        url (str): The URL of the Pastebin content to fetch.
+
+    Raises:
+        aiohttp.ClientError: If the HTTP request to fetch the content fails.
+    """
+
+    if urlparse(url).netloc == "pastebin.com" and "/raw" not in url:
+        url = url.replace("pastebin.com", "pastebin.com/raw")
+
+    async with aiohttp.ClientSession() as session, session.get(url) as response:
+        if response.status != 200:
+            response.raise_for_status()
+        content = await response.text()
+
+    # File operations are still synchronous, but they're generally quick
+    # For a fully async version, you could use aiofiles, but it's not always necessary
+    pastebin_path = Path("Crash Logs/Pastebin")
+    if not pastebin_path.is_dir():
+        pastebin_path.mkdir(parents=True, exist_ok=True)
+
+    outfile = pastebin_path / f"crash-{urlparse(url).path.split('/')[-1]}.log"
+
+    # If you want fully async file operations, uncomment this and comment out the write_text line:
+    # import aiofiles
+    # async with aiofiles.open(outfile, 'w', encoding="utf-8", errors="ignore") as f:
+    #     await f.write(content)
+
+    # Otherwise, this is fine for most use cases:
+    outfile.write_text(content, encoding="utf-8", errors="ignore")
 
 
 def get_entry(formid: str, plugin: str) -> str | None:
