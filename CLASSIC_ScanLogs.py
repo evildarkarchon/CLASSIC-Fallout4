@@ -339,6 +339,19 @@ def crashgen_version_gen(input_string: str) -> Version:
         return Version(version_str)
     return Version("0.0.0")
 
+def append_or_extend(value: str | list | tuple | set, destination: list[str]) -> None:
+        """
+        Append or extend the autoscan report with the given value.
+
+        Args:
+            value (str | list | tuple | set): The value to append or extend.
+            destination (list[str]): The list to update.
+        """
+        if isinstance(value, list | tuple | set):
+            destination.extend(value)
+        else:
+            destination.append(value)
+
 class SQLiteReader:
     def __init__(self, logfiles: list[Path]) -> None:
         """
@@ -720,19 +733,7 @@ class ClassicScanLogs:
                 else:
                     crashlog_plugins[plugin_name] = "???"
         return crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled
-    @staticmethod
-    def append_or_extend(value: str | list | tuple | set, destination: list[str]) -> None:
-        """
-        Append or extend the autoscan report with the given value.
 
-        Args:
-            value (str | list | tuple | set): The value to append or extend.
-            destination (list[str]): The list to update.
-        """
-        if isinstance(value, list | tuple | set):
-            destination.extend(value)
-        else:
-            destination.append(value)
 
 
 # ================================================
@@ -833,7 +834,7 @@ def crashlogs_scan() -> None:
         # IF LOADORDER FILE EXISTS, USE ITS PLUGINS
         loadorder_path = Path("loadorder.txt")
         if loadorder_path.exists():
-            scanner.append_or_extend((
+            append_or_extend((
                 "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
                 "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
                 "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
