@@ -341,7 +341,7 @@ def crashgen_version_gen(input_string: str) -> Version:
 
 def append_or_extend(value: str | list | tuple | set, destination: list[str]) -> None:
         """
-        Append or extend the autoscan report with the given value.
+        Append or extend the specified list with the given value.
 
         Args:
             value (str | list | tuple | set): The value to append or extend.
@@ -862,11 +862,11 @@ def crashlogs_scan() -> None:
                 if any(signal == plugin for plugin in crashlog_plugins_lower):
                     del crashlog_plugins[signal]
 
-        autoscan_report.extend((
+        append_or_extend((
             "====================================================\n",
             "CHECKING IF LOG MATCHES ANY KNOWN CRASH SUSPECTS...\n",
             "====================================================\n",
-        ))
+        ), autoscan_report)
 
         crashlog_mainerror_lower = crashlog_mainerror.lower()
         if ".dll" in crashlog_mainerror_lower and "tbbmalloc" not in crashlog_mainerror_lower:
