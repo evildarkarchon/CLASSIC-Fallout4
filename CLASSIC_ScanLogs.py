@@ -28,6 +28,19 @@ DB_PATHS = (
 # ================================================
 # ASSORTED FUNCTIONS
 # ================================================
+def append_or_extend(value: str | list | tuple | set, destination: list[str]) -> None:
+        """
+        Append or extend the specified list with the given value.
+
+        Args:
+            value (str | list | tuple | set): The value to append or extend.
+            destination (list[str]): The list to update.
+        """
+        if isinstance(value, list | tuple | set):
+            destination.extend(value)
+        else:
+            destination.append(value)
+
 def pastebin_fetch(url: str) -> None:
     """
     Fetches the content from a given Pastebin URL and saves it to a local file.
@@ -338,19 +351,6 @@ def crashgen_version_gen(input_string: str) -> Version:
     if version_str:
         return Version(version_str)
     return Version("0.0.0")
-
-def append_or_extend(value: str | list | tuple | set, destination: list[str]) -> None:
-        """
-        Append or extend the specified list with the given value.
-
-        Args:
-            value (str | list | tuple | set): The value to append or extend.
-            destination (list[str]): The list to update.
-        """
-        if isinstance(value, list | tuple | set):
-            destination.extend(value)
-        else:
-            destination.append(value)
 
 class SQLiteReader:
     def __init__(self, logfiles: list[Path]) -> None:
