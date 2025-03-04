@@ -721,18 +721,18 @@ class ClassicScanLogs:
                     crashlog_plugins[plugin_name] = "???"
         return crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled
     @staticmethod
-    def append_or_extend(value: str | list | tuple | set, autoscan_report: list[str]) -> None:
+    def append_or_extend(value: str | list | tuple | set, destination: list[str]) -> None:
         """
         Append or extend the autoscan report with the given value.
 
         Args:
             value (str | list | tuple | set): The value to append or extend.
-            autoscan_report (list[str]): The autoscan report list to update.
+            destination (list[str]): The list to update.
         """
         if isinstance(value, list | tuple | set):
-            autoscan_report.extend(value)
+            destination.extend(value)
         else:
-            autoscan_report.append(value)
+            destination.append(value)
 
 
 # ================================================
@@ -833,11 +833,11 @@ def crashlogs_scan() -> None:
         # IF LOADORDER FILE EXISTS, USE ITS PLUGINS
         loadorder_path = Path("loadorder.txt")
         if loadorder_path.exists():
-            autoscan_report.extend((
+            scanner.append_or_extend((
                 "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
                 "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
                 "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
-            ))
+            ), autoscan_report)
             loadorder_plugins, trigger_plugins_loaded = scanner.loadorder_scan_loadorder_txt()
             crashlog_plugins = crashlog_plugins | loadorder_plugins
 
