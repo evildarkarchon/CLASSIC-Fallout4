@@ -28,12 +28,12 @@ DB_PATHS = (
 # ================================================
 # ASSORTED FUNCTIONS
 # ================================================
-def append_or_extend(value: str | list | tuple | set, destination: list[str]) -> None:
+def append_or_extend(value: str | int | float | list | tuple | set, destination: list[str]) -> None:
         """
         Append or extend the specified list with the given value.
 
         Args:
-            value (str | list | tuple | set): The value to append or extend.
+            value (str | int | float | list | tuple | set): The value to append or extend.
             destination (list[str]): The list to update.
         """
         if isinstance(value, list | tuple | set):
@@ -390,6 +390,8 @@ class SQLiteReader:
     def close(self) -> None:
         self.db.close()
 
+
+# noinspection PyUnresolvedReferences
 @dataclass
 class ClassicScanLogsInfo:
     """
@@ -515,6 +517,7 @@ class ClassicScanLogsInfo:
         self.game_version_new = Version(CMain.yaml_settings(str, CMain.YAML.Game, "Game_Info.GameVersionNEW") or "0.0.0")
         self.game_version_vr = Version(CMain.yaml_settings(str, CMain.YAML.Game, "GameVR_Info.GameVersion") or "0.0.0")
 
+# noinspection PyUnresolvedReferences
 class ClassicScanLogs:
     def __init__(self) -> None:
         """
@@ -677,7 +680,8 @@ class ClassicScanLogs:
         # Set default values incase actual index is not found.
         return crashlog_gameversion or "UNKNOWN", crashlog_crashgen or "UNKNOWN", crashlog_mainerror or "UNKNOWN", segment_results
 
-    def loadorder_scan_loadorder_txt(self) -> tuple[dict[str, str], bool]:
+    @staticmethod
+    def loadorder_scan_loadorder_txt() -> tuple[dict[str, str], bool]:
         """
         Scan the loadorder.txt file for plugins.
 
@@ -697,7 +701,8 @@ class ClassicScanLogs:
         for elem in loadorder_data[1:]:
             if all(elem not in item for item in crashlog_plugins):
                 crashlog_plugins[elem] = "LO"
-        trigger_plugins_loaded = True
+                if not trigger_plugins_loaded:
+                    trigger_plugins_loaded = True
         return crashlog_plugins, trigger_plugins_loaded
 
     def loadorder_scan_log(self, segment_plugins: list[str], game_version: Version) -> tuple[dict[str, str], bool, bool]:
@@ -734,7 +739,320 @@ class ClassicScanLogs:
                     crashlog_plugins[plugin_name] = "???"
         return crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled
 
+    def suspect_scan_mainerror(self, autoscan_report: list[str], crashlog_mainerror: str, max_warn_length: int) -> bool:
+        """
+        Scans the crash log main error for known suspect errors and updates the autoscan report.
 
+        Args:
+            autoscan_report (list[str]): The list to append the scan results to.
+            crashlog_mainerror (str): The main error message from the crash log.
+            max_warn_length (int): The maximum length for the warning message.
+
+        Returns:
+            bool: True if a suspect error is found, False otherwise.
+        """
+        trigger_suspect_found = False
+        for error, signal in self.yamldata.suspects_error_list.items():
+            error_severity, error_name = error.split(" | ", 1)
+            if signal in crashlog_mainerror:
+                error_name = error_name.ljust(max_warn_length, ".")
+                append_or_extend(
+                    f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n",
+                    autoscan_report)
+                if not trigger_suspect_found:
+                    trigger_suspect_found = True
+        return trigger_suspect_found
+
+    def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str],
+                           max_warn_length: int) -> bool:
+        """
+        Scans the provided crash log and call stack segment for known suspect errors and updates the autoscan report.
+        Args:
+            crashlog_mainerror (str): The main error message from the crash log.
+            segment_callstack_intact (str): The intact segment of the call stack to be scanned.
+            autoscan_report (list[str]): The list to append the scan results to.
+            max_warn_length (int): The maximum length for the warning message.
+        Returns:
+            bool: True if any suspect error is found, False otherwise.
+        """
+        trigger_suspect_found = False
+        for error in self.yamldata.suspects_stack_list:
+            error_severity, error_name = error.split(" | ", 1)
+            error_req_found = error_opt_found = stack_found = False
+            signal_list = self.yamldata.suspects_stack_list.get(error, [])
+            has_required_item = False
+            for signal in signal_list:
+                if "|" in signal:
+                    signal_modifier, signal_string = signal.split("|", 1)
+                    match signal_modifier:
+                        case "ME-REQ":
+                            has_required_item = True
+                            if signal_string in crashlog_mainerror:
+                                error_req_found = True
+                        case "ME-OPT":
+                            if signal_string in crashlog_mainerror:
+                                error_opt_found = True
+                        case "NOT" if signal_string in segment_callstack_intact:
+                            break
+                        case _ if signal_modifier.isdecimal():
+                            if segment_callstack_intact.count(signal_string) >= int(signal_modifier):
+                                stack_found = True
+                elif signal in segment_callstack_intact:
+                    stack_found = True
+
+            # print(f"TEST: {error_req_found} | {error_opt_found} | {stack_found}")
+            if has_required_item:
+                if error_req_found:
+                    error_name = error_name.ljust(max_warn_length, ".")
+                    append_or_extend(
+                        f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n",
+                        autoscan_report)
+                    trigger_suspect_found = True
+            elif error_opt_found or stack_found:
+                error_name = error_name.ljust(max_warn_length, ".")
+                append_or_extend(
+                    f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n",
+                    autoscan_report)
+                trigger_suspect_found = True
+        return trigger_suspect_found
+
+    def scan_buffout_achievements_setting(self, autoscan_report: list[str], xsemodules: set[str],
+                                          crashgen: dict[str, bool | int | str]) -> None:
+        """
+        Scans the Buffout achievements setting and updates the autoscan report accordingly.
+
+        This method checks if the "Achievements" setting in the crashgen dictionary is enabled
+        and if either "achievements.dll" or "unlimitedsurvivalmode.dll" is present in the xsemodules set.
+        If both conditions are met, it appends a caution message to the autoscan report suggesting
+        to disable the Achievements setting to prevent conflicts. Otherwise, it appends a message
+        indicating that the Achievements parameter is correctly configured.
+
+        Args:
+            autoscan_report (list[str]): The list to which the scan results will be appended.
+            xsemodules (set[str]): A set of module names to check for the presence of specific DLLs.
+            crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
+
+        Returns:
+            None
+        """
+        crashgen_achievements = crashgen.get("Achievements")
+        if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
+            append_or_extend((
+                "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n",
+                f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {self.yamldata.crashgen_name}.\n-----\n",
+            ), autoscan_report)
+        else:
+            append_or_extend(
+                f"✔️ Achievements parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                autoscan_report
+            )
+
+    def scan_buffout_memorymanagement_settings(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str],
+                                               Has_XCell: bool, Has_BakaScrapHeap: bool) -> None:
+        """
+        Scans the Buffout memory management settings and updates the autoscan report accordingly.
+    
+        This method checks if the "MemoryManager" setting in the crashgen dictionary is enabled
+        and if X-Cell or Baka ScrapHeap mods are present. If conflicts are detected, it appends
+        caution messages to the autoscan report.
+    
+        Args:
+            autoscan_report (list[str]): The list to which the scan results will be appended.
+            crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
+            Has_XCell (bool): Indicates if the X-Cell mod is installed.
+            Has_BakaScrapHeap (bool): Indicates if the Baka ScrapHeap mod is installed.
+    
+        Returns:
+            None
+        """
+        crashgen_memorymanager = crashgen.get("MemoryManager")
+        if crashgen_memorymanager:
+            if Has_XCell:
+                append_or_extend((
+                    "# ❌ CAUTION : X-Cell is installed, but MemoryManager parameter is set to TRUE # \n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.\n-----\n",
+                ),
+                    autoscan_report)
+                if Has_BakaScrapHeap:
+                    append_or_extend((
+                        "# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with X-Cell # \n",
+                        " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n",
+                    ),
+                        autoscan_report)
+            elif Has_BakaScrapHeap:
+                append_or_extend((
+                    f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.yamldata.crashgen_name} # \n",
+                    f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {self.yamldata.crashgen_name}.\n-----\n",
+                ),
+                    autoscan_report)
+            else:
+                append_or_extend(
+                    f"✔️ Memory Manager parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                    autoscan_report
+                )
+        elif Has_XCell:
+            if Has_BakaScrapHeap:
+                append_or_extend((
+                    "# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with X-Cell # \n",
+                    " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n",
+                ), autoscan_report)
+            else:
+                append_or_extend(
+                    f"✔️ Memory Manager parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                    autoscan_report
+                )
+        elif Has_BakaScrapHeap:
+            append_or_extend((
+                f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.yamldata.crashgen_name} # \n",
+                f" FIX: Uninstall the Baka ScrapHeap Mod and open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.\n-----\n",
+            ),
+                autoscan_report)
+
+        if Has_XCell:
+            crashgen_havokmemorysystem = crashgen.get("HavokMemorySystem")
+            if crashgen_havokmemorysystem:
+                append_or_extend((
+                    "# ❌ CAUTION : X-Cell is installed, but HavokMemorySystem parameter is set to TRUE # \n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change HavokMemorySystem to FALSE, this prevents conflicts with X-Cell.\n-----\n",
+                ),
+                    autoscan_report)
+            else:
+                append_or_extend(
+                    f"✔️ HavokMemorySystem parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                    autoscan_report
+                )
+            crashgen_bstexturestreamerlocalheap = crashgen.get("BSTextureStreamerLocalHeap")
+            if crashgen_bstexturestreamerlocalheap:
+                append_or_extend((
+                    "# ❌ CAUTION : X-Cell is installed, but BSTextureStreamerLocalHeap parameter is set to TRUE # \n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change BSTextureStreamerLocalHeap to FALSE, this prevents conflicts with X-Cell.\n-----\n",
+                ),
+                    autoscan_report)
+            else:
+                append_or_extend(
+                    f"✔️ BSTextureStreamerLocalHeap parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                    autoscan_report
+                )
+            crashgen_scaleformallocator = crashgen.get("ScaleformAllocator")
+            if crashgen_scaleformallocator:
+                append_or_extend((
+                    "# ❌ CAUTION : X-Cell is installed, but ScaleformAllocator parameter is set to TRUE # \n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ScaleformAllocator to FALSE, this prevents conflicts with X-Cell.\n-----\n",
+                ), autoscan_report)
+            else:
+                append_or_extend(
+                    f"✔️ ScaleformAllocator parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                    autoscan_report
+                )
+            crashgen_smallblockallocator = crashgen.get("SmallBlockAllocator")
+            if crashgen_smallblockallocator:
+                append_or_extend((
+                    "# ❌ CAUTION : X-Cell is installed, but SmallBlockAllocator parameter is set to TRUE # \n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change SmallBlockAllocator to FALSE, this prevents conflicts with X-Cell.\n-----\n",
+                ), autoscan_report)
+            else:
+                append_or_extend(
+                    f"✔️ SmallBlockAllocator parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                    autoscan_report
+                )
+    def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], xsemodules: set[str]) -> None:
+        """
+        Scans the Buffout settings for LooksMenu and updates the autoscan report accordingly.
+
+        This method checks if the "F4EE" setting in the crashgen dictionary is enabled
+        and if "f4ee.dll" is present in the xsemodules set. If the setting is not enabled
+        but the DLL is present, it appends a caution message to the autoscan report suggesting
+        to enable the F4EE setting to prevent bugs and crashes from LooksMenu. Otherwise, it
+        appends a message indicating that the F4EE parameter is correctly configured.
+
+        Args:
+            crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
+            autoscan_report (list[str]): The list to which the scan results will be appended.
+            xsemodules (set[str]): A set of module names to check for the presence of specific DLLs.
+
+        Returns:
+            None
+        """
+        crashgen_f4ee = crashgen.get("F4EE")
+        if crashgen_f4ee is not None:
+            if not crashgen_f4ee and "f4ee.dll" in xsemodules:
+                append_or_extend((
+                    "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE # \n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu.\n-----\n",
+                ),
+                    autoscan_report)
+            else:
+                append_or_extend(
+                    f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                    autoscan_report
+                )
+    @staticmethod
+    def formid_match(formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]):
+        """
+        Matches FormIDs with plugins and updates the autoscan report.
+    
+        Args:
+            formids_matches (list[str]): A list of FormID matches found in the crash log.
+            crashlog_plugins (dict[str, str]): A dictionary mapping plugin names to their file IDs.
+            autoscan_report (list[str]): A list to append the scan results to.
+    
+        Returns:
+            None
+        """
+        if formids_matches:
+            formids_found = dict(Counter(sorted(formids_matches)))
+            for formid_full, count in formids_found.items():
+                formid_split = formid_full.split(": ", 1)
+                if len(formid_split) < 2:
+                    continue
+                for plugin, plugin_id in crashlog_plugins.items():
+                    if plugin_id != formid_split[1][:2]:
+                        continue
+
+                    if scanner.show_formid_values and scanner.formid_db_exists:
+                        report = get_entry(formid_split[1][2:], plugin)
+                        if report:
+                            append_or_extend(f"- {formid_full} | [{plugin}] | {report} | {count}\n", autoscan_report)
+                            continue
+
+                    append_or_extend(f"- {formid_full} | [{plugin}] | {count}\n", autoscan_report)
+                    break
+            append_or_extend((
+                "\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
+                f"These Form IDs were caught by {yamldata.crashgen_name} and some of them might be related to this crash.\n",
+                "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n",
+            ), autoscan_report)
+        else:
+            append_or_extend("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n", autoscan_report)
+    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str], autoscan_report: list[str]):
+        """
+        Matches plugins found in the call stack segment with the crash log plugins and updates the autoscan report.
+    
+        Args:
+            segment_callstack_lower (list[str]): A list of strings representing the call stack segment in lowercase.
+            crashlog_plugins_lower (set[str]): A set of plugin names in lowercase.
+            autoscan_report (list[str]): A list to append the scan results to.
+    
+        Returns:
+            None
+        """
+        plugins_matches: list[str] = [
+            plugin
+            for line in segment_callstack_lower
+            for plugin in crashlog_plugins_lower
+            if plugin in line and "modified by:" not in line and all(ignore not in plugin for ignore in scanner.lower_plugins_ignore)
+        ]
+        if plugins_matches:
+            plugins_found = dict(Counter(plugins_matches))
+            if plugins_found:
+                append_or_extend([f"- {key} | {value}\n" for key, value in plugins_found.items()], autoscan_report)
+                append_or_extend((
+                    "\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n",
+                    f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n",
+                    "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n",
+                ), autoscan_report)
+        else:
+            append_or_extend("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n", autoscan_report)
 
 # ================================================
 # CRASH LOG SCAN START
@@ -748,12 +1066,12 @@ def crashlogs_scan() -> None:
         trigger_plugin_limit = trigger_limit_check_disabled = trigger_plugins_loaded = trigger_scan_failed = False
         crash_data = scanner.crashlogs.read_log(crashlog_file.name)
 
-        autoscan_report.extend((
+        append_or_extend((
             f"{crashlog_file.name} -> AUTOSCAN REPORT GENERATED BY {yamldata.classic_version} \n",
             "# FOR BEST VIEWING EXPERIENCE OPEN THIS FILE IN NOTEPAD++ OR SIMILAR # \n",
             "# PLEASE READ EVERYTHING CAREFULLY AND BEWARE OF FALSE POSITIVES # \n",
             "====================================================\n",
-        ))
+        ), autoscan_report)
 
         # ================================================
         # 1) GENERATE REQUIRED SEGMENTS FROM THE CRASH LOG
@@ -801,7 +1119,7 @@ def crashlogs_scan() -> None:
         version_current = crashgen_version_gen(crashlog_crashgen)
         version_latest = crashgen_version_gen(yamldata.crashgen_latest_og)
         version_latest_vr = crashgen_version_gen(yamldata.crashgen_latest_vr)
-        autoscan_report.extend((
+        append_or_extend((
             f"\nMain Error: {crashlog_mainerror}\n",
             f"Detected {yamldata.crashgen_name} Version: {crashlog_crashgen} \n",
             (
@@ -809,7 +1127,7 @@ def crashlogs_scan() -> None:
                 if version_current >= version_latest or version_current >= version_latest_vr
                 else f"{yamldata.warn_outdated} \n"
             ),
-        ))
+        ), autoscan_report)
 
         # ======= REQUIRED LISTS, DICTS AND CHECKS =======
 
@@ -870,86 +1188,47 @@ def crashlogs_scan() -> None:
 
         crashlog_mainerror_lower = crashlog_mainerror.lower()
         if ".dll" in crashlog_mainerror_lower and "tbbmalloc" not in crashlog_mainerror_lower:
-            autoscan_report.extend((
+            append_or_extend((
                 "* NOTICE : MAIN ERROR REPORTS THAT A DLL FILE WAS INVOLVED IN THIS CRASH! * \n",
                 "If that dll file belongs to a mod, that mod is a prime suspect for the crash. \n-----\n",
-            ))
+            ), autoscan_report)
         max_warn_length = 30
-        trigger_suspect_found = False
-        for error, signal in yamldata.suspects_error_list.items():
-            error_severity, error_name = error.split(" | ", 1)
-            if signal in crashlog_mainerror:
-                error_name = error_name.ljust(max_warn_length, ".")
-                autoscan_report.append(f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n")
-                if not trigger_suspect_found:
-                    trigger_suspect_found = True
-
-        for error in yamldata.suspects_stack_list:
-            error_severity, error_name = error.split(" | ", 1)
-            error_req_found = error_opt_found = stack_found = False
-            signal_list = yamldata.suspects_stack_list.get(error, [])
-            has_required_item = False
-            for signal in signal_list:
-                if "|" in signal:
-                    signal_modifier, signal_string = signal.split("|", 1)
-                    match signal_modifier:
-                        case "ME-REQ":
-                            has_required_item = True
-                            if signal_string in crashlog_mainerror:
-                                error_req_found = True
-                        case "ME-OPT":
-                            if signal_string in crashlog_mainerror:
-                                error_opt_found = True
-                        case "NOT" if signal_string in segment_callstack_intact:
-                            break
-                        case _ if signal_modifier.isdecimal():
-                            if segment_callstack_intact.count(signal_string) >= int(signal_modifier):
-                                stack_found = True
-                elif signal in segment_callstack_intact:
-                    stack_found = True
-
-            # print(f"TEST: {error_req_found} | {error_opt_found} | {stack_found}")
-            if has_required_item:
-                if error_req_found:
-                    error_name = error_name.ljust(max_warn_length, ".")
-                    autoscan_report.append(f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n")
-                    trigger_suspect_found = True
-            elif error_opt_found or stack_found:
-                error_name = error_name.ljust(max_warn_length, ".")
-                autoscan_report.append(f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n")
-                trigger_suspect_found = True
+        trigger_suspect_found = any(
+            (scanner.suspect_scan_mainerror(autoscan_report, crashlog_mainerror, max_warn_length),
+             scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, autoscan_report,
+                                        max_warn_length)))
 
         if trigger_suspect_found:
-            autoscan_report.extend((
+            append_or_extend((
                 "* FOR DETAILED DESCRIPTIONS AND POSSIBLE SOLUTIONS TO ANY ABOVE DETECTED CRASH SUSPECTS *\n",
                 "* SEE: https://docs.google.com/document/d/17FzeIMJ256xE85XdjoPvv_Zi3C5uHeSTQh6wOZugs4c *\n\n",
-            ))
+            ), autoscan_report)
         else:
-            autoscan_report.extend((
+            append_or_extend((
                 "# FOUND NO CRASH ERRORS / SUSPECTS THAT MATCH THE CURRENT DATABASE #\n",
                 "Check below for mods that can cause frequent crashes and other problems.\n\n",
-            ))
+            ), autoscan_report)
 
-        autoscan_report.extend((
+        append_or_extend((
             "====================================================\n",
             "CHECKING IF NECESSARY FILES/SETTINGS ARE CORRECT...\n",
             "====================================================\n",
-        ))
+        ), autoscan_report)
 
         Has_XCell = ("x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules)
         Has_BakaScrapHeap = "bakascrapheap.dll" in xsemodules
 
         if scanner.fcx_mode:
-            autoscan_report.extend((
+            append_or_extend((
                 "* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n",
                 "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n",
-            ))
+            ), autoscan_report)
 
         else:
-            autoscan_report.extend((
+            append_or_extend((
                 "* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n",
                 "[ FCX Mode can be enabled in the exe or CLASSIC Settings.yaml located in your CLASSIC folder. ] \n\n",
-            ))
+            ), autoscan_report)
             if Has_XCell:
                 yamldata.crashgen_ignore.update(("MemoryManager", "HavokMemorySystem", "ScaleformAllocator", "SmallBlockAllocator"))
             elif Has_BakaScrapHeap:
@@ -959,198 +1238,97 @@ def crashlogs_scan() -> None:
             if crashgen:
                 for setting_name, setting_value in crashgen.items():
                     if setting_value is False and setting_name not in yamldata.crashgen_ignore:
-                        autoscan_report.append(
-                            f"* NOTICE : {setting_name} is disabled in your {yamldata.crashgen_name} settings, is this intentional? * \n-----\n"
+                        append_or_extend(
+                            f"* NOTICE : {setting_name} is disabled in your {yamldata.crashgen_name} settings, is this intentional? * \n-----\n",
+                            autoscan_report
                         )
-                crashgen_achievements = crashgen.get("Achievements")
-                if crashgen_achievements is not None:
-                    if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
-                        autoscan_report.extend((
-                            "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n",
-                            f" FIX: Open {yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {yamldata.crashgen_name}.\n-----\n",
-                        ))
-                    else:
-                        autoscan_report.append(
-                            f"✔️ Achievements parameter is correctly configured in your {yamldata.crashgen_name} settings! \n-----\n"
-                        )
-                crashgen_memorymanager = crashgen.get("MemoryManager")
-                if crashgen_memorymanager is not None:
-                    if crashgen_memorymanager:
-                        if Has_XCell:
-                            autoscan_report.extend((
-                                "# ❌ CAUTION : X-Cell is installed, but MemoryManager parameter is set to TRUE # \n",
-                                f" FIX: Open {yamldata.crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                            ))
-                            if Has_BakaScrapHeap:
-                                autoscan_report.extend((
-                                    "# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with X-Cell # \n",
-                                    " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n",
-                                ))
-                        elif Has_BakaScrapHeap:
-                            autoscan_report.extend((
-                                f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {yamldata.crashgen_name} # \n",
-                                f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {yamldata.crashgen_name}.\n-----\n",
-                            ))
-                        else:
-                            autoscan_report.append(
-                                f"✔️ Memory Manager parameter is correctly configured in your {yamldata.crashgen_name} settings! \n-----\n"
-                            )
-                    elif Has_XCell:
-                        if Has_BakaScrapHeap:
-                            autoscan_report.extend((
-                                "# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with X-Cell # \n",
-                                " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n",
-                            ))
-                        else:
-                            autoscan_report.append(
-                                f"✔️ Memory Manager parameter is correctly configured for use with X-Cell in your {yamldata.crashgen_name} settings! \n-----\n"
-                            )
-                    elif Has_BakaScrapHeap:
-                        autoscan_report.extend((
-                            f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {yamldata.crashgen_name} # \n",
-                            f" FIX: Uninstall the Baka ScrapHeap Mod and open {yamldata.crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.\n-----\n",
-                        ))
+                scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
+                scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, Has_XCell, Has_BakaScrapHeap)
+                scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
 
-                if Has_XCell:
-                    crashgen_havokmemorysystem = crashgen.get("HavokMemorySystem")
-                    if crashgen_havokmemorysystem is not None:
-                        if crashgen_havokmemorysystem:
-                            autoscan_report.extend((
-                                "# ❌ CAUTION : X-Cell is installed, but HavokMemorySystem parameter is set to TRUE # \n",
-                                f" FIX: Open {yamldata.crashgen_name}'s TOML file and change HavokMemorySystem to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                            ))
-                        else:
-                            autoscan_report.append(
-                                f"✔️ HavokMemorySystem parameter is correctly configured for use with X-Cell in your {yamldata.crashgen_name} settings! \n-----\n"
-                            )
-                    crashgen_bstexturestreamerlocalheap = crashgen.get("BSTextureStreamerLocalHeap")
-                    if crashgen_bstexturestreamerlocalheap is not None:
-                        if crashgen_bstexturestreamerlocalheap:
-                            autoscan_report.extend((
-                                "# ❌ CAUTION : X-Cell is installed, but BSTextureStreamerLocalHeap parameter is set to TRUE # \n",
-                                f" FIX: Open {yamldata.crashgen_name}'s TOML file and change BSTextureStreamerLocalHeap to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                            ))
-                        else:
-                            autoscan_report.append(
-                                f"✔️ BSTextureStreamerLocalHeap parameter is correctly configured for use with X-Cell in your {yamldata.crashgen_name} settings! \n-----\n"
-                            )
-                    crashgen_scaleformallocator = crashgen.get("ScaleformAllocator")
-                    if crashgen_scaleformallocator is not None:
-                        if crashgen_scaleformallocator:
-                            autoscan_report.extend((
-                                "# ❌ CAUTION : X-Cell is installed, but ScaleformAllocator parameter is set to TRUE # \n",
-                                f" FIX: Open {yamldata.crashgen_name}'s TOML file and change ScaleformAllocator to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                            ))
-                        else:
-                            autoscan_report.append(
-                                f"✔️ ScaleformAllocator parameter is correctly configured for use with X-Cell in your {yamldata.crashgen_name} settings! \n-----\n"
-                            )
-                    crashgen_smallblockallocator = crashgen.get("SmallBlockAllocator")
-                    if crashgen_smallblockallocator is not None:
-                        if crashgen_smallblockallocator:
-                            autoscan_report.extend((
-                                "# ❌ CAUTION : X-Cell is installed, but SmallBlockAllocator parameter is set to TRUE # \n",
-                                f" FIX: Open {yamldata.crashgen_name}'s TOML file and change SmallBlockAllocator to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                            ))
-                        else:
-                            autoscan_report.append(
-                                f"✔️ SmallBlockAllocator parameter is correctly configured for use with X-Cell in your {yamldata.crashgen_name} settings! \n-----\n"
-                            )
-                crashgen_f4ee = crashgen.get("F4EE")
-                if crashgen_f4ee is not None:
-                    if not crashgen_f4ee and "f4ee.dll" in xsemodules:
-                        autoscan_report.extend((
-                            "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE # \n",
-                            f" FIX: Open {yamldata.crashgen_name}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu.\n-----\n",
-                        ))
-                    else:
-                        autoscan_report.append(
-                            f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {yamldata.crashgen_name} settings! \n-----\n"
-                        )
-
-        autoscan_report.append(scanner.main_files_check)
+        append_or_extend(scanner.main_files_check, autoscan_report)
         if scanner.game_files_check:
-            autoscan_report.append(scanner.game_files_check)
+            append_or_extend(scanner.game_files_check, autoscan_report)
 
-        autoscan_report.extend((
+        append_or_extend((
             "====================================================\n",
             "CHECKING FOR MODS THAT CAN CAUSE FREQUENT CRASHES...\n",
             "====================================================\n",
-        ))
+        ), autoscan_report)
 
         if trigger_plugins_loaded:
             if detect_mods_single(yamldata.game_mods_freq, crashlog_plugins, autoscan_report):
-                autoscan_report.extend((
+                append_or_extend((
                     "# [!] CAUTION : ANY ABOVE DETECTED MODS HAVE A MUCH HIGHER CHANCE TO CRASH YOUR GAME! #\n",
                     "* YOU CAN DISABLE ANY / ALL OF THEM TEMPORARILY TO CONFIRM THEY CAUSED THIS CRASH. * \n\n",
-                ))
+                ), autoscan_report)
             else:
-                autoscan_report.extend((
+                append_or_extend((
                     "# FOUND NO PROBLEMATIC MODS THAT MATCH THE CURRENT DATABASE FOR THIS CRASH LOG #\n",
                     "THAT DOESN'T MEAN THERE AREN'T ANY! YOU SHOULD RUN PLUGIN CHECKER IN WRYE BASH \n",
                     "Plugin Checker Instructions: https://www.nexusmods.com/fallout4/articles/4141 \n\n",
-                ))
+                ), autoscan_report)
         else:
-            autoscan_report.append(yamldata.warn_noplugins)
+            append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
-        autoscan_report.extend((
+        append_or_extend((
             "====================================================\n",
             "CHECKING FOR MODS THAT CONFLICT WITH OTHER MODS...\n",
             "====================================================\n",
-        ))
+        ), autoscan_report)
 
         if trigger_plugins_loaded:
             if detect_mods_double(yamldata.game_mods_conf, crashlog_plugins, autoscan_report):
-                autoscan_report.extend((
+                append_or_extend((
                     "# [!] CAUTION : FOUND MODS THAT ARE INCOMPATIBLE OR CONFLICT WITH YOUR OTHER MODS # \n",
                     "* YOU SHOULD CHOOSE WHICH MOD TO KEEP AND DISABLE OR COMPLETELY REMOVE THE OTHER MOD * \n\n",
-                ))
+                ), autoscan_report)
             else:
-                autoscan_report.append("# FOUND NO MODS THAT ARE INCOMPATIBLE OR CONFLICT WITH YOUR OTHER MODS # \n\n")
+                append_or_extend("# FOUND NO MODS THAT ARE INCOMPATIBLE OR CONFLICT WITH YOUR OTHER MODS # \n\n", autoscan_report)
         else:
-            autoscan_report.append(yamldata.warn_noplugins)
+            append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
-        autoscan_report.extend((
+        append_or_extend((
             "====================================================\n",
             "CHECKING FOR MODS WITH SOLUTIONS & COMMUNITY PATCHES\n",
             "====================================================\n",
-        ))
+        ), autoscan_report)
 
         if trigger_plugins_loaded:
             if detect_mods_single(yamldata.game_mods_solu, crashlog_plugins, autoscan_report):
-                autoscan_report.extend((
+                append_or_extend((
                     "# [!] CAUTION : FOUND PROBLEMATIC MODS WITH SOLUTIONS AND COMMUNITY PATCHES # \n",
                     "[Due to limitations, CLASSIC will show warnings for some mods even if fixes or patches are already installed.] \n",
                     "[To hide these warnings, you can add their plugin names to the CLASSIC Ignore.yaml file. ONE PLUGIN PER LINE.] \n\n",
-                ))
+                ), autoscan_report)
             else:
-                autoscan_report.append("# FOUND NO PROBLEMATIC MODS WITH AVAILABLE SOLUTIONS AND COMMUNITY PATCHES # \n\n")
+                append_or_extend("# FOUND NO PROBLEMATIC MODS WITH AVAILABLE SOLUTIONS AND COMMUNITY PATCHES # \n\n", autoscan_report)
         else:
-            autoscan_report.append(yamldata.warn_noplugins)
+            append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
         if CMain.gamevars["game"] == "Fallout4":
-            autoscan_report.extend((
+            append_or_extend((
                 "====================================================\n",
                 "CHECKING FOR MODS PATCHED THROUGH OPC INSTALLER...\n",
                 "====================================================\n",
-            ))
+            ), autoscan_report)
 
             if trigger_plugins_loaded:
                 if detect_mods_single(yamldata.game_mods_opc2, crashlog_plugins, autoscan_report):
-                    autoscan_report.extend((
+                    append_or_extend((
                         "\n* FOR PATCH REPOSITORY THAT PREVENTS CRASHES AND FIXES PROBLEMS IN THESE AND OTHER MODS,* \n",
                         "* VISIT OPTIMIZATION PATCHES COLLECTION: https://www.nexusmods.com/fallout4/mods/54872 * \n\n",
-                    ))
+                    ), autoscan_report)
                 else:
-                    autoscan_report.append("# FOUND NO PROBLEMATIC MODS THAT ARE ALREADY PATCHED THROUGH THE OPC INSTALLER # \n\n")
+                    append_or_extend("# FOUND NO PROBLEMATIC MODS THAT ARE ALREADY PATCHED THROUGH THE OPC INSTALLER # \n\n", autoscan_report)
             else:
-                autoscan_report.append(yamldata.warn_noplugins)
+                append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
-        autoscan_report.extend((
+        append_or_extend((
             "====================================================\n",
             "CHECKING IF IMPORTANT PATCHES & FIXES ARE INSTALLED\n",
             "====================================================\n",
-        ))
+        ), autoscan_report)
 
         if trigger_plugins_loaded:
             if any("londonworldspace" in plugin.lower() for plugin in crashlog_plugins):
@@ -1158,79 +1336,37 @@ def crashlogs_scan() -> None:
             else:
                 detect_mods_important(yamldata.game_mods_core, crashlog_plugins, autoscan_report, gpu_rival)
         else:
-            autoscan_report.append(yamldata.warn_noplugins)
+            append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
-        autoscan_report.extend((
+        append_or_extend((
             "====================================================\n",
             "SCANNING THE LOG FOR SPECIFIC (POSSIBLE) SUSPECTS...\n",
             "====================================================\n",
-        ))
+        ), autoscan_report)
 
         if trigger_plugin_limit and not trigger_limit_check_disabled:
             warn_plugin_limit = CMain.yaml_settings(str, CMain.YAML.Main, "Mods_Warn.Mods_Plugin_Limit") or ""
-            autoscan_report.append(warn_plugin_limit)
+            append_or_extend(warn_plugin_limit, autoscan_report)
 
         if trigger_limit_check_disabled:
-            autoscan_report.extend(("❌ WARNING : Crash logs for the current game version do not report plugin indexes correctly! \n",
-                                                "The plugin limit check will be disabled for this scan. \n\n"))
+            append_or_extend(("❌ WARNING : Crash logs for the current game version do not report plugin indexes correctly! \n",
+                                                "The plugin limit check will be disabled for this scan. \n\n"), autoscan_report)
 
         # ================================================
 
-        autoscan_report.append("# LIST OF (POSSIBLE) PLUGIN SUSPECTS #\n")
+        append_or_extend("# LIST OF (POSSIBLE) PLUGIN SUSPECTS #\n", autoscan_report)
         segment_callstack_lower = [line.lower() for line in segment_callstack]
 
-        plugins_matches: list[str] = [
-            plugin
-            for line in segment_callstack_lower
-            for plugin in crashlog_plugins_lower
-            if plugin in line and "modified by:" not in line and all(ignore not in plugin for ignore in scanner.lower_plugins_ignore)
-        ]
-
-        if plugins_matches:
-            plugins_found = dict(Counter(plugins_matches))
-            if plugins_found:
-                autoscan_report.extend([f"- {key} | {value}\n" for key, value in plugins_found.items()])
-                autoscan_report.extend((
-                    "\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n",
-                    f"These Plugins were caught by {yamldata.crashgen_name} and some of them might be responsible for this crash.\n",
-                    "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n",
-                ))
-        else:
-            autoscan_report.append("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n")
+        scanner.plugin_match(segment_callstack_lower, crashlog_plugins_lower, autoscan_report)
 
         # ================================================
-        autoscan_report.append("# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n")
+        append_or_extend("# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n", autoscan_report)
         formids_matches = [line.replace("0x", "").strip() for line in segment_callstack if "0xFF" not in line and "id:" in line.lower()]
-        if formids_matches:
-            formids_found = dict(Counter(sorted(formids_matches)))
-            for formid_full, count in formids_found.items():
-                formid_split = formid_full.split(": ", 1)
-                if len(formid_split) < 2:
-                    continue
-                for plugin, plugin_id in crashlog_plugins.items():
-                    if plugin_id != formid_split[1][:2]:
-                        continue
-
-                    if scanner.show_formid_values and scanner.formid_db_exists:
-                        report = get_entry(formid_split[1][2:], plugin)
-                        if report:
-                            autoscan_report.append(f"- {formid_full} | [{plugin}] | {report} | {count}\n")
-                            continue
-
-                    autoscan_report.append(f"- {formid_full} | [{plugin}] | {count}\n")
-                    break
-
-            autoscan_report.extend((
-                "\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
-                f"These Form IDs were caught by {yamldata.crashgen_name} and some of them might be related to this crash.\n",
-                "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n",
-            ))
-        else:
-            autoscan_report.append("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n")
+        scanner.formid_match(formids_matches, crashlog_plugins, autoscan_report)
 
         # ================================================
 
-        autoscan_report.append("# LIST OF DETECTED (NAMED) RECORDS #\n")
+        append_or_extend("# LIST OF DETECTED (NAMED) RECORDS #\n", autoscan_report)
         records_matches: list[str] = []
 
         for line in segment_callstack:
@@ -1246,25 +1382,25 @@ def crashlogs_scan() -> None:
         if records_matches:
             records_found = dict(Counter(sorted(records_matches)))
             for record, count in records_found.items():
-                autoscan_report.append(f"- {record} | {count}\n")
+                append_or_extend(f"- {record} | {count}\n", autoscan_report)
 
-            autoscan_report.extend((
+            append_or_extend((
                 "\n[Last number counts how many times each Named Record shows up in the crash log.]\n",
                 f"These records were caught by {yamldata.crashgen_name} and some of them might be related to this crash.\n",
                 "Named records should give extra info on involved game objects, record types or mod files.\n\n",
-            ))
+            ), autoscan_report)
         else:
-            autoscan_report.append("* COULDN'T FIND ANY NAMED RECORDS *\n\n")
+            append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
 
         # ============== AUTOSCAN REPORT END ==============
         if CMain.gamevars["game"] == "Fallout4":
-            autoscan_report.append(yamldata.autoscan_text)
-        autoscan_report.append(f"{yamldata.classic_version} | {yamldata.classic_version_date} | END OF AUTOSCAN \n")
+            append_or_extend(yamldata.autoscan_text, autoscan_report)
+        append_or_extend(f"{yamldata.classic_version} | {yamldata.classic_version_date} | END OF AUTOSCAN \n", autoscan_report)
 
         # CHECK IF SCAN FAILED
         scanner.stats_crashlog_scanned += 1
         if trigger_scan_failed:
-            scanner.scan_failed_list.append(crashlog_file.name)
+            append_or_extend(crashlog_file.name, scanner.scan_failed_list)
 
         # HIDE PERSONAL USERNAME
         user_name = scanner.user_folder.name
