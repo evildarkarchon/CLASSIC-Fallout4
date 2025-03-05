@@ -39,7 +39,7 @@ def append_or_extend(value: str | int | float | list | tuple | set, destination:
         if isinstance(value, list | tuple | set):
             destination.extend(value)
         else:
-            destination.append(value)
+            destination.append(str(value))
 
 def pastebin_fetch(url: str) -> None:
     """
@@ -851,17 +851,17 @@ class ClassicScanLogs:
                                                Has_XCell: bool, Has_BakaScrapHeap: bool) -> None:
         """
         Scans the Buffout memory management settings and updates the autoscan report accordingly.
-    
+
         This method checks if the "MemoryManager" setting in the crashgen dictionary is enabled
         and if X-Cell or Baka ScrapHeap mods are present. If conflicts are detected, it appends
         caution messages to the autoscan report.
-    
+
         Args:
             autoscan_report (list[str]): The list to which the scan results will be appended.
             crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
             Has_XCell (bool): Indicates if the X-Cell mod is installed.
             Has_BakaScrapHeap (bool): Indicates if the Baka ScrapHeap mod is installed.
-    
+
         Returns:
             None
         """
@@ -986,16 +986,16 @@ class ClassicScanLogs:
                     f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
                     autoscan_report
                 )
-    @staticmethod
-    def formid_match(formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]):
+
+    def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
         """
         Matches FormIDs with plugins and updates the autoscan report.
-    
+
         Args:
             formids_matches (list[str]): A list of FormID matches found in the crash log.
             crashlog_plugins (dict[str, str]): A dictionary mapping plugin names to their file IDs.
             autoscan_report (list[str]): A list to append the scan results to.
-    
+
         Returns:
             None
         """
@@ -1009,7 +1009,7 @@ class ClassicScanLogs:
                     if plugin_id != formid_split[1][:2]:
                         continue
 
-                    if scanner.show_formid_values and scanner.formid_db_exists:
+                    if self.show_formid_values and self.formid_db_exists:
                         report = get_entry(formid_split[1][2:], plugin)
                         if report:
                             append_or_extend(f"- {formid_full} | [{plugin}] | {report} | {count}\n", autoscan_report)
@@ -1019,20 +1019,21 @@ class ClassicScanLogs:
                     break
             append_or_extend((
                 "\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
-                f"These Form IDs were caught by {yamldata.crashgen_name} and some of them might be related to this crash.\n",
+                f"These Form IDs were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n",
                 "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n",
             ), autoscan_report)
         else:
             append_or_extend("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n", autoscan_report)
-    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str], autoscan_report: list[str]):
+
+    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str], autoscan_report: list[str]) -> None:
         """
         Matches plugins found in the call stack segment with the crash log plugins and updates the autoscan report.
-    
+
         Args:
             segment_callstack_lower (list[str]): A list of strings representing the call stack segment in lowercase.
             crashlog_plugins_lower (set[str]): A set of plugin names in lowercase.
             autoscan_report (list[str]): A list to append the scan results to.
-    
+
         Returns:
             None
         """
@@ -1040,7 +1041,7 @@ class ClassicScanLogs:
             plugin
             for line in segment_callstack_lower
             for plugin in crashlog_plugins_lower
-            if plugin in line and "modified by:" not in line and all(ignore not in plugin for ignore in scanner.lower_plugins_ignore)
+            if plugin in line and "modified by:" not in line and all(ignore not in plugin for ignore in self.lower_plugins_ignore)
         ]
         if plugins_matches:
             plugins_found = dict(Counter(plugins_matches))
