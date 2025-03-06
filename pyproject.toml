@@ -50,7 +50,7 @@ disable_error_code = [
 	"index",          # Redundant with Pyright reportIndexIssue
 	"name-defined",   # Redundant with Ruff F821
 	"operator",       # Redundant with Pyright reportOperatorIssue
-	"attr-defined"	 # Messes with my docstrings
+	"attr-defined"	 # Redundant with reportAttributeAccessIssue
 ]
 
 [tool.pyright]
