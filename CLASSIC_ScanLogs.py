@@ -681,7 +681,7 @@ class ClassicScanLogs:
         return crashlog_gameversion or "UNKNOWN", crashlog_crashgen or "UNKNOWN", crashlog_mainerror or "UNKNOWN", segment_results
 
     @staticmethod
-    def loadorder_scan_loadorder_txt() -> tuple[dict[str, str], bool]:
+    def loadorder_scan_loadorder_txt(autoscan_report: list[str]) -> tuple[dict[str, str], bool]:
         """
         Scan the loadorder.txt file for plugins.
 
@@ -693,6 +693,11 @@ class ClassicScanLogs:
             tuple[dict[str, str], bool]: A tuple containing a dictionary of plugin
             names with their markers and a boolean indicating if plugins were loaded.
         """
+        append_or_extend((
+            "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
+            "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
+            "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
+        ), autoscan_report)
         trigger_plugins_loaded = False
         loadorder_path = Path("loadorder.txt")
         crashlog_plugins: dict[str, str] = {}
@@ -1054,6 +1059,31 @@ class ClassicScanLogs:
                 ), autoscan_report)
         else:
             append_or_extend("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n", autoscan_report)
+    
+    @staticmethod
+    def scan_log_gpu(segment_system: list[str]) -> tuple[str, str | None]:
+        """
+        Scans the system segment of the crash log to determine the GPU brand.
+
+        Args:
+            segment_system (list[str]): The list of strings representing the system segment of the crash log.
+
+        Returns:
+            tuple[str, str | None]: A tuple containing:
+                - The GPU brand found in the log ("AMD", "Nvidia", or "Unknown").
+                - The rival GPU brand ("nvidia" or "amd") if a known GPU brand is found, otherwise None.
+        """
+        if any("GPU #1" in elem and "AMD" in elem for elem in segment_system):
+            GPU = "AMD"
+            gpu_rival = "nvidia"
+        elif any("GPU #1" in elem and "Nvidia" in elem for elem in segment_system):
+            GPU = "Nvidia"
+            gpu_rival = "amd"
+        else:
+            GPU = "Unknown"
+            gpu_rival = None
+        return GPU, gpu_rival
+        
 
 # ================================================
 # CRASH LOG SCAN START
@@ -1145,20 +1175,12 @@ def crashlogs_scan() -> None:
         # ================================================
 
         # CHECK GPU TYPE FOR CRASH LOG
-        crashlog_GPUAMD = any("GPU #1" in elem and "AMD" in elem for elem in segment_system)
-        crashlog_GPUNV = any("GPU #1" in elem and "Nvidia" in elem for elem in segment_system)
-        crashlog_GPUI = not crashlog_GPUAMD and not crashlog_GPUNV
-        gpu_rival: Literal["nvidia", "amd"] | None = "nvidia" if (crashlog_GPUAMD or crashlog_GPUI) else "amd" if crashlog_GPUNV else None
+        crashlog_GPU, crashlog_GPU_rival = scanner.scan_log_gpu(segment_system)
 
         # IF LOADORDER FILE EXISTS, USE ITS PLUGINS
         loadorder_path = Path("loadorder.txt")
         if loadorder_path.exists():
-            append_or_extend((
-                "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
-                "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
-                "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
-            ), autoscan_report)
-            loadorder_plugins, trigger_plugins_loaded = scanner.loadorder_scan_loadorder_txt()
+            loadorder_plugins, trigger_plugins_loaded = scanner.loadorder_scan_loadorder_txt(autoscan_report)
             crashlog_plugins = crashlog_plugins | loadorder_plugins
 
         else:  # OTHERWISE, USE PLUGINS FROM CRASH LOG
@@ -1333,9 +1355,9 @@ def crashlogs_scan() -> None:
 
         if trigger_plugins_loaded:
             if any("londonworldspace" in plugin.lower() for plugin in crashlog_plugins):
-                detect_mods_important(yamldata.game_mods_core_folon, crashlog_plugins, autoscan_report, gpu_rival)
+                detect_mods_important(yamldata.game_mods_core_folon, crashlog_plugins, autoscan_report, crashlog_GPU_rival)
             else:
-                detect_mods_important(yamldata.game_mods_core, crashlog_plugins, autoscan_report, gpu_rival)
+                detect_mods_important(yamldata.game_mods_core, crashlog_plugins, autoscan_report, crashlog_GPU_rival)
         else:
             append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
