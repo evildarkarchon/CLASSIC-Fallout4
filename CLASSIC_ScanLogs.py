@@ -293,7 +293,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 def detect_mods_important(yaml_dict: dict[str, str],
                           crashlog_plugins: dict[str, str],
                           autoscan_report: list[str],
-                          gpu_rival: Literal["nvidia", "amd"] | None) -> None:
+                          gpu_rival: Literal["nvidia", "amd", "Unknown"] | None) -> None:
     """
     Detects important Core and GPU-specific mods from the provided YAML dictionary and updates the autoscan report.
 
@@ -1059,9 +1059,9 @@ class ClassicScanLogs:
                 ), autoscan_report)
         else:
             append_or_extend("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n", autoscan_report)
-    
+
     @staticmethod
-    def scan_log_gpu(segment_system: list[str]) -> tuple[str, str | None]:
+    def scan_log_gpu(segment_system: list[str]) -> tuple[str, Literal["nvidia", "amd", "Unknown"] | None]:
         """
         Scans the system segment of the crash log to determine the GPU brand.
 
@@ -1073,6 +1073,8 @@ class ClassicScanLogs:
                 - The GPU brand found in the log ("AMD", "Nvidia", or "Unknown").
                 - The rival GPU brand ("nvidia" or "amd") if a known GPU brand is found, otherwise None.
         """
+        GPU: str
+        gpu_rival: Literal["nvidia", "amd", "Unknown"] | None
         if any("GPU #1" in elem and "AMD" in elem for elem in segment_system):
             GPU = "AMD"
             gpu_rival = "nvidia"
@@ -1083,8 +1085,8 @@ class ClassicScanLogs:
             GPU = "Unknown"
             gpu_rival = None
         return GPU, gpu_rival
-    
-    def scan_named_records(self, records_matches: list[str], autoscan_report: list[str]) -> None:
+
+    def scan_named_records(self, segment_callstack: list[str], records_matches: list[str], autoscan_report: list[str]) -> None:
         """
         Matches named records with the game ignore records and updates the autoscan report.
 
@@ -1117,7 +1119,7 @@ class ClassicScanLogs:
             ), autoscan_report)
         else:
             append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
-        
+
 
 # ================================================
 # CRASH LOG SCAN START
@@ -1425,7 +1427,7 @@ def crashlogs_scan() -> None:
 
         append_or_extend("# LIST OF DETECTED (NAMED) RECORDS #\n", autoscan_report)
         records_matches: list[str] = []
-        scanner.scan_named_records(records_matches, autoscan_report)
+        scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)
 
         # ============== AUTOSCAN REPORT END ==============
         if CMain.gamevars["game"] == "Fallout4":
