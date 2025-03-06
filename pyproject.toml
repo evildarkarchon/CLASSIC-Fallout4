@@ -50,6 +50,7 @@ disable_error_code = [
 	"index",          # Redundant with Pyright reportIndexIssue
 	"name-defined",   # Redundant with Ruff F821
 	"operator",       # Redundant with Pyright reportOperatorIssue
+	"attr-defined"	 # Messes with my docstrings
 ]
 
 [tool.pyright]
@@ -60,6 +61,7 @@ reportMissingParameterType = false # Redundant with Ruff ANN001
 reportReturnType = false           # Redundant with Mypy return-type
 reportUndefinedVariable = false    # Redundant with Ruff F821
 reportUnusedImport = false         # Redundant with Ruff F401
+reportAttributeAccessIssue = "warning" # Messes with my docstrings, but could be useful elsewhere
 
 [tool.ruff]
 indent-width = 4
