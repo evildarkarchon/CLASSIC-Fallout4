@@ -1083,6 +1083,40 @@ class ClassicScanLogs:
             GPU = "Unknown"
             gpu_rival = None
         return GPU, gpu_rival
+    
+    def scan_named_records(self, records_matches: list[str], autoscan_report: list[str]) -> None:
+        """
+        Matches named records with the game ignore records and updates the autoscan report.
+
+        Args:
+            records_matches (list[str]): A list of named records found in the crash log.
+            autoscan_report (list[str]): A list to append the scan results to.
+
+        Returns:
+            None
+        """
+        for line in segment_callstack:
+            lower_line = line.lower()
+
+            if any(item in lower_line for item in self.lower_records) and all(
+                    record not in lower_line for record in self.lower_ignore
+            ):
+                if "[RSP+" in line:
+                    records_matches.append(line[30:].strip())
+                else:
+                    records_matches.append(line.strip())
+        if records_matches:
+            records_found = dict(Counter(sorted(records_matches)))
+            for record, count in records_found.items():
+                append_or_extend(f"- {record} | {count}\n", autoscan_report)
+
+            append_or_extend((
+                "\n[Last number counts how many times each Named Record shows up in the crash log.]\n",
+                f"These records were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n",
+                "Named records should give extra info on involved game objects, record types or mod files.\n\n",
+            ), autoscan_report)
+        else:
+            append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
         
 
 # ================================================
@@ -1391,29 +1425,7 @@ def crashlogs_scan() -> None:
 
         append_or_extend("# LIST OF DETECTED (NAMED) RECORDS #\n", autoscan_report)
         records_matches: list[str] = []
-
-        for line in segment_callstack:
-            lower_line = line.lower()
-
-            if any(item in lower_line for item in scanner.lower_records) and all(
-                record not in lower_line for record in scanner.lower_ignore
-            ):
-                if "[RSP+" in line:
-                    records_matches.append(line[30:].strip())
-                else:
-                    records_matches.append(line.strip())
-        if records_matches:
-            records_found = dict(Counter(sorted(records_matches)))
-            for record, count in records_found.items():
-                append_or_extend(f"- {record} | {count}\n", autoscan_report)
-
-            append_or_extend((
-                "\n[Last number counts how many times each Named Record shows up in the crash log.]\n",
-                f"These records were caught by {yamldata.crashgen_name} and some of them might be related to this crash.\n",
-                "Named records should give extra info on involved game objects, record types or mod files.\n\n",
-            ), autoscan_report)
-        else:
-            append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
+        scanner.scan_named_records(records_matches, autoscan_report)
 
         # ============== AUTOSCAN REPORT END ==============
         if CMain.gamevars["game"] == "Fallout4":
