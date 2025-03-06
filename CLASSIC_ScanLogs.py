@@ -293,7 +293,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 def detect_mods_important(yaml_dict: dict[str, str],
                           crashlog_plugins: dict[str, str],
                           autoscan_report: list[str],
-                          gpu_rival: Literal["nvidia", "amd", "Unknown"] | None) -> None:
+                          gpu_rival: Literal["nvidia", "amd"] | None) -> None:
     """
     Detects important Core and GPU-specific mods from the provided YAML dictionary and updates the autoscan report.
 
@@ -1061,7 +1061,7 @@ class ClassicScanLogs:
             append_or_extend("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n", autoscan_report)
 
     @staticmethod
-    def scan_log_gpu(segment_system: list[str]) -> tuple[str, Literal["nvidia", "amd", "Unknown"] | None]:
+    def scan_log_gpu(segment_system: list[str]) -> tuple[str, Literal["nvidia", "amd"] | None]:
         """
         Scans the system segment of the crash log to determine the GPU brand.
 
@@ -1074,7 +1074,7 @@ class ClassicScanLogs:
                 - The rival GPU brand ("nvidia" or "amd") if a known GPU brand is found, otherwise None.
         """
         GPU: str
-        gpu_rival: Literal["nvidia", "amd", "Unknown"] | None
+        gpu_rival: Literal["nvidia", "amd"] | None
         if any("GPU #1" in elem and "AMD" in elem for elem in segment_system):
             GPU = "AMD"
             gpu_rival = "nvidia"
