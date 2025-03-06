@@ -1125,6 +1125,36 @@ class ClassicScanLogs:
 # CRASH LOG SCAN START
 # ================================================
 def crashlogs_scan() -> None:
+    """
+    Scans crash logs for a Fallout 4 game, generates detailed autoscan reports, and identifies potential issues.
+    This function performs the following steps:
+    1. Initializes the ClassicScanLogs scanner and retrieves YAML data.
+    2. Iterates through each crash log file in the scanner's crashlog list.
+    3. Reads the crash log data and generates an autoscan report header.
+    4. Extracts and processes various segments from the crash log.
+    5. Checks for important DLLs and updates the crash generation dictionary.
+    6. Updates scanner statistics based on the completeness of the crash log.
+    7. Appends main error and crash generation version information to the report.
+    8. Checks for loaded plugins and updates the crash log plugins dictionary.
+    9. Scans for GPU type and loads plugins from loadorder.txt if available.
+    10. Checks for ignored plugins and appends relevant information to the report.
+    11. Identifies potential crash suspects and appends relevant information to the report.
+    12. Checks for necessary files and settings, and appends relevant information to the report.
+    13. Scans for mods that can cause frequent crashes and appends relevant information to the report.
+    14. Scans for mods that conflict with other mods and appends relevant information to the report.
+    15. Scans for mods with solutions and community patches and appends relevant information to the report.
+    16. Checks for mods patched through the OPC installer (specific to Fallout 4).
+    17. Checks for important patches and fixes, and appends relevant information to the report.
+    18. Scans the log for specific possible suspects and appends relevant information to the report.
+    19. Lists possible plugin and form ID suspects, and appends relevant information to the report.
+    20. Writes the autoscan report to a file and handles failed scans by moving logs to a backup folder.
+    21. Checks for failed or invalid crash logs and prints a notice if any are found.
+    22. Closes the scanner database and prints the scan completion message and statistics.
+    Note:
+        - The function assumes the presence of various methods and attributes in the ClassicScanLogs class.
+        - The function also assumes the presence of certain global variables and constants (e.g., CMain, yamldata).
+        - The function generates autoscan reports in markdown format and saves them to files.
+    """
     scanner = ClassicScanLogs()
     yamldata = scanner.yamldata
 
