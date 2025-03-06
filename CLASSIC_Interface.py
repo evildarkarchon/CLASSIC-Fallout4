@@ -379,7 +379,7 @@ class AudioPlayer(QObject):
         play_custom_signal (Signal): Signal to play a custom sound from a specified file path.
     Methods:
         __init__() -> None:
-            Initializes the CLASSIC_Interface class, sets up audio notification settings, and initializes QSoundEffect objects.
+            Initializes the AudioPlayer class, sets up audio notification settings, and initializes QSoundEffect objects.
         play_error_sound() -> None:
         play_notify_sound() -> None:
         play_custom_sound(sound_path: str, volume: float = 1.0) -> None:
@@ -392,7 +392,7 @@ class AudioPlayer(QObject):
 
     def __init__(self) -> None:
         """
-        Initializes the CLASSIC_Interface class.
+        Initializes the AudioPlayer class.
         This constructor sets up the audio notification settings and initializes
         QSoundEffect objects for error and notification sounds. It also connects
         the appropriate signals to their respective slots if audio notifications
@@ -741,8 +741,8 @@ class GameFilesScanWorker(QObject):
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         """
-        Initializes the CLASSIC_Interface class.
-        This method sets up the initial state of the CLASSIC_Interface instance, including
+        Initializes the MainWindow class.
+        This method sets up the initial state of the MainWindow instance, including
         initializing various worker and UI components, setting the window title and icon,
         applying a dark style sheet, and configuring the main layout and tabs. It also
         sets up custom exception handling, initializes folder paths, sets up output
