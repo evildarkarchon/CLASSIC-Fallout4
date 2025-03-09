@@ -1088,11 +1088,12 @@ class ClassicScanLogs:
 
     def scan_named_records(self, segment_callstack: list[str], records_matches: list[str], autoscan_report: list[str]) -> None:
         """
-        Matches named records with the game ignore records and updates the autoscan report.
+        Scans the call stack segment for named records and updates the autoscan report.
 
         Args:
-            records_matches (list[str]): A list of named records found in the crash log.
-            autoscan_report (list[str]): A list to append the scan results to.
+            segment_callstack (list[str]): The list of strings representing the call stack segment.
+            records_matches (list[str]): The list of record matches found in the call stack.
+            autoscan_report (list[str]): The list to append the scan results to.
 
         Returns:
             None

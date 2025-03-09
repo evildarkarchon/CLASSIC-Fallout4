@@ -397,10 +397,6 @@ class AudioPlayer(QObject):
         QSoundEffect objects for error and notification sounds. It also connects
         the appropriate signals to their respective slots if audio notifications
         are enabled.
-        Attributes:
-            audio_enabled (bool): Indicates whether audio notifications are enabled.
-            error_sound (QSoundEffect): Sound effect for error notifications.
-            notify_sound (QSoundEffect): Sound effect for general notifications.
         Signals:
             play_error_signal: Signal to play the error sound.
             play_notify_signal: Signal to play the notification sound.
@@ -658,11 +654,6 @@ class OutputRedirector(QObject):
 class CrashLogsScanWorker(QObject):
     """
     CrashLogsScanWorker is a QObject-based worker class responsible for scanning crash logs and emitting signals based on the scan's outcome.
-    Attributes:
-        finished (Signal): Signal emitted when the scan process is completed.
-        notify_sound_signal (Signal): Signal emitted to play a notification sound upon successful completion of the scan.
-        error_sound_signal (Signal): Signal emitted to play an error sound if an exception occurs during the scan.
-        custom_sound_signal (Signal): Signal emitted to play a custom sound, with the sound file path as a string argument.
     Methods:
         run(): Executes the crash logs scan and emits appropriate signals based on the outcome.
     finished = Signal()
@@ -700,11 +691,6 @@ class CrashLogsScanWorker(QObject):
 class GameFilesScanWorker(QObject):
     """
     GameFilesScanWorker is a QObject-based worker class responsible for scanning game files and handling the results.
-    Attributes:
-        finished (Signal): Signal emitted when the scanning process is finished.
-        notify_sound_signal (Signal): Signal emitted to play a notification sound upon successful completion.
-        error_sound_signal (Signal): Signal emitted to play an error sound if an exception occurs.
-        custom_sound_signal (Signal): Signal emitted to play a custom sound, taking a string parameter.
     Methods:
         run() -> None:
     finished = Signal()
@@ -747,35 +733,6 @@ class MainWindow(QMainWindow):
         applying a dark style sheet, and configuring the main layout and tabs. It also
         sets up custom exception handling, initializes folder paths, sets up output
         redirection, and performs an initial update check.
-        Attributes:
-            game_files_worker (GameFilesScanWorker | None): Worker for scanning game files.
-            crash_logs_worker (CrashLogsScanWorker | None): Worker for scanning crash logs.
-            papyrus_button (QPushButton | None): Button for Papyrus actions.
-            game_files_button (QPushButton | None): Button for game files actions.
-            crash_logs_button (QPushButton | None): Button for crash logs actions.
-            output_redirector (OutputRedirector | None): Redirector for output.
-            output_text_box (QTextEdit | None): Text box for displaying output.
-            scan_folder_edit (QLineEdit | None): Input field for scan folder path.
-            mods_folder_edit (QLineEdit | None): Input field for mods folder path.
-            pastebin_fetch_button (QPushButton | None): Button to fetch from Pastebin.
-            pastebin_id_input (QLineEdit | None): Input field for Pastebin ID.
-            pastebin_label (QLabel | None): Label for Pastebin.
-            papyrus_monitor_thread (QThread | None): Thread for Papyrus monitoring.
-            papyrus_monitor_worker (PapyrusMonitorWorker | None): Worker for Papyrus monitoring.
-            _last_stats (PapyrusStats | None): Last recorded Papyrus stats.
-            pastebin_url_regex (re.Pattern): Regex pattern for Pastebin URLs.
-            audio_player (AudioPlayer): Player for audio notifications.
-            central_widget (QWidget): Central widget of the main window.
-            main_layout (QVBoxLayout): Main layout of the central widget.
-            tab_widget (QTabWidget): Tab widget for main and backup options.
-            main_tab (QWidget): Main options tab.
-            backups_tab (QWidget): File backup tab.
-            scan_button_group (QButtonGroup): Group for scan buttons.
-            output_buffer (str): Buffer for output redirection.
-            update_check_timer (QTimer): Timer for periodic update checks.
-            is_update_check_running (bool): Flag indicating if an update check is running.
-            crash_logs_thread (QThread | None): Thread for crash logs processing.
-            game_files_thread (QThread | None): Thread for game files processing.
         Raises:
             TypeError: If CMain is not properly initialized.
         """
@@ -2291,9 +2248,6 @@ This feature is not fully implemented."""
         in the background. It connects various signals and slots to handle notifications,
         errors, and the completion of the scan. The method also disables relevant buttons
         and updates the UI text before starting the thread.
-        Attributes:
-            crash_logs_thread (QThread): The thread in which the crash logs scan will run.
-            crash_logs_worker (CrashLogsScanWorker): The worker object that performs the scan.
         """
         if self.crash_logs_thread is None:
             self.crash_logs_thread = QThread()

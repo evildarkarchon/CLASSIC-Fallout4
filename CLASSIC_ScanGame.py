@@ -101,12 +101,6 @@ class ConfigFileCache:
         This method sets up the initial state of the object, including configuration file caches,
         duplicate file tracking, and the game root path. It also scans the game directory for
         configuration files, identifies duplicates, and stores them for further processing.
-        Attributes:
-            _config_files (dict): A dictionary to store configuration files by their lowercase names.
-            _config_file_cache (dict): A dictionary to cache configuration files.
-            duplicate_files (dict): A dictionary to store duplicate configuration files.
-            _duplicate_whitelist (list): A list of whitelisted directories to check for duplicates.
-            _game_root_path (Path): The root path of the game directory.
         Raises:
             FileNotFoundError: If the game root path is not found.
         """
