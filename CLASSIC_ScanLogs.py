@@ -28,6 +28,7 @@ DB_PATHS = (
 # ================================================
 # ASSORTED FUNCTIONS
 # ================================================
+# Nice little convenience function to abstract adding a value to a list.
 def append_or_extend(value: str | int | float | list | tuple | set, destination: list[str]) -> None:
         """
         Append or extend the specified list with the given value.
