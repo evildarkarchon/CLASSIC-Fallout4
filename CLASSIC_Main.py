@@ -596,12 +596,24 @@ def docs_generate_paths() -> None:
 def game_path_find() -> None:
     logger.debug("- - - INITIATED GAME PATH CHECK")
 
+    path: str | None = None
+    game_path: Path | None = None
+
     try:
         # Open the registry key
         reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{gamevars["vr"]}")  # pyright: ignore[reportPossiblyUnboundVariable]
         # Query the 'installed path' value
         path, _ = winreg.QueryValueEx(reg_key, "installed path")  # pyright: ignore[reportPossiblyUnboundVariable]
         winreg.CloseKey(reg_key)  # pyright: ignore[reportPossiblyUnboundVariable]
+    except FileNotFoundError:
+        try:
+            reg_key_gog = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\GOG.com\Games\1998527297")  # pyright: ignore[reportPossiblyUnboundVariable]
+            path, _ = winreg.QueryValueEx(reg_key_gog, "path")  # pyright: ignore[reportPossiblyUnboundVariable]
+            winreg.CloseKey(reg_key_gog)  # pyright: ignore[reportPossiblyUnboundVariable]
+        except (FileNotFoundError, UnboundLocalError, OSError):
+            game_path = None
+        else:
+            game_path = Path(path) if path else None
     except (UnboundLocalError, OSError):
         game_path = None
     else:
