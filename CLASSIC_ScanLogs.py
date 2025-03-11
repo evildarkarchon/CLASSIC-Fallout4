@@ -961,6 +961,36 @@ class ClassicScanLogs:
                     f"✔️ SmallBlockAllocator parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
                     autoscan_report
                 )
+    def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str]) -> None:
+        """
+        Scans the ArchiveLimit setting and updates the autoscan report accordingly.
+
+        This method checks if the "ArchiveLimit" setting in the crashgen dictionary is enabled.
+        If the setting is enabled, it appends a caution message to the autoscan report suggesting
+        to disable the ArchiveLimit setting to reduce instability.
+        Otherwise, it appends a message indicating that the ArchiveLimit parameter is correctly configured.
+
+        Args:
+            autoscan_report (list[str]): The list to which the scan results will be appended.
+            crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
+
+        Returns:
+            None
+        """
+        crashgen_archivelimit = crashgen.get("ArchiveLimit")
+        if crashgen_archivelimit:
+            append_or_extend(
+                (
+                    "# ❌ CAUTION : ArchiveLimit is set to TRUE, this setting can cause instability. # \n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ArchiveLimit to FALSE.\n-----\n",
+                ),
+                autoscan_report,
+            )
+        else:
+            append_or_extend(
+                f"✔️ ArchiveLimit parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                autoscan_report,
+            )
     def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], xsemodules: set[str]) -> None:
         """
         Scans the Buffout settings for LooksMenu and updates the autoscan report accordingly.
@@ -1335,6 +1365,7 @@ def crashlogs_scan() -> None:
                         )
                 scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
                 scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, Has_XCell, Has_BakaScrapHeap)
+                scanner.scan_archivelimit_setting(autoscan_report, crashgen)
                 scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
 
         append_or_extend(scanner.main_files_check, autoscan_report)

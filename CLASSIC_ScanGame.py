@@ -498,6 +498,14 @@ def check_crashgen_settings() -> str:
     else:
         message_list.append(f"✔️ SmallBlockAllocator parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
 
+    if mod_toml_config(crashgen_toml_main, "Patches", "ArchiveLimit"):
+        message_list.extend((
+            "# ❌ CAUTION : ArchiveLimit parameter is set to TRUE #\n",
+            "    Auto Scanner will change this parameter to FALSE to prevent crashes.\n-----\n",))
+        mod_toml_config(crashgen_toml_main, "Patches", "ArchiveLimit", False)
+    else:
+        message_list.append(f"✔️ ArchiveLimit parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
+
     if xse_files and mod_toml_config(crashgen_toml_main, "Compatibility", "F4EE") and any("f4ee" in file for file in xse_files):
         message_list.extend((
             "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE #\n",
