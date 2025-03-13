@@ -538,8 +538,8 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
 
     except (ValueError, OSError, aiohttp.ClientError, UpdateCheckError) as err:
         if not quiet:
-            print(err, flush=True)
-            print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{gamevars["game"]}"), flush=True)
+            print(err)
+            print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{gamevars["game"]}"))
         if gui_request:
             # GUI catches exceptions to detect update failures.
             raise UpdateCheckError from err
