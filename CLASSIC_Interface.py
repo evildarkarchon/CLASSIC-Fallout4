@@ -232,8 +232,27 @@ class PastebinFetchWorker(QObject):
 
     @Slot()
     def run(self) -> None:
+        """
+        Executes the main logic of the class.
+
+        This method attempts to fetch data from a URL using the `pastebin_fetch` function
+        from the `CLASSIC_ScanLogs` module. It emits success or error signals based on the
+        outcome of the operation.
+
+        Emits:
+            success (str): Emitted with the URL if the fetch operation is successful.
+            error (str): Emitted with an error message if an exception occurs.
+            finished: Emitted when the operation is complete, regardless of success or failure.
+
+        Exceptions:
+            OSError: If an OS-related error occurs.
+            ValueError: If a value-related error occurs.
+            requests.exceptions.RequestException: If a network-related error occurs.
+            ImportError: If the `pastebin_fetch` function cannot be imported.
+            Exception: For any other unexpected errors.
+        """
         try:
-            # Make sure CLogs is properly imported
+            # Make sure pastebin_fetch is properly imported
             from CLASSIC_ScanLogs import pastebin_fetch
             pastebin_fetch(self.url)
             self.success.emit(self.url)
