@@ -184,24 +184,22 @@ def remove_readonly(file_path: Path) -> None:
         FileNotFoundError: If the specified file does not exist.
         ValueError: If there is an issue with the file path or permissions.
         OSError: If there is an operating system-related error.
-    Logs:
-        Logs a debug message indicating whether the file was read-only and if the flag was removed.
-        Logs an error message if the file is not found or if there is an issue removing the read-only flag.
     """
-    """Remove the read-only flag from a given file, if present."""
     try:
         if platform.system() == "Windows":
-            if file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY == 1:
+            # Check if read-only attribute is set
+            if file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY:
                 file_path.chmod(stat.S_IWRITE)
                 logger.debug(f"- - - '{file_path}' is no longer Read-Only.")
             else:
                 logger.debug(f"- - - '{file_path}' is not set to Read-Only.")
         else:
-            # Get current file permissions.
-            permissions = file_path.stat().st_mode & 0o777
-            if permissions & (os.O_RDONLY | os.O_WRONLY):
-                # Remove file permissions if needed.
-                file_path.chmod(permissions | 0o200)
+            # Get current file permissions
+            current_mode = file_path.stat().st_mode
+            # Check if user write permission is not set (file is read-only)
+            if not (current_mode & stat.S_IWUSR):
+                # Add write permission for user
+                file_path.chmod(current_mode | stat.S_IWUSR)
                 logger.debug(f"- - - '{file_path}' is no longer Read-Only.")
             else:
                 logger.debug(f"- - - '{file_path}' is not set to Read-Only.")
