@@ -9,6 +9,7 @@ from types import TracebackType
 from typing import Literal
 
 import regex as re
+import requests
 from PySide6.QtCore import QEvent, QObject, Qt, QThread, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QCloseEvent, QDesktopServices, QFontMetrics, QIcon, QPixmap
 from PySide6.QtMultimedia import QSoundEffect
@@ -37,6 +38,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+import CLASSIC_ScanLogs as CLogs
 
 
 @dataclass
@@ -229,22 +232,17 @@ class PastebinFetchWorker(QObject):
 
     @Slot()
     def run(self) -> None:
-        """
-        Executes the main logic of the function.
-
-        Tries to fetch data from a pastebin URL and emits a success signal if successful.
-        If an OSError or ValueError occurs, emits an error signal with the exception message.
-        Finally, emits a finished signal regardless of success or failure.
-
-        Raises:
-            OSError: If there is an issue with the operating system.
-            ValueError: If there is a value error during execution.
-        """
         try:
-            CLogs.pastebin_fetch(self.url)
+            # Make sure CLogs is properly imported
+            from CLASSIC_ScanLogs import pastebin_fetch
+            pastebin_fetch(self.url)
             self.success.emit(self.url)
-        except (OSError, ValueError) as e:
-            self.error.emit(str(e))
+        except (OSError, ValueError, requests.exceptions.RequestException) as e:
+            self.error.emit(f"Network or file error: {e!s}")
+        except ImportError as e:
+            self.error.emit(f"Failed to import required module: {e!s}")
+        except Exception as e:  # noqa: BLE001
+            self.error.emit(f"Unexpected error: {e!s}")
         finally:
             self.finished.emit()
 
@@ -368,7 +366,6 @@ sys.excepthook = custom_excepthook
 
 import CLASSIC_Main as CMain  # noqa: E402
 import CLASSIC_ScanGame as CGame  # noqa: E402
-import CLASSIC_ScanLogs as CLogs  # noqa: E402
 
 
 class AudioPlayer(QObject):
@@ -1015,28 +1012,22 @@ QLabel {
         layout.addLayout(pastebin_layout)
 
     def fetch_pastebin_log(self) -> None:
-        """
-        Fetches a log from Pastebin based on the input provided in the pastebin_id_input field.
-        This method constructs a URL from the input text, creates a QThread and a PastebinFetchWorker,
-        and connects the necessary signals to handle the fetching process. Upon successful fetching,
-        a success message box is displayed. If an error occurs, an error message box is shown.
-        Returns:
-            None
-        """
         input_text = self.pastebin_id_input.text().strip() if self.pastebin_id_input is not None else ""
         url = input_text if self.pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
-
+            
         # Create thread and worker
         pastebin_thread = QThread()
         pastebin_worker = PastebinFetchWorker(url)
         pastebin_worker.moveToThread(pastebin_thread)
-
+            
         # Connect signals
         pastebin_thread.started.connect(pastebin_worker.run)
         pastebin_worker.finished.connect(pastebin_thread.quit)
+        pastebin_worker.finished.connect(pastebin_worker.deleteLater)
+        pastebin_thread.finished.connect(pastebin_thread.deleteLater)
         pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}", QMessageBox.StandardButton.Ok))
         pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}", QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.NoButton))
-
+            
         # Start thread
         pastebin_thread.start()
 
