@@ -644,8 +644,8 @@ def check_xse_plugins() -> str:
         right_version = (versions[VR[0]])
         wrong_version = (versions[FLAT[0]], versions[FLAT[1]])
     else:
-        right_version = (versions[FLAT[0]], versions[FLAT[1]]) # type: ignore[assignment]
-        wrong_version = (versions[VR[0]]) # type: ignore[assignment]
+        right_version = (versions[FLAT[0]], versions[FLAT[1]])
+        wrong_version = (versions[VR[0]])
     
     if (game_version in VR and plugins_path and plugins_path.joinpath(right_version[0][0]).exists()) or (game_version in FLAT and plugins_path and (plugins_path.joinpath(right_version[0][0]).exists() or plugins_path.joinpath(right_version[1][0]).exists())):
         message_list.append("✔️ You have the latest version of the Address Library file!\n-----\n")
