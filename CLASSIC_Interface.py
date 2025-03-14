@@ -2443,7 +2443,6 @@ This feature is not fully implemented."""
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    # noinspection PyBroadException
     try:
         window = MainWindow()
         window.show()
