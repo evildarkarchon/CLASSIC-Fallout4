@@ -711,7 +711,7 @@ class ClassicScanLogs:
                     trigger_plugins_loaded = True
         return crashlog_plugins, trigger_plugins_loaded
 
-    def loadorder_scan_log(self, segment_plugins: list[str], game_version: Version) -> tuple[dict[str, str], bool, bool]:
+    def loadorder_scan_log(self, segment_plugins: list[str], game_version: Version, version_current: Version) -> tuple[dict[str, str], bool, bool]:
         """
         Scan the crash log for plugins and determine if certain conditions are met.
 
@@ -731,7 +731,7 @@ class ClassicScanLogs:
             if "[FF]" in elem:
                 if game_version in (self.yamldata.game_version, self.yamldata.game_version_vr):
                     trigger_plugin_limit = True
-                elif game_version >= self.yamldata.game_version_new:
+                elif game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0"):
                     trigger_limit_check_disabled = True
             pluginmatch = self.pluginsearch.match(elem, concurrent=True)
             if pluginmatch is not None:
@@ -1282,7 +1282,7 @@ def crashlogs_scan() -> None:
             crashlog_plugins = crashlog_plugins | loadorder_plugins
 
         else:  # OTHERWISE, USE PLUGINS FROM CRASH LOG
-            log_plugins, trigger_plugin_limit, trigger_limit_check_disabled = scanner.loadorder_scan_log(segment_plugins, game_version)
+            log_plugins, trigger_plugin_limit, trigger_limit_check_disabled = scanner.loadorder_scan_log(segment_plugins, game_version, version_current)
             crashlog_plugins = crashlog_plugins | log_plugins
 
         crashlog_plugins.update({elem: "DLL" for elem in xsemodules if all(elem not in item for item in crashlog_plugins)})
