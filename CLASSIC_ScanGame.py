@@ -624,24 +624,32 @@ def check_xse_plugins() -> str:
         "OG Flat": ("version-1-10-163-0.bin", "Non-VR (Regular) version", "https://www.nexusmods.com/fallout4/mods/47327?tab=files"),
         "NG Flat": ("version-1-10-984-0.bin", "Non-VR (New Game) version", "https://www.nexusmods.com/fallout4/mods/47327?tab=files"),
     }
-    VR = (Version("1.2.72.0"))
-    FLAT = (Version("1.10.163"), Version("1.10.984"))
-    versions = {VR: adlib_versions["VR Mode"],
+    game_version: Version = get_game_version()
+    VR: tuple[Version] = (Version("1.2.72.0"),)
+    FLAT: tuple[Version, Version] = (Version("1.10.163.0"), Version("1.10.984.0"))
+    versions = {VR[0]: adlib_versions["VR Mode"],
                 FLAT[0]: adlib_versions["OG Flat"],
                 FLAT[1]: adlib_versions["NG Flat"]
             }
+    if game_version == Version("0.0.0.0"):
+        message_list.extend((
+            "❓ NOTICE : Unable to locate Address Library\n",
+            "  If you have Address Library installed, please check the path in your settings.\n",
+            "  If you don't have it installed, you can find it on the Nexus.\n",
+            f"  Link: Regular: {versions[FLAT[0]][2]} or VR: {versions[VR[0]][2]}\n-----\n",
+        ))
     right_version: tuple[tuple[str, str, str], tuple[str, str, str]] | tuple[str, str, str]
     wrong_version: tuple[tuple[str, str, str], tuple[str, str, str]] | tuple[str, str, str]
     if CMain.classic_settings(bool, "VR Mode"):
-        right_version = (versions[VR])
+        right_version = (versions[VR[0]])
         wrong_version = (versions[FLAT[0]], versions[FLAT[1]])
     else:
         right_version = (versions[FLAT[0]], versions[FLAT[1]]) # type: ignore[assignment]
-        wrong_version = (versions[VR]) # type: ignore[assignment]
+        wrong_version = (versions[VR[0]]) # type: ignore[assignment]
     
-    if (len(right_version) < 2 and plugins_path and plugins_path.joinpath(right_version[0][0]).exists()) or (len(right_version) >= 2 and plugins_path and (plugins_path.joinpath(right_version[0][0]).exists() or plugins_path.joinpath(right_version[1][0]).exists())):
+    if (game_version in VR and plugins_path and plugins_path.joinpath(right_version[0][0]).exists()) or (game_version in FLAT and plugins_path and (plugins_path.joinpath(right_version[0][0]).exists() or plugins_path.joinpath(right_version[1][0]).exists())):
         message_list.append("✔️ You have the latest version of the Address Library file!\n-----\n")
-    elif (len(right_version) < 2 and plugins_path and plugins_path.joinpath(wrong_version[0][0]).exists()) or (len(wrong_version) >= 2 and plugins_path and (plugins_path.joinpath(wrong_version[0][0]).exists() or plugins_path.joinpath(wrong_version[1][0]).exists())):
+    elif (game_version in VR and plugins_path and plugins_path.joinpath(wrong_version[0][0]).exists()) or (game_version in FLAT and plugins_path and (plugins_path.joinpath(wrong_version[0][0]).exists() or plugins_path.joinpath(wrong_version[1][0]).exists())):
         message_list.extend((
             "❌ CAUTION : You have installed the wrong version of the Address Library file!\n",
             f"  Remove the current Address Library file and install the {right_version[0][1]}.\n",
