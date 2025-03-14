@@ -1541,7 +1541,9 @@ QLabel {
             self.output_buffer = lines[-1] if not ends_with_newline else ""
 
         except Exception as e:  # noqa: BLE001
-            print(f"Error in update_output_text_box: {e}")
+            QMessageBox().critical(
+                self, "Error", f"An error occurred while updating the output text box: {e}", QMessageBox.StandardButton.Ok
+            )
 
     def process_lines(self, lines: list[str]) -> None:
         """
