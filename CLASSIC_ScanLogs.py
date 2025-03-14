@@ -501,7 +501,7 @@ def crashlogs_scan() -> None:
                 if "[FF]" in elem:
                     if game_version in (yamldata.game_version, yamldata.game_version_vr):
                         trigger_plugin_limit = True
-                    elif (game_version >= yamldata.game_version_new) and version_latest_vr < version_current:
+                    elif game_version >= yamldata.game_version_new and version_current < Version("1.37.0"):
                         trigger_limit_check_disabled = True
                 pluginmatch = pluginsearch.match(elem, concurrent=True)
                 if pluginmatch is not None:
