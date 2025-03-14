@@ -1,4 +1,5 @@
 import configparser
+import contextlib
 import hashlib
 import io
 import os
@@ -14,6 +15,11 @@ import chardet
 import iniparse
 import tomlkit
 from bs4 import BeautifulSoup
+from packaging.version import Version
+
+with contextlib.suppress(ImportError):
+    import win32api
+
 
 try:
     from bs4 import PageElement
@@ -349,6 +355,24 @@ class ConfigFileCache:
         """
         return self._config_files.items()
 
+def get_game_version() -> Version:
+    """
+    Get the game version from the game's executable file.
+
+    Returns:
+        Version: A Version named tuple containing the game's version information.
+    """
+    game_exe_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE")
+    if not game_exe_path:
+        return Version("0.0.0.0")
+
+    try:
+        version_info = win32api.GetFileVersionInfo(str(game_exe_path), "\\") # type: ignore[attr-defined]
+        major, minor, patch, build = version_info["FileVersionMS"] >> 16, version_info["FileVersionMS"] & 0xFFFF, version_info["FileVersionLS"] >> 16, version_info["FileVersionLS"] & 0xFFFF
+    except (Exception, UnboundLocalError):
+        major = minor = patch = build = 0
+
+    return Version(f"{major}.{minor}.{patch}.{build}")
 
 def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bool | int | None = None) -> Any | None:
     """
@@ -585,7 +609,7 @@ def check_log_errors(folder_path: Path | str) -> str:
 # ================================================
 # CHECK XSE PLUGINS FOLDER IN GAME DATA
 # ================================================
-def check_xse_plugins() -> str:  # RESERVED | Might be expanded upon in the future.
+def check_xse_plugins() -> str:
     """
     Checks the Address Library plugin version for Fallout 4 and returns a message indicating the status.
     This function determines whether the correct version of the Address Library file is installed based on the game mode (VR or Non-VR).
@@ -595,20 +619,37 @@ def check_xse_plugins() -> str:  # RESERVED | Might be expanded upon in the futu
     """
     message_list: list[str] = []
     plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
-    # TODO: Add NG version
     adlib_versions = {
         "VR Mode": ("version-1-2-72-0.csv", "Virtual Reality (VR) version", "https://www.nexusmods.com/fallout4/mods/64879?tab=files"),
-        "Non-VR Mode": ("version-1-10-163-0.bin", "Non-VR (Regular) version", "https://www.nexusmods.com/fallout4/mods/47327?tab=files"),
+        "OG Flat": ("version-1-10-163-0.bin", "Non-VR (Regular) version", "https://www.nexusmods.com/fallout4/mods/47327?tab=files"),
+        "NG Flat": ("version-1-10-984-0.bin", "Non-VR (New Game) version", "https://www.nexusmods.com/fallout4/mods/47327?tab=files"),
     }
-
+    VR = (Version("1.2.72.0"))
+    FLAT = (Version("1.10.163"), Version("1.10.984"))
+    versions = {VR: adlib_versions["VR Mode"],
+                FLAT[0]: adlib_versions["OG Flat"],
+                FLAT[1]: adlib_versions["NG Flat"]
+            }
+    right_version: tuple[tuple[str, str, str], tuple[str, str, str]] | tuple[str, str, str]
+    wrong_version: tuple[tuple[str, str, str], tuple[str, str, str]] | tuple[str, str, str]
     if CMain.classic_settings(bool, "VR Mode"):
-        selected_version = adlib_versions["VR Mode"]
-        other_version = adlib_versions["Non-VR Mode"]
+        right_version = (versions[VR])
+        wrong_version = (versions[FLAT[0]], versions[FLAT[1]])
     else:
-        selected_version = adlib_versions["Non-VR Mode"]
-        other_version = adlib_versions["VR Mode"]
+        right_version = (versions[FLAT[0]], versions[FLAT[1]]) # type: ignore[assignment]
+        wrong_version = (versions[VR]) # type: ignore[assignment]
+    
+    if (len(right_version) < 2 and plugins_path and plugins_path.joinpath(right_version[0][0]).exists()) or (len(right_version) >= 2 and plugins_path and (plugins_path.joinpath(right_version[0][0]).exists() or plugins_path.joinpath(right_version[1][0]).exists())):
+        message_list.append("✔️ You have the latest version of the Address Library file!\n-----\n")
+    elif (len(right_version) < 2 and plugins_path and plugins_path.joinpath(wrong_version[0][0]).exists()) or (len(wrong_version) >= 2 and plugins_path and (plugins_path.joinpath(wrong_version[0][0]).exists() or plugins_path.joinpath(wrong_version[1][0]).exists())):
+        message_list.extend((
+            "❌ CAUTION : You have installed the wrong version of the Address Library file!\n",
+            f"  Remove the current Address Library file and install the {right_version[0][1]}.\n",
+            f"  Link: {right_version[0][2]}\n-----\n",
+        ))
 
-    if plugins_path and plugins_path.joinpath(selected_version[0]).exists():
+
+    """if plugins_path and plugins_path.joinpath(selected_version[0]).exists():
         message_list.append("✔️ You have the latest version of the Address Library file!\n-----\n")
     elif plugins_path and plugins_path.joinpath(other_version[0]).exists():
         message_list.extend((
@@ -622,7 +663,7 @@ def check_xse_plugins() -> str:  # RESERVED | Might be expanded upon in the futu
             "  If you have Address Library installed, please check the path in your settings.\n",
             "  If you don't have it installed, you can find it on the Nexus.\n",
             f"  Link: {selected_version[2]}\n-----\n",
-        ))
+        ))"""
 
     return "".join(message_list)
 
