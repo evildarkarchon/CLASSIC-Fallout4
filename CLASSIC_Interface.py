@@ -1,6 +1,5 @@
 import asyncio
 import sys
-import traceback
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -626,7 +625,7 @@ class CrashLogsScanWorker(QObject):
         try:
             CLogs.crashlogs_scan()
             self.notify_sound_signal.emit()  # type: ignore # Emit signal to play notify sound
-        except Exception as e:  # noqa: BLE001
+        except Exception:
             if CMain.classic_settings(bool, "Audio Notifications"):
                 self.error_sound_signal.emit()  # type: ignore # Emit signal to play error sound in case of exception
             else:
@@ -661,7 +660,7 @@ class GameFilesScanWorker(QObject):
         try:
             CGame.write_combined_results()
             self.notify_sound_signal.emit()  # type: ignore # Emit signal to play notify sound
-        except Exception as e:  # noqa: BLE001
+        except Exception:
             if CMain.classic_settings(bool, "Audio Notifications"):
                 self.error_sound_signal.emit()  # type: ignore # Emit signal to play error sound in case of exception
             else:
