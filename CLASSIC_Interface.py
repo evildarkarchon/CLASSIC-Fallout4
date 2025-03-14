@@ -5,7 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from types import TracebackType
 from typing import Literal
 
 import regex as re
@@ -30,7 +29,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
-    QPlainTextEdit,
     QPushButton,
     QSizePolicy,
     QTabWidget,
@@ -39,6 +37,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+import CLASSIC_Main as CMain
+import CLASSIC_ScanGame as CGame
 import CLASSIC_ScanLogs as CLogs
 
 
@@ -317,75 +317,6 @@ class CustomAboutDialog(QDialog):
 
         # Align the Close button to the right and add some space at the bottom
         layout.setAlignment(close_button, Qt.AlignmentFlag.AlignRight)
-
-class ErrorDialog(QDialog):
-    def __init__(self, error_dialog_text: str) -> None:
-        """
-        Initializes the error dialog window.
-        Args:
-            error_dialog_text (str): The text to be displayed in the error dialog.
-        Sets up the error dialog window with a title, minimum size, a read-only text
-        edit widget to display the error message, and a button to copy the error
-        message to the clipboard.
-        """
-        super().__init__()
-        self.setWindowTitle("Error")
-        self.setMinimumSize(600, 300)
-        layout = QVBoxLayout(self)
-
-        self.text_edit = QPlainTextEdit(self)
-        self.text_edit.setReadOnly(True)
-        self.text_edit.setPlainText(error_dialog_text)
-        layout.addWidget(self.text_edit)
-
-        copy_button = QPushButton("Copy to Clipboard", self)
-        copy_button.clicked.connect(self.copy_to_clipboard)
-        layout.addWidget(copy_button)
-
-    def copy_to_clipboard(self) -> None:
-        QApplication.clipboard().setText(self.text_edit.toPlainText())
-
-
-def show_exception_box(exception_text: str) -> None:
-    """
-    Displays an error dialog with the provided exception text.
-
-    Args:
-        exception_text (str): The text of the exception to display in the error dialog.
-
-    Returns:
-        None
-    """
-    dialog = ErrorDialog(exception_text)
-    dialog.show()
-    dialog.exec()
-
-
-def custom_excepthook(exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType | None) -> None:
-    """
-    Custom exception hook to handle uncaught exceptions.
-
-    This function formats the exception details and prints them to the console.
-    Additionally, it displays the exception details in a custom exception box.
-
-    Args:
-        exc_type (type[BaseException]): The class of the exception that was raised.
-        exc_value (BaseException): The instance of the exception that was raised.
-        exc_traceback (TracebackType | None): The traceback object representing the point at which the exception was raised.
-
-    Returns:
-        None
-    """
-    custom_except_text = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-    print(custom_except_text)  # Still print to console
-    show_exception_box(custom_except_text)
-
-
-sys.excepthook = custom_excepthook
-
-import CLASSIC_Main as CMain  # noqa: E402
-import CLASSIC_ScanGame as CGame  # noqa: E402
-
 
 class AudioPlayer(QObject):
     """
@@ -699,7 +630,7 @@ class CrashLogsScanWorker(QObject):
             if CMain.classic_settings(bool, "Audio Notifications"):
                 self.error_sound_signal.emit()  # type: ignore # Emit signal to play error sound in case of exception
             else:
-                ErrorDialog(str(e)).exec()
+                raise
         finally:
             self.finished.emit() # type: ignore
 
@@ -734,7 +665,7 @@ class GameFilesScanWorker(QObject):
             if CMain.classic_settings(bool, "Audio Notifications"):
                 self.error_sound_signal.emit()  # type: ignore # Emit signal to play error sound in case of exception
             else:
-                ErrorDialog(str(e)).exec()
+                raise
         finally:
             self.finished.emit() # type: ignore
 
@@ -2518,6 +2449,3 @@ if __name__ == "__main__":
         sys.exit(app.exec())
     except KeyboardInterrupt:
         app.exit(1)
-    except Exception as _:  # noqa: BLE001
-        error_text = traceback.format_exc()
-        show_exception_box(error_text)
