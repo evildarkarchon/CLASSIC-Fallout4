@@ -854,43 +854,34 @@ class ClassicScanLogs:
             )
 
     def scan_buffout_memorymanagement_settings(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str],
-                                               Has_XCell: bool, Has_BakaScrapHeap: bool) -> None:
+                                           Has_XCell: bool, Has_BakaScrapHeap: bool) -> None:
         """
-        Scans the Buffout memory management settings and updates the autoscan report accordingly.
-
-        This method checks if the "MemoryManager" setting in the crashgen dictionary is enabled
-        and if X-Cell or Baka ScrapHeap mods are present. If conflicts are detected, it appends
-        caution messages to the autoscan report.
-
-        Args:
-            autoscan_report (list[str]): The list to which the scan results will be appended.
-            crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
-            Has_XCell (bool): Indicates if the X-Cell mod is installed.
-            Has_BakaScrapHeap (bool): Indicates if the Baka ScrapHeap mod is installed.
-
+        Scans and validates the memory management settings for the Buffout 4 crash generator configuration.
+        This function checks the compatibility of the memory management settings with the installed mods (X-Cell and Baka ScrapHeap)
+        and appends appropriate messages to the autoscan report.
+        
+        Parameters:
+        autoscan_report (list[str]): The list to which the scan results will be appended.
+        crashgen (dict[str, bool | int | str]): The crash generator configuration settings.
+        Has_XCell (bool): Indicates if the X-Cell mod is installed.
+        Has_BakaScrapHeap (bool): Indicates if the Baka ScrapHeap mod is installed.
+        
         Returns:
-            None
+        None
         """
-        crashgen_memorymanager = crashgen.get("MemoryManager")
-        if crashgen_memorymanager:
+        # Check main MemoryManager setting first
+        mem_manager = crashgen.get("MemoryManager")
+        if mem_manager:
             if Has_XCell:
                 append_or_extend((
                     "# ❌ CAUTION : X-Cell is installed, but MemoryManager parameter is set to TRUE # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                ),
-                    autoscan_report)
-                if Has_BakaScrapHeap:
-                    append_or_extend((
-                        "# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with X-Cell # \n",
-                        " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n",
-                    ),
-                        autoscan_report)
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.\n-----\n"
+                ), autoscan_report)
             elif Has_BakaScrapHeap:
                 append_or_extend((
                     f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.yamldata.crashgen_name} # \n",
-                    f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {self.yamldata.crashgen_name}.\n-----\n",
-                ),
-                    autoscan_report)
+                    f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {self.yamldata.crashgen_name}.\n-----\n"
+                ), autoscan_report)
             else:
                 append_or_extend(
                     f"✔️ Memory Manager parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
@@ -900,7 +891,7 @@ class ClassicScanLogs:
             if Has_BakaScrapHeap:
                 append_or_extend((
                     "# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with X-Cell # \n",
-                    " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n",
+                    " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n"
                 ), autoscan_report)
             else:
                 append_or_extend(
@@ -910,57 +901,30 @@ class ClassicScanLogs:
         elif Has_BakaScrapHeap:
             append_or_extend((
                 f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.yamldata.crashgen_name} # \n",
-                f" FIX: Uninstall the Baka ScrapHeap Mod and open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.\n-----\n",
-            ),
-                autoscan_report)
-
+                f" FIX: Uninstall the Baka ScrapHeap Mod and open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.\n-----\n"
+            ), autoscan_report)
+    
+        # Check other memory settings (only relevant when X-Cell is installed)
         if Has_XCell:
-            crashgen_havokmemorysystem = crashgen.get("HavokMemorySystem")
-            if crashgen_havokmemorysystem:
-                append_or_extend((
-                    "# ❌ CAUTION : X-Cell is installed, but HavokMemorySystem parameter is set to TRUE # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change HavokMemorySystem to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                ),
-                    autoscan_report)
-            else:
-                append_or_extend(
-                    f"✔️ HavokMemorySystem parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
-                    autoscan_report
-                )
-            crashgen_bstexturestreamerlocalheap = crashgen.get("BSTextureStreamerLocalHeap")
-            if crashgen_bstexturestreamerlocalheap:
-                append_or_extend((
-                    "# ❌ CAUTION : X-Cell is installed, but BSTextureStreamerLocalHeap parameter is set to TRUE # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change BSTextureStreamerLocalHeap to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                ),
-                    autoscan_report)
-            else:
-                append_or_extend(
-                    f"✔️ BSTextureStreamerLocalHeap parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
-                    autoscan_report
-                )
-            crashgen_scaleformallocator = crashgen.get("ScaleformAllocator")
-            if crashgen_scaleformallocator:
-                append_or_extend((
-                    "# ❌ CAUTION : X-Cell is installed, but ScaleformAllocator parameter is set to TRUE # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ScaleformAllocator to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                ), autoscan_report)
-            else:
-                append_or_extend(
-                    f"✔️ ScaleformAllocator parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
-                    autoscan_report
-                )
-            crashgen_smallblockallocator = crashgen.get("SmallBlockAllocator")
-            if crashgen_smallblockallocator:
-                append_or_extend((
-                    "# ❌ CAUTION : X-Cell is installed, but SmallBlockAllocator parameter is set to TRUE # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change SmallBlockAllocator to FALSE, this prevents conflicts with X-Cell.\n-----\n",
-                ), autoscan_report)
-            else:
-                append_or_extend(
-                    f"✔️ SmallBlockAllocator parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
-                    autoscan_report
-                )
+            memory_settings = {
+                "HavokMemorySystem": "Havok Memory System",
+                "BSTextureStreamerLocalHeap": "BSTextureStreamerLocalHeap", 
+                "ScaleformAllocator": "Scaleform Allocator",
+                "SmallBlockAllocator": "Small Block Allocator"
+            }
+            
+            for setting_key, setting_name in memory_settings.items():
+                if crashgen.get(setting_key):
+                    append_or_extend((
+                        f"# ❌ CAUTION : X-Cell is installed, but {setting_key} parameter is set to TRUE # \n",
+                        f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change {setting_key} to FALSE, this prevents conflicts with X-Cell.\n-----\n"
+                    ), autoscan_report)
+                else:
+                    append_or_extend(
+                        f"✔️ {setting_name} parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                        autoscan_report
+                    )
+
     def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str]) -> None:
         """
         Scans the ArchiveLimit setting and updates the autoscan report accordingly.
