@@ -945,7 +945,7 @@ class ClassicScanLogs:
         if crashgen_archivelimit:
             append_or_extend(
                 (
-                    "# ❌ CAUTION : ArchiveLimit is set to TRUE, this setting can cause instability. # \n",
+                    "# ❌ CAUTION : ArchiveLimit is set to TRUE, this setting is known to cause instability. # \n",
                     f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ArchiveLimit to FALSE.\n-----\n",
                 ),
                 autoscan_report,
