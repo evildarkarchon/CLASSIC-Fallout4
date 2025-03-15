@@ -9,7 +9,7 @@ import subprocess
 from collections.abc import ItemsView
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, cast
 
 import chardet
 import iniparse
@@ -360,19 +360,44 @@ def get_game_version() -> Version:
     Get the game version from the game's executable file.
 
     Returns:
-        Version: A Version named tuple containing the game's version information.
+        Version: A Version object containing the game's version information.
+                 Returns Version("0.0.0.0") if the game executable cannot be found
+                 or if the version information cannot be retrieved.
     """
     game_exe_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE")
-    if not game_exe_path:
+    
+    # Check if path exists and is a file
+    if not game_exe_path or not game_exe_path.is_file():
+        CMain.logger.warning("Game executable not found or path is invalid")
         return Version("0.0.0.0")
 
     try:
+        # Get file version info using win32api
         version_info = win32api.GetFileVersionInfo(str(game_exe_path), "\\") # type: ignore[attr-defined]
-        major, minor, patch, build = version_info["FileVersionMS"] >> 16, version_info["FileVersionMS"] & 0xFFFF, version_info["FileVersionLS"] >> 16, version_info["FileVersionLS"] & 0xFFFF
-    except (Exception, UnboundLocalError):
-        major = minor = patch = build = 0
-
-    return Version(f"{major}.{minor}.{patch}.{build}")
+        
+        # Extract version components
+        major = version_info["FileVersionMS"] >> 16
+        minor = version_info["FileVersionMS"] & 0xFFFF
+        patch = version_info["FileVersionLS"] >> 16
+        build = version_info["FileVersionLS"] & 0xFFFF
+        
+        version = Version(f"{major}.{minor}.{patch}.{build}")
+        CMain.logger.debug(f"Game version detected: {version}")
+        
+    except FileNotFoundError:
+        CMain.logger.error(f"Game executable not found at: {game_exe_path}")
+        return Version("0.0.0.0")
+    except (AttributeError, UnboundLocalError):
+        CMain.logger.error("win32api module not properly loaded")
+        return Version("0.0.0.0")
+    except (OSError, ValueError) as e:
+        CMain.logger.error(f"Error retrieving version info: {e}")
+        return Version("0.0.0.0")
+    except Exception as e:  # noqa: BLE001
+        CMain.logger.error(f"Unexpected error getting game version: {e}")
+        return Version("0.0.0.0")
+    else:
+        return version
 
 def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bool | int | None = None) -> Any | None:
     """
@@ -606,73 +631,86 @@ def check_log_errors(folder_path: Path | str) -> str:
     return "".join(message_list)
 
 
-# ================================================
-# CHECK XSE PLUGINS FOLDER IN GAME DATA
-# ================================================
 def check_xse_plugins() -> str:
     """
     Checks the Address Library plugin version for Fallout 4 and returns a message indicating the status.
     This function determines whether the correct version of the Address Library file is installed based on the game mode (VR or Non-VR).
     It generates a message indicating whether the correct version is installed, the wrong version is installed, or if the file is missing.
+    
     Returns:
         str: A message indicating the status of the Address Library file.
     """
     message_list: list[str] = []
     plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
-    adlib_versions = {
-        "VR Mode": ("version-1-2-72-0.csv", "Virtual Reality (VR) version", "https://www.nexusmods.com/fallout4/mods/64879?tab=files"),
-        "OG Flat": ("version-1-10-163-0.bin", "Non-VR (Regular) version", "https://www.nexusmods.com/fallout4/mods/47327?tab=files"),
-        "NG Flat": ("version-1-10-984-0.bin", "Non-VR (New Game) version", "https://www.nexusmods.com/fallout4/mods/47327?tab=files"),
+    
+    # Version information organized by game type
+    version_info = {
+        "VR": {
+            "version": Version("1.2.72.0"),
+            "filename": "version-1-2-72-0.csv",
+            "description": "Virtual Reality (VR) version",
+            "url": "https://www.nexusmods.com/fallout4/mods/64879?tab=files"
+        },
+        "OG": {
+            "version": Version("1.10.163.0"),
+            "filename": "version-1-10-163-0.bin",
+            "description": "Non-VR (Regular) version",
+            "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
+        },
+        "NG": {
+            "version": Version("1.10.984.0"),
+            "filename": "version-1-10-984-0.bin",
+            "description": "Non-VR (New Game) version",
+            "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
+        }
     }
+    
     game_version: Version = get_game_version()
-    VR: tuple[Version] = (Version("1.2.72.0"),)
-    FLAT: tuple[Version, Version] = (Version("1.10.163.0"), Version("1.10.984.0"))
-    versions = {VR[0]: adlib_versions["VR Mode"],
-                FLAT[0]: adlib_versions["OG Flat"],
-                FLAT[1]: adlib_versions["NG Flat"]
-            }
+    
+    # Check if we can detect the game version
     if game_version == Version("0.0.0.0"):
         message_list.extend((
             "❓ NOTICE : Unable to locate Address Library\n",
             "  If you have Address Library installed, please check the path in your settings.\n",
             "  If you don't have it installed, you can find it on the Nexus.\n",
-            f"  Link: Regular: {versions[FLAT[0]][2]} or VR: {versions[VR[0]][2]}\n-----\n",
+            f"  Link: Regular: {version_info['OG']['url']} or VR: {version_info['VR']['url']}\n-----\n",
         ))
-    right_version: tuple[tuple[str, str, str], tuple[str, str, str]] | tuple[str, str, str]
-    wrong_version: tuple[tuple[str, str, str], tuple[str, str, str]] | tuple[str, str, str]
-    if CMain.classic_settings(bool, "VR Mode"):
-        right_version = (versions[VR[0]])
-        wrong_version = (versions[FLAT[0]], versions[FLAT[1]])
-    else:
-        right_version = (versions[FLAT[0]], versions[FLAT[1]])
-        wrong_version = (versions[VR[0]])
+        return "".join(message_list)
     
-    if (game_version in VR and plugins_path and plugins_path.joinpath(right_version[0][0]).exists()) or (game_version in FLAT and plugins_path and (plugins_path.joinpath(right_version[0][0]).exists() or plugins_path.joinpath(right_version[1][0]).exists())):
-        message_list.append("✔️ You have the latest version of the Address Library file!\n-----\n")
-    elif (game_version in VR and plugins_path and plugins_path.joinpath(wrong_version[0][0]).exists()) or (game_version in FLAT and plugins_path and (plugins_path.joinpath(wrong_version[0][0]).exists() or plugins_path.joinpath(wrong_version[1][0]).exists())):
+    # Determine correct version based on game mode
+    is_vr_mode = CMain.classic_settings(bool, "VR Mode")
+    
+    if is_vr_mode:
+        correct_versions = [version_info["VR"]]
+        wrong_versions = [version_info["OG"], version_info["NG"]]
+    else:
+        correct_versions = [version_info["OG"], version_info["NG"]]
+        wrong_versions = [version_info["VR"]]
+    
+    # Check if plugins_path exists
+    if not plugins_path:
+        message_list.append("❌ ERROR: Could not locate plugins folder path in settings\n-----\n")
+        return "".join(message_list)
+    
+    # Check if correct version(s) exist
+    correct_version_exists = any(plugins_path.joinpath(cast("str", version["filename"])).exists() for version in correct_versions)
+    wrong_version_exists = any(plugins_path.joinpath(cast("str", version["filename"])).exists() for version in wrong_versions)
+    
+    if correct_version_exists:
+        message_list.append("✔️ You have the correct version of the Address Library file!\n-----\n")
+    elif wrong_version_exists:
         message_list.extend((
-            "❌ CAUTION : You have installed the wrong version of the Address Library file!\n",
-            f"  Remove the current Address Library file and install the {right_version[0][1]}.\n",
-            f"  Link: {right_version[0][2]}\n-----\n",
-        ))
-
-
-    """if plugins_path and plugins_path.joinpath(selected_version[0]).exists():
-        message_list.append("✔️ You have the latest version of the Address Library file!\n-----\n")
-    elif plugins_path and plugins_path.joinpath(other_version[0]).exists():
-        message_list.extend((
-            "❌ CAUTION : You have installed the wrong version of the Address Library file!\n",
-            f"  Remove the current Address Library file and install the {selected_version[1]}.\n",
-            f"  Link: {selected_version[2]}\n-----\n",
+            "❌ CAUTION: You have installed the wrong version of the Address Library file!\n",
+            f"  Remove the current Address Library file and install the {correct_versions[0]['description']}.\n",
+            f"  Link: {correct_versions[0]['url']}\n-----\n",
         ))
     else:
         message_list.extend((
-            "❓ NOTICE : Unable to locate Address Library\n",
-            "  If you have Address Library installed, please check the path in your settings.\n",
-            "  If you don't have it installed, you can find it on the Nexus.\n",
-            f"  Link: {selected_version[2]}\n-----\n",
-        ))"""
-
+            "❓ NOTICE: Address Library file not found\n",
+            f"  Please install the {correct_versions[0]['description']} for proper functionality.\n",
+            f"  Link: {correct_versions[0]['url']}\n-----\n",
+        ))
+    
     return "".join(message_list)
 
 
