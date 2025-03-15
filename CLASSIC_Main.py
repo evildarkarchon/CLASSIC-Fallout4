@@ -477,12 +477,6 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
         pass
     return None
 
-
-# New name transition aid. TODO: Remove when no longer needed.
-async def classic_update_check(quiet: bool = False, gui_request: bool = True) -> bool:
-    return await is_latest_version(quiet, gui_request)
-
-
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
     """
     Check if the CLASSIC mod is the latest version by querying GitHub and Nexus Mods.
