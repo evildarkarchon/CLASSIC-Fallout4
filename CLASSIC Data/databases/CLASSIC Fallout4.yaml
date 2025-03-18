@@ -27,6 +27,7 @@ Game_Info:
   XSE_Acronym: F4SE
   XSE_FullName: Fallout 4 Script Extender (F4SE)
   XSE_Ver_Latest: 0.6.23
+  XSE_Ver_Latest_NG: 0.7.2
   XSE_FileCount: 29
 
   XSE_HashedScripts:  # SHA-256 from https://f4se.silverlock.org/
