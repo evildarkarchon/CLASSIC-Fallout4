@@ -1,5 +1,4 @@
 import configparser
-import contextlib
 import hashlib
 import io
 import os
