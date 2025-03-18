@@ -974,7 +974,7 @@ QLabel {
         pastebin_worker.finished.connect(pastebin_thread.quit)
         pastebin_worker.finished.connect(pastebin_worker.deleteLater)
         pastebin_thread.finished.connect(pastebin_thread.deleteLater)
-        pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}", QMessageBox.StandardButton.Ok))
+        pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok))
         pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}", QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.NoButton))
             
         # Start thread
