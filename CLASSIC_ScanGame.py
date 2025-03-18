@@ -13,7 +13,12 @@ from typing import Any, Literal, TypedDict
 import chardet
 import iniparse
 import tomlkit
-from bs4 import BeautifulSoup, PageElement
+from bs4 import BeautifulSoup
+
+try:
+    from bs4 import PageElement
+except ImportError:
+    from bs4.element import PageElement  # noqa: TC002
 
 import CLASSIC_Main as CMain
 
@@ -266,6 +271,7 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
 def check_crashgen_settings() -> str:
     message_list: list[str] = []
     plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
+    plugins_path = Path(plugins_path) if plugins_path and not isinstance(plugins_path, Path) else plugins_path
     crashgen_name_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.CRASHGEN_LogName")
     crashgen_name = crashgen_name_setting if isinstance(crashgen_name_setting, str) else ""
 
