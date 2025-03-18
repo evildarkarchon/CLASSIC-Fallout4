@@ -12,7 +12,7 @@ from enum import Enum, auto
 from functools import reduce
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, cast
 
 import aiohttp
 import chardet
@@ -23,6 +23,8 @@ from PySide6.QtCore import QObject, Signal
 with contextlib.suppress(ImportError):
     import winreg
 
+    import win32api  # type: ignore[import]
+
 """ AUTHOR NOTES (POET): ❓ ❌ ✔️
     ❓ REMINDER: 'shadows x from outer scope' means the variable name repeats both in the func and outside all other func.
     ❓ Comments marked as RESERVED in all scripts are intended for future updates or tests, do not edit / move / remove.
@@ -30,13 +32,62 @@ with contextlib.suppress(ImportError):
     ❓ import shelve if you want to store persistent data that you do not want regular users to access or modify.
     ❓ Globals are generally used to standardize game paths and INI files naming conventions.
 """
-
+NULL_VERSION = Version("0.0.0.0")
+OG_VERSION = Version("1.10.163.0")
+NG_VERSION = Version("1.10.984.0")
+OG_F4SE_VERSION = Version("0.6.23")
+NG_F4SE_VERSION = Version("0.7.2")
+FO4_VERSIONS = (OG_VERSION, NG_VERSION)
+F4SE_VERSIONS = (OG_F4SE_VERSION, NG_F4SE_VERSION)
 type YAMLLiteral = str | int | bool
 type YAMLSequence = list[str]
 type YAMLMapping = dict[str, "YAMLValue"]
 type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
 type YAMLValueOptional = YAMLValue | None
 type GameID = Literal["Fallout4", "Fallout4VR", "Skyrim", "Starfield"] # Entries must correspond to the game's Main ESM or EXE file name.
+
+def get_game_version(game_exe_path: Path) -> Version:
+    """
+    Get the game version from the game's executable file.
+
+    Returns:
+        Version: A Version object containing the game's version information.
+                 Returns Version("0.0.0.0") if the game executable cannot be found
+                 or if the version information cannot be retrieved.
+    """
+
+    # Check if path exists and is a file
+    if not game_exe_path or not game_exe_path.is_file():
+        logger.warning("Game executable not found or path is invalid")
+        return NULL_VERSION
+
+    try:
+        # Get file version info using win32api
+        version_info = win32api.GetFileVersionInfo(str(game_exe_path), "\\")  # type: ignore[attr-defined]
+
+        # Extract version components
+        major = version_info["FileVersionMS"] >> 16
+        minor = version_info["FileVersionMS"] & 0xFFFF
+        patch = version_info["FileVersionLS"] >> 16
+        build = version_info["FileVersionLS"] & 0xFFFF
+
+        version = Version(f"{major}.{minor}.{patch}.{build}")
+        logger.debug(f"Game version detected: {version}")
+
+    except FileNotFoundError:
+        logger.error(f"Game executable not found at: {game_exe_path}")
+        return NULL_VERSION
+    except (AttributeError, UnboundLocalError):
+        logger.error("win32api module not properly loaded")
+        return NULL_VERSION
+    except (OSError, ValueError) as e:
+        logger.error(f"Error retrieving version info: {e}")
+        return NULL_VERSION
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Unexpected error getting game version: {e}")
+        return NULL_VERSION
+    else:
+        return version
 
 class YAML(Enum):
     Main = auto()
@@ -60,8 +111,6 @@ gamevars: GameVars = {
     "game": "Fallout4",
     "vr": "",
 }
-
-NULL_VERSION = Version("0.0.0")
 
 class UpdateCheckError(Exception):
     """Checking for updates failed."""
@@ -859,9 +908,15 @@ def game_generate_paths() -> None:
     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_Folder_Plugins", fr"{game_path}\Data\{xse_acronym_base}\Plugins")
     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE", fr"{game_path}\{gamevars["game"]}{gamevars["vr"]}.exe")
+    game_version = get_game_version(Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE"))))
     match gamevars["game"]:
         case "Fallout4" if not gamevars["vr"]:
-            yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib", fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin")
+            if not game_version or game_version not in FO4_VERSIONS:
+                raise ValueError("Unsupported or invalid game version")
+            if game_version == OG_VERSION:
+                yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib", fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin")
+            elif game_version == NG_VERSION:
+                yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib", fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-984-0.bin")
         case "Fallout4" if gamevars["vr"]:
             yaml_settings(str, YAML.Game_Local, "GameVR_Info.Game_File_AddressLib", fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-2-72-0.csv")
 

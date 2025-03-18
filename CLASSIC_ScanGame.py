@@ -17,10 +17,6 @@ import tomlkit
 from bs4 import BeautifulSoup
 from packaging.version import Version
 
-with contextlib.suppress(ImportError):
-    import win32api  # type: ignore[import]
-
-
 try:
     from bs4 import PageElement
 except ImportError:
@@ -355,49 +351,6 @@ class ConfigFileCache:
         """
         return self._config_files.items()
 
-def get_game_version() -> Version:
-    """
-    Get the game version from the game's executable file.
-
-    Returns:
-        Version: A Version object containing the game's version information.
-                 Returns Version("0.0.0.0") if the game executable cannot be found
-                 or if the version information cannot be retrieved.
-    """
-    game_exe_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE")
-    
-    # Check if path exists and is a file
-    if not game_exe_path or not game_exe_path.is_file():
-        CMain.logger.warning("Game executable not found or path is invalid")
-        return Version("0.0.0.0")
-
-    try:
-        # Get file version info using win32api
-        version_info = win32api.GetFileVersionInfo(str(game_exe_path), "\\") # type: ignore[attr-defined]
-        
-        # Extract version components
-        major = version_info["FileVersionMS"] >> 16
-        minor = version_info["FileVersionMS"] & 0xFFFF
-        patch = version_info["FileVersionLS"] >> 16
-        build = version_info["FileVersionLS"] & 0xFFFF
-        
-        version = Version(f"{major}.{minor}.{patch}.{build}")
-        CMain.logger.debug(f"Game version detected: {version}")
-        
-    except FileNotFoundError:
-        CMain.logger.error(f"Game executable not found at: {game_exe_path}")
-        return Version("0.0.0.0")
-    except (AttributeError, UnboundLocalError):
-        CMain.logger.error("win32api module not properly loaded")
-        return Version("0.0.0.0")
-    except (OSError, ValueError) as e:
-        CMain.logger.error(f"Error retrieving version info: {e}")
-        return Version("0.0.0.0")
-    except Exception as e:  # noqa: BLE001
-        CMain.logger.error(f"Unexpected error getting game version: {e}")
-        return Version("0.0.0.0")
-    else:
-        return version
 
 def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bool | int | None = None) -> Any | None:
     """
@@ -712,7 +665,7 @@ def check_xse_plugins() -> str:
         }
     }
     
-    game_version: Version = get_game_version()
+    game_version: Version = CMain.get_game_version(Path(cast("str", CMain.yaml_settings(str, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE"))))
     
     # Check if we can detect the game version
     if game_version == Version("0.0.0.0"):
