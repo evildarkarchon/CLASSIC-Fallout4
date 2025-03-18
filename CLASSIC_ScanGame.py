@@ -8,7 +8,7 @@ import subprocess
 from collections.abc import ItemsView
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, cast
 
 import chardet
 import iniparse
@@ -269,21 +269,43 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
 # CHECK BUFFOUT CONFIG SETTINGS
 # ================================================
 def check_crashgen_settings() -> str:
-    message_list: list[str] = []
-    plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
-    plugins_path = Path(plugins_path) if plugins_path and not isinstance(plugins_path, Path) else plugins_path
-    crashgen_name_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.CRASHGEN_LogName")
-    crashgen_name = crashgen_name_setting if isinstance(crashgen_name_setting, str) else ""
+    """
+    Checks and validates the settings for the CRASHGEN log in the Buffout4 configuration.
 
+    This function performs the following tasks:
+    - Retrieves the path to the plugins folder and the CRASHGEN log name from the YAML settings.
+    - Determines the correct Buffout4 configuration file to use (either Buffout4/config.toml or Buffout4.toml).
+    - Checks for the presence of both configuration files and warns the user if both are found.
+    - Checks for the presence of specific DLL files in the plugins folder to determine installed mods.
+    - Validates and modifies the Buffout4 configuration settings to prevent conflicts with installed mods.
+    - Generates a list of messages indicating the status and any changes made to the configuration.
+
+    Returns:
+        str: A string containing messages about the status and any changes made to the Buffout4 configuration.
+    """
+    message_list: list[str] = []
+
+    # Get plugins path and ensure it's a Path object
+    plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
+    if plugins_path and not isinstance(plugins_path, Path):
+        plugins_path = Path(plugins_path)
+
+    # Get crash generator name from settings
+    crashgen_name_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.CRASHGEN_LogName")
+    crashgen_name = crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
+
+    # Define paths to possible config files
     crashgen_toml_og = plugins_path / "Buffout4/config.toml" if plugins_path else None
     crashgen_toml_vr = plugins_path / "Buffout4.toml" if plugins_path else None
+
+    # Determine which config file to use
+    crashgen_toml_main = None
     if crashgen_toml_og and crashgen_toml_og.is_file():
         crashgen_toml_main = crashgen_toml_og
     elif crashgen_toml_vr and crashgen_toml_vr.is_file():
         crashgen_toml_main = crashgen_toml_vr
-    else:
-        raise FileNotFoundError("Buffout4.toml not found in the plugins folder.")
 
+    # Check if both versions of config exist and warn user
     if (crashgen_toml_og and crashgen_toml_og.is_file()) and (crashgen_toml_vr and crashgen_toml_vr.is_file()):
         message_list.extend((
             f"# ❌ CAUTION : BOTH VERSIONS OF {crashgen_name.upper()} TOML SETTINGS FILES WERE FOUND! #\n",
@@ -291,10 +313,20 @@ def check_crashgen_settings() -> str:
             f"Please recheck your {crashgen_name} installation and delete any obsolete files.\n-----\n",
         ))
 
-    xse_files: set[str] = {file.name.lower() for file in plugins_path.iterdir()} if plugins_path else set()
-    Has_XCell = ("x-cell-fo4.dll" in xse_files or "x-cell-og.dll" in xse_files or "x-cell-ng2.dll" in xse_files)
-    Has_BakaScrapHeap = "bakascrapheap.dll" in xse_files
+    # Check for installed mods by examining DLL files in the plugins directory
+    xse_files: set[str] = set()
+    if plugins_path and plugins_path.exists():
+        try:
+            xse_files = {file.name.lower() for file in plugins_path.iterdir()}
+        except (PermissionError, OSError) as e:
+            CMain.logger.error(f"Error accessing plugins directory: {e}")
 
+    has_xcell = any(xcell_file in xse_files for xcell_file in ["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll"])
+    has_bakascrapheap = "bakascrapheap.dll" in xse_files
+    has_achievements = any(ach_file in xse_files for ach_file in ["achievements.dll", "achievementsmodsenablerloader.dll"])
+    has_looksmenu = any("f4ee" in file for file in xse_files)
+
+    # If no config file found, return message without raising exception
     if not crashgen_toml_main:
         message_list.extend((
             f"# [!] NOTICE : Unable to find the {crashgen_name} config file, settings check will be skipped. #\n",
@@ -303,79 +335,113 @@ def check_crashgen_settings() -> str:
         ))
         return "".join(message_list)
 
-    if (
-        xse_files
-        and ("achievements.dll" in xse_files or "achievementsmodsenablerloader.dll" in xse_files)
-        and mod_toml_config(crashgen_toml_main, "Patches", "Achievements")
-    ):
-        message_list.extend((
-            "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE #\n",
-            f"    Auto Scanner will change this parameter to FALSE to prevent conflicts with {crashgen_name}.\n-----\n",
-        ))
-        mod_toml_config(crashgen_toml_main, "Patches", "Achievements", False)
-    else:
-        message_list.append(f"✔️ Achievements parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
+    CMain.logger.info(f"Checking {crashgen_name} settings in {crashgen_toml_main}")
 
-    if Has_BakaScrapHeap and mod_toml_config(crashgen_toml_main, "Patches", "MemoryManager"):
-        message_list.extend((
-            f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name} #\n",
-            f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}.\n-----\n",
-        ))
-        if not Has_XCell:
-            mod_toml_config(crashgen_toml_main, "Patches", "MemoryManager", True)
-    elif Has_XCell and mod_toml_config(crashgen_toml_main, "Patches", "MemoryManager"):
-        message_list.extend((
-            "# ❌ CAUTION : The X-Cell Mod is installed, but MemoryManager parameter is set to TRUE #\n",
-            "    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell.\n-----\n",
-        ))
-        mod_toml_config(crashgen_toml_main, "Patches", "MemoryManager", False)
-    else:
-        message_list.append(f"✔️ Memory Manager parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
+    # Define configuration settings to check, with their requirements and desired states
+    settings_to_check = [
+        # Patches section settings
+        {
+            "section": "Patches",
+            "key": "Achievements",
+            "name": "Achievements",
+            "condition": has_achievements,
+            "desired_value": False,
+            "description": "The Achievements Mod and/or Unlimited Survival Mode is installed",
+            "reason": f"to prevent conflicts with {crashgen_name}",
+        },
+        {
+            "section": "Patches",
+            "key": "MemoryManager",
+            "name": "Memory Manager",
+            "condition": has_xcell,
+            "desired_value": False,
+            "description": "The X-Cell Mod is installed",
+            "reason": "to prevent conflicts with X-Cell",
+            "special_case": "bakascrapheap",
+        },
+        {
+            "section": "Patches",
+            "key": "HavokMemorySystem",
+            "name": "Havok Memory System",
+            "condition": has_xcell,
+            "desired_value": False,
+            "description": "The X-Cell Mod is installed",
+            "reason": "to prevent conflicts with X-Cell",
+        },
+        {
+            "section": "Patches",
+            "key": "BSTextureStreamerLocalHeap",
+            "name": "BS Texture Streamer Local Heap",
+            "condition": has_xcell,
+            "desired_value": False,
+            "description": "The X-Cell Mod is installed",
+            "reason": "to prevent conflicts with X-Cell",
+        },
+        {
+            "section": "Patches",
+            "key": "ScaleformAllocator",
+            "name": "Scaleform Allocator",
+            "condition": has_xcell,
+            "desired_value": False,
+            "description": "The X-Cell Mod is installed",
+            "reason": "to prevent conflicts with X-Cell",
+        },
+        {
+            "section": "Patches",
+            "key": "SmallBlockAllocator",
+            "name": "Small Block Allocator",
+            "condition": has_xcell,
+            "desired_value": False,
+            "description": "The X-Cell Mod is installed",
+            "reason": "to prevent conflicts with X-Cell",
+        },
+        {
+            "section": "Patches",
+            "key": "ArchiveLimit",
+            "name": "Archive Limit",
+            "condition": True,  # Always check this setting
+            "desired_value": False,
+            "description": "Archive Limit is enabled",
+            "reason": "to prevent crashes",
+        },
+        # Compatibility section settings
+        {
+            "section": "Compatibility",
+            "key": "F4EE",
+            "name": "F4EE (Looks Menu)",
+            "condition": has_looksmenu,
+            "desired_value": True,
+            "description": "Looks Menu is installed, but F4EE parameter is set to FALSE",
+            "reason": "to prevent bugs and crashes from Looks Menu",
+        },
+    ]
 
-    if Has_XCell and mod_toml_config(crashgen_toml_main, "Patches", "HavokMemorySystem"):
-        message_list.extend((
-            "# ❌ CAUTION : The X-Cell Mod is installed, but HavokMemorySystem parameter is set to TRUE #\n",
-            "    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell.\n-----\n",
-        ))
-        mod_toml_config(crashgen_toml_main, "Patches", "HavokMemorySystem", False)
-    else:
-        message_list.append(f"✔️ HavokMemorySystem parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
+    # Process each setting
+    for setting in settings_to_check:
+        # Get current setting value
+        current_value = mod_toml_config(crashgen_toml_main, cast("str", setting["section"]), cast("str", setting["key"]))
 
-    if Has_XCell and mod_toml_config(crashgen_toml_main, "Patches", "BSTextureStreamerLocalHeap"):
-        message_list.extend((
-            "# ❌ CAUTION : The X-Cell Mod is installed, but BSTextureStreamerLocalHeap parameter is set to TRUE #\n",
-            "    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell.\n-----\n",
-        ))
-        mod_toml_config(crashgen_toml_main, "Patches", "BSTextureStreamerLocalHeap", False)
-    else:
-        message_list.append(f"✔️ BSTextureStreamerLocalHeap parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
+        # Special case for BakaScrapHeap with MemoryManager
+        if setting.get("special_case") == "bakascrapheap" and has_bakascrapheap and current_value:
+            message_list.extend((
+                f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name} #\n",
+                f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}.\n-----\n",
+            ))
+            
+            continue
 
-    if Has_XCell and mod_toml_config(crashgen_toml_main, "Patches", "ScaleformAllocator"):
-        message_list.extend((
-            "# ❌ CAUTION : The X-Cell Mod is installed, but ScaleformAllocator parameter is set to TRUE #\n",
-            "    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell.\n-----\n",
-        ))
-        mod_toml_config(crashgen_toml_main, "Patches", "ScaleFormAllocator", False)
-    else:
-        message_list.append(f"✔️ ScaleformAllocator parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
-
-    if Has_XCell and mod_toml_config(crashgen_toml_main, "Patches", "SmallBlockAllocator"):
-        message_list.extend((
-            "# ❌ CAUTION : The X-Cell Mod is installed, but SmallBlockAllocator parameter is set to TRUE #\n",
-            "    Auto Scanner will change this parameter to FALSE to prevent conflicts with X-Cell.\n-----\n",
-        ))
-        mod_toml_config(crashgen_toml_main, "Patches", "SmallBlockAllocator", False)
-    else:
-        message_list.append(f"✔️ SmallBlockAllocator parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
-
-    if xse_files and mod_toml_config(crashgen_toml_main, "Compatibility", "F4EE") and any("f4ee" in file for file in xse_files):
-        message_list.extend((
-            "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE #\n",
-            "    Auto Scanner will change this parameter to TRUE to prevent bugs and crashes from Looks Menu.\n-----\n",
-        ))
-        mod_toml_config(crashgen_toml_main, "Compatibility", "F4EE", True)
-    else:
-        message_list.append(f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
+        # Check if condition is met and setting needs changing
+        if setting["condition"] and current_value != setting["desired_value"]:
+            message_list.extend((
+                f"# ❌ CAUTION : {setting['description']}, but {setting['name']} parameter is set to {current_value} #\n",
+                f"    Auto Scanner will change this parameter to {setting['desired_value']} {setting['reason']}.\n-----\n",
+            ))
+            # Apply the change
+            mod_toml_config(crashgen_toml_main, cast("str", setting["section"]), cast("str", setting["key"]), cast("str | bool | int | None", setting["desired_value"]))
+            CMain.logger.info(f"Changed {setting['name']} from {current_value} to {setting['desired_value']}")
+        else:
+            # Setting is already correctly configured
+            message_list.append(f"✔️ {setting['name']} parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
 
     return "".join(message_list)
 
