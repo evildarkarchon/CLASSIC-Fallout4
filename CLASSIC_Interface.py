@@ -745,7 +745,7 @@ QComboBox::drop-down {
 }
 
 QComboBox::down-arrow {
-    image: pb_source(CLASSIC Data/graphics/arrow-down.svg);
+    image: url("CLASSIC Data/graphics/arrow-down.svg");
     width: 12px;
     height: 12px;
 }
@@ -1732,10 +1732,10 @@ QLabel {
                 height: 25px;
             }
             QCheckBox::indicator:unchecked {
-                image: pb_source(CLASSIC Data/graphics/unchecked.png);
+                image: url("CLASSIC Data/graphics/unchecked.png");
             }
             QCheckBox::indicator:checked {
-                image: pb_source(CLASSIC Data/graphics/checked.png);
+                image: url("CLASSIC Data/graphics/checked.png");
             }
         """
         )
