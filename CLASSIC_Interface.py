@@ -1193,7 +1193,7 @@ QLabel {
 
 
 
-        self.setup_pastebin_elements(layout)
+        # self.setup_pastebin_elements(layout) # Disabling Pastebin elements for now.
 
         # Add first separator
         layout.addWidget(self.create_separator())
