@@ -351,7 +351,7 @@ def crashgen_version_gen(input_string: str) -> Version:
             version_str = part[1:]  # Remove the 'v'
     if version_str:
         return Version(version_str)
-    return Version("0.0.0")
+    return CMain.NULL_VERSION
 
 class SQLiteReader:
     def __init__(self, logfiles: list[Path]) -> None:
@@ -450,9 +450,9 @@ class ClassicScanLogsInfo:
     game_mods_freq: dict[str, str] = field(default_factory=dict)
     game_mods_opc2: dict[str, str] = field(default_factory=dict)
     game_mods_solu: dict[str, str] = field(default_factory=dict)
-    game_version: Version = field(default=Version("0.0.0"), init=False)
-    game_version_new: Version = field(default=Version("0.0.0"), init=False)
-    game_version_vr: Version = field(default=Version("0.0.0"), init=False)
+    game_version: Version = field(default=CMain.NULL_VERSION, init=False)
+    game_version_new: Version = field(default=CMain.NULL_VERSION, init=False)
+    game_version_vr: Version = field(default=CMain.NULL_VERSION, init=False)
 
     def __post_init__(self) -> None:
         """

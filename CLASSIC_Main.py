@@ -35,6 +35,7 @@ with contextlib.suppress(ImportError):
 NULL_VERSION = Version("0.0.0.0")
 OG_VERSION = Version("1.10.163.0")
 NG_VERSION = Version("1.10.984.0")
+VR_VERSION = Version("1.2.72.0")
 OG_F4SE_VERSION = Version("0.6.23")
 NG_F4SE_VERSION = Version("0.7.2")
 FO4_VERSIONS = (OG_VERSION, NG_VERSION)

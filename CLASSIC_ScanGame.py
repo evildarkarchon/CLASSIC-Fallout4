@@ -14,7 +14,7 @@ import chardet
 import iniparse
 import tomlkit
 from bs4 import BeautifulSoup
-from packaging.version import Version
+from packaging.version import Version  # noqa: TC002
 
 try:
     from bs4 import PageElement
@@ -424,6 +424,11 @@ def check_crashgen_settings() -> str:
         crashgen_toml_main = crashgen_toml_og
     elif crashgen_toml_vr and crashgen_toml_vr.is_file():
         crashgen_toml_main = crashgen_toml_vr
+    elif (crashgen_toml_og and not crashgen_toml_og.exists()) or (crashgen_toml_vr and not crashgen_toml_vr.exists()):
+        message_list.extend((
+            f"# ❌ CAUTION : {crashgen_name.upper()} TOML SETTINGS FILE NOT FOUND! #\n",
+            f"Please recheck your {crashgen_name} installation and delete any obsolete files.\n-----\n",
+        ))
 
     # Check if both versions of config exist and warn user
     if (crashgen_toml_og and crashgen_toml_og.is_file()) and (crashgen_toml_vr and crashgen_toml_vr.is_file()):
@@ -645,19 +650,19 @@ def check_xse_plugins() -> str:
     # Version information organized by game type
     version_info = {
         "VR": {
-            "version": Version("1.2.72.0"),
+            "version": CMain.VR_VERSION,
             "filename": "version-1-2-72-0.csv",
             "description": "Virtual Reality (VR) version",
             "url": "https://www.nexusmods.com/fallout4/mods/64879?tab=files"
         },
         "OG": {
-            "version": Version("1.10.163.0"),
+            "version": CMain.OG_VERSION,
             "filename": "version-1-10-163-0.bin",
             "description": "Non-VR (Regular) version",
             "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
         },
         "NG": {
-            "version": Version("1.10.984.0"),
+            "version": CMain.NG_VERSION,
             "filename": "version-1-10-984-0.bin",
             "description": "Non-VR (New Game) version",
             "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
@@ -667,7 +672,7 @@ def check_xse_plugins() -> str:
     game_version: Version = CMain.get_game_version(Path(cast("str", CMain.yaml_settings(str, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE"))))
     
     # Check if we can detect the game version
-    if game_version == Version("0.0.0.0"):
+    if game_version == CMain.NULL_VERSION:
         message_list.extend((
             "❓ NOTICE : Unable to locate Address Library\n",
             "  If you have Address Library installed, please check the path in your settings.\n",
