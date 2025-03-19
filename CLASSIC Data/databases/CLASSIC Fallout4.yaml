@@ -784,7 +784,9 @@ Mods_SOLU:  # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
 
   EveryonesBestFriend: |
     Everyone's Best Friend
-        - This mod needs a compatibility patch to forward changes made by the Unofficial Patch.
+        - An improved alternative with better compatibility is available:
+          Simple Everyone's Best Friend: https://www.nexusmods.com/fallout4/mods/92314
+          If you wish to keep the original, it needs a compatibility patch to forward changes made by the Unofficial Patch.
           Patch Link: https://drive.google.com/file/d/1JJvrnaxmui22P1X44V2VTkifjmfahtLM
           If you have Horizon installed or don't use UFO4P, this patch is not needed.
         -----
