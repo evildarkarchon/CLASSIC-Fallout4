@@ -1478,7 +1478,7 @@ def crashlogs_scan() -> None:
                 line.replace(user_path_1, "******").replace(user_path_2, "******")
 
         # WRITE AUTOSCAN REPORT TO FILE
-        autoscan_path = crashlog_file.with_name(crashlog_file.stem + "-AUTOSCAN.md")
+        autoscan_path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
         with autoscan_path.open("w", encoding="utf-8", errors="ignore") as autoscan_file:
             CMain.logger.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
             autoscan_output = "".join(autoscan_report)
@@ -1487,7 +1487,7 @@ def crashlogs_scan() -> None:
         if trigger_scan_failed and scanner.move_unsolved_logs:
             backup_path = Path("CLASSIC Backup/Unsolved Logs")
             backup_path.mkdir(parents=True, exist_ok=True)
-            autoscan_filepath = crashlog_file.with_name(crashlog_file.stem + "-AUTOSCAN.md")
+            autoscan_filepath = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
             crash_move = backup_path / crashlog_file.name
             scan_move = backup_path / autoscan_file.name
 
