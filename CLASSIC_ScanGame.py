@@ -408,7 +408,7 @@ def check_crashgen_settings() -> str:
     # Get plugins path and ensure it's a Path object
     plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
     if plugins_path and not isinstance(plugins_path, Path):
-        plugins_path = Path(plugins_path)
+        plugins_path = Path(cast("str | PathLike[str]", plugins_path))
 
     # Get crash generator name from settings
     crashgen_name_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.CRASHGEN_LogName")
@@ -807,10 +807,10 @@ def scan_wryecheck() -> str:
             "  [To hide this report, remove *ModChecker.html* from the same folder.]\n",
         ))
         with CMain.open_file_with_encoding(wrye_plugincheck) as WB_Check:
-            WB_HTML = WB_Check.read()
+            wb_html = WB_Check.read()
 
         # Parse the HTML code using BeautifulSoup.
-        soup = BeautifulSoup(WB_HTML, "html.parser")
+        soup = BeautifulSoup(wb_html, "html.parser")
 
         h3: PageElement
         for h3 in soup.find_all("h3"):  # Find all <h3> elems and loop through them.

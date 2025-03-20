@@ -354,6 +354,7 @@ def crashgen_version_gen(input_string: str) -> Version:
     return CMain.NULL_VERSION
 
 class SQLiteReader:
+    # noinspection SpellCheckingInspection
     def __init__(self, logfiles: list[Path]) -> None:
         """
         Initializes the CLASSIC_ScanLogs object.
@@ -518,7 +519,8 @@ class ClassicScanLogsInfo:
         self.game_version_new = Version(CMain.yaml_settings(str, CMain.YAML.Game, "Game_Info.GameVersionNEW") or "0.0.0")
         self.game_version_vr = Version(CMain.yaml_settings(str, CMain.YAML.Game, "GameVR_Info.GameVersion") or "0.0.0")
 
-# noinspection PyUnresolvedReferences
+
+# noinspection PyUnresolvedReferences,PyPep8Naming
 class ClassicScanLogs:
     def __init__(self) -> None:
         """
@@ -718,6 +720,7 @@ class ClassicScanLogs:
         Args:
             segment_plugins (list[str]): A list of plugin strings to scan.
             game_version (Version): The version of the game being analyzed.
+            version_current (Version): The current version of the game being analyzed.
 
         Returns:
             tuple[dict[str, str], bool, bool]:
@@ -1149,7 +1152,7 @@ def crashlogs_scan() -> None:
     Note:
         - The function assumes the presence of various methods and attributes in the ClassicScanLogs class.
         - The function also assumes the presence of certain global variables and constants (e.g., CMain, yamldata).
-        - The function generates autoscan reports in markdown format and saves them to files.
+        - The function generates autoscan reports in Markdown format and saves them to files.
     """
     scanner = ClassicScanLogs()
     yamldata = scanner.yamldata

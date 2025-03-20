@@ -103,6 +103,7 @@ class PapyrusMonitorWorker(QObject):
     # Signal for errors
     error = Signal(str)
 
+    # noinspection GrazieInspection
     def __init__(self) -> None:
         """
         Initializes the CLASSIC_Interface instance.
@@ -229,6 +230,7 @@ class PastebinFetchWorker(QObject):
         super().__init__()
         self.url = url
 
+    # noinspection PyUnresolvedReferences
     @Slot()
     def run(self) -> None:
         """
@@ -317,6 +319,8 @@ class CustomAboutDialog(QDialog):
         # Align the Close button to the right and add some space at the bottom
         layout.setAlignment(close_button, Qt.AlignmentFlag.AlignRight)
 
+
+# noinspection GrazieInspection
 class AudioPlayer(QObject):
     """
     AudioPlayer is a class responsible for managing audio notifications within the CLASSIC_Interface.
@@ -607,6 +611,8 @@ class CrashLogsScanWorker(QObject):
     error_sound_signal = Signal()
     custom_sound_signal = Signal(str)  # In case a custom sound needs to be played
     """
+
+    # noinspection PyBroadException
     @Slot()
     def run(self) -> None:
         """
@@ -645,6 +651,7 @@ class GameFilesScanWorker(QObject):
     custom_sound_signal = Signal(str)
     """
 
+    # noinspection PyBroadException
     @Slot()
     def run(self) -> None:
         """
@@ -669,7 +676,7 @@ class GameFilesScanWorker(QObject):
             self.finished.emit() # type: ignore
 
 
-
+# noinspection DuplicatedCode
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         """
@@ -961,14 +968,28 @@ QLabel {
         layout.addLayout(pastebin_layout)
 
     def fetch_pastebin_log(self) -> None:
+        """
+        Fetches a log file from Pastebin.
+    
+        This method retrieves the text from the pastebin_id_input field, constructs the URL,
+        creates a thread and worker for fetching the log, connects the necessary signals, 
+        and starts the thread.
+    
+        Signals:
+            - success: Emitted when the log is successfully fetched.
+            - error: Emitted when an error occurs during fetching.
+    
+        Returns:
+            None
+        """
         input_text = self.pastebin_id_input.text().strip() if self.pastebin_id_input is not None else ""
         url = input_text if self.pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
-            
+        
         # Create thread and worker
         pastebin_thread = QThread()
         pastebin_worker = PastebinFetchWorker(url)
         pastebin_worker.moveToThread(pastebin_thread)
-            
+        
         # Connect signals
         pastebin_thread.started.connect(pastebin_worker.run)
         pastebin_worker.finished.connect(pastebin_thread.quit)
@@ -976,7 +997,7 @@ QLabel {
         pastebin_thread.finished.connect(pastebin_thread.deleteLater)
         pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok))
         pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}", QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.NoButton))
-            
+        
         # Start thread
         pastebin_thread.start()
 

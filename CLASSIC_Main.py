@@ -17,8 +17,8 @@ from typing import Literal, TypedDict, cast
 import aiohttp
 import chardet
 import ruamel.yaml
-from packaging.version import InvalidVersion, Version
 from PySide6.QtCore import QObject, Signal
+from packaging.version import InvalidVersion, Version
 
 with contextlib.suppress(ImportError):
     import winreg
@@ -126,6 +126,7 @@ SETTINGS_IGNORE_NONE = {
 logger = logging.getLogger()
 
 
+# noinspection DuplicatedCode
 class ManualDocsPath(QObject):
     manual_docs_path_signal = Signal()
 
@@ -142,6 +143,7 @@ class ManualDocsPath(QObject):
             self.manual_docs_path_signal.emit()
 
 
+# noinspection DuplicatedCode
 class GamePathEntry(QObject):
     game_path_signal = Signal()
 
@@ -176,11 +178,11 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
     raw_data = file_path.read_bytes()
     encoding = chardet.detect(raw_data)["encoding"]
 
-    file_handle = file_path.open(encoding=encoding, errors="ignore")
+    file_handle = cast("Iterator[TextIOWrapper]", file_path.open(encoding=encoding, errors="ignore"))
     try:
-        yield file_handle
+        yield cast("TextIOWrapper", file_handle)
     finally:
-        file_handle.close()
+        cast("TextIOWrapper", file_handle).close()
 
 
 def configure_logging() -> None:
@@ -261,14 +263,14 @@ def remove_readonly(file_path: Path) -> None:
 
 
 class YamlSettingsCache:
-    def __init__(self) -> None:
-        """
-        Initializes the YamlSettingsCache class.
+    """
+    A class to handle caching of YAML settings.
 
-        Attributes:
-            cache (dict[Path, YAMLMapping]): A dictionary to store cached data.
-            file_mod_times (dict[Path, float]): A dictionary to store file modification times.
-        """
+    Attributes:
+        cache (dict[Path, YAMLMapping]): A dictionary to store cached YAML contents.
+        file_mod_times (dict[Path, float]): A dictionary to store modification times of cached files.
+    """
+    def __init__(self) -> None:
         self.cache: dict[Path, YAMLMapping] = {}
         self.file_mod_times: dict[Path, float] = {}
 
@@ -641,6 +643,7 @@ def docs_path_find() -> None:
     if not isinstance(docs_name, str):
         docs_name = gamevars["game"]
 
+    # noinspection PyTypeChecker
     def get_windows_docs_path() -> None:
         """
         Retrieves the path to the user's Documents folder on a Windows system.
@@ -667,6 +670,7 @@ def docs_path_find() -> None:
         # Update the YAML settings with the documents path
         yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs", win_docs)
 
+    # noinspection PyTypeChecker
     def get_linux_docs_path() -> None:
         """
         Retrieves the path to the My Documents folder for a game running on Linux through Steam.
@@ -815,8 +819,8 @@ def game_path_find() -> None:
     """
     logger.debug("- - - INITIATED GAME PATH CHECK")
 
-    path: str | None = None
-    game_path: Path | None = None
+    path: str | None
+    game_path: Path | None
 
     try:
         # Open the registry key
@@ -853,15 +857,15 @@ def game_path_find() -> None:
     if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(game_name, str)):
         raise TypeError
 
-    if not xse_file or not Path(xse_file).is_file():
+    if not xse_file or not Path(cast("str | PathLike[str]", xse_file)).is_file():
         print(f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n")
         print(f"   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n")
         print("    After that, try running CLASSIC again! \n-----\n")
         return
 
-    with open_file_with_encoding(xse_file) as LOG_Check:
-        Path_Check = LOG_Check.readlines()
-    for logline in Path_Check:
+    with open_file_with_encoding(cast("str | PathLike[str]", xse_file)) as LOG_Check:
+        path_check = LOG_Check.readlines()
+    for logline in path_check:
         if logline.startswith("plugin directory"):
             logline = logline.split("=", maxsplit=1)[1].strip().replace(f"\\Data\\{xse_acronym_base}\\Plugins", "").replace("\n", "")
             game_path = Path(logline)
@@ -923,6 +927,7 @@ def game_generate_paths() -> None:
 
 
 # =========== CHECK GAME EXE FILE -> GET PATH AND HASHES ===========
+# noinspection DuplicatedCode
 def game_check_integrity() -> str:
     """
     Checks the integrity of the game installation by verifying the hash of the game executable
@@ -976,6 +981,7 @@ def game_check_integrity() -> str:
 
 
 # =========== CHECK GAME XSE SCRIPTS -> GET PATH AND HASHES ===========
+# noinspection DuplicatedCode
 def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
     """
     Checks the integrity of the Script Extender (XSE) installation and logs any issues found.
@@ -1023,9 +1029,9 @@ def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
 
     match xse_log_file:
         case str() | Path():
-            if Path(xse_log_file).exists():
+            if Path(cast("str | PathLike[str]", xse_log_file)).exists():
                 message_list.append(f"✔️ REQUIRED: *{xse_full_name}* is installed! \n-----\n")
-                with open_file_with_encoding(xse_log_file) as xse_log:
+                with open_file_with_encoding(cast("str | Pathlike[str]", xse_log_file)) as xse_log:
                     xse_data = xse_log.readlines()
                 if str(xse_ver_latest) in xse_data[0]:
                     message_list.append(f"✔️ You have the latest version of *{xse_full_name}*! \n-----\n")
@@ -1122,7 +1128,7 @@ def docs_check_folder() -> str:
     Checks the folder path for the game documentation and returns any warnings if applicable.
 
     This function retrieves the documentation folder name from the YAML settings. If the folder name
-    contains "onedrive" (case insensitive), it appends a warning message to the message list.
+    contains "onedrive" (case-insensitive), it appends a warning message to the message list.
 
     Returns:
         str: A concatenated string of warning messages, if any.
@@ -1176,25 +1182,25 @@ def docs_check_ini(ini_name: str) -> str:
         try:
             remove_readonly(ini_path)
 
-            INI_config = configparser.ConfigParser()
-            INI_config.optionxform = str  # type: ignore[method-assign, assignment]
-            INI_config.read(ini_path)
+            ini_config = configparser.ConfigParser()
+            ini_config.optionxform = str  # type: ignore[method-assign, assignment]
+            ini_config.read(ini_path)
             message_list.append(f"✔️ No obvious corruption detected in {ini_name}, file seems OK! \n-----\n")
 
             if ini_name.lower() == f"{docs_name.lower()}custom.ini":
-                if "Archive" not in INI_config.sections():
+                if "Archive" not in ini_config.sections():
                     message_list.extend(["❌ WARNING : Archive Invalidation / Loose Files setting is not enabled. \n",
                                          "  CLASSIC will now enable this setting automatically in the game INI files. \n-----\n"])
                     with contextlib.suppress(configparser.DuplicateSectionError):
-                        INI_config.add_section("Archive")
+                        ini_config.add_section("Archive")
                 else:
                     message_list.append("✔️ Archive Invalidation / Loose Files setting is already enabled! \n-----\n")
 
-                INI_config.set("Archive", "bInvalidateOlderFiles", "1")
-                INI_config.set("Archive", "sResourceDataDirsFinal", "")
+                ini_config.set("Archive", "bInvalidateOlderFiles", "1")
+                ini_config.set("Archive", "sResourceDataDirsFinal", "")
 
                 with ini_path.open("w+", encoding="utf-8", errors="ignore") as ini_file:
-                    INI_config.write(ini_file, space_around_delimiters=False)
+                    ini_config.write(cast("SupportsWrite[str]", ini_file), space_around_delimiters=False)
 
         except PermissionError:
             message_list.extend([f"[!] CAUTION : YOUR {ini_name} FILE IS SET TO READ ONLY. \n",
@@ -1227,6 +1233,7 @@ def docs_check_ini(ini_name: str) -> str:
 
 
 # =========== GENERATE FILE BACKUPS ===========
+# noinspection DuplicatedCode
 def main_files_backup() -> None:
     """
     Backs up game files to a specified directory based on the current XSE version.
@@ -1372,7 +1379,7 @@ def initialize(is_gui: bool = False) -> None:
     global gui_mode, yaml_cache, manual_docs_gui, game_path_gui  # noqa: PLW0603
 
     yaml_cache = YamlSettingsCache()
-    gamevars["vr"] = "VR" if classic_settings(bool, "VR Mode") else ""
+    gamevars["vr"] = cast('Literal["VR". ""]', "VR") if classic_settings(bool, "VR Mode") else ""
     gui_mode = is_gui
     if gui_mode:
         manual_docs_gui = ManualDocsPath()
