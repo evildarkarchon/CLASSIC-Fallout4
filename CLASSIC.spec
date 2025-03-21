@@ -12,14 +12,14 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
-    optimize=0,
+    optimize=2,
 )
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
-    [],
+    [('O', None, 'OPTION'), ('O', None, 'OPTION')],
     exclude_binaries=True,
     name='CLASSIC',
     debug=False,
