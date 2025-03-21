@@ -17,8 +17,8 @@ from typing import Literal, TypedDict, cast
 import aiohttp
 import chardet
 import ruamel.yaml
-from PySide6.QtCore import QObject, Signal
 from packaging.version import InvalidVersion, Version
+from PySide6.QtCore import QObject, Signal
 
 with contextlib.suppress(ImportError):
     import winreg
@@ -671,8 +671,7 @@ def docs_path_find() -> None:
         """
         try:
             # Open the registry key to get the user's documents path
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:  # pyright: ignore[reportPossiblyUnboundVariable]
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:  # pyright: ignore[reportPossiblyUnboundVariable]
                 documents_path = Path(
                     winreg.QueryValueEx(key, "Personal")[0])  # pyright: ignore[reportPossiblyUnboundVariable]
         except (OSError, UnboundLocalError):
@@ -680,7 +679,7 @@ def docs_path_find() -> None:
             documents_path = Path.home() / "Documents"
 
         # Construct the full path to the game's documents folder
-        win_docs = str(documents_path / "My Games" / cast("str | PathLike[str]", docs_name))
+        win_docs = str(documents_path / "My Games" / cast("str", docs_name))
 
         # Update the YAML settings with the documents path
         yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs", win_docs)
@@ -716,7 +715,7 @@ def docs_path_find() -> None:
                 if str(game_sid) in library_line:
                     library_path = library_path / "steamapps"
                     linux_docs = library_path / "compatdata" / str(
-                        game_sid) / "pfx/drive_c/users/steamuser/My Documents/My Games" / cast("str | PathLike[str]", docs_name)
+                        game_sid) / "pfx/drive_c/users/steamuser/My Documents/My Games" / cast("str", docs_name)
                     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs", str(linux_docs))
 
     def get_manual_docs_path() -> None:
@@ -847,15 +846,13 @@ def game_path_find() -> None:
 
     try:
         # Open the registry key
-        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                 rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{gamevars["vr"]}")  # pyright: ignore[reportPossiblyUnboundVariable]
+        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{gamevars["vr"]}")  # pyright: ignore[reportPossiblyUnboundVariable]
         # Query the 'installed path' value
         path, _ = winreg.QueryValueEx(reg_key, "installed path")  # pyright: ignore[reportPossiblyUnboundVariable]
         winreg.CloseKey(reg_key)  # pyright: ignore[reportPossiblyUnboundVariable]
     except FileNotFoundError:
         try:
-            reg_key_gog = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                         r"SOFTWARE\WOW6432Node\GOG.com\Games\1998527297")  # pyright: ignore[reportPossiblyUnboundVariable]
+            reg_key_gog = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\GOG.com\Games\1998527297")  # pyright: ignore[reportPossiblyUnboundVariable]
             path, _ = winreg.QueryValueEx(reg_key_gog, "path")  # pyright: ignore[reportPossiblyUnboundVariable]
             winreg.CloseKey(reg_key_gog)  # pyright: ignore[reportPossiblyUnboundVariable]
         except (FileNotFoundError, UnboundLocalError, OSError):
@@ -882,13 +879,13 @@ def game_path_find() -> None:
     if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(game_name, str)):
         raise TypeError
 
-    if not xse_file or not Path(cast("str | PathLike[str]", xse_file)).is_file():
+    if not xse_file or not Path(cast("str", xse_file)).is_file():
         print(f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n")
         print(f"   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n")
         print("    After that, try running CLASSIC again! \n-----\n")
         return
 
-    with open_file_with_encoding(cast("str | PathLike[str]", xse_file)) as LOG_Check:
+    with open_file_with_encoding(cast("str", xse_file)) as LOG_Check:
         path_check = LOG_Check.readlines()
     for logline in path_check:
         if logline.startswith("plugin directory"):
@@ -947,7 +944,7 @@ def game_generate_paths() -> None:
         case "Fallout4" if not gamevars["vr"]:
             if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
                 raise ValueError("Unsupported or invalid game version")
-            if game_version == OG_VERSION or game_version == NULL_VERSION:
+            if game_version in (OG_VERSION, NULL_VERSION):
                 yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib",
                               fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin")
             elif game_version == NG_VERSION:
@@ -994,7 +991,7 @@ def game_check_integrity() -> str:
             # Algo should match the one used for Database YAML!
             exe_hash_local = hashlib.sha256(file_contents).hexdigest()
         # print(f"LOCAL: {exe_hash_local}\nDATABASE: {exe_hash_old}")
-        if (exe_hash_local == exe_hash_old or exe_hash_local == exe_hash_new) and not (steam_ini_path and steam_ini_path.exists()):
+        if (exe_hash_local in (exe_hash_old, exe_hash_new)) and not (steam_ini_path and steam_ini_path.exists()):
             message_list.append(f"✔️ You have the latest version of {root_name}! \n-----\n")
         elif steam_ini_path and steam_ini_path.exists():
             message_list.append(f"\U0001F480 CAUTION : YOUR {root_name} GAME / EXE VERSION IS OUT OF DATE \n-----\n")
@@ -1063,9 +1060,9 @@ def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
 
     match xse_log_file:
         case str() | Path():
-            if Path(cast("str | PathLike[str]", xse_log_file)).exists():
+            if Path(cast("str", xse_log_file)).exists():
                 message_list.append(f"✔️ REQUIRED: *{xse_full_name}* is installed! \n-----\n")
-                with open_file_with_encoding(cast("str | Pathlike[str]", xse_log_file)) as xse_log:
+                with open_file_with_encoding(cast("str", xse_log_file)) as xse_log:
                     xse_data = xse_log.readlines()
                 if str(xse_ver_latest) in xse_data[0]:
                     message_list.append(f"✔️ You have the latest version of *{xse_full_name}*! \n-----\n")
@@ -1238,7 +1235,7 @@ def docs_check_ini(ini_name: str) -> str:
                 ini_config.set("Archive", "sResourceDataDirsFinal", "")
 
                 with ini_path.open("w+", encoding="utf-8", errors="ignore") as ini_file:
-                    ini_config.write(cast("SupportsWrite[str]", ini_file), space_around_delimiters=False)
+                    ini_config.write(cast("TextIOWrapper", ini_file), space_around_delimiters=False)
 
         except PermissionError:
             message_list.extend([f"[!] CAUTION : YOUR {ini_name} FILE IS SET TO READ ONLY. \n",
@@ -1419,7 +1416,7 @@ def initialize(is_gui: bool = False) -> None:
     global gui_mode, yaml_cache, manual_docs_gui, game_path_gui  # noqa: PLW0603
 
     yaml_cache = YamlSettingsCache()
-    gamevars["vr"] = cast('Literal["VR". ""]', "VR") if classic_settings(bool, "VR Mode") else ""
+    gamevars["vr"] = cast("Literal['VR', '']", "VR") if classic_settings(bool, "VR Mode") else ""
     gui_mode = is_gui
     if gui_mode:
         manual_docs_gui = ManualDocsPath()
