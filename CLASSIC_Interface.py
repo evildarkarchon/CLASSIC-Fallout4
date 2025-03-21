@@ -606,11 +606,12 @@ class CrashLogsScanWorker(QObject):
     CrashLogsScanWorker is a QObject-based worker class responsible for scanning crash logs and emitting signals based on the scan's outcome.
     Methods:
         run(): Executes the crash logs scan and emits appropriate signals based on the outcome.
+    """
     finished = Signal()
     notify_sound_signal = Signal()
     error_sound_signal = Signal()
     custom_sound_signal = Signal(str)  # In case a custom sound needs to be played
-    """
+    
 
     # noinspection PyBroadException
     @Slot()
@@ -645,11 +646,11 @@ class GameFilesScanWorker(QObject):
     GameFilesScanWorker is a QObject-based worker class responsible for scanning game files and handling the results.
     Methods:
         run() -> None:
+    """
     finished = Signal()
     notify_sound_signal = Signal()
     error_sound_signal = Signal()
     custom_sound_signal = Signal(str)
-    """
 
     # noinspection PyBroadException
     @Slot()

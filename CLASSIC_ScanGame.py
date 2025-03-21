@@ -531,10 +531,19 @@ def check_crashgen_settings() -> str:
             "section": "Patches",
             "key": "ArchiveLimit",
             "name": "Archive Limit",
-            "condition": True,  # Always check this setting
+            "condition": crashgen_toml_main == crashgen_toml_og,  # Always check this setting
             "desired_value": False,
             "description": "Archive Limit is enabled",
             "reason": "to prevent crashes",
+        },
+        {
+            "section": "Patches",
+            "name": "MaxStdIO",
+            "key": "MaxStdIO",
+            "condition": False, # This is a placeholder, this may or may not be enabled in the future
+            "desired_value": 2048,
+            "description": "MaxStdIO is set to a low value",
+            "reason": "to improve performance",
         },
         # Compatibility section settings
         {
@@ -975,6 +984,7 @@ def scan_mod_inis() -> str:
 # ================================================
 # CHECK ALL UNPACKED / LOOSE MOD FILES
 # ================================================
+# noinspection DuplicatedCode
 def scan_mods_unpacked() -> str:
     """
     Scans the unpacked/loose mod files in the specified MODS folder path and performs cleanup and analysis.
@@ -1161,6 +1171,7 @@ def scan_mods_unpacked() -> str:
 # ================================================
 # CHECK ALL ARCHIVED / BA2 MOD FILES
 # ================================================
+# noinspection DuplicatedCode
 def scan_mods_archived() -> str:
     """
     Scans the archived BA2 mod files in the specified MODS folder path and analyzes their contents for potential issues.

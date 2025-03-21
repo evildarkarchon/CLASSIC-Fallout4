@@ -1246,7 +1246,10 @@ def crashlogs_scan() -> None:
                 "* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n",
                 "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n",
             ), autoscan_report)
-
+            scanner.fcx_mode_check()
+            append_or_extend(scanner.main_files_check, autoscan_report)
+            append_or_extend(scanner.game_files_check, autoscan_report)
+            
         else:
             append_or_extend((
                 "* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n",
@@ -1268,7 +1271,8 @@ def crashlogs_scan() -> None:
                         )
                 scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
                 scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, Has_XCell, Has_BakaScrapHeap)
-                scanner.scan_archivelimit_setting(autoscan_report, crashgen)
+                if Version(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(crashlog_crashgen) >= Version("1.27.0"):
+                    scanner.scan_archivelimit_setting(autoscan_report, crashgen)
                 scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
 
         append_or_extend(scanner.main_files_check, autoscan_report)
