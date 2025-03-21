@@ -1562,7 +1562,6 @@ def crashlogs_scan() -> None:
 
 if __name__ == "__main__":
     CMain.initialize()
-    from pathlib import Path
 
     # noinspection PyUnresolvedReferences
     from tap import Tap
