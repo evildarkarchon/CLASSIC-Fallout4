@@ -58,6 +58,10 @@ def get_game_version(game_exe_path: Path) -> Version:
                  Returns Version("0.0.0.0") if the game executable cannot be found
                  or if the version information cannot be retrieved.
     """
+    
+    if platform.system() != "Windows":
+        logger.warning("Game version detection is only supported on Windows")
+        return NULL_VERSION
 
     # Check if path exists and is a file
     if not game_exe_path or not game_exe_path.is_file():
@@ -941,9 +945,9 @@ def game_generate_paths() -> None:
         Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE"))))
     match gamevars["game"]:
         case "Fallout4" if not gamevars["vr"]:
-            if not game_version or game_version not in FO4_VERSIONS:
+            if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
                 raise ValueError("Unsupported or invalid game version")
-            if game_version == OG_VERSION:
+            if game_version == OG_VERSION or game_version == NULL_VERSION:
                 yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib",
                               fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin")
             elif game_version == NG_VERSION:
@@ -971,8 +975,8 @@ def game_check_integrity() -> str:
     logger.debug("- - - INITIATED GAME INTEGRITY CHECK")
 
     steam_ini_local = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_SteamINI")
-    exe_hash_old = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.EXE_HashedOLD")
-    # exe_hash_new = yaml_settings(YAML.Game, f"Game{gamevars["vr"]}_Info.EXE_HashedNEW")  # RESERVED FOR 2023 UPDATE
+    exe_hash_old = yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedOLD") # The VR check is not needed here.
+    exe_hash_new = yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedNEW") # ...or here. VR hashes are not available at this time.
     game_exe_local = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE")
     root_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Root_Name")
     if not (isinstance(exe_hash_old, str) and isinstance(root_name, str)):
@@ -990,7 +994,7 @@ def game_check_integrity() -> str:
             # Algo should match the one used for Database YAML!
             exe_hash_local = hashlib.sha256(file_contents).hexdigest()
         # print(f"LOCAL: {exe_hash_local}\nDATABASE: {exe_hash_old}")
-        if exe_hash_local == exe_hash_old and not (steam_ini_path and steam_ini_path.exists()):
+        if (exe_hash_local == exe_hash_old or exe_hash_local == exe_hash_new) and not (steam_ini_path and steam_ini_path.exists()):
             message_list.append(f"✔️ You have the latest version of {root_name}! \n-----\n")
         elif steam_ini_path and steam_ini_path.exists():
             message_list.append(f"\U0001F480 CAUTION : YOUR {root_name} GAME / EXE VERSION IS OUT OF DATE \n-----\n")
