@@ -6,7 +6,7 @@ import time
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 from urllib.parse import urlparse
 
 import aiohttp
@@ -320,8 +320,7 @@ def detect_mods_important(yaml_dict: dict[str, str],
                 mod_found = True
                 continue
         if mod_found:
-            # noinspection PyTypeChecker
-            if gpu_rival and gpu_rival in mod_warn.lower():
+            if gpu_rival and cast("str", gpu_rival) in mod_warn.lower():
                 autoscan_report.extend((
                     f"❓ {mod_split[1]} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n",
                     "IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n",

@@ -656,7 +656,7 @@ def docs_path_find() -> None:
     if not isinstance(docs_name, str):
         docs_name = gamevars["game"]
 
-    # noinspection PyTypeChecker
+    
     def get_windows_docs_path() -> None:
         """
         Retrieves the path to the user's Documents folder on a Windows system.
@@ -680,12 +680,12 @@ def docs_path_find() -> None:
             documents_path = Path.home() / "Documents"
 
         # Construct the full path to the game's documents folder
-        win_docs = str(documents_path / "My Games" / docs_name)
+        win_docs = str(documents_path / "My Games" / cast("str | PathLike[str]", docs_name))
 
         # Update the YAML settings with the documents path
         yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs", win_docs)
 
-    # noinspection PyTypeChecker
+    
     def get_linux_docs_path() -> None:
         """
         Retrieves the path to the My Documents folder for a game running on Linux through Steam.
@@ -716,7 +716,7 @@ def docs_path_find() -> None:
                 if str(game_sid) in library_line:
                     library_path = library_path / "steamapps"
                     linux_docs = library_path / "compatdata" / str(
-                        game_sid) / "pfx/drive_c/users/steamuser/My Documents/My Games" / docs_name
+                        game_sid) / "pfx/drive_c/users/steamuser/My Documents/My Games" / cast("str | PathLike[str]", docs_name)
                     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs", str(linux_docs))
 
     def get_manual_docs_path() -> None:
