@@ -144,5 +144,5 @@ source = ["."]
 addopts = "--cov --cov-report=lcov:lcov.info --cov-report=term"
 
 [tool.black]
-line-length = 150
+line-length = 140
 target-version = ['py312', 'py313']
