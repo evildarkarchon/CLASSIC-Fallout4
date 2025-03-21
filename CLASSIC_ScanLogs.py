@@ -403,38 +403,6 @@ class SQLiteReader:
 # noinspection PyUnresolvedReferences
 @dataclass
 class ClassicScanLogsInfo:
-    """
-    A class to represent and manage the scanning logs information for the CLASSIC Fallout 4 game.
-    Attributes:
-        classic_game_hints (list[str]): Hints related to the classic game.
-        classic_records_list (list[str]): List of classic records.
-        classic_version (str): Version of the classic game.
-        classic_version_date (str): Date of the classic game version.
-        crashgen_name (str): Name of the crash generator.
-        crashgen_latest_og (str): Latest version of the original crash generator.
-        crashgen_latest_vr (str): Latest version of the VR crash generator.
-        crashgen_ignore (set): Set of items to ignore for the crash generator.
-        warn_noplugins (str): Warning message for no plugins.
-        warn_outdated (str): Warning message for outdated plugins.
-        xse_acronym (str): Acronym for XSE.
-        game_ignore_plugins (list[str]): List of plugins to ignore.
-        game_ignore_records (list[str]): List of records to ignore.
-        suspects_error_list (dict[str, str]): Dictionary of suspect errors.
-        suspects_stack_list (dict[str, list[str]]): Dictionary of suspect stacks.
-        autoscan_text (str): Text for auto scan.
-        ignore_list (list[str]): List of items to ignore.
-        game_mods_conf (dict[str, str]): Configuration of game mods.
-        game_mods_core (dict[str, str]): Core game mods.
-        game_mods_core_folon (dict[str, str]): Core FOLON game mods.
-        game_mods_freq (dict[str, str]): Frequently used game mods.
-        game_mods_opc2 (dict[str, str]): OPC2 game mods.
-        game_mods_solu (dict[str, str]): SOLU game mods.
-        game_version (Version): Version of the game.
-        game_version_new (Version): New version of the game.
-        game_version_vr (Version): VR version of the game.
-    Methods:
-        __post_init__(): Initializes the class attributes with settings from CMain.
-    """
     classic_game_hints: list[str] = field(default_factory=list)
     classic_records_list: list[str] = field(default_factory=list)
     classic_version: str = ""
@@ -463,40 +431,6 @@ class ClassicScanLogsInfo:
     game_version_vr: Version = field(default=CMain.NULL_VERSION, init=False)
 
     def __post_init__(self) -> None:
-        """
-        Post-initialization method for setting up various game-related configurations and settings.
-
-        Raises:
-            TypeError: If CMain.yaml_cache is None, indicating that CMain is not initialized.
-
-        Attributes:
-            classic_game_hints (list[str]): List of game hints.
-            classic_records_list (list[str]): List of log records to catch.
-            classic_version (str): Version of the CLASSIC.
-            classic_version_date (str): Date of the CLASSIC version.
-            crashgen_name (str): Name of the CRASHGEN log.
-            crashgen_latest_og (str): Latest version of CRASHGEN for the original game.
-            crashgen_latest_vr (str): Latest version of CRASHGEN for the VR game.
-            crashgen_ignore (set[str]): Set of CRASHGEN ignore settings.
-            warn_noplugins (str): Warning message for no plugins.
-            warn_outdated (str): Warning message for outdated plugins.
-            xse_acronym (str): Acronym for XSE.
-            game_ignore_plugins (list[str]): List of plugins to ignore in crash logs.
-            game_ignore_records (list[str]): List of records to ignore in crash logs.
-            suspects_error_list (dict[str, str]): Dictionary of error checks for crash logs.
-            suspects_stack_list (dict[str, list[str]]): Dictionary of stack checks for crash logs.
-            autoscan_text (str): Text for the autoscan interface.
-            ignore_list (list[str]): List of items to ignore.
-            game_mods_conf (dict[str, str]): Configuration for game mods.
-            game_mods_core (dict[str, str]): Core game mods.
-            game_mods_core_folon (dict[str, str]): Core FOLON game mods.
-            game_mods_freq (dict[str, str]): Frequently used game mods.
-            game_mods_opc2 (dict[str, str]): OPC2 game mods.
-            game_mods_solu (dict[str, str]): SOLU game mods.
-            game_version (Version): Version of the game.
-            game_version_new (Version): New version of the game.
-            game_version_vr (Version): Version of the VR game.
-        """
         if CMain.yaml_cache is None:
             raise TypeError("CMain is not initialized.")
         self.classic_game_hints = CMain.yaml_settings(list[str], CMain.YAML.Game, "Game_Hints") or []
@@ -547,29 +481,6 @@ class ClassicScanLogs:
         - Loads various settings and data from YAML and other sources.
         - Prints a message indicating the start of crash log scanning.
         - Records the start time of the scan.
-
-        Attributes:
-            pluginsearch (re.Pattern): Compiled regex pattern for plugin search.
-            crashlog_list (list): List of crash log files.
-            remove_list (list): List of log records to exclude.
-            yamldata (ClassicScanLogsInfo): Instance containing scan log information.
-            xse_acronym (str): Lowercase acronym for XSE.
-            fcx_mode (bool): Flag indicating if FCX Mode is enabled.
-            show_formid_values (bool): Flag indicating if FormID values should be shown.
-            formid_db_exists (bool): Flag indicating if the FormID database exists.
-            move_unsolved_logs (bool): Flag indicating if unsolved logs should be moved.
-            lower_records (list): List of classic records in lowercase.
-            lower_ignore (list): List of game ignore records in lowercase.
-            lower_plugins_ignore (set): Set of game ignore plugins in lowercase.
-            ignore_plugins_list (set): Set of plugins to ignore in lowercase.
-            scan_start_time (float): Start time of the scan.
-            main_files_check (str): Results of the main files check.
-            game_files_check (str): Results of the game files check.
-            scan_failed_list (list): List of failed scans.
-            user_folder (Path): Path to the user's home folder.
-            stats_crashlog_scanned (int): Number of scanned crash logs.
-            stats_crashlog_incomplete (int): Number of incomplete crash logs.
-            stats_crashlog_failed (int): Number of failed crash logs.
         """
         self.pluginsearch = re.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
                                        flags=re.IGNORECASE)
