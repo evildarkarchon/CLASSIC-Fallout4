@@ -1504,8 +1504,8 @@ def crashlogs_scan() -> None:
 
         # HIDE PERSONAL USERNAME
         user_name = scanner.user_folder.name
-        user_path_1 = f"{scanner.user_folder.parent}\\{scanner.user_folder.name}"
-        user_path_2 = f"{scanner.user_folder.parent}/{scanner.user_folder.name}"
+        user_path_1 = f"{scanner.user_folder.parent}\\{user_name}"
+        user_path_2 = f"{scanner.user_folder.parent}/{user_name}"
         for line in autoscan_report:
             if user_name in line:
                 line.replace(user_path_1, "******").replace(user_path_2, "******")
