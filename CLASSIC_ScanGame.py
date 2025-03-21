@@ -79,6 +79,8 @@ def compare_ini_files(file1: Path, file2: Path) -> bool:
             config1[section] == config2[section] for section in config1.sections()
         )
     return False
+
+
 # ================================================
 # DEFINE MAIN FILE / YAML FUNCTIONS
 # ================================================
@@ -110,7 +112,8 @@ class ConfigFileCache:
         self.duplicate_files = {}
         self._duplicate_whitelist = ["F4EE"]
 
-        self._game_root_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Game")
+        self._game_root_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
+                                                   f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Game")
         if self._game_root_path is None:
             # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)
             raise FileNotFoundError
@@ -230,18 +233,19 @@ class ConfigFileCache:
             return None
 
         if not config.has_option(section, setting):
-            CMain.logger.error(f"ERROR: Key '{setting}' does not exist in section '{section}' of '{self._config_files[file_name_lower]}'")
+            CMain.logger.error(
+                f"ERROR: Key '{setting}' does not exist in section '{section}' of '{self._config_files[file_name_lower]}'")
             return None
 
         try:
             if value_type is str:
                 return config.get(section, setting)
             if value_type is bool:
-                return config.getboolean(section, setting) # type: ignore[no-any-return]
+                return config.getboolean(section, setting)  # type: ignore[no-any-return]
             if value_type is int:
-                return config.getint(section, setting) # type: ignore[no-any-return]
+                return config.getint(section, setting)  # type: ignore[no-any-return]
             if value_type is float:
-                return config.getfloat(section, setting) # type: ignore[no-any-return]
+                return config.getfloat(section, setting)  # type: ignore[no-any-return]
             raise NotImplementedError
         except ValueError as e:
             CMain.logger.error(f"ERROR: Unexpected value type - {e}")
@@ -406,12 +410,14 @@ def check_crashgen_settings() -> str:
     message_list: list[str] = []
 
     # Get plugins path and ensure it's a Path object
-    plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
+    plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
+                                       f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
     if plugins_path and not isinstance(plugins_path, Path):
         plugins_path = Path(cast("str | PathLike[str]", plugins_path))
 
     # Get crash generator name from settings
-    crashgen_name_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.CRASHGEN_LogName")
+    crashgen_name_setting = CMain.yaml_settings(str, CMain.YAML.Game,
+                                                f"Game{CMain.gamevars['vr']}_Info.CRASHGEN_LogName")
     crashgen_name = crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
 
     # Define paths to possible config files
@@ -448,7 +454,8 @@ def check_crashgen_settings() -> str:
 
     has_xcell = any(xcell_file in xse_files for xcell_file in ["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll"])
     has_bakascrapheap = "bakascrapheap.dll" in xse_files
-    has_achievements = any(ach_file in xse_files for ach_file in ["achievements.dll", "achievementsmodsenablerloader.dll"])
+    has_achievements = any(
+        ach_file in xse_files for ach_file in ["achievements.dll", "achievementsmodsenablerloader.dll"])
     has_looksmenu = any("f4ee" in file for file in xse_files)
 
     # If no config file found, return message without raising exception
@@ -544,7 +551,8 @@ def check_crashgen_settings() -> str:
     # Process each setting
     for setting in settings_to_check:
         # Get current setting value
-        current_value = mod_toml_config(crashgen_toml_main, cast("str", setting["section"]), cast("str", setting["key"]))
+        current_value = mod_toml_config(crashgen_toml_main, cast("str", setting["section"]),
+                                        cast("str", setting["key"]))
 
         # Special case for BakaScrapHeap with MemoryManager
         if setting.get("special_case") == "bakascrapheap" and has_bakascrapheap and current_value:
@@ -552,7 +560,7 @@ def check_crashgen_settings() -> str:
                 f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name} #\n",
                 f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}.\n-----\n",
             ))
-            
+
             continue
 
         # Check if condition is met and setting needs changing
@@ -562,11 +570,13 @@ def check_crashgen_settings() -> str:
                 f"    Auto Scanner will change this parameter to {setting['desired_value']} {setting['reason']}.\n-----\n",
             ))
             # Apply the change
-            mod_toml_config(crashgen_toml_main, cast("str", setting["section"]), cast("str", setting["key"]), cast("str | bool | int | None", setting["desired_value"]))
+            mod_toml_config(crashgen_toml_main, cast("str", setting["section"]), cast("str", setting["key"]),
+                            cast("str | bool | int | None", setting["desired_value"]))
             CMain.logger.info(f"Changed {setting['name']} from {current_value} to {setting['desired_value']}")
         else:
             # Setting is already correctly configured
-            message_list.append(f"✔️ {setting['name']} parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
+            message_list.append(
+                f"✔️ {setting['name']} parameter is correctly configured in your {crashgen_name} settings!\n-----\n")
 
     return "".join(message_list)
 
@@ -615,7 +625,8 @@ def check_log_errors(folder_path: Path | str) -> str:
                     errors_list = [
                         f"ERROR > {line}"
                         for line in log_data_lower
-                        if any(item in line for item in catch_errors_lower) and all(elem not in line for elem in ignore_logs_errors_lower)
+                        if any(item in line for item in catch_errors_lower) and all(
+                            elem not in line for elem in ignore_logs_errors_lower)
                     ]
 
                 if errors_list:
@@ -645,8 +656,9 @@ def check_xse_plugins() -> str:
         str: A message indicating the status of the Address Library file.
     """
     message_list: list[str] = []
-    plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
-    
+    plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
+                                       f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
+
     # Version information organized by game type
     version_info = {
         "VR": {
@@ -668,9 +680,10 @@ def check_xse_plugins() -> str:
             "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
         }
     }
-    
-    game_version: Version = CMain.get_game_version(Path(cast("str", CMain.yaml_settings(str, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE"))))
-    
+
+    game_version: Version = CMain.get_game_version(Path(
+        cast("str", CMain.yaml_settings(str, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE"))))
+
     # Check if we can detect the game version
     if game_version == CMain.NULL_VERSION:
         message_list.extend((
@@ -680,26 +693,28 @@ def check_xse_plugins() -> str:
             f"  Link: Regular: {version_info['OG']['url']} or VR: {version_info['VR']['url']}\n-----\n",
         ))
         return "".join(message_list)
-    
+
     # Determine correct version based on game mode
     is_vr_mode = CMain.classic_settings(bool, "VR Mode")
-    
+
     if is_vr_mode:
         correct_versions = [version_info["VR"]]
         wrong_versions = [version_info["OG"], version_info["NG"]]
     else:
         correct_versions = [version_info["OG"], version_info["NG"]]
         wrong_versions = [version_info["VR"]]
-    
+
     # Check if plugins_path exists
     if not plugins_path:
         message_list.append("❌ ERROR: Could not locate plugins folder path in settings\n-----\n")
         return "".join(message_list)
-    
+
     # Check if correct version(s) exist
-    correct_version_exists = any(plugins_path.joinpath(cast("str", version["filename"])).exists() for version in correct_versions)
-    wrong_version_exists = any(plugins_path.joinpath(cast("str", version["filename"])).exists() for version in wrong_versions)
-    
+    correct_version_exists = any(
+        plugins_path.joinpath(cast("str", version["filename"])).exists() for version in correct_versions)
+    wrong_version_exists = any(
+        plugins_path.joinpath(cast("str", version["filename"])).exists() for version in wrong_versions)
+
     if correct_version_exists:
         message_list.append("✔️ You have the correct version of the Address Library file!\n-----\n")
     elif wrong_version_exists:
@@ -714,7 +729,7 @@ def check_xse_plugins() -> str:
             f"  Please install the {correct_versions[0]['description']} for proper functionality.\n",
             f"  Link: {correct_versions[0]['url']}\n-----\n",
         ))
-    
+
     return "".join(message_list)
 
 
@@ -740,7 +755,8 @@ def papyrus_logging() -> tuple[str, int]:
         message_output, count_dumps = papyrus_logging()
     """
     message_list: list[str] = []
-    papyrus_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Docs_File_PapyrusLog")
+    papyrus_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
+                                       f"Game{CMain.gamevars['vr']}_Info.Docs_File_PapyrusLog")
 
     count_dumps = count_stacks = count_warnings = count_errors = 0
     if papyrus_path and papyrus_path.exists():
@@ -794,7 +810,8 @@ def scan_wryecheck() -> str:
     """
     message_list: list[str] = []
     wrye_missinghtml_setting = CMain.yaml_settings(str, CMain.YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")
-    wrye_plugincheck = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Docs_File_WryeBashPC")
+    wrye_plugincheck = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
+                                           f"Game{CMain.gamevars['vr']}_Info.Docs_File_WryeBashPC")
     wrye_warnings_setting = CMain.yaml_settings(dict[str, str], CMain.YAML.Main, "Warnings_WRYE")
 
     wrye_missinghtml = wrye_missinghtml_setting if isinstance(wrye_missinghtml_setting, str) else None
@@ -818,9 +835,11 @@ def scan_wryecheck() -> str:
             plugin_list: list[str] = []
 
             for p in h3.find_next_siblings("p"):  # Find all <p> elements that come after current <h3> element.
-                if p.find_previous_sibling("h3") == h3:  # Check if current <p> elem is under same <h3> elem as previous <p>.
+                if p.find_previous_sibling(
+                        "h3") == h3:  # Check if current <p> elem is under same <h3> elem as previous <p>.
                     text = p.get_text().strip().replace("•\xa0 ", "")
-                    if any(ext in text for ext in (".esp", ".esl", ".esm")):  # Get text of <p> elem and check plugin extensions.
+                    if any(ext in text for ext in
+                           (".esp", ".esl", ".esm")):  # Get text of <p> elem and check plugin extensions.
                         plugin_list.append(text)
                 else:  # If current <p> elem is under a different <h3> elem, break loop.
                     break
@@ -932,7 +951,8 @@ def scan_mod_inis() -> str:
         if config_files.get_strict(float, "highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS") < 600.0:
             config_files.set(float, "highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS", 600.0)
             CMain.logger.info(f"> > > PERFORMED INI LOADING SCREEN FPS FIX FOR {config_files['highfpsphysicsfix.ini']}")
-            message_list.append(f"> Performed INI Loading Screen FPS Fix For : {config_files['highfpsphysicsfix.ini']}\n")
+            message_list.append(
+                f"> Performed INI Loading Screen FPS Fix For : {config_files['highfpsphysicsfix.ini']}\n")
 
     if vsync_list:
         message_list.extend((
@@ -981,7 +1001,8 @@ def scan_mods_unpacked() -> str:
     xse_file_list: set[str] = set()
     previs_list: set[str] = set()
     xse_acronym_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = CMain.yaml_settings(dict[str, str], CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.XSE_HashedScripts")
+    xse_scriptfiles_setting = CMain.yaml_settings(dict[str, str], CMain.YAML.Game,
+                                                  f"Game{CMain.gamevars['vr']}_Info.XSE_HashedScripts")
 
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
@@ -1068,10 +1089,10 @@ def scan_mods_unpacked() -> str:
             # ================================================
             # DETECT MODS WITH SCRIPT EXTENDER FILE COPIES
             elif (
-                not has_xse_files
-                and any(filename_lower == key.lower() for key in xse_scriptfiles)
-                and "workshop framework" not in str(root).lower()
-                and f"Scripts\\{filename}" in str(file_path)
+                    not has_xse_files
+                    and any(filename_lower == key.lower() for key in xse_scriptfiles)
+                    and "workshop framework" not in str(root).lower()
+                    and f"Scripts\\{filename}" in str(file_path)
             ):
                 has_xse_files = True
                 xse_file_list.add(f"  - {root_main}\n")
@@ -1169,7 +1190,8 @@ def scan_mods_archived() -> str:
     previs_list: set[str] = set()
 
     xse_acronym_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = CMain.yaml_settings(dict[str, str], CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.XSE_HashedScripts")
+    xse_scriptfiles_setting = CMain.yaml_settings(dict[str, str], CMain.YAML.Game,
+                                                  f"Game{CMain.gamevars['vr']}_Info.XSE_HashedScripts")
 
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else ""
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
@@ -1231,7 +1253,8 @@ def scan_mods_archived() -> str:
                     # ================================================
                     # DETECT INVALID TEXTURE FILE FORMATS
                     if "Ext: dds" not in block_split[1]:
-                        tex_frmt_list.add(f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
+                        tex_frmt_list.add(
+                            f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
                         continue
 
                     # ================================================
@@ -1268,9 +1291,9 @@ def scan_mods_archived() -> str:
                     # ================================================
                     # DETECT MODS WITH SCRIPT EXTENDER FILE COPIES
                     elif (
-                        not has_xse_files
-                        and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
-                        and "workshop framework" not in str(root).lower()
+                            not has_xse_files
+                            and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
+                            and "workshop framework" not in str(root).lower()
                     ):
                         has_xse_files = True
                         xse_file_list.add(f"  - {filename}\n")

@@ -45,7 +45,9 @@ type YAMLSequence = list[str]
 type YAMLMapping = dict[str, "YAMLValue"]
 type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
 type YAMLValueOptional = YAMLValue | None
-type GameID = Literal["Fallout4", "Fallout4VR", "Skyrim", "Starfield"] # Entries must correspond to the game's Main ESM or EXE file name.
+type GameID = Literal[
+    "Fallout4", "Fallout4VR", "Skyrim", "Starfield"]  # Entries must correspond to the game's Main ESM or EXE file name.
+
 
 def get_game_version(game_exe_path: Path) -> Version:
     """
@@ -90,6 +92,7 @@ def get_game_version(game_exe_path: Path) -> Version:
     else:
         return version
 
+
 class YAML(Enum):
     Main = auto()
     """CLASSIC Data/databases/CLASSIC Main.yaml"""
@@ -104,17 +107,21 @@ class YAML(Enum):
     TEST = auto()
     """tests/test_settings.yaml"""
 
+
 class GameVars(TypedDict):
     game: GameID
     vr: Literal["VR", ""]
+
 
 gamevars: GameVars = {
     "game": "Fallout4",
     "vr": "",
 }
 
+
 class UpdateCheckError(Exception):
     """Checking for updates failed."""
+
 
 SETTINGS_IGNORE_NONE = {
     "SCAN Custom Path",
@@ -270,6 +277,7 @@ class YamlSettingsCache:
         cache (dict[Path, YAMLMapping]): A dictionary to store cached YAML contents.
         file_mod_times (dict[Path, float]): A dictionary to store modification times of cached files.
     """
+
     def __init__(self) -> None:
         self.cache: dict[Path, YAMLMapping] = {}
         self.file_mod_times: dict[Path, float] = {}
@@ -290,8 +298,7 @@ class YamlSettingsCache:
             # Check if the file has been modified since it was last cached
             last_mod_time = yaml_path.stat().st_mtime
             if (yaml_path not in self.file_mod_times or
-                self.file_mod_times[yaml_path] != last_mod_time):
-
+                    self.file_mod_times[yaml_path] != last_mod_time):
                 # Update the file modification time
                 self.file_mod_times[yaml_path] = last_mod_time
 
@@ -339,7 +346,7 @@ class YamlSettingsCache:
             case _:
                 raise NotImplementedError
 
-        #assert yaml_path.is_file()
+        # assert yaml_path.is_file()
         data = self.load_yaml(yaml_path)
         keys = key_path.split(".")
 
@@ -478,7 +485,8 @@ async def get_github_version(session: aiohttp.ClientSession) -> Version | None:
         Version | None: The latest version of CLASSIC if successful, otherwise None.
     """
     try:
-        async with session.get("https://api.github.com/repos/evildarkarchon/CLASSIC-Fallout4/releases/latest") as response:
+        async with session.get(
+                "https://api.github.com/repos/evildarkarchon/CLASSIC-Fallout4/releases/latest") as response:
             response_json = await response.json()
     except aiohttp.ClientError:
         return None
@@ -528,6 +536,7 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
     except aiohttp.ClientError:
         pass
     return None
+
 
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
     """
@@ -595,9 +604,9 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     version_local = try_parse_version(classic_local.rsplit(maxsplit=1)[-1]) if classic_local else NULL_VERSION
 
     if (
-        version_local is None  # Local version unknown; updating may fix
-        or (version_github is not None and version_local < version_github)
-        or (version_nexus is not None and version_local < version_nexus)
+            version_local is None  # Local version unknown; updating may fix
+            or (version_github is not None and version_local < version_github)
+            or (version_nexus is not None and version_local < version_nexus)
     ):
         if not quiet:
             print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{gamevars["game"]}"), flush=True)
@@ -658,8 +667,10 @@ def docs_path_find() -> None:
         """
         try:
             # Open the registry key to get the user's documents path
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:  # pyright: ignore[reportPossiblyUnboundVariable]
-                documents_path = Path(winreg.QueryValueEx(key, "Personal")[0]) # pyright: ignore[reportPossiblyUnboundVariable]
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:  # pyright: ignore[reportPossiblyUnboundVariable]
+                documents_path = Path(
+                    winreg.QueryValueEx(key, "Personal")[0])  # pyright: ignore[reportPossiblyUnboundVariable]
         except (OSError, UnboundLocalError):
             # Fallback to a default path if registry key is not found
             documents_path = Path.home() / "Documents"
@@ -700,7 +711,8 @@ def docs_path_find() -> None:
                     library_path = Path(library_line.split('"')[3])
                 if str(game_sid) in library_line:
                     library_path = library_path / "steamapps"
-                    linux_docs = library_path / "compatdata" / str(game_sid) / "pfx/drive_c/users/steamuser/My Documents/My Games" / docs_name
+                    linux_docs = library_path / "compatdata" / str(
+                        game_sid) / "pfx/drive_c/users/steamuser/My Documents/My Games" / docs_name
                     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs", str(linux_docs))
 
     def get_manual_docs_path() -> None:
@@ -713,7 +725,8 @@ def docs_path_find() -> None:
         """
         print(f"> > > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {docs_name}.ini IS LOCATED < < <")
         while True:
-            input_str = input(f"(EXAMPLE: C:/Users/Zen/Documents/My Games/{docs_name} | Press ENTER to confirm.)\n> ").strip()
+            input_str = input(
+                f"(EXAMPLE: C:/Users/Zen/Documents/My Games/{docs_name} | Press ENTER to confirm.)\n> ").strip()
             input_path = Path(input_str)
             if input_str and input_path.is_dir():
                 print(f"You entered: '{input_str}' | This path will be automatically added to CLASSIC Settings.yaml")
@@ -744,6 +757,7 @@ def docs_path_find() -> None:
             manual_docs_gui.manual_docs_path_signal.emit()
         else:
             get_manual_docs_path()
+
 
 def get_manual_docs_path_gui(path: str) -> None:
     """
@@ -779,6 +793,7 @@ def get_manual_docs_path_gui(path: str) -> None:
         print(f"'{path}' is not a valid or existing directory path. Please try again.")
         manual_docs_gui.manual_docs_path_signal.emit()
 
+
 def docs_generate_paths() -> None:
     """
     Generates and sets various documentation paths in the YAML settings.
@@ -796,10 +811,14 @@ def docs_generate_paths() -> None:
         raise TypeError
     docs_path = Path(docs_path_str)
 
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_Folder_XSE", str(docs_path.joinpath(xse_acronym_base)))
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_PapyrusLog", str(docs_path.joinpath("Logs/Script/Papyrus.0.log")))
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_WryeBashPC", str(docs_path.joinpath("ModChecker.html")))
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_XSE", str(docs_path.joinpath(xse_acronym_base, f"{xse_acronym.lower()}.log")))
+    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_Folder_XSE",
+                  str(docs_path.joinpath(xse_acronym_base)))
+    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_PapyrusLog",
+                  str(docs_path.joinpath("Logs/Script/Papyrus.0.log")))
+    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_WryeBashPC",
+                  str(docs_path.joinpath("ModChecker.html")))
+    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_XSE",
+                  str(docs_path.joinpath(xse_acronym_base, f"{xse_acronym.lower()}.log")))
 
 
 # =========== CHECK DOCUMENTS XSE FILE -> GET GAME ROOT FOLDER PATH ===========
@@ -824,13 +843,15 @@ def game_path_find() -> None:
 
     try:
         # Open the registry key
-        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{gamevars["vr"]}")  # pyright: ignore[reportPossiblyUnboundVariable]
+        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                 rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{gamevars["vr"]}")  # pyright: ignore[reportPossiblyUnboundVariable]
         # Query the 'installed path' value
         path, _ = winreg.QueryValueEx(reg_key, "installed path")  # pyright: ignore[reportPossiblyUnboundVariable]
         winreg.CloseKey(reg_key)  # pyright: ignore[reportPossiblyUnboundVariable]
     except FileNotFoundError:
         try:
-            reg_key_gog = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\GOG.com\Games\1998527297")  # pyright: ignore[reportPossiblyUnboundVariable]
+            reg_key_gog = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                         r"SOFTWARE\WOW6432Node\GOG.com\Games\1998527297")  # pyright: ignore[reportPossiblyUnboundVariable]
             path, _ = winreg.QueryValueEx(reg_key_gog, "path")  # pyright: ignore[reportPossiblyUnboundVariable]
             winreg.CloseKey(reg_key_gog)  # pyright: ignore[reportPossiblyUnboundVariable]
         except (FileNotFoundError, UnboundLocalError, OSError):
@@ -867,7 +888,8 @@ def game_path_find() -> None:
         path_check = LOG_Check.readlines()
     for logline in path_check:
         if logline.startswith("plugin directory"):
-            logline = logline.split("=", maxsplit=1)[1].strip().replace(f"\\Data\\{xse_acronym_base}\\Plugins", "").replace("\n", "")
+            logline = logline.split("=", maxsplit=1)[1].strip().replace(f"\\Data\\{xse_acronym_base}\\Plugins",
+                                                                        "").replace("\n", "")
             game_path = Path(logline)
             break
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
@@ -910,20 +932,26 @@ def game_generate_paths() -> None:
 
     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_Folder_Data", rf"{game_path}\Data")
     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_Folder_Plugins", fr"{game_path}\Data\{xse_acronym_base}\Plugins")
+    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_Folder_Plugins",
+                  fr"{game_path}\Data\{xse_acronym_base}\Plugins")
     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE", fr"{game_path}\{gamevars["game"]}{gamevars["vr"]}.exe")
-    game_version = get_game_version(Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE"))))
+    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE",
+                  fr"{game_path}\{gamevars["game"]}{gamevars["vr"]}.exe")
+    game_version = get_game_version(
+        Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE"))))
     match gamevars["game"]:
         case "Fallout4" if not gamevars["vr"]:
             if not game_version or game_version not in FO4_VERSIONS:
                 raise ValueError("Unsupported or invalid game version")
             if game_version == OG_VERSION:
-                yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib", fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin")
+                yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib",
+                              fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin")
             elif game_version == NG_VERSION:
-                yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib", fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-984-0.bin")
+                yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib",
+                              fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-984-0.bin")
         case "Fallout4" if gamevars["vr"]:
-            yaml_settings(str, YAML.Game_Local, "GameVR_Info.Game_File_AddressLib", fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-2-72-0.csv")
+            yaml_settings(str, YAML.Game_Local, "GameVR_Info.Game_File_AddressLib",
+                          fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-2-72-0.csv")
 
 
 # =========== CHECK GAME EXE FILE -> GET PATH AND HASHES ===========
@@ -970,7 +998,8 @@ def game_check_integrity() -> str:
             message_list.append(f"❌ CAUTION : YOUR {root_name} GAME / EXE VERSION IS OUT OF DATE \n-----\n")
 
         if "Program Files" not in str(game_exe_path):
-            message_list.append(f"✔️ Your {root_name} game files are installed outside of the Program Files folder! \n-----\n")
+            message_list.append(
+                f"✔️ Your {root_name} game files are installed outside of the Program Files folder! \n-----\n")
         else:
             root_warn = yaml_settings(str, YAML.Main, "Warnings_GAME.warn_root_path")
             if not isinstance(root_warn, str):
@@ -1025,7 +1054,8 @@ def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
                     raise TypeError
                 message_list.append(warn_adlib)
         case _:
-            message_list.append(f"❌ Value for Address Library is invalid or missing from CLASSIC {gamevars["game"]} Local.yaml!\n-----\n")
+            message_list.append(
+                f"❌ Value for Address Library is invalid or missing from CLASSIC {gamevars["game"]} Local.yaml!\n-----\n")
 
     match xse_log_file:
         case str() | Path():
@@ -1048,11 +1078,13 @@ def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
                     message_list.append(f"#❌ CAUTION : {xse_acronym}.log REPORTS THE FOLLOWING ERRORS #\n")
                     message_list.extend([f"ERROR > {elem.strip()} \n-----\n" for elem in failed_list])
             else:
-                message_list.extend([f"❌ CAUTION : *{xse_acronym.lower()}.log* FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",
-                                    f"   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n",
-                                    "    After that, try running CLASSIC again! \n-----\n"])
+                message_list.extend(
+                    [f"❌ CAUTION : *{xse_acronym.lower()}.log* FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",
+                     f"   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n",
+                     "    After that, try running CLASSIC again! \n-----\n"])
         case _:
-            message_list.append(f"❌ Value for {xse_acronym.lower()}.log is invalid or missing from CLASSIC {gamevars["game"]} Local.yaml!\n-----\n")
+            message_list.append(
+                f"❌ Value for {xse_acronym.lower()}.log is invalid or missing from CLASSIC {gamevars["game"]} Local.yaml!\n-----\n")
 
     return "".join(message_list)
 
@@ -1098,10 +1130,12 @@ def xse_check_hashes() -> str:
             if hash1 == hash2:
                 pass
             elif hash2 is None:  # Can only be None if not hashed in the first place, meaning it is missing.
-                message_list.append(f"❌ CAUTION : {key} Script Extender file is missing from your game Scripts folder! \n-----\n")
+                message_list.append(
+                    f"❌ CAUTION : {key} Script Extender file is missing from your game Scripts folder! \n-----\n")
                 xse_script_missing = True
             else:
-                message_list.append(f"[!] CAUTION : {key} Script Extender file is outdated or overriden by another mod! \n-----\n")
+                message_list.append(
+                    f"[!] CAUTION : {key} Script Extender file is outdated or overriden by another mod! \n-----\n")
                 xse_script_mismatch = True
 
     if xse_script_missing:
@@ -1208,9 +1242,10 @@ def docs_check_ini(ini_name: str) -> str:
                                  "     SO CLASSIC CAN MAKE THE REQUIRED CHANGES TO IT. \n-----\n"])
 
         except (configparser.MissingSectionHeaderError, configparser.ParsingError, ValueError, OSError):
-            message_list.extend([f"[!] CAUTION : YOUR {ini_name} FILE IS VERY LIKELY BROKEN, PLEASE CREATE A NEW ONE \n",
-                                 f"    Delete this file from your Documents/My Games/{docs_name} folder, then press \n",
-                                 f"    *Scan Game Files* in CLASSIC to generate a new {ini_name} file. \n-----\n"])
+            message_list.extend(
+                [f"[!] CAUTION : YOUR {ini_name} FILE IS VERY LIKELY BROKEN, PLEASE CREATE A NEW ONE \n",
+                 f"    Delete this file from your Documents/My Games/{docs_name} folder, then press \n",
+                 f"    *Scan Game Files* in CLASSIC to generate a new {ini_name} file. \n-----\n"])
         except configparser.DuplicateOptionError as e:
             message_list.extend([f"[!] ERROR : Your {ini_name} file has duplicate options! \n",
                                  f"    {e} \n-----\n"])
@@ -1270,7 +1305,6 @@ def main_files_backup() -> None:
     except FileNotFoundError:
         xse_data_lower = []
 
-
     # Grab current xse version to create a folder with that name.
     if len(xse_data_lower) > 0:
         line_xse = next(line for _, line in enumerate(xse_data_lower) if "version = " in line)
@@ -1297,6 +1331,7 @@ def main_files_backup() -> None:
                     destination_file = backup_path / file.name
                     shutil.copy2(file, destination_file)
 
+
 # =========== GENERATE MAIN RESULTS ===========
 def main_combined_result() -> str:
     """
@@ -1313,7 +1348,8 @@ def main_combined_result() -> str:
         str: A concatenated string of the results from all the checks.
     """
     combined_return = [game_check_integrity(), xse_check_integrity(), xse_check_hashes(), docs_check_folder(),
-                       docs_check_ini(f"{gamevars["game"]}.ini"), docs_check_ini(f"{gamevars["game"]}Custom.ini"), docs_check_ini(f"{gamevars["game"]}Prefs.ini")]
+                       docs_check_ini(f"{gamevars["game"]}.ini"), docs_check_ini(f"{gamevars["game"]}Custom.ini"),
+                       docs_check_ini(f"{gamevars["game"]}Prefs.ini")]
     return "".join(combined_return)
 
 
