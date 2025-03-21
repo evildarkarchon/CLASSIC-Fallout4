@@ -1,6 +1,16 @@
 =====================================================================================================
 # CLASSIC CHANGELOG #
 
+7.31.0
+*CHANGES*
+- Reduced volume for audio notifications
+- Add detection of the GOG version of the game
+- Extensive backend changes for better maintainability, which should ease future updates
+- Remove Nvidia Reflex recommendation because it is only useful for GPU-locked situations (which are rare in Fallout 4)
+- Temporarily remove the pastebin feature until I can make it more stable
+- Hopefully fix over-reporting of duplicate INI files
+- Probably some other things I forgot to write down
+
 7.30.4
 *CHANGES*
 - Added two new crashes to the list
