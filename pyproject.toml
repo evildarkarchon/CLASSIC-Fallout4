@@ -25,6 +25,7 @@ pyside6 = "^6.8.0"
 typed-argument-parser = "^1.10.1"
 packaging = "^24.1"
 tap = "^0.2"
+pywin32 = "^309"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.12.0"
@@ -38,6 +39,7 @@ pytest-cov = "^5.0.0"
 pytest-asyncio = "^0.24.0"
 anyio = "^4.6.2.post1"
 pyinstaller-hooks-contrib = "^2025.0"
+black = "^25.1.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -50,6 +52,7 @@ disable_error_code = [
 	"index",          # Redundant with Pyright reportIndexIssue
 	"name-defined",   # Redundant with Ruff F821
 	"operator",       # Redundant with Pyright reportOperatorIssue
+	"attr-defined"	 # Redundant with reportAttributeAccessIssue
 ]
 
 [tool.pyright]
@@ -60,6 +63,7 @@ reportMissingParameterType = false # Redundant with Ruff ANN001
 reportReturnType = false           # Redundant with Mypy return-type
 reportUndefinedVariable = false    # Redundant with Ruff F821
 reportUnusedImport = false         # Redundant with Ruff F401
+reportAttributeAccessIssue = "warning" # Messes with my docstrings, but could be useful elsewhere
 
 [tool.ruff]
 indent-width = 4
@@ -138,3 +142,7 @@ source = ["."]
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-report=lcov:lcov.info --cov-report=term"
+
+[tool.black]
+line-length = 150
+target-version = ['py312', 'py313']
