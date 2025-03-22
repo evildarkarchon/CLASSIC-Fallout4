@@ -1270,7 +1270,7 @@ def crashlogs_scan() -> None:
                         )
                 scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
                 scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, Has_XCell, Has_BakaScrapHeap)
-                if Version(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(crashlog_crashgen) >= Version("1.27.0"):
+                if crashgen_version_gen(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(crashlog_crashgen) >= Version("1.27.0"):
                     scanner.scan_archivelimit_setting(autoscan_report, crashgen)
                 scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
 

@@ -10,6 +10,7 @@
 - Temporarily remove the pastebin feature until I can make it more stable
 - Hopefully fix over-reporting of duplicate INI files
 - Probably some other things I forgot to write down
+- Add entry for Fourville to the "Mods with Community Solutions" list
 
 7.30.4
 *CHANGES*
