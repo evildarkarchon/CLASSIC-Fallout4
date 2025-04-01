@@ -12,7 +12,7 @@ from enum import Enum, auto
 from functools import reduce
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Literal, TypedDict, cast
+from typing import Literal, TypedDict, cast, Any
 
 import aiohttp
 import chardet
@@ -275,37 +275,75 @@ def remove_readonly(file_path: Path) -> None:
 
 class YamlSettingsCache:
     """
-    A class to handle caching of YAML settings.
-
-    Attributes:
-        cache (dict[Path, YAMLMapping]): A dictionary to store cached YAML contents.
-        file_mod_times (dict[Path, float]): A dictionary to store modification times of cached files.
+    A class to handle caching of YAML settings with optimizations for static files.
+    
+    Static files (YAML.Main and YAML.Game) are loaded once and not checked for changes.
+    Dynamic files are monitored for modifications and reloaded as needed.
     """
+    # Static YAML stores that won't change during program execution
+    STATIC_YAML_STORES = {YAML.Main, YAML.Game}
 
     def __init__(self) -> None:
         self.cache: dict[Path, YAMLMapping] = {}
         self.file_mod_times: dict[Path, float] = {}
+        self.path_cache: dict[YAML, Path] = {}  # Cache for YAML store to Path mapping
+        self.settings_cache: dict[tuple[YAML, str, type], Any] = {}  # Cache for frequently accessed settings
 
-    def load_yaml(self, yaml_path: str | os.PathLike) -> YAMLMapping:
+    def get_path_for_store(self, yaml_store: YAML) -> Path:
+        """Get the file path for a YAML store, with caching."""
+        if yaml_store in self.path_cache:
+            return self.path_cache[yaml_store]
+
+        data_path = Path("CLASSIC Data/")
+        match yaml_store:
+            case YAML.Main:
+                yaml_path = data_path / "databases/CLASSIC Main.yaml"
+            case YAML.Settings:
+                yaml_path = Path("CLASSIC Settings.yaml")
+            case YAML.Ignore:
+                yaml_path = Path("CLASSIC Ignore.yaml")
+            case YAML.Game:
+                yaml_path = data_path / f"databases/CLASSIC {gamevars['game']}.yaml"
+            case YAML.Game_Local:
+                yaml_path = data_path / f"CLASSIC {gamevars['game']} Local.yaml"
+            case YAML.TEST:
+                yaml_path = Path("tests/test_settings.yaml")
+            case _:
+                raise NotImplementedError
+
+        self.path_cache[yaml_store] = yaml_path
+        return yaml_path
+
+    def load_yaml(self, yaml_path: Path) -> YAMLMapping:
         """
-        Load a YAML file and cache its contents.
-        This method uses pathlib for file handling and caching. It checks if the
-        YAML file has been modified since it was last cached and reloads it if necessary.
-        Args:
-            yaml_path (str | os.PathLike): The path to the YAML file.
-        Returns:
-            YAMLMapping: The contents of the YAML file as a YAMLMapping object.
+        Load a YAML file with caching based on whether it's static or dynamic.
+        
+        Static files are loaded once, while dynamic files are checked for modifications.
         """
-        # Use pathlib for file handling and caching
-        yaml_path = Path(yaml_path)
-        if yaml_path.exists():
-            # Check if the file has been modified since it was last cached
+        if not yaml_path.exists():
+            return {}
+
+        # Determine if this is a static file
+        is_static = any(yaml_path == self.get_path_for_store(store) for store in self.STATIC_YAML_STORES)
+
+        if is_static:
+            # For static files, just load once
+            if yaml_path not in self.cache:
+                logger.debug(f"Loading static YAML file: {yaml_path}")
+                with yaml_path.open(encoding="utf-8") as yaml_file:
+                    yaml = ruamel.yaml.YAML()
+                    yaml.indent(offset=2)
+                    yaml.width = 300
+                    self.cache[yaml_path] = yaml.load(yaml_file)
+        else:
+            # For dynamic files, check modification time
             last_mod_time = yaml_path.stat().st_mtime
             if (yaml_path not in self.file_mod_times or
                     self.file_mod_times[yaml_path] != last_mod_time):
                 # Update the file modification time
                 self.file_mod_times[yaml_path] = last_mod_time
 
+                logger.debug(f"Loading dynamic YAML file: {yaml_path}")
                 # Reload the YAML file
                 with yaml_path.open(encoding="utf-8") as yaml_file:
                     yaml = ruamel.yaml.YAML()
@@ -318,39 +356,17 @@ class YamlSettingsCache:
     def get_setting[T](self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """
         Retrieve or update a setting from a specified YAML store.
-        Args:
-            _type (type[T]): The expected type of the setting value.
-            yaml_store (YAML): The YAML store to retrieve the setting from.
-            key_path (str): The dot-separated path to the setting within the YAML structure.
-            new_value (T | None, optional): The new value to set for the specified key path. Defaults to None.
-        Returns:
-            T | None: The value of the setting if found, otherwise None. If new_value is provided, returns new_value.
-        Raises:
-            NotImplementedError: If the specified YAML store is not recognized.
-            TypeError: If the key path does not lead to a dictionary when setting a new value.
-        Notes:
-            - If new_value is provided, the setting is updated and written back to the YAML file.
-            - The method also updates an internal cache after modifying the YAML file.
-            - If the setting value is None and the key is not in SETTINGS_IGNORE_NONE, an error message is printed.
+        
+        For static stores, results are cached to avoid repeated YAML traversal.
         """
-        data_path = Path("CLASSIC Data/")
-        match yaml_store:
-            case YAML.Main:
-                yaml_path = data_path / "databases/CLASSIC Main.yaml"
-            case YAML.Settings:
-                yaml_path = Path("CLASSIC Settings.yaml")
-            case YAML.Ignore:
-                yaml_path = Path("CLASSIC Ignore.yaml")
-            case YAML.Game:
-                yaml_path = data_path / f"databases/CLASSIC {gamevars["game"]}.yaml"
-            case YAML.Game_Local:
-                yaml_path = data_path / f"CLASSIC {gamevars["game"]} Local.yaml"
-            case YAML.TEST:
-                yaml_path = Path("tests/test_settings.yaml")
-            case _:
-                raise NotImplementedError
+        # If this is a read operation for a static store, check cache first
+        cache_key = (yaml_store, key_path, _type)
+        if new_value is None and yaml_store in self.STATIC_YAML_STORES and cache_key in self.settings_cache:
+            return self.settings_cache[cache_key]
 
-        # assert yaml_path.is_file()
+        yaml_path = self.get_path_for_store(yaml_store)
+
+        # Load YAML with caching logic
         data = self.load_yaml(yaml_path)
         keys = key_path.split(".")
 
@@ -362,10 +378,19 @@ class YamlSettingsCache:
                 raise TypeError
             return next_value
 
-        setting_container = reduce(setdefault, keys[:-1], data)
+        try:
+            setting_container = reduce(setdefault, keys[:-1], data)
+        except TypeError:
+            # Handle the case where a non-dictionary value is encountered
+            logger.error(f"Invalid path structure for {key_path} in {yaml_store}")
+            return None
 
         # If new_value is provided, update the value
         if new_value is not None:
+            # If this is a static file and we're trying to modify it, warn about this
+            if yaml_store in self.STATIC_YAML_STORES:
+                logger.warning(f"Attempting to modify static YAML store {yaml_store} at {key_path}")
+
             setting_container[keys[-1]] = new_value  # type: ignore[assignment]
 
             # Write changes back to the YAML file
@@ -377,12 +402,22 @@ class YamlSettingsCache:
 
             # Update the cache
             self.cache[yaml_path] = data
+
+            # Clear any cached results for this path
+            if cache_key in self.settings_cache:
+                del self.settings_cache[cache_key]
+
             return new_value
 
         # Traverse YAML structure to get value
         setting_value = setting_container.get(keys[-1])
         if setting_value is None and keys[-1] not in SETTINGS_IGNORE_NONE:
             print(f"❌ ERROR (yaml_settings) : Trying to grab a None value for : '{key_path}'")
+
+        # Cache the result for static stores
+        if yaml_store in self.STATIC_YAML_STORES:
+            self.settings_cache[cache_key] = setting_value
+
         return setting_value  # type: ignore[return-value]
 
 
@@ -1404,19 +1439,24 @@ gui_mode: bool = False
 def initialize(is_gui: bool = False) -> None:
     """
     Initialize the application settings and GUI components.
-    This function sets up the necessary global variables and initializes
-    the YAML settings cache. If the GUI mode is enabled, it also initializes
-    the manual documentation path and game path entry components.
+    
+    Pre-loads static YAML files for better performance.
+    
     Args:
         is_gui (bool): A flag indicating whether the GUI mode is enabled.
                        Defaults to False.
-    Returns:
-        None
     """
     global gui_mode, yaml_cache, manual_docs_gui, game_path_gui  # noqa: PLW0603
 
     yaml_cache = YamlSettingsCache()
-    gamevars["vr"] = cast("Literal['VR', '']", "VR") if classic_settings(bool, "VR Mode") else ""
+
+    # Pre-load static YAML files
+    for store in YamlSettingsCache.STATIC_YAML_STORES:
+        path = yaml_cache.get_path_for_store(store)
+        yaml_cache.load_yaml(path)
+
+    # noinspection PyTypedDict
+    gamevars["vr"] = "" if not classic_settings(bool, "VR Mode") else cast('Literal["VR", ""]', "VR")
     gui_mode = is_gui
     if gui_mode:
         manual_docs_gui = ManualDocsPath()
