@@ -12,7 +12,7 @@ from enum import Enum, auto
 from functools import reduce
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Literal, TypedDict, cast, Any
+from typing import Any, ClassVar, Literal, TypedDict, cast
 
 import aiohttp
 import chardet
@@ -281,7 +281,7 @@ class YamlSettingsCache:
     Dynamic files are monitored for modifications and reloaded as needed.
     """
     # Static YAML stores that won't change during program execution
-    STATIC_YAML_STORES = {YAML.Main, YAML.Game}
+    STATIC_YAML_STORES: ClassVar[set[YAML]] = {YAML.Main, YAML.Game}
 
     def __init__(self) -> None:
         self.cache: dict[Path, YAMLMapping] = {}
