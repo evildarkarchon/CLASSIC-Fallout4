@@ -326,15 +326,18 @@ class YamlSettingsCache:
         # Determine if this is a static file
         is_static = any(yaml_path == self.get_path_for_store(store) for store in self.STATIC_YAML_STORES)
 
+        def cache_file(yaml_path: Path) -> None:
+            with open_file_with_encoding(yaml_path) as yaml_file:
+                yaml = ruamel.yaml.YAML()
+                yaml.indent(offset=2)
+                yaml.width = 300
+                self.cache[yaml_path] = yaml.load(yaml_file)
+
         if is_static:
             # For static files, just load once
             if yaml_path not in self.cache:
                 logger.debug(f"Loading static YAML file: {yaml_path}")
-                with yaml_path.open(encoding="utf-8") as yaml_file:
-                    yaml = ruamel.yaml.YAML()
-                    yaml.indent(offset=2)
-                    yaml.width = 300
-                    self.cache[yaml_path] = yaml.load(yaml_file)
+                cache_file(yaml_path)
         else:
             # For dynamic files, check modification time
             last_mod_time = yaml_path.stat().st_mtime
@@ -345,11 +348,7 @@ class YamlSettingsCache:
 
                 logger.debug(f"Loading dynamic YAML file: {yaml_path}")
                 # Reload the YAML file
-                with yaml_path.open(encoding="utf-8") as yaml_file:
-                    yaml = ruamel.yaml.YAML()
-                    yaml.indent(offset=2)
-                    yaml.width = 300
-                    self.cache[yaml_path] = yaml.load(yaml_file)
+                cache_file(yaml_path)
 
         return self.cache.get(yaml_path, {})
 
