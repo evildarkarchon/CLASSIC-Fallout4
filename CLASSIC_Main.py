@@ -1463,6 +1463,5 @@ def initialize(is_gui: bool = False) -> None:
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.
-    initialize()
-    main_generate_required()
-    os.system("pause")
+    raise RuntimeError("""This module is not meant to be run directly. 
+Please use it as part of the CLASSIC application.""")

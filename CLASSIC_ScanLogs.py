@@ -971,7 +971,7 @@ class ClassicScanLogs:
         relevant_lines = [line for line in segment_callstack_lower if "modified by:" not in line]
         
         # Use Counter directly instead of list + Counter conversion
-        plugins_matches = Counter()
+        plugins_matches: Counter[str] = Counter()
         
         # Optimize the matching algorithm
         for line in relevant_lines:
