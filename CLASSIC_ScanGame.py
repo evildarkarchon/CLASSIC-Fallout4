@@ -413,7 +413,7 @@ def check_crashgen_settings() -> str:
     plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
                                        f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
     if plugins_path and not isinstance(plugins_path, Path):
-        plugins_path = Path(cast(str, plugins_path))
+        plugins_path = Path(cast("str", plugins_path))
 
     # Get crash generator name from settings
     crashgen_name_setting = CMain.yaml_settings(str, CMain.YAML.Game,
