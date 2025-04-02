@@ -326,12 +326,12 @@ class YamlSettingsCache:
         # Determine if this is a static file
         is_static = any(yaml_path == self.get_path_for_store(store) for store in self.STATIC_YAML_STORES)
 
-        def cache_file(yaml_path: Path) -> None:
-            with open_file_with_encoding(yaml_path) as yaml_file:
+        def cache_file(yaml_path_obj: Path) -> None:
+            with open_file_with_encoding(yaml_path_obj) as yaml_file:
                 yaml = ruamel.yaml.YAML()
                 yaml.indent(offset=2)
                 yaml.width = 300
-                self.cache[yaml_path] = yaml.load(yaml_file)
+                self.cache[yaml_path_obj] = yaml.load(yaml_file)
 
         if is_static:
             # For static files, just load once

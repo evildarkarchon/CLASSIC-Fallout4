@@ -653,19 +653,25 @@ class ClassicScanLogs:
                 - A boolean indicating if the plugin limit trigger is activated.
                 - A boolean indicating if the limit check is disabled.
         """
+        if not segment_plugins:
+            return {}, False, False
+        
+        is_og = game_version in (self.yamldata.game_version, self.yamldata.game_version_vr)
+        is_ng = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
         crashlog_plugins: dict[str, str] = {}
         trigger_plugin_limit = trigger_limit_check_disabled = False
         for elem in segment_plugins:
             if "[FF]" in elem:
-                if game_version in (self.yamldata.game_version, self.yamldata.game_version_vr):
+                if is_og:
                     trigger_plugin_limit = True
-                elif game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0"):
+                elif is_ng:
                     trigger_limit_check_disabled = True
             pluginmatch = self.pluginsearch.match(elem, concurrent=True)
             if pluginmatch is not None:
                 plugin_fid = pluginmatch.group(1)
                 plugin_name = pluginmatch.group(3)
-                if plugin_fid is not None and all(plugin_name not in item for item in crashlog_plugins):
+                is_unique = plugin_name and plugin_name not in crashlog_plugins
+                if plugin_fid is not None and is_unique:
                     crashlog_plugins[plugin_name] = plugin_fid.replace(":", "")
                 elif plugin_name and "dll" in plugin_name.lower():
                     crashlog_plugins[plugin_name] = "DLL"
@@ -960,31 +966,33 @@ class ClassicScanLogs:
                      autoscan_report: list[str]) -> None:
         """
         Matches plugins found in the call stack segment with the crash log plugins and updates the autoscan report.
-
-        Args:
-            segment_callstack_lower (list[str]): A list of strings representing the call stack segment in lowercase.
-            crashlog_plugins_lower (set[str]): A set of plugin names in lowercase.
-            autoscan_report (list[str]): A list to append the scan results to.
-
-        Returns:
-            None
         """
-        plugins_matches: list[str] = [
-            plugin
-            for line in segment_callstack_lower
-            for plugin in crashlog_plugins_lower
-            if plugin in line and "modified by:" not in line and all(
-                ignore not in plugin for ignore in self.lower_plugins_ignore)
-        ]
+        # Pre-filter call stack lines that won't match
+        relevant_lines = [line for line in segment_callstack_lower if "modified by:" not in line]
+        
+        # Use Counter directly instead of list + Counter conversion
+        plugins_matches = Counter()
+        
+        # Optimize the matching algorithm
+        for line in relevant_lines:
+            for plugin in crashlog_plugins_lower:
+                # Skip plugins that are in the ignore list
+                if plugin in self.lower_plugins_ignore:
+                    continue
+                    
+                if plugin in line:
+                    plugins_matches[plugin] += 1
+        
         if plugins_matches:
-            plugins_found = dict(Counter(plugins_matches))
-            if plugins_found:
-                append_or_extend([f"- {key} | {value}\n" for key, value in plugins_found.items()], autoscan_report)
-                append_or_extend((
-                    "\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n",
-                    f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n",
-                    "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n",
-                ), autoscan_report)
+            append_or_extend("The following PLUGINS were found in the CRASH STACK:\n", autoscan_report)
+            # Sort by count (descending) then by name for consistent output
+            for plugin, count in sorted(plugins_matches.items(), key=lambda x: (-x[1], x[0])):
+                append_or_extend(f"- {plugin} | {count}\n", autoscan_report)
+            append_or_extend((
+                "\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n",
+                f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n",
+                "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n",
+            ), autoscan_report)
         else:
             append_or_extend("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n", autoscan_report)
 
@@ -1199,7 +1207,7 @@ def crashlogs_scan() -> None:
         # CHECK IF THERE ARE ANY PLUGINS IN THE IGNORE YAML
         if scanner.ignore_plugins_list:
             for signal in scanner.ignore_plugins_list:
-                if any(signal == plugin for plugin in crashlog_plugins_lower):
+                if signal in crashlog_plugins_lower:
                     del crashlog_plugins[signal]
 
         append_or_extend((
