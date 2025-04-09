@@ -468,7 +468,7 @@ Crashlog_Stack_Check:
 
   5 | Plugin Limit Crash: ["[FF]", BSMemStorage, DataFileHandleReaderWriter]
 
-  5 | Plugin Order Crash: [ME-OPT|0DB9300, GamebryoSequenceGenerator]
+  5 | Load Order Crash: [ME-OPT|0DB9300, GamebryoSequenceGenerator]
 
   3 | MO2 Extractor Crash: [BSD3DResourceCreator]
 
