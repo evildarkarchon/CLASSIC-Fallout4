@@ -355,6 +355,9 @@ class ConfigFileCache:
         return self._config_files.items()
 
 
+config_files = ConfigFileCache()
+
+
 def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bool | int | None = None) -> Any | None:
     """
     Read or modify a value in a TOML configuration file.
@@ -457,6 +460,13 @@ def check_crashgen_settings() -> str:
     has_achievements = any(
         ach_file in xse_files for ach_file in ["achievements.dll", "achievementsmodsenablerloader.dll"])
     has_looksmenu = any("f4ee" in file for file in xse_files)
+    xcell_memory_enabled = True
+    xcell_toml: Path = plugins_path / "x-cell.toml"
+    xcell_ini: Path = plugins_path / "x-cell.ini"
+    if xcell_toml.exists():
+        xcell_memory_enabled = mod_toml_config(xcell_toml, "Patches", "bMemory") is True
+    elif xcell_ini.exists():
+        xcell_memory_enabled = config_files.get(bool, str(xcell_ini), "patches", "memory") is True
 
     # If no config file found, return message without raising exception
     if not crashgen_toml_main:
@@ -472,89 +482,37 @@ def check_crashgen_settings() -> str:
     # Define configuration settings to check, with their requirements and desired states
     settings_to_check = [
         # Patches section settings
-        {
-            "section": "Patches",
-            "key": "Achievements",
-            "name": "Achievements",
-            "condition": has_achievements,
-            "desired_value": False,
-            "description": "The Achievements Mod and/or Unlimited Survival Mode is installed",
-            "reason": f"to prevent conflicts with {crashgen_name}",
-        },
-        {
-            "section": "Patches",
-            "key": "MemoryManager",
-            "name": "Memory Manager",
-            "condition": has_xcell,
-            "desired_value": False,
-            "description": "The X-Cell Mod is installed",
-            "reason": "to prevent conflicts with X-Cell",
-            "special_case": "bakascrapheap",
-        },
-        {
-            "section": "Patches",
-            "key": "HavokMemorySystem",
-            "name": "Havok Memory System",
-            "condition": has_xcell,
-            "desired_value": False,
-            "description": "The X-Cell Mod is installed",
-            "reason": "to prevent conflicts with X-Cell",
-        },
-        {
-            "section": "Patches",
-            "key": "BSTextureStreamerLocalHeap",
-            "name": "BS Texture Streamer Local Heap",
-            "condition": has_xcell,
-            "desired_value": False,
-            "description": "The X-Cell Mod is installed",
-            "reason": "to prevent conflicts with X-Cell",
-        },
-        {
-            "section": "Patches",
-            "key": "ScaleformAllocator",
-            "name": "Scaleform Allocator",
-            "condition": has_xcell,
-            "desired_value": False,
-            "description": "The X-Cell Mod is installed",
-            "reason": "to prevent conflicts with X-Cell",
-        },
-        {
-            "section": "Patches",
-            "key": "SmallBlockAllocator",
-            "name": "Small Block Allocator",
-            "condition": has_xcell,
-            "desired_value": False,
-            "description": "The X-Cell Mod is installed",
-            "reason": "to prevent conflicts with X-Cell",
-        },
-        {
-            "section": "Patches",
-            "key": "ArchiveLimit",
-            "name": "Archive Limit",
-            "condition": crashgen_toml_main == crashgen_toml_og,  # Always check this setting
-            "desired_value": False,
-            "description": "Archive Limit is enabled",
-            "reason": "to prevent crashes",
-        },
-        {
-            "section": "Patches",
-            "name": "MaxStdIO",
-            "key": "MaxStdIO",
-            "condition": False, # This is a placeholder, this may or may not be enabled in the future
-            "desired_value": 2048,
-            "description": "MaxStdIO is set to a low value",
-            "reason": "to improve performance",
-        },
+        dict(section="Patches", key="Achievements", name="Achievements", condition=has_achievements,
+             desired_value=False, description="The Achievements Mod and/or Unlimited Survival Mode is installed",
+             reason=f"to prevent conflicts with {crashgen_name}"),
+        dict(section="Patches", key="MemoryManager", name="Memory Manager",
+             condition=has_xcell and xcell_memory_enabled, desired_value=False,
+             description="The X-Cell Mod is installed", reason="to prevent conflicts with X-Cell",
+             special_case="bakascrapheap"),
+        dict(section="Patches", key="MemoryManager", name="Memory Manager", condition=not has_xcell, desired_value=True,
+             description="The Memory Manager is disabled", reason="for performance and stability",
+             special_case="bakascrapheap"),
+        dict(section="Patches", key="HavokMemorySystem", name="Havok Memory System",
+             condition=has_xcell and xcell_memory_enabled, desired_value=False,
+             description="The X-Cell Mod is installed", reason="to prevent conflicts with X-Cell"),
+        dict(section="Patches", key="BSTextureStreamerLocalHeap", name="BS Texture Streamer Local Heap",
+             condition=has_xcell and xcell_memory_enabled, desired_value=False,
+             description="The X-Cell Mod is installed", reason="to prevent conflicts with X-Cell"),
+        dict(section="Patches", key="ScaleformAllocator", name="Scaleform Allocator",
+             condition=has_xcell and xcell_memory_enabled, desired_value=False,
+             description="The X-Cell Mod is installed", reason="to prevent conflicts with X-Cell"),
+        dict(section="Patches", key="SmallBlockAllocator", name="Small Block Allocator",
+             condition=has_xcell and xcell_memory_enabled, desired_value=False,
+             description="The X-Cell Mod is installed", reason="to prevent conflicts with X-Cell"),
+        dict(section="Patches", key="ArchiveLimit", name="Archive Limit",
+             condition=crashgen_toml_main == crashgen_toml_og, desired_value=False,
+             description="Archive Limit is enabled", reason="to prevent crashes"),
+        dict(section="Patches", name="MaxStdIO", key="MaxStdIO", condition=False, desired_value=2048,
+             description="MaxStdIO is set to a low value", reason="to improve performance"),
         # Compatibility section settings
-        {
-            "section": "Compatibility",
-            "key": "F4EE",
-            "name": "F4EE (Looks Menu)",
-            "condition": has_looksmenu,
-            "desired_value": True,
-            "description": "Looks Menu is installed, but F4EE parameter is set to FALSE",
-            "reason": "to prevent bugs and crashes from Looks Menu",
-        },
+        dict(section="Compatibility", key="F4EE", name="F4EE (Looks Menu)", condition=has_looksmenu, desired_value=True,
+             description="Looks Menu is installed, but F4EE parameter is set to FALSE",
+             reason="to prevent bugs and crashes from Looks Menu"),
     ]
 
     # Process each setting
@@ -905,7 +863,6 @@ def scan_mod_inis() -> str:
     message_list: list[str] = []
     vsync_list: list[str] = []
 
-    config_files = ConfigFileCache()
     # TODO: Maybe return a message that no ini files were found? (See also: TODO in ConfigFileCache)
     # if not config_files:
     #     pass
