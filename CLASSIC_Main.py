@@ -17,8 +17,8 @@ from typing import Any, ClassVar, Literal, TypedDict, cast
 import aiohttp
 import chardet
 import ruamel.yaml
-from PySide6.QtCore import QObject, Signal
 from packaging.version import InvalidVersion, Version
+from PySide6.QtCore import QObject, Signal
 
 with contextlib.suppress(ImportError):
     import winreg
@@ -58,7 +58,7 @@ def get_game_version(game_exe_path: Path) -> Version:
                  Returns Version("0.0.0.0") if the game executable cannot be found
                  or if the version information cannot be retrieved.
     """
-
+    
     if platform.system() != "Windows":
         logger.warning("Game version detection is only supported on Windows")
         return NULL_VERSION
@@ -690,6 +690,7 @@ def docs_path_find() -> None:
     if not isinstance(docs_name, str):
         docs_name = gamevars["game"]
 
+    
     def get_windows_docs_path() -> None:
         """
         Retrieves the path to the user's Documents folder on a Windows system.
@@ -704,8 +705,7 @@ def docs_path_find() -> None:
         """
         try:
             # Open the registry key to get the user's documents path
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:  # pyright: ignore[reportPossiblyUnboundVariable]
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:  # pyright: ignore[reportPossiblyUnboundVariable]
                 documents_path = Path(
                     winreg.QueryValueEx(key, "Personal")[0])  # pyright: ignore[reportPossiblyUnboundVariable]
         except (OSError, UnboundLocalError):
@@ -718,6 +718,7 @@ def docs_path_find() -> None:
         # Update the YAML settings with the documents path
         yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs", win_docs)
 
+    
     def get_linux_docs_path() -> None:
         """
         Retrieves the path to the My Documents folder for a game running on Linux through Steam.
@@ -879,15 +880,13 @@ def game_path_find() -> None:
 
     try:
         # Open the registry key
-        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                 rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{gamevars["vr"]}")  # pyright: ignore[reportPossiblyUnboundVariable]
+        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{gamevars["vr"]}")  # pyright: ignore[reportPossiblyUnboundVariable]
         # Query the 'installed path' value
         path, _ = winreg.QueryValueEx(reg_key, "installed path")  # pyright: ignore[reportPossiblyUnboundVariable]
         winreg.CloseKey(reg_key)  # pyright: ignore[reportPossiblyUnboundVariable]
     except FileNotFoundError:
         try:
-            reg_key_gog = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                         r"SOFTWARE\WOW6432Node\GOG.com\Games\1998527297")  # pyright: ignore[reportPossiblyUnboundVariable]
+            reg_key_gog = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\GOG.com\Games\1998527297")  # pyright: ignore[reportPossiblyUnboundVariable]
             path, _ = winreg.QueryValueEx(reg_key_gog, "path")  # pyright: ignore[reportPossiblyUnboundVariable]
             winreg.CloseKey(reg_key_gog)  # pyright: ignore[reportPossiblyUnboundVariable]
         except (FileNotFoundError, UnboundLocalError, OSError):
@@ -1007,8 +1006,8 @@ def game_check_integrity() -> str:
     logger.debug("- - - INITIATED GAME INTEGRITY CHECK")
 
     steam_ini_local = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_SteamINI")
-    exe_hash_old = yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedOLD")  # The VR check is not needed here.
-    exe_hash_new = yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedNEW")  # ...or here. VR hashes are not available at this time.
+    exe_hash_old = yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedOLD") # The VR check is not needed here.
+    exe_hash_new = yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedNEW") # ...or here. VR hashes are not available at this time.
     game_exe_local = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE")
     root_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Root_Name")
     if not (isinstance(exe_hash_old, str) and isinstance(root_name, str)):

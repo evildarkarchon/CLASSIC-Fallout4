@@ -81,7 +81,6 @@ class PapyrusStats:
                 self.warnings == other.warnings and
                 self.errors == other.errors)
 
-
 class PapyrusMonitorWorker(QObject):
     """
     Worker class to monitor Papyrus logs in a separate thread.
@@ -206,7 +205,6 @@ class PapyrusMonitorWorker(QObject):
             ratio=ratio
         )
 
-
 # Example fix for pastebin fetch
 class PastebinFetchWorker(QObject):
     """
@@ -267,7 +265,6 @@ class PastebinFetchWorker(QObject):
             self.error.emit(f"Unexpected error: {e!s}")
         finally:
             self.finished.emit()
-
 
 class CustomAboutDialog(QDialog):
     def __init__(self, parent: QMainWindow | QDialog | None = None) -> None:
@@ -433,7 +430,6 @@ class AudioPlayer(QObject):
             self.play_error_signal.connect(self.play_error_sound)
             self.play_custom_signal.connect(lambda file: self.play_custom_sound(file))
 
-
 class ManualPathDialog(QDialog):
     """
     A dialog window for manually setting the directory path for INI files.
@@ -445,7 +441,6 @@ class ManualPathDialog(QDialog):
         browse_directory() -> None:
         get_path() -> str:
     """
-
     def __init__(self, parent: QMainWindow | None = None) -> None:
         """
         Initializes the CLASSIC_Interface dialog.
@@ -462,9 +457,7 @@ class ManualPathDialog(QDialog):
         layout = QVBoxLayout(self)
 
         # Add a label
-        label = QLabel(
-            f"Enter the path for the {CMain.gamevars["game"]} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{CMain.gamevars["game"]})",
-            self)
+        label = QLabel(f"Enter the path for the {CMain.gamevars["game"]} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{CMain.gamevars["game"]})", self)
         layout.addWidget(label)
 
         inputlayout = QHBoxLayout()
@@ -507,7 +500,6 @@ class ManualPathDialog(QDialog):
         """
         return self.input_field.text()
 
-
 class GamePathDialog(QDialog):
     """
     GamePathDialog is a custom QDialog that allows the user to set the directory path for game INI files.
@@ -518,7 +510,6 @@ class GamePathDialog(QDialog):
         browse_directory() -> None:
         get_path() -> str:
     """
-
     def __init__(self, parent: QMainWindow | None = None) -> None:
         """
         Initializes the GamePathDialog dialog.
@@ -535,9 +526,7 @@ class GamePathDialog(QDialog):
         layout = QVBoxLayout(self)
 
         # Add a label
-        label = QLabel(
-            f"Enter the path for the {CMain.gamevars["game"]} directory (example: C:\\Steam\\steamapps\\common\\{CMain.gamevars["game"]})",
-            self)
+        label = QLabel(f"Enter the path for the {CMain.gamevars["game"]} directory (example: C:\\Steam\\steamapps\\common\\{CMain.gamevars["game"]})", self)
         layout.addWidget(label)
 
         inputlayout = QHBoxLayout()
@@ -581,7 +570,6 @@ class GamePathDialog(QDialog):
         """
         return self.input_field.text()
 
-
 class OutputRedirector(QObject):
     """
     A class to redirect output to a Qt signal.
@@ -623,6 +611,7 @@ class CrashLogsScanWorker(QObject):
     notify_sound_signal = Signal()
     error_sound_signal = Signal()
     custom_sound_signal = Signal(str)  # In case a custom sound needs to be played
+    
 
     # noinspection PyBroadException
     @Slot()
@@ -649,7 +638,7 @@ class CrashLogsScanWorker(QObject):
             else:
                 raise
         finally:
-            self.finished.emit()  # type: ignore
+            self.finished.emit() # type: ignore
 
 
 class GameFilesScanWorker(QObject):
@@ -685,7 +674,7 @@ class GameFilesScanWorker(QObject):
             else:
                 raise
         finally:
-            self.finished.emit()  # type: ignore
+            self.finished.emit() # type: ignore
 
 
 # noinspection DuplicatedCode
@@ -996,24 +985,20 @@ QLabel {
         """
         input_text = self.pastebin_id_input.text().strip() if self.pastebin_id_input is not None else ""
         url = input_text if self.pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
-
+        
         # Create thread and worker
         pastebin_thread = QThread()
         pastebin_worker = PastebinFetchWorker(url)
         pastebin_worker.moveToThread(pastebin_thread)
-
+        
         # Connect signals
         pastebin_thread.started.connect(pastebin_worker.run)
         pastebin_worker.finished.connect(pastebin_thread.quit)
         pastebin_worker.finished.connect(pastebin_worker.deleteLater)
         pastebin_thread.finished.connect(pastebin_thread.deleteLater)
-        pastebin_worker.success.connect(
-            lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}",
-                                                      QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok))
-        pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}",
-                                                                      QMessageBox.StandardButton.NoButton,
-                                                                      QMessageBox.StandardButton.NoButton))
-
+        pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok))
+        pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}", QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.NoButton))
+        
         # Start thread
         pastebin_thread.start()
 
@@ -1167,8 +1152,7 @@ QLabel {
             None
         """
         if is_up_to_date:
-            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!",
-                                    QMessageBox.StandardButton.Ok)
+            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)
         else:
             update_popup_text = CMain.yaml_settings(str, CMain.YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
             result = QMessageBox.question(
@@ -1193,8 +1177,7 @@ QLabel {
             error_message (str): The error message to display in the warning message box.
         """
         QMessageBox.warning(
-            self, "Update Check Failed", f"Failed to check for updates: {error_message}",
-            QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.NoButton
+            self, "Update Check Failed", f"Failed to check for updates: {error_message}", QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.NoButton
         )
 
     def setup_main_tab(self) -> None:
@@ -1229,6 +1212,8 @@ QLabel {
         )
         self.scan_folder_edit.setToolTip("Select a custom folder to scan for log files.")
         self.scan_folder_edit.setPlaceholderText("Optional: Select a custom folder to scan for log files.")
+
+
 
         # self.setup_pastebin_elements(layout) # Disabling Pastebin elements for now.
 
@@ -1379,8 +1364,7 @@ QLabel {
                     """
                     )
 
-    def add_backup_section(self, layout: QBoxLayout, title: str,
-                           backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None:
+    def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None:
         """
         Adds a backup section to the given layout with a title and buttons for backup, restore, and remove actions.
         Args:
@@ -1431,8 +1415,7 @@ QLabel {
 
         layout.addLayout(buttons_layout)
 
-    def classic_files_manage(self, selected_list: str,
-                             selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
+    def classic_files_manage(self, selected_list: str, selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
         """
         Manages game files based on the selected mode.
 
@@ -1581,8 +1564,7 @@ QLabel {
 
         except Exception as e:  # noqa: BLE001
             QMessageBox().critical(
-                self, "Error", f"An error occurred while updating the output text box: {e}",
-                QMessageBox.StandardButton.Ok
+                self, "Error", f"An error occurred while updating the output text box: {e}", QMessageBox.StandardButton.Ok
             )
 
     def process_lines(self, lines: list[str]) -> None:
@@ -1716,8 +1698,7 @@ QLabel {
         else:
             CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.Update Source", "Nexus")
 
-        update_source_combo.setToolTip(
-            "Select the source to check for updates. Nexus = stable, GitHub = latest, Both = check both")
+        update_source_combo.setToolTip("Select the source to check for updates. Nexus = stable, GitHub = latest, Both = check both")
 
         update_source_combo.currentTextChanged.connect(
             lambda value: CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.Update Source", value)
@@ -2210,8 +2191,7 @@ This feature is not fully implemented."""
         folder = QFileDialog.getExistingDirectory(self)
         if folder:
             CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
-            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}",
-                                    QMessageBox.StandardButton.Ok)
+            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}", QMessageBox.StandardButton.Ok)
 
     @staticmethod
     def open_settings() -> None:
@@ -2238,13 +2218,12 @@ This feature is not fully implemented."""
             self.crash_logs_worker = CrashLogsScanWorker()
             self.crash_logs_worker.moveToThread(self.crash_logs_thread)
 
-            self.crash_logs_worker.notify_sound_signal.connect(
-                self.audio_player.play_notify_signal.emit)  # type: ignore
-            self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
+            self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit) # type: ignore
+            self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit) # type: ignore
 
             self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
-            self.crash_logs_worker.finished.connect(self.crash_logs_thread.quit)  # type: ignore
-            self.crash_logs_worker.finished.connect(self.crash_logs_worker.deleteLater)  # type: ignore
+            self.crash_logs_worker.finished.connect(self.crash_logs_thread.quit) # type: ignore
+            self.crash_logs_worker.finished.connect(self.crash_logs_worker.deleteLater) # type: ignore
             self.crash_logs_thread.finished.connect(self.crash_logs_thread.deleteLater)
             self.crash_logs_thread.finished.connect(self.crash_logs_scan_finished)
 
@@ -2270,13 +2249,12 @@ This feature is not fully implemented."""
             self.game_files_worker = GameFilesScanWorker()
             self.game_files_worker.moveToThread(self.game_files_thread)
 
-            self.game_files_worker.notify_sound_signal.connect(
-                self.audio_player.play_notify_signal.emit)  # type: ignore
-            self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
+            self.game_files_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit) # type: ignore
+            self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit) # type: ignore
 
             self.game_files_thread.started.connect(self.game_files_worker.run)
-            self.game_files_worker.finished.connect(self.game_files_thread.quit)  # type: ignore
-            self.game_files_worker.finished.connect(self.game_files_worker.deleteLater)  # type: ignore
+            self.game_files_worker.finished.connect(self.game_files_thread.quit) # type: ignore
+            self.game_files_worker.finished.connect(self.game_files_worker.deleteLater) # type: ignore
             self.game_files_thread.finished.connect(self.game_files_thread.deleteLater)
             self.game_files_thread.finished.connect(self.game_files_scan_finished)
 
@@ -2378,17 +2356,17 @@ This feature is not fully implemented."""
             if self.papyrus_button:
                 self.papyrus_button.setText("STOP PAPYRUS MONITORING")
                 self.papyrus_button.setStyleSheet(
-                    """
-                    QPushButton {
-                        color: black;
-                        background: rgb(237, 45, 45);  /* Red background */
-                        border-radius: 10px;
-                        border: 1px solid black;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-                    """
-                )
+                """
+                QPushButton {
+                    color: black;
+                    background: rgb(237, 45, 45);  /* Red background */
+                    border-radius: 10px;
+                    border: 1px solid black;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                """
+            )
             self.papyrus_monitor_thread.start()
 
     def stop_papyrus_monitoring(self) -> None:
@@ -2421,17 +2399,17 @@ This feature is not fully implemented."""
             if self.papyrus_button:
                 self.papyrus_button.setText("START PAPYRUS MONITORING")
                 self.papyrus_button.setStyleSheet(
-                    """
-                    QPushButton {
-                        color: black;
-                        background: rgb(45, 237, 138);  /* Green background */
-                        border-radius: 10px;
-                        border: 1px solid black;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-                    """
-                )
+                """
+                QPushButton {
+                    color: black;
+                    background: rgb(45, 237, 138);  /* Green background */
+                    border-radius: 10px;
+                    border: 1px solid black;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                """
+            )
                 self.papyrus_button.setChecked(False)
             if self.output_text_box:
                 self.output_text_box.append("\n=== Papyrus monitoring stopped ===\n")
@@ -2458,8 +2436,8 @@ This feature is not fully implemented."""
 
             # Scroll to the bottom after adding the new message
             self.output_text_box.verticalScrollBar().setValue(
-                self.output_text_box.verticalScrollBar().maximum()
-            )
+            self.output_text_box.verticalScrollBar().maximum()
+        )
 
         self._last_stats = stats
 

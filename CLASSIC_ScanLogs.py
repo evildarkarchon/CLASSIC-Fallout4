@@ -655,7 +655,7 @@ class ClassicScanLogs:
         """
         if not segment_plugins:
             return {}, False, False
-
+        
         is_og = game_version in (self.yamldata.game_version, self.yamldata.game_version_vr)
         is_ng = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
         crashlog_plugins: dict[str, str] = {}
@@ -969,20 +969,20 @@ class ClassicScanLogs:
         """
         # Pre-filter call stack lines that won't match
         relevant_lines = [line for line in segment_callstack_lower if "modified by:" not in line]
-
+        
         # Use Counter directly instead of list + Counter conversion
         plugins_matches: Counter[str] = Counter()
-
+        
         # Optimize the matching algorithm
         for line in relevant_lines:
             for plugin in crashlog_plugins_lower:
                 # Skip plugins that are in the ignore list
                 if plugin in self.lower_plugins_ignore:
                     continue
-
+                    
                 if plugin in line:
                     plugins_matches[plugin] += 1
-
+        
         if plugins_matches:
             append_or_extend("The following PLUGINS were found in the CRASH STACK:\n", autoscan_report)
             # Sort by count (descending) then by name for consistent output
@@ -1256,7 +1256,7 @@ def crashlogs_scan() -> None:
             scanner.fcx_mode_check()
             append_or_extend(scanner.main_files_check, autoscan_report)
             append_or_extend(scanner.game_files_check, autoscan_report)
-
+            
         else:
             append_or_extend((
                 "* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n",
@@ -1278,8 +1278,7 @@ def crashlogs_scan() -> None:
                         )
                 scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
                 scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, Has_XCell, Has_BakaScrapHeap)
-                if crashgen_version_gen(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(
-                        crashlog_crashgen) >= Version("1.27.0"):
+                if crashgen_version_gen(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(crashlog_crashgen) >= Version("1.27.0"):
                     scanner.scan_archivelimit_setting(autoscan_report, crashgen)
                 scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
 
