@@ -933,19 +933,6 @@ QLabel {
         CMain.manual_docs_gui.manual_docs_path_signal.connect(self.show_manual_docs_path_dialog)
         CMain.game_path_gui.game_path_signal.connect(self.show_game_path_dialog)
 
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        """if event.type() == QEvent.KeyPress:
-                key_event = QKeyEvent(event)
-                if key_event.key() == Qt.Key_F12:
-                    # Simulate an exception when F12 is pressed (for testing)
-                    raise Exception("This is a test exception")"""
-        return super().eventFilter(watched, event)
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        """Stop the Papyrus monitor thread when the window is closed"""
-        self.stop_papyrus_monitoring()
-        super().closeEvent(event)
-
     def setup_pastebin_elements(self, layout: QVBoxLayout) -> None:
         """
         Set up the Pastebin fetch UI elements.
