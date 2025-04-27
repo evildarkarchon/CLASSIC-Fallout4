@@ -540,7 +540,7 @@ def check_crashgen_settings() -> str:
             "section": "Patches",
             "name": "MaxStdIO",
             "key": "MaxStdIO",
-            "condition": False, # This is a placeholder, this may or may not be enabled in the future
+            "condition": False,  # This is a placeholder, this may or may not be enabled in the future
             "desired_value": 2048,
             "description": "MaxStdIO is set to a low value",
             "reason": "to improve performance",
