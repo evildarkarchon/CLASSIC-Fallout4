@@ -30,13 +30,18 @@ TEST_MODE = False
 
 def calculate_file_hash(file_path: Path) -> str:
     """
-    Calculates the SHA256 hash of a file.
+    Calculates the SHA-256 hash of a file's contents.
+
+    This function reads the contents of a file in binary mode in chunks of 4096
+    bytes and computes its SHA-256 hash incrementally. It returns the final
+    hash value as a hexadecimal string representation.
 
     Args:
-        file_path (Path): The path to the file for which the hash is to be calculated.
+        file_path: Path object representing the location of the file whose
+            hash needs to be computed.
 
     Returns:
-        str: The SHA256 hash of the file in hexadecimal format.
+        str: The hexadecimal SHA-256 hash of the file's contents.
     """
     hash_sha256 = hashlib.sha256()
     with file_path.open("rb") as file:
@@ -47,14 +52,17 @@ def calculate_file_hash(file_path: Path) -> str:
 
 def calculate_similarity(file1: Path, file2: Path) -> float:
     """
-    Calculate the similarity between the contents of two files using difflib.
+    Compares the content of two files and calculates the similarity ratio based
+    on their sequences. The similarity ratio is a floating-point number between
+    0 and 1, where 0 indicates no similarity and 1 indicates identical content.
 
     Args:
-        file1 (Path): The path to the first file.
-        file2 (Path): The path to the second file.
+        file1 (Path): The path to the first file to be compared.
+        file2 (Path): The path to the second file to be compared.
 
     Returns:
-        float: A similarity ratio between 0 and 1, where 1 indicates identical content.
+        float: A similarity ratio between 0 and 1, indicating the degree of
+        similarity between the content of the two files.
     """
     with file1.open("r") as f1, file2.open("r") as f2:
         return SequenceMatcher(None, f1.read(), f2.read()).ratio()
@@ -62,14 +70,20 @@ def calculate_similarity(file1: Path, file2: Path) -> float:
 
 def compare_ini_files(file1: Path, file2: Path) -> bool:
     """
-    Compare two .ini configuration files to check if they are identical.
+    Compares two INI files to determine if they have identical sections and content.
+
+    This function verifies if both input files have a ".ini" extension, reads their
+    contents using the `configparser` library, and compares their sections and
+    values to check for equality. If the files have non-matching extensions, the
+    function immediately returns False.
 
     Args:
-        file1 (Path): The path to the first .ini file.
-        file2 (Path): The path to the second .ini file.
+        file1 (Path): The path of the first INI file to compare.
+        file2 (Path): The path of the second INI file to compare.
 
     Returns:
-        bool: True if the .ini files have the same sections and the same key-value pairs within each section, False otherwise.
+        bool: True if both INI files have identical sections and content,
+        False otherwise.
     """
     if file1.suffix == ".ini" and file2.suffix == ".ini":
         config1, config2 = configparser.ConfigParser(), configparser.ConfigParser()
@@ -85,6 +99,20 @@ def compare_ini_files(file1: Path, file2: Path) -> bool:
 # DEFINE MAIN FILE / YAML FUNCTIONS
 # ================================================
 class ConfigFile(TypedDict):
+    """
+    A TypedDict for defining the configuration file structure in a strongly-typed
+    manner.
+
+    This class is used to ensure type safety and clear structure when dealing
+    with configuration-related data.
+
+    Attributes:
+        encoding (str): The text encoding used for the configuration file.
+        path (Path): The file path for the configuration file.
+        settings (iniparse.ConfigParser): The configuration parser object
+            containing settings parsed from the config file.
+        text (str): The raw text content of the configuration file.
+    """
     encoding: str
     path: Path
     settings: iniparse.ConfigParser
@@ -98,14 +126,40 @@ class ConfigFileCache:
     _game_root_path: Path | None
     _duplicate_whitelist: list[str]
 
+    # noinspection PyUnresolvedReferences
     def __init__(self) -> None:
         """
-        Initializes the CLASSIC_ScanGame object.
-        This method sets up the initial state of the object, including configuration file caches,
-        duplicate file tracking, and the game root path. It also scans the game directory for
-        configuration files, identifies duplicates, and stores them for further processing.
+        Initializes and scans the game's root directory for configuration files, identifying duplicates based on
+        file hash, similarity, and specific comparison rules.
+
+        The initialization sets up paths and attributes necessary for the operation, loads configuration
+        files from the specified game root folder, and identifies duplicates by comparing hashed content,
+        similarity thresholds, file properties, and specific configuration file comparison methods.
+
+        Attributes:
+            _config_files (dict): A dictionary that maps lowercase filenames to their corresponding file paths.
+            _config_file_cache (dict): A dictionary reserved for caching file-related data, left unpopulated.
+            duplicate_files (dict): A dictionary mapping lowercase filenames to lists of file paths that are
+                considered duplicate or similar based on the comparison logic.
+            _duplicate_whitelist (list): A list of strings that defines prefixes or terms of interest for
+                filtering directories and filenames when scanning for configuration files.
+            _game_root_path (Path): The root path of the game's directory, which is loaded from specific
+                YAML settings and verified for presence; raises FileNotFoundError if the path cannot be loaded.
+
         Raises:
-            FileNotFoundError: If the game root path is not found.
+            FileNotFoundError: Raised if the game's root directory is not found or fails to be resolved via
+                the YAML settings.
+
+        Notes:
+            - Configuration file scanning and duplicate identification rely on file extensions
+              (.ini, .conf, dxvk.conf) and specific file name matching conditions.
+            - Files are compared based on content hash, similarity threshold (≥90%), and additional
+              heuristic checks such as file size, modification time, or a detailed INI file comparison.
+            - The duplicate detection logic is case-insensitive for filenames.
+
+        Todo:
+            - Determine if a specific exception should be raised or a message returned when the game's
+              root path is missing (observed in scan_mod_inis).
         """
         self._config_files = {}
         self._config_file_cache = {}
@@ -154,6 +208,22 @@ class ConfigFileCache:
                     self._config_files[file_lower] = file_path
 
     def __contains__(self, file_name_lower: str) -> bool:
+        """
+        Checks if a given file name is in the configuration files.
+
+        This method determines if a specific file name is present within the
+        internal collection of configuration files. The check is case-sensitive
+        and depends on the provided file name's exact match with entries in
+        the configuration files.
+
+        Args:
+            file_name_lower: The name of the file (in lowercase) that is
+                being checked for presence in the configuration files.
+
+        Returns:
+            bool: True if the file name exists in the configuration files,
+                False otherwise.
+        """
         return file_name_lower in self._config_files
 
     # TODO: Useful for checking how many INIs found
@@ -164,20 +234,33 @@ class ConfigFileCache:
     #     return len(self._config_files)
 
     def __getitem__(self, file_name_lower: str) -> Path:
+        """
+        Retrieves the file path associated with the given lowercase file name key.
+
+        Args:
+            file_name_lower (str): The lowercase string of the file name to look up in the
+                configuration files mapping.
+
+        Returns:
+            Path: The file path corresponding to the given lowercase file name key.
+        """
         return self._config_files[file_name_lower]
 
     def _load_config(self, file_name_lower: str) -> None:
         """
-        Loads the configuration file specified by `file_name_lower`.
-        This method checks if the configuration file is already loaded in the cache.
-        If it is, it removes the cached version and reloads the file. If the file is
-        not found in the list of configuration files, it raises a FileNotFoundError.
+        Loads and parses a configuration file, caching its contents. If the file has
+        already been loaded and cached, the cache will be invalidated and reloaded.
+        The method ensures the file exists in the configuration mapping before
+        processing.
+
         Args:
-            file_name_lower (str): The lowercase name of the configuration file to load.
+            file_name_lower (str): The lowercase name of the configuration file to be
+                loaded. Must correspond to a key in the internal `_config_files`
+                mapping.
+
         Raises:
-            FileNotFoundError: If the configuration file is not found in the list of configuration files.
-        Updates:
-            self._config_file_cache: A dictionary containing the file encoding, path, settings, and text of the loaded configuration file.
+            FileNotFoundError: If the specified `file_name_lower` does not exist in
+                the `_config_files` mapping.
         """
         if file_name_lower not in self._config_files:
             raise FileNotFoundError
@@ -202,16 +285,21 @@ class ConfigFileCache:
 
     def get[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str) -> T | None:
         """
-        Get the value of a setting from a configuration file.
+        Retrieves a configuration value of the specified type from a configuration file. The method
+        accesses the given configuration section and retrieves the value associated with the provided key.
+
         Args:
-            value_type (type[T]): The expected type of the setting's value. Must be one of str, bool, int, or float.
-            file_name_lower (str): The name of the configuration file (in lowercase).
-            section (str): The section within the configuration file.
-            setting (str): The setting key within the section.
+            value_type: The expected data type of the configuration value. Must be one of: str, bool,
+                int, or float. Raises NotImplementedError for unsupported types.
+            file_name_lower: The file name of the configuration file, in lowercase. This is used to
+                identify the configuration file in the cache.
+            section: The section of the configuration file where the desired setting is located.
+            setting: The key of the desired configuration value within the specified section.
+
         Returns:
-            T | None: The value of the setting if it exists and matches the expected type, otherwise None.
-        Raises:
-            NotImplementedError: If the value_type is not one of str, bool, int, or float.
+            The value of the requested configuration key, cast to the specified type. Returns None if the
+            configuration file is not found, the requested section or key does not exist, or the value
+            cannot be retrieved or cast to the specified type.
         """
         if value_type is not str and value_type is not bool and value_type is not int and value_type is not float:
             raise NotImplementedError
@@ -255,25 +343,31 @@ class ConfigFileCache:
 
     def get_strict[T](self, value_type: type[T], file: str, section: str, setting: str) -> T:
         """
-        Retrieve the value of a setting from a configuration file with strict type checking.
+        Fetches a configuration value with a strict fallback mechanism. If the value is not found, returns
+        a default value based on the specified type. Default values are as follows:
+
+        - str: An empty string.
+        - bool: False.
+        - int: 0.
+        - float: 0.0.
+
+        If the type is unhandled, a `NotImplementedError` will be raised.
+
+        This method is generic and enforces type consistency for the returned value matching `value_type`.
 
         Args:
-            value_type (type[T]): The expected type of the setting's value.
-            file (str): The path to the configuration file.
-            section (str): The section within the configuration file where the setting is located.
-            setting (str): The name of the setting to retrieve.
+            value_type: The type of the expected configuration value. Determines the fallback value
+                if the specified configuration is not found.
+            file: The name of the configuration file where the setting is to be retrieved from.
+            section: The section inside the configuration file containing the desired setting.
+            setting: The specific key for the value that needs to be fetched.
 
         Returns:
-            T: The value of the setting if it exists and matches the expected type.
-            If the setting does not exist or the file is not found, returns a default falsy value
-            based on the expected type:
-                - str: returns an empty string ""
-                - bool: returns False
-                - int: returns 0
-                - float: returns 0.0
+            The fetched configuration value if it exists. If the value does not exist, returns a default
+            value determined by `value_type`.
 
         Raises:
-            NotImplementedError: If the value_type is not one of the supported types (str, bool, int, float).
+            NotImplementedError: If `value_type` is not handled for default fallback values.
         """
         value = self.get(value_type, file, section, setting)
         if value is not None:
@@ -290,17 +384,25 @@ class ConfigFileCache:
 
     def set[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str, value: T) -> None:
         """
-        Sets a configuration value in the specified config file.
+        Sets a configuration value in a specified section and setting with a given type, and writes it to
+        the corresponding configuration file.
+
+        Processes the configuration value based on its type, checks the existence of the configuration
+        file in cache or loads it if not present, and updates or adds a new setting within the
+        specified section of the configuration. The updated configuration is saved unless the system
+        is in test mode.
+
         Args:
-            value_type (type[T]): The type of the value to set. Must be one of str, bool, int, or float.
-            file_name_lower (str): The name of the config file (in lowercase) to modify.
-            section (str): The section in the config file where the setting is located.
-            setting (str): The name of the setting to modify.
-            value (T): The value to set for the specified setting.
+            value_type: The type of the value to be set. It must be one of the supported types:
+                str, bool, int, or float.
+            file_name_lower: The lowercased name of the configuration file to be updated.
+            section: The name of the configuration section where the setting resides.
+            setting: The specific setting to be updated or added within the section.
+            value: The value to set for the specified setting. The type of the value must correspond
+                to the provided value_type.
+
         Raises:
-            NotImplementedError: If the value_type is not one of str, bool, int, or float.
-        Returns:
-            None
+            NotImplementedError: If the provided value_type is not one of the supported types.
         """
         if value_type is not str and value_type is not bool and value_type is not int and value_type is not float:
             raise NotImplementedError
@@ -325,15 +427,18 @@ class ConfigFileCache:
 
     def has(self, file_name_lower: str, section: str, setting: str) -> bool:
         """
-        Checks if a specific setting exists in a given section of a configuration file.
+        Determines if a given setting exists under a specific section in the configuration
+        file specified by its lower-cased file name. It checks the cache for previously
+        loaded configurations and loads the file if not already cached.
 
         Args:
-            file_name_lower (str): The name of the configuration file in lowercase.
-            section (str): The section within the configuration file.
-            setting (str): The setting to check for within the section.
+            file_name_lower (str): The lower-cased name of the configuration file to check.
+            section (str): The section in the configuration file to look for.
+            setting (str): The setting within the specified section to verify existence.
 
         Returns:
-            bool: True if the setting exists in the specified section of the configuration file, False otherwise.
+            bool: True if the setting exists in the specified section of the configuration
+            file; otherwise, False.
         """
         if file_name_lower not in self._config_files:
             return False
@@ -347,27 +452,39 @@ class ConfigFileCache:
 
     def items(self) -> ItemsView[str, Path]:
         """
-        Retrieve the items from the configuration files.
+        Returns the items from the internal configuration files dictionary.
+
+        This method provides access to the key-value pairs stored in the
+        configuration files dictionary. It can be used to iterate over or
+        inspect the directory path mappings associated with their keys.
 
         Returns:
-            ItemsView[str, Path]: A view object that displays a list of dictionary's key-value tuple pairs.
+            ItemsView[str, Path]: A view object that displays a list of
+            dictionary's key-value tuple pairs. Keys are of type `str` and
+            represent names or identifiers, while values are of type `Path`
+            and represent corresponding directory or file paths.
         """
         return self._config_files.items()
 
 
 def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bool | int | None = None) -> Any | None:
     """
-    Read or modify a value in a TOML configuration file.
-    This function reads a TOML file, checks if the specified section and key exist,
-    and optionally updates the key with a new value. If the new value is provided,
-    the function writes the updated data back to the TOML file.
+    Modifies a specific key in a TOML configuration file within a specified section if the key exists.
+    If a new value is provided, the function updates the key with the given value. The current value
+    of the key is returned, whether updated or not. If the specified section or key does not exist,
+    the function returns None. The function handles file encoding and ensures the integrity of the
+    TOML’s structure during modifications.
+
     Args:
-        toml_path (Path): The path to the TOML file.
-        section (str): The section in the TOML file where the key is located.
-        key (str): The key within the section to be read or updated.
-        new_value (str | bool | int | None, optional): The new value to set for the key. Defaults to None.
+        toml_path (Path): Path to the TOML file to be modified.
+        section (str): Section in the TOML file where the key resides.
+        key (str): Key within the section to modify or retrieve.
+        new_value (str | bool | int | None, optional): New value to assign to the key. If None, no
+            update is applied, and the current value is retrieved. Defaults to None.
+
     Returns:
-        Any | None: The current value of the key if it exists, otherwise None.
+        Any | None: The current value of the key (either the existing or updated value if changed).
+        Returns None if the specified section or key does not exist.
     """
 
     file_bytes = toml_path.read_bytes()
@@ -394,18 +511,19 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
 # ================================================
 def check_crashgen_settings() -> str:
     """
-    Checks and validates the settings for the CRASHGEN log in the Buffout4 configuration.
+    Checks and validates the settings for Crash Generator (CRASHGEN) based on the configuration
+    files and the presence of certain plugins or mods in the system.
 
-    This function performs the following tasks:
-    - Retrieves the path to the plugins folder and the CRASHGEN log name from the YAML settings.
-    - Determines the correct Buffout4 configuration file to use (either Buffout4/config.toml or Buffout4.toml).
-    - Checks for the presence of both configuration files and warns the user if both are found.
-    - Checks for the presence of specific DLL files in the plugins folder to determine installed mods.
-    - Validates and modifies the Buffout4 configuration settings to prevent conflicts with installed mods.
-    - Generates a list of messages indicating the status and any changes made to the configuration.
+    This function performs the following checks:
+    - Ensures the appropriate CRASHGEN configuration file exists and is being used.
+    - Verifies the plugins directory for specific installed mods or DLL files.
+    - Evaluates patch and compatibility settings in the CRASHGEN configuration file based
+      on detected plugins or mods, and provides warnings or recommendations when
+      configurations do not meet the desired conditions.
 
     Returns:
-        str: A string containing messages about the status and any changes made to the Buffout4 configuration.
+        str: A summary of any issues found, warnings, or necessary actions related to the
+        CRASHGEN configuration and system setup.
     """
     message_list: list[str] = []
 
@@ -595,20 +713,16 @@ def check_crashgen_settings() -> str:
 # ================================================
 def check_log_errors(folder_path: Path | str) -> str:
     """
-    Scans log files in the specified folder for errors based on settings.
+    Inspects log files within a specified folder for recorded errors. Errors matching the provided
+    catch criteria are highlighted, whereas those designated to be ignored in the settings or from
+    specific files are omitted. The function aggregates error messages and provides a detailed
+    report string containing relevant log error data.
+
     Args:
-        folder_path (Path | str): The path to the folder containing log files.
+        folder_path (Path | str): Path to the folder containing log files for error inspection.
+
     Returns:
-        str: A formatted string containing error messages found in the log files.
-    The function performs the following steps:
-    1. Converts the folder_path to a Path object if it is a string.
-    2. Retrieves settings for catching errors, ignoring log files, and ignoring specific errors.
-    3. Filters log files in the folder, excluding those with "crash-" in their names.
-    4. Reads each log file and checks for errors based on the settings.
-    5. Collects and formats error messages, including the log file path and the total number of errors detected.
-    6. Returns the formatted error messages as a single string.
-    Note:
-        Errors in log files do not necessarily mean that the mod is not working.
+        str: A detailed report of all detected errors in the relevant log files, if any.
     """
     if isinstance(folder_path, str):
         folder_path = Path(folder_path)
@@ -657,12 +771,17 @@ def check_log_errors(folder_path: Path | str) -> str:
 
 def check_xse_plugins() -> str:
     """
-    Checks the Address Library plugin version for Fallout 4 and returns a message indicating the status.
-    This function determines whether the correct version of the Address Library file is installed based on the game mode (VR or Non-VR).
-    It generates a message indicating whether the correct version is installed, the wrong version is installed, or if the file is missing.
-    
+    Checks the plugins folder for the correct version of Address Library files needed for the game.
+
+    This function verifies the existence and version of the Address Library files based on the game type
+    and mode, such as Virtual Reality (VR) or Non-VR modes. It uses game configurations to locate the plugins
+    path and checks for specific file versions in the directory. If the correct version exists, it notifies
+    the user; otherwise, it raises alerts about potential mismatches or missing files. Links are provided
+    for downloading the appropriate files if needed.
+
     Returns:
-        str: A message indicating the status of the Address Library file.
+        str: A detailed message about the status of the Address Library files, including errors, warnings,
+        or success notifications.
     """
     message_list: list[str] = []
     plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
@@ -747,21 +866,20 @@ def check_xse_plugins() -> str:
 # ================================================
 def papyrus_logging() -> tuple[str, int]:
     """
-    Analyzes the Papyrus log file for specific patterns and generates a summary report.
-    This function reads the Papyrus log file, counts occurrences of specific log entries
-    (dumps, stacks, warnings, and errors), and calculates the ratio of dumps to stacks.
-    It returns a formatted message containing the summary and the count of dumps.
+    Analyzes Papyrus log files, extracting various statistics and compiling a summary.
+
+    This function reads a Papyrus log file, if available, and computes key data such
+    as the total number of dumps, stacks, warnings, and errors present in the log.
+    It also calculates the ratio of dumps to stacks. If the log file is not found,
+    the function provides user guidance on enabling and locating Papyrus logging.
+
     Returns:
-        tuple[str, int]: A tuple containing:
-            - A formatted string with the summary of the log analysis.
-            - An integer representing the number of dumps found in the log.
-    Notes:
-        - If the Papyrus log file is not found, the function returns an error message
-          indicating that logging is disabled or the game was not run.
-        - The function uses the `chardet` library to detect the encoding of the log file.
-        - The log file path is retrieved from the YAML settings using `CMain.yaml_settings`.
-    Example:
-        message_output, count_dumps = papyrus_logging()
+        tuple[str, int]: A tuple containing a formatted string with log analysis
+        details and the total count of dumps extracted from the log.
+
+    Raises:
+        ValueError: If encoding detection fails or returns a None value from the
+        chardet library when reading the log file's bytes.
     """
     message_list: list[str] = []
     papyrus_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
@@ -807,15 +925,18 @@ def papyrus_logging() -> tuple[str, int]:
 # ================================================
 def scan_wryecheck() -> str:
     """
-    Scans the Wrye Bash plugin checker report and generates a formatted message.
-    This function reads the Wrye Bash plugin checker report from a specified file,
-    parses its HTML content, and generates a formatted message based on the report's
-    findings. It includes warnings, plugin lists, and additional information for
-    troubleshooting.
+    Analyzes Wrye Bash plugin checker report and generates a detailed message containing plugin-related warnings,
+    recommendations, and additional resources based on the report content and predefined settings.
+
+    The function handles the presence or absence of the Wrye Bash plugin checker report (HTML file). When the report
+    is found, its contents are parsed using BeautifulSoup to extract categorized plugin information and
+    diagnostic messages. It integrates custom plugin warnings from predefined settings and formats the output for clarity.
+
+    If the report is not found, it either provides a missing report warning or raises an error based on the YAML settings.
+
     Returns:
-        str: A formatted message containing the results of the Wrye Bash plugin checker report.
-    Raises:
-        ValueError: If the Warnings_WRYE setting is missing from the database.
+        str: A formatted multi-line string containing analysis and recommendations based on the Wrye Bash plugin
+        checker report.
     """
     message_list: list[str] = []
     wrye_missinghtml_setting = CMain.yaml_settings(str, CMain.YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")
@@ -894,12 +1015,17 @@ def scan_wryecheck() -> str:
 # ================================================
 def scan_mod_inis() -> str:
     """
-    Scans various INI files for specific mod settings and performs necessary fixes.
-    This function checks for specific settings in INI files related to mods and performs
-    necessary fixes or adjustments. It also generates messages regarding the findings
-    and actions taken.
+    Check INI files for mods and perform necessary fixes or notify about potential issues.
+
+    This function analyzes INI configuration files associated with a game, looking for specific settings or
+    conditions that can potentially impact game performance, startup time, or user settings. If specific
+    conditions or discrepancies are found, it performs updates to the INI files, logs the changes, and collects
+    notices for the user. The function also identifies duplicate INI files and verifies the presence of VSync
+    settings across several configuration files.
+
     Returns:
-        str: A string containing messages about the findings and actions taken.
+        str: A concatenated string of messages highlighting changes, issues, or notices for the user regarding
+        the analyzed INI files.
     """
     """Check INI files for mods."""
     message_list: list[str] = []
@@ -987,17 +1113,26 @@ def scan_mod_inis() -> str:
 # noinspection DuplicatedCode
 def scan_mods_unpacked() -> str:
     """
-    Scans the unpacked/loose mod files in the specified MODS folder path and performs cleanup and analysis.
-    This function performs the following tasks:
-    1. Cleans up redundant files and folders such as "fomod" folders and "readme" or "changelog" text files.
-    2. Analyzes DDS files for incorrect dimensions.
-    3. Detects invalid texture file formats (e.g., TGA, PNG).
-    4. Detects invalid sound file formats (e.g., MP3, M4A).
-    5. Detects mods with copies of Script Extender files.
-    6. Detects mods with precombine/previs files.
-    7. Detects mods with custom animation file data.
+    Scans and processes mod files within a specified mods folder. The function performs
+    initial cleanup, analyzes loose files, and categorizes potential issues related to
+    the mod files' folder content or specific file types, formats, and configurations.
+
+    During execution, the function:
+    - Detects and processes redundant files and folders, such as README or changelog
+      files, and relocates them to a backup path.
+    - Identifies problematic file attributes, such as invalid dimensions for DDS files,
+      incorrect file formats for textures and sounds, or the presence of loose precombine/
+      previs files.
+    - Examines directories for specific types of files, including animation-related data
+      and modified Script Extender files, which might pose issues like crashes or
+      incompatibilities.
+
     Returns:
-        str: A formatted message string containing the results of the scan, including any issues found and files moved during cleanup.
+        str: Detailed scan results assembled into a structured report.
+
+    Raises:
+        No errors are described as part of the docstring. Ensure developer review of the
+        function's implementation for potential raised exceptions.
     """
     message_list: list[str] = [
         "=================== MOD FILES SCAN ====================\n",
@@ -1174,20 +1309,22 @@ def scan_mods_unpacked() -> str:
 # noinspection DuplicatedCode
 def scan_mods_archived() -> str:
     """
-    Scans the archived BA2 mod files in the specified MODS folder path and analyzes their contents for potential issues.
+    Scans and analyzes BA2 mod archive files for various issues or invalid data.
+
+    This function processes mod archive files with BA2 format and validates their structure,
+    contents, and file formats. It identifies potential issues such as invalid texture dimensions,
+    incorrect file formats, presence of unauthorized files, and problem-specific data like script
+    extender script files or previs/precombine files. The results of the scan are compiled into
+    a string message containing a detailed summary.
+
     Returns:
-        str: A formatted string containing the results of the scan, including any detected issues with the BA2 files.
-    The function performs the following checks:
-    - Verifies the existence of the MODS folder path and the BSArch executable.
-    - Analyzes BA2 files to detect:
-        - Invalid texture file formats.
-        - DDS files with incorrect dimensions.
-        - Invalid sound file formats.
-        - Mods containing AnimationFileData.
-        - Mods containing copies of Script Extender files.
-        - Mods containing custom precombine/previs files.
-        - BA2 files with incorrect formats.
-    The results are categorized and formatted into a message list, which is then returned as a single string.
+        str: A summary report detailing the results of the mod archive scan, including detected
+            issues or warnings.
+
+    Raises:
+        Does not raise explicit exceptions but handles issues within the function to provide meaningful
+        error feedback.
+
     """
     message_list: list[str] = [
         "\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n",
@@ -1378,20 +1515,19 @@ def scan_mods_archived() -> str:
 # ================================================
 def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
     """
-    Manages game files by backing up, restoring, or removing them based on the specified mode.
+    Manages game files by supporting operations like backup, restore, and removal. The behavior of
+    the operation depends on the specified mode. The function interacts with the game folder and performs
+    the requested action on files or directories matching the criteria in a specified list, which is loaded
+    from the settings.
+
     Args:
-        classic_list (str): The name of the list of files to manage.
-        mode (Literal["BACKUP", "RESTORE", "REMOVE"], optional): The operation mode.
-            "BACKUP" to create a backup of the specified files.
-            "RESTORE" to restore the specified files from a backup.
-            "REMOVE" to remove the specified files from the game folder.
-            Defaults to "BACKUP".
+        classic_list (str): Name of the list specifying files or directories to be managed. It is a key
+            to retrieve the actual list from the configuration settings.
+        mode (Literal["BACKUP", "RESTORE", "REMOVE"], optional): Determines the type of operation to
+            be performed on the game files. Defaults to "BACKUP".
+
     Raises:
-        FileNotFoundError: If the game path does not exist or is not a directory.
-        PermissionError: If there are file permission issues during the operation.
-    Notes:
-        - Ensure that the game path and backup path are correctly set in the YAML settings.
-        - Running the script with elevated permissions (admin mode) may be necessary to avoid permission errors.
+        FileNotFoundError: If the game path could not be located or is not a valid directory.
     """
     game_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Game")
     manage_list_setting = CMain.yaml_settings(list[str], CMain.YAML.Game, classic_list)
@@ -1462,13 +1598,17 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
 # ================================================
 def game_combined_result() -> str:
     """
-    Combines various game-related checks and returns the result as a string.
-    This function retrieves the paths for game documents and game files from
-    the YAML settings. It then performs several checks and scans, concatenating
-    their results into a single string.
+    Combines and returns the result of various game-related checks and scans.
+
+    This function aggregates the output from multiple checks and scans related to the
+    game's setup, plugins, logs, and configuration files. It retrieves specific game-related
+    settings from YAML configuration and determines directories for game documents and
+    resources. If these directories are not found, it returns an empty string. Otherwise,
+    it processes the checks and accumulates their results into a single string.
+
     Returns:
-        str: A concatenated string of results from various checks and scans.
-              Returns an empty string if the game path or docs path is not found.
+        str: A string combining the results of all checks and scans. Returns an
+        empty string if game directories are not found.
     """
     docs_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Docs")
     game_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Game")
@@ -1487,14 +1627,16 @@ def game_combined_result() -> str:
 
 def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUDED IN AUTOSCAN REPORTS
     """
-    Combines the results of scanning unpacked and archived mods.
-
-    This function first scans for unpacked mods and checks if the mods folder path is provided.
-    If the path is not provided, it returns an error message.
-    Otherwise, it combines the results of scanning unpacked mods with the results of scanning archived mods.
+    Combines and returns the result of the outputs of `scan_mods_unpacked` and
+    `scan_mods_archived`. If the unpacked mods scan indicates that the mods folder
+    path is not provided, returns the corresponding unpacked result directly without
+    proceeding to retrieve the archived mods results. Otherwise, concatenates the
+    unpackaged and archived mods scan results and returns the combination.
 
     Returns:
-        str: The combined result of scanning unpacked and archived mods, or an error message if the mods folder path is not provided.
+        str: Concatenation of the results from `scan_mods_unpacked` and
+             `scan_mods_archived`, or the `scan_mods_unpacked` result directly if
+             the mods folder path is not provided.
     """
     unpacked = scan_mods_unpacked()
     if unpacked.startswith("❌ MODS FOLDER PATH NOT PROVIDED"):
@@ -1504,11 +1646,20 @@ def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUD
 
 def write_combined_results() -> None:
     """
-    Generates combined results from game and mods, and writes them to a markdown file.
+    Writes combined results of two processes into a markdown report file.
 
-    This function calls `game_combined_result` and `mods_combined_result` to get the results,
-    combines them, and writes the combined result to a file named "CLASSIC GFS Report.md".
-    The file is encoded in UTF-8 and any encoding errors are ignored.
+    This function aggregates results from two distinct processes, namely
+    `game_combined_result()` and `mods_combined_result()`. The results are
+    retrieved as strings and are then appended to create a combined string.
+    This combined string is subsequently written to a markdown file named
+    "CLASSIC GFS Report.md". The output file is encoded in UTF-8, and any
+    encoding errors are ignored during the write operation.
+
+    Raises:
+        FileNotFoundError: If the file path "CLASSIC GFS Report.md" cannot
+            be accessed or created.
+        UnicodeEncodeError: If there is an issue encoding the content in
+            UTF-8 and the error cannot be ignored.
     """
     game_result = game_combined_result()
     mods_result = mods_combined_result()

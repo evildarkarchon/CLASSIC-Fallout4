@@ -31,11 +31,20 @@ DB_PATHS = (
 # Nice little convenience function to abstract adding a value to a list.
 def append_or_extend(value: str | int | float | list | tuple | set, destination: list[str]) -> None:
     """
-    Append or extend the specified list with the given value.
+    Appends a single value or extends a list with multiple values into the destination list.
+
+    If the input `value` is a string, integer, or float, it is appended to the `destination`
+    list after converting it to a string. If the `value` is a collection type such as a list,
+    tuple, or set, its elements are extended into the `destination` list.
 
     Args:
-        value (str | int | float | list | tuple | set): The value to append or extend.
-        destination (list[str]): The list to update.
+        value: A single value to append or a collection (list, tuple, or set) whose elements
+            will be extended into the destination list.
+        destination: The list to which the value or collection of values will be appended
+            or extended.
+
+    Returns:
+        None
     """
     if isinstance(value, list | tuple | set):
         destination.extend(value)
@@ -45,16 +54,17 @@ def append_or_extend(value: str | int | float | list | tuple | set, destination:
 
 def pastebin_fetch(url: str) -> None:
     """
-    Fetches the content from a given Pastebin URL and saves it to a local file.
+    Fetches and saves raw content from a Pastebin URL to a local file.
 
-    If the URL does not point to the raw Pastebin content, it modifies the URL to point to the raw content.
-    The fetched content is saved in the "Crash Logs/Pastebin" directory with a filename derived from the Pastebin ID.
+    This function takes a Pastebin URL, converts it to its raw content version
+    if necessary, downloads the content, and saves it to a specified directory.
+    The output file is named based on the paste identifier extracted from the URL.
 
     Args:
-        url (str): The URL of the Pastebin content to fetch.
+        url: The Pastebin URL from which the content will be fetched.
 
     Raises:
-        requests.exceptions.HTTPError: If the HTTP request to fetch the content fails.
+        HTTPError: If the HTTP request to the provided URL fails.
     """
     if urlparse(url).netloc == "pastebin.com" and "/raw" not in url:
         url = url.replace("pastebin.com", "pastebin.com/raw")
@@ -70,16 +80,17 @@ def pastebin_fetch(url: str) -> None:
 
 async def pastebin_fetch_async(url: str) -> None:
     """
-    Asynchronously fetches the content from a given Pastebin URL and saves it to a local file.
+    Asynchronously fetches the raw content of a pastebin link and writes it to a log file.
 
-    If the URL does not point to the raw Pastebin content, it modifies the URL to point to the raw content.
-    The fetched content is saved in the "Crash Logs/Pastebin" directory with a filename derived from the Pastebin ID.
+    This function processes a given Pastebin URL, ensuring it fetches raw content if necessary,
+    downloads the content asynchronously, and writes it to a local file. If the directory
+    does not exist, it is created. The function operates asynchronously for network operations
+    to improve efficiency in asynchronous workflows.
 
     Args:
-        url (str): The URL of the Pastebin content to fetch.
+        url (str): The Pastebin URL to fetch content from. The function automatically adjusts
+            the URL to point to the raw content if it is not already.
 
-    Raises:
-        aiohttp.ClientError: If the HTTP request to fetch the content fails.
     """
 
     if urlparse(url).netloc == "pastebin.com" and "/raw" not in url:
@@ -109,17 +120,17 @@ async def pastebin_fetch_async(url: str) -> None:
 
 def get_entry(formid: str, plugin: str) -> str | None:
     """
-    Retrieve an entry from the database based on the given form ID and plugin.
-    This function first checks a cache for the entry. If the entry is not found
-    in the cache, it searches through a list of database paths. If a database
-    file is found, it queries the database for the entry. If the entry is found,
-    it is added to the cache and returned. If the entry is not found in any
-    database, the function returns None.
+    Retrieves the entry associated with the provided `formid` and `plugin` from the cache or
+    the database. If the pair is found in the query cache, it is returned directly. Otherwise,
+    searches through the defined database paths, and if an entry is found, it is stored in the
+    cache before returning it.
+
     Args:
-        formid (str): The form ID to search for.
-        plugin (str): The plugin name to search for.
+        formid: The unique identifier associated with the entry to be retrieved.
+        plugin: The name of the plugin associated with the specified `formid`.
+
     Returns:
-        str | None: The entry if found, otherwise None.
+        str | None: The entry as a string if found; otherwise, returns None.
     """
     if (entry := query_cache.get((formid, plugin))) is not None:
         return entry
@@ -145,62 +156,58 @@ def get_entry(formid: str, plugin: str) -> str | None:
 # ================================================
 def crashlogs_get_files() -> list[Path]:
     """
-    Get paths of all available crash logs.
-    This function scans the current working directory and specified custom directories
-    for crash log files, moves or copies them to a designated "Crash Logs" folder, and
-    returns a list of paths to these crash log files.
+    Generates a list of crash log file paths from various defined directories, ensuring that necessary
+    directories and files are aggregated and organized under a primary "Crash Logs" folder. This function
+    handles file copying and renaming operations and supports the inclusion of custom and additional
+    directories specified in settings.
+
     Returns:
-        list[Path]: A list of Path objects representing the paths to the crash log files.
+        list[Path]: A list of `Path` objects representing all discovered and processed crash log files.
     """
     CMain.logger.debug("- - - INITIATED CRASH LOG FILE LIST GENERATION")
-    CLASSIC_folder = Path.cwd()
-    CLASSIC_logs = CLASSIC_folder / "Crash Logs"
-    CLASSIC_pastebin = CLASSIC_logs / "Pastebin"
-    CUSTOM_folder_setting = CMain.classic_settings(str, "SCAN Custom Path")
-    XSE_folder_setting = CMain.yaml_settings(str, CMain.YAML.Game_Local, "Game_Info.Docs_Folder_XSE")
+    classic_folder = Path.cwd()
+    classic_logs = classic_folder / "Crash Logs"
+    classic_pastebin = classic_logs / "Pastebin"
+    custom_folder_setting = CMain.classic_settings(str, "SCAN Custom Path")
+    xse_folder_setting = CMain.yaml_settings(str, CMain.YAML.Game_Local, "Game_Info.Docs_Folder_XSE")
 
-    CUSTOM_folder = Path(CUSTOM_folder_setting) if isinstance(CUSTOM_folder_setting, str) else None
-    XSE_folder = Path(XSE_folder_setting) if isinstance(XSE_folder_setting, str) else None
+    custom_folder = Path(custom_folder_setting) if isinstance(custom_folder_setting, str) else None
+    xse_folder = Path(xse_folder_setting) if isinstance(xse_folder_setting, str) else None
 
-    if not CLASSIC_logs.is_dir():
-        CLASSIC_logs.mkdir(parents=True, exist_ok=True)
-    if not CLASSIC_pastebin.is_dir():
-        CLASSIC_pastebin.mkdir(parents=True, exist_ok=True)
-    for file in CLASSIC_folder.glob("crash-*.log"):
-        destination_file = CLASSIC_logs / file.name
+    if not classic_logs.is_dir():
+        classic_logs.mkdir(parents=True, exist_ok=True)
+    if not classic_pastebin.is_dir():
+        classic_pastebin.mkdir(parents=True, exist_ok=True)
+    for file in classic_folder.glob("crash-*.log"):
+        destination_file = classic_logs / file.name
         if not destination_file.is_file():
             file.rename(destination_file)
-    for file in CLASSIC_folder.glob("crash-*-AUTOSCAN.md"):
-        destination_file = CLASSIC_logs / file.name
+    for file in classic_folder.glob("crash-*-AUTOSCAN.md"):
+        destination_file = classic_logs / file.name
         if not destination_file.is_file():
             file.rename(destination_file)
-    if XSE_folder and XSE_folder.is_dir():
-        for crash_file in XSE_folder.glob("crash-*.log"):
-            destination_file = CLASSIC_logs / crash_file.name
+    if xse_folder and xse_folder.is_dir():
+        for crash_file in xse_folder.glob("crash-*.log"):
+            destination_file = classic_logs / crash_file.name
             if not destination_file.is_file():
                 shutil.copy2(crash_file, destination_file)
 
-    crash_files = list(CLASSIC_logs.rglob("crash-*.log"))
-    if CUSTOM_folder and CUSTOM_folder.is_dir():
-        crash_files.extend(CUSTOM_folder.glob("crash-*.log"))
+    crash_files = list(classic_logs.rglob("crash-*.log"))
+    if custom_folder and custom_folder.is_dir():
+        crash_files.extend(custom_folder.glob("crash-*.log"))
 
     return crash_files
 
 
 def crashlogs_reformat(crashlog_list: list[Path], remove_list: list[str]) -> None:
     """
-    Reformat plugin lists in crash logs to ensure consistency between old and new CRASHGEN formats.
+    Reformats crash log files by simplifying or modifying their content based on specified settings and criteria. This function processes each log file in the provided list, removes lines containing specific substrings if 'Simplify Logs' is enabled, and reformats load order lines for consistency.
+
     Args:
-        crashlog_list (list[Path]): A list of file paths to the crash logs that need reformatting.
-        remove_list (list[str]): A list of strings that, if found in a line, will cause that line to be removed from the crash log.
-    Returns:
-        None
-    The function performs the following operations:
-        - Logs the initiation of the crash log file reformatting process.
-        - Reads each crash log file line by line.
-        - If "Simplify Logs" setting is enabled, removes lines containing any string from the remove_list.
-        - Replaces spaces inside load order brackets with zeros to maintain consistency between different versions of Buffout 4.
-        - Writes the modified crash log data back to the file.
+        crashlog_list: A list of file paths representing crash log files to be reformatted.
+        remove_list: A list of strings; if any of these strings appear in a log line and 'Simplify Logs'
+            is enabled, the line is removed.
+
     """
     CMain.logger.debug("- - - INITIATED CRASH LOG FILE REFORMAT")
     simplify_logs = CMain.classic_settings(bool, "Simplify Logs")
@@ -234,15 +241,25 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: list[str]) -> Non
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> bool:
     """
-    Detects mods from a YAML dictionary within a crash log plugins dictionary and updates the autoscan report.
+    Detects modifications (mods) based on provided YAML dictionary, crashlog plugins, and updates the
+    autoscan report accordingly.
+
+    This function checks if any mod names from the YAML dictionary exist in the crashlog plugins. If a match is found, it
+    will append the respective plugin's identifier and a warning message to the autoscan report. If a mod in the YAML
+    dictionary has no associated warning but is found in the crashlog plugins, a ValueError is raised.
+
     Args:
-        yaml_dict (dict[str, str]): A dictionary where keys are mod names and values are warnings associated with the mods.
-        crashlog_plugins (dict[str, str]): A dictionary where keys are plugin names and values are plugin identifiers.
-        autoscan_report (list[str]): A list to be updated with found mods and their warnings.
+        yaml_dict (dict[str, str]): A mapping of mod names (as keys) to their respective warnings (as values).
+        crashlog_plugins (dict[str, str]): A mapping of plugin names (as keys) to their corresponding identifiers
+            (as values).
+        autoscan_report (list[str]): A collection of strings that the function updates to log findings based on the match
+            results.
+
     Returns:
-        bool: True if any mod is found in the crash log plugins, False otherwise.
+        bool: True if at least one mod was detected in the crashlog plugins; otherwise, False.
+
     Raises:
-        ValueError: If a mod is found in the crash log plugins but has no associated warning in the YAML dictionary.
+        ValueError: If a mod from the YAML dictionary has no warning defined and is found in the crashlog plugins.
     """
     trigger_mod_found = False
     yaml_dict_lower = {key.lower(): value for key, value in yaml_dict.items()}
@@ -262,15 +279,24 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> bool:
     """
-    Detects if any pair of mods (split by " | ") from the YAML dictionary are present in the crashlog plugins.
+    Detects conflicts or combinations of specific plugins based on given mappings and produces warnings
+    or errors if necessary.
+
+    This function checks for combinations of mods (plugins) defined in the `yaml_dict` by iterating
+    over the plugins extracted from a crash log. If a predefined combination is found, it either raises
+    an error or appends a caution message to the report. Matches are case-insensitive.
+
     Args:
-        yaml_dict (dict[str, str]): A dictionary where keys are mod names and values are warning messages (using " | " to indicate key and value).
-        crashlog_plugins (dict[str, str]): A dictionary of plugins from the crashlog where keys are plugin names.
-        autoscan_report (list[str]): A list to append warning messages if a pair of mods is detected.
+        yaml_dict (dict[str, str]): A dictionary where the key is a combination of two mod names joined
+            by ' | ', and the value is either a warning message or an empty string.
+        crashlog_plugins (dict[str, str]): A dictionary containing plugin names identified in a crash log.
+        autoscan_report (list[str]): A list to collect warnings or other scan-related messages.
+
     Returns:
-        bool: True if any pair of mods is detected in the crashlog plugins, False otherwise.
+        bool: True if any combination of mods was found; otherwise, False.
+
     Raises:
-        ValueError: If a detected pair of mods does not have an associated warning message in the YAML dictionary.
+        ValueError: If a detected mod combination from the database has no warning associated with it.
     """
     trigger_mod_found = False
     yaml_dict_lower = {key.lower(): value for key, value in yaml_dict.items()}
@@ -300,16 +326,23 @@ def detect_mods_important(yaml_dict: dict[str, str],
                           autoscan_report: list[str],
                           gpu_rival: Literal["nvidia", "amd"] | None) -> None:
     """
-    Detects important Core and GPU-specific mods from the provided YAML dictionary and updates the autoscan report.
+    Detects and evaluates important mods based on provided information, updating a report accordingly.
+
+    This function processes a dictionary of mods and their warnings, compares them
+    against available plugins, and generates a report indicating whether a mod is
+    installed and compatible with the specified GPU (if provided). It appends the
+    status and any relevant warnings to the auto-scan report.
 
     Args:
-        yaml_dict (dict[str, str]): A dictionary containing mod names and their corresponding warnings.
-        crashlog_plugins (dict[str, str]): A dictionary containing plugin names found in the crash log.
-        autoscan_report (list[str]): A list to append the scan results.
-        gpu_rival (Literal["nvidia", "amd"] | None): The GPU brand to check for specific warnings, can be "nvidia", "amd", or None.
-
-    Returns:
-        None: This function does not return any value. It updates the autoscan_report list in place.
+        yaml_dict (dict[str, str]): A dictionary where keys represent mod names
+            and values contain any warnings or messages associated with those mods.
+        crashlog_plugins (dict[str, str]): A dictionary of plugins present in the
+            crash log, used to check for installed mods.
+        autoscan_report (list[str]): A list that serves as a report, updated with
+            the status of mods (installed, not installed, or incompatible).
+        gpu_rival (Literal["nvidia", "amd"] | None): An optional indicator of a GPU
+            type to be compared against mod warnings. If provided, it is used to
+            adjust the compatibility checks and generate warnings.
     """
     for mod_name in yaml_dict:
         mod_warn = yaml_dict.get(mod_name, "")
@@ -333,19 +366,20 @@ def detect_mods_important(yaml_dict: dict[str, str],
 
 def crashgen_version_gen(input_string: str) -> Version:
     """
-    Extracts and returns a version number from the given input string.
+    Generates a Version object from an input string.
 
-    The function looks for a part of the input string that starts with 'v'
-    followed by version numbers (e.g., 'v1.2.3'). If such a part is found,
-    it removes the 'v' and returns the remaining string as a Version object.
-    If no version string is found, it returns a default Version object with
-    the version "0.0.0".
+    This function processes an input string to extract a version number. It looks
+    for substrings prefixed with the letter 'v', strips the prefix, and constructs
+    a Version instance if a valid version string is found. If no valid version is
+    present, it returns a predefined null version.
 
     Args:
-        input_string (str): The input string containing the version information.
+        input_string: A string that potentially includes a version prefixed by
+            'v'.
 
     Returns:
-        Version: A Version object representing the extracted version number.
+        Version: A Version object representing the extracted version or a null
+            Version instance if no valid version could be parsed.
     """
     input_string = input_string.strip()
     parts = input_string.split()
@@ -362,17 +396,14 @@ class SQLiteReader:
     # noinspection SpellCheckingInspection
     def __init__(self, logfiles: list[Path]) -> None:
         """
-        Initializes the CLASSIC_ScanLogs object.
+        Initializes an in-memory SQLite database and populates it with crash log data
+        from provided log files. The logs are stored in a table with each entry
+        containing the log file name and its binary data. Additionally, a unique index
+        on the log file name is created for efficient retrieval.
 
         Args:
-            logfiles (list[Path]): A list of Path objects representing the log files to be processed.
-
-        Initializes an in-memory SQLite database and creates a table named 'crashlogs' with columns for
-        log name and log data. Also creates an index on the 'logname' column for faster lookups. Inserts
-        the provided log files into the 'crashlogs' table.
-
-        Raises:
-            sqlite3.Error: If an error occurs while interacting with the SQLite database.
+            logfiles (list[Path]): A list of file paths representing the log files to
+                be read and stored in the SQLite database.
         """
         self.db = sqlite3.connect(":memory:")
         self.db.execute("CREATE TABLE crashlogs (logname TEXT UNIQUE, logdata BLOB)")
@@ -382,13 +413,21 @@ class SQLiteReader:
 
     def read_log(self, logname: str) -> list[str]:
         """
-        Reads the log data from the database for the given log name.
+        Reads log data from the database for the given logname, processes it to decode
+        and split the log content into individual lines.
+
+        The method connects to the database, retrieves data associated with the
+        specified logname from the 'crashlogs' table, decodes the stored byte data
+        ignoring any errors, and splits it into lines to return a list of strings for
+        further use.
 
         Args:
-            logname (str): The name of the log to read.
+            logname: The name of the log whose data is to be retrieved.
+                     It is used as a key to query the 'crashlogs' table.
 
         Returns:
-            list[str]: A list of strings, each representing a line of the log data.
+            list[str]: A list of individual log lines as strings, extracted and processed
+                       from the database entry corresponding to the provided logname.
         """
         with self.db as conn:
             cursor = conn.cursor()
@@ -468,19 +507,6 @@ class ClassicScanLogsInfo:
 # noinspection PyUnresolvedReferences,PyPep8Naming
 class ClassicScanLogs:
     def __init__(self) -> None:
-        """
-        Initializes the CLASSIC_ScanLogs class.
-
-        This method performs the following tasks:
-        - Compiles a regular expression pattern for plugin search.
-        - Retrieves a list of crash log files.
-        - Prints a message indicating the start of crash log reformatting.
-        - Loads a list of log records to exclude from YAML settings.
-        - Reformats the crash logs based on the retrieved list and exclusion list.
-        - Loads various settings and data from YAML and other sources.
-        - Prints a message indicating the start of crash log scanning.
-        - Records the start time of the scan.
-        """
         self.pluginsearch = re.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
                                        flags=re.IGNORECASE)
         self.crashlog_list = crashlogs_get_files()
@@ -516,16 +542,17 @@ class ClassicScanLogs:
 
     def fcx_mode_check(self) -> None:
         """
-        Checks the FCX mode status and performs corresponding actions.
+        Checks the FCX mode status and performs corresponding file integrity checks.
 
-        If FCX mode is enabled, it updates `main_files_check` and `game_files_check`
-        with the results from `CMain.main_combined_result()` and `CGame.game_combined_result()`
-        respectively. If FCX mode is disabled, it sets `main_files_check` to a message
-        indicating that FCX mode is disabled and skips the game files check, leaving
-        `game_files_check` empty.
+        If FCX mode is enabled, this method performs integrity checks for the main
+        files and game files by invoking the respective methods. If FCX mode is
+        disabled, it sets the results to indicate that checks are skipped.
 
-        Returns:
-            None
+        Attributes:
+            main_files_check (str): The result of the main files check. If FCX mode is
+                disabled, it contains a message indicating the check was skipped.
+            game_files_check (str): The result of the game files check. If FCX mode is
+                disabled, it is set to an empty string.
         """
         if self.fcx_mode:
             self.main_files_check = CMain.main_combined_result()
@@ -536,16 +563,21 @@ class ClassicScanLogs:
 
     def find_segments(self, crash_data: list[str], crashgen_name: str) -> tuple[str, str, str, list[list[str]]]:
         """
-        Divide the log up into segments.
+        Finds and extracts structured segments from the crash report data based on predefined boundary markers. This function
+        parses sections such as crash generation details, system specifications, probable call stack, module details, XSE plugins,
+        and general plugins. The extracted segments are returned alongside metadata such as the game version, crash generator name,
+        and the main error message from the crash log.
+
         Args:
-            crash_data (list[str]): The list of strings representing the crash log data.
-            crashgen_name (str): The name of the crash generator to look for in the log.
+            crash_data (list[str]): The raw crash report data represented as a list of strings.
+            crashgen_name (str): The designated crash generator name to identify the associated crash details.
+
         Returns:
             tuple[str, str, str, list[list[str]]]: A tuple containing:
-                - crashlog_gameversion (str): The game version found in the log or "UNKNOWN" if not found.
-                - crashlog_crashgen (str): The crash generator name found in the log or "UNKNOWN" if not found.
-                - crashlog_mainerror (str): The main error message found in the log or "UNKNOWN" if not found.
-                - segment_results (list[list[str]]): A list of lists, where each inner list represents a segment of the log.
+                - The identified game version from the crash log or "UNKNOWN" if not found.
+                - The identified crash generator version or "UNKNOWN" if not found.
+                - The primary error message extracted from the crash log or "UNKNOWN" if not found.
+                - A list of lists, where each nested list contains stripped lines belonging to a specific segment of the crash log.
         """
         xse = self.yamldata.xse_acronym.upper()
         segment_boundaries = (
@@ -610,15 +642,24 @@ class ClassicScanLogs:
     @staticmethod
     def loadorder_scan_loadorder_txt(autoscan_report: list[str]) -> tuple[dict[str, str], bool]:
         """
-        Scan the loadorder.txt file for plugins.
+        Parses the 'loadorder.txt' file and updates the autoscan report. It processes the file to
+        determine plugins in a specific load order and marks whether any plugins were loaded as a
+        result.
 
-        This method reads the loadorder.txt file and extracts the plugin names,
-        storing them in a dictionary with a marker indicating they were found in
-        the load order. It also sets a trigger to indicate that plugins were loaded.
+        The 'loadorder.txt' information ensures the application prioritizes plugins detected from
+        this file over those detected from crash logs. If the file is removed, the application
+        will revert to its default behavior of detecting plugins from crash logs.
+
+        Args:
+            autoscan_report (list[str]): The current autoscan report to append messages indicating
+                the presence and usage of the 'loadorder.txt' file.
 
         Returns:
-            tuple[dict[str, str], bool]: A tuple containing a dictionary of plugin
-            names with their markers and a boolean indicating if plugins were loaded.
+            tuple[dict[str, str], bool]:
+                - A dictionary of plugins (keys) with their load origin "LO" (value) based on
+                  'loadorder.txt'.
+                - A boolean indicating whether any plugins were successfully loaded from
+                  'loadorder.txt'.
         """
         append_or_extend((
             "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
@@ -640,18 +681,20 @@ class ClassicScanLogs:
     def loadorder_scan_log(self, segment_plugins: list[str], game_version: Version, version_current: Version) -> tuple[
         dict[str, str], bool, bool]:
         """
-        Scan the crash log for plugins and determine if certain conditions are met.
+        Scans load order logs to extract plugin information, which helps determine plugin-related issues
+        in a specific game version and its compatibility. It identifies potential plugin limit triggers,
+        disabled limit checks, and classifies plugins based on their unique identifiers or names.
 
         Args:
-            segment_plugins (list[str]): A list of plugin strings to scan.
-            game_version (Version): The version of the game being analyzed.
-            version_current (Version): The current version of the game being analyzed.
+            segment_plugins (list[str]): A list of plugin entries from the scanned load order log.
+            game_version (Version): The current game version being analyzed.
+            version_current (Version): The version of the game currently in use.
 
         Returns:
-            tuple[dict[str, str], bool, bool]:
-                - A dictionary mapping plugin names to their file IDs or special identifiers.
-                - A boolean indicating if the plugin limit trigger is activated.
-                - A boolean indicating if the limit check is disabled.
+            tuple[dict[str, str], bool, bool]: A tuple containing three elements:
+                - A dictionary mapping plugin names to their unique identifiers or statuses.
+                - A boolean indicating whether the plugin limit trigger has been activated.
+                - A boolean indicating whether the plugin limit check has been disabled under specific conditions.
         """
         if not segment_plugins:
             return {}, False, False
@@ -681,15 +724,22 @@ class ClassicScanLogs:
 
     def suspect_scan_mainerror(self, autoscan_report: list[str], crashlog_mainerror: str, max_warn_length: int) -> bool:
         """
-        Scans the crash log main error for known suspect errors and updates the autoscan report.
+        Scans for main errors in the autoscan report based on a list of suspect errors and
+        signals. Matches errors in the crash log main error with predefined suspect signals
+        and adds detailed error information to the autoscan report if a match is found. A
+        flag indicating whether any suspect was found is returned.
 
         Args:
-            autoscan_report (list[str]): The list to append the scan results to.
-            crashlog_mainerror (str): The main error message from the crash log.
-            max_warn_length (int): The maximum length for the warning message.
+            autoscan_report (list[str]): A list containing lines of the autoscan report
+                where detected errors will be appended.
+            crashlog_mainerror (str): A string containing the main error log which is
+                checked for suspect signals.
+            max_warn_length (int): The maximum allowed length of the warning label in
+                the autoscan report.
 
         Returns:
-            bool: True if a suspect error is found, False otherwise.
+            bool: True if any suspect error was found in the crash log main error;
+                False otherwise.
         """
         trigger_suspect_found = False
         for error, signal in self.yamldata.suspects_error_list.items():
@@ -706,14 +756,27 @@ class ClassicScanLogs:
     def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str],
                            max_warn_length: int) -> bool:
         """
-        Scans the provided crash log and call stack segment for known suspect errors and updates the autoscan report.
+        Scans a crash log's main error and call stack for patterns defined in the suspects
+        stack list to identify potential issues and appends relevant findings to the autoscan
+        report if any suspects are found.
+
+        The function evaluates signals specified in the suspects stack list, which are categorized
+        by modifiers such as "ME-REQ", "ME-OPT", "NOT", or numerical counts. The analysis determines
+        whether required or optional patterns are matched, or specific conditions exist in the
+        call stack segment. Based on these conditions, the report is updated with findings.
+
         Args:
-            crashlog_mainerror (str): The main error message from the crash log.
-            segment_callstack_intact (str): The intact segment of the call stack to be scanned.
-            autoscan_report (list[str]): The list to append the scan results to.
-            max_warn_length (int): The maximum length for the warning message.
+            crashlog_mainerror (str): The main error string from the crash log to be analyzed
+                against the suspects stack list.
+            segment_callstack_intact (str): Complete call stack segment as a string to identify
+                patterns or conditions specified in the suspects stack list.
+            autoscan_report (list[str]): A list to store detailed findings and results of the
+                scan for suspects for further review.
+            max_warn_length (int): Maximum length used to format suspect issue names or warnings
+                when appending them to the report.
+
         Returns:
-            bool: True if any suspect error is found, False otherwise.
+            bool: True if at least one suspect is found based on the analysis; otherwise, False.
         """
         trigger_suspect_found = False
         for error in self.yamldata.suspects_stack_list:
@@ -759,21 +822,17 @@ class ClassicScanLogs:
     def scan_buffout_achievements_setting(self, autoscan_report: list[str], xsemodules: set[str],
                                           crashgen: dict[str, bool | int | str]) -> None:
         """
-        Scans the Buffout achievements setting and updates the autoscan report accordingly.
-
-        This method checks if the "Achievements" setting in the crashgen dictionary is enabled
-        and if either "achievements.dll" or "unlimitedsurvivalmode.dll" is present in the xsemodules set.
-        If both conditions are met, it appends a caution message to the autoscan report suggesting
-        to disable the Achievements setting to prevent conflicts. Otherwise, it appends a message
-        indicating that the Achievements parameter is correctly configured.
+        Validates the configuration of the Achievements parameter in the crash generator settings file
+        (crashgen) against installed modules in XSE (xsemodules) and updates the autoscan report with
+        findings, including necessary fixes if a conflict is detected.
 
         Args:
-            autoscan_report (list[str]): The list to which the scan results will be appended.
-            xsemodules (set[str]): A set of module names to check for the presence of specific DLLs.
-            crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
+            autoscan_report: The report list where messages about the configuration status are
+                appended or extended.
+            xsemodules: A set of strings representing the names of installed XSE modules.
+            crashgen: A dictionary containing configuration values for the crash generator, where
+                the key is a configuration parameter, and the value is its corresponding setting.
 
-        Returns:
-            None
         """
         crashgen_achievements = crashgen.get("Achievements")
         if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
@@ -790,18 +849,17 @@ class ClassicScanLogs:
     def scan_buffout_memorymanagement_settings(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str],
                                                Has_XCell: bool, Has_BakaScrapHeap: bool) -> None:
         """
-        Scans and validates the memory management settings for the Buffout 4 crash generator configuration.
-        This function checks the compatibility of the memory management settings with the installed mods (X-Cell and Baka ScrapHeap)
-        and appends appropriate messages to the autoscan report.
-        
-        Parameters:
-        autoscan_report (list[str]): The list to which the scan results will be appended.
-        crashgen (dict[str, bool | int | str]): The crash generator configuration settings.
-        Has_XCell (bool): Indicates if the X-Cell mod is installed.
-        Has_BakaScrapHeap (bool): Indicates if the Baka ScrapHeap mod is installed.
-        
-        Returns:
-        None
+        Validates and scans the memory management settings in the configuration file for conflicts with
+        X-Cell and the Baka ScrapHeap Mod. Generates a report based on the findings, providing guidance on
+        necessary fixes if parameters are incorrectly configured.
+
+        Args:
+            autoscan_report (list[str]): A list to store findings and recommendations based on the memory
+                management settings validation.
+            crashgen (dict[str, bool | int | str]): A dictionary containing current CrashGen configuration
+                settings, including memory management parameters and other related properties.
+            Has_XCell (bool): A flag indicating whether the X-Cell mod is installed.
+            Has_BakaScrapHeap (bool): A flag indicating whether the Baka ScrapHeap mod is installed.
         """
         # Check main MemoryManager setting first
         mem_manager = crashgen.get("MemoryManager")
@@ -861,19 +919,22 @@ class ClassicScanLogs:
 
     def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str]) -> None:
         """
-        Scans the ArchiveLimit setting and updates the autoscan report accordingly.
+        Scans the 'ArchiveLimit' setting in the crashgen configuration and appends either
+        a warning or confirmation message to the autoscan_report.
 
-        This method checks if the "ArchiveLimit" setting in the crashgen dictionary is enabled.
-        If the setting is enabled, it appends a caution message to the autoscan report suggesting
-        to disable the ArchiveLimit setting to reduce instability.
-        Otherwise, it appends a message indicating that the ArchiveLimit parameter is correctly configured.
+        This method evaluates the 'ArchiveLimit' parameter of the crashgen configuration;
+        if the parameter is enabled (True), it adds a cautionary message to the report,
+        notifying the user of its potential instability and providing guidance for
+        disabling it. Conversely, if the parameter is disabled (False or not set), it
+        adds a confirmation message to the report, indicating that the setting is
+        correctly configured.
 
         Args:
-            autoscan_report (list[str]): The list to which the scan results will be appended.
-            crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
-
-        Returns:
-            None
+            autoscan_report (list[str]): A list where logging or reporting messages are
+                appended to indicate issues or validation details during the scan.
+            crashgen (dict[str, bool | int | str]): A dictionary representing the
+                crashgen configuration, which is evaluated to determine the value of
+                the 'ArchiveLimit' parameter.
         """
         crashgen_archivelimit = crashgen.get("ArchiveLimit")
         if crashgen_archivelimit:
@@ -893,18 +954,22 @@ class ClassicScanLogs:
     def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], autoscan_report: list[str],
                                        xsemodules: set[str]) -> None:
         """
-        Scans the Buffout settings for LooksMenu and updates the autoscan report accordingly.
+        Scans the Buffout 4 settings for the correct configuration of the Looks Menu (F4EE)
+        parameter under the `[Compatibility]` section and appends the corresponding
+        messages to the autoscan report.
 
-        This method checks if the "F4EE" setting in the crashgen dictionary is enabled
-        and if "f4ee.dll" is present in the xsemodules set. If the setting is not enabled
-        but the DLL is present, it appends a caution message to the autoscan report suggesting
-        to enable the F4EE setting to prevent bugs and crashes from LooksMenu. Otherwise, it
-        appends a message indicating that the F4EE parameter is correctly configured.
+        This function checks if the F4EE parameter in the crashgen configuration is
+        set appropriately based on the presence of `f4ee.dll` in the installed modules. If the
+        parameter is incorrectly configured, it provides specific instructions for fixing the
+        configuration in the TOML file. Otherwise, it confirms that the parameter is correct.
 
         Args:
-            crashgen (dict[str, bool | int | str]): A dictionary containing the crash generation settings.
-            autoscan_report (list[str]): The list to which the scan results will be appended.
-            xsemodules (set[str]): A set of module names to check for the presence of specific DLLs.
+            crashgen (dict[str, bool | int | str]): The settings dictionary containing
+                configuration parameters, including the F4EE parameter under the `[Compatibility]`.
+            autoscan_report (list[str]): The list used to store diagnostic messages
+                regarding the scan results.
+            xsemodules (set[str]): The set of installed module filenames in the current
+                environment used to determine compatibility requirements.
 
         Returns:
             None
@@ -926,15 +991,18 @@ class ClassicScanLogs:
     def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str],
                      autoscan_report: list[str]) -> None:
         """
-        Matches FormIDs with plugins and updates the autoscan report.
+        Processes and analyzes Form IDs from the provided data sources, matching them
+        against crash log plugins and generating a report based on the findings. This
+        method identifies potentially relevant Form IDs present in the crash log and
+        provides insights using a database, if available.
 
         Args:
-            formids_matches (list[str]): A list of FormID matches found in the crash log.
-            crashlog_plugins (dict[str, str]): A dictionary mapping plugin names to their file IDs.
-            autoscan_report (list[str]): A list to append the scan results to.
-
-        Returns:
-            None
+            formids_matches (list[str]): A list of Form ID strings identified
+                from the crash log.
+            crashlog_plugins (dict[str, str]): A dictionary mapping plugin names
+                to their associated plugin IDs.
+            autoscan_report (list[str]): A list to which the method appends
+                formatted analysis results.
         """
         if formids_matches:
             formids_found = dict(Counter(sorted(formids_matches)))
@@ -965,7 +1033,17 @@ class ClassicScanLogs:
     def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str],
                      autoscan_report: list[str]) -> None:
         """
-        Matches plugins found in the call stack segment with the crash log plugins and updates the autoscan report.
+        Matches plugins in the given segment callstack against the crashlog plugins and appends the result
+        to the autoscan report. The method identifies plugins in the crash log that correspond to the given
+        plugin list, filtering based on relevance and ignoring specific plugins as configured in the class.
+
+        Args:
+            segment_callstack_lower (list[str]): Lowercase representation of the segment callstack,
+                containing lines to be analyzed for potential plugin matches.
+            crashlog_plugins_lower (set[str]): Set of lowercase plugin names extracted from the crash log,
+                used as a reference for matching against the callstack lines.
+            autoscan_report (list[str]): List where the method will append strings documenting plugin matches
+                or the absence of matches. This is modified in-place.
         """
         # Pre-filter call stack lines that won't match
         relevant_lines = [line for line in segment_callstack_lower if "modified by:" not in line]
@@ -999,15 +1077,24 @@ class ClassicScanLogs:
     @staticmethod
     def scan_log_gpu(segment_system: list[str]) -> tuple[str, Literal["nvidia", "amd"] | None]:
         """
-        Scans the system segment of the crash log to determine the GPU brand.
+        Scans the log to determine the GPU information and its rival.
+
+        This method analyzes a list of system log segments to identify the primary
+        graphics processing unit (GPU) being used. It also determines the rival GPU
+        manufacturer based on the GPU identified. If the GPU information cannot be
+        determined, the method returns "Unknown" and the rival GPU is set to None.
 
         Args:
-            segment_system (list[str]): The list of strings representing the system segment of the crash log.
+            segment_system (list[str]): A list of log segments containing system
+                information. Each log segment is expected to contain details about
+                hardware components including GPUs.
 
         Returns:
-            tuple[str, str | None]: A tuple containing:
-                - The GPU brand found in the log ("AMD", "Nvidia", or "Unknown").
-                - The rival GPU brand ("nvidia" or "amd") if a known GPU brand is found, otherwise None.
+            tuple[str, Literal["nvidia", "amd"] | None]: A tuple containing the GPU
+                name and the rival GPU manufacturer. The first element is a string
+                that represents the GPU name ("AMD", "Nvidia", or "Unknown"). The
+                second element is a Literal that specifies the rival GPU
+                manufacturer ("nvidia", "amd"), or None if no rival is identified.
         """
         GPU: str
         gpu_rival: Literal["nvidia", "amd"] | None
@@ -1025,15 +1112,22 @@ class ClassicScanLogs:
     def scan_named_records(self, segment_callstack: list[str], records_matches: list[str],
                            autoscan_report: list[str]) -> None:
         """
-        Scans the call stack segment for named records and updates the autoscan report.
+        Scans a given call stack segment to identify and record named records, and appends
+        relevant information about the findings to the autoscan report.
+
+        This method processes the `segment_callstack` to identify specific patterns for "named
+        records" while respecting the specified ignore list. If any matches are found, it
+        counts occurrences, formats findings, and appends suitable annotations or information
+        to the autoscan report, summarizing potential crash-related data for further analysis.
 
         Args:
-            segment_callstack (list[str]): The list of strings representing the call stack segment.
-            records_matches (list[str]): The list of record matches found in the call stack.
-            autoscan_report (list[str]): The list to append the scan results to.
+            segment_callstack (list[str]): List of strings representing the call stack segment
+                to be analyzed for named records.
+            records_matches (list[str]): List to store the matched named records identified during
+                the scan.
+            autoscan_report (list[str]): List to which the analysis summary or findings about
+                named records will be appended.
 
-        Returns:
-            None
         """
         for line in segment_callstack:
             lower_line = line.lower()
@@ -1064,34 +1158,18 @@ class ClassicScanLogs:
 # ================================================
 def crashlogs_scan() -> None:
     """
-    Scans crash logs for a Fallout 4 game, generates detailed autoscan reports, and identifies potential issues.
-    This function performs the following steps:
-    1. Initializes the ClassicScanLogs scanner and retrieves YAML data.
-    2. Iterates through each crash log file in the scanner's crashlog list.
-    3. Reads the crash log data and generates an autoscan report header.
-    4. Extracts and processes various segments from the crash log.
-    5. Checks for important DLLs and updates the crash generation dictionary.
-    6. Updates scanner statistics based on the completeness of the crash log.
-    7. Appends main error and crash generation version information to the report.
-    8. Checks for loaded plugins and updates the crash log plugins dictionary.
-    9. Scans for GPU type and loads plugins from loadorder.txt if available.
-    10. Checks for ignored plugins and appends relevant information to the report.
-    11. Identifies potential crash suspects and appends relevant information to the report.
-    12. Checks for necessary files and settings, and appends relevant information to the report.
-    13. Scans for mods that can cause frequent crashes and appends relevant information to the report.
-    14. Scans for mods that conflict with other mods and appends relevant information to the report.
-    15. Scans for mods with solutions and community patches and appends relevant information to the report.
-    16. Checks for mods patched through the OPC installer (specific to Fallout 4).
-    17. Checks for important patches and fixes, and appends relevant information to the report.
-    18. Scans the log for specific possible suspects and appends relevant information to the report.
-    19. Lists possible plugin and form ID suspects, and appends relevant information to the report.
-    20. Writes the autoscan report to a file and handles failed scans by moving logs to a backup folder.
-    21. Checks for failed or invalid crash logs and prints a notice if any are found.
-    22. Closes the scanner database and prints the scan completion message and statistics.
-    Note:
-        - The function assumes the presence of various methods and attributes in the ClassicScanLogs class.
-        - The function also assumes the presence of certain global variables and constants (e.g., CMain, yamldata).
-        - The function generates autoscan reports in Markdown format and saves them to files.
+    Scans crash log files to generate reports, identify issues, and provide insights into the cause of crashes. This
+    function utilizes crash log data, plugin configurations, and system segments to correlate crash events with probable
+    causes and generate detailed reports that include warnings, errors, and potential solutions.
+
+    The function performs a sequence of actions:
+    1) Collects and processes crash log segments, such as system information, stack traces, and plugin lists.
+    2) Analyzes crash-generation details, checks for specific errors, and identifies potential crash suspects.
+    3) Evaluates system and game configurations, scans for missing files or conflicting plugins, and suggests fixes.
+    4) Produces an autoscan report summarizing the findings, which can assist in troubleshooting and resolving crash issues.
+
+    Raises:
+        RuntimeError: If a critical error occurs during crash log scanning or data processing.
     """
     scanner = ClassicScanLogs()
     yamldata = scanner.yamldata
@@ -1180,7 +1258,7 @@ def crashlogs_scan() -> None:
         # ================================================
 
         # CHECK GPU TYPE FOR CRASH LOG
-        crashlog_GPU, crashlog_GPU_rival = scanner.scan_log_gpu(segment_system)
+        crashlog_gpu, crashlog_gpu_rival = scanner.scan_log_gpu(segment_system)
 
         # IF LOADORDER FILE EXISTS, USE ITS PLUGINS
         loadorder_path = Path("loadorder.txt")
@@ -1245,8 +1323,8 @@ def crashlogs_scan() -> None:
             "====================================================\n",
         ), autoscan_report)
 
-        Has_XCell = ("x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules)
-        Has_BakaScrapHeap = "bakascrapheap.dll" in xsemodules
+        has_x_cell: bool = ("x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules)
+        has_baka_scrapheap: bool = "bakascrapheap.dll" in xsemodules
 
         if scanner.fcx_mode:
             append_or_extend((
@@ -1262,10 +1340,10 @@ def crashlogs_scan() -> None:
                 "* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n",
                 "[ FCX Mode can be enabled in the exe or CLASSIC Settings.yaml located in your CLASSIC folder. ] \n\n",
             ), autoscan_report)
-            if Has_XCell:
+            if has_x_cell:
                 yamldata.crashgen_ignore.update(
                     ("MemoryManager", "HavokMemorySystem", "ScaleformAllocator", "SmallBlockAllocator"))
-            elif Has_BakaScrapHeap:
+            elif has_baka_scrapheap:
                 # To prevent two messages mentioning this parameter.
                 yamldata.crashgen_ignore.add("MemoryManager")
 
@@ -1277,7 +1355,7 @@ def crashlogs_scan() -> None:
                             autoscan_report
                         )
                 scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
-                scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, Has_XCell, Has_BakaScrapHeap)
+                scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, has_x_cell, has_baka_scrapheap)
                 if crashgen_version_gen(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(
                         crashlog_crashgen) >= Version("1.27.0"):
                     scanner.scan_archivelimit_setting(autoscan_report, crashgen)
@@ -1374,9 +1452,9 @@ def crashlogs_scan() -> None:
         if trigger_plugins_loaded:
             if any("londonworldspace" in plugin.lower() for plugin in crashlog_plugins):
                 detect_mods_important(yamldata.game_mods_core_folon, crashlog_plugins, autoscan_report,
-                                      crashlog_GPU_rival)
+                                      crashlog_gpu_rival)
             else:
-                detect_mods_important(yamldata.game_mods_core, crashlog_plugins, autoscan_report, crashlog_GPU_rival)
+                detect_mods_important(yamldata.game_mods_core, crashlog_plugins, autoscan_report, crashlog_gpu_rival)
         else:
             append_or_extend(yamldata.warn_noplugins, autoscan_report)
 

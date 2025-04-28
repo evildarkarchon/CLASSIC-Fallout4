@@ -51,12 +51,20 @@ type GameID = Literal[
 
 def get_game_version(game_exe_path: Path) -> Version:
     """
-    Get the game version from the game's executable file.
+    Gets the version information of a specified game executable file.
+
+    This function retrieves the version of a game executable file by using system-level
+    API calls to fetch version information. It is specifically supported for systems running
+    on Windows. If the path provided does not exist, is invalid, or is not a Windows
+    executable file, a default null version is returned. Any unexpected errors during
+    processing are gracefully handled and logged.
+
+    Args:
+        game_exe_path (Path): The file path to the target game executable.
 
     Returns:
-        Version: A Version object containing the game's version information.
-                 Returns Version("0.0.0.0") if the game executable cannot be found
-                 or if the version information cannot be retrieved.
+        Version: The version of the game executable in the format "major.minor.patch.build".
+        If detection fails, a null version is returned.
     """
 
     if platform.system() != "Windows":
@@ -145,6 +153,14 @@ class ManualDocsPath(QObject):
         super().__init__()
 
     def get_manual_docs_path_gui(self, path: str) -> None:
+        """
+        Validates the provided path to ensure it is a directory and updates settings accordingly. Emits a
+        signal if the path is invalid.
+
+        Args:
+            path: The directory path input by the user. This is validated to ensure it is an existing
+                directory.
+        """
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
             manual_docs = Path(path.strip())
@@ -162,6 +178,18 @@ class GamePathEntry(QObject):
         super().__init__()
 
     def get_game_path_gui(self, path: str) -> None:
+        """
+        Processes the provided directory path to configure the game settings via GUI.
+
+        This function checks if the path entered by the user is a valid directory. If it
+        is valid, it saves the path to the settings.yaml file for the CLASSIC application.
+        Otherwise, it alerts the user about the invalid directory and emits a signal
+        to re-prompt for the input.
+
+        Args:
+            path: The directory path entered by the user as a string. This should be the
+                intended path for the game's root folder.
+        """
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
             game_path = Path(path.strip())
@@ -174,15 +202,22 @@ class GamePathEntry(QObject):
 @contextlib.contextmanager
 def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[TextIOWrapper]:
     """
-    Opens a text file with automatic encoding detection.
+    Opens a file with its detected encoding as a context manager.
+
+    This function detects the encoding of the specified file and opens the file using
+    that encoding. It allows working with files having unknown or varied encodings
+    to ensure the correct reading of the content. The function ensures that the file
+    is properly closed after processing, even if exceptions are raised during the
+    execution of the code block that uses the context manager.
+
     Args:
-        file_path (Path | str | os.PathLike): The path to the file to be opened.
+        file_path: The path to the file to be opened. It can be provided as a Path,
+            string, or os.PathLike object.
+
     Yields:
-        Iterator[TextIOWrapper]: A file object opened in read mode with the detected encoding.
-    Notes:
-        - This function reads the file as bytes to detect the encoding using the `chardet` library.
-        - The file is opened with the detected encoding and errors are ignored during reading.
-        - The file is automatically closed after the context is exited.
+        TextIOWrapper: An open text file object for reading the file's content using
+        the detected encoding.
+
     """
     if not isinstance(file_path, Path):
         file_path = Path(file_path)
@@ -198,15 +233,17 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
 
 def configure_logging() -> None:
     """
-    Configure logging for the application.
-    This function sets up logging to a file named `CLASSIC Journal.log`. If the log file
-    exists and is older than 7 days, it will be deleted and a new log file will be created.
-    The logging levels available are: debug, info, warning, error, and critical.
-    Global Variables:
-        logger (logging.Logger): The logger instance used for logging messages.
+    Configures the logging system for the application.
+
+    This function checks the existence and age of a log file named "CLASSIC Journal.log".
+    If the log file is older than 7 days, it deletes the file and generates a new one.
+    The function also ensures that logging is configured only once for the logger named
+    "CLASSIC". The logs are stored in "CLASSIC Journal.log" using a specific format that
+    includes timestamp, log level, and the log message.
+
     Raises:
-        ValueError: If an error occurs while deleting the old log file.
-        OSError: If an error occurs while deleting the old log file.
+        ValueError: If an error occurs while deleting the log file.
+        OSError: If there is an operating system-related error during log file deletion.
     """
     global logger  # noqa: PLW0603
 
@@ -240,13 +277,16 @@ def configure_logging() -> None:
 # ================================================
 def remove_readonly(file_path: Path) -> None:
     """
-    Remove the read-only flag from a given file, if present.
-    Parameters:
-        file_path (Path): The path to the file from which the read-only flag should be removed.
-    Raises:
-        FileNotFoundError: If the specified file does not exist.
-        ValueError: If there is an issue with the file path or permissions.
-        OSError: If there is an operating system-related error.
+    Removes the read-only attribute or permission from the specified file path.
+    On Windows, it clears the read-only file attribute. On other operating
+    systems, it adds the write permission for the user if not already set.
+
+    In case the file does not exist or an error occurs during the operation,
+    appropriate error messages are logged.
+
+    Args:
+        file_path (Path): The path of the file from which the read-only
+            attribute or permission is to be removed.
     """
     try:
         if platform.system() == "Windows":
@@ -275,10 +315,27 @@ def remove_readonly(file_path: Path) -> None:
 
 class YamlSettingsCache:
     """
-    A class to handle caching of YAML settings with optimizations for static files.
-    
-    Static files (YAML.Main and YAML.Game) are loaded once and not checked for changes.
-    Dynamic files are monitored for modifications and reloaded as needed.
+    Manages YAML file caching and settings retrieval and updating operations.
+
+    This class provides methods to efficiently handle YAML files by implementing
+    caching mechanisms for both static and dynamic YAML files. It supports
+    retrieving, updating, and maintaining settings across multiple YAML stores,
+    with built-in optimization to cache frequently accessed data for static files.
+    The class also ensures changes to dynamic files are detected and reloaded
+    when necessary.
+
+    Attributes:
+        STATIC_YAML_STORES (set[YAML]): A set of YAML stores that remain unchanged
+            during program execution. These stores are treated as static files.
+        cache (dict[Path, YAMLMapping]): A dictionary that maps file paths to their
+            loaded YAML content for caching purposes.
+        file_mod_times (dict[Path, float]): Tracks modification timestamps of files
+            to determine if a reload is needed.
+        path_cache (dict[YAML, Path]): Caches the mapping of YAML stores to their
+            corresponding file paths for faster file resolution.
+        settings_cache (dict[tuple[YAML, str, type], Any]): A cache for frequently
+            accessed settings in static YAML files, enabling quick retrieval without
+            repeated file reads or traversals.
     """
     # Static YAML stores that won't change during program execution
     STATIC_YAML_STORES: ClassVar[set[YAML]] = {YAML.Main, YAML.Game}
@@ -290,7 +347,23 @@ class YamlSettingsCache:
         self.settings_cache: dict[tuple[YAML, str, type], Any] = {}  # Cache for frequently accessed settings
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
-        """Get the file path for a YAML store, with caching."""
+        """
+        Retrieves the file path for the given YAML store. If the path is already cached,
+        it returns the cached path. Otherwise, it determines the path based on the
+        YAML store type, caches it, and then returns the path. The function uses
+        different predefined paths based on the type of YAML store passed.
+
+        Args:
+            yaml_store: An enum value of type YAML indicating the type of YAML store,
+                such as Main, Settings, Ignore, Game, Game_Local, or TEST.
+
+        Returns:
+            Path: The file path corresponding to the specified YAML store.
+
+        Raises:
+            NotImplementedError: If the provided yaml_store is not recognized or
+                implemented.
+        """
         if yaml_store in self.path_cache:
             return self.path_cache[yaml_store]
 
@@ -316,9 +389,16 @@ class YamlSettingsCache:
 
     def load_yaml(self, yaml_path: Path) -> YAMLMapping:
         """
-        Load a YAML file with caching based on whether it's static or dynamic.
-        
-        Static files are loaded once, while dynamic files are checked for modifications.
+        Loads a YAML file with caching to optimize reloading. Supports static and dynamic files,
+        with separate handling based on file type. Static files are loaded once and cached, while
+        dynamic files are reloaded if their modification timestamp changes.
+
+        Args:
+            yaml_path (Path): The path to the YAML file to be loaded.
+
+        Returns:
+            YAMLMapping: The loaded YAML content. If the file does not exist, an empty dictionary
+            is returned.
         """
         if not yaml_path.exists():
             return {}
@@ -354,9 +434,21 @@ class YamlSettingsCache:
 
     def get_setting[T](self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """
-        Retrieve or update a setting from a specified YAML store.
-        
-        For static stores, results are cached to avoid repeated YAML traversal.
+        Fetches or modifies a setting within a YAML file. This function is responsible for retrieving or modifying
+        nested settings in YAML files, depending on the provided arguments. It handles caching for static YAML
+        stores, ensuring efficient access and updates. Static stores are also protected against unintended
+        modifications with appropriate warnings.
+
+        Args:
+            _type: The expected type of the setting to be retrieved or updated.
+            yaml_store: An identifier for the specific YAML store to access.
+            key_path: The dot-separated path key to locate the setting within the YAML structure.
+            new_value: The new value to be assigned to the setting. If None, no modification is performed,
+                and the function operates in a read-only mode.
+
+        Returns:
+            The value retrieved from the YAML structure or the newly updated value. Returns None if
+            the key path is invalid or leads to a None value and is not listed in the settings ignore list.
         """
         # If this is a read operation for a static store, check cache first
         cache_key = (yaml_store, key_path, _type)
@@ -370,6 +462,10 @@ class YamlSettingsCache:
         keys = key_path.split(".")
 
         def setdefault(dictionary: dict[str, YAMLValue], key: str) -> dict[str, YAMLValue]:
+            """
+            A utility class for managing and working with YAML settings. This class provides
+            methods to retrieve and modify settings within a nested YAML data structure.
+            """
             if key not in dictionary:
                 dictionary[key] = {}
             next_value = dictionary[key]
@@ -422,19 +518,27 @@ class YamlSettingsCache:
 
 def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
     """
-    Retrieve or update a setting from a YAML store.
+    Updates or retrieves a setting value from a given YAML store. The method
+    handles type-specific processing for the retrieved or updated value, such
+    as converting to a `Path` object when appropriate.
 
     Args:
-        _type (type[T]): The expected type of the setting.
-        yaml_store (YAML): The YAML store object to retrieve the setting from.
-        key_path (str): The key path to the setting in the YAML store.
-        new_value (T | None, optional): The new value to set for the setting. Defaults to None.
+        _type: The type of setting to retrieve or update. Supports generic
+            type hinting.
+        yaml_store: The YAML store object representing the settings data.
+        key_path: The key path in the YAML store where the setting resides.
+        new_value: The new value to be set in the YAML store at the given key
+            path. This value must match the specified `_type`. Defaults to None.
 
     Returns:
-        T | None: The retrieved setting value, or None if the setting is not found or if the type is Path and the setting is not a string.
+        T | None: If `new_value` is provided, returns the updated setting value
+        from the YAML store of the specified `_type`. If no `new_value` is
+        provided, it retrieves and returns the current setting value in the
+        YAML store of the given `_type`. Returns None if the setting does not
+        exist or a type mismatch occurs.
 
     Raises:
-        TypeError: If the yaml_cache is not initialized.
+        TypeError: If the YAML cache is not initialized.
     """
     if yaml_cache is None:
         raise TypeError("CMain not initialized")
@@ -446,16 +550,23 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
 
 def classic_settings[T](_type: type[T], setting: str) -> T | None:
     """
-    Retrieves a specific setting from the "CLASSIC Settings.yaml" file.
-    If the settings file does not exist, it creates one using default settings
-    from "CLASSIC_Info.default_settings".
+    Fetches a specific setting from a CLASSIC settings file or creates the settings file
+    if it does not exist.
+
+    This function ensures that a settings file named "CLASSIC Settings.yaml" exists in the
+    current directory. If the file does not exist, it creates the file based on default
+    settings specified in another YAML configuration. The function then retrieves and
+    returns the requested setting based on the provided type and setting key.
+
     Args:
-        _type (type[T]): The expected type of the setting value.
-        setting (str): The key of the setting to retrieve.
+        _type: The expected type of the setting value. This helps ensure the retrieved
+            setting is appropriately cast to the desired type.
+        setting: The key of the setting to retrieve from the "CLASSIC Settings.yaml"
+            file.
+
     Returns:
-        T | None: The value of the setting if found and correctly typed, otherwise None.
-    Raises:
-        ValueError: If the default settings are invalid.
+        The value of the requested setting, cast to the specified type `_type`. If the
+        setting is not found, or if an error occurs, it returns `None`.
     """
     settings_path = Path("CLASSIC Settings.yaml")
     if not settings_path.exists():
@@ -472,13 +583,19 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
 # CREATE REQUIRED FILES, SETTINGS & UPDATE CHECK
 # ================================================
 def classic_generate_files() -> None:
-    """
-    Generate `CLASSIC Ignore.yaml` and `CLASSIC Data/CLASSIC <GAME> Local.yaml` files if they do not exist.
-    This function checks for the existence of the `CLASSIC Ignore.yaml` file and the
-    `CLASSIC Data/CLASSIC <GAME> Local.yaml` file. If either file does not exist, it creates
-    the file with default content retrieved from the YAML settings.
+    """Generate necessary CLASSIC YAML files.
+
+    This function generates the following files if they do not already exist:
+    - `CLASSIC Ignore.yaml`: Uses a default ignore file string specified in
+      the YAML settings. Ensures the file content is written in UTF-8 encoding.
+    - `CLASSIC Data/CLASSIC <GAME> Local.yaml`: Uses a default local YAML
+      string specified in the YAML settings, where `<GAME>` is dynamically
+      determined from `gamevars["game"]`. Ensures the file content is written
+      in UTF-8 encoding.
+
     Raises:
-        TypeError: If the default content retrieved from the YAML settings is not a string.
+        TypeError: If the default content retrieved for either the ignore file
+            or the local YAML file is not of type `str`.
     """
     """Generate `CLASSIC Ignore.yaml` and `CLASSIC Data/CLASSIC <GAME> Local.yaml`."""
     ignore_path = Path("CLASSIC Ignore.yaml")
@@ -498,14 +615,15 @@ def classic_generate_files() -> None:
 
 def try_parse_version(version_string: str) -> Version | None:
     """
-    Attempts to parse a version string into a Version object.
+    Parses a version string into a Version object. If parsing fails due to an invalid
+    version format, returns None.
 
     Args:
-        version_string (str): The version string to parse.
+        version_string: A string representing the version to be parsed.
 
     Returns:
-        Version | None: A Version object if the parsing is successful,
-                        otherwise None if the version string is invalid.
+        A Version object if the string is successfully parsed, or None if the
+        string is not a valid version format.
     """
     try:
         return Version(version_string)
@@ -514,13 +632,23 @@ def try_parse_version(version_string: str) -> Version | None:
 
 
 async def get_github_version(session: aiohttp.ClientSession) -> Version | None:
-    """Check the latest CLASSIC version on GitHub.
+    """
+    Fetches the latest release version of the CLASSIC-Fallout4 repository from
+    GitHub using the provided aiohttp ClientSession.
+
+    The function performs a GET request to the GitHub API to retrieve the latest
+    release information of the specified repository. It extracts and parses the
+    version number from the release name. If the request fails or the response
+    does not contain a valid version, the function returns None.
 
     Args:
-        session (aiohttp.ClientSession): The aiohttp session to use for the request.
+        session (aiohttp.ClientSession): An instance of aiohttp.ClientSession used
+            for making asynchronous HTTP requests.
 
     Returns:
-        Version | None: The latest version of CLASSIC if successful, otherwise None.
+        Version | None: A Version object representing the parsed release version
+            if successful, or None if the version cannot be determined or the
+            request fails.
     """
     try:
         async with session.get(
@@ -540,11 +668,26 @@ async def get_github_version(session: aiohttp.ClientSession) -> Version | None:
 
 async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
     """
-    Check the latest CLASSIC version on Nexus Mods.
+    Fetches the NexusMods version information for a specific Fallout 4 mod.
+
+    This function asynchronously requests the web page for a Fallout 4 mod on NexusMods
+    to determine its current version. It looks for specific HTML meta tags to extract
+    the version. The method is designed to handle potential changes in the HTML
+    structure by looking for specific markers.
+
     Args:
-        session (aiohttp.ClientSession): The aiohttp client session to use for making the HTTP request.
+        session (aiohttp.ClientSession): The active HTTP session used to fetch the
+            NexusMods webpage.
+
     Returns:
-        Version | None: The Version on the mod page if successful, otherwise None if the check fails or the HTML structure has changed.
+        Version | None: The parsed version information as a `Version` object if found,
+            or `None` if the version cannot be determined or if an error occurs during
+            the request.
+
+    Raises:
+        aiohttp.ClientError: Raised if there is an issue with the HTTP request made
+            using the session.
+
     """
 
     try:
@@ -578,16 +721,26 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
 
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
     """
-    Check if the CLASSIC mod is the latest version by querying GitHub and Nexus Mods.
-    This function checks for newer versions of the CLASSIC mod based on the settings provided in the CLASSIC Settings.yaml file.
-    It can query both GitHub and Nexus Mods for the latest version information.
+    Checks whether the current local version of the software is the latest version
+    available from GitHub and/or Nexus. This function communicates with remote
+    servers, validates configuration options, and reports the results of the update
+    check.
+
     Args:
-        quiet (bool): If True, suppresses print statements. Defaults to False.
-        gui_request (bool): If True, indicates that the request is coming from a GUI, which may handle exceptions differently. Defaults to True.
+        quiet (bool): If set to True, suppresses print statements providing feedback
+            about the update check process.
+        gui_request (bool): Indicates whether the function is triggered by a GUI-based
+            request. If True and an update check fails, errors will propagate instead
+            of being handled gracefully.
+
     Returns:
-        bool: Returns True if CLASSIC is already the latest version, False otherwise.
+        bool: True if the local version is the latest or if the update check is
+            disabled, otherwise False.
+
     Raises:
-        UpdateCheckError: If there is an error checking for updates or if the local version is outdated and the request is from a GUI.
+        UpdateCheckError: If the update check fails for any of the chosen data
+            sources (GitHub/Nexus) or an issue with the configuration exists when
+            triggered by a GUI request.
     """
 
     logger.debug("- - - INITIATED UPDATE CHECK")
@@ -668,20 +821,39 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
 # CHECK DEFAULT DOCUMENTS & GAME FOLDERS / FILES
 # ================================================
 # =========== CHECK DOCUMENTS FOLDER PATH -> GET GAME DOCUMENTS FOLDER ===========
+# noinspection PyUnresolvedReferences
 def docs_path_find() -> None:
     """
-    Checks and sets the path to the game's documents folder based on the operating system and user settings.
-    This function performs the following steps:
-    1. Retrieves the document name from YAML settings.
-    2. Defines nested functions to get the documents path for Windows, Linux, and manual input:
-        - `get_windows_docs_path`: Retrieves the path from the Windows registry or defaults to the user's Documents folder.
-        - `get_linux_docs_path`: Retrieves the path from Steam library folders configuration.
-        - `get_manual_docs_path`: Prompts the user to manually enter the path.
-    3. Checks if the game documents folder path is already set in YAML settings.
-    4. If the path is not set, it determines the operating system and calls the appropriate nested function.
-    5. If the path is set but invalid, it prompts the user to manually enter the path or uses a GUI if available.
+    Provides utility functions to locate and configure the path to a game's documents folder across different platforms.
+
+    The module includes functionality to:
+    - Locate the Documents folder on Windows using the system registry.
+    - Locate the equivalent folder for Linux when run through Steam.
+    - Allow manual user input for specifying the path when automated detection fails.
+
     Raises:
-        TypeError: If the Steam ID is not an integer or if the GUI mode is enabled but not initialized.
+        OSError: If there is an error accessing the Windows registry.
+        UnboundLocalError: If the required registry key is not found.
+        TypeError: If the retrieved Steam ID is not an integer or if a required GUI component is uninitialized.
+        FileNotFoundError: If a manual input path is provided but does not exist.
+
+    Attributes:
+        logger (Logger): Logger instance for debug-level messages.
+        winreg (module): Windows registry access used for retrieving the user's documents path.
+        Path (Path): Used for handling file and directory paths.
+        yaml_settings (function): Utility function for reading and writing configuration from YAML files.
+        YAML (enum): Enumerator for YAML configuration sections.
+        gamevars (dict): Dictionary storing configuration values related to the current game context.
+        gui_mode (bool): Indicator if the program is running in GUI mode.
+        manual_docs_gui (object): GUI object for managing manual path inputs or directory selection.
+
+    Defines:
+        docs_path_find: Function to initialize the process of finding and validating the game's documents folder path.
+
+    Sub-functions:
+        get_windows_docs_path: Retrieves the Documents folder path for Windows systems.
+        get_linux_docs_path: Retrieves the equivalent documents path for Linux systems when using Steam.
+        get_manual_docs_path: Prompts the user for manual input to specify the documents folder path.
     """
     logger.debug("- - - INITIATED DOCS PATH CHECK")
 
@@ -692,15 +864,14 @@ def docs_path_find() -> None:
 
     def get_windows_docs_path() -> None:
         """
-        Retrieves the path to the user's Documents folder on a Windows system.
-        This function attempts to read the path from the Windows registry. If the registry key is not found,
-        it falls back to the default Documents path in the user's home directory. The function then constructs
-        the full path to the game's documents folder and updates the YAML settings with this path.
+        Find and update the path of the user's My Documents folder on Windows and save
+        it in the game's specific YAML configuration. This function uses the Windows
+        Registry to retrieve the target path and falls back to defaults in case of
+        errors.
+
         Raises:
-            OSError: If there is an error accessing the registry.
-            UnboundLocalError: If the registry key is not found.
-        Returns:
-            None
+            OSError: If there is an issue accessing the Windows Registry.
+            UnboundLocalError: If the registry access results in unbound variable usage.
         """
         try:
             # Open the registry key to get the user's documents path
@@ -720,14 +891,13 @@ def docs_path_find() -> None:
 
     def get_linux_docs_path() -> None:
         """
-        Retrieves the path to the My Documents folder for a game running on Linux through Steam.
-        This function reads the Steam library folders configuration file to find the path to the
-        game's compatibility data directory. It then constructs the path to the My Documents folder
-        within that directory and updates the YAML settings with this path.
+        Retrieves and sets the path to the Linux-compatible game documents directory using the Steam
+        library configuration file. This function reads the Steam library folders configuration, looks
+        for the appropriate folder associated with the game's Steam ID, and constructs the path to the
+        game's "My Documents" folder. It then sets this information into the YAML settings.
+
         Raises:
-            TypeError: If the retrieved Steam ID is not an integer.
-        Updates:
-            YAML settings with the path to the My Documents folder for the game.
+            TypeError: If the retrieved Steam ID is not of the expected integer type.
         """
         # Retrieve the Steam ID from YAML settings
         game_sid = yaml_settings(int, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_SteamID")
@@ -753,10 +923,14 @@ def docs_path_find() -> None:
 
     def get_manual_docs_path() -> None:
         """
-        Prompts the user to enter the full directory path where a specific .ini file is located.
-        The function continuously prompts the user until a valid directory path is provided.
-        Once a valid path is entered, it prints a confirmation message and updates the CLASSIC Settings.yaml file with the provided path.
-        Returns:
+        Locates the path for manual documentation files and updates the application's YAML settings with the
+        path provided by the user. Allows repeated attempts until a valid directory path is entered.
+
+        Functions:
+            get_manual_docs_path: Prompts the user for a directory path, validates the input, and updates the
+                settings file with the path if valid. Displays guidance messages for user input validation.
+
+        Raises:
             None
         """
         print(f"> > > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {docs_name}.ini IS LOCATED < < <")
@@ -797,17 +971,18 @@ def docs_path_find() -> None:
 
 def get_manual_docs_path_gui(path: str) -> None:
     """
-    Processes the given path to locate and validate the manual documentation files for the game.
+    Handles the selection of a manual documentation path through the
+    graphical user interface (GUI). This function validates the given
+    path, searches for a specific configuration file in the directory,
+    and updates settings if the required file is found. If the validation
+    fails or the required file is not found, an error message is
+    displayed and the user is prompted to try again.
+
     Args:
-        path (str): The directory path where the manual documentation files are expected to be found.
-    Raises:
-        TypeError: If the manual_docs_gui is not initialized.
-    Behavior:
-        - Strips any leading or trailing whitespace from the provided path.
-        - Checks if the path is a valid directory.
-        - Searches recursively within the directory for an .ini file matching the game's name.
-        - If found, updates the CLASSIC Settings.yaml with the path.
-        - Emits a signal if no matching .ini file is found or if the path is invalid.
+        path: A string representing the directory path entered by the
+            user through the GUI. The function expects this path to be
+            validated as an existing directory containing the necessary
+            game-specific configuration file (e.g., `{game}.ini`).
     """
     if manual_docs_gui is None:
         raise TypeError("CMain not initialized")
@@ -832,12 +1007,14 @@ def get_manual_docs_path_gui(path: str) -> None:
 
 def docs_generate_paths() -> None:
     """
-    Generates and sets various documentation paths in the YAML settings.
-    This function retrieves the XSE acronym and base acronym from the YAML settings,
-    constructs the documentation path, and updates the YAML settings with paths for
-    various documentation files including the XSE log, Papyrus log, and Wrye Bash PC log.
+    Generates and configures paths for documentation files based on various game-specific
+    yaml settings. Integrates configuration with specific folders and file paths required
+    for documentation purposes. Validates the types of fetched data and applies the
+    appropriate yaml updates for local game documentation settings.
+
     Raises:
-        TypeError: If any of the retrieved YAML settings are not of type str.
+        TypeError: Raised if any of the key yaml retrieved settings are not of
+            expected types as str.
     """
     logger.debug("- - - INITIATED DOCS PATH GENERATION")
     xse_acronym = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.XSE_Acronym")
@@ -860,17 +1037,14 @@ def docs_generate_paths() -> None:
 # =========== CHECK DOCUMENTS XSE FILE -> GET GAME ROOT FOLDER PATH ===========
 def game_path_find() -> None:
     """
-    Checks and sets the game installation path for CLASSIC Fallout 4.
-    This function attempts to find the game installation path by:
-    1. Checking the Windows registry for the installation path.
-    2. Verifying the existence of the game executable in the found path.
-    3. If the registry check fails, it looks for a log file in the game documents folder.
-    4. If the log file is found, it extracts the game path from the log.
-    5. If all automated checks fail, it prompts the user to manually input the game path.
-    The function updates the CLASSIC settings with the found or provided game path.
+    Performs game path verification and ensures that the game executable is
+    correctly located. It checks for the installation path in the Windows
+    Registry and verifies the game directory using log files or user input.
+    The method also updates the YAML settings for future reference.
+
     Raises:
-        TypeError: If the expected types for certain variables are not met.
-        TypeError: If the GUI mode is enabled but the game path GUI is not initialized.
+        TypeError: If the XSE loader log file or game-related YAML settings are
+            not of the expected type.
     """
     logger.debug("- - - INITIATED GAME PATH CHECK")
 
@@ -951,12 +1125,21 @@ def game_path_find() -> None:
 
 def game_generate_paths() -> None:
     """
-    Generates and sets various game paths in the YAML settings based on the game version and type.
-    This function retrieves the root game path and XSE acronym from the YAML settings, validates them,
-    and then sets several other paths related to game data, scripts, plugins, and executable files.
-    It also handles specific cases for different game versions and VR settings.
+    Generates and updates file paths for game configurations based on game variant and version.
+
+    This function reads game-specific configurations and dynamically constructs essential
+    file paths required for game execution. The paths are stored in a configuration YAML
+    file for local game settings. Additionally, it handles version-specific file naming
+    in certain cases such as "AddressLib" files for different versions of Fallout 4. The
+    function also ensures appropriate types for necessary variables, raising errors
+    if validations fail.
+
     Raises:
-        TypeError: If the retrieved game path or XSE acronym is not a string.
+        TypeError: If `game_path` or `xse_acronym_base` are not strings.
+        ValueError: If an unsupported or invalid `game_version` is detected for Fallout 4.
+
+    Returns:
+        None
     """
     logger.debug("- - - INITIATED GAME PATH GENERATION")
 
@@ -994,14 +1177,17 @@ def game_generate_paths() -> None:
 # noinspection DuplicatedCode
 def game_check_integrity() -> str:
     """
-    Checks the integrity of the game installation by verifying the hash of the game executable
-    and the presence of specific files. It compares the local hash with the expected hash stored
-    in the YAML configuration and provides messages regarding the integrity and installation path
-    of the game.
+    Checks the integrity of the game files, including executable file version and Steam
+    INI file existence, and generates a summary message on the validity and installation
+    status of the game. It ensures that the local game files match the hashes stored in
+    the database and assesses proper installation directories.
+
     Returns:
-        str: A concatenated string of messages indicating the status of the game integrity check.
+        str: A detailed message indicating the integrity status of game files.
+
     Raises:
-        TypeError: If any of the expected YAML settings are not of the correct type.
+        TypeError: If any of the settings loaded from the configuration files is not of the
+            expected type.
     """
     message_list = []
     logger.debug("- - - INITIATED GAME INTEGRITY CHECK")
@@ -1050,16 +1236,18 @@ def game_check_integrity() -> str:
 # noinspection DuplicatedCode
 def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
     """
-    Checks the integrity of the Script Extender (XSE) installation and logs any issues found.
-    This function performs the following checks:
-    1. Verifies the presence and validity of the Address Library file.
-    2. Checks if the XSE log file exists and reads its contents.
-    3. Compares the version in the log file with the latest version.
-    4. Searches the log file for any errors specified in the settings.
-    Returns:
-        str: A message detailing the results of the integrity check, including any errors or warnings found.
+    Checks the integrity of the XSE (Script Extender) installation, files, and logs.
+
+    This function performs an integrity check for the Script Extender (XSE) by verifying the existence of
+    required files, ensuring compatibility with the latest version, and analyzing log files for potential
+    errors. It also generates informative messages or warnings based on the state of the XSE components
+    and captures any issues identified in the log file.
+
     Raises:
-        TypeError: If any of the settings values are of incorrect type.
+        TypeError: If expected settings or file paths are not of the correct type or are invalid.
+
+    Returns:
+        str: A concatenated string of messages and warnings indicating the results of the integrity check.
     """
     failed_list: list[str] = []
     message_list: list[str] = []
@@ -1128,16 +1316,16 @@ def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
 
 def xse_check_hashes() -> str:
     """
-    Checks the hashes of Script Extender (XSE) files against expected values and returns a message indicating the status.
-    This function performs the following steps:
-    1. Initializes a list to store messages and logs the initiation of the hash check.
-    2. Retrieves the expected hashes of XSE scripts and the path to the game folder scripts from YAML settings.
-    3. Computes the hashes of the local XSE scripts found in the game folder.
-    4. Compares the computed hashes with the expected hashes and appends appropriate messages to the message list.
-    5. Checks for missing or mismatched scripts and appends warning messages from YAML settings if necessary.
-    6. Returns a concatenated string of all messages.
+    Performs integrity checks for Script Extender (XSE) files by validating their hashes against the expected ones
+    stored in the game YAML configuration. Reports missing or mismatched files and generates appropriate warning
+    messages based on the configuration. Ensures that the scripts are intact and not overridden by external modifications.
+
+    Raises:
+        TypeError: If configuration data types retrieved from YAML settings do not match the expected types.
+
     Returns:
-        str: A concatenated string of messages indicating the status of the XSE file hash check.
+        str: Consolidated message summarizing the results of the integrity check, including warnings about missing or
+        mismatched files, or confirmation that all scripts are correctly validated.
     """
     message_list: list[str] = []
     logger.debug("- - - INITIATED XSE FILE HASH CHECK")
@@ -1196,16 +1384,17 @@ def xse_check_hashes() -> str:
 # ================================================
 def docs_check_folder() -> str:
     """
-    Checks the folder path for the game documentation and returns any warnings if applicable.
+    Checks the folder configuration for game documentation and returns any warnings if applicable.
 
-    This function retrieves the documentation folder name from the YAML settings. If the folder name
-    contains "onedrive" (case-insensitive), it appends a warning message to the message list.
+    This function verifies the documentation path and checks for specific keywords like "onedrive"
+    in the documentation path name. If the specific condition is met, it appends a warning
+    message to a list and returns the concatenated string of warnings.
 
     Returns:
-        str: A concatenated string of warning messages, if any.
+        str: A concatenated string of all warnings, if applicable; otherwise, an empty string.
 
     Raises:
-        TypeError: If the retrieved documentation name or warning message is not a string.
+        TypeError: If the `docs_name` or `docs_warn` obtained from YAML settings is not of type str.
     """
     message_list = []
     docs_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Docs_Name")
@@ -1222,19 +1411,24 @@ def docs_check_folder() -> str:
 # =========== CHECK DOCS MAIN INI -> CHECK EXISTENCE & CORRUPTION ===========
 def docs_check_ini(ini_name: str) -> str:
     """
-    Checks the integrity of a specified INI file and ensures necessary settings are enabled.
+    Performs a series of validation and configuration updates on the provided INI file to ensure it conforms to
+    the required settings for proper functionality of the associated game. It checks for file existence, corruption,
+    and specific configuration settings, making appropriate changes and logging messages during the process.
+
     Args:
-        ini_name (str): The name of the INI file to check.
+        ini_name (str): The name of the INI file to validate and process.
+
     Returns:
-        str: A message detailing the results of the INI file check.
+        str: A concatenated string of messages detailing the checks performed and any corrective actions taken.
+
     Raises:
-        TypeError: If the `docs_name` or `folder_docs` is not a string or None.
-        PermissionError: If the INI file is set to read-only and cannot be modified.
-        configparser.MissingSectionHeaderError: If the INI file is missing section headers.
-        configparser.ParsingError: If there is an error parsing the INI file.
-        ValueError: If there is a value error while processing the INI file.
-        OSError: If there is an OS-related error while processing the INI file.
-        configparser.DuplicateOptionError: If the INI file contains duplicate options.
+        TypeError: Raised when provided values for key configurations or paths are not of the expected type.
+        PermissionError: Occurs when the INI file is set to read-only and cannot be modified.
+        configparser.MissingSectionHeaderError: If the INI file lacks section headers, indicating a corrupted file.
+        configparser.ParsingError: Triggered when the INI file has parsing issues.
+        configparser.DuplicateOptionError: Raised when duplicate configuration options are detected in the file.
+        ValueError: Raised when file operations or content validation fail unexpectedly.
+        OSError: Raised during file system access or writing errors.
     """
     message_list: list[str] = []
     logger.info(f"- - - INITIATED {ini_name} CHECK")
@@ -1308,19 +1502,18 @@ def docs_check_ini(ini_name: str) -> str:
 # noinspection DuplicatedCode
 def main_files_backup() -> None:
     """
-    Backs up game files to a specified directory based on the current XSE version.
-    This function reads the backup list, game path, XSE log file, and the latest XSE version
-    from a YAML configuration. It then reads the XSE log file to determine the current XSE version.
-    If a backup directory for the current XSE version does not exist, it creates one. It then
-    copies game files to the backup directory if they are listed in the backup list and do not
-    already exist in the backup directory.
+    Backs up game files specified in the YAML configuration to a versioned directory.
+
+    The function reads a list of files to back up from the YAML configuration, the game
+    path, and the current game-specific log file. It determines the current game
+    version, creates a backup directory for that version if it does not exist, and
+    copies files from the game directory to the backup directory, provided the files
+    are listed in the backup configuration and do not already exist in the backup.
+
     Raises:
-        TypeError: If the types of the configuration values are not as expected.
-        FileNotFoundError: If the XSE log file is not found.
-    Notes:
-        - The function assumes that the YAML configuration and the `open_file_with_encoding` function
-          are defined elsewhere in the codebase.
-        - The function uses `shutil.copy2` to preserve file metadata during the copy process.
+        TypeError: If the YAML settings do not provide the required data types.
+        FileNotFoundError: If the game log file specified in the YAML settings is not found
+          during attempt to read it.
     """
     # Got an expired certificate warning after a few tries, maybe there's a better way?
     backup_list = yaml_settings(list[str], YAML.Main, "CLASSIC_AutoBackup")
@@ -1372,17 +1565,17 @@ def main_files_backup() -> None:
 # =========== GENERATE MAIN RESULTS ===========
 def main_combined_result() -> str:
     """
-    Combines the results of various integrity checks into a single string.
+    Combines and executes multiple integrity and configuration checks.
 
-    This function performs the following checks:
-    - Game integrity check
-    - XSE integrity check
-    - XSE hashes check
-    - Documentation folder check
-    - INI file checks for game, game custom, and game preferences
+    This function executes a series of integrity checks that include game
+    integrity validation, hash verification, and validation of specific
+    configuration files. The results from all the checks are aggregated
+    and returned as a single concatenated string representing the combined
+    outcome of all checks.
 
     Returns:
-        str: A concatenated string of the results from all the checks.
+        str: A concatenated string containing the results of all executed
+        checks.
     """
     combined_return = [game_check_integrity(), xse_check_integrity(), xse_check_hashes(), docs_check_folder(),
                        docs_check_ini(f"{gamevars["game"]}.ini"), docs_check_ini(f"{gamevars["game"]}Custom.ini"),
@@ -1392,19 +1585,17 @@ def main_combined_result() -> str:
 
 def main_generate_required() -> None:
     """
-    Main function to generate required settings and paths for the CLASSIC tool.
-    This function performs the following tasks:
-    1. Configures logging.
-    2. Generates necessary files for CLASSIC.
-    3. Retrieves the CLASSIC version and game name from YAML settings.
-    4. Prints initial setup messages and reminders.
-    5. Logs the start of the process.
-    6. Retrieves the game path from YAML settings.
-    7. If the game path is not found, it attempts to find and generate paths for documents and the game.
-    8. If the game path is found, it performs a backup of main files.
-    9. Prints a completion message indicating that all checks have been performed.
+    Executes the main logic for generating required settings and verifying the game setup integrity.
+
+    This function configures logging, generates files, and validates game and classic version
+    info. It provides an initial check and feedback for compatibility of crash logs and game
+    settings. Depending on whether the game path is found within the settings, the function
+    either runs path generation procedures or backs up main files. Displays relevant messages
+    to the user regarding progress and outcomes.
+
     Raises:
-        TypeError: If the CLASSIC version or game name is not a string.
+        TypeError: If the classic version or game name settings are not of type `str`.
+
     """
     configure_logging()
     classic_generate_files()
@@ -1439,13 +1630,15 @@ gui_mode: bool = False
 
 def initialize(is_gui: bool = False) -> None:
     """
-    Initialize the application settings and GUI components.
-    
-    Pre-loads static YAML files for better performance.
-    
+    Initializes the application state, sets up the YAML settings cache, and optionally enables GUI mode.
+
+    This function initializes the necessary components required for the application's operation, such
+    as loading static YAML files into a settings cache. It also determines whether the application
+    should operate in GUI mode and sets up related resources accordingly.
+
     Args:
-        is_gui (bool): A flag indicating whether the GUI mode is enabled.
-                       Defaults to False.
+        is_gui (bool): Indicates whether the application should operate in GUI mode. If True,
+            GUI-related resources are initialized.
     """
     global gui_mode, yaml_cache, manual_docs_gui, game_path_gui  # noqa: PLW0603
 
