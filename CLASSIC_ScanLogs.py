@@ -1152,6 +1152,24 @@ class ClassicScanLogs:
         else:
             append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
 
+    @staticmethod
+    def extract_module_names(module_texts):
+        if not module_texts:
+            return set()
+
+        # Pattern matches module name potentially followed by version
+        pattern = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
+
+        result = set()
+        for text in module_texts:
+            text = text.strip()
+            match = pattern.match(text)
+            if match:
+                result.add(match.group(1))
+            else:
+                result.add(text)
+
+        return result
 
 # ================================================
 # CRASH LOG SCAN START
@@ -1207,12 +1225,9 @@ def crashlogs_scan() -> None:
         game_version = crashgen_version_gen(crashlog_gameversion)
 
         # SOME IMPORTANT DLLs HAVE A VERSION, REMOVE IT
-        segment_xsemodules_lower = {x.lower() for x in segment_xsemodules}
-        xsemodules = (
-            {x.split(" v", 1)[0].strip() if "dll v" in x else x.strip() for x in segment_xsemodules_lower}
-            if segment_xsemodules_lower
-            else set()
-        )
+
+        xsemodules = ClassicScanLogs.extract_module_names(segment_xsemodules)
+
         crashgen: dict[str, bool | int | str] = {}
         if segment_crashgen:
             for elem in segment_crashgen:
