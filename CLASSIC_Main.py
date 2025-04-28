@@ -16,6 +16,7 @@ from typing import Any, ClassVar, Literal, TypedDict, cast
 
 import aiohttp
 import chardet
+import ClassicLib.Constants as Constants
 import ruamel.yaml
 from PySide6.QtCore import QObject, Signal
 from packaging.version import InvalidVersion, Version
@@ -32,21 +33,6 @@ with contextlib.suppress(ImportError):
     ❓ import shelve if you want to store persistent data that you do not want regular users to access or modify.
     ❓ Globals are generally used to standardize game paths and INI files naming conventions.
 """
-NULL_VERSION = Version("0.0.0.0")
-OG_VERSION = Version("1.10.163.0")
-NG_VERSION = Version("1.10.984.0")
-VR_VERSION = Version("1.2.72.0")
-OG_F4SE_VERSION = Version("0.6.23")
-NG_F4SE_VERSION = Version("0.7.2")
-FO4_VERSIONS = (OG_VERSION, NG_VERSION)
-F4SE_VERSIONS = (OG_F4SE_VERSION, NG_F4SE_VERSION)
-type YAMLLiteral = str | int | bool
-type YAMLSequence = list[str]
-type YAMLMapping = dict[str, "YAMLValue"]
-type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
-type YAMLValueOptional = YAMLValue | None
-type GameID = Literal[
-    "Fallout4", "Fallout4VR", "Skyrim", "Starfield"]  # Entries must correspond to the game's Main ESM or EXE file name.
 
 
 def get_game_version(game_exe_path: Path) -> Version:
@@ -69,12 +55,12 @@ def get_game_version(game_exe_path: Path) -> Version:
 
     if platform.system() != "Windows":
         logger.warning("Game version detection is only supported on Windows")
-        return NULL_VERSION
+        return Constants.NULL_VERSION
 
     # Check if path exists and is a file
     if not game_exe_path or not game_exe_path.is_file():
         logger.warning("Game executable not found or path is invalid")
-        return NULL_VERSION
+        return Constants.NULL_VERSION
 
     try:
         # Get file version info using win32api
@@ -91,16 +77,16 @@ def get_game_version(game_exe_path: Path) -> Version:
 
     except FileNotFoundError:
         logger.error(f"Game executable not found at: {game_exe_path}")
-        return NULL_VERSION
+        return Constants.NULL_VERSION
     except (AttributeError, UnboundLocalError):
         logger.error("win32api module not properly loaded")
-        return NULL_VERSION
+        return Constants.NULL_VERSION
     except (OSError, ValueError) as e:
         logger.error(f"Error retrieving version info: {e}")
-        return NULL_VERSION
+        return Constants.NULL_VERSION
     except Exception as e:  # noqa: BLE001
         logger.error(f"Unexpected error getting game version: {e}")
-        return NULL_VERSION
+        return Constants.NULL_VERSION
     else:
         return version
 
@@ -121,7 +107,7 @@ class YAML(Enum):
 
 
 class GameVars(TypedDict):
-    game: GameID
+    game: Constants.GameID
     vr: Literal["VR", ""]
 
 
@@ -341,7 +327,7 @@ class YamlSettingsCache:
     STATIC_YAML_STORES: ClassVar[set[YAML]] = {YAML.Main, YAML.Game}
 
     def __init__(self) -> None:
-        self.cache: dict[Path, YAMLMapping] = {}
+        self.cache: dict[Path, Constants.YAMLMapping] = {}
         self.file_mod_times: dict[Path, float] = {}
         self.path_cache: dict[YAML, Path] = {}  # Cache for YAML store to Path mapping
         self.settings_cache: dict[tuple[YAML, str, type], Any] = {}  # Cache for frequently accessed settings
@@ -387,7 +373,7 @@ class YamlSettingsCache:
         self.path_cache[yaml_store] = yaml_path
         return yaml_path
 
-    def load_yaml(self, yaml_path: Path) -> YAMLMapping:
+    def load_yaml(self, yaml_path: Path) -> Constants.YAMLMapping:
         """
         Loads a YAML file with caching to optimize reloading. Supports static and dynamic files,
         with separate handling based on file type. Static files are loaded once and cached, while
@@ -461,7 +447,7 @@ class YamlSettingsCache:
         data = self.load_yaml(yaml_path)
         keys = key_path.split(".")
 
-        def setdefault(dictionary: dict[str, YAMLValue], key: str) -> dict[str, YAMLValue]:
+        def setdefault(dictionary: dict[str, Constants.YAMLValue], key: str) -> dict[str, Constants.YAMLValue]:
             """
             A utility class for managing and working with YAML settings. This class provides
             methods to retrieve and modify settings within a nested YAML data structure.
@@ -773,11 +759,11 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
 
     use_github = update_source in {"Both", "GitHub"}
     use_nexus = update_source in {"Both", "Nexus"}
-    no_data: set[None | Version] = {None, NULL_VERSION}
+    no_data: set[None | Version] = {None, Constants.NULL_VERSION}
     try:
         async with aiohttp.ClientSession(raise_for_status=True) as session:
-            version_github = await get_github_version(session) if use_github else NULL_VERSION
-            version_nexus = await get_nexus_version(session) if use_nexus else NULL_VERSION
+            version_github = await get_github_version(session) if use_github else Constants.NULL_VERSION
+            version_nexus = await get_nexus_version(session) if use_nexus else Constants.NULL_VERSION
         if version_github in no_data and version_nexus in no_data:
             # Unable to check any chosen sources
             raise UpdateCheckError  # noqa: TRY301
@@ -792,7 +778,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
         return False
 
     # Split "CLASSIC" from the version for YAML and GitHub; "CLASSIC v7.30.3"
-    version_local = try_parse_version(classic_local.rsplit(maxsplit=1)[-1]) if classic_local else NULL_VERSION
+    version_local = try_parse_version(classic_local.rsplit(maxsplit=1)[-1]) if classic_local else Constants.NULL_VERSION
 
     if (
             version_local is None  # Local version unknown; updating may fix
@@ -1160,12 +1146,12 @@ def game_generate_paths() -> None:
         Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE"))))
     match gamevars["game"]:
         case "Fallout4" if not gamevars["vr"]:
-            if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
+            if (not game_version or game_version not in Constants.FO4_VERSIONS) and game_version != Constants.NULL_VERSION:
                 raise ValueError("Unsupported or invalid game version")
-            if game_version in (OG_VERSION, NULL_VERSION):
+            if game_version in (Constants.OG_VERSION, Constants.NULL_VERSION):
                 yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib",
                               fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin")
-            elif game_version == NG_VERSION:
+            elif game_version == Constants.NG_VERSION:
                 yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib",
                               fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-984-0.bin")
         case "Fallout4" if gamevars["vr"]:

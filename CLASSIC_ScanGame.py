@@ -22,6 +22,7 @@ except ImportError:
     from bs4.element import PageElement  # noqa: TC002
 
 import CLASSIC_Main as CMain
+import ClassicLib.Constants as Constants
 
 # For comparing results across runs.
 # Skips moving/editing files; outputs to 'CLASSIC GFS Report.md' instead of console.
@@ -790,19 +791,19 @@ def check_xse_plugins() -> str:
     # Version information organized by game type
     version_info = {
         "VR": {
-            "version": CMain.VR_VERSION,
+            "version": Constants.VR_VERSION,
             "filename": "version-1-2-72-0.csv",
             "description": "Virtual Reality (VR) version",
             "url": "https://www.nexusmods.com/fallout4/mods/64879?tab=files"
         },
         "OG": {
-            "version": CMain.OG_VERSION,
+            "version": Constants.OG_VERSION,
             "filename": "version-1-10-163-0.bin",
             "description": "Non-VR (Regular) version",
             "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
         },
         "NG": {
-            "version": CMain.NG_VERSION,
+            "version": Constants.NG_VERSION,
             "filename": "version-1-10-984-0.bin",
             "description": "Non-VR (New Game) version",
             "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
@@ -813,7 +814,7 @@ def check_xse_plugins() -> str:
         cast("str", CMain.yaml_settings(str, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE"))))
 
     # Check if we can detect the game version
-    if game_version == CMain.NULL_VERSION:
+    if game_version == Constants.NULL_VERSION:
         message_list.extend((
             "❓ NOTICE : Unable to locate Address Library\n",
             "  If you have Address Library installed, please check the path in your settings.\n",

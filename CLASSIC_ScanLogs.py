@@ -14,6 +14,7 @@ import regex as re
 import requests
 from packaging.version import Version
 
+import ClassicLib.Constants as Constants
 import CLASSIC_Main as CMain
 import CLASSIC_ScanGame as CGame
 
@@ -389,7 +390,7 @@ def crashgen_version_gen(input_string: str) -> Version:
             version_str = part[1:]  # Remove the 'v'
     if version_str:
         return Version(version_str)
-    return CMain.NULL_VERSION
+    return Constants.NULL_VERSION
 
 
 class SQLiteReader:
