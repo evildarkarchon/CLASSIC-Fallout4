@@ -1,25 +1,20 @@
 import configparser
 import contextlib
-import datetime
 import hashlib
 import logging
-import os
 import platform
 import shutil
-import stat
-from collections.abc import Iterator
 from enum import Enum, auto
-from io import TextIOWrapper
 from pathlib import Path
 from typing import Literal, TypedDict, cast
 
 import aiohttp
-import chardet
 from PySide6.QtCore import QObject, Signal
 from packaging.version import InvalidVersion, Version
 
 import ClassicLib.Constants as Constants
 from ClassicLib.YamlSettingsCache import YamlSettingsCache
+from ClassicLib.util import get_game_version, open_file_with_encoding, remove_readonly, configure_logging
 
 with contextlib.suppress(ImportError):
     import winreg
@@ -33,62 +28,6 @@ with contextlib.suppress(ImportError):
     ❓ import shelve if you want to store persistent data that you do not want regular users to access or modify.
     ❓ Globals are generally used to standardize game paths and INI files naming conventions.
 """
-
-
-def get_game_version(game_exe_path: Path) -> Version:
-    """
-    Gets the version information of a specified game executable file.
-
-    This function retrieves the version of a game executable file by using system-level
-    API calls to fetch version information. It is specifically supported for systems running
-    on Windows. If the path provided does not exist, is invalid, or is not a Windows
-    executable file, a default null version is returned. Any unexpected errors during
-    processing are gracefully handled and logged.
-
-    Args:
-        game_exe_path (Path): The file path to the target game executable.
-
-    Returns:
-        Version: The version of the game executable in the format "major.minor.patch.build".
-        If detection fails, a null version is returned.
-    """
-
-    if platform.system() != "Windows":
-        logger.warning("Game version detection is only supported on Windows")
-        return Constants.NULL_VERSION
-
-    # Check if path exists and is a file
-    if not game_exe_path or not game_exe_path.is_file():
-        logger.warning("Game executable not found or path is invalid")
-        return Constants.NULL_VERSION
-
-    try:
-        # Get file version info using win32api
-        version_info = win32api.GetFileVersionInfo(str(game_exe_path), "\\")  # type: ignore[attr-defined]
-
-        # Extract version components
-        major = version_info["FileVersionMS"] >> 16
-        minor = version_info["FileVersionMS"] & 0xFFFF
-        patch = version_info["FileVersionLS"] >> 16
-        build = version_info["FileVersionLS"] & 0xFFFF
-
-        version = Version(f"{major}.{minor}.{patch}.{build}")
-        logger.debug(f"Game version detected: {version}")
-
-    except FileNotFoundError:
-        logger.error(f"Game executable not found at: {game_exe_path}")
-        return Constants.NULL_VERSION
-    except (AttributeError, UnboundLocalError):
-        logger.error("win32api module not properly loaded")
-        return Constants.NULL_VERSION
-    except (OSError, ValueError) as e:
-        logger.error(f"Error retrieving version info: {e}")
-        return Constants.NULL_VERSION
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Unexpected error getting game version: {e}")
-        return Constants.NULL_VERSION
-    else:
-        return version
 
 
 class YAML(Enum):
@@ -185,120 +124,6 @@ class GamePathEntry(QObject):
             self.game_path_signal.emit()
 
 
-@contextlib.contextmanager
-def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[TextIOWrapper]:
-    """
-    Opens a file with its detected encoding as a context manager.
-
-    This function detects the encoding of the specified file and opens the file using
-    that encoding. It allows working with files having unknown or varied encodings
-    to ensure the correct reading of the content. The function ensures that the file
-    is properly closed after processing, even if exceptions are raised during the
-    execution of the code block that uses the context manager.
-
-    Args:
-        file_path: The path to the file to be opened. It can be provided as a Path,
-            string, or os.PathLike object.
-
-    Yields:
-        TextIOWrapper: An open text file object for reading the file's content using
-        the detected encoding.
-
-    """
-    if not isinstance(file_path, Path):
-        file_path = Path(file_path)
-    raw_data = file_path.read_bytes()
-    encoding = chardet.detect(raw_data)["encoding"]
-
-    file_handle = cast("Iterator[TextIOWrapper]", file_path.open(encoding=encoding, errors="ignore"))
-    try:
-        yield cast("TextIOWrapper", file_handle)
-    finally:
-        cast("TextIOWrapper", file_handle).close()
-
-
-def configure_logging() -> None:
-    """
-    Configures the logging system for the application.
-
-    This function checks the existence and age of a log file named "CLASSIC Journal.log".
-    If the log file is older than 7 days, it deletes the file and generates a new one.
-    The function also ensures that logging is configured only once for the logger named
-    "CLASSIC". The logs are stored in "CLASSIC Journal.log" using a specific format that
-    includes timestamp, log level, and the log message.
-
-    Raises:
-        ValueError: If an error occurs while deleting the log file.
-        OSError: If there is an operating system-related error during log file deletion.
-    """
-    global logger  # noqa: PLW0603
-
-    journal_path = Path("CLASSIC Journal.log")
-    if journal_path.exists():
-        logger.debug("- - - INITIATED LOGGING CHECK")
-        log_time = datetime.datetime.fromtimestamp(journal_path.stat().st_mtime)
-        current_time = datetime.datetime.now()
-        log_age = current_time - log_time
-        if log_age.days > 7:
-            try:
-                journal_path.unlink(missing_ok=True)
-                print("CLASSIC Journal.log has been deleted and regenerated due to being older than 7 days.")
-            except (ValueError, OSError) as err:
-                print(f"An error occurred while deleting {journal_path.name}: {err}")
-
-    # Make sure we only configure the handler once
-    if "CLASSIC" not in logging.Logger.manager.loggerDict:
-        logger = logging.getLogger("CLASSIC")
-        logger.setLevel(logging.INFO)
-        handler = logging.FileHandler(
-            filename="CLASSIC Journal.log",
-            mode="a",
-        )
-        handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(message)s"))
-        logger.addHandler(handler)
-
-
-# ================================================
-# DEFINE FILE / YAML FUNCTIONS
-# ================================================
-def remove_readonly(file_path: Path) -> None:
-    """
-    Removes the read-only attribute or permission from the specified file path.
-    On Windows, it clears the read-only file attribute. On other operating
-    systems, it adds the write permission for the user if not already set.
-
-    In case the file does not exist or an error occurs during the operation,
-    appropriate error messages are logged.
-
-    Args:
-        file_path (Path): The path of the file from which the read-only
-            attribute or permission is to be removed.
-    """
-    try:
-        if platform.system() == "Windows":
-            # Check if read-only attribute is set
-            if file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY:
-                file_path.chmod(stat.S_IWRITE)
-                logger.debug(f"- - - '{file_path}' is no longer Read-Only.")
-            else:
-                logger.debug(f"- - - '{file_path}' is not set to Read-Only.")
-        else:
-            # Get current file permissions
-            current_mode = file_path.stat().st_mode
-            # Check if user write permission is not set (file is read-only)
-            if not (current_mode & stat.S_IWUSR):
-                # Add write permission for user
-                file_path.chmod(current_mode | stat.S_IWUSR)
-                logger.debug(f"- - - '{file_path}' is no longer Read-Only.")
-            else:
-                logger.debug(f"- - - '{file_path}' is not set to Read-Only.")
-
-    except FileNotFoundError:
-        logger.error(f"> > > ERROR (remove_readonly) : '{file_path}' not found.")
-    except (ValueError, OSError) as err:
-        logger.error(f"> > > ERROR (remove_readonly) : {err}")
-
-
 def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
     """
     Updates or retrieves a setting value from a given YAML store. The method
@@ -365,36 +190,6 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
 # ================================================
 # CREATE REQUIRED FILES, SETTINGS & UPDATE CHECK
 # ================================================
-def classic_generate_files() -> None:
-    """Generate necessary CLASSIC YAML files.
-
-    This function generates the following files if they do not already exist:
-    - `CLASSIC Ignore.yaml`: Uses a default ignore file string specified in
-      the YAML settings. Ensures the file content is written in UTF-8 encoding.
-    - `CLASSIC Data/CLASSIC <GAME> Local.yaml`: Uses a default local YAML
-      string specified in the YAML settings, where `<GAME>` is dynamically
-      determined from `gamevars["game"]`. Ensures the file content is written
-      in UTF-8 encoding.
-
-    Raises:
-        TypeError: If the default content retrieved for either the ignore file
-            or the local YAML file is not of type `str`.
-    """
-    """Generate `CLASSIC Ignore.yaml` and `CLASSIC Data/CLASSIC <GAME> Local.yaml`."""
-    ignore_path = Path("CLASSIC Ignore.yaml")
-    if not ignore_path.exists():
-        default_ignorefile = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
-        if not isinstance(default_ignorefile, str):
-            raise TypeError
-        ignore_path.write_text(default_ignorefile, encoding="utf-8")
-
-    local_path = Path(f"CLASSIC Data/CLASSIC {gamevars["game"]} Local.yaml")
-    if not local_path.exists():
-        default_yaml = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_localyaml")
-        if not isinstance(default_yaml, str):
-            raise TypeError
-        local_path.write_text(default_yaml, encoding="utf-8")
-
 
 def try_parse_version(version_string: str) -> Version | None:
     """
@@ -500,6 +295,37 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
     except aiohttp.ClientError:
         pass
     return None
+
+
+def classic_generate_files() -> None:
+    """Generate necessary CLASSIC YAML files.
+
+    This function generates the following files if they do not already exist:
+    - `CLASSIC Ignore.yaml`: Uses a default ignore file string specified in
+      the YAML settings. Ensures the file content is written in UTF-8 encoding.
+    - `CLASSIC Data/CLASSIC <GAME> Local.yaml`: Uses a default local YAML
+      string specified in the YAML settings, where `<GAME>` is dynamically
+      determined from `gamevars["game"]`. Ensures the file content is written
+      in UTF-8 encoding.
+
+    Raises:
+        TypeError: If the default content retrieved for either the ignore file
+            or the local YAML file is not of type `str`.
+    """
+    """Generate `CLASSIC Ignore.yaml` and `CLASSIC Data/CLASSIC <GAME> Local.yaml`."""
+    ignore_path = Path("CLASSIC Ignore.yaml")
+    if not ignore_path.exists():
+        default_ignorefile = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
+        if not isinstance(default_ignorefile, str):
+            raise TypeError
+        ignore_path.write_text(default_ignorefile, encoding="utf-8")
+
+    local_path = Path(f"CLASSIC Data/CLASSIC {gamevars["game"]} Local.yaml")
+    if not local_path.exists():
+        default_yaml = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_localyaml")
+        if not isinstance(default_yaml, str):
+            raise TypeError
+        local_path.write_text(default_yaml, encoding="utf-8")
 
 
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
@@ -943,7 +769,8 @@ def game_generate_paths() -> None:
         Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE"))))
     match gamevars["game"]:
         case "Fallout4" if not gamevars["vr"]:
-            if (not game_version or game_version not in Constants.FO4_VERSIONS) and game_version != Constants.NULL_VERSION:
+            if (
+                    not game_version or game_version not in Constants.FO4_VERSIONS) and game_version != Constants.NULL_VERSION:
                 raise ValueError("Unsupported or invalid game version")
             if game_version in (Constants.OG_VERSION, Constants.NULL_VERSION):
                 yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib",
@@ -1248,7 +1075,7 @@ def docs_check_ini(ini_name: str) -> str:
                 ini_config.set("Archive", "sResourceDataDirsFinal", "")
 
                 with ini_path.open("w+", encoding="utf-8", errors="ignore") as ini_file:
-                    ini_config.write(cast("TextIOWrapper", ini_file), space_around_delimiters=False)
+                    ini_config.write(ini_file, space_around_delimiters=False)
 
         except PermissionError:
             message_list.extend([f"[!] CAUTION : YOUR {ini_name} FILE IS SET TO READ ONLY. \n",
@@ -1380,7 +1207,8 @@ def main_generate_required() -> None:
         TypeError: If the classic version or game name settings are not of type `str`.
 
     """
-    configure_logging()
+    global logger
+    configure_logging(logger)
     classic_generate_files()
     classic_ver = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
     game_name = yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name")

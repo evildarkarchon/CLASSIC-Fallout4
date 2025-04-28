@@ -14,9 +14,9 @@ import regex as re
 import requests
 from packaging.version import Version
 
-import ClassicLib.Constants as Constants
 import CLASSIC_Main as CMain
 import CLASSIC_ScanGame as CGame
+from ClassicLib.util import crashgen_version_gen
 
 query_cache: dict[tuple[str, str], str] = {}
 # Define paths for both Main and Local databases
@@ -363,34 +363,6 @@ def detect_mods_important(yaml_dict: dict[str, str],
                 autoscan_report.append(f"✔️ {mod_split[1]} is installed!\n\n")
         elif (gpu_rival and mod_warn) and gpu_rival not in mod_warn.lower():
             autoscan_report.extend((f"❌ {mod_split[1]} is not installed!\n", mod_warn, "\n"))
-
-
-def crashgen_version_gen(input_string: str) -> Version:
-    """
-    Generates a Version object from an input string.
-
-    This function processes an input string to extract a version number. It looks
-    for substrings prefixed with the letter 'v', strips the prefix, and constructs
-    a Version instance if a valid version string is found. If no valid version is
-    present, it returns a predefined null version.
-
-    Args:
-        input_string: A string that potentially includes a version prefixed by
-            'v'.
-
-    Returns:
-        Version: A Version object representing the extracted version or a null
-            Version instance if no valid version could be parsed.
-    """
-    input_string = input_string.strip()
-    parts = input_string.split()
-    version_str = ""
-    for part in parts:
-        if part.startswith("v") and len(part) > 1:
-            version_str = part[1:]  # Remove the 'v'
-    if version_str:
-        return Version(version_str)
-    return Constants.NULL_VERSION
 
 
 class SQLiteReader:
@@ -1172,6 +1144,7 @@ class ClassicScanLogs:
 
         return result
 
+
 # ================================================
 # CRASH LOG SCAN START
 # ================================================
@@ -1339,7 +1312,8 @@ def crashlogs_scan() -> None:
             "====================================================\n",
         ), autoscan_report)
 
-        has_x_cell: bool = ("x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules)
+        has_x_cell: bool = (
+                    "x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules)
         has_baka_scrapheap: bool = "bakascrapheap.dll" in xsemodules
 
         if scanner.fcx_mode:
@@ -1371,7 +1345,8 @@ def crashlogs_scan() -> None:
                             autoscan_report
                         )
                 scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
-                scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, has_x_cell, has_baka_scrapheap)
+                scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, has_x_cell,
+                                                               has_baka_scrapheap)
                 if crashgen_version_gen(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(
                         crashlog_crashgen) >= Version("1.27.0"):
                     scanner.scan_archivelimit_setting(autoscan_report, crashgen)
