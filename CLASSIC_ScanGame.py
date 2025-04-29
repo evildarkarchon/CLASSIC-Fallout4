@@ -16,6 +16,8 @@ import tomlkit
 from bs4 import BeautifulSoup
 from packaging.version import Version  # noqa: TC002
 
+from ClassicLib.Util import get_game_version
+
 try:
     from bs4 import PageElement
 except ImportError:
@@ -811,7 +813,7 @@ def check_xse_plugins() -> str:
         }
     }
 
-    game_version: Version = CMain.get_game_version(Path(
+    game_version: Version = get_game_version(Path(
         cast("str", CMain.yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Game_File_EXE"))))
 
     # Check if we can detect the game version

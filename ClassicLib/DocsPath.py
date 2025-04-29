@@ -1,9 +1,14 @@
+import contextlib
 import winreg
 from pathlib import Path
 from typing import cast
 
+from iniparse import configparser
+
 from CLASSIC_Main import yaml_settings, manual_docs_gui, logger
+from ClassicLib import Constants
 from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Util import remove_readonly
 
 
 # noinspection PyUnresolvedReferences
@@ -217,3 +222,92 @@ def docs_generate_paths() -> None:
                   str(docs_path.joinpath("ModChecker.html")))
     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_XSE",
                   str(docs_path.joinpath(xse_acronym_base, f"{xse_acronym.lower()}.log")))
+
+# =========== CHECK DOCS MAIN INI -> CHECK EXISTENCE & CORRUPTION ===========
+def docs_check_ini(ini_name: str) -> str:
+    """
+    Performs a series of validation and configuration updates on the provided INI file to ensure it conforms to
+    the required settings for proper functionality of the associated game. It checks for file existence, corruption,
+    and specific configuration settings, making appropriate changes and logging messages during the process.
+
+    Args:
+        ini_name (str): The name of the INI file to validate and process.
+
+    Returns:
+        str: A concatenated string of messages detailing the checks performed and any corrective actions taken.
+
+    Raises:
+        TypeError: Raised when provided values for key configurations or paths are not of the expected type.
+        PermissionError: Occurs when the INI file is set to read-only and cannot be modified.
+        configparser.MissingSectionHeaderError: If the INI file lacks section headers, indicating a corrupted file.
+        configparser.ParsingError: Triggered when the INI file has parsing issues.
+        configparser.DuplicateOptionError: Raised when duplicate configuration options are detected in the file.
+        ValueError: Raised when file operations or content validation fail unexpectedly.
+        OSError: Raised during file system access or writing errors.
+    """
+    message_list: list[str] = []
+    logger.info(f"- - - INITIATED {ini_name} CHECK")
+    folder_docs = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Docs")
+    docs_name = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.Main_Docs_Name")
+    if not isinstance(docs_name, str):
+        raise TypeError
+    if not (isinstance(folder_docs, str) or folder_docs is None):
+        raise TypeError
+
+    ini_file_list = list(Path(folder_docs).glob("*.ini")) if folder_docs else []
+    ini_path = Path(folder_docs).joinpath(ini_name) if folder_docs else None
+    if ini_path is None:
+        raise TypeError
+    if any(ini_name.lower() in file.name.lower() for file in ini_file_list):
+        try:
+            remove_readonly(ini_path)
+
+            ini_config = configparser.ConfigParser()
+            ini_config.optionxform = str  # type: ignore[method-assign, assignment]
+            ini_config.read(ini_path)
+            message_list.append(f"✔️ No obvious corruption detected in {ini_name}, file seems OK! \n-----\n")
+
+            if ini_name.lower() == f"{docs_name.lower()}custom.ini":
+                if "Archive" not in ini_config.sections():
+                    message_list.extend(["❌ WARNING : Archive Invalidation / Loose Files setting is not enabled. \n",
+                                         "  CLASSIC will now enable this setting automatically in the game INI files. \n-----\n"])
+                    with contextlib.suppress(configparser.DuplicateSectionError):
+                        ini_config.add_section("Archive")
+                else:
+                    message_list.append("✔️ Archive Invalidation / Loose Files setting is already enabled! \n-----\n")
+
+                ini_config.set("Archive", "bInvalidateOlderFiles", "1")
+                ini_config.set("Archive", "sResourceDataDirsFinal", "")
+
+                with ini_path.open("w+", encoding="utf-8", errors="ignore") as ini_file:
+                    ini_config.write(ini_file, space_around_delimiters=False)
+
+        except PermissionError:
+            message_list.extend([f"[!] CAUTION : YOUR {ini_name} FILE IS SET TO READ ONLY. \n",
+                                 "     PLEASE REMOVE THE READ ONLY PROPERTY FROM THIS FILE, \n",
+                                 "     SO CLASSIC CAN MAKE THE REQUIRED CHANGES TO IT. \n-----\n"])
+
+        except (configparser.MissingSectionHeaderError, configparser.ParsingError, ValueError, OSError):
+            message_list.extend(
+                [f"[!] CAUTION : YOUR {ini_name} FILE IS VERY LIKELY BROKEN, PLEASE CREATE A NEW ONE \n",
+                 f"    Delete this file from your Documents/My Games/{docs_name} folder, then press \n",
+                 f"    *Scan Game Files* in CLASSIC to generate a new {ini_name} file. \n-----\n"])
+        except configparser.DuplicateOptionError as e:
+            message_list.extend([f"[!] ERROR : Your {ini_name} file has duplicate options! \n",
+                                 f"    {e} \n-----\n"])
+    else:
+        if ini_name.lower() == f"{docs_name.lower()}.ini":
+            message_list.extend([f"❌ CAUTION : {ini_name} FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",
+                                 f"   You need to run the game at least once with {docs_name}Launcher.exe \n",
+                                 "    This will create files and INI settings required for the game to run. \n-----\n"])
+
+        if ini_name.lower() == f"{docs_name.lower()}custom.ini":
+            with ini_path.open("a", encoding="utf-8", errors="ignore") as ini_file:
+                message_list.extend(["❌ WARNING : Archive Invalidation / Loose Files setting is not enabled. \n",
+                                     "  CLASSIC will now enable this setting automatically in the game INI files. \n-----\n"])
+                customini_config = yaml_settings(str, Constants.YAML.Game, "Default_CustomINI")
+                if not isinstance(customini_config, str):
+                    raise TypeError
+                ini_file.write(customini_config)
+
+    return "".join(message_list)
