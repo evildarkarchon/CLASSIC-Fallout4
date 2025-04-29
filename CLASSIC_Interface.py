@@ -39,7 +39,9 @@ from PySide6.QtWidgets import (
 import CLASSIC_Main as CMain
 import CLASSIC_ScanGame as CGame
 import CLASSIC_ScanLogs as CLogs
-
+from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.DocsPath import get_manual_docs_path_gui
+from ClassicLib.Update import is_latest_version, UpdateCheckError
 
 @dataclass
 class PapyrusStats:
@@ -406,7 +408,7 @@ class AudioPlayer(QObject):
         super().__init__()
         self.audio_enabled = CMain.classic_settings(bool, "Audio Notifications")
         if self.audio_enabled is None:
-            CMain.yaml_settings(bool, CMain.YAML.Settings, "CLASSIC_Settings.Audio Notifications", True)
+            CMain.yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Audio Notifications", True)
             self.audio_enabled = True
 
         # Setup QSoundEffect objects for the preset sounds
@@ -525,7 +527,7 @@ class ManualPathDialog(QDialog):
 
         # Add a label
         label = QLabel(
-            f"Enter the path for the {CMain.gamevars["game"]} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{CMain.gamevars["game"]})",
+            f"Enter the path for the {gamevars["game"]} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{gamevars["game"]})",
             self)
         layout.addWidget(label)
 
@@ -611,7 +613,7 @@ class GamePathDialog(QDialog):
 
         # Add a label
         label = QLabel(
-            f"Enter the path for the {CMain.gamevars["game"]} directory (example: C:\\Steam\\steamapps\\common\\{CMain.gamevars["game"]})",
+            f"Enter the path for the {gamevars["game"]} directory (example: C:\\Steam\\steamapps\\common\\{gamevars["game"]})",
             self)
         layout.addWidget(label)
 
@@ -642,7 +644,7 @@ class GamePathDialog(QDialog):
             None
         """
         # Open directory browser and update the input field
-        manual_path = QFileDialog.getExistingDirectory(self, f"Select Directory for {CMain.gamevars["game"]}")
+        manual_path = QFileDialog.getExistingDirectory(self, f"Select Directory for {gamevars["game"]}")
         if manual_path:
             self.input_field.setText(manual_path)
 
@@ -799,7 +801,7 @@ class MainWindow(QMainWindow):
         CMain.initialize(is_gui=True)
 
         self.setWindowTitle(
-            f"Crash Log Auto Scanner & Setup Integrity Checker | {CMain.yaml_settings(str, CMain.YAML.Main, "CLASSIC_Info.version")}"
+            f"Crash Log Auto Scanner & Setup Integrity Checker | {CMain.yaml_settings(str, YAML.Main, "CLASSIC_Info.version")}"
         )
         self.setWindowIcon(QIcon("CLASSIC Data/graphics/CLASSIC.ico"))
         dark_style = """
@@ -1105,7 +1107,7 @@ QLabel {
         dialog = ManualPathDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             manual_path = dialog.get_path()
-            CMain.get_manual_docs_path_gui(manual_path)
+            get_manual_docs_path_gui(manual_path)
 
     def show_game_path_dialog(self) -> None:
         """
@@ -1219,9 +1221,9 @@ QLabel {
             None
         """
         try:
-            is_up_to_date = await CMain.is_latest_version(quiet=True)
+            is_up_to_date = await is_latest_version(quiet=True)
             self.show_update_result(is_up_to_date)
-        except CMain.UpdateCheckError as e:
+        except UpdateCheckError as e:
             self.show_update_error(str(e))
         finally:
             self.is_update_check_running = False
@@ -1243,11 +1245,11 @@ QLabel {
             it is caught and handled by displaying an error message.
         """
         try:
-            is_up_to_date = await CMain.is_latest_version(
+            is_up_to_date = await is_latest_version(
                 quiet=True, gui_request=True
             )
             self.show_update_result(is_up_to_date)
-        except CMain.UpdateCheckError as e:
+        except UpdateCheckError as e:
             self.show_update_error(str(e))
         finally:
             self.is_update_check_running = False
@@ -1267,7 +1269,7 @@ QLabel {
             QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!",
                                     QMessageBox.StandardButton.Ok)
         else:
-            update_popup_text = CMain.yaml_settings(str, CMain.YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
+            update_popup_text = CMain.yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
             result = QMessageBox.question(
                 self,
                 "CLASSIC UPDATE",
@@ -1582,7 +1584,7 @@ QLabel {
         Returns:
             None
         """
-        help_popup_text = CMain.yaml_settings(str, CMain.YAML.Main, "CLASSIC_Interface.help_popup_backup") or ""
+        help_popup_text = CMain.yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_backup") or ""
         QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
 
     @staticmethod
@@ -1814,13 +1816,13 @@ QLabel {
         if current_value is not None:
             update_source_combo.setCurrentText(current_value)
         else:
-            CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.Update Source", "Nexus")
+            CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", "Nexus")
 
         update_source_combo.setToolTip(
             "Select the source to check for updates. Nexus = stable, GitHub = latest, Both = check both")
 
         update_source_combo.currentTextChanged.connect(
-            lambda value: CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.Update Source", value)
+            lambda value: CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", value)
         )
 
         update_source_layout.addWidget(update_source_label)
@@ -1853,11 +1855,11 @@ QLabel {
         if value is not None:
             checkbox.setChecked(value)
         else:
-            CMain.yaml_settings(bool, CMain.YAML.Settings, f"CLASSIC_Settings.{setting}", False)
+            CMain.yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", False)
             checkbox.setChecked(False)
 
         checkbox.stateChanged.connect(
-            lambda state: CMain.yaml_settings(bool, CMain.YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state))
+            lambda state: CMain.yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state))
         )
         if setting == "Audio Notifications":
             checkbox.stateChanged.connect(
@@ -2186,7 +2188,7 @@ This feature is not fully implemented."""
         Returns:
             None
         """
-        help_popup_text = CMain.yaml_settings(str, CMain.YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
+        help_popup_text = CMain.yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
         QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
 
     @staticmethod
@@ -2281,7 +2283,7 @@ This feature is not fully implemented."""
         if folder:
             if self.scan_folder_edit is not None:
                 self.scan_folder_edit.setText(folder)
-            CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
+            CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
 
     def select_folder_mods(self) -> None:
         """
@@ -2299,7 +2301,7 @@ This feature is not fully implemented."""
         if folder:
             if self.mods_folder_edit is not None:
                 self.mods_folder_edit.setText(folder)
-            CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.MODS Folder Path", folder)
+            CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", folder)
 
     def initialize_folder_paths(self) -> None:
         """
@@ -2326,7 +2328,7 @@ This feature is not fully implemented."""
         """
         folder = QFileDialog.getExistingDirectory(self)
         if folder:
-            CMain.yaml_settings(str, CMain.YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
+            CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
             QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}",
                                     QMessageBox.StandardButton.Ok)
 

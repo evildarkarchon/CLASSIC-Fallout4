@@ -23,6 +23,7 @@ except ImportError:
 
 import CLASSIC_Main as CMain
 import ClassicLib.Constants as Constants
+from ClassicLib.Constants import YAML, gamevars
 
 # For comparing results across runs.
 # Skips moving/editing files; outputs to 'CLASSIC GFS Report.md' instead of console.
@@ -168,7 +169,7 @@ class ConfigFileCache:
         self._duplicate_whitelist = ["F4EE"]
 
         self._game_root_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
-                                                   f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Game")
+                                                   f"Game{gamevars['vr']}_Info.Root_Folder_Game")
         if self._game_root_path is None:
             # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)
             raise FileNotFoundError
@@ -529,14 +530,14 @@ def check_crashgen_settings() -> str:
     message_list: list[str] = []
 
     # Get plugins path and ensure it's a Path object
-    plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
-                                       f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
+    plugins_path = CMain.yaml_settings(Path, YAML.Game_Local,
+                                       f"Game{gamevars['vr']}_Info.Game_Folder_Plugins")
     if plugins_path and not isinstance(plugins_path, Path):
         plugins_path = Path(cast("str", plugins_path))
 
     # Get crash generator name from settings
-    crashgen_name_setting = CMain.yaml_settings(str, CMain.YAML.Game,
-                                                f"Game{CMain.gamevars['vr']}_Info.CRASHGEN_LogName")
+    crashgen_name_setting = CMain.yaml_settings(str, YAML.Game,
+                                                f"Game{gamevars['vr']}_Info.CRASHGEN_LogName")
     crashgen_name = crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
 
     # Define paths to possible config files
@@ -727,9 +728,9 @@ def check_log_errors(folder_path: Path | str) -> str:
     """
     if isinstance(folder_path, str):
         folder_path = Path(folder_path)
-    catch_errors_setting = CMain.yaml_settings(list[str], CMain.YAML.Main, "catch_log_errors")
-    ignore_logs_list_setting = CMain.yaml_settings(list[str], CMain.YAML.Main, "exclude_log_files")
-    ignore_logs_errors_setting = CMain.yaml_settings(list[str], CMain.YAML.Main, "exclude_log_errors")
+    catch_errors_setting = CMain.yaml_settings(list[str], YAML.Main, "catch_log_errors")
+    ignore_logs_list_setting = CMain.yaml_settings(list[str], YAML.Main, "exclude_log_files")
+    ignore_logs_errors_setting = CMain.yaml_settings(list[str], YAML.Main, "exclude_log_errors")
 
     catch_errors = catch_errors_setting if isinstance(catch_errors_setting, list) else []
     catch_errors_lower = [item.lower() for item in catch_errors] if catch_errors else []
@@ -785,8 +786,8 @@ def check_xse_plugins() -> str:
         or success notifications.
     """
     message_list: list[str] = []
-    plugins_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
-                                       f"Game{CMain.gamevars['vr']}_Info.Game_Folder_Plugins")
+    plugins_path = CMain.yaml_settings(Path, YAML.Game_Local,
+                                       f"Game{gamevars['vr']}_Info.Game_Folder_Plugins")
 
     # Version information organized by game type
     version_info = {
@@ -811,7 +812,7 @@ def check_xse_plugins() -> str:
     }
 
     game_version: Version = CMain.get_game_version(Path(
-        cast("str", CMain.yaml_settings(str, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Game_File_EXE"))))
+        cast("str", CMain.yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Game_File_EXE"))))
 
     # Check if we can detect the game version
     if game_version == Constants.NULL_VERSION:
@@ -883,8 +884,8 @@ def papyrus_logging() -> tuple[str, int]:
         chardet library when reading the log file's bytes.
     """
     message_list: list[str] = []
-    papyrus_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
-                                       f"Game{CMain.gamevars['vr']}_Info.Docs_File_PapyrusLog")
+    papyrus_path = CMain.yaml_settings(Path, YAML.Game_Local,
+                                       f"Game{gamevars['vr']}_Info.Docs_File_PapyrusLog")
 
     count_dumps = count_stacks = count_warnings = count_errors = 0
     if papyrus_path and papyrus_path.exists():
@@ -940,10 +941,10 @@ def scan_wryecheck() -> str:
         checker report.
     """
     message_list: list[str] = []
-    wrye_missinghtml_setting = CMain.yaml_settings(str, CMain.YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")
-    wrye_plugincheck = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
-                                           f"Game{CMain.gamevars['vr']}_Info.Docs_File_WryeBashPC")
-    wrye_warnings_setting = CMain.yaml_settings(dict[str, str], CMain.YAML.Main, "Warnings_WRYE")
+    wrye_missinghtml_setting = CMain.yaml_settings(str, YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")
+    wrye_plugincheck = CMain.yaml_settings(Path, YAML.Game_Local,
+                                           f"Game{gamevars['vr']}_Info.Docs_File_WryeBashPC")
+    wrye_warnings_setting = CMain.yaml_settings(dict[str, str], YAML.Main, "Warnings_WRYE")
 
     wrye_missinghtml = wrye_missinghtml_setting if isinstance(wrye_missinghtml_setting, str) else None
     wrye_warnings = wrye_warnings_setting if isinstance(wrye_warnings_setting, dict) else {}
@@ -951,7 +952,7 @@ def scan_wryecheck() -> str:
     if wrye_plugincheck and wrye_plugincheck.is_file():
         message_list.extend((
             "\n✔️ WRYE BASH PLUGIN CHECKER REPORT WAS FOUND! ANALYZING CONTENTS...\n",
-            f"  [This report is located in your Documents/My Games/{CMain.gamevars['game']} folder.]\n",
+            f"  [This report is located in your Documents/My Games/{gamevars['game']} folder.]\n",
             "  [To hide this report, remove *ModChecker.html* from the same folder.]\n",
         ))
         with CMain.open_file_with_encoding(wrye_plugincheck) as WB_Check:
@@ -1037,7 +1038,7 @@ def scan_mod_inis() -> str:
     # if not config_files:
     #     pass
 
-    game_lower = CMain.gamevars["game"].lower()
+    game_lower = gamevars["game"].lower()
 
     for file_lower, file_path in config_files.items():
         if file_lower.startswith(game_lower) and config_files.has(file_lower, "General", "sStartingConsoleCommand"):
@@ -1048,7 +1049,7 @@ def scan_mod_inis() -> str:
             ))
 
     # TODO: Support for other exe file names
-    if config_files.get(bool, "dxvk.conf", f"{CMain.gamevars['game']}.exe", "dxgi.syncInterval"):
+    if config_files.get(bool, "dxvk.conf", f"{gamevars['game']}.exe", "dxgi.syncInterval"):
         vsync_list.append(f"{config_files['dxvk.conf']} | SETTING: dxgi.syncInterval\n")
     if config_files.get(bool, "enblocal.ini", "ENGINE", "ForceVSync"):
         vsync_list.append(f"{config_files['enblocal.ini']} | SETTING: ForceVSync\n")
@@ -1146,9 +1147,9 @@ def scan_mods_unpacked() -> str:
     snd_frmt_list: set[str] = set()
     xse_file_list: set[str] = set()
     previs_list: set[str] = set()
-    xse_acronym_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = CMain.yaml_settings(dict[str, str], CMain.YAML.Game,
-                                                  f"Game{CMain.gamevars['vr']}_Info.XSE_HashedScripts")
+    xse_acronym_setting = CMain.yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.XSE_Acronym")
+    xse_scriptfiles_setting = CMain.yaml_settings(dict[str, str], YAML.Game,
+                                                  f"Game{gamevars['vr']}_Info.XSE_HashedScripts")
 
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
@@ -1159,10 +1160,10 @@ def scan_mods_unpacked() -> str:
 
     mod_path = CMain.classic_settings(Path, "MODS Folder Path")
     if not mod_path:
-        return str(CMain.yaml_settings(str, CMain.YAML.Main, "Mods_Warn.Mods_Path_Missing"))
+        return str(CMain.yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
 
     if not mod_path.is_dir():
-        return str(CMain.yaml_settings(str, CMain.YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
+        return str(CMain.yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
 
     print("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES CLEANUP...")
 
@@ -1338,9 +1339,9 @@ def scan_mods_archived() -> str:
     xse_file_list: set[str] = set()
     previs_list: set[str] = set()
 
-    xse_acronym_setting = CMain.yaml_settings(str, CMain.YAML.Game, f"Game{CMain.gamevars['vr']}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = CMain.yaml_settings(dict[str, str], CMain.YAML.Game,
-                                                  f"Game{CMain.gamevars['vr']}_Info.XSE_HashedScripts")
+    xse_acronym_setting = CMain.yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.XSE_Acronym")
+    xse_scriptfiles_setting = CMain.yaml_settings(dict[str, str], YAML.Game,
+                                                  f"Game{gamevars['vr']}_Info.XSE_HashedScripts")
 
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else ""
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
@@ -1348,13 +1349,13 @@ def scan_mods_archived() -> str:
     bsarch_path = Path.cwd() / "CLASSIC Data/BSArch.exe"
     mod_path = CMain.classic_settings(Path, "MODS Folder Path")
     if not mod_path:
-        return str(CMain.yaml_settings(str, CMain.YAML.Main, "Mods_Warn.Mods_Path_Missing"))
+        return str(CMain.yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
 
     if not mod_path.exists():
-        return str(CMain.yaml_settings(str, CMain.YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
+        return str(CMain.yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
 
     if not bsarch_path.exists():
-        return str(CMain.yaml_settings(str, CMain.YAML.Main, "Mods_Warn.Mods_BSArch_Missing"))
+        return str(CMain.yaml_settings(str, YAML.Main, "Mods_Warn.Mods_BSArch_Missing"))
 
     print("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES...")
 
@@ -1530,8 +1531,8 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
     Raises:
         FileNotFoundError: If the game path could not be located or is not a valid directory.
     """
-    game_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Game")
-    manage_list_setting = CMain.yaml_settings(list[str], CMain.YAML.Game, classic_list)
+    game_path = CMain.yaml_settings(Path, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Game")
+    manage_list_setting = CMain.yaml_settings(list[str], YAML.Game, classic_list)
     manage_list = manage_list_setting if isinstance(manage_list_setting, list) else []
 
     if game_path is None or not game_path.is_dir():
@@ -1611,8 +1612,8 @@ def game_combined_result() -> str:
         str: A string combining the results of all checks and scans. Returns an
         empty string if game directories are not found.
     """
-    docs_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Docs")
-    game_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local, f"Game{CMain.gamevars['vr']}_Info.Root_Folder_Game")
+    docs_path = CMain.yaml_settings(Path, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Docs")
+    game_path = CMain.yaml_settings(Path, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Game")
 
     if not (game_path and docs_path):
         return ""

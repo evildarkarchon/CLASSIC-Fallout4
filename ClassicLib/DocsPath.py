@@ -2,7 +2,8 @@ import winreg
 from pathlib import Path
 from typing import cast
 
-from CLASSIC_Main import yaml_settings, YAML, gamevars, manual_docs_gui, logger
+from CLASSIC_Main import yaml_settings, manual_docs_gui, logger
+from ClassicLib.Constants import YAML, gamevars
 
 
 # noinspection PyUnresolvedReferences

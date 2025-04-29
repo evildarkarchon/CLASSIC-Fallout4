@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import ClassVar, Any
 
 import ruamel.yaml
-from CLASSIC_Main import YAML, gamevars, open_file_with_encoding, logger, SETTINGS_IGNORE_NONE
+from ClassicLib.Constants import YAML, gamevars, SETTINGS_IGNORE_NONE
+from CLASSIC_Main import open_file_with_encoding, logger
 from ClassicLib import Constants
 
 

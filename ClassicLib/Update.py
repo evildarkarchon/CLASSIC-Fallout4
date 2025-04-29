@@ -1,8 +1,9 @@
 import aiohttp
 from packaging.version import Version, InvalidVersion
 
-from CLASSIC_Main import classic_settings, logger, yaml_settings, YAML, gamevars
+from CLASSIC_Main import classic_settings, logger, yaml_settings
 from ClassicLib import Constants
+from ClassicLib.Constants import YAML, gamevars
 
 
 def try_parse_version(version_string: str) -> Version | None:

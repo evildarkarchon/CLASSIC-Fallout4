@@ -805,7 +805,7 @@ def initialize(is_gui: bool = False) -> None:
         yaml_cache.load_yaml(path)
 
     # noinspection PyTypedDict
-    Constants.gamevars["vr"] = "" if not classic_settings(bool, "VR Mode") else cast('Literal["VR", ""]', "VR")
+    Constants.gamevars["vr"] = "" if not classic_settings(bool, "VR Mode") else "VR"
     gui_mode = is_gui
     if gui_mode:
         manual_docs_gui = ManualDocsPath()
