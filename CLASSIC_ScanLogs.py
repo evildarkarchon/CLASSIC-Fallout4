@@ -16,7 +16,7 @@ from packaging.version import Version
 
 import CLASSIC_Main as CMain
 import CLASSIC_ScanGame as CGame
-from ClassicLib.util import crashgen_version_gen
+from ClassicLib.Util import crashgen_version_gen
 
 query_cache: dict[tuple[str, str], str] = {}
 # Define paths for both Main and Local databases
