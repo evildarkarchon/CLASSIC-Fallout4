@@ -1,4 +1,5 @@
-from typing import Literal
+from enum import Enum, auto
+from typing import Literal, TypedDict
 from packaging.version import Version
 
 NULL_VERSION = Version("0.0.0.0")
@@ -16,3 +17,35 @@ type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
 type YAMLValueOptional = YAMLValue | None
 type GameID = Literal[
     "Fallout4", "Fallout4VR", "Skyrim", "Starfield"]  # Entries must correspond to the game's Main ESM or EXE file name.
+
+class YAML(Enum):
+    Main = auto()
+    """CLASSIC Data/databases/CLASSIC Main.yaml"""
+    Settings = auto()
+    """CLASSIC Settings.yaml"""
+    Ignore = auto()
+    """CLASSIC Ignore.yaml"""
+    Game = auto()
+    """CLASSIC Data/databases/CLASSIC Fallout4.yaml"""
+    Game_Local = auto()
+    """CLASSIC Data/CLASSIC Fallout4 Local.yaml"""
+    TEST = auto()
+    """tests/test_settings.yaml"""
+
+
+class GameVars(TypedDict):
+    game: GameID
+    vr: Literal["VR", ""]
+
+
+gamevars: GameVars = {
+    "game": "Fallout4",
+    "vr": "",
+}
+
+SETTINGS_IGNORE_NONE = {
+    "SCAN Custom Path",
+    "MODS Folder Path",
+    "Root_Folder_Game",
+    "Root_Folder_Docs",
+}
