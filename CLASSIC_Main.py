@@ -2,19 +2,17 @@ import configparser
 import contextlib
 import hashlib
 import logging
-import platform
 import shutil
 from enum import Enum, auto
 from pathlib import Path
 from typing import Literal, TypedDict, cast
 
-import aiohttp
 from PySide6.QtCore import QObject, Signal
-from packaging.version import InvalidVersion, Version
 
 import ClassicLib.Constants as Constants
-from ClassicLib.YamlSettingsCache import YamlSettingsCache
+from ClassicLib.DocsPath import docs_path_find, docs_generate_paths
 from ClassicLib.Util import get_game_version, open_file_with_encoding, remove_readonly, configure_logging
+from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
 with contextlib.suppress(ImportError):
     import winreg
