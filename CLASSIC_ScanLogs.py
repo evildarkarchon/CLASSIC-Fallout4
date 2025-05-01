@@ -19,7 +19,7 @@ from ClassicLib.Util import append_or_extend, crashgen_version_gen
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
-# noinspection PyUnresolvedReferences,PyPep8Naming
+# noinspection PyUnresolvedReferences
 class ClassicScanLogs:
     def __init__(self) -> None:
         self.pluginsearch = re.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
@@ -362,7 +362,7 @@ class ClassicScanLogs:
             )
 
     def scan_buffout_memorymanagement_settings(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str],
-                                               Has_XCell: bool, Has_BakaScrapHeap: bool) -> None:
+                                               has_xcell: bool, has_baka_scrapheap: bool) -> None:
         """
         Validates and scans the memory management settings in the configuration file for conflicts with
         X-Cell and the Baka ScrapHeap Mod. Generates a report based on the findings, providing guidance on
@@ -373,18 +373,18 @@ class ClassicScanLogs:
                 management settings validation.
             crashgen (dict[str, bool | int | str]): A dictionary containing current CrashGen configuration
                 settings, including memory management parameters and other related properties.
-            Has_XCell (bool): A flag indicating whether the X-Cell mod is installed.
-            Has_BakaScrapHeap (bool): A flag indicating whether the Baka ScrapHeap mod is installed.
+            has_xcell (bool): A flag indicating whether the X-Cell mod is installed.
+            has_baka_scrapheap (bool): A flag indicating whether the Baka ScrapHeap mod is installed.
         """
         # Check main MemoryManager setting first
         mem_manager = crashgen.get("MemoryManager")
         if mem_manager:
-            if Has_XCell:
+            if has_xcell:
                 append_or_extend((
                     "# ❌ CAUTION : X-Cell is installed, but MemoryManager parameter is set to TRUE # \n",
                     f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.\n-----\n"
                 ), autoscan_report)
-            elif Has_BakaScrapHeap:
+            elif has_baka_scrapheap:
                 append_or_extend((
                     f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.yamldata.crashgen_name} # \n",
                     f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {self.yamldata.crashgen_name}.\n-----\n"
@@ -394,8 +394,8 @@ class ClassicScanLogs:
                     f"✔️ Memory Manager parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
                     autoscan_report
                 )
-        elif Has_XCell:
-            if Has_BakaScrapHeap:
+        elif has_xcell:
+            if has_baka_scrapheap:
                 append_or_extend((
                     "# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with X-Cell # \n",
                     " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n"
@@ -405,14 +405,14 @@ class ClassicScanLogs:
                     f"✔️ Memory Manager parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
                     autoscan_report
                 )
-        elif Has_BakaScrapHeap:
+        elif has_baka_scrapheap:
             append_or_extend((
                 f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.yamldata.crashgen_name} # \n",
                 f" FIX: Uninstall the Baka ScrapHeap Mod and open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.\n-----\n"
             ), autoscan_report)
 
         # Check other memory settings (only relevant when X-Cell is installed)
-        if Has_XCell:
+        if has_xcell:
             memory_settings = {
                 "HavokMemorySystem": "Havok Memory System",
                 "BSTextureStreamerLocalHeap": "BSTextureStreamerLocalHeap",
@@ -611,18 +611,18 @@ class ClassicScanLogs:
                 second element is a Literal that specifies the rival GPU
                 manufacturer ("nvidia", "amd"), or None if no rival is identified.
         """
-        GPU: str
+        gpu: str
         gpu_rival: Literal["nvidia", "amd"] | None
         if any("GPU #1" in elem and "AMD" in elem for elem in segment_system):
-            GPU = "AMD"
+            gpu = "AMD"
             gpu_rival = "nvidia"
         elif any("GPU #1" in elem and "Nvidia" in elem for elem in segment_system):
-            GPU = "Nvidia"
+            gpu = "Nvidia"
             gpu_rival = "amd"
         else:
-            GPU = "Unknown"
+            gpu = "Unknown"
             gpu_rival = None
-        return GPU, gpu_rival
+        return gpu, gpu_rival
 
     def scan_named_records(self, segment_callstack: list[str], records_matches: list[str],
                            autoscan_report: list[str]) -> None:
