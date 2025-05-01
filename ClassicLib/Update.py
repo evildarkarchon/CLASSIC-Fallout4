@@ -1,5 +1,5 @@
 import aiohttp
-from packaging.version import Version, InvalidVersion
+from packaging.version import InvalidVersion, Version
 
 from CLASSIC_Main import classic_settings, logger, yaml_settings
 from ClassicLib import Constants

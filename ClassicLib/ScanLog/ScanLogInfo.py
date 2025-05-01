@@ -1,5 +1,11 @@
 import sqlite3
+from dataclasses import dataclass, field
 from pathlib import Path
+
+from packaging.version import Version
+
+from ClassicLib.Constants import NULL_VERSION, YAML, gamevars
+from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
 
 
 class SQLiteReader:
@@ -74,12 +80,12 @@ class ClassicScanLogsInfo:
     game_mods_freq: dict[str, str] = field(default_factory=dict)
     game_mods_opc2: dict[str, str] = field(default_factory=dict)
     game_mods_solu: dict[str, str] = field(default_factory=dict)
-    game_version: Version = field(default=CMain.NULL_VERSION, init=False)
-    game_version_new: Version = field(default=CMain.NULL_VERSION, init=False)
-    game_version_vr: Version = field(default=CMain.NULL_VERSION, init=False)
+    game_version: Version = field(default=NULL_VERSION, init=False)
+    game_version_new: Version = field(default=NULL_VERSION, init=False)
+    game_version_vr: Version = field(default=NULL_VERSION, init=False)
 
     def __post_init__(self) -> None:
-        if CMain.yaml_cache is None:
+        if yaml_cache is None:
             raise TypeError("CMain is not initialized.")
         self.classic_game_hints = yaml_settings(list[str], YAML.Game, "Game_Hints") or []
         self.classic_records_list = yaml_settings(list[str], YAML.Main, "catch_log_records") or []

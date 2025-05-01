@@ -24,7 +24,7 @@ except ImportError:
     from bs4.element import PageElement  # noqa: TC002
 
 import CLASSIC_Main as CMain
-import ClassicLib.Constants as Constants
+from ClassicLib import Constants
 from ClassicLib.Constants import YAML, gamevars
 
 # For comparing results across runs.

@@ -2,9 +2,9 @@ import winreg
 from pathlib import Path
 from typing import cast
 
-from CLASSIC_Main import logger, yaml_settings, gui_mode, game_path_gui
+from CLASSIC_Main import game_path_gui, gui_mode, logger, yaml_settings
 from ClassicLib import Constants
-from ClassicLib.Util import open_file_with_encoding, get_game_version
+from ClassicLib.Util import get_game_version, open_file_with_encoding
 
 
 def game_path_find() -> None:

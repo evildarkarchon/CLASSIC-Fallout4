@@ -41,7 +41,8 @@ import CLASSIC_ScanGame as CGame
 import CLASSIC_ScanLogs as CLogs
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.DocsPath import get_manual_docs_path_gui
-from ClassicLib.Update import is_latest_version, UpdateCheckError
+from ClassicLib.Update import UpdateCheckError, is_latest_version
+
 
 @dataclass
 class PapyrusStats:

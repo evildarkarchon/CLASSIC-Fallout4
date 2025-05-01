@@ -6,15 +6,15 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 
-import ClassicLib.Constants as Constants
-from ClassicLib.DocsPath import docs_path_find, docs_generate_paths, docs_check_ini
-from ClassicLib.GamePath import game_path_find, game_generate_paths
-from ClassicLib.Util import open_file_with_encoding, configure_logging
-from ClassicLib.XseCheck import xse_check_integrity, xse_check_hashes
-from ClassicLib.YamlSettingsCache import YamlSettingsCache, yaml_settings, classic_settings
+from ClassicLib import Constants
+from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
+from ClassicLib.GamePath import game_generate_paths, game_path_find
+from ClassicLib.Util import configure_logging, open_file_with_encoding
+from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
+from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_settings
 
 with contextlib.suppress(ImportError):
-    import win32api  # type: ignore[import]
+    pass  # type: ignore[import]
 
 """ AUTHOR NOTES (POET): ❓ ❌ ✔️
     ❓ REMINDER: 'shadows x from outer scope' means the variable name repeats both in the func and outside all other func.
@@ -304,7 +304,6 @@ def main_generate_required() -> None:
         TypeError: If the classic version or game name settings are not of type `str`.
 
     """
-    global logger
     configure_logging(logger)
     classic_generate_files()
     classic_ver = yaml_settings(str, Constants.YAML.Main, "CLASSIC_Info.version")
@@ -319,7 +318,7 @@ def main_generate_required() -> None:
     game_path = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game")
 
     if not game_path:
-        docs_path_find()
+        docs_path_find(gui_mode)
         docs_generate_paths()
         game_path_find()
         game_generate_paths()

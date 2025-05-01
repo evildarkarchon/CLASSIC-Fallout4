@@ -4,10 +4,11 @@ import logging
 import os
 import platform
 import stat
+from collections.abc import Iterator
 from io import TextIOWrapper
 from logging import Logger
 from pathlib import Path
-from typing import Iterator, cast
+from typing import cast
 from urllib.parse import urlparse
 
 import aiohttp
@@ -40,6 +41,7 @@ def get_game_version(game_exe_path: Path) -> Version:
     if platform.system() != "Windows":
         logger.warning("Game version detection is only supported on Windows")
         return Constants.NULL_VERSION
+    import win32api
 
     # Check if path exists and is a file
     if not game_exe_path or not game_exe_path.is_file():
@@ -100,11 +102,10 @@ def crashgen_version_gen(input_string: str) -> Version:
             version_str = part[1:]  # Remove the 'v'
     if version_str:
         return Version(version_str)
-    return Constants.NULL_VERSION \
- \
-        @ contextlib.contextmanager
+    return Constants.NULL_VERSION
 
 
+@contextlib.contextmanager
 def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[TextIOWrapper]:
     """
     Opens a file with its detected encoding as a context manager.

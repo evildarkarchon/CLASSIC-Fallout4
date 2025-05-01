@@ -12,11 +12,11 @@ from packaging.version import Version
 import CLASSIC_Main as CMain
 import CLASSIC_ScanGame as CGame
 from ClassicLib.Constants import YAML, gamevars
-from ClassicLib.ScanLog.DetectMods import detect_mods_single, detect_mods_double, detect_mods_important
-from ClassicLib.ScanLog.ScanLogInfo import SQLiteReader, ClassicScanLogsInfo
-from ClassicLib.ScanLog.Util import get_entry, crashlogs_get_files, crashlogs_reformat
-from ClassicLib.Util import crashgen_version_gen, append_or_extend
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
+from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, SQLiteReader
+from ClassicLib.ScanLog.Util import DB_PATHS, crashlogs_get_files, crashlogs_reformat, get_entry
+from ClassicLib.Util import append_or_extend, crashgen_version_gen
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 # noinspection PyUnresolvedReferences,PyPep8Naming
@@ -668,7 +668,7 @@ class ClassicScanLogs:
             append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
 
     @staticmethod
-    def extract_module_names(module_texts):
+    def extract_module_names(module_texts: set[str]) -> set[str]:
         if not module_texts:
             return set()
 

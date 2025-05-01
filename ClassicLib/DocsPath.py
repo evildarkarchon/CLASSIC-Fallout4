@@ -1,18 +1,19 @@
 import contextlib
+import platform
 import winreg
 from pathlib import Path
 from typing import cast
 
 from iniparse import configparser
 
-from CLASSIC_Main import yaml_settings, manual_docs_gui, logger
+from CLASSIC_Main import logger, manual_docs_gui, yaml_settings
 from ClassicLib import Constants
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.Util import remove_readonly
 
 
 # noinspection PyUnresolvedReferences
-def docs_path_find() -> None:
+def docs_path_find(gui_mode: bool = False) -> None:
     """
     Provides utility functions to locate and configure the path to a game's documents folder across different platforms.
 

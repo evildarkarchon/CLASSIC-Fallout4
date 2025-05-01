@@ -1,12 +1,12 @@
 from functools import reduce
 from pathlib import Path
-from typing import ClassVar, Any
+from typing import Any, ClassVar
 
 import ruamel.yaml
 
-from CLASSIC_Main import open_file_with_encoding, logger, yaml_cache
+from CLASSIC_Main import logger, open_file_with_encoding, yaml_cache
 from ClassicLib import Constants
-from ClassicLib.Constants import YAML, gamevars, SETTINGS_IGNORE_NONE
+from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, gamevars
 
 
 class YamlSettingsCache:

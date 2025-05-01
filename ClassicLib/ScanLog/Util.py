@@ -2,7 +2,7 @@ import shutil
 import sqlite3
 from pathlib import Path
 
-from CLASSIC_Main import logger, classic_settings, yaml_settings
+from CLASSIC_Main import classic_settings, logger, yaml_settings
 from ClassicLib.Constants import YAML, gamevars
 
 
