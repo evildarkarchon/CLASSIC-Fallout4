@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from pathlib import Path
 from typing import Literal, TypedDict
 
 from packaging.version import Version
@@ -51,3 +52,9 @@ SETTINGS_IGNORE_NONE = {
     "Root_Folder_Game",
     "Root_Folder_Docs",
 }
+
+# Define paths for both Main and Local databases
+DB_PATHS = (
+    Path(f"CLASSIC Data/databases/{gamevars["game"]} FormIDs Main.db"),
+    Path(f"CLASSIC Data/databases/{gamevars["game"]} FormIDs Local.db"),
+)

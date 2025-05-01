@@ -36,13 +36,17 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-import CLASSIC_Main as CMain
-import CLASSIC_ScanGame as CGame
-import CLASSIC_ScanLogs as CLogs
+from CLASSIC_Main import initialize, main_generate_required, manual_docs_gui, game_path_gui
+from CLASSIC_ScanGame import write_combined_results, game_files_manage
+from CLASSIC_ScanLogs import crashlogs_scan
+#import CLASSIC_Main as CMain
+#import CLASSIC_ScanGame as CGame
+#import CLASSIC_ScanLogs as CLogs
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.DocsPath import get_manual_docs_path_gui
 from ClassicLib.PapyrusLog import papyrus_logging
 from ClassicLib.Update import UpdateCheckError, is_latest_version
+from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
 
 
 @dataclass
@@ -408,9 +412,9 @@ class AudioPlayer(QObject):
             KeyError: Raises if specific keys are not found in the configuration.
         """
         super().__init__()
-        self.audio_enabled = CMain.classic_settings(bool, "Audio Notifications")
+        self.audio_enabled = classic_settings(bool, "Audio Notifications")
         if self.audio_enabled is None:
-            CMain.yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Audio Notifications", True)
+            yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Audio Notifications", True)
             self.audio_enabled = True
 
         # Setup QSoundEffect objects for the preset sounds
@@ -721,10 +725,10 @@ class CrashLogsScanWorker(QObject):
         # Here you can determine the appropriate sound to play.
         # For simplicity, we're triggering the notify sound when the scan completes.
         try:
-            CLogs.crashlogs_scan()
+            crashlogs_scan()
             self.notify_sound_signal.emit()  # type: ignore # Emit signal to play notify sound
         except Exception:
-            if CMain.classic_settings(bool, "Audio Notifications"):
+            if classic_settings(bool, "Audio Notifications"):
                 self.error_sound_signal.emit()  # type: ignore # Emit signal to play error sound in case of exception
             else:
                 raise
@@ -758,10 +762,10 @@ class GameFilesScanWorker(QObject):
             None
         """
         try:
-            CGame.write_combined_results()
+            write_combined_results()
             self.notify_sound_signal.emit()  # type: ignore # Emit signal to play notify sound
         except Exception:
-            if CMain.classic_settings(bool, "Audio Notifications"):
+            if classic_settings(bool, "Audio Notifications"):
                 self.error_sound_signal.emit()  # type: ignore # Emit signal to play error sound in case of exception
             else:
                 raise
@@ -800,10 +804,10 @@ class MainWindow(QMainWindow):
         self._last_stats: PapyrusStats | None = None
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
 
-        CMain.initialize(is_gui=True)
+        initialize(is_gui=True)
 
         self.setWindowTitle(
-            f"Crash Log Auto Scanner & Setup Integrity Checker | {CMain.yaml_settings(str, YAML.Main, "CLASSIC_Info.version")}"
+            f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, "CLASSIC_Info.version")}"
         )
         self.setWindowIcon(QIcon("CLASSIC Data/graphics/CLASSIC.ico"))
         dark_style = """
@@ -996,9 +1000,9 @@ QLabel {
         self.initialize_folder_paths()
         self.setup_output_redirection()
         self.output_buffer = ""
-        CMain.main_generate_required()
+        main_generate_required()
         # Perform initial update check
-        if CMain.classic_settings(bool, "Update Check"):
+        if classic_settings(bool, "Update Check"):
             QTimer.singleShot(0, self.update_popup)
 
         self.update_check_timer = QTimer()
@@ -1009,10 +1013,10 @@ QLabel {
         self.crash_logs_thread: QThread | None = None
         self.game_files_thread: QThread | None = None
 
-        if CMain.manual_docs_gui is None or CMain.game_path_gui is None:
+        if manual_docs_gui is None or game_path_gui is None:
             raise TypeError("CMain not initialized")
-        CMain.manual_docs_gui.manual_docs_path_signal.connect(self.show_manual_docs_path_dialog)
-        CMain.game_path_gui.game_path_signal.connect(self.show_game_path_dialog)
+        manual_docs_gui.manual_docs_path_signal.connect(self.show_manual_docs_path_dialog)
+        game_path_gui.game_path_signal.connect(self.show_game_path_dialog)
 
     def setup_pastebin_elements(self, layout: QVBoxLayout) -> None:
         """
@@ -1122,13 +1126,13 @@ QLabel {
         Raises:
             TypeError: If `CMain.game_path_gui` is not initialized.
         """
-        if CMain.game_path_gui is None:
+        if game_path_gui is None:
             raise TypeError("CMain not initialized")
 
         dialog = GamePathDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             manual_path = dialog.get_path()
-            CMain.game_path_gui.get_game_path_gui(manual_path)
+            game_path_gui.get_game_path_gui(manual_path)
 
     # noinspection PyUnresolvedReferences
     def update_popup(self) -> None:
@@ -1271,7 +1275,7 @@ QLabel {
             QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!",
                                     QMessageBox.StandardButton.Ok)
         else:
-            update_popup_text = CMain.yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
+            update_popup_text = yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
             result = QMessageBox.question(
                 self,
                 "CLASSIC UPDATE",
@@ -1548,7 +1552,7 @@ QLabel {
         """
         list_name = selected_list.split(" ", 1)
         try:
-            CGame.game_files_manage(selected_list, selected_mode)
+            game_files_manage(selected_list, selected_mode)
             if selected_mode == "BACKUP":
                 # Enable the corresponding restore button
                 restore_button = getattr(self, f"RestoreButton_{list_name[1]}", None)
@@ -1586,7 +1590,7 @@ QLabel {
         Returns:
             None
         """
-        help_popup_text = CMain.yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_backup") or ""
+        help_popup_text = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_backup") or ""
         QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
 
     @staticmethod
@@ -1814,17 +1818,17 @@ QLabel {
         update_source_combo.setFixedWidth(combo_width)
 
         # Set the default value if stored in settings
-        current_value = CMain.classic_settings(str, "Update Source")
+        current_value = classic_settings(str, "Update Source")
         if current_value is not None:
             update_source_combo.setCurrentText(current_value)
         else:
-            CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", "Nexus")
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", "Nexus")
 
         update_source_combo.setToolTip(
             "Select the source to check for updates. Nexus = stable, GitHub = latest, Both = check both")
 
         update_source_combo.currentTextChanged.connect(
-            lambda value: CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", value)
+            lambda value: yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", value)
         )
 
         update_source_layout.addWidget(update_source_label)
@@ -1853,15 +1857,15 @@ QLabel {
             QCheckBox: A QCheckBox widget connected to the specified setting's state.
         """
         checkbox = QCheckBox(label_text)
-        value = CMain.classic_settings(bool, setting)
+        value = classic_settings(bool, setting)
         if value is not None:
             checkbox.setChecked(value)
         else:
-            CMain.yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", False)
+            yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", False)
             checkbox.setChecked(False)
 
         checkbox.stateChanged.connect(
-            lambda state: CMain.yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state))
+            lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state))
         )
         if setting == "Audio Notifications":
             checkbox.stateChanged.connect(
@@ -2190,7 +2194,7 @@ This feature is not fully implemented."""
         Returns:
             None
         """
-        help_popup_text = CMain.yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
+        help_popup_text = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
         QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
 
     @staticmethod
@@ -2285,7 +2289,7 @@ This feature is not fully implemented."""
         if folder:
             if self.scan_folder_edit is not None:
                 self.scan_folder_edit.setText(folder)
-            CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
 
     def select_folder_mods(self) -> None:
         """
@@ -2303,7 +2307,7 @@ This feature is not fully implemented."""
         if folder:
             if self.mods_folder_edit is not None:
                 self.mods_folder_edit.setText(folder)
-            CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", folder)
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", folder)
 
     def initialize_folder_paths(self) -> None:
         """
@@ -2314,8 +2318,8 @@ This feature is not fully implemented."""
         retrieved, they are assigned to the corresponding UI text fields, namely
         `scan_folder_edit` and `mods_folder_edit`, provided those fields are not None.
         """
-        scan_folder = CMain.classic_settings(str, "SCAN Custom Path")
-        mods_folder = CMain.classic_settings(str, "MODS Folder Path")
+        scan_folder = classic_settings(str, "SCAN Custom Path")
+        mods_folder = classic_settings(str, "MODS Folder Path")
 
         if scan_folder and self.scan_folder_edit is not None:
             self.scan_folder_edit.setText(scan_folder)
@@ -2330,7 +2334,7 @@ This feature is not fully implemented."""
         """
         folder = QFileDialog.getExistingDirectory(self)
         if folder:
-            CMain.yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
             QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}",
                                     QMessageBox.StandardButton.Ok)
 

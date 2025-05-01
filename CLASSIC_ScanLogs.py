@@ -9,12 +9,14 @@ from typing import Literal
 import regex as re
 from packaging.version import Version
 
-import CLASSIC_Main as CMain
-import CLASSIC_ScanGame as CGame
-from ClassicLib.Constants import YAML, gamevars
+from CLASSIC_Main import logger, initialize
+
+"""import CLASSIC_Main as CMain
+import CLASSIC_ScanGame as CGame"""
+from ClassicLib.Constants import YAML, gamevars, DB_PATHS
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, SQLiteReader
-from ClassicLib.ScanLog.Util import DB_PATHS, crashlogs_get_files, crashlogs_reformat, get_entry
+from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat, get_entry
 from ClassicLib.Util import append_or_extend, crashgen_version_gen
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -1047,7 +1049,7 @@ def crashlogs_scan() -> None:
         # WRITE AUTOSCAN REPORT TO FILE
         autoscan_path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
         with autoscan_path.open("w", encoding="utf-8", errors="ignore") as autoscan_file:
-            CMain.logger.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
+            logger.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
             autoscan_output = "".join(autoscan_report)
             autoscan_file.write(autoscan_output)
 
@@ -1079,7 +1081,7 @@ def crashlogs_scan() -> None:
     # CRASH LOG SCAN COMPLETE / TERMINAL OUTPUT
     # ================================================
     scanner.close_database()
-    CMain.logger.info("- - - COMPLETED CRASH LOG FILE SCAN >>> ALL AVAILABLE LOGS SCANNED")
+    logger.info("- - - COMPLETED CRASH LOG FILE SCAN >>> ALL AVAILABLE LOGS SCANNED")
     print("SCAN COMPLETE! (IT MIGHT TAKE SEVERAL SECONDS FOR SCAN RESULTS TO APPEAR)")
     print("SCAN RESULTS ARE AVAILABLE IN FILES NAMED crash-date-and-time-AUTOSCAN.md \n")
     print(f"{random.choice(yamldata.classic_game_hints)}\n-----")
@@ -1095,7 +1097,7 @@ def crashlogs_scan() -> None:
 
 
 if __name__ == "__main__":
-    CMain.initialize()
+    initialize()
 
     # noinspection PyUnresolvedReferences
     from tap import Tap
