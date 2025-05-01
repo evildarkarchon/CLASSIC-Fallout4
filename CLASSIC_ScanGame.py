@@ -170,7 +170,7 @@ class ConfigFileCache:
         self.duplicate_files = {}
         self._duplicate_whitelist = ["F4EE"]
 
-        self._game_root_path = CMain.yaml_settings(Path, CMain.YAML.Game_Local,
+        self._game_root_path = CMain.yaml_settings(Path, YAML.Game_Local,
                                                    f"Game{gamevars['vr']}_Info.Root_Folder_Game")
         if self._game_root_path is None:
             # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)
@@ -489,7 +489,7 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
     Returns:
         Any | None: The current value of the key (either the existing or updated value if changed).
         Returns None if the specified section or key does not exist.
-    """
+    """  # noqa: RUF002
 
     file_bytes = toml_path.read_bytes()
     file_encoding = chardet.detect(file_bytes)["encoding"] or "utf-8"

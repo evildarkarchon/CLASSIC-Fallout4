@@ -302,7 +302,7 @@ class PastebinFetchWorker(QObject):
         """
         try:
             # Make sure pastebin_fetch is properly imported
-            from CLASSIC_ScanLogs import pastebin_fetch
+            from ClassicLib.Util import pastebin_fetch
             pastebin_fetch(self.url)
             self.success.emit(self.url)
         except (OSError, ValueError, requests.exceptions.RequestException) as e:
@@ -507,7 +507,7 @@ class ManualPathDialog(QDialog):
 
     Attributes:
         input_field (QLineEdit): Input field where the user can manually enter the INI files directory path.
-    """
+    """  # noqa: RUF002
 
     def __init__(self, parent: QMainWindow | None = None) -> None:
         """

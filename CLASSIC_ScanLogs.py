@@ -693,7 +693,7 @@ class ClassicScanLogs:
 def crashlogs_scan() -> None:
     """
     Scans crash log files to generate reports, identify issues, and provide insights into the cause of crashes. This
-    function utilizes crash log data, plugin configurations, and system segments to correlate crash events with probable
+    function uses crash log data, plugin configurations, and system segments to correlate crash events with probable
     causes and generate detailed reports that include warnings, errors, and potential solutions.
 
     The function performs a sequence of actions:
