@@ -41,6 +41,7 @@ import CLASSIC_ScanGame as CGame
 import CLASSIC_ScanLogs as CLogs
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.DocsPath import get_manual_docs_path_gui
+from ClassicLib.PapyrusLog import papyrus_logging
 from ClassicLib.Update import UpdateCheckError, is_latest_version
 
 
@@ -175,7 +176,7 @@ class PapyrusMonitorWorker(QObject):
         """Main monitoring loop"""
         while self._should_run:
             try:
-                message, count = CGame.papyrus_logging()
+                message, count = papyrus_logging()
 
                 # Parse the message to extract stats
                 current_stats = self._parse_stats(message, count)
@@ -248,7 +249,7 @@ class PastebinFetchWorker(QObject):
     Handles fetching data from a specified pastebin URL using a worker mechanism, emitting signals based on the
     operation's success or failure.
 
-    This class is designed to execute a long-running fetch operation in a separate thread, utilizing PyQt signals
+    This class is designed to execute a long-running fetch operation in a separate thread, using PyQt signals
     to communicate the operation's outcome. It provides a structured and thread-safe method for handling URL data
     retrieval, ensuring appropriate signal emissions for success, error, and operation completion events.
 
@@ -294,11 +295,11 @@ class PastebinFetchWorker(QObject):
                 the operation.
 
         Raises:
-            OSError: If there are file system-related issues.
+            OSError: If there are file-system-related issues.
             ValueError: If invalid configuration or input data is encountered.
             requests.exceptions.RequestException: For network-related issues such as connection problems.
             ImportError: If the required import operation for a module fails to execute.
-            Exception: If a general exception is encountered outside of specific types mentioned.
+            Exception: If a general exception is encountered outside specific types mentioned.
         """
         try:
             # Make sure pastebin_fetch is properly imported
@@ -653,7 +654,7 @@ class GamePathDialog(QDialog):
         """
         Retrieves the text input from the field as a string.
 
-        This method is used to obtain the current text value of the input field
+        This method is used to get the current text value of the input field
         within the user interface.
 
         Returns:
@@ -1210,7 +1211,7 @@ QLabel {
         """
         Performs an asynchronous check for updates and handles the result or errors.
 
-        This coroutine checks whether the application is up-to-date by invoking an external method. It then processes the
+        This coroutine checks whether the application is up to date by invoking an external method. It then processes the
         result or handles any errors that might occur during the update check. Additionally, it ensures that the update
         check status is appropriately updated, and the timer for update checks is stopped regardless of the check's
         outcome.
@@ -1258,11 +1259,11 @@ QLabel {
 
     def show_update_result(self, is_up_to_date: bool) -> None:
         """
-        Displays update result to the user in a message box and handles subsequent actions based
+        Displays update result to the user in a message box and handles further actions based
         on the user's response if an update is available.
 
         Args:
-            is_up_to_date: Indicates whether the application is already up-to-date. If True,
+            is_up_to_date: Indicates whether the application is already up to date. If True,
                 a message box informs the user that they have the latest version. If False, the
                 user is prompted with a choice to visit the update page.
         """

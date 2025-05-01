@@ -1,10 +1,12 @@
 import contextlib
 import datetime
+import hashlib
 import logging
 import os
 import platform
 import stat
 from collections.abc import Iterator
+from difflib import SequenceMatcher
 from io import TextIOWrapper
 from logging import Logger
 from pathlib import Path
@@ -18,6 +20,23 @@ from packaging.version import Version
 
 from CLASSIC_Main import logger
 from ClassicLib import Constants
+
+def calculate_similarity(file1: Path, file2: Path) -> float:
+    """
+    Compares the content of two files and calculates the similarity ratio based
+    on their sequences. The similarity ratio is a floating-point number between
+    0 and 1, where 0 indicates no similarity and 1 indicates identical content.
+
+    Args:
+        file1 (Path): The path to the first file to be compared.
+        file2 (Path): The path to the second file to be compared.
+
+    Returns:
+        float: A similarity ratio between 0 and 1, indicating the degree of
+        similarity between the content of the two files.
+    """
+    with file1.open("r") as f1, file2.open("r") as f2:
+        return SequenceMatcher(None, f1.read(), f2.read()).ratio()
 
 
 def get_game_version(game_exe_path: Path) -> Version:
@@ -306,3 +325,24 @@ async def pastebin_fetch_async(url: str) -> None:
 
     # Otherwise, this is fine for most use cases:
     outfile.write_text(content, encoding="utf-8", errors="ignore")
+
+def calculate_file_hash(file_path: Path) -> str:
+    """
+    Calculates the SHA-256 hash of a file's contents.
+
+    This function reads the contents of a file in binary mode in chunks of 4096
+    bytes and computes its SHA-256 hash incrementally. It returns the final
+    hash value as a hexadecimal string representation.
+
+    Args:
+        file_path: Path object representing the location of the file whose
+            hash needs to be computed.
+
+    Returns:
+        str: The hexadecimal SHA-256 hash of the file's contents.
+    """
+    hash_sha256 = hashlib.sha256()
+    with file_path.open("rb") as file:
+        for block in iter(lambda: file.read(4096), b""):
+            hash_sha256.update(block)
+    return hash_sha256.hexdigest()

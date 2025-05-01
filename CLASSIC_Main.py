@@ -258,7 +258,7 @@ def main_files_backup() -> None:
         if backup_path:
             backup_path.mkdir(parents=True, exist_ok=True)
 
-            # Backup the file if backup of file does not already exist.
+            # Back up the file if backup of file does not already exist.
             game_files = list(Path(game_path).glob("*.*")) if game_path else []
             backup_files = [file.name for file in backup_path.glob("*.*")]
 
@@ -351,7 +351,7 @@ def initialize(is_gui: bool = False) -> None:
 
     yaml_cache = YamlSettingsCache()
 
-    # Pre-load static YAML files
+    # Preload static YAML files
     for store in YamlSettingsCache.STATIC_YAML_STORES:
         path = yaml_cache.get_path_for_store(store)
         yaml_cache.load_yaml(path)
