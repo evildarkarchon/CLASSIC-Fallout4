@@ -36,15 +36,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from CLASSIC_Main import initialize, main_generate_required, manual_docs_gui, game_path_gui
-from CLASSIC_ScanGame import write_combined_results, game_files_manage
+from CLASSIC_Main import game_path_gui, initialize, main_generate_required, manual_docs_gui
+from CLASSIC_ScanGame import game_files_manage, write_combined_results
 from CLASSIC_ScanLogs import crashlogs_scan
-
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.DocsPath import get_manual_docs_path_gui
 from ClassicLib.PapyrusLog import papyrus_logging
 from ClassicLib.Update import UpdateCheckError, is_latest_version
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 @dataclass

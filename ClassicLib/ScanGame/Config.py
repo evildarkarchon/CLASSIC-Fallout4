@@ -1,6 +1,7 @@
 import io
+from collections.abc import ItemsView
 from pathlib import Path
-from typing import ItemsView, TypedDict, Any
+from typing import Any, TypedDict
 
 import chardet
 import iniparse
@@ -8,6 +9,9 @@ import tomlkit
 from iniparse import configparser
 
 from CLASSIC_Main import logger
+from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Util import calculate_file_hash, calculate_similarity
+from ClassicLib.YamlSettingsCache import yaml_settings
 
 TEST_MODE = False
 
@@ -107,7 +111,7 @@ class ConfigFileCache:
         self.duplicate_files = {}
         self._duplicate_whitelist = ["F4EE"]
 
-        self._game_root_path = CMain.yaml_settings(Path, YAML.Game_Local,
+        self._game_root_path = yaml_settings(Path, YAML.Game_Local,
                                                    f"Game{gamevars['vr']}_Info.Root_Folder_Game")
         if self._game_root_path is None:
             # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)

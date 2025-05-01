@@ -8,10 +8,10 @@ from typing import Literal, cast
 from bs4 import BeautifulSoup
 from packaging.version import Version  # noqa: TC002
 
-from CLASSIC_Main import logger, initialize, main_generate_required
+from CLASSIC_Main import initialize, logger, main_generate_required
 from ClassicLib.ScanGame.Config import TEST_MODE, ConfigFileCache, mod_toml_config
 from ClassicLib.Util import get_game_version, open_file_with_encoding
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 try:
     from bs4 import PageElement

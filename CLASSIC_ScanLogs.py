@@ -9,9 +9,9 @@ from typing import Literal
 import regex as re
 from packaging.version import Version
 
-from CLASSIC_Main import logger, initialize
-
-from ClassicLib.Constants import YAML, gamevars, DB_PATHS
+from CLASSIC_Main import initialize, logger, main_combined_result
+from CLASSIC_ScanGame import game_combined_result
+from ClassicLib.Constants import DB_PATHS, YAML, gamevars
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, SQLiteReader
 from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat, get_entry
@@ -49,7 +49,7 @@ class ClassicScanLogs:
         self.stats_crashlog_scanned = 0
         self.stats_crashlog_incomplete = 0
         self.stats_crashlog_failed = 0
-        CMain.logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
+        logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
 
     def close_database(self) -> None:
         """Close the SQLite database."""
@@ -70,8 +70,8 @@ class ClassicScanLogs:
                 disabled, it is set to an empty string.
         """
         if self.fcx_mode:
-            self.main_files_check = CMain.main_combined_result()
-            self.game_files_check = CGame.game_combined_result()
+            self.main_files_check = main_combined_result()
+            self.game_files_check = game_combined_result()
         else:
             self.main_files_check = "❌ FCX Mode is disabled, skipping game files check... \n-----\n"
             self.game_files_check = ""

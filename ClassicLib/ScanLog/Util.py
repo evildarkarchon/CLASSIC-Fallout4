@@ -3,7 +3,7 @@ import sqlite3
 from pathlib import Path
 
 from CLASSIC_Main import classic_settings, logger, yaml_settings
-from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Constants import DB_PATHS, YAML, gamevars
 
 
 def crashlogs_get_files() -> list[Path]:

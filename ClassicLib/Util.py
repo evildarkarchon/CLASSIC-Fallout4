@@ -21,6 +21,7 @@ from packaging.version import Version
 from CLASSIC_Main import logger
 from ClassicLib import Constants
 
+
 def calculate_similarity(file1: Path, file2: Path) -> float:
     """
     Compares the content of two files and calculates the similarity ratio based
