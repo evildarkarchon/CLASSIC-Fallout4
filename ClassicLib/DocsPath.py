@@ -223,6 +223,7 @@ def docs_generate_paths() -> None:
     yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_XSE",
                   str(docs_path.joinpath(xse_acronym_base, f"{xse_acronym.lower()}.log")))
 
+
 # =========== CHECK DOCS MAIN INI -> CHECK EXISTENCE & CORRUPTION ===========
 def docs_check_ini(ini_name: str) -> str:
     """

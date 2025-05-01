@@ -8,8 +8,11 @@ from io import TextIOWrapper
 from logging import Logger
 from pathlib import Path
 from typing import Iterator, cast
+from urllib.parse import urlparse
 
+import aiohttp
 import chardet
+import requests
 from packaging.version import Version
 
 from CLASSIC_Main import logger
@@ -99,8 +102,9 @@ def crashgen_version_gen(input_string: str) -> Version:
         return Version(version_str)
     return Constants.NULL_VERSION \
  \
- \
-@contextlib.contextmanager
+        @ contextlib.contextmanager
+
+
 def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[TextIOWrapper]:
     """
     Opens a file with its detected encoding as a context manager.
@@ -212,3 +216,92 @@ def remove_readonly(file_path: Path) -> None:
         logger.error(f"> > > ERROR (remove_readonly) : '{file_path}' not found.")
     except (ValueError, OSError) as err:
         logger.error(f"> > > ERROR (remove_readonly) : {err}")
+
+
+def append_or_extend(value: str | int | float | list | tuple | set, destination: list[str]) -> None:
+    """
+    Appends a single value or extends a list with multiple values into the destination list.
+
+    If the input `value` is a string, integer, or float, it is appended to the `destination`
+    list after converting it to a string. If the `value` is a collection type such as a list,
+    tuple, or set, its elements are extended into the `destination` list.
+
+    Args:
+        value: A single value to append or a collection (list, tuple, or set) whose elements
+            will be extended into the destination list.
+        destination: The list to which the value or collection of values will be appended
+            or extended.
+
+    Returns:
+        None
+    """
+    if isinstance(value, list | tuple | set):
+        destination.extend(value)
+    else:
+        destination.append(str(value))
+
+
+def pastebin_fetch(url: str) -> None:
+    """
+    Fetches and saves raw content from a Pastebin URL to a local file.
+
+    This function takes a Pastebin URL, converts it to its raw content version
+    if necessary, downloads the content, and saves it to a specified directory.
+    The output file is named based on the paste identifier extracted from the URL.
+
+    Args:
+        url: The Pastebin URL from which the content will be fetched.
+
+    Raises:
+        HTTPError: If the HTTP request to the provided URL fails.
+    """
+    if urlparse(url).netloc == "pastebin.com" and "/raw" not in url:
+        url = url.replace("pastebin.com", "pastebin.com/raw")
+    response = requests.get(url)
+    if response.status_code != requests.codes.ok:
+        response.raise_for_status()
+    pastebin_path = Path("Crash Logs/Pastebin")
+    if not pastebin_path.is_dir():
+        pastebin_path.mkdir(parents=True, exist_ok=True)
+    outfile = pastebin_path / f"crash-{urlparse(url).path.split("/")[-1]}.log"
+    outfile.write_text(response.text, encoding="utf-8", errors="ignore")
+
+
+async def pastebin_fetch_async(url: str) -> None:
+    """
+    Asynchronously fetches the raw content of a pastebin link and writes it to a log file.
+
+    This function processes a given Pastebin URL, ensuring it fetches raw content if necessary,
+    downloads the content asynchronously, and writes it to a local file. If the directory
+    does not exist, it is created. The function operates asynchronously for network operations
+    to improve efficiency in asynchronous workflows.
+
+    Args:
+        url (str): The Pastebin URL to fetch content from. The function automatically adjusts
+            the URL to point to the raw content if it is not already.
+
+    """
+
+    if urlparse(url).netloc == "pastebin.com" and "/raw" not in url:
+        url = url.replace("pastebin.com", "pastebin.com/raw")
+
+    async with aiohttp.ClientSession() as session, session.get(url) as response:
+        if response.status != 200:
+            response.raise_for_status()
+        content = await response.text()
+
+    # File operations are still synchronous, but they're generally quick
+    # For a fully async version, you could use aiofiles, but it's not always necessary
+    pastebin_path = Path("Crash Logs/Pastebin")
+    if not pastebin_path.is_dir():
+        pastebin_path.mkdir(parents=True, exist_ok=True)
+
+    outfile = pastebin_path / f"crash-{urlparse(url).path.split('/')[-1]}.log"
+
+    # If you want fully async file operations, uncomment this and comment out the write_text line:
+    # import aiofiles
+    # async with aiofiles.open(outfile, 'w', encoding="utf-8", errors="ignore") as f:
+    #     await f.write(content)
+
+    # Otherwise, this is fine for most use cases:
+    outfile.write_text(content, encoding="utf-8", errors="ignore")

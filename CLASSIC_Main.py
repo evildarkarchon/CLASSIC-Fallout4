@@ -11,7 +11,7 @@ from ClassicLib.DocsPath import docs_path_find, docs_generate_paths, docs_check_
 from ClassicLib.GamePath import game_path_find, game_generate_paths
 from ClassicLib.Util import open_file_with_encoding, configure_logging
 from ClassicLib.XseCheck import xse_check_integrity, xse_check_hashes
-from ClassicLib.YamlSettingsCache import YamlSettingsCache
+from ClassicLib.YamlSettingsCache import YamlSettingsCache, yaml_settings, classic_settings
 
 with contextlib.suppress(ImportError):
     import win32api  # type: ignore[import]
@@ -46,7 +46,8 @@ class ManualDocsPath(QObject):
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
             manual_docs = Path(path.strip())
-            yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Docs", str(manual_docs))
+            yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Docs",
+                          str(manual_docs))
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")
             self.manual_docs_path_signal.emit()
@@ -75,73 +76,11 @@ class GamePathEntry(QObject):
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
             game_path = Path(path.strip())
-            yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game", str(game_path))
+            yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game",
+                          str(game_path))
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")
             self.game_path_signal.emit()
-
-
-def yaml_settings[T](_type: type[T], yaml_store: Constants.YAML, key_path: str, new_value: T | None = None) -> T | None:
-    """
-    Updates or retrieves a setting value from a given YAML store. The method
-    handles type-specific processing for the retrieved or updated value, such
-    as converting to a `Path` object when appropriate.
-
-    Args:
-        _type: The type of setting to retrieve or update. Supports generic
-            type hinting.
-        yaml_store: The YAML store object representing the settings data.
-        key_path: The key path in the YAML store where the setting resides.
-        new_value: The new value to be set in the YAML store at the given key
-            path. This value must match the specified `_type`. Defaults to None.
-
-    Returns:
-        T | None: If `new_value` is provided, returns the updated setting value
-        from the YAML store of the specified `_type`. If no `new_value` is
-        provided, it retrieves and returns the current setting value in the
-        YAML store of the given `_type`. Returns None if the setting does not
-        exist or a type mismatch occurs.
-
-    Raises:
-        TypeError: If the YAML cache is not initialized.
-    """
-    if yaml_cache is None:
-        raise TypeError("CMain not initialized")
-    setting = yaml_cache.get_setting(_type, yaml_store, key_path, new_value)
-    if _type is Path:
-        return Path(setting) if setting and isinstance(setting, str) else None  # type: ignore[return-value]
-    return setting
-
-
-def classic_settings[T](_type: type[T], setting: str) -> T | None:
-    """
-    Fetches a specific setting from a CLASSIC settings file or creates the settings file
-    if it does not exist.
-
-    This function ensures that a settings file named "CLASSIC Settings.yaml" exists in the
-    current directory. If the file does not exist, it creates the file based on default
-    settings specified in another YAML configuration. The function then retrieves and
-    returns the requested setting based on the provided type and setting key.
-
-    Args:
-        _type: The expected type of the setting value. This helps ensure the retrieved
-            setting is appropriately cast to the desired type.
-        setting: The key of the setting to retrieve from the "CLASSIC Settings.yaml"
-            file.
-
-    Returns:
-        The value of the requested setting, cast to the specified type `_type`. If the
-        setting is not found, or if an error occurs, it returns `None`.
-    """
-    settings_path = Path("CLASSIC Settings.yaml")
-    if not settings_path.exists():
-        default_settings = yaml_settings(str, Constants.YAML.Main, "CLASSIC_Info.default_settings")
-        if not isinstance(default_settings, str):
-            raise ValueError("Invalid Default Settings in 'CLASSIC Main.yaml'")
-
-        settings_path.write_text(default_settings, encoding="utf-8")
-
-    return yaml_settings(_type, Constants.YAML.Settings, f"CLASSIC_Settings.{setting}")
 
 
 def classic_generate_files() -> None:
@@ -194,8 +133,10 @@ def game_check_integrity() -> str:
     message_list = []
     logger.debug("- - - INITIATED GAME INTEGRITY CHECK")
 
-    steam_ini_local = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_SteamINI")
-    exe_hash_old = yaml_settings(str, Constants.YAML.Game, "Game_Info.EXE_HashedOLD")  # The VR check is not needed here.
+    steam_ini_local = yaml_settings(str, Constants.YAML.Game_Local,
+                                    f"Game{Constants.gamevars["vr"]}_Info.Game_File_SteamINI")
+    exe_hash_old = yaml_settings(str, Constants.YAML.Game,
+                                 "Game_Info.EXE_HashedOLD")  # The VR check is not needed here.
     exe_hash_new = yaml_settings(str, Constants.YAML.Game,
                                  "Game_Info.EXE_HashedNEW")  # ...or here. VR hashes are not available at this time.
     game_exe_local = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_EXE")
@@ -233,6 +174,7 @@ def game_check_integrity() -> str:
 
     return "".join(message_list)
 
+
 # ================================================
 # CHECK DOCUMENTS GAME INI FILES & INI SETTINGS
 # ================================================
@@ -260,6 +202,7 @@ def docs_check_folder() -> str:
             raise TypeError
         message_list.append(docs_warn)
     return "".join(message_list)
+
 
 # =========== GENERATE FILE BACKUPS ===========
 # noinspection DuplicatedCode
@@ -341,7 +284,8 @@ def main_combined_result() -> str:
         checks.
     """
     combined_return = [game_check_integrity(), xse_check_integrity(), xse_check_hashes(), docs_check_folder(),
-                       docs_check_ini(f"{Constants.gamevars["game"]}.ini"), docs_check_ini(f"{Constants.gamevars["game"]}Custom.ini"),
+                       docs_check_ini(f"{Constants.gamevars["game"]}.ini"),
+                       docs_check_ini(f"{Constants.gamevars["game"]}Custom.ini"),
                        docs_check_ini(f"{Constants.gamevars["game"]}Prefs.ini")]
     return "".join(combined_return)
 

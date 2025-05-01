@@ -33,7 +33,8 @@ def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
     xse_log_file = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Docs_File_XSE")
     xse_full_name = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.XSE_FullName")
     xse_ver_latest = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.XSE_Ver_Latest")
-    adlib_file_str = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_AddressLib")
+    adlib_file_str = yaml_settings(str, Constants.YAML.Game_Local,
+                                   f"Game{Constants.gamevars["vr"]}_Info.Game_File_AddressLib")
     if not isinstance(catch_errors, list):
         raise TypeError
     if not (isinstance(xse_acronym, str) and isinstance(xse_full_name, str) and isinstance(xse_ver_latest, str)):
@@ -106,8 +107,10 @@ def xse_check_hashes() -> str:
     logger.debug("- - - INITIATED XSE FILE HASH CHECK")
 
     xse_script_missing = xse_script_mismatch = False
-    xse_hashedscripts = yaml_settings(dict[str, str], Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.XSE_HashedScripts")
-    game_folder_scripts = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_Folder_Scripts")
+    xse_hashedscripts = yaml_settings(dict[str, str], Constants.YAML.Game,
+                                      f"Game{Constants.gamevars["vr"]}_Info.XSE_HashedScripts")
+    game_folder_scripts = yaml_settings(str, Constants.YAML.Game_Local,
+                                        f"Game{Constants.gamevars["vr"]}_Info.Game_Folder_Scripts")
     if not isinstance(xse_hashedscripts, dict):
         raise TypeError
     if not (isinstance(game_folder_scripts, str) or game_folder_scripts is None):

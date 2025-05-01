@@ -48,7 +48,8 @@ def game_path_find() -> None:
     exe_name = f"{Constants.gamevars["game"]}{Constants.gamevars["vr"]}.exe"
 
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
-        yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game", str(game_path))
+        yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game",
+                      str(game_path))
         return
 
     xse_file = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Docs_File_XSE")
@@ -75,7 +76,8 @@ def game_path_find() -> None:
             game_path = Path(logline)
             break
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
-        yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game", str(game_path))
+        yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game",
+                      str(game_path))
         return
 
     if gui_mode:
@@ -90,9 +92,11 @@ def game_path_find() -> None:
         print(f"You entered: {path_input} | This path will be automatically added to CLASSIC Settings.yaml")
         game_path = Path(path_input.strip())
         if game_path and game_path.joinpath(exe_name).is_file():
-            yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game", str(game_path))
+            yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game",
+                          str(game_path))
             return
-        print(f"❌ ERROR : NO {Constants.gamevars["game"]}{Constants.gamevars["vr"]}.exe FILE FOUND IN '{game_path}'! Please try again.")
+        print(
+            f"❌ ERROR : NO {Constants.gamevars["game"]}{Constants.gamevars["vr"]}.exe FILE FOUND IN '{game_path}'! Please try again.")
 
 
 def game_generate_paths() -> None:
@@ -121,15 +125,19 @@ def game_generate_paths() -> None:
     if not (isinstance(game_path, str) and isinstance(xse_acronym_base, str)):
         raise TypeError
 
-    yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_Folder_Data", rf"{game_path}\Data")
-    yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
+    yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_Folder_Data",
+                  rf"{game_path}\Data")
+    yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_Folder_Scripts",
+                  rf"{game_path}\Data\Scripts")
     yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_Folder_Plugins",
                   fr"{game_path}\Data\{xse_acronym_base}\Plugins")
-    yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
+    yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_SteamINI",
+                  rf"{game_path}\steam_api.ini")
     yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_EXE",
                   fr"{game_path}\{Constants.gamevars["game"]}{Constants.gamevars["vr"]}.exe")
     game_version = get_game_version(
-        Path(cast("str", yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_EXE"))))
+        Path(cast("str",
+                  yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_EXE"))))
     match Constants.gamevars["game"]:
         case "Fallout4" if not Constants.gamevars["vr"]:
             if (

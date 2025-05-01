@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from typing import Literal, TypedDict
+
 from packaging.version import Version
 
 NULL_VERSION = Version("0.0.0.0")
@@ -17,6 +18,7 @@ type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
 type YAMLValueOptional = YAMLValue | None
 type GameID = Literal[
     "Fallout4", "Fallout4VR", "Skyrim", "Starfield"]  # Entries must correspond to the game's Main ESM or EXE file name.
+
 
 class YAML(Enum):
     Main = auto()

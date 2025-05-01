@@ -3,9 +3,10 @@ from pathlib import Path
 from typing import ClassVar, Any
 
 import ruamel.yaml
-from ClassicLib.Constants import YAML, gamevars, SETTINGS_IGNORE_NONE
-from CLASSIC_Main import open_file_with_encoding, logger
+
+from CLASSIC_Main import open_file_with_encoding, logger, yaml_cache
 from ClassicLib import Constants
+from ClassicLib.Constants import YAML, gamevars, SETTINGS_IGNORE_NONE
 
 
 class YamlSettingsCache:
@@ -209,3 +210,66 @@ class YamlSettingsCache:
             self.settings_cache[cache_key] = setting_value
 
         return setting_value  # type: ignore[return-value]
+
+
+def yaml_settings[T](_type: type[T], yaml_store: Constants.YAML, key_path: str, new_value: T | None = None) -> T | None:
+    """
+    Updates or retrieves a setting value from a given YAML store. The method
+    handles type-specific processing for the retrieved or updated value, such
+    as converting to a `Path` object when appropriate.
+
+    Args:
+        _type: The type of setting to retrieve or update. Supports generic
+            type hinting.
+        yaml_store: The YAML store object representing the settings data.
+        key_path: The key path in the YAML store where the setting resides.
+        new_value: The new value to be set in the YAML store at the given key
+            path. This value must match the specified `_type`. Defaults to None.
+
+    Returns:
+        T | None: If `new_value` is provided, returns the updated setting value
+        from the YAML store of the specified `_type`. If no `new_value` is
+        provided, it retrieves and returns the current setting value in the
+        YAML store of the given `_type`. Returns None if the setting does not
+        exist or a type mismatch occurs.
+
+    Raises:
+        TypeError: If the YAML cache is not initialized.
+    """
+    if yaml_cache is None:
+        raise TypeError("CMain not initialized")
+    setting = yaml_cache.get_setting(_type, yaml_store, key_path, new_value)
+    if _type is Path:
+        return Path(setting) if setting and isinstance(setting, str) else None  # type: ignore[return-value]
+    return setting
+
+
+def classic_settings[T](_type: type[T], setting: str) -> T | None:
+    """
+    Fetches a specific setting from a CLASSIC settings file or creates the settings file
+    if it does not exist.
+
+    This function ensures that a settings file named "CLASSIC Settings.yaml" exists in the
+    current directory. If the file does not exist, it creates the file based on default
+    settings specified in another YAML configuration. The function then retrieves and
+    returns the requested setting based on the provided type and setting key.
+
+    Args:
+        _type: The expected type of the setting value. This helps ensure the retrieved
+            setting is appropriately cast to the desired type.
+        setting: The key of the setting to retrieve from the "CLASSIC Settings.yaml"
+            file.
+
+    Returns:
+        The value of the requested setting, cast to the specified type `_type`. If the
+        setting is not found, or if an error occurs, it returns `None`.
+    """
+    settings_path = Path("CLASSIC Settings.yaml")
+    if not settings_path.exists():
+        default_settings = yaml_settings(str, Constants.YAML.Main, "CLASSIC_Info.default_settings")
+        if not isinstance(default_settings, str):
+            raise ValueError("Invalid Default Settings in 'CLASSIC Main.yaml'")
+
+        settings_path.write_text(default_settings, encoding="utf-8")
+
+    return yaml_settings(_type, Constants.YAML.Settings, f"CLASSIC_Settings.{setting}")
