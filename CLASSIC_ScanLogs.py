@@ -11,8 +11,6 @@ from packaging.version import Version
 
 from CLASSIC_Main import logger, initialize
 
-"""import CLASSIC_Main as CMain
-import CLASSIC_ScanGame as CGame"""
 from ClassicLib.Constants import YAML, gamevars, DB_PATHS
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, SQLiteReader
