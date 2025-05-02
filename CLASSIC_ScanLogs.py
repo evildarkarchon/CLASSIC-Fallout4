@@ -22,11 +22,43 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 # noinspection PyUnresolvedReferences
 class ClassicScanLogs:
     def __init__(self) -> None:
+        """
+        Initializes the class and performs the setup required for crash log scanning and processing.
+
+        This method initializes several attributes and settings required for scanning and
+        processing crash log files. It compiles a regex pattern for plugin searches, retrieves
+        the list of crash log files, loads settings for excluding certain log records, and
+        applies transformations and checks for various conditions. Additionally, it sets up
+        the environment necessary to process the crash logs, including loading YAML data,
+        checking database states, and preparing to move unsolved logs if required.
+
+        Attributes:
+            pluginsearch (re.Pattern): Compiled regex pattern to search for plugins within the crash logs.
+            crashlog_list (list[Path]): List of crash log files to be processed, retrieved using crashlogs_get_files().
+            remove_list (tuple[str]): List of log records to exclude, fetched from the YAML settings.
+            yamldata (ClassicScanLogsInfo): Instance containing classic scan logs info fetched from YAML.
+            xse_acronym (str): Lowercase representation of the XSE acronym from the YAML data.
+            fcx_mode (bool): Whether the FCX mode is enabled, fetched from the classic settings.
+            show_formid_values (bool): Indicates whether FormID values should be displayed, fetched from classic settings.
+            formid_db_exists (bool): True if at least one database exists in the specified DB paths.
+            move_unsolved_logs (bool): Whether unsolved logs should be moved, based on classic settings.
+            lower_records (set[str]): Set of lowercase record entries from the classic records in the YAML data.
+            lower_ignore (set[str]): Set of lowercase game ignore records from the YAML data.
+            lower_plugins_ignore (set[str]): Set of lowercase ignore plugins from the YAML data.
+            ignore_plugins_list (set[str]): Set of lowercase plugins from the YAML ignore list, if any.
+            scan_start_time (float): Timestamp indicating the start time of the scan, in seconds since the epoch.
+            crashlogs (SQLiteReader): SQLiteReader instance initialized with the crash log files.
+            main_files_check (str): Placeholder for main files check-related information.
+            game_files_check (str): Placeholder for game files check-related information.
+            scan_failed_list (list[str]): List of crash log files that failed to scan.
+            user_folder (Path): Path to the user's home directory.
+            crashlog_stats (Counter): Counter for various statistics of the scan (currently scanned, incomplete, and failed).
+        """
         self.pluginsearch = re.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
                                        flags=re.IGNORECASE)
         self.crashlog_list = crashlogs_get_files()
         print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
-        self.remove_list = yaml_settings(list[str], YAML.Main, "exclude_log_records") or []
+        self.remove_list = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ()
         crashlogs_reformat(self.crashlog_list, self.remove_list)
         self.yamldata = ClassicScanLogsInfo()
         self.xse_acronym = self.yamldata.xse_acronym.lower()
@@ -34,8 +66,8 @@ class ClassicScanLogs:
         self.show_formid_values = classic_settings(bool, "Show FormID Values")
         self.formid_db_exists = any(db.is_file() for db in DB_PATHS)
         self.move_unsolved_logs = classic_settings(bool, "Move Unsolved Logs")
-        self.lower_records = [record.lower() for record in self.yamldata.classic_records_list]
-        self.lower_ignore = [record.lower() for record in self.yamldata.game_ignore_records]
+        self.lower_records = {record.lower() for record in self.yamldata.classic_records_list} or set()
+        self.lower_ignore = {record.lower() for record in self.yamldata.game_ignore_records} or set()
         self.lower_plugins_ignore = {ignore.lower() for ignore in self.yamldata.game_ignore_plugins}
         self.ignore_plugins_list = {item.lower() for item in
                                     self.yamldata.ignore_list} if self.yamldata.ignore_list else set()
@@ -46,9 +78,7 @@ class ClassicScanLogs:
         self.game_files_check = ""
         self.scan_failed_list: list[str] = []
         self.user_folder = Path.home()
-        self.stats_crashlog_scanned = 0
-        self.stats_crashlog_incomplete = 0
-        self.stats_crashlog_failed = 0
+        self.crashlog_stats = Counter(scanned=0, incomplete=0, failed=0)
         logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
 
     def close_database(self) -> None:
@@ -753,10 +783,10 @@ def crashlogs_scan() -> None:
                         value) if value.isdecimal() else value.strip()
 
         if not segment_plugins:
-            scanner.stats_crashlog_incomplete += 1
+            scanner.crashlog_stats["incomplete"] += 1
         if len(crash_data) < 20:
-            scanner.stats_crashlog_scanned -= 1
-            scanner.stats_crashlog_failed += 1
+            scanner.crashlog_stats["scanned"] -= 1
+            scanner.crashlog_stats["failed"] += 1
             trigger_scan_failed = True
 
         # ================== MAIN ERROR ==================
@@ -782,7 +812,7 @@ def crashlogs_scan() -> None:
         if any(esm_name in elem for elem in segment_plugins):
             trigger_plugins_loaded = True
         else:
-            scanner.stats_crashlog_incomplete += 1
+            scanner.crashlog_stats["incomplete"] += 1
 
         # ================================================
         # 2) CHECK EACH SEGMENT AND CREATE REQUIRED VALUES
@@ -1032,7 +1062,7 @@ def crashlogs_scan() -> None:
                          autoscan_report)
 
         # CHECK IF SCAN FAILED
-        scanner.stats_crashlog_scanned += 1
+        scanner.crashlog_stats["scanned"] += 1
         if trigger_scan_failed:
             append_or_extend(crashlog_file.name, scanner.scan_failed_list)
 
@@ -1084,12 +1114,12 @@ def crashlogs_scan() -> None:
     print("SCAN RESULTS ARE AVAILABLE IN FILES NAMED crash-date-and-time-AUTOSCAN.md \n")
     print(f"{random.choice(yamldata.classic_game_hints)}\n-----")
     print(f"Scanned all available logs in {str(time.perf_counter() - 0.5 - scanner.scan_start_time)[:5]} seconds.")
-    print(f"Number of Scanned Logs (No Autoscan Errors): {scanner.stats_crashlog_scanned}")
-    print(f"Number of Incomplete Logs (No Plugins List): {scanner.stats_crashlog_incomplete}")
-    print(f"Number of Failed Logs (Autoscan Can't Scan): {scanner.stats_crashlog_failed}\n-----")
+    print(f"Number of Scanned Logs (No Autoscan Errors): {scanner.crashlog_stats['scanned']}")
+    print(f"Number of Incomplete Logs (No Plugins List): {scanner.crashlog_stats['incomplete']}")
+    print(f"Number of Failed Logs (Autoscan Can't Scan): {scanner.crashlog_stats['failed']}\n-----")
     if gamevars["game"] == "Fallout4":
         print(yamldata.autoscan_text)
-    if scanner.stats_crashlog_scanned == 0 and scanner.stats_crashlog_incomplete == 0:
+    if scanner.crashlog_stats["scanned"] == 0 and scanner.crashlog_stats["incomplete"] == 0:
         print("\n❌ CLASSIC found no crash logs to scan or the scan failed.")
         print("    There are no statistics to show (at this time).\n")
 

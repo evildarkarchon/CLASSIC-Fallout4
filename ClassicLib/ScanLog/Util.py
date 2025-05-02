@@ -86,7 +86,7 @@ def get_entry(formid: str, plugin: str) -> str | None:
     return None
 
 
-def crashlogs_reformat(crashlog_list: list[Path], remove_list: list[str]) -> None:
+def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> None:
     """
     Reformats crash log files by simplifying or modifying their content based on specified settings and criteria. This function processes each log file in the provided list, removes lines containing specific substrings if 'Simplify Logs' is enabled, and reformats load order lines for consistency.
 
