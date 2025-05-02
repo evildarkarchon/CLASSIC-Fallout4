@@ -55,17 +55,20 @@ query_cache: dict[tuple[str, str], str] = {}
 
 def get_entry(formid: str, plugin: str) -> str | None:
     """
-    Retrieves the entry associated with the provided `formid` and `plugin` from the cache or
-    the database. If the pair is found in the query cache, it is returned directly. Otherwise,
-    searches through the defined database paths, and if an entry is found, it is stored in the
-    cache before returning it.
+    Fetches an entry from the cache or database based on the given form ID and plugin.
+
+    This function checks if an entry corresponding to the given `formid` and
+    `plugin` exists in the query cache. If the entry is not found in the cache,
+    it iterates through a list of database paths (`DB_PATHS`) to locate the entry
+    in the database file. If found in the database, the entry is added to the
+    query cache for faster access on subsequent calls.
 
     Args:
-        formid: The unique identifier associated with the entry to be retrieved.
-        plugin: The name of the plugin associated with the specified `formid`.
+        formid: The unique identifier for the form entry to be retrieved.
+        plugin: The name of the plugin associated with the form entry.
 
     Returns:
-        str | None: The entry as a string if found; otherwise, returns None.
+        str | None: The retrieved entry if found, or None if no such entry exists.
     """
     if (entry := query_cache.get((formid, plugin))) is not None:
         return entry
