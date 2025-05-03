@@ -18,8 +18,7 @@ try:
 except ImportError:
     from bs4.element import PageElement  # noqa: TC002
 
-from ClassicLib import Constants
-from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Constants import YAML, gamevars, VR_VERSION, OG_VERSION, NG_VERSION, NULL_VERSION
 
 
 # ================================================
@@ -306,19 +305,19 @@ def check_xse_plugins() -> str:
     # Version information organized by game type
     version_info = {
         "VR": {
-            "version": Constants.VR_VERSION,
+            "version": VR_VERSION,
             "filename": "version-1-2-72-0.csv",
             "description": "Virtual Reality (VR) version",
             "url": "https://www.nexusmods.com/fallout4/mods/64879?tab=files"
         },
         "OG": {
-            "version": Constants.OG_VERSION,
+            "version": OG_VERSION,
             "filename": "version-1-10-163-0.bin",
             "description": "Non-VR (Regular) version",
             "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
         },
         "NG": {
-            "version": Constants.NG_VERSION,
+            "version": NG_VERSION,
             "filename": "version-1-10-984-0.bin",
             "description": "Non-VR (New Game) version",
             "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
@@ -329,7 +328,7 @@ def check_xse_plugins() -> str:
         cast("str", yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Game_File_EXE"))))
 
     # Check if we can detect the game version
-    if game_version == Constants.NULL_VERSION:
+    if game_version == NULL_VERSION:
         message_list.extend((
             "❓ NOTICE : Unable to locate Address Library\n",
             "  If you have Address Library installed, please check the path in your settings.\n",
