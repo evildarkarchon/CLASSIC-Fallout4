@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 
-from ClassicLib import Constants
+from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
 from ClassicLib.Util import configure_logging, open_file_with_encoding
@@ -46,7 +46,7 @@ class ManualDocsPath(QObject):
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
             manual_docs = Path(path.strip())
-            yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Docs",
+            yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs",
                           str(manual_docs))
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")
@@ -76,7 +76,7 @@ class GamePathEntry(QObject):
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
             game_path = Path(path.strip())
-            yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game",
+            yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game",
                           str(game_path))
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")
@@ -101,14 +101,14 @@ def classic_generate_files() -> None:
     """Generate `CLASSIC Ignore.yaml` and `CLASSIC Data/CLASSIC <GAME> Local.yaml`."""
     ignore_path = Path("CLASSIC Ignore.yaml")
     if not ignore_path.exists():
-        default_ignorefile = yaml_settings(str, Constants.YAML.Main, "CLASSIC_Info.default_ignorefile")
+        default_ignorefile = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
         if not isinstance(default_ignorefile, str):
             raise TypeError
         ignore_path.write_text(default_ignorefile, encoding="utf-8")
 
-    local_path = Path(f"CLASSIC Data/CLASSIC {Constants.gamevars["game"]} Local.yaml")
+    local_path = Path(f"CLASSIC Data/CLASSIC {gamevars["game"]} Local.yaml")
     if not local_path.exists():
-        default_yaml = yaml_settings(str, Constants.YAML.Main, "CLASSIC_Info.default_localyaml")
+        default_yaml = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_localyaml")
         if not isinstance(default_yaml, str):
             raise TypeError
         local_path.write_text(default_yaml, encoding="utf-8")
@@ -133,14 +133,14 @@ def game_check_integrity() -> str:
     message_list = []
     logger.debug("- - - INITIATED GAME INTEGRITY CHECK")
 
-    steam_ini_local = yaml_settings(str, Constants.YAML.Game_Local,
-                                    f"Game{Constants.gamevars["vr"]}_Info.Game_File_SteamINI")
-    exe_hash_old = yaml_settings(str, Constants.YAML.Game,
+    steam_ini_local = yaml_settings(str, YAML.Game_Local,
+                                    f"Game{gamevars["vr"]}_Info.Game_File_SteamINI")
+    exe_hash_old = yaml_settings(str, YAML.Game,
                                  "Game_Info.EXE_HashedOLD")  # The VR check is not needed here.
-    exe_hash_new = yaml_settings(str, Constants.YAML.Game,
+    exe_hash_new = yaml_settings(str, YAML.Game,
                                  "Game_Info.EXE_HashedNEW")  # ...or here. VR hashes are not available at this time.
-    game_exe_local = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Game_File_EXE")
-    root_name = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.Main_Root_Name")
+    game_exe_local = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE")
+    root_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Root_Name")
     if not (isinstance(exe_hash_old, str) and isinstance(root_name, str)):
         raise TypeError
     if not (isinstance(steam_ini_local, str) or steam_ini_local is None):
@@ -167,7 +167,7 @@ def game_check_integrity() -> str:
             message_list.append(
                 f"✔️ Your {root_name} game files are installed outside of the Program Files folder! \n-----\n")
         else:
-            root_warn = yaml_settings(str, Constants.YAML.Main, "Warnings_GAME.warn_root_path")
+            root_warn = yaml_settings(str, YAML.Main, "Warnings_GAME.warn_root_path")
             if not isinstance(root_warn, str):
                 raise TypeError
             message_list.append(root_warn)
@@ -193,11 +193,11 @@ def docs_check_folder() -> str:
         TypeError: If the `docs_name` or `docs_warn` obtained from YAML settings is not of type str.
     """
     message_list = []
-    docs_name = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.Main_Docs_Name")
+    docs_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Docs_Name")
     if not isinstance(docs_name, str):
         raise TypeError
     if "onedrive" in docs_name.lower():
-        docs_warn = yaml_settings(str, Constants.YAML.Main, "Warnings_GAME.warn_docs_path")
+        docs_warn = yaml_settings(str, YAML.Main, "Warnings_GAME.warn_docs_path")
         if not isinstance(docs_warn, str):
             raise TypeError
         message_list.append(docs_warn)
@@ -222,10 +222,10 @@ def main_files_backup() -> None:
           during attempt to read it.
     """
     # Got an expired certificate warning after a few tries, maybe there's a better way?
-    backup_list = yaml_settings(list[str], Constants.YAML.Main, "CLASSIC_AutoBackup")
-    game_path = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game")
-    xse_log_file = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Docs_File_XSE")
-    xse_ver_latest = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.XSE_Ver_Latest")
+    backup_list = yaml_settings(list[str], YAML.Main, "CLASSIC_AutoBackup")
+    game_path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game")
+    xse_log_file = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_XSE")
+    xse_ver_latest = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.XSE_Ver_Latest")
 
     if not (isinstance(backup_list, list) and isinstance(xse_ver_latest, str)):
         raise TypeError
@@ -284,9 +284,9 @@ def main_combined_result() -> str:
         checks.
     """
     combined_return = [game_check_integrity(), xse_check_integrity(), xse_check_hashes(), docs_check_folder(),
-                       docs_check_ini(f"{Constants.gamevars["game"]}.ini"),
-                       docs_check_ini(f"{Constants.gamevars["game"]}Custom.ini"),
-                       docs_check_ini(f"{Constants.gamevars["game"]}Prefs.ini")]
+                       docs_check_ini(f"{gamevars["game"]}.ini"),
+                       docs_check_ini(f"{gamevars["game"]}Custom.ini"),
+                       docs_check_ini(f"{gamevars["game"]}Prefs.ini")]
     return "".join(combined_return)
 
 
@@ -306,8 +306,8 @@ def main_generate_required() -> None:
     """
     configure_logging(logger)
     classic_generate_files()
-    classic_ver = yaml_settings(str, Constants.YAML.Main, "CLASSIC_Info.version")
-    game_name = yaml_settings(str, Constants.YAML.Game, "Game_Info.Main_Root_Name")
+    classic_ver = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
+    game_name = yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name")
     if not (isinstance(classic_ver, str) and isinstance(game_name, str)):
         raise TypeError
     print(f"Hello World! | Crash Log Auto Scanner & Setup Integrity Checker | {classic_ver} | {game_name}")
@@ -315,7 +315,7 @@ def main_generate_required() -> None:
     print("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...")
     logger.debug(f"> > > STARTED {classic_ver}")
 
-    game_path = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Game")
+    game_path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game")
 
     if not game_path:
         docs_path_find(gui_mode)
@@ -357,7 +357,7 @@ def initialize(is_gui: bool = False) -> None:
         yaml_cache.load_yaml(path)
 
     # noinspection PyTypedDict
-    Constants.gamevars["vr"] = "" if not classic_settings(bool, "VR Mode") else "VR"
+    gamevars["vr"] = "" if not classic_settings(bool, "VR Mode") else "VR"
     gui_mode = is_gui
     if gui_mode:
         manual_docs_gui = ManualDocsPath()
