@@ -12,27 +12,19 @@ from ClassicLib.Util import open_file_with_encoding
 
 class YamlSettingsCache:
     """
-    Manages YAML file caching and settings retrieval and updating operations.
+    A utility class for managing and caching YAML settings.
 
-    This class provides methods to efficiently handle YAML files by implementing
-    caching mechanisms for both static and dynamic YAML files. It supports
-    retrieving, updating, and maintaining settings across multiple YAML stores,
-    with built-in optimization to cache frequently accessed data for static files.
-    The class also ensures changes to dynamic files are detected and reloaded
-    when necessary.
+    This class provides mechanisms for working with YAML configurations, including
+    retrieving paths, loading YAML files with caching, and accessing or modifying
+    settings in a structured YAML format. It employs a singleton pattern to ensure
+    a single instance across the application. Static YAML files (those that don't
+    change during program execution) are handled differently from dynamic YAML
+    files, with separate caching mechanisms for improved performance.
 
     Attributes:
-        STATIC_YAML_STORES (set[YAML]): A set of YAML stores that remain unchanged
-            during program execution. These stores are treated as static files.
-        cache (dict[Path, YAMLMapping]): A dictionary that maps file paths to their
-            loaded YAML content for caching purposes.
-        file_mod_times (dict[Path, float]): Tracks modification timestamps of files
-            to determine if a reload is needed.
-        path_cache (dict[YAML, Path]): Caches the mapping of YAML stores to their
-            corresponding file paths for faster file resolution.
-        settings_cache (dict[tuple[YAML, str, type], Any]): A cache for frequently
-            accessed settings in static YAML files, enabling quick retrieval without
-            repeated file reads or traversals.
+        STATIC_YAML_STORES (set[YAML]): A set of YAML stores considered static,
+            meaning their contents won't be expected to change during program
+            execution. Examples include Main, Game YAML files.
     """
 
     _instance = None
