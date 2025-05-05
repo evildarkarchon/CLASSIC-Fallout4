@@ -1,9 +1,10 @@
 import aiohttp
 from packaging.version import InvalidVersion, Version
 
-from CLASSIC_Main import classic_settings, logger, yaml_settings
 from ClassicLib import Constants
 from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Logger import logger
+from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
 
 
 def try_parse_version(version_string: str) -> Version | None:
@@ -111,6 +112,7 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
         pass
     return None
 
+
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
     """
     Checks whether the current local version of the software is the latest version
@@ -207,6 +209,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             flush=True,
         )
     return True
+
 
 class UpdateCheckError(Exception):
     """Checking for updates failed."""

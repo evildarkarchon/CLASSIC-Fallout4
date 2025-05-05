@@ -38,7 +38,7 @@ class YAML(Enum):
 
 class GameVars(TypedDict):
     game: GameID
-    vr: Literal["VR", ""]
+    vr: Literal["VR", ""] | str
 
 
 gamevars: GameVars = {

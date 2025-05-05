@@ -18,8 +18,8 @@ import chardet
 import requests
 from packaging.version import Version
 
-from CLASSIC_Main import logger
-from ClassicLib import Constants
+from ClassicLib import Constants, GlobalRegistry
+from ClassicLib.Logger import logger
 
 
 def calculate_similarity(file1: Path, file2: Path) -> float:
@@ -155,6 +155,9 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
         yield cast("TextIOWrapper", file_handle)
     finally:
         cast("TextIOWrapper", file_handle).close()
+
+
+GlobalRegistry.register(GlobalRegistry.Keys.OPEN_FILE_FUNC, open_file_with_encoding)
 
 
 # noinspection PyGlobalUndefined
@@ -326,6 +329,7 @@ async def pastebin_fetch_async(url: str) -> None:
 
     # Otherwise, this is fine for most use cases:
     outfile.write_text(content, encoding="utf-8", errors="ignore")
+
 
 def calculate_file_hash(file_path: Path) -> str:
     """

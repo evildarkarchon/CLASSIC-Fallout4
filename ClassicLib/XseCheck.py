@@ -3,9 +3,10 @@ import hashlib
 from pathlib import Path
 from typing import cast
 
-from CLASSIC_Main import logger, yaml_settings
 from ClassicLib import Constants
+from ClassicLib.Logger import logger
 from ClassicLib.Util import open_file_with_encoding
+from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 # noinspection DuplicatedCode

@@ -6,10 +6,10 @@ from typing import cast
 
 from iniparse import configparser
 
-from CLASSIC_Main import logger, manual_docs_gui, yaml_settings
-from ClassicLib import Constants
 from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Logger import logger
 from ClassicLib.Util import remove_readonly
+from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 # noinspection PyUnresolvedReferences
@@ -160,42 +160,6 @@ def docs_path_find(gui_mode: bool = False) -> None:
             get_manual_docs_path()
 
 
-def get_manual_docs_path_gui(path: str) -> None:
-    """
-    Handles the selection of a manual documentation path through the
-    graphical user interface (GUI). This function validates the given
-    path, searches for a specific configuration file in the directory,
-    and updates settings if the required file is found. If the validation
-    fails or the required file is not found, an error message is
-    displayed and the user is prompted to try again.
-
-    Args:
-        path: A string representing the directory path entered by the
-            user through the GUI. The function expects this path to be
-            validated as an existing directory containing the necessary
-            game-specific configuration file (e.g., `{game}.ini`).
-    """
-    if manual_docs_gui is None:
-        raise TypeError("CMain not initialized")
-
-    path = path.strip()
-    if Path(path).is_dir():
-        file_found: bool = False
-        for file in Path(path).rglob("*.ini"):
-            if f"{gamevars["game"]}.ini" in file.name:
-                print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
-                manual_docs = Path(path)
-                yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs", str(manual_docs))
-                file_found = True
-                break
-        if not file_found:
-            print(f"❌ ERROR : NO {gamevars["game"]}.ini FILE FOUND IN '{path}'! Please try again.")
-            manual_docs_gui.manual_docs_path_signal.emit()
-    else:
-        print(f"'{path}' is not a valid or existing directory path. Please try again.")
-        manual_docs_gui.manual_docs_path_signal.emit()
-
-
 def docs_generate_paths() -> None:
     """
     Generates and configures paths for documentation files based on various game-specific
@@ -249,8 +213,8 @@ def docs_check_ini(ini_name: str) -> str:
     """
     message_list: list[str] = []
     logger.info(f"- - - INITIATED {ini_name} CHECK")
-    folder_docs = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Root_Folder_Docs")
-    docs_name = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.Main_Docs_Name")
+    folder_docs = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs")
+    docs_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Docs_Name")
     if not isinstance(docs_name, str):
         raise TypeError
     if not (isinstance(folder_docs, str) or folder_docs is None):
@@ -307,7 +271,7 @@ def docs_check_ini(ini_name: str) -> str:
             with ini_path.open("a", encoding="utf-8", errors="ignore") as ini_file:
                 message_list.extend(["❌ WARNING : Archive Invalidation / Loose Files setting is not enabled. \n",
                                      "  CLASSIC will now enable this setting automatically in the game INI files. \n-----\n"])
-                customini_config = yaml_settings(str, Constants.YAML.Game, "Default_CustomINI")
+                customini_config = yaml_settings(str, YAML.Game, "Default_CustomINI")
                 if not isinstance(customini_config, str):
                     raise TypeError
                 ini_file.write(customini_config)

@@ -5,7 +5,7 @@ from pathlib import Path
 from packaging.version import Version
 
 from ClassicLib.Constants import NULL_VERSION, YAML, gamevars
-from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
+from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 class SQLiteReader:
@@ -114,7 +114,7 @@ class ClassicScanLogsInfo:
         self.game_mods_freq = yaml_settings(dict[str, str], YAML.Game, "Mods_FREQ") or {}
         self.game_mods_opc2 = yaml_settings(dict[str, str], YAML.Game, "Mods_OPC2") or {}
         self.game_mods_solu = yaml_settings(dict[str, str], YAML.Game, "Mods_SOLU") or {}
-        self.game_version = Version(yaml_settings(str, YAML.Game, "Game_Info.GameVersion") or "0.0.0")
+        self.game_version = Version(yaml_settings(str, YAML.Game, "Game_Info.GameVersion") or str(NULL_VERSION))
         self.game_version_new = Version(
-            yaml_settings(str, YAML.Game, "Game_Info.GameVersionNEW") or "0.0.0")
-        self.game_version_vr = Version(yaml_settings(str, YAML.Game, "GameVR_Info.GameVersion") or "0.0.0")
+            yaml_settings(str, YAML.Game, "Game_Info.GameVersionNEW") or str(NULL_VERSION))
+        self.game_version_vr = Version(yaml_settings(str, YAML.Game, "GameVR_Info.GameVersion") or str(NULL_VERSION))

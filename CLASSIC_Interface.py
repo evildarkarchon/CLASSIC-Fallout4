@@ -36,14 +36,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from CLASSIC_Main import game_path_gui, initialize, main_generate_required, manual_docs_gui
+from CLASSIC_Main import initialize, main_generate_required
 from CLASSIC_ScanGame import game_files_manage, write_combined_results
 from CLASSIC_ScanLogs import crashlogs_scan
+from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML, gamevars
-from ClassicLib.DocsPath import get_manual_docs_path_gui
 from ClassicLib.PapyrusLog import papyrus_logging
 from ClassicLib.Update import UpdateCheckError, is_latest_version
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
 
 
 @dataclass
@@ -970,7 +970,7 @@ QLabel {
         self.setStyleSheet(dark_style)
         self.setMinimumSize(350, 475)
         self.setMaximumSize(700, 950)
-        #self.setFixedSize(700, 950)  # Set fixed size to prevent resizing, for now.
+        # self.setFixedSize(700, 950)  # Set fixed size to prevent resizing, for now.
 
         # Set up the custom exception handler for the main window
         self.installEventFilter(self)
@@ -1110,7 +1110,7 @@ QLabel {
         dialog = ManualPathDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             manual_path = dialog.get_path()
-            get_manual_docs_path_gui(manual_path)
+            game_path_gui(manual_path)
 
     def show_game_path_dialog(self) -> None:
         """
@@ -2624,7 +2624,9 @@ This feature is not fully implemented."""
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
+    initialize(is_gui=True)
+    manual_docs_gui = GlobalRegistry.get_manual_docs_gui()
+    game_path_gui = GlobalRegistry.get_game_path_gui()
     try:
         window = MainWindow()
         window.show()

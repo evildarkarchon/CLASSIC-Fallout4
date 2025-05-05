@@ -2,8 +2,9 @@ import shutil
 import sqlite3
 from pathlib import Path
 
-from CLASSIC_Main import classic_settings, logger, yaml_settings
 from ClassicLib.Constants import DB_PATHS, YAML, gamevars
+from ClassicLib.Logger import logger
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 def crashlogs_get_files() -> list[Path]:
@@ -52,6 +53,7 @@ def crashlogs_get_files() -> list[Path]:
 
 
 query_cache: dict[tuple[str, str], str] = {}
+
 
 def get_entry(formid: str, plugin: str) -> str | None:
     """

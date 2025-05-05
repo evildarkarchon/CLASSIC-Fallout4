@@ -8,10 +8,11 @@ from typing import Literal, cast
 from bs4 import BeautifulSoup
 from packaging.version import Version  # noqa: TC002
 
-from CLASSIC_Main import initialize, logger, main_generate_required
+from CLASSIC_Main import initialize, main_generate_required
+from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import TEST_MODE, ConfigFileCache, mod_toml_config
 from ClassicLib.Util import get_game_version, open_file_with_encoding
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
 
 try:
     from bs4 import PageElement
@@ -44,13 +45,13 @@ def check_crashgen_settings() -> str:
 
     # Get plugins path and ensure it's a Path object
     plugins_path = yaml_settings(Path, YAML.Game_Local,
-                                       f"Game{gamevars['vr']}_Info.Game_Folder_Plugins")
+                                 f"Game{gamevars['vr']}_Info.Game_Folder_Plugins")
     if plugins_path and not isinstance(plugins_path, Path):
         plugins_path = Path(cast("str", plugins_path))
 
     # Get crash generator name from settings
     crashgen_name_setting = yaml_settings(str, YAML.Game,
-                                                f"Game{gamevars['vr']}_Info.CRASHGEN_LogName")
+                                          f"Game{gamevars['vr']}_Info.CRASHGEN_LogName")
     crashgen_name = crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
 
     # Define paths to possible config files
@@ -300,7 +301,7 @@ def check_xse_plugins() -> str:
     """
     message_list: list[str] = []
     plugins_path = yaml_settings(Path, YAML.Game_Local,
-                                       f"Game{gamevars['vr']}_Info.Game_Folder_Plugins")
+                                 f"Game{gamevars['vr']}_Info.Game_Folder_Plugins")
 
     # Version information organized by game type
     version_info = {
@@ -376,9 +377,6 @@ def check_xse_plugins() -> str:
     return "".join(message_list)
 
 
-
-
-
 # ================================================
 # WRYE BASH - PLUGIN CHECKER
 # ================================================
@@ -400,7 +398,7 @@ def scan_wryecheck() -> str:
     message_list: list[str] = []
     wrye_missinghtml_setting = yaml_settings(str, YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")
     wrye_plugincheck = yaml_settings(Path, YAML.Game_Local,
-                                           f"Game{gamevars['vr']}_Info.Docs_File_WryeBashPC")
+                                     f"Game{gamevars['vr']}_Info.Docs_File_WryeBashPC")
     wrye_warnings_setting = yaml_settings(dict[str, str], YAML.Main, "Warnings_WRYE")
 
     wrye_missinghtml = wrye_missinghtml_setting if isinstance(wrye_missinghtml_setting, str) else None
@@ -606,7 +604,7 @@ def scan_mods_unpacked() -> str:
     previs_list: set[str] = set()
     xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.XSE_Acronym")
     xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game,
-                                                  f"Game{gamevars['vr']}_Info.XSE_HashedScripts")
+                                            f"Game{gamevars['vr']}_Info.XSE_HashedScripts")
 
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
@@ -798,7 +796,7 @@ def scan_mods_archived() -> str:
 
     xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.XSE_Acronym")
     xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game,
-                                                  f"Game{gamevars['vr']}_Info.XSE_HashedScripts")
+                                            f"Game{gamevars['vr']}_Info.XSE_HashedScripts")
 
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else ""
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}

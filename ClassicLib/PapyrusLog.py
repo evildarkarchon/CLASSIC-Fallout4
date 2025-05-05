@@ -28,7 +28,7 @@ def papyrus_logging() -> tuple[str, int]:
     """
     message_list: list[str] = []
     papyrus_path = yaml_settings(Path, YAML.Game_Local,
-                                       f"Game{gamevars['vr']}_Info.Docs_File_PapyrusLog")
+                                 f"Game{gamevars['vr']}_Info.Docs_File_PapyrusLog")
 
     count_dumps = count_stacks = count_warnings = count_errors = 0
     if papyrus_path and papyrus_path.exists():

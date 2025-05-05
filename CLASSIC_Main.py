@@ -1,17 +1,17 @@
 import contextlib
 import hashlib
-import logging
 import shutil
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Signal
-
+from ClassicLib import GlobalRegistry
+from ClassicLib.Logger import logger
+from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings, yaml_cache
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
+from ClassicLib.GuiComponents import ManualDocsPath, GamePathEntry
 from ClassicLib.Util import configure_logging, open_file_with_encoding
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
-from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_settings
 
 with contextlib.suppress(ImportError):
     pass  # type: ignore[import]
@@ -23,64 +23,6 @@ with contextlib.suppress(ImportError):
     ❓ import shelve if you want to store persistent data that you do not want regular users to access or modify.
     ❓ Globals are generally used to standardize game paths and INI files naming conventions.
 """
-
-logger = logging.getLogger()
-
-
-# noinspection DuplicatedCode
-class ManualDocsPath(QObject):
-    manual_docs_path_signal = Signal()
-
-    def __init__(self) -> None:
-        super().__init__()
-
-    def get_manual_docs_path_gui(self, path: str) -> None:
-        """
-        Validates the provided path to ensure it is a directory and updates settings accordingly. Emits a
-        signal if the path is invalid.
-
-        Args:
-            path: The directory path input by the user. This is validated to ensure it is an existing
-                directory.
-        """
-        if Path(path).is_dir():
-            print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
-            manual_docs = Path(path.strip())
-            yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs",
-                          str(manual_docs))
-        else:
-            print(f"'{path}' is not a valid or existing directory path. Please try again.")
-            self.manual_docs_path_signal.emit()
-
-
-# noinspection DuplicatedCode
-class GamePathEntry(QObject):
-    game_path_signal = Signal()
-
-    def __init__(self) -> None:
-        super().__init__()
-
-    def get_game_path_gui(self, path: str) -> None:
-        """
-        Processes the provided directory path to configure the game settings via GUI.
-
-        This function checks if the path entered by the user is a valid directory. If it
-        is valid, it saves the path to the settings.yaml file for the CLASSIC application.
-        Otherwise, it alerts the user about the invalid directory and emits a signal
-        to re-prompt for the input.
-
-        Args:
-            path: The directory path entered by the user as a string. This should be the
-                intended path for the game's root folder.
-        """
-        if Path(path).is_dir():
-            print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
-            game_path = Path(path.strip())
-            yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game",
-                          str(game_path))
-        else:
-            print(f"'{path}' is not a valid or existing directory path. Please try again.")
-            self.game_path_signal.emit()
 
 
 def classic_generate_files() -> None:
@@ -318,7 +260,7 @@ def main_generate_required() -> None:
     game_path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game")
 
     if not game_path:
-        docs_path_find(gui_mode)
+        docs_path_find(is_gui_mode())
         docs_generate_paths()
         game_path_find()
         game_generate_paths()
@@ -329,10 +271,19 @@ def main_generate_required() -> None:
     print("    YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES \n")
 
 
-yaml_cache: YamlSettingsCache | None = None
-manual_docs_gui: ManualDocsPath | None = None
-game_path_gui: GamePathEntry | None = None
-gui_mode: bool = False
+def get_manual_docs_gui():
+    """Get the manual docs GUI component from the registry."""
+    return GlobalRegistry.get_manual_docs_gui()
+
+
+def get_game_path_gui():
+    """Get the game path GUI component from the registry."""
+    return GlobalRegistry.get_game_path_gui()
+
+
+def is_gui_mode() -> bool:
+    """Check if application is running in GUI mode."""
+    return GlobalRegistry.is_gui_mode()
 
 
 def initialize(is_gui: bool = False) -> None:
@@ -347,21 +298,18 @@ def initialize(is_gui: bool = False) -> None:
         is_gui (bool): Indicates whether the application should operate in GUI mode. If True,
             GUI-related resources are initialized.
     """
-    global gui_mode, yaml_cache, manual_docs_gui, game_path_gui  # noqa: PLW0603
-
-    yaml_cache = YamlSettingsCache()
-
+    GlobalRegistry.register(GlobalRegistry.Keys.GUI_MODE, is_gui)
     # Preload static YAML files
-    for store in YamlSettingsCache.STATIC_YAML_STORES:
+    for store in yaml_cache.STATIC_YAML_STORES:
         path = yaml_cache.get_path_for_store(store)
         yaml_cache.load_yaml(path)
 
     # noinspection PyTypedDict
     gamevars["vr"] = "" if not classic_settings(bool, "VR Mode") else "VR"
-    gui_mode = is_gui
-    if gui_mode:
-        manual_docs_gui = ManualDocsPath()
-        game_path_gui = GamePathEntry()
+    GlobalRegistry.register("VR", gamevars["vr"])
+    if is_gui:
+        GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS_GUI, ManualDocsPath())
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH_GUI, GamePathEntry())
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.

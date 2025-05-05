@@ -1,0 +1,94 @@
+"""
+Global registry for sharing objects across modules without circular imports.
+This module serves as a central storage location for objects that need to be accessed
+from multiple modules throughout the application.
+"""
+
+from pathlib import Path
+from typing import Any
+
+# Central storage for all globally accessible objects
+_registry: dict[str, Any] = {}
+
+
+# Define keys for consistent access
+class Keys:
+    YAML_CACHE = "yaml_cache"
+    MANUAL_DOCS_GUI = "manual_docs_gui"
+    GAME_PATH_GUI = "game_path_gui"
+    GUI_MODE = "gui_mode"
+    OPEN_FILE_FUNC = "open_file_with_encoding"
+    VR = "gamevars_vr"
+
+
+def register(key: str, obj: Any) -> None:
+    """
+    Register an object in the global registry.
+
+    Args:
+        key: Unique identifier for the object
+        obj: The object to register
+    """
+    _registry[key] = obj
+
+
+def get(key: str) -> Any:
+    """
+    Retrieve an object from the global registry.
+
+    Args:
+        key: The unique identifier of the object
+
+    Returns:
+        The registered object or None if not found
+    """
+    return _registry.get(key)
+
+
+def is_registered(key: str) -> bool:
+    """
+    Check if a key is registered.
+
+    Args:
+        key: The unique identifier to check
+
+    Returns:
+        True if the key exists in the registry, False otherwise
+    """
+    return key in _registry
+
+
+# Convenience functions for commonly used registry items
+def get_yaml_cache():
+    """Get the YAML settings cache instance."""
+    return get(Keys.YAML_CACHE)
+
+
+def get_manual_docs_gui():
+    """Get the manual docs GUI component."""
+    return get(Keys.MANUAL_DOCS_GUI)
+
+
+def get_game_path_gui():
+    """Get the game path GUI component."""
+    return get(Keys.GAME_PATH_GUI)
+
+
+def is_gui_mode() -> bool:
+    """Check if the application is running in GUI mode."""
+    return get(Keys.GUI_MODE) or False
+
+
+def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore"):
+    """Open a file with the specified encoding."""
+    func = get(Keys.OPEN_FILE_FUNC)
+    if func:
+        return func(path, encoding, errors)
+    raise RuntimeError("open_file_with_encoding function not registered")
+
+
+def get_vr() -> str:
+    """Get the VR setting."""
+    if not is_registered(Keys.VR) or (is_registered(Keys.VR) and Keys.VR == ""):
+        return ""
+    return get(Keys.VR)

@@ -9,14 +9,15 @@ from typing import Literal
 import regex as re
 from packaging.version import Version
 
-from CLASSIC_Main import initialize, logger, main_combined_result
+from CLASSIC_Main import initialize, main_combined_result
 from CLASSIC_ScanGame import game_combined_result
 from ClassicLib.Constants import DB_PATHS, YAML, gamevars
+from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, SQLiteReader
 from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat, get_entry
 from ClassicLib.Util import append_or_extend, crashgen_version_gen
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
 
 
 # noinspection PyUnresolvedReferences

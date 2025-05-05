@@ -4,9 +4,10 @@ from typing import Any, ClassVar
 
 import ruamel.yaml
 
-from CLASSIC_Main import logger, open_file_with_encoding, yaml_cache
-from ClassicLib import Constants
-from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, gamevars
+from ClassicLib import GlobalRegistry
+from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, gamevars, YAMLMapping, YAMLValue
+from ClassicLib.Logger import logger
+from ClassicLib.Util import open_file_with_encoding
 
 
 class YamlSettingsCache:
@@ -33,14 +34,25 @@ class YamlSettingsCache:
             accessed settings in static YAML files, enabling quick retrieval without
             repeated file reads or traversals.
     """
+
+    _instance = None
+
     # Static YAML stores that won't change during program execution
     STATIC_YAML_STORES: ClassVar[set[YAML]] = {YAML.Main, YAML.Game}
 
-    def __init__(self) -> None:
-        self.cache: dict[Path, Constants.YAMLMapping] = {}
+    def __new__(cls):
+        """Ensure only one instance of YamlSettingsCache is created."""
+        if cls._instance is None:
+            cls._instance = super(YamlSettingsCache, cls).__new__(cls)
+            cls._instance._initialize()
+        return cls._instance
+
+    def _initialize(self):
+        """Initialize the instance attributes."""
+        self.cache: dict[Path, YAMLMapping] = {}
         self.file_mod_times: dict[Path, float] = {}
-        self.path_cache: dict[YAML, Path] = {}  # Cache for YAML store to Path mapping
-        self.settings_cache: dict[tuple[YAML, str, type], Any] = {}  # Cache for frequently accessed settings
+        self.path_cache: dict[YAML, Path] = {}
+        self.settings_cache: dict[tuple[YAML, str, type], Any] = {}
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """
@@ -83,7 +95,7 @@ class YamlSettingsCache:
         self.path_cache[yaml_store] = yaml_path
         return yaml_path
 
-    def load_yaml(self, yaml_path: Path) -> Constants.YAMLMapping:
+    def load_yaml(self, yaml_path: Path) -> YAMLMapping:
         """
         Loads a YAML file with caching to optimize reloading. Supports static and dynamic files,
         with separate handling based on file type. Static files are loaded once and cached, while
@@ -157,7 +169,7 @@ class YamlSettingsCache:
         data = self.load_yaml(yaml_path)
         keys = key_path.split(".")
 
-        def setdefault(dictionary: dict[str, Constants.YAMLValue], key: str) -> dict[str, Constants.YAMLValue]:
+        def setdefault(dictionary: dict[str, YAMLValue], key: str) -> dict[str, YAMLValue]:
             """
             A utility class for managing and working with YAML settings. This class provides
             methods to retrieve and modify settings within a nested YAML data structure.
@@ -212,7 +224,11 @@ class YamlSettingsCache:
         return setting_value  # type: ignore[return-value]
 
 
-def yaml_settings[T](_type: type[T], yaml_store: Constants.YAML, key_path: str, new_value: T | None = None) -> T | None:
+yaml_cache = YamlSettingsCache()
+GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
+
+
+def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
     """
     Updates or retrieves a setting value from a given YAML store. The method
     handles type-specific processing for the retrieved or updated value, such
@@ -266,10 +282,10 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
     """
     settings_path = Path("CLASSIC Settings.yaml")
     if not settings_path.exists():
-        default_settings = yaml_settings(str, Constants.YAML.Main, "CLASSIC_Info.default_settings")
+        default_settings = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_settings")
         if not isinstance(default_settings, str):
             raise ValueError("Invalid Default Settings in 'CLASSIC Main.yaml'")
 
         settings_path.write_text(default_settings, encoding="utf-8")
 
-    return yaml_settings(_type, Constants.YAML.Settings, f"CLASSIC_Settings.{setting}")
+    return yaml_settings(_type, YAML.Settings, f"CLASSIC_Settings.{setting}")
