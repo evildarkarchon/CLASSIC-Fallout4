@@ -1,6 +1,7 @@
 import contextlib
 import hashlib
 import shutil
+import sys
 from pathlib import Path
 
 from ClassicLib import GlobalRegistry
@@ -310,6 +311,11 @@ def initialize(is_gui: bool = False) -> None:
     if is_gui:
         GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS_GUI, ManualDocsPath())
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH_GUI, GamePathEntry())
+
+    if getattr(sys, "frozen", False):
+        GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(sys.executable).parent)
+    else:
+        GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(__file__).parent)
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.

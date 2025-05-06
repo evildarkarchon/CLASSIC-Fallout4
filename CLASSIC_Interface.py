@@ -245,19 +245,21 @@ class PapyrusMonitorWorker(QObject):
 
 
 # Example fix for pastebin fetch
+import asyncio
+
 class PastebinFetchWorker(QObject):
     """
-    Handles fetching data from a specified pastebin URL using a worker mechanism, emitting signals based on the
-    operation's success or failure.
+    Handles fetching data from a given Pastebin URL within a PyQt framework.
 
-    This class is designed to execute a long-running fetch operation in a separate thread, using PyQt signals
-    to communicate the operation's outcome. It provides a structured and thread-safe method for handling URL data
-    retrieval, ensuring appropriate signal emissions for success, error, and operation completion events.
+    This class is designed as a worker object for performing asynchronous operations to retrieve data from a specified
+    Pastebin URL. The class uses signals to emit the success, error, or completion states of the operation. It ensures
+    robust handling of exceptions, including network errors, import failures, configuration issues, and other unforeseen
+    problems, making it suitable for integration into PyQt applications.
 
     Attributes:
-        finished (pyqtSignal): Signal emitted when the process has finished executing, regardless of the outcome.
-        error (pyqtSignal): Signal emitted with a string describing the error in case of failure.
-        success (pyqtSignal): Signal emitted with the fetched URL as a string when the operation completes successfully.
+        finished (Signal): Signal emitted when the operation finishes, regardless of success or failure.
+        error (Signal): Signal emitted with an error message in case of failure.
+        success (Signal): Signal emitted with the URL upon successful data fetch.
     """
     finished = Signal()
     error = Signal(str)
@@ -279,7 +281,7 @@ class PastebinFetchWorker(QObject):
     @Slot()
     def run(self) -> None:
         """
-        Executes a slot function to fetch data from a specified URL using the `pastebin_fetch` function. This
+        Executes a slot function to fetch data from a specified URL using the `pastebin_fetch_async` function. This
         function emits corresponding signals based on the success or failure of the operation.
 
         The function is aimed to handle possible exceptions such as network-related issues, module import
@@ -298,17 +300,29 @@ class PastebinFetchWorker(QObject):
         Raises:
             OSError: If there are file-system-related issues.
             ValueError: If invalid configuration or input data is encountered.
-            requests.exceptions.RequestException: For network-related issues such as connection problems.
+            aiohttp.ClientError: For network-related issues such as connection problems.
             ImportError: If the required import operation for a module fails to execute.
             Exception: If a general exception is encountered outside specific types mentioned.
         """
         try:
-            # Make sure pastebin_fetch is properly imported
-            from ClassicLib.Util import pastebin_fetch
-            pastebin_fetch(self.url)
-            self.success.emit(self.url)
-        except (OSError, ValueError, requests.exceptions.RequestException) as e:
-            self.error.emit(f"Network or file error: {e!s}")
+            # Make sure pastebin_fetch_async is properly imported
+            from ClassicLib.Util import pastebin_fetch_async
+            import aiohttp
+            
+            # Create and run async event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                loop.run_until_complete(pastebin_fetch_async(self.url))
+                self.success.emit(self.url)
+            except aiohttp.ClientError as e:
+                self.error.emit(f"Network error: {e!s}")
+            finally:
+                loop.close()
+                
+        except (OSError, ValueError) as e:
+            self.error.emit(f"File system or value error: {e!s}")
         except ImportError as e:
             self.error.emit(f"Failed to import required module: {e!s}")
         except Exception as e:  # noqa: BLE001
@@ -806,7 +820,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(
             f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, "CLASSIC_Info.version")}"
         )
-        self.setWindowIcon(QIcon("CLASSIC Data/graphics/CLASSIC.ico"))
+        self.setWindowIcon(QIcon(f"{GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)}/CLASSIC Data/graphics/CLASSIC.ico"))
         dark_style = """
 QWidget {
     background-color: #2b2b2b;
@@ -1053,13 +1067,14 @@ QLabel {
     # noinspection PyUnresolvedReferences
     def fetch_pastebin_log(self) -> None:
         """
-        Fetches a log from a Pastebin URL or ID provided by the user and processes it in a separate thread.
-
-        This method retrieves the text from a user input field, verifies if it matches a Pastebin URL pattern,
-        or formats it into a valid Pastebin URL if an ID is provided. It then sets up a separate thread and a
-        worker object to handle the fetching process asynchronously, ensuring the main application's UI remains
-        responsive. User feedback is provided through message boxes based on the success or failure of the log
-        retrieval process.
+            Fetches a log from a Pastebin URL or ID provided by the user and processes it in a separate thread
+            using asynchronous operations.
+    
+            This method retrieves the text from a user input field, verifies if it matches a Pastebin URL pattern,
+            or formats it into a valid Pastebin URL if an ID is provided. It then sets up a separate thread and a
+            worker object to handle the fetching process asynchronously using the pastebin_fetch_async function,
+            ensuring the main application's UI remains responsive. User feedback is provided through message boxes
+            based on the success or failure of the log retrieval process.
 
         Attributes:
             pastebin_id_input (QWidget): Input field for the user to enter a Pastebin URL or ID.
@@ -1593,16 +1608,29 @@ QLabel {
     @staticmethod
     def open_backup_folder() -> None:
         """
-        Opens the backup folder containing game files.
+        Opens the backup folder registered in the global registry or shows an error message.
 
-        This method constructs the path to the backup folder and opens it using
-        the system's default file explorer.
+        This static method checks if the local directory containing the backup folder is registered in 
+        the global registry under a specific key. If the directory is registered, it constructs the 
+        path to the backup folder and opens it using the default desktop service. If the directory is 
+        not registered, it displays a critical error message to the user, prompting them to restart 
+        the program.
 
-        Returns:
-            None
+        Raises:
+            QMessageBox: A critical error message is displayed if the backup folder is not registered 
+            in the global registry.
         """
-        backup_path = Path.cwd() / "CLASSIC Backup/Game Files"
-        QDesktopServices.openUrl(QUrl.fromLocalFile(backup_path))
+        if GlobalRegistry.is_registered(GlobalRegistry.Keys.LOCAL_DIR):
+            backup_path = Path(GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)) / "CLASSIC Backup/Game Files"
+            QDesktopServices.openUrl(QUrl.fromLocalFile(backup_path))
+        else:
+            QMessageBox.critical(
+                None,
+                "Error",
+                "Backup folder is missing or not registered. Please restart the program.",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
+            )
 
     def setup_output_text_box(self, layout: QLayout) -> None:
         """
@@ -2308,12 +2336,15 @@ This feature is not fully implemented."""
 
     def initialize_folder_paths(self) -> None:
         """
-        Initializes folder paths for scan and mods directories using classic settings.
+        Initializes the folder paths by retrieving settings for specific folders and updating the
+        corresponding user interface fields if available.
 
-        The method retrieves folder paths using `CMain.classic_settings` for keys
-        "SCAN Custom Path" and "MODS Folder Path". If the paths are successfully
-        retrieved, they are assigned to the corresponding UI text fields, namely
-        `scan_folder_edit` and `mods_folder_edit`, provided those fields are not None.
+        This method retrieves the folder paths for "SCAN Custom Path" and "MODS Folder Path"
+        from the application settings and, if applicable, populates the respective input fields
+        with the retrieved values.
+
+        Returns:
+            None
         """
         scan_folder = classic_settings(str, "SCAN Custom Path")
         mods_folder = classic_settings(str, "MODS Folder Path")
@@ -2335,21 +2366,32 @@ This feature is not fully implemented."""
             QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}",
                                     QMessageBox.StandardButton.Ok)
 
-    @staticmethod
-    def open_settings() -> None:
+    def open_settings(self) -> None:
         """
         Opens the settings file for the application.
 
-        This method launches the application's settings file using the default
-        file opener associated with the system. The settings file is named
-        "CLASSIC Settings.yaml" and is expected to be located in the application's
-        working directory.
+        If the local directory is registered in the global registry, attempts to open the 
+        "CLASSIC Settings.yaml" file from that directory. If the file is missing, a critical 
+        error message is displayed, instructing the user to restart the application to resolve 
+        the issue.
+
+        Raises:
+            Displays a QMessageBox with a critical error if the settings file is missing.
 
         Returns:
-            None: This method does not return any value.
+            None
         """
-        settings_file = "CLASSIC Settings.yaml"
-        QDesktopServices.openUrl(QUrl.fromLocalFile(settings_file))
+        if GlobalRegistry.is_registered(GlobalRegistry.Keys.LOCAL_DIR):
+            settings_file = f"{GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)}/CLASSIC Settings.yaml"
+            QDesktopServices.openUrl(QUrl.fromLocalFile(settings_file))
+        else:
+            QMessageBox.critical(
+                self,
+                "ERROR",
+                "The Settings file is missing. Restarting the application should fix this issue.",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
+            )
 
     def crash_logs_scan(self) -> None:
         """
