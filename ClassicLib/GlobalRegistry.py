@@ -100,4 +100,4 @@ def get_local_dir(as_string = False) -> Path | str:
         return Path.cwd()
     if as_string:
         return str(get(Keys.LOCAL_DIR))
-    return Path(get(Keys.LOCAL_DIR))
+    return get(Keys.LOCAL_DIR)

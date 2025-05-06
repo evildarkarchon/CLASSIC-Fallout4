@@ -1,4 +1,3 @@
-import asyncio
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -7,7 +6,6 @@ from pathlib import Path
 from typing import Literal
 
 import regex as re
-import requests
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices, QFontMetrics, QIcon, QPixmap
 from PySide6.QtMultimedia import QSoundEffect
@@ -247,6 +245,7 @@ class PapyrusMonitorWorker(QObject):
 # Example fix for pastebin fetch
 import asyncio
 
+
 class PastebinFetchWorker(QObject):
     """
     Handles fetching data from a given Pastebin URL within a PyQt framework.
@@ -308,11 +307,11 @@ class PastebinFetchWorker(QObject):
             # Make sure pastebin_fetch_async is properly imported
             from ClassicLib.Util import pastebin_fetch_async
             import aiohttp
-            
+
             # Create and run async event loop
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            
+
             try:
                 loop.run_until_complete(pastebin_fetch_async(self.url))
                 self.success.emit(self.url)
@@ -320,7 +319,7 @@ class PastebinFetchWorker(QObject):
                 self.error.emit(f"Network error: {e!s}")
             finally:
                 loop.close()
-                
+
         except (OSError, ValueError) as e:
             self.error.emit(f"File system or value error: {e!s}")
         except ImportError as e:
@@ -820,7 +819,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(
             f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, "CLASSIC_Info.version")}"
         )
-        self.setWindowIcon(QIcon(f"{GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)}/CLASSIC Data/graphics/CLASSIC.ico"))
+        self.setWindowIcon(QIcon(f"{GlobalRegistry.get_local_dir(as_string=True)}/CLASSIC Data/graphics/CLASSIC.ico"))
         dark_style = """
 QWidget {
     background-color: #2b2b2b;
@@ -1605,27 +1604,27 @@ QLabel {
         help_popup_text = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_backup") or ""
         QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
 
-    @staticmethod
-    def open_backup_folder() -> None:
+    def open_backup_folder(self) -> None:
         """
-        Opens the backup folder registered in the global registry or shows an error message.
+        Opens the backup folder if it exists and is registered.
 
-        This static method checks if the local directory containing the backup folder is registered in 
-        the global registry under a specific key. If the directory is registered, it constructs the 
-        path to the backup folder and opens it using the default desktop service. If the directory is 
-        not registered, it displays a critical error message to the user, prompting them to restart 
-        the program.
+        This method checks if the local directory is registered in the
+        GlobalRegistry. If registered, it attempts to open the backup folder
+        named "CLASSIC Backup/Game Files" within the directory. If the
+        registration or directory is missing, an error message is displayed
+        to the user.
 
         Raises:
-            QMessageBox: A critical error message is displayed if the backup folder is not registered 
-            in the global registry.
+            QMessageBox: Displays an error dialog if the backup folder is
+            not registered or missing.
         """
-        if GlobalRegistry.is_registered(GlobalRegistry.Keys.LOCAL_DIR):
-            backup_path = Path(GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)) / "CLASSIC Backup/Game Files"
+        local_dir = GlobalRegistry.get_local_dir()
+        if local_dir.exists():
+            backup_path = local_dir / "CLASSIC Backup/Game Files"
             QDesktopServices.openUrl(QUrl.fromLocalFile(backup_path))
         else:
             QMessageBox.critical(
-                None,
+                self,
                 "Error",
                 "Backup folder is missing or not registered. Please restart the program.",
                 QMessageBox.StandardButton.Ok,
@@ -2381,17 +2380,14 @@ This feature is not fully implemented."""
         Returns:
             None
         """
-        if GlobalRegistry.is_registered(GlobalRegistry.Keys.LOCAL_DIR):
-            settings_file = f"{GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)}/CLASSIC Settings.yaml"
+        settings_file = GlobalRegistry.get_local_dir() / "CLASSIC Settings.yaml"
+        if settings_file.exists():
             QDesktopServices.openUrl(QUrl.fromLocalFile(settings_file))
         else:
-            QMessageBox.critical(
-                self,
-                "ERROR",
-                "The Settings file is missing. Restarting the application should fix this issue.",
-                QMessageBox.StandardButton.Ok,
-                QMessageBox.StandardButton.Ok
-            )
+            QMessageBox.critical(self, "Settings File Missing",
+                                 "The settings file is missing. Please restart the application to resolve this issue.",
+                                 QMessageBox.StandardButton.Ok,
+                                 QMessageBox.StandardButton.Ok)
 
     def crash_logs_scan(self) -> None:
         """
