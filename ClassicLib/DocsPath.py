@@ -6,6 +6,7 @@ from typing import cast
 
 from iniparse import configparser
 
+from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.Logger import logger
 from ClassicLib.Util import remove_readonly
@@ -51,7 +52,9 @@ def docs_path_find(gui_mode: bool = False) -> None:
     # Retrieve the document name from YAML settings
     docs_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Docs_Name")
     if not isinstance(docs_name, str):
-        docs_name = gamevars["game"]
+        docs_name = GlobalRegistry.get_game()
+
+    manual_docs_gui = GlobalRegistry.get_manual_docs_gui() if gui_mode else None
 
     def get_windows_docs_path() -> None:
         """

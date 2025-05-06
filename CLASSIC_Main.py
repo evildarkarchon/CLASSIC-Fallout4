@@ -5,14 +5,14 @@ import sys
 from pathlib import Path
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
-from ClassicLib.GuiComponents import ManualDocsPath, GamePathEntry
+from ClassicLib.GuiComponents import GamePathEntry, ManualDocsPath
+from ClassicLib.Logger import logger
 from ClassicLib.Util import configure_logging, open_file_with_encoding
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 with contextlib.suppress(ImportError):
     pass  # type: ignore[import]
@@ -270,16 +270,6 @@ def main_generate_required() -> None:
 
     print("✔️ ALL CLASSIC AND GAME SETTINGS CHECKS HAVE BEEN PERFORMED!")
     print("    YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES \n")
-
-
-def get_manual_docs_gui():
-    """Get the manual docs GUI component from the registry."""
-    return GlobalRegistry.get_manual_docs_gui()
-
-
-def get_game_path_gui():
-    """Get the game path GUI component from the registry."""
-    return GlobalRegistry.get_game_path_gui()
 
 
 def is_gui_mode() -> bool:

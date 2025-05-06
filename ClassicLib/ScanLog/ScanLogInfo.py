@@ -4,6 +4,7 @@ from pathlib import Path
 
 from packaging.version import Version
 
+from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import NULL_VERSION, YAML, gamevars
 from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -85,8 +86,8 @@ class ClassicScanLogsInfo:
     game_version_vr: Version = field(default=NULL_VERSION, init=False)
 
     def __post_init__(self) -> None:
-        if yaml_cache is None:
-            raise TypeError("CMain is not initialized.")
+        if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
+            raise TypeError("YAML Cache is not initialized.")
         self.classic_game_hints = yaml_settings(list[str], YAML.Game, "Game_Hints") or []
         self.classic_records_list = yaml_settings(list[str], YAML.Main, "catch_log_records") or []
         self.classic_version = yaml_settings(str, YAML.Main, "CLASSIC_Info.version") or ""

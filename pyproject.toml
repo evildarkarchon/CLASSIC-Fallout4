@@ -91,6 +91,7 @@ ignore = [
 	"TRY400",  # Use `logging.exception` instead of `logging.error`
 	"PLR2004", # Allow magic values in comparisons
 	"PLW2901", # Allow overwriting loop variables
+	"SLF001",
 ]
 
 extend-select = [

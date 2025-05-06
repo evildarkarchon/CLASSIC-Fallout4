@@ -5,12 +5,21 @@ from typing import Any, ClassVar
 import ruamel.yaml
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, gamevars, YAMLMapping, YAMLValue
+from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, YAMLMapping, YAMLValue, gamevars
 from ClassicLib.Logger import logger
 from ClassicLib.Util import open_file_with_encoding
 
 
-class YamlSettingsCache:
+class SingletonMeta(type):
+    _instances: ClassVar[dict[type, Any]] = {}
+
+    def __call__(cls, *args, **kwargs):  # noqa: ANN002, ANN003, ANN204
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class YamlSettingsCache(metaclass=SingletonMeta):
     """
     A utility class for managing and caching YAML settings.
 
@@ -27,19 +36,10 @@ class YamlSettingsCache:
             execution. Examples include Main, Game YAML files.
     """
 
-    _instance = None
-
     # Static YAML stores that won't change during program execution
     STATIC_YAML_STORES: ClassVar[set[YAML]] = {YAML.Main, YAML.Game}
 
-    def __new__(cls):
-        """Ensure only one instance of YamlSettingsCache is created."""
-        if cls._instance is None:
-            cls._instance = super(YamlSettingsCache, cls).__new__(cls)
-            cls._instance._initialize()
-        return cls._instance
-
-    def _initialize(self):
+    def __init__(self) -> None:
         """Initialize the instance attributes."""
         self.cache: dict[Path, YAMLMapping] = {}
         self.file_mod_times: dict[Path, float] = {}

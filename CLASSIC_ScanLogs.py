@@ -12,13 +12,13 @@ from packaging.version import Version
 
 from CLASSIC_Main import initialize, main_combined_result
 from CLASSIC_ScanGame import game_combined_result
-from ClassicLib.Constants import DB_PATHS, YAML, gamevars
 from ClassicLib import GlobalRegistry
+from ClassicLib.Constants import DB_PATHS, YAML, gamevars
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, SQLiteReader
 from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat, get_entry
 from ClassicLib.Util import append_or_extend, crashgen_version_gen
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 # noinspection PyUnresolvedReferences
@@ -254,7 +254,7 @@ class ClassicScanLogs:
             if "[FF]" in elem:
                 if is_og:
                     trigger_plugin_limit = True
-                elif is_ng and version_current < Version("1.37.0"):
+                elif is_ng:
                     trigger_limit_check_disabled = True
             pluginmatch = self.pluginsearch.match(elem, concurrent=True)
             if pluginmatch is not None:
@@ -926,7 +926,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     # 4) IMPORT AND RUN DETECT MODS FROM EXTERNAL MODULE
     # ================================================
     # Import at runtime to avoid circular imports
-    from ClassicLib.ScanLog.DetectMods import detect_mods_single, detect_mods_double, detect_mods_important
+    from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 
     # ================================================
     # 5) CHECK SETTINGS AFTER MOD CHECKS
@@ -1000,7 +1000,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
 
     if trigger_plugins_loaded:
         # Detect problematic mods
-        trigger_freq_found = detect_mods_single(yamldata.game_mods_freq, crashlog_plugins, autoscan_report)
+        detect_mods_single(yamldata.game_mods_freq, crashlog_plugins, autoscan_report)
     else:
         append_or_extend(plugins_loading_failure_message, autoscan_report)
 
@@ -1211,8 +1211,8 @@ def crashlogs_scan() -> None:
                     if trigger_scan_failed:
                         scan_failed_list.append(crashlog_file.name)
 
-                except Exception as e:
-                    logger.error(f"Error processing crash log: {str(e)}")
+                except Exception as e: # noqa: BLE001
+                    logger.error(f"Error processing crash log: {e!s}")
                     scanner.crashlog_stats["failed"] += 1
 
         # CHECK FOR FAILED OR INVALID CRASH LOGS
