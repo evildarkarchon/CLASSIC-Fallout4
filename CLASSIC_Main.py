@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings, yaml_cache
+from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
@@ -299,6 +299,7 @@ def initialize(is_gui: bool = False) -> None:
         is_gui (bool): Indicates whether the application should operate in GUI mode. If True,
             GUI-related resources are initialized.
     """
+    yaml_cache = GlobalRegistry.get_yaml_cache()
     GlobalRegistry.register(GlobalRegistry.Keys.GUI_MODE, is_gui)
     # Preload static YAML files
     for store in yaml_cache.STATIC_YAML_STORES:
@@ -307,7 +308,10 @@ def initialize(is_gui: bool = False) -> None:
 
     # noinspection PyTypedDict
     gamevars["vr"] = "" if not classic_settings(bool, "VR Mode") else "VR"
-    GlobalRegistry.register("VR", gamevars["vr"])
+    gamevars["game"] = classic_settings(str, "Managed Game").replace(" ", "")
+    GlobalRegistry.register(GlobalRegistry.Keys.VR, gamevars["vr"])
+    GlobalRegistry.register(GlobalRegistry.Keys.GAME, gamevars["game"])
+
     if is_gui:
         GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS_GUI, ManualDocsPath())
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH_GUI, GamePathEntry())

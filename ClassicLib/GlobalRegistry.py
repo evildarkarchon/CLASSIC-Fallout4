@@ -19,6 +19,7 @@ class Keys:
     GUI_MODE = "gui_mode"
     OPEN_FILE_FUNC = "open_file_with_encoding"
     VR = "gamevars_vr"
+    GAME = "gamevars_game"
     LOCAL_DIR = "local_dir"
 
 
@@ -93,6 +94,12 @@ def get_vr() -> str:
     if not is_registered(Keys.VR) or (is_registered(Keys.VR) and Keys.VR == ""):
         return ""
     return get(Keys.VR)
+
+def get_game() -> str:
+    """Get the game setting."""
+    if not is_registered(Keys.GAME) or (is_registered(Keys.GAME) and Keys.GAME == ""):
+        return ""
+    return get(Keys.GAME)
 
 def get_local_dir(as_string = False) -> Path | str:
     """Get the local directory setting."""

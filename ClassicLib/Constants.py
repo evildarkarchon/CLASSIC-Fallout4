@@ -18,7 +18,7 @@ type YAMLMapping = dict[str, "YAMLValue"]
 type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
 type YAMLValueOptional = YAMLValue | None
 type GameID = Literal[
-    "Fallout4", "Fallout4VR", "Skyrim", "Starfield"]  # Entries must correspond to the game's Main ESM or EXE file name.
+                  "Fallout4", "Fallout4VR", "Skyrim", "Starfield"] | str  # Entries must correspond to the game's Main ESM or EXE file name.
 
 
 class YAML(Enum):
