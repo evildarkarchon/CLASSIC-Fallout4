@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 from CLASSIC_Main import initialize, main_generate_required
+from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
 from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
@@ -20,7 +21,7 @@ try:
 except ImportError:
     from bs4.element import PageElement  # noqa: TC002
 
-from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Constants import YAML
 
 
 # ================================================
@@ -127,8 +128,8 @@ def scan_mods_unpacked() -> str:
     }
 
     # Get settings
-    xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game, f"Game{gamevars['vr']}_Info.XSE_HashedScripts")
+    xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts")
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
 
@@ -293,8 +294,8 @@ def scan_mods_archived() -> str:
     }
 
     # Get settings
-    xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game, f"Game{gamevars['vr']}_Info.XSE_HashedScripts")
+    xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts")
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else ""
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
 
@@ -480,7 +481,7 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
     ADMIN_SUGGESTION = "    TRY RUNNING CLASSIC.EXE IN ADMIN MODE TO RESOLVE THIS PROBLEM.\n"
 
     # Get paths and settings
-    game_path = yaml_settings(Path, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Game")
+    game_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
     manage_list_setting = yaml_settings(list[str], YAML.Game, classic_list)
     manage_list = manage_list_setting if isinstance(manage_list_setting, list) else []
 
@@ -564,8 +565,8 @@ def game_combined_result() -> str:
         str: A string combining the results of all checks and scans. Returns an
         empty string if game directories are not found.
     """
-    docs_path = yaml_settings(Path, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Docs")
-    game_path = yaml_settings(Path, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Game")
+    docs_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+    game_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
     if not (game_path and docs_path):
         return ""
