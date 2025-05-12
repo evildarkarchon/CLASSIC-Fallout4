@@ -108,12 +108,10 @@ class ClassicScanLogs:
             self.main_files_check = "❌ FCX Mode is disabled, skipping game files check... \n-----\n"
             self.game_files_check = ""
 
+    # noinspection PyPep8Naming
     def find_segments(self, crash_data: list[str], crashgen_name: str) -> tuple[str, str, str, list[list[str]]]:
         """
-        Finds and extracts structured segments from the crash report data based on predefined boundary markers. This function
-        parses sections such as crash generation details, system specifications, probable call stack, module details, XSE plugins,
-        and general plugins. The extracted segments are returned alongside metadata such as the game version, crash generator name,
-        and the main error message from the crash log.
+        Finds and extracts structured segments from the crash report data based on predefined boundary markers.
 
         Args:
             crash_data (list[str]): The raw crash report data represented as a list of strings.
@@ -126,65 +124,112 @@ class ClassicScanLogs:
                 - The primary error message extracted from the crash log or "UNKNOWN" if not found.
                 - A list of lists, where each nested list contains stripped lines belonging to a specific segment of the crash log.
         """
+        # Define constants
+        UNKNOWN = "UNKNOWN"
+        EOF_MARKER = "EOF"
+
+        # Get required information from configuration
         xse = self.yamldata.xse_acronym.upper()
-        segment_boundaries = (
+        game_root_name = yaml_settings(str, YAML.Game, f"Game_{gamevars['vr']}Info.Main_Root_Name")
+
+        # Define segment boundaries
+        segment_boundaries = [
             ("	[Compatibility]", "SYSTEM SPECS:"),  # segment_crashgen
             ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),  # segment_system
             ("PROBABLE CALL STACK:", "MODULES:"),  # segment_callstack
             ("MODULES:", f"{xse} PLUGINS:"),  # segment_allmodules
             (f"{xse} PLUGINS:", "PLUGINS:"),  # segment_xsemodules
-            ("PLUGINS:", "EOF"),  # segment_plugins
-        )
-        segment_index = 0
-        collect = False
-        segments: list[list[str]] = []
-        next_boundary = segment_boundaries[0][0]
-        index_start = 0
-        total = len(crash_data)
-        current_index = 0
-        crashlog_gameversion = None
-        crashlog_crashgen = None
-        crashlog_mainerror = None
-        game_root_name = yaml_settings(str, YAML.Game, f"Game_{gamevars["vr"]}Info.Main_Root_Name")
-        while current_index < total:
-            line = crash_data[current_index]
-            if crashlog_gameversion is None and game_root_name and line.startswith(game_root_name):
-                crashlog_gameversion = line.strip()
-            if crashlog_crashgen is None:
-                if line.startswith(crashgen_name):
-                    crashlog_crashgen = line.strip()
-            elif crashlog_mainerror is None and line.startswith("Unhandled exception"):
-                crashlog_mainerror = line.replace("|", "\n", 1)
+            ("PLUGINS:", EOF_MARKER),  # segment_plugins
+        ]
 
-            elif line.startswith(next_boundary):
-                if collect:
-                    index_end = current_index - 1 if current_index > 0 else current_index
-                    segments.append(crash_data[index_start:index_end])
+        # Initialize metadata variables
+        game_version = None
+        crashgen_version = None
+        main_error = None
+
+        # Parse segments
+        segments = self._extract_segments(crash_data, segment_boundaries, EOF_MARKER)
+
+        # Extract metadata from crash data
+        for line in crash_data:
+            if game_version is None and game_root_name and line.startswith(game_root_name):
+                game_version = line.strip()
+            elif crashgen_version is None and line.startswith(crashgen_name):
+                crashgen_version = line.strip()
+            elif main_error is None and line.startswith("Unhandled exception"):
+                main_error = line.replace("|", "\n", 1)
+
+        # Process segments to strip whitespace
+        processed_segments = [[line.strip() for line in segment] for segment in segments] if segments else segments
+
+        # Ensure all expected segments exist (add empty lists for missing segments)
+        missing_segments_count = len(segment_boundaries) - len(processed_segments)
+        if missing_segments_count > 0:
+            processed_segments.extend([[]] * missing_segments_count)
+
+        return game_version or UNKNOWN, crashgen_version or UNKNOWN, main_error or UNKNOWN, processed_segments
+
+    @staticmethod
+    def _extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, str]],
+                          eof_marker: str) -> list[list[str]]:
+        """
+        Extract segments from crash data based on defined boundaries.
+
+        Args:
+            crash_data: The raw crash report data
+            segment_boundaries: List of tuples with (start_marker, end_marker) for each segment
+            eof_marker: The marker used to indicate end of file
+
+        Returns:
+            A list of segments where each segment is a list of lines
+        """
+        segments: list[list[str]] = []
+        total_lines = len(crash_data)
+        current_index = 0
+        segment_index = 0
+        collecting = False
+        segment_start_index = 0
+        current_boundary = segment_boundaries[0][0]  # Start with first boundary
+
+        while current_index < total_lines:
+            line = crash_data[current_index]
+
+            # Check if we've hit a boundary
+            if line.startswith(current_boundary):
+                if collecting:
+                    # End of current segment
+                    segment_end_index = current_index - 1 if current_index > 0 else current_index
+                    segments.append(crash_data[segment_start_index:segment_end_index])
                     segment_index += 1
+
+                    # Check if we've processed all segments
                     if segment_index == len(segment_boundaries):
                         break
                 else:
-                    index_start = current_index + 1 if total > current_index else current_index
-                collect = not collect
-                next_boundary = segment_boundaries[segment_index][collect]
-                if collect:
-                    if next_boundary == "EOF":
-                        segments.append(crash_data[index_start:])
-                        break
-                else:
-                    # Don't increase current_index in case the current
-                    # line is also the next start boundary
-                    continue
-            current_index += 1
-            if collect and current_index == total:
-                segments.append(crash_data[index_start:])
+                    # Start of a new segment
+                    segment_start_index = current_index + 1 if total_lines > current_index else current_index
 
-        segment_results = [[line.strip() for line in segment] for segment in segments] if segments else segments
-        missing_segments = len(segment_boundaries) - len(segment_results)
-        if missing_segments > 0:
-            segment_results.extend([[]] * missing_segments)
-        # Set default values incase actual index is not found.
-        return crashlog_gameversion or "UNKNOWN", crashlog_crashgen or "UNKNOWN", crashlog_mainerror or "UNKNOWN", segment_results
+                # Toggle collection state and update boundary
+                collecting = not collecting
+                current_boundary = segment_boundaries[segment_index][int(collecting)]
+
+                # Handle special cases
+                if collecting and current_boundary == eof_marker:
+                    # Add all remaining lines
+                    segments.append(crash_data[segment_start_index:])
+                    break
+
+                if not collecting:
+                    # Don't increment index in case the current line is also the next start boundary
+                    current_index -= 1
+
+            # Check if we've reached the end while still collecting
+            if collecting and current_index == total_lines - 1:
+                segments.append(crash_data[segment_start_index:])
+
+            current_index += 1
+
+        return segments
 
     @staticmethod
     def loadorder_scan_loadorder_txt(autoscan_report: list[str]) -> tuple[dict[str, str], bool]:
@@ -225,8 +270,10 @@ class ClassicScanLogs:
                     trigger_plugins_loaded = True
         return crashlog_plugins, trigger_plugins_loaded
 
+    # noinspection PyPep8Naming
     def loadorder_scan_log(self, segment_plugins: list[str], game_version: Version, version_current: Version) -> tuple[
         dict[str, str], bool, bool]:
+
         """
         Scans load order logs to extract plugin information, which helps determine plugin-related issues
         in a specific game version and its compatibility. It identifies potential plugin limit triggers,
@@ -243,31 +290,56 @@ class ClassicScanLogs:
                 - A boolean indicating whether the plugin limit trigger has been activated.
                 - A boolean indicating whether the plugin limit check has been disabled under specific conditions.
         """
+        # Early return for empty input
         if not segment_plugins:
             return {}, False, False
 
-        is_og = game_version in (self.yamldata.game_version, self.yamldata.game_version_vr)
-        is_ng = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
-        crashlog_plugins: dict[str, str] = {}
-        trigger_plugin_limit = trigger_limit_check_disabled = False
-        for elem in segment_plugins:
-            if "[FF]" in elem:
-                if is_og:
-                    trigger_plugin_limit = True
-                elif is_ng:
-                    trigger_limit_check_disabled = True
-            pluginmatch = self.pluginsearch.match(elem, concurrent=True)
-            if pluginmatch is not None:
-                plugin_fid = pluginmatch.group(1)
-                plugin_name = pluginmatch.group(3)
-                is_unique = plugin_name and plugin_name not in crashlog_plugins
-                if plugin_fid is not None and is_unique:
-                    crashlog_plugins[plugin_name] = plugin_fid.replace(":", "")
-                elif plugin_name and "dll" in plugin_name.lower():
-                    crashlog_plugins[plugin_name] = "DLL"
-                else:
-                    crashlog_plugins[plugin_name] = "???"
-        return crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled
+        # Constants for plugin status
+        PLUGIN_STATUS_DLL = "DLL"
+        PLUGIN_STATUS_UNKNOWN = "???"
+        PLUGIN_LIMIT_MARKER = "[FF]"
+
+        # Determine game version characteristics
+        is_original_game = game_version in (self.yamldata.game_version, self.yamldata.game_version_vr)
+        is_new_game_crashgen_pre_137 = (game_version >= self.yamldata.game_version_new and
+                                        version_current < Version("1.37.0"))
+
+        # Initialize return values
+        plugin_map: dict[str, str] = {}
+        plugin_limit_triggered = False
+        limit_check_disabled = False
+
+        # Process each plugin entry
+        for entry in segment_plugins:
+            # Check for plugin limit markers
+            if PLUGIN_LIMIT_MARKER in entry:
+                if is_original_game:
+                    plugin_limit_triggered = True
+                elif is_new_game_crashgen_pre_137:
+                    limit_check_disabled = True
+
+            # Extract plugin information using regex
+            plugin_match = self.pluginsearch.match(entry, concurrent=True)
+            if plugin_match is None:
+                continue
+
+            # Extract plugin details
+            plugin_id = plugin_match.group(1)
+            plugin_name = plugin_match.group(3)
+
+            # Skip if plugin name is empty or already processed
+            if not plugin_name or plugin_name in plugin_map:
+                continue
+
+            # Classify the plugin
+            if plugin_id is not None:
+                plugin_map[plugin_name] = plugin_id.replace(":", "")
+            elif "dll" in plugin_name.lower():
+                plugin_map[plugin_name] = PLUGIN_STATUS_DLL
+            else:
+                plugin_map[plugin_name] = PLUGIN_STATUS_UNKNOWN
+
+        return plugin_map, plugin_limit_triggered, limit_check_disabled
 
     def suspect_scan_mainerror(self, autoscan_report: list[str], crashlog_mainerror: str, max_warn_length: int) -> bool:
         """
@@ -300,6 +372,7 @@ class ClassicScanLogs:
                     trigger_suspect_found = True
         return trigger_suspect_found
 
+    # noinspection PyUnusedLocal,PyPep8Naming
     def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str],
                            max_warn_length: int) -> bool:
         """
@@ -325,46 +398,94 @@ class ClassicScanLogs:
         Returns:
             bool: True if at least one suspect is found based on the analysis; otherwise, False.
         """
-        trigger_suspect_found = False
-        for error in self.yamldata.suspects_stack_list:
-            error_severity, error_name = error.split(" | ", 1)
-            error_req_found = error_opt_found = stack_found = False
-            signal_list = self.yamldata.suspects_stack_list.get(error, [])
-            has_required_item = False
-            for signal in signal_list:
-                if "|" in signal:
-                    signal_modifier, signal_string = signal.split("|", 1)
-                    match signal_modifier:
-                        case "ME-REQ":
-                            has_required_item = True
-                            if signal_string in crashlog_mainerror:
-                                error_req_found = True
-                        case "ME-OPT":
-                            if signal_string in crashlog_mainerror:
-                                error_opt_found = True
-                        case "NOT" if signal_string in segment_callstack_intact:
-                            break
-                        case _ if signal_modifier.isdecimal():
-                            if segment_callstack_intact.count(signal_string) >= int(signal_modifier):
-                                stack_found = True
-                elif signal in segment_callstack_intact:
-                    stack_found = True
+        # Constants for signal modifiers
+        MAIN_ERROR_REQUIRED = "ME-REQ"
+        MAIN_ERROR_OPTIONAL = "ME-OPT"
+        CALLSTACK_NEGATIVE = "NOT"
 
-            # print(f"TEST: {error_req_found} | {error_opt_found} | {stack_found}")
-            if has_required_item:
-                if error_req_found:
-                    error_name = error_name.ljust(max_warn_length, ".")
-                    append_or_extend(
-                        f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n",
-                        autoscan_report)
-                    trigger_suspect_found = True
-            elif error_opt_found or stack_found:
-                error_name = error_name.ljust(max_warn_length, ".")
-                append_or_extend(
-                    f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n",
-                    autoscan_report)
-                trigger_suspect_found = True
-        return trigger_suspect_found
+        any_suspect_found = False
+
+        for error_key, signal_list in self.yamldata.suspects_stack_list.items():
+            error_severity, error_name = error_key.split(" | ", 1)
+
+            # Initialize match status
+            match_status = {
+                "has_required_item": False,
+                "error_req_found": False,
+                "error_opt_found": False,
+                "stack_found": False
+            }
+
+            # Process each signal in the list
+            for signal in signal_list:
+                if self._process_signal(signal, crashlog_mainerror, segment_callstack_intact, match_status):
+                    # Exit early if a NOT condition is met
+                    break
+
+            # Determine if we have a match based on the processed signals
+            if self._is_suspect_match(match_status):
+                self._add_suspect_to_report(error_name, error_severity, max_warn_length, autoscan_report)
+                any_suspect_found = True
+
+        return any_suspect_found
+
+    # noinspection PyPep8Naming
+    @staticmethod
+    def _process_signal(signal: str, crashlog_mainerror: str, segment_callstack_intact: str,
+                        match_status: dict[str, bool]) -> bool:
+        """
+        Process an individual signal and update match status accordingly.
+
+        Returns True if processing should stop (NOT condition met).
+        """
+        # Constants for signal modifiers
+        MAIN_ERROR_REQUIRED = "ME-REQ"
+        MAIN_ERROR_OPTIONAL = "ME-OPT"
+        CALLSTACK_NEGATIVE = "NOT"
+
+        if "|" not in signal:
+            # Simple case: direct string match in callstack
+            if signal in segment_callstack_intact:
+                match_status["stack_found"] = True
+            return False
+
+        signal_modifier, signal_string = signal.split("|", 1)
+
+        # Process based on signal modifier
+        if signal_modifier == MAIN_ERROR_REQUIRED:
+            match_status["has_required_item"] = True
+            if signal_string in crashlog_mainerror:
+                match_status["error_req_found"] = True
+        elif signal_modifier == MAIN_ERROR_OPTIONAL:
+            if signal_string in crashlog_mainerror:
+                match_status["error_opt_found"] = True
+        elif signal_modifier == CALLSTACK_NEGATIVE:
+            # Return True to break out of the loop if NOT condition is met
+            return signal_string in segment_callstack_intact
+        elif signal_modifier.isdecimal():
+            # Check for minimum occurrences
+            min_occurrences = int(signal_modifier)
+            if segment_callstack_intact.count(signal_string) >= min_occurrences:
+                match_status["stack_found"] = True
+
+        return False
+
+    @staticmethod
+    def _is_suspect_match(match_status: dict[str, bool]) -> bool:
+        """Determine if current error conditions constitute a suspect match."""
+        if match_status["has_required_item"]:
+            return match_status["error_req_found"]
+        else:
+            return match_status["error_opt_found"] or match_status["stack_found"]
+
+    @staticmethod
+    def _add_suspect_to_report(error_name: str, error_severity: str, max_warn_length: int,
+                               autoscan_report: list[str]) -> None:
+        """Add a found suspect to the report with proper formatting."""
+        formatted_error_name = error_name.ljust(max_warn_length, ".")
+        message = (f"# Checking for {formatted_error_name} SUSPECT FOUND! > "
+                   f"Severity : {error_severity} # \n-----\n")
+        append_or_extend(message, autoscan_report)
 
     def scan_buffout_achievements_setting(self, autoscan_report: list[str], xsemodules: set[str],
                                           crashgen: dict[str, bool | int | str]) -> None:
@@ -399,7 +520,6 @@ class ClassicScanLogs:
         Validates and scans the memory management settings in the configuration file for conflicts with
         X-Cell and the Baka ScrapHeap Mod. Generates a report based on the findings, providing guidance on
         necessary fixes if parameters are incorrectly configured.
-
         Args:
             autoscan_report (list[str]): A list to store findings and recommendations based on the memory
                 management settings validation.
@@ -408,42 +528,58 @@ class ClassicScanLogs:
             has_xcell (bool): A flag indicating whether the X-Cell mod is installed.
             has_baka_scrapheap (bool): A flag indicating whether the Baka ScrapHeap mod is installed.
         """
-        # Check main MemoryManager setting first
-        mem_manager = crashgen.get("MemoryManager")
-        if mem_manager:
-            if has_xcell:
-                append_or_extend((
-                    "# ❌ CAUTION : X-Cell is installed, but MemoryManager parameter is set to TRUE # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.\n-----\n"
-                ), autoscan_report)
-            elif has_baka_scrapheap:
-                append_or_extend((
-                    f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.yamldata.crashgen_name} # \n",
-                    f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {self.yamldata.crashgen_name}.\n-----\n"
-                ), autoscan_report)
-            else:
-                append_or_extend(
-                    f"✔️ Memory Manager parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
-                    autoscan_report
-                )
-        elif has_xcell:
-            if has_baka_scrapheap:
-                append_or_extend((
-                    "# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with X-Cell # \n",
-                    " FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.\n-----\n"
-                ), autoscan_report)
-            else:
-                append_or_extend(
-                    f"✔️ Memory Manager parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
-                    autoscan_report
-                )
-        elif has_baka_scrapheap:
+        # Constants for messages and settings
+        separator = "\n-----\n"
+        success_prefix = "✔️ "
+        warning_prefix = "# ❌ CAUTION : "
+        fix_prefix = " FIX: "
+        crashgen_name = self.yamldata.crashgen_name
+
+        def add_success_message(message: str) -> None:
+            """Add a success message to the report."""
+            append_or_extend(f"{success_prefix}{message}{separator}", autoscan_report)
+
+        def add_warning_message(warning: str, fix: str) -> None:
+            """Add a warning message with fix instructions to the report."""
             append_or_extend((
-                f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.yamldata.crashgen_name} # \n",
-                f" FIX: Uninstall the Baka ScrapHeap Mod and open {self.yamldata.crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.\n-----\n"
+                f"{warning_prefix}{warning} # \n",
+                f"{fix_prefix}{fix}{separator}"
             ), autoscan_report)
 
-        # Check other memory settings (only relevant when X-Cell is installed)
+        # Check main MemoryManager setting
+        mem_manager_enabled = crashgen.get("MemoryManager", False)
+
+        # Handle main memory manager configuration
+        if mem_manager_enabled:
+            if has_xcell:
+                add_warning_message(
+                    f"X-Cell is installed, but MemoryManager parameter is set to TRUE",
+                    f"Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell."
+                )
+            elif has_baka_scrapheap:
+                add_warning_message(
+                    f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
+                    f"Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}."
+                )
+            else:
+                add_success_message(
+                    f"Memory Manager parameter is correctly configured in your {crashgen_name} settings!")
+        elif has_xcell:
+            if has_baka_scrapheap:
+                add_warning_message(
+                    "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell",
+                    "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell."
+                )
+            else:
+                add_success_message(
+                    f"Memory Manager parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!")
+        elif has_baka_scrapheap:
+            add_warning_message(
+                f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
+                f"Uninstall the Baka ScrapHeap Mod and open {crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance."
+            )
+
+        # Check additional memory settings for X-Cell compatibility
         if has_xcell:
             memory_settings = {
                 "HavokMemorySystem": "Havok Memory System",
@@ -452,17 +588,15 @@ class ClassicScanLogs:
                 "SmallBlockAllocator": "Small Block Allocator"
             }
 
-            for setting_key, setting_name in memory_settings.items():
+            for setting_key, display_name in memory_settings.items():
                 if crashgen.get(setting_key):
-                    append_or_extend((
-                        f"# ❌ CAUTION : X-Cell is installed, but {setting_key} parameter is set to TRUE # \n",
-                        f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change {setting_key} to FALSE, this prevents conflicts with X-Cell.\n-----\n"
-                    ), autoscan_report)
-                else:
-                    append_or_extend(
-                        f"✔️ {setting_name} parameter is correctly configured for use with X-Cell in your {self.yamldata.crashgen_name} settings! \n-----\n",
-                        autoscan_report
+                    add_warning_message(
+                        f"X-Cell is installed, but {setting_key} parameter is set to TRUE",
+                        f"Open {crashgen_name}'s TOML file and change {setting_key} to FALSE, this prevents conflicts with X-Cell."
                     )
+                else:
+                    add_success_message(
+                        f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!")
 
     def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str]) -> None:
         """
@@ -656,6 +790,7 @@ class ClassicScanLogs:
             gpu_rival = None
         return gpu, gpu_rival
 
+    # noinspection PyPep8Naming
     def scan_named_records(self, segment_callstack: list[str], records_matches: list[str],
                            autoscan_report: list[str]) -> None:
         """
@@ -674,30 +809,52 @@ class ClassicScanLogs:
                 the scan.
             autoscan_report (list[str]): List to which the analysis summary or findings about
                 named records will be appended.
-
         """
+        # Constants
+        RSP_MARKER = "[RSP+"
+        RSP_OFFSET = 30
+
+        # Find matching records
+        self._find_matching_records(segment_callstack, records_matches, RSP_MARKER, RSP_OFFSET)
+
+        # Report results
+        if records_matches:
+            self._report_found_records(records_matches, autoscan_report)
+        else:
+            append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
+
+    def _find_matching_records(self, segment_callstack: list[str], records_matches: list[str],
+                               rsp_marker: str, rsp_offset: int) -> None:
+        """Extract matching records from the call stack and add them to records_matches."""
         for line in segment_callstack:
             lower_line = line.lower()
 
-            if any(item in lower_line for item in self.lower_records) and all(
-                    record not in lower_line for record in self.lower_ignore
-            ):
-                if "[RSP+" in line:
-                    records_matches.append(line[30:].strip())
+            # Check if line contains any target record and doesn't contain any ignored terms
+            if (any(item in lower_line for item in self.lower_records) and
+                    all(record not in lower_line for record in self.lower_ignore)):
+
+                # Extract the relevant part of the line based on format
+                if rsp_marker in line:
+                    records_matches.append(line[rsp_offset:].strip())
                 else:
                     records_matches.append(line.strip())
-        if records_matches:
-            records_found = dict(Counter(sorted(records_matches)))
-            for record, count in records_found.items():
-                append_or_extend(f"- {record} | {count}\n", autoscan_report)
 
-            append_or_extend((
-                "\n[Last number counts how many times each Named Record shows up in the crash log.]\n",
-                f"These records were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n",
-                "Named records should give extra info on involved game objects, record types or mod files.\n\n",
-            ), autoscan_report)
-        else:
-            append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
+    def _report_found_records(self, records_matches: list[str], autoscan_report: list[str]) -> None:
+        """Format and add report entries for the found records."""
+        # Count and sort the records
+        records_found = dict(Counter(sorted(records_matches)))
+
+        # Add each record with its count
+        for record, count in records_found.items():
+            append_or_extend(f"- {record} | {count}\n", autoscan_report)
+
+        # Add explanatory notes
+        explanatory_notes = (
+            "\n[Last number counts how many times each Named Record shows up in the crash log.]\n",
+            f"These records were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n",
+            "Named records should give extra info on involved game objects, record types or mod files.\n\n",
+        )
+        append_or_extend(explanatory_notes, autoscan_report)
 
     @staticmethod
     def extract_module_names(module_texts: set[str]) -> set[str]:
@@ -1211,12 +1368,12 @@ def crashlogs_scan() -> None:
                     if trigger_scan_failed:
                         scan_failed_list.append(crashlog_file.name)
 
-                except Exception as e: # noqa: BLE001
+                except Exception as e:  # noqa: BLE001
                     logger.error(f"Error processing crash log: {e!s}")
                     scanner.crashlog_stats["failed"] += 1
 
         # CHECK FOR FAILED OR INVALID CRASH LOGS
-        scan_invalid_list = list(Path.cwd().glob("crash-*.txt"))
+        scan_invalid_list = sorted(Path.cwd().glob("crash-*.txt"))
         if scan_failed_list or scan_invalid_list:
             print("❌ NOTICE : CLASSIC WAS UNABLE TO PROPERLY SCAN THE FOLLOWING LOG(S):")
             print("\n".join(scan_failed_list))

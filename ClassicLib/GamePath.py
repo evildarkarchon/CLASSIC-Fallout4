@@ -28,7 +28,7 @@ def game_path_find() -> None:
     try:
         # Open the registry key
         reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                 rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{gamevars["vr"]}")  # pyright: ignore[reportPossiblyUnboundVariable]
+                                 rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{GlobalRegistry.get_vr()}")  # pyright: ignore[reportPossiblyUnboundVariable]
         # Query the 'installed path' value
         path, _ = winreg.QueryValueEx(reg_key, "installed path")  # pyright: ignore[reportPossiblyUnboundVariable]
         winreg.CloseKey(reg_key)  # pyright: ignore[reportPossiblyUnboundVariable]
@@ -47,17 +47,17 @@ def game_path_find() -> None:
     else:
         game_path = Path(path) if path else None
 
-    exe_name = f"{gamevars["game"]}{gamevars["vr"]}.exe"
+    exe_name = f"{gamevars["game"]}{GlobalRegistry.get_vr()}.exe"
 
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
-        yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game",
+        yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game",
                       str(game_path))
         return
 
-    xse_file = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Docs_File_XSE")
-    xse_acronym = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.XSE_Acronym")
+    xse_file = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
+    xse_acronym = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
     xse_acronym_base = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
-    game_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Root_Name")
+    game_name = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Root_Name")
     if not (isinstance(xse_file, str) or xse_file is None):
         raise TypeError
     if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(game_name, str)):
@@ -78,7 +78,7 @@ def game_path_find() -> None:
             game_path = Path(logline)
             break
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
-        yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game",
+        yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game",
                       str(game_path))
         return
 
@@ -95,11 +95,11 @@ def game_path_find() -> None:
         print(f"You entered: {path_input} | This path will be automatically added to CLASSIC Settings.yaml")
         game_path = Path(path_input.strip())
         if game_path and game_path.joinpath(exe_name).is_file():
-            yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game",
+            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game",
                           str(game_path))
             return
         print(
-            f"❌ ERROR : NO {gamevars["game"]}{gamevars["vr"]}.exe FILE FOUND IN '{game_path}'! Please try again.")
+            f"❌ ERROR : NO {gamevars["game"]}{GlobalRegistry.get_vr()}.exe FILE FOUND IN '{game_path}'! Please try again.")
 
 
 def game_generate_paths() -> None:
@@ -122,27 +122,27 @@ def game_generate_paths() -> None:
     """
     logger.debug("- - - INITIATED GAME PATH GENERATION")
 
-    game_path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game")
-    yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.XSE_Acronym")
+    game_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
     xse_acronym_base = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
     if not (isinstance(game_path, str) and isinstance(xse_acronym_base, str)):
         raise TypeError
 
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_Folder_Data",
+    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Data",
                   rf"{game_path}\Data")
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_Folder_Scripts",
+    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts",
                   rf"{game_path}\Data\Scripts")
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_Folder_Plugins",
+    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins",
                   fr"{game_path}\Data\{xse_acronym_base}\Plugins")
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_SteamINI",
+    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_SteamINI",
                   rf"{game_path}\steam_api.ini")
-    yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE",
-                  fr"{game_path}\{gamevars["game"]}{gamevars["vr"]}.exe")
+    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE",
+                  fr"{game_path}\{gamevars["game"]}{GlobalRegistry.get_vr()}.exe")
     game_version = get_game_version(
         Path(cast("str",
-                  yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Game_File_EXE"))))
+                  yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE"))))
     match gamevars["game"]:
-        case "Fallout4" if not gamevars["vr"]:
+        case "Fallout4" if not GlobalRegistry.get_vr():
             if (
                     not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
                 raise ValueError("Unsupported or invalid game version")
@@ -152,6 +152,6 @@ def game_generate_paths() -> None:
             elif game_version == NG_VERSION:
                 yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib",
                               fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-984-0.bin")
-        case "Fallout4" if gamevars["vr"]:
+        case "Fallout4" if GlobalRegistry.get_vr():
             yaml_settings(str, YAML.Game_Local, "GameVR_Info.Game_File_AddressLib",
                           fr"{game_path}\Data\{xse_acronym_base}\plugins\version-1-2-72-0.csv")
