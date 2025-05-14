@@ -4,7 +4,7 @@ from packaging.version import InvalidVersion, Version
 from ClassicLib import Constants
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 def try_parse_version(version_string: str) -> Version | None:

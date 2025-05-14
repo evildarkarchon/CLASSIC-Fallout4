@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 import ruamel.yaml
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, gamevars, YAMLMapping, YAMLValue
+from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, YAMLMapping, YAMLValue, gamevars
 from ClassicLib.Logger import logger
 from ClassicLib.Util import open_file_with_encoding
 
@@ -32,14 +32,14 @@ class YamlSettingsCache:
     # Static YAML stores that won't change during program execution
     STATIC_YAML_STORES: ClassVar[set[YAML]] = {YAML.Main, YAML.Game}
 
-    def __new__(cls):
+    def __new__(cls) -> 'YamlSettingsCache':
         """Ensure only one instance of YamlSettingsCache is created."""
         if cls._instance is None:
-            cls._instance = super(YamlSettingsCache, cls).__new__(cls)
-            cls._instance._initialize()
+            cls._instance = super().__new__(cls)
+            cls._instance._initialize()  # noqa: SLF001
         return cls._instance
 
-    def _initialize(self):
+    def _initialize(self) -> None:
         """Initialize the instance attributes."""
         self.cache: dict[Path, YAMLMapping] = {}
         self.file_mod_times: dict[Path, float] = {}

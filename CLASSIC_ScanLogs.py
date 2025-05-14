@@ -17,7 +17,7 @@ from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_import
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, SQLiteReader
 from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat, get_entry
 from ClassicLib.Util import append_or_extend, crashgen_version_gen
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 # noinspection PyUnresolvedReferences

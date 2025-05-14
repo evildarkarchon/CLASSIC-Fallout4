@@ -2,7 +2,7 @@ import contextlib
 import platform
 import winreg
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from iniparse import configparser
 
@@ -10,6 +10,9 @@ from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.Logger import logger
 from ClassicLib.Util import remove_readonly
 from ClassicLib.YamlSettingsCache import yaml_settings
+
+if TYPE_CHECKING:
+    from ClassicLib.GuiComponents import ManualDocsPath
 
 
 # noinspection PyUnresolvedReferences
@@ -153,6 +156,8 @@ def docs_path_find(gui_mode: bool = False) -> None:
 
     if docs_path and not Path(docs_path).is_dir():
         if gui_mode:
+            from ClassicLib.GlobalRegistry import get_manual_docs_gui
+            manual_docs_gui = cast('ManualDocsPath', get_manual_docs_gui())
             if manual_docs_gui is None:
                 raise TypeError("CMain not initialized")
             manual_docs_gui.manual_docs_path_signal.emit()

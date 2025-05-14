@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import cast
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import gamevars, YAML, FO4_VERSIONS, NULL_VERSION, OG_VERSION, NG_VERSION
+from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERSION, YAML, gamevars
 from ClassicLib.Logger import logger
 from ClassicLib.Util import get_game_version, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings

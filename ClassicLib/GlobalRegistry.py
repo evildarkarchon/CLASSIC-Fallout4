@@ -4,6 +4,8 @@ This module serves as a central storage location for objects that need to be acc
 from multiple modules throughout the application.
 """
 
+from collections.abc import Iterator
+from io import TextIOWrapper
 from pathlib import Path
 from typing import Any
 
@@ -61,17 +63,17 @@ def is_registered(key: str) -> bool:
 
 
 # Convenience functions for commonly used registry items
-def get_yaml_cache():
+def get_yaml_cache() -> Any:
     """Get the YAML settings cache instance."""
     return get(Keys.YAML_CACHE)
 
 
-def get_manual_docs_gui():
+def get_manual_docs_gui() -> Any:
     """Get the manual docs GUI component."""
     return get(Keys.MANUAL_DOCS_GUI)
 
 
-def get_game_path_gui():
+def get_game_path_gui() -> Any:
     """Get the game path GUI component."""
     return get(Keys.GAME_PATH_GUI)
 
@@ -81,7 +83,7 @@ def is_gui_mode() -> bool:
     return get(Keys.GUI_MODE) or False
 
 
-def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore"):
+def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore") -> Iterator[TextIOWrapper]:
     """Open a file with the specified encoding."""
     func = get(Keys.OPEN_FILE_FUNC)
     if func:
@@ -101,7 +103,7 @@ def get_game() -> str:
         return ""
     return get(Keys.GAME)
 
-def get_local_dir(as_string = False) -> Path | str:
+def get_local_dir(as_string: bool = False) -> Path | str:
     """Get the local directory setting."""
     if not is_registered(Keys.LOCAL_DIR) or (is_registered(Keys.LOCAL_DIR) and Keys.LOCAL_DIR == ""):
         return Path.cwd()

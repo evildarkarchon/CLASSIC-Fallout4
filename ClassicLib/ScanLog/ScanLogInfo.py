@@ -5,7 +5,7 @@ from pathlib import Path
 from packaging.version import Version
 
 from ClassicLib.Constants import NULL_VERSION, YAML, gamevars
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
 
 
 class SQLiteReader:

@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -41,7 +42,7 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML, gamevars
 from ClassicLib.PapyrusLog import papyrus_logging
 from ClassicLib.Update import UpdateCheckError, is_latest_version
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 @dataclass
@@ -241,11 +242,6 @@ class PapyrusMonitorWorker(QObject):
             ratio=ratio
         )
 
-
-# Example fix for pastebin fetch
-import asyncio
-
-
 class PastebinFetchWorker(QObject):
     """
     Handles fetching data from a given Pastebin URL within a PyQt framework.
@@ -305,8 +301,9 @@ class PastebinFetchWorker(QObject):
         """
         try:
             # Make sure pastebin_fetch_async is properly imported
-            from ClassicLib.Util import pastebin_fetch_async
             import aiohttp
+
+            from ClassicLib.Util import pastebin_fetch_async
 
             # Create and run async event loop
             loop = asyncio.new_event_loop()
@@ -1618,7 +1615,7 @@ QLabel {
             QMessageBox: Displays an error dialog if the backup folder is
             not registered or missing.
         """
-        local_dir = GlobalRegistry.get_local_dir()
+        local_dir = Path(GlobalRegistry.get_local_dir())
         if local_dir.exists():
             backup_path = local_dir / "CLASSIC Backup/Game Files"
             QDesktopServices.openUrl(QUrl.fromLocalFile(backup_path))
@@ -2380,7 +2377,7 @@ This feature is not fully implemented."""
         Returns:
             None
         """
-        settings_file = GlobalRegistry.get_local_dir() / "CLASSIC Settings.yaml"
+        settings_file = Path(GlobalRegistry.get_local_dir()) / "CLASSIC Settings.yaml"
         if settings_file.exists():
             QDesktopServices.openUrl(QUrl.fromLocalFile(settings_file))
         else:

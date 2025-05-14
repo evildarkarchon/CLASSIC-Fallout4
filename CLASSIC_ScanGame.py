@@ -12,14 +12,14 @@ from CLASSIC_Main import initialize, main_generate_required
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import TEST_MODE, ConfigFileCache, mod_toml_config
 from ClassicLib.Util import get_game_version, open_file_with_encoding
-from ClassicLib.YamlSettingsCache import yaml_settings, classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 try:
     from bs4 import PageElement
 except ImportError:
     from bs4.element import PageElement  # noqa: TC002
 
-from ClassicLib.Constants import YAML, gamevars, VR_VERSION, OG_VERSION, NG_VERSION, NULL_VERSION
+from ClassicLib.Constants import NG_VERSION, NULL_VERSION, OG_VERSION, VR_VERSION, YAML, gamevars
 
 
 # ================================================
