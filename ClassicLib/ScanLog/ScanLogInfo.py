@@ -1,14 +1,15 @@
-from pathlib import Path
 import sqlite3
+import threading
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict
+
 from packaging.version import Version
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import NULL_VERSION, YAML, gamevars
-from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
+from ClassicLib.YamlSettingsCache import yaml_settings
 
-import threading
-from typing import Dict, List
 
 class SQLiteReader:
     # noinspection SpellCheckingInspection
@@ -115,7 +116,8 @@ class ThreadSafeLogCache:
         """
         with self.lock:
             try:
-                self.cache[path.name] = path.read_bytes()
+                if path.name not in self.cache:
+                    self.cache[path.name] = path.read_bytes()
                 return True
             except (IOError, OSError):
                 return False

@@ -15,7 +15,7 @@ from CLASSIC_ScanGame import game_combined_result
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS, YAML, gamevars
 from ClassicLib.Logger import logger
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, SQLiteReader, ThreadSafeLogCache
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat, get_entry
 from ClassicLib.Util import append_or_extend, crashgen_version_gen
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
