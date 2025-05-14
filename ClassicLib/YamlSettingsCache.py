@@ -66,7 +66,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         """
         if yaml_store in self.path_cache:
             return self.path_cache[yaml_store]
-
+        yaml_path: Path = Path.cwd()
         data_path = Path("CLASSIC Data/")
         match yaml_store:
             case YAML.Main:
@@ -81,10 +81,13 @@ class YamlSettingsCache(metaclass=SingletonMeta):
                 yaml_path = data_path / f"CLASSIC {gamevars['game']} Local.yaml"
             case YAML.TEST:
                 yaml_path = Path("tests/test_settings.yaml")
-            case _:
+            case other if other not in (YAML.Main, YAML.Settings, YAML.Ignore, YAML.Game, YAML.Game_Local, YAML.TEST):
                 raise NotImplementedError
 
-        self.path_cache[yaml_store] = yaml_path
+        if not yaml_path == Path.cwd():
+            self.path_cache[yaml_store] = yaml_path
+        else:
+            raise FileNotFoundError(f"No YAML file found for {yaml_store}")
         return yaml_path
 
     def load_yaml(self, yaml_path: Path) -> YAMLMapping:
