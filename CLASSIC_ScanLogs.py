@@ -26,7 +26,6 @@ class ClassicScanLogs:
     _fcx_checks_run = False
     _main_files_result = ""
     _game_files_result = ""
-
     def __init__(self) -> None:
         """
         Initializes the class and performs the setup required for crash log scanning and processing.
@@ -114,8 +113,8 @@ class ClassicScanLogs:
                 ClassicScanLogs._fcx_checks_run = True
 
             # Always assign the stored results to instance variables
-            self.main_files_check = self._main_files_result
-            self.game_files_check = self._game_files_result
+            self.main_files_check = ClassicScanLogs._main_files_result
+            self.game_files_check = ClassicScanLogs._game_files_result
         else:
             self.main_files_check = "❌ FCX Mode is disabled, skipping game files check... \n-----\n"
             self.game_files_check = ""
@@ -1051,34 +1050,6 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
         ), autoscan_report)
 
     # ================================================
-    # 3) CHECK FORMIDS, PLUGINS AND RECORDS FIRST - BUT STORE FOR LATER DISPLAY
-    # ================================================
-
-    # Create temporary storage for the first scan results instead of writing to the report
-    formids_temp_report: list[str] = []
-    plugins_temp_report: list[str] = []
-    records_temp_report: list[str] = []
-
-    # Scan for Form IDs
-    formids_matches: list[str] = []
-    if segment_callstack:
-        formid_pattern = re.compile(r"Form ID: ([0-9A-F]{8})", re.IGNORECASE)
-        for line in segment_callstack:
-            match = formid_pattern.search(line)
-            if match:
-                formids_matches.append(f"Form ID: {match.group(1)}")
-
-    scanner.formid_match(formids_matches, crashlog_plugins, formids_temp_report)
-
-    # Scan for plugins in call stack
-    segment_callstack_lower = [line.lower() for line in segment_callstack]
-    scanner.plugin_match(segment_callstack_lower, crashlog_plugins_lower, plugins_temp_report)
-
-    # Scan for named records
-    records_matches: list[str] = []
-    scanner.scan_named_records(segment_callstack, records_matches, records_temp_report)
-
-    # ================================================
     # 4) IMPORT AND RUN DETECT MODS FROM EXTERNAL MODULE
     # ================================================
     # Import at runtime to avoid circular imports
@@ -1253,17 +1224,35 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
         "====================================================\n",
     ), autoscan_report)
 
-    # Add plugin suspects section
-    append_or_extend("# LIST OF (POSSIBLE) PLUGIN SUSPECTS #\n", autoscan_report)
-    append_or_extend(plugins_temp_report, autoscan_report)
+    # Scan for plugins in call stack
+    append_or_extend((
+        "# LIST OF (POSSIBLE) PLUGIN SUSPECTS #\n",
+    ), autoscan_report)
 
-    # Add form ID suspects section
-    append_or_extend("\n# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n", autoscan_report)
-    append_or_extend(formids_temp_report, autoscan_report)
+    # Convert callstack to lowercase for case-insensitive matching
+    segment_callstack_lower = [line.lower() for line in segment_callstack]
+    scanner.plugin_match(segment_callstack_lower, crashlog_plugins_lower, autoscan_report)
 
-    # Add named records section
-    append_or_extend("\n# LIST OF DETECTED (NAMED) RECORDS #\n", autoscan_report)
-    append_or_extend(records_temp_report, autoscan_report)
+    # Scan for Form IDs
+    append_or_extend((
+        "\n# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n",
+    ), autoscan_report)
+    formids_matches: list[str] = []
+    if segment_callstack:
+        formid_pattern = re.compile(r"^(?!.*0xFF)(?=.*id:).*Form ID: ([0-9A-F]{8})", re.IGNORECASE | re.MULTILINE)
+        for line in segment_callstack:
+            match = formid_pattern.search(line)
+            if match:
+                formids_matches.append(f"Form ID: {match.group(1).strip().replace('0x', '')}")
+
+    scanner.formid_match(formids_matches, crashlog_plugins, autoscan_report)
+
+    # Scan for named records
+    append_or_extend((
+        "\n# LIST OF DETECTED (NAMED) RECORDS #\n",
+    ), autoscan_report)
+    records_matches: list[str] = []
+    scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)
 
     if GlobalRegistry.get_game().replace(" ", "") == "Fallout4":
         append_or_extend(yamldata.autoscan_text, autoscan_report)
@@ -1319,7 +1308,7 @@ def crashlogs_scan() -> None:
         RuntimeError: If a critical error occurs during crash log scanning or data processing.
     """
     scanner = ClassicScanLogs()
-    ClassicScanLogs._fcx_checks_run = False
+    scanner._fcx_checks_run = False
     yamldata = scanner.yamldata
     scan_failed_list: list[str] = []
 
