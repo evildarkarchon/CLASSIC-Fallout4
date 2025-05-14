@@ -23,6 +23,10 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 # noinspection PyUnresolvedReferences
 class ClassicScanLogs:
+    _fcx_checks_run = False
+    _main_files_result = ""
+    _game_files_result = ""
+
     def __init__(self) -> None:
         """
         Initializes the class and performs the setup required for crash log scanning and processing.
@@ -82,9 +86,6 @@ class ClassicScanLogs:
         self.user_folder = Path.home()
         self.crashlog_stats = Counter(scanned=0, incomplete=0, failed=0)
         logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
-        self._fcx_checks_run = False
-        self._main_files_result = ""
-        self._game_files_result = ""
 
     def close_database(self) -> None:
         """Close the SQLite database."""
@@ -108,9 +109,9 @@ class ClassicScanLogs:
             # Check if we've already run the FCX checks in this scan session
             if not hasattr(ClassicScanLogs, '_fcx_checks_run') or not self._fcx_checks_run:
                 # Run the checks once and store results in class variables
-                self._main_files_result = main_combined_result()
-                self._game_files_result = game_combined_result()
-                self._fcx_checks_run = True
+                ClassicScanLogs._main_files_result = main_combined_result()
+                ClassicScanLogs._game_files_result = game_combined_result()
+                ClassicScanLogs._fcx_checks_run = True
 
             # Always assign the stored results to instance variables
             self.main_files_check = self._main_files_result
@@ -1318,7 +1319,7 @@ def crashlogs_scan() -> None:
         RuntimeError: If a critical error occurs during crash log scanning or data processing.
     """
     scanner = ClassicScanLogs()
-    scanner._fcx_checks_run = False
+    ClassicScanLogs._fcx_checks_run = False
     yamldata = scanner.yamldata
     scan_failed_list: list[str] = []
 
