@@ -23,6 +23,7 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 # noinspection PyUnresolvedReferences
 class ClassicScanLogs:
+    _fcx_lock = threading.RLock()
     _fcx_checks_run = False
     _main_files_result = ""
     _game_files_result = ""
@@ -93,11 +94,14 @@ class ClassicScanLogs:
     def fcx_mode_check(self) -> None:
         """
         Checks the FCX mode status and performs corresponding file integrity checks.
-
+    
         If FCX mode is enabled, this method performs integrity checks for the main
         files and game files by invoking the respective methods (but only once per scan session).
         If FCX mode is disabled, it sets the results to indicate that checks are skipped.
-
+    
+        Thread-safe implementation using a lock to ensure multiple threads don't run the
+        expensive checks simultaneously.
+    
         Attributes:
             main_files_check (str): The result of the main files check. If FCX mode is
                 disabled, it contains a message indicating the check was skipped.
@@ -105,13 +109,15 @@ class ClassicScanLogs:
                 disabled, it is set to an empty string.
         """
         if self.fcx_mode:
-            # Check if we've already run the FCX checks in this scan session
-            if not hasattr(ClassicScanLogs, '_fcx_checks_run') or not self._fcx_checks_run:
-                # Run the checks once and store results in class variables
-                ClassicScanLogs._main_files_result = main_combined_result()
-                ClassicScanLogs._game_files_result = game_combined_result()
-                ClassicScanLogs._fcx_checks_run = True
-
+            # Use a class-level lock to ensure thread safety
+            with ClassicScanLogs._fcx_lock:
+                # Check if we've already run the FCX checks in this scan session
+                if not hasattr(ClassicScanLogs, '_fcx_checks_run') or not ClassicScanLogs._fcx_checks_run:
+                    # Run the checks once and store results in class variables
+                    ClassicScanLogs._main_files_result = main_combined_result()
+                    ClassicScanLogs._game_files_result = game_combined_result()
+                    ClassicScanLogs._fcx_checks_run = True
+    
             # Always assign the stored results to instance variables
             self.main_files_check = ClassicScanLogs._main_files_result
             self.game_files_check = ClassicScanLogs._game_files_result
