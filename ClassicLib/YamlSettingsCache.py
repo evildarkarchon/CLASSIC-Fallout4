@@ -7,16 +7,8 @@ import ruamel.yaml
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, YAMLMapping, YAMLValue, gamevars
 from ClassicLib.Logger import logger
+from ClassicLib.Meta import SingletonMeta
 from ClassicLib.Util import open_file_with_encoding
-
-
-class SingletonMeta(type):
-    _instances: ClassVar[dict[type, Any]] = {}
-
-    def __call__(cls, *args, **kwargs):  # noqa: ANN002, ANN003, ANN204
-        if cls not in cls._instances:
-            cls._instances[cls] = super().__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 class YamlSettingsCache(metaclass=SingletonMeta):
