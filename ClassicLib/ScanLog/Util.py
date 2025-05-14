@@ -6,6 +6,37 @@ from ClassicLib.Constants import DB_PATHS, YAML, gamevars
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
+# Constants for file patterns
+CRASH_LOG_PATTERN = "crash-*.log"
+CRASH_AUTOSCAN_PATTERN = "crash-*-AUTOSCAN.md"
+
+
+def ensure_directory_exists(directory: Path) -> None:
+    """Create directory if it doesn't exist."""
+    directory.mkdir(parents=True, exist_ok=True)
+
+
+def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
+    """Move files matching pattern from source to target directory if they don't exist in target."""
+    for file in source_dir.glob(pattern):
+        destination_file = target_dir / file.name
+        if not destination_file.is_file():
+            file.rename(destination_file)
+
+
+def copy_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
+    """Copy files matching pattern from source to target directory if they don't exist in target."""
+    if source_dir and source_dir.is_dir():
+        for file in source_dir.glob(pattern):
+            destination_file = target_dir / file.name
+            if not destination_file.is_file():
+                shutil.copy2(file, destination_file)
+
+
+def get_path_from_setting(setting_value: str | None) -> Path | None:
+    """Convert setting string to Path object if setting is valid."""
+    return Path(setting_value) if isinstance(setting_value, str) else None
+
 
 def crashlogs_get_files() -> list[Path]:
     """
@@ -18,36 +49,31 @@ def crashlogs_get_files() -> list[Path]:
         list[Path]: A list of `Path` objects representing all discovered and processed crash log files.
     """
     logger.debug("- - - INITIATED CRASH LOG FILE LIST GENERATION")
-    classic_folder = Path.cwd()
-    classic_logs = classic_folder / "Crash Logs"
-    classic_pastebin = classic_logs / "Pastebin"
-    custom_folder_setting = classic_settings(str, "SCAN Custom Path")
-    xse_folder_setting = yaml_settings(str, YAML.Game_Local, "Game_Info.Docs_Folder_XSE")
 
-    custom_folder = Path(custom_folder_setting) if isinstance(custom_folder_setting, str) else None
-    xse_folder = Path(xse_folder_setting) if isinstance(xse_folder_setting, str) else None
+    # Define directory structure
+    base_folder = Path.cwd()
+    crash_logs_dir = base_folder / "Crash Logs"
+    pastebin_dir = crash_logs_dir / "Pastebin"
 
-    if not classic_logs.is_dir():
-        classic_logs.mkdir(parents=True, exist_ok=True)
-    if not classic_pastebin.is_dir():
-        classic_pastebin.mkdir(parents=True, exist_ok=True)
-    for file in classic_folder.glob("crash-*.log"):
-        destination_file = classic_logs / file.name
-        if not destination_file.is_file():
-            file.rename(destination_file)
-    for file in classic_folder.glob("crash-*-AUTOSCAN.md"):
-        destination_file = classic_logs / file.name
-        if not destination_file.is_file():
-            file.rename(destination_file)
-    if xse_folder and xse_folder.is_dir():
-        for crash_file in xse_folder.glob("crash-*.log"):
-            destination_file = classic_logs / crash_file.name
-            if not destination_file.is_file():
-                shutil.copy2(crash_file, destination_file)
+    # Get additional directories from settings
+    custom_folder = get_path_from_setting(classic_settings(str, "SCAN Custom Path"))
+    xse_folder = get_path_from_setting(yaml_settings(str, YAML.Game_Local, "Game_Info.Docs_Folder_XSE"))
 
-    crash_files = list(classic_logs.rglob("crash-*.log"))
+    # Ensure required directories exist
+    ensure_directory_exists(crash_logs_dir)
+    ensure_directory_exists(pastebin_dir)
+
+    # Process files from base directory
+    move_files(base_folder, crash_logs_dir, CRASH_LOG_PATTERN)
+    move_files(base_folder, crash_logs_dir, CRASH_AUTOSCAN_PATTERN)
+
+    # Copy files from XSE folder if available
+    copy_files(xse_folder, crash_logs_dir, CRASH_LOG_PATTERN)
+
+    # Collect crash log files
+    crash_files = list(crash_logs_dir.rglob(CRASH_LOG_PATTERN))
     if custom_folder and custom_folder.is_dir():
-        crash_files.extend(custom_folder.glob("crash-*.log"))
+        crash_files.extend(custom_folder.glob(CRASH_LOG_PATTERN))
 
     return crash_files
 

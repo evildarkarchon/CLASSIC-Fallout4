@@ -1,7 +1,7 @@
 # =========== CHECK GAME XSE SCRIPTS -> GET PATH AND HASHES ===========
 import hashlib
 from pathlib import Path
-from typing import cast
+from typing import cast, Iterable
 
 from ClassicLib import Constants
 from ClassicLib.Logger import logger
@@ -10,85 +10,141 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 # noinspection DuplicatedCode
-def xse_check_integrity() -> str:  # RESERVED | NEED VR HASH/FILE CHECK
+def xse_check_integrity() -> str:
     """
     Checks the integrity of the XSE (Script Extender) installation, files, and logs.
 
-    This function performs an integrity check for the Script Extender (XSE) by verifying the existence of
-    required files, ensuring compatibility with the latest version, and analyzing log files for potential
-    errors. It also generates informative messages or warnings based on the state of the XSE components
-    and captures any issues identified in the log file.
-
-    Raises:
-        TypeError: If expected settings or file paths are not of the correct type or are invalid.
+    This function verifies XSE installation by checking required files, version compatibility,
+    and analyzing log files for potential errors.
 
     Returns:
-        str: A concatenated string of messages and warnings indicating the results of the integrity check.
-    """
-    failed_list: list[str] = []
-    message_list: list[str] = []
-    logger.debug("- - - INITIATED XSE INTEGRITY CHECK")
+        str: A formatted report of the XSE integrity check results
 
-    catch_errors = yaml_settings(list[str], Constants.YAML.Main, "catch_log_errors")
-    xse_acronym = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.XSE_Acronym")
-    xse_log_file = yaml_settings(str, Constants.YAML.Game_Local, f"Game{Constants.gamevars["vr"]}_Info.Docs_File_XSE")
-    xse_full_name = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.XSE_FullName")
-    xse_ver_latest = yaml_settings(str, Constants.YAML.Game, f"Game{Constants.gamevars["vr"]}_Info.XSE_Ver_Latest")
-    adlib_file_str = yaml_settings(str, Constants.YAML.Game_Local,
-                                   f"Game{Constants.gamevars["vr"]}_Info.Game_File_AddressLib")
-    if not isinstance(catch_errors, list):
-        raise TypeError
-    if not (isinstance(xse_acronym, str) and isinstance(xse_full_name, str) and isinstance(xse_ver_latest, str)):
-        raise TypeError
+    Raises:
+        TypeError: If expected settings or file paths have invalid types
+    """
+    logger.debug("- - - INITIATED XSE INTEGRITY CHECK")
+    messages: list[str] = []
+
+    # Load configuration settings
+    game_vr = Constants.gamevars["vr"]
+    game_name = Constants.gamevars["game"]
+
+    # Get error patterns to search for in logs
+    error_patterns = yaml_settings(list[str], Constants.YAML.Main, "catch_log_errors")
+    if not isinstance(error_patterns, list):
+        raise TypeError("Error patterns setting must be a list")
+
+    # Get XSE-related settings
+    xse_config = _load_xse_config(game_vr, game_name)
+
+    # Check address library
+    _check_address_library(xse_config["adlib_file"], game_name, messages)
+
+    # Check XSE installation and log file
+    _check_xse_installation(
+        xse_config["log_file"],
+        xse_config["acronym"],
+        xse_config["full_name"],
+        xse_config["latest_version"],
+        error_patterns,
+        messages
+    )
+
+    return "".join(messages)
+
+
+# noinspection PyUnusedLocal
+def _load_xse_config(game_vr: str, game_name: str | None = None) -> dict:
+    """Load XSE configuration settings from YAML files"""
+    xse_acronym = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
+    xse_full_name = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_FullName")
+    xse_latest_version = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
+    xse_log_file = yaml_settings(str, Constants.YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
+    adlib_file_str = yaml_settings(str, Constants.YAML.Game_Local, f"Game{game_vr}_Info.Game_File_AddressLib")
+
+    # Validate types
+    if not (isinstance(xse_acronym, str) and isinstance(xse_full_name, str) and isinstance(xse_latest_version, str)):
+        raise TypeError("XSE name and version settings must be strings")
     if not (isinstance(xse_log_file, str) or xse_log_file is None):
-        raise TypeError
+        raise TypeError("XSE log file path must be a string or None")
     if not (isinstance(adlib_file_str, str) or adlib_file_str is None):
-        raise TypeError
+        raise TypeError("Address library file path must be a string or None")
+
     adlib_file = Path(adlib_file_str) if adlib_file_str else None
 
-    match adlib_file:
-        case str() | Path():
-            if Path(adlib_file).exists():
-                message_list.append("✔️ REQUIRED: *Address Library* for Script Extender is installed! \n-----\n")
-            else:
-                warn_adlib = yaml_settings(str, Constants.YAML.Game, "Warnings_MODS.Warn_ADLIB_Missing")
-                if not isinstance(warn_adlib, str):
-                    raise TypeError
-                message_list.append(warn_adlib)
-        case _:
-            message_list.append(
-                f"❌ Value for Address Library is invalid or missing from CLASSIC {Constants.gamevars["game"]} Local.yaml!\n-----\n")
+    return {
+        "acronym": xse_acronym,
+        "full_name": xse_full_name,
+        "latest_version": xse_latest_version,
+        "log_file": xse_log_file,
+        "adlib_file": adlib_file
+    }
 
-    match xse_log_file:
-        case str() | Path():
-            if Path(cast("str", xse_log_file)).exists():
-                message_list.append(f"✔️ REQUIRED: *{xse_full_name}* is installed! \n-----\n")
-                with open_file_with_encoding(cast("str", xse_log_file)) as xse_log:
-                    xse_data = xse_log.readlines()
-                if str(xse_ver_latest) in xse_data[0]:
-                    message_list.append(f"✔️ You have the latest version of *{xse_full_name}*! \n-----\n")
-                else:
-                    warn_outdated = yaml_settings(str, Constants.YAML.Game, "Warnings_XSE.Warn_Outdated")
-                    if not isinstance(warn_outdated, str):
-                        raise TypeError
-                    message_list.append(warn_outdated)
-                failed_list.extend([
-                    line for line in xse_data if any(item.lower() in line.lower() for item in catch_errors)
-                ])
 
-                if failed_list:
-                    message_list.append(f"#❌ CAUTION : {xse_acronym}.log REPORTS THE FOLLOWING ERRORS #\n")
-                    message_list.extend([f"ERROR > {elem.strip()} \n-----\n" for elem in failed_list])
-            else:
-                message_list.extend(
-                    [f"❌ CAUTION : *{xse_acronym.lower()}.log* FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",
-                     f"   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n",
-                     "    After that, try running CLASSIC again! \n-----\n"])
-        case _:
-            message_list.append(
-                f"❌ Value for {xse_acronym.lower()}.log is invalid or missing from CLASSIC {Constants.gamevars["game"]} Local.yaml!\n-----\n")
+def _check_address_library(adlib_file: Path | None, game_name: str, messages: list[str]) -> None:
+    """Check if Address Library for Script Extender is installed"""
+    if isinstance(adlib_file, (str, Path)):
+        if Path(adlib_file).exists():
+            messages.append("✔️ REQUIRED: *Address Library* for Script Extender is installed! \n-----\n")
+        else:
+            warn_adlib = yaml_settings(str, Constants.YAML.Game, "Warnings_MODS.Warn_ADLIB_Missing")
+            if not isinstance(warn_adlib, str):
+                raise TypeError("Address library warning message must be a string")
+            messages.append(warn_adlib)
+    else:
+        messages.append(
+            f"❌ Value for Address Library is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
 
-    return "".join(message_list)
+
+def _check_xse_installation(
+        log_file: str | None,
+        acronym: str,
+        full_name: str,
+        latest_version: str,
+        error_patterns: list[str],
+        messages: list[str]
+) -> None:
+    """Check XSE installation status, version, and log for errors"""
+    if not isinstance(log_file, (str, Path)):
+        messages.append(
+            f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC Local.yaml!\n-----\n")
+        return
+
+    log_path = Path(cast("str", log_file))
+    if not log_path.exists():
+        messages.extend([
+            f"❌ CAUTION : *{acronym.lower()}.log* FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",
+            f"   You need to run the game at least once with {acronym.lower()}_loader.exe \n",
+            "    After that, try running CLASSIC again! \n-----\n"
+        ])
+        return
+
+    # XSE is installed
+    messages.append(f"✔️ REQUIRED: *{full_name}* is installed! \n-----\n")
+
+    # Check XSE version and log for errors
+    with open_file_with_encoding(log_path) as xse_log:
+        log_contents = xse_log.readlines()
+
+    # Check version
+    if str(latest_version) in log_contents[0]:
+        messages.append(f"✔️ You have the latest version of *{full_name}*! \n-----\n")
+    else:
+        warn_outdated = yaml_settings(str, Constants.YAML.Game, "Warnings_XSE.Warn_Outdated")
+        if not isinstance(warn_outdated, str):
+            raise TypeError("XSE outdated warning message must be a string")
+        messages.append(warn_outdated)
+
+    # Check for errors in log
+    error_lines = [
+        line for line in log_contents
+        if any(error.lower() in line.lower() for error in error_patterns)
+    ]
+
+    if error_lines:
+        messages.append(f"#❌ CAUTION : {acronym}.log REPORTS THE FOLLOWING ERRORS #\n")
+        messages.extend([f"ERROR > {line.strip()} \n-----\n" for line in error_lines])
 
 
 def xse_check_hashes() -> str:
@@ -104,55 +160,97 @@ def xse_check_hashes() -> str:
         str: Consolidated message summarizing the results of the integrity check, including warnings about missing or
         mismatched files, or confirmation that all scripts are correctly validated.
     """
-    message_list: list[str] = []
     logger.debug("- - - INITIATED XSE FILE HASH CHECK")
 
-    xse_script_missing = xse_script_mismatch = False
+    # Load configuration values
+    expected_hashes = _get_expected_script_hashes()
+    scripts_folder = _get_scripts_folder_path()
+
+    # Check script files
+    actual_hashes = _calculate_script_hashes(expected_hashes.keys(), scripts_folder)
+
+    # Compare hashes and build messages
+    return _generate_result_message(expected_hashes, actual_hashes)
+
+
+def _get_expected_script_hashes() -> dict[str, str]:
+    """Get expected script hashes from config."""
     xse_hashedscripts = yaml_settings(dict[str, str], Constants.YAML.Game,
-                                      f"Game{Constants.gamevars["vr"]}_Info.XSE_HashedScripts")
-    game_folder_scripts = yaml_settings(str, Constants.YAML.Game_Local,
-                                        f"Game{Constants.gamevars["vr"]}_Info.Game_Folder_Scripts")
+                                      f"Game{Constants.gamevars['vr']}_Info.XSE_HashedScripts")
     if not isinstance(xse_hashedscripts, dict):
-        raise TypeError
+        raise TypeError("Expected script hashes configuration must be a dictionary")
+    return xse_hashedscripts
+
+
+def _get_scripts_folder_path() -> str:
+    """Get scripts folder path from config."""
+    game_folder_scripts = yaml_settings(str, Constants.YAML.Game_Local,
+                                        f"Game{Constants.gamevars['vr']}_Info.Game_Folder_Scripts")
     if not (isinstance(game_folder_scripts, str) or game_folder_scripts is None):
-        raise TypeError
+        raise TypeError("Game scripts folder path must be a string or None")
+    if game_folder_scripts is None:
+        raise ValueError("Game scripts folder path cannot be None")
+    return game_folder_scripts
 
-    xse_hashedscripts_local = dict.fromkeys(xse_hashedscripts)
-    for key in xse_hashedscripts_local:
-        script_path = Path(rf"{game_folder_scripts}\{key!s}")
+
+def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: str) -> dict[str, str | None]:
+    """Calculate actual hashes for script files."""
+    actual_hashes = {}
+
+    for filename in script_filenames:
+        script_path = Path(rf"{scripts_folder}\{filename}")
+
         if script_path.is_file():
-            with script_path.open("rb") as f:
-                file_contents = f.read()
-                # Algo should match the one used for Database YAML!
-                file_hash = hashlib.sha256(file_contents).hexdigest()
-                xse_hashedscripts_local[key] = str(file_hash)
+            try:
+                with script_path.open("rb") as f:
+                    file_contents = f.read()
+                    # Algo should match the one used for Database YAML!
+                    file_hash = hashlib.sha256(file_contents).hexdigest()
+                    actual_hashes[filename] = file_hash
+            except (IOError, OSError) as e:
+                logger.warning(f"Error reading file {script_path}: {e}")
+                actual_hashes[filename] = None
+        else:
+            actual_hashes[filename] = None
 
-    for key in xse_hashedscripts:
-        if key in xse_hashedscripts_local:
-            hash1 = xse_hashedscripts[key]
-            hash2 = xse_hashedscripts_local[key]
-            if hash1 == hash2:
-                pass
-            elif hash2 is None:  # Can only be None if not hashed in the first place, meaning it is missing.
-                message_list.append(
-                    f"❌ CAUTION : {key} Script Extender file is missing from your game Scripts folder! \n-----\n")
-                xse_script_missing = True
-            else:
-                message_list.append(
-                    f"[!] CAUTION : {key} Script Extender file is outdated or overriden by another mod! \n-----\n")
-                xse_script_mismatch = True
+    return actual_hashes
 
-    if xse_script_missing:
+
+def _generate_result_message(expected_hashes: dict[str, str],
+                             actual_hashes: dict[str, str | None]) -> str:
+    """Generate result message based on hash comparison."""
+    message_list = []
+    has_missing_scripts = False
+    has_mismatched_scripts = False
+
+    # Compare hashes and collect messages
+    for filename, expected_hash in expected_hashes.items():
+        actual_hash = actual_hashes.get(filename)
+
+        if actual_hash is None:
+            message_list.append(
+                f"❌ CAUTION : {filename} Script Extender file is missing from your game Scripts folder! \n-----\n")
+            has_missing_scripts = True
+        elif expected_hash != actual_hash:
+            message_list.append(
+                f"[!] CAUTION : {filename} Script Extender file is outdated or overriden by another mod! \n-----\n")
+            has_mismatched_scripts = True
+
+    # Add warning messages from configuration if needed
+    if has_missing_scripts:
         warn_missing = yaml_settings(str, Constants.YAML.Game, "Warnings_XSE.Warn_Missing")
         if not isinstance(warn_missing, str):
-            raise TypeError
+            raise TypeError("Missing scripts warning message must be a string")
         message_list.append(warn_missing)
-    if xse_script_mismatch:
+
+    if has_mismatched_scripts:
         warn_mismatch = yaml_settings(str, Constants.YAML.Game, "Warnings_XSE.Warn_Mismatch")
         if not isinstance(warn_mismatch, str):
-            raise TypeError
+            raise TypeError("Mismatched scripts warning message must be a string")
         message_list.append(warn_mismatch)
-    if not xse_script_missing and not xse_script_mismatch:
+
+    # All checks passed
+    if not has_missing_scripts and not has_mismatched_scripts:
         message_list.append("✔️ All Script Extender files have been found and accounted for! \n-----\n")
 
     return "".join(message_list)

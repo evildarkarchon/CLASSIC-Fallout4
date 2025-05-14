@@ -10,7 +10,7 @@ from difflib import SequenceMatcher
 from io import TextIOWrapper
 from logging import Logger
 from pathlib import Path
-from typing import cast
+from typing import cast, Any
 from urllib.parse import urlparse
 
 import aiohttp
@@ -57,44 +57,54 @@ def get_game_version(game_exe_path: Path) -> Version:
         Version: The version of the game executable in the format "major.minor.patch.build".
         If detection fails, a null version is returned.
     """
-
+    # Early return for non-Windows systems
     if platform.system() != "Windows":
         logger.warning("Game version detection is only supported on Windows")
         return Constants.NULL_VERSION
-    import win32api
 
-    # Check if path exists and is a file
-    if not game_exe_path or not game_exe_path.is_file():
+    # Early return for invalid path
+    if not _is_valid_executable_path(game_exe_path):
         logger.warning("Game executable not found or path is invalid")
         return Constants.NULL_VERSION
 
     try:
-        # Get file version info using win32api
-        version_info = win32api.GetFileVersionInfo(str(game_exe_path), "\\")  # type: ignore[attr-defined]
-
-        # Extract version components
-        major = version_info["FileVersionMS"] >> 16
-        minor = version_info["FileVersionMS"] & 0xFFFF
-        patch = version_info["FileVersionLS"] >> 16
-        build = version_info["FileVersionLS"] & 0xFFFF
-
-        version = Version(f"{major}.{minor}.{patch}.{build}")
+        # Conditional import of Windows-specific module
+        import win32api
+        version_info = _extract_windows_version_info(win32api, game_exe_path)
+        version = _create_version_from_info(version_info)
         logger.debug(f"Game version detected: {version}")
-
-    except FileNotFoundError:
-        logger.error(f"Game executable not found at: {game_exe_path}")
+        return version
+    except (FileNotFoundError, OSError):
+        logger.error(f"Game executable not found or inaccessible at: {game_exe_path}")
         return Constants.NULL_VERSION
-    except (AttributeError, UnboundLocalError):
-        logger.error("win32api module not properly loaded")
+    except (AttributeError, UnboundLocalError, ImportError):
+        logger.error("Windows API module not properly loaded")
         return Constants.NULL_VERSION
-    except (OSError, ValueError) as e:
-        logger.error(f"Error retrieving version info: {e}")
+    except ValueError as e:
+        logger.error(f"Error parsing version info: {e}")
         return Constants.NULL_VERSION
     except Exception as e:  # noqa: BLE001
         logger.error(f"Unexpected error getting game version: {e}")
         return Constants.NULL_VERSION
-    else:
-        return version
+
+
+def _is_valid_executable_path(path: Path | None) -> bool:
+    """Checks if the provided path exists and is a file."""
+    return bool(path and path.is_file())
+
+
+def _extract_windows_version_info(win32api_module: Any, exe_path: Path) -> dict[str, int]:
+    """Extracts version information from a Windows executable using win32api."""
+    return cast(dict[str, int], win32api_module.GetFileVersionInfo(str(exe_path), "\\"))
+
+
+def _create_version_from_info(version_info: dict[str, int]) -> Version:
+    """Creates a Version object from Windows version info dictionary."""
+    major = version_info["FileVersionMS"] >> 16
+    minor = version_info["FileVersionMS"] & 0xFFFF
+    patch = version_info["FileVersionLS"] >> 16
+    build = version_info["FileVersionLS"] & 0xFFFF
+    return Version(f"{major}.{minor}.{patch}.{build}")
 
 
 def crashgen_version_gen(input_string: str) -> Version:
@@ -209,7 +219,6 @@ def remove_readonly(file_path: Path) -> None:
     Removes the read-only attribute or permission from the specified file path.
     On Windows, it clears the read-only file attribute. On other operating
     systems, it adds the write permission for the user if not already set.
-
     In case the file does not exist or an error occurs during the operation,
     appropriate error messages are logged.
 
@@ -219,22 +228,20 @@ def remove_readonly(file_path: Path) -> None:
     """
     try:
         if platform.system() == "Windows":
-            # Check if read-only attribute is set
-            if file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY:
+            is_readonly = file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY
+            if is_readonly:
                 file_path.chmod(stat.S_IWRITE)
-                logger.debug(f"- - - '{file_path}' is no longer Read-Only.")
-            else:
-                logger.debug(f"- - - '{file_path}' is not set to Read-Only.")
         else:
-            # Get current file permissions
             current_mode = file_path.stat().st_mode
-            # Check if user write permission is not set (file is read-only)
-            if not (current_mode & stat.S_IWUSR):
-                # Add write permission for user
+            is_readonly = not (current_mode & stat.S_IWUSR)
+            if is_readonly:
                 file_path.chmod(current_mode | stat.S_IWUSR)
-                logger.debug(f"- - - '{file_path}' is no longer Read-Only.")
-            else:
-                logger.debug(f"- - - '{file_path}' is not set to Read-Only.")
+
+        # Log the outcome based on whether the file was read-only
+        if is_readonly:
+            logger.debug(f"- - - '{file_path}' is no longer Read-Only.")
+        else:
+            logger.debug(f"- - - '{file_path}' is not set to Read-Only.")
 
     except FileNotFoundError:
         logger.error(f"> > > ERROR (remove_readonly) : '{file_path}' not found.")

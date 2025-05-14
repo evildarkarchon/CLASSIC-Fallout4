@@ -4,8 +4,6 @@ This module serves as a central storage location for objects that need to be acc
 from multiple modules throughout the application.
 """
 
-from collections.abc import Iterator
-from io import TextIOWrapper
 from pathlib import Path
 from typing import Any
 
@@ -68,12 +66,12 @@ def get_yaml_cache() -> Any:
     return get(Keys.YAML_CACHE)
 
 
-def get_manual_docs_gui() -> Any:
+def get_manual_docs_gui(): # noqa: ANN201
     """Get the manual docs GUI component."""
     return get(Keys.MANUAL_DOCS_GUI)
 
 
-def get_game_path_gui() -> Any:
+def get_game_path_gui(): # noqa: ANN201
     """Get the game path GUI component."""
     return get(Keys.GAME_PATH_GUI)
 
@@ -83,7 +81,7 @@ def is_gui_mode() -> bool:
     return get(Keys.GUI_MODE) or False
 
 
-def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore") -> Iterator[TextIOWrapper]:
+def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore"): # noqa: ANN201
     """Open a file with the specified encoding."""
     func = get(Keys.OPEN_FILE_FUNC)
     if func:
@@ -100,8 +98,9 @@ def get_vr() -> str:
 def get_game() -> str:
     """Get the game setting."""
     if not is_registered(Keys.GAME) or (is_registered(Keys.GAME) and Keys.GAME == ""):
-        return ""
+        return "Fallout4"
     return get(Keys.GAME)
+
 
 def get_local_dir(as_string: bool = False) -> Path | str:
     """Get the local directory setting."""

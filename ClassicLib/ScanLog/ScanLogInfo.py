@@ -1,12 +1,14 @@
+from pathlib import Path
 import sqlite3
 from dataclasses import dataclass, field
-from pathlib import Path
-
 from packaging.version import Version
 
+from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import NULL_VERSION, YAML, gamevars
 from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
 
+import threading
+from typing import Dict, List
 
 class SQLiteReader:
     # noinspection SpellCheckingInspection
@@ -54,6 +56,78 @@ class SQLiteReader:
         self.db.close()
 
 
+class ThreadSafeLogCache:
+    def __init__(self, logfiles: list[Path]) -> None:
+        """
+        Initializes a thread-safe in-memory log cache using a dictionary protected by a lock.
+        This provides a thread-safe alternative to SQLite for caching log files.
+        
+        Args:
+            logfiles (list[Path]): A list of file paths representing the log files to be cached.
+        """
+        self.lock = threading.RLock()  # Reentrant lock allows nested acquisitions
+        self.cache: Dict[str, bytes] = {}
+        
+        # Populate the cache with log content
+        for file in logfiles:
+            try:
+                self.cache[file.name] = file.read_bytes()
+            except (IOError, OSError) as e:
+                print(f"Error reading {file}: {e}")
+            
+    def read_log(self, logname: str) -> list[str]:
+        """
+        Thread-safely reads log data from the cache for the given logname, processes it to
+        decode and split the log content into individual lines.
+        
+        Args:
+            logname: The name of the log whose data is to be retrieved.
+            
+        Returns:
+            list[str]: A list of individual log lines as strings.
+        """
+        with self.lock:
+            if logname not in self.cache:
+                return []
+            
+            logdata = self.cache[logname]
+            return logdata.decode("utf-8", errors="ignore").splitlines()
+    
+    def get_log_names(self) -> list[str]:
+        """
+        Returns a list of all log names in the cache.
+        
+        Returns:
+            list[str]: List of log names.
+        """
+        with self.lock:
+            return list(self.cache.keys())
+    
+    def add_log(self, path: Path) -> bool:
+        """
+        Adds a new log to the cache.
+        
+        Args:
+            path: Path to the log file
+            
+        Returns:
+            bool: True if added successfully, False otherwise
+        """
+        with self.lock:
+            try:
+                self.cache[path.name] = path.read_bytes()
+                return True
+            except (IOError, OSError):
+                return False
+    
+    def close(self) -> None:
+        """
+        Clears the cache when no longer needed.
+        """
+        with self.lock:
+            self.cache.clear()
+
+
 # noinspection PyUnresolvedReferences
 @dataclass
 class ClassicScanLogsInfo:
@@ -85,8 +159,8 @@ class ClassicScanLogsInfo:
     game_version_vr: Version = field(default=NULL_VERSION, init=False)
 
     def __post_init__(self) -> None:
-        if yaml_cache is None:
-            raise TypeError("CMain is not initialized.")
+        if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
+            raise TypeError("YAML Cache is not initialized.")
         self.classic_game_hints = yaml_settings(list[str], YAML.Game, "Game_Hints") or []
         self.classic_records_list = yaml_settings(list[str], YAML.Main, "catch_log_records") or []
         self.classic_version = yaml_settings(str, YAML.Main, "CLASSIC_Info.version") or ""
