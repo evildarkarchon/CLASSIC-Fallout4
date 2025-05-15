@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import TypedDict, List, Tuple
 
-from ClassicLib.Constants import NULL_VERSION, Version, gamevars, VR_VERSION, OG_VERSION, NG_VERSION, YAML
+from ClassicLib import GlobalRegistry
+from ClassicLib.Constants import NULL_VERSION, Version, VR_VERSION, OG_VERSION, NG_VERSION, YAML
 from ClassicLib.Util import get_game_version
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -106,9 +107,9 @@ def check_xse_plugins() -> str:
     message_list: List[str]
 
     plugins_path = yaml_settings(Path, YAML.Game_Local,
-                                 f"Game{gamevars['vr']}_Info.Game_Folder_Plugins")
+                                 f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins")
 
-    game_exe_path_str = yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Game_File_EXE")
+    game_exe_path_str = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")
     if not game_exe_path_str:
         # Handle case where game exe path string is not found, though original code implies it's casted
         # This case wasn't explicitly handled for NULL_VERSION trigger in original, but good practice

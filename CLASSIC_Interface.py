@@ -1169,10 +1169,10 @@ class MainWindow(QMainWindow):
                 height: 25px;
             }
             QCheckBox::indicator:unchecked {
-                image: url("CLASSIC Data/graphics/unchecked.png");
+                image: url("CLASSIC Data/graphics/unchecked.svg");
             }
             QCheckBox::indicator:checked {
-                image: url("CLASSIC Data/graphics/checked.png");
+                image: url("CLASSIC Data/graphics/checked.svg");
             }
         """
         )
