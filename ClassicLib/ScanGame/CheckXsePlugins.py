@@ -7,15 +7,6 @@ from ClassicLib.Util import get_game_version
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
-# Assume these are defined elsewhere and imported as necessary:
-# from .somewhere import (
-#     VR_VERSION, OG_VERSION, NG_VERSION, NULL_VERSION, Version,
-#     yaml_settings, YAML, gamevars, get_game_version, classic_settings
-# )
-
-# Placeholder definitions for missing types/variables for standalone understanding
-
-
 class AddressLibVersionInfo(TypedDict):
     version_const: str  # Stores the constant like VR_VERSION
     filename: str
