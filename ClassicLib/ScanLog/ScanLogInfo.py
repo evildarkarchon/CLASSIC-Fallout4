@@ -7,7 +7,7 @@ from typing import Dict
 from packaging.version import Version
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import NULL_VERSION, YAML, gamevars
+from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 
@@ -171,7 +171,7 @@ class ClassicScanLogsInfo:
         self.crashgen_latest_og = yaml_settings(str, YAML.Game, "Game_Info.CRASHGEN_LatestVer") or ""
         self.crashgen_latest_vr = yaml_settings(str, YAML.Game, "GameVR_Info.CRASHGEN_LatestVer") or ""
         self.crashgen_ignore = set(
-            yaml_settings(list[str], YAML.Game, f"Game{gamevars['vr']}_Info.CRASHGEN_Ignore") or [])
+            yaml_settings(list[str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_Ignore") or [])
         self.warn_noplugins = yaml_settings(str, YAML.Game, "Warnings_CRASHGEN.Warn_NOPlugins") or ""
         self.warn_outdated = yaml_settings(str, YAML.Game, "Warnings_CRASHGEN.Warn_Outdated") or ""
         self.xse_acronym = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym") or ""
@@ -181,9 +181,9 @@ class ClassicScanLogsInfo:
         self.suspects_stack_list = yaml_settings(dict[str, list[str]], YAML.Game,
                                                  "Crashlog_Stack_Check") or {}
         self.autoscan_text = yaml_settings(str, YAML.Main,
-                                           f"CLASSIC_Interface.autoscan_text_{gamevars['game']}") or ""
+                                           f"CLASSIC_Interface.autoscan_text_{GlobalRegistry.get_game()}") or ""
         self.ignore_list = yaml_settings(list[str], YAML.Ignore,
-                                         f"CLASSIC_Ignore_{gamevars['game']}") or []
+                                         f"CLASSIC_Ignore_{GlobalRegistry.get_game()}") or []
         self.game_mods_conf = yaml_settings(dict[str, str], YAML.Game, "Mods_CONF") or {}
         self.game_mods_core = yaml_settings(dict[str, str], YAML.Game, "Mods_CORE") or {}
         self.game_mods_core_folon = yaml_settings(dict[str, str], YAML.Game, "Mods_CORE_FOLON") or {}

@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
-
-from ClassicLib.Constants import YAML, gamevars
+from ClassicLib import GlobalRegistry
+from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 
@@ -24,7 +24,7 @@ class ManualDocsPath(QObject):
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
             manual_docs = Path(path.strip())
-            yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Docs",
+            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs",
                           str(manual_docs))
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")
@@ -47,7 +47,7 @@ class GamePathEntry(QObject):
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
             game_path = Path(path.strip())
-            yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game",
+            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game",
                           str(game_path))
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")

@@ -3,7 +3,7 @@ import hashlib
 from pathlib import Path
 from typing import cast, Iterable
 
-from ClassicLib import Constants
+from ClassicLib import Constants, GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.Util import open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings
@@ -27,8 +27,8 @@ def xse_check_integrity() -> str:
     messages: list[str] = []
 
     # Load configuration settings
-    game_vr = Constants.gamevars["vr"]
-    game_name = Constants.gamevars["game"]
+    game_vr = GlobalRegistry.get_vr()
+    game_name = GlobalRegistry.get_game()
 
     # Get error patterns to search for in logs
     error_patterns = yaml_settings(list[str], Constants.YAML.Main, "catch_log_errors")
@@ -176,7 +176,7 @@ def xse_check_hashes() -> str:
 def _get_expected_script_hashes() -> dict[str, str]:
     """Get expected script hashes from config."""
     xse_hashedscripts = yaml_settings(dict[str, str], Constants.YAML.Game,
-                                      f"Game{Constants.gamevars['vr']}_Info.XSE_HashedScripts")
+                                      f"Game{GlobalRegistry.get_game()}_Info.XSE_HashedScripts")
     if not isinstance(xse_hashedscripts, dict):
         raise TypeError("Expected script hashes configuration must be a dictionary")
     return xse_hashedscripts
@@ -185,7 +185,7 @@ def _get_expected_script_hashes() -> dict[str, str]:
 def _get_scripts_folder_path() -> str:
     """Get scripts folder path from config."""
     game_folder_scripts = yaml_settings(str, Constants.YAML.Game_Local,
-                                        f"Game{Constants.gamevars['vr']}_Info.Game_Folder_Scripts")
+                                        f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts")
     if not (isinstance(game_folder_scripts, str) or game_folder_scripts is None):
         raise TypeError("Game scripts folder path must be a string or None")
     if game_folder_scripts is None:

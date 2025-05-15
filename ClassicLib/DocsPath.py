@@ -7,7 +7,7 @@ from typing import cast
 from iniparse import configparser
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Util import remove_readonly
 from ClassicLib.YamlSettingsCache import yaml_settings
@@ -29,7 +29,7 @@ class DocumentsPathManager:
     @staticmethod
     def _get_docs_name() -> str:
         """Get the document folder name from settings."""
-        docs_name = yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.Main_Docs_Name")
+        docs_name = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
         if not isinstance(docs_name, str):
             docs_name = GlobalRegistry.get_game()
         return docs_name
@@ -47,7 +47,7 @@ class DocumentsPathManager:
         Raises:
             TypeError: If the setting value is not a string
         """
-        path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.{setting_name}")
+        path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}")
         if not isinstance(path, str):
             raise TypeError(f"Expected string value for {setting_name}")
         return path
@@ -60,14 +60,14 @@ class DocumentsPathManager:
             setting_name: The setting name suffix to update
             value: The value to set
         """
-        yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.{setting_name}", value)
+        yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}", value)
 
     def find_docs_path(self) -> None:
         """Find and configure the game documents folder path."""
         logger.debug("- - - INITIATED DOCS PATH CHECK")
 
         # Check if path already exists
-        docs_path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Docs")
+        docs_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
         if not isinstance(docs_path, str) or not Path(docs_path).is_dir():
             # Find path based on platform
             if platform.system() == "Windows":
@@ -76,7 +76,7 @@ class DocumentsPathManager:
                 self._find_linux_docs_path()
 
             # Check if path was found successfully
-            docs_path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Docs")
+            docs_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
             if not isinstance(docs_path, str) or not Path(docs_path).is_dir():
                 self._get_manual_docs_path()
 
@@ -100,7 +100,7 @@ class DocumentsPathManager:
     def _find_linux_docs_path(self) -> None:
         """Find the Linux documents path using Steam library configuration."""
         # Retrieve the Steam ID from YAML settings
-        game_sid = yaml_settings(int, YAML.Game, f"Game{gamevars['vr']}_Info.Main_SteamID")
+        game_sid = yaml_settings(int, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_SteamID")
         if not isinstance(game_sid, int):
             raise TypeError("Invalid Steam ID")
 
@@ -144,9 +144,9 @@ class DocumentsPathManager:
         logger.debug("- - - INITIATED DOCS PATH GENERATION")
 
         # Get required settings
-        xse_acronym = yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.XSE_Acronym")
+        xse_acronym = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
         xse_acronym_base = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
-        docs_path_str = yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Docs")
+        docs_path_str = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
 
         if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(docs_path_str, str)):
             raise TypeError("Missing or invalid settings")
@@ -175,7 +175,7 @@ class DocumentsPathManager:
         message_list: list[str] = []
         logger.info(f"- - - INITIATED {ini_name} CHECK")
 
-        folder_docs = yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Docs")
+        folder_docs = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
 
         if not isinstance(self.docs_name, str):
             raise TypeError("Invalid docs_name")

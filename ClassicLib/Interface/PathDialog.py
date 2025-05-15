@@ -1,8 +1,7 @@
 from PySide6.QtWidgets import QDialogButtonBox, QPushButton, QHBoxLayout, QLineEdit, QLabel, QVBoxLayout, QMainWindow, \
     QDialog, QFileDialog
 
-from ClassicLib.Constants import gamevars
-
+from ClassicLib import GlobalRegistry
 
 class ManualPathDialog(QDialog):
     """
@@ -34,10 +33,11 @@ class ManualPathDialog(QDialog):
 
         # Create layout and input field
         layout = QVBoxLayout(self)
+        self._game = GlobalRegistry.get_game()
 
         # Add a label
         label = QLabel(
-            f"Enter the path for the {gamevars["game"]} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{gamevars["game"]})",
+            f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
             self)
         layout.addWidget(label)
 
@@ -120,10 +120,11 @@ class GamePathDialog(QDialog):
 
         # Create layout and input field
         layout = QVBoxLayout(self)
+        self._game = GlobalRegistry.get_game()
 
         # Add a label
         label = QLabel(
-            f"Enter the path for the {gamevars["game"]} directory (example: C:\\Steam\\steamapps\\common\\{gamevars["game"]})",
+            f"Enter the path for the {self._game} directory (example: C:\\Steam\\steamapps\\common\\{self._game})",
             self)
         layout.addWidget(label)
 
@@ -154,7 +155,7 @@ class GamePathDialog(QDialog):
             None
         """
         # Open directory browser and update the input field
-        manual_path = QFileDialog.getExistingDirectory(self, f"Select Directory for {gamevars["game"]}")
+        manual_path = QFileDialog.getExistingDirectory(self, f"Select Directory for {self._game}")
         if manual_path:
             self.input_field.setText(manual_path)
 

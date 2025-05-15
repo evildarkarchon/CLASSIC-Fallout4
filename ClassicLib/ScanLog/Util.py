@@ -2,7 +2,8 @@ import shutil
 import sqlite3
 from pathlib import Path
 
-from ClassicLib.Constants import DB_PATHS, YAML, gamevars
+from ClassicLib import GlobalRegistry
+from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -106,7 +107,7 @@ def get_entry(formid: str, plugin: str) -> str | None:
             with sqlite3.connect(db_path) as conn:
                 c = conn.cursor()
                 c.execute(
-                    f"SELECT entry FROM {gamevars["game"]} WHERE formid=? AND plugin=? COLLATE nocase",
+                    f"SELECT entry FROM {GlobalRegistry.get_game()} WHERE formid=? AND plugin=? COLLATE nocase",
                     (formid, plugin),
                 )
                 entry = c.fetchone()

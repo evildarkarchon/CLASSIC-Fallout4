@@ -1,6 +1,7 @@
 import os
 import random
 import shutil
+import threading
 import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -13,7 +14,7 @@ from packaging.version import Version
 from CLASSIC_Main import initialize, main_combined_result
 from CLASSIC_ScanGame import game_combined_result
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import DB_PATHS, YAML, gamevars
+from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat, get_entry
@@ -23,10 +24,10 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 # noinspection PyUnresolvedReferences
 class ClassicScanLogs:
-    _fcx_lock = threading.RLock()
-    _fcx_checks_run = False
-    _main_files_result = ""
-    _game_files_result = ""
+    _fcx_lock: threading.RLock = threading.RLock()
+    _fcx_checks_run: bool = False
+    _main_files_result: str = ""
+    _game_files_result: str = ""
     def __init__(self) -> None:
         """
         Initializes the class and performs the setup required for crash log scanning and processing.
@@ -147,7 +148,7 @@ class ClassicScanLogs:
 
         # Get required information from configuration
         xse = self.yamldata.xse_acronym.upper()
-        game_root_name = yaml_settings(str, YAML.Game, f"Game_{gamevars['vr']}Info.Main_Root_Name")
+        game_root_name = yaml_settings(str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name")
 
         # Define segment boundaries
         segment_boundaries = [
@@ -985,7 +986,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     crashlog_plugins: dict[str, str] = {}
     trigger_plugin_limit = False  # Initialize the variable here
 
-    esm_name = f"{gamevars['game']}.esm"
+    esm_name = f"{GlobalRegistry.get_game()}.esm"
     if any(esm_name in elem for elem in segment_plugins):
         trigger_plugins_loaded = True
     else:
@@ -1174,7 +1175,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     else:
         append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
-    if gamevars["game"] == "Fallout4":
+    if GlobalRegistry.get_game() == "Fallout4":
         append_or_extend((
             "====================================================\n",
             "CHECKING FOR MODS PATCHED THROUGH OPC INSTALLER...\n",
@@ -1372,7 +1373,7 @@ def crashlogs_scan() -> None:
         print(f"Number of Scanned Logs (No Autoscan Errors): {scanner.crashlog_stats['scanned']}")
         print(f"Number of Incomplete Logs (No Plugins List): {scanner.crashlog_stats['incomplete']}")
         print(f"Number of Failed Logs (Autoscan Can't Scan): {scanner.crashlog_stats['failed']}\n-----")
-        if gamevars["game"] == "Fallout4":
+        if GlobalRegistry.get_game() == "Fallout4":
             print(yamldata.autoscan_text)
         if scanner.crashlog_stats["scanned"] == 0 and scanner.crashlog_stats["incomplete"] == 0:
             print("\n❌ CLASSIC found no crash logs to scan or the scan failed.")

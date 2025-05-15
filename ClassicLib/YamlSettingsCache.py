@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 import ruamel.yaml
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, YAMLMapping, YAMLValue, gamevars
+from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, YAMLMapping, YAMLValue
 from ClassicLib.Logger import logger
 from ClassicLib.Meta import SingletonMeta
 from ClassicLib.Util import open_file_with_encoding
@@ -68,9 +68,9 @@ class YamlSettingsCache(metaclass=SingletonMeta):
             case YAML.Ignore:
                 yaml_path = Path("CLASSIC Ignore.yaml")
             case YAML.Game:
-                yaml_path = data_path / f"databases/CLASSIC {gamevars['game']}.yaml"
+                yaml_path = data_path / f"databases/CLASSIC {GlobalRegistry.get_game()}.yaml"
             case YAML.Game_Local:
-                yaml_path = data_path / f"CLASSIC {gamevars['game']} Local.yaml"
+                yaml_path = data_path / f"CLASSIC {GlobalRegistry.get_game()} Local.yaml"
             case YAML.TEST:
                 yaml_path = Path("tests/test_settings.yaml")
             case other if other not in (YAML.Main, YAML.Settings, YAML.Ignore, YAML.Game, YAML.Game_Local, YAML.TEST):

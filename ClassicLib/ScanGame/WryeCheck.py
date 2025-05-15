@@ -2,7 +2,8 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup, PageElement
 
-from ClassicLib.Constants import YAML, gamevars
+from ClassicLib import GlobalRegistry
+from ClassicLib.Constants import YAML
 from ClassicLib.Util import open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -26,7 +27,7 @@ def scan_wryecheck() -> str:
 
     # Load settings from YAML
     missing_html_setting = yaml_settings(str, YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")
-    plugin_check_path = yaml_settings(Path, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Docs_File_WryeBashPC")
+    plugin_check_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_WryeBashPC")
     warnings_dict = yaml_settings(dict[str, str], YAML.Main, "Warnings_WRYE")
 
     # Validate settings
@@ -42,7 +43,7 @@ def scan_wryecheck() -> str:
     # Build the message
     message_parts = [
         "\n✔️ WRYE BASH PLUGIN CHECKER REPORT WAS FOUND! ANALYZING CONTENTS...\n",
-        f"  [This report is located in your Documents/My Games/{gamevars['game']} folder.]\n",
+        f"  [This report is located in your Documents/My Games/{GlobalRegistry.get_game()} folder.]\n",
         "  [To hide this report, remove *ModChecker.html* from the same folder.]\n",
     ]
 

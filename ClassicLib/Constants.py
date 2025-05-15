@@ -4,6 +4,8 @@ from typing import Literal, TypedDict
 
 from packaging.version import Version
 
+from ClassicLib import GlobalRegistry
+
 NULL_VERSION = Version("0.0.0.0")
 OG_VERSION = Version("1.10.163.0")
 NG_VERSION = Version("1.10.984.0")
@@ -41,10 +43,10 @@ class GameVars(TypedDict):
     vr: Literal["VR", ""] | str
 
 
-gamevars: GameVars = {
+"""gamevars: GameVars = {
     "game": "Fallout4",
     "vr": "",
-}
+}"""
 
 SETTINGS_IGNORE_NONE = {
     "SCAN Custom Path",
@@ -55,6 +57,6 @@ SETTINGS_IGNORE_NONE = {
 
 # Define paths for both Main and Local databases
 DB_PATHS = (
-    Path(f"CLASSIC Data/databases/{gamevars["game"]} FormIDs Main.db"),
-    Path(f"CLASSIC Data/databases/{gamevars["game"]} FormIDs Local.db"),
+    Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Main.db"),
+    Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Local.db"),
 )

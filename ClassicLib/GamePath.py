@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import cast
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERSION, YAML, gamevars
+from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERSION, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Util import get_game_version, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings
@@ -28,7 +28,7 @@ def game_path_find() -> None:
     try:
         # Open the registry key
         reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                 rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{gamevars["game"]}{GlobalRegistry.get_vr()}")  # pyright: ignore[reportPossiblyUnboundVariable]
+                                 rf"SOFTWARE\WOW6432Node\Bethesda Softworks\{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}")  # pyright: ignore[reportPossiblyUnboundVariable]
         # Query the 'installed path' value
         path, _ = winreg.QueryValueEx(reg_key, "installed path")  # pyright: ignore[reportPossiblyUnboundVariable]
         winreg.CloseKey(reg_key)  # pyright: ignore[reportPossiblyUnboundVariable]
@@ -47,7 +47,7 @@ def game_path_find() -> None:
     else:
         game_path = Path(path) if path else None
 
-    exe_name = f"{gamevars["game"]}{GlobalRegistry.get_vr()}.exe"
+    exe_name = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
 
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
         yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game",
@@ -99,7 +99,7 @@ def game_path_find() -> None:
                           str(game_path))
             return
         print(
-            f"❌ ERROR : NO {gamevars["game"]}{GlobalRegistry.get_vr()}.exe FILE FOUND IN '{game_path}'! Please try again.")
+            f"❌ ERROR : NO {GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe FILE FOUND IN '{game_path}'! Please try again.")
 
 
 def game_generate_paths() -> None:
@@ -137,11 +137,11 @@ def game_generate_paths() -> None:
     yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_SteamINI",
                   rf"{game_path}\steam_api.ini")
     yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE",
-                  fr"{game_path}\{gamevars["game"]}{GlobalRegistry.get_vr()}.exe")
+                  fr"{game_path}\{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe")
     game_version = get_game_version(
         Path(cast("str",
                   yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE"))))
-    match gamevars["game"]:
+    match GlobalRegistry.get_game():
         case "Fallout4" if not GlobalRegistry.get_vr():
             if (
                     not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:

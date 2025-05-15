@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from ClassicLib.Constants import gamevars
+from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import ConfigFileCache
 
@@ -15,7 +15,7 @@ CONSOLE_COMMAND_NOTICE = (
 
 # List of files and their VSync settings to check
 VSYNC_SETTINGS = [
-    ("dxvk.conf", f"{gamevars['game']}.exe", "dxgi.syncInterval"),
+    ("dxvk.conf", f"{GlobalRegistry.get_game()}.exe", "dxgi.syncInterval"),
     ("enblocal.ini", "ENGINE", "ForceVSync"),
     ("longloadingtimesfix.ini", "Limiter", "EnableVSync"),
     ("reshade.ini", "APP", "ForceVsync"),
@@ -69,7 +69,7 @@ def scan_mod_inis() -> str:
 
 def check_starting_console_command(config_files: ConfigFileCache, message_list: list[str]) -> None:
     """Check for console command settings that might slow down game startup."""
-    game_lower = gamevars["game"].lower()
+    game_lower = GlobalRegistry.get_game().lower()
 
     for file_lower, file_path in config_files.items():
         if file_lower.startswith(game_lower) and config_files.has(

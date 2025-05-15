@@ -1,8 +1,8 @@
 import aiohttp
 from packaging.version import InvalidVersion, Version
 
-from ClassicLib import Constants
-from ClassicLib.Constants import YAML, gamevars
+from ClassicLib import Constants, GlobalRegistry
+from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -179,7 +179,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     except (ValueError, OSError, aiohttp.ClientError, UpdateCheckError) as err:
         if not quiet:
             print(err)
-            print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{gamevars["game"]}"))
+            print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{GlobalRegistry.get_game()}"))
         if gui_request:
             # GUI catches exceptions to detect update failures.
             raise UpdateCheckError from err
@@ -194,7 +194,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             or (version_nexus is not None and version_local < version_nexus)
     ):
         if not quiet:
-            print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{gamevars["game"]}"), flush=True)
+            print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"), flush=True)
         if gui_request:
             raise UpdateCheckError
         return False

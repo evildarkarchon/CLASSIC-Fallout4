@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML, gamevars
+from ClassicLib.Constants import YAML
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
 from ClassicLib.GuiComponents import GamePathEntry, ManualDocsPath
@@ -48,7 +48,7 @@ def classic_generate_files() -> None:
             raise TypeError
         ignore_path.write_text(default_ignorefile, encoding="utf-8")
 
-    local_path = Path(f"CLASSIC Data/CLASSIC {gamevars["game"]} Local.yaml")
+    local_path = Path(f"CLASSIC Data/CLASSIC {GlobalRegistry.get_game()} Local.yaml")
     if not local_path.exists():
         default_yaml = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_localyaml")
         if not isinstance(default_yaml, str):
@@ -111,7 +111,7 @@ def game_check_integrity() -> str:
 
 def _load_game_config() -> dict:
     """Load and validate all needed game configuration settings."""
-    vr_suffix = gamevars["vr"]
+    vr_suffix = GlobalRegistry.get_vr()
 
     # Load settings from YAML
     config = {
@@ -149,7 +149,7 @@ def docs_check_folder() -> str:
         TypeError: If the `docs_name` or `docs_warn` obtained from YAML settings is not of type str.
     """
     message_list = []
-    docs_name = yaml_settings(str, YAML.Game, f"Game{gamevars["vr"]}_Info.Main_Docs_Name")
+    docs_name = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
     if not isinstance(docs_name, str):
         raise TypeError
     if "onedrive" in docs_name.lower():
@@ -199,10 +199,11 @@ def _load_backup_configuration() -> dict:
     Raises:
         TypeError: If any of the settings have invalid types.
     """
+    game_vr = GlobalRegistry.get_vr()
     backup_list = yaml_settings(list[str], YAML.Main, "CLASSIC_AutoBackup")
-    game_path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Root_Folder_Game")
-    xse_log_file = yaml_settings(str, YAML.Game_Local, f"Game{gamevars['vr']}_Info.Docs_File_XSE")
-    xse_ver_latest = yaml_settings(str, YAML.Game, f"Game{gamevars['vr']}_Info.XSE_Ver_Latest")
+    game_path = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Root_Folder_Game")
+    xse_log_file = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
+    xse_ver_latest = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
 
     # Validate types
     if not isinstance(backup_list, list):
@@ -299,10 +300,11 @@ def main_combined_result() -> str:
         str: A concatenated string containing the results of all executed
         checks.
     """
+    game_name = GlobalRegistry.get_game()
     combined_return = [game_check_integrity(), xse_check_integrity(), xse_check_hashes(), docs_check_folder(),
-                       docs_check_ini(f"{gamevars["game"]}.ini"),
-                       docs_check_ini(f"{gamevars["game"]}Custom.ini"),
-                       docs_check_ini(f"{gamevars["game"]}Prefs.ini")]
+                       docs_check_ini(f"{game_name}.ini"),
+                       docs_check_ini(f"{game_name}Custom.ini"),
+                       docs_check_ini(f"{game_name}Prefs.ini")]
     return "".join(combined_return)
 
 
@@ -331,7 +333,7 @@ def main_generate_required() -> None:
     print("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...")
     logger.debug(f"> > > STARTED {classic_ver}")
 
-    game_path = yaml_settings(str, YAML.Game_Local, f"Game{gamevars["vr"]}_Info.Root_Folder_Game")
+    game_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
     if not game_path:
         docs_path_find(is_gui_mode())
@@ -370,10 +372,8 @@ def initialize(is_gui: bool = False) -> None:
         yaml_cache.load_yaml(path)
 
     # noinspection PyTypedDict
-    gamevars["vr"] = "" if not classic_settings(bool, "VR Mode") else "VR"
-    gamevars["game"] = classic_settings(str, "Managed Game").replace(" ", "")
-    GlobalRegistry.register(GlobalRegistry.Keys.VR, gamevars["vr"])
-    GlobalRegistry.register(GlobalRegistry.Keys.GAME, gamevars["game"])
+    GlobalRegistry.register(GlobalRegistry.Keys.VR, "" if not classic_settings(bool, "VR Mode") else "VR")
+    GlobalRegistry.register(GlobalRegistry.Keys.GAME, classic_settings(str, "Managed Game").replace(" ", ""))
 
     if is_gui:
         GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS_GUI, ManualDocsPath())
