@@ -6,7 +6,7 @@ from typing import Literal
 
 import regex as re
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QDesktopServices, QFontMetrics, QIcon, QPixmap
+from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -63,7 +63,12 @@ class CustomAboutDialog(QDialog):
         """
         super().__init__(parent)
         self.setWindowTitle("About")
-        self.setMinimumSize(600, 200)  # Adjust size for icon and text
+        # --- Define window size behavior ---
+        self.setMinimumSize(400, 500)  # New, slightly larger minimum
+        # self.setMaximumSize(700, 950) # Remove or adjust if you want it more resizable
+
+        # --- Set preferred initial size ---
+        self.resize(750, 650)  # <<< SET YOUR DESIRED STARTUP SIZE HERE
 
         # Create a layout with margins similar to QMessageBox.about
         layout: QVBoxLayout = QVBoxLayout(self)
@@ -388,7 +393,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() == QDialog.DialogCode.Accepted:
             manual_path = dialog.get_path()
             # Store the path in the GlobalRegistry for access by other components
-            GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS, manual_path)
+            GlobalRegistry.register(GlobalRegistry.Keys.DOCS_PATH, manual_path)
 
     def show_game_path_dialog(self) -> None:
         """
@@ -501,6 +506,7 @@ class MainWindow(QMainWindow):
         Raises:
             UpdateCheckError: If an error occurs during the version check process.
         """
+        # noinspection PyShadowingNames
         try:
             is_up_to_date = await is_latest_version(quiet=True)
             self.show_update_result(is_up_to_date)
@@ -526,6 +532,7 @@ class MainWindow(QMainWindow):
         Returns:
             None: This function has no return value.
         """
+        # noinspection PyShadowingNames
         try:
             is_up_to_date = await is_latest_version(
                 quiet=True, gui_request=True
@@ -603,49 +610,30 @@ class MainWindow(QMainWindow):
 
         # Top section
         self.mods_folder_edit = self.setup_folder_section(
-            layout, "STAGING MODS FOLDER", "Box_SelectedMods", self.select_folder_mods
+            layout, "STAGING MODS FOLDER", "Box_SelectedMods", self.select_folder_mods,
+            tooltip="Select the folder where your mod manager (e.g., MO2) stages your mods."
         )
-        self.mods_folder_edit.setToolTip("Select the folder where you stage your mods.")
-        self.mods_folder_edit.setPlaceholderText("Optional: Select the folder where you stage your mods.")
+        if self.mods_folder_edit:  # Check if it was created
+            self.mods_folder_edit.setPlaceholderText("Optional: Select your mod staging folder (e.g., MO2/mods)")
 
         self.scan_folder_edit = self.setup_folder_section(
-            layout, "CUSTOM SCAN FOLDER", "Box_SelectedScan", self.select_folder_scan
+            layout, "CUSTOM SCAN FOLDER", "Box_SelectedScan", self.select_folder_scan,
+            tooltip="Select a custom folder containing crash logs to scan."
         )
-        self.scan_folder_edit.setToolTip("Select a custom folder to scan for log files.")
-        self.scan_folder_edit.setPlaceholderText("Optional: Select a custom folder to scan for log files.")
+        if self.scan_folder_edit:  # Check if it was created
+            self.scan_folder_edit.setPlaceholderText("Optional: Select a custom folder with crash logs")
 
-        # self.setup_pastebin_elements(layout) # Disabling Pastebin elements for now.
+        # self.setup_pastebin_elements(layout)  # Re-enabled Pastebin elements
 
-        # Add first separator
         layout.addWidget(self.create_separator())
-
-        # Main buttons section
         self.setup_main_buttons(layout)
-
-        # Add second separator
         layout.addWidget(self.create_separator())
-
-        # Checkbox section
         self.setup_checkboxes(layout)
-
-        # Articles section
+        # Articles section - No separator before it if checkboxes are directly above
         self.setup_articles_section(layout)
-
-        # Add a separator before bottom buttons
         layout.addWidget(self.create_separator())
-
-        # Bottom buttons
         self.setup_bottom_buttons(layout)
-
-        # Add output text box
         self.setup_output_text_box(layout)
-
-        # Add some spacing
-        layout.addSpacing(10)
-
-        # Set the layout to be stretchable
-        if self.output_text_box is not None:
-            layout.setStretchFactor(self.output_text_box, 1)
 
     def setup_backups_tab(self) -> None:
         """
@@ -662,66 +650,25 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(20, 10, 20, 10)
         layout.setSpacing(10)
 
-        # Add explanation labels
-        layout.addWidget(
-            QLabel(
-                "BACKUP > Backup files from the game folder into the CLASSIC Backup folder."
-            )
-        )
-        layout.addWidget(
-            QLabel(
-                "RESTORE > Restore file backup from the CLASSIC Backup folder into the game folder."
-            )
-        )
-        layout.addWidget(
-            QLabel(
-                "REMOVE > Remove files only from the game folder without removing existing backups."
-            )
-        )
+        layout.addWidget(QLabel("BACKUP > Backup files from the game folder into the CLASSIC Backup folder."))
+        layout.addWidget(QLabel("RESTORE > Restore file backup from the CLASSIC Backup folder into the game folder."))
+        layout.addWidget(QLabel("REMOVE > Remove files only from the game folder without removing existing backups."))
 
-        # Add separators and category buttons
         categories = ["XSE", "RESHADE", "VULKAN", "ENB"]
         for category in categories:
-            layout.addWidget(self.create_separator())
-            category_label = QLabel(category)
-            category_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            layout.addWidget(category_label)
+            self.add_backup_section(layout, category, category) # type: ignore
 
-            button_layout = QHBoxLayout()
+        layout.addStretch(1) # Push content to the top
 
-            backup_button = QPushButton(f"BACKUP {category}")
-            backup_button.clicked.connect(
-                lambda _, c=category: self.classic_files_manage(f"Backup {c}", "BACKUP")
-            )
-            button_layout.addWidget(backup_button)
-
-            restore_button = QPushButton(f"RESTORE {category}")
-            restore_button.clicked.connect(
-                lambda _, c=category: self.classic_files_manage(
-                    f"Backup {c}", "RESTORE"
-                )
-            )
-            restore_button.setEnabled(False)  # Initially disabled
-            setattr(
-                self, f"RestoreButton_{category}", restore_button
-            )  # Store reference to the button
-            button_layout.addWidget(restore_button)
-
-            remove_button = QPushButton(f"REMOVE {category}")
-            remove_button.clicked.connect(
-                lambda _, c=category: self.classic_files_manage(f"Backup {c}", "REMOVE")
-            )
-            button_layout.addWidget(remove_button)
-
-            layout.addLayout(button_layout)
-
-        # Check if backups exist and enable restore buttons accordingly
-        self.check_existing_backups()
-
-        # Add a button to open the backups folder
+        bottom_layout = QHBoxLayout()
         open_backups_button = QPushButton("OPEN CLASSIC BACKUPS")
         open_backups_button.clicked.connect(self.open_backup_folder)
-        layout.addWidget(open_backups_button)
+        bottom_layout.addWidget(open_backups_button)
+        bottom_layout.addStretch(1) # Keep button to the left
+        layout.addLayout(bottom_layout)
+
+        self.check_existing_backups()
+
 
     def check_existing_backups(self) -> None:
         """
@@ -776,9 +723,37 @@ class MainWindow(QMainWindow):
         layout.addWidget(title_label)
 
         buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(10)  # Add spacing between buttons
+
         backup_button = QPushButton(f"BACKUP {backup_type}")
         restore_button = QPushButton(f"RESTORE {backup_type}")
         remove_button = QPushButton(f"REMOVE {backup_type}")
+
+        # Store restore button for later enabling/disabling
+        setattr(self, f"RestoreButton_{backup_type}", restore_button)
+
+        button_style_sheet = """
+            QPushButton {{
+                color: white;
+                background: rgba(60, 60, 60, 0.9); /* Slightly lighter than main background */
+                border-radius: 5px; /* Softer corners */
+                border: 1px solid #5c5c5c;
+                font-size: 12px; /* Slightly larger font */
+                padding: 8px; /* Add some padding */
+                min-height: 40px; /* Adjust height */
+            }}
+            QPushButton:hover {{
+                background-color: rgba(80, 80, 80, 0.9);
+            }}
+            QPushButton:pressed {{
+                background-color: rgba(40, 40, 40, 0.9);
+            }}
+            QPushButton:disabled {{
+                color: grey;
+                background-color: rgba(45, 45, 45, 0.75); /* Darker for disabled */
+                border: 1px solid #444444;
+            }}
+        """
 
         for button, action in [
             (backup_button, "BACKUP"),
@@ -786,26 +761,15 @@ class MainWindow(QMainWindow):
             (remove_button, "REMOVE"),
         ]:
             button.clicked.connect(
-                lambda _, b=backup_type, a=action: self.classic_files_manage(
+                lambda checked=False, b=backup_type, a=action: self.classic_files_manage(  # checked arg for signal
                     f"Backup {b}", a  # type: ignore
                 )
             )
-            button.setStyleSheet(
-                """
-                QPushButton {
-                    color: white;
-                    background: rgba(10, 10, 10, 0.75);
-                    border-radius: 10px;
-                    border: 1px solid white;
-                    font-size: 11px;
-                    min-height: 48px;
-                    max-height: 48px;
-                    min-width: 180px;
-                    max-width: 180px;
-                }
-            """
-            )
+            button.setStyleSheet(button_style_sheet)
+            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # Allow horizontal expansion
             buttons_layout.addWidget(button)
+
+        restore_button.setEnabled(False)  # Initially disabled
 
         layout.addLayout(buttons_layout)
 
@@ -922,14 +886,15 @@ class MainWindow(QMainWindow):
                 font-size: 13px;
             }
         """
-        )  # Have to use alternate font here because the default font doesn't support some characters.
+        )
 
         self.output_text_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.output_text_box.setMinimumHeight(150)
+        self.output_text_box.setMinimumHeight(150) # Ensure it has some initial height
         layout.addWidget(self.output_text_box)
 
         self.output_buffer = ""
 
+    # noinspection PyBroadException
     def update_output_text_box(self, text: str | bytes) -> None:
         """
         Updates the content of the output text box by appending new text. Handles both string and
@@ -939,43 +904,33 @@ class MainWindow(QMainWindow):
         Args:
             text: Input text to be appended to the output text box. Can be a string or bytes.
         """
+        if self.output_text_box is None: return
+
+        # noinspection PyShadowingNames
         try:
-            # If the incoming text is bytes, decode it
-            text = text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text)
+            text_str = text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text)
+            self.output_buffer += text_str
 
-            # Append the incoming text to the buffer
-            self.output_buffer += text
+            if '\n' in self.output_buffer:
+                lines_to_append, self.output_buffer = self.output_buffer.rsplit('\n', 1)
+                self.output_text_box.append(
+                    lines_to_append)  # Append adds a newline, so pass lines_to_append + '\n' if needed
+                self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
 
-            # Split the buffer into lines, keeping newlines
-            lines = self.output_buffer.splitlines(True)
+            # If buffer gets too large without a newline, append it anyway to prevent memory issues
+            # Or consider a timer to flush the buffer periodically
+            if len(self.output_buffer) > 4096:  # Example threshold
+                self.output_text_box.append(self.output_buffer)
+                self.output_buffer = ""
+                self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
 
-            # Initialize flag to track if the last line ended with a newline
-            ends_with_newline = self.output_buffer.endswith("\n")
 
-            # Process all complete lines
-            complete_lines = lines[:-1] if not ends_with_newline else lines
-
-            if complete_lines:
-                current_text = self.output_text_box.toPlainText() if self.output_text_box is not None else ""
-
-                # Append complete lines without extra newlines
-                new_text = current_text + "".join(complete_lines)
-                if self.output_text_box is not None:
-                    self.output_text_box.setPlainText(new_text)
-
-                # Scroll to the bottom
-                if self.output_text_box is not None:
-                    scrollbar = self.output_text_box.verticalScrollBar()
-                    scrollbar.setValue(scrollbar.maximum())
-
-            # Keep the last incomplete line in the buffer if it's not complete
-            self.output_buffer = lines[-1] if not ends_with_newline else ""
-
-        except Exception as e:  # noqa: BLE001
-            QMessageBox().critical(
-                self, "Error", f"An error occurred while updating the output text box: {e}",
-                QMessageBox.StandardButton.Ok
-            )
+        except Exception as e:
+            # Fallback to simple append if complex logic fails, to avoid losing output
+            try:
+                self.output_text_box.append(str(text))
+            except Exception:  # If even simple append fails, log to console
+                print(f"Error updating output text box: {e}, Original text: {text}", file=sys.__stderr__)
 
     def process_lines(self, lines: list[str]) -> None:
         """
@@ -990,17 +945,15 @@ class MainWindow(QMainWindow):
         Args:
             lines: A list of strings that represents the input lines to process.
         """
+        if self.output_text_box is None: return
+
         for line in lines:
             stripped_line = line.rstrip()
-            if (stripped_line or line.endswith("\n")) and self.output_text_box is not None:
+            if stripped_line or line.endswith("\n"):
                 self.output_text_box.append(stripped_line)
 
-        # Scroll to the bottom of the text box
-        if self.output_text_box is not None:
-            scrollbar = self.output_text_box.verticalScrollBar()
-            scrollbar.setValue(scrollbar.maximum())
+        self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
 
-    # noinspection PyUnresolvedReferences
     def setup_output_redirection(self) -> None:
         """
         Sets up redirection of standard output and standard error streams.
@@ -1008,15 +961,11 @@ class MainWindow(QMainWindow):
         This method initializes an instance of `OutputRedirector`, connects its
         `outputWritten` signal to the `update_output_text_box` method, and redirects the
         `sys.stdout` and `sys.stderr` streams to the `output_redirector`.
-
-        Attributes:
-            output_redirector (OutputRedirector): Instance for handling redirection of
-                output streams, capturing print statements and error messages.
         """
         self.output_redirector = OutputRedirector()
         self.output_redirector.outputWritten.connect(self.update_output_text_box)
-        sys.stdout = self.output_redirector
-        sys.stderr = self.output_redirector  # Redirect stderr as well
+        sys.stdout = self.output_redirector  # type: ignore
+        sys.stderr = self.output_redirector  # type: ignore
 
     @staticmethod
     def create_separator() -> QFrame:
@@ -1042,92 +991,63 @@ class MainWindow(QMainWindow):
             layout (QBoxLayout): The parent layout to which the checkbox section, update source
                 section, and separator will be added.
         """
-        checkbox_layout = QVBoxLayout()
+        checkbox_section_layout = QVBoxLayout()  # Main layout for this section
 
-        # Title for the checkbox section
         title_label = QLabel("CLASSIC SETTINGS")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        checkbox_layout.addWidget(title_label)
+        title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 10px;")
+        checkbox_section_layout.addWidget(title_label)
 
-        # Grid for checkboxes
         grid_layout = QGridLayout()
-        grid_layout.setHorizontalSpacing(40)  # Increased spacing
-        grid_layout.setVerticalSpacing(20)  # Increased spacing
+        grid_layout.setHorizontalSpacing(20)
+        grid_layout.setVerticalSpacing(10)
 
         checkboxes = [
-            ("FCX MODE", "FCX Mode"),
-            ("SIMPLIFY LOGS", "Simplify Logs"),
-            ("UPDATE CHECK", "Update Check"),
-            ("VR MODE", "VR Mode"),
-            ("SHOW FID VALUES", "Show FormID Values"),
-            ("MOVE INVALID LOGS", "Move Unsolved Logs"),
-            ("AUDIO NOTIFICATIONS", "Audio Notifications")
+            ("FCX MODE", "FCX Mode", "Enable extended file integrity checks."),
+            ("SIMPLIFY LOGS", "Simplify Logs", "Remove redundant lines from crash logs."),
+            ("UPDATE CHECK", "Update Check", "Automatically check for CLASSIC updates."),
+            ("VR MODE", "VR Mode", "Prioritize settings for VR version of the game."),
+            ("SHOW FID VALUES", "Show FormID Values", "Look up FormID names (slower scans)."),
+            ("MOVE INVALID LOGS", "Move Unsolved Logs", "Move incomplete/unscannable logs to a separate folder."),
+            ("AUDIO NOTIFICATIONS", "Audio Notifications", "Play sounds for scan completion/errors.")
         ]
 
-        for index, (label, setting) in enumerate(checkboxes):
+        for index, (label, setting, tooltip) in enumerate(checkboxes):
             checkbox = self.create_checkbox(label, setting)
-            row = index // 3
-            col = index % 3
+            checkbox.setToolTip(tooltip)
+            row = index // 2  # Arrange in 2 columns
+            col = index % 2
             grid_layout.addWidget(checkbox, row, col, Qt.AlignmentFlag.AlignLeft)
 
-        checkbox_layout.addLayout(grid_layout)
+        checkbox_section_layout.addLayout(grid_layout)
+        checkbox_section_layout.addSpacing(15)  # Space before update source
 
-        # Add some vertical spacing
-        checkbox_layout.addSpacing(20)
-
-        layout.addLayout(checkbox_layout)
-
-        update_source_layout = QHBoxLayout()
-
-        update_source_label = QLabel("Update Source")
+        # Update Source ComboBox
+        update_source_hbox = QHBoxLayout()
+        update_source_label = QLabel("Update Source:")
         update_source_combo = QComboBox()
         update_sources = ("Nexus", "GitHub", "Both")
         update_source_combo.addItems(update_sources)
+        update_source_combo.setToolTip("Select where CLASSIC checks for updates (Nexus for stable, GitHub for latest).")
 
-        # Set the ComboBox to adjust size based on content
-        update_source_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-
-        # Optionally, reduce the spacing between the label and ComboBox
-        update_source_layout.setSpacing(10)  # Adjust the spacing between label and combo box
-
-        # Set layout margins to 0 to bring the label and combo box closer
-        update_source_layout.setContentsMargins(0, 0, 0, 0)
-
-        # Set the layout alignment to align left
-        update_source_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
-        # Set the size policy to prevent expanding
-        update_source_combo.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        update_source_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-
-        # Calculate the width of the longest item and set the ComboBox width accordingly
-        font_metrics = QFontMetrics(update_source_combo.font())
-        combo_width = max(font_metrics.horizontalAdvance(item) for item in update_sources) + 30
-        update_source_combo.setFixedWidth(combo_width)
-
-        # Set the default value if stored in settings
-        current_value = classic_settings(str, "Update Source")
-        if current_value is not None:
-            update_source_combo.setCurrentText(current_value)
-        else:
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", "Nexus")
-
-        update_source_combo.setToolTip(
-            "Select the source to check for updates. Nexus = stable, GitHub = latest, Both = check both")
+        current_update_source = classic_settings(str, "Update Source") or "Both"  # Default to Both if not set
+        if current_update_source in update_sources:
+            update_source_combo.setCurrentText(current_update_source)
+        else:  # If invalid value in settings, default to "Both" and save it
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", "Both")
+            update_source_combo.setCurrentText("Both")
 
         update_source_combo.currentTextChanged.connect(
             lambda value: yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", value)
         )
 
-        update_source_layout.addWidget(update_source_label)
-        update_source_layout.addWidget(update_source_combo)
+        update_source_hbox.addWidget(update_source_label)
+        update_source_hbox.addWidget(update_source_combo)
+        update_source_hbox.addStretch(1)  # Push to left
+        checkbox_section_layout.addLayout(update_source_hbox)
 
-        # Add the update source layout below the checkboxes
-        layout.addLayout(update_source_layout)
-
-        # Add a separator after the checkboxes
-        layout.addWidget(self.create_separator())
+        layout.addLayout(checkbox_section_layout)  # Add this section's layout to the main tab layout
+        # Separator is added after this section in setup_main_tab
 
     def create_checkbox(self, label_text: str, setting: str) -> QCheckBox:
         """
@@ -1184,7 +1104,7 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def setup_folder_section(layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None],
-                             tooltip: str = "") -> QLineEdit:
+                             tooltip: str = "") -> QLineEdit | None:
         """
         Sets up a folder selection section within a provided layout. This method creates a section
         consisting of a label, a QLineEdit for folder path input, and a browse button. Clicking the
@@ -1206,21 +1126,30 @@ class MainWindow(QMainWindow):
 
         label = QLabel(title)
         label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        label.setFixedWidth(180)
+        # label.setFixedWidth(180) # Avoid fixed width for better scaling
+        label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         section_layout.addWidget(label)
 
         line_edit = QLineEdit()
         line_edit.setObjectName(box_name)
-        section_layout.addWidget(line_edit, 1)
+        line_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # Allow horizontal expansion
+        section_layout.addWidget(line_edit)
 
-        browse_button = QPushButton("Browse Folder")
-        if tooltip:
-            browse_button.setToolTip(tooltip)
+        browse_button = QPushButton("Browse...")  # Shorter text
+        browse_button.setToolTip(tooltip if tooltip else f"Browse for {title.lower()}")
         browse_button.clicked.connect(browse_callback)
+        browse_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         section_layout.addWidget(browse_button)
 
-        layout.addLayout(section_layout)
-        return line_edit  # Return the created QLineEdit
+        # Add the QHBoxLayout to the parent QVBoxLayout (or other QBoxLayout)
+        if isinstance(layout, (QVBoxLayout, QHBoxLayout)):
+            layout.addLayout(section_layout)
+        else:
+            # Fallback if layout type is unexpected, though typically it's one of these.
+            # This might indicate a need to adjust how sections are added.
+            print(f"Warning: Unexpected layout type ({type(layout)}) for folder section '{title}'")
+
+        return line_edit
 
     def setup_main_buttons(self, layout: QBoxLayout) -> None:
         """
@@ -1235,32 +1164,22 @@ class MainWindow(QMainWindow):
             layout: QBoxLayout instance where the main buttons and bottom row buttons
                 are to be arranged and added.
         """
-        # Main action buttons
         main_buttons_layout = QHBoxLayout()
         main_buttons_layout.setSpacing(10)
         self.crash_logs_button = self.add_main_button(
-            main_buttons_layout, "SCAN CRASH LOGS", self.crash_logs_scan
+            main_buttons_layout, "SCAN CRASH LOGS", self.crash_logs_scan,
+            "Scan all detected crash logs for issues."
         )
-        self.scan_button_group.addButton(self.crash_logs_button)
-        self.game_files_button = self.add_main_button(
-            main_buttons_layout, "SCAN GAME FILES", self.game_files_scan
-        )
-        self.scan_button_group.addButton(self.game_files_button)
-        layout.addLayout(main_buttons_layout)
+        if self.crash_logs_button: self.scan_button_group.addButton(self.crash_logs_button)
 
-        # Bottom row buttons
-        bottom_buttons_layout = QHBoxLayout()
-        bottom_buttons_layout.setSpacing(5)
-        self.add_bottom_button(
-            bottom_buttons_layout, "CHANGE INI PATH", self.select_folder_ini
+        self.game_files_button = self.add_main_button(
+            main_buttons_layout, "SCAN GAME FILES", self.game_files_scan,
+            "Scan game and mod files for potential problems (FCX Mode dependent)."
         )
-        self.add_bottom_button(
-            bottom_buttons_layout, "OPEN CLASSIC SETTINGS", self.open_settings
-        )
-        self.add_bottom_button(
-            bottom_buttons_layout, "CHECK UPDATES", self.update_popup_explicit
-        )
-        layout.addLayout(bottom_buttons_layout)
+        if self.game_files_button: self.scan_button_group.addButton(self.game_files_button)
+
+        if isinstance(layout, (QVBoxLayout, QHBoxLayout)):  # Ensure layout supports addLayout
+            layout.addLayout(main_buttons_layout)
 
     @staticmethod
     def setup_articles_section(layout: QBoxLayout) -> None:
@@ -1279,87 +1198,57 @@ class MainWindow(QMainWindow):
             layout (QBoxLayout): The parent layout where the articles section will be
                 added.
         """
-        # Title for the articles section
-        title_label = QLabel("ARTICLES / WEBSITES / NEXUS LINKS")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        layout.addWidget(title_label)
+        articles_section_layout = QVBoxLayout()  # Main layout for this section
+        articles_section_layout.setSpacing(10)
 
-        # Grid layout for article buttons
+        title_label = QLabel("USEFUL RESOURCES & LINKS")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 5px;")
+        articles_section_layout.addWidget(title_label)
+
         grid_layout = QGridLayout()
         grid_layout.setHorizontalSpacing(10)
         grid_layout.setVerticalSpacing(10)
 
         button_data = [
-            {
-                "text": "BUFFOUT 4 INSTALLATION",
-                "pb_source": "https://www.nexusmods.com/fallout4/articles/3115",
-            },
-            {
-                "text": "FALLOUT 4 SETUP TIPS",
-                "pb_source": "https://www.nexusmods.com/fallout4/articles/4141",
-            },
-            {
-                "text": "IMPORTANT PATCHES LIST",
-                "pb_source": "https://www.nexusmods.com/fallout4/articles/3769",
-            },
-            {
-                "text": "BUFFOUT 4 NEXUS PAGE",
-                "pb_source": "https://www.nexusmods.com/fallout4/mods/47359",
-            },
-            {
-                "text": "CLASSIC NEXUS PAGE",
-                "pb_source": "https://www.nexusmods.com/fallout4/mods/56255",
-            },
-            {
-                "text": "CLASSIC GITHUB",
-                "pb_source": "https://github.com/GuidanceOfGrace/CLASSIC-Fallout4",
-            },
-            {
-                "text": "DDS TEXTURE SCANNER",
-                "pb_source": "https://www.nexusmods.com/fallout4/mods/71588",
-            },
-            {"text": "BETHINI PIE", "pb_source": "https://www.nexusmods.com/site/mods/631"},
-            {
-                "text": "WRYE BASH TOOL",
-                "pb_source": "https://www.nexusmods.com/fallout4/mods/20032",
-            },
+            {"text": "BUFFOUT 4 INSTALLATION", "url": "https://www.nexusmods.com/fallout4/articles/3115"},
+            {"text": "FALLOUT 4 SETUP TIPS", "url": "https://www.nexusmods.com/fallout4/articles/4141"},
+            {"text": "IMPORTANT PATCHES LIST", "url": "https://www.nexusmods.com/fallout4/articles/3769"},
+            {"text": "BUFFOUT 4 NEXUS", "url": "https://www.nexusmods.com/fallout4/mods/47359"},
+            {"text": "CLASSIC NEXUS", "url": "https://www.nexusmods.com/fallout4/mods/56255"},
+            {"text": "CLASSIC GITHUB", "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4"},  # Updated URL
+            {"text": "DDS TEXTURE SCANNER", "url": "https://www.nexusmods.com/fallout4/mods/71588"},
+            {"text": "BETHINI PIE", "url": "https://www.nexusmods.com/site/mods/631"},
+            {"text": "WRYE BASH", "url": "https://www.nexusmods.com/fallout4/mods/20032"},
         ]
+
+        button_style = """
+            QPushButton {
+                color: white;
+                background-color: rgba(60, 60, 60, 0.9);
+                border: 1px solid #5c5c5c;
+                border-radius: 5px;
+                padding: 8px;
+                font-size: 11px; /* Adjusted for potentially longer text */
+                font-weight: bold;
+                min-height: 40px; /* Ensure buttons are not too small */
+            }
+            QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
+            QPushButton:disabled { color: gray; background-color: rgba(45, 45, 45, 0.75); }
+        """
 
         for i, data in enumerate(button_data):
             button = QPushButton(data["text"])
-            button.setFixedSize(180, 50)  # Set fixed size for buttons
-            button.setStyleSheet(
-                """
-                QPushButton {
-                    color: white;
-                    background-color: rgba(10, 10, 10, 0.75);
-                    border: 1px solid white;
-                    border-radius: 5px;
-                    padding: 5px;
-                    font-size: 11px;
-                    font-weight: bold;
-                }
-                QPushButton:hover {
-                    background-color: rgba(50, 50, 50, 0.75);
-                }
-                QPushButton:disabled {
-                    color: gray;
-                    background-color: rgba(10, 10, 10, 0.75);
-                }
-            """
-            )
-            button.clicked.connect(
-                lambda _, url=data["pb_source"]: QDesktopServices.openUrl(QUrl(url))
-            )
-            row = i // 3
-            col = i % 3
-            grid_layout.addWidget(button, row, col, Qt.AlignmentFlag.AlignCenter)
+            button.setStyleSheet(button_style)
+            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # Allow horizontal expansion
+            button.setToolTip(f"Open {data['url']} in your browser.")
+            button.clicked.connect(lambda checked=False, url=data["url"]: QDesktopServices.openUrl(QUrl(url)))
+            row, col = divmod(i, 3)  # Arrange in 3 columns
+            grid_layout.addWidget(button, row, col)
 
-        layout.addLayout(grid_layout)
-
-        # Add some vertical spacing after the articles section
-        layout.addSpacing(20)
+        articles_section_layout.addLayout(grid_layout)
+        if isinstance(layout, (QVBoxLayout, QHBoxLayout)):
+            layout.addLayout(articles_section_layout)
 
     def setup_bottom_buttons(self, layout: QBoxLayout) -> None:
         """
@@ -1372,90 +1261,78 @@ class MainWindow(QMainWindow):
             layout (QBoxLayout): The main layout to which the bottom button layout will
                 be added.
         """
-        bottom_layout = QHBoxLayout()
-        bottom_layout.setSpacing(5)
+        bottom_buttons_hbox = QHBoxLayout()
+        bottom_buttons_hbox.setSpacing(10)
 
         # ABOUT button
         about_button = QPushButton("ABOUT")
-        about_button.setFixedSize(80, 30)
+        about_button.setToolTip("Show application information.")
         about_button.clicked.connect(self.show_about)
-        about_button.setStyleSheet(
-            """
-            QPushButton {
-                color: white;
-                background: rgba(10, 10, 10, 0.75);
-                border-radius: 10px;
-                border: 1px solid white;
-                font-size: 11px;
-            }
-        """
-        )
-        bottom_layout.addWidget(about_button)
+        bottom_buttons_hbox.addWidget(about_button)
 
         # HELP button
         help_button = QPushButton("HELP")
-        help_button.setFixedSize(80, 30)
+        help_button.setToolTip("Show help information for main options.")
         help_button.clicked.connect(self.help_popup_main)
-        help_button.setStyleSheet(
-            """
-            QPushButton {
-                color: white;
-                background: rgba(10, 10, 10, 0.75);
-                border-radius: 10px;
-                border: 1px solid white;
-                font-size: 11px;
-            }
-        """
-        )
-        bottom_layout.addWidget(help_button)
+        bottom_buttons_hbox.addWidget(help_button)
 
-        # PAPYRUS MONITORING button
+        # CHANGE INI PATH button
+        ini_path_button = QPushButton("CHANGE INI PATH")
+        ini_path_button.setToolTip("Manually set the path to your game's INI files folder.")
+        ini_path_button.clicked.connect(self.select_folder_ini)
+        bottom_buttons_hbox.addWidget(ini_path_button)
+
+        # OPEN CLASSIC SETTINGS button
+        open_settings_button = QPushButton("OPEN SETTINGS")
+        open_settings_button.setToolTip("Open CLASSIC Settings.yaml file.")
+        open_settings_button.clicked.connect(self.open_settings)
+        bottom_buttons_hbox.addWidget(open_settings_button)
+
+        # CHECK UPDATES button
+        check_updates_button = QPushButton("CHECK UPDATES")
+        check_updates_button.setToolTip("Manually check for CLASSIC updates.")
+        check_updates_button.clicked.connect(self.update_popup_explicit)
+        bottom_buttons_hbox.addWidget(check_updates_button)
+
+        # PAPYRUS MONITORING button (main actions row)
+        main_actions_hbox = QHBoxLayout()  # New layout for Papyrus and Exit
+        main_actions_hbox.setSpacing(10)
+
         self.papyrus_button = QPushButton("START PAPYRUS MONITORING")
-        self.papyrus_button.setFixedHeight(30)
-        self.papyrus_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.papyrus_button.clicked.connect(self.toggle_papyrus_worker)
-        self.papyrus_button.setEnabled(True)  # Enable the button since monitoring is now implemented
-        self.papyrus_button.setStyleSheet(
-            """
-            QPushButton {
-                color: black;
-                background: rgb(45, 237, 138);
-                border-radius: 10px;
-                border: 1px solid black;
-                font-weight: bold;
-                font-size: 14px;
-            }
-            QPushButton:disabled {
-                color: gray;
-                background: rgba(10, 10, 10, 0.75);
-            }
-        """
-        )
-        self.papyrus_button.setToolTip(
-            """Start monitoring the Papyrus logs for new errors.
-This feature is not fully implemented."""
-        )
         self.papyrus_button.setCheckable(True)
-        bottom_layout.addWidget(self.papyrus_button)
+        self.papyrus_button.toggled.connect(self.toggle_papyrus_worker)  # Use toggled for checkable buttons
+        self.papyrus_button.setToolTip("Toggle Papyrus log monitoring. Displays stats in the output window.")
+        self.update_papyrus_button_style(False)  # Initial style for "START"
+        main_actions_hbox.addWidget(self.papyrus_button, 1)  # Allow to expand
 
         # EXIT button
         exit_button = QPushButton("EXIT")
-        exit_button.setFixedSize(80, 30)
+        exit_button.setToolTip("Close CLASSIC.")
         exit_button.clicked.connect(QApplication.quit)
-        exit_button.setStyleSheet(
-            """
+        main_actions_hbox.addWidget(exit_button)
+
+        # Apply common styling to bottom buttons
+        common_button_style = """
             QPushButton {
                 color: white;
-                background: rgba(10, 10, 10, 0.75);
-                border-radius: 10px;
-                border: 1px solid white;
+                background: rgba(60, 60, 60, 0.9);
+                border-radius: 5px;
+                border: 1px solid #5c5c5c;
                 font-size: 11px;
+                padding: 6px 10px; /* Adjust padding */
+                min-height: 30px;
             }
+            QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
+            QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
         """
-        )
-        bottom_layout.addWidget(exit_button)
+        for btn in [about_button, help_button, ini_path_button, open_settings_button, check_updates_button,
+                    exit_button]:
+            btn.setStyleSheet(common_button_style)
+            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
-        layout.addLayout(bottom_layout)
+        if isinstance(layout, (QVBoxLayout, QHBoxLayout)):
+            layout.addLayout(bottom_buttons_hbox)  # Add first row of bottom buttons
+            layout.addLayout(main_actions_hbox)  # Add Papyrus and Exit buttons below
 
     def show_about(self) -> None:
         """
@@ -1560,6 +1437,47 @@ This feature is not fully implemented."""
             button.setToolTip(tooltip)
         button.clicked.connect(callback)
         layout.addWidget(button)
+
+    def update_papyrus_button_style(self, monitoring: bool) -> None:
+        """Updates the style and text of the Papyrus button based on monitoring state."""
+        if self.papyrus_button is None:
+            return
+        if monitoring:
+            self.papyrus_button.setText("STOP PAPYRUS MONITORING")
+            self.papyrus_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: white; /* Changed to white for better contrast on red */
+                    background: rgb(180, 45, 45);  /* Darker Red background */
+                    border-radius: 5px;
+                    border: 1px solid #FF6347; /* Lighter red border */
+                    font-weight: bold;
+                    font-size: 12px; /* Consistent font size */
+                    padding: 6px 10px;
+                    min-height: 30px;
+                }
+                QPushButton:hover { background-color: rgb(200, 50, 50); }
+                QPushButton:pressed { background-color: rgb(160, 40, 40); }
+                """
+            )
+        else:
+            self.papyrus_button.setText("START PAPYRUS MONITORING")
+            self.papyrus_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: white; /* Changed to white for better contrast on green */
+                    background: rgb(45, 150, 100);  /* Darker Green background */
+                    border-radius: 5px;
+                    border: 1px solid #32CD32; /* Lighter green border */
+                    font-weight: bold;
+                    font-size: 12px;
+                    padding: 6px 10px;
+                    min-height: 30px;
+                }
+                QPushButton:hover { background-color: rgb(50, 170, 110); }
+                QPushButton:pressed { background-color: rgb(40, 130, 90); }
+                """
+            )
 
     def select_folder_scan(self) -> None:
         """
@@ -1928,10 +1846,17 @@ This feature is not fully implemented."""
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     initialize(is_gui=True)
-
+    manual_docs_gui = GlobalRegistry.get_manual_docs_gui()
+    game_path_gui = GlobalRegistry.get_game_path_gui()
     try:
         window = MainWindow()
         window.show()
         sys.exit(app.exec())
     except KeyboardInterrupt:
         app.exit(1)
+    except Exception as e:
+        print(f"Unhandled exception during application startup: {e}", file=sys.stderr)
+        if QApplication.instance():
+            # noinspection PyTypeChecker
+            QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {e}")
+        sys.exit(1)
