@@ -6,7 +6,7 @@ from typing import Literal
 
 import regex as re
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
+from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -41,67 +41,89 @@ from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
 from ClassicLib.Interface.Pastebin import PastebinFetchWorker
 from ClassicLib.Interface.PathDialog import ManualPathDialog
 from ClassicLib.Interface.StyleSheets import DARK_MODE
+from ClassicLib.Logger import logger
 from ClassicLib.Update import UpdateCheckError, is_latest_version
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class CustomAboutDialog(QDialog):
+    """
+    A class representing an "About" dialog window, providing information about the application,
+    icon, contributors, and a close button for dismissing the dialog. The dialog is designed
+    to have similar style and layout to a QMessageBox's "About" dialog, with custom text and
+    an application-specific icon.
+    """
+
+    TITLE = "About"
+    MIN_WIDTH = 500
+    MIN_HEIGHT = 200
+    ICON_SIZE = 128
+    MARGIN = 15
+
     def __init__(self, parent: QMainWindow | QDialog | None = None) -> None:
         """
-        A class representing an "About" dialog window, providing information about the application,
-        icon, contributors, and a close button for dismissing the dialog. The dialog is designed
-        to have similar style and layout to a QMessageBox's "About" dialog, with custom text and
-        an application-specific icon.
-
-        Attributes:
-            parent: The parent widget for the "About" dialog, which can be a QMainWindow, QDialog,
-                or None if there is no parent.
+        Initialize the About dialog.
 
         Args:
             parent: Optional parent widget to associate the "About" dialog with. It can be an
                 instance of QMainWindow, QDialog, or None if no parent is provided.
         """
         super().__init__(parent)
-        self.setWindowTitle("About")
-        # --- Define window size behavior ---
-        self.setMinimumSize(500, 200)  # New, slightly larger minimum
-        # self.setMaximumSize(700, 950) # Remove or adjust if you want it more resizable
+        self.setWindowTitle(self.TITLE)
+        self.setMinimumSize(self.MIN_WIDTH, self.MIN_HEIGHT)
 
-        # Create a layout with margins similar to QMessageBox.about
-        layout: QVBoxLayout = QVBoxLayout(self)
-        layout.setContentsMargins(15, 15, 15, 15)  # Adjust margins (left, top, right, bottom)
+        # Create main layout
+        layout = self._create_main_layout()
 
-        # Horizontal layout for icon and text
-        h_layout: QHBoxLayout = QHBoxLayout()
+        # Create and add horizontal layout with icon and text
+        h_layout = self._create_icon_text_layout()
+        layout.addLayout(h_layout)
 
-        # Add the icon
-        icon_label: QLabel = QLabel(self)
-        icon: QIcon = QIcon(f"{GlobalRegistry.get_local_dir(as_string=True)}/CLASSIC Data/graphics/CLASSIC.ico")
-        pixmap: QPixmap = icon.pixmap(128, 128)  # Request the 64x64 icon size
+        # Add close button
+        close_button = self._create_close_button()
+        layout.addWidget(close_button)
+        layout.setAlignment(close_button, Qt.AlignmentFlag.AlignRight)
+
+    def _create_main_layout(self) -> QVBoxLayout:
+        """Create and return the main layout with proper margins."""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(self.MARGIN, self.MARGIN, self.MARGIN, self.MARGIN)
+        return layout
+
+    def _create_icon_text_layout(self) -> QHBoxLayout:
+        """Create and return the horizontal layout with icon and text."""
+        h_layout = QHBoxLayout()
+
+        # Add icon
+        icon_label = QLabel(self)
+        icon_path = f"{GlobalRegistry.get_local_dir(as_string=True)}/CLASSIC Data/graphics/CLASSIC.ico"
+        pixmap = QIcon(icon_path).pixmap(self.ICON_SIZE, self.ICON_SIZE)
+
         if not pixmap.isNull():
             icon_label.setPixmap(pixmap)
-            icon_label.setAlignment(Qt.AlignmentFlag.AlignTop)  # Align icon at the top
+            icon_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         h_layout.addWidget(icon_label)
 
-        # Add the text next to the icon
-        text_label: QLabel = QLabel(
+        # Add text
+        text = (
             "Crash Log Auto Scanner & Setup Integrity Checker\n\n"
             "Made by: Poet\n"
             "Contributors: evildarkarchon | kittivelae | AtomicFallout757 | wxMichael"
         )
-        text_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)  # Align text to top-left
-        text_label.setWordWrap(True)  # Allow text wrapping for better formatting
+
+        text_label = QLabel(text)
+        text_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        text_label.setWordWrap(True)
+
         h_layout.addWidget(text_label)
+        return h_layout
 
-        layout.addLayout(h_layout)
-
-        # Add a Close button at the bottom
-        close_button: QPushButton = QPushButton("Close", self)
+    def _create_close_button(self) -> QPushButton:
+        """Create and return the close button."""
+        close_button = QPushButton("Close", self)
         close_button.clicked.connect(self.accept)
-        layout.addWidget(close_button)
-
-        # Align the Close button to the right and add some space at the bottom
-        layout.setAlignment(close_button, Qt.AlignmentFlag.AlignRight)
+        return close_button
 
 
 class OutputRedirector(QObject):
@@ -145,73 +167,125 @@ class CrashLogsScanWorker(QObject):
     custom_sound_signal = Signal(str)  # In case a custom sound needs to be played
 
     # noinspection PyBroadException
+
     @Slot()
     def run(self) -> None:
         """
         Triggers a scan process, determines appropriate audio notification based on the outcome,
         and emits corresponding signals. Upon completion, it ensures the finished signal is emitted
         regardless of the outcome.
-
+    
         Slot:
             Decorates the method to indicate that it is callable as a slot in the context
             of PyQt/PySide signal-slot mechanism.
-
+    
         Raises:
-            Propagates any raised exception if audio notifications are disabled.
+            Exception: Propagates any raised exception if audio notifications are disabled.
         """
-        # Here you can determine the appropriate sound to play.
-        # For simplicity, we're triggering the notify sound when the scan completes.
+        # noinspection PyShadowingNames
         try:
-            crashlogs_scan()
-            self.notify_sound_signal.emit()  # type: ignore # Emit signal to play notify sound
-        except Exception:
-            if classic_settings(bool, "Audio Notifications"):
-                self.error_sound_signal.emit()  # type: ignore # Emit signal to play error sound in case of exception
-            else:
-                raise
+            self._perform_crash_logs_scan()
+            self._play_success_notification()
+        except Exception as e:
+            self._handle_scan_error(e)
         finally:
             self.finished.emit()  # type: ignore
 
+    @staticmethod
+    def _perform_crash_logs_scan() -> None:
+        """Executes the crash logs scan operation."""
+        logger.debug("Starting crash logs scan")
+        crashlogs_scan()
+        logger.debug("Crash logs scan completed successfully")
 
+    def _play_success_notification(self) -> None:
+        """Plays a notification sound for successful scan."""
+        self.notify_sound_signal.emit()  # type: ignore
+
+    def _handle_scan_error(self, error: Exception) -> None:
+        """
+        Handles errors during the scan process based on user settings.
+    
+        Args:
+            error: The exception that occurred during scanning
+    
+        Raises:
+            Exception: Re-raises the exception if audio notifications are disabled
+        """
+        logger.error(f"Crash logs scan failed: {str(error)}")
+
+        audio_notifications_enabled = classic_settings(bool, "Audio Notifications")
+        if audio_notifications_enabled:
+            self.error_sound_signal.emit()  # type: ignore
+        else:
+            raise error
+
+
+# noinspection PyBroadException
 class GameFilesScanWorker(QObject):
     """
-    GameFilesScanWorker is a QObject-based worker class responsible for scanning game files and handling the results.
-    Methods:
-        run() -> None:
-    """
-    finished = Signal()
-    notify_sound_signal = Signal()
-    error_sound_signal = Signal()
-    custom_sound_signal = Signal(str)
+    A worker class responsible for scanning game files in a separate thread.
 
-    # noinspection PyBroadException
+    This class processes game results and provides audio notifications based on
+    the outcome of the scanning process.
+
+    Signals:
+        scan_finished: Emitted when the scanning process completes (success or failure)
+        play_success_sound: Emitted when processing completes successfully
+        play_error_sound: Emitted when an error occurs during processing
+        play_custom_sound: Emitted with a path to a custom sound to play
+    """
+    scan_finished = Signal()
+    play_success_sound = Signal()
+    play_error_sound = Signal()
+    play_custom_sound = Signal(str)
+
     @Slot()
     def run(self) -> None:
         """
-        Runs the slot method responsible for handling game result processing, notifying through
-        audio signals, and emitting a finished signal upon successful execution or error handling.
-        This method ensures proper cleanup and notifications while processing.
+        Executes the game files scanning process.
 
-        Raises:
-            None
-
-        Returns:
-            None
+        Processes game result data and handles appropriate audio notifications
+        based on the outcome and user settings. Always emits the scan_finished
+        signal when complete.
         """
         try:
-            write_combined_results()
-            self.notify_sound_signal.emit()  # type: ignore # Emit signal to play notify sound
+            self._process_game_results()
+            self._notify_success()
         except Exception:
-            if classic_settings(bool, "Audio Notifications"):
-                self.error_sound_signal.emit()  # type: ignore # Emit signal to play error sound in case of exception
-            else:
-                raise
+            self._handle_error()
         finally:
-            self.finished.emit()  # type: ignore
+            self.scan_finished.emit()  # type: ignore
+
+    @staticmethod
+    def _process_game_results() -> None:
+        """Process and write the combined game results data."""
+        write_combined_results()
+
+    def _notify_success(self) -> None:
+        """Play success notification sound."""
+        self.play_success_sound.emit()  # type: ignore
+
+    def _handle_error(self) -> None:
+        """Handle exceptions based on user audio notification settings."""
+        if classic_settings(bool, "Audio Notifications"):
+            self.play_error_sound.emit()  # type: ignore
+        else:
+            raise
 
 
 # noinspection DuplicatedCode
 class MainWindow(QMainWindow):
+    # Style constants for the class
+    ENABLED_BUTTON_STYLE = """
+            QPushButton {
+                color: black;
+                background: rgb(250, 250, 250);
+                border-radius: 10px;
+                border: 2px solid black;
+            }
+        """
+
     def __init__(self) -> None:
         """
         Represents the main application GUI for managing crash log scanning, game file integrity checking,
@@ -653,19 +727,18 @@ class MainWindow(QMainWindow):
 
         categories = ["XSE", "RESHADE", "VULKAN", "ENB"]
         for category in categories:
-            self.add_backup_section(layout, category, category) # type: ignore
+            self.add_backup_section(layout, category, category)  # type: ignore
 
-        layout.addStretch(1) # Push content to the top
+        layout.addStretch(1)  # Push content to the top
 
         bottom_layout = QHBoxLayout()
         open_backups_button = QPushButton("OPEN CLASSIC BACKUPS")
         open_backups_button.clicked.connect(self.open_backup_folder)
         bottom_layout.addWidget(open_backups_button)
-        bottom_layout.addStretch(1) # Keep button to the left
+        bottom_layout.addStretch(1)  # Keep button to the left
         layout.addLayout(bottom_layout)
 
         self.check_existing_backups()
-
 
     def check_existing_backups(self) -> None:
         """
@@ -776,35 +849,31 @@ class MainWindow(QMainWindow):
         Manages game files by performing operations such as backup, restore, or removal
         based on the selected mode. This function interacts with the game files and
         updates the GUI to reflect the changes.
-
         Args:
             selected_list (str): The selected list containing game file references, with
                 entries separated by a space.
             selected_mode (Literal["BACKUP", "RESTORE", "REMOVE"], optional): The mode
                 of operation to perform on the game files. Defaults to "BACKUP".
-
         Raises:
             PermissionError: If the function is unable to access files in the game folder
                 due to insufficient permissions.
         """
-        list_name = selected_list.split(" ", 1)
+        # noinspection PyShadowingNames
         try:
+            # Extract backup type from the selected list (format: "Backup TYPE")
+            parts = selected_list.split(" ", 1)
+            if len(parts) < 2:
+                raise ValueError(f"Invalid list format: {selected_list}")
+
+            backup_type = parts[1]
+
+            # Perform file operation
             game_files_manage(selected_list, selected_mode)
+
+            # Update UI based on operation performed
             if selected_mode == "BACKUP":
-                # Enable the corresponding restore button
-                restore_button = getattr(self, f"RestoreButton_{list_name[1]}", None)
-                if restore_button:
-                    restore_button.setEnabled(True)
-                    restore_button.setStyleSheet(
-                        """
-                        QPushButton {
-                            color: black;
-                            background: rgb(250, 250, 250);
-                            border-radius: 10px;
-                            border: 2px solid black;
-                        }
-                    """
-                    )
+                self._enable_restore_button_for_type(backup_type)
+
         except PermissionError:
             QMessageBox.critical(
                 self,
@@ -813,6 +882,26 @@ class MainWindow(QMainWindow):
                 QMessageBox.StandardButton.NoButton,
                 QMessageBox.StandardButton.NoButton,
             )
+        except ValueError as e:
+            QMessageBox.warning(
+                self,
+                "Warning",
+                str(e),
+                QMessageBox.StandardButton.NoButton,
+                QMessageBox.StandardButton.NoButton,
+            )
+
+    def _enable_restore_button_for_type(self, backup_type: str) -> None:
+        """
+        Enables the restore button for the specified backup type and updates its style.
+
+        Args:
+            backup_type (str): The type of backup (XSE, RESHADE, VULKAN, ENB, etc.)
+        """
+        restore_button = getattr(self, f"RestoreButton_{backup_type}", None)
+        if restore_button:
+            restore_button.setEnabled(True)
+            restore_button.setStyleSheet(self.ENABLED_BUTTON_STYLE)
 
     def help_popup_backup(self) -> None:
         """
@@ -857,39 +946,49 @@ class MainWindow(QMainWindow):
                 QMessageBox.StandardButton.Ok
             )
 
-    def setup_output_text_box(self, layout: QLayout) -> None:
-        """
-        Sets up an output text box within the specified layout.
+    # Add this constant to the MainWindow class alongside other style constants
+    OUTPUT_TEXT_BOX_STYLE = """
+        QTextEdit {
+            color: white;
+            font-family: "Cascadia Mono", Consolas, monospace;
+            background: rgba(10, 10, 10, 0.75);
+            border-radius: 10px;
+            border: 1px solid white;
+            font-size: 13px;
+        }
+    """
 
-        This method configures a QTextEdit widget to act as a read-only
-        output text box. It also applies custom styling, defines its size
-        policy, and sets a minimum height. The text box is added to the
-        provided QLayout instance. Additionally, an internal buffer for
-        output storage is initialized.
+    def setup_output_text_box(self, layout: QLayout, min_height: int = 150) -> None:
+        """
+        Sets up a read-only output text box within the specified layout.
+
+        Creates and configures a QTextEdit widget to display output text with custom
+        styling. The widget is added to the provided layout and an internal buffer
+        is initialized to store output data.
 
         Args:
             layout (QLayout): The layout where the output text box will be added.
+            min_height (int, optional): Minimum height for the text box. Defaults to 150px.
         """
         self.output_text_box = QTextEdit(self)
-        self.output_text_box.setReadOnly(True)
-        self.output_text_box.setStyleSheet(
-            """
-            QTextEdit {
-                color: white;
-                font-family: "Cascadia Mono", Consolas, monospace;
-                background: rgba(10, 10, 10, 0.75);
-                border-radius: 10px;
-                border: 1px solid white;
-                font-size: 13px;
-            }
-        """
-        )
-
-        self.output_text_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.output_text_box.setMinimumHeight(150) # Ensure it has some initial height
+        self._configure_output_text_box(min_height)
         layout.addWidget(self.output_text_box)
-
         self.output_buffer = ""
+
+    def _configure_output_text_box(self, min_height: int) -> None:
+        """
+        Configures properties of the output text box.
+
+        Args:
+            min_height (int): Minimum height to set for the text box.
+        """
+        self.output_text_box.setReadOnly(True)
+        self.output_text_box.setStyleSheet(self.OUTPUT_TEXT_BOX_STYLE)
+        self.output_text_box.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding
+        )
+        self.output_text_box.setMinimumHeight(min_height)
 
     # noinspection PyBroadException
     def update_output_text_box(self, text: str | bytes) -> None:
@@ -1046,14 +1145,26 @@ class MainWindow(QMainWindow):
         layout.addLayout(checkbox_section_layout)  # Add this section's layout to the main tab layout
         # Separator is added after this section in setup_main_tab
 
+    # Add this constant to the MainWindow class alongside other style constants
+    CHECKBOX_STYLE = """
+        QCheckBox {
+            spacing: 10px;
+        }
+        QCheckBox::indicator {
+            width: 25px;
+            height: 25px;
+        }
+        QCheckBox::indicator:unchecked {
+            image: url("CLASSIC Data/graphics/unchecked.svg");
+        }
+        QCheckBox::indicator:checked {
+            image: url("CLASSIC Data/graphics/checked.svg");
+        }
+    """
+
     def create_checkbox(self, label_text: str, setting: str) -> QCheckBox:
         """
         Creates a styled QCheckBox widget linked to a specific setting and its state.
-
-        This method initializes a QCheckBox instance, sets its checked state based on
-        the specified setting, and ensures the state is synced with settings. It also
-        applies a custom style and manages specific additional behaviors when the
-        associated setting is "Audio Notifications".
 
         Args:
             label_text (str): The text label to display next to the checkbox.
@@ -1063,39 +1174,28 @@ class MainWindow(QMainWindow):
             QCheckBox: A QCheckBox widget connected to the specified setting's state.
         """
         checkbox = QCheckBox(label_text)
-        value = classic_settings(bool, setting)
-        if value is not None:
-            checkbox.setChecked(value)
-        else:
-            yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", False)
-            checkbox.setChecked(False)
 
+        # Initialize checkbox state from settings or create default
+        value = classic_settings(bool, setting)
+        if value is None:
+            value = False
+            yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", False)
+
+        checkbox.setChecked(value)
+
+        # Connect setting update to checkbox state
         checkbox.stateChanged.connect(
             lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state))
         )
+
+        # Special handling for Audio Notifications
         if setting == "Audio Notifications":
             checkbox.stateChanged.connect(
                 lambda state: self.audio_player.toggle_audio(state)
             )
 
         # Apply custom style sheet
-        checkbox.setStyleSheet(
-            """
-            QCheckBox {
-                spacing: 10px;
-            }
-            QCheckBox::indicator {
-                width: 25px;
-                height: 25px;
-            }
-            QCheckBox::indicator:unchecked {
-                image: url("CLASSIC Data/graphics/unchecked.svg");
-            }
-            QCheckBox::indicator:checked {
-                image: url("CLASSIC Data/graphics/checked.svg");
-            }
-        """
-        )
+        checkbox.setStyleSheet(self.CHECKBOX_STYLE)
 
         return checkbox
 
@@ -1253,83 +1353,93 @@ class MainWindow(QMainWindow):
         "ABOUT", "HELP", "START PAPYRUS MONITORING", and "EXIT", each of which performs
         specific actions when clicked. Each button is styled, and some include tooltips
         and specific behavioral properties such as being checkable.
-
         Args:
             layout (QBoxLayout): The main layout to which the bottom button layout will
                 be added.
         """
+        # First row of utility buttons
         bottom_buttons_hbox = QHBoxLayout()
         bottom_buttons_hbox.setSpacing(10)
 
-        # ABOUT button
-        about_button = QPushButton("ABOUT")
-        about_button.setToolTip("Show application information.")
-        about_button.clicked.connect(self.show_about)
-        bottom_buttons_hbox.addWidget(about_button)
+        # Create first row of buttons
+        buttons_config = [
+            ("ABOUT", "Show application information.", self.show_about),
+            ("HELP", "Show help information for main options.", self.help_popup_main),
+            ("CHANGE INI PATH", "Manually set the path to your game's INI files folder.", self.select_folder_ini),
+            ("OPEN SETTINGS", "Open CLASSIC Settings.yaml file.", self.open_settings),
+            ("CHECK UPDATES", "Manually check for CLASSIC updates.", self.update_popup_explicit)
+        ]
 
-        # HELP button
-        help_button = QPushButton("HELP")
-        help_button.setToolTip("Show help information for main options.")
-        help_button.clicked.connect(self.help_popup_main)
-        bottom_buttons_hbox.addWidget(help_button)
+        utility_buttons = []
+        for text, tooltip, callback in buttons_config:
+            button = self._create_button(text, tooltip, callback)
+            bottom_buttons_hbox.addWidget(button)
+            utility_buttons.append(button)
 
-        # CHANGE INI PATH button
-        ini_path_button = QPushButton("CHANGE INI PATH")
-        ini_path_button.setToolTip("Manually set the path to your game's INI files folder.")
-        ini_path_button.clicked.connect(self.select_folder_ini)
-        bottom_buttons_hbox.addWidget(ini_path_button)
-
-        # OPEN CLASSIC SETTINGS button
-        open_settings_button = QPushButton("OPEN SETTINGS")
-        open_settings_button.setToolTip("Open CLASSIC Settings.yaml file.")
-        open_settings_button.clicked.connect(self.open_settings)
-        bottom_buttons_hbox.addWidget(open_settings_button)
-
-        # CHECK UPDATES button
-        check_updates_button = QPushButton("CHECK UPDATES")
-        check_updates_button.setToolTip("Manually check for CLASSIC updates.")
-        check_updates_button.clicked.connect(self.update_popup_explicit)
-        bottom_buttons_hbox.addWidget(check_updates_button)
-
-        # PAPYRUS MONITORING button (main actions row)
-        main_actions_hbox = QHBoxLayout()  # New layout for Papyrus and Exit
+        # Second row with main action buttons
+        main_actions_hbox = QHBoxLayout()
         main_actions_hbox.setSpacing(10)
 
-        self.papyrus_button = QPushButton("START PAPYRUS MONITORING")
+        # Papyrus monitoring button (special handling for checkable button)
+        self.papyrus_button = self._create_button(
+            "START PAPYRUS MONITORING",
+            "Toggle Papyrus log monitoring. Displays stats in the output window.",
+            self.toggle_papyrus_worker
+        )
         self.papyrus_button.setCheckable(True)
-        self.papyrus_button.toggled.connect(self.toggle_papyrus_worker)  # Use toggled for checkable buttons
-        self.papyrus_button.setToolTip("Toggle Papyrus log monitoring. Displays stats in the output window.")
         self.update_papyrus_button_style(False)  # Initial style for "START"
         main_actions_hbox.addWidget(self.papyrus_button, 1)  # Allow to expand
 
-        # EXIT button
-        exit_button = QPushButton("EXIT")
-        exit_button.setToolTip("Close CLASSIC.")
-        exit_button.clicked.connect(QApplication.quit)
+        # Exit button
+        exit_button = self._create_button("EXIT", "Close CLASSIC.", QApplication.quit)
         main_actions_hbox.addWidget(exit_button)
 
-        # Apply common styling to bottom buttons
-        common_button_style = """
-            QPushButton {
-                color: white;
-                background: rgba(60, 60, 60, 0.9);
-                border-radius: 5px;
-                border: 1px solid #5c5c5c;
-                font-size: 11px;
-                padding: 6px 10px; /* Adjust padding */
-                min-height: 30px;
-            }
-            QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
-            QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
-        """
-        for btn in [about_button, help_button, ini_path_button, open_settings_button, check_updates_button,
-                    exit_button]:
-            btn.setStyleSheet(common_button_style)
-            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-
+        # Add both layouts to the main layout
         if isinstance(layout, (QVBoxLayout, QHBoxLayout)):
-            layout.addLayout(bottom_buttons_hbox)  # Add first row of bottom buttons
-            layout.addLayout(main_actions_hbox)  # Add Papyrus and Exit buttons below
+            layout.addLayout(bottom_buttons_hbox)
+            layout.addLayout(main_actions_hbox)
+
+    def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton:
+        """
+        Creates and configures a button with common styling and properties.
+
+        Args:
+            text: The button text
+            tooltip: The button tooltip
+            callback: Function to call when button is clicked
+
+        Returns:
+            Configured QPushButton instance
+        """
+        button = QPushButton(text)
+        button.setToolTip(tooltip)
+
+        # Connect appropriate signal based on whether it's a toggle button or regular
+        if isinstance(button, QPushButton) and button.isCheckable():
+            button.toggled.connect(callback)
+        else:
+            button.clicked.connect(callback)
+
+        # Apply common styling
+        button.setStyleSheet(self.BOTTOM_BUTTON_STYLE)
+        button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+
+        return button
+
+    # Add this as a class constant near other style constants
+    BOTTOM_BUTTON_STYLE = """
+        QPushButton {
+            color: white;
+            background: rgba(60, 60, 60, 0.9);
+            border-radius: 5px;
+            border: 1px solid #5c5c5c;
+            font-size: 11px;
+            padding: 6px 10px;
+            min-height: 30px;
+        }
+        QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
+        QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
+    """
 
     def show_about(self) -> None:
         """
