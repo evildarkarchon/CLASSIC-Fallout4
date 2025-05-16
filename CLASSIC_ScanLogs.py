@@ -444,9 +444,6 @@ class ClassicScanLogs:
         # ME-REQ: Signal must be found in the main error
         # ME-OPT: Signal can be found in the main error but isn't required
         # NOT: Signal should NOT be present in the callstack
-        MAIN_ERROR_REQUIRED = "ME-REQ"
-        MAIN_ERROR_OPTIONAL = "ME-OPT"
-        CALLSTACK_NEGATIVE = "NOT"
 
         any_suspect_found = False
 
