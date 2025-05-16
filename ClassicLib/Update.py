@@ -194,7 +194,8 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             or (version_nexus is not None and version_local < version_nexus)
     ):
         if not quiet:
-            print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"), flush=True)
+            print(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"),
+                  flush=True)
         if gui_request:
             raise UpdateCheckError
         return False

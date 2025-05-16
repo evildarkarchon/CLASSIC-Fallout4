@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
+
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import yaml_settings

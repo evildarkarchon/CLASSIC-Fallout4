@@ -68,14 +68,14 @@ class ThreadSafeLogCache:
         """
         self.lock = threading.RLock()  # Reentrant lock allows nested acquisitions
         self.cache: Dict[str, bytes] = {}
-        
+
         # Populate the cache with log content
         for file in logfiles:
             try:
                 self.cache[file.name] = file.read_bytes()
             except (IOError, OSError) as e:
                 print(f"Error reading {file}: {e}")
-            
+
     def read_log(self, logname: str) -> list[str]:
         """
         Thread-safely reads log data from the cache for the given logname, processes it to
@@ -90,10 +90,10 @@ class ThreadSafeLogCache:
         with self.lock:
             if logname not in self.cache:
                 return []
-            
+
             logdata = self.cache[logname]
             return logdata.decode("utf-8", errors="ignore").splitlines()
-    
+
     def get_log_names(self) -> list[str]:
         """
         Returns a list of all log names in the cache.
@@ -103,7 +103,7 @@ class ThreadSafeLogCache:
         """
         with self.lock:
             return list(self.cache.keys())
-    
+
     def add_log(self, path: Path) -> bool:
         """
         Adds a new log to the cache.
@@ -121,7 +121,7 @@ class ThreadSafeLogCache:
                 return True
             except (IOError, OSError):
                 return False
-    
+
     def close(self) -> None:
         """
         Clears the cache when no longer needed.

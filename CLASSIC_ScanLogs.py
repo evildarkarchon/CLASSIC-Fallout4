@@ -28,6 +28,7 @@ class ClassicScanLogs:
     _fcx_checks_run: bool = False
     _main_files_result: str = ""
     _game_files_result: str = ""
+
     def __init__(self) -> None:
         """
         Initializes the class and performs the setup required for crash log scanning and processing.
@@ -118,7 +119,7 @@ class ClassicScanLogs:
                     ClassicScanLogs._main_files_result = main_combined_result()
                     ClassicScanLogs._game_files_result = game_combined_result()
                     ClassicScanLogs._fcx_checks_run = True
-    
+
             # Always assign the stored results to instance variables
             self.main_files_check = ClassicScanLogs._main_files_result
             self.game_files_check = ClassicScanLogs._game_files_result
@@ -416,7 +417,7 @@ class ClassicScanLogs:
         return found_suspect
 
     def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str],
-                       max_warn_length: int) -> bool:
+                           max_warn_length: int) -> bool:
         """
         Scans a crash log's main error and call stack for patterns defined in the suspects
         stack list to identify potential issues and appends relevant findings to the autoscan

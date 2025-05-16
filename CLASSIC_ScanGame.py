@@ -129,7 +129,8 @@ def scan_mods_unpacked() -> str:
 
     # Get settings
     xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts")
+    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game,
+                                            f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts")
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
 
@@ -295,7 +296,8 @@ def scan_mods_archived() -> str:
 
     # Get settings
     xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts")
+    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game,
+                                            f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts")
     xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else ""
     xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
 

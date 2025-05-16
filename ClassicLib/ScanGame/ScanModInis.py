@@ -119,7 +119,8 @@ def apply_all_ini_fixes(config_files: ConfigFileCache, message_list: list[str]) 
     if "f4ee.ini" in config_files:
         # Fix head parts unlock setting
         if config_files.get(int, "f4ee.ini", "CharGen", "bUnlockHeadParts") == 0:
-            apply_ini_fix(config_files, "f4ee.ini", "CharGen", "bUnlockHeadParts", 1, "INI HEAD PARTS UNLOCK", message_list)
+            apply_ini_fix(config_files, "f4ee.ini", "CharGen", "bUnlockHeadParts", 1, "INI HEAD PARTS UNLOCK",
+                          message_list)
 
         # Fix face tints unlock setting
         if config_files.get(int, "f4ee.ini", "CharGen", "bUnlockTints") == 0:
