@@ -64,11 +64,8 @@ class CustomAboutDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("About")
         # --- Define window size behavior ---
-        self.setMinimumSize(400, 500)  # New, slightly larger minimum
+        self.setMinimumSize(500, 200)  # New, slightly larger minimum
         # self.setMaximumSize(700, 950) # Remove or adjust if you want it more resizable
-
-        # --- Set preferred initial size ---
-        self.resize(750, 650)  # <<< SET YOUR DESIRED STARTUP SIZE HERE
 
         # Create a layout with margins similar to QMessageBox.about
         layout: QVBoxLayout = QVBoxLayout(self)
@@ -254,6 +251,9 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(350, 475)
         # self.setMaximumSize(700, 950) # Keep this commented or removed for resizability
         # self.setFixedSize(700, 950)  # Set fixed size to prevent resizing, for now.
+
+        # --- Set preferred initial size ---
+        self.resize(750, 950)  # <<< SET YOUR DESIRED STARTUP SIZE HERE
 
         self.audio_player = AudioPlayer()
 
