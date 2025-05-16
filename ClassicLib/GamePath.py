@@ -52,6 +52,7 @@ def game_path_find() -> None:
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
         yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game",
                       str(game_path))
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
         return
 
     xse_file = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")

@@ -38,7 +38,8 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Audio import AudioPlayer
 from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
-from ClassicLib.Interface.PathDialog import ManualPathDialog, GamePathDialog
+from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+from ClassicLib.Interface.PathDialog import ManualPathDialog
 from ClassicLib.Interface.StyleSheets import DARK_MODE
 from ClassicLib.Update import UpdateCheckError, is_latest_version
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
@@ -62,7 +63,7 @@ class CustomAboutDialog(QDialog):
         """
         super().__init__(parent)
         self.setWindowTitle("About")
-        self.setFixedSize(600, 200)  # Adjust size for icon and text
+        self.setMinimumSize(600, 200)  # Adjust size for icon and text
 
         # Create a layout with margins similar to QMessageBox.about
         layout: QVBoxLayout = QVBoxLayout(self)
@@ -218,6 +219,8 @@ class MainWindow(QMainWindow):
         the application.
         """
         super().__init__()
+        self.pastebin_worker = None
+        self.pastebin_thread = QThread()
         self.game_files_worker: GameFilesScanWorker | None = None
         self.crash_logs_worker: CrashLogsScanWorker | None = None
         self.papyrus_button: QPushButton | None = None
@@ -238,11 +241,13 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(
             f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, "CLASSIC_Info.version")}"
         )
-        self.setWindowIcon(QIcon(f"{GlobalRegistry.get_local_dir(as_string=True)}/CLASSIC Data/graphics/CLASSIC.ico"))
+        # Ensure GlobalRegistry.get_local_dir() returns a Path or string
+        local_dir_path = GlobalRegistry.get_local_dir(as_string=True)
+        self.setWindowIcon(QIcon(f"{local_dir_path}/CLASSIC Data/graphics/CLASSIC.ico"))
 
         self.setStyleSheet(DARK_MODE)
         self.setMinimumSize(350, 475)
-        self.setMaximumSize(700, 950)
+        # self.setMaximumSize(700, 950) # Keep this commented or removed for resizability
         # self.setFixedSize(700, 950)  # Set fixed size to prevent resizing, for now.
 
         # Set up the custom exception handler for the main window
@@ -266,12 +271,12 @@ class MainWindow(QMainWindow):
         self.scan_button_group = QButtonGroup()
         self.setup_main_tab()
         self.setup_backups_tab()
-        # In __init__ method, after setting up the main tab:
+
         self.initialize_folder_paths()
         self.setup_output_redirection()
-        self.output_buffer = ""
+        self.output_buffer = ""  # Initialize output_buffer
         main_generate_required()
-        # Perform initial update check
+
         if classic_settings(bool, "Update Check"):
             QTimer.singleShot(0, self.update_popup)
 
@@ -279,12 +284,13 @@ class MainWindow(QMainWindow):
         self.update_check_timer.timeout.connect(self.perform_update_check)
         self.is_update_check_running = False
 
-        # Initialize thread attributes
         self.crash_logs_thread: QThread | None = None
         self.game_files_thread: QThread | None = None
 
-        manual_docs_gui.manual_docs_path_signal.connect(self.show_manual_docs_path_dialog)
-        game_path_gui.game_path_signal.connect(self.show_game_path_dialog)
+        # self.manual_docs_gui = ManualPathDialog(self)
+        # self.game_path_gui = ManualPathDialog(self)
+        GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS_GUI, self.show_manual_docs_path_dialog)
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH_GUI, self.show_game_path_dialog)
 
     def setup_pastebin_elements(self, layout: QVBoxLayout) -> None:
         """
@@ -298,7 +304,6 @@ class MainWindow(QMainWindow):
         Args:
             layout (QVBoxLayout): The parent layout to which the Pastebin elements are added.
         """
-        """Set up the Pastebin fetch UI elements."""
         pastebin_layout = QHBoxLayout()
 
         self.pastebin_label = QLabel("PASTEBIN LOG FETCH", self)
@@ -314,28 +319,23 @@ class MainWindow(QMainWindow):
 
         self.pastebin_fetch_button = QPushButton("Fetch Log", self)
         self.pastebin_fetch_button.clicked.connect(self.fetch_pastebin_log)
-        self.pastebin_fetch_button.clicked.connect(self.pastebin_id_input.clear)
+        if self.pastebin_id_input:  # Ensure pastebin_id_input is not None
+            self.pastebin_fetch_button.clicked.connect(self.pastebin_id_input.clear)
         self.pastebin_fetch_button.setToolTip("Fetch the log file from Pastebin. Can be used more than once.")
         pastebin_layout.addWidget(self.pastebin_fetch_button)
 
-        # Add the layout to the main layout (add it to an appropriate tab or section)
         layout.addLayout(pastebin_layout)
 
-    # noinspection PyUnresolvedReferences
     def fetch_pastebin_log(self) -> None:
         """
             Fetches a log from a Pastebin URL or ID provided by the user and processes it in a separate thread
             using asynchronous operations.
-    
+
             This method retrieves the text from a user input field, verifies if it matches a Pastebin URL pattern,
             or formats it into a valid Pastebin URL if an ID is provided. It then sets up a separate thread and a
             worker object to handle the fetching process asynchronously using the pastebin_fetch_async function,
             ensuring the main application's UI remains responsive. User feedback is provided through message boxes
             based on the success or failure of the log retrieval process.
-
-        Attributes:
-            pastebin_id_input (QWidget): Input field for the user to enter a Pastebin URL or ID.
-            pastebin_url_regex (re.Pattern): Regular expression pattern to validate a Pastebin URL.
 
         Raises:
             SignalErrors: Raised when the worker encounters an error during network operations or data processing.
@@ -343,70 +343,73 @@ class MainWindow(QMainWindow):
         Returns:
             None
         """
-        input_text = self.pastebin_id_input.text().strip() if self.pastebin_id_input is not None else ""
+        if self.pastebin_id_input is None: return  # Should not happen if UI is setup correctly
+
+        input_text = self.pastebin_id_input.text().strip()
         url = input_text if self.pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
 
         # Create thread and worker
-        pastebin_thread = QThread()
-        pastebin_worker = PastebinFetchWorker(url)
-        pastebin_worker.moveToThread(pastebin_thread)
+        # Store the thread and worker as instance attributes to prevent them from being garbage collected prematurely
+        self.pastebin_worker = PastebinFetchWorker(url)
+        self.pastebin_worker.moveToThread(self.pastebin_thread)
 
         # Connect signals
-        pastebin_thread.started.connect(pastebin_worker.run)
-        pastebin_worker.finished.connect(pastebin_thread.quit)
-        pastebin_worker.finished.connect(pastebin_worker.deleteLater)
-        pastebin_thread.finished.connect(pastebin_thread.deleteLater)
-        pastebin_worker.success.connect(
-            lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}",
-                                                      QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok))
-        pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}",
-                                                                      QMessageBox.StandardButton.NoButton,
-                                                                      QMessageBox.StandardButton.NoButton))
+        self.pastebin_thread.started.connect(self.pastebin_worker.run)
+        self.pastebin_worker.finished.connect(self.pastebin_thread.quit)
+        self.pastebin_worker.finished.connect(self.pastebin_worker.deleteLater)
+        self.pastebin_thread.finished.connect(self.pastebin_thread.deleteLater)
 
-        # Start thread
-        pastebin_thread.start()
+        # Use lambdas or functools.partial if arguments need to be passed to slots
+        self.pastebin_worker.success.connect(
+            lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}")
+        )
+        self.pastebin_worker.error.connect(
+            lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}")
+        )
+
+        self.pastebin_thread.start()
 
     def show_manual_docs_path_dialog(self) -> None:
         """
-        Opens a dialog to set the manual documentation path and updates the configuration
-        if the user accepts the dialog.
+        Opens a dialog for selecting the manual documentation path.
 
-        This function displays a custom dialog for the user to specify or modify the path
-        to the manual documentation. If the user confirms the selection through the dialog,
-        the application's configuration for the manual documentation path is updated
-        accordingly.
-
-        Returns:
-            None
+        Displays a custom dialog that allows the user to browse for or manually enter
+        the documentation path. If the user confirms their selection, the path is stored
+        in the GlobalRegistry for access by other components.
         """
-        dialog = ManualPathDialog(self)
+        # Create a dialog with appropriate title and descriptive label
+        dialog = ManualPathDialog(
+            parent=self,
+            title="Set INI Path",
+            label=f"Select the location of your {GlobalRegistry.get_game()} INI files"
+        )
+
+        # Process the dialog result
         if dialog.exec() == QDialog.DialogCode.Accepted:
             manual_path = dialog.get_path()
-            game_path_gui(manual_path)
+            # Store the path in the GlobalRegistry for access by other components
+            GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS, manual_path)
 
     def show_game_path_dialog(self) -> None:
         """
-        Handles displaying a dialog for selecting a game path and processes the input.
+        Opens a dialog for selecting the game installation path.
 
-        The function displays a custom dialog to allow the user to select a game
-        path. If the dialog is accepted, the selected path is retrieved and set
-        through a provided GUI utility. The function ensures that the necessary
-        game path GUI functionality is properly initialized.
-
-        Raises:
-            TypeError: If the `game_path_gui` instance is not initialized.
-
-        Args:
-            self: The instance of the class that contains this method.
-
-        Returns:
-            None
+        Displays a custom dialog that allows the user to browse for or manually enter
+        the game installation directory. If the user confirms their selection, the path
+        is stored in the GlobalRegistry for access by other components.
         """
+        # Create a dialog with appropriate title and descriptive label
+        dialog = ManualPathDialog(
+            parent=self,
+            title="Set Game Installation Path",
+            label=f"Select the installation directory for {GlobalRegistry.get_game()}"
+        )
 
-        dialog = GamePathDialog(self)
+        # Process the dialog result
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            manual_path = dialog.get_path()
-            game_path_gui.get_game_path_gui(manual_path)
+            game_path = dialog.get_path()
+            # Store the path in the GlobalRegistry for access by other components
+            GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
 
     # noinspection PyUnresolvedReferences
     def update_popup(self) -> None:
@@ -1925,8 +1928,7 @@ This feature is not fully implemented."""
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     initialize(is_gui=True)
-    manual_docs_gui = GlobalRegistry.get_manual_docs_gui()
-    game_path_gui = GlobalRegistry.get_game_path_gui()
+
     try:
         window = MainWindow()
         window.show()

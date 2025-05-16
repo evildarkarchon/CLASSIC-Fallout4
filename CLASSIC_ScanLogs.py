@@ -249,6 +249,7 @@ class ClassicScanLogs:
 
         return segments
 
+    # noinspection PyPep8Naming
     @staticmethod
     def loadorder_scan_loadorder_txt(autoscan_report: list[str]) -> tuple[dict[str, str], bool]:
         """
@@ -271,22 +272,37 @@ class ClassicScanLogs:
                 - A boolean indicating whether any plugins were successfully loaded from
                   'loadorder.txt'.
         """
-        append_or_extend((
+        LOADORDER_MESSAGES = (
             "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
             "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
             "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
-        ), autoscan_report)
-        trigger_plugins_loaded = False
-        loadorder_path = Path("loadorder.txt")
-        crashlog_plugins: dict[str, str] = {}
-        with loadorder_path.open(encoding="utf-8", errors="ignore") as loadorder_file:
-            loadorder_data = loadorder_file.readlines()
-        for elem in loadorder_data[1:]:
-            if all(elem not in item for item in crashlog_plugins):
-                crashlog_plugins[elem] = "LO"
-                if not trigger_plugins_loaded:
-                    trigger_plugins_loaded = True
-        return crashlog_plugins, trigger_plugins_loaded
+        )
+        LOADORDER_ORIGIN = "LO"  # Origin marker for plugins from loadorder.txt
+        LOADORDER_PATH = Path("loadorder.txt")
+
+        append_or_extend(LOADORDER_MESSAGES, autoscan_report)
+
+        loadorder_plugins = {}
+
+        try:
+            with LOADORDER_PATH.open(encoding="utf-8", errors="ignore") as loadorder_file:
+                loadorder_data = loadorder_file.readlines()
+
+            # Skip the header line (first line) of the loadorder.txt file
+            if len(loadorder_data) > 1:
+                for plugin_entry in loadorder_data[1:]:
+                    plugin_entry = plugin_entry.strip()
+                    if plugin_entry and plugin_entry not in loadorder_plugins:
+                        loadorder_plugins[plugin_entry] = LOADORDER_ORIGIN
+        except (IOError, OSError) as e:
+            # Log file access error but continue execution
+            error_msg = f"Error reading loadorder.txt: {str(e)}"
+            append_or_extend(error_msg, autoscan_report)
+
+        # Check if any plugins were loaded
+        plugins_loaded = bool(loadorder_plugins)
+
+        return loadorder_plugins, plugins_loaded
 
     # noinspection PyPep8Naming
     def loadorder_scan_log(self, segment_plugins: list[str], game_version: Version, version_current: Version) -> tuple[
@@ -363,8 +379,7 @@ class ClassicScanLogs:
         """
         Scans for main errors in the autoscan report based on a list of suspect errors and
         signals. Matches errors in the crash log main error with predefined suspect signals
-        and adds detailed error information to the autoscan report if a match is found. A
-        flag indicating whether any suspect was found is returned.
+        and adds detailed error information to the autoscan report if a match is found.
 
         Args:
             autoscan_report (list[str]): A list containing lines of the autoscan report
@@ -378,21 +393,30 @@ class ClassicScanLogs:
             bool: True if any suspect error was found in the crash log main error;
                 False otherwise.
         """
-        trigger_suspect_found = False
-        for error, signal in self.yamldata.suspects_error_list.items():
-            error_severity, error_name = error.split(" | ", 1)
-            if signal in crashlog_mainerror:
-                error_name = error_name.ljust(max_warn_length, ".")
-                append_or_extend(
-                    f"# Checking for {error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n",
-                    autoscan_report)
-                if not trigger_suspect_found:
-                    trigger_suspect_found = True
-        return trigger_suspect_found
+        found_suspect = False
 
-    # noinspection PyUnusedLocal,PyPep8Naming
+        for error_key, signal in self.yamldata.suspects_error_list.items():
+            # Skip checking if signal not in crash log
+            if signal not in crashlog_mainerror:
+                continue
+
+            # Parse error information
+            error_severity, error_name = error_key.split(" | ", 1)
+
+            # Format the error name for report
+            formatted_error_name = error_name.ljust(max_warn_length, ".")
+
+            # Add the error to the report
+            report_entry = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
+            append_or_extend(report_entry, autoscan_report)
+
+            # Update suspect found status
+            found_suspect = True
+
+        return found_suspect
+
     def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str],
-                           max_warn_length: int) -> bool:
+                       max_warn_length: int) -> bool:
         """
         Scans a crash log's main error and call stack for patterns defined in the suspects
         stack list to identify potential issues and appends relevant findings to the autoscan
@@ -416,7 +440,10 @@ class ClassicScanLogs:
         Returns:
             bool: True if at least one suspect is found based on the analysis; otherwise, False.
         """
-        # Constants for signal modifiers
+        # Constants for signal modifiers - these define the matching criteria
+        # ME-REQ: Signal must be found in the main error
+        # ME-OPT: Signal can be found in the main error but isn't required
+        # NOT: Signal should NOT be present in the callstack
         MAIN_ERROR_REQUIRED = "ME-REQ"
         MAIN_ERROR_OPTIONAL = "ME-OPT"
         CALLSTACK_NEGATIVE = "NOT"
@@ -424,9 +451,10 @@ class ClassicScanLogs:
         any_suspect_found = False
 
         for error_key, signal_list in self.yamldata.suspects_stack_list.items():
+            # Parse error information
             error_severity, error_name = error_key.split(" | ", 1)
 
-            # Initialize match status
+            # Initialize match status tracking dictionary
             match_status = {
                 "has_required_item": False,
                 "error_req_found": False,
@@ -435,13 +463,21 @@ class ClassicScanLogs:
             }
 
             # Process each signal in the list
+            should_skip_error = False
             for signal in signal_list:
+                # Process the signal and update match_status accordingly
+                # Returns True if we need to skip this error (e.g., a NOT condition was matched)
                 if self._process_signal(signal, crashlog_mainerror, segment_callstack_intact, match_status):
-                    # Exit early if a NOT condition is met
+                    should_skip_error = True
                     break
+
+            # Skip this error if a condition indicates we should
+            if should_skip_error:
+                continue
 
             # Determine if we have a match based on the processed signals
             if self._is_suspect_match(match_status):
+                # Add the suspect to the report and update the found status
                 self._add_suspect_to_report(error_name, error_severity, max_warn_length, autoscan_report)
                 any_suspect_found = True
 
@@ -901,14 +937,14 @@ class ClassicScanLogs:
 def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
     """
     Process a single crash log file and generate a report.
-    
-    This function processes a crash log file, analyzing its contents to identify potential issues, 
+
+    This function processes a crash log file, analyzing its contents to identify potential issues,
     checking for known crash suspects, and generating a detailed report.
-    
+
     Args:
         scanner: The ClassicScanLogs instance used for scanning the crash log.
         crashlog_file: The path to the crash log file to be processed.
-        
+
     Returns:
         tuple: Contains the crash log file path, the generated report as a list of strings,
               a boolean indicating if the scan failed, and a Counter with updated statistics.
