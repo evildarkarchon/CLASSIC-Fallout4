@@ -255,9 +255,6 @@ class MainWindow(QMainWindow):
         # self.setMaximumSize(700, 950) # Keep this commented or removed for resizability
         # self.setFixedSize(700, 950)  # Set fixed size to prevent resizing, for now.
 
-        # Set up the custom exception handler for the main window
-        self.installEventFilter(self)
-
         self.audio_player = AudioPlayer()
 
         self.central_widget = QWidget()
