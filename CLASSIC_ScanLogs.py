@@ -130,18 +130,21 @@ class ClassicScanLogs:
     # noinspection PyPep8Naming
     def find_segments(self, crash_data: list[str], crashgen_name: str) -> tuple[str, str, str, list[list[str]]]:
         """
-        Finds and extracts structured segments from the crash report data based on predefined boundary markers.
+        Finds and extracts segments from crash data text and extracts metadata including game version, crash
+        generator version, and main error message. This method also processes the segments for whitespace
+        trimming and ensures completeness by adding placeholders for any missing segments.
 
         Args:
-            crash_data (list[str]): The raw crash report data represented as a list of strings.
-            crashgen_name (str): The designated crash generator name to identify the associated crash details.
+            crash_data (list[str]): List of strings representing lines of the crash data.
+            crashgen_name (str): Name of the crash generator to be identified in the crash data.
 
         Returns:
-            tuple[str, str, str, list[list[str]]]: A tuple containing:
-                - The identified game version from the crash log or "UNKNOWN" if not found.
-                - The identified crash generator version or "UNKNOWN" if not found.
-                - The primary error message extracted from the crash log or "UNKNOWN" if not found.
-                - A list of lists, where each nested list contains stripped lines belonging to a specific segment of the crash log.
+            tuple[str, str, str, list[list[str]]]: A tuple containing the following elements:
+                - Game version (str), extracted from the crash data or UNKNOWN if not found.
+                - Crash generator version (str), extracted from the crash data or UNKNOWN if not found.
+                - Main error message (str), extracted from the crash data or UNKNOWN if not found.
+                - Processed segments (list[list[str]]), where each inner list represents a segment with
+                  whitespace stripped.
         """
         # Define constants
         UNKNOWN = "UNKNOWN"
@@ -254,24 +257,22 @@ class ClassicScanLogs:
     @staticmethod
     def loadorder_scan_loadorder_txt(autoscan_report: list[str]) -> tuple[dict[str, str], bool]:
         """
-        Parses the 'loadorder.txt' file and updates the autoscan report. It processes the file to
-        determine plugins in a specific load order and marks whether any plugins were loaded as a
-        result.
+        Processes the "loadorder.txt" file within a specific folder to generate a mapping of plugins
+        to their origin and determines if any plugins were successfully loaded.
 
-        The 'loadorder.txt' information ensures the application prioritizes plugins detected from
-        this file over those detected from crash logs. If the file is removed, the application
-        will revert to its default behavior of detecting plugins from crash logs.
+        This method attempts to read the `loadorder.txt` for plugin entries, processes its content,
+        and builds a dictionary mapping plugin names to a specified origin marker. If any issues
+        occur during file reading, an error message is appended to the `autoscan_report`. The method
+        also determines if the file has at least one valid plugin entry.
 
         Args:
-            autoscan_report (list[str]): The current autoscan report to append messages indicating
-                the presence and usage of the 'loadorder.txt' file.
+            autoscan_report (list[str]): A list to which informational or error messages regarding the
+                operation will be appended.
 
         Returns:
-            tuple[dict[str, str], bool]:
-                - A dictionary of plugins (keys) with their load origin "LO" (value) based on
-                  'loadorder.txt'.
-                - A boolean indicating whether any plugins were successfully loaded from
-                  'loadorder.txt'.
+            tuple[dict[str, str], bool]: A tuple where the first element is a dictionary mapping
+                plugin names to their origin markers, and the second element is a boolean indicating
+                whether any plugins were successfully loaded.
         """
         LOADORDER_MESSAGES = (
             "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
@@ -310,20 +311,20 @@ class ClassicScanLogs:
         dict[str, str], bool, bool]:
 
         """
-        Scans load order logs to extract plugin information, which helps determine plugin-related issues
-        in a specific game version and its compatibility. It identifies potential plugin limit triggers,
-        disabled limit checks, and classifies plugins based on their unique identifiers or names.
+        Analyzes and processes a list of plugins for a given game version, determining specific conditions
+        and identifying plugin statuses. Returns a mapping of plugin names to their statuses, alongside
+        flags indicating the detection of specific conditions related to plugin limits.
 
         Args:
-            segment_plugins (list[str]): A list of plugin entries from the scanned load order log.
-            game_version (Version): The current game version being analyzed.
-            version_current (Version): The version of the game currently in use.
+            segment_plugins (list[str]): A list of plugin data segments to process.
+            game_version (Version): The version of the game for determining behavior.
+            version_current (Version): The current version to be compared against thresholds.
 
         Returns:
-            tuple[dict[str, str], bool, bool]: A tuple containing three elements:
-                - A dictionary mapping plugin names to their unique identifiers or statuses.
-                - A boolean indicating whether the plugin limit trigger has been activated.
-                - A boolean indicating whether the plugin limit check has been disabled under specific conditions.
+            tuple: A tuple containing:
+                - dict[str, str]: A mapping of plugin names to their classified statuses.
+                - bool: A flag indicating whether a plugin limit marker has been triggered.
+                - bool: A flag indicating whether the limit check has been disabled.
         """
         # Early return for empty input
         if not segment_plugins:

@@ -12,16 +12,14 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 # noinspection DuplicatedCode
 def xse_check_integrity() -> str:
     """
-    Checks the integrity of the XSE (Script Extender) installation, files, and logs.
-
-    This function verifies XSE installation by checking required files, version compatibility,
-    and analyzing log files for potential errors.
+    Performs an integrity check for the XSE framework, ensuring the necessary configurations,
+    libraries, and installation files are correctly set up and free of critical errors. This
+    function analyzes configuration settings, validates the address library, and examines logs for
+    patterns indicating issues. Results are compiled and returned as a single message string.
 
     Returns:
-        str: A formatted report of the XSE integrity check results
-
-    Raises:
-        TypeError: If expected settings or file paths have invalid types
+        str: A comprehensive message summarizing the results of the integrity check, including
+        detected issues or confirmation of successful checks.
     """
     logger.debug("- - - INITIATED XSE INTEGRITY CHECK")
     messages: list[str] = []
@@ -149,16 +147,15 @@ def _check_xse_installation(
 
 def xse_check_hashes() -> str:
     """
-    Performs integrity checks for Script Extender (XSE) files by validating their hashes against the expected ones
-    stored in the game YAML configuration. Reports missing or mismatched files and generates appropriate warning
-    messages based on the configuration. Ensures that the scripts are intact and not overridden by external modifications.
+    Checks the integrity of script files by comparing their hashes with the expected values.
 
-    Raises:
-        TypeError: If configuration data types retrieved from YAML settings do not match the expected types.
+    This function validates that script files in a specified folder match their expected
+    hash values. It reads the configuration for expected hashes, calculates the actual
+    hashes, and generates a result message indicating the status of the comparison.
 
     Returns:
-        str: Consolidated message summarizing the results of the integrity check, including warnings about missing or
-        mismatched files, or confirmation that all scripts are correctly validated.
+        str: A result message indicating whether all hashes match or identifying any
+        inconsistencies.
     """
     logger.debug("- - - INITIATED XSE FILE HASH CHECK")
 

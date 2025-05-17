@@ -1,4 +1,3 @@
-import sqlite3
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -9,52 +8,6 @@ from packaging.version import Version
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.YamlSettingsCache import yaml_settings
-
-
-class SQLiteReader:
-    # noinspection SpellCheckingInspection
-    def __init__(self, logfiles: list[Path]) -> None:
-        """
-        Initializes an in-memory SQLite database and populates it with crash log data
-        from provided log files. The logs are stored in a table with each entry
-        containing the log file name and its binary data. Additionally, a unique index
-        on the log file name is created for efficient retrieval.
-
-        Args:
-            logfiles (list[Path]): A list of file paths representing the log files to
-                be read and stored in the SQLite database.
-        """
-        self.db = sqlite3.connect(":memory:")
-        self.db.execute("CREATE TABLE crashlogs (logname TEXT UNIQUE, logdata BLOB)")
-        self.db.execute("CREATE INDEX idx_logname ON crashlogs (logname)")
-        self.db.executemany("INSERT INTO crashlogs VALUES (?, ?)",
-                            ((file.name, file.read_bytes()) for file in logfiles))
-
-    def read_log(self, logname: str) -> list[str]:
-        """
-        Reads log data from the database for the given logname, processes it to decode
-        and split the log content into individual lines.
-
-        The method connects to the database, retrieves data associated with the
-        specified logname from the 'crashlogs' table, decodes the stored byte data
-        ignoring any errors, and splits it into lines to return a list of strings for
-        further use.
-
-        Args:
-            logname: The name of the log whose data is to be retrieved.
-                     It is used as a key to query the 'crashlogs' table.
-
-        Returns:
-            list[str]: A list of individual log lines as strings, extracted and processed
-                       from the database entry corresponding to the provided logname.
-        """
-        with self.db as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT logdata FROM crashlogs WHERE logname = ?", (logname,))
-            return cursor.fetchone()[0].decode("utf-8", errors="ignore").splitlines()
-
-    def close(self) -> None:
-        self.db.close()
 
 
 class ThreadSafeLogCache:

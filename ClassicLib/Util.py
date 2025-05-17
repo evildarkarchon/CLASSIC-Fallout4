@@ -24,17 +24,17 @@ from ClassicLib.Logger import logger
 
 def calculate_similarity(file1: Path, file2: Path) -> float:
     """
-    Compares the content of two files and calculates the similarity ratio based
-    on their sequences. The similarity ratio is a floating-point number between
-    0 and 1, where 0 indicates no similarity and 1 indicates identical content.
+    Calculates the similarity ratio between the content of two text files using the
+    SequenceMatcher utility. This method reads the content of both files and determines
+    how closely they resemble each other by computing a numerical similarity ratio.
 
     Args:
-        file1 (Path): The path to the first file to be compared.
-        file2 (Path): The path to the second file to be compared.
+        file1 (Path): The path to the first file for comparison.
+        file2 (Path): The path to the second file for comparison.
 
     Returns:
-        float: A similarity ratio between 0 and 1, indicating the degree of
-        similarity between the content of the two files.
+        float: A ratio between 0 and 1 indicating the similarity between the two file
+        contents, where 1 implies an exact match and 0 indicates no similarity.
     """
     with file1.open("r") as f1, file2.open("r") as f2:
         return SequenceMatcher(None, f1.read(), f2.read()).ratio()
@@ -42,20 +42,21 @@ def calculate_similarity(file1: Path, file2: Path) -> float:
 
 def get_game_version(game_exe_path: Path) -> Version:
     """
-    Gets the version information of a specified game executable file.
+    Retrieves the version information of a game executable.
 
-    This function retrieves the version of a game executable file by using system-level
-    API calls to fetch version information. It is specifically supported for systems running
-    on Windows. If the path provided does not exist, is invalid, or is not a Windows
-    executable file, a default null version is returned. Any unexpected errors during
-    processing are gracefully handled and logged.
+    This function attempts to detect the version of a given game executable
+    file located at `game_exe_path`. It is designed to work only on Windows
+    operating systems. If the function encounters any issue, such as an
+    invalid path, unavailable Windows API modules, or corrupted version
+    information, it will log the error and return a null version
+    placeholder.
 
     Args:
-        game_exe_path (Path): The file path to the target game executable.
+        game_exe_path (Path): Path to the game executable file.
 
     Returns:
-        Version: The version of the game executable in the format "major.minor.patch.build".
-        If detection fails, a null version is returned.
+        Version: Parsed version of the game executable, or a null version
+        placeholder if any error occurs during version detection.
     """
     # Early return for non-Windows systems
     if platform.system() != "Windows":
@@ -109,20 +110,19 @@ def _create_version_from_info(version_info: dict[str, int]) -> Version:
 
 def crashgen_version_gen(input_string: str) -> Version:
     """
-    Generates a Version object from an input string.
-
-    This function processes an input string to extract a version number. It looks
-    for substrings prefixed with the letter 'v', strips the prefix, and constructs
-    a Version instance if a valid version string is found. If no valid version is
-    present, it returns a predefined null version.
+    Parses an input string to extract the version information and returns a Version
+    object if successful. If no valid version information is found in the input,
+    it returns a predefined constant representing a null version.
 
     Args:
-        input_string: A string that potentially includes a version prefixed by
-            'v'.
+        input_string: A string potentially containing version information prefixed
+            with the character 'v'. The string may contain multiple components
+            separated by whitespace.
 
     Returns:
-        Version: A Version object representing the extracted version or a null
-            Version instance if no valid version could be parsed.
+        Version: A Version object initialized with the extracted version string
+            if found, otherwise a constant representing a null version.
+
     """
     input_string = input_string.strip()
     parts = input_string.split()
@@ -138,21 +138,20 @@ def crashgen_version_gen(input_string: str) -> Version:
 @contextlib.contextmanager
 def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[TextIOWrapper]:
     """
-    Opens a file with its detected encoding as a context manager.
-
-    This function detects the encoding of the specified file and opens the file using
-    that encoding. It allows working with files having unknown or varied encodings
-    to ensure the correct reading of the content. The function ensures that the file
-    is properly closed after processing, even if exceptions are raised during the
-    execution of the code block that uses the context manager.
+    Context manager for opening a file with an automatically detected encoding. This utility uses
+    `chardet` to determine the encoding of the file, allowing reading and processing files with
+    varied encodings in an error-tolerant manner. The detected encoding is also set to ignore
+    encoding-related errors, ensuring that invalid characters in files do not raise exceptions
+    during processing.
 
     Args:
-        file_path: The path to the file to be opened. It can be provided as a Path,
-            string, or os.PathLike object.
+        file_path (Path | str | os.PathLike): The path to the file that is to be opened. It can be
+            provided either as a `Path` object, a string path, or any object implementing the
+            `os.PathLike` interface.
 
     Yields:
-        TextIOWrapper: An open text file object for reading the file's content using
-        the detected encoding.
+        TextIOWrapper: A file object opened with the detected encoding, for reading the contents of
+            the file.
 
     """
     if not isinstance(file_path, Path):
@@ -173,20 +172,17 @@ GlobalRegistry.register(GlobalRegistry.Keys.OPEN_FILE_FUNC, open_file_with_encod
 # noinspection PyGlobalUndefined
 def configure_logging(classic_logger: Logger) -> None:
     """
-    Configures the logging system for the application.
-
-    This function checks the existence and age of a log file named "CLASSIC Journal.log".
-    If the log file is older than 7 days, it deletes the file and generates a new one.
-    The function also ensures that logging is configured only once for the logger named
-    "CLASSIC". The logs are stored in "CLASSIC Journal.log" using a specific format that
-    includes timestamp, log level, and the log message.
+    Configures the logging system for the provided logger, ensuring that a
+    file-based log with specific formatting is maintained. It checks the
+    existence of the "CLASSIC Journal.log" file and removes it if it is older
+    than seven days, regenerating a new logging file as needed. Additionally,
+    it ensures that the logging handler is only initialized once for the logger
+    named "CLASSIC".
 
     Args:
-        classic_logger (Logger): 
-
-    Raises:
-        ValueError: If an error occurs while deleting the log file.
-        OSError: If there is an operating system-related error during log file deletion.
+        classic_logger: A Logger instance to configure the logging settings
+            for. This will be modified to include appropriate level, handler,
+            and formatter settings.
     """
 
     journal_path = Path("CLASSIC Journal.log")
@@ -215,16 +211,16 @@ def configure_logging(classic_logger: Logger) -> None:
 
 
 def remove_readonly(file_path: Path) -> None:
-    """
-    Removes the read-only attribute or permission from the specified file path.
-    On Windows, it clears the read-only file attribute. On other operating
-    systems, it adds the write permission for the user if not already set.
-    In case the file does not exist or an error occurs during the operation,
-    appropriate error messages are logged.
+    """Removes the read-only attribute from a file or directory.
+
+    This function modifies the file attributes to ensure the specified file or
+    directory is writable. It checks the file system type and applies the
+    necessary operations based on the OS. If the file or directory is already
+    writable, it logs the corresponding outcome.
 
     Args:
-        file_path (Path): The path of the file from which the read-only
-            attribute or permission is to be removed.
+        file_path (Path): The path of the file or directory for which the read-only
+            attribute should be removed.
     """
     try:
         if platform.system() == "Windows":
@@ -274,17 +270,19 @@ def append_or_extend(value: str | int | float | list | tuple | set, destination:
 
 def pastebin_fetch(url: str) -> None:
     """
-    Fetches and saves raw content from a Pastebin URL to a local file.
+    Fetches the contents of a Pastebin raw URL and saves them as a crash log file.
 
-    This function takes a Pastebin URL, converts it to its raw content version
-    if necessary, downloads the content, and saves it to a specified directory.
-    The output file is named based on the paste identifier extracted from the URL.
+    The function checks if the given URL belongs to a Pastebin page and converts it
+    to a raw content URL if necessary. It then retrieves the content from the URL,
+    ensures the required directory structure exists, and saves the content to a
+    file. File paths and directories are created if they do not exist.
 
     Args:
-        url: The Pastebin URL from which the content will be fetched.
+        url: The URL to a Pastebin page or raw content.
 
     Raises:
-        HTTPError: If the HTTP request to the provided URL fails.
+        HTTPError: If the HTTP request to fetch the Pastebin content fails with a
+            non-200 status code.
     """
     if urlparse(url).netloc == "pastebin.com" and "/raw" not in url:
         url = url.replace("pastebin.com", "pastebin.com/raw")
@@ -300,17 +298,17 @@ def pastebin_fetch(url: str) -> None:
 
 async def pastebin_fetch_async(url: str) -> None:
     """
-    Asynchronously fetches the raw content of a pastebin link and writes it to a log file.
+    Fetches and saves the contents of a Pastebin raw URL asynchronously to a local file.
 
-    This function processes a given Pastebin URL, ensuring it fetches raw content if necessary,
-    downloads the content asynchronously, and writes it to a local file. If the directory
-    does not exist, it is created. The function operates asynchronously for network operations
-    to improve efficiency in asynchronous workflows.
+    This function takes a Pastebin URL, modifies it to ensure it points to the raw content
+    (if not already), retrieves the content asynchronously, and saves it to a file
+    within a local "Crash Logs/Pastebin" directory. The filename is derived from the
+    last segment of the URL path. If the specified directory does not exist,
+    it is created.
 
     Args:
-        url (str): The Pastebin URL to fetch content from. The function automatically adjusts
-            the URL to point to the raw content if it is not already.
-
+        url (str): The Pastebin URL to fetch and save. If the input URL is not a raw
+            URL (i.e., it doesn't include '/raw'), it will be modified accordingly.
     """
 
     if urlparse(url).netloc == "pastebin.com" and "/raw" not in url:
@@ -340,18 +338,15 @@ async def pastebin_fetch_async(url: str) -> None:
 
 def calculate_file_hash(file_path: Path) -> str:
     """
-    Calculates the SHA-256 hash of a file's contents.
-
-    This function reads the contents of a file in binary mode in chunks of 4096
-    bytes and computes its SHA-256 hash incrementally. It returns the final
-    hash value as a hexadecimal string representation.
+    Calculates the SHA-256 hash of a file. This function reads the content of the file
+    in blocks to efficiently compute the hash for large files without loading the entire
+    file into memory.
 
     Args:
-        file_path: Path object representing the location of the file whose
-            hash needs to be computed.
+        file_path (Path): The path to the file whose SHA-256 hash needs to be calculated.
 
     Returns:
-        str: The hexadecimal SHA-256 hash of the file's contents.
+        str: The computed SHA-256 hash of the file in hexadecimal format.
     """
     hash_sha256 = hashlib.sha256()
     with file_path.open("rb") as file:

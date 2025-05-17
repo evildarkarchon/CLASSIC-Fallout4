@@ -1,6 +1,6 @@
 from enum import Enum, auto
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal
 
 from packaging.version import Version
 
@@ -38,9 +38,9 @@ class YAML(Enum):
     """tests/test_settings.yaml"""
 
 
-class GameVars(TypedDict):
+"""class GameVars(TypedDict):
     game: GameID
-    vr: Literal["VR", ""] | str
+    vr: Literal["VR", ""] | str"""
 
 
 """gamevars: GameVars = {

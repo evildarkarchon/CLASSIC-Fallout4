@@ -276,10 +276,22 @@ def scan_mods_unpacked() -> str:
 
 def scan_mods_archived() -> str:
     """
-    Scans BA2 archive mod files for issues and identifies problematic files.
+    Analyzes archived BA2 mod files to identify potential issues, such as incorrect
+    formats, invalid dimensions, or unexpected content, and generates a detailed
+    report about the detected anomalies. Ensures compliance with specific
+    modding requirements and alerts users to potential crashes or compatibility
+    issues.
 
     Returns:
-        str: Detailed report of scan results.
+        str: A report detailing the findings, including errors and warnings
+        regarding issues found in the BA2 files. The report contains recommendations
+        for rectifying the problems or guidance for further action.
+
+    Raises:
+        OSError: If the function fails to open or read a BA2 file during analysis.
+        subprocess.SubprocessError: If there is an error while running `BSArch`
+        commands for file dumping or listing.
+
     """
     message_list = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
 
@@ -464,17 +476,24 @@ def scan_mods_archived() -> str:
 # noinspection PyPep8Naming
 def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
     """
-    Manages game files by supporting operations like backup, restore, and removal. The behavior of
-    the operation depends on the specified mode. The function interacts with the game folder and performs
-    the requested action on files or directories matching the criteria in a specified list, which is loaded
-    from the settings.
+    Manages game files by performing backup, restore, or removal operations. The function interacts
+    with the game's directory and modifies files based on the specified mode.
+
     Args:
-        classic_list (str): Name of the list specifying files or directories to be managed. It is a key
-            to retrieve the actual list from the configuration settings.
-        mode (Literal["BACKUP", "RESTORE", "REMOVE"], optional): Determines the type of operation to
-            be performed on the game files. Defaults to "BACKUP".
+        classic_list: str
+            The name of the list specifying which files need to be managed. This parameter
+            is used to identify target files or directories in the game's folder.
+        mode: Literal["BACKUP", "RESTORE", "REMOVE"], optional
+            The operation mode to be performed on the files. Available options are:
+            - "BACKUP": Creates a backup of the specified files.
+            - "RESTORE": Restores the files from a backup to the game folder.
+            - "REMOVE": Deletes the specified files from the game folder. Defaults to "BACKUP".
+
     Raises:
-        FileNotFoundError: If the game path could not be located or is not a valid directory.
+        FileNotFoundError: If the specified game folder is not found or is not a valid
+            directory.
+        PermissionError: If there are file permission issues preventing the operation
+            from completing.
     """
     # Constants
     BACKUP_DIR = "CLASSIC Backup/Game Files"
@@ -555,17 +574,18 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
 # ================================================
 def game_combined_result() -> str:
     """
-    Combines and returns the result of various game-related checks and scans.
+    Generates a combined result summarizing game-related checks and scans.
 
-    This function aggregates the output from multiple checks and scans related to the
-    game's setup, plugins, logs, and configuration files. It retrieves specific game-related
-    settings from YAML configuration and determines directories for game documents and
-    resources. If these directories are not found, it returns an empty string. Otherwise,
-    it processes the checks and accumulates their results into a single string.
+    This function performs a series of validations and scans on the game files
+    and documentation directories. It consolidates plugin checks, crash generation
+    settings, log errors, and additional configuration validations into a single
+    text result. The returned result can be used for diagnostics or reporting
+    purposes.
 
     Returns:
-        str: A string combining the results of all checks and scans. Returns an
-        empty string if game directories are not found.
+        str: A string summarizing the results of all performed checks and scans.
+        If the necessary paths or directories are not available, an empty string
+        is returned.
     """
     docs_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
     game_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
@@ -584,16 +604,16 @@ def game_combined_result() -> str:
 
 def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUDED IN AUTOSCAN REPORTS
     """
-    Combines and returns the result outputs of `scan_mods_unpacked` and
-    `scan_mods_archived`. If the unpacked mods scan indicates that the mods folder
-    path is not provided, returns the corresponding unpacked result directly without
-    proceeding to retrieve the archived mods results. Otherwise, concatenates the
-    unpackaged and archived mods scan results and returns the combination.
+    Combines the results of scanning unpacked and archived mods.
+
+    This function first scans for unpacked mods and checks their status. If the unpacked mods
+    path is not provided, it quickly returns a relevant message. Otherwise, it appends the
+    results of scanning the archived mods to the result of the unpacked mods scan and provides
+    a combined status report.
 
     Returns:
-        str: Concatenation of the results from `scan_mods_unpacked` and
-             `scan_mods_archived`, or the `scan_mods_unpacked` result directly if
-             the mods folder path is not provided.
+        str: The combined results of the unpacked and archived mods scans, or a message
+        indicating that the mods folder path is not provided.
     """
     unpacked = scan_mods_unpacked()
     if unpacked.startswith("❌ MODS FOLDER PATH NOT PROVIDED"):
@@ -603,20 +623,12 @@ def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUD
 
 def write_combined_results() -> None:
     """
-    Writes combined results of two processes into a markdown report file.
+    Writes combined results of game and mods into a markdown report file.
 
-    This function aggregates results from two distinct processes, namely
-    `game_combined_result()` and `mods_combined_result()`. The results are
-    retrieved as strings and are then appended to create a combined string.
-    This combined string is subsequently written to a markdown file named
-    "CLASSIC GFS Report.md". The output file is encoded in UTF-8, and any
-    encoding errors are ignored during the write operation.
-
-    Raises:
-        FileNotFoundError: If the file path "CLASSIC GFS Report.md" cannot
-            be accessed or created.
-        UnicodeEncodeError: If there is an issue encoding the content in
-            UTF-8 and the error cannot be ignored.
+    This function aggregates results from two separate processes: the game result
+    and the mods result. It then writes their combined output into a markdown
+    file named "CLASSIC GFS Report.md". The report file is encoded in UTF-8 and
+    any errors during encoding are ignored.
     """
     game_result = game_combined_result()
     mods_result = mods_combined_result()

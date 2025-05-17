@@ -40,21 +40,18 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """
-        Retrieves the file path for the given YAML store. If the path is already cached,
-        it returns the cached path. Otherwise, it determines the path based on the
-        YAML store type, caches it, and then returns the path. The function uses
-        different predefined paths based on the type of YAML store passed.
+        Determines and returns the file path for a given YAML configuration type. The file path is derived based on the
+        specific YAML store requested. A cache is utilized to avoid recalculating paths for previously accessed stores.
 
         Args:
-            yaml_store: An enum value of type YAML indicating the type of YAML store,
-                such as Main, Settings, Ignore, Game, Game_Local, or TEST.
+            yaml_store (YAML): The identifier for the configuration type. Specifies which YAML file's path is being requested.
 
         Returns:
-            Path: The file path corresponding to the specified YAML store.
+            Path: The resolved file path corresponding to the provided YAML store.
 
         Raises:
-            NotImplementedError: If the provided yaml_store is not recognized or
-                implemented.
+            NotImplementedError: If the provided yaml_store does not match any of the predefined YAML types.
+            FileNotFoundError: If no valid file path could be resolved for the provided yaml_store.
         """
         if yaml_store in self.path_cache:
             return self.path_cache[yaml_store]
@@ -84,16 +81,15 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
     def load_yaml(self, yaml_path: Path) -> YAMLMapping:
         """
-        Loads a YAML file with caching to optimize reloading. Supports static and dynamic files,
-        with separate handling based on file type. Static files are loaded once and cached, while
-        dynamic files are reloaded if their modification timestamp changes.
+        Loads the content of a YAML file into a cache and retrieves it. Supports static and dynamic YAML files,
+        with handling for file modification times to reload dynamic files when they change.
 
         Args:
             yaml_path (Path): The path to the YAML file to be loaded.
 
         Returns:
-            YAMLMapping: The loaded YAML content. If the file does not exist, an empty dictionary
-            is returned.
+            YAMLMapping: The content of the YAML file, either from the cache or loaded dynamically. Returns
+                an empty dictionary if the file does not exist.
         """
         if not yaml_path.exists():
             return {}
@@ -129,21 +125,19 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
     def get_setting[T](self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """
-        Fetches or modifies a setting within a YAML file. This function is responsible for retrieving or modifying
-        nested settings in YAML files, depending on the provided arguments. It handles caching for static YAML
-        stores, ensuring efficient access and updates. Static stores are also protected against unintended
-        modifications with appropriate warnings.
+        Retrieves or updates a setting from a nested YAML data structure. This method allows you to perform both
+        read and write operations on YAML files while incorporating caching mechanisms for improved performance
+        when accessing static YAML stores. If a new value is provided, the corresponding YAML file is updated
+        and the cache is refreshed to reflect the changes.
 
         Args:
-            _type: The expected type of the setting to be retrieved or updated.
-            yaml_store: An identifier for the specific YAML store to access.
-            key_path: The dot-separated path key to locate the setting within the YAML structure.
-            new_value: The new value to be assigned to the setting. If None, no modification is performed,
-                and the function operates in a read-only mode.
+            _type: The expected type of the setting value.
+            yaml_store: The YAML store from which the setting is retrieved or updated.
+            key_path: The dot-delimited path specifying the location of the setting within the YAML structure.
+            new_value: The new value to update the setting with. If None, the method operates as a read.
 
         Returns:
-            The value retrieved from the YAML structure or the newly updated value. Returns None if
-            the key path is invalid or leads to a None value and is not listed in the settings ignore list.
+            The existing or updated setting value if successful, otherwise None.
         """
         # If this is a read operation for a static store, check cache first
         cache_key = (yaml_store, key_path, _type)
@@ -217,27 +211,28 @@ GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
 
 def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
     """
-    Updates or retrieves a setting value from a given YAML store. The method
-    handles type-specific processing for the retrieved or updated value, such
-    as converting to a `Path` object when appropriate.
+    Manages YAML settings by retrieving or updating a specific setting in the YAML store.
+
+    This function operates on YAML configuration data. It retrieves or updates a setting
+    based on the provided key path. The function ensures that types are consistent with
+    the required input or output. If `new_value` is provided, it updates the setting in
+    the YAML store, otherwise it fetches the current value. If `_type` is `Path`, it
+    attempts to convert the setting to a `Path` object before returning it.
 
     Args:
-        _type: The type of setting to retrieve or update. Supports generic
-            type hinting.
-        yaml_store: The YAML store object representing the settings data.
-        key_path: The key path in the YAML store where the setting resides.
-        new_value: The new value to be set in the YAML store at the given key
-            path. This value must match the specified `_type`. Defaults to None.
+        _type: The expected type of the setting value. It defines the type of the value
+            to be retrieved or updated in the YAML store.
+        yaml_store: The YAML object where the settings are stored and managed.
+        key_path: The key path in the YAML store that points to the specific setting.
+        new_value: The new value for the setting that is to be updated in the YAML
+            store. If not provided, the function simply retrieves the current value.
+            Defaults to None.
 
     Returns:
-        T | None: If `new_value` is provided, returns the updated setting value
-        from the YAML store of the specified `_type`. If no `new_value` is
-        provided, it retrieves and returns the current setting value in the
-        YAML store of the given `_type`. Returns None if the setting does not
-        exist or a type mismatch occurs.
-
-    Raises:
-        TypeError: If the YAML cache is not initialized.
+        The value of the setting retrieved from the YAML store if `new_value` is not
+        provided. If `_type` is `Path`, it returns the value as a `Path` object;
+        otherwise, it returns it with the specified type `_type`. Returns None if the
+        setting is not found.
     """
     if yaml_cache is None:
         raise TypeError("CMain not initialized")

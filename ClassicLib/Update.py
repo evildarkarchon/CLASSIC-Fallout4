@@ -9,15 +9,15 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 def try_parse_version(version_string: str) -> Version | None:
     """
-    Parses a version string into a Version object. If parsing fails due to an invalid
-    version format, returns None.
+    Attempts to parse a version string into a Version object. If parsing fails due
+    to an invalid version format, it returns None.
 
     Args:
-        version_string: A string representing the version to be parsed.
+        version_string (str): A string representation of the version to parse.
 
     Returns:
-        A Version object if the string is successfully parsed, or None if the
-        string is not a valid version format.
+        Version | None: A Version object if the version_string is valid, or None if
+        the string cannot be parsed as a valid version.
     """
     try:
         return Version(version_string)
@@ -27,22 +27,23 @@ def try_parse_version(version_string: str) -> Version | None:
 
 async def get_github_version(session: aiohttp.ClientSession) -> Version | None:
     """
-    Fetches the latest release version of the CLASSIC-Fallout4 repository from
-    GitHub using the provided aiohttp ClientSession.
+    Fetches the latest version of the CLASSIC Fallout 4 mod from the GitHub API.
 
-    The function performs a GET request to the GitHub API to retrieve the latest
-    release information of the specified repository. It extracts and parses the
-    version number from the release name. If the request fails or the response
-    does not contain a valid version, the function returns None.
+    This function sends a GET request to the GitHub API to retrieve the latest release
+    information for the CLASSIC Fallout 4 mod repository. It attempts to parse and
+    return the version number from the release name field. If the request fails or
+    the version name cannot be parsed, it returns None.
 
     Args:
         session (aiohttp.ClientSession): An instance of aiohttp.ClientSession used
-            for making asynchronous HTTP requests.
+            to perform the HTTP request.
 
     Returns:
-        Version | None: A Version object representing the parsed release version
-            if successful, or None if the version cannot be determined or the
-            request fails.
+        Version | None: A Version object representing the parsed version from the
+            release name, or None if the version cannot be retrieved or parsed.
+
+    Raises:
+        aiohttp.ClientError: Raised if there is an issue with the HTTP request.
     """
     try:
         async with session.get(
@@ -64,24 +65,22 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
     """
     Fetches the NexusMods version information for a specific Fallout 4 mod.
 
-    This function asynchronously requests the web page for a Fallout 4 mod on NexusMods
-    to determine its current version. It looks for specific HTML meta tags to extract
-    the version. The method is designed to handle potential changes in the HTML
-    structure by looking for specific markers.
+    The function performs an asynchronous HTTP GET request to the specified mod page URL and
+    parses the HTML content to extract the version metadata. It recognizes version information from
+    specific `<meta>` tag patterns and attempts to parse the version string. If no valid version
+    is found or if an error occurs, the function returns None.
 
     Args:
-        session (aiohttp.ClientSession): The active HTTP session used to fetch the
-            NexusMods webpage.
+        session (aiohttp.ClientSession): An instance of aiohttp.ClientSession to send the HTTP
+            request.
 
     Returns:
-        Version | None: The parsed version information as a `Version` object if found,
-            or `None` if the version cannot be determined or if an error occurs during
-            the request.
+        Version | None: The parsed version of the mod if found and valid; otherwise, returns None.
 
     Raises:
-        aiohttp.ClientError: Raised if there is an issue with the HTTP request made
-            using the session.
-
+        aiohttp.ClientError: May be raised during the HTTP request if an error in the connection
+            or request occurs. However, the function catches this error internally and does not
+            propagate it.
     """
 
     try:
@@ -115,27 +114,32 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
 
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
     """
-    Checks whether the current local version of the software is the latest version
-    available from GitHub and/or Nexus. This function communicates with remote
-    servers, validates configuration options, and reports the results of the update
-    check.
+    Checks if the current version of "CLASSIC" is the latest available version.
+
+    This function verifies if the installed version of the "CLASSIC" application is
+    the latest available by comparing it with the versions available from the configured
+    update sources. It logs or prints relevant information about the update process
+    and checks for update-related settings.
 
     Args:
-        quiet (bool): If set to True, suppresses print statements providing feedback
-            about the update check process.
-        gui_request (bool): Indicates whether the function is triggered by a GUI-based
-            request. If True and an update check fails, errors will propagate instead
-            of being handled gracefully.
+        quiet (bool): If True, suppresses output messages to stdout. If False, displays
+            update-related information during the check process.
+        gui_request (bool): If True, raises exceptions upon errors or update warnings
+            for GUI handling. If False, exceptions are suppressed, and a failure
+            returns False.
 
     Returns:
-        bool: True if the local version is the latest or if the update check is
-            disabled, otherwise False.
+        bool: True if the current version is up-to-date or if updates are disabled,
+            otherwise False if the version is outdated.
 
     Raises:
-        UpdateCheckError: If the update check fails for any of the chosen data
-            sources (GitHub/Nexus) or an issue with the configuration exists when
-            triggered by a GUI request.
+        UpdateCheckError: Raised in cases of update check failure, including
+            inability to fetch version information from all configured update sources
+            or when the GUI explicitly requests an update warning.
     """
+
+    if classic_settings(bool, "Update Check") and GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
+        return True
 
     logger.debug("- - - INITIATED UPDATE CHECK")
     if not (gui_request or classic_settings(bool, "Update Check")):

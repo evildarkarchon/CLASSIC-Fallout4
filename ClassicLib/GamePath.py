@@ -11,14 +11,20 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 def game_path_find() -> None:
     """
-    Performs game path verification and ensures that the game executable is
-    correctly located. It checks for the installation path in the Windows
-    Registry and verifies the game directory using log files or user input.
-    The method also updates the YAML settings for future reference.
+    Attempts to locate and validate the installation directory of a game by retrieving the path through
+    several methods, including the system registry, log file inspection, and user input. Registers the
+    located path or updates configuration settings as needed.
 
     Raises:
-        TypeError: If the XSE loader log file or game-related YAML settings are
-            not of the expected type.
+        TypeError: If invalid types are encountered, such as improperly formatted settings or unexpected
+        results during path validation.
+
+    Notes:
+        - The function uses several fallback mechanisms to determine the correct game path.
+        - If the registry lookup fails, the function attempts to find the path via a log file or
+          prompts the user for manual input.
+        - Registry keys from both Bethesda Softworks and GOG.com installations are queried initially.
+        - Global configuration and settings files are updated upon successfully finding the valid path.
     """
     logger.debug("- - - INITIATED GAME PATH CHECK")
 
@@ -105,21 +111,13 @@ def game_path_find() -> None:
 
 def game_generate_paths() -> None:
     """
-    Generates and updates file paths for game configurations based on game variant and version.
-
-    This function reads game-specific configurations and dynamically constructs essential
-    file paths required for game execution. The paths are stored in a configuration YAML
-    file for local game settings. Additionally, it handles version-specific file naming
-    in certain cases such as "AddressLib" files for different versions of Fallout 4. The
-    function also ensures appropriate types for necessary variables, raising errors
-    if validations fail.
+    Generates and configures the necessary paths and files for the current game version. This function interacts
+    with a YAML settings manager to set up paths and validates game versions. It ensures the local game environment
+    is correctly configured based on the registry's active game and version setting.
 
     Raises:
-        TypeError: If `game_path` or `xse_acronym_base` are not strings.
-        ValueError: If an unsupported or invalid `game_version` is detected for Fallout 4.
-
-    Returns:
-        None
+        TypeError: If the game path or XSE acronym base is not a string type as expected.
+        ValueError: If the game version is unsupported, invalid, or does not match the known valid versions for Fallout4.
     """
     logger.debug("- - - INITIATED GAME PATH GENERATION")
 

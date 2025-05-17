@@ -23,6 +23,7 @@ class Keys:
     VR = "gamevars_vr"
     GAME = "gamevars_game"
     LOCAL_DIR = "local_dir"
+    IS_PRERELEASE = "is_prerelease"
 
 
 def register(key: str, obj: Any) -> None:

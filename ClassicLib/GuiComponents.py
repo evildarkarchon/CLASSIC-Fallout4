@@ -15,12 +15,14 @@ class ManualDocsPath(QObject):
 
     def get_manual_docs_path_gui(self, path: str) -> None:
         """
-        Validates the provided path to ensure it is a directory and updates settings accordingly. Emits a
-        signal if the path is invalid.
+        Ensures the provided path is valid for the manual documentation directory of a game.
+        If valid, the path is added to the CLASSIC configuration file. Otherwise, the user is
+        notified that the path is invalid and a signal to request a new path is emitted.
 
         Args:
-            path: The directory path input by the user. This is validated to ensure it is an existing
-                directory.
+            path (str): The directory path provided by the user to be validated and potentially
+                added to the CLASSIC configuration file.
+
         """
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
@@ -40,10 +42,12 @@ class GamePathEntry(QObject):
 
     def get_game_path_gui(self, path: str) -> None:
         """
-        Processes the provided directory path to configure the game settings via GUI.
+        Determines if the input path is a valid directory. If valid, updates a settings YAML file with
+        the provided path and logs the changes. If invalid, informs the user and re-emits a signal to
+        retry.
 
         Args:
-            path: The directory path entered by the user
+            path (str): The input directory path to be validated and possibly stored.
         """
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")

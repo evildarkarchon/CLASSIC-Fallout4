@@ -7,7 +7,6 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
-from ClassicLib.GuiComponents import GamePathEntry, ManualDocsPath
 from ClassicLib.Logger import logger
 from ClassicLib.Util import configure_logging, open_file_with_encoding, calculate_file_hash
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
@@ -336,7 +335,7 @@ def main_generate_required() -> None:
     game_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
     if not game_path:
-        docs_path_find(is_gui_mode())
+        docs_path_find(GlobalRegistry.is_gui_mode())
         docs_generate_paths()
         game_path_find()
         game_generate_paths()
@@ -374,10 +373,7 @@ def initialize(is_gui: bool = False) -> None:
     # noinspection PyTypedDict
     GlobalRegistry.register(GlobalRegistry.Keys.VR, "" if not classic_settings(bool, "VR Mode") else "VR")
     GlobalRegistry.register(GlobalRegistry.Keys.GAME, classic_settings(str, "Managed Game").replace(" ", ""))
-
-    if is_gui:
-        GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS_GUI, ManualDocsPath())
-        GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH_GUI, GamePathEntry())
+    GlobalRegistry.register(GlobalRegistry.Keys.IS_PRERELEASE, yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease"))
 
     if getattr(sys, "frozen", False):
         GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(sys.executable).parent)

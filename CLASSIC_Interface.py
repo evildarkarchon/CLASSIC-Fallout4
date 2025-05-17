@@ -577,6 +577,8 @@ class MainWindow(QMainWindow):
         Raises:
             UpdateCheckError: If an error occurs during the version check process.
         """
+        if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
+            return
         # noinspection PyShadowingNames
         try:
             is_up_to_date = await is_latest_version(quiet=True)
@@ -603,6 +605,9 @@ class MainWindow(QMainWindow):
         Returns:
             None: This function has no return value.
         """
+        if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
+            self.show_update_error("Software is in pre-release stage, update check skipped.")
+            return
         # noinspection PyShadowingNames
         try:
             is_up_to_date = await is_latest_version(
@@ -1727,8 +1732,6 @@ class MainWindow(QMainWindow):
             self.game_files_worker = GameFilesScanWorker()
             self.game_files_worker.moveToThread(self.game_files_thread)
 
-            self.game_files_worker.notify_sound_signal.connect(
-                self.audio_player.play_notify_signal.emit)  # type: ignore
             self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
 
             self.game_files_thread.started.connect(self.game_files_worker.run)
