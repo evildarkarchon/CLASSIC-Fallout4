@@ -1,8 +1,8 @@
 from typing import Any  # Added List and Dict for type hinting
 
 import aiohttp
-from bs4 import BeautifulSoup
-from packaging.version import Version, InvalidVersion
+from bs4 import BeautifulSoup, Tag
+from packaging.version import InvalidVersion, Version
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
@@ -217,12 +217,12 @@ async def get_latest_and_top_release_details(session: aiohttp.ClientSession, own
             results["are_same_release_by_id"] = (
                     results["latest_endpoint_release"]["id"] == results["top_of_list_release"]["id"]
             )
-        return results
+        return results  # noqa: TRY300
 
     except aiohttp.ClientError as e:
         logger.error(f"GitHub API ClientError for {owner}/{repo}: {e}")
         return results if results["latest_endpoint_release"] or results["top_of_list_release"] else None
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Unexpected error fetching release details for {owner}/{repo}: {e}")
         return None
 
@@ -273,8 +273,8 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
             # Look for the next meta tag with version data
             version_data_tag = soup.find('meta', property=version_data_property)
 
-            if not version_data_tag or not version_data_tag.get('content'):
-                logger.debug("Version data meta tag not found")
+            if not isinstance(version_data_tag, Tag) or not version_data_tag.get('content'):
+                logger.debug("Version data meta tag not found, is not a Tag, or content is missing")
                 return None
 
             version_str = version_data_tag.get('content')
@@ -289,7 +289,7 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
 
     except aiohttp.ClientError as e:
         logger.error(f"Network error while fetching Nexus version: {e}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Unexpected error parsing Nexus version: {e}")
 
     return None
@@ -316,6 +316,21 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             version details from GitHub and Nexus, or when an update is available in response
             to a GUI request.
     """
+
+    def _check_source_failures_and_raise(
+            use_github_flag: bool,
+            use_nexus_flag: bool,
+            github_fetch_failed: bool,
+            nexus_fetch_failed: bool
+    ) -> None:
+        """Helper to raise UpdateCheckError if source fetching failed based on configuration."""
+        if use_github_flag and not use_nexus_flag and github_fetch_failed:
+            raise UpdateCheckError("Unable to fetch version information from GitHub (selected as only source).")
+        if use_nexus_flag and not use_github_flag and nexus_fetch_failed:
+            raise UpdateCheckError("Unable to fetch version information from Nexus (selected as only source).")
+        if use_github_flag and use_nexus_flag and github_fetch_failed and nexus_fetch_failed:
+            raise UpdateCheckError("Unable to fetch version information from both GitHub and Nexus.")
+
     # Hardcoded repository for CLASSIC Fallout 4
     repo_owner = "evildarkarchon"
     repo_name = "CLASSIC-Fallout4"
@@ -386,29 +401,10 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
                     if candidate_stable_versions:
                         version_github_to_compare = max(candidate_stable_versions)
                         logger.info(f"Determined latest stable GitHub version: {version_github_to_compare}")
-                    else:
-                        logger.info("No stable GitHub version found from details.")
-                else:
-                    logger.warning("Failed to get comprehensive GitHub release details.")
-
-            if use_nexus:
-                logger.debug("Fetching Nexus version.")
-                version_nexus_to_compare = await get_nexus_version(session)
-                if version_nexus_to_compare:
-                    logger.info(f"Fetched Nexus version: {version_nexus_to_compare}")
-                else:
-                    logger.info("No version found from Nexus.")
-
-            # Check if all selected sources failed
-            github_source_failed = use_github and (version_github_to_compare is None)
             nexus_source_failed = use_nexus and (version_nexus_to_compare is None)
+            github_source_failed = use_github and (version_github_to_compare is None)
 
-            if use_github and not use_nexus and github_source_failed:
-                raise UpdateCheckError("Unable to fetch version information from GitHub (selected as only source).")
-            if use_nexus and not use_github and nexus_source_failed:
-                raise UpdateCheckError("Unable to fetch version information from Nexus (selected as only source).")
-            if use_github and use_nexus and github_source_failed and nexus_source_failed:
-                raise UpdateCheckError("Unable to fetch version information from both GitHub and Nexus.")
+            _check_source_failures_and_raise(use_github, use_nexus, github_source_failed, nexus_source_failed)
             # If 'Both' were chosen and one succeeded, we can proceed.
 
     except (aiohttp.ClientError,
@@ -461,9 +457,9 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
         print(
             f"Your CLASSIC Version: {version_local or 'Unknown'}",
             (f"\nLatest GitHub Version: {version_github_to_compare}" if use_github and version_github_to_compare else (
-                f"\nLatest GitHub Version: Not found/checked" if use_github else "")),
+                "\nLatest GitHub Version: Not found/checked" if use_github else "")),
             (f"\nLatest Nexus Version: {version_nexus_to_compare}" if use_nexus and version_nexus_to_compare else (
-                f"\nLatest Nexus Version: Not found/checked" if use_nexus else "")),
+                "\nLatest Nexus Version: Not found/checked" if use_nexus else "")),
             "\n\n✔️ You have the latest version of CLASSIC!\n",
             sep="",  # Ensure sep is an empty string
             flush=True,

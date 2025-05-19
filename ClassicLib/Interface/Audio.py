@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Signal, QUrl
+from PySide6.QtCore import QObject, QUrl, Signal
 from PySide6.QtMultimedia import QSoundEffect
 
 from ClassicLib.Constants import YAML

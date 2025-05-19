@@ -1,8 +1,8 @@
 from pathlib import Path
-from typing import TypedDict, List, Tuple
+from typing import TypedDict
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import NULL_VERSION, Version, VR_VERSION, OG_VERSION, NG_VERSION, YAML
+from ClassicLib.Constants import NG_VERSION, NULL_VERSION, OG_VERSION, VR_VERSION, YAML, Version
 from ClassicLib.Util import get_game_version
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -38,7 +38,7 @@ ALL_ADDRESS_LIB_INFO: dict[str, AddressLibVersionInfo] = {
 
 def _determine_relevant_versions(
         is_vr_mode: bool
-) -> Tuple[List[AddressLibVersionInfo], List[AddressLibVersionInfo]]:
+) -> tuple[list[AddressLibVersionInfo], list[AddressLibVersionInfo]]:
     """Determines correct and wrong Address Library versions based on VR mode."""
     if is_vr_mode:
         correct_versions = [ALL_ADDRESS_LIB_INFO["VR"]]
@@ -49,7 +49,7 @@ def _determine_relevant_versions(
     return correct_versions, wrong_versions
 
 
-def _format_game_version_not_detected_message() -> List[str]:
+def _format_game_version_not_detected_message() -> list[str]:
     """Formats message for when game version cannot be detected."""
     return [
         "❓ NOTICE : Unable to locate Address Library\n",
@@ -59,17 +59,17 @@ def _format_game_version_not_detected_message() -> List[str]:
     ]
 
 
-def _format_plugins_path_not_found_message() -> List[str]:
+def _format_plugins_path_not_found_message() -> list[str]:
     """Formats message for when plugins path is not found in settings."""
     return ["❌ ERROR: Could not locate plugins folder path in settings\n-----\n"]
 
 
-def _format_correct_address_lib_message() -> List[str]:
+def _format_correct_address_lib_message() -> list[str]:
     """Formats message for when the correct Address Library version is found."""
     return ["✔️ You have the correct version of the Address Library file!\n-----\n"]
 
 
-def _format_wrong_address_lib_message(correct_version_info: AddressLibVersionInfo) -> List[str]:
+def _format_wrong_address_lib_message(correct_version_info: AddressLibVersionInfo) -> list[str]:
     """Formats message for when a wrong Address Library version is found."""
     return [
         "❌ CAUTION: You have installed the wrong version of the Address Library file!\n",
@@ -78,7 +78,7 @@ def _format_wrong_address_lib_message(correct_version_info: AddressLibVersionInf
     ]
 
 
-def _format_address_lib_not_found_message(correct_version_info: AddressLibVersionInfo) -> List[str]:
+def _format_address_lib_not_found_message(correct_version_info: AddressLibVersionInfo) -> list[str]:
     """Formats message for when Address Library file is not found."""
     return [
         "❓ NOTICE: Address Library file not found\n",
@@ -95,7 +95,7 @@ def check_xse_plugins() -> str:
     Returns:
         str: A detailed message about the status of the Address Library files.
     """
-    message_list: List[str]
+    message_list: list[str]
 
     plugins_path = yaml_settings(Path, YAML.Game_Local,
                                  f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins")

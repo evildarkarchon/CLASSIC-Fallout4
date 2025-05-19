@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from PySide6.QtCore import QObject, Signal, Slot, QThread
+from PySide6.QtCore import QObject, QThread, Signal, Slot
 
 from ClassicLib.PapyrusLog import papyrus_logging
 

@@ -2,7 +2,7 @@
 # CHECK BUFFOUT CONFIG SETTINGS
 # ================================================
 from pathlib import Path
-from typing import cast, Any, Dict, List, Set, Optional
+from typing import Any, cast
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
@@ -15,14 +15,14 @@ class CrashgenChecker:
     """Checks and validates settings for Crash Generator (Buffout4) configuration."""
 
     def __init__(self) -> None:
-        self.message_list: List[str] = []
+        self.message_list: list[str] = []
         self.plugins_path = self._get_plugins_path()
         self.crashgen_name = self._get_crashgen_name()
         self.config_file = self._find_config_file()
         self.installed_plugins = self._detect_installed_plugins()
 
     @staticmethod
-    def _get_plugins_path() -> Optional[Path]:
+    def _get_plugins_path() -> Path | None:
         """Get plugins path from settings and ensure it's a Path object."""
         plugins_path = yaml_settings(Path, YAML.Game_Local,
                                      f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins")
@@ -37,7 +37,7 @@ class CrashgenChecker:
                                               f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_LogName")
         return crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
 
-    def _find_config_file(self) -> Optional[Path]:
+    def _find_config_file(self) -> Path | None:
         """Find and determine which config file to use."""
         if not self.plugins_path:
             return None
@@ -64,13 +64,13 @@ class CrashgenChecker:
         # Determine which config file to use
         if crashgen_toml_og.is_file():
             return crashgen_toml_og
-        elif crashgen_toml_vr.is_file():
+        if crashgen_toml_vr.is_file():
             return crashgen_toml_vr
         return None
 
-    def _detect_installed_plugins(self) -> Set[str]:
+    def _detect_installed_plugins(self) -> set[str]:
         """Check for installed mods by examining DLL files in the plugins directory."""
-        xse_files: Set[str] = set()
+        xse_files: set[str] = set()
         if self.plugins_path and self.plugins_path.exists():
             try:
                 xse_files = {file.name.lower() for file in self.plugins_path.iterdir()}
@@ -78,18 +78,16 @@ class CrashgenChecker:
                 logger.error(f"Error accessing plugins directory: {e}")
         return xse_files
 
-    def has_plugin(self, plugin_names: List[str]) -> bool:
+    def has_plugin(self, plugin_names: list[str]) -> bool:
         """Check if any of the specified plugins are installed."""
         return any(plugin in self.installed_plugins for plugin in plugin_names)
 
-    def _get_settings_to_check(self) -> List[Dict[str, Any]]:
+    def _get_settings_to_check(self) -> list[dict[str, Any]]:
         """Define configuration settings to check with their requirements and desired states."""
         if GlobalRegistry.get_game() != "Fallout4":
             return []
 
         has_xcell = self.has_plugin(["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll"])
-        # noinspection PyUnusedLocal
-        has_bakascrapheap = "bakascrapheap.dll" in self.installed_plugins
         has_achievements = self.has_plugin(["achievements.dll", "achievementsmodsenablerloader.dll"])
         has_looksmenu = any("f4ee" in file for file in self.installed_plugins)
 

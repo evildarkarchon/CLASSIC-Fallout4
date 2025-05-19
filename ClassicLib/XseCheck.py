@@ -1,7 +1,8 @@
 # =========== CHECK GAME XSE SCRIPTS -> GET PATH AND HASHES ===========
 import hashlib
+from collections.abc import Iterable
 from pathlib import Path
-from typing import cast, Iterable
+from typing import cast
 
 from ClassicLib import Constants, GlobalRegistry
 from ClassicLib.Logger import logger
@@ -34,7 +35,7 @@ def xse_check_integrity() -> str:
         raise TypeError("Error patterns setting must be a list")
 
     # Get XSE-related settings
-    xse_config = _load_xse_config(game_vr, game_name)
+    xse_config = _load_xse_config(game_vr)
 
     # Check address library
     _check_address_library(xse_config["adlib_file"], game_name, messages)
@@ -53,7 +54,7 @@ def xse_check_integrity() -> str:
 
 
 # noinspection PyUnusedLocal
-def _load_xse_config(game_vr: str, game_name: str | None = None) -> dict:
+def _load_xse_config(game_vr: str) -> dict:
     """Load XSE configuration settings from YAML files"""
     xse_acronym = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
     xse_full_name = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_FullName")
@@ -82,7 +83,7 @@ def _load_xse_config(game_vr: str, game_name: str | None = None) -> dict:
 
 def _check_address_library(adlib_file: Path | None, game_name: str, messages: list[str]) -> None:
     """Check if Address Library for Script Extender is installed"""
-    if isinstance(adlib_file, (str, Path)):
+    if isinstance(adlib_file, str | Path):
         if Path(adlib_file).exists():
             messages.append("✔️ REQUIRED: *Address Library* for Script Extender is installed! \n-----\n")
         else:
@@ -95,7 +96,7 @@ def _check_address_library(adlib_file: Path | None, game_name: str, messages: li
             f"❌ Value for Address Library is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
 
 
-def _check_xse_installation(
+def _check_xse_installation(  # noqa: PLR0913
         log_file: str | None,
         acronym: str,
         full_name: str,
@@ -104,7 +105,7 @@ def _check_xse_installation(
         messages: list[str]
 ) -> None:
     """Check XSE installation status, version, and log for errors"""
-    if not isinstance(log_file, (str, Path)):
+    if not isinstance(log_file, str | Path):
         messages.append(
             f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC Local.yaml!\n-----\n")
         return
@@ -204,7 +205,7 @@ def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: st
                     # Algo should match the one used for Database YAML!
                     file_hash = hashlib.sha256(file_contents).hexdigest()
                     actual_hashes[filename] = file_hash
-            except (IOError, OSError) as e:
+            except OSError as e:
                 logger.warning(f"Error reading file {script_path}: {e}")
                 actual_hashes[filename] = None
         else:

@@ -19,7 +19,7 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 try:
     from bs4 import PageElement
 except ImportError:
-    from bs4.element import PageElement  # noqa: TC002
+    pass
 
 from ClassicLib.Constants import YAML
 

@@ -60,6 +60,8 @@ class PastebinFetchWorker(QObject):
         """
         try:
             # Make sure pastebin_fetch_async is properly imported
+            import asyncio
+
             import aiohttp
 
             from ClassicLib.Util import pastebin_fetch_async

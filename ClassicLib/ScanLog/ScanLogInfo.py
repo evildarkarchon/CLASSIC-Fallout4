@@ -1,7 +1,6 @@
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict
 
 from packaging.version import Version
 
@@ -20,13 +19,13 @@ class ThreadSafeLogCache:
             logfiles (list[Path]): A list of file paths representing the log files to be cached.
         """
         self.lock = threading.RLock()  # Reentrant lock allows nested acquisitions
-        self.cache: Dict[str, bytes] = {}
+        self.cache: dict[str, bytes] = {}
 
         # Populate the cache with log content
         for file in logfiles:
             try:
                 self.cache[file.name] = file.read_bytes()
-            except (IOError, OSError) as e:
+            except OSError as e:
                 print(f"Error reading {file}: {e}")
 
     def read_log(self, logname: str) -> list[str]:
@@ -71,8 +70,8 @@ class ThreadSafeLogCache:
             try:
                 if path.name not in self.cache:
                     self.cache[path.name] = path.read_bytes()
-                return True
-            except (IOError, OSError):
+                return True  # noqa: TRY300
+            except OSError:
                 return False
 
     def close(self) -> None:

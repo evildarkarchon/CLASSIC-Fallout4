@@ -10,7 +10,7 @@ from difflib import SequenceMatcher
 from io import TextIOWrapper
 from logging import Logger
 from pathlib import Path
-from typing import cast, Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import aiohttp
@@ -73,8 +73,6 @@ def get_game_version(game_exe_path: Path) -> Version:
         import win32api
         version_info = _extract_windows_version_info(win32api, game_exe_path)
         version = _create_version_from_info(version_info)
-        logger.debug(f"Game version detected: {version}")
-        return version
     except (FileNotFoundError, OSError):
         logger.error(f"Game executable not found or inaccessible at: {game_exe_path}")
         return Constants.NULL_VERSION
@@ -87,6 +85,9 @@ def get_game_version(game_exe_path: Path) -> Version:
     except Exception as e:  # noqa: BLE001
         logger.error(f"Unexpected error getting game version: {e}")
         return Constants.NULL_VERSION
+    else:
+        logger.debug(f"Game version detected: {version}")
+        return version
 
 
 def _is_valid_executable_path(path: Path | None) -> bool:
@@ -96,7 +97,7 @@ def _is_valid_executable_path(path: Path | None) -> bool:
 
 def _extract_windows_version_info(win32api_module: Any, exe_path: Path) -> dict[str, int]:
     """Extracts version information from a Windows executable using win32api."""
-    return cast(dict[str, int], win32api_module.GetFileVersionInfo(str(exe_path), "\\"))
+    return cast("dict[str, int]", win32api_module.GetFileVersionInfo(str(exe_path), "\\"))
 
 
 def _create_version_from_info(version_info: dict[str, int]) -> Version:

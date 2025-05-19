@@ -16,7 +16,7 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 class DocumentsPathManager:
     """Manages game document paths across different platforms."""
 
-    def __init__(self, gui_mode: bool = False):
+    def __init__(self, gui_mode: bool = False) -> None:
         """Initialize the document path manager.
 
         Args:

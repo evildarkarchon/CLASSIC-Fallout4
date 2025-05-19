@@ -73,7 +73,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
             case other if other not in (YAML.Main, YAML.Settings, YAML.Ignore, YAML.Game, YAML.Game_Local, YAML.TEST):
                 raise NotImplementedError
 
-        if not yaml_path == Path.cwd():
+        if yaml_path != Path.cwd():
             self.path_cache[yaml_store] = yaml_path
         else:
             raise FileNotFoundError(f"No YAML file found for {yaml_store}")

@@ -1,9 +1,11 @@
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import ConfigFileCache
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # Constants for config settings
 CONSOLE_COMMAND_SETTING = "sStartingConsoleCommand"
@@ -90,14 +92,14 @@ def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
             vsync_list.append(f"{config_files[file_name]} | SETTING: {setting}\n")
 
     # Check highfpsphysicsfix.ini separately
-    if "highfpsphysicsfix.ini" in config_files:
-        if config_files.get(bool, "highfpsphysicsfix.ini", "Main", "EnableVSync"):
-            vsync_list.append(f"{config_files['highfpsphysicsfix.ini']} | SETTING: EnableVSync\n")
+    if "highfpsphysicsfix.ini" in config_files and config_files.get(bool, "highfpsphysicsfix.ini", "Main",
+                                                                    "EnableVSync"):
+        vsync_list.append(f"{config_files['highfpsphysicsfix.ini']} | SETTING: EnableVSync\n")
 
     return vsync_list
 
 
-def apply_ini_fix(config_files: ConfigFileCache, file_name: str, section: str,
+def apply_ini_fix(config_files: ConfigFileCache, file_name: str, section: str,  # noqa: PLR0913
                   setting: str, value: Any, fix_description: str, message_list: list[str]) -> None:
     """Apply a fix to an INI file and log the change."""
     config_files.set(type(value), file_name, section, setting, value)
@@ -127,10 +129,10 @@ def apply_all_ini_fixes(config_files: ConfigFileCache, message_list: list[str]) 
             apply_ini_fix(config_files, "f4ee.ini", "CharGen", "bUnlockTints", 1, "INI FACE TINTS UNLOCK", message_list)
 
     # Fix highfpsphysicsfix.ini loading screen FPS if present
-    if "highfpsphysicsfix.ini" in config_files:
-        if config_files.get_strict(float, "highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS") < 600.0:
-            apply_ini_fix(config_files, "highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS",
-                          600.0, "INI LOADING SCREEN FPS", message_list)
+    if ("highfpsphysicsfix.ini" in config_files and
+            config_files.get_strict(float, "highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS") < 600.0):
+        apply_ini_fix(config_files, "highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS",
+                      600.0, "INI LOADING SCREEN FPS", message_list)
 
 
 def check_duplicate_files(config_files: ConfigFileCache, message_list: list[str]) -> None:

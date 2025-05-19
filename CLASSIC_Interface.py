@@ -2,7 +2,7 @@ import asyncio
 import sys
 from collections.abc import Callable
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 import regex as re
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, QUrl, Signal, Slot
@@ -73,13 +73,12 @@ def show_game_path_dialog_static() -> Path | None:
             # Validate that the directory contains the game executable
             if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
                 return game_path
-            else:
-                # Show error and continue loop to try again
-                QMessageBox.critical(
-                    None,
-                    "Invalid Game Directory",
-                    f"❌ ERROR: No {exe_name} file found in '{game_path}'!\n\nPlease select the correct game directory."
-                )
+            # Show error and continue loop to try again
+            QMessageBox.critical(
+                None,
+                "Invalid Game Directory",
+                f"❌ ERROR: No {exe_name} file found in '{game_path}'!\n\nPlease select the correct game directory."
+            )
         else:
             # User cancelled - show confirmation dialog
             reply = QMessageBox.question(
@@ -237,7 +236,7 @@ class CrashLogsScanWorker(QObject):
         try:
             self._perform_crash_logs_scan()
             self._play_success_notification()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self._handle_scan_error(e)
         finally:
             self.finished.emit()  # type: ignore
@@ -263,7 +262,7 @@ class CrashLogsScanWorker(QObject):
         Raises:
             Exception: Re-raises the exception if audio notifications are disabled
         """
-        logger.error(f"Crash logs scan failed: {str(error)}")
+        logger.error(f"Crash logs scan failed: {error!s}")
 
         audio_notifications_enabled = classic_settings(bool, "Audio Notifications")
         if audio_notifications_enabled:
@@ -303,8 +302,8 @@ class GameFilesScanWorker(QObject):
         try:
             self._process_game_results()
             self._notify_success()
-        except Exception:
-            self._handle_error()
+        except Exception as e:  # noqa: BLE001
+            self._handle_error(e)
         finally:
             self.scan_finished.emit()  # type: ignore
 
@@ -317,12 +316,12 @@ class GameFilesScanWorker(QObject):
         """Play success notification sound."""
         self.play_success_sound.emit()  # type: ignore
 
-    def _handle_error(self) -> None:
+    def _handle_error(self, error: Exception) -> None:
         """Handle exceptions based on user audio notification settings."""
         if classic_settings(bool, "Audio Notifications"):
             self.play_error_sound.emit()  # type: ignore
         else:
-            raise
+            raise error
 
 
 # noinspection DuplicatedCode
@@ -470,7 +469,8 @@ class MainWindow(QMainWindow):
         Returns:
             None
         """
-        if self.pastebin_id_input is None: return  # Should not happen if UI is setup correctly
+        if self.pastebin_id_input is None:
+            return  # Should not happen if UI is setup correctly
 
         input_text = self.pastebin_id_input.text().strip()
         url = input_text if self.pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
@@ -887,7 +887,7 @@ class MainWindow(QMainWindow):
             (remove_button, "REMOVE"),
         ]:
             button.clicked.connect(
-                lambda checked=False, b=backup_type, a=action: self.classic_files_manage(  # checked arg for signal
+                lambda b=backup_type, a=action: self.classic_files_manage(  # checked arg for signal
                     f"Backup {b}", a  # type: ignore
                 )
             )
@@ -895,14 +895,34 @@ class MainWindow(QMainWindow):
             button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # Allow horizontal expansion
             buttons_layout.addWidget(button)
 
-        restore_button.setEnabled(False)  # Initially disabled
+            restore_button.setEnabled(False)  # Initially disabled
 
         layout.addLayout(buttons_layout)
+
+    def _validate_selected_list_format(self, selected_list: str) -> list[str]:
+        """
+        Validates the format of the selected list string.
+
+        Args:
+            selected_list (str): The string to validate, expected format "Backup TYPE".
+
+        Returns:
+            list[str]: A list containing the parts of the string if valid.
+
+        Raises:
+            ValueError: If the selected_list format is invalid.
+        """
+        parts = selected_list.split()
+        if len(parts) != 2 or parts[0] != "Backup":
+            raise ValueError(
+                f"Invalid format for selected_list: '{selected_list}'. Expected 'Backup TYPE'."
+            )
+        return parts
 
     def classic_files_manage(self, selected_list: str,
                              selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
         """
-        Manages game files by performing operations such as backup, restore, or removal
+   Manages game files by performing operations such as backup, restore, or removal
         based on the selected mode. This function interacts with the game files and
         updates the GUI to reflect the changes.
         Args:
@@ -914,16 +934,13 @@ class MainWindow(QMainWindow):
             PermissionError: If the function is unable to access files in the game folder
                 due to insufficient permissions.
         """
-        # noinspection PyShadowingNames
+             # noinspection PyShadowingNames
         try:
             # Extract backup type from the selected list (format: "Backup TYPE")
-            parts = selected_list.split(" ", 1)
-            if len(parts) < 2:
-                raise ValueError(f"Invalid list format: {selected_list}")
+            parts = self._validate_selected_list_format(selected_list)
 
             backup_type = parts[1]
-
-            # Perform file operation
+         # Perform file operation
             game_files_manage(selected_list, selected_mode)
 
             # Update UI based on operation performed
@@ -989,7 +1006,7 @@ class MainWindow(QMainWindow):
             QMessageBox: Displays an error dialog if the backup folder is
             not registered or missing.
         """
-        local_dir = GlobalRegistry.get_local_dir()
+        local_dir = cast("Path",GlobalRegistry.get_local_dir())
         if local_dir.exists():
             backup_path = local_dir / "CLASSIC Backup/Game Files"
             QDesktopServices.openUrl(QUrl.fromLocalFile(backup_path))
@@ -1035,16 +1052,17 @@ class MainWindow(QMainWindow):
         """
         Configures properties of the output text box.
 
-        Args:
+             Args:
             min_height (int): Minimum height to set for the text box.
         """
-        self.output_text_box.setReadOnly(True)
-        self.output_text_box.setStyleSheet(self.OUTPUT_TEXT_BOX_STYLE)
-        self.output_text_box.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding
-        )
-        self.output_text_box.setMinimumHeight(min_height)
+        if self.output_text_box is not None:
+            self.output_text_box.setReadOnly(True)
+            self.output_text_box.setStyleSheet(self.OUTPUT_TEXT_BOX_STYLE)
+            self.output_text_box.setSizePolicy(
+                QSizePolicy.Policy.Expanding,
+                QSizePolicy.Policy.Expanding
+            )
+            self.output_text_box.setMinimumHeight(min_height)
 
     # noinspection PyBroadException
     def update_output_text_box(self, text: str | bytes) -> None:
@@ -1056,7 +1074,8 @@ class MainWindow(QMainWindow):
         Args:
             text: Input text to be appended to the output text box. Can be a string or bytes.
         """
-        if self.output_text_box is None: return
+        if self.output_text_box is None: 
+            return
 
         # noinspection PyShadowingNames
         try:
@@ -1077,11 +1096,11 @@ class MainWindow(QMainWindow):
                 self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
 
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             # Fallback to simple append if complex logic fails, to avoid losing output
             try:
                 self.output_text_box.append(str(text))
-            except Exception:  # If even simple append fails, log to console
+            except Exception:  # If even simple append fails, log to console  # noqa: BLE001
                 print(f"Error updating output text box: {e}, Original text: {text}", file=sys.__stderr__)
 
     def process_lines(self, lines: list[str]) -> None:
@@ -1097,7 +1116,8 @@ class MainWindow(QMainWindow):
         Args:
             lines: A list of strings that represents the input lines to process.
         """
-        if self.output_text_box is None: return
+        if self.output_text_box is None: 
+            return
 
         for line in lines:
             stripped_line = line.rstrip()
@@ -1295,7 +1315,7 @@ class MainWindow(QMainWindow):
         section_layout.addWidget(browse_button)
 
         # Add the QHBoxLayout to the parent QVBoxLayout (or other QBoxLayout)
-        if isinstance(layout, (QVBoxLayout, QHBoxLayout)):
+        if isinstance(layout, QVBoxLayout | QHBoxLayout):
             layout.addLayout(section_layout)
         else:
             # Fallback if layout type is unexpected, though typically it's one of these.
@@ -1323,15 +1343,17 @@ class MainWindow(QMainWindow):
             main_buttons_layout, "SCAN CRASH LOGS", self.crash_logs_scan,
             "Scan all detected crash logs for issues."
         )
-        if self.crash_logs_button: self.scan_button_group.addButton(self.crash_logs_button)
+        if self.crash_logs_button: 
+            self.scan_button_group.addButton(self.crash_logs_button)
 
         self.game_files_button = self.add_main_button(
             main_buttons_layout, "SCAN GAME FILES", self.game_files_scan,
             "Scan game and mod files for potential problems (FCX Mode dependent)."
         )
-        if self.game_files_button: self.scan_button_group.addButton(self.game_files_button)
+        if self.game_files_button: 
+            self.scan_button_group.addButton(self.game_files_button)
 
-        if isinstance(layout, (QVBoxLayout, QHBoxLayout)):  # Ensure layout supports addLayout
+        if isinstance(layout, QVBoxLayout | QHBoxLayout):  # Ensure layout supports addLayout
             layout.addLayout(main_buttons_layout)
 
     @staticmethod
@@ -1395,12 +1417,12 @@ class MainWindow(QMainWindow):
             button.setStyleSheet(button_style)
             button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # Allow horizontal expansion
             button.setToolTip(f"Open {data['url']} in your browser.")
-            button.clicked.connect(lambda checked=False, url=data["url"]: QDesktopServices.openUrl(QUrl(url)))
+            button.clicked.connect(lambda url=data["url"]: QDesktopServices.openUrl(QUrl(url)))
             row, col = divmod(i, 3)  # Arrange in 3 columns
             grid_layout.addWidget(button, row, col)
 
         articles_section_layout.addLayout(grid_layout)
-        if isinstance(layout, (QVBoxLayout, QHBoxLayout)):
+        if isinstance(layout, QVBoxLayout | QHBoxLayout):
             layout.addLayout(articles_section_layout)
 
     def setup_bottom_buttons(self, layout: QBoxLayout) -> None:
@@ -1451,7 +1473,7 @@ class MainWindow(QMainWindow):
         main_actions_hbox.addWidget(exit_button)
 
         # Add both layouts to the main layout
-        if isinstance(layout, (QVBoxLayout, QHBoxLayout)):
+        if isinstance(layout, QVBoxLayout | QHBoxLayout):
             layout.addLayout(bottom_buttons_hbox)
             layout.addLayout(main_actions_hbox)
 
@@ -1726,7 +1748,7 @@ class MainWindow(QMainWindow):
         Returns:
             None
         """
-        settings_file = GlobalRegistry.get_local_dir() / "CLASSIC Settings.yaml"
+        settings_file = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Settings.yaml"
         if settings_file.exists():
             QDesktopServices.openUrl(QUrl.fromLocalFile(settings_file))
         else:
@@ -2015,7 +2037,7 @@ if __name__ == "__main__":
         sys.exit(app.exec())
     except KeyboardInterrupt:
         app.exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Unhandled exception during application startup: {e}", file=sys.stderr)
         if QApplication.instance():
             # noinspection PyTypeChecker

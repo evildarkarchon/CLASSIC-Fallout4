@@ -8,6 +8,7 @@ import iniparse
 import tomlkit
 from iniparse import configparser
 
+from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Util import calculate_file_hash, calculate_similarity

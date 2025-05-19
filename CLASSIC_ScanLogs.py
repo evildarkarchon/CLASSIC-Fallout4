@@ -296,9 +296,9 @@ class ClassicScanLogs:
                     plugin_entry = plugin_entry.strip()
                     if plugin_entry and plugin_entry not in loadorder_plugins:
                         loadorder_plugins[plugin_entry] = LOADORDER_ORIGIN
-        except (IOError, OSError) as e:
+        except OSError as e:
             # Log file access error but continue execution
-            error_msg = f"Error reading loadorder.txt: {str(e)}"
+            error_msg = f"Error reading loadorder.txt: {e!s}"
             append_or_extend(error_msg, autoscan_report)
 
         # Check if any plugins were loaded
@@ -528,8 +528,7 @@ class ClassicScanLogs:
         """Determine if current error conditions constitute a suspect match."""
         if match_status["has_required_item"]:
             return match_status["error_req_found"]
-        else:
-            return match_status["error_opt_found"] or match_status["stack_found"]
+        return match_status["error_opt_found"] or match_status["stack_found"]
 
     @staticmethod
     def _add_suspect_to_report(error_name: str, error_severity: str, max_warn_length: int,
@@ -606,7 +605,7 @@ class ClassicScanLogs:
         if mem_manager_enabled:
             if has_xcell:
                 add_warning_message(
-                    f"X-Cell is installed, but MemoryManager parameter is set to TRUE",
+                    "X-Cell is installed, but MemoryManager parameter is set to TRUE",
                     f"Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell."
                 )
             elif has_baka_scrapheap:
@@ -1281,7 +1280,8 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     ), autoscan_report)
     formids_matches: list[str] = []
     if segment_callstack:
-        formid_pattern = regex.compile(r"^(?!.*0xFF)(?=.*id:).*Form ID: ([0-9A-F]{8})", regex.IGNORECASE | regex.MULTILINE)
+        formid_pattern = regex.compile(r"^(?!.*0xFF)(?=.*id:).*Form ID: ([0-9A-F]{8})",
+                                       regex.IGNORECASE | regex.MULTILINE)
         for line in segment_callstack:
             match = formid_pattern.search(line)
             if match:

@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QDialogButtonBox, QPushButton, QHBoxLayout, QLineEdit, QLabel, QVBoxLayout, QMainWindow, \
-    QDialog, QFileDialog
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMainWindow, \
+    QPushButton, QVBoxLayout
 
 from ClassicLib import GlobalRegistry
 
@@ -30,7 +30,7 @@ class ManualPathDialog(QDialog):
             parent (QMainWindow | None): The parent window of the dialog. Defaults to None.
         """
         super().__init__(parent)
-        self.setWindowTitle("Set INI Files Directory" if not title else title)
+        self.setWindowTitle(title if title else "Set INI Files Directory")
         self.setFixedSize(700, 150)
 
         # Create layout and input field
@@ -39,14 +39,14 @@ class ManualPathDialog(QDialog):
 
         # Add a label
         label = QLabel(
-            f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})" if not label else label,
+            label if label else f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
             self)
         layout.addWidget(label)
 
         inputlayout = QHBoxLayout()
         self.input_field = QLineEdit(self)
         self.input_field.setPlaceholderText(
-            "Enter the INI directory or click 'Browse'..." if not placeholder else placeholder)
+            placeholder if placeholder else "Enter the INI directory or click 'Browse'...")
         inputlayout.addWidget(self.input_field)
 
         # Create the "Browse" button
@@ -73,7 +73,7 @@ class ManualPathDialog(QDialog):
         """
         # Open directory browser and update the input field
         manual_path = QFileDialog.getExistingDirectory(self,
-                                                       "Select Directory for INI Files" if not caption else caption)
+                                                       caption if caption else "Select Directory for INI Files")
         if manual_path:
             self.input_field.setText(manual_path)
 
