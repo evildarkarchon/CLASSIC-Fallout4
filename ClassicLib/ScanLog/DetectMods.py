@@ -1,14 +1,26 @@
 from typing import Literal, cast
 
 
-def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> bool:
+def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
+    """Convert dictionary keys to lowercase for case-insensitive comparisons."""
+    return {key.lower(): value for key, value in data.items()}
+
+
+def _validate_warning(mod_name: str, warning: str) -> None:
+    """Validate that a mod has an associated warning message."""
+    if not warning:
+        raise ValueError(f"ERROR: {mod_name} has no warning in the database!")
+
+
+def detect_mods_single(yaml_dict: dict[str, str],
+                       crashlog_plugins: dict[str, str],
+                       autoscan_report: list[str]) -> bool:
     """
     Detects modifications (mods) based on provided YAML dictionary, crashlog plugins, and updates the
     autoscan report accordingly.
 
     This function checks if any mod names from the YAML dictionary exist in the crashlog plugins. If a match is found, it
-    will append the respective plugin's identifier and a warning message to the autoscan report. If a mod in the YAML
-    dictionary has no associated warning but is found in the crashlog plugins, a ValueError is raised.
+    will append the respective plugin's identifier and a warning message to the autoscan report.
 
     Args:
         yaml_dict (dict[str, str]): A mapping of mod names (as keys) to their respective warnings (as values).
@@ -23,23 +35,24 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     Raises:
         ValueError: If a mod from the YAML dictionary has no warning defined and is found in the crashlog plugins.
     """
-    trigger_mod_found = False
-    yaml_dict_lower = {key.lower(): value for key, value in yaml_dict.items()}
-    crashlog_plugins_lower = {key.lower(): value for key, value in crashlog_plugins.items()}
+    mods_found = False
+    yaml_dict_lower = _convert_to_lowercase(yaml_dict)
+    crashlog_plugins_lower = _convert_to_lowercase(crashlog_plugins)
 
-    for mod_name_lower, mod_warn in yaml_dict_lower.items():
-        for plugin_name_lower, plugin_fid in crashlog_plugins_lower.items():
-            if mod_name_lower in plugin_name_lower:
-                if mod_warn:
-                    autoscan_report.extend((f"[!] FOUND : [{plugin_fid}] ", mod_warn))
-                else:
-                    raise ValueError(f"ERROR: {mod_name_lower} has no warning in the database!")
-                trigger_mod_found = True
+    for mod_name, mod_warning in yaml_dict_lower.items():
+        for plugin_name, plugin_id in crashlog_plugins_lower.items():
+            if mod_name in plugin_name:
+                _validate_warning(mod_name, mod_warning)
+                autoscan_report.extend((f"[!] FOUND : [{plugin_id}] ", mod_warning))
+                mods_found = True
                 break
-    return trigger_mod_found
+
+    return mods_found
 
 
-def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> bool:
+def detect_mods_double(yaml_dict: dict[str, str],
+                       crashlog_plugins: dict[str, str],
+                       autoscan_report: list[str]) -> bool:
     """
     Detects conflicts or combinations of specific plugins based on given mappings and produces warnings
     or errors if necessary.
@@ -60,27 +73,23 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     Raises:
         ValueError: If a detected mod combination from the database has no warning associated with it.
     """
-    trigger_mod_found = False
-    yaml_dict_lower = {key.lower(): value for key, value in yaml_dict.items()}
-    crashlog_plugins_lower = {key.lower(): value for key, value in crashlog_plugins.items()}
+    mods_found = False
+    yaml_dict_lower = _convert_to_lowercase(yaml_dict)
+    crashlog_plugins_lower = _convert_to_lowercase(crashlog_plugins)
+    plugin_names = crashlog_plugins_lower.keys()
 
-    for mod_name_lower, mod_warn in yaml_dict_lower.items():
-        mod_split = mod_name_lower.split(" | ", 1)
-        mod1_found = mod2_found = False
-        for plugin_name_lower in crashlog_plugins_lower:
-            if not mod1_found and mod_split[0] in plugin_name_lower:
-                mod1_found = True
-                continue
-            if not mod2_found and mod_split[1] in plugin_name_lower:
-                mod2_found = True
-                continue
+    for mod_pair, mod_warning in yaml_dict_lower.items():
+        mod1, mod2 = mod_pair.split(" | ", 1)
+
+        mod1_found = any(mod1 in plugin_name for plugin_name in plugin_names)
+        mod2_found = any(mod2 in plugin_name for plugin_name in plugin_names)
+
         if mod1_found and mod2_found:
-            if mod_warn:
-                autoscan_report.extend(("[!] CAUTION : ", mod_warn))
-            else:
-                raise ValueError(f"ERROR: {mod_name_lower} has no warning in the database!")
-            trigger_mod_found = True
-    return trigger_mod_found
+            _validate_warning(mod_pair, mod_warning)
+            autoscan_report.extend(("[!] CAUTION : ", mod_warning))
+            mods_found = True
+
+    return mods_found
 
 
 def detect_mods_important(yaml_dict: dict[str, str],
@@ -92,8 +101,7 @@ def detect_mods_important(yaml_dict: dict[str, str],
 
     This function processes a dictionary of mods and their warnings, compares them
     against available plugins, and generates a report indicating whether a mod is
-    installed and compatible with the specified GPU (if provided). It appends the
-    status and any relevant warnings to the auto-scan report.
+    installed and compatible with the specified GPU (if provided).
 
     Args:
         yaml_dict (dict[str, str]): A dictionary where keys represent mod names
@@ -106,21 +114,23 @@ def detect_mods_important(yaml_dict: dict[str, str],
             type to be compared against mod warnings. If provided, it is used to
             adjust the compatibility checks and generate warnings.
     """
-    for mod_name in yaml_dict:
-        mod_warn = yaml_dict.get(mod_name, "")
-        mod_split = mod_name.split(" | ", 1)
-        mod_found = False
-        for plugin_name in crashlog_plugins:
-            if mod_split[0].lower() in plugin_name.lower():
-                mod_found = True
-                continue
+    plugin_names_lower = list(_convert_to_lowercase(crashlog_plugins).keys())
+
+    for mod_entry, mod_warning in yaml_dict.items():
+        mod_id, mod_display_name = mod_entry.split(" | ", 1)
+        mod_found = any(mod_id.lower() in plugin_name for plugin_name in plugin_names_lower)
+
         if mod_found:
-            if gpu_rival and cast("str", gpu_rival) in mod_warn.lower():
+            if gpu_rival and cast("str", gpu_rival) in mod_warning.lower():
                 autoscan_report.extend((
-                    f"❓ {mod_split[1]} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n",
+                    f"❓ {mod_display_name} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n",
                     "IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n",
                 ))
             else:
-                autoscan_report.append(f"✔️ {mod_split[1]} is installed!\n\n")
-        elif (gpu_rival and mod_warn) and gpu_rival not in mod_warn.lower():
-            autoscan_report.extend((f"❌ {mod_split[1]} is not installed!\n", mod_warn, "\n"))
+                autoscan_report.append(f"✔️ {mod_display_name} is installed!\n\n")
+        elif (gpu_rival and mod_warning) and gpu_rival not in mod_warning.lower():
+            autoscan_report.extend((
+                f"❌ {mod_display_name} is not installed!\n",
+                mod_warning,
+                "\n"
+            ))
