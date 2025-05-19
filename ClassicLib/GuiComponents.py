@@ -9,6 +9,7 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 class ManualDocsPath(QObject):
     manual_docs_path_signal = Signal()
+    game_path_signal = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -32,13 +33,6 @@ class ManualDocsPath(QObject):
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")
             self.manual_docs_path_signal.emit()
-
-
-class GamePathEntry(QObject):
-    game_path_signal = Signal()
-
-    def __init__(self) -> None:
-        super().__init__()
 
     def get_game_path_gui(self, path: str) -> None:
         """

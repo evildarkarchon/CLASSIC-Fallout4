@@ -90,10 +90,16 @@ def game_path_find() -> None:
         return
 
     if GlobalRegistry.is_gui_mode():
-        game_path_gui = GlobalRegistry.get_game_path_gui()
-        if game_path_gui is None:
-            raise TypeError("CMain not initialized")
-        game_path_gui.game_path_signal.emit()
+        # Show dialog until valid path is selected or user cancels
+        from CLASSIC_Interface import show_game_path_dialog_static
+
+        # This will return a valid path or exit the application if cancelled
+        game_path = show_game_path_dialog_static()
+
+        # If we get here, we have a valid path (function exits if user cancels)
+        yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game",
+                      str(game_path))
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
         return
 
     while True:
