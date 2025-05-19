@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Literal
 
-import regex as re
+import regex
 from packaging.version import Version
 
 from CLASSIC_Main import initialize, main_combined_result
@@ -62,11 +62,11 @@ class ClassicScanLogs:
             user_folder (Path): Path to the user's home directory.
             crashlog_stats (Counter): Counter for various statistics of the scan (currently scanned, incomplete, and failed).
         """
-        self.pluginsearch = re.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
-                                       flags=re.IGNORECASE)
+        self.pluginsearch = regex.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
+                                          flags=regex.IGNORECASE)
         self.crashlog_list = crashlogs_get_files()
         print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
-        self.remove_list = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ()
+        self.remove_list = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or tuple()
         crashlogs_reformat(self.crashlog_list, self.remove_list)
         self.yamldata = ClassicScanLogsInfo()
         self.xse_acronym = self.yamldata.xse_acronym.lower()
@@ -915,7 +915,7 @@ class ClassicScanLogs:
             return set()
 
         # Pattern matches module name potentially followed by version
-        pattern = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
+        pattern = regex.compile(r"(.*?\.dll)\s*v?.*", regex.IGNORECASE)
 
         result = set()
         for text in module_texts:
@@ -984,7 +984,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     game_version = crashgen_version_gen(crashlog_gameversion)
 
     # SOME IMPORTANT DLLs HAVE A VERSION, REMOVE IT
-    xsemodules = ClassicScanLogs.extract_module_names(segment_xsemodules)
+    xsemodules = ClassicScanLogs.extract_module_names(set(segment_xsemodules))
 
     crashgen: dict[str, bool | int | str] = {}
     if segment_crashgen:
@@ -1281,7 +1281,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     ), autoscan_report)
     formids_matches: list[str] = []
     if segment_callstack:
-        formid_pattern = re.compile(r"^(?!.*0xFF)(?=.*id:).*Form ID: ([0-9A-F]{8})", re.IGNORECASE | re.MULTILINE)
+        formid_pattern = regex.compile(r"^(?!.*0xFF)(?=.*id:).*Form ID: ([0-9A-F]{8})", regex.IGNORECASE | regex.MULTILINE)
         for line in segment_callstack:
             match = formid_pattern.search(line)
             if match:
