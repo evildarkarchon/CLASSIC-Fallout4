@@ -8,7 +8,7 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class AddressLibVersionInfo(TypedDict):
-    version_const: str  # Stores the constant like VR_VERSION
+    version_const: Version
     filename: str
     description: str
     url: str

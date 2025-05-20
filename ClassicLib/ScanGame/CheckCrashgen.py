@@ -180,6 +180,7 @@ class CrashgenChecker:
 
     def _process_settings(self) -> None:
         """Process each setting and make necessary adjustments."""
+        assert self.config_file is not None, "Config file must be checked by the caller before processing settings."
         has_bakascrapheap = "bakascrapheap.dll" in self.installed_plugins
 
         for setting in self._get_settings_to_check():
@@ -204,7 +205,7 @@ class CrashgenChecker:
                     f"    Auto Scanner will change this parameter to {setting['desired_value']} {setting['reason']}.\n-----\n",
                 ])
                 # Apply the change
-                mod_toml_config(self.config_file,
+                mod_toml_config(cast("Path", self.config_file),
                                 cast("str", setting["section"]),
                                 cast("str", setting["key"]),
                                 cast("str | bool | int | None", setting["desired_value"]))

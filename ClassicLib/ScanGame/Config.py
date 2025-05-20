@@ -7,6 +7,7 @@ import chardet
 import iniparse
 import tomlkit
 from iniparse import configparser
+from tomlkit.items import Table as TomlkitTable
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
@@ -117,8 +118,9 @@ class ConfigFileCache:
         if self._game_root_path is None:
             # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)
             raise FileNotFoundError
-
-        for path, _dirs, files in self._game_root_path.walk():
+        
+        
+        for path, _dirs, files in self._game_root_path.walk(): # pyrefly: ignore
             for file in files:
                 # Skip if _dirs do not intersect with the whitelist or no match in file name
                 if not (set(self._duplicate_whitelist) & set(_dirs)) and not any(
@@ -222,12 +224,13 @@ class ConfigFileCache:
         config = iniparse.ConfigParser()
         config.readfp(io.StringIO(file_text, newline=None))
 
-        self._config_file_cache[file_name_lower] = {
+        config_entry: ConfigFile = {
             "encoding": file_encoding,
             "path": file_path,
             "settings": config,
             "text": file_text,
         }
+        self._config_file_cache[file_name_lower] = config_entry
 
     def get[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str) -> T | None:
         """
@@ -438,14 +441,26 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
     file_text = file_bytes.decode(file_encoding)
     data = tomlkit.parse(file_text)
 
-    if section not in data or key not in data[section]:  # pyright: ignore[reportOperatorIssue]
+    if section not in data:
         return None
-    current_value = data[section][key]  # pyright: ignore[reportIndexIssue]
+    
+    section_item = data[section] # section_item is a tomlkit.items.Item
+    # Ensure section_item is a tomlkit.Table (which is dict-like)
+    # before checking for the key or trying to access section_item[key].
+    if not isinstance(section_item, TomlkitTable):
+        # If the section exists but is not a table, it cannot contain the key as expected.
+        return None
+        
+    if key not in section_item: # Now section_item is known to be a Table.
+        # The key does not exist in the table.
+        return None
+        
+    current_value = section_item[key]
 
     # If a new value is provided, update the key
     if new_value is not None:
-        current_value = new_value
-        data[section][key] = new_value  # pyright: ignore[reportIndexIssue]
+        section_item[key] = new_value # section_item is a Table, so assignment is valid.
+        current_value = new_value     # Update current_value to reflect the change.
         if not TEST_MODE:
             with toml_path.open("w", encoding=file_encoding, newline="") as toml_file:
                 toml_file.write(data.as_string())

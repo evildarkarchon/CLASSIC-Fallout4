@@ -46,12 +46,12 @@ def papyrus_logging() -> tuple[str, int]:
             elif " error: " in line:
                 count_errors += 1
 
-        ratio = 0 if count_dumps == 0 else count_dumps / count_stacks
+        ratio = 0.0 if count_dumps == 0 else count_dumps / count_stacks
 
         message_list.extend((
             f"NUMBER OF DUMPS    : {count_dumps}\n",
             f"NUMBER OF STACKS   : {count_stacks}\n",
-            f"DUMPS/STACKS RATIO : {round(ratio, 3)}\n",
+            f"DUMPS/STACKS RATIO : {round(ratio, 3)}\n", # pyrefly: ignore
             f"NUMBER OF WARNINGS : {count_warnings}\n",
             f"NUMBER OF ERRORS   : {count_errors}\n",
         ))

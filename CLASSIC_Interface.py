@@ -75,14 +75,14 @@ def show_game_path_dialog_static() -> Path | None:
                 return game_path
             # Show error and continue loop to try again
             QMessageBox.critical(
-                None,
+                None, # pyrefly: ignore
                 "Invalid Game Directory",
                 f"❌ ERROR: No {exe_name} file found in '{game_path}'!\n\nPlease select the correct game directory."
             )
         else:
             # User cancelled - show confirmation dialog
             reply = QMessageBox.question(
-                None,
+                None, # pyrefly: ignore
                 "Exit Application?",
                 "A valid game path is required to continue.\nDo you want to exit the application?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -343,9 +343,9 @@ class MainWindow(QMainWindow):
         and various functionalities pertaining to application settings and external services like Pastebin.
         It also includes custom exception handling, style configuration, and dynamic update checking for
         the application.
-        """
+             """
         super().__init__()
-        self.pastebin_worker = None
+        self.pastebin_worker: PastebinFetchWorker | None = None
         self.pastebin_thread = QThread()
         self.game_files_worker: GameFilesScanWorker | None = None
         self.crash_logs_worker: CrashLogsScanWorker | None = None
@@ -1122,7 +1122,7 @@ class MainWindow(QMainWindow):
         for line in lines:
             stripped_line = line.rstrip()
             if stripped_line or line.endswith("\n"):
-                self.output_text_box.append(stripped_line)
+                self.output_text_box.append(stripped_line) # pyrefly: ignore
 
         self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
 
@@ -2031,15 +2031,16 @@ if __name__ == "__main__":
     initialize(is_gui=True)
     manual_docs_gui = GlobalRegistry.get_manual_docs_gui()
     game_path_gui = GlobalRegistry.get_game_path_gui()
+    window = None  # Initialize window to ensure it's defined
     try:
         window = MainWindow()
         window.show()
         sys.exit(app.exec())
     except KeyboardInterrupt:
         app.exit(1)
-    except Exception as e:  # noqa: BLE001
-        print(f"Unhandled exception during application startup: {e}", file=sys.stderr)
+    except Exception as exc: # pyrefly: ignore  # noqa: BLE001
+        print(f"Unhandled exception during application startup: {exc}", file=sys.stderr)
         if QApplication.instance():
             # noinspection PyTypeChecker
-            QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {e}")
+            QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {exc}") # pyrefly: ignore
         sys.exit(1)

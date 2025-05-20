@@ -25,7 +25,7 @@ def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
             file.rename(destination_file)
 
 
-def copy_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
+def copy_files(source_dir: Path | None, target_dir: Path, pattern: str) -> None:
     """Copy files matching pattern from source to target directory if they don't exist in target."""
     if source_dir and source_dir.is_dir():
         for file in source_dir.glob(pattern):
@@ -135,26 +135,42 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
 
     for file in crashlog_list:
         with file.open(encoding="utf-8", errors="ignore") as crash_log:
-            crash_data = crash_log.readlines()
+            original_lines = crash_log.readlines()
 
-        last_index = len(crash_data) - 1
-        in_plugins = True
-        for index, line in enumerate(reversed(crash_data)):
-            if in_plugins and line.startswith("PLUGINS:"):
-                in_plugins = False
-            reversed_index = last_index - index
+        processed_lines_reversed = []
+        in_plugins_section = True  # State for tracking if currently in the PLUGINS section
+
+        # Iterate over lines from bottom to top to correctly handle PLUGINS section logic
+        for line in reversed(original_lines):
+            if in_plugins_section and line.startswith("PLUGINS:"):
+                in_plugins_section = False  # Exited the PLUGINS section (from bottom)
+
+            # Condition for removing lines if Simplify Logs is enabled
             if simplify_logs and any(string in line for string in remove_list):
-                # Remove *useless* lines from crash log if Simplify Logs is enabled.
-                crash_data.pop(reversed_index)
-            elif in_plugins and "[" in line:
+                # Skip this line by not adding it to processed_lines_reversed
+                continue
+
+            # Condition for reformatting lines within the PLUGINS section
+            if in_plugins_section and "[" in line:
                 # Replace all spaces inside the load order [brackets] with 0s.
                 # This maintains consistency between different versions of Buffout 4.
                 # Example log lines:
                 # [ 1] DLCRobot.esm
                 # [FE:  0] RedRocketsGlareII.esl
-                indent, rest = line.split("[", 1)
-                fid, name = rest.split("]", 1)
-                crash_data[reversed_index] = f"{indent}[{fid.replace(" ", "0")}]{name}"
+                try:
+                    indent, rest = line.split("[", 1)
+                    fid, name = rest.split("]", 1)
+                    modified_line = f"{indent}[{fid.replace(" ", "0")}]{name}"
+                    processed_lines_reversed.append(modified_line)
+                except ValueError:
+                    # If line format is unexpected (e.g., no ']' after '['), keep original line
+                    processed_lines_reversed.append(line)
+            else:
+                # Line is not removed or modified, keep as is
+                processed_lines_reversed.append(line)
+
+        # The processed_lines_reversed list is in reverse order, so reverse it back
+        final_processed_lines = list(reversed(processed_lines_reversed))
 
         with file.open("w", encoding="utf-8", errors="ignore") as crash_log:
-            crash_log.writelines(crash_data)
+            crash_log.writelines(final_processed_lines)

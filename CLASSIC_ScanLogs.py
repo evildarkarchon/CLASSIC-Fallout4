@@ -63,10 +63,10 @@ class ClassicScanLogs:
             crashlog_stats (Counter): Counter for various statistics of the scan (currently scanned, incomplete, and failed).
         """
         self.pluginsearch = regex.compile(r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
-                                          flags=regex.IGNORECASE)
+                                          flags=regex.IGNORECASE) # pyrefly: ignore
         self.crashlog_list = crashlogs_get_files()
         print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
-        self.remove_list = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or tuple()
+        self.remove_list = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ("",)
         crashlogs_reformat(self.crashlog_list, self.remove_list)
         self.yamldata = ClassicScanLogsInfo()
         self.xse_acronym = self.yamldata.xse_acronym.lower()
@@ -165,9 +165,9 @@ class ClassicScanLogs:
         ]
 
         # Initialize metadata variables
-        game_version = None
-        crashgen_version = None
-        main_error = None
+        game_version: str | None = None
+        crashgen_version: str | None = None
+        main_error: str | None = None
 
         # Parse segments
         segments = self._extract_segments(crash_data, segment_boundaries, EOF_MARKER)
@@ -914,7 +914,7 @@ class ClassicScanLogs:
             return set()
 
         # Pattern matches module name potentially followed by version
-        pattern = regex.compile(r"(.*?\.dll)\s*v?.*", regex.IGNORECASE)
+        pattern = regex.compile(r"(.*?\.dll)\s*v?.*", regex.IGNORECASE) # pyrefly: ignore
 
         result = set()
         for text in module_texts:
@@ -1281,7 +1281,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     formids_matches: list[str] = []
     if segment_callstack:
         formid_pattern = regex.compile(r"^(?!.*0xFF)(?=.*id:).*Form ID: ([0-9A-F]{8})",
-                                       regex.IGNORECASE | regex.MULTILINE)
+                                       regex.IGNORECASE | regex.MULTILINE) # pyrefly: ignore
         for line in segment_callstack:
             match = formid_pattern.search(line)
             if match:

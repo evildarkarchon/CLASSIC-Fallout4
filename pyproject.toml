@@ -40,6 +40,7 @@ pytest-asyncio = "^0.24.0"
 anyio = "^4.6.2.post1"
 pyinstaller-hooks-contrib = "^2025.0"
 black = "^25.1.0"
+pyrefly = "^0.16.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -147,3 +148,6 @@ addopts = "--cov --cov-report=lcov:lcov.info --cov-report=term"
 [tool.black]
 line-length = 140
 target-version = ['py312', 'py313']
+
+[tool.pyrefly]
+use_untyped_imports = true

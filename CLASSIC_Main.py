@@ -372,7 +372,9 @@ def initialize(is_gui: bool = False) -> None:
 
     # noinspection PyTypedDict
     GlobalRegistry.register(GlobalRegistry.Keys.VR, "" if not classic_settings(bool, "VR Mode") else "VR")
-    GlobalRegistry.register(GlobalRegistry.Keys.GAME, classic_settings(str, "Managed Game").replace(" ", ""))
+    managed_game_setting = classic_settings(str, "Managed Game")
+    game_value = managed_game_setting.replace(" ", "") if isinstance(managed_game_setting, str) else ""
+    GlobalRegistry.register(GlobalRegistry.Keys.GAME, game_value)
     GlobalRegistry.register(GlobalRegistry.Keys.IS_PRERELEASE, yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease"))
 
     if getattr(sys, "frozen", False):

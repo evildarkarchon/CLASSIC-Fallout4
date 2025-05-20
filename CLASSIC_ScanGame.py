@@ -7,6 +7,7 @@ from typing import Literal
 
 from CLASSIC_Main import initialize, main_generate_required
 from ClassicLib import GlobalRegistry
+from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
 from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
@@ -15,13 +16,6 @@ from ClassicLib.ScanGame.ScanModInis import scan_mod_inis
 from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
 from ClassicLib.Util import open_file_with_encoding
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
-
-try:
-    from bs4 import PageElement
-except ImportError:
-    pass
-
-from ClassicLib.Constants import YAML
 
 
 # ================================================

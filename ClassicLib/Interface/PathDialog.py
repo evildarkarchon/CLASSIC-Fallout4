@@ -1,5 +1,4 @@
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMainWindow, \
-    QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout
 
 from ClassicLib import GlobalRegistry
 
@@ -38,10 +37,10 @@ class ManualPathDialog(QDialog):
         self._game = GlobalRegistry.get_game()
 
         # Add a label
-        label = QLabel(
+        info_label = QLabel(
             label if label else f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
             self)
-        layout.addWidget(label)
+        layout.addWidget(info_label)
 
         inputlayout = QHBoxLayout()
         self.input_field = QLineEdit(self)

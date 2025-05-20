@@ -31,4 +31,5 @@
 	"[markdown]": {
 		"files.trimTrailingWhitespace": false
 	},
+	"python.REPL.enableREPLSmartSend": false,
 }

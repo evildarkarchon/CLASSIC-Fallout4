@@ -193,7 +193,7 @@ def _get_scripts_folder_path() -> str:
 
 def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: str) -> dict[str, str | None]:
     """Calculate actual hashes for script files."""
-    actual_hashes = {}
+    actual_hashes: dict[str, str | None] = {}
 
     for filename in script_filenames:
         script_path = Path(rf"{scripts_folder}\{filename}")

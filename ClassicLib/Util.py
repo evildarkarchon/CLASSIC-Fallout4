@@ -70,7 +70,7 @@ def get_game_version(game_exe_path: Path) -> Version:
 
     try:
         # Conditional import of Windows-specific module
-        import win32api
+        import win32api  # pyrefly: ignore
         version_info = _extract_windows_version_info(win32api, game_exe_path)
         version = _create_version_from_info(version_info)
     except (FileNotFoundError, OSError):
@@ -162,7 +162,7 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
 
     file_handle = cast("Iterator[TextIOWrapper]", file_path.open(encoding=encoding, errors="ignore"))
     try:
-        yield cast("TextIOWrapper", file_handle)
+        yield cast("TextIOWrapper", file_handle) # pyrefly: ignore
     finally:
         cast("TextIOWrapper", file_handle).close()
 
@@ -263,7 +263,7 @@ def append_or_extend(value: str | int | float | list | tuple | set, destination:
     Returns:
         None
     """
-    if isinstance(value, list | tuple | set):
+    if isinstance(value, list | tuple | set): # pyrefly: ignore
         destination.extend(value)
     else:
         destination.append(str(value))
@@ -288,7 +288,7 @@ def pastebin_fetch(url: str) -> None:
     if urlparse(url).netloc == "pastebin.com" and "/raw" not in url:
         url = url.replace("pastebin.com", "pastebin.com/raw")
     response = requests.get(url)
-    if response.status_code != requests.codes.ok:
+    if response.status_code != 200:
         response.raise_for_status()
     pastebin_path = Path("Crash Logs/Pastebin")
     if not pastebin_path.is_dir():

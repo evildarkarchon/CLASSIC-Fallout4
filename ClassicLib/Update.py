@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, Tag
 from packaging.version import InvalidVersion, Version
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML
+from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -278,7 +278,11 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
                 return None
 
             version_str = version_data_tag.get('content')
-            parsed_version = try_parse_version(version_str)
+            if isinstance(version_str, str):
+                parsed_version = try_parse_version(version_str)
+            else:
+                logger.debug("Version string from meta tag is not a string or is None.")
+                parsed_version = NULL_VERSION
 
             if parsed_version:
                 logger.debug(f"Successfully parsed Nexus version: {parsed_version}")
