@@ -8,8 +8,8 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 class ManualDocsPath(QObject):
-    manual_docs_path_signal = Signal()
-    game_path_signal = Signal()
+    manual_docs_path_signal: Signal = Signal()
+    game_path_signal: Signal = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -27,9 +27,8 @@ class ManualDocsPath(QObject):
         """
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
-            manual_docs = Path(path.strip())
-            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs",
-                          str(manual_docs))
+            manual_docs: Path = Path(path.strip())
+            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs", str(manual_docs))
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")
             self.manual_docs_path_signal.emit()
@@ -45,9 +44,8 @@ class ManualDocsPath(QObject):
         """
         if Path(path).is_dir():
             print(f"You entered: '{path}' | This path will be automatically added to CLASSIC Settings.yaml")
-            game_path = Path(path.strip())
-            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game",
-                          str(game_path))
+            game_path: Path = Path(path.strip())
+            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
         else:
             print(f"'{path}' is not a valid or existing directory path. Please try again.")
             self.game_path_signal.emit()

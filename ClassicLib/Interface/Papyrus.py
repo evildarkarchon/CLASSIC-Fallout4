@@ -25,6 +25,7 @@ class PapyrusStats:
         errors (int): The number of errors encountered.
         ratio (float): A calculated ratio or metric based on other statistics.
     """
+
     timestamp: datetime
     dumps: int
     stacks: int
@@ -50,10 +51,7 @@ class PapyrusStats:
         """
         if not isinstance(other, PapyrusStats):
             return NotImplemented
-        return (self.dumps == other.dumps and
-                self.stacks == other.stacks and
-                self.warnings == other.warnings and
-                self.errors == other.errors)
+        return self.dumps == other.dumps and self.stacks == other.stacks and self.warnings == other.warnings and self.errors == other.errors
 
 
 class PapyrusMonitorWorker(QObject):
@@ -73,10 +71,10 @@ class PapyrusMonitorWorker(QObject):
     """
 
     # Signal when new stats are available
-    statsUpdated = Signal(PapyrusStats)
+    statsUpdated: Signal = Signal(PapyrusStats)
 
     # Signal for errors
-    error = Signal(str)
+    error: Signal = Signal(str)
 
     # noinspection GrazieInspection
     def __init__(self) -> None:
@@ -140,7 +138,7 @@ class PapyrusMonitorWorker(QObject):
                 message, count = papyrus_logging()
 
                 # Parse the message to extract stats
-                current_stats = self._parse_stats(message, count)
+                current_stats: PapyrusStats = self._parse_stats(message, count)
 
                 # Only emit if stats have changed
                 if self._last_stats != current_stats:
@@ -174,31 +172,26 @@ class PapyrusMonitorWorker(QObject):
             (including the timestamp of parsing, number of dumps, stacks, warnings,
             errors, and the calculated dump-to-stack ratio).
         """
-        stats = {
-            'dumps': dump_count,
-            'stacks': 0,
-            'warnings': 0,
-            'errors': 0
-        }
+        stats: dict[str, int] = {"dumps": dump_count, "stacks": 0, "warnings": 0, "errors": 0}
 
         for line in message.splitlines():
-            if ': ' in line:
-                key, value = line.split(': ')
+            if ": " in line:
+                key, value = line.split(": ")
                 key = key.strip().lower()
-                if key == 'number of stacks':
-                    stats['stacks'] = int(value)
-                elif key == 'number of warnings':
-                    stats['warnings'] = int(value)
-                elif key == 'number of errors':
-                    stats['errors'] = int(value)
+                if key == "number of stacks":
+                    stats["stacks"] = int(value)
+                elif key == "number of warnings":
+                    stats["warnings"] = int(value)
+                elif key == "number of errors":
+                    stats["errors"] = int(value)
 
-        ratio = 0.0 if stats['dumps'] == 0 else stats['dumps'] / stats['stacks']
+        ratio: float = 0.0 if stats["dumps"] == 0 else stats["dumps"] / stats["stacks"]
 
         return PapyrusStats(
             timestamp=datetime.now(),
-            dumps=stats['dumps'],
-            stacks=stats['stacks'],
-            warnings=stats['warnings'],
-            errors=stats['errors'],
-            ratio=ratio
+            dumps=stats["dumps"],
+            stacks=stats["stacks"],
+            warnings=stats["warnings"],
+            errors=stats["errors"],
+            ratio=ratio,
         )

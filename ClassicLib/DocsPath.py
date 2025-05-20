@@ -29,7 +29,7 @@ class DocumentsPathManager:
     @staticmethod
     def _get_docs_name() -> str:
         """Get the document folder name from settings."""
-        docs_name = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
+        docs_name: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
         if not isinstance(docs_name, str):
             docs_name = GlobalRegistry.get_game()
         return docs_name
@@ -47,7 +47,7 @@ class DocumentsPathManager:
         Raises:
             TypeError: If the setting value is not a string
         """
-        path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}")
+        path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}")
         if not isinstance(path, str):
             raise TypeError(f"Expected string value for {setting_name}")
         return path
@@ -67,7 +67,7 @@ class DocumentsPathManager:
         logger.debug("- - - INITIATED DOCS PATH CHECK")
 
         # Check if path already exists
-        docs_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+        docs_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
         if not isinstance(docs_path, str) or not Path(docs_path).is_dir():
             # Find path based on platform
             if platform.system() == "Windows":
@@ -84,15 +84,14 @@ class DocumentsPathManager:
         """Find the Windows documents path using the registry."""
         try:
             # Open the registry key to get the user's documents path
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:
                 documents_path = Path(winreg.QueryValueEx(key, "Personal")[0])
         except (OSError, UnboundLocalError):
             # Fallback to a default path if registry key is not found
-            documents_path = Path.home() / "Documents"
+            documents_path: Path = Path.home() / "Documents"
 
         # Construct the full path to the game's documents folder
-        win_docs = str(documents_path / "My Games" / cast("str", self.docs_name))
+        win_docs: str = str(documents_path / "My Games" / cast("str", self.docs_name))
 
         # Update the YAML settings with the documents path
         self._update_game_setting("Root_Folder_Docs", win_docs)
@@ -100,26 +99,31 @@ class DocumentsPathManager:
     def _find_linux_docs_path(self) -> None:
         """Find the Linux documents path using Steam library configuration."""
         # Retrieve the Steam ID from YAML settings
-        game_sid = yaml_settings(int, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_SteamID")
+        game_sid: int | None = yaml_settings(int, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_SteamID")
         if not isinstance(game_sid, int):
             raise TypeError("Invalid Steam ID")
 
         # Path to the Steam library folders configuration file
-        libraryfolders_path = Path.home() / ".local/share/Steam/steamapps/common/libraryfolders.vdf"
+        libraryfolders_path: Path = Path.home() / ".local/share/Steam/steamapps/common/libraryfolders.vdf"
         if not libraryfolders_path.is_file():
             return
 
-        library_path = Path()
+        library_path: Path = Path()
         with libraryfolders_path.open(encoding="utf-8", errors="ignore") as steam_library_raw:
-            steam_library = steam_library_raw.readlines()
+            steam_library: list[str] = steam_library_raw.readlines()
 
         for library_line in steam_library:
             if "path" in library_line:
                 library_path = Path(library_line.split('"')[3])
             if str(game_sid) in library_line:
                 library_path = library_path / "steamapps"
-                linux_docs = library_path / "compatdata" / str(
-                    game_sid) / "pfx/drive_c/users/steamuser/My Documents/My Games" / cast("str", self.docs_name)
+                linux_docs: Path = (
+                    library_path
+                    / "compatdata"
+                    / str(game_sid)
+                    / "pfx/drive_c/users/steamuser/My Documents/My Games"
+                    / cast("str", self.docs_name)
+                )
                 self._update_game_setting("Root_Folder_Docs", str(linux_docs))
 
     def _get_manual_docs_path(self) -> None:
@@ -130,9 +134,8 @@ class DocumentsPathManager:
 
         print(f"> > > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {self.docs_name}.ini IS LOCATED < < <")
         while True:
-            input_str = input(
-                f"(EXAMPLE: C:/Users/Zen/Documents/My Games/{self.docs_name} | Press ENTER to confirm.)\n> ").strip()
-            input_path = Path(input_str)
+            input_str: str = input(f"(EXAMPLE: C:/Users/Zen/Documents/My Games/{self.docs_name} | Press ENTER to confirm.)\n> ").strip()
+            input_path: Path = Path(input_str)
             if input_str and input_path.is_dir():
                 print(f"You entered: '{input_str}' | This path will be automatically added to CLASSIC Settings.yaml")
                 self._update_game_setting("Root_Folder_Docs", str(input_path))
@@ -144,21 +147,20 @@ class DocumentsPathManager:
         logger.debug("- - - INITIATED DOCS PATH GENERATION")
 
         # Get required settings
-        xse_acronym = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-        xse_acronym_base = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
-        docs_path_str = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+        xse_acronym: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+        xse_acronym_base: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
+        docs_path_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
 
         if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(docs_path_str, str)):
             raise TypeError("Missing or invalid settings")
 
-        docs_path = Path(docs_path_str)
+        docs_path: Path = Path(docs_path_str)
 
         # Update path settings
         self._update_game_setting("Docs_Folder_XSE", str(docs_path.joinpath(xse_acronym_base)))
         self._update_game_setting("Docs_File_PapyrusLog", str(docs_path.joinpath("Logs/Script/Papyrus.0.log")))
         self._update_game_setting("Docs_File_WryeBashPC", str(docs_path.joinpath("ModChecker.html")))
-        self._update_game_setting("Docs_File_XSE",
-                                  str(docs_path.joinpath(xse_acronym_base, f"{xse_acronym.lower()}.log")))
+        self._update_game_setting("Docs_File_XSE", str(docs_path.joinpath(xse_acronym_base, f"{xse_acronym.lower()}.log")))
 
     def check_ini(self, ini_name: str) -> str:
         """Check INI file for existence and corruption.
@@ -175,7 +177,7 @@ class DocumentsPathManager:
         message_list: list[str] = []
         logger.info(f"- - - INITIATED {ini_name} CHECK")
 
-        folder_docs = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+        folder_docs: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
 
         if not isinstance(self.docs_name, str):
             raise TypeError("Invalid docs_name")
@@ -185,9 +187,9 @@ class DocumentsPathManager:
         if folder_docs is None:
             raise TypeError("Missing docs folder path")
 
-        docs_path = Path(folder_docs)
-        ini_file_list = list(docs_path.glob("*.ini"))
-        ini_path = docs_path.joinpath(ini_name)
+        docs_path: Path = Path(folder_docs)
+        ini_file_list: list[Path] = list(docs_path.glob("*.ini"))
+        ini_path: Path = docs_path.joinpath(ini_name)
 
         if any(ini_name.lower() in file.name.lower() for file in ini_file_list):
             message_list.extend(self._check_existing_ini(ini_path, ini_name))
@@ -209,7 +211,7 @@ class DocumentsPathManager:
         message_list: list[str] = []
         try:
             remove_readonly(ini_path)
-            ini_config = configparser.ConfigParser()
+            ini_config: configparser.ConfigParser = configparser.ConfigParser()
             ini_config.optionxform = str  # type: ignore[method-assign, assignment]
             ini_config.read(ini_path)
 
@@ -222,19 +224,16 @@ class DocumentsPathManager:
             message_list.extend([
                 f"[!] CAUTION : YOUR {ini_name} FILE IS SET TO READ ONLY. \n",
                 "     PLEASE REMOVE THE READ ONLY PROPERTY FROM THIS FILE, \n",
-                "     SO CLASSIC CAN MAKE THE REQUIRED CHANGES TO IT. \n-----\n"
+                "     SO CLASSIC CAN MAKE THE REQUIRED CHANGES TO IT. \n-----\n",
             ])
         except (configparser.MissingSectionHeaderError, configparser.ParsingError, ValueError, OSError):
             message_list.extend([
                 f"[!] CAUTION : YOUR {ini_name} FILE IS VERY LIKELY BROKEN, PLEASE CREATE A NEW ONE \n",
                 f"    Delete this file from your Documents/My Games/{self.docs_name} folder, then press \n",
-                f"    *Scan Game Files* in CLASSIC to generate a new {ini_name} file. \n-----\n"
+                f"    *Scan Game Files* in CLASSIC to generate a new {ini_name} file. \n-----\n",
             ])
         except configparser.DuplicateOptionError as e:
-            message_list.extend([
-                f"[!] ERROR : Your {ini_name} file has duplicate options! \n",
-                f"    {e} \n-----\n"
-            ])
+            message_list.extend([f"[!] ERROR : Your {ini_name} file has duplicate options! \n", f"    {e} \n-----\n"])
 
         return message_list
 
@@ -253,7 +252,7 @@ class DocumentsPathManager:
         if "Archive" not in ini_config.sections():
             message_list.extend([
                 "❌ WARNING : Archive Invalidation / Loose Files setting is not enabled. \n",
-                "  CLASSIC will now enable this setting automatically in the game INI files. \n-----\n"
+                "  CLASSIC will now enable this setting automatically in the game INI files. \n-----\n",
             ])
             with contextlib.suppress(configparser.DuplicateSectionError):
                 ini_config.add_section("Archive")
@@ -284,15 +283,15 @@ class DocumentsPathManager:
             message_list.extend([
                 f"❌ CAUTION : {ini_name} FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",
                 f"   You need to run the game at least once with {self.docs_name}Launcher.exe \n",
-                "    This will create files and INI settings required for the game to run. \n-----\n"
+                "    This will create files and INI settings required for the game to run. \n-----\n",
             ])
         elif ini_name.lower() == f"{self.docs_name.lower()}custom.ini":
             with ini_path.open("a", encoding="utf-8", errors="ignore") as ini_file:
                 message_list.extend([
                     "❌ WARNING : Archive Invalidation / Loose Files setting is not enabled. \n",
-                    "  CLASSIC will now enable this setting automatically in the game INI files. \n-----\n"
+                    "  CLASSIC will now enable this setting automatically in the game INI files. \n-----\n",
                 ])
-                customini_config = yaml_settings(str, YAML.Game, "Default_CustomINI")
+                customini_config: str | None = yaml_settings(str, YAML.Game, "Default_CustomINI")
                 if not isinstance(customini_config, str):
                     raise TypeError("Invalid customINI config")
                 ini_file.write(customini_config)
@@ -303,13 +302,13 @@ class DocumentsPathManager:
 # Public API functions that use the DocumentsPathManager class
 def docs_path_find(gui_mode: bool = False) -> None:
     """Find and configure the path to a game's documents folder."""
-    manager = DocumentsPathManager(gui_mode)
+    manager: DocumentsPathManager = DocumentsPathManager(gui_mode)
     manager.find_docs_path()
 
 
 def docs_generate_paths() -> None:
     """Generate and configure paths for game documentation files."""
-    manager = DocumentsPathManager()
+    manager: DocumentsPathManager = DocumentsPathManager()
     manager.generate_paths()
 
 
@@ -322,5 +321,5 @@ def docs_check_ini(ini_name: str) -> str:
     Returns:
         A message detailing the checks performed and any actions taken
     """
-    manager = DocumentsPathManager()
+    manager: DocumentsPathManager = DocumentsPathManager()
     return manager.check_ini(ini_name)

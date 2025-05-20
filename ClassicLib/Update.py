@@ -29,11 +29,11 @@ def try_parse_version(version_str: str) -> Version | None:
         return None
 
     # Extracts the last part after a space, common for "Name v1.2.3"
-    potential_version_part = version_str.rsplit(maxsplit=1)[-1]
+    potential_version_part: str = version_str.rsplit(maxsplit=1)[-1]
 
     try:
         # Remove a leading 'v' if present, as packaging.version handles it
-        if potential_version_part.startswith('v') and len(potential_version_part) > 1:
+        if potential_version_part.startswith("v") and len(potential_version_part) > 1:
             return Version(potential_version_part[1:])
         return Version(potential_version_part)
     except InvalidVersion:
@@ -42,7 +42,7 @@ def try_parse_version(version_str: str) -> Version | None:
         if version_str == potential_version_part:
             return None
         try:
-            if version_str.startswith('v') and len(version_str) > 1:
+            if version_str.startswith("v") and len(version_str) > 1:
                 return Version(version_str[1:])
             return Version(version_str)
         except InvalidVersion:
@@ -50,8 +50,7 @@ def try_parse_version(version_str: str) -> Version | None:
             return None
 
 
-async def get_github_latest_stable_version_from_endpoint(session: aiohttp.ClientSession, owner: str, repo: str) -> \
-        Version | None:
+async def get_github_latest_stable_version_from_endpoint(session: aiohttp.ClientSession, owner: str, repo: str) -> Version | None:
     """
     Fetches the latest stable release version of a GitHub repository using the GitHub API.
 
@@ -70,7 +69,7 @@ async def get_github_latest_stable_version_from_endpoint(session: aiohttp.Client
         Version | None: The version object representing the latest stable release,
         or None if no stable release is found or an error occurs.
     """
-    url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
+    url: str = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
     try:
         async with session.get(url) as response:
             if response.status == 404:
@@ -93,8 +92,7 @@ async def get_github_latest_stable_version_from_endpoint(session: aiohttp.Client
     return None
 
 
-async def get_github_latest_prerelease_version_from_list(session: aiohttp.ClientSession, owner: str, repo: str) -> \
-        Version | None:
+async def get_github_latest_prerelease_version_from_list(session: aiohttp.ClientSession, owner: str, repo: str) -> Version | None:
     """
     Fetches the latest prerelease version from a GitHub repository's releases list.
 
@@ -112,7 +110,7 @@ async def get_github_latest_prerelease_version_from_list(session: aiohttp.Client
         The parsed `Version` object of the latest prerelease, or `None` if no valid
         prerelease is found or an error occurs.
     """
-    url = f"https://api.github.com/repos/{owner}/{repo}/releases"
+    url: str = f"https://api.github.com/repos/{owner}/{repo}/releases"
     try:
         async with session.get(url) as response:
             response.raise_for_status()
@@ -129,14 +127,13 @@ async def get_github_latest_prerelease_version_from_list(session: aiohttp.Client
         if isinstance(release_data, dict) and release_data.get("prerelease") is True:
             prerelease_name = release_data.get("name")
             if prerelease_name and isinstance(prerelease_name, str):
-                parsed_version = try_parse_version(prerelease_name)
+                parsed_version: Version | None = try_parse_version(prerelease_name)
                 if parsed_version:
                     return parsed_version
     return None
 
 
-async def get_latest_and_top_release_details(session: aiohttp.ClientSession, owner: str, repo: str) -> dict[
-                                                                                                           str, Any] | None:
+async def get_latest_and_top_release_details(session: aiohttp.ClientSession, owner: str, repo: str) -> dict[str, Any] | None:
     """
     Fetches details of the latest release and the top release from the repository's
     releases list on the GitHub API, compares their IDs, and returns a
@@ -169,8 +166,8 @@ async def get_latest_and_top_release_details(session: aiohttp.ClientSession, own
           "latest_endpoint_release" and "top_of_list_release" are identical.
         Returns `None` if no valid release data is fetched.
     """
-    latest_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
-    all_releases_url = f"https://api.github.com/repos/{owner}/{repo}/releases"
+    latest_url: str = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
+    all_releases_url: str = f"https://api.github.com/repos/{owner}/{repo}/releases"
 
     results: dict[str, Any] = {
         "latest_endpoint_release": None,
@@ -203,7 +200,7 @@ async def get_latest_and_top_release_details(session: aiohttp.ClientSession, own
             if not all_releases_json or not isinstance(all_releases_json, list):
                 logger.warning(f"No releases found or unexpected format from {all_releases_url}")
             else:
-                top_release_json = all_releases_json[0]
+                top_release_json: dict[str, Any] = all_releases_json[0]
                 results["top_of_list_release"] = {
                     "id": top_release_json.get("id"),
                     "tag_name": top_release_json.get("tag_name"),
@@ -214,9 +211,7 @@ async def get_latest_and_top_release_details(session: aiohttp.ClientSession, own
                 }
 
         if results["latest_endpoint_release"] and results["top_of_list_release"]:
-            results["are_same_release_by_id"] = (
-                    results["latest_endpoint_release"]["id"] == results["top_of_list_release"]["id"]
-            )
+            results["are_same_release_by_id"] = results["latest_endpoint_release"]["id"] == results["top_of_list_release"]["id"]
         return results  # noqa: TRY300
 
     except aiohttp.ClientError as e:
@@ -259,27 +254,26 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
                 logger.warning(f"Failed to fetch Nexus mod page: HTTP {response.status}")
                 return None
 
-            html_content = await response.text()
-            soup = BeautifulSoup(html_content, 'html.parser')
+            html_content: str = await response.text()
+            soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
 
             # Find the meta tag that indicates version label
-            version_label_tag = soup.find('meta', property=version_property_name,
-                                          attrs={'content': version_property_value})
+            version_label_tag = soup.find("meta", property=version_property_name, attrs={"content": version_property_value})
 
             if not version_label_tag:
                 logger.debug("Version label meta tag not found")
                 return None
 
             # Look for the next meta tag with version data
-            version_data_tag = soup.find('meta', property=version_data_property)
+            version_data_tag = soup.find("meta", property=version_data_property)
 
-            if not isinstance(version_data_tag, Tag) or not version_data_tag.get('content'):
+            if not isinstance(version_data_tag, Tag) or not version_data_tag.get("content"):
                 logger.debug("Version data meta tag not found, is not a Tag, or content is missing")
                 return None
 
-            version_str = version_data_tag.get('content')
+            version_str = version_data_tag.get("content")
             if isinstance(version_str, str):
-                parsed_version = try_parse_version(version_str)
+                parsed_version: Version | None = try_parse_version(version_str)
             else:
                 logger.debug("Version string from meta tag is not a string or is None.")
                 parsed_version = NULL_VERSION
@@ -322,10 +316,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     """
 
     def _check_source_failures_and_raise(
-            use_github_flag: bool,
-            use_nexus_flag: bool,
-            github_fetch_failed: bool,
-            nexus_fetch_failed: bool
+        use_github_flag: bool, use_nexus_flag: bool, github_fetch_failed: bool, nexus_fetch_failed: bool
     ) -> None:
         """Helper to raise UpdateCheckError if source fetching failed based on configuration."""
         if use_github_flag and not use_nexus_flag and github_fetch_failed:
@@ -345,11 +336,11 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             print(
                 "\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n",
                 "\n===============================================================================",
-                flush=True
+                flush=True,
             )
         return False  # False because it's not the "latest" if checks are off (unless for GUI)
 
-    update_source = classic_settings(str, "Update Source") or "Both"
+    update_source: str = classic_settings(str, "Update Source") or "Both"
     if update_source not in {"Both", "GitHub", "Nexus"}:
         if not quiet:
             print(
@@ -359,26 +350,26 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             )
         return False  # Invalid source, cannot determine if latest
 
-    classic_local_str = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore
+    classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore
 
     # Parse local version string (e.g., "CLASSIC v7.30.3" -> "7.30.3")
     parsed_local_version_str = None
     if classic_local_str:
-        parts = classic_local_str.rsplit(maxsplit=1)
+        parts: list[str] = classic_local_str.rsplit(maxsplit=1)
         if parts:
             parsed_local_version_str = parts[-1]
 
-    version_local = try_parse_version(parsed_local_version_str) if parsed_local_version_str else None
+    version_local: Version | None = try_parse_version(parsed_local_version_str) if parsed_local_version_str else None
 
     if not quiet:
         print(
             "❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...",
             "\n   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n",
-            flush=True
+            flush=True,
         )
 
-    use_github = update_source in {"Both", "GitHub"}
-    use_nexus = update_source in {"Both", "Nexus"} and not yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease")
+    use_github: bool = update_source in {"Both", "GitHub"}
+    use_nexus: bool = update_source in {"Both", "Nexus"} and not yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease")
 
     version_github_to_compare: Version | None = None
     version_nexus_to_compare: Version | None = None
@@ -388,37 +379,39 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
         async with aiohttp.ClientSession() as session:  # Removed raise_for_status from here, handled in funcs
             if use_github:
                 logger.debug(f"Fetching GitHub release details for {repo_owner}/{repo_name}")
-                github_details = await get_latest_and_top_release_details(session, repo_owner, repo_name)
+                github_details: dict[str, Any] | None = await get_latest_and_top_release_details(session, repo_owner, repo_name)
                 if github_details:
-                    latest_ep_info = github_details.get("latest_endpoint_release")
-                    top_list_info = github_details.get("top_of_list_release")
+                    latest_ep_info: Any | None = github_details.get("latest_endpoint_release")
+                    top_list_info: Any | None = github_details.get("top_of_list_release")
 
                     candidate_stable_versions: list[Version] = []
-                    if latest_ep_info and latest_ep_info.get("version") is not None and not latest_ep_info.get(
-                            "prerelease"):
+                    if latest_ep_info and latest_ep_info.get("version") is not None and not latest_ep_info.get("prerelease"):
                         candidate_stable_versions.append(latest_ep_info["version"])
 
-                    if top_list_info and top_list_info.get("version") is not None and not top_list_info.get(
-                            "prerelease"):
+                    if top_list_info and top_list_info.get("version") is not None and not top_list_info.get("prerelease"):
                         candidate_stable_versions.append(top_list_info["version"])
 
                     if candidate_stable_versions:
                         version_github_to_compare = max(candidate_stable_versions)
                         logger.info(f"Determined latest stable GitHub version: {version_github_to_compare}")
-            nexus_source_failed = use_nexus and (version_nexus_to_compare is None)
-            github_source_failed = use_github and (version_github_to_compare is None)
+            if use_nexus:
+                logger.debug("Fetching Nexus version")
+                version_nexus_to_compare = await get_nexus_version(session)
+                if version_nexus_to_compare:
+                    logger.info(f"Determined Nexus version: {version_nexus_to_compare}")
+
+            nexus_source_failed: bool = use_nexus and (version_nexus_to_compare is None)
+            github_source_failed: bool = use_github and (version_github_to_compare is None)
 
             _check_source_failures_and_raise(use_github, use_nexus, github_source_failed, nexus_source_failed)
             # If 'Both' were chosen and one succeeded, we can proceed.
 
-    except (aiohttp.ClientError,
-            UpdateCheckError) as err:  # Removed ValueError, OSError as ClientError covers network issues
+    except (aiohttp.ClientError, UpdateCheckError) as err:  # Removed ValueError, OSError as ClientError covers network issues
         logger.error(f"Update check failed during version fetching: {err}")
         if not quiet:
             print(err)  # Print the specific error message
             # Assuming yaml_settings returns a string for the message
-            unable_msg = yaml_settings(str, YAML.Main,
-                                       f"CLASSIC_Interface.update_unable_{GlobalRegistry.get_game()}")  # type: ignore
+            unable_msg: str | None = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{GlobalRegistry.get_game()}")  # type: ignore
             print(unable_msg)
         if gui_request:
             raise UpdateCheckError(str(err)) from err  # Pass the original error message
@@ -448,8 +441,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     if is_outdated:
         if not quiet:
             # Assuming yaml_settings returns a string for the message
-            warning_msg = str(yaml_settings(str, YAML.Main,
-                                            f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"))  # type: ignore
+            warning_msg: str = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"))  # type: ignore
             print(warning_msg, flush=True)
         if gui_request:
             # GUI catches this to indicate an update is available.
@@ -460,10 +452,16 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     if not quiet:
         print(
             f"Your CLASSIC Version: {version_local or 'Unknown'}",
-            (f"\nLatest GitHub Version: {version_github_to_compare}" if use_github and version_github_to_compare else (
-                "\nLatest GitHub Version: Not found/checked" if use_github else "")),
-            (f"\nLatest Nexus Version: {version_nexus_to_compare}" if use_nexus and version_nexus_to_compare else (
-                "\nLatest Nexus Version: Not found/checked" if use_nexus else "")),
+            (
+                f"\nLatest GitHub Version: {version_github_to_compare}"
+                if use_github and version_github_to_compare
+                else ("\nLatest GitHub Version: Not found/checked" if use_github else "")
+            ),
+            (
+                f"\nLatest Nexus Version: {version_nexus_to_compare}"
+                if use_nexus and version_nexus_to_compare
+                else ("\nLatest Nexus Version: Not found/checked" if use_nexus else "")
+            ),
             "\n\n✔️ You have the latest version of CLASSIC!\n",
             sep="",  # Ensure sep is an empty string
             flush=True,

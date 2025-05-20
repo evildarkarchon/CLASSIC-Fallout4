@@ -15,9 +15,10 @@ class PastebinFetchWorker(QObject):
         error (Signal): Signal emitted with an error message in case of failure.
         success (Signal): Signal emitted with the URL upon successful data fetch.
     """
-    finished = Signal()
-    error = Signal(str)
-    success = Signal(str)
+
+    finished: Signal = Signal()
+    error: Signal = Signal(str)
+    success: Signal = Signal(str)
 
     def __init__(self, url: str) -> None:
         """
@@ -67,7 +68,7 @@ class PastebinFetchWorker(QObject):
             from ClassicLib.Util import pastebin_fetch_async
 
             # Create and run async event loop
-            loop = asyncio.new_event_loop()
+            loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
 
             try:

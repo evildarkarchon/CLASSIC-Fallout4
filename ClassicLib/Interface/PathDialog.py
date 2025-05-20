@@ -17,8 +17,7 @@ class ManualPathDialog(QDialog):
         input_field (QLineEdit): Input field where the user can manually enter the INI files directory path.
     """  # noqa: RUF002
 
-    def __init__(self, parent: QMainWindow | None = None, title: str = "", label: str = "",
-                 placeholder: str = "") -> None:
+    def __init__(self, parent: QMainWindow | None = None, title: str = "", label: str = "", placeholder: str = "") -> None:
         """
         Initializes a dialog window for setting the INI files directory for a game. The
         dialog allows the user to either enter the directory path manually or select
@@ -33,29 +32,31 @@ class ManualPathDialog(QDialog):
         self.setFixedSize(700, 150)
 
         # Create layout and input field
-        layout = QVBoxLayout(self)
+        layout: QVBoxLayout = QVBoxLayout(self)
         self._game = GlobalRegistry.get_game()
 
         # Add a label
-        info_label = QLabel(
-            label if label else f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
-            self)
+        info_label: QLabel = QLabel(
+            label
+            if label
+            else f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
+            self,
+        )
         layout.addWidget(info_label)
 
-        inputlayout = QHBoxLayout()
+        inputlayout: QHBoxLayout = QHBoxLayout()
         self.input_field = QLineEdit(self)
-        self.input_field.setPlaceholderText(
-            placeholder if placeholder else "Enter the INI directory or click 'Browse'...")
+        self.input_field.setPlaceholderText(placeholder if placeholder else "Enter the INI directory or click 'Browse'...")
         inputlayout.addWidget(self.input_field)
 
         # Create the "Browse" button
-        browse_button = QPushButton("Browse...", self)
+        browse_button: QPushButton = QPushButton("Browse...", self)
         browse_button.clicked.connect(self.browse_directory)
         inputlayout.addWidget(browse_button)
         layout.addLayout(inputlayout)
 
         # Create standard OK button
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, self)
+        buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -71,8 +72,7 @@ class ManualPathDialog(QDialog):
             or UI-related issues.
         """
         # Open directory browser and update the input field
-        manual_path = QFileDialog.getExistingDirectory(self,
-                                                       caption if caption else "Select Directory for INI Files")
+        manual_path: str = QFileDialog.getExistingDirectory(self, caption if caption else "Select Directory for INI Files")
         if manual_path:
             self.input_field.setText(manual_path)
 

@@ -20,7 +20,7 @@ def ensure_directory_exists(directory: Path) -> None:
 def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
     """Move files matching pattern from source to target directory if they don't exist in target."""
     for file in source_dir.glob(pattern):
-        destination_file = target_dir / file.name
+        destination_file: Path = target_dir / file.name
         if not destination_file.is_file():
             file.rename(destination_file)
 
@@ -29,7 +29,7 @@ def copy_files(source_dir: Path | None, target_dir: Path, pattern: str) -> None:
     """Copy files matching pattern from source to target directory if they don't exist in target."""
     if source_dir and source_dir.is_dir():
         for file in source_dir.glob(pattern):
-            destination_file = target_dir / file.name
+            destination_file: Path = target_dir / file.name
             if not destination_file.is_file():
                 shutil.copy2(file, destination_file)
 
@@ -52,13 +52,13 @@ def crashlogs_get_files() -> list[Path]:
     logger.debug("- - - INITIATED CRASH LOG FILE LIST GENERATION")
 
     # Define directory structure
-    base_folder = Path.cwd()
-    crash_logs_dir = base_folder / "Crash Logs"
-    pastebin_dir = crash_logs_dir / "Pastebin"
+    base_folder: Path = Path.cwd()
+    crash_logs_dir: Path = base_folder / "Crash Logs"
+    pastebin_dir: Path = crash_logs_dir / "Pastebin"
 
     # Get additional directories from settings
-    custom_folder = get_path_from_setting(classic_settings(str, "SCAN Custom Path"))
-    xse_folder = get_path_from_setting(yaml_settings(str, YAML.Game_Local, "Game_Info.Docs_Folder_XSE"))
+    custom_folder: Path | None = get_path_from_setting(classic_settings(str, "SCAN Custom Path"))
+    xse_folder: Path | None = get_path_from_setting(yaml_settings(str, YAML.Game_Local, "Game_Info.Docs_Folder_XSE"))
 
     # Ensure required directories exist
     ensure_directory_exists(crash_logs_dir)
@@ -72,7 +72,7 @@ def crashlogs_get_files() -> list[Path]:
     copy_files(xse_folder, crash_logs_dir, CRASH_LOG_PATTERN)
 
     # Collect crash log files
-    crash_files = list(crash_logs_dir.rglob(CRASH_LOG_PATTERN))
+    crash_files: list[Path] = list(crash_logs_dir.rglob(CRASH_LOG_PATTERN))
     if custom_folder and custom_folder.is_dir():
         crash_files.extend(custom_folder.glob(CRASH_LOG_PATTERN))
 
@@ -105,7 +105,7 @@ def get_entry(formid: str, plugin: str) -> str | None:
     for db_path in DB_PATHS:
         if db_path.is_file():
             with sqlite3.connect(db_path) as conn:
-                c = conn.cursor()
+                c: sqlite3.Cursor = conn.cursor()
                 c.execute(
                     f"SELECT entry FROM {GlobalRegistry.get_game()} WHERE formid=? AND plugin=? COLLATE nocase",
                     (formid, plugin),
@@ -131,13 +131,13 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
 
     """
     logger.debug("- - - INITIATED CRASH LOG FILE REFORMAT")
-    simplify_logs = classic_settings(bool, "Simplify Logs")
+    simplify_logs: bool | None = classic_settings(bool, "Simplify Logs")
 
     for file in crashlog_list:
         with file.open(encoding="utf-8", errors="ignore") as crash_log:
-            original_lines = crash_log.readlines()
+            original_lines: list[str] = crash_log.readlines()
 
-        processed_lines_reversed = []
+        processed_lines_reversed: list[str] = []
         in_plugins_section = True  # State for tracking if currently in the PLUGINS section
 
         # Iterate over lines from bottom to top to correctly handle PLUGINS section logic
@@ -160,7 +160,7 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
                 try:
                     indent, rest = line.split("[", 1)
                     fid, name = rest.split("]", 1)
-                    modified_line = f"{indent}[{fid.replace(" ", "0")}]{name}"
+                    modified_line: str = f"{indent}[{fid.replace(' ', '0')}]{name}"
                     processed_lines_reversed.append(modified_line)
                 except ValueError:
                     # If line format is unexpected (e.g., no ']' after '['), keep original line
@@ -170,7 +170,7 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
                 processed_lines_reversed.append(line)
 
         # The processed_lines_reversed list is in reverse order, so reverse it back
-        final_processed_lines = list(reversed(processed_lines_reversed))
+        final_processed_lines: list[str] = list(reversed(processed_lines_reversed))
 
         with file.open("w", encoding="utf-8", errors="ignore") as crash_log:
             crash_log.writelines(final_processed_lines)

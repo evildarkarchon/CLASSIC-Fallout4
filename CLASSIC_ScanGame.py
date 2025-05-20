@@ -3,7 +3,7 @@ import shutil
 import struct
 import subprocess
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from CLASSIC_Main import initialize, main_generate_required
 from ClassicLib import GlobalRegistry
@@ -35,7 +35,7 @@ def check_log_errors(folder_path: Path | str) -> str:
 
     def get_setting_as_list(setting_type: type[list[str]], yaml_type: YAML, key: str) -> list[str]:
         """Retrieve a setting from YAML and ensure it's a list of strings."""
-        setting = yaml_settings(setting_type, yaml_type, key)
+        setting: list[str] | None = yaml_settings(setting_type, yaml_type, key)
         return setting if isinstance(setting, list) else []
 
     def normalize_list(items: list[str]) -> list[str]:
@@ -57,14 +57,14 @@ def check_log_errors(folder_path: Path | str) -> str:
         folder_path = Path(folder_path)
 
     # Get YAML settings
-    catch_errors = normalize_list(get_setting_as_list(list[str], YAML.Main, "catch_log_errors"))
-    ignore_files = normalize_list(get_setting_as_list(list[str], YAML.Main, "exclude_log_files"))
-    ignore_errors = normalize_list(get_setting_as_list(list[str], YAML.Main, "exclude_log_errors"))
+    catch_errors: list[str] = normalize_list(get_setting_as_list(list[str], YAML.Main, "catch_log_errors"))
+    ignore_files: list[str] = normalize_list(get_setting_as_list(list[str], YAML.Main, "exclude_log_files"))
+    ignore_errors: list[str] = normalize_list(get_setting_as_list(list[str], YAML.Main, "exclude_log_errors"))
 
     error_report: list[str] = []
 
     # Find valid log files (excluding crash logs)
-    valid_log_files = [file for file in folder_path.glob("*.log") if "crash-" not in file.name]
+    valid_log_files: list[Path] = [file for file in folder_path.glob("*.log") if "crash-" not in file.name]
 
     for log_file_path in valid_log_files:
         # Skip files that should be ignored
@@ -79,8 +79,7 @@ def check_log_errors(folder_path: Path | str) -> str:
                 detected_errors = [
                     f"ERROR > {line}"
                     for line in log_lines
-                    if any(error in line.lower() for error in catch_errors) and
-                       all(ignore not in line.lower() for ignore in ignore_errors)
+                    if any(error in line.lower() for error in catch_errors) and all(ignore not in line.lower() for ignore in ignore_errors)
                 ]
 
                 if detected_errors:
@@ -107,33 +106,36 @@ def scan_mods_unpacked() -> str:
         str: Detailed report of scan results.
     """
     # Initialize lists for reporting
-    message_list = ["=================== MOD FILES SCAN ====================\n",
-                    "========= RESULTS FROM UNPACKED / LOOSE FILES =========\n"]
+    message_list: list[str] = [
+        "=================== MOD FILES SCAN ====================\n",
+        "========= RESULTS FROM UNPACKED / LOOSE FILES =========\n",
+    ]
 
     # Initialize sets for collecting different issue types
-    issue_lists = {
+    issue_lists: dict[str, set[str]] = {
         "cleanup": set(),
         "animdata": set(),
         "tex_dims": set(),
         "tex_frmt": set(),
         "snd_frmt": set(),
         "xse_file": set(),
-        "previs": set()
+        "previs": set(),
     }
 
     # Get settings
-    xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game,
-                                            f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts")
-    xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
-    xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
+    xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+    xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
+        dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
+    )
+    xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
+    xse_scriptfiles: dict[str, str] = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
 
     # Setup paths
-    backup_path = Path("CLASSIC Backup/Cleaned Files")
+    backup_path: Path = Path("CLASSIC Backup/Cleaned Files")
     if not TEST_MODE:
         backup_path.mkdir(parents=True, exist_ok=True)
 
-    mod_path = classic_settings(Path, "MODS Folder Path")
+    mod_path: Path | None = classic_settings(Path, "MODS Folder Path")
     if not mod_path:
         return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
     if not mod_path.is_dir():
@@ -142,32 +144,32 @@ def scan_mods_unpacked() -> str:
     print("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES CLEANUP...")
 
     # First pass: cleanup and detect animation data
-    filter_names = ("readme", "changes", "changelog", "change log")
+    filter_names: tuple = ("readme", "changes", "changelog", "change log")
     for root, dirs, files in mod_path.walk(top_down=False):
-        root_main = root.relative_to(mod_path).parent
+        root_main: Path = root.relative_to(mod_path).parent
         has_anim_data = False
 
         # Process directories
         for dirname in dirs:
-            dirname_lower = dirname.lower()
+            dirname_lower: str = dirname.lower()
             if not has_anim_data and dirname_lower == "animationfiledata":
                 has_anim_data = True
                 issue_lists["animdata"].add(f"  - {root_main}\n")
             elif dirname_lower == "fomod":
-                fomod_folder_path = root / dirname
-                relative_path = fomod_folder_path.relative_to(mod_path)
-                new_folder_path = backup_path / relative_path
+                fomod_folder_path: Path = root / dirname
+                relative_path: Path = fomod_folder_path.relative_to(mod_path)
+                new_folder_path: Path = backup_path / relative_path
                 if not TEST_MODE:
                     shutil.move(fomod_folder_path, new_folder_path)
                 issue_lists["cleanup"].add(f"  - {relative_path}\n")
 
         # Process files for cleanup
         for filename in files:
-            filename_lower = filename.lower()
+            filename_lower: str = filename.lower()
             if filename_lower.endswith(".txt") and any(name in filename_lower for name in filter_names):
-                file_path = root / filename
+                file_path: Path = root / filename
                 relative_path = file_path.relative_to(mod_path)
-                new_file_path = backup_path / relative_path
+                new_file_path: Path = backup_path / relative_path
                 if not TEST_MODE:
                     new_file_path.parent.mkdir(parents=True, exist_ok=True)
                     shutil.move(file_path, new_file_path)
@@ -189,10 +191,10 @@ def scan_mods_unpacked() -> str:
             # Check DDS dimensions
             if file_ext == ".dds":
                 with file_path.open("rb") as dds_file:
-                    dds_data = dds_file.read(20)
+                    dds_data: bytes = dds_file.read(20)
                 if dds_data[:4] == b"DDS ":
-                    width = struct.unpack("<I", dds_data[12:16])[0]
-                    height = struct.unpack("<I", dds_data[16:20])[0]
+                    width: Any = struct.unpack("<I", dds_data[12:16])[0]
+                    height: Any = struct.unpack("<I", dds_data[16:20])[0]
                     if width % 2 != 0 or height % 2 != 0:
                         issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})")
 
@@ -205,10 +207,12 @@ def scan_mods_unpacked() -> str:
                 issue_lists["snd_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
 
             # Check for XSE files
-            elif (not has_xse_files and
-                  any(filename_lower == key.lower() for key in xse_scriptfiles) and
-                  "workshop framework" not in str(root).lower() and
-                  f"Scripts\\{filename}" in str(file_path)):
+            elif (
+                not has_xse_files
+                and any(filename_lower == key.lower() for key in xse_scriptfiles)
+                and "workshop framework" not in str(root).lower()
+                and f"Scripts\\{filename}" in str(file_path)
+            ):
                 has_xse_files = True
                 issue_lists["xse_file"].add(f"  - {root_main}\n")
 
@@ -218,45 +222,43 @@ def scan_mods_unpacked() -> str:
                 issue_lists["previs"].add(f"  - {root_main}\n")
 
     # Build the report
-    issue_messages = {
+    issue_messages: dict[str, list[str]] = {
         "xse_file": [
             f"\n# ⚠️ FOLDERS CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
             "▶️ Any mods with copies of original Script Extender files\n",
-            "  may cause script related problems or crashes.\n\n"
+            "  may cause script related problems or crashes.\n\n",
         ],
         "previs": [
             "\n# ⚠️ FOLDERS CONTAIN LOOSE PRECOMBINE / PREVIS FILES ⚠️\n",
             "▶️ Any mods that contain custom precombine/previs files\n",
             "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
-            "  Otherwise, see if there is a PRP patch available for these mods.\n\n"
+            "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
         ],
         "tex_dims": [
             "\n# ⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️\n",
             "▶️ Any mods that have texture files with incorrect dimensions\n",
             "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
-            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
         ],
         "tex_frmt": [
             "\n# ❓ TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS ❓\n",
             "▶️ Any files with an incorrect file format will not work.\n",
             "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n"
+            "  If possible, notify the original mod authors about these problems.\n\n",
         ],
         "snd_frmt": [
             "\n# ❓ SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV ❓\n",
             "▶️ Any files with an incorrect file format will not work.\n",
             "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n"
+            "  If possible, notify the original mod authors about these problems.\n\n",
         ],
         "animdata": [
             "\n# ❓ FOLDERS CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
             "▶️ Any mods that have their own custom Animation File Data\n",
             "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
-            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
         ],
-        "cleanup": [
-            "\n# 📄 DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' 📄\n"
-        ]
+        "cleanup": ["\n# 📄 DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' 📄\n"],
     }
 
     # Add found issues to message list
@@ -287,29 +289,30 @@ def scan_mods_archived() -> str:
         commands for file dumping or listing.
 
     """
-    message_list = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
+    message_list: list[str] = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
 
     # Initialize sets for collecting different issue types
-    issue_lists = {
+    issue_lists: dict[str, set[str]] = {
         "ba2_frmt": set(),
         "animdata": set(),
         "tex_dims": set(),
         "tex_frmt": set(),
         "snd_frmt": set(),
         "xse_file": set(),
-        "previs": set()
+        "previs": set(),
     }
 
     # Get settings
-    xse_acronym_setting = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_scriptfiles_setting = yaml_settings(dict[str, str], YAML.Game,
-                                            f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts")
-    xse_acronym = xse_acronym_setting if isinstance(xse_acronym_setting, str) else ""
-    xse_scriptfiles = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
+    xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+    xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
+        dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
+    )
+    xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else ""
+    xse_scriptfiles: dict[str, str] = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
 
     # Setup paths
-    bsarch_path = Path.cwd() / "CLASSIC Data/BSArch.exe"
-    mod_path = classic_settings(Path, "MODS Folder Path")
+    bsarch_path: Path = Path.cwd() / "CLASSIC Data/BSArch.exe"
+    mod_path: Path | None = classic_settings(Path, "MODS Folder Path")
 
     # Validate paths
     if not mod_path:
@@ -324,16 +327,16 @@ def scan_mods_archived() -> str:
     # Process BA2 files
     for root, _, files in mod_path.walk(top_down=False):
         for filename in files:
-            filename_lower = filename.lower()
+            filename_lower: str = filename.lower()
             if not filename_lower.endswith(".ba2") or filename_lower == "prp - main.ba2":
                 continue
 
-            file_path = root / filename
+            file_path: Path = root / filename
 
             # Read BA2 header
             try:
                 with file_path.open("rb") as f:
-                    header = f.read(12)
+                    header: bytes = f.read(12)
             except OSError:
                 print("Failed to read file:", filename)
                 continue
@@ -345,14 +348,16 @@ def scan_mods_archived() -> str:
 
             if header[8:] == b"DX10":
                 # Process texture-format BA2
-                command_dump = (bsarch_path, file_path, "-dump")
-                archive_dump = subprocess.run(command_dump, shell=True, capture_output=True, text=True, check=False)
+                command_dump: tuple = (bsarch_path, file_path, "-dump")
+                archive_dump: subprocess.CompletedProcess[str] = subprocess.run(
+                    command_dump, shell=True, capture_output=True, text=True, check=False
+                )
 
                 if archive_dump.returncode != 0:
                     print("BSArch command failed:", archive_dump.returncode, archive_dump.stderr)
                     continue
 
-                output_split = archive_dump.stdout.split("\n\n")
+                output_split: list[str] = archive_dump.stdout.split("\n\n")
                 if output_split[-1].startswith("Error:"):
                     print("BSArch command failed:", output_split[-1], archive_dump.stderr)
                     continue
@@ -362,12 +367,11 @@ def scan_mods_archived() -> str:
                     if not file_block:
                         continue
 
-                    block_split = file_block.split("\n", 3)
+                    block_split: list[str] = file_block.split("\n", 3)
 
                     # Check texture format
                     if "Ext: dds" not in block_split[1]:
-                        issue_lists["tex_frmt"].add(
-                            f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
+                        issue_lists["tex_frmt"].add(f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
                         continue
 
                     # Check texture dimensions
@@ -377,8 +381,10 @@ def scan_mods_archived() -> str:
 
             else:
                 # Process general-format BA2
-                command_list = (bsarch_path, file_path, "-list")
-                archive_list = subprocess.run(command_list, shell=True, capture_output=True, text=True, check=False)
+                command_list: tuple = (bsarch_path, file_path, "-list")
+                archive_list: subprocess.CompletedProcess[str] = subprocess.run(
+                    command_list, shell=True, capture_output=True, text=True, check=False
+                )
 
                 if archive_list.returncode != 0:
                     print("BSArch command failed:", archive_list.returncode, archive_list.stderr)
@@ -399,9 +405,11 @@ def scan_mods_archived() -> str:
                         issue_lists["animdata"].add(f"  - {filename}\n")
 
                     # Check XSE files
-                    elif (not has_xse_files and
-                          any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles) and
-                          "workshop framework" not in str(root).lower()):
+                    elif (
+                        not has_xse_files
+                        and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
+                        and "workshop framework" not in str(root).lower()
+                    ):
                         has_xse_files = True
                         issue_lists["xse_file"].add(f"  - {filename}\n")
 
@@ -411,48 +419,48 @@ def scan_mods_archived() -> str:
                         issue_lists["previs"].add(f"  - {filename}\n")
 
     # Build the report
-    issue_messages = {
+    issue_messages: dict[str, list[str]] = {
         "xse_file": [
             f"\n# ⚠️ BA2 ARCHIVES CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
             "▶️ Any mods with copies of original Script Extender files\n",
-            "  may cause script related problems or crashes.\n\n"
+            "  may cause script related problems or crashes.\n\n",
         ],
         "previs": [
             "\n# ⚠️ BA2 ARCHIVES CONTAIN CUSTOM PRECOMBINE / PREVIS FILES ⚠️\n",
             "▶️ Any mods that contain custom precombine/previs files\n",
             "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
-            "  Otherwise, see if there is a PRP patch available for these mods.\n\n"
+            "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
         ],
         "tex_dims": [
             "\n# ⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️\n",
             "▶️ Any mods that have texture files with incorrect dimensions\n",
             "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
-            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
         ],
         "tex_frmt": [
             "\n# ❓ TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS ❓\n",
             "▶️ Any files with an incorrect file format will not work.\n",
             "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n"
+            "  If possible, notify the original mod authors about these problems.\n\n",
         ],
         "snd_frmt": [
             "\n# ❓ SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV ❓\n",
             "▶️ Any files with an incorrect file format will not work.\n",
             "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n"
+            "  If possible, notify the original mod authors about these problems.\n\n",
         ],
         "animdata": [
             "\n# ❓ BA2 ARCHIVES CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
             "▶️ Any mods that have their own custom Animation File Data\n",
             "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
-            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
         ],
         "ba2_frmt": [
             "\n# ❓ BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 ❓\n",
             "▶️ Any files with an incorrect file format will not work.\n",
             "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n"
-        ]
+            "  If possible, notify the original mod authors about these problems.\n\n",
+        ],
     }
 
     # Add found issues to message list
@@ -496,20 +504,20 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
     ADMIN_SUGGESTION = "    TRY RUNNING CLASSIC.EXE IN ADMIN MODE TO RESOLVE THIS PROBLEM.\n"
 
     # Get paths and settings
-    game_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
-    manage_list_setting = yaml_settings(list[str], YAML.Game, classic_list)
-    manage_list = manage_list_setting if isinstance(manage_list_setting, list) else []
+    game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    manage_list_setting: list[str] | None = yaml_settings(list[str], YAML.Game, classic_list)
+    manage_list: list[str] = manage_list_setting if isinstance(manage_list_setting, list) else []
 
     # Validate game path
     if game_path is None or not game_path.is_dir():
         raise FileNotFoundError("Game folder not found or is not a valid directory")
 
     # Set up backup path
-    backup_path = Path(f"{BACKUP_DIR}/{classic_list}")
+    backup_path: Path = Path(f"{BACKUP_DIR}/{classic_list}")
     backup_path.mkdir(parents=True, exist_ok=True)
 
     # Extract list name for display purposes
-    list_name = classic_list.split(maxsplit=1)[-1]
+    list_name: str = classic_list.split(maxsplit=1)[-1]
 
     def matches_managed_file(file_name: str) -> bool:
         """Check if the file name matches any item in the manage list."""
@@ -581,8 +589,8 @@ def game_combined_result() -> str:
         If the necessary paths or directories are not available, an empty string
         is returned.
     """
-    docs_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
-    game_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    docs_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+    game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
     if not (game_path and docs_path):
         return ""
@@ -624,9 +632,9 @@ def write_combined_results() -> None:
     file named "CLASSIC GFS Report.md". The report file is encoded in UTF-8 and
     any errors during encoding are ignored.
     """
-    game_result = game_combined_result()
-    mods_result = mods_combined_result()
-    gfs_report = Path("CLASSIC GFS Report.md")
+    game_result: str = game_combined_result()
+    mods_result: str = mods_combined_result()
+    gfs_report: Path = Path("CLASSIC GFS Report.md")
     with gfs_report.open("w", encoding="utf-8", errors="ignore") as scan_report:
         scan_report.write(game_result + mods_result)
 

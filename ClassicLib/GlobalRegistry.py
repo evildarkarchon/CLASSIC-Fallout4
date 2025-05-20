@@ -69,12 +69,12 @@ def get_yaml_cache() -> Any:
     return get(Keys.YAML_CACHE)
 
 
-def get_manual_docs_gui():  # noqa: ANN201
+def get_manual_docs_gui() -> Any:
     """Get the manual docs GUI component."""
     return get(Keys.MANUAL_DOCS_GUI)
 
 
-def get_game_path_gui():  # noqa: ANN201
+def get_game_path_gui() -> Any:
     """Get the game path GUI component."""
     return get(Keys.GAME_PATH_GUI)
 

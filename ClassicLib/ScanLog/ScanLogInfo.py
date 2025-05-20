@@ -14,7 +14,7 @@ class ThreadSafeLogCache:
         """
         Initializes a thread-safe in-memory log cache using a dictionary protected by a lock.
         This provides a thread-safe alternative to SQLite for caching log files.
-        
+
         Args:
             logfiles (list[Path]): A list of file paths representing the log files to be cached.
         """
@@ -32,10 +32,10 @@ class ThreadSafeLogCache:
         """
         Thread-safely reads log data from the cache for the given logname, processes it to
         decode and split the log content into individual lines.
-        
+
         Args:
             logname: The name of the log whose data is to be retrieved.
-            
+
         Returns:
             list[str]: A list of individual log lines as strings.
         """
@@ -49,7 +49,7 @@ class ThreadSafeLogCache:
     def get_log_names(self) -> list[str]:
         """
         Returns a list of all log names in the cache.
-        
+
         Returns:
             list[str]: List of log names.
         """
@@ -59,10 +59,10 @@ class ThreadSafeLogCache:
     def add_log(self, path: Path) -> bool:
         """
         Adds a new log to the cache.
-        
+
         Args:
             path: Path to the log file
-            
+
         Returns:
             bool: True if added successfully, False otherwise
         """
@@ -122,20 +122,16 @@ class ClassicScanLogsInfo:
         self.crashgen_name = yaml_settings(str, YAML.Game, "Game_Info.CRASHGEN_LogName") or ""
         self.crashgen_latest_og = yaml_settings(str, YAML.Game, "Game_Info.CRASHGEN_LatestVer") or ""
         self.crashgen_latest_vr = yaml_settings(str, YAML.Game, "GameVR_Info.CRASHGEN_LatestVer") or ""
-        self.crashgen_ignore = set(
-            yaml_settings(list[str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_Ignore") or [])
+        self.crashgen_ignore = set(yaml_settings(list[str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_Ignore") or [])
         self.warn_noplugins = yaml_settings(str, YAML.Game, "Warnings_CRASHGEN.Warn_NOPlugins") or ""
         self.warn_outdated = yaml_settings(str, YAML.Game, "Warnings_CRASHGEN.Warn_Outdated") or ""
         self.xse_acronym = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym") or ""
         self.game_ignore_plugins = yaml_settings(list[str], YAML.Game, "Crashlog_Plugins_Exclude") or []
         self.game_ignore_records = yaml_settings(list[str], YAML.Game, "Crashlog_Records_Exclude") or []
         self.suspects_error_list = yaml_settings(dict[str, str], YAML.Game, "Crashlog_Error_Check") or {}
-        self.suspects_stack_list = yaml_settings(dict[str, list[str]], YAML.Game,
-                                                 "Crashlog_Stack_Check") or {}
-        self.autoscan_text = yaml_settings(str, YAML.Main,
-                                           f"CLASSIC_Interface.autoscan_text_{GlobalRegistry.get_game()}") or ""
-        self.ignore_list = yaml_settings(list[str], YAML.Ignore,
-                                         f"CLASSIC_Ignore_{GlobalRegistry.get_game()}") or []
+        self.suspects_stack_list = yaml_settings(dict[str, list[str]], YAML.Game, "Crashlog_Stack_Check") or {}
+        self.autoscan_text = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.autoscan_text_{GlobalRegistry.get_game()}") or ""
+        self.ignore_list = yaml_settings(list[str], YAML.Ignore, f"CLASSIC_Ignore_{GlobalRegistry.get_game()}") or []
         self.game_mods_conf = yaml_settings(dict[str, str], YAML.Game, "Mods_CONF") or {}
         self.game_mods_core = yaml_settings(dict[str, str], YAML.Game, "Mods_CORE") or {}
         self.game_mods_core_folon = yaml_settings(dict[str, str], YAML.Game, "Mods_CORE_FOLON") or {}
@@ -143,6 +139,5 @@ class ClassicScanLogsInfo:
         self.game_mods_opc2 = yaml_settings(dict[str, str], YAML.Game, "Mods_OPC2") or {}
         self.game_mods_solu = yaml_settings(dict[str, str], YAML.Game, "Mods_SOLU") or {}
         self.game_version = Version(yaml_settings(str, YAML.Game, "Game_Info.GameVersion") or str(NULL_VERSION))
-        self.game_version_new = Version(
-            yaml_settings(str, YAML.Game, "Game_Info.GameVersionNEW") or str(NULL_VERSION))
+        self.game_version_new = Version(yaml_settings(str, YAML.Game, "Game_Info.GameVersionNEW") or str(NULL_VERSION))
         self.game_version_vr = Version(yaml_settings(str, YAML.Game, "GameVR_Info.GameVersion") or str(NULL_VERSION))

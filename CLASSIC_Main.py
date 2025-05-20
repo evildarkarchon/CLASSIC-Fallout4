@@ -2,6 +2,7 @@ import contextlib
 import shutil
 import sys
 from pathlib import Path
+from typing import Any
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
@@ -74,52 +75,51 @@ def game_check_integrity() -> str:
     logger.debug("- - - INITIATED GAME INTEGRITY CHECK")
 
     # Load configuration settings
-    config = _load_game_config()
+    config: dict = _load_game_config()
 
     # Validate paths
-    exe_path = Path(config['game_exe_path']) if config['game_exe_path'] else None
-    steam_ini_path = Path(config['steam_ini_path']) if config['steam_ini_path'] else None
+    exe_path: Path | None = Path(config["game_exe_path"]) if config["game_exe_path"] else None
+    steam_ini_path = Path(config["steam_ini_path"]) if config["steam_ini_path"] else None
 
-    messages = []
+    messages: list[str] = []
 
     # Check game executable if it exists
     if exe_path and exe_path.is_file():
         # Calculate local executable hash
-        local_hash = calculate_file_hash(exe_path)
+        local_hash: str = calculate_file_hash(exe_path)
 
         # Check if hash matches known versions
-        is_valid_version = local_hash in (config['exe_hash_old'], config['exe_hash_new'])
-        steam_ini_exists = steam_ini_path and steam_ini_path.exists()
+        is_valid_version: bool = local_hash in (config["exe_hash_old"], config["exe_hash_new"])
+        steam_ini_exists: Path | bool | None = steam_ini_path and steam_ini_path.exists()
 
         # Add version status message
         if is_valid_version and not steam_ini_exists:
             messages.append(f"✔️ You have the latest version of {config['root_name']}! \n-----\n")
         else:
-            icon = "\U0001F480" if steam_ini_exists else "❌"
+            icon = "\U0001f480" if steam_ini_exists else "❌"
             messages.append(f"{icon} CAUTION : YOUR {config['root_name']} GAME / EXE VERSION IS OUT OF DATE \n-----\n")
 
         # Add installation location message
         if "Program Files" not in str(exe_path):
-            messages.append(
-                f"✔️ Your {config['root_name']} game files are installed outside of the Program Files folder! \n-----\n")
+            messages.append(f"✔️ Your {config['root_name']} game files are installed outside of the Program Files folder! \n-----\n")
         else:
-            messages.append(config['root_warn'])
+            messages.append(config["root_warn"])
 
     return "".join(messages)
 
 
 def _load_game_config() -> dict:
     """Load and validate all needed game configuration settings."""
-    vr_suffix = GlobalRegistry.get_vr()
+    vr_suffix: str = GlobalRegistry.get_vr()
 
     # Load settings from YAML
-    config = {
-        'steam_ini_path': yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
-        'exe_hash_old': yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedOLD"),
-        'exe_hash_new': yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedNEW"),
-        'game_exe_path': yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
-        'root_name': yaml_settings(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
-        'root_warn': yaml_settings(str, YAML.Main, "Warnings_GAME.warn_root_path")
+    config: dict[str, str | None] = {
+        "steam_ini_path": yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
+        "exe_hash_old": yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedOLD"),
+        "exe_hash_new": yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedNEW"),
+        "game_exe_path": yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
+        "root_name": yaml_settings(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
+        "root_warn": yaml_settings(str, YAML.Main, "Warnings_GAME.warn_root_path"),
     }
 
     # Validate settings types
@@ -147,12 +147,12 @@ def docs_check_folder() -> str:
     Raises:
         TypeError: If the `docs_name` or `docs_warn` obtained from YAML settings is not of type str.
     """
-    message_list = []
-    docs_name = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
+    message_list: list[str] = []
+    docs_name: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
     if not isinstance(docs_name, str):
         raise TypeError
     if "onedrive" in docs_name.lower():
-        docs_warn = yaml_settings(str, YAML.Main, "Warnings_GAME.warn_docs_path")
+        docs_warn: str | None = yaml_settings(str, YAML.Main, "Warnings_GAME.warn_docs_path")
         if not isinstance(docs_warn, str):
             raise TypeError
         message_list.append(docs_warn)
@@ -177,10 +177,10 @@ def main_files_backup() -> None:
           during attempt to read it.
     """
     # Load configuration settings
-    config = _load_backup_configuration()
+    config: dict = _load_backup_configuration()
 
     # Get XSE version from log file
-    xse_version = _extract_xse_version(config["xse_log_file"], config["xse_ver_latest"])
+    xse_version: str | None = _extract_xse_version(config["xse_log_file"], config["xse_ver_latest"])
     if not xse_version:
         return  # No version found, nothing to back up
 
@@ -198,28 +198,21 @@ def _load_backup_configuration() -> dict:
     Raises:
         TypeError: If any of the settings have invalid types.
     """
-    game_vr = GlobalRegistry.get_vr()
-    backup_list = yaml_settings(list[str], YAML.Main, "CLASSIC_AutoBackup")
-    game_path = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Root_Folder_Game")
-    xse_log_file = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
-    xse_ver_latest = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
+    game_vr: str = GlobalRegistry.get_vr()
+    backup_list: list[str] | None = yaml_settings(list[str], YAML.Main, "CLASSIC_AutoBackup")
+    game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Root_Folder_Game")
+    xse_log_file: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
+    xse_ver_latest: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
 
     # Validate types
     if not isinstance(backup_list, list):
         raise TypeError("Backup list must be a list of strings")
-    if not (isinstance(game_path, str) or game_path is None):
-        raise TypeError("Game path must be a string or None")
     if not isinstance(xse_log_file, str):
         raise TypeError("XSE log file path must be a string")
     if not isinstance(xse_ver_latest, str):
         raise TypeError("Latest XSE version must be a string")
 
-    return {
-        "backup_list": backup_list,
-        "game_path": game_path,
-        "xse_log_file": xse_log_file,
-        "xse_ver_latest": xse_ver_latest
-    }
+    return {"backup_list": backup_list, "game_path": game_path, "xse_log_file": xse_log_file, "xse_ver_latest": xse_ver_latest}
 
 
 def _extract_xse_version(xse_log_file: str, default_version: str) -> str | None:
@@ -235,18 +228,18 @@ def _extract_xse_version(xse_log_file: str, default_version: str) -> str | None:
     """
     try:
         with open_file_with_encoding(xse_log_file) as xse_log:
-            xse_data = xse_log.readlines()
-            xse_data_lower = [line.lower() for line in xse_data]
+            xse_data: list[str] = xse_log.readlines()
+            xse_data_lower: list[str] = [line.lower() for line in xse_data]
     except FileNotFoundError:
         xse_data_lower = []
 
     if not xse_data_lower:
         return None
 
-    version = default_version
+    version: str = default_version
     try:
-        line_with_version = next(line for line in xse_data_lower if "version = " in line)
-        split_line = line_with_version.split(" ")
+        line_with_version: str = next(line for line in xse_data_lower if "version = " in line)
+        split_line: list[str] = line_with_version.split(" ")
 
         for index, item in enumerate(split_line):
             if "version" in item:
@@ -268,19 +261,19 @@ def _perform_backup(version: str, game_path: str | None, backup_list: list[str])
         game_path: Path to the game directory
         backup_list: List of file patterns to back up
     """
-    backup_path = Path(f"CLASSIC Backup/Game Files/{version}")
+    backup_path: Path = Path(f"CLASSIC Backup/Game Files/{version}")
     backup_path.mkdir(parents=True, exist_ok=True)
 
     if not game_path:
         return
 
     # Back up the file if backup of file does not already exist
-    game_files = list(Path(game_path).glob("*.*"))
-    backup_files = [file.name for file in backup_path.glob("*.*")]
+    game_files: list[Path] = list(Path(game_path).glob("*.*"))
+    backup_files: list[str] = [file.name for file in backup_path.glob("*.*")]
 
     for file in game_files:
         if file.name not in backup_files and any(file.name in item for item in backup_list):
-            destination_file = backup_path / file.name
+            destination_file: Path = backup_path / file.name
             shutil.copy2(file, destination_file)
 
 
@@ -299,11 +292,16 @@ def main_combined_result() -> str:
         str: A concatenated string containing the results of all executed
         checks.
     """
-    game_name = GlobalRegistry.get_game()
-    combined_return = [game_check_integrity(), xse_check_integrity(), xse_check_hashes(), docs_check_folder(),
-                       docs_check_ini(f"{game_name}.ini"),
-                       docs_check_ini(f"{game_name}Custom.ini"),
-                       docs_check_ini(f"{game_name}Prefs.ini")]
+    game_name: str = GlobalRegistry.get_game()
+    combined_return: list[str] = [
+        game_check_integrity(),
+        xse_check_integrity(),
+        xse_check_hashes(),
+        docs_check_folder(),
+        docs_check_ini(f"{game_name}.ini"),
+        docs_check_ini(f"{game_name}Custom.ini"),
+        docs_check_ini(f"{game_name}Prefs.ini"),
+    ]
     return "".join(combined_return)
 
 
@@ -323,8 +321,8 @@ def main_generate_required() -> None:
     """
     configure_logging(logger)
     classic_generate_files()
-    classic_ver = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
-    game_name = yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name")
+    classic_ver: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
+    game_name: str | None = yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name")
     if not (isinstance(classic_ver, str) and isinstance(game_name, str)):
         raise TypeError
     print(f"Hello World! | Crash Log Auto Scanner & Setup Integrity Checker | {classic_ver} | {game_name}")
@@ -332,7 +330,7 @@ def main_generate_required() -> None:
     print("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...")
     logger.debug(f"> > > STARTED {classic_ver}")
 
-    game_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
     if not game_path:
         docs_path_find(GlobalRegistry.is_gui_mode())
@@ -363,7 +361,7 @@ def initialize(is_gui: bool = False) -> None:
         is_gui (bool): Indicates whether the application should operate in GUI mode. If True,
             GUI-related resources are initialized.
     """
-    yaml_cache = GlobalRegistry.get_yaml_cache()
+    yaml_cache: Any = GlobalRegistry.get_yaml_cache()
     GlobalRegistry.register(GlobalRegistry.Keys.GUI_MODE, is_gui)
     # Preload static YAML files
     for store in yaml_cache.STATIC_YAML_STORES:
@@ -372,8 +370,8 @@ def initialize(is_gui: bool = False) -> None:
 
     # noinspection PyTypedDict
     GlobalRegistry.register(GlobalRegistry.Keys.VR, "" if not classic_settings(bool, "VR Mode") else "VR")
-    managed_game_setting = classic_settings(str, "Managed Game")
-    game_value = managed_game_setting.replace(" ", "") if isinstance(managed_game_setting, str) else ""
+    managed_game_setting: str | None = classic_settings(str, "Managed Game")
+    game_value: str = managed_game_setting.replace(" ", "") if isinstance(managed_game_setting, str) else ""
     GlobalRegistry.register(GlobalRegistry.Keys.GAME, game_value)
     GlobalRegistry.register(GlobalRegistry.Keys.IS_PRERELEASE, yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease"))
 

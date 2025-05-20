@@ -56,7 +56,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         if yaml_store in self.path_cache:
             return self.path_cache[yaml_store]
         yaml_path: Path = Path.cwd()
-        data_path = Path("CLASSIC Data/")
+        data_path: Path = Path("CLASSIC Data/")
         match yaml_store:
             case YAML.Main:
                 yaml_path = data_path / "databases/CLASSIC Main.yaml"
@@ -99,7 +99,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
         def cache_file(yaml_path_obj: Path) -> None:
             with open_file_with_encoding(yaml_path_obj) as yaml_file:
-                yaml = ruamel.yaml.YAML()
+                yaml: ruamel.yaml.YAML = ruamel.yaml.YAML()
                 yaml.indent(offset=2)
                 yaml.width = 300
                 self.cache[yaml_path_obj] = yaml.load(yaml_file)
@@ -112,8 +112,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         else:
             # For dynamic files, check modification time
             last_mod_time = yaml_path.stat().st_mtime
-            if (yaml_path not in self.file_mod_times or
-                    self.file_mod_times[yaml_path] != last_mod_time):
+            if yaml_path not in self.file_mod_times or self.file_mod_times[yaml_path] != last_mod_time:
                 # Update the file modification time
                 self.file_mod_times[yaml_path] = last_mod_time
 
@@ -140,15 +139,15 @@ class YamlSettingsCache(metaclass=SingletonMeta):
             The existing or updated setting value if successful, otherwise None.
         """
         # If this is a read operation for a static store, check cache first
-        cache_key = (yaml_store, key_path, _type)
+        cache_key: tuple[YAML, str, type[T]] = (yaml_store, key_path, _type)
         if new_value is None and yaml_store in self.STATIC_YAML_STORES and cache_key in self.settings_cache:
             return self.settings_cache[cache_key]
 
-        yaml_path = self.get_path_for_store(yaml_store)
+        yaml_path: Path = self.get_path_for_store(yaml_store)
 
         # Load YAML with caching logic
-        data = self.load_yaml(yaml_path)
-        keys = key_path.split(".")
+        data: dict = self.load_yaml(yaml_path)
+        keys: list[str] = key_path.split(".")
 
         def setdefault(dictionary: dict[str, YAMLValue], key: str) -> dict[str, YAMLValue]:
             """
@@ -179,7 +178,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
             # Write changes back to the YAML file
             with yaml_path.open("w", encoding="utf-8") as yaml_file:
-                yaml = ruamel.yaml.YAML()
+                yaml: ruamel.yaml.YAML = ruamel.yaml.YAML()
                 yaml.indent(offset=2)
                 yaml.width = 300
                 yaml.dump(data, yaml_file)
@@ -205,7 +204,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         return setting_value  # type: ignore[return-value]
 
 
-yaml_cache = YamlSettingsCache()
+yaml_cache: YamlSettingsCache = YamlSettingsCache()
 GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
 
 
@@ -234,9 +233,7 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
         otherwise, it returns it with the specified type `_type`. Returns None if the
         setting is not found.
     """
-    if yaml_cache is None:
-        raise TypeError("CMain not initialized")
-    setting = yaml_cache.get_setting(_type, yaml_store, key_path, new_value)
+    setting: T | None = yaml_cache.get_setting(_type, yaml_store, key_path, new_value)
     if _type is Path:
         return Path(setting) if setting and isinstance(setting, str) else None  # type: ignore[return-value]
     return setting
@@ -262,9 +259,9 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
         The value of the requested setting, cast to the specified type `_type`. If the
         setting is not found, or if an error occurs, it returns `None`.
     """
-    settings_path = Path("CLASSIC Settings.yaml")
+    settings_path: Path = Path("CLASSIC Settings.yaml")
     if not settings_path.exists():
-        default_settings = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_settings")
+        default_settings: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_settings")
         if not isinstance(default_settings, str):
             raise ValueError("Invalid Default Settings in 'CLASSIC Main.yaml'")
 

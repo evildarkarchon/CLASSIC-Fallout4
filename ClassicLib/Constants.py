@@ -6,21 +6,22 @@ from packaging.version import Version
 
 from ClassicLib import GlobalRegistry
 
-NULL_VERSION = Version("0.0.0.0")
-OG_VERSION = Version("1.10.163.0")
-NG_VERSION = Version("1.10.984.0")
-VR_VERSION = Version("1.2.72.0")
-OG_F4SE_VERSION = Version("0.6.23")
-NG_F4SE_VERSION = Version("0.7.2")
-FO4_VERSIONS = (OG_VERSION, NG_VERSION)
-F4SE_VERSIONS = (OG_F4SE_VERSION, NG_F4SE_VERSION)
+NULL_VERSION: Version = Version("0.0.0.0")
+OG_VERSION: Version = Version("1.10.163.0")
+NG_VERSION: Version = Version("1.10.984.0")
+VR_VERSION: Version = Version("1.2.72.0")
+OG_F4SE_VERSION: Version = Version("0.6.23")
+NG_F4SE_VERSION: Version = Version("0.7.2")
+FO4_VERSIONS: tuple[Version, Version] = (OG_VERSION, NG_VERSION)
+F4SE_VERSIONS: tuple[Version, Version] = (OG_F4SE_VERSION, NG_F4SE_VERSION)
 type YAMLLiteral = str | int | bool
 type YAMLSequence = list[str]
 type YAMLMapping = dict[str, "YAMLValue"]
 type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
 type YAMLValueOptional = YAMLValue | None
-type GameID = Literal[
-                  "Fallout4", "Fallout4VR", "Skyrim", "Starfield"] | str  # Entries must correspond to the game's Main ESM or EXE file name.
+type GameID = (
+    Literal["Fallout4", "Fallout4VR", "Skyrim", "Starfield"] | str
+)  # Entries must correspond to the game's Main ESM or EXE file name.
 
 
 class YAML(Enum):

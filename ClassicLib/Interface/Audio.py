@@ -22,15 +22,15 @@ class AudioPlayer(QObject):
     # Constants
     DEFAULT_VOLUME = 0.5
     SOUND_DIR = "CLASSIC Data/sounds"
-    ERROR_SOUND_PATH = f"{SOUND_DIR}/classic_error.wav"
-    NOTIFY_SOUND_PATH = f"{SOUND_DIR}/classic_notify.wav"
-    SETTING_KEY = "Audio Notifications"
-    SETTING_PATH = f"CLASSIC_Settings.{SETTING_KEY}"
+    ERROR_SOUND_PATH: str = f"{SOUND_DIR}/classic_error.wav"
+    NOTIFY_SOUND_PATH: str = f"{SOUND_DIR}/classic_notify.wav"
+    SETTING_KEY: str = "Audio Notifications"
+    SETTING_PATH: str = f"CLASSIC_Settings.{SETTING_KEY}"
 
     # Signals for different sounds
-    play_error_signal = Signal()
-    play_notify_signal = Signal()
-    play_custom_signal = Signal(str)
+    play_error_signal: Signal = Signal()
+    play_notify_signal: Signal = Signal()
+    play_custom_signal: Signal = Signal(str)
 
     def __init__(self) -> None:
         """
@@ -62,7 +62,7 @@ class AudioPlayer(QObject):
         Returns:
             QSoundEffect: Initialized sound effect object.
         """
-        sound = QSoundEffect()
+        sound: QSoundEffect = QSoundEffect()
         sound.setSource(QUrl.fromLocalFile(sound_path))
         sound.setVolume(self.DEFAULT_VOLUME)
         return sound
@@ -106,7 +106,7 @@ class AudioPlayer(QObject):
             sound_path (str): The file path of the sound file to play.
             volume (float, optional): Volume level (0.0 to 1.0). Defaults to 1.0.
         """
-        custom_sound = QSoundEffect()
+        custom_sound: QSoundEffect = QSoundEffect()
         custom_sound.setSource(QUrl.fromLocalFile(sound_path))
         custom_sound.setVolume(volume)
         custom_sound.play()

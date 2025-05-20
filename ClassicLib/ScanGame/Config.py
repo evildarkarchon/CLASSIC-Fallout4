@@ -7,6 +7,8 @@ import chardet
 import iniparse
 import tomlkit
 from iniparse import configparser
+from tomlkit import TOMLDocument
+from tomlkit.items import Item
 from tomlkit.items import Table as TomlkitTable
 
 from ClassicLib import GlobalRegistry
@@ -39,9 +41,7 @@ def compare_ini_files(file1: Path, file2: Path) -> bool:
         config1, config2 = configparser.ConfigParser(), configparser.ConfigParser()
         config1.read(file1)
         config2.read(file2)
-        return config1.sections() == config2.sections() and all(
-            config1[section] == config2[section] for section in config1.sections()
-        )
+        return config1.sections() == config2.sections() and all(config1[section] == config2[section] for section in config1.sections())
     return False
 
 
@@ -60,6 +60,7 @@ class ConfigFile(TypedDict):
             containing settings parsed from the config file.
         text (str): The raw text content of the configuration file.
     """
+
     encoding: str
     path: Path
     settings: iniparse.ConfigParser
@@ -113,41 +114,42 @@ class ConfigFileCache:
         self.duplicate_files = {}
         self._duplicate_whitelist = ["F4EE"]
 
-        self._game_root_path = yaml_settings(Path, YAML.Game_Local,
-                                             f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+        self._game_root_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
         if self._game_root_path is None:
             # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)
             raise FileNotFoundError
-        
-        
-        for path, _dirs, files in self._game_root_path.walk(): # pyrefly: ignore
+
+        for path, _dirs, files in self._game_root_path.walk():  # pyrefly: ignore
             for file in files:
                 # Skip if _dirs do not intersect with the whitelist or no match in file name
                 if not (set(self._duplicate_whitelist) & set(_dirs)) and not any(
-                        whitelist in file for whitelist in self._duplicate_whitelist):
+                    whitelist in file for whitelist in self._duplicate_whitelist
+                ):
                     continue
 
-                file_lower = file.lower()
+                file_lower: str = file.lower()
                 # Skip non-config files and files not matching specific criteria
                 if not file_lower.endswith((".ini", ".conf")) and file_lower != "dxvk.conf":
                     continue
 
-                file_path = path / file
-                file_hash = calculate_file_hash(file_path)
+                file_path: Path = path / file
+                file_hash: str = calculate_file_hash(file_path)
 
                 # Check for duplicates already stored
                 if file_lower in self._config_files:
-                    existing_file = self._config_files[file_lower]
-                    existing_hash = calculate_file_hash(existing_file)
+                    existing_file: Path = self._config_files[file_lower]
+                    existing_hash: str = calculate_file_hash(existing_file)
 
                     if file_hash == existing_hash:  # Exact duplicate
                         self.duplicate_files.setdefault(file_lower, [existing_file]).append(file_path)
                     else:  # Compare for similarity
-                        is_similar = (
-                                calculate_similarity(existing_file, file_path) >= 0.90
-                                or (
-                                        file_path.stat().st_size == existing_file.stat().st_size and file_path.stat().st_mtime == existing_file.stat().st_mtime)
-                                or compare_ini_files(existing_file, file_path)
+                        is_similar: bool = (
+                            calculate_similarity(existing_file, file_path) >= 0.90
+                            or (
+                                file_path.stat().st_size == existing_file.stat().st_size
+                                and file_path.stat().st_mtime == existing_file.stat().st_mtime
+                            )
+                            or compare_ini_files(existing_file, file_path)
                         )
                         if is_similar:
                             self.duplicate_files.setdefault(file_lower, [existing_file]).append(file_path)
@@ -217,11 +219,11 @@ class ConfigFileCache:
             # Delete the cache and reload the file
             del self._config_file_cache[file_name_lower]
 
-        file_path = self._config_files[file_name_lower]
-        file_bytes = file_path.read_bytes()
-        file_encoding = chardet.detect(file_bytes)["encoding"] or "utf-8"
-        file_text = file_bytes.decode(file_encoding)
-        config = iniparse.ConfigParser()
+        file_path: Path = self._config_files[file_name_lower]
+        file_bytes: bytes = file_path.read_bytes()
+        file_encoding: str = chardet.detect(file_bytes)["encoding"] or "utf-8"
+        file_text: str = file_bytes.decode(file_encoding)
+        config: iniparse.ConfigParser = iniparse.ConfigParser()
         config.readfp(io.StringIO(file_text, newline=None))
 
         config_entry: ConfigFile = {
@@ -263,15 +265,14 @@ class ConfigFileCache:
                 logger.error(f"ERROR: Config file not found - {file_name_lower}")
                 return None
 
-        config = self._config_file_cache[file_name_lower]["settings"]
+        config: iniparse.ConfigParser = self._config_file_cache[file_name_lower]["settings"]
 
         if not config.has_section(section):
             logger.error(f"ERROR: Section '{section}' does not exist in '{self._config_files[file_name_lower]}'")
             return None
 
         if not config.has_option(section, setting):
-            logger.error(
-                f"ERROR: Key '{setting}' does not exist in section '{section}' of '{self._config_files[file_name_lower]}'")
+            logger.error(f"ERROR: Key '{setting}' does not exist in section '{section}' of '{self._config_files[file_name_lower]}'")
             return None
 
         try:
@@ -318,7 +319,7 @@ class ConfigFileCache:
         Raises:
             NotImplementedError: If `value_type` is not handled for default fallback values.
         """
-        value = self.get(value_type, file, section, setting)
+        value: T | None = self.get(value_type, file, section, setting)
         if value is not None:
             return value
         if value_type is str:
@@ -363,8 +364,8 @@ class ConfigFileCache:
                 logger.error(f"ERROR: Config file not found - {file_name_lower}")
                 return
 
-        cache = self._config_file_cache[file_name_lower]
-        config = cache["settings"]
+        cache: ConfigFile = self._config_file_cache[file_name_lower]
+        config: iniparse.ConfigParser = cache["settings"]
         value = ("true" if value else "false") if value_type is bool else str(value)  # type: ignore[assignment]
         if not config.has_section(section):
             config.add_section(section)
@@ -394,7 +395,7 @@ class ConfigFileCache:
         try:
             if file_name_lower not in self._config_file_cache:
                 self._load_config(file_name_lower)
-            config = self._config_file_cache[file_name_lower]["settings"]
+            config: iniparse.ConfigParser = self._config_file_cache[file_name_lower]["settings"]
             return config.has_option(section, setting)
         except (FileNotFoundError, configparser.NoSectionError):
             return False
@@ -436,32 +437,33 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
         Returns None if the specified section or key does not exist.
     """  # noqa: RUF002
 
-    file_bytes = toml_path.read_bytes()
-    file_encoding = chardet.detect(file_bytes)["encoding"] or "utf-8"
-    file_text = file_bytes.decode(file_encoding)
-    data = tomlkit.parse(file_text)
+    file_bytes: bytes = toml_path.read_bytes()
+    file_encoding: str = chardet.detect(file_bytes)["encoding"] or "utf-8"
+    file_text: str = file_bytes.decode(file_encoding)
+    data: TOMLDocument = tomlkit.parse(file_text)
 
     if section not in data:
         return None
-    
-    section_item = data[section] # section_item is a tomlkit.items.Item
+
+    section_item: Item = data[section]  # pyrefly: ignore
+    # section_item can be an Item or Container
     # Ensure section_item is a tomlkit.Table (which is dict-like)
     # before checking for the key or trying to access section_item[key].
     if not isinstance(section_item, TomlkitTable):
         # If the section exists but is not a table, it cannot contain the key as expected.
         return None
-        
-    if key not in section_item: # Now section_item is known to be a Table.
+
+    if key not in section_item:  # Now section_item is known to be a Table.
         # The key does not exist in the table.
         return None
-        
-    current_value = section_item[key]
 
-    # If a new value is provided, update the key
+    # If a new value is provided, update the key and return it
     if new_value is not None:
-        section_item[key] = new_value # section_item is a Table, so assignment is valid.
-        current_value = new_value     # Update current_value to reflect the change.
+        section_item[key] = new_value  # section_item is a Table, so assignment is valid.
         if not TEST_MODE:
             with toml_path.open("w", encoding=file_encoding, newline="") as toml_file:
                 toml_file.write(data.as_string())
-    return current_value
+        return new_value
+
+    # Otherwise, return the original value (which is an Item) from the TOML file
+    return section_item[key]

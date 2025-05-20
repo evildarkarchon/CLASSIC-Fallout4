@@ -71,8 +71,9 @@ def get_game_version(game_exe_path: Path) -> Version:
     try:
         # Conditional import of Windows-specific module
         import win32api  # pyrefly: ignore
-        version_info = _extract_windows_version_info(win32api, game_exe_path)
-        version = _create_version_from_info(version_info)
+
+        version_info: dict[str, int] = _extract_windows_version_info(win32api, game_exe_path)
+        version: Version = _create_version_from_info(version_info)
     except (FileNotFoundError, OSError):
         logger.error(f"Game executable not found or inaccessible at: {game_exe_path}")
         return Constants.NULL_VERSION
@@ -102,10 +103,10 @@ def _extract_windows_version_info(win32api_module: Any, exe_path: Path) -> dict[
 
 def _create_version_from_info(version_info: dict[str, int]) -> Version:
     """Creates a Version object from Windows version info dictionary."""
-    major = version_info["FileVersionMS"] >> 16
-    minor = version_info["FileVersionMS"] & 0xFFFF
-    patch = version_info["FileVersionLS"] >> 16
-    build = version_info["FileVersionLS"] & 0xFFFF
+    major: int = version_info["FileVersionMS"] >> 16
+    minor: int = version_info["FileVersionMS"] & 0xFFFF
+    patch: int = version_info["FileVersionLS"] >> 16
+    build: int = version_info["FileVersionLS"] & 0xFFFF
     return Version(f"{major}.{minor}.{patch}.{build}")
 
 
@@ -126,7 +127,7 @@ def crashgen_version_gen(input_string: str) -> Version:
 
     """
     input_string = input_string.strip()
-    parts = input_string.split()
+    parts: list[str] = input_string.split()
     version_str = ""
     for part in parts:
         if part.startswith("v") and len(part) > 1:
@@ -157,12 +158,12 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
     """
     if not isinstance(file_path, Path):
         file_path = Path(file_path)
-    raw_data = file_path.read_bytes()
-    encoding = chardet.detect(raw_data)["encoding"]
+    raw_data: bytes = file_path.read_bytes()
+    encoding: str | None = chardet.detect(raw_data)["encoding"]
 
-    file_handle = cast("Iterator[TextIOWrapper]", file_path.open(encoding=encoding, errors="ignore"))
+    file_handle: Iterator[TextIOWrapper] = cast("Iterator[TextIOWrapper]", file_path.open(encoding=encoding, errors="ignore"))
     try:
-        yield cast("TextIOWrapper", file_handle) # pyrefly: ignore
+        yield cast("TextIOWrapper", file_handle)  # pyrefly: ignore
     finally:
         cast("TextIOWrapper", file_handle).close()
 
@@ -186,12 +187,12 @@ def configure_logging(classic_logger: Logger) -> None:
             and formatter settings.
     """
 
-    journal_path = Path("CLASSIC Journal.log")
+    journal_path: Path = Path("CLASSIC Journal.log")
     if journal_path.exists():
         classic_logger.debug("- - - INITIATED LOGGING CHECK")
-        log_time = datetime.datetime.fromtimestamp(journal_path.stat().st_mtime)
-        current_time = datetime.datetime.now()
-        log_age = current_time - log_time
+        log_time: datetime.datetime = datetime.datetime.fromtimestamp(journal_path.stat().st_mtime)
+        current_time: datetime.datetime = datetime.datetime.now()
+        log_age: datetime.timedelta = current_time - log_time
         if log_age.days > 7:
             try:
                 journal_path.unlink(missing_ok=True)
@@ -203,7 +204,7 @@ def configure_logging(classic_logger: Logger) -> None:
     if "CLASSIC" not in logging.Logger.manager.loggerDict:
         classic_logger = logging.getLogger("CLASSIC")
         classic_logger.setLevel(logging.INFO)
-        handler = logging.FileHandler(
+        handler: logging.FileHandler = logging.FileHandler(
             filename="CLASSIC Journal.log",
             mode="a",
         )
@@ -225,11 +226,11 @@ def remove_readonly(file_path: Path) -> None:
     """
     try:
         if platform.system() == "Windows":
-            is_readonly = file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY
+            is_readonly: int = file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY
             if is_readonly:
                 file_path.chmod(stat.S_IWRITE)
         else:
-            current_mode = file_path.stat().st_mode
+            current_mode: int = file_path.stat().st_mode
             is_readonly = not (current_mode & stat.S_IWUSR)
             if is_readonly:
                 file_path.chmod(current_mode | stat.S_IWUSR)
@@ -263,7 +264,7 @@ def append_or_extend(value: str | int | float | list | tuple | set, destination:
     Returns:
         None
     """
-    if isinstance(value, list | tuple | set): # pyrefly: ignore
+    if isinstance(value, list | tuple | set):  # pyrefly: ignore
         destination.extend(value)
     else:
         destination.append(str(value))
@@ -290,10 +291,10 @@ def pastebin_fetch(url: str) -> None:
     response = requests.get(url)
     if response.status_code != 200:
         response.raise_for_status()
-    pastebin_path = Path("Crash Logs/Pastebin")
+    pastebin_path: Path = Path("Crash Logs/Pastebin")
     if not pastebin_path.is_dir():
         pastebin_path.mkdir(parents=True, exist_ok=True)
-    outfile = pastebin_path / f"crash-{urlparse(url).path.split("/")[-1]}.log"
+    outfile: Path = pastebin_path / f"crash-{urlparse(url).path.split('/')[-1]}.log"
     outfile.write_text(response.text, encoding="utf-8", errors="ignore")
 
 
@@ -318,15 +319,15 @@ async def pastebin_fetch_async(url: str) -> None:
     async with aiohttp.ClientSession() as session, session.get(url) as response:
         if response.status != 200:
             response.raise_for_status()
-        content = await response.text()
+        content: str = await response.text()
 
     # File operations are still synchronous, but they're generally quick
     # For a fully async version, you could use aiofiles, but it's not always necessary
-    pastebin_path = Path("Crash Logs/Pastebin")
+    pastebin_path: Path = Path("Crash Logs/Pastebin")
     if not pastebin_path.is_dir():
         pastebin_path.mkdir(parents=True, exist_ok=True)
 
-    outfile = pastebin_path / f"crash-{urlparse(url).path.split('/')[-1]}.log"
+    outfile: Path = pastebin_path / f"crash-{urlparse(url).path.split('/')[-1]}.log"
 
     # If you want fully async file operations, uncomment this and comment out the write_text line:
     # import aiofiles
