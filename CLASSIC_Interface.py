@@ -1111,7 +1111,7 @@ class MainWindow(QMainWindow):
             if stripped_line or line.endswith("\n"):
                 self.output_text_box.append(stripped_line)  # pyrefly: ignore
 
-        self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
+        self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum()) # pyrefly: ignore
 
     def setup_output_redirection(self) -> None:
         """
