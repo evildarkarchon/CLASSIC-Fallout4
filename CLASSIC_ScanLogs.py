@@ -454,7 +454,7 @@ class ClassicScanLogs:
             error_severity, error_name = error_key.split(" | ", 1)
 
             # Initialize match status tracking dictionary
-            match_status = {"has_required_item": False, "error_req_found": False, "error_opt_found": False, "stack_found": False}
+            match_status: dict[str, bool] = {"has_required_item": False, "error_req_found": False, "error_opt_found": False, "stack_found": False}
 
             # Process each signal in the list
             should_skip_error = False
@@ -778,7 +778,7 @@ class ClassicScanLogs:
                 or the absence of matches. This is modified in-place.
         """
         # Pre-filter call stack lines that won't match
-        relevant_lines = [line for line in segment_callstack_lower if "modified by:" not in line]
+        relevant_lines: list[str] = [line for line in segment_callstack_lower if "modified by:" not in line]
 
         # Use Counter directly instead of list + Counter conversion
         plugins_matches: Counter[str] = Counter()
@@ -979,18 +979,18 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
             segment_plugins,
         ),
     ) = scanner.find_segments(crash_data, yamldata.crashgen_name)
-    segment_callstack_intact = "".join(segment_callstack)
+    segment_callstack_intact: str = "".join(segment_callstack)
 
-    game_version = crashgen_version_gen(crashlog_gameversion)
+    game_version: Version = crashgen_version_gen(crashlog_gameversion)
 
     # SOME IMPORTANT DLLs HAVE A VERSION, REMOVE IT
-    xsemodules = ClassicScanLogs.extract_module_names(set(segment_xsemodules))
+    xsemodules: set[str] = ClassicScanLogs.extract_module_names(set(segment_xsemodules))
 
     crashgen: dict[str, bool | int | str] = {}
     if segment_crashgen:
         for elem in segment_crashgen:
             if ":" in elem:
-                key, value = elem.split(":", 1)
+                key , value = elem.split(":", 1)
                 crashgen[key] = (
                     True if value == " true" else False if value == " false" else int(value) if value.isdecimal() else value.strip()
                 )
@@ -1004,9 +1004,9 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
 
     # ================== MAIN ERROR ==================
     # =============== CRASHGEN VERSION ===============
-    version_current = crashgen_version_gen(crashlog_crashgen)
-    version_latest = crashgen_version_gen(yamldata.crashgen_latest_og)
-    version_latest_vr = crashgen_version_gen(yamldata.crashgen_latest_vr)
+    version_current: Version = crashgen_version_gen(crashlog_crashgen)
+    version_latest: Version = crashgen_version_gen(yamldata.crashgen_latest_og)
+    version_latest_vr: Version = crashgen_version_gen(yamldata.crashgen_latest_vr)
     append_or_extend(
         (
             f"\nMain Error: {crashlog_mainerror}\n",
@@ -1025,7 +1025,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     crashlog_plugins: dict[str, str] = {}
     trigger_plugin_limit = False  # Initialize the variable here
 
-    esm_name = f"{GlobalRegistry.get_game()}.esm"
+    esm_name: str = f"{GlobalRegistry.get_game()}.esm"
     if any(esm_name in elem for elem in segment_plugins):
         trigger_plugins_loaded = True
     else:
@@ -1053,10 +1053,10 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     for elem in segment_allmodules:
         # SOME IMPORTANT DLLs ONLY APPEAR UNDER ALL MODULES
         if "vulkan" in elem.lower():
-            elem_parts = elem.strip().split(" ", 1)
+            elem_parts: list[str] = elem.strip().split(" ", 1)
             crashlog_plugins.update({elem_parts[0]: "DLL"})
 
-    crashlog_plugins_lower = {plugin.lower() for plugin in crashlog_plugins}
+    crashlog_plugins_lower: set[str] = {plugin.lower() for plugin in crashlog_plugins}
 
     # CHECK IF THERE ARE ANY PLUGINS IN THE IGNORE YAML
     if scanner.ignore_plugins_list:
@@ -1073,7 +1073,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
         autoscan_report,
     )
 
-    crashlog_mainerror_lower = crashlog_mainerror.lower()
+    crashlog_mainerror_lower: str = crashlog_mainerror.lower()
     if ".dll" in crashlog_mainerror_lower and "tbbmalloc" not in crashlog_mainerror_lower:
         append_or_extend(
             (
@@ -1083,7 +1083,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
             autoscan_report,
         )
     max_warn_length = 30
-    trigger_suspect_found = any((
+    trigger_suspect_found: bool = any((
         scanner.suspect_scan_mainerror(autoscan_report, crashlog_mainerror, max_warn_length),
         scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, autoscan_report, max_warn_length),
     ))
