@@ -1074,14 +1074,15 @@ class MainWindow(QMainWindow):
             if "\n" in self.output_buffer:
                 lines_to_append, self.output_buffer = self.output_buffer.rsplit("\n", 1)
                 self.output_text_box.append(lines_to_append)  # Append adds a newline, so pass lines_to_append + '\n' if needed
-                self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
-
+                if self.output_text_box.verticalScrollBar() is not None:
+                    self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
             # If buffer gets too large without a newline, append it anyway to prevent memory issues
             # Or consider a timer to flush the buffer periodically
             if len(self.output_buffer) > 4096:  # Example threshold
                 self.output_text_box.append(self.output_buffer)
                 self.output_buffer = ""
-                self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
+                if self.output_text_box.verticalScrollBar() is not None:
+                    self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
 
         except Exception as e:  # noqa: BLE001
             # Fallback to simple append if complex logic fails, to avoid losing output
@@ -1111,7 +1112,8 @@ class MainWindow(QMainWindow):
             if stripped_line or line.endswith("\n"):
                 self.output_text_box.append(stripped_line)  # pyrefly: ignore
 
-        self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
+        if self.output_text_box and self.output_text_box.verticalScrollBar():
+            self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
 
     def setup_output_redirection(self) -> None:
         """
