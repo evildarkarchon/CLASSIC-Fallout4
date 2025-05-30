@@ -1318,14 +1318,18 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     append_or_extend(("\n# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n",), autoscan_report)
     formids_matches: list[str] = []
     if segment_callstack:
+        # Updated pattern to match the actual format in crash logs
         formid_pattern: re.Pattern[str] = re.compile(
-            r"^(?!.*0xFF)(?=.*id:).*Form ID: ([0-9A-F]{8})",
-            re.IGNORECASE | re.MULTILINE,  # pyrefly: ignore
+            r"^\s*Form ID:\s*0x([0-9A-F]{8})",
+            re.IGNORECASE, # pyrefly: ignore
         )
         for line in segment_callstack:
             match: re.Match[str] | None = formid_pattern.search(line)
             if match:
-                formids_matches.append(f"Form ID: {match.group(1).strip().replace('0x', '')}")
+                formid_id = match.group(1).upper()  # Get the hex part without 0x
+                # Skip if it starts with FF (plugin limit)
+                if not formid_id.startswith("FF"):
+                    formids_matches.append(f"Form ID: {formid_id}")
 
     scanner.formid_match(formids_matches, crashlog_plugins, autoscan_report)
 
