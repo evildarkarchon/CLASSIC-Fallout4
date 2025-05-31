@@ -1,6 +1,5 @@
 import os
 import random
-import shutil
 import threading
 import time
 from collections import Counter
@@ -1362,17 +1361,21 @@ def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigge
         autoscan_file.write(autoscan_output)
 
     if trigger_scan_failed and scanner.move_unsolved_logs:
-        backup_path: Path = Path("CLASSIC Backup/Unsolved Logs")
-        backup_path.mkdir(parents=True, exist_ok=True)
-        autoscan_filepath: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
-        crash_move: Path = backup_path / crashlog_file.name
-        scan_move: Path = backup_path / autoscan_filepath.name
+        move_unsolved_logs(crashlog_file)
 
-        if crashlog_file.exists():
-            shutil.copy2(crashlog_file, crash_move)
-        if autoscan_filepath.exists():
-            shutil.copy2(autoscan_filepath, scan_move)
 
+def move_unsolved_logs(crashlog_file: Path):
+    """
+    Move the unsolved logs to a backup location.
+    """
+    backup_path: Path = Path("CLASSIC Backup/Unsolved Logs")
+    backup_path.mkdir(parents=True, exist_ok=True)
+    autoscan_filepath: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
+    backup_filepath: Path = backup_path / autoscan_filepath.name
+    if crashlog_file.exists():
+        crashlog_file.rename(backup_filepath)
+    else:
+        autoscan_filepath.rename(backup_path / autoscan_filepath.name)
 
 def crashlogs_scan() -> None:
     """
