@@ -1307,13 +1307,13 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     # Check if plugin limit may be reached
     if trigger_plugin_limit and not trigger_limit_check_disabled and trigger_plugins_loaded:
         append_or_extend(
-            ("# \U0001f480 CRITICAL : THE '[FF]' PLUGIN MEANS YOU REACHED THE PLUGIN LIMIT OF 255-ish PLUGINS # \n",),
+            ("# \U0001f480 CRITICAL : THE '[FF]' PLUGIN PREFIX MEANS YOU REACHED THE PLUGIN LIMIT OF 254 PLUGINS # \n",),
             autoscan_report
         )
     elif trigger_plugin_limit and trigger_limit_check_disabled and trigger_plugins_loaded:
         append_or_extend(
             (
-                "# ⚠️ WARNING : THE '[FF]' PLUGIN WAS DETECTED BUT PLUGIN LIMIT CHECK IS DISABLED. # \n",
+                "# ⚠️ WARNING : THE '[FF]' PLUGIN PREFIX WAS DETECTED BUT PLUGIN LIMIT CHECK IS DISABLED. # \n",
                 "This could indicates that your version of Buffout 4 NG is out of date. \n",
                 "Recommendation: Consider updating Buffout 4 NG to the latest version. \n-----\n",
             ),
