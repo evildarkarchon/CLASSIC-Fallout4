@@ -1409,7 +1409,7 @@ def move_unsolved_logs(crashlog_file: Path):
     """
     Move the unsolved logs to a backup location.
     """
-    backup_path: Path = Path("CLASSIC Backup/Unsolved Logs")
+    backup_path: Path = Path(GlobalRegistry.get_local_dir() / "CLASSIC Backup/Unsolved Logs")
     backup_path.mkdir(parents=True, exist_ok=True)
     autoscan_filepath: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
     backup_filepath: Path = backup_path / autoscan_filepath.name
