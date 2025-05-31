@@ -89,12 +89,14 @@ class ClassicScanLogs:
         self.user_folder = Path.home()
         self.crashlog_stats = Counter(scanned=0, incomplete=0, failed=0)
         logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
+        if self.fcx_mode:
+            self._fcx_mode_check()
 
     def close_database(self) -> None:
         """Close the SQLite database."""
         self.crashlogs.close()
 
-    def fcx_mode_check(self) -> None:
+    def _fcx_mode_check(self) -> None:
         """
         Checks the FCX mode status and performs corresponding file integrity checks.
 
@@ -1372,13 +1374,26 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
 def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool,
                          scanner: ClassicScanLogs) -> None:
     """
-    Write the autoscan report to a file and handle failed logs.
+    Writes a report to a file based on the scan results and handles potential
+    unsolved logs if certain conditions are met.
+
+    This function processes crash log files and writes a report to a new file in
+    Markdown format. In the case where a scan failure is indicated and the `scanner`
+    allows moving unsolved logs, the crash log file is moved to a designated
+    location for unsolved logs.
 
     Args:
-        crashlog_file: The path to the crash log file.
-        autoscan_report: The generated report as a list of strings.
-        trigger_scan_failed: A boolean indicating if the scan failed.
-        scanner: The ClassicScanLogs instance.
+        crashlog_file (Path): The path to the crash log file being analyzed.
+        autoscan_report (list[str]): The list of strings containing the scan
+            results to be written to the report file.
+        trigger_scan_failed (bool): A flag indicating whether the scan was marked
+            as failed, which potentially triggers additional handling of unsolved
+            logs.
+        scanner (ClassicScanLogs): An object responsible for handling scan logs,
+            providing necessary metadata or behaviors, such as moving unsolved logs.
+
+    Returns:
+        None
     """
     autoscan_path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
     with autoscan_path.open("w", encoding="utf-8", errors="ignore") as autoscan_file:
@@ -1406,27 +1421,21 @@ def move_unsolved_logs(crashlog_file: Path):
 
 def crashlogs_scan() -> None:
     """
-    Scans crash log files to generate reports, identify issues, and provide insights into the cause of crashes. This
-    function uses crash log data, plugin configurations, and system segments to correlate crash events with probable
-    causes and generate detailed reports that include warnings, errors, and potential solutions.
+    Scans crash logs for a given session using multiple threads for efficient processing, aggregates statistics,
+    and generates a report for scanned logs.
 
-    The function performs a sequence of actions:
-    1) Collects and processes crash log segments, such as system information, stack traces, and plugin lists.
-    2) Analyzes crash-generation details, checks for specific errors, and identifies potential crash suspects.
-    3) Evaluates system and game configurations, scans for missing files or conflicting plugins, and suggests fixes.
-    4) Produces an autoscan report summarizing the findings, which can assist in troubleshooting and resolving crash issues.
+    The function initializes a crash log scanner, performs preliminary checks for FCX mode, and processes crash logs
+    concurrently using a thread pool. It parses each crash log to generate a report and maintains a list of failed scans.
+    Upon completion, it displays scan results, writes reports to files, and provides summary statistics about the scan.
+
+    If issues occur during processing, appropriate logs and error counters are updated. The process ensures that the
+    scanner's database is closed safely, even if exceptions are raised.
 
     Raises:
-        RuntimeError: If a critical error occurs during crash log scanning or data processing.
+        Exception: If any errors occur during crash log processing.
     """
     scanner: ClassicScanLogs = ClassicScanLogs()
     ClassicScanLogs._fcx_checks_run = False  # Correctly target class variable to reset guard
-
-    # Perform FCX checks once for the entire session if FCX mode is enabled.
-    # This populates scanner.main_files_check and scanner.game_files_check
-    # and sets ClassicScanLogs._fcx_checks_run to True.
-    if scanner.fcx_mode:
-        scanner.fcx_mode_check()
 
     yamldata = scanner.yamldata
     scan_failed_list: list[str] = []
