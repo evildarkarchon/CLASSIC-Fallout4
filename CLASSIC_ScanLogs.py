@@ -78,7 +78,8 @@ class ClassicScanLogs:
         self.lower_records = {record.lower() for record in self.yamldata.classic_records_list} or set()
         self.lower_ignore = {record.lower() for record in self.yamldata.game_ignore_records} or set()
         self.lower_plugins_ignore = {ignore.lower() for ignore in self.yamldata.game_ignore_plugins}
-        self.ignore_plugins_list = {item.lower() for item in self.yamldata.ignore_list} if self.yamldata.ignore_list else set()
+        self.ignore_plugins_list = {item.lower() for item in
+                                    self.yamldata.ignore_list} if self.yamldata.ignore_list else set()
         print("SCANNING CRASH LOGS, PLEASE WAIT...\n")
         self.scan_start_time = time.perf_counter()
         self.crashlogs = ThreadSafeLogCache(self.crashlog_list)
@@ -192,7 +193,8 @@ class ClassicScanLogs:
         return game_version or UNKNOWN, crashgen_version or UNKNOWN, main_error or UNKNOWN, processed_segments
 
     @staticmethod
-    def _extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, str]], eof_marker: str) -> list[list[str]]:
+    def _extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, str]], eof_marker: str) -> list[
+        list[str]]:
         """
         Extract segments from crash data based on defined boundaries.
 
@@ -307,7 +309,7 @@ class ClassicScanLogs:
 
     # noinspection PyPep8Naming
     def loadorder_scan_log(
-        self, segment_plugins: list[str], game_version: Version, version_current: Version
+            self, segment_plugins: list[str], game_version: Version, version_current: Version
     ) -> tuple[dict[str, str], bool, bool]:
         """
         Analyzes and processes a list of plugins for a given game version, determining specific conditions
@@ -336,7 +338,8 @@ class ClassicScanLogs:
 
         # Determine game version characteristics
         is_original_game = game_version in (self.yamldata.game_version, self.yamldata.game_version_vr)
-        is_new_game_crashgen_pre_137 = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
+        is_new_game_crashgen_pre_137 = game_version >= self.yamldata.game_version_new and version_current < Version(
+            "1.37.0")
 
         # Initialize return values
         plugin_map: dict[str, str] = {}
@@ -416,7 +419,8 @@ class ClassicScanLogs:
         return found_suspect
 
     def suspect_scan_stack(
-        self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str], max_warn_length: int
+            self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str],
+            max_warn_length: int
     ) -> bool:
         """
         Scans a crash log's main error and call stack for patterns defined in the suspects
@@ -453,7 +457,8 @@ class ClassicScanLogs:
             error_severity, error_name = error_key.split(" | ", 1)
 
             # Initialize match status tracking dictionary
-            match_status: dict[str, bool] = {"has_required_item": False, "error_req_found": False, "error_opt_found": False, "stack_found": False}
+            match_status: dict[str, bool] = {"has_required_item": False, "error_req_found": False,
+                                             "error_opt_found": False, "stack_found": False}
 
             # Process each signal in the list
             should_skip_error = False
@@ -478,7 +483,8 @@ class ClassicScanLogs:
 
     # noinspection PyPep8Naming
     @staticmethod
-    def _process_signal(signal: str, crashlog_mainerror: str, segment_callstack_intact: str, match_status: dict[str, bool]) -> bool:
+    def _process_signal(signal: str, crashlog_mainerror: str, segment_callstack_intact: str,
+                        match_status: dict[str, bool]) -> bool:
         """
         Process an individual signal and update match status accordingly.
 
@@ -524,14 +530,15 @@ class ClassicScanLogs:
         return match_status["error_opt_found"] or match_status["stack_found"]
 
     @staticmethod
-    def _add_suspect_to_report(error_name: str, error_severity: str, max_warn_length: int, autoscan_report: list[str]) -> None:
+    def _add_suspect_to_report(error_name: str, error_severity: str, max_warn_length: int,
+                               autoscan_report: list[str]) -> None:
         """Add a found suspect to the report with proper formatting."""
         formatted_error_name = error_name.ljust(max_warn_length, ".")
         message = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
         append_or_extend(message, autoscan_report)
 
     def scan_buffout_achievements_setting(
-        self, autoscan_report: list[str], xsemodules: set[str], crashgen: dict[str, bool | int | str]
+            self, autoscan_report: list[str], xsemodules: set[str], crashgen: dict[str, bool | int | str]
     ) -> None:
         """
         Validates the configuration of the Achievements parameter in the crash generator settings file
@@ -562,7 +569,8 @@ class ClassicScanLogs:
             )
 
     def scan_buffout_memorymanagement_settings(
-        self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], has_xcell: bool, has_baka_scrapheap: bool
+            self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], has_xcell: bool,
+            has_baka_scrapheap: bool
     ) -> None:
         """
         Validates and scans the memory management settings in the configuration file for conflicts with
@@ -607,7 +615,8 @@ class ClassicScanLogs:
                     f"Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}.",
                 )
             else:
-                add_success_message(f"Memory Manager parameter is correctly configured in your {crashgen_name} settings!")
+                add_success_message(
+                    f"Memory Manager parameter is correctly configured in your {crashgen_name} settings!")
         elif has_xcell:
             if has_baka_scrapheap:
                 add_warning_message(
@@ -679,7 +688,7 @@ class ClassicScanLogs:
             )
 
     def scan_buffout_looksmenu_setting(
-        self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], xsemodules: set[str]
+            self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], xsemodules: set[str]
     ) -> None:
         """
         Scans the Buffout 4 settings for the correct configuration of the Looks Menu (F4EE)
@@ -718,7 +727,8 @@ class ClassicScanLogs:
                     autoscan_report,
                 )
 
-    def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
+    def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str],
+                     autoscan_report: list[str]) -> None:
         """
         Processes and analyzes Form IDs from the provided data sources, matching them
         against crash log plugins and generating a report based on the findings. This
@@ -762,7 +772,8 @@ class ClassicScanLogs:
         else:
             append_or_extend("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n", autoscan_report)
 
-    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str], autoscan_report: list[str]) -> None:
+    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str],
+                     autoscan_report: list[str]) -> None:
         """
         Matches plugins in the given segment callstack against the crashlog plugins and appends the result
         to the autoscan report. The method identifies plugins in the crash log that correspond to the given
@@ -844,7 +855,8 @@ class ClassicScanLogs:
         return gpu, gpu_rival
 
     # noinspection PyPep8Naming
-    def scan_named_records(self, segment_callstack: list[str], records_matches: list[str], autoscan_report: list[str]) -> None:
+    def scan_named_records(self, segment_callstack: list[str], records_matches: list[str],
+                           autoscan_report: list[str]) -> None:
         """
         Scans a given call stack segment to identify and record named records, and appends
         relevant information about the findings to the autoscan report.
@@ -875,13 +887,15 @@ class ClassicScanLogs:
         else:
             append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
 
-    def _find_matching_records(self, segment_callstack: list[str], records_matches: list[str], rsp_marker: str, rsp_offset: int) -> None:
+    def _find_matching_records(self, segment_callstack: list[str], records_matches: list[str], rsp_marker: str,
+                               rsp_offset: int) -> None:
         """Extract matching records from the call stack and add them to records_matches."""
         for line in segment_callstack:
             lower_line = line.lower()
 
             # Check if line contains any target record and doesn't contain any ignored terms
-            if any(item in lower_line for item in self.lower_records) and all(record not in lower_line for record in self.lower_ignore):
+            if any(item in lower_line for item in self.lower_records) and all(
+                    record not in lower_line for record in self.lower_ignore):
                 # Extract the relevant part of the line based on format
                 if rsp_marker in line:
                     records_matches.append(line[rsp_offset:].strip())
@@ -989,9 +1003,10 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     if segment_crashgen:
         for elem in segment_crashgen:
             if ":" in elem:
-                key , value = elem.split(":", 1)
+                key, value = elem.split(":", 1)
                 crashgen[key] = (
-                    True if value == " true" else False if value == " false" else int(value) if value.isdecimal() else value.strip()
+                    True if value == " true" else False if value == " false" else int(
+                        value) if value.isdecimal() else value.strip()
                 )
 
     if not segment_plugins:
@@ -1043,7 +1058,9 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
         loadorder_plugins, trigger_plugins_loaded = scanner.loadorder_scan_loadorder_txt(autoscan_report)
         crashlog_plugins = crashlog_plugins | loadorder_plugins
     else:  # OTHERWISE, USE PLUGINS FROM CRASH LOG
-        log_plugins, plugin_limit, trigger_limit_check_disabled = scanner.loadorder_scan_log(segment_plugins, game_version, version_current)
+        log_plugins, plugin_limit, trigger_limit_check_disabled = scanner.loadorder_scan_log(segment_plugins,
+                                                                                             game_version,
+                                                                                             version_current)
         crashlog_plugins = crashlog_plugins | log_plugins
         trigger_plugin_limit = plugin_limit  # Update the trigger_plugin_limit variable
 
@@ -1144,7 +1161,8 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
             autoscan_report,
         )
         if has_x_cell:
-            yamldata.crashgen_ignore.update(("MemoryManager", "HavokMemorySystem", "ScaleformAllocator", "SmallBlockAllocator"))
+            yamldata.crashgen_ignore.update(
+                ("MemoryManager", "HavokMemorySystem", "ScaleformAllocator", "SmallBlockAllocator"))
         elif has_baka_scrapheap:
             # To prevent two messages mentioning this parameter.
             yamldata.crashgen_ignore.add("MemoryManager")
@@ -1163,7 +1181,8 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
         scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, has_x_cell, has_baka_scrapheap)
 
         # Check ArchiveLimit setting
-        if crashgen_version_gen(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(crashlog_crashgen) >= Version("1.27.0"):
+        if crashgen_version_gen(scanner.yamldata.crashgen_latest_og) <= crashgen_version_gen(
+                crashlog_crashgen) >= Version("1.27.0"):
             scanner.scan_archivelimit_setting(autoscan_report, crashgen)
 
         # Check LooksMenu (F4EE) setting
@@ -1210,7 +1229,8 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
                 autoscan_report,
             )
         else:
-            append_or_extend("# FOUND NO MODS THAT ARE INCOMPATIBLE OR CONFLICT WITH YOUR OTHER MODS # \n\n", autoscan_report)
+            append_or_extend("# FOUND NO MODS THAT ARE INCOMPATIBLE OR CONFLICT WITH YOUR OTHER MODS # \n\n",
+                             autoscan_report)
     else:
         append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
@@ -1234,7 +1254,8 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
                 autoscan_report,
             )
         else:
-            append_or_extend("# FOUND NO PROBLEMATIC MODS WITH AVAILABLE SOLUTIONS AND COMMUNITY PATCHES # \n\n", autoscan_report)
+            append_or_extend("# FOUND NO PROBLEMATIC MODS WITH AVAILABLE SOLUTIONS AND COMMUNITY PATCHES # \n\n",
+                             autoscan_report)
     else:
         append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
@@ -1258,7 +1279,9 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
                     autoscan_report,
                 )
             else:
-                append_or_extend("# FOUND NO PROBLEMATIC MODS THAT ARE ALREADY PATCHED THROUGH THE OPC INSTALLER # \n\n", autoscan_report)
+                append_or_extend(
+                    "# FOUND NO PROBLEMATIC MODS THAT ARE ALREADY PATCHED THROUGH THE OPC INSTALLER # \n\n",
+                    autoscan_report)
         else:
             append_or_extend(yamldata.warn_noplugins, autoscan_report)
 
@@ -1282,7 +1305,8 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
     # Check if plugin limit may be reached
     if trigger_plugin_limit and not trigger_limit_check_disabled and trigger_plugins_loaded:
         append_or_extend(
-            ("# \U0001f480 CRITICAL : THE '[FF]' PLUGIN MEANS YOU REACHED THE PLUGIN LIMIT OF 255-ish PLUGINS # \n",), autoscan_report
+            ("# \U0001f480 CRITICAL : THE '[FF]' PLUGIN MEANS YOU REACHED THE PLUGIN LIMIT OF 255-ish PLUGINS # \n",),
+            autoscan_report
         )
     elif trigger_plugin_limit and trigger_limit_check_disabled and trigger_plugins_loaded:
         append_or_extend(
@@ -1320,7 +1344,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
         # Updated pattern to match the actual format in crash logs
         formid_pattern: re.Pattern[str] = re.compile(
             r"^\s*Form ID:\s*0x([0-9A-F]{8})",
-            re.IGNORECASE, # pyrefly: ignore
+            re.IGNORECASE,  # pyrefly: ignore
         )
         for line in segment_callstack:
             match: re.Match[str] | None = formid_pattern.search(line)
@@ -1339,12 +1363,14 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
 
     if GlobalRegistry.get_game().replace(" ", "") == "Fallout4":
         append_or_extend(yamldata.autoscan_text, autoscan_report)
-    append_or_extend(f"{yamldata.classic_version} | {yamldata.classic_version_date} | END OF AUTOSCAN \n", autoscan_report)
+    append_or_extend(f"{yamldata.classic_version} | {yamldata.classic_version_date} | END OF AUTOSCAN \n",
+                     autoscan_report)
 
     return crashlog_file, autoscan_report, trigger_scan_failed, local_stats
 
 
-def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: ClassicScanLogs) -> None:
+def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool,
+                         scanner: ClassicScanLogs) -> None:
     """
     Write the autoscan report to a file and handle failed logs.
 
@@ -1376,6 +1402,7 @@ def move_unsolved_logs(crashlog_file: Path):
         crashlog_file.rename(backup_filepath)
     else:
         autoscan_filepath.rename(backup_path / autoscan_filepath.name)
+
 
 def crashlogs_scan() -> None:
     """
@@ -1412,7 +1439,8 @@ def crashlogs_scan() -> None:
         # Process crash logs in parallel using ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all crash log processing tasks
-            futures = [executor.submit(process_crashlog, scanner, crashlog_file) for crashlog_file in scanner.crashlog_list]
+            futures = [executor.submit(process_crashlog, scanner, crashlog_file) for crashlog_file in
+                       scanner.crashlog_list]
 
             # Process results as they complete
             for future in as_completed(futures):
@@ -1473,6 +1501,7 @@ if __name__ == "__main__":
     # noinspection PyUnresolvedReferences
     from tap import Tap
 
+
     class Args(Tap):
         """Command-line arguments for CLASSIC's Command Line Interface"""
 
@@ -1500,6 +1529,7 @@ if __name__ == "__main__":
         simplify_logs: bool = False
         """Simplify the logs"""
 
+
     args = Args().parse_args()
 
     if isinstance(args.fcx_mode, bool) and args.fcx_mode != classic_settings(bool, "FCX Mode"):
@@ -1512,23 +1542,23 @@ if __name__ == "__main__":
         yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Move Unsolved", args.move_unsolved)
 
     if (
-        isinstance(args.ini_path, Path)
-        and args.ini_path.resolve().is_dir()
-        and str(args.ini_path) != classic_settings(str, "INI Folder Path")
+            isinstance(args.ini_path, Path)
+            and args.ini_path.resolve().is_dir()
+            and str(args.ini_path) != classic_settings(str, "INI Folder Path")
     ):
         yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", str(args.ini_path.resolve()))
 
     if (
-        isinstance(args.scan_path, Path)
-        and args.scan_path.resolve().is_dir()
-        and str(args.scan_path) != classic_settings(str, "SCAN Custom Path")
+            isinstance(args.scan_path, Path)
+            and args.scan_path.resolve().is_dir()
+            and str(args.scan_path) != classic_settings(str, "SCAN Custom Path")
     ):
         yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))
 
     if (
-        isinstance(args.mods_folder_path, Path)
-        and args.mods_folder_path.resolve().is_dir()
-        and str(args.mods_folder_path) != classic_settings(str, "MODS Folder Path")
+            isinstance(args.mods_folder_path, Path)
+            and args.mods_folder_path.resolve().is_dir()
+            and str(args.mods_folder_path) != classic_settings(str, "MODS Folder Path")
     ):
         yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", str(args.mods_folder_path.resolve()))
 
