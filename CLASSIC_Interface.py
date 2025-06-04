@@ -393,11 +393,14 @@ class MainWindow(QMainWindow):
 
         self.main_tab = QWidget()
         self.backups_tab = QWidget()
+        self.articles_tab = QWidget()
         self.tab_widget.addTab(self.main_tab, "MAIN OPTIONS")
         self.tab_widget.addTab(self.backups_tab, "FILE BACKUP")
+        self.tab_widget.addTab(self.articles_tab, "ARTICLES")
         self.scan_button_group = QButtonGroup()
         self.setup_main_tab()
         self.setup_backups_tab()
+        self.setup_articles_tab() # Added call
 
         self.initialize_folder_paths()
         self.setup_output_redirection()
@@ -752,10 +755,18 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.create_separator())
         self.setup_checkboxes(layout)
         # Articles section - No separator before it if checkboxes are directly above
-        self.setup_articles_section(layout)
+        # self.setup_articles_section(layout) # Removed from here
         layout.addWidget(self.create_separator())
         self.setup_bottom_buttons(layout)
         self.setup_output_text_box(layout)
+
+    def setup_articles_tab(self) -> None:
+        """Sets up the UI elements for the articles tab."""
+        layout: QVBoxLayout = QVBoxLayout(self.articles_tab)
+        layout.setContentsMargins(20, 10, 20, 10)
+        layout.setSpacing(10)
+        self.setup_articles_section(layout)
+        layout.addStretch(1) # Push content to the top
 
     def setup_backups_tab(self) -> None:
         """
