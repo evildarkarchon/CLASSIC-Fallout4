@@ -400,7 +400,7 @@ class MainWindow(QMainWindow):
         self.scan_button_group = QButtonGroup()
         self.setup_main_tab()
         self.setup_backups_tab()
-        self.setup_articles_tab() # Added call
+        self.setup_articles_tab()  # Added call
 
         self.initialize_folder_paths()
         self.setup_output_redirection()
@@ -754,19 +754,88 @@ class MainWindow(QMainWindow):
         self.setup_main_buttons(layout)
         layout.addWidget(self.create_separator())
         self.setup_checkboxes(layout)
-        # Articles section - No separator before it if checkboxes are directly above
-        # self.setup_articles_section(layout) # Removed from here
         layout.addWidget(self.create_separator())
         self.setup_bottom_buttons(layout)
         self.setup_output_text_box(layout)
 
     def setup_articles_tab(self) -> None:
-        """Sets up the UI elements for the articles tab."""
+        """Sets up the UI elements for the articles tab.
+        Creates a layout for the articles tab with a title label and a grid of buttons.
+        Each button is linked to a useful resource or website related to Fallout 4 modding
+        and tools. The buttons are arranged in a 3-column grid layout and styled with
+        a consistent dark theme.
+        The resources include:
+        - Buffout 4 installation guide
+        - Fallout 4 setup tips
+        - Important patches list
+        - Links to relevant Nexus Mods pages
+        - GitHub repository link
+        - Various modding tools
+        Each button, when clicked, will open the associated URL in the user's default web browser.
+        Returns:
+            None
+        """
         layout: QVBoxLayout = QVBoxLayout(self.articles_tab)
         layout.setContentsMargins(20, 10, 20, 10)
         layout.setSpacing(10)
-        self.setup_articles_section(layout)
-        layout.addStretch(1) # Push content to the top
+
+        # Add a title label
+        title_label: QLabel = QLabel("USEFUL RESOURCES & LINKS")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 5px;")
+        layout.addWidget(title_label)
+
+        # Create a grid layout for the buttons
+        grid_layout: QGridLayout = QGridLayout()
+        grid_layout.setHorizontalSpacing(10)
+        grid_layout.setVerticalSpacing(10)
+
+        # Define the article buttons data
+        button_data: list[dict[str, str]] = [
+            {"text": "BUFFOUT 4 INSTALLATION", "url": "https://www.nexusmods.com/fallout4/articles/3115"},
+            {"text": "FALLOUT 4 SETUP TIPS", "url": "https://www.nexusmods.com/fallout4/articles/4141"},
+            {"text": "IMPORTANT PATCHES LIST", "url": "https://www.nexusmods.com/fallout4/articles/3769"},
+            {"text": "BUFFOUT 4 NEXUS", "url": "https://www.nexusmods.com/fallout4/mods/47359"},
+            {"text": "CLASSIC NEXUS", "url": "https://www.nexusmods.com/fallout4/mods/56255"},
+            {"text": "CLASSIC GITHUB", "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4"},
+            {"text": "DDS TEXTURE SCANNER", "url": "https://www.nexusmods.com/fallout4/mods/71588"},
+            {"text": "BETHINI PIE", "url": "https://www.nexusmods.com/site/mods/631"},
+            {"text": "WRYE BASH", "url": "https://www.nexusmods.com/fallout4/mods/20032"},
+        ]
+
+        # Define button style
+        button_style = """
+            QPushButton {
+                color: white;
+                background-color: rgba(60, 60, 60, 0.9);
+                border: 1px solid #5c5c5c;
+                border-radius: 5px;
+                padding: 8px;
+                font-size: 11px;
+                font-weight: bold;
+                min-height: 40px;
+            }
+            QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
+            QPushButton:disabled { color: gray; background-color: rgba(45, 45, 45, 0.75); }
+        """
+
+        # Create buttons and connect to URLs
+        for i, data in enumerate(button_data):
+            button: QPushButton = QPushButton(data["text"])
+            button.setStyleSheet(button_style)
+            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            button.setToolTip(f"Open {data['url']} in your browser.")
+
+            # Fix: Use functools.partial instead of lambda to properly capture the URL
+            from functools import partial
+
+            button.clicked.connect(partial(self.open_url, data["url"]))
+
+            row, col = divmod(i, 3)  # Arrange in 3 columns
+            grid_layout.addWidget(button, row, col)
+
+        layout.addLayout(grid_layout)
+        layout.addStretch(1)  # Push content to the top
 
     def setup_backups_tab(self) -> None:
         """
@@ -1122,7 +1191,7 @@ class MainWindow(QMainWindow):
             if stripped_line or line.endswith("\n"):
                 self.output_text_box.append(stripped_line)  # pyrefly: ignore
 
-        self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum()) # pyrefly: ignore
+        self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())  # pyrefly: ignore
 
     def setup_output_redirection(self) -> None:
         """
@@ -2017,6 +2086,15 @@ class MainWindow(QMainWindow):
             self.audio_player.play_error_signal.emit()
             self.papyrus_monitor_worker.error_sound_played = True
         self.stop_papyrus_monitoring()
+
+    def open_url(self, url: str) -> None:
+        """
+        Opens the specified URL in the default web browser.
+
+        Args:
+            url (str): The URL to open in the browser.
+        """
+        QDesktopServices.openUrl(QUrl(url))
 
 
 if __name__ == "__main__":
