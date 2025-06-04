@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 import CLASSIC_Main
+from ClassicLib import YamlSettingsCache
 from tests.conftest import MOCK_YAML, MockYAML
 
 TEST_YAML_TEXT = """Section 1:
@@ -167,7 +168,7 @@ def test_remove_readonly_4() -> None:
 
 
 @pytest.fixture(scope="module")
-def test_load_yaml(test_file_yaml: Path, yaml_cache: CLASSIC_Main.YamlSettingsCache) -> CLASSIC_Main.YamlSettingsCache:
+def test_load_yaml(test_file_yaml: Path, yaml_cache: YamlSettingsCache.YamlSettingsCache) -> YamlSettingsCache.YamlSettingsCache:
     """Test CLASSIC_Main's `YamlSettingsCache`.`load_yaml()`."""
     fake_path = Path("Non-existant file")
     loaded_data_1 = yaml_cache.load_yaml(fake_path)
@@ -182,7 +183,7 @@ def test_load_yaml(test_file_yaml: Path, yaml_cache: CLASSIC_Main.YamlSettingsCa
 
 
 @pytest.mark.usefixtures("test_file_yaml")
-def test_YamlSettingsCache_get_setting(test_load_yaml: CLASSIC_Main.YamlSettingsCache) -> None:
+def test_YamlSettingsCache_get_setting(test_load_yaml: YamlSettingsCache.YamlSettingsCache) -> None:
     """Test CLASSIC_Main's `YamlSettingsCache`.`get_setting()`."""
     game = test_load_yaml.get_setting(CLASSIC_Main.YAML.TEST, "Section 1.Game Name")
     assert isinstance(game, str), "Section 1.Game Name should be a string"
@@ -284,9 +285,9 @@ def test_YamlSettingsCache_get_setting(test_load_yaml: CLASSIC_Main.YamlSettings
 
 
 @pytest.mark.usefixtures("test_file_yaml")
-def test_yaml_settings(test_load_yaml: CLASSIC_Main.YamlSettingsCache) -> None:
+def test_yaml_settings(test_load_yaml: YamlSettingsCache.YamlSettingsCache) -> None:
     """Test CLASSIC_Main's `yaml_settings()`."""
-    assert isinstance(test_load_yaml, CLASSIC_Main.YamlSettingsCache), "yaml cache should be initialized"
+    assert isinstance(test_load_yaml, YamlSettingsCache.YamlSettingsCache), "yaml cache should be initialized"
     game = CLASSIC_Main.yaml_settings(CLASSIC_Main.YAML.TEST, "Section 1.Game Name")
     assert isinstance(game, str), "Section 1.Game Name should be a string"
     assert game == "Elder Scrolls VI", "Section 1.Game Name should equal 'Elder Scrolls VI'"

@@ -6,6 +6,7 @@ from typing import TypeAliasType, get_args
 import pytest
 
 import CLASSIC_Main
+from ClassicLib import YamlSettingsCache
 
 RUNTIME_FILES = (
     "CLASSIC Settings.yaml",
@@ -116,7 +117,7 @@ def _move_user_files() -> Generator[None]:
 
 
 @pytest.fixture(scope="session")
-def yaml_cache() -> CLASSIC_Main.YamlSettingsCache:
+def yaml_cache() -> YamlSettingsCache.YamlSettingsCache:
     """Initialize CLASSIC_Main's YAML Cache.
 
     This is required for any test that entails calls to:
@@ -124,7 +125,7 @@ def yaml_cache() -> CLASSIC_Main.YamlSettingsCache:
     - `get_setting()`
     - `classic_settings()`
     """
-    CLASSIC_Main.yaml_cache = CLASSIC_Main.YamlSettingsCache()
+    CLASSIC_Main.yaml_cache = YamlSettingsCache.YamlSettingsCache()
     assert isinstance(CLASSIC_Main.yaml_cache.cache, dict), "cache dict not created"
     assert isinstance(CLASSIC_Main.yaml_cache.file_mod_times, dict), "file_mod_times dict not created"
     return CLASSIC_Main.yaml_cache
