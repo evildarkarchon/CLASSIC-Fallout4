@@ -27,6 +27,7 @@ packaging = "^25.0"
 tap = "^0.2"
 pywin32 = "^310"
 aiofiles = "^24.1.0"
+pytest = "^8.4.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.12.0"
@@ -41,7 +42,6 @@ pytest-asyncio = "^0.24.0"
 anyio = "^4.6.2.post1"
 pyinstaller-hooks-contrib = "^2025.0"
 black = "^25.1.0"
-pyrefly = "^0.16.0"
 
 [build-system]
 requires = ["poetry-core"]
