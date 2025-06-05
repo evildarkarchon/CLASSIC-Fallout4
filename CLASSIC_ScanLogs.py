@@ -5,7 +5,7 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import regex as re
 from packaging.version import Version
@@ -19,6 +19,9 @@ from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCac
 from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat, get_entry
 from ClassicLib.Util import append_or_extend, crashgen_version_gen
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+
+if TYPE_CHECKING:
+    from concurrent.futures._base import Future
 
 
 # noinspection PyUnresolvedReferences
@@ -1332,7 +1335,7 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
         for line in segment_callstack:
             match: re.Match[str] | None = formid_pattern.search(line)
             if match:
-                formid_id = match.group(1).upper()  # Get the hex part without 0x
+                formid_id: str = match.group(1).upper()  # Get the hex part without 0x
                 # Skip if it starts with FF (plugin limit)
                 if not formid_id.startswith("FF"):
                     formids_matches.append(f"Form ID: {formid_id}")
@@ -1374,7 +1377,7 @@ def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigge
     Returns:
         None
     """
-    autoscan_path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
+    autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
     with autoscan_path.open("w", encoding="utf-8", errors="ignore") as autoscan_file:
         logger.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
         autoscan_output: str = "".join(autoscan_report)
@@ -1416,7 +1419,7 @@ def crashlogs_scan() -> None:
     scanner: ClassicScanLogs = ClassicScanLogs()
     ClassicScanLogs._fcx_checks_run = False  # Correctly target class variable to reset guard
 
-    yamldata = scanner.yamldata
+    yamldata: ClassicScanLogsInfo = scanner.yamldata
     scan_failed_list: list[str] = []
 
     # Number of worker threads - adjust based on system capabilities
@@ -1427,7 +1430,7 @@ def crashlogs_scan() -> None:
         # Process crash logs in parallel using ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all crash log processing tasks
-            futures = [executor.submit(process_crashlog, scanner, crashlog_file) for crashlog_file in scanner.crashlog_list]
+            futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [executor.submit(process_crashlog, scanner, crashlog_file) for crashlog_file in scanner.crashlog_list]
 
             # Process results as they complete
             for future in as_completed(futures):
@@ -1450,7 +1453,7 @@ def crashlogs_scan() -> None:
                     scanner.crashlog_stats["failed"] += 1
 
         # CHECK FOR FAILED OR INVALID CRASH LOGS
-        scan_invalid_list = sorted(Path.cwd().glob("crash-*.txt"))
+        scan_invalid_list: list[Path] = sorted(Path.cwd().glob("crash-*.txt"))
         if scan_failed_list or scan_invalid_list:
             print("❌ NOTICE : CLASSIC WAS UNABLE TO PROPERLY SCAN THE FOLLOWING LOG(S):")
             print("\n".join(scan_failed_list))
