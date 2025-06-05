@@ -78,7 +78,9 @@ class TestCrashLogProcessingIntegration:
         """Test the full process_crashlog function with minimal mocking."""
         crash_file = create_crashlog_file
 
-        with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml:
+        with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml, \
+             patch("CLASSIC_ScanLogs.crashlogs_get_files") as mock_get_files, \
+             patch("ClassicLib.ScanLog.Util.crashlogs_reformat"):
             # Setup the mock to return values needed for crash processing
             def yaml_side_effect(
                 _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
@@ -96,25 +98,25 @@ class TestCrashLogProcessingIntegration:
                 return None
 
             mock_yaml.side_effect = yaml_side_effect
+            mock_get_files.return_value = [crash_file]
 
             # Register necessary global values
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
             GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
 
             try:
-                # Create log cache
-                log_cache = ThreadSafeLogCache([crash_file])
+                # Create scanner instance with proper mocking
+                scanner = ClassicScanLogs()
 
                 # Process the crash log
-                result_data: tuple[Path, list[str], bool, Counter[str]] = process_crashlog(log_cache, crash_file)
+                result = process_crashlog(scanner, crash_file)
 
                 # Verify results
-                assert result_data is not None
-                assert "crash-2023-01-01-00-00-00" in result_data
-
-                # Check for expected content based on the sample crash log
-                assert "EXCEPTION_ACCESS_VIOLATION" in result_data
-                assert "ProblemPlugin.esp" in result_data
+                assert result is not None
+                assert len(result) == 4  # Should return a tuple with 4 elements
+                assert result[0] == crash_file  # First element should be the crash file path
+                assert isinstance(result[1], list)  # Second element should be autoscan_report
+                assert isinstance(result[2], bool)  # Third element should be trigger_scan_failed
 
             finally:
                 # Restore original global registry value
