@@ -1,12 +1,15 @@
 import winreg
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERSION, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Util import get_game_version, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings
+
+if TYPE_CHECKING:
+    from packaging.version import Version
 
 
 def game_path_find() -> None:
@@ -77,7 +80,7 @@ def game_path_find() -> None:
         path_check: list[str] = LOG_Check.readlines()
     for logline in path_check:
         if logline.startswith("plugin directory"):
-            logline = logline.split("=", maxsplit=1)[1].strip().replace(f"\\Data\\{xse_acronym_base}\\Plugins", "").replace("\n", "")
+            logline: str = logline.split("=", maxsplit=1)[1].strip().replace(f"\\Data\\{xse_acronym_base}\\Plugins", "").replace("\n", "")
             game_path = Path(logline)
             break
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
@@ -119,9 +122,9 @@ def game_generate_paths() -> None:
     """
     logger.debug("- - - INITIATED GAME PATH GENERATION")
 
-    game_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
     yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_acronym_base = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
+    xse_acronym_base: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
     if not (isinstance(game_path, str) and isinstance(xse_acronym_base, str)):
         raise TypeError
 
@@ -137,7 +140,7 @@ def game_generate_paths() -> None:
         f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE",
         rf"{game_path}\{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe",
     )
-    game_version = get_game_version(
+    game_version: Version = get_game_version(
         Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")))
     )
     match GlobalRegistry.get_game():

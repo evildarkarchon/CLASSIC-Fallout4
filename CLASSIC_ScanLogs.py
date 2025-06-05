@@ -5,7 +5,7 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import regex as re
 from packaging.version import Version
@@ -61,32 +61,32 @@ class ClassicScanLogs:
             user_folder (Path): Path to the user's home directory.
             crashlog_stats (Counter): Counter for various statistics of the scan (currently scanned, incomplete, and failed).
         """
-        self.pluginsearch = re.compile(
+        self.pluginsearch: re.Pattern[str] = re.compile(
             r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
             flags=re.IGNORECASE,  # pyrefly: ignore
         )
-        self.crashlog_list = crashlogs_get_files()
+        self.crashlog_list: list[Path] = crashlogs_get_files()
         print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
-        self.remove_list = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ("",)
+        self.remove_list: tuple[str] | tuple[Literal['']] = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ("",)
         crashlogs_reformat(self.crashlog_list, self.remove_list)
         self.yamldata = ClassicScanLogsInfo()
-        self.xse_acronym = self.yamldata.xse_acronym.lower()
-        self.fcx_mode = classic_settings(bool, "FCX Mode")
-        self.show_formid_values = classic_settings(bool, "Show FormID Values")
-        self.formid_db_exists = any(db.is_file() for db in DB_PATHS)
-        self.move_unsolved_logs = classic_settings(bool, "Move Unsolved Logs")
-        self.lower_records = {record.lower() for record in self.yamldata.classic_records_list} or set()
-        self.lower_ignore = {record.lower() for record in self.yamldata.game_ignore_records} or set()
-        self.lower_plugins_ignore = {ignore.lower() for ignore in self.yamldata.game_ignore_plugins}
-        self.ignore_plugins_list = {item.lower() for item in self.yamldata.ignore_list} if self.yamldata.ignore_list else set()
+        self.xse_acronym: str = self.yamldata.xse_acronym.lower()
+        self.fcx_mode: bool | None = classic_settings(bool, "FCX Mode")
+        self.show_formid_values: bool | None = classic_settings(bool, "Show FormID Values")
+        self.formid_db_exists: bool = any(db.is_file() for db in DB_PATHS)
+        self.move_unsolved_logs: bool | None = classic_settings(bool, "Move Unsolved Logs")
+        self.lower_records: set[str] = {record.lower() for record in self.yamldata.classic_records_list} or set()
+        self.lower_ignore: set[str] = {record.lower() for record in self.yamldata.game_ignore_records} or set()
+        self.lower_plugins_ignore: set[str] = {ignore.lower() for ignore in self.yamldata.game_ignore_plugins}
+        self.ignore_plugins_list: set[str] = {item.lower() for item in self.yamldata.ignore_list} if self.yamldata.ignore_list else set()
         print("SCANNING CRASH LOGS, PLEASE WAIT...\n")
-        self.scan_start_time = time.perf_counter()
+        self.scan_start_time: float = time.perf_counter()
         self.crashlogs = ThreadSafeLogCache(self.crashlog_list)
-        self.main_files_check = ""
-        self.game_files_check = ""
+        self.main_files_check: str = ""
+        self.game_files_check: str = ""
         self.scan_failed_list: list[str] = []
-        self.user_folder = Path.home()
-        self.crashlog_stats = Counter(scanned=0, incomplete=0, failed=0)
+        self.user_folder: Path = Path.home()
+        self.crashlog_stats: Counter[str] = Counter(scanned=0, incomplete=0, failed=0)
         logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
         if self.fcx_mode:
             self._fcx_mode_check()
@@ -172,7 +172,7 @@ class ClassicScanLogs:
         main_error: str | None = None
 
         # Parse segments
-        segments = self._extract_segments(crash_data, segment_boundaries, EOF_MARKER)
+        segments: list[list[str]] = self._extract_segments(crash_data, segment_boundaries, EOF_MARKER)
 
         # Extract metadata from crash data
         for line in crash_data:
@@ -184,10 +184,10 @@ class ClassicScanLogs:
                 main_error = line.replace("|", "\n", 1)
 
         # Process segments to strip whitespace
-        processed_segments = [[line.strip() for line in segment] for segment in segments] if segments else segments
+        processed_segments: list[list[str]] = [[line.strip() for line in segment] for segment in segments] if segments else segments
 
         # Ensure all expected segments exist (add empty lists for missing segments)
-        missing_segments_count = len(segment_boundaries) - len(processed_segments)
+        missing_segments_count: int = len(segment_boundaries) - len(processed_segments)
         if missing_segments_count > 0:
             processed_segments.extend([[]] * missing_segments_count)
 
@@ -275,13 +275,13 @@ class ClassicScanLogs:
                 plugin names to their origin markers, and the second element is a boolean indicating
                 whether any plugins were successfully loaded.
         """
-        LOADORDER_MESSAGES = (
+        LOADORDER_MESSAGES: tuple[str, str, str] = (
             "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
             "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
             "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
         )
-        LOADORDER_ORIGIN = "LO"  # Origin marker for plugins from loadorder.txt
-        LOADORDER_PATH = Path("loadorder.txt")
+        LOADORDER_ORIGIN: str = "LO"  # Origin marker for plugins from loadorder.txt
+        LOADORDER_PATH: Path = Path("loadorder.txt")
 
         append_or_extend(LOADORDER_MESSAGES, autoscan_report)
 
@@ -289,17 +289,17 @@ class ClassicScanLogs:
 
         try:
             with LOADORDER_PATH.open(encoding="utf-8", errors="ignore") as loadorder_file:
-                loadorder_data = loadorder_file.readlines()
+                loadorder_data: list[str] = loadorder_file.readlines()
 
             # Skip the header line (first line) of the loadorder.txt file
             if len(loadorder_data) > 1:
                 for plugin_entry in loadorder_data[1:]:
-                    plugin_entry = plugin_entry.strip()
+                    plugin_entry: str = plugin_entry.strip()
                     if plugin_entry and plugin_entry not in loadorder_plugins:
                         loadorder_plugins[plugin_entry] = LOADORDER_ORIGIN
         except OSError as e:
             # Log file access error but continue execution
-            error_msg = f"Error reading loadorder.txt: {e!s}"
+            error_msg: str = f"Error reading loadorder.txt: {e!s}"
             append_or_extend(error_msg, autoscan_report)
 
         # Check if any plugins were loaded
@@ -360,8 +360,8 @@ class ClassicScanLogs:
                 continue
 
             # Extract plugin details
-            plugin_id = plugin_match.group(1)
-            plugin_name = plugin_match.group(3)
+            plugin_id: str | Any = plugin_match.group(1)
+            plugin_name: str | Any = plugin_match.group(3)
 
             # Skip if plugin name is empty or already processed
             if not plugin_name or plugin_name in plugin_map:
@@ -406,10 +406,10 @@ class ClassicScanLogs:
             error_severity, error_name = error_key.split(" | ", 1)
 
             # Format the error name for report
-            formatted_error_name = error_name.ljust(max_warn_length, ".")
+            formatted_error_name: str = error_name.ljust(max_warn_length, ".")
 
             # Add the error to the report
-            report_entry = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
+            report_entry: str = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
             append_or_extend(report_entry, autoscan_report)
 
             # Update suspect found status
@@ -588,7 +588,7 @@ class ClassicScanLogs:
         success_prefix = "✔️ "
         warning_prefix = "# ❌ CAUTION : "
         fix_prefix = " FIX: "
-        crashgen_name = self.yamldata.crashgen_name
+        crashgen_name: str = self.yamldata.crashgen_name
 
         def add_success_message(message: str) -> None:
             """Add a success message to the report."""
@@ -599,7 +599,7 @@ class ClassicScanLogs:
             append_or_extend((f"{warning_prefix}{warning} # \n", f"{fix_prefix}{fix}{separator}"), autoscan_report)
 
         # Check main MemoryManager setting
-        mem_manager_enabled = crashgen.get("MemoryManager", False)
+        mem_manager_enabled: bool | int | str = crashgen.get("MemoryManager", False)
 
         # Handle main memory manager configuration
         if mem_manager_enabled:
@@ -709,7 +709,7 @@ class ClassicScanLogs:
         Returns:
             None
         """
-        crashgen_f4ee = crashgen.get("F4EE")
+        crashgen_f4ee: bool | int | str | None = crashgen.get("F4EE")
         if crashgen_f4ee is not None:
             if not crashgen_f4ee and "f4ee.dll" in xsemodules:
                 append_or_extend(
@@ -741,9 +741,9 @@ class ClassicScanLogs:
                 formatted analysis results.
         """
         if formids_matches:
-            formids_found = dict(Counter(sorted(formids_matches)))
+            formids_found: dict[str, int] = dict(Counter(sorted(formids_matches)))
             for formid_full, count in formids_found.items():
-                formid_split = formid_full.split(": ", 1)
+                formid_split: list[str] = formid_full.split(": ", 1)
                 if len(formid_split) < 2:
                     continue
                 for plugin, plugin_id in crashlog_plugins.items():
@@ -751,7 +751,7 @@ class ClassicScanLogs:
                         continue
 
                     if self.show_formid_values and self.formid_db_exists:
-                        report = get_entry(formid_split[1][2:], plugin)
+                        report: str | None = get_entry(formid_split[1][2:], plugin)
                         if report:
                             append_or_extend(f"- {formid_full} | [{plugin}] | {report} | {count}\n", autoscan_report)
                             continue
@@ -898,7 +898,7 @@ class ClassicScanLogs:
     def _report_found_records(self, records_matches: list[str], autoscan_report: list[str]) -> None:
         """Format and add report entries for the found records."""
         # Count and sort the records
-        records_found = dict(Counter(sorted(records_matches)))
+        records_found: dict[str, int] = dict(Counter(sorted(records_matches)))
 
         # Add each record with its count
         for record, count in records_found.items():
@@ -918,12 +918,12 @@ class ClassicScanLogs:
             return set()
 
         # Pattern matches module name potentially followed by version
-        pattern = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)  # pyrefly: ignore
+        pattern: re.Pattern[str] = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)  # pyrefly: ignore
 
-        result = set()
+        result: set = set()
         for text in module_texts:
-            text = text.strip()
-            match = pattern.match(text)
+            text: str = text.strip()
+            match: re.Match[str] | None = pattern.match(text)
             if match:
                 result.add(match.group(1))
             else:
@@ -951,13 +951,13 @@ def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Pat
         tuple: Contains the crash log file path, the generated report as a list of strings,
               a boolean indicating if the scan failed, and a Counter with updated statistics.
     """
-    yamldata = scanner.yamldata
+    yamldata: ClassicScanLogsInfo = scanner.yamldata
     autoscan_report: list[str] = []
     trigger_plugin_limit = trigger_limit_check_disabled = trigger_plugins_loaded = trigger_scan_failed = False
     # Local stats counter to avoid thread synchronization issues
-    local_stats = Counter(scanned=1, incomplete=0, failed=0)  # Start with 1 scanned
+    local_stats: Counter[str] = Counter(scanned=1, incomplete=0, failed=0)  # Start with 1 scanned
 
-    crash_data = scanner.crashlogs.read_log(crashlog_file.name)
+    crash_data: list[str] = scanner.crashlogs.read_log(crashlog_file.name)
 
     append_or_extend(
         (
