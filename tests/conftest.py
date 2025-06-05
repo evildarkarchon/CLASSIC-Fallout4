@@ -4,11 +4,14 @@ Pytest configuration file for CLASSIC-Fallout4 test suite.
 This file contains shared fixtures and configuration that are available to all test modules.
 """
 
-import os
 import sys
-import pytest
+from collections.abc import Callable, Generator
 from pathlib import Path
+from types import ModuleType
+from typing import Any
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Ensure the parent directory is in sys.path so imports work correctly
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -18,16 +21,15 @@ from ClassicLib.Constants import YAML
 
 
 @pytest.fixture
-def sample_crash_logs_dir():
+def sample_crash_logs_dir() -> Callable[[Path], Path]:
     """Fixture to create a temporary crash logs directory with sample files."""
-
     # Create a temporary directory with pytest's tmp_path
-    def _create_sample_logs(tmp_path):
-        crash_logs_dir = tmp_path / "Crash Logs"
+    def _create_sample_logs(tmp_path: Path) -> Path:
+        crash_logs_dir: Path = tmp_path / "Crash Logs"
         crash_logs_dir.mkdir(exist_ok=True)
 
         # Create a simple crash log file
-        simple_log = crash_logs_dir / "crash-2023-01-01-00-00-00.log"
+        simple_log: Path = crash_logs_dir / "crash-2023-01-01-00-00-00.log"
         simple_log.write_text("""Fallout 4 v1.10.163
 Buffout 4 v1.28.6
 
@@ -48,14 +50,14 @@ PLUGINS:
 
     return _create_sample_logs
 
-
 @pytest.fixture
-def mock_global_registry():
+def mock_global_registry() -> Generator[ModuleType, None, None]:
+    """Mock the GlobalRegistry to return test values."""
     """Mock the GlobalRegistry to return test values."""
     original_values = {}
 
     # Save original values
-    for key in GlobalRegistry.Keys:
+    for key in GlobalRegistry._registry:
         original_values[key] = GlobalRegistry.get(key)
 
     # Set test values
@@ -70,11 +72,11 @@ def mock_global_registry():
 
 
 @pytest.fixture
-def mock_yaml_settings():
+def mock_yaml_settings() -> Generator[MagicMock, None, None]:
     """Mock YAML settings for testing."""
     with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml:
 
-        def side_effect(type_arg, yaml_store, key_path, new_value=None):
+        def side_effect(_type_arg: Any, yaml_store: Any, key_path: str, new_value: Any = None) -> Any:  # noqa: ARG001
             if key_path == "catch_log_records":
                 return ["Record1", "Record2"]
             if key_path == "Game_Info.CRASHGEN_LogName":

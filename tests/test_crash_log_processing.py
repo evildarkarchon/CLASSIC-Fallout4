@@ -7,17 +7,13 @@ of crash logs, verifying that the full pipeline works correctly.
 
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 from unittest.mock import patch
 
 import pytest
 
 from CLASSIC_ScanLogs import ClassicScanLogs, process_crashlog
 from ClassicLib import GlobalRegistry
-from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
-
-if TYPE_CHECKING:
-    from collections import Counter
 
 
 @pytest.fixture
@@ -61,10 +57,10 @@ PLUGINS:
 @pytest.fixture
 def create_crashlog_file(tmp_path: Path, sample_crashlog: str) -> Path:
     """Create a temporary crash log file for testing."""
-    crash_dir = tmp_path / "Crash Logs"
+    crash_dir: Path = tmp_path / "Crash Logs"
     crash_dir.mkdir(exist_ok=True)
 
-    crash_file = crash_dir / "crash-2023-01-01-00-00-00.log"
+    crash_file: Path = crash_dir / "crash-2023-01-01-00-00-00.log"
     crash_file.write_text(sample_crashlog)
 
     return crash_file
@@ -126,12 +122,12 @@ class TestCrashLogProcessingIntegration:
     def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str) -> None:
         """Test the entire crash log scanning process."""
         # Create crash logs directory with multiple logs
-        crash_dir = tmp_path / "Crash Logs"
+        crash_dir: Path = tmp_path / "Crash Logs"
         crash_dir.mkdir(exist_ok=True)
 
         # Create multiple crash log files
         for i in range(3):
-            crash_file = crash_dir / f"crash-2023-01-0{i + 1}-00-00-00.log"
+            crash_file: Path = crash_dir / f"crash-2023-01-0{i + 1}-00-00-00.log"
             crash_file.write_text(sample_crashlog)
 
         with (
