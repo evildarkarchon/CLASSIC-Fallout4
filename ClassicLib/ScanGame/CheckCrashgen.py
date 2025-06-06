@@ -16,10 +16,10 @@ class CrashgenChecker:
 
     def __init__(self) -> None:
         self.message_list: list[str] = []
-        self.plugins_path = self._get_plugins_path()
-        self.crashgen_name = self._get_crashgen_name()
-        self.config_file = self._find_config_file()
-        self.installed_plugins = self._detect_installed_plugins()
+        self.plugins_path: Path | None = self._get_plugins_path()
+        self.crashgen_name: str = self._get_crashgen_name()
+        self.config_file: Path | None = self._find_config_file()
+        self.installed_plugins: set[str] = self._detect_installed_plugins()
 
     @staticmethod
     def _get_plugins_path() -> Path | None:
@@ -82,9 +82,9 @@ class CrashgenChecker:
         if GlobalRegistry.get_game() != "Fallout4":
             return []
 
-        has_xcell = self.has_plugin(["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll"])
-        has_achievements = self.has_plugin(["achievements.dll", "achievementsmodsenablerloader.dll"])
-        has_looksmenu = any("f4ee" in file for file in self.installed_plugins)
+        has_xcell: bool = self.has_plugin(["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll"])
+        has_achievements: bool = self.has_plugin(["achievements.dll", "achievementsmodsenablerloader.dll"])
+        has_looksmenu: bool = any("f4ee" in file for file in self.installed_plugins)
 
         return [
             # Patches section settings

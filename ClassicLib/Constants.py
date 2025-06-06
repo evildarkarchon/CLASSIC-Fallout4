@@ -1,6 +1,5 @@
 from enum import Enum, auto
 from pathlib import Path
-from typing import Literal
 
 from packaging.version import Version
 
@@ -14,14 +13,6 @@ OG_F4SE_VERSION: Version = Version("0.6.23")
 NG_F4SE_VERSION: Version = Version("0.7.2")
 FO4_VERSIONS: tuple[Version, Version] = (OG_VERSION, NG_VERSION)
 F4SE_VERSIONS: tuple[Version, Version] = (OG_F4SE_VERSION, NG_F4SE_VERSION)
-type YAMLLiteral = str | int | bool
-type YAMLSequence = list[str]
-type YAMLMapping = dict[str, "YAMLValue"]
-type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
-type YAMLValueOptional = YAMLValue | None
-type GameID = (
-    Literal["Fallout4", "Fallout4VR", "Skyrim", "Starfield"] | str
-)  # Entries must correspond to the game's Main ESM or EXE file name.
 
 
 class YAML(Enum):
@@ -49,7 +40,7 @@ class YAML(Enum):
     "vr": "",
 }"""
 
-SETTINGS_IGNORE_NONE = {
+SETTINGS_IGNORE_NONE: set[str] = {
     "SCAN Custom Path",
     "MODS Folder Path",
     "Root_Folder_Game",
@@ -57,7 +48,7 @@ SETTINGS_IGNORE_NONE = {
 }
 
 # Define paths for both Main and Local databases
-DB_PATHS = (
+DB_PATHS: tuple[Path, Path] = (
     Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Main.db"),
     Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Local.db"),
 )
