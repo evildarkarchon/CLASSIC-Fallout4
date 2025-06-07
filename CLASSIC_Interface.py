@@ -38,6 +38,7 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Audio import AudioPlayer
 from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
+from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
 from ClassicLib.Interface.Pastebin import PastebinFetchWorker
 from ClassicLib.Interface.PathDialog import ManualPathDialog
 from ClassicLib.Interface.StyleSheets import DARK_MODE
@@ -364,6 +365,7 @@ class MainWindow(QMainWindow):
         self.pastebin_label: QLabel | None = None
         self.papyrus_monitor_thread: QThread | None = None
         self.papyrus_monitor_worker: PapyrusMonitorWorker | None = None
+        self.papyrus_monitor_dialog: PapyrusMonitorDialog | None = None
         self._last_stats: PapyrusStats | None = None
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
 
@@ -422,6 +424,111 @@ class MainWindow(QMainWindow):
         GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS_GUI, self.show_manual_docs_path_dialog)
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH_GUI, self.show_game_path_dialog)
 
+    def toggle_papyrus_worker(self) -> None:
+        """
+        Toggles the state of the Papyrus worker based on the state of the `papyrus_button`.
+
+        If the `papyrus_button` is checked, the Papyrus monitoring process is started and
+        the custom monitoring dialog is displayed. Otherwise, it stops the Papyrus monitoring 
+        process and closes the dialog. This function is intended to manage the lifecycle 
+        of the Papyrus worker efficiently.
+        """
+        if self.papyrus_button and self.papyrus_button.isChecked():
+            self.start_papyrus_monitoring()
+        else:
+            self.stop_papyrus_monitoring()
+            
+    def start_papyrus_monitoring(self) -> None:
+        """
+        Initializes and starts the Papyrus monitoring process using a separate thread and worker. This allows
+        asynchronous monitoring of the Papyrus system, ensuring that updates, errors, and other signals are
+        handled efficiently without blocking the main application. The method configures the worker, connects
+        necessary signals, updates the user interface to reflect the monitoring status, creates and displays
+        the Papyrus monitoring dialog, and starts the monitoring thread.
+
+        Raises:
+            Any exception or error handling will be caught and managed by connected signals
+            such as `error`.
+        """
+        if self.papyrus_monitor_thread is None:
+            # Create new thread and worker
+            self.papyrus_monitor_thread = QThread()
+            self.papyrus_monitor_worker = PapyrusMonitorWorker()
+            self.papyrus_monitor_worker.moveToThread(self.papyrus_monitor_thread)
+
+            # Create the dialog
+            self.papyrus_monitor_dialog = PapyrusMonitorDialog(self)
+            
+            # Connect signals
+            self.papyrus_monitor_thread.started.connect(self.papyrus_monitor_worker.run)
+            self.papyrus_monitor_worker.statsUpdated.connect(self.papyrus_monitor_dialog.update_stats)
+            self.papyrus_monitor_worker.error.connect(self.papyrus_monitor_dialog.handle_error)
+            self.papyrus_monitor_dialog.stop_monitoring.connect(self.stop_papyrus_monitoring)
+
+            # Start monitoring
+            if self.papyrus_button:
+                self.papyrus_button.setText("STOP PAPYRUS MONITORING")
+                self.papyrus_button.setStyleSheet(
+                    """
+                    QPushButton {
+                        color: black;
+                        background: rgb(237, 45, 45);  /* Red background */
+                        border-radius: 10px;
+                        border: 1px solid black;
+                        font-weight: bold;
+                        font-size: 14px;
+                    }
+                    """
+                )
+            
+            # Show the dialog and start the thread
+            self.papyrus_monitor_dialog.show()
+            self.papyrus_monitor_thread.start()
+            
+    def stop_papyrus_monitoring(self) -> None:
+        """
+        Stops the papyrus monitoring process and performs necessary cleanup.
+
+        This function terminates the papyrus monitoring by halting the monitor worker and
+        its associated thread. It also updates the user interface components, such as the
+        button, and closes the Papyrus monitoring dialog if it's open.
+
+        Returns:
+            None
+        """
+        if self.papyrus_monitor_worker:
+            self.papyrus_monitor_worker.stop()
+
+        if self.papyrus_monitor_thread:
+            self.papyrus_monitor_thread.quit()
+            self.papyrus_monitor_thread.wait()
+
+            # Reset thread and worker
+            self.papyrus_monitor_thread = None
+            self.papyrus_monitor_worker = None
+
+        # Close the dialog if it exists
+        if self.papyrus_monitor_dialog:
+            self.papyrus_monitor_dialog.close()
+            self.papyrus_monitor_dialog = None
+
+        # Update UI
+        if self.papyrus_button:
+            self.papyrus_button.setText("START PAPYRUS MONITORING")
+            self.papyrus_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: black;
+                    background: rgb(45, 237, 138);  /* Green background */
+                    border-radius: 10px;
+                    border: 1px solid black;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                """
+            )
+            self.papyrus_button.setChecked(False)
+            
     def setup_pastebin_elements(self, layout: QVBoxLayout) -> None:
         """
         Set up the UI elements to fetch logs from Pastebin and add them to the provided layout.
@@ -1522,11 +1629,9 @@ class MainWindow(QMainWindow):
 
         # Second row with main action buttons
         main_actions_hbox: QHBoxLayout = QHBoxLayout()
-        main_actions_hbox.setSpacing(10)
-
-        # Papyrus monitoring button (special handling for checkable button)
+        main_actions_hbox.setSpacing(10)        # Papyrus monitoring button (special handling for checkable button)
         self.papyrus_button = self._create_button(
-            "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Displays stats in the output window.", self.toggle_papyrus_worker
+            "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Shows statistics in a dedicated dialog.", self.toggle_papyrus_worker
         )
         self.papyrus_button.setCheckable(True)
         self.update_papyrus_button_style(False)  # Initial style for "START"
@@ -1921,9 +2026,8 @@ class MainWindow(QMainWindow):
             None: This method does not return any value.
         """
         self.crash_logs_thread = None
-        self.enable_scan_buttons()
-
-    # noinspection PyUnresolvedReferences
+        self.enable_scan_buttons()    # noinspection PyUnresolvedReferences
+    
     def game_files_scan_finished(self) -> None:
         """
         Marks the completion of the game files scanning process.
@@ -1935,158 +2039,18 @@ class MainWindow(QMainWindow):
         Attributes:
             game_files_thread: Represents the thread used for scanning game files. Set to None
                 after the scan is completed.
-
+                
         Returns:
             None
         """
         self.game_files_thread = None
         self.enable_scan_buttons()
-
-    def toggle_papyrus_worker(self) -> None:
-        """
-        Toggles the state of the Papyrus worker based on the state of the `papyrus_button`.
-
-        If the `papyrus_button` is checked, the Papyrus monitoring process is started.
-        Otherwise, it stops the Papyrus monitoring process. This function is intended
-        to manage the lifecycle of the Papyrus worker efficiently.
-        """
-        if self.papyrus_button and self.papyrus_button.isChecked():
+        
+        # Check papyrus button state
+        if self.papyrus_button is not None and self.papyrus_button.isChecked():
             self.start_papyrus_monitoring()
         else:
             self.stop_papyrus_monitoring()
-
-    def start_papyrus_monitoring(self) -> None:
-        """
-        Initializes and starts the Papyrus monitoring process using a separate thread and worker. This allows
-        asynchronous monitoring of the Papyrus system, ensuring that updates, errors, and other signals are
-        handled efficiently without blocking the main application. The method configures the worker, connects
-        necessary signals, updates the user interface to reflect the monitoring status, and starts the
-        monitoring thread.
-
-        Raises:
-            Any exception or error handling will be caught and managed by connected signals
-            such as `error`.
-
-        """
-        if self.papyrus_monitor_thread is None:
-            # Create new thread and worker
-            self.papyrus_monitor_thread = QThread()
-            self.papyrus_monitor_worker = PapyrusMonitorWorker()
-            self.papyrus_monitor_worker.moveToThread(self.papyrus_monitor_thread)
-
-            # Connect signals
-            self.papyrus_monitor_thread.started.connect(self.papyrus_monitor_worker.run)
-            self.papyrus_monitor_worker.statsUpdated.connect(self.update_papyrus_stats)
-            self.papyrus_monitor_worker.error.connect(self.handle_papyrus_error)
-
-            # Start monitoring
-            if self.papyrus_button:
-                self.papyrus_button.setText("STOP PAPYRUS MONITORING")
-                self.papyrus_button.setStyleSheet(
-                    """
-                    QPushButton {
-                        color: black;
-                        background: rgb(237, 45, 45);  /* Red background */
-                        border-radius: 10px;
-                        border: 1px solid black;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-                    """
-                )
-            self.papyrus_monitor_thread.start()
-
-    def stop_papyrus_monitoring(self) -> None:
-        """
-        Stops the papyrus monitoring process and performs necessary cleanup.
-
-        This function terminates the papyrus monitoring by halting the monitor worker and
-        its associated thread. It also updates the user interface components, such as the
-        button and text box, to reflect the stopped state.
-
-        Returns:
-            None
-        """
-        if self.papyrus_monitor_worker:
-            self.papyrus_monitor_worker.stop()
-
-        if self.papyrus_monitor_thread:
-            self.papyrus_monitor_thread.quit()
-            self.papyrus_monitor_thread.wait()
-
-            # Reset thread and worker
-            self.papyrus_monitor_thread = None
-            self.papyrus_monitor_worker = None
-
-            # Update UI
-            if self.papyrus_button:
-                self.papyrus_button.setText("START PAPYRUS MONITORING")
-                self.papyrus_button.setStyleSheet(
-                    """
-                    QPushButton {
-                        color: black;
-                        background: rgb(45, 237, 138);  /* Green background */
-                        border-radius: 10px;
-                        border: 1px solid black;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-                    """
-                )
-                self.papyrus_button.setChecked(False)
-            if self.output_text_box:
-                self.output_text_box.append("\n=== Papyrus monitoring stopped ===\n")
-
-    def update_papyrus_stats(self, stats: PapyrusStats) -> None:
-        """Update the UI with new Papyrus statistics.
-
-        Updates the output text box in the UI with the statistics provided in
-        the `stats` object. Displays information such as timestamp, number
-        of dumps, stacks, warnings, errors, and dumps/stacks ratio. Ensures
-        the text box automatically scrolls to the most recent entry. Stores
-        the last statistics for further reference.
-
-        Args:
-            stats: Instance of PapyrusStats containing the statistics data to
-                be displayed. Includes attributes such as timestamp, dumps,
-                stacks, ratio, warnings, and errors.
-        """
-        """Update the UI with new Papyrus statistics"""
-        message = (
-            f"\n=== Papyrus Log Stats [{stats.timestamp.strftime('%H:%M:%S')}] ===\n"
-            f"Number of Dumps: {stats.dumps}\n"
-            f"Number of Stacks: {stats.stacks}\n"
-            f"Dumps/Stacks Ratio: {stats.ratio:.3f}\n"
-            f"Number of Warnings: {stats.warnings}\n"
-            f"Number of Errors: {stats.errors}\n"
-        )
-        if self.output_text_box:
-            self.output_text_box.append(message)
-
-            # Scroll to the bottom after adding the new message
-            self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
-
-        self._last_stats = stats
-
-    def handle_papyrus_error(self, error_msg: str) -> None:
-        """
-        Handle errors from the Papyrus monitor.
-
-        This method appends an error message to the output text box, unchecks the
-        Papyrus button, plays an error sound if it hasn't been played already, and
-        stops the Papyrus monitoring process.
-
-        Args:
-            error_msg (str): The error message to be handled.
-        """
-        if self.output_text_box:
-            self.output_text_box.append(f"\n❌ ERROR IN PAPYRUS MONITORING: {error_msg}\n")
-        if self.papyrus_button:
-            self.papyrus_button.setChecked(False)
-        if self.papyrus_monitor_worker and not self.papyrus_monitor_worker.error_sound_played:
-            self.audio_player.play_error_signal.emit()
-            self.papyrus_monitor_worker.error_sound_played = True
-        self.stop_papyrus_monitoring()
 
     @staticmethod
     def open_url(url: str) -> None:
