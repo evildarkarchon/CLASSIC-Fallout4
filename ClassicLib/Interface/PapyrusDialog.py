@@ -70,7 +70,7 @@ class PapyrusMonitorDialog(QDialog):
         stats_layout.addWidget(QLabel("<b>Metric</b>"), 0, 0)
         stats_layout.addWidget(QLabel("<b>Value</b>"), 0, 1)
         stats_layout.addWidget(QLabel("<b>Status</b>"), 0, 2)  # Data rows with labels
-        stat_labels = ["Dumps", "Stacks", "Dumps/Stacks Ratio", "Warnings", "Errors"]
+        stat_labels: list[str] = ["Dumps", "Stacks", "Dumps/Stacks Ratio", "Warnings", "Errors"]
         self.stat_value_labels = {}
         self.stat_status_labels = {}
 
@@ -81,7 +81,7 @@ class PapyrusMonitorDialog(QDialog):
             value_label = QLabel("0")
             value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             # Create a safe key for the dictionary
-            key = label_text.lower().replace("/", "_").replace(" ", "_")
+            key: str = label_text.lower().replace("/", "_").replace(" ", "_")
             self.stat_value_labels[key] = value_label
             stats_layout.addWidget(value_label, row, 1)  # Status
             status_label = QLabel("✓")
@@ -173,10 +173,10 @@ class PapyrusMonitorDialog(QDialog):
             stats: The PapyrusStats object containing the current statistics
         """
         if stats.errors > 0:
-            self.message_label.setText(f"Warning: {stats.errors} errors detected in Papyrus log!")
+            self.message_label.setText(f"{stats.errors} errors detected in Papyrus log!")
             self.message_label.setStyleSheet("color: red; font-weight: bold;")
         elif stats.warnings > 0:
-            self.message_label.setText(f"Caution: {stats.warnings} warnings detected in Papyrus log.")
+            self.message_label.setText(f"{stats.warnings} warnings detected in Papyrus log.")
             self.message_label.setStyleSheet("color: orange; font-weight: bold;")
         elif stats.ratio > 0.8:
             self.message_label.setText("Warning: High dumps-to-stacks ratio detected!")
