@@ -143,6 +143,9 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
         Returns:
             The existing or updated setting value if successful, otherwise None.
+
+        Raises:
+            ValueError: If a static YAML store is being modified.
         """
         # If this is a read operation for a static store, check cache first
         cache_key: tuple[YAML, str, type[T]] = (yaml_store, key_path, _type)
@@ -176,9 +179,10 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
         # If new_value is provided, update the value
         if new_value is not None:
-            # If this is a static file and we're trying to modify it, warn about this
+            # If this is a static file and we're trying to modify it, raise a ValueError
             if yaml_store in self.STATIC_YAML_STORES:
-                logger.warning(f"Attempting to modify static YAML store {yaml_store} at {key_path}")
+                logger.error(f"Attempting to modify static YAML store {yaml_store} at {key_path}")
+                raise ValueError(f"Attempted to modify static YAML store {yaml_store} at {key_path}")
 
             setting_container[keys[-1]] = new_value  # type: ignore[assignment]
 
