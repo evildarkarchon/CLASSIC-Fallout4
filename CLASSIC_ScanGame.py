@@ -3,7 +3,7 @@ import shutil
 import struct
 import subprocess
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from CLASSIC_Main import initialize, main_generate_required
 from ClassicLib import GlobalRegistry
@@ -14,7 +14,7 @@ from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
 from ClassicLib.ScanGame.Config import TEST_MODE
 from ClassicLib.ScanGame.ScanModInis import scan_mod_inis
 from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
-from ClassicLib.Util import open_file_with_encoding
+from ClassicLib.Util import open_file_with_encoding, normalize_list
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
@@ -33,15 +33,6 @@ def check_log_errors(folder_path: Path | str) -> str:
         str: A detailed report of all detected errors in the relevant log files, if any.
     """
 
-    def get_setting_as_list(setting_type: type[list[str]], yaml_type: YAML, key: str) -> list[str]:
-        """Retrieve a setting from YAML and ensure it's a list of strings."""
-        setting: list[str] | None = yaml_settings(setting_type, yaml_type, key)
-        return setting if isinstance(setting, list) else []
-
-    def normalize_list(items: list[str]) -> list[str]:
-        """Convert all strings in a list to lowercase."""
-        return [item.lower() for item in items] if items else []
-
     def format_error_report(file_path: Path, errors: list[str]) -> list[str]:
         """Format the error report for a specific log file."""
         return [
@@ -57,14 +48,14 @@ def check_log_errors(folder_path: Path | str) -> str:
         folder_path = Path(folder_path)
 
     # Get YAML settings
-    catch_errors: list[str] = normalize_list(get_setting_as_list(list[str], YAML.Main, "catch_log_errors"))
-    ignore_files: list[str] = normalize_list(get_setting_as_list(list[str], YAML.Main, "exclude_log_files"))
-    ignore_errors: list[str] = normalize_list(get_setting_as_list(list[str], YAML.Main, "exclude_log_errors"))
+    catch_errors: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "catch_log_errors"))
+    ignore_files: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_files"))
+    ignore_errors: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_errors"))
 
     error_report: list[str] = []
 
     # Find valid log files (excluding crash logs)
-    valid_log_files: list[Path] = [file for file in folder_path.glob("*.log") if "crash-" not in file.name]
+    valid_log_files: list[Path] = [file for file in folder_path.glob("*.log") if "crash-" not in file.name.lower()]
 
     for log_file_path in valid_log_files:
         # Skip files that should be ignored
@@ -79,7 +70,8 @@ def check_log_errors(folder_path: Path | str) -> str:
                 detected_errors = [
                     f"ERROR > {line}"
                     for line in log_lines
-                    if any(error in line.lower() for error in catch_errors) and all(ignore not in line.lower() for ignore in ignore_errors)
+                    if any(error in line.lower() for error in catch_errors) and all(
+                        ignore not in line.lower() for ignore in ignore_errors)
                 ]
 
                 if detected_errors:
@@ -91,6 +83,114 @@ def check_log_errors(folder_path: Path | str) -> str:
             logger.warning(f"> ! > DETECT LOG ERRORS > UNABLE TO SCAN : {log_file_path}")
 
     return "".join(error_report)
+
+
+# ================================================
+# SHARED SCAN FUNCTIONS
+# ================================================
+def get_scan_settings() -> tuple[str, dict[str, str], Path | None]:
+    """
+    Gets common settings used by mod scanning functions.
+
+    Returns:
+        tuple: (xse_acronym, xse_scriptfiles, mod_path)
+    """
+    # Get XSE settings
+    xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+    xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
+        dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
+    )
+    xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
+    xse_scriptfiles: dict[str, str] = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
+
+    # Get mods path
+    mod_path: Path | None = classic_settings(Path, "MODS Folder Path")
+
+    return xse_acronym, xse_scriptfiles, mod_path
+
+
+def get_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:
+    """
+    Returns standardized issue messages for mod scan reports.
+
+    Args:
+        xse_acronym: Script extender acronym from settings
+        mode: Either "unpacked" or "archived"
+
+    Returns:
+        dict: Dictionary of issue types and their message templates
+    """
+    base_messages = {
+        "tex_dims": [
+            "\n# ⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️\n",
+            "▶️ Any mods that have texture files with incorrect dimensions\n",
+            "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
+        ],
+        "tex_frmt": [
+            "\n# ❓ TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS ❓\n",
+            "▶️ Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n",
+        ],
+        "snd_frmt": [
+            "\n# ❓ SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV ❓\n",
+            "▶️ Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n",
+        ],
+    }
+
+    # Add mode-specific messages
+    if mode == "unpacked":
+        base_messages.update({
+            "xse_file": [
+                f"\n# ⚠️ FOLDERS CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
+                "▶️ Any mods with copies of original Script Extender files\n",
+                "  may cause script related problems or crashes.\n\n",
+            ],
+            "previs": [
+                "\n# ⚠️ FOLDERS CONTAIN LOOSE PRECOMBINE / PREVIS FILES ⚠️\n",
+                "▶️ Any mods that contain custom precombine/previs files\n",
+                "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
+                "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
+            ],
+            "animdata": [
+                "\n# ❓ FOLDERS CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
+                "▶️ Any mods that have their own custom Animation File Data\n",
+                "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
+                "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
+            ],
+            "cleanup": ["\n# 📄 DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' 📄\n"],
+        })
+    else:  # archived
+        base_messages.update({
+            "xse_file": [
+                f"\n# ⚠️ BA2 ARCHIVES CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
+                "▶️ Any mods with copies of original Script Extender files\n",
+                "  may cause script related problems or crashes.\n\n",
+            ],
+            "previs": [
+                "\n# ⚠️ BA2 ARCHIVES CONTAIN CUSTOM PRECOMBINE / PREVIS FILES ⚠️\n",
+                "▶️ Any mods that contain custom precombine/previs files\n",
+                "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
+                "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
+            ],
+            "animdata": [
+                "\n# ❓ BA2 ARCHIVES CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
+                "▶️ Any mods that have their own custom Animation File Data\n",
+                "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
+                "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
+            ],
+            "ba2_frmt": [
+                "\n# ❓ BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 ❓\n",
+                "▶️ Any files with an incorrect file format will not work.\n",
+                "  Mod authors should convert these files to their proper game format.\n",
+                "  If possible, notify the original mod authors about these problems.\n\n",
+            ],
+        })
+
+    return base_messages
 
 
 # ================================================
@@ -123,19 +223,13 @@ def scan_mods_unpacked() -> str:
     }
 
     # Get settings
-    xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
-        dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
-    )
-    xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
-    xse_scriptfiles: dict[str, str] = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
+    xse_acronym, xse_scriptfiles, mod_path = get_scan_settings()
 
     # Setup paths
-    backup_path: Path = Path("CLASSIC Backup/Cleaned Files")
+    backup_path: Path = GlobalRegistry.get_local_dir() / "CLASSIC Backup/Cleaned Files"
     if not TEST_MODE:
         backup_path.mkdir(parents=True, exist_ok=True)
 
-    mod_path: Path | None = classic_settings(Path, "MODS Folder Path")
     if not mod_path:
         return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
     if not mod_path.is_dir():
@@ -208,10 +302,10 @@ def scan_mods_unpacked() -> str:
 
             # Check for XSE files
             elif (
-                not has_xse_files
-                and any(filename_lower == key.lower() for key in xse_scriptfiles)
-                and "workshop framework" not in str(root).lower()
-                and f"Scripts\\{filename}" in str(file_path)
+                    not has_xse_files
+                    and any(filename_lower == key.lower() for key in xse_scriptfiles)
+                    and "workshop framework" not in str(root).lower()
+                    and f"Scripts\\{filename}" in str(file_path)
             ):
                 has_xse_files = True
                 issue_lists["xse_file"].add(f"  - {root_main}\n")
@@ -222,48 +316,11 @@ def scan_mods_unpacked() -> str:
                 issue_lists["previs"].add(f"  - {root_main}\n")
 
     # Build the report
-    issue_messages: dict[str, list[str]] = {
-        "xse_file": [
-            f"\n# ⚠️ FOLDERS CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
-            "▶️ Any mods with copies of original Script Extender files\n",
-            "  may cause script related problems or crashes.\n\n",
-        ],
-        "previs": [
-            "\n# ⚠️ FOLDERS CONTAIN LOOSE PRECOMBINE / PREVIS FILES ⚠️\n",
-            "▶️ Any mods that contain custom precombine/previs files\n",
-            "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
-            "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
-        ],
-        "tex_dims": [
-            "\n# ⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️\n",
-            "▶️ Any mods that have texture files with incorrect dimensions\n",
-            "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
-            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
-        ],
-        "tex_frmt": [
-            "\n# ❓ TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS ❓\n",
-            "▶️ Any files with an incorrect file format will not work.\n",
-            "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n",
-        ],
-        "snd_frmt": [
-            "\n# ❓ SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV ❓\n",
-            "▶️ Any files with an incorrect file format will not work.\n",
-            "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n",
-        ],
-        "animdata": [
-            "\n# ❓ FOLDERS CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
-            "▶️ Any mods that have their own custom Animation File Data\n",
-            "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
-            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
-        ],
-        "cleanup": ["\n# 📄 DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' 📄\n"],
-    }
+    issue_messages = get_issue_messages(xse_acronym, "unpacked")
 
     # Add found issues to message list
     for issue_type, items in issue_lists.items():
-        if items:
+        if items and issue_type in issue_messages:
             message_list.extend(issue_messages[issue_type])
             message_list.extend(sorted(items))
 
@@ -287,7 +344,6 @@ def scan_mods_archived() -> str:
         OSError: If the function fails to open or read a BA2 file during analysis.
         subprocess.SubprocessError: If there is an error while running `BSArch`
         commands for file dumping or listing.
-
     """
     message_list: list[str] = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
 
@@ -303,16 +359,10 @@ def scan_mods_archived() -> str:
     }
 
     # Get settings
-    xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
-        dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
-    )
-    xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else ""
-    xse_scriptfiles: dict[str, str] = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
+    xse_acronym, xse_scriptfiles, mod_path = get_scan_settings()
 
     # Setup paths
-    bsarch_path: Path = Path.cwd() / "CLASSIC Data/BSArch.exe"
-    mod_path: Path | None = classic_settings(Path, "MODS Folder Path")
+    bsarch_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Data/BSArch.exe"
 
     # Validate paths
     if not mod_path:
@@ -371,7 +421,8 @@ def scan_mods_archived() -> str:
 
                     # Check texture format
                     if "Ext: dds" not in block_split[1]:
-                        issue_lists["tex_frmt"].add(f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
+                        issue_lists["tex_frmt"].add(
+                            f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
                         continue
 
                     # Check texture dimensions
@@ -406,9 +457,9 @@ def scan_mods_archived() -> str:
 
                     # Check XSE files
                     elif (
-                        not has_xse_files
-                        and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
-                        and "workshop framework" not in str(root).lower()
+                            not has_xse_files
+                            and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
+                            and "workshop framework" not in str(root).lower()
                     ):
                         has_xse_files = True
                         issue_lists["xse_file"].add(f"  - {filename}\n")
@@ -418,54 +469,12 @@ def scan_mods_archived() -> str:
                         has_previs_files = True
                         issue_lists["previs"].add(f"  - {filename}\n")
 
-    # Build the report
-    issue_messages: dict[str, list[str]] = {
-        "xse_file": [
-            f"\n# ⚠️ BA2 ARCHIVES CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
-            "▶️ Any mods with copies of original Script Extender files\n",
-            "  may cause script related problems or crashes.\n\n",
-        ],
-        "previs": [
-            "\n# ⚠️ BA2 ARCHIVES CONTAIN CUSTOM PRECOMBINE / PREVIS FILES ⚠️\n",
-            "▶️ Any mods that contain custom precombine/previs files\n",
-            "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
-            "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
-        ],
-        "tex_dims": [
-            "\n# ⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️\n",
-            "▶️ Any mods that have texture files with incorrect dimensions\n",
-            "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
-            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
-        ],
-        "tex_frmt": [
-            "\n# ❓ TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS ❓\n",
-            "▶️ Any files with an incorrect file format will not work.\n",
-            "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n",
-        ],
-        "snd_frmt": [
-            "\n# ❓ SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV ❓\n",
-            "▶️ Any files with an incorrect file format will not work.\n",
-            "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n",
-        ],
-        "animdata": [
-            "\n# ❓ BA2 ARCHIVES CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
-            "▶️ Any mods that have their own custom Animation File Data\n",
-            "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
-            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
-        ],
-        "ba2_frmt": [
-            "\n# ❓ BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 ❓\n",
-            "▶️ Any files with an incorrect file format will not work.\n",
-            "  Mod authors should convert these files to their proper game format.\n",
-            "  If possible, notify the original mod authors about these problems.\n\n",
-        ],
-    }
+    # Build the report using shared function
+    issue_messages = get_issue_messages(xse_acronym, "archived")
 
     # Add found issues to message list
     for issue_type, items in issue_lists.items():
-        if items:
+        if items and issue_type in issue_messages:
             message_list.extend(issue_messages[issue_type])
             message_list.extend(sorted(items))
 
@@ -504,7 +513,8 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
     ADMIN_SUGGESTION = "    TRY RUNNING CLASSIC.EXE IN ADMIN MODE TO RESOLVE THIS PROBLEM.\n"
 
     # Get paths and settings
-    game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    game_path: Path | None = yaml_settings(Path, YAML.Game_Local,
+                                           f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
     manage_list_setting: list[str] | None = yaml_settings(list[str], YAML.Game, classic_list)
     manage_list: list[str] = manage_list_setting if isinstance(manage_list_setting, list) else []
 
@@ -589,8 +599,10 @@ def game_combined_result() -> str:
         If the necessary paths or directories are not available, an empty string
         is returned.
     """
-    docs_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
-    game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    docs_path: Path | None = yaml_settings(Path, YAML.Game_Local,
+                                           f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+    game_path: Path | None = yaml_settings(Path, YAML.Game_Local,
+                                           f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
     if not (game_path and docs_path):
         return ""
@@ -617,10 +629,18 @@ def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUD
         str: The combined results of the unpacked and archived mods scans, or a message
         indicating that the mods folder path is not provided.
     """
+    # Get mod path to verify it exists before running scans
+    _, _, mod_path = get_scan_settings()
+
+    if not mod_path:
+        return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
+    if not mod_path.is_dir():
+        return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
+
+    # Run both scans and combine results
     unpacked = scan_mods_unpacked()
-    if unpacked.startswith("❌ MODS FOLDER PATH NOT PROVIDED"):
-        return unpacked
-    return unpacked + scan_mods_archived()
+    archived = scan_mods_archived()
+    return unpacked + archived
 
 
 def write_combined_results() -> None:

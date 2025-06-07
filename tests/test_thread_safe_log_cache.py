@@ -80,7 +80,8 @@ class TestThreadSafeLogCacheThreadSafety:
         # Use ThreadPoolExecutor to run tasks concurrently
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             # Submit 100 tasks that may run concurrently
-            futures: list[Future[list[str]]] = [executor.submit(read_log_task, random.choice(log_names)) for _ in range(100)]
+            futures: list[Future[list[str]]] = [executor.submit(read_log_task, random.choice(log_names)) for _ in
+                                                range(100)]
 
             # Collect results as they complete
             for future in concurrent.futures.as_completed(futures):

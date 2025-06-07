@@ -5,7 +5,6 @@ This module contains tests that focus on the end-to-end processing
 of crash logs, verifying that the full pipeline works correctly.
 """
 
-
 from pathlib import Path
 from typing import Any, Literal
 from unittest.mock import patch
@@ -75,11 +74,11 @@ class TestCrashLogProcessingIntegration:
         crash_file = create_crashlog_file
 
         with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml, \
-             patch("CLASSIC_ScanLogs.crashlogs_get_files") as mock_get_files, \
-             patch("ClassicLib.ScanLog.Util.crashlogs_reformat"):
+                patch("CLASSIC_ScanLogs.crashlogs_get_files") as mock_get_files, \
+                patch("ClassicLib.ScanLog.Util.crashlogs_reformat"):
             # Setup the mock to return values needed for crash processing
             def yaml_side_effect(
-                _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
+                    _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
             ) -> dict[str, str] | dict[str, list[str]] | None | Literal["Buffout 4"] | Literal["F4SE"]:
                 if key_path == "Game_Info.CRASHGEN_LogName":
                     return "Buffout 4"
@@ -140,7 +139,7 @@ class TestCrashLogProcessingIntegration:
         ):
             # Configure mocks
             def yaml_side_effect(
-                _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
+                    _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
             ) -> dict[str, str] | None | Literal["Buffout 4"] | Literal["F4SE"]:
                 if key_path == "Game_Info.CRASHGEN_LogName":
                     return "Buffout 4"
@@ -169,7 +168,8 @@ class TestCrashLogProcessingIntegration:
                 # Process each crash log and collect results
                 results = []
                 for crash_file in scanner.crashlog_list:
-                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = process_crashlog(scanner, crash_file)
+                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = process_crashlog(scanner,
+                                                                                                        crash_file)
                     results.append(autoscan_report)
 
                 # Verify results

@@ -5,24 +5,18 @@ This module contains tests for the crash log scanning functionality,
 including segment extraction, plugin detection, and suspect identification.
 """
 
-import os
-import threading
-from collections import Counter
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from packaging.version import Version
 
 from CLASSIC_ScanLogs import ClassicScanLogs
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import NULL_VERSION, YAML
-from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
-from ClassicLib.ScanLog.Util import get_entry
+from ClassicLib.Constants import YAML
+from ClassicLib.ScanLog.DetectMods import detect_mods_important
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.Util import append_or_extend
-from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 @pytest.fixture

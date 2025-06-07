@@ -22,6 +22,10 @@ from ClassicLib import Constants, GlobalRegistry
 from ClassicLib.Logger import logger
 
 
+def normalize_list(items: list[str]) -> list[str]:
+    """Convert all strings in a list to lowercase."""
+    return [item.lower() for item in items] if items else []
+
 def calculate_similarity(file1: Path, file2: Path) -> float:
     """
     Calculates the similarity ratio between the content of two text files using the

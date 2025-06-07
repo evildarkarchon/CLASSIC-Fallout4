@@ -107,8 +107,27 @@ def get_game() -> str:
 
 
 def get_local_dir(as_string: bool = False) -> Path | str:
-    """Get the local directory setting."""
+    """
+    Determines and returns the local directory path.
+
+    This function retrieves the local directory path, either as a Path object
+    or as a string, based on the input argument. If the local directory is not
+    registered or is an empty string, it defaults to the current working
+    directory. Otherwise, it retrieves and uses the registered path.
+
+    Parameters:
+    as_string: bool
+        Determines whether the returned local directory is converted to a
+        string. Default is False.
+
+    Returns:
+    Path | str
+        The local directory path as a Path object (default) or a string
+        (if as_string is True).
+    """
     if not is_registered(Keys.LOCAL_DIR) or (is_registered(Keys.LOCAL_DIR) and Keys.LOCAL_DIR == ""):
+        if as_string:
+            return str(Path.cwd())
         return Path.cwd()
     if as_string:
         return str(get(Keys.LOCAL_DIR))

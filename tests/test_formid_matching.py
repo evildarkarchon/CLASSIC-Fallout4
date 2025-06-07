@@ -5,13 +5,12 @@ This module contains tests focused on the FormID matching functionality
 which is an essential part of the crash log analysis.
 """
 
+from unittest.mock import patch, mock_open
+
 import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
 
 from CLASSIC_ScanLogs import ClassicScanLogs
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import DB_PATHS
 
 
 @pytest.fixture
@@ -139,7 +138,8 @@ class TestFormIDMatching:
 
     def test_formid_database_not_found(self):
         """Test behavior when FormID database does not exist."""
-        with patch("os.path.isfile", return_value=False), patch("CLASSIC_ScanLogs.crashlogs_get_files", return_value=[]):
+        with patch("os.path.isfile", return_value=False), patch("CLASSIC_ScanLogs.crashlogs_get_files",
+                                                                return_value=[]):
             # Setup GlobalRegistry
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
             GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")

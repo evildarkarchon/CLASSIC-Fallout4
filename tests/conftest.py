@@ -23,6 +23,7 @@ from ClassicLib.Constants import YAML
 @pytest.fixture
 def sample_crash_logs_dir() -> Callable[[Path], Path]:
     """Fixture to create a temporary crash logs directory with sample files."""
+
     # Create a temporary directory with pytest's tmp_path
     def _create_sample_logs(tmp_path: Path) -> Path:
         crash_logs_dir: Path = tmp_path / "Crash Logs"
@@ -49,6 +50,7 @@ PLUGINS:
         return crash_logs_dir
 
     return _create_sample_logs
+
 
 @pytest.fixture
 def mock_global_registry() -> Generator[ModuleType, None, None]:
