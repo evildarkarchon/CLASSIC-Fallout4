@@ -5,10 +5,16 @@ from typing import Any, ClassVar
 import ruamel.yaml
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML, YAMLMapping, YAMLValue
+from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Meta import SingletonMeta
 from ClassicLib.Util import open_file_with_encoding
+
+type YAMLLiteral = str | int | bool
+type YAMLSequence = list[str]
+type YAMLMapping = dict[str, "YAMLValue"]
+type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
+type YAMLValueOptional = YAMLValue | None
 
 
 class YamlSettingsCache(metaclass=SingletonMeta):

@@ -14,11 +14,6 @@ OG_F4SE_VERSION: Version = Version("0.6.23")
 NG_F4SE_VERSION: Version = Version("0.7.2")
 FO4_VERSIONS: tuple[Version, Version] = (OG_VERSION, NG_VERSION)
 F4SE_VERSIONS: tuple[Version, Version] = (OG_F4SE_VERSION, NG_F4SE_VERSION)
-type YAMLLiteral = str | int | bool
-type YAMLSequence = list[str]
-type YAMLMapping = dict[str, "YAMLValue"]
-type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
-type YAMLValueOptional = YAMLValue | None
 type GameID = (
     Literal["Fallout4", "Fallout4VR", "Skyrim", "Starfield"] | str
 )  # Entries must correspond to the game's Main ESM or EXE file name.

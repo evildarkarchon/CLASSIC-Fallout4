@@ -974,7 +974,8 @@ class MainWindow(QMainWindow):
 
         layout.addLayout(buttons_layout)
 
-    def _validate_selected_list_format(self, selected_list: str) -> list[str]:
+    @staticmethod
+    def _validate_selected_list_format(selected_list: str) -> list[str]:
         """
         Validates the format of the selected list string.
 
@@ -2087,7 +2088,8 @@ class MainWindow(QMainWindow):
             self.papyrus_monitor_worker.error_sound_played = True
         self.stop_papyrus_monitoring()
 
-    def open_url(self, url: str) -> None:
+    @staticmethod
+    def open_url(url: str) -> None:
         """
         Opens the specified URL in the default web browser.
 
