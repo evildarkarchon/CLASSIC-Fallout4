@@ -112,10 +112,16 @@ class PapyrusMonitorDialog(QDialog):
 
     def update_stats(self, stats: PapyrusStats) -> None:
         """
-        Update the dialog with new statistics.
+        Updates the statistics and user interface with the provided stats, including updating
+        the timestamp, stat labels, status indicators, and error/warning messages. This method
+        modifies the UI components to reflect the latest telemetry data.
 
         Args:
-            stats: The PapyrusStats object containing the current statistics
+            stats (PapyrusStats): The object containing the updated statistics values to be
+                reflected in the user interface.
+
+        Returns:
+            None
         """
         # Update timestamp
         self.timestamp_label.setText(f"Last Updated: {stats.timestamp.strftime('%H:%M:%S')}")  # Update stat values
@@ -134,10 +140,14 @@ class PapyrusMonitorDialog(QDialog):
 
     def _update_status_indicators(self, stats: PapyrusStats) -> None:
         """
-        Update the status indicators based on the current statistics.
+        Updates the status indicators for various statistical metrics based on the provided
+        statistics data. This function modifies the appearance and text of relevant status
+        indicators to reflect the current state of the statistics. The status indicators
+        use icons and color coding to provide a visual representation of the statistical metrics.
 
-        Args:
-            stats: The PapyrusStats object containing the current statistics
+        Parameters:
+            stats (PapyrusStats): The statistics object containing the data to be represented
+            in the status indicators.
         """  # A high ratio is bad
         if stats.ratio > 0.8:
             self.stat_status_labels["dumps_stacks_ratio"].setText("❌")
@@ -167,10 +177,22 @@ class PapyrusMonitorDialog(QDialog):
 
     def _update_message(self, stats: PapyrusStats) -> None:
         """
-        Update the message label based on the current statistics.
+        Updates the message label based on the statistics provided by the PapyrusStats object.
 
-        Args:
-            stats: The PapyrusStats object containing the current statistics
+        This method evaluates errors, warnings, and the dumps-to-stacks ratio from the
+        given PapyrusStats instance and updates the message label's text and style
+        accordingly. If the number of errors is greater than zero, an error message
+        will be displayed in bold red. If there are warnings, a warning message will
+        be displayed in bold orange. If the ratio exceeds specific thresholds, caution
+        or warning messages will be displayed. If no issues are detected, the log is
+        considered normal and the label is updated with this information in green.
+
+        Parameters:
+            stats (PapyrusStats): The statistics object containing error counts, warning
+                counts, and the dumps-to-stacks ratio to analyze.
+
+        Returns:
+            None
         """
         if stats.errors > 0:
             self.message_label.setText(f"{stats.errors} errors detected in Papyrus log!")

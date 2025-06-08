@@ -369,7 +369,8 @@ class MainWindow(QMainWindow):
         self._last_stats: PapyrusStats | None = None
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
 
-        self.setWindowTitle(f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}")
+        self.setWindowTitle(
+            f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}")
         # Ensure GlobalRegistry.get_local_dir() returns a Path or string
         local_dir_path = GlobalRegistry.get_local_dir(as_string=True)
         self.setWindowIcon(QIcon(f"{local_dir_path}/CLASSIC Data/graphics/CLASSIC.ico"))
@@ -437,7 +438,7 @@ class MainWindow(QMainWindow):
             self.start_papyrus_monitoring()
         else:
             self.stop_papyrus_monitoring()
-            
+
     def start_papyrus_monitoring(self) -> None:
         """
         Initializes and starts the Papyrus monitoring process using a separate thread and worker. This allows
@@ -458,7 +459,7 @@ class MainWindow(QMainWindow):
 
             # Create the dialog
             self.papyrus_monitor_dialog = PapyrusMonitorDialog(self)
-            
+
             # Connect signals
             self.papyrus_monitor_thread.started.connect(self.papyrus_monitor_worker.run)
             self.papyrus_monitor_worker.statsUpdated.connect(self.papyrus_monitor_dialog.update_stats)
@@ -480,11 +481,11 @@ class MainWindow(QMainWindow):
                     }
                     """
                 )
-            
+
             # Show the dialog and start the thread
             self.papyrus_monitor_dialog.show()
             self.papyrus_monitor_thread.start()
-            
+
     def stop_papyrus_monitoring(self) -> None:
         """
         Stops the papyrus monitoring process and performs necessary cleanup.
@@ -528,7 +529,7 @@ class MainWindow(QMainWindow):
                 """
             )
             self.papyrus_button.setChecked(False)
-            
+
     def setup_pastebin_elements(self, layout: QVBoxLayout) -> None:
         """
         Set up the UI elements to fetch logs from Pastebin and add them to the provided layout.
@@ -598,8 +599,10 @@ class MainWindow(QMainWindow):
         self.pastebin_thread.finished.connect(self.pastebin_thread.deleteLater)
 
         # Use lambdas or functools.partial if arguments need to be passed to slots
-        self.pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
-        self.pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}"))
+        self.pastebin_worker.success.connect(
+            lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
+        self.pastebin_worker.error.connect(
+            lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}"))
 
         self.pastebin_thread.start()
 
@@ -613,7 +616,8 @@ class MainWindow(QMainWindow):
         """
         # Create a dialog with appropriate title and descriptive label
         dialog: ManualPathDialog = ManualPathDialog(
-            parent=self, title="Set INI Path", label=f"Select the location of your {GlobalRegistry.get_game()} INI files"
+            parent=self, title="Set INI Path",
+            label=f"Select the location of your {GlobalRegistry.get_game()} INI files"
         )
 
         # Process the dialog result
@@ -632,7 +636,8 @@ class MainWindow(QMainWindow):
         """
         # Create a dialog with appropriate title and descriptive label
         dialog: ManualPathDialog = ManualPathDialog(
-            parent=self, title="Set Game Installation Path", label=f"Select the installation directory for {GlobalRegistry.get_game()}"
+            parent=self, title="Set Game Installation Path",
+            label=f"Select the installation directory for {GlobalRegistry.get_game()}"
         )
 
         # Process the dialog result
@@ -783,7 +788,8 @@ class MainWindow(QMainWindow):
                 user is prompted with a choice to visit the update page.
         """
         if is_up_to_date:
-            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)
+            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!",
+                                    QMessageBox.StandardButton.Ok)
         else:
             update_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
             result = QMessageBox.question(
@@ -1008,7 +1014,8 @@ class MainWindow(QMainWindow):
                     """
                     )
 
-    def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None:
+    def add_backup_section(self, layout: QBoxLayout, title: str,
+                           backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None:
         """
         Adds a backup section to the given layout with a specified title
         and backup type. The section includes a title label and three buttons
@@ -1100,7 +1107,8 @@ class MainWindow(QMainWindow):
             raise ValueError(f"Invalid format for selected_list: '{selected_list}'. Expected 'Backup TYPE'.")
         return parts
 
-    def classic_files_manage(self, selected_list: str, selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
+    def classic_files_manage(self, selected_list: str,
+                             selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
         """
         Manages game files by performing operations such as backup, restore, or removal
              based on the selected mode. This function interacts with the game files and
@@ -1261,7 +1269,8 @@ class MainWindow(QMainWindow):
 
             if "\n" in self.output_buffer:
                 lines_to_append, self.output_buffer = self.output_buffer.rsplit("\n", 1)
-                self.output_text_box.append(lines_to_append)  # Append adds a newline, so pass lines_to_append + '\n' if needed
+                self.output_text_box.append(
+                    lines_to_append)  # Append adds a newline, so pass lines_to_append + '\n' if needed
                 self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
 
             # If buffer gets too large without a newline, append it anyway to prevent memory issues
@@ -1299,7 +1308,8 @@ class MainWindow(QMainWindow):
             if stripped_line or line.endswith("\n"):
                 self.output_text_box.append(stripped_line)  # pyrefly: ignore
 
-        self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())  # pyrefly: ignore
+        self.output_text_box.verticalScrollBar().setValue(
+            self.output_text_box.verticalScrollBar().maximum())  # pyrefly: ignore
 
     def setup_output_redirection(self) -> None:
         """
@@ -1435,7 +1445,8 @@ class MainWindow(QMainWindow):
         checkbox.setChecked(value)
 
         # Connect setting update to checkbox state
-        checkbox.stateChanged.connect(lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state)))
+        checkbox.stateChanged.connect(
+            lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state)))
 
         # Special handling for Audio Notifications
         if setting == "Audio Notifications":
@@ -1448,7 +1459,7 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def setup_folder_section(
-        layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None], tooltip: str = ""
+            layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None], tooltip: str = ""
     ) -> QLineEdit | None:
         """
         Sets up a folder selection section within a provided layout. This method creates a section
@@ -1629,9 +1640,10 @@ class MainWindow(QMainWindow):
 
         # Second row with main action buttons
         main_actions_hbox: QHBoxLayout = QHBoxLayout()
-        main_actions_hbox.setSpacing(10)        # Papyrus monitoring button (special handling for checkable button)
+        main_actions_hbox.setSpacing(10)  # Papyrus monitoring button (special handling for checkable button)
         self.papyrus_button = self._create_button(
-            "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Shows statistics in a dedicated dialog.", self.toggle_papyrus_worker
+            "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Shows statistics in a dedicated dialog.",
+            self.toggle_papyrus_worker
         )
         self.papyrus_button.setCheckable(True)
         self.update_papyrus_button_style(False)  # Initial style for "START"
@@ -1899,7 +1911,8 @@ class MainWindow(QMainWindow):
         folder: str = QFileDialog.getExistingDirectory(self)
         if folder:
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
-            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}", QMessageBox.StandardButton.Ok)
+            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}",
+                                    QMessageBox.StandardButton.Ok)
 
     def open_settings(self) -> None:
         """
@@ -1947,7 +1960,8 @@ class MainWindow(QMainWindow):
             self.crash_logs_worker = CrashLogsScanWorker()
             self.crash_logs_worker.moveToThread(self.crash_logs_thread)
 
-            self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit)  # type: ignore
+            self.crash_logs_worker.notify_sound_signal.connect(
+                self.audio_player.play_notify_signal.emit)  # type: ignore
             self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
 
             self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
@@ -2026,8 +2040,8 @@ class MainWindow(QMainWindow):
             None: This method does not return any value.
         """
         self.crash_logs_thread = None
-        self.enable_scan_buttons()    # noinspection PyUnresolvedReferences
-    
+        self.enable_scan_buttons()  # noinspection PyUnresolvedReferences
+
     def game_files_scan_finished(self) -> None:
         """
         Marks the completion of the game files scanning process.
@@ -2045,7 +2059,7 @@ class MainWindow(QMainWindow):
         """
         self.game_files_thread = None
         self.enable_scan_buttons()
-        
+
         # Check papyrus button state
         if self.papyrus_button is not None and self.papyrus_button.isChecked():
             self.start_papyrus_monitoring()
@@ -2079,5 +2093,6 @@ if __name__ == "__main__":
         print(f"Unhandled exception during application startup: {exc}", file=sys.stderr)
         if QApplication.instance():
             # noinspection PyTypeChecker
-            QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {exc}")  # pyrefly: ignore
+            QMessageBox.critical(None, "Application Startup Error",
+                                 f"An critical error occurred: {exc}")  # pyrefly: ignore
         sys.exit(1)
