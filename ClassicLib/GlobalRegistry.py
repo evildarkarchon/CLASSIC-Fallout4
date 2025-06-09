@@ -136,6 +136,4 @@ def get_local_dir(as_string: bool = False) -> Path | str:
 
 def get_main_window() -> Any:
     """Get the main window object."""
-    if not is_registered(Keys.MAIN_WINDOW):
-        return None
     return get(Keys.MAIN_WINDOW)
