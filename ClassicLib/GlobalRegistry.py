@@ -24,7 +24,6 @@ class Keys:
     GAME = "gamevars_game"
     LOCAL_DIR = "local_dir"
     IS_PRERELEASE = "is_prerelease"
-    MAIN_WINDOW = "main_window"
 
 
 def register(key: str, obj: Any) -> None:
@@ -133,7 +132,3 @@ def get_local_dir(as_string: bool = False) -> Path | str:
     if as_string:
         return str(get(Keys.LOCAL_DIR))
     return get(Keys.LOCAL_DIR)
-
-def get_main_window() -> Any:
-    """Get the main window object."""
-    return get(Keys.MAIN_WINDOW)

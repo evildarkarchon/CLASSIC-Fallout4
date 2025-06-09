@@ -2086,7 +2086,6 @@ if __name__ == "__main__":
     try:
         window = MainWindow()
         window.show()
-        GlobalRegistry.register(GlobalRegistry.Keys.MAIN_WINDOW, window)  # Register the main window in the global registry
         sys.exit(app.exec())
     except KeyboardInterrupt:
         app.exit(1)
