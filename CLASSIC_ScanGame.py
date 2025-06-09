@@ -14,7 +14,7 @@ from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
 from ClassicLib.ScanGame.Config import TEST_MODE
 from ClassicLib.ScanGame.ScanModInis import scan_mod_inis
 from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
-from ClassicLib.Util import open_file_with_encoding, normalize_list
+from ClassicLib.Util import normalize_list, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 

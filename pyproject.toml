@@ -28,6 +28,7 @@ packaging = "^25.0"
 pywin32 = ">=310"
 aiofiles = "^24.1.0"
 pytest = "^8.4.0"
+tqdm = "^4.67.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.12.0"
@@ -41,7 +42,6 @@ pytest-cov = ">=5.0.0"
 pytest-asyncio = ">=0.24.0"
 anyio = "^4.6.2.post1"
 pyinstaller-hooks-contrib = "^2025.0"
-black = "^25.1.0"
 
 [tool.poetry.requires-plugins]
 poetry-plugin-up = ">=0.9.0"

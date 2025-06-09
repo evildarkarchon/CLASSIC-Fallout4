@@ -5,7 +5,7 @@ This module contains tests focused on the FormID matching functionality
 which is an essential part of the crash log analysis.
 """
 
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
 import pytest
 

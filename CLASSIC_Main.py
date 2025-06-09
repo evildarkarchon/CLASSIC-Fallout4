@@ -9,6 +9,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
 from ClassicLib.Logger import logger
+from ClassicLib.MessageHandler import MessageTarget, init_message_handler, msg_error, msg_info, msg_warning  # noqa: F401
 from ClassicLib.Util import calculate_file_hash, configure_logging, open_file_with_encoding
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
@@ -361,6 +362,11 @@ def initialize(is_gui: bool = False) -> None:
         is_gui (bool): Indicates whether the application should operate in GUI mode. If True,
             GUI-related resources are initialized.
     """
+    if is_gui:
+        init_message_handler(GlobalRegistry.get_main_window(), True)
+    else:
+        init_message_handler(None, False)
+
     yaml_cache: Any = GlobalRegistry.get_yaml_cache()
     GlobalRegistry.register(GlobalRegistry.Keys.GUI_MODE, is_gui)
     # Preload static YAML files
