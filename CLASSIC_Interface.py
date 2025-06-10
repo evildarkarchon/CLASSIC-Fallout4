@@ -860,6 +860,8 @@ class MainWindow(QMainWindow):
         )
         if self.scan_folder_edit:  # Check if it was created
             self.scan_folder_edit.setPlaceholderText("Optional: Select a custom folder with crash logs")
+            # Connect signal to validate when user finishes editing the text
+            self.scan_folder_edit.editingFinished.connect(self.validate_scan_folder_text)
 
         # self.setup_pastebin_elements(layout)  # Re-enabled Pastebin elements
 
@@ -1858,11 +1860,79 @@ class MainWindow(QMainWindow):
         Returns:
             None
         """
-        folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder")
-        if folder:
-            if self.scan_folder_edit is not None:
-                self.scan_folder_edit.setText(folder)
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
+        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        
+        while True:
+            folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder")
+            if not folder:  # User clicked cancel
+                break
+                
+            if is_valid_custom_scan_path(folder):
+                # Valid path, update and save
+                if self.scan_folder_edit is not None:
+                    self.scan_folder_edit.setText(folder)
+                yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
+                break
+            else:
+                # Invalid path, show warning and continue loop
+                QMessageBox.warning(
+                    self, 
+                    "Invalid Custom Scan Path", 
+                    "The selected directory cannot be used as a custom scan path.\n\n"
+                    "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
+                    "and cannot be set as custom scan directories.\n\n"
+                    "Please select a different directory."
+                )
+
+    def validate_scan_folder_text(self) -> None:
+        """
+        Validates the manually entered scan folder path when the text field is edited.
+        
+        This method is called when the user finishes editing the scan folder text field
+        (e.g., by pressing Enter or when the field loses focus). It validates the entered
+        path and saves it if valid, or clears it if invalid.
+        """
+        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        
+        if self.scan_folder_edit is None:
+            return
+            
+        folder_text = self.scan_folder_edit.text().strip()
+        
+        # If empty, clear the setting
+        if not folder_text:
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", " ")
+            return
+        
+        # Check if path exists
+        path_obj = Path(folder_text)
+        if not path_obj.exists() or not path_obj.is_dir():
+            QMessageBox.warning(
+                self,
+                "Invalid Path",
+                f"The path '{folder_text}' does not exist or is not a directory.\n\n"
+                "The custom scan path has been cleared."
+            )
+            self.scan_folder_edit.clear()
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
+            return
+        
+        # Check if path is restricted
+        if not is_valid_custom_scan_path(folder_text):
+            QMessageBox.warning(
+                self,
+                "Invalid Custom Scan Path",
+                "The entered directory cannot be used as a custom scan path.\n\n"
+                "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
+                "and cannot be set as custom scan directories.\n\n"
+                "The custom scan path has been cleared."
+            )
+            self.scan_folder_edit.clear()
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
+            return
+        
+        # Valid path, save it
+        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(path_obj.resolve()))
 
     def select_folder_mods(self) -> None:
         """

@@ -349,6 +349,40 @@ def is_gui_mode() -> bool:
     return GlobalRegistry.is_gui_mode()
 
 
+def validate_settings_paths() -> None:
+    """
+    Validates and cleans up invalid paths in settings.
+    
+    This function checks for paths stored in settings and removes any that:
+    - Don't exist on the filesystem
+    - Are empty strings
+    - Are None values
+    - Are restricted (hard-coded) directories
+    
+    Currently validates:
+    - SCAN Custom Path: Used for custom crash log scanning directories
+    """
+    from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+    
+    # Validate custom scan path
+    custom_scan_path: str | None = classic_settings(str, "SCAN Custom Path")
+    if custom_scan_path:
+        # Check if the path exists
+        path_obj = Path(custom_scan_path)
+        if not path_obj.exists() or not path_obj.is_dir():
+            logger.warning(f"Invalid custom scan path found in settings: {custom_scan_path}")
+            logger.info("Removing invalid custom scan path from settings")
+            # Clear the invalid path from settings
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
+            print(f"⚠️ Removed invalid custom scan path: {custom_scan_path}")
+        elif not is_valid_custom_scan_path(custom_scan_path):
+            logger.warning(f"Restricted custom scan path found in settings: {custom_scan_path}")
+            logger.info("Removing restricted custom scan path from settings")
+            # Clear the restricted path from settings
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
+            print(f"⚠️ Removed restricted custom scan path: {custom_scan_path}")
+
+
 def initialize(is_gui: bool = False) -> None:
     """
     Initializes the application state, sets up the YAML settings cache, and optionally enables GUI mode.
@@ -379,6 +413,9 @@ def initialize(is_gui: bool = False) -> None:
         GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(sys.executable).parent)
     else:
         GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(__file__).parent)
+    
+    # Validate settings after initialization
+    validate_settings_paths()
 
 
 if __name__ == "__main__":  # AKA only autorun / do the following when NOT imported.

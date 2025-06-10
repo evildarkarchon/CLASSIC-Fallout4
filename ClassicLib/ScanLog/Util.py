@@ -39,6 +39,47 @@ def get_path_from_setting(setting_value: str | None) -> Path | None:
     return Path(setting_value) if isinstance(setting_value, str) else None
 
 
+def is_valid_custom_scan_path(path: Path | str) -> bool:
+    """
+    Check if the given path is valid as a custom scan directory.
+    Prevents users from setting hard-coded directories as custom scan paths.
+    
+    Args:
+        path: The path to validate
+        
+    Returns:
+        bool: True if the path is valid, False if it's a restricted directory
+    """
+    if isinstance(path, str):
+        path = Path(path)
+    
+    # Resolve to absolute path for comparison
+    try:
+        abs_path = path.resolve()
+    except (OSError, RuntimeError):
+        return False
+    
+    # Define restricted paths (hard-coded directories)
+    cwd = GlobalRegistry.get_local_dir().resolve()
+    restricted_paths = [
+        cwd / "Crash Logs",
+        cwd / "Crash Logs" / "Pastebin",
+        yaml_settings(Path, YAML.Game_Local, "Game_Info.Docs_Folder_XSE")
+    ]
+    
+    # Check if the path matches any restricted path
+    for restricted in restricted_paths:
+        try:
+            if abs_path == restricted or abs_path in restricted.parents:
+                logger.warning(f"Attempted to set restricted path as custom scan directory: {path}")
+                return False
+        except ValueError:
+            # Can happen if paths are on different drives on Windows
+            pass
+    
+    return True
+
+
 def crashlogs_get_files() -> list[Path]:
     """
     Generates a list of crash log file paths from various defined directories, ensuring that necessary

@@ -1524,7 +1524,15 @@ if __name__ == "__main__":
         and args.scan_path.resolve().is_dir()
         and str(args.scan_path) != classic_settings(str, "SCAN Custom Path")
     ):
-        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))
+        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        
+        if is_valid_custom_scan_path(args.scan_path):
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))
+        else:
+            print("WARNING: The specified scan path cannot be used as a custom scan directory.")
+            print("The 'Crash Logs' folder and its subfolders are managed by CLASSIC and cannot be set as custom scan directories.")
+            print("Resetting custom scan path.")
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
 
     if (
         isinstance(args.mods_folder_path, Path)
