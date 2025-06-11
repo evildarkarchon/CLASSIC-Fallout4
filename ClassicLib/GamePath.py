@@ -14,21 +14,20 @@ if TYPE_CHECKING:
 
 def _game_path_find_registry(exe_name: str) -> Path | None:
     """
-    Finds the installation path of a game in the Windows registry and updates the global
-    registry and settings accordingly. This function checks for the game's presence in
-    both the Bethesda Softworks registry entries and GOG.com registry entries. If found,
-    it verifies the existence of the executable file and stores the path in the global
-    configuration.
+    Finds the installation path of a game via system registry and validates the path.
 
-    Raises:
-        FileNotFoundError: If the registry keys or paths being checked do not exist.
-        UnboundLocalError: If a local variable is accessed before being assigned.
-        OSError: If an operating system error occurs during registry access.
+    The method attempts to retrieve the installation path of a specific game by querying the Windows
+    registry for registry keys associated with the game's installation. It first checks the key for
+    Bethesda Softworks and then attempts to retrieve the path for GOG's registry key if the first
+    attempt fails. The retrieved path is validated to ensure it exists and includes the game's
+    executable. If successful, the validated path is registered globally.
+
+    Args:
+        exe_name: The name of the game's executable file to validate its presence in the resolved path.
 
     Returns:
-        None: This function does not return a value; it updates global settings if
-        the installation path is found and valid.
-
+        A Path object representing the game's valid installation directory if found and validated,
+        otherwise None.
     """
     import winreg
 
