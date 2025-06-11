@@ -1,4 +1,4 @@
-import winreg
+import platform
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -12,27 +12,25 @@ if TYPE_CHECKING:
     from packaging.version import Version
 
 
-def game_path_find() -> None:
+def _game_path_find_registry(exe_name: str) -> Path | None:
     """
-    Attempts to locate and validate the installation directory of a game by retrieving the path through
-    several methods, including the system registry, log file inspection, and user input. Registers the
-    located path or updates configuration settings as needed.
+    Finds the installation path of a game in the Windows registry and updates the global
+    registry and settings accordingly. This function checks for the game's presence in
+    both the Bethesda Softworks registry entries and GOG.com registry entries. If found,
+    it verifies the existence of the executable file and stores the path in the global
+    configuration.
 
     Raises:
-        TypeError: If invalid types are encountered, such as improperly formatted settings or unexpected
-        results during path validation.
+        FileNotFoundError: If the registry keys or paths being checked do not exist.
+        UnboundLocalError: If a local variable is accessed before being assigned.
+        OSError: If an operating system error occurs during registry access.
 
-    Notes:
-        - The function uses several fallback mechanisms to determine the correct game path.
-        - If the registry lookup fails, the function attempts to find the path via a log file or
-          prompts the user for manual input.
-        - Registry keys from both Bethesda Softworks and GOG.com installations are queried initially.
-        - Global configuration and settings files are updated upon successfully finding the valid path.
+    Returns:
+        None: This function does not return a value; it updates global settings if
+        the installation path is found and valid.
+
     """
-    logger.debug("- - - INITIATED GAME PATH CHECK")
-
-    path: str | None
-    game_path: Path | None
+    import winreg
 
     try:
         # Open the registry key
@@ -56,12 +54,30 @@ def game_path_find() -> None:
     else:
         game_path = Path(path) if path else None
 
-    exe_name: str = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
-
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
         yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
-        return
+        return game_path
+    return None
+
+
+def game_path_find() -> None:
+    """
+    Finds and verifies the game installation path by checking specific requirements and interacting with the user
+    through different interfaces depending on context (e.g., GUI mode or console). Updates the game's settings once
+    a valid path is confirmed.
+
+    Raises
+    ------
+    TypeError
+        If essential configuration data retrieved from YAML settings is not of the expected type.
+    """
+    logger.debug("- - - INITIATED GAME PATH CHECK")
+
+    path: str | None
+    exe_name: str = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
+
+    game_path = _game_path_find_registry(exe_name) if platform.system() == "Windows" else None
 
     xse_file: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
     xse_acronym: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
