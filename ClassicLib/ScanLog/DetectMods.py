@@ -1,5 +1,7 @@
-from _collections_abc import dict_keys
-from typing import Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
+
+if TYPE_CHECKING:
+    from _collections_abc import dict_keys
 
 
 def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
