@@ -9,11 +9,12 @@ This module handles all plugin-related operations including:
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import regex as re
 from packaging.version import Version
 
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
@@ -23,21 +24,21 @@ if TYPE_CHECKING:
 class PluginAnalyzer:
     """Handles plugin analysis and matching operations."""
     
-    def __init__(self, yamldata: "ClassicScanLogsInfo"):
+    def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
         Initialize the plugin analyzer.
         
         Args:
             yamldata: Configuration data containing plugin-related settings
         """
-        self.yamldata = yamldata
-        self.pluginsearch = re.compile(
+        self.yamldata: ClassicScanLogsInfo = yamldata
+        self.pluginsearch: re.Pattern[str] = re.compile(
             r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
             flags=re.IGNORECASE,
         )
-        self.lower_plugins_ignore = {ignore.lower() for ignore in yamldata.game_ignore_plugins}
-        self.ignore_plugins_list = {item.lower() for item in yamldata.ignore_list} if yamldata.ignore_list else set()
-        
+        self.lower_plugins_ignore: set[str] = {ignore.lower() for ignore in yamldata.game_ignore_plugins}
+        self.ignore_plugins_list: set[str] = {item.lower() for item in yamldata.ignore_list} if yamldata.ignore_list else set()
+
     @staticmethod
     def loadorder_scan_loadorder_txt(autoscan_report: list[str]) -> tuple[dict[str, str], bool]:
         """
@@ -61,21 +62,21 @@ class PluginAnalyzer:
         
         append_or_extend(loadorder_messages, autoscan_report)
         
-        loadorder_plugins = {}
+        loadorder_plugins: dict = {}
         
         try:
             with loadorder_path.open(encoding="utf-8", errors="ignore") as loadorder_file:
-                loadorder_data = loadorder_file.readlines()
+                loadorder_data: list[str] = loadorder_file.readlines()
                 
             # Skip the header line (first line) of the loadorder.txt file
             if len(loadorder_data) > 1:
                 for plugin_entry in loadorder_data[1:]:
-                    plugin_entry = plugin_entry.strip()
+                    plugin_entry: str = plugin_entry.strip()
                     if plugin_entry and plugin_entry not in loadorder_plugins:
                         loadorder_plugins[plugin_entry] = loadorder_origin
         except OSError as e:
             # Log file access error but continue execution
-            error_msg = f"Error reading loadorder.txt: {e!s}"
+            error_msg: str = f"Error reading loadorder.txt: {e!s}"
             append_or_extend(error_msg, autoscan_report)
             
         # Check if any plugins were loaded
@@ -114,7 +115,7 @@ class PluginAnalyzer:
         is_new_game_crashgen_pre_137 = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
         
         # Initialize return values
-        plugin_map = {}
+        plugin_map: dict = {}
         plugin_limit_triggered = False
         limit_check_disabled = False
         
@@ -128,13 +129,13 @@ class PluginAnalyzer:
                     limit_check_disabled = True
                     
             # Extract plugin information using regex
-            plugin_match = self.pluginsearch.match(entry, concurrent=True)
+            plugin_match: re.Match[str] | None = self.pluginsearch.match(entry, concurrent=True)
             if plugin_match is None:
                 continue
                 
             # Extract plugin details
-            plugin_id = plugin_match.group(1)
-            plugin_name = plugin_match.group(3)
+            plugin_id: str | Any = plugin_match.group(1)
+            plugin_name: str | Any = plugin_match.group(3)
             
             # Skip if plugin name is empty or already processed
             if not plugin_name or plugin_name in plugin_map:
@@ -164,11 +165,11 @@ class PluginAnalyzer:
         from collections import Counter
         
         # Pre-filter call stack lines that won't match
-        relevant_lines = [line for line in segment_callstack_lower if "modified by:" not in line]
+        relevant_lines: list[str] = [line for line in segment_callstack_lower if "modified by:" not in line]
         
         # Use Counter directly instead of list + Counter conversion
-        plugins_matches = Counter()
-        
+        plugins_matches: Counter[str] = Counter()
+
         # Optimize the matching algorithm
         for line in relevant_lines:
             for plugin in crashlog_plugins_lower:
@@ -209,12 +210,12 @@ class PluginAnalyzer:
             return crashlog_plugins
             
         # Create lowercase version for comparison
-        crashlog_plugins_lower = {k.lower(): k for k in crashlog_plugins}
+        crashlog_plugins_lower: dict[str, str] = {k.lower(): k for k in crashlog_plugins}
         
         # Remove ignored plugins
         for signal in self.ignore_plugins_list:
             if signal in crashlog_plugins_lower:
-                original_key = crashlog_plugins_lower[signal]
+                original_key: str = crashlog_plugins_lower[signal]
                 del crashlog_plugins[original_key]
                 
         return crashlog_plugins

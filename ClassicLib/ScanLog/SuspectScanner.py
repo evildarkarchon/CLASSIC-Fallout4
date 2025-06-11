@@ -10,6 +10,7 @@ This module scans for known crash patterns and suspects including:
 
 from typing import TYPE_CHECKING
 
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
@@ -19,14 +20,14 @@ if TYPE_CHECKING:
 class SuspectScanner:
     """Handles scanning for known crash patterns and suspects."""
     
-    def __init__(self, yamldata: "ClassicScanLogsInfo"):
+    def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
         Initialize the suspect scanner.
         
         Args:
             yamldata: Configuration data containing suspect patterns
         """
-        self.yamldata = yamldata
+        self.yamldata: ClassicScanLogsInfo = yamldata
         
     def suspect_scan_mainerror(
         self, autoscan_report: list[str], crashlog_mainerror: str, max_warn_length: int
@@ -53,10 +54,10 @@ class SuspectScanner:
             error_severity, error_name = error_key.split(" | ", 1)
             
             # Format the error name for report
-            formatted_error_name = error_name.ljust(max_warn_length, ".")
+            formatted_error_name: str = error_name.ljust(max_warn_length, ".")
             
             # Add the error to the report
-            report_entry = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
+            report_entry: str = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
             append_or_extend(report_entry, autoscan_report)
             
             # Update suspect found status
@@ -167,8 +168,8 @@ class SuspectScanner:
         error_name: str, error_severity: str, max_warn_length: int, autoscan_report: list[str]
     ) -> None:
         """Add a found suspect to the report with proper formatting."""
-        formatted_error_name = error_name.ljust(max_warn_length, ".")
-        message = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
+        formatted_error_name: str = error_name.ljust(max_warn_length, ".")
+        message: str = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
         append_or_extend(message, autoscan_report)
         
     @staticmethod
@@ -180,7 +181,7 @@ class SuspectScanner:
             crashlog_mainerror: Main error string
             autoscan_report: List to append findings
         """
-        crashlog_mainerror_lower = crashlog_mainerror.lower()
+        crashlog_mainerror_lower: str = crashlog_mainerror.lower()
         if ".dll" in crashlog_mainerror_lower and "tbbmalloc" not in crashlog_mainerror_lower:
             append_or_extend(
                 (

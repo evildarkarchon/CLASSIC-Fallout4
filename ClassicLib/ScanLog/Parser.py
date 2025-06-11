@@ -29,12 +29,12 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
     main_error = None
     
     for line in crash_data:
-        if game_version is None and game_root_name and line.startswith(game_root_name):
-            game_version = line.strip()
-        elif crashgen_version is None and line.startswith(crashgen_name):
-            crashgen_version = line.strip()
-        elif main_error is None and line.startswith("Unhandled exception"):
-            main_error = line.replace("|", "\n", 1)
+        if game_root_name and line.startswith(game_root_name):
+            game_version: str = line.strip()
+        if line.startswith(crashgen_name):
+            crashgen_version: str = line.strip()
+        if line.startswith("Unhandled exception"):
+            main_error: str = line.replace("|", "\n", 1)
             
     return (
         game_version or "UNKNOWN",
@@ -56,21 +56,21 @@ def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, 
         A list of segments where each segment is a list of lines
     """
     segments: list[list[str]] = []
-    total_lines = len(crash_data)
+    total_lines: int = len(crash_data)
     current_index = 0
     segment_index = 0
     collecting = False
     segment_start_index = 0
-    current_boundary = segment_boundaries[0][0]  # Start with first boundary
+    current_boundary: str = segment_boundaries[0][0]  # Start with first boundary
     
     while current_index < total_lines:
-        line = crash_data[current_index]
+        line: str = crash_data[current_index]
         
         # Check if we've hit a boundary
         if line.startswith(current_boundary):
             if collecting:
                 # End of current segment
-                segment_end_index = current_index - 1 if current_index > 0 else current_index
+                segment_end_index: int = current_index - 1 if current_index > 0 else current_index
                 segments.append(crash_data[segment_start_index:segment_end_index])
                 segment_index += 1
                 
@@ -82,7 +82,7 @@ def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, 
                 segment_start_index = current_index + 1 if total_lines > current_index else current_index
                 
             # Toggle collection state and update boundary
-            collecting = not collecting
+            collecting: bool = not collecting
             current_boundary = segment_boundaries[segment_index][int(collecting)]
             
             # Handle special cases
@@ -122,7 +122,7 @@ def find_segments(crash_data: list[str], crashgen_name: str, xse_acronym: str, g
         - Processed segments
     """
     # Define segment boundaries
-    segment_boundaries = [
+    segment_boundaries: list[tuple[str, str]] = [
         ("\t[Compatibility]", "SYSTEM SPECS:"),  # segment_crashgen
         ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),  # segment_system
         ("PROBABLE CALL STACK:", "MODULES:"),  # segment_callstack
@@ -135,13 +135,13 @@ def find_segments(crash_data: list[str], crashgen_name: str, xse_acronym: str, g
     game_version, crashgen_version, main_error = parse_crash_header(crash_data, crashgen_name, game_root_name)
     
     # Parse segments
-    segments = extract_segments(crash_data, segment_boundaries, "EOF")
+    segments: list[list[str]] = extract_segments(crash_data, segment_boundaries, "EOF")
     
     # Process segments to strip whitespace
-    processed_segments = [[line.strip() for line in segment] for segment in segments] if segments else segments
+    processed_segments: list[list[str]] = [[line.strip() for line in segment] for segment in segments] if segments else segments
     
     # Ensure all expected segments exist (add empty lists for missing segments)
-    missing_segments_count = len(segment_boundaries) - len(processed_segments)
+    missing_segments_count: int = len(segment_boundaries) - len(processed_segments)
     if missing_segments_count > 0:
         processed_segments.extend([[]] * missing_segments_count)
         
@@ -164,12 +164,12 @@ def extract_module_names(module_texts: set[str]) -> set[str]:
         return set()
         
     # Pattern matches module name potentially followed by version
-    pattern = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
-    
-    result = set()
+    pattern: re.Pattern[str] = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
+
+    result: set[str] = set()
     for text in module_texts:
-        text = text.strip()
-        match = pattern.match(text)
+        text: str = text.strip()
+        match: re.Match[str] | None = pattern.match(text)
         if match:
             result.add(match.group(1))
         else:

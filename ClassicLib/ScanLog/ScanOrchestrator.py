@@ -23,6 +23,7 @@ from ClassicLib.ScanLog.Parser import extract_module_names, find_segments
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
 from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 from ClassicLib.ScanLog.SettingsScanner import SettingsScanner
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
 from ClassicLib.Util import append_or_extend, crashgen_version_gen
@@ -53,8 +54,8 @@ class ScanOrchestrator:
             show_formid_values: Whether to show FormID values
             formid_db_exists: Whether FormID database exists
         """
-        self.yamldata = yamldata
-        self.crashlogs = crashlogs
+        self.yamldata: ClassicScanLogsInfo = yamldata
+        self.crashlogs: ThreadSafeLogCache = crashlogs
 
         # Initialize all modules
         self.plugin_analyzer = PluginAnalyzer(yamldata)
@@ -66,7 +67,7 @@ class ScanOrchestrator:
         self.fcx_handler = FCXModeHandler(fcx_mode)
 
         # Get game info
-        self.game_root_name = yaml_settings(str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name")
+        self.game_root_name: str | None = yaml_settings(str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name")
 
     def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
         """
@@ -82,12 +83,12 @@ class ScanOrchestrator:
             - Boolean indicating if scan failed
             - Counter with statistics
         """
-        autoscan_report = []
+        autoscan_report: list[str] = []
         trigger_scan_failed = False
-        local_stats = Counter(scanned=1, incomplete=0, failed=0)
+        local_stats: Counter[str] = Counter(scanned=1, incomplete=0, failed=0)
 
         # Read crash data
-        crash_data = self.crashlogs.read_log(crashlog_file.name)
+        crash_data: list[str] = self.crashlogs.read_log(crashlog_file.name)
 
         # Generate report header
         self.report_generator.generate_header(crashlog_file.name, autoscan_report)
@@ -149,10 +150,10 @@ class ScanOrchestrator:
     ) -> None:
         """Process all sections of the crash log."""
         # Version checking
-        game_version = crashgen_version_gen(crashlog_gameversion)
-        version_current = crashgen_version_gen(crashlog_crashgen)
-        version_latest = crashgen_version_gen(self.yamldata.crashgen_latest_og)
-        version_latest_vr = crashgen_version_gen(self.yamldata.crashgen_latest_vr)
+        game_version: Version = crashgen_version_gen(crashlog_gameversion)
+        version_current: Version = crashgen_version_gen(crashlog_crashgen)
+        version_latest: Version = crashgen_version_gen(self.yamldata.crashgen_latest_og)
+        version_latest_vr: Version = crashgen_version_gen(self.yamldata.crashgen_latest_vr)
 
         # Generate error section
         self.report_generator.generate_error_section(
@@ -160,10 +161,10 @@ class ScanOrchestrator:
         )
 
         # Extract module names
-        xsemodules = extract_module_names(set(segment_xsemodules))
+        xsemodules: set[str] = extract_module_names(set(segment_xsemodules))
 
         # Parse crashgen settings
-        crashgen = self._parse_crashgen_settings(segment_crashgen)
+        crashgen: dict[str, bool | int | str] = self._parse_crashgen_settings(segment_crashgen)
 
         # Check GPU
         crashlog_gpu, crashlog_gpu_rival = scan_log_gpu(segment_system)
@@ -228,7 +229,7 @@ class ScanOrchestrator:
         trigger_plugins_loaded = False
 
         # Check if plugins loaded
-        esm_name = f"{GlobalRegistry.get_game()}.esm"
+        esm_name: str = f"{GlobalRegistry.get_game()}.esm"
         if any(esm_name in elem for elem in segment_plugins):
             trigger_plugins_loaded = True
 
@@ -251,11 +252,11 @@ class ScanOrchestrator:
         # Add vulkan if found
         for elem in segment_allmodules if segment_allmodules else []:
             if "vulkan" in elem.lower():
-                elem_parts = elem.strip().split(" ", 1)
+                elem_parts: list[str] = elem.strip().split(" ", 1)
                 crashlog_plugins.update({elem_parts[0]: "DLL"})
 
         # Filter ignored plugins
-        crashlog_plugins = self.plugin_analyzer.filter_ignored_plugins(crashlog_plugins)
+        crashlog_plugins: dict[str, str] = self.plugin_analyzer.filter_ignored_plugins(crashlog_plugins)
 
         return crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded
 
@@ -267,7 +268,7 @@ class ScanOrchestrator:
         self.suspect_scanner.check_dll_crash(crashlog_mainerror, autoscan_report)
 
         # Scan for suspects
-        segment_callstack_intact = "".join(segment_callstack)
+        segment_callstack_intact: str = "".join(segment_callstack)
         max_warn_length = 30
 
         trigger_suspect_found = any((

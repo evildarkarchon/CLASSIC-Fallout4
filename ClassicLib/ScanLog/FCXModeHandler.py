@@ -9,6 +9,7 @@ This module manages FCX mode operations including:
 """
 
 import threading
+from typing import Literal
 
 
 class FCXModeHandler:
@@ -20,16 +21,16 @@ class FCXModeHandler:
     _main_files_result: str = ""
     _game_files_result: str = ""
     
-    def __init__(self, fcx_mode: bool | None):
+    def __init__(self, fcx_mode: bool | None) -> None:
         """
         Initialize FCX mode handler.
         
         Args:
             fcx_mode: Whether FCX mode is enabled
         """
-        self.fcx_mode = fcx_mode
-        self.main_files_check = ""
-        self.game_files_check = ""
+        self.fcx_mode: bool | None = fcx_mode
+        self.main_files_check: str | Literal[''] = ""
+        self.game_files_check: str | Literal[''] = ""
         
     def check_fcx_mode(self) -> None:
         """

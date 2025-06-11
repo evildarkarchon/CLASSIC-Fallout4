@@ -10,6 +10,7 @@ This module validates crash generator and mod settings including:
 
 from typing import TYPE_CHECKING
 
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
@@ -19,14 +20,14 @@ if TYPE_CHECKING:
 class SettingsScanner:
     """Handles validation of crash generator and mod settings."""
     
-    def __init__(self, yamldata: "ClassicScanLogsInfo"):
+    def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
         Initialize the settings scanner.
         
         Args:
             yamldata: Configuration data
         """
-        self.yamldata = yamldata
+        self.yamldata: ClassicScanLogsInfo = yamldata
         
     def scan_buffout_achievements_setting(
         self, autoscan_report: list[str], xsemodules: set[str], crashgen: dict[str, bool | int | str]
@@ -39,7 +40,7 @@ class SettingsScanner:
             xsemodules: Set of installed XSE modules
             crashgen: Crash generator configuration
         """
-        crashgen_achievements = crashgen.get("Achievements")
+        crashgen_achievements: bool | int | str | None = crashgen.get("Achievements")
         if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
             append_or_extend(
                 (
@@ -71,7 +72,7 @@ class SettingsScanner:
         success_prefix = "✔️ "
         warning_prefix = "# ❌ CAUTION : "
         fix_prefix = " FIX: "
-        crashgen_name = self.yamldata.crashgen_name
+        crashgen_name: str = self.yamldata.crashgen_name
         
         def add_success_message(message: str) -> None:
             """Add a success message to the report."""
@@ -82,7 +83,7 @@ class SettingsScanner:
             append_or_extend((f"{warning_prefix}{warning} # \n", f"{fix_prefix}{fix}{separator}"), autoscan_report)
             
         # Check main MemoryManager setting
-        mem_manager_enabled = crashgen.get("MemoryManager", False)
+        mem_manager_enabled: bool | int | str = crashgen.get("MemoryManager", False)
         
         # Handle main memory manager configuration
         if mem_manager_enabled:
@@ -116,7 +117,7 @@ class SettingsScanner:
             
         # Check additional memory settings for X-Cell compatibility
         if has_xcell:
-            memory_settings = {
+            memory_settings: dict[str, str] = {
                 "HavokMemorySystem": "Havok Memory System",
                 "BSTextureStreamerLocalHeap": "BSTextureStreamerLocalHeap",
                 "ScaleformAllocator": "Scaleform Allocator",
@@ -142,7 +143,7 @@ class SettingsScanner:
             autoscan_report: Report list for messages
             crashgen: Crash generator configuration
         """
-        crashgen_archivelimit = crashgen.get("ArchiveLimit")
+        crashgen_archivelimit: bool | int | str | None = crashgen.get("ArchiveLimit")
         if crashgen_archivelimit:
             append_or_extend(
                 (
@@ -168,7 +169,7 @@ class SettingsScanner:
             autoscan_report: Report list for messages
             xsemodules: Set of installed modules
         """
-        crashgen_f4ee = crashgen.get("F4EE")
+        crashgen_f4ee: bool | int | str | None = crashgen.get("F4EE")
         if crashgen_f4ee is not None:
             if not crashgen_f4ee and "f4ee.dll" in xsemodules:
                 append_or_extend(

@@ -11,7 +11,7 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 from CLASSIC_Main import initialize
 from ClassicLib import GlobalRegistry
@@ -42,22 +42,22 @@ class ClassicScanLogs:
     def __init__(self) -> None:
         """Initialize the crash log scanner with new modular components."""
         # Get crash log files
-        self.crashlog_list = crashlogs_get_files()
+        self.crashlog_list: list[Path] = crashlogs_get_files()
         print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
         
         # Load settings
-        self.remove_list = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ("",)
+        self.remove_list: tuple[str] | tuple[Literal['']] = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ("",)
         crashlogs_reformat(self.crashlog_list, self.remove_list)
         
         # Initialize configuration
         self.yamldata = ClassicScanLogsInfo()
-        self.fcx_mode = classic_settings(bool, "FCX Mode")
-        self.show_formid_values = classic_settings(bool, "Show FormID Values")
-        self.formid_db_exists = any(db.is_file() for db in DB_PATHS)
-        self.move_unsolved_logs = classic_settings(bool, "Move Unsolved Logs")
+        self.fcx_mode: bool | None = classic_settings(bool, "FCX Mode")
+        self.show_formid_values: bool | None = classic_settings(bool, "Show FormID Values")
+        self.formid_db_exists: bool = any(db.is_file() for db in DB_PATHS)
+        self.move_unsolved_logs: bool | None = classic_settings(bool, "Move Unsolved Logs")
         
         print("SCANNING CRASH LOGS, PLEASE WAIT...\n")
-        self.scan_start_time = time.perf_counter()
+        self.scan_start_time: float = time.perf_counter()
         
         # Initialize thread-safe log cache
         self.crashlogs = ThreadSafeLogCache(self.crashlog_list)
@@ -72,7 +72,7 @@ class ClassicScanLogs:
         )
         
         # Statistics tracking
-        self.crashlog_stats = Counter(scanned=0, incomplete=0, failed=0)
+        self.crashlog_stats: Counter[str] = Counter(scanned=0, incomplete=0, failed=0)
         
         logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
         
@@ -103,10 +103,10 @@ def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigge
         trigger_scan_failed: Whether the scan failed
         scanner: The scanner instance
     """
-    autoscan_path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
+    autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
     with autoscan_path.open("w", encoding="utf-8", errors="ignore") as autoscan_file:
         logger.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
-        autoscan_output = "".join(autoscan_report)
+        autoscan_output: str = "".join(autoscan_report)
         autoscan_file.write(autoscan_output)
         
     if trigger_scan_failed and scanner.move_unsolved_logs:
@@ -115,10 +115,10 @@ def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigge
 
 def move_unsolved_logs(crashlog_file: Path) -> None:
     """Move unsolved logs to backup location."""
-    backup_path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup/Unsolved Logs"
+    backup_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup/Unsolved Logs"
     backup_path.mkdir(parents=True, exist_ok=True)
-    autoscan_filepath = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
-    backup_filepath = backup_path / autoscan_filepath.name
+    autoscan_filepath: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
+    backup_filepath: Path = backup_path / autoscan_filepath.name
     if crashlog_file.exists():
         crashlog_file.rename(backup_filepath)
     else:
@@ -134,11 +134,11 @@ def crashlogs_scan() -> None:
     scanner = ClassicScanLogs()
     FCXModeHandler.reset_fcx_checks()  # Reset FCX checks for new scan session
     
-    yamldata = scanner.yamldata
-    scan_failed_list = []
-    
+    yamldata: ClassicScanLogsInfo = scanner.yamldata
+    scan_failed_list: list = []
+
     # Determine number of worker threads
-    max_workers = min(os.cpu_count() or 4, 8)  # Default to 4, max of 8
+    max_workers: int = min(os.cpu_count() or 4, 8)  # Default to 4, max of 8
     
     # Process crash logs in parallel
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -169,7 +169,7 @@ def crashlogs_scan() -> None:
                 scanner.crashlog_stats["failed"] += 1
                     
         # Check for failed or invalid crash logs
-        scan_invalid_list = sorted(Path.cwd().glob("crash-*.txt"))
+        scan_invalid_list: list[Path] = sorted(Path.cwd().glob("crash-*.txt"))
         if scan_failed_list or scan_invalid_list:
             print("❌ NOTICE : CLASSIC WAS UNABLE TO PROPERLY SCAN THE FOLLOWING LOG(S):")
             print("\n".join(scan_failed_list))

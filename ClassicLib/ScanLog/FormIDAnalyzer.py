@@ -9,10 +9,11 @@ This module manages FormID extraction and lookup operations including:
 """
 
 from collections import Counter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import regex as re
 
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.ScanLog.Util import get_entry
 from ClassicLib.Util import append_or_extend
 
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 class FormIDAnalyzer:
     """Handles FormID analysis and lookup operations."""
     
-    def __init__(self, yamldata: "ClassicScanLogsInfo", show_formid_values: bool, formid_db_exists: bool):
+    def __init__(self, yamldata: "ClassicScanLogsInfo", show_formid_values: bool, formid_db_exists: bool) -> None:
         """
         Initialize the FormID analyzer.
         
@@ -32,12 +33,12 @@ class FormIDAnalyzer:
             show_formid_values: Whether to show FormID values
             formid_db_exists: Whether FormID database exists
         """
-        self.yamldata = yamldata
-        self.show_formid_values = show_formid_values
-        self.formid_db_exists = formid_db_exists
+        self.yamldata: ClassicScanLogsInfo = yamldata
+        self.show_formid_values: bool = show_formid_values
+        self.formid_db_exists: bool = formid_db_exists
         
         # Pattern to match FormID format in crash logs
-        self.formid_pattern = re.compile(
+        self.formid_pattern: re.Pattern[str] = re.compile(
             r"^\s*Form ID:\s*0x([0-9A-F]{8})",
             re.IGNORECASE,
         )
@@ -52,15 +53,15 @@ class FormIDAnalyzer:
         Returns:
             List of FormID strings found
         """
-        formids_matches = []
+        formids_matches: list[str] = []
         
         if not segment_callstack:
             return formids_matches
             
         for line in segment_callstack:
-            match = self.formid_pattern.search(line)
+            match: re.Match[str] | None = self.formid_pattern.search(line)
             if match:
-                formid_id = match.group(1).upper()  # Get the hex part without 0x
+                formid_id: str | Any = match.group(1).upper()  # Get the hex part without 0x
                 # Skip if it starts with FF (plugin limit)
                 if not formid_id.startswith("FF"):
                     formids_matches.append(f"Form ID: {formid_id}")
@@ -79,9 +80,9 @@ class FormIDAnalyzer:
             autoscan_report: List to append analysis results
         """
         if formids_matches:
-            formids_found = dict(Counter(sorted(formids_matches)))
+            formids_found: dict[str, int] = dict(Counter(sorted(formids_matches)))
             for formid_full, count in formids_found.items():
-                formid_split = formid_full.split(": ", 1)
+                formid_split: list[str] | None = formid_full.split(": ", 1)
                 if len(formid_split) < 2:
                     continue
                     
@@ -90,7 +91,7 @@ class FormIDAnalyzer:
                         continue
                         
                     if self.show_formid_values and self.formid_db_exists:
-                        report = get_entry(formid_split[1][2:], plugin)
+                        report: str | None = get_entry(formid_split[1][2:], plugin)
                         if report:
                             append_or_extend(f"- {formid_full} | [{plugin}] | {report} | {count}\n", autoscan_report)
                             continue

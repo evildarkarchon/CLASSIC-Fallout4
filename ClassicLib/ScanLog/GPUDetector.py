@@ -55,7 +55,7 @@ def get_gpu_info(segment_system: list[str]) -> dict[str, str]:
     Returns:
         Dictionary containing GPU details
     """
-    gpu_info = {
+    gpu_info: dict[str, str | None] = {
         "primary": "Unknown",
         "secondary": None,
         "manufacturer": "Unknown",

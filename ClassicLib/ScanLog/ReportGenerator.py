@@ -14,6 +14,7 @@ This module handles report generation and formatting including:
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib import GlobalRegistry
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
@@ -30,7 +31,7 @@ class ReportGenerator:
         Args:
             yamldata: Configuration data
         """
-        self.yamldata = yamldata
+        self.yamldata: ClassicScanLogsInfo = yamldata
         
     def generate_header(self, crashlog_filename: str, autoscan_report: list[str]) -> None:
         """

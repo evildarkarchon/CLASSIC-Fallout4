@@ -1,3 +1,4 @@
+from _collections_abc import dict_keys
 from typing import Literal, cast
 
 
@@ -72,7 +73,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     mods_found = False
     yaml_dict_lower: dict[str, str] = _convert_to_lowercase(yaml_dict)
     crashlog_plugins_lower: dict[str, str] = _convert_to_lowercase(crashlog_plugins)
-    plugin_names = crashlog_plugins_lower.keys()
+    plugin_names: dict_keys[str, str] = crashlog_plugins_lower.keys()
 
     for mod_pair, mod_warning in yaml_dict_lower.items():
         mod1, mod2 = mod_pair.split(" | ", 1)
