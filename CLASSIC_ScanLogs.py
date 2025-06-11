@@ -93,22 +93,6 @@ class ClassicScanLogs:
         return self.orchestrator.process_crash_log(crashlog_file)
 
 
-def process_crashlog(scanner: ClassicScanLogs, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
-    """
-    Process a single crash log file.
-    
-    This wrapper function maintains compatibility with the original implementation.
-    
-    Args:
-        scanner: The ClassicScanLogs instance
-        crashlog_file: Path to the crash log file
-        
-    Returns:
-        Tuple containing file path, report, failure status, and statistics
-    """
-    return scanner.process_crashlog(crashlog_file)
-
-
 def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: ClassicScanLogs) -> None:
     """
     Write report to file and handle unsolved logs.
@@ -160,7 +144,7 @@ def crashlogs_scan() -> None:
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all tasks
         futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
-            executor.submit(process_crashlog, scanner, crashlog_file) 
+            executor.submit(scanner.process_crashlog, crashlog_file) 
             for crashlog_file in scanner.crashlog_list
         ]
             
