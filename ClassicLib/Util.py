@@ -18,7 +18,7 @@ import chardet
 import requests
 from packaging.version import Version
 
-from ClassicLib import Constants, GlobalRegistry
+from ClassicLib import Constants, GlobalRegistry, msg_error, msg_info
 from ClassicLib.Logger import logger
 
 
@@ -200,9 +200,9 @@ def configure_logging(classic_logger: Logger) -> None:
         if log_age.days > 7:
             try:
                 journal_path.unlink(missing_ok=True)
-                print("CLASSIC Journal.log has been deleted and regenerated due to being older than 7 days.")
+                msg_info("CLASSIC Journal.log has been deleted and regenerated due to being older than 7 days.")
             except (ValueError, OSError) as err:
-                print(f"An error occurred while deleting {journal_path.name}: {err}")
+                msg_error(f"An error occurred while deleting {journal_path.name}: {err}")
 
     # Make sure we only configure the handler once
     if "CLASSIC" not in logging.Logger.manager.loggerDict:

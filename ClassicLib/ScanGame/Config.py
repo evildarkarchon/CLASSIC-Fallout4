@@ -11,7 +11,7 @@ from tomlkit import TOMLDocument
 from tomlkit.items import Item
 from tomlkit.items import Table as TomlkitTable
 
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, msg_error
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Util import calculate_file_hash, calculate_similarity
@@ -262,17 +262,20 @@ class ConfigFileCache:
             try:
                 self._load_config(file_name_lower)
             except FileNotFoundError:
-                logger.error(f"ERROR: Config file not found - {file_name_lower}")
+                logger.debug(f"Config file not found: {file_name_lower}")
+                msg_error(f"Config file not found: {file_name_lower}")
                 return None
 
         config: iniparse.ConfigParser = self._config_file_cache[file_name_lower]["settings"]
 
         if not config.has_section(section):
-            logger.error(f"ERROR: Section '{section}' does not exist in '{self._config_files[file_name_lower]}'")
+            logger.debug(f"Section '{section}' not found in '{self._config_files[file_name_lower]}'")
+            msg_error(f"Section '{section}' does not exist in config file")
             return None
 
         if not config.has_option(section, setting):
-            logger.error(f"ERROR: Key '{setting}' does not exist in section '{section}' of '{self._config_files[file_name_lower]}'")
+            logger.debug(f"Key '{setting}' not found in section '{section}' of '{self._config_files[file_name_lower]}'")
+            msg_error(f"Setting '{setting}' not found in section '{section}'")
             return None
 
         try:
@@ -286,7 +289,8 @@ class ConfigFileCache:
                 return config.getfloat(section, setting)  # type: ignore[no-any-return]
             raise NotImplementedError
         except ValueError as e:
-            logger.error(f"ERROR: Unexpected value type - {e}")
+            logger.debug(f"Value type error: {e}")
+            msg_error(f"Invalid value type in configuration: {e}")
             return None
         except (configparser.NoSectionError, configparser.NoOptionError):
             return None
@@ -361,7 +365,8 @@ class ConfigFileCache:
             try:
                 self._load_config(file_name_lower)
             except FileNotFoundError:
-                logger.error(f"ERROR: Config file not found - {file_name_lower}")
+                logger.debug(f"Config file not found: {file_name_lower}")
+                msg_error(f"Config file not found: {file_name_lower}")
                 return
 
         cache: ConfigFile = self._config_file_cache[file_name_lower]

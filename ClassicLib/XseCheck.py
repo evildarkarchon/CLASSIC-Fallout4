@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, cast
 
-from ClassicLib import Constants, GlobalRegistry
+from ClassicLib import Constants, GlobalRegistry, msg_warning
 from ClassicLib.Logger import logger
 from ClassicLib.Util import open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings
@@ -190,7 +190,8 @@ def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: st
                     file_hash = hashlib.sha256(file_contents).hexdigest()
                     actual_hashes[filename] = file_hash
             except OSError as e:
-                logger.warning(f"Error reading file {script_path}: {e}")
+                logger.debug(f"Error reading file {script_path}: {e}")
+                msg_warning(f"Cannot read script file: {script_path.name}")
                 actual_hashes[filename] = None
         else:
             actual_hashes[filename] = None

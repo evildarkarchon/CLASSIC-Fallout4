@@ -4,7 +4,7 @@
 from pathlib import Path
 from typing import Any, cast
 
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, msg_error
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import mod_toml_config
@@ -70,7 +70,8 @@ class CrashgenChecker:
             try:
                 xse_files = {file.name.lower() for file in self.plugins_path.iterdir()}
             except (PermissionError, OSError) as e:
-                logger.error(f"Error accessing plugins directory: {e}")
+                logger.debug(f"Error accessing plugins directory: {e}")
+                msg_error(f"Cannot access plugins directory: {e}")
         return xse_files
 
     def has_plugin(self, plugin_names: list[str]) -> bool:

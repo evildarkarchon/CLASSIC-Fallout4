@@ -2,7 +2,7 @@ import platform
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, msg_error, msg_info
 from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERSION, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Util import get_game_version, open_file_with_encoding
@@ -73,7 +73,6 @@ def game_path_find() -> None:
     """
     logger.debug("- - - INITIATED GAME PATH CHECK")
 
-    path: str | None
     exe_name: str = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
 
     game_path = _game_path_find_registry(exe_name) if platform.system() == "Windows" else None
@@ -86,9 +85,7 @@ def game_path_find() -> None:
         raise TypeError
 
     if not xse_file or not Path(cast("str", xse_file)).is_file():
-        print(f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n")
-        print(f"   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n")
-        print("    After that, try running CLASSIC again! \n-----\n")
+        msg_error(f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n    After that, try running CLASSIC again! \n-----\n")
         return
 
     with open_file_with_encoding(cast("str", xse_file)) as LOG_Check:
@@ -115,14 +112,14 @@ def game_path_find() -> None:
         return
 
     while True:
-        print(f"> > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {game_name} IS LOCATED < <")
+        msg_info(f"> > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {game_name} IS LOCATED < <")
         path_input: str = input(rf"(EXAMPLE: C:\Steam\steamapps\common\{game_name} | Press ENTER to confirm.)\n> ")
-        print(f"You entered: {path_input} | This path will be automatically added to CLASSIC Settings.yaml")
+        msg_info(f"You entered: {path_input} | This path will be automatically added to CLASSIC Settings.yaml")
         game_path = Path(path_input.strip())
         if game_path and game_path.joinpath(exe_name).is_file():
             yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
             return
-        print(f"❌ ERROR : NO {GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe FILE FOUND IN '{game_path}'! Please try again.")
+        msg_error(f"ERROR : NO {GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe FILE FOUND IN '{game_path}'! Please try again.")
 
 
 def game_generate_paths() -> None:

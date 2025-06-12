@@ -4,7 +4,7 @@ from pathlib import Path
 
 from packaging.version import Version
 
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, msg_error
 from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -26,7 +26,7 @@ class ThreadSafeLogCache:
             try:
                 self.cache[file.name] = file.read_bytes()
             except OSError as e:
-                print(f"Error reading {file}: {e}")
+                msg_error(f"Error reading {file}: {e}")
 
     def read_log(self, logname: str) -> list[str]:
         """

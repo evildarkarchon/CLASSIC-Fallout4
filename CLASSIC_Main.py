@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, init_message_handler, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
@@ -325,9 +325,9 @@ def main_generate_required() -> None:
     game_name: str | None = yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name")
     if not (isinstance(classic_ver, str) and isinstance(game_name, str)):
         raise TypeError
-    print(f"Hello World! | Crash Log Auto Scanner & Setup Integrity Checker | {classic_ver} | {game_name}")
-    print("REMINDER: COMPATIBLE CRASH LOGS MUST START WITH 'crash-' AND MUST HAVE .log EXTENSION \n")
-    print("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...")
+    msg_info(f"Hello World! | Crash Log Auto Scanner & Setup Integrity Checker | {classic_ver} | {game_name}")
+    msg_info("REMINDER: COMPATIBLE CRASH LOGS MUST START WITH 'crash-' AND MUST HAVE .log EXTENSION")
+    msg_info("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...")
     logger.debug(f"> > > STARTED {classic_ver}")
 
     game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
@@ -340,8 +340,8 @@ def main_generate_required() -> None:
     else:
         main_files_backup()
 
-    print("✔️ ALL CLASSIC AND GAME SETTINGS CHECKS HAVE BEEN PERFORMED!")
-    print("    YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES \n")
+    msg_success("ALL CLASSIC AND GAME SETTINGS CHECKS HAVE BEEN PERFORMED!")
+    msg_info("YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES")
 
 
 def is_gui_mode() -> bool:
@@ -370,17 +370,15 @@ def validate_settings_paths() -> None:
         # Check if the path exists
         path_obj = Path(custom_scan_path)
         if not path_obj.exists() or not path_obj.is_dir():
-            logger.warning(f"Invalid custom scan path found in settings: {custom_scan_path}")
-            logger.info("Removing invalid custom scan path from settings")
+            logger.debug(f"Invalid custom scan path found in settings: {custom_scan_path}")
             # Clear the invalid path from settings
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
-            print(f"⚠️ Removed invalid custom scan path: {custom_scan_path}")
+            msg_warning(f"Removed invalid custom scan path: {custom_scan_path}")
         elif not is_valid_custom_scan_path(custom_scan_path):
-            logger.warning(f"Restricted custom scan path found in settings: {custom_scan_path}")
-            logger.info("Removing restricted custom scan path from settings")
+            logger.debug(f"Restricted custom scan path found in settings: {custom_scan_path}")
             # Clear the restricted path from settings
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
-            print(f"⚠️ Removed restricted custom scan path: {custom_scan_path}")
+            msg_warning(f"Removed restricted custom scan path: {custom_scan_path}")
 
 
 def initialize(is_gui: bool = False) -> None:
@@ -395,6 +393,9 @@ def initialize(is_gui: bool = False) -> None:
         is_gui (bool): Indicates whether the application should operate in GUI mode. If True,
             GUI-related resources are initialized.
     """
+    # Initialize message handler first
+    init_message_handler(parent=None, is_gui_mode=is_gui)
+    
     yaml_cache: Any = GlobalRegistry.get_yaml_cache()
     GlobalRegistry.register(GlobalRegistry.Keys.GUI_MODE, is_gui)
     # Preload static YAML files

@@ -26,7 +26,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QTabWidget,
-    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -43,6 +42,7 @@ from ClassicLib.Interface.Pastebin import PastebinFetchWorker
 from ClassicLib.Interface.PathDialog import ManualPathDialog
 from ClassicLib.Interface.StyleSheets import DARK_MODE
 from ClassicLib.Logger import logger
+from ClassicLib.MessageHandler import init_message_handler, msg_error, msg_info, msg_warning
 from ClassicLib.Update import UpdateCheckError, is_latest_version
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -82,7 +82,7 @@ def show_game_path_dialog_static() -> Path | None:
             )
         else:
             # User cancelled - show confirmation dialog
-            reply = QMessageBox.question(
+            reply: QMessageBox.StandardButton = QMessageBox.question(
                 None,  # pyrefly: ignore
                 "Exit Application?",
                 "A valid game path is required to continue.\nDo you want to exit the application?",
@@ -92,7 +92,7 @@ def show_game_path_dialog_static() -> Path | None:
 
             if reply == QMessageBox.StandardButton.Yes:
                 # Exit the application
-                print("User chose to exit the application.")
+                msg_info("User chose to exit the application.")
                 sys.exit(0)  # Exit with success code
             # If No, the loop continues and shows the dialog again
 
@@ -176,35 +176,6 @@ class CustomAboutDialog(QDialog):
         close_button.clicked.connect(self.accept)
         return close_button
 
-
-class OutputRedirector(QObject):
-    """
-    Acts as a redirector for output, allowing text to be emitted through a signal.
-
-    This class provides functionality to intercept and redirect standard output or any textual
-    messages to a custom signal (`outputWritten`). It is particularly useful for capturing and
-    managing output in a graphical user interface or other similar contexts where direct use
-    of standard output is not ideal.
-
-    Attributes:
-        outputWritten (Signal): A signal emitted when text is written, carrying the emitted text as a string.
-    """
-
-    outputWritten: Signal = Signal(str)
-
-    def write(self, text: str) -> None:
-        """
-        Emits the given text as a signal.
-
-        Args:
-            text (str): The text to be emitted.
-        """
-        self.outputWritten.emit(str(text))
-
-    def flush(self) -> None:
-        """
-        Flushes the current state. This method is a placeholder and does not perform any operations.
-        """
 
 
 class CrashLogsScanWorker(QObject):
@@ -356,8 +327,6 @@ class MainWindow(QMainWindow):
         self.papyrus_button: QPushButton | None = None
         self.game_files_button: QPushButton | None = None
         self.crash_logs_button: QPushButton | None = None
-        self.output_redirector: OutputRedirector | None = None
-        self.output_text_box: QTextEdit | None = None
         self.scan_folder_edit: QLineEdit | None = None
         self.mods_folder_edit: QLineEdit | None = None
         self.pastebin_fetch_button: QPushButton | None = None
@@ -406,8 +375,8 @@ class MainWindow(QMainWindow):
         self.setup_articles_tab()  # Added call
 
         self.initialize_folder_paths()
-        self.setup_output_redirection()
-        self.output_buffer = ""  # Initialize output_buffer
+        # Initialize message handler for GUI mode
+        init_message_handler(parent=self, is_gui_mode=True)
         main_generate_required()
 
         if classic_settings(bool, "Update Check"):
@@ -871,7 +840,6 @@ class MainWindow(QMainWindow):
         self.setup_checkboxes(layout)
         layout.addWidget(self.create_separator())
         self.setup_bottom_buttons(layout)
-        self.setup_output_text_box(layout)
 
     def setup_articles_tab(self) -> None:
         """Sets up the UI elements for the articles tab.
@@ -1209,123 +1177,6 @@ class MainWindow(QMainWindow):
                 QMessageBox.StandardButton.Ok,
             )
 
-    # Add this constant to the MainWindow class alongside other style constants
-    OUTPUT_TEXT_BOX_STYLE = """
-        QTextEdit {
-            color: white;
-            font-family: "Cascadia Mono", Consolas, monospace;
-            background: rgba(10, 10, 10, 0.75);
-            border-radius: 10px;
-            border: 1px solid white;
-            font-size: 13px;
-        }
-    """
-
-    def setup_output_text_box(self, layout: QLayout, min_height: int = 150) -> None:
-        """
-        Sets up a read-only output text box within the specified layout.
-
-        Creates and configures a QTextEdit widget to display output text with custom
-        styling. The widget is added to the provided layout and an internal buffer
-        is initialized to store output data.
-
-        Args:
-            layout (QLayout): The layout where the output text box will be added.
-            min_height (int, optional): Minimum height for the text box. Defaults to 150px.
-        """
-        self.output_text_box = QTextEdit(self)
-        self._configure_output_text_box(min_height)
-        layout.addWidget(self.output_text_box)
-        self.output_buffer = ""
-
-    def _configure_output_text_box(self, min_height: int) -> None:
-        """
-        Configures properties of the output text box.
-
-             Args:
-            min_height (int): Minimum height to set for the text box.
-        """
-        if self.output_text_box is not None:
-            self.output_text_box.setReadOnly(True)
-            self.output_text_box.setStyleSheet(self.OUTPUT_TEXT_BOX_STYLE)
-            self.output_text_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            self.output_text_box.setMinimumHeight(min_height)
-
-    # noinspection PyBroadException
-    def update_output_text_box(self, text: str | bytes) -> None:
-        """
-        Updates the content of the output text box by appending new text. Handles both string and
-        bytes input types, ensuring proper encoding and appending. Manages incomplete lines in
-        a buffer and updates only when a complete line is formed.
-
-        Args:
-            text: Input text to be appended to the output text box. Can be a string or bytes.
-        """
-        if self.output_text_box is None:
-            return
-
-        # noinspection PyShadowingNames
-        try:
-            text_str: str = text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text)
-            self.output_buffer += text_str
-
-            if "\n" in self.output_buffer:
-                lines_to_append, self.output_buffer = self.output_buffer.rsplit("\n", 1)
-                self.output_text_box.append(
-                    lines_to_append)  # Append adds a newline, so pass lines_to_append + '\n' if needed
-                self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
-
-            # If buffer gets too large without a newline, append it anyway to prevent memory issues
-            # Or consider a timer to flush the buffer periodically
-            if len(self.output_buffer) > 4096:  # Example threshold
-                self.output_text_box.append(self.output_buffer)
-                self.output_buffer = ""
-                self.output_text_box.verticalScrollBar().setValue(self.output_text_box.verticalScrollBar().maximum())
-
-        except Exception as e:  # noqa: BLE001
-            # Fallback to simple append if complex logic fails, to avoid losing output
-            try:
-                self.output_text_box.append(str(text))
-            except Exception:  # If even simple append fails, log to console  # noqa: BLE001
-                print(f"Error updating output text box: {e}, Original text: {text}", file=sys.__stderr__)
-
-    def process_lines(self, lines: list[str]) -> None:
-        """
-        Processes a list of lines, appending each stripped line to an output text box if it exists, and
-        scrolls the text box to the bottom.
-
-        The method iterates through the given list of lines, removes trailing whitespace from each line,
-        and appends it to the output text box. If the line ends with a newline character or the stripped
-        line is non-empty, it will be appended to the output text box, provided the text box exists. Once
-        all lines have been processed, the output text box is scrolled to its bottom.
-
-        Args:
-            lines: A list of strings that represents the input lines to process.
-        """
-        if self.output_text_box is None:
-            return
-
-        for line in lines:
-            stripped_line: str = line.rstrip()
-            if stripped_line or line.endswith("\n"):
-                self.output_text_box.append(stripped_line)  # pyrefly: ignore
-
-        self.output_text_box.verticalScrollBar().setValue(
-            self.output_text_box.verticalScrollBar().maximum())  # pyrefly: ignore
-
-    def setup_output_redirection(self) -> None:
-        """
-        Sets up redirection of standard output and standard error streams.
-
-        This method initializes an instance of `OutputRedirector`, connects its
-        `outputWritten` signal to the `update_output_text_box` method, and redirects the
-        `sys.stdout` and `sys.stderr` streams to the `output_redirector`.
-        """
-        self.output_redirector = OutputRedirector()
-        self.output_redirector.outputWritten.connect(self.update_output_text_box)
-        sys.stdout = self.output_redirector  # type: ignore
-        sys.stderr = self.output_redirector  # type: ignore
-
     @staticmethod
     def create_separator() -> QFrame:
         """
@@ -1505,7 +1356,7 @@ class MainWindow(QMainWindow):
         else:
             # Fallback if layout type is unexpected, though typically it's one of these.
             # This might indicate a need to adjust how sections are added.
-            print(f"Warning: Unexpected layout type ({type(layout)}) for folder section '{title}'")
+            msg_warning(f"Unexpected layout type ({type(layout)}) for folder section '{title}'")
 
         return line_edit
 
@@ -1873,16 +1724,15 @@ class MainWindow(QMainWindow):
                     self.scan_folder_edit.setText(folder)
                 yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
                 break
-            else:
-                # Invalid path, show warning and continue loop
-                QMessageBox.warning(
-                    self, 
-                    "Invalid Custom Scan Path", 
-                    "The selected directory cannot be used as a custom scan path.\n\n"
-                    "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
-                    "and cannot be set as custom scan directories.\n\n"
-                    "Please select a different directory."
-                )
+            # Invalid path, show warning and continue loop
+            QMessageBox.warning(
+                self, 
+                "Invalid Custom Scan Path", 
+                "The selected directory cannot be used as a custom scan path.\n\n"
+                "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
+                "and cannot be set as custom scan directories.\n\n"
+                "Please select a different directory."
+            )
 
     def validate_scan_folder_text(self) -> None:
         """
@@ -2160,7 +2010,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         app.exit(1)
     except Exception as exc:  # pyrefly: ignore  # noqa: BLE001
-        print(f"Unhandled exception during application startup: {exc}", file=sys.stderr)
+        msg_error(f"Unhandled exception during application startup: {exc}")
         if QApplication.instance():
             # noinspection PyTypeChecker
             QMessageBox.critical(None, "Application Startup Error",

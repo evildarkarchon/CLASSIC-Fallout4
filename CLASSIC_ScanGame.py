@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 from CLASSIC_Main import initialize, main_generate_required
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
@@ -14,7 +14,7 @@ from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
 from ClassicLib.ScanGame.Config import TEST_MODE
 from ClassicLib.ScanGame.ScanModInis import scan_mod_inis
 from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
-from ClassicLib.Util import open_file_with_encoding, normalize_list
+from ClassicLib.Util import normalize_list, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
@@ -235,7 +235,7 @@ def scan_mods_unpacked() -> str:
     if not mod_path.is_dir():
         return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
 
-    print("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES CLEANUP...")
+    msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES CLEANUP...")
 
     # First pass: cleanup and detect animation data
     filter_names: tuple = ("readme", "changes", "changelog", "change log")
@@ -269,7 +269,7 @@ def scan_mods_unpacked() -> str:
                     shutil.move(file_path, new_file_path)
                 issue_lists["cleanup"].add(f"  - {relative_path}\n")
 
-    print("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...")
+    msg_info("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...")
 
     # Second pass: analyze files for issues
     for root, _, files in mod_path.walk(top_down=False):
@@ -372,7 +372,7 @@ def scan_mods_archived() -> str:
     if not bsarch_path.exists():
         return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_BSArch_Missing"))
 
-    print("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES...")
+    msg_info("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES...")
 
     # Process BA2 files
     for root, _, files in mod_path.walk(top_down=False):
@@ -388,7 +388,7 @@ def scan_mods_archived() -> str:
                 with file_path.open("rb") as f:
                     header: bytes = f.read(12)
             except OSError:
-                print("Failed to read file:", filename)
+                msg_warning(f"Failed to read file: {filename}")
                 continue
 
             # Check BA2 format
@@ -404,12 +404,12 @@ def scan_mods_archived() -> str:
                 )
 
                 if archive_dump.returncode != 0:
-                    print("BSArch command failed:", archive_dump.returncode, archive_dump.stderr)
+                    msg_error(f"BSArch command failed: {archive_dump.returncode} {archive_dump.stderr}")
                     continue
 
                 output_split: list[str] = archive_dump.stdout.split("\n\n")
                 if output_split[-1].startswith("Error:"):
-                    print("BSArch command failed:", output_split[-1], archive_dump.stderr)
+                    msg_error(f"BSArch command failed: {output_split[-1]} {archive_dump.stderr}")
                     continue
 
                 # Process texture information
@@ -438,7 +438,7 @@ def scan_mods_archived() -> str:
                 )
 
                 if archive_list.returncode != 0:
-                    print("BSArch command failed:", archive_list.returncode, archive_list.stderr)
+                    msg_error(f"BSArch command failed: {archive_list.returncode} {archive_list.stderr}")
                     continue
 
                 # Process file list
@@ -535,8 +535,7 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
 
     def handle_permission_error(operation: str) -> None:
         """Print consistent error message for permission errors."""
-        print(f"{ERROR_PREFIX} UNABLE TO {operation} {list_name} FILES DUE TO FILE PERMISSIONS!")
-        print(ADMIN_SUGGESTION)
+        msg_error(f"{ERROR_PREFIX} UNABLE TO {operation} {list_name} FILES DUE TO FILE PERMISSIONS!\n{ADMIN_SUGGESTION}")
 
     def copy_file_or_directory(source: Path, destination: Path) -> None:
         """Copy a file or directory, handling existing destinations appropriately."""
@@ -552,30 +551,30 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
     # Perform the requested operation
     try:
         if mode == "BACKUP":
-            print(f"CREATING A BACKUP OF {list_name} FILES, PLEASE WAIT...")
+            msg_info(f"CREATING A BACKUP OF {list_name} FILES, PLEASE WAIT...")
             for file in game_path.glob("*"):
                 if matches_managed_file(file.name):
                     copy_file_or_directory(file, backup_path / file.name)
-            print(f"{SUCCESS_PREFIX} CREATED A BACKUP OF {list_name} FILES\n")
+            msg_success(f"{SUCCESS_PREFIX} CREATED A BACKUP OF {list_name} FILES\n")
 
         elif mode == "RESTORE":
-            print(f"RESTORING {list_name} FILES FROM A BACKUP, PLEASE WAIT...")
+            msg_info(f"RESTORING {list_name} FILES FROM A BACKUP, PLEASE WAIT...")
             for file in game_path.glob("*"):
                 if matches_managed_file(file.name):
                     source_file = backup_path / file.name
                     if source_file.exists():
                         copy_file_or_directory(source_file, file)
-            print(f"{SUCCESS_PREFIX} RESTORED {list_name} FILES TO THE GAME FOLDER\n")
+            msg_success(f"{SUCCESS_PREFIX} RESTORED {list_name} FILES TO THE GAME FOLDER\n")
 
         elif mode == "REMOVE":
-            print(f"REMOVING {list_name} FILES FROM YOUR GAME FOLDER, PLEASE WAIT...")
+            msg_info(f"REMOVING {list_name} FILES FROM YOUR GAME FOLDER, PLEASE WAIT...")
             for file in game_path.glob("*"):
                 if matches_managed_file(file.name):
                     if file.is_file():
                         file.unlink(missing_ok=True)
                     elif file.is_dir():
                         shutil.rmtree(file)  # Using rmtree instead of os.removedirs for more reliable deletion
-            print(f"{SUCCESS_PREFIX} REMOVED {list_name} FILES FROM THE GAME FOLDER\n")
+            msg_success(f"{SUCCESS_PREFIX} REMOVED {list_name} FILES FROM THE GAME FOLDER\n")
 
     except PermissionError:
         handle_permission_error(mode)
@@ -665,7 +664,7 @@ if __name__ == "__main__":
     if TEST_MODE:
         write_combined_results()
     else:
-        print(game_combined_result())
-        print(mods_combined_result())
+        msg_info(game_combined_result())
+        msg_info(mods_combined_result())
         game_files_manage("Backup ENB")
         os.system("pause")

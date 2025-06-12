@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 
 from CLASSIC_Main import initialize
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_progress_context, msg_success
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog import (
@@ -43,7 +43,7 @@ class ClassicScanLogs:
         """Initialize the crash log scanner with new modular components."""
         # Get crash log files
         self.crashlog_list: list[Path] = crashlogs_get_files()
-        print("REFORMATTING CRASH LOGS, PLEASE WAIT...\n")
+        msg_info("REFORMATTING CRASH LOGS, PLEASE WAIT...")
         
         # Load settings
         self.remove_list: tuple[str] | tuple[Literal['']] = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ("",)
@@ -56,7 +56,7 @@ class ClassicScanLogs:
         self.formid_db_exists: bool = any(db.is_file() for db in DB_PATHS)
         self.move_unsolved_logs: bool | None = classic_settings(bool, "Move Unsolved Logs")
         
-        print("SCANNING CRASH LOGS, PLEASE WAIT...\n")
+        msg_info("SCANNING CRASH LOGS, PLEASE WAIT...")
         self.scan_start_time: float = time.perf_counter()
         
         # Initialize thread-safe log cache
@@ -74,7 +74,7 @@ class ClassicScanLogs:
         # Statistics tracking
         self.crashlog_stats: Counter[str] = Counter(scanned=0, incomplete=0, failed=0)
         
-        logger.info(f"- - - INITIATED CRASH LOG FILE SCAN >>> CURRENTLY SCANNING {len(self.crashlog_list)} FILES")
+        logger.debug(f"Initiated crash log scan for {len(self.crashlog_list)} files")
         
         # Run FCX checks if enabled
         if self.fcx_mode:
@@ -140,60 +140,75 @@ def crashlogs_scan() -> None:
     # Determine number of worker threads
     max_workers: int = min(os.cpu_count() or 4, 8)  # Default to 4, max of 8
     
-    # Process crash logs in parallel
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Submit all tasks
-        futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
-            executor.submit(scanner.process_crashlog, crashlog_file) 
-            for crashlog_file in scanner.crashlog_list
-        ]
-            
-        # Process results as they complete
-        for future in as_completed(futures):
-            try:
-                crashlog_file, autoscan_report, trigger_scan_failed, local_stats = future.result()
-                    
-                # Update statistics
-                for key, value in local_stats.items():
-                    scanner.crashlog_stats[key] += value
+    # Process crash logs in parallel with progress tracking
+    total_logs = len(scanner.crashlog_list)
+    with msg_progress_context("Processing Crash Logs", total_logs) as progress:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
+                executor.submit(scanner.process_crashlog, crashlog_file) 
+                for crashlog_file in scanner.crashlog_list
+            ]
+                
+            # Process results as they complete
+            for future in as_completed(futures):
+                try:
+                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = future.result()
                         
-                # Write report
-                write_report_to_file(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
-                    
-                # Track failed scans
-                if trigger_scan_failed:
-                    scan_failed_list.append(crashlog_file.name)
+                    # Update statistics
+                    for key, value in local_stats.items():
+                        scanner.crashlog_stats[key] += value
+                            
+                    # Write report
+                    write_report_to_file(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
                         
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"Error processing crash log: {e!s}")
-                scanner.crashlog_stats["failed"] += 1
+                    # Track failed scans
+                    if trigger_scan_failed:
+                        scan_failed_list.append(crashlog_file.name)
+                            
+                    # Update progress
+                    progress.update(1, f"Processed {crashlog_file.name}")
+                            
+                except Exception as e:  # noqa: BLE001
+                    logger.debug(f"Error processing crash log: {e!s}")
+                    msg_error(f"Failed to process crash log: {e!s}")
+                    scanner.crashlog_stats["failed"] += 1
+                    progress.update(1)
                     
         # Check for failed or invalid crash logs
         scan_invalid_list: list[Path] = sorted(Path.cwd().glob("crash-*.txt"))
         if scan_failed_list or scan_invalid_list:
-            print("❌ NOTICE : CLASSIC WAS UNABLE TO PROPERLY SCAN THE FOLLOWING LOG(S):")
-            print("\n".join(scan_failed_list))
+            error_msg = "NOTICE : CLASSIC WAS UNABLE TO PROPERLY SCAN THE FOLLOWING LOG(S):\n"
+            if scan_failed_list:
+                error_msg += "\n".join(scan_failed_list) + "\n"
             if scan_invalid_list:
+                error_msg += "\n"
                 for file in scan_invalid_list:
-                    print(f"{file}\n")
-            print("===============================================================================")
-            print("Most common reason for this are logs being incomplete or in the wrong format.")
-            print("Make sure that your crash log files have the .log file format, NOT .txt! \n")
+                    error_msg += f"{file}\n"
+            error_msg += "===============================================================================\n"
+            error_msg += "Most common reason for this are logs being incomplete or in the wrong format.\n"
+            error_msg += "Make sure that your crash log files have the .log file format, NOT .txt!"
+            msg_error(error_msg)
             
         # Display completion information
-        logger.info("- - - COMPLETED CRASH LOG FILE SCAN >>> ALL AVAILABLE LOGS SCANNED")
-        print("SCAN COMPLETE! (IT MIGHT TAKE SEVERAL SECONDS FOR SCAN RESULTS TO APPEAR)")
-        print("SCAN RESULTS ARE AVAILABLE IN FILES NAMED crash-date-and-time-AUTOSCAN.md \n")
-        print(f"{random.choice(yamldata.classic_game_hints)}\n-----")
-        print(f"Scanned all available logs in {str(time.perf_counter() - 0.5 - scanner.scan_start_time)[:5]} seconds.")
-        print(f"Number of Scanned Logs (No Autoscan Errors): {scanner.crashlog_stats['scanned']}")
-        print(f"Number of Incomplete Logs (No Plugins List): {scanner.crashlog_stats['incomplete']}")
-        print(f"Number of Failed Logs (Autoscan Can't Scan): {scanner.crashlog_stats['failed']}\n-----")
-        if GlobalRegistry.get_game() == "Fallout4":
-            print(yamldata.autoscan_text)
+        logger.debug("Completed crash log file scan")
+        
         if scanner.crashlog_stats["scanned"] == 0 and scanner.crashlog_stats["incomplete"] == 0:
-            print("\n❌ CLASSIC found no crash logs to scan or the scan failed.")
-            print("    There are no statistics to show (at this time).\n")
+            msg_error("CLASSIC found no crash logs to scan or the scan failed.\n    There are no statistics to show (at this time).")
+        else:
+            msg_success("SCAN COMPLETE! (IT MIGHT TAKE SEVERAL SECONDS FOR SCAN RESULTS TO APPEAR)")
+            msg_info("SCAN RESULTS ARE AVAILABLE IN FILES NAMED crash-date-and-time-AUTOSCAN.md")
+            
+            # Display hint and statistics
+            stats_msg = f"{random.choice(yamldata.classic_game_hints)}\n-----\n"
+            stats_msg += f"Scanned all available logs in {str(time.perf_counter() - 0.5 - scanner.scan_start_time)[:5]} seconds.\n"
+            stats_msg += f"Number of Scanned Logs (No Autoscan Errors): {scanner.crashlog_stats['scanned']}\n"
+            stats_msg += f"Number of Incomplete Logs (No Plugins List): {scanner.crashlog_stats['incomplete']}\n"
+            stats_msg += f"Number of Failed Logs (Autoscan Can't Scan): {scanner.crashlog_stats['failed']}\n-----"
+            msg_info(stats_msg)
+            
+            if GlobalRegistry.get_game() == "Fallout4":
+                msg_info(yamldata.autoscan_text)
 
 
 if __name__ == "__main__":
@@ -241,9 +256,11 @@ if __name__ == "__main__":
         if is_valid_custom_scan_path(args.scan_path):
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))
         else:
-            print("WARNING: The specified scan path cannot be used as a custom scan directory.")
-            print("The 'Crash Logs' folder and its subfolders are managed by CLASSIC and cannot be set as custom scan directories.")
-            print("Resetting custom scan path.")
+            msg_error(
+                "WARNING: The specified scan path cannot be used as a custom scan directory.\n"
+                "The 'Crash Logs' folder and its subfolders are managed by CLASSIC and cannot be set as custom scan directories.\n"
+                "Resetting custom scan path."
+            )
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
             
     if (

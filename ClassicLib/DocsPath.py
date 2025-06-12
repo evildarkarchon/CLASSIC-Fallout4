@@ -6,7 +6,7 @@ from typing import cast
 
 from iniparse import configparser
 
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, msg_error, msg_info
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Util import remove_readonly
@@ -132,15 +132,15 @@ class DocumentsPathManager:
             self.manual_docs_gui.manual_docs_path_signal.emit()
             return
 
-        print(f"> > > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {self.docs_name}.ini IS LOCATED < < <")
+        msg_info(f"> > > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {self.docs_name}.ini IS LOCATED < < <")
         while True:
             input_str: str = input(f"(EXAMPLE: C:/Users/Zen/Documents/My Games/{self.docs_name} | Press ENTER to confirm.)\n> ").strip()
             input_path: Path = Path(input_str)
             if input_str and input_path.is_dir():
-                print(f"You entered: '{input_str}' | This path will be automatically added to CLASSIC Settings.yaml")
+                msg_info(f"You entered: '{input_str}' | This path will be automatically added to CLASSIC Settings.yaml")
                 self._update_game_setting("Root_Folder_Docs", str(input_path))
                 break
-            print(f"'{input_str}' is not a valid or existing directory path. Please try again.")
+            msg_error(f"'{input_str}' is not a valid or existing directory path. Please try again.")
 
     def generate_paths(self) -> None:
         """Generate and configure paths for game documentation files."""
@@ -181,11 +181,8 @@ class DocumentsPathManager:
 
         if not isinstance(self.docs_name, str):
             raise TypeError("Invalid docs_name")
-        if not (isinstance(folder_docs, str) or folder_docs is None):
+        if not isinstance(folder_docs, str) or folder_docs is None:
             raise TypeError("Invalid folder_docs type")
-
-        if folder_docs is None:
-            raise TypeError("Missing docs folder path")
 
         docs_path: Path = Path(folder_docs)
         ini_file_list: list[Path] = list(docs_path.glob("*.ini"))

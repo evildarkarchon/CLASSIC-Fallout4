@@ -4,7 +4,7 @@ import aiohttp
 from bs4 import BeautifulSoup, Tag
 from packaging.version import InvalidVersion, Version
 
-from ClassicLib import GlobalRegistry
+from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
@@ -333,21 +333,13 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     logger.debug("- - - INITIATED UPDATE CHECK")
     if not (gui_request or classic_settings(bool, "Update Check")):
         if not quiet:
-            print(
-                "\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n",
-                "\n===============================================================================",
-                flush=True,
-            )
+            msg_info("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n===============================================================================")
         return False  # False because it's not the "latest" if checks are off (unless for GUI)
 
     update_source: str = classic_settings(str, "Update Source") or "Both"
     if update_source not in {"Both", "GitHub", "Nexus"}:
         if not quiet:
-            print(
-                "\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n",
-                "\n===============================================================================",
-                flush=True,
-            )
+            msg_info("\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n\n===============================================================================")
         return False  # Invalid source, cannot determine if latest
 
     classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore
@@ -362,11 +354,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     version_local: Version | None = try_parse_version(parsed_local_version_str) if parsed_local_version_str else None
 
     if not quiet:
-        print(
-            "❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...",
-            "\n   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n",
-            flush=True,
-        )
+        msg_info("❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...\n   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n")
 
     use_github: bool = update_source in {"Both", "GitHub"}
     use_nexus: bool = update_source in {"Both", "Nexus"} and not yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease")
@@ -407,24 +395,28 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             # If 'Both' were chosen and one succeeded, we can proceed.
 
     except (aiohttp.ClientError, UpdateCheckError) as err:  # Removed ValueError, OSError as ClientError covers network issues
-        logger.error(f"Update check failed during version fetching: {err}")
+        logger.debug(f"Update check failed during version fetching: {err}")
         if not quiet:
-            print(err)  # Print the specific error message
-            # Assuming yaml_settings returns a string for the message
+            msg_error(f"Update check failed: {err}")
+            # Get the unable message from YAML
             unable_msg: str | None = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{GlobalRegistry.get_game()}")  # type: ignore
-            print(unable_msg)
+            if unable_msg:
+                msg_error(unable_msg)
         if gui_request:
             raise UpdateCheckError(str(err)) from err  # Pass the original error message
         return False
     except Exception as e:  # Catch any other unexpected error during setup or calls
         logger.error(f"Unexpected error during update check: {e}", exc_info=True)
+        if not quiet:
+            msg_error(f"An unexpected error occurred during update check: {e}")
         if gui_request:
             raise UpdateCheckError(f"An unexpected error occurred: {e}") from e
         return False
 
     is_outdated = False
     if version_local is None:
-        logger.warning("Local version is unknown. Assuming update is needed or there's an issue.")
+        logger.debug("Local version is unknown")
+        msg_warning("Local version is unknown. Assuming update is needed or there's an issue.")
         # Depending on desired behavior, this could be True (outdated) or False (cannot determine)
         # For safety, if local version is unknown, and remote versions exist, consider it outdated.
         if version_github_to_compare or version_nexus_to_compare:
@@ -442,7 +434,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
         if not quiet:
             # Assuming yaml_settings returns a string for the message
             warning_msg: str = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"))  # type: ignore
-            print(warning_msg, flush=True)
+            msg_warning(warning_msg)
         if gui_request:
             # GUI catches this to indicate an update is available.
             raise UpdateCheckError("A new version is available.")
@@ -450,21 +442,19 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
 
     # If not outdated
     if not quiet:
-        print(
-            f"Your CLASSIC Version: {version_local or 'Unknown'}",
-            (
+        msg_success(
+            f"Your CLASSIC Version: {version_local or 'Unknown'}"
+            + (
                 f"\nLatest GitHub Version: {version_github_to_compare}"
                 if use_github and version_github_to_compare
                 else ("\nLatest GitHub Version: Not found/checked" if use_github else "")
-            ),
-            (
+            )
+            + (
                 f"\nLatest Nexus Version: {version_nexus_to_compare}"
                 if use_nexus and version_nexus_to_compare
                 else ("\nLatest Nexus Version: Not found/checked" if use_nexus else "")
-            ),
-            "\n\n✔️ You have the latest version of CLASSIC!\n",
-            sep="",  # Ensure sep is an empty string
-            flush=True,
+            )
+            + "\n\n✔️ You have the latest version of CLASSIC!\n"
         )
     return True
 
