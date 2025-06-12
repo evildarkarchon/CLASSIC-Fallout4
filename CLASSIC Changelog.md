@@ -1,8 +1,19 @@
 =====================================================================================================
 # CLASSIC CHANGELOG #
 
-7.31.0
-*CHANGES*
+### 7.35.0 CHANGES
+
+- Window is now resizable and should scale to smaller screens and handle high scaling better.
+- Remove the text box and convert messages to either use dialog boxes or the CLI, depending on the mode it's launched in.
+- Add progress window (for GUI mode) or CLI progress bar (for CLI) to show scanning progress.
+- Log scanning is now threaded for efficiency.
+- Add a button to open the main Crash Logs folder.
+- Only run FCX checks once and cache the results
+- New SVG-based checkbox icons
+- Articles moved to a separate tab to save space
+- Papyrus log monitoring now uses a dialog box
+
+### 7.31.0 CHANGES
 - Reduced volume for audio notifications
 - Add detection of the GOG version of the game
 - Extensive backend changes for better maintainability, which should ease future updates
@@ -12,37 +23,31 @@
 - Probably some other things I forgot to write down
 - Add entry for Fourville to the "Mods with Community Solutions" list
 
-7.30.4
-*CHANGES*
+### 7.30.4 CHANGES
 - Added two new crashes to the list
 - Rewrote the Papyrus Log Monitor
 - Add the ability to fetch logs from pastebin
 - Minor optimizations and cleanups
 
-7.30.3
-*CHANGES*
+### 7.30.3 CHANGES
 - Now queries the registry for the game's install directory first before falling back to parsing the F4SE log
 - Add the ability to toggle the audio notifications, also now uses Qt's built-in sound effect library so we no longer need to bundle NumPy (which was a dependency of the old audio library)
 - Logs copied from F4SE directory now go into a new "Crash Logs" folder (which is automatically created if it doesn't exist). Existing logs in the main CLASSIC directory will be moved to this folder.
 - No longer automatically checks for latest F4SE version since it is obsolete because F4SE is now doing new releases on Nexus.
 
-7.30.2
-*CHANGES*
+### 7.30.2 CHANGES
 - Game installation directory is now properly saved to the local data file.
 - Removed the FormID database creation code and opted for bundling a premade database
 There is also a second database for you to add your own mods form ids to, just add the bundled xEdit script in CLASSIC Data to create the list and use the included tools to add them.
 
 
-7.30.1
-*CHANGES*
+### 7.30.1 CHANGES
 - Prompts for INI directory and Game directory will be handled in the GUI
 - Fixed typos that prevented the detection of X-Cell in FCX mode.
+- Known Issue: The Papyrus log monitor is still a WIP
 
-*KNOWN ISSUES*
-The Papyrus log monitor is still a WIP
-
-7.30 (Formerly known as 7.26.1 Unofficial)
-*CHANGE SUMMARY*
+### 7.30 (Formerly known as 7.26.1 Unofficial)
+#### CHANGE SUMMARY#
 - CLASSIC now uses a database cache, generated on startup, to improve query speed for the "Show FID Values" feature.
 - Fixes the NoneType error, which was caused by the initialization code failing to store the location of the F4SE Address Library.
 - FCX mode no longer crashes when duplicate section entries are found in an INI file or a section it's looking for doesn't exist.
@@ -60,14 +65,14 @@ This new UI also no longer pops up a console window, all console output is now p
 - Fix plugin tests running when no plugin list was loaded.
 - More fixes and optimizations that didn't make the changelogs of the past.
 
-7.26.1 Unofficial
-*BUG FIXES*
+### 7.26.1 Unofficial
+#### BUG FIXES#
 - Papyrus Monitor no longer launches a new instance of CLASSIC.
 - Fixed formatting errors in Papyrus Monitor that were hidden by the old display method.
 - Revert the initialization threading changes from the previous versions hotfixes.
 
-7.26 Unofficial
-*NEW UI*
+### 7.26 Unofficial
+#### NEW UI#
 - Scans run off the main thread, so the window no longer freezes when scans are running.
 - Terminal is now embedded into the window, in the text box formerly reserved for the credits.
 - Credits have been moved to an about screen, the button for it is next to the help button.
@@ -75,12 +80,11 @@ I think it looks better like that, anyways.
 - No more custom widgets, which will make maintainance and feature development easier.
 - Crash dialog with a button to easily copy the traceback to the clipboard.
 
-*WHAT'S NOT PORTED YET*
+#### WHAT'S NOT PORTED YET#
 - The background image, still working on how to integrate it.
 - The game selection box, until there are other games to switch to (Skyrim support is coming someday), there's no point for it to be there.
 
-7.25.12 Unofficial
-*CHANGES*
+### 7.25.12 Unofficial CHANGES
 - Add encoding detection to INI file checks to prevent issues with some non-latin encodings
 - Update Check will now display in the window instead of the terminal.
 - Minor consistency changes
@@ -88,72 +92,61 @@ I think it looks better like that, anyways.
 - Minor backend optimizations
 - Fixed plugin detection for FONG logs.
 
-7.25.11 Unofficial
-*CHANGES*
+### 7.25.11 Unofficial CHANGES
 - Add separate core mod list for Fallout: London
 
-7.25.10 Unofficial
-*CHANGES*
+### 7.25.10 Unofficial CHANGES
 - Add Buffout 4 configuration fixes to FCX mode.
 - Added conflict between X-Cell and PrivateProfileRedirector (from 7.25.9-hotfix2)
 
-7.25.9 Unofficial
-*CHANGES*
+### 7.25.9 Unofficial CHANGES
 - Add conflict and configuration checks for perchik71's X-Cell mod.
 
-7.25.8 Unofficial
-*CHANGES*
+### 7.25.8 Unofficial CHANGES
 - Check the registry instead of shell32.dll for the location of the "Documents" directory
 - Add a cache to the YAML lookup code to improve performance (hopefully)
 - Reclassified loose previsibine files as a *CAUTION* instead of a *NOTICE* since current conensus is that loose previsibine files are problematic.
 - Fix log stat counting.
 - Change latest Buffout 4 NG version to 1.35.1
 
-7.25.7 Unofficial
-*CHANGES*
+### 7.25.7 Unofficial CHANGES
 - Further improve exception handling when parsing INI files with FCX mode or Scan Game Files.
 
-7.25.6 Unofficial
-*CHANGES*
+### 7.25.6 Unofficial CHANGES
 - Fix plugin tests not running when loadorder.txt was used instead of a log's plugin section.
 
-7.25.5 Unofficial
-*CHANGES*
+### 7.25.5 Unofficial CHANGES
 - Fix plugin tests running when there was no plugin list loaded.
 
-7.25.4 Unofficial
-*CHANGES*
+### 7.25.4 Unofficial CHANGES
 - Make reading text files more resilient
 - Add message informing about the possibility of "False Negatives" with the core mods.
 
-7.25.3 Unofficial
-*CHANGES*
+### 7.25.3 Unofficial CHANGES
 - Changed location FCX mode looks for F4SEVR's log to {docs_directory}\\F4SE\\f4sevr.log
 
-7.25.2 Unofficial
-*CHANGES*
+### 7.25.2 Unofficial CHANGES
 - Fix `KeyError`s occurring when scanning mod INI files and the section being searched for doesn't exist.
 - Possible fix for FCX mode not finding Address Library in situations where it should be able to.
 
-7.25.1 Unofficial
-*CHANGES*
+### 7.25.1 Unofficial CHANGES
 - Unofficial Series Only: Redirect update queries to my GitHub page.
 
-7.25 Unofficial
-*NEW FEATURES*
+### 7.25 Unofficial
+#### NEW FEATURES
 - CLASSIC will now generate a cache of the Form-IDs list for faster searching.
 - Added tools to add new form-ids or update existing form-ids in the cache.
 
-*CHANGES*
+#### CHANGES
 - Fix Address Library path not being saved in the local data file.
 - Only match the first GPU in the log to avoid issues with systems with an AMD CPU and Nvidia GPU.
 - Finding duplicate entries in game INI files will no longer cause CLASSIC to crash.
 
-*DISCLAIMER*
+**DISCLAIMER:**
 This is just a reflection of my copy of the code and may or may not make it into the final build.
 
-7.20
-*NEW FEATURES*
+### 7.20
+#### NEW FEATURES
 - CLASSIC now automatically creates backups of your game's main EXE files.
 - CLASSIC now automatically checks for F4SE updates from the official website.
 - Added hash checks for Script Extender files from the VR version of the game.
@@ -163,7 +156,7 @@ This is just a reflection of my copy of the code and may or may not make it into
 [These options are located under the new tab in the CLASSIC interface. See Readme PDF for details].
 - All invalid crash logs and file backups are now stored and separated into *CLASSIC Backup* folder.
 
-*CHANGES*
+#### CHANGES
 - *Crash Logs Scan* is now ~25% faster.
 - Improved visuals of interface popup boxes.
 - Re-centered a few misaligned interface elements.
@@ -174,13 +167,13 @@ This is just a reflection of my copy of the code and may or may not make it into
 - Fixed incorrect detection of Script Extender file copies during *Game Files Scan*.
 - Fixed an issue where certain plugins were not detected under *Possible Plugin Suspects*.
 
-7.10
-*NEW FEATURES*
+### 7.10
+#### NEW FEATURES
 - CLASSIC will now extract required files from *CLASSIC Data.zip* if they are not found.
 - Default *Fallout4Custom.ini* settings are now accessible through *CLASSIC FO4.yaml*
 [These settings will be auto generated if Fallout4Custom.ini doesn't already exist.]
 
-*CHANGES*
+#### CHANGES
 - The CLASSIC interface has a brand new look.
 - Fixed *AttributeError* in the mod_ini_config().
 - Fixed some minor formatting bugs for *-AUTOSCAN.md* files.
@@ -190,8 +183,8 @@ This is just a reflection of my copy of the code and may or may not make it into
 - Changed the file structure, now all required files are organized inside *CLASSIC Data* folder.
 [Please report if it still fails to generate your Fallout 4 VR file and folder paths in CLASSIC FO4VR.yaml]
 
-7.07 | "Everything Everywhere All At Once" Update
-*NEW FEATURES*
+### 7.07 | "Everything Everywhere All At Once" Update
+#### NEW FEATURES
 - CLASSIC will automatically check for its own updates every 7 days.
 - CLASSIC will warn you if MS OneDrive is overriding your Documents folder location.
 - CLASSIC will automatically grab all crash log files from the Script Extender folder.
@@ -221,7 +214,7 @@ This is just a reflection of my copy of the code and may or may not make it into
 	> Notify you when Buffout 4 fixes in the TOML config file get changed or disabled.
 	> Show an additional warning if you went over the Plugin Limit (254 esm/esp).
 
-*CHANGES*
+#### CHANGES
 - Complete code rewrite that will make all future versions much more stable and expandable.
 - *Game Corruption Crash* renamed to *Animation Data Crash*, crash info has been updated.
 - Several code optimizations thanks to [evildarkarchon] on GitHub, plus many bugs squashed.
