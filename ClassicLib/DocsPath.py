@@ -82,13 +82,16 @@ class DocumentsPathManager:
 
     def _find_windows_docs_path(self) -> None:
         """Find the Windows documents path using the registry."""
+        # Initialize with default value first
+        documents_path: Path = Path.home() / "Documents"
+
         try:
             # Open the registry key to get the user's documents path
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:
                 documents_path = Path(winreg.QueryValueEx(key, "Personal")[0])
         except (OSError, UnboundLocalError):
             # Fallback to a default path if registry key is not found
-            documents_path: Path = Path.home() / "Documents"
+            pass  # We already initialized documents_path with the default value
 
         # Construct the full path to the game's documents folder
         win_docs: str = str(documents_path / "My Games" / cast("str", self.docs_name))

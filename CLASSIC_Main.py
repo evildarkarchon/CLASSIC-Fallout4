@@ -4,12 +4,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ClassicLib import GlobalRegistry, init_message_handler, msg_info, msg_success, msg_warning
+from ClassicLib import GlobalRegistry, init_message_handler, msg_info, msg_success, msg_warning, MessageTarget
 from ClassicLib.Constants import YAML
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
 from ClassicLib.Logger import logger
-from ClassicLib.Util import calculate_file_hash, configure_logging, open_file_with_encoding
+from ClassicLib.Util import calculate_file_hash, configure_logging, open_file_with_encoding, normalize_list
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -226,12 +226,13 @@ def _extract_xse_version(xse_log_file: str, default_version: str) -> str | None:
     Returns:
         The extracted XSE version or None if no log data is available
     """
+    xse_data_lower: list[str] = []
     try:
         with open_file_with_encoding(xse_log_file) as xse_log:
             xse_data: list[str] = xse_log.readlines()
-            xse_data_lower: list[str] = [line.lower() for line in xse_data]
+            xse_data_lower: list[str] = normalize_list(xse_data)
     except FileNotFoundError:
-        xse_data_lower = []
+        pass
 
     if not xse_data_lower:
         return None
@@ -325,9 +326,11 @@ def main_generate_required() -> None:
     game_name: str | None = yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name")
     if not (isinstance(classic_ver, str) and isinstance(game_name, str)):
         raise TypeError
-    msg_info(f"Hello World! | Crash Log Auto Scanner & Setup Integrity Checker | {classic_ver} | {game_name}")
-    msg_info("REMINDER: COMPATIBLE CRASH LOGS MUST START WITH 'crash-' AND MUST HAVE .log EXTENSION")
-    msg_info("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...")
+    msg_info(
+        f"Hello World! | Crash Log Auto Scanner & Setup Integrity Checker | {classic_ver} | {game_name}", target=MessageTarget.CLI_ONLY
+    )
+    msg_info("REMINDER: COMPATIBLE CRASH LOGS MUST START WITH 'crash-' AND MUST HAVE .log EXTENSION", target=MessageTarget.CLI_ONLY)
+    msg_info("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...", target=MessageTarget.CLI_ONLY)
     logger.debug(f"> > > STARTED {classic_ver}")
 
     game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
@@ -340,8 +343,8 @@ def main_generate_required() -> None:
     else:
         main_files_backup()
 
-    msg_success("ALL CLASSIC AND GAME SETTINGS CHECKS HAVE BEEN PERFORMED!")
-    msg_info("YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES")
+    msg_success("ALL CLASSIC AND GAME SETTINGS CHECKS HAVE BEEN PERFORMED!", target=MessageTarget.CLI_ONLY)
+    msg_info("YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES", target=MessageTarget.CLI_ONLY)
 
 
 def is_gui_mode() -> bool:
@@ -352,18 +355,18 @@ def is_gui_mode() -> bool:
 def validate_settings_paths() -> None:
     """
     Validates and cleans up invalid paths in settings.
-    
+
     This function checks for paths stored in settings and removes any that:
     - Don't exist on the filesystem
     - Are empty strings
     - Are None values
     - Are restricted (hard-coded) directories
-    
+
     Currently validates:
     - SCAN Custom Path: Used for custom crash log scanning directories
     """
     from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
-    
+
     # Validate custom scan path
     custom_scan_path: str | None = classic_settings(str, "SCAN Custom Path")
     if custom_scan_path:
@@ -395,7 +398,7 @@ def initialize(is_gui: bool = False) -> None:
     """
     # Initialize message handler first
     init_message_handler(parent=None, is_gui_mode=is_gui)
-    
+
     yaml_cache: Any = GlobalRegistry.get_yaml_cache()
     GlobalRegistry.register(GlobalRegistry.Keys.GUI_MODE, is_gui)
     # Preload static YAML files

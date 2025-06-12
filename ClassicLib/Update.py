@@ -82,7 +82,7 @@ async def get_github_latest_stable_version_from_endpoint(session: aiohttp.Client
         return None
 
     if isinstance(response_json, dict):
-        if response_json.get("prerelease") is True:
+        if response_json.get("prerelease"):
             logger.warning(f"{url} returned a prerelease. Expected a stable release.")
             return None
 
@@ -333,13 +333,17 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     logger.debug("- - - INITIATED UPDATE CHECK")
     if not (gui_request or classic_settings(bool, "Update Check")):
         if not quiet:
-            msg_info("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n===============================================================================")
+            msg_info(
+                "\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n==============================================================================="
+            )
         return False  # False because it's not the "latest" if checks are off (unless for GUI)
 
     update_source: str = classic_settings(str, "Update Source") or "Both"
     if update_source not in {"Both", "GitHub", "Nexus"}:
         if not quiet:
-            msg_info("\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n\n===============================================================================")
+            msg_info(
+                "\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n\n==============================================================================="
+            )
         return False  # Invalid source, cannot determine if latest
 
     classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore
@@ -354,7 +358,9 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     version_local: Version | None = try_parse_version(parsed_local_version_str) if parsed_local_version_str else None
 
     if not quiet:
-        msg_info("❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...\n   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n")
+        msg_info(
+            "❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...\n   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n"
+        )
 
     use_github: bool = update_source in {"Both", "GitHub"}
     use_nexus: bool = update_source in {"Both", "Nexus"} and not yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease")

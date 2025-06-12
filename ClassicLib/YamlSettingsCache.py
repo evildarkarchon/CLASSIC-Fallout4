@@ -4,7 +4,7 @@ from typing import Any, ClassVar
 
 import ruamel.yaml
 
-from ClassicLib import GlobalRegistry, msg_error
+from ClassicLib import GlobalRegistry, msg_error, MessageTarget
 from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Meta import SingletonMeta
@@ -205,7 +205,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         # Traverse YAML structure to get value
         setting_value = setting_container.get(keys[-1])
         if setting_value is None and keys[-1] not in SETTINGS_IGNORE_NONE:
-            msg_error(f"ERROR (yaml_settings) : Trying to grab a None value for : '{key_path}'")
+            msg_error(f"ERROR (yaml_settings) : Trying to grab a None value for : '{key_path}'", message_target=MessageTarget.CLI_ONLY)
 
         # Cache the result for static stores
         if yaml_store in self.STATIC_YAML_STORES:

@@ -177,7 +177,6 @@ class CustomAboutDialog(QDialog):
         return close_button
 
 
-
 class CrashLogsScanWorker(QObject):
     """
     CrashLogsScanWorker is a QObject-based worker class responsible for scanning crash logs and emitting signals based on the scan's outcome.
@@ -338,8 +337,7 @@ class MainWindow(QMainWindow):
         self._last_stats: PapyrusStats | None = None
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
 
-        self.setWindowTitle(
-            f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}")
+        self.setWindowTitle(f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}")
         # Ensure GlobalRegistry.get_local_dir() returns a Path or string
         local_dir_path = GlobalRegistry.get_local_dir(as_string=True)
         self.setWindowIcon(QIcon(f"{local_dir_path}/CLASSIC Data/graphics/CLASSIC.ico"))
@@ -350,7 +348,7 @@ class MainWindow(QMainWindow):
         # self.setFixedSize(700, 950)  # Set fixed size to prevent resizing, for now.
 
         # --- Set preferred initial size ---
-        self.resize(750, 950)  # <<< SET YOUR DESIRED STARTUP SIZE HERE
+        self.resize(650, 650)  # <<< SET YOUR DESIRED STARTUP SIZE HERE
 
         self.audio_player = AudioPlayer()
 
@@ -376,6 +374,7 @@ class MainWindow(QMainWindow):
 
         self.initialize_folder_paths()
         # Initialize message handler for GUI mode
+        # noinspection PyTypeChecker
         init_message_handler(parent=self, is_gui_mode=True)
         main_generate_required()
 
@@ -399,8 +398,8 @@ class MainWindow(QMainWindow):
         Toggles the state of the Papyrus worker based on the state of the `papyrus_button`.
 
         If the `papyrus_button` is checked, the Papyrus monitoring process is started and
-        the custom monitoring dialog is displayed. Otherwise, it stops the Papyrus monitoring 
-        process and closes the dialog. This function is intended to manage the lifecycle 
+        the custom monitoring dialog is displayed. Otherwise, it stops the Papyrus monitoring
+        process and closes the dialog. This function is intended to manage the lifecycle
         of the Papyrus worker efficiently.
         """
         if self.papyrus_button and self.papyrus_button.isChecked():
@@ -568,10 +567,8 @@ class MainWindow(QMainWindow):
         self.pastebin_thread.finished.connect(self.pastebin_thread.deleteLater)
 
         # Use lambdas or functools.partial if arguments need to be passed to slots
-        self.pastebin_worker.success.connect(
-            lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
-        self.pastebin_worker.error.connect(
-            lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}"))
+        self.pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
+        self.pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}"))
 
         self.pastebin_thread.start()
 
@@ -585,8 +582,7 @@ class MainWindow(QMainWindow):
         """
         # Create a dialog with appropriate title and descriptive label
         dialog: ManualPathDialog = ManualPathDialog(
-            parent=self, title="Set INI Path",
-            label=f"Select the location of your {GlobalRegistry.get_game()} INI files"
+            parent=self, title="Set INI Path", label=f"Select the location of your {GlobalRegistry.get_game()} INI files"
         )
 
         # Process the dialog result
@@ -605,8 +601,7 @@ class MainWindow(QMainWindow):
         """
         # Create a dialog with appropriate title and descriptive label
         dialog: ManualPathDialog = ManualPathDialog(
-            parent=self, title="Set Game Installation Path",
-            label=f"Select the installation directory for {GlobalRegistry.get_game()}"
+            parent=self, title="Set Game Installation Path", label=f"Select the installation directory for {GlobalRegistry.get_game()}"
         )
 
         # Process the dialog result
@@ -757,8 +752,7 @@ class MainWindow(QMainWindow):
                 user is prompted with a choice to visit the update page.
         """
         if is_up_to_date:
-            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!",
-                                    QMessageBox.StandardButton.Ok)
+            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)
         else:
             update_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
             result = QMessageBox.question(
@@ -819,16 +813,20 @@ class MainWindow(QMainWindow):
         )
         if self.mods_folder_edit:  # Check if it was created
             self.mods_folder_edit.setPlaceholderText("Optional: Select your mod staging folder (e.g., MO2/mods)")
+            self.mods_folder_edit.setToolTip("Select the folder where your mod manager (e.g., MO2) stages your mods.")
 
         self.scan_folder_edit = self.setup_folder_section(
             layout,
             "CUSTOM SCAN FOLDER",
             "Box_SelectedScan",
             self.select_folder_scan,
-            tooltip="Select a custom folder containing crash logs to scan.",
+            tooltip="Select a supplementary custom folder containing crash logs to scan. The game directory is always used for scanning.",
         )
         if self.scan_folder_edit:  # Check if it was created
-            self.scan_folder_edit.setPlaceholderText("Optional: Select a custom folder with crash logs")
+            self.scan_folder_edit.setPlaceholderText("Optional: Select a supplementary custom folder with crash logs")
+            self.scan_folder_edit.setToolTip(
+                "Select a supplementary custom folder containing crash logs to scan. The game directory is always used for scanning."
+            )
             # Connect signal to validate when user finishes editing the text
             self.scan_folder_edit.editingFinished.connect(self.validate_scan_folder_text)
 
@@ -836,7 +834,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.create_separator())
         self.setup_main_buttons(layout)
-        layout.addWidget(self.create_separator())
+        # layout.addWidget(self.create_separator())
         self.setup_checkboxes(layout)
         layout.addWidget(self.create_separator())
         self.setup_bottom_buttons(layout)
@@ -984,8 +982,7 @@ class MainWindow(QMainWindow):
                     """
                     )
 
-    def add_backup_section(self, layout: QBoxLayout, title: str,
-                           backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None:
+    def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None:
         """
         Adds a backup section to the given layout with a specified title
         and backup type. The section includes a title label and three buttons
@@ -1077,8 +1074,7 @@ class MainWindow(QMainWindow):
             raise ValueError(f"Invalid format for selected_list: '{selected_list}'. Expected 'Backup TYPE'.")
         return parts
 
-    def classic_files_manage(self, selected_list: str,
-                             selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
+    def classic_files_manage(self, selected_list: str, selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
         """
         Manages game files by performing operations such as backup, restore, or removal
              based on the selected mode. This function interacts with the game files and
@@ -1173,6 +1169,33 @@ class MainWindow(QMainWindow):
                 self,
                 "Error",
                 "Backup folder is missing or not registered. Please restart the program.",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok,
+            )
+
+    def open_crash_logs_folder(self) -> None:
+        """
+        Opens the Crash Logs directory in the system's file explorer.
+
+        This method checks if the local directory is registered in the
+        GlobalRegistry. If registered, it attempts to open the Crash Logs folder
+        within the local directory. If the folder doesn't exist, it creates it
+        before opening. If the registration is missing, an error message is displayed.
+
+        Raises:
+            QMessageBox: Displays an error dialog if the local directory is not registered.
+        """
+        local_dir: Path = cast("Path", GlobalRegistry.get_local_dir())
+        if local_dir.exists():
+            crash_logs_path: Path = local_dir / "Crash Logs"
+            # Ensure the directory exists
+            crash_logs_path.mkdir(exist_ok=True)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(crash_logs_path))
+        else:
+            QMessageBox.critical(
+                self,
+                "Error",
+                "Local directory is missing or not registered. Please restart the program.",
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok,
             )
@@ -1298,8 +1321,7 @@ class MainWindow(QMainWindow):
         checkbox.setChecked(value)
 
         # Connect setting update to checkbox state
-        checkbox.stateChanged.connect(
-            lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state)))
+        checkbox.stateChanged.connect(lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state)))
 
         # Special handling for Audio Notifications
         if setting == "Audio Notifications":
@@ -1312,7 +1334,7 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def setup_folder_section(
-            layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None], tooltip: str = ""
+        layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None], tooltip: str = ""
     ) -> QLineEdit | None:
         """
         Sets up a folder selection section within a provided layout. This method creates a section
@@ -1482,6 +1504,7 @@ class MainWindow(QMainWindow):
             ("HELP", "Show help information for main options.", self.help_popup_main),
             ("CHANGE INI PATH", "Manually set the path to your game's INI files folder.", self.select_folder_ini),
             ("OPEN SETTINGS", "Open CLASSIC Settings.yaml file.", self.open_settings),
+            ("OPEN CRASH LOGS", "Open the Crash Logs directory in your file explorer.", self.open_crash_logs_folder),
             ("CHECK UPDATES", "Manually check for CLASSIC updates.", self.update_popup_explicit),
         ]
 
@@ -1495,8 +1518,7 @@ class MainWindow(QMainWindow):
         main_actions_hbox: QHBoxLayout = QHBoxLayout()
         main_actions_hbox.setSpacing(10)  # Papyrus monitoring button (special handling for checkable button)
         self.papyrus_button = self._create_button(
-            "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Shows statistics in a dedicated dialog.",
-            self.toggle_papyrus_worker
+            "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Shows statistics in a dedicated dialog.", self.toggle_papyrus_worker
         )
         self.papyrus_button.setCheckable(True)
         self.update_papyrus_button_style(False)  # Initial style for "START"
@@ -1712,12 +1734,12 @@ class MainWindow(QMainWindow):
             None
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
-        
+
         while True:
             folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder")
             if not folder:  # User clicked cancel
                 break
-                
+
             if is_valid_custom_scan_path(folder):
                 # Valid path, update and save
                 if self.scan_folder_edit is not None:
@@ -1726,47 +1748,46 @@ class MainWindow(QMainWindow):
                 break
             # Invalid path, show warning and continue loop
             QMessageBox.warning(
-                self, 
-                "Invalid Custom Scan Path", 
+                self,
+                "Invalid Custom Scan Path",
                 "The selected directory cannot be used as a custom scan path.\n\n"
                 "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
                 "and cannot be set as custom scan directories.\n\n"
-                "Please select a different directory."
+                "Please select a different directory.",
             )
 
     def validate_scan_folder_text(self) -> None:
         """
         Validates the manually entered scan folder path when the text field is edited.
-        
+
         This method is called when the user finishes editing the scan folder text field
         (e.g., by pressing Enter or when the field loses focus). It validates the entered
         path and saves it if valid, or clears it if invalid.
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
-        
+
         if self.scan_folder_edit is None:
             return
-            
+
         folder_text = self.scan_folder_edit.text().strip()
-        
+
         # If empty, clear the setting
         if not folder_text:
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", " ")
             return
-        
+
         # Check if path exists
         path_obj = Path(folder_text)
         if not path_obj.exists() or not path_obj.is_dir():
             QMessageBox.warning(
                 self,
                 "Invalid Path",
-                f"The path '{folder_text}' does not exist or is not a directory.\n\n"
-                "The custom scan path has been cleared."
+                f"The path '{folder_text}' does not exist or is not a directory.\n\nThe custom scan path has been cleared.",
             )
             self.scan_folder_edit.clear()
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
             return
-        
+
         # Check if path is restricted
         if not is_valid_custom_scan_path(folder_text):
             QMessageBox.warning(
@@ -1775,12 +1796,12 @@ class MainWindow(QMainWindow):
                 "The entered directory cannot be used as a custom scan path.\n\n"
                 "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
                 "and cannot be set as custom scan directories.\n\n"
-                "The custom scan path has been cleared."
+                "The custom scan path has been cleared.",
             )
             self.scan_folder_edit.clear()
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
             return
-        
+
         # Valid path, save it
         yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(path_obj.resolve()))
 
@@ -1831,8 +1852,7 @@ class MainWindow(QMainWindow):
         folder: str = QFileDialog.getExistingDirectory(self)
         if folder:
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
-            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}",
-                                    QMessageBox.StandardButton.Ok)
+            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}", QMessageBox.StandardButton.Ok)
 
     def open_settings(self) -> None:
         """
@@ -1880,8 +1900,7 @@ class MainWindow(QMainWindow):
             self.crash_logs_worker = CrashLogsScanWorker()
             self.crash_logs_worker.moveToThread(self.crash_logs_thread)
 
-            self.crash_logs_worker.notify_sound_signal.connect(
-                self.audio_player.play_notify_signal.emit)  # type: ignore
+            self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit)  # type: ignore
             self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
 
             self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
@@ -1970,10 +1989,6 @@ class MainWindow(QMainWindow):
         resets the state by clearing the scanning thread reference and re-enables the buttons
         associated with scanning operations.
 
-        Attributes:
-            game_files_thread: Represents the thread used for scanning game files. Set to None
-                after the scan is completed.
-                
         Returns:
             None
         """

@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 from CLASSIC_Main import initialize, main_generate_required
-from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success, msg_warning
+from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success, msg_warning, MessageTarget
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
@@ -70,8 +70,7 @@ def check_log_errors(folder_path: Path | str) -> str:
                 detected_errors = [
                     f"ERROR > {line}"
                     for line in log_lines
-                    if any(error in line.lower() for error in catch_errors) and all(
-                        ignore not in line.lower() for ignore in ignore_errors)
+                    if any(error in line.lower() for error in catch_errors) and all(ignore not in line.lower() for ignore in ignore_errors)
                 ]
 
                 if detected_errors:
@@ -235,7 +234,7 @@ def scan_mods_unpacked() -> str:
     if not mod_path.is_dir():
         return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
 
-    msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES CLEANUP...")
+    msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES CLEANUP...", target=MessageTarget.CLI_ONLY)
 
     # First pass: cleanup and detect animation data
     filter_names: tuple = ("readme", "changes", "changelog", "change log")
@@ -269,7 +268,7 @@ def scan_mods_unpacked() -> str:
                     shutil.move(file_path, new_file_path)
                 issue_lists["cleanup"].add(f"  - {relative_path}\n")
 
-    msg_info("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...")
+    msg_info("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...", message_target=MessageTarget.CLI_ONLY)
 
     # Second pass: analyze files for issues
     for root, _, files in mod_path.walk(top_down=False):
@@ -302,10 +301,10 @@ def scan_mods_unpacked() -> str:
 
             # Check for XSE files
             elif (
-                    not has_xse_files
-                    and any(filename_lower == key.lower() for key in xse_scriptfiles)
-                    and "workshop framework" not in str(root).lower()
-                    and f"Scripts\\{filename}" in str(file_path)
+                not has_xse_files
+                and any(filename_lower == key.lower() for key in xse_scriptfiles)
+                and "workshop framework" not in str(root).lower()
+                and f"Scripts\\{filename}" in str(file_path)
             ):
                 has_xse_files = True
                 issue_lists["xse_file"].add(f"  - {root_main}\n")
@@ -404,12 +403,12 @@ def scan_mods_archived() -> str:
                 )
 
                 if archive_dump.returncode != 0:
-                    msg_error(f"BSArch command failed: {archive_dump.returncode} {archive_dump.stderr}")
+                    msg_error(f"BSArch command failed:\n{archive_dump.stderr}")
                     continue
 
                 output_split: list[str] = archive_dump.stdout.split("\n\n")
                 if output_split[-1].startswith("Error:"):
-                    msg_error(f"BSArch command failed: {output_split[-1]} {archive_dump.stderr}")
+                    msg_error(f"BSArch command failed:\n{output_split[-1]}\n\n{archive_dump.stderr}")
                     continue
 
                 # Process texture information
@@ -421,8 +420,7 @@ def scan_mods_archived() -> str:
 
                     # Check texture format
                     if "Ext: dds" not in block_split[1]:
-                        issue_lists["tex_frmt"].add(
-                            f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
+                        issue_lists["tex_frmt"].add(f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
                         continue
 
                     # Check texture dimensions
@@ -438,7 +436,7 @@ def scan_mods_archived() -> str:
                 )
 
                 if archive_list.returncode != 0:
-                    msg_error(f"BSArch command failed: {archive_list.returncode} {archive_list.stderr}")
+                    msg_error(f"BSArch command failed:\n{archive_list.stderr}")
                     continue
 
                 # Process file list
@@ -457,9 +455,9 @@ def scan_mods_archived() -> str:
 
                     # Check XSE files
                     elif (
-                            not has_xse_files
-                            and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
-                            and "workshop framework" not in str(root).lower()
+                        not has_xse_files
+                        and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
+                        and "workshop framework" not in str(root).lower()
                     ):
                         has_xse_files = True
                         issue_lists["xse_file"].add(f"  - {filename}\n")
@@ -508,13 +506,12 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
     """
     # Constants
     BACKUP_DIR = "CLASSIC Backup/Game Files"
-    SUCCESS_PREFIX = "✔️ SUCCESSFULLY"
-    ERROR_PREFIX = "❌ ERROR :"
+    SUCCESS_PREFIX = "SUCCESSFULLY"
+    ERROR_PREFIX = "ERROR :"
     ADMIN_SUGGESTION = "    TRY RUNNING CLASSIC.EXE IN ADMIN MODE TO RESOLVE THIS PROBLEM.\n"
 
     # Get paths and settings
-    game_path: Path | None = yaml_settings(Path, YAML.Game_Local,
-                                           f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
     manage_list_setting: list[str] | None = yaml_settings(list[str], YAML.Game, classic_list)
     manage_list: list[str] = manage_list_setting if isinstance(manage_list_setting, list) else []
 
@@ -598,10 +595,8 @@ def game_combined_result() -> str:
         If the necessary paths or directories are not available, an empty string
         is returned.
     """
-    docs_path: Path | None = yaml_settings(Path, YAML.Game_Local,
-                                           f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
-    game_path: Path | None = yaml_settings(Path, YAML.Game_Local,
-                                           f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    docs_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+    game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
     if not (game_path and docs_path):
         return ""

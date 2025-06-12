@@ -11,7 +11,7 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 class Tokens:
-    _XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED: bool = False
+    XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED: bool = False
 
 
 # noinspection DuplicatedCode
@@ -156,8 +156,8 @@ def _get_expected_script_hashes() -> dict[str, str]:
     """Get expected script hashes from config."""
     xse_hashedscripts = yaml_settings(dict[str, str], Constants.YAML.Game, "Game_Info.XSE_HashedScripts")
     if not isinstance(xse_hashedscripts, dict):
-        if not Tokens._XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED:
-            Tokens._XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED = True
+        if not Tokens.XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED:
+            Tokens.XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED = True
             raise TypeError("Expected script hashes configuration must be a dictionary")
         # If the error has been raised before, return an empty dict to avoid repeated errors
         # and allow the program to continue or handle it further up the call stack.
