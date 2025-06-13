@@ -84,7 +84,7 @@ class AsyncFormIDAnalyzer:
         
         Args:
             formids_matches: List of FormID strings
-            crashlog_plugins: Dictionary mapping plugin names to IDs
+            crashlog_plugins: Dictionary mapping plugin_name names to IDs
             autoscan_report: List to append analysis results
         """
         if not formids_matches:
@@ -111,12 +111,12 @@ class AsyncFormIDAnalyzer:
                     
         # Execute all database lookups concurrently
         if self.show_formid_values and self.formid_db_exists and lookup_tasks:
-            async def lookup_and_format(formid_full: str, formid_suffix: str, plugin: str, count: int) -> str | None:
+            async def lookup_and_format(full_formid: str, formid: str, plugin_name: str, formid_count: int) -> str | None:
                 """Perform database lookup and format result."""
-                report = await self.db_pool.get_entry(formid_suffix, plugin)
+                report = await self.db_pool.get_entry(formid, plugin_name)
                 if report:
-                    return f"- {formid_full} | [{plugin}] | {report} | {count}\n"
-                return f"- {formid_full} | [{plugin}] | {count}\n"
+                    return f"- {full_formid} | [{plugin_name}] | {report} | {formid_count}\n"
+                return f"- {full_formid} | [{plugin_name}] | {formid_count}\n"
                     
             # Run all lookups concurrently
             lookup_coroutines = [

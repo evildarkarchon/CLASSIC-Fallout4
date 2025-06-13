@@ -64,6 +64,8 @@ except ImportError:
             def currentThread() -> QThread:
                 pass
 
+
+        # noinspection PyUnusedLocal,PyPep8Naming
         class QMessageBox:
             class Icon:
                 Information = 0
@@ -79,10 +81,12 @@ except ImportError:
             def setWindowTitle(self, title: str) -> None:
                 pass
 
+            # noinspection PyMethodMayBeStatic
             def exec(self) -> int:
                 return 0
 
-        # noinspection PyPep8Naming
+
+        # noinspection PyPep8Naming,PyUnusedLocal
         class QProgressDialog:
             def __init__(self, labelText: str = "", cancelButtonText: str = "", minimum: int = 0, maximum: int = 0, parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
                 pass

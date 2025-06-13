@@ -51,6 +51,7 @@ class ClassicScanLogs:
         
         # Use async file I/O for better performance
         try:
+            # noinspection PyUnresolvedReferences
             from ClassicLib.ScanLog.AsyncFileIO import crashlogs_reformat_with_async
             crashlogs_reformat_with_async(self.crashlog_list, self.remove_list)
             logger.debug("Used async file I/O for crash log reformatting")
@@ -142,7 +143,7 @@ class ClassicScanLogs:
         if (hasattr(self.orchestrator, '_last_formids') and 
             hasattr(self.orchestrator, '_last_plugins') and
             self.formid_db_exists and 
-            self.orchestrator._last_formids):
+            self.orchestrator.last_formids):
             
             async with AsyncDatabasePool() as db_pool:
                 # Create async FormID analyzer
@@ -170,8 +171,8 @@ class ClassicScanLogs:
                     # Add async FormID analysis
                     formid_section: list[str] = []
                     await async_analyzer.formid_match_async(
-                        self.orchestrator._last_formids,
-                        self.orchestrator._last_plugins,
+                        self.orchestrator.last_formids,
+                        self.orchestrator.last_plugins,
                         formid_section
                     )
                     new_report.extend(formid_section)

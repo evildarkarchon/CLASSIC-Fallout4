@@ -420,8 +420,8 @@ class ScanOrchestrator:
         formids_matches = self.formid_analyzer.extract_formids(segment_callstack)
         
         # Store FormID data for potential async processing
-        self._last_formids = formids_matches
-        self._last_plugins = crashlog_plugins
+        self.last_formids = formids_matches
+        self.last_plugins = crashlog_plugins
         
         self.formid_analyzer.formid_match(formids_matches, crashlog_plugins, autoscan_report)
 

@@ -59,6 +59,7 @@ async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str
     logger.debug(f"Starting async load of {len(crashlog_list)} crash logs")
     
     try:
+        # noinspection PyUnresolvedReferences
         from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
         # Load all logs concurrently and convert to bytes format for compatibility
         cache_dict = await load_crash_logs_async(crashlog_list)
