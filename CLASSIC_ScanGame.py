@@ -268,7 +268,7 @@ def scan_mods_unpacked() -> str:
                     shutil.move(file_path, new_file_path)
                 issue_lists["cleanup"].add(f"  - {relative_path}\n")
 
-    msg_info("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...", message_target=MessageTarget.CLI_ONLY)
+    msg_info("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...", target=MessageTarget.CLI_ONLY)
 
     # Second pass: analyze files for issues
     for root, _, files in mod_path.walk(top_down=False):
