@@ -6,7 +6,7 @@
 - Window is now resizable and should scale to smaller screens and handle high scaling better.
 - Remove the text box and convert messages to either use dialog boxes or the CLI, depending on the mode it's launched in.
 - Add progress window (for GUI mode) or CLI progress bar (for CLI) to show scanning progress.
-- Log scanning is now threaded for efficiency.
+- Many optimizations to the log scanning pipeline.
 - Add a button to open the main Crash Logs folder.
 - Only run FCX checks once and cache the results
 - New SVG-based checkbox icons
