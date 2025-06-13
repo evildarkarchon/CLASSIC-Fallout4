@@ -359,9 +359,7 @@ def crashlogs_scan_threaded(scanner: ClassicScanLogs) -> None:
     yamldata: ClassicScanLogsInfo = scanner.yamldata
     scan_failed_list: list = []
 
-    # Determine number of worker threads
-    # Reduced from 8 to 4 to minimize thread contention
-    max_workers: int = min(os.cpu_count() or 4, 4)  # Default to 4, max of 4
+    max_workers: int = 4
 
     # Process crash logs in parallel with progress tracking
     total_logs = len(scanner.crashlog_list)
