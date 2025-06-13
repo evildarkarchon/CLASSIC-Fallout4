@@ -1,3 +1,3 @@
 import logging
 
-logger: logging.Logger = logging.getLogger()
+logger: logging.Logger = logging.getLogger("CLASSIC")

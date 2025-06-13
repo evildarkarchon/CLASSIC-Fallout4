@@ -5,33 +5,45 @@ and progress bars in both GUI (PySide6) and CLI modes. It replaces direct print
 statements and QTextEdit output boxes with appropriate message boxes and progress bars.
 """
 
+from __future__ import annotations
+
 import logging
+import re
 import sys
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, LiteralString
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    # Forward references
-    MessageHandler = "MessageHandler"
-    ProgressContext = "ProgressContext"
-
 # Try to import tqdm for enhanced CLI progress bars
 try:
     # noinspection PyUnresolvedReferences
-    from tqdm import tqdm  # noqa: TC002
+    from tqdm import tqdm as TqdmProgress
 
     HAS_TQDM = True
 except ImportError:
     HAS_TQDM = False
+    # Define dummy tqdm for type checking when not available
+    class TqdmProgress:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+        
+        def update(self, n: int = 1) -> None:
+            pass
+        
+        def set_description(self, desc: str) -> None:
+            pass
+        
+        def close(self) -> None:
+            pass
 
 # Try to import PySide6 for GUI mode
 try:
-    from PySide6.QtCore import QObject, Signal, QThread
+    from PySide6.QtCore import QObject, QThread, Signal
     from PySide6.QtWidgets import QMessageBox, QProgressDialog, QWidget
 
     HAS_QT = True
@@ -49,17 +61,32 @@ except ImportError:
         class QThread:
             # noinspection PyPep8Naming
             @staticmethod
-            def currentThread() -> "QThread":
+            def currentThread() -> QThread:
                 pass
 
         class QMessageBox:
             class Icon:
-                Information: int = 0
-                Warning: int = 1
-                Critical: int = 2
+                Information = 0
+                Warning = 1
+                Critical = 2
+
+            def __init__(self, icon: Any = None, title: str = "", text: str = "", parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
+                pass
+
+            def setDetailedText(self, text: str) -> None:
+                pass
+
+            def setWindowTitle(self, title: str) -> None:
+                pass
+
+            def exec(self) -> int:
+                return 0
 
         # noinspection PyPep8Naming
         class QProgressDialog:
+            def __init__(self, labelText: str = "", cancelButtonText: str = "", minimum: int = 0, maximum: int = 0, parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
+                pass
+
             def hide(self) -> None:
                 pass
 
@@ -67,6 +94,21 @@ except ImportError:
                 pass
 
             def setLabelText(self, text: str) -> None:
+                pass
+
+            def setWindowTitle(self, title: str) -> None:
+                pass
+
+            def setAutoClose(self, autoClose: bool) -> None:
+                pass
+
+            def setAutoReset(self, autoReset: bool) -> None:
+                pass
+
+            def setRange(self, minimum: int, maximum: int) -> None:
+                pass
+
+            def show(self) -> None:
                 pass
 
         class Signal:
@@ -157,7 +199,7 @@ class CLIProgressBar:
 class ProgressContext:
     """Context manager for progress tracking that works in both GUI and CLI modes."""
 
-    def __init__(self, handler: "MessageHandler", description: str, total: int | None = None) -> None:
+    def __init__(self, handler: MessageHandler, description: str, total: int | None = None) -> None:
         """Initialize progress context.
 
         Args:
@@ -169,9 +211,8 @@ class ProgressContext:
         self.description = description
         self.total = total
         self.current = 0
-        self._progress_bar: tqdm | CLIProgressBar | QProgressDialog | None = None
-
-    def __enter__(self) -> "ProgressContext":
+        self._progress_bar: TqdmProgress | CLIProgressBar | QProgressDialog | Literal["qt_signal"] | None = None
+    def __enter__(self) -> ProgressContext:
         """Enter the context and create appropriate progress indicator."""
         if self.handler.is_gui_mode and HAS_QT:
             # Check if we're in the main thread and QApplication exists
@@ -188,7 +229,7 @@ class ProgressContext:
                     self._progress_bar.setAutoClose(True)
                     self._progress_bar.setAutoReset(True)
                     if self.total is None:
-                        self._progress_bar.setRange(0, 0)  # Indeterminate
+                        self._progress_bar.setRange(0, 0) # Indeterminate
                     self._progress_bar.show()
                 else:
                     # We're in a worker thread - use signals to create progress dialog in main thread
@@ -199,11 +240,9 @@ class ProgressContext:
                 # Suppress progress in GUI mode even if Qt fails
                 self._progress_bar = None
         # CLI mode
+        # CLI mode
         elif HAS_TQDM:
-            from tqdm import tqdm  # Import locally when we know it's available
-
-            self._progress_bar = tqdm(total=self.total, desc=self.description, file=sys.stdout)
-        else:
+            self._progress_bar = TqdmProgress(total=self.total, desc=self.description, file=sys.stdout)
             self._progress_bar = CLIProgressBar(self.description, self.total)
 
         return self
@@ -293,6 +332,26 @@ class MessageHandler(QObject):
         # MessageTarget.ALL
         return True
 
+    @staticmethod
+    def _strip_emoji(text: str) -> str:
+        """Strip emoji characters from text to avoid encoding issues in logs."""
+        # Unicode ranges for emojis and symbols
+        emoji_pattern = re.compile(
+            "["
+            "\U0001F600-\U0001F64F"  # emoticons
+            "\U0001F300-\U0001F5FF"  # symbols & pictographs
+            "\U0001F680-\U0001F6FF"  # transport & map symbols
+            "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+            "\U00002702-\U000027B0"  # dingbats
+            "\U000024C2-\U0001F251"
+            "\U0001F900-\U0001F9FF"  # supplemental symbols
+            "\U00002600-\U000026FF"  # miscellaneous symbols
+            "\U00002700-\U000027BF"  # dingbats
+            "]+",
+            flags=re.UNICODE
+        )
+        return emoji_pattern.sub("", text).strip()
+
     def _log_message(self, message: Message) -> None:
         """Log message to file."""
         level_map = {
@@ -306,9 +365,10 @@ class MessageHandler(QObject):
         }
 
         log_level = level_map.get(message.msg_type, logging.INFO)
-        log_content = message.content
+        # Strip emoji characters for logging to avoid encoding issues on Windows console
+        log_content = self._strip_emoji(message.content)
         if message.details:
-            log_content += f"\nDetails: {message.details}"
+            log_content += f"\nDetails: {self._strip_emoji(message.details)}"
 
         self.logger.log(log_level, log_content)
 
@@ -317,8 +377,8 @@ class MessageHandler(QObject):
         if not HAS_QT:
             return
 
-        parent = message.parent or self.parent_widget
-        title = message.title or message.msg_type.name.title()
+        parent: QWidget | None = message.parent or self.parent_widget
+        title: str | LiteralString = message.title or message.msg_type.name.title()
         icon_map = {
             MessageType.INFO: QMessageBox.Icon.Information,
             MessageType.WARNING: QMessageBox.Icon.Warning,
@@ -331,11 +391,14 @@ class MessageHandler(QObject):
         icon = icon_map.get(message.msg_type, QMessageBox.Icon.Information)
 
         if message.details:
-            msg_box = QMessageBox(icon, title, message.content, parent=parent)
+            msg_box = QMessageBox(parent=parent, text=message.content, icon=icon)
+            msg_box.setWindowTitle(title)
             msg_box.setDetailedText(message.details)
             msg_box.exec()
         else:
-            QMessageBox(icon, title, message.content, parent=parent).exec()
+            msg_box = QMessageBox(parent=parent, text=message.content, icon=icon)
+            msg_box.setWindowTitle(title)
+            msg_box.exec()
 
     def _create_progress_dialog(self, description: str, total: int) -> None:
         """Create progress dialog in main thread."""
@@ -347,7 +410,7 @@ class MessageHandler(QObject):
         self._progress_dialog.setAutoClose(True)
         self._progress_dialog.setAutoReset(True)
         if total == 0:
-            self._progress_dialog.setRange(0, 0)  # Indeterminate
+            self._progress_dialog.setRange(0, 0) # Indeterminate
         self._progress_dialog.show()
 
     def _update_progress_dialog(self, value: int, description: str) -> None:
@@ -367,7 +430,7 @@ class MessageHandler(QObject):
     def _handle_cli_message(message: Message) -> None:
         """Handle displaying message in CLI mode."""
         # Add emoji prefixes for different message types
-        prefix_map = {
+        prefix_map: dict[MessageType, str] = {
             MessageType.INFO: "",
             MessageType.WARNING: "⚠️ ",
             MessageType.ERROR: "❌ ",
@@ -376,8 +439,8 @@ class MessageHandler(QObject):
             MessageType.DEBUG: "🐛 ",
         }
 
-        prefix = prefix_map.get(message.msg_type, "")
-        output = f"{prefix}{message.content}"
+        prefix: str = prefix_map.get(message.msg_type, "")
+        output: str = f"{prefix}{message.content}"
 
         if message.details:
             output += f"\n   Details: {message.details}"
@@ -512,7 +575,7 @@ def msg_critical(content: str, **kwargs: Any) -> None:
 
 
 @contextmanager
-def msg_progress_context(description: str, total: int | None = None) -> 'Iterator[ProgressContext]':
+def msg_progress_context(description: str, total: int | None = None) -> Iterator[ProgressContext]:
     """Create a progress context manager using the global handler.
     
     Args:

@@ -247,7 +247,12 @@ class ScanOrchestrator:
             trigger_limit_check_disabled = limit_check_disabled
 
         # Add XSE modules as DLLs
-        crashlog_plugins.update({elem: "DLL" for elem in xsemodules if all(elem not in item for item in crashlog_plugins)})
+        # Convert to set for O(1) lookups instead of O(n*m) nested loops
+        existing_plugin_names = set(crashlog_plugins.keys())
+        for elem in xsemodules:
+            # Check if elem is a substring of any existing plugin
+            if not any(elem in plugin_name for plugin_name in existing_plugin_names):
+                crashlog_plugins[elem] = "DLL"
 
         # Add vulkan if found
         for elem in segment_allmodules if segment_allmodules else []:
@@ -413,6 +418,11 @@ class ScanOrchestrator:
         # FormID matching
         self.report_generator.generate_formid_section_header(autoscan_report)
         formids_matches = self.formid_analyzer.extract_formids(segment_callstack)
+        
+        # Store FormID data for potential async processing
+        self._last_formids = formids_matches
+        self._last_plugins = crashlog_plugins
+        
         self.formid_analyzer.formid_match(formids_matches, crashlog_plugins, autoscan_report)
 
         # Record scanning

@@ -62,6 +62,10 @@ CLASSIC_Info:
     # Set the source where CLASSIC will check for updates. (Nexus | GitHub)
       Update Source: Both
 
+    # Enable or disable the use of an asynchronous pipeline for processing. This setting should not be changed and is primarily for testing purposes.
+    # If you are not a developer or do not know what this means, leave it as is.
+      Use Async Pipeline: true
+
 
   default_localyaml: |
     Game_Info:

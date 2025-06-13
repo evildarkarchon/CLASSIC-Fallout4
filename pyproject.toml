@@ -25,10 +25,10 @@ iniparse = "^0.5"
 pyside6 = "^6.8.0"
 typed-argument-parser = "^1.10.1"
 packaging = "^25.0"
-pywin32 = ">=310"
 aiofiles = "^24.1.0"
 pytest = "^8.4.0"
 tqdm = "^4.67.1"
+aiosqlite = "^0.21.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.12.0"

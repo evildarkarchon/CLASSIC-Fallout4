@@ -72,13 +72,14 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     mods_found = False
     yaml_dict_lower: dict[str, str] = _convert_to_lowercase(yaml_dict)
     crashlog_plugins_lower: dict[str, str] = _convert_to_lowercase(crashlog_plugins)
-    plugin_names = crashlog_plugins_lower.keys()
+    # Convert to list once to avoid repeated iteration
+    plugin_names_list = list(crashlog_plugins_lower.keys())
 
     for mod_pair, mod_warning in yaml_dict_lower.items():
         mod1, mod2 = mod_pair.split(" | ", 1)
 
-        mod1_found: bool = any(mod1 in plugin_name for plugin_name in plugin_names)
-        mod2_found: bool = any(mod2 in plugin_name for plugin_name in plugin_names)
+        mod1_found: bool = any(mod1 in plugin_name for plugin_name in plugin_names_list)
+        mod2_found: bool = any(mod2 in plugin_name for plugin_name in plugin_names_list)
 
         if mod1_found and mod2_found:
             _validate_warning(mod_pair, mod_warning)

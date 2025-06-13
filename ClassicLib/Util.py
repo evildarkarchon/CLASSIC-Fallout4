@@ -214,8 +214,7 @@ def configure_logging(classic_logger: Logger) -> None:
                 msg_error(f"An error occurred while deleting {journal_path.name}: {err}")
 
     # Make sure we only configure the handler once
-    if "CLASSIC" not in logging.Logger.manager.loggerDict:
-        classic_logger = logging.getLogger("CLASSIC")
+    if not classic_logger.handlers:
         classic_logger.setLevel(logging.INFO)
         handler: logging.FileHandler = logging.FileHandler(
             filename="CLASSIC Journal.log",

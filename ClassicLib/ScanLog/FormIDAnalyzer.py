@@ -17,6 +17,9 @@ from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.ScanLog.Util import get_entry
 from ClassicLib.Util import append_or_extend
 
+# Module-level regex pattern cache to avoid recompilation
+_PATTERN_CACHE: dict[str, re.Pattern[str]] = {}
+
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
@@ -37,11 +40,14 @@ class FormIDAnalyzer:
         self.show_formid_values: bool = show_formid_values
         self.formid_db_exists: bool = formid_db_exists
         
-        # Pattern to match FormID format in crash logs
-        self.formid_pattern: re.Pattern[str] = re.compile(
-            r"^\s*Form ID:\s*0x([0-9A-F]{8})",
-            re.IGNORECASE,
-        )
+        # Pattern to match FormID format in crash logs (cached)
+        pattern_key = "formid_pattern"
+        if pattern_key not in _PATTERN_CACHE:
+            _PATTERN_CACHE[pattern_key] = re.compile(
+                r"^\s*Form ID:\s*0x([0-9A-F]{8})",
+                re.IGNORECASE,
+            )
+        self.formid_pattern = _PATTERN_CACHE[pattern_key]
         
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
         """

@@ -22,11 +22,21 @@ class ThreadSafeLogCache:
         self.cache: dict[str, bytes] = {}
 
         # Populate the cache with log content
-        for file in logfiles:
-            try:
-                self.cache[file.name] = file.read_bytes()
-            except OSError as e:
-                msg_error(f"Error reading {file}: {e}")
+        # Try async loading first for better performance
+        try:
+            from ClassicLib.ScanLog.AsyncFileIO import integrate_async_file_loading
+            self.cache = integrate_async_file_loading(logfiles)
+            from ClassicLib.Logger import logger
+            logger.debug(f"Loaded {len(self.cache)} crash logs using async I/O")
+        except (ImportError, Exception):
+            # Fallback to sync loading
+            for file in logfiles:
+                try:
+                    self.cache[file.name] = file.read_bytes()
+                except OSError as e:
+                    msg_error(f"Error reading {file}: {e}")
+            from ClassicLib.Logger import logger
+            logger.debug(f"Loaded {len(self.cache)} crash logs using sync I/O")
 
     def read_log(self, logname: str) -> list[str]:
         """
@@ -80,6 +90,27 @@ class ThreadSafeLogCache:
         """
         with self.lock:
             self.cache.clear()
+    
+    @classmethod
+    def from_cache(cls, cache_dict: dict[str, bytes]) -> "ThreadSafeLogCache":
+        """
+        Create a ThreadSafeLogCache from an existing cache dictionary.
+        
+        Args:
+            cache_dict: Pre-populated cache dictionary
+            
+        Returns:
+            ThreadSafeLogCache instance with the provided cache
+        """
+        # Create instance without loading files
+        instance = cls.__new__(cls)
+        instance.lock = threading.RLock()
+        instance.cache = cache_dict.copy()
+        
+        from ClassicLib.Logger import logger
+        logger.debug(f"Created ThreadSafeLogCache from existing cache with {len(cache_dict)} logs")
+        
+        return instance
 
 
 # noinspection PyUnresolvedReferences
