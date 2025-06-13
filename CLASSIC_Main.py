@@ -4,12 +4,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ClassicLib import GlobalRegistry, init_message_handler, msg_info, msg_success, msg_warning, MessageTarget
+from ClassicLib import GlobalRegistry, MessageTarget, init_message_handler, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 from ClassicLib.GamePath import game_generate_paths, game_path_find
 from ClassicLib.Logger import logger
-from ClassicLib.Util import calculate_file_hash, configure_logging, open_file_with_encoding, normalize_list
+from ClassicLib.Util import calculate_file_hash, configure_logging, normalize_list, open_file_with_encoding
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 

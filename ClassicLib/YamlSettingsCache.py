@@ -4,7 +4,7 @@ from typing import Any, ClassVar
 
 import ruamel.yaml
 
-from ClassicLib import GlobalRegistry, msg_error, MessageTarget
+from ClassicLib import GlobalRegistry, MessageTarget, msg_error
 from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Meta import SingletonMeta

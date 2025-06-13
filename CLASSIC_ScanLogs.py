@@ -207,11 +207,12 @@ class ClassicScanLogs:
 
             from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer  # noqa: F401
             from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401
-            logger.debug("Async database operations available")
-            return True
         except ImportError:
             logger.debug("Async database dependencies not available")
             return False
+        else:
+            logger.debug("Async database operations available")
+            return True
     
     def _check_async_pipeline_availability(self) -> bool:
         """
@@ -236,11 +237,12 @@ class ClassicScanLogs:
 
             from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline  # noqa: F401
             from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401
-            logger.debug("Async pipeline dependencies available")
-            return True
         except ImportError as e:
             logger.debug(f"Async pipeline dependencies not available: {e}")
             return False
+        else:
+            logger.debug("Async pipeline operations available")
+            return True
 
 
 def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: ClassicScanLogs) -> None:
@@ -362,46 +364,45 @@ def crashlogs_scan_threaded(scanner: ClassicScanLogs) -> None:
 
     # Process crash logs in parallel with progress tracking
     total_logs = len(scanner.crashlog_list)
-    with msg_progress_context("Processing Crash Logs", total_logs) as progress:
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all tasks - use async DB operations if available
-            if scanner.use_async_db:
-                logger.debug("Using async database operations for FormID lookups")
-                futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
-                    executor.submit(scanner.process_crashlog_with_async_db, crashlog_file) 
-                    for crashlog_file in scanner.crashlog_list
-                ]
-            else:
-                logger.debug("Using synchronous database operations")
-                futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
-                    executor.submit(scanner.process_crashlog, crashlog_file) 
-                    for crashlog_file in scanner.crashlog_list
-                ]
+    with msg_progress_context("Processing Crash Logs", total_logs) as progress, ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks - use async DB operations if available
+        if scanner.use_async_db:
+            logger.debug("Using async database operations for FormID lookups")
+            futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
+                executor.submit(scanner.process_crashlog_with_async_db, crashlog_file) 
+                for crashlog_file in scanner.crashlog_list
+            ]
+        else:
+            logger.debug("Using synchronous database operations")
+            futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
+                executor.submit(scanner.process_crashlog, crashlog_file) 
+                for crashlog_file in scanner.crashlog_list
+            ]
 
-            # Process results as they complete
-            for future in as_completed(futures):
-                try:
-                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = future.result()
+        # Process results as they complete
+        for future in as_completed(futures):
+            try:
+                crashlog_file, autoscan_report, trigger_scan_failed, local_stats = future.result()
 
-                    # Update statistics
-                    for key, value in local_stats.items():
-                        scanner.crashlog_stats[key] += value
+                # Update statistics
+                for key, value in local_stats.items():
+                    scanner.crashlog_stats[key] += value
 
-                    # Write report
-                    write_report_to_file(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
+                # Write report
+                write_report_to_file(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
 
-                    # Track failed scans
-                    if trigger_scan_failed:
-                        scan_failed_list.append(crashlog_file.name)
+                # Track failed scans
+                if trigger_scan_failed:
+                    scan_failed_list.append(crashlog_file.name)
 
-                    # Update progress
-                    progress.update(1, f"Processed {crashlog_file.name}")
+                # Update progress
+                progress.update(1, f"Processed {crashlog_file.name}")
 
-                except Exception as e:  # noqa: BLE001
-                    logger.debug(f"Error processing crash log: {e!s}")
-                    msg_error(f"Failed to process crash log: {e!s}")
-                    scanner.crashlog_stats["failed"] += 1
-                    progress.update(1)
+            except Exception as e:  # noqa: BLE001
+                logger.debug(f"Error processing crash log: {e!s}")
+                msg_error(f"Failed to process crash log: {e!s}")
+                scanner.crashlog_stats["failed"] += 1
+                progress.update(1)
 
     # Complete with standard error checking and summary
     _complete_scan_with_summary(scanner, scan_failed_list, yamldata)
