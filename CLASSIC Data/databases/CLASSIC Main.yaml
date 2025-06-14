@@ -65,6 +65,10 @@ CLASSIC_Info:
     # Enable or disable the use of an asynchronous pipeline for processing. This setting should not be changed and is primarily for testing purposes.
     # If you are not a developer or do not know what this means, leave it as is.
       Use Async Pipeline: true
+    
+    # Set to true if you want CLASSIC to disable progress bars when running in command line mode.
+    # This can be useful for cleaner output when running CLASSIC in scripts or automated environments.
+      Disable CLI Progress: false
 
 
   default_localyaml: |

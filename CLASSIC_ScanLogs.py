@@ -460,14 +460,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Command-line arguments for CLASSIC's Command Line Interface")
 
-    parser.add_argument("--fcx-mode", action="store_true", help="Enable FCX mode")
-    parser.add_argument("--show-fid-values", action="store_true", help="Show FormID values")
-    parser.add_argument("--stat-logging", action="store_true", help="Enable statistical logging")
-    parser.add_argument("--move-unsolved", action="store_true", help="Move unsolved logs")
+    parser.add_argument("--fcx-mode", action=argparse.BooleanOptionalAction, help="Enable FCX mode")
+    parser.add_argument("--show-fid-values", action=argparse.BooleanOptionalAction, help="Show FormID values")
+    parser.add_argument("--stat-logging", action=argparse.BooleanOptionalAction, help="Enable statistical logging")
+    parser.add_argument("--move-unsolved", action=argparse.BooleanOptionalAction, help="Move unsolved logs")
     parser.add_argument("--ini-path", type=Path, help="Path to the INI file")
     parser.add_argument("--scan-path", type=Path, help="Path to the scan directory")
     parser.add_argument("--mods-folder-path", type=Path, help="Path to the mods folder")
-    parser.add_argument("--simplify-logs", action="store_true", help="Simplify the logs (Warning: May remove important information)")
+    parser.add_argument("--simplify-logs", action=argparse.BooleanOptionalAction, help="Simplify the logs (Warning: May remove important information)")
+    parser.add_argument("--disable-progress", action=argparse.BooleanOptionalAction, help="Disable progress bars in CLI mode")
 
     args = parser.parse_args()
 
@@ -514,6 +515,9 @@ if __name__ == "__main__":
         
     if isinstance(args.simplify_logs, bool) and args.simplify_logs != classic_settings(bool, "Simplify Logs"):
         yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Simplify Logs", args.simplify_logs)
+
+    if isinstance(args.disable_progress, bool) and args.disable_progress != classic_settings(bool, "Disable CLI Progress"):
+        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Disable CLI Progress", args.disable_progress)
         
     crashlogs_scan()
     os.system("pause")

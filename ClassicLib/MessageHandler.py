@@ -14,7 +14,7 @@ import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, Literal, LiteralString
+from typing import TYPE_CHECKING, Any, LiteralString
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -50,80 +50,77 @@ try:
 except ImportError:
     HAS_QT = False
     # Define dummy classes for type checking when Qt is not available
-    if TYPE_CHECKING:
+    class QObject:
+        pass
 
-        class QObject:
+    class QWidget:
+        pass
+
+    class QThread:
+        # noinspection PyPep8Naming
+        @staticmethod
+        def currentThread() -> QThread:
             pass
 
-        class QWidget:
+    # noinspection PyUnusedLocal,PyPep8Naming
+    class QMessageBox:
+        class Icon:
+            Information = 0
+            Warning = 1
+            Critical = 2
+
+        def __init__(self, icon: Any = None, title: str = "", text: str = "", parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
             pass
 
-        class QThread:
-            # noinspection PyPep8Naming
-            @staticmethod
-            def currentThread() -> QThread:
-                pass
+        def setDetailedText(self, text: str) -> None:
+            pass
+
+        def setWindowTitle(self, title: str) -> None:
+            pass
+
+        # noinspection PyMethodMayBeStatic
+        def exec(self) -> int:
+            return 0
 
 
-        # noinspection PyUnusedLocal,PyPep8Naming
-        class QMessageBox:
-            class Icon:
-                Information = 0
-                Warning = 1
-                Critical = 2
+    # noinspection PyPep8Naming,PyUnusedLocal
+    class QProgressDialog:
+        def __init__(self, labelText: str = "", cancelButtonText: str = "", minimum: int = 0, maximum: int = 0, parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
+            pass
 
-            def __init__(self, icon: Any = None, title: str = "", text: str = "", parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
-                pass
+        def hide(self) -> None:
+            pass
 
-            def setDetailedText(self, text: str) -> None:
-                pass
+        def setValue(self, value: int) -> None:
+            pass
 
-            def setWindowTitle(self, title: str) -> None:
-                pass
+        def setLabelText(self, text: str) -> None:
+            pass
 
-            # noinspection PyMethodMayBeStatic
-            def exec(self) -> int:
-                return 0
+        def setWindowTitle(self, title: str) -> None:
+            pass
 
+        def setAutoClose(self, autoClose: bool) -> None:
+            pass
 
-        # noinspection PyPep8Naming,PyUnusedLocal
-        class QProgressDialog:
-            def __init__(self, labelText: str = "", cancelButtonText: str = "", minimum: int = 0, maximum: int = 0, parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
-                pass
+        def setAutoReset(self, autoReset: bool) -> None:
+            pass
 
-            def hide(self) -> None:
-                pass
+        def setRange(self, minimum: int, maximum: int) -> None:
+            pass
 
-            def setValue(self, value: int) -> None:
-                pass
+        def show(self) -> None:
+            pass
 
-            def setLabelText(self, text: str) -> None:
-                pass
+    class Signal:
+        def __init__(self, *args: Any) -> None:
+            pass
 
-            def setWindowTitle(self, title: str) -> None:
-                pass
+        def emit(self, *args: Any) -> None:
+            pass
 
-            def setAutoClose(self, autoClose: bool) -> None:
-                pass
-
-            def setAutoReset(self, autoReset: bool) -> None:
-                pass
-
-            def setRange(self, minimum: int, maximum: int) -> None:
-                pass
-
-            def show(self) -> None:
-                pass
-
-        class Signal:
-            def __init__(self, *args: Any) -> None:
-                pass
-
-            def emit(self, *args: Any) -> None:
-                pass
-
-            def connect(self, func: Any) -> None:
-                pass
+        def connect(self, func: Any) -> None:
+            pass
 
 
 class MessageType(Enum):
@@ -215,9 +212,18 @@ class ProgressContext:
         self.description = description
         self.total = total
         self.current = 0
-        self._progress_bar: TqdmProgress | CLIProgressBar | QProgressDialog | Literal["qt_signal"] | None = None
+        self._progress_bar: TqdmProgress | CLIProgressBar | QProgressDialog | None = None
+        self._using_qt_signals = False
     def __enter__(self) -> ProgressContext:
         """Enter the context and create appropriate progress indicator."""
+        # Check if CLI progress is disabled
+        try:
+            from ClassicLib.YamlSettingsCache import classic_settings
+            disable_cli_progress = classic_settings(bool, "Disable CLI Progress") or False
+        except (ImportError, FileNotFoundError, KeyError, TypeError):
+            # If we can't load settings, default to showing progress
+            disable_cli_progress = False
+        
         if self.handler.is_gui_mode and HAS_QT:
             # Check if we're in the main thread and QApplication exists
             try:
@@ -238,26 +244,27 @@ class ProgressContext:
                 else:
                     # We're in a worker thread - use signals to create progress dialog in main thread
                     self.handler.progress_create_signal.emit(self.description, self.total or 0)
-                    self._progress_bar = "qt_signal"  # Marker to indicate we're using Qt signals
+                    self._using_qt_signals = True
             except (ImportError, RuntimeError):
                 # Fallback to CLI progress if Qt is not available or has issues
                 # Suppress progress in GUI mode even if Qt fails
                 self._progress_bar = None
-        # CLI mode
-        elif HAS_TQDM:
-            self._progress_bar = TqdmProgress(total=self.total, desc=self.description, file=sys.stdout)
-        else:
-            self._progress_bar = CLIProgressBar(self.description, self.total)
+        # CLI mode - only create progress bars if not disabled
+        elif not disable_cli_progress:
+            if HAS_TQDM:
+                self._progress_bar = TqdmProgress(total=self.total, desc=self.description, file=sys.stdout)
+            else:
+                self._progress_bar = CLIProgressBar(self.description, self.total)
 
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Exit the context and clean up progress indicator."""
-        if self._progress_bar is not None:
+        if self._using_qt_signals:
+            self.handler.progress_close_signal.emit()
+        elif self._progress_bar is not None:
             if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
                 self._progress_bar.hide()
-            elif self._progress_bar == "qt_signal":
-                self.handler.progress_close_signal.emit()
             elif hasattr(self._progress_bar, "close"):
                 self._progress_bar.close()
 
@@ -270,19 +277,17 @@ class ProgressContext:
         """
         self.current += n
 
-        if self._progress_bar is None:
-            return
-
-        if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
-            self._progress_bar.setValue(self.current)
-            if description:
-                self._progress_bar.setLabelText(description)
-        elif self._progress_bar == "qt_signal":
+        if self._using_qt_signals:
             self.handler.progress_signal.emit(self.current, description or "")
-        elif hasattr(self._progress_bar, "update"):
-            self._progress_bar.update(n)
-            if description and hasattr(self._progress_bar, "set_description"):
-                self._progress_bar.set_description(description)
+        elif self._progress_bar is not None:
+            if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
+                self._progress_bar.setValue(self.current)
+                if description:
+                    self._progress_bar.setLabelText(description)
+            elif hasattr(self._progress_bar, "update"):
+                self._progress_bar.update(n)
+                if description and hasattr(self._progress_bar, "set_description"):
+                    self._progress_bar.set_description(description)
 
 
 class MessageHandler(QObject):
