@@ -1,4 +1,8 @@
-"""ClassicLib - Core library for CLASSIC crash log analyzer."""
+"""ClassicLib - Core library for CLASSIC crash log analyzer.
+
+This module provides core functionality that works with or without PySide6.
+GUI-specific components are available in ClassicLib.gui when PySide6 is installed.
+"""
 
 from ClassicLib.Constants import (
     DB_PATHS,
@@ -28,6 +32,7 @@ from ClassicLib.GlobalRegistry import (
     register,
 )
 from ClassicLib.Logger import logger
+from ClassicLib.compat import HAS_PYSIDE6, HAS_TQDM, check_gui_requirements
 from ClassicLib.MessageHandler import (
     Message,
     MessageHandler,
@@ -80,6 +85,10 @@ from ClassicLib.YamlSettingsCache import (
 )
 
 __all__ = [
+    # Compatibility
+    "HAS_PYSIDE6",
+    "HAS_TQDM",
+    "check_gui_requirements",
     # Constants
     "DB_PATHS",
     "F4SE_VERSIONS",

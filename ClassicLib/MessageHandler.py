@@ -244,9 +244,9 @@ class ProgressContext:
                 # Suppress progress in GUI mode even if Qt fails
                 self._progress_bar = None
         # CLI mode
-        # CLI mode
         elif HAS_TQDM:
             self._progress_bar = TqdmProgress(total=self.total, desc=self.description, file=sys.stdout)
+        else:
             self._progress_bar = CLIProgressBar(self.description, self.total)
 
         return self
@@ -254,7 +254,7 @@ class ProgressContext:
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Exit the context and clean up progress indicator."""
         if self._progress_bar is not None:
-            if isinstance(self._progress_bar, QProgressDialog):
+            if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
                 self._progress_bar.hide()
             elif self._progress_bar == "qt_signal":
                 self.handler.progress_close_signal.emit()
@@ -273,7 +273,7 @@ class ProgressContext:
         if self._progress_bar is None:
             return
 
-        if isinstance(self._progress_bar, QProgressDialog):
+        if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
             self._progress_bar.setValue(self.current)
             if description:
                 self._progress_bar.setLabelText(description)

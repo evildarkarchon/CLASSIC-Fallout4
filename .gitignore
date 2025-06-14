@@ -65,3 +65,4 @@ Release/
 Crash Logs/
 compile.py
 /package-lock.json
+/Examples/

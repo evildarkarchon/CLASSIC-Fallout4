@@ -22,13 +22,17 @@ chardet = "^5.2.0"
 aiohttp = "^3.10.10"
 regex = "^2024.9.11"
 iniparse = "^0.5"
-pyside6 = "^6.8.0"
 typed-argument-parser = "^1.10.1"
 packaging = "^25.0"
 aiofiles = "^24.1.0"
 pytest = "^8.4.0"
-tqdm = "^4.67.1"
 aiosqlite = "^0.21.0"
+
+[tool.poetry.group.gui.dependencies]
+pyside6 = "^6.8.0"
+
+[tool.poetry.group.cli.dependencies]
+tqdm = "^4.67.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.12.0"
