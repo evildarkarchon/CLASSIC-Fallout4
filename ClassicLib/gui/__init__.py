@@ -26,20 +26,20 @@ except ImportError:
 # Only import GUI components if PySide6 is available
 if HAS_PYSIDE6:
     from ClassicLib.GuiComponents import ManualDocsPath
-    from ClassicLib.Interface.Audio import Audio
-    from ClassicLib.Interface.Papyrus import PapyrusData, PapyrusManager
-    from ClassicLib.Interface.PapyrusDialog import PapyrusDialog
-    from ClassicLib.Interface.Pastebin import PastebinDialog
-    from ClassicLib.Interface.PathDialog import PathInputDialog
+    from ClassicLib.Interface.Audio import AudioPlayer
+    from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
+    from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
+    from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+    from ClassicLib.Interface.PathDialog import ManualPathDialog
     
     __all__ = [
         "ManualDocsPath",
-        "Audio",
-        "PapyrusData",
-        "PapyrusManager",
-        "PapyrusDialog",
-        "PastebinDialog",
-        "PathInputDialog",
+        "AudioPlayer",
+        "PapyrusMonitorWorker",
+        "PapyrusStats",
+        "PastebinFetchWorker",
+        "PapyrusMonitorDialog",
+        "ManualPathDialog",
         "HAS_PYSIDE6",
     ]
 else:
