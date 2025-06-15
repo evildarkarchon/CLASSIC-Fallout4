@@ -37,7 +37,21 @@ class AsyncDatabasePool:
         await self.close()
         
     async def initialize(self) -> None:
-        """Initialize database connections."""
+        """
+        Initializes asynchronous database connections.
+
+        This method ensures thread-safe initialization of database connections
+        to files defined in `DB_PATHS`. It attempts to open an asynchronous
+        connection for each valid database path and stores the connection
+        in the `connections` dictionary. If an error occurs while opening any
+        database, it logs the error for debugging purposes.
+
+        Raises:
+            KeyError: If the dictionary `connections` does not exist or cannot
+                      be accessed.
+            Any exceptions raised by `aiosqlite.connect` or file operations.
+
+        """
         async with self._lock:
             for db_path in DB_PATHS:
                 if db_path.is_file():
@@ -57,14 +71,27 @@ class AsyncDatabasePool:
             
     async def get_entry(self, formid: str, plugin: str) -> str | None:
         """
-        Async version of FormID database lookup with caching.
-        
-        Args:
-            formid: The FormID to look up
-            plugin: The plugin name
-            
+        Fetch a specific entry from the database based on the given form ID and plugin name.
+        The method first checks if the requested data is available in the cache. If not,
+        it queries the connected databases sequentially until the entry is found or all
+        databases are exhausted. The result is cached for future requests.
+
+        Parameters:
+        formid: str
+            The unique form ID used to identify the entry in the database.
+        plugin: str
+            The plugin name associated with the form ID.
+
         Returns:
-            The database entry or None if not found
+        str | None
+            The entry corresponding to the specified form ID and plugin. Returns None
+            if the entry is not found in the cache or any of the connected databases.
+
+        Raises:
+        aiosqlite.Error
+            Raised if a SQLite error occurs during database operations.
+        OSError
+            Raised if an operating system-related error occurs during database operations.
         """
         # Check cache first
         cache_key = (formid, plugin)
@@ -91,13 +118,23 @@ class AsyncDatabasePool:
 
 async def read_file_async(file_path: Path) -> list[str]:
     """
-    Asynchronously read a file and return its lines.
-    
-    Args:
-        file_path: Path to the file to read
-        
+    Reads the contents of a file asynchronously and returns its lines as a list of strings.
+    Handles file reading errors and logs them without raising exceptions.
+
+    Parameters:
+    file_path: Path
+        The path to the file to be read. Must be a valid file path.
+
     Returns:
-        List of lines from the file
+    list[str]
+        A list of strings where each string corresponds to a line from the file. Returns an empty list
+        if an error occurs during file reading.
+
+    Raises:
+    OSError
+        Raised if there's an issue opening or reading the file.
+    UnicodeDecodeError
+        Raised if the file's content cannot be decoded using the specified encoding.
     """
     try:
         async with aiofiles.open(file_path, encoding='utf-8', errors='ignore') as f:
@@ -110,11 +147,19 @@ async def read_file_async(file_path: Path) -> list[str]:
 
 async def write_file_async(file_path: Path, content: str) -> None:
     """
-    Asynchronously write content to a file.
-    
-    Args:
-        file_path: Path to the file to write
-        content: Content to write
+    Writes the specified content to a file asynchronously. This function utilizes
+    asynchronous file operations to write the content into the designated file
+    path efficiently. In case of an error during the file writing operation, it
+    logs the error details.
+
+    Arguments:
+        file_path (Path): The path of the file to write content into.
+        content (str): The string content to be written to the file.
+
+    Raises:
+        OSError: If there is an issue accessing or writing to the file.
+        UnicodeEncodeError: If the content cannot be encoded properly in the
+        specified encoding.
     """
     try:
         async with aiofiles.open(file_path, mode='w', encoding='utf-8', errors='ignore') as f:
@@ -125,13 +170,18 @@ async def write_file_async(file_path: Path, content: str) -> None:
 
 async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str]]:
     """
-    Asynchronously load all crash logs into memory.
-    
-    Args:
-        crashlog_list: List of crash log paths
-        
+    Loads crash logs asynchronously and returns a dictionary mapping log file names
+    to their respective content. Each log file is read concurrently to improve the
+    performance when handling multiple files.
+
+    Parameters:
+    crashlog_list: list[Path]
+        A list of Path objects representing the paths to log files to be loaded.
+
     Returns:
-        Dictionary mapping log names to their content lines
+    dict[str, list[str]]
+        A dictionary where the keys are file names and the values are lists of
+        strings representing the content of each log file.
     """
     cache: dict[str, list[str]] = {}
     
@@ -156,11 +206,26 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
 
 async def batch_file_operations(operations: list[tuple[str, Path, Any]]) -> None:
     """
-    Execute multiple file operations concurrently.
-    
-    Args:
-        operations: List of (operation_type, path, data) tuples
-                   where operation_type is 'read', 'write', 'move', etc.
+    Perform a batch of asynchronous file operations.
+
+    This function processes multiple file-related operations concurrently. Each operation
+    must be specified as a tuple containing the type of operation, the target file path,
+    and any associated data. Supported file operation types include reading, writing,
+    moving, and copying files. For operations requiring blocking calls such as file moves
+    or copies, the implementation ensures that these calls run in asyncio's thread pool
+    to avoid blocking the event loop.
+
+    Parameters:
+    operations (list[tuple[str, Path, Any]]): A list where each item is a tuple representing
+        a file operation. The tuple consists of three elements:
+        - op_type (str): Specifies the operation type ('read', 'write', 'move', or 'copy').
+        - path (Path): A Path object representing the target file.
+        - data (Any): Additional information required for the operation.
+            * For 'write', this is the content to write to the file.
+            * For 'move' and 'copy', this is the destination Path for the operation.
+
+    Returns:
+    None
     """
     async def execute_operation(op_type: str, path: Path, data: Any) -> None:
         """Execute a single file operation."""

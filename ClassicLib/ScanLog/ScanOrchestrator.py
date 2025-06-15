@@ -18,7 +18,7 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandler
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
-from ClassicLib.ScanLog.GPUDetector import scan_log_gpu
+from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from ClassicLib.ScanLog.Parser import extract_module_names, find_segments
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
@@ -71,17 +71,16 @@ class ScanOrchestrator:
 
     def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
         """
-        Process a single crash log file.
+        Processes a crash log file to extract data, generate a report, and update local statistics. Checks for incomplete or
+        failed logs and handles their processing accordingly.
 
-        Args:
-            crashlog_file: Path to the crash log file
+        Parameters:
+        crashlog_file (Path): Path to the crash log file to be processed.
 
         Returns:
-            Tuple containing:
-            - Crash log file path
-            - Generated report as list of strings
-            - Boolean indicating if scan failed
-            - Counter with statistics
+        tuple[Path, list[str], bool, Counter[str]]: A tuple containing the path of the crash log file, the generated report as
+        a list of strings, a boolean indicating if the scan failed, and a Counter object containing local statistics related to
+        the scanning process.
         """
         autoscan_report: list[str] = []
         trigger_scan_failed = False
@@ -167,7 +166,8 @@ class ScanOrchestrator:
         crashgen: dict[str, bool | int | str] = self._parse_crashgen_settings(segment_crashgen)
 
         # Check GPU
-        crashlog_gpu, crashlog_gpu_rival = scan_log_gpu(segment_system)
+        gpu_info = get_gpu_info(segment_system)
+        crashlog_gpu_rival = gpu_info["rival"]
 
         # Process plugins
         crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded = self._process_plugins(

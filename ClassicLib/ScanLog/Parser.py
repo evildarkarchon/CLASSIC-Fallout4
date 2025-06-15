@@ -41,15 +41,25 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
 
 def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, str]], eof_marker: str) -> list[list[str]]:
     """
-    Extract segments from crash data based on defined boundaries.
+    Extracts multiple segments from crash data based on specified segment boundaries and an
+    end-of-file (EOF) marker. The function processes the crash data line by line and divides it
+    into separate segments bounded by the given start and end markers.
 
-    Args:
-        crash_data: The raw crash report data
-        segment_boundaries: List of tuples with (start_marker, end_marker) for each segment
-        eof_marker: The marker used to indicate end of file
+    Parameters:
+        crash_data (list[str]): The list of strings containing the crash data to segment.
+        segment_boundaries (list[tuple[str, str]]): A list of tuples where each tuple contains
+            a start and end marker for a segment. The function processes the crash data
+            in order of these tuples.
+        eof_marker (str): A special marker indicating the end of the file. When the function
+            encounters this marker during collection, it collects all remaining lines of the
+            crash data until the end.
 
     Returns:
-        A list of segments where each segment is a list of lines
+        list[list[str]]: A list where each element is a list of strings representing a
+        specific segment extracted from the crash data.
+
+    Raises:
+        None
     """
     segments: list[list[str]] = []
     total_lines: int = len(crash_data)
@@ -104,20 +114,23 @@ def find_segments(
     crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
 ) -> tuple[str, str, str, list[list[str]]]:
     """
-    Find and extract segments from crash data and extract metadata.
+    Parses crash report data to identify and extract specific segments of information. Each segment
+    corresponds to a defined boundary within the crash report. The function also extracts metadata
+    such as game version, crash generation version, and the main error message.
 
-    Args:
-        crash_data: List of strings representing lines of the crash data
-        crashgen_name: Name of the crash generator to be identified
-        xse_acronym: Script extender acronym (e.g., "F4SE")
-        game_root_name: Root name of the game
+    Arguments:
+        crash_data: List of strings representing the input crash report data.
+        crashgen_name: Name of the crash generator tool.
+        xse_acronym: Acronym of the plugin or extension system for identifying specific segments.
+        game_root_name: Name of the game's root directory for metadata extraction.
 
     Returns:
-        Tuple containing:
-        - Game version
-        - Crash generator version
-        - Main error message
-        - Processed segments
+        A tuple containing:
+            - game_version: Extracted game version from the crash report header.
+            - crashgen_version: Version of the crash generation tool as extracted.
+            - main_error: The primary error message derived from the header.
+            - processed_segments: A list of lists representing stripped contents of each segmented portion
+              of the crash report. Missing segments are represented as empty lists.
     """
     # Define segment boundaries
     segment_boundaries: list[tuple[str, str]] = [
@@ -148,15 +161,20 @@ def find_segments(
 
 def extract_module_names(module_texts: set[str]) -> set[str]:
     """
-    Extract module names from a set of module text entries.
+    Extracts module names from a set of provided module texts.
 
-    Some DLLs have version information that needs to be stripped.
+    This function processes a set of strings representing module texts and
+    attempts to extract module names, which may include file names with a ".dll"
+    extension. If a version number or additional metadata exists after the module
+    name, it is ignored while extracting the name. If the input set is empty,
+    an empty set is returned. The extraction is case-insensitive.
 
     Args:
-        module_texts: Set of module text entries
+        module_texts: set[str]
+            A set of strings containing module names and optional metadata.
 
     Returns:
-        Set of cleaned module names
+        set[str]: A set of strings representing the extracted module names.
     """
     if not module_texts:
         return set()

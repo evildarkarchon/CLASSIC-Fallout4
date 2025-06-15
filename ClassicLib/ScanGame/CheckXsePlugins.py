@@ -87,11 +87,20 @@ def _format_address_lib_not_found_message(correct_version_info: AddressLibVersio
 
 def check_xse_plugins() -> str:
     """
-    Checks the plugins folder for the correct version of Address Library files needed for the game.
-    Verifies existence and version based on game type (VR/Non-VR) and configuration.
-    Provides status messages including errors, warnings, or success notifications.
+    Checks the XSE plugins for compatibility and addresses potential issues.
+
+    This function verifies the existence and compatibility of specific plugin
+    versions in the designated plugins folder for the game. It determines
+    compatibility, handles cases where the game executable or plugins path is not
+    found, and provides appropriate messages based on the analysis.
+
     Returns:
-        str: A detailed message about the status of the Address Library files.
+        str: A message detailing the result of the compatibility check. The message
+        conveys information about the presence of correct plugin versions, incorrect
+        plugin versions, or the absence of plugins.
+
+    Raises:
+        None
     """
     message_list: list[str]
 

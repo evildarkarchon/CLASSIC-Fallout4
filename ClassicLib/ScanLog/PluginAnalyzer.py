@@ -42,15 +42,17 @@ class PluginAnalyzer:
     @staticmethod
     def loadorder_scan_loadorder_txt(autoscan_report: list[str]) -> tuple[dict[str, str], bool]:
         """
-        Process the loadorder.txt file to generate a mapping of plugins.
-        
-        Args:
-            autoscan_report: List to append informational messages
-            
+        Loads and processes the "loadorder.txt" file from the main "CLASSIC" folder, if available. This
+        method reads the file to determine the list of plugins specified for use. It returns a dictionary
+        of plugin names with their origin marker, as well as whether any plugins were successfully loaded.
+        If any file access errors occur, these are logged into the provided autoscan_report list.
+
+        Arguments:
+            autoscan_report (list[str]): A list to log messages or errors related to the scanning process.
+
         Returns:
-            Tuple containing:
-            - Dictionary mapping plugin names to origin markers
-            - Boolean indicating if any plugins were loaded
+            tuple[dict[str, str], bool]: A dictionary of plugin names mapped to their origin markers
+                                         and a boolean indicating whether any plugins were loaded.
         """
         loadorder_messages = (
             "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
@@ -88,18 +90,28 @@ class PluginAnalyzer:
         self, segment_plugins: list[str], game_version: Version, version_current: Version
     ) -> tuple[dict[str, str], bool, bool]:
         """
-        Analyze and process a list of plugins from crash log.
-        
-        Args:
-            segment_plugins: List of plugin data segments to process
-            game_version: The version of the game
-            version_current: The current crash generator version
-            
+        Scans and processes the plugin load order from the provided segment plugins.
+
+        This function analyzes a list of segment plugins to extract their details and
+        builds a mapping of plugin names to their identifiers or classification. It
+        also identifies if a plugin limit was triggered based on certain marker patterns
+        and evaluates version-related conditions regarding the game's behavior with
+        specific plugin configurations.
+
+        Arguments:
+            segment_plugins: A list of strings representing the loaded plugins, where
+                each string includes plugin identifiers or related markers.
+            game_version: The current detected version of the game.
+            version_current: The current software version of the application or handler.
+
         Returns:
-            Tuple containing:
-            - Dictionary mapping plugin names to their classified statuses
-            - Boolean indicating if plugin limit marker was detected
-            - Boolean indicating if limit check has been disabled
+            A tuple containing:
+                - A dictionary mapping plugin names to their corresponding identifiers
+                  or classifications.
+                - A boolean flag indicating if a plugin limit marker was detected
+                  and triggered specific processing logic.
+                - A boolean flag indicating if specific plugin limit-related checks
+                  were disabled under the given conditions.
         """
         # Early return for empty input
         if not segment_plugins:
@@ -155,12 +167,20 @@ class PluginAnalyzer:
         self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str], autoscan_report: list[str]
     ) -> None:
         """
-        Match plugins in the call stack against crashlog plugins.
-        
-        Args:
-            segment_callstack_lower: Lowercase call stack lines
-            crashlog_plugins_lower: Set of lowercase plugin names
-            autoscan_report: List to append match results
+        Analyzes crash logs for relevant plugin references and updates the autoscan report with
+        any matches found. It optimizes the matching process for speed and accuracy by ignoring
+        irrelevant lines and filtering out plugins present in an ignore list.
+
+        Parameters:
+            segment_callstack_lower (list[str]): A list of lowercased strings representing
+                the crash stack of a segment.
+            crashlog_plugins_lower (set[str]): A set of lowercased plugin names derived from
+                the crash log for matching purposes.
+            autoscan_report (list[str]): A mutable list to which the results of the analysis
+                will be appended.
+
+        Returns:
+            None
         """
         from collections import Counter
         
@@ -198,13 +218,22 @@ class PluginAnalyzer:
             
     def filter_ignored_plugins(self, crashlog_plugins: dict[str, str]) -> dict[str, str]:
         """
-        Filter out ignored plugins from the plugin dictionary.
-        
-        Args:
-            crashlog_plugins: Dictionary of plugins to filter
-            
+        Filters out ignored plugins from a dictionary of crash log plugins.
+
+        This method removes plugins listed in the `ignore_plugins_list` from the
+        provided `crashlog_plugins` dictionary. It performs a case-insensitive
+        comparison of plugin names, ensuring that ignored plugins are removed
+        regardless of their case.
+
+        Parameters:
+            crashlog_plugins: dict[str, str]
+                The dictionary containing plugin names as keys and their associated
+                values. The dictionary may include plugins that need to be filtered
+                out based on the `ignore_plugins_list`.
+
         Returns:
-            Filtered plugin dictionary
+            dict[str, str]: A dictionary of crash log plugins with the ignored plugins
+            removed.
         """
         if not self.ignore_plugins_list:
             return crashlog_plugins

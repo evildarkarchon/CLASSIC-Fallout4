@@ -51,13 +51,21 @@ class FormIDAnalyzer:
         
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
         """
-        Extract FormIDs from the call stack segment.
-        
+        Extracts Form IDs from a given call stack.
+
+        This method processes each line in the provided call stack, searching for
+        and extracting Form IDs that match a predefined pattern. Extracted Form IDs
+        that do not adhere to certain criteria (e.g., starting with "FF") are skipped.
+        Matches are then appended to the result list prefixed with "Form ID:".
+        If the call stack is empty, an empty list is returned.
+
         Args:
-            segment_callstack: List of call stack lines
-            
+            segment_callstack (list[str]): A list of strings representing the
+                call stack to be processed.
+
         Returns:
-            List of FormID strings found
+            list[str]: A list containing all extracted and formatted Form IDs
+                that meet the criteria.
         """
         formids_matches: list[str] = []
         
@@ -78,12 +86,24 @@ class FormIDAnalyzer:
         self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]
     ) -> None:
         """
-        Process and analyze Form IDs, matching them against crash log plugins.
-        
-        Args:
-            formids_matches: List of FormID strings
-            crashlog_plugins: Dictionary mapping plugin names to IDs
-            autoscan_report: List to append analysis results
+        Processes and appends reports based on Form ID matches retrieved from crash logs and a scan report.
+
+        This method analyzes Form ID matches, compares them with plugins listed in the crash log,
+        and optionally retrieves additional data from a Form ID database. It generates and appends
+        a formatted report to a provided list. If no matches are identified, it appends a default
+        report indicating no Form ID suspects were found. The method also supports additional
+        context and instructions for interpreting the results, depending on the configuration
+        stored in the instance.
+
+        Arguments:
+            formids_matches (list[str]): A list of Form ID matches extracted from the crash log.
+            crashlog_plugins (dict[str, str]): A dictionary mapping plugin filenames to plugin IDs
+                found in the crash log.
+            autoscan_report (list[str]): A mutable list to which the generated or default report
+                will be appended.
+
+        Returns:
+            None
         """
         if formids_matches:
             formids_found: dict[str, int] = dict(Counter(sorted(formids_matches)))
@@ -118,14 +138,20 @@ class FormIDAnalyzer:
             
     def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
         """
-        Look up a FormID value in the database.
-        
+        Look up the value associated with a given form ID and plugin in the database.
+
+        This method retrieves the value corresponding to the provided form ID and plugin
+        from the database. If the database does not exist, it returns None. Otherwise,
+        it uses the `get_entry` function to fetch the value.
+
         Args:
-            formid: The FormID to look up (without plugin prefix)
-            plugin: The plugin name
-            
+            formid: A string representing the form ID to look up.
+            plugin: A string representing the plugin name associated with the form ID.
+
         Returns:
-            The FormID description if found, None otherwise
+            A string containing the value associated with the form ID and plugin if
+            found in the database, or None if the database does not exist or the
+            value is not found.
         """
         if not self.formid_db_exists:
             return None

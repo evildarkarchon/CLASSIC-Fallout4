@@ -64,13 +64,21 @@ class AsyncScanOrchestrator(ScanOrchestrator):
         self, crashlog_files: list[Path]
     ) -> list[tuple[Path, list[str], bool, Counter[str]]]:
         """
-        Process multiple crash logs concurrently in batches.
-        
+        Processes a batch of crash log files asynchronously in manageable groups to prevent system
+        overload. This method divides the provided files into smaller batches, processes them
+        concurrently, and handles potential exceptions during processing.
+
         Args:
-            crashlog_files: List of crash log file paths
-            
+            crashlog_files (list[Path]): A list of paths representing the crash log files to be processed.
+
         Returns:
-            List of results for each crash log
+            list[tuple[Path, list[str], bool, Counter[str]]]: A list of tuples containing information
+            about each processed crash log file. Each tuple includes:
+            - Path: The path of the log file or an error log identifier.
+            - list[str]: A list of processed log content or error messages.
+            - bool: A flag indicating if the processing encountered issues.
+            - Counter[str]: A counter with keys 'scanned', 'incomplete', and 'failed' representing
+              the status of the processing operation.
         """
         # Process logs in batches to avoid overwhelming the system
         batch_size = 10
@@ -106,16 +114,22 @@ class AsyncScanOrchestrator(ScanOrchestrator):
         self, crashlog_file: Path
     ) -> tuple[Path, list[str], bool, Counter[str]]:
         """
-        Async version of crash log processing.
-        
-        This method processes most of the log synchronously but uses async
-        for I/O-bound operations like database lookups.
-        
+        Processes a crash log asynchronously, including FormID analysis if an asynchronous
+        FormID analyzer is available. The method first utilizes synchronous processing to handle
+        parsing, plugin processing, and other steps. If FormIDs are identified for further
+        analysis and the asynchronous FormID analyzer is enabled, the FormID section in the
+        crash report is reprocessed asynchronously.
+
         Args:
-            crashlog_file: Path to the crash log file
-            
+            crashlog_file (Path): The path to the crash log file that needs processing.
+
         Returns:
-            Tuple containing file path, report, failure status, and statistics
+            tuple[Path, list[str], bool, Counter[str]]: A tuple containing the crash log file path,
+            the processed crash report as a list of strings, a boolean indicating the processing fail
+            status, and a Counter object with statistics derived during the processing.
+
+        Raises:
+            Does not explicitly describe raised errors.
         """
         # Use the existing synchronous processing
         
@@ -162,10 +176,26 @@ async def write_reports_batch_async(
     reports: list[tuple[Path, list[str], bool]]
 ) -> None:
     """
-    Write multiple crash log reports concurrently.
-    
-    Args:
-        reports: List of (crashlog_file, report_lines, scan_failed) tuples
+    Writes a batch of reports asynchronously. This function processes a batch of
+    reporting tasks where each task comprises a file path, content to be written,
+    and a boolean trigger. The reports are written asynchronously to improve
+    performance when handling multiple write operations.
+
+    Arguments:
+        reports (list[tuple[Path, list[str], bool]]): A list of tuples where each
+            tuple contains:
+            - Path object pointing to the destination file.
+            - List of strings constituting the report content to be written.
+            - Boolean flag potentially used to signify a specific condition or
+              trigger (not utilized within this implementation).
+
+    Raises:
+        The function does not propagate exceptions from individual write tasks,
+        as it uses `asyncio.gather` with `return_exceptions=True`. Any exceptions
+        occurring during the write process are captured silently.
+
+    Returns:
+        None
     """
     write_tasks = []
     

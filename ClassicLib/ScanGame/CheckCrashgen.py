@@ -75,7 +75,20 @@ class CrashgenChecker:
         return xse_files
 
     def has_plugin(self, plugin_names: list[str]) -> bool:
-        """Check if any of the specified plugins are installed."""
+        """
+        Determines if any of the specified plugins are present in the installed plugins list.
+
+        The method checks if at least one plugin from the given list of plugin names exists
+        in the installed plugins list.
+
+        Args:
+            plugin_names (list[str]): A list of plugin names to check against the
+                installed plugins.
+
+        Returns:
+            bool: True if any of the provided plugin names is found in the installed
+                plugins, otherwise False.
+        """
         return any(plugin in self.installed_plugins for plugin in plugin_names)
 
     def _get_settings_to_check(self) -> list[dict[str, Any]]:
@@ -213,11 +226,20 @@ class CrashgenChecker:
 
     def check(self) -> str:
         """
-        Checks and validates Crash Generator settings based on configuration files
-        and installed plugins.
+        Checks the settings for the given configuration file and generates an appropriate
+        message based on the existence of the config file.
+
+        This method inspects the application's state to verify if a configuration file
+        specific to a crash generator exists. If the config file is not found, it appends
+        a series of pre-defined messages to the message list, informing the user of the
+        issue without raising an exception. If the config file exists, it logs an
+        information message indicating the start of the settings check and invokes the
+        internal processing for settings. At the end, the cumulative message list is
+        returned as a concatenated string.
 
         Returns:
-            str: A summary of issues found, warnings, or necessary actions.
+            str: The concatenated message list containing either the notice regarding a
+            missing configuration file or any messages resulting from the settings check.
         """
         # If no config file found, return message without raising exception
         if not self.config_file:
@@ -235,12 +257,14 @@ class CrashgenChecker:
 
 def check_crashgen_settings() -> str:
     """
-    Checks and validates the settings for Crash Generator (CRASHGEN) based on the configuration
-    files and the presence of certain plugins or mods in the system.
+    Checks the crash generation settings using a CrashgenChecker instance.
+
+    This function creates an instance of the CrashgenChecker class and
+    uses it to check the current crash generation settings. The result
+    of the check is returned as a string.
 
     Returns:
-        str: A summary of any issues found, warnings, or necessary actions related to the
-        CRASHGEN configuration and system setup.
+        str: The result of the crash generation settings check.
     """
     checker: CrashgenChecker = CrashgenChecker()
     return checker.check()

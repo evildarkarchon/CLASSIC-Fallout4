@@ -112,16 +112,19 @@ class PapyrusMonitorDialog(QDialog):
 
     def update_stats(self, stats: PapyrusStats) -> None:
         """
-        Updates the statistics and user interface with the provided stats, including updating
-        the timestamp, stat labels, status indicators, and error/warning messages. This method
-        modifies the UI components to reflect the latest telemetry data.
+        Updates statistical data and UI elements with the given stats object.
 
-        Args:
-            stats (PapyrusStats): The object containing the updated statistics values to be
-                reflected in the user interface.
+        This method updates UI elements such as labels and status indicators with the
+        latest statistics provided in the `stats` parameter. It processes various
+        metrics, including dump counts, stack counts, dump-stack ratios, and warning
+        and error counts. Additionally, it invokes helper methods to update status
+        indicators and messages based on the state of the provided stats.
 
-        Returns:
-            None
+        Parameters
+        ----------
+        stats : PapyrusStats
+            An object containing the latest statistics, including metrics such as
+            timestamp, dumps, stacks, ratio, warnings, and errors.
         """
         # Update timestamp
         self.timestamp_label.setText(f"Last Updated: {stats.timestamp.strftime('%H:%M:%S')}")  # Update stat values
@@ -212,19 +215,29 @@ class PapyrusMonitorDialog(QDialog):
 
     def on_stop_clicked(self) -> None:
         """
-        Handle the stop button click.
+        Emits a signal to stop monitoring and closes the dialog.
 
-        Emits the stop_monitoring signal and closes the dialog.
+        This method is intended to be connected to a user action, such as clicking a
+        stop button. It emits a signal to indicate monitoring should be stopped and
+        subsequently closes the dialog by invoking the `accept` function.
+
+        Raises:
+            None
+        Returns:
+            None
         """
         self.stop_monitoring.emit()
         self.accept()
 
     def handle_error(self, error_msg: str) -> None:
         """
-        Handle errors from the Papyrus monitor.
+        Handles the display of an error message in the user interface by updating the
+        text and style of a message label to indicate an error visually. It sets the
+        label's text to include the given error message and changes its appearance to
+        red, bold text for clearer visibility to the user.
 
         Args:
-            error_msg: The error message to display
+            error_msg: The error message to be displayed on the message label.
         """
         self.message_label.setText(f"Error: {error_msg}")
         self.message_label.setStyleSheet("color: red; font-weight: bold;")

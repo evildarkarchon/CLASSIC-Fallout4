@@ -106,14 +106,45 @@ def apply_ini_fix(  # noqa: PLR0913
     fix_description: str,
     message_list: list[str],
 ) -> None:
-    """Apply a fix to an INI file and log the change."""
+    """
+    Applies a fix to a configuration file by updating its settings and logs the operation.
+
+    This function applies a specified fix by updating a setting within a specified section
+    of a configuration file. It logs the details of the fix operation and also appends a
+    formatted message about the performed fix to a given message list.
+
+    Parameters:
+    config_files (ConfigFileCache): An object that represents a cache of configuration
+        files and provides methods to interact with them.
+    file_name (str): The name of the configuration file to which the fix is applied.
+    section (str): The section within the configuration file where the setting is located.
+    setting (str): The specific setting within the section to be updated.
+    value (Any): The new value to set for the specified setting.
+    fix_description (str): A human-readable description of the fix being applied.
+    message_list (list[str]): A list where a formatted message about the performed fix
+        will be appended.
+
+    Returns:
+    None
+    """
     config_files.set(type(value), file_name, section, setting, value)
     logger.info(f"> > > PERFORMED {fix_description} FIX FOR {config_files[file_name]}")
     message_list.append(f"> Performed {fix_description.title()} Fix For : {config_files[file_name]}\n")
 
 
 def apply_all_ini_fixes(config_files: ConfigFileCache, message_list: list[str]) -> None:
-    """Apply all necessary fixes to INI files."""
+    """
+    Applies all necessary fixes to the specified configuration files to ensure correct settings and values. This function
+    performs multiple checks and updates for specific configuration entries across different INI files. It modifies values
+    only if the current ones do not meet the desired conditions. Additionally, it logs all the changes as messages in a list.
+
+    Parameters:
+        config_files (ConfigFileCache): The configuration file cache that provides access to the INI files and their contents.
+        message_list (list[str]): A list where messages about applied fixes are appended.
+
+    Returns:
+        None: This function does not return a value.
+    """
     # Fix ESPExplorer hotkey
     if "; F10" in config_files.get_strict(str, "espexplorer.ini", "General", "HotKey"):
         apply_ini_fix(config_files, "espexplorer.ini", "General", "HotKey", "0x79", "INI HOTKEY", message_list)
@@ -141,7 +172,21 @@ def apply_all_ini_fixes(config_files: ConfigFileCache, message_list: list[str]) 
 
 
 def check_duplicate_files(config_files: ConfigFileCache, message_list: list[str]) -> None:
-    """Check for and report duplicate INI files."""
+    """
+    Check for duplicate files in the configuration files and update the provided message list with
+    information about the duplicates. It sorts duplicate files by their name for consistent output
+    and appends formatted messages detailing the duplicates.
+
+    Arguments:
+        config_files (ConfigFileCache): Cache object containing file configuration details and
+            a mapping of duplicate files.
+        message_list (list[str]): A list to which formatted messages about duplicate files are appended.
+
+    Raises:
+        None
+    Returns:
+        None
+    """
     if config_files.duplicate_files:
         all_duplicates: list[Path] = []
 

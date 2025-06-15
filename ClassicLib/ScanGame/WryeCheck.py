@@ -10,12 +10,23 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 def scan_wryecheck() -> str:
     """
-    Analyzes Wrye Bash plugin checker report and generates a detailed message containing plugin-related warnings,
-    recommendations, and additional resources based on the report content and predefined settings.
+    Scans the Wrye Bash plugin checker report for detected problems and generates
+    a detailed analysis message. The function reads specific settings for the check
+    from a YAML configuration file and validates the presence of a plugin check
+    HTML report. If the report exists, it is parsed and a summary message is
+    constructed with detailed resources and guidance links. If the report is
+    missing, an optional warning message is returned instead.
+
+    Parameters: None
 
     Returns:
-        str: A formatted multi-line string containing analysis and recommendations based on the Wrye Bash plugin
-        checker report.
+        str: The generated analysis message detailing the contents of the plugin
+             checker report or an optional warning message if the report is
+             missing.
+
+    Raises:
+        ValueError: If the required warnings setting related to the Wrye Bash report
+                    is not found in the YAML configuration file.
     """
     # Constants for formatting and links
     # noinspection PyPep8Naming
@@ -65,14 +76,19 @@ def scan_wryecheck() -> str:
 
 def parse_wrye_report(report_path: Path, wrye_warnings: dict[str, str]) -> list[str]:
     """
-    Parses the Wrye Bash HTML report and formats the content into readable messages.
+    Parses a Wrye Bash report in HTML format and extracts relevant messages and plugin details.
 
-    Args:
-        report_path: Path to the Wrye Bash plugin checker HTML report
-        wrye_warnings: Dictionary containing warning messages for specific section titles
+    This function reads a Wrye Bash plugin analysis report in the form of an HTML file,
+    extracts and processes relevant data concerning plugins and warnings. The data is formatted
+    into a list of strings, which may include sections, warnings, and lists of plugins,
+    based on the content of the file and a provided dictionary of warning messages.
+
+    Arguments:
+        report_path (Path): The path to the Wrye Bash report file in HTML format.
+        wrye_warnings (dict[str, str]): A dictionary mapping warning names to their respective warning messages.
 
     Returns:
-        List of formatted message strings
+        list[str]: A list of formatted message strings containing details from the report and warnings.
     """
     message_parts: list[str] = []
 
@@ -109,13 +125,19 @@ def parse_wrye_report(report_path: Path, wrye_warnings: dict[str, str]) -> list[
 
 def extract_plugins_from_section(section: PageElement) -> list[str]:
     """
-    Extracts plugin entries from a section in the Wrye Bash report.
+    Extracts plugin file names from a specified section of a web page.
 
-    Args:
-        section: BeautifulSoup PageElement (h3) containing the section
+    Traverses paragraphs following a given section header to collect
+    plugin file names based on their respective extensions. Stops processing
+    if a paragraph belongs to a different section.
+
+    Parameters:
+    section (PageElement): The header element representing the section from
+    which plugins are to be extracted.
 
     Returns:
-        List of plugin entries
+    list[str]: A list of plugin file names found within the given section, where
+    each file name must contain one of the following extensions: .esp, .esl, or .esm.
     """
     plugins: list[str] = []
     for paragraph in section.find_next_siblings("p"):
@@ -133,13 +155,16 @@ def extract_plugins_from_section(section: PageElement) -> list[str]:
 
 def format_section_header(title: str) -> str:
     """
-    Formats a section title with decorative equals signs.
+    Formats a section header with adjustable padding to center-align the title.
+    If the title is shorter than 32 characters, it adds equal padding on both
+    sides to ensure consistent alignment. For titles longer than 32 characters,
+    it directly returns the title without any modification.
 
-    Args:
-        title: The section title to format
+    Parameters:
+        title (str): The title string to be formatted as a section header.
 
     Returns:
-        Formatted section header string
+        str: The formatted section header with or without applied padding.
     """
     if len(title) < 32:
         diff: int = 32 - len(title)

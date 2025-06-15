@@ -63,13 +63,18 @@ class ManualPathDialog(QDialog):
 
     def browse_directory(self, caption: str = "") -> None:
         """
-        Opens a directory browser dialog to allow the user to select a directory and updates
-        the input field with the selected directory's path.
+        Browse a directory using a dialog and update the input field with the selected path.
 
-        Raises:
-            No specific exceptions are explicitly raised in this implementation; however, standard
-            QFileDialog operations may fail under certain conditions such as lack of permissions
-            or UI-related issues.
+        This method opens a directory browser dialog. If the user selects a directory, the input
+        field will be updated with the selected directory path.
+
+        Args:
+            caption: str
+                An optional caption for the directory browser dialog. Defaults to an empty
+                string, which will use the default caption "Select Directory for INI Files".
+
+        Returns:
+            None
         """
         # Open directory browser and update the input field
         manual_path: str = QFileDialog.getExistingDirectory(self, caption if caption else "Select Directory for INI Files")
@@ -78,13 +83,12 @@ class ManualPathDialog(QDialog):
 
     def get_path(self) -> str:
         """
-        Retrieves the text content of the input field.
+        Returns the text from the input field.
 
-        This method is used to access the current text entered in the input field
-        of the instance. It retrieves the value as a string and returns it to the
-        caller. The function does not modify the text or the input field state.
+        This method retrieves the current text from the input field and returns it as
+        a string. It is useful for accessing user-provided input data.
 
         Returns:
-            str: The content of the input field as a string.
+            str: The text retrieved from the input field.
         """
         return self.input_field.text()

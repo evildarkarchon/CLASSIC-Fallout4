@@ -36,12 +36,22 @@ class RecordScanner:
         self, segment_callstack: list[str], records_matches: list[str], autoscan_report: list[str]
     ) -> None:
         """
-        Scan call stack segment for named records.
-        
-        Args:
-            segment_callstack: List of call stack lines
-            records_matches: List to store matched records
-            autoscan_report: List to append analysis summary
+        Scans named records in the provided segment callstack, identifies matches,
+        and updates the autoscan report accordingly.
+
+        This function processes the provided callstack to locate specific named
+        records, utilizing defined markers and offsets. Any matches found are
+        added to the records_matches list and subsequently reported in the
+        autoscan report. If no matches are identified, a corresponding message
+        is appended to the report.
+
+        Arguments:
+            segment_callstack (list[str]): The callstack to scan for named records.
+            records_matches (list[str]): A list to hold records that match the scan criteria.
+            autoscan_report (list[str]): The report to be updated based on scanning results.
+
+        Returns:
+            None
         """
         # Constants
         rsp_marker = "[RSP+"
@@ -60,13 +70,25 @@ class RecordScanner:
         self, segment_callstack: list[str], records_matches: list[str], rsp_marker: str, rsp_offset: int
     ) -> None:
         """
-        Extract matching records from the call stack.
-        
-        Args:
-            segment_callstack: Call stack lines
-            records_matches: List to append found records
-            rsp_marker: Marker to identify RSP lines
-            rsp_offset: Offset for extracting record data
+        Finds and collects matching records from a given segment of a call stack based on specified criteria.
+
+        This function processes each line in a provided segment of the call stack, checks whether the line contains any target
+        records defined in the class's attributes, and excludes lines containing terms that should be ignored. If the line meets
+        the criteria, the relevant part of the line is extracted and appended to a list of matching records.
+
+        Parameters:
+        segment_callstack: list of str
+            A list of strings representing segment of the call stack to be analyzed.
+        records_matches: list of str
+            A list where matching record lines will be appended.
+        rsp_marker: str
+            A marker string to identify the relevant portion of the call stack lines.
+        rsp_offset: int
+            An integer representing the character offset from rsp_marker used to determine where to begin extracting record
+            content.
+
+        Returns:
+        None
         """
         for line in segment_callstack:
             lower_line: str = line.lower()
@@ -106,13 +128,19 @@ class RecordScanner:
         
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
         """
-        Extract all matching records from call stack.
-        
+        Extract records from a segment callstack based on specific matching criteria.
+
+        This method processes a given segment callstack and identifies matching records
+        based on predefined constants for marker and offset. Matching records are then
+        collected and returned as a list.
+
         Args:
-            segment_callstack: List of call stack lines
-            
+            segment_callstack (list[str]): The list of strings representing the segment
+            callstack to be processed.
+
         Returns:
-            List of extracted record strings
+            list[str]: A list of strings containing the matching records identified from
+            the segment callstack.
         """
         records_matches = []
         

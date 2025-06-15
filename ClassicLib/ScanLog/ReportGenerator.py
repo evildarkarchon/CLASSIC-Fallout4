@@ -35,11 +35,19 @@ class ReportGenerator:
         
     def generate_header(self, crashlog_filename: str, autoscan_report: list[str]) -> None:
         """
-        Generate report header.
-        
-        Args:
-            crashlog_filename: Name of the crash log file
-            autoscan_report: List to append header content
+        Generates a standardized header for an autoscan report and appends it
+        to the provided report list. The header includes details about the
+        crashlog filename, the generator version, and important viewing and
+        reading instructions.
+
+        Parameters:
+            crashlog_filename: str
+                The name of the crash log file being processed.
+            autoscan_report: list[str]
+                The list to which the generated header will be appended.
+
+        Returns:
+            None
         """
         append_or_extend(
             (
@@ -56,15 +64,27 @@ class ReportGenerator:
         version_latest_vr: Any, autoscan_report: list[str]
     ) -> None:
         """
-        Format error information section.
-        
-        Args:
-            main_error: Main crash error message
-            crashgen_version: Detected crash generator version
-            version_current: Current version object
-            version_latest: Latest version object
-            version_latest_vr: Latest VR version object
-            autoscan_report: List to append formatted section
+        Generates and appends an error section to the autoscan report based on the provided error
+        data, versions, and warnings. This method is responsible for displaying error information
+        related to the `crashgen` component, including the detected version, outdated warnings,
+        and version comparison logic.
+
+        Parameters:
+        main_error: str
+            The main error message to be displayed in the report.
+        crashgen_version: str
+            The version string of the crashgen component as detected by the system.
+        version_current: Any
+            The current version of the crashgen being analyzed.
+        version_latest: Any
+            The latest available version of the crashgen from the official source.
+        version_latest_vr: Any
+            The latest available version of the crashgen with VR-specific updates.
+        autoscan_report: list[str]
+            The list to which the error information and warnings will be appended.
+
+        Returns:
+        None
         """
         append_or_extend(
             (
@@ -82,10 +102,19 @@ class ReportGenerator:
     @staticmethod
     def generate_suspect_section_header(autoscan_report: list[str]) -> None:
         """
-        Generate suspect checking section header.
-        
+        Generates a suspect section header for the autoscan report.
+
+        This method appends or extends a predefined header to the provided
+        autoscan report list. The header is used to indicate the beginning
+        of a section where the system will analyze and check if any known crash
+        suspects match the log data.
+
         Args:
-            autoscan_report: List to append header
+            autoscan_report (list[str]): A list representing the autoscan report
+                where the suspect section header will be added.
+
+        Returns:
+            None
         """
         append_or_extend(
             (
@@ -99,11 +128,20 @@ class ReportGenerator:
     @staticmethod
     def generate_suspect_found_footer(found_suspect: bool, autoscan_report: list[str]) -> None:
         """
-        Generate footer for suspect section based on findings.
-        
-        Args:
-            found_suspect: Whether any suspects were found
-            autoscan_report: List to append footer
+        Generate a footer message for crash suspect analysis and append it to the autoscan report.
+
+        Depending on whether a crash suspect was found or not, this method appends a specific
+        message to the provided autoscan report list. The appended message includes information
+        or guidance regarding crash suspects.
+
+        Parameters:
+            found_suspect: bool
+                Indicates whether a crash suspect has been found.
+            autoscan_report: list[str]
+                The list to which the footer message will be appended or extended.
+
+        Returns:
+            None
         """
         if found_suspect:
             append_or_extend(
@@ -125,10 +163,18 @@ class ReportGenerator:
     @staticmethod
     def generate_settings_section_header(autoscan_report: list[str]) -> None:
         """
-        Generate settings check section header.
-        
+        Generate a header for the settings section of the report.
+
+        This method appends a predefined header to a given list, which represents
+        the report for the autoscan process. The header indicates the beginning
+        of the section that verifies the correctness of necessary files and settings.
+
         Args:
-            autoscan_report: List to append header
+            autoscan_report (list[str]): A list representing the autoscan report to which
+                the header will be appended.
+
+        Returns:
+            None
         """
         append_or_extend(
             (
@@ -142,11 +188,17 @@ class ReportGenerator:
     @staticmethod
     def generate_mod_check_header(check_type: str, autoscan_report: list[str]) -> None:
         """
-        Generate header for mod checking sections.
-        
+        Generates a header for a modification check and appends or extends it in the
+        autoscan report list. The header includes delimiters and a message specifying
+        the type of check being performed.
+
         Args:
-            check_type: Type of mod check (e.g., "FREQUENT CRASHES", "CONFLICT")
-            autoscan_report: List to append header
+            check_type: Specifies the type of modification check being performed.
+            autoscan_report: A list where the generated header will be appended or
+                extended. The list is expected to contain string elements.
+
+        Returns:
+            None
         """
         append_or_extend(
             (
@@ -160,10 +212,17 @@ class ReportGenerator:
     @staticmethod
     def generate_plugin_suspect_header(autoscan_report: list[str]) -> None:
         """
-        Generate plugin suspect section header.
-        
+        Generate a header for a plugin suspect list and append or extend it to the provided autoscan report.
+
+        This method creates a formatted header indicating the beginning of a scan for specific
+        potential plugin suspects. The generated header is appended or extended to the given
+        autoscan report list.
+
         Args:
-            autoscan_report: List to append header
+            autoscan_report (list[str]): The list where the plugin suspect header will be added.
+
+        Returns:
+            None
         """
         append_or_extend(
             (
@@ -178,29 +237,51 @@ class ReportGenerator:
     @staticmethod
     def generate_formid_section_header(autoscan_report: list[str]) -> None:
         """
-        Generate FormID section header.
-        
-        Args:
-            autoscan_report: List to append header
+        Generates and appends a section header for form ID suspects to the autoscan report.
+
+        This method inserts a predefined header indicating the list of possible form ID suspects
+        into the provided autoscan report. The header is appended or extended to the report
+        based on the functionality of the helper function.
+
+        Parameters:
+            autoscan_report (list[str]): A list containing strings that represent the autoscan
+            report. The section header will be added to this list.
+
+        Returns:
+            None
         """
         append_or_extend(("\n# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n",), autoscan_report)
         
     @staticmethod
     def generate_record_section_header(autoscan_report: list[str]) -> None:
         """
-        Generate named record section header.
-        
+        Generates a header section for detected named records and appends or extends it to the
+        provided autoscan report list.
+
         Args:
-            autoscan_report: List to append header
+            autoscan_report (list[str]): The list where the header section will be appended
+            or extended.
+
+        Returns:
+            None
         """
         append_or_extend(("\n# LIST OF DETECTED (NAMED) RECORDS #\n",), autoscan_report)
         
     def generate_footer(self, autoscan_report: list[str]) -> None:
         """
-        Generate report footer.
-        
-        Args:
-            autoscan_report: List to append footer
+        Generates and appends or extends footer text to the autoscan report.
+
+        This method generates a footer text specific to the current game and appends
+        or extends the provided autoscan report with the generated footer. If the
+        game is "Fallout4," it uses a specific footer text. Otherwise, it adds classic
+        version and date information followed by a concluding note.
+
+        Parameters:
+        autoscan_report (list[str]): A list of strings representing the autoscan
+        report to which the footer text will be appended or extended.
+
+        Returns:
+        None
         """
         if GlobalRegistry.get_game().replace(" ", "") == "Fallout4":
             append_or_extend(self.yamldata.autoscan_text, autoscan_report)
@@ -215,13 +296,19 @@ class ReportGenerator:
         trigger_plugins_loaded: bool, autoscan_report: list[str]
     ) -> None:
         """
-        Generate plugin limit warning if applicable.
-        
+        Provides a utility method to generate warnings related to plugin limit conditions during an autoscan process.
+
+        This method evaluates the state of plugin limit-related flags and appends appropriate warnings to the autoscan
+        report based on the trigger conditions provided.
+
         Args:
-            trigger_plugin_limit: Whether plugin limit was detected
-            trigger_limit_check_disabled: Whether limit check is disabled
-            trigger_plugins_loaded: Whether plugins were loaded
-            autoscan_report: List to append warning
+            trigger_plugin_limit (bool): Indicates whether the plugin limit condition has been reached.
+            trigger_limit_check_disabled (bool): Indicates whether the plugin limit check is disabled.
+            trigger_plugins_loaded (bool): Indicates whether plugins have been successfully loaded.
+            autoscan_report (list[str]): A list capturing messages or warnings to be included in the autoscan report.
+
+        Returns:
+            None
         """
         if trigger_plugin_limit and not trigger_limit_check_disabled and trigger_plugins_loaded:
             append_or_extend(
@@ -241,10 +328,13 @@ class ReportGenerator:
     @staticmethod
     def generate_plugins_loading_failure_message() -> tuple[str, ...]:
         """
-        Generate message for plugin loading failure.
-        
+        Generates a message tuple indicating failure to load the plugin list for a
+        crash log. This message informs the user about the inability to proceed with
+        a full scan and provides alternative actions that can be taken.
+
         Returns:
-            Tuple of message lines
+            tuple[str, ...]: A tuple containing multiple lines of failure warning
+            and guidance messages.
         """
         return ((
             "* [!] NOTICE : BUFFOUT 4 WAS NOT ABLE TO LOAD THE PLUGIN LIST FOR THIS CRASH LOG! *\n",

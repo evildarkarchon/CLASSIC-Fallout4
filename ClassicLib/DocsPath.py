@@ -146,7 +146,18 @@ class DocumentsPathManager:
             msg_error(f"'{input_str}' is not a valid or existing directory path. Please try again.")
 
     def generate_paths(self) -> None:
-        """Generate and configure paths for game documentation files."""
+        """
+        Generates and updates the documentation paths necessary for the game.
+
+        This method uses the current game version and YAML configuration to determine
+        the appropriate paths required for generating and updating documentation-related
+        files. The paths are then updated in the current game settings registry. If
+        any required settings are missing or invalid, a TypeError will be raised.
+
+        Raises:
+            TypeError: If required settings are missing or not valid.
+
+        """
         logger.debug("- - - INITIATED DOCS PATH GENERATION")
 
         # Get required settings
@@ -166,16 +177,24 @@ class DocumentsPathManager:
         self._update_game_setting("Docs_File_XSE", str(docs_path.joinpath(xse_acronym_base, f"{xse_acronym.lower()}.log")))
 
     def check_ini(self, ini_name: str) -> str:
-        """Check INI file for existence and corruption.
+        """
+        Check the existence and validity of an INI file.
+
+        This method verifies whether an INI file with the given name (`ini_name`)
+        exists in the specified documentation folder. If the file exists, further
+        checks are carried out on its content. If the file is missing, the absence is
+        handled accordingly. The function returns a message detailing the results of
+        the checks.
 
         Args:
-            ini_name: The name of the INI file to validate
-
-        Returns:
-            A message detailing the checks performed and any actions taken
+            ini_name: The name of the INI file to check.
 
         Raises:
-            TypeError: If paths or settings have invalid types
+            TypeError: Raised if the `docs_name` attribute is not a string.
+            TypeError: Raised if the `folder_docs` is not a string or is None.
+
+        Returns:
+            A string containing the results of the INI file checks.
         """
         message_list: list[str] = []
         logger.info(f"- - - INITIATED {ini_name} CHECK")
@@ -301,25 +320,46 @@ class DocumentsPathManager:
 
 # Public API functions that use the DocumentsPathManager class
 def docs_path_find(gui_mode: bool = False) -> None:
-    """Find and configure the path to a game's documents folder."""
+    """
+    Locates the documents path using a manager instance.
+
+    This function initializes a `DocumentsPathManager` object, passing the
+    specified mode (GUI or non-GUI) and invokes its `find_docs_path` method
+    to determine the location of the documents path.
+
+    Args:
+        gui_mode (bool): If True, enables GUI mode; otherwise, operates in
+            command-line mode.
+
+    Returns:
+        None
+    """
     manager: DocumentsPathManager = DocumentsPathManager(gui_mode)
     manager.find_docs_path()
 
 
 def docs_generate_paths() -> None:
-    """Generate and configure paths for game documentation files."""
+    """
+    Executes the process to generate document paths using the DocumentsPathManager.
+
+    The function initializes a DocumentsPathManager instance and invokes its
+    generate_paths method to perform the document paths generation.
+
+    """
     manager: DocumentsPathManager = DocumentsPathManager()
     manager.generate_paths()
 
 
 def docs_check_ini(ini_name: str) -> str:
-    """Check INI file for existence and corruption.
+    """
+    Checks the validity of the provided ini file by utilizing the DocumentsPathManager
+    to determine its existence or setup requirements.
 
     Args:
-        ini_name: The name of the INI file to validate
+        ini_name (str): The name of the ini file to be checked.
 
     Returns:
-        A message detailing the checks performed and any actions taken
+        str: A status message indicating the result of the check.
     """
     manager: DocumentsPathManager = DocumentsPathManager()
     return manager.check_ini(ini_name)

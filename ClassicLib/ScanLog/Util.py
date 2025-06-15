@@ -13,12 +13,39 @@ CRASH_AUTOSCAN_PATTERN = "crash-*-AUTOSCAN.md"
 
 
 def ensure_directory_exists(directory: Path) -> None:
-    """Create directory if it doesn't exist."""
+    """
+    Ensures that a specified directory exists by creating it, including any necessary
+    parent directories.
+
+    If the directory already exists, the function does nothing.
+
+    Parameters:
+        directory (Path): The path of the directory to ensure exists.
+
+    Returns:
+        None
+    """
     directory.mkdir(parents=True, exist_ok=True)
 
 
 def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
-    """Move files matching pattern from source to target directory if they don't exist in target."""
+    """
+    Moves files matching a given pattern from the source directory to the
+    target directory.
+
+    This function iterates through all files in the source directory that
+    match the specified pattern, and moves each file to the target directory
+    if a file with the same name does not already exist in the target
+    directory.
+
+    Arguments:
+        source_dir (Path): The directory containing the files to be moved.
+        target_dir (Path): The directory to which the files will be moved.
+        pattern (str): A glob pattern to filter the files to be moved.
+
+    Returns:
+        None
+    """
     for file in source_dir.glob(pattern):
         destination_file: Path = target_dir / file.name
         if not destination_file.is_file():
@@ -26,7 +53,26 @@ def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
 
 
 def copy_files(source_dir: Path | None, target_dir: Path, pattern: str) -> None:
-    """Copy files matching pattern from source to target directory if they don't exist in target."""
+    """
+    Copies files from the source directory to the target directory based on a given pattern.
+
+    This function iterates through all files in the specified source
+    directory that match the given pattern and copies them to the target
+    directory. Files that already exist in the target directory are not
+    overwritten.
+
+    Args:
+        source_dir (Path | None): The path to the source directory. If None or
+                                  the directory does not exist, the function
+                                  does nothing.
+        target_dir (Path): The path to the target directory where files will
+                           be copied.
+        pattern (str): A glob-style pattern used to match files in the source
+                       directory.
+
+    Returns:
+        None
+    """
     if source_dir and source_dir.is_dir():
         for file in source_dir.glob(pattern):
             destination_file: Path = target_dir / file.name
@@ -35,7 +81,22 @@ def copy_files(source_dir: Path | None, target_dir: Path, pattern: str) -> None:
 
 
 def get_path_from_setting(setting_value: str | None) -> Path | None:
-    """Convert setting string to Path object if setting is valid."""
+    """
+    Converts a setting value to a Path object if it is a valid string.
+
+    This function takes a provided setting value and checks if it is a string.
+    If the value is a string, it converts it to a Path object. If the value is
+    not a string or is None, the function returns None. This utility can be
+    used to ensure a safe conversion of various input configuration values
+    to Path objects.
+
+    Args:
+        setting_value: The input value to convert to a Path. Can be a string
+            or None.
+
+    Returns:
+        A Path object if the input value is a string, otherwise None.
+    """
     return Path(setting_value) if isinstance(setting_value, str) else None
 
 

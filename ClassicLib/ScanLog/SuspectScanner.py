@@ -33,15 +33,19 @@ class SuspectScanner:
         self, autoscan_report: list[str], crashlog_mainerror: str, max_warn_length: int
     ) -> bool:
         """
-        Scan for main errors based on suspect error list.
-        
-        Args:
-            autoscan_report: List to append detected errors
-            crashlog_mainerror: Main error string from crash log
-            max_warn_length: Maximum length for warning labels
-            
+        Scans the crash log for errors listed in a predefined suspect error list, updates the
+        autoscan report upon detection, and determines if any suspects are found.
+
+        Parameters:
+        autoscan_report (list[str]): A list to store formatted strings of identified suspect
+            errors and their associated details.
+        crashlog_mainerror (str): The main error output from a crash log to scan for
+            suspect errors.
+        max_warn_length (int): The maximum length for formatting the error name in the autoscan
+            report.
+
         Returns:
-            True if any suspect error was found
+        bool: A boolean indicating whether any suspect errors were found in the crash log.
         """
         found_suspect = False
         
@@ -69,16 +73,19 @@ class SuspectScanner:
         self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str], max_warn_length: int
     ) -> bool:
         """
-        Scan call stack for suspect patterns.
-        
-        Args:
-            crashlog_mainerror: Main error string
-            segment_callstack_intact: Complete call stack as string
-            autoscan_report: List to append findings
-            max_warn_length: Maximum length for formatting
-            
+        Analyzes a crash report and call stack information to identify potential suspect errors
+        and integrates findings into an autoscan report. The function evaluates signal
+        criteria from a YAML configuration to detect mismatches, potential issues, and specific
+        patterns in the provided crash log and call stack details.
+
+        Parameters:
+            crashlog_mainerror (str): The main error extracted from the crash log.
+            segment_callstack_intact (str): The intact segment of the call stack relevant to the analysis.
+            autoscan_report (list[str]): A mutable report list where detected suspects are appended.
+            max_warn_length (int): Maximum allowed length for warnings included in the report.
+
         Returns:
-            True if at least one suspect is found
+            bool: Indicates whether any suspect has been identified and added to the autoscan report.
         """
         any_suspect_found = False
         
@@ -175,11 +182,20 @@ class SuspectScanner:
     @staticmethod
     def check_dll_crash(crashlog_mainerror: str, autoscan_report: list[str]) -> None:
         """
-        Check if a DLL file was involved in the crash.
-        
-        Args:
-            crashlog_mainerror: Main error string
-            autoscan_report: List to append findings
+        A static method designed to analyze a crash log and identify if a DLL file is implicated in the crash.
+        The method evaluates the primary error message from the crash log to determine if it references a DLL
+        file, excluding specific cases such as "tbbmalloc". If a potentially problematic DLL is detected, the
+        method appends a formatted notification to the autoscan report.
+
+        Arguments:
+            crashlog_mainerror: str
+                The main error message extracted from the crash log, which is inspected for DLL-related
+                mentions.
+            autoscan_report: list[str]
+                A reference to a list where any relevant findings or alerts about the crash will be appended.
+
+        Returns:
+            None
         """
         crashlog_mainerror_lower: str = crashlog_mainerror.lower()
         if ".dll" in crashlog_mainerror_lower and "tbbmalloc" not in crashlog_mainerror_lower:

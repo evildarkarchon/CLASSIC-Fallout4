@@ -20,12 +20,15 @@ async def reformat_single_log_async(
     simplify_logs: bool
 ) -> None:
     """
-    Asynchronously reformat a single crash log file.
-    
+    Reformats a single log file asynchronously based on the given parameters. It processes the log file by removing unwanted lines, maintaining consistency in formatting, especially within specific sections, and rewriting the content back to the file.
+
     Args:
-        file_path: Path to the crash log file
-        remove_list: Tuple of strings to remove if simplification is enabled
-        simplify_logs: Whether to simplify logs
+        file_path (Path): The path to the log file to be reformatted.
+        remove_list (tuple[str]): A tuple of strings to identify lines that should be removed, used when simplify_logs is enabled.
+        simplify_logs (bool): Indicates whether to remove lines containing strings listed in remove_list, simplifying the log.
+
+    Raises:
+        Exception: If an error occurs during file processing (e.g., reading, writing, or reformatting).
     """
     try:
         # Read file asynchronously
@@ -79,14 +82,21 @@ async def crashlogs_reformat_async(
     remove_list: tuple[str]
 ) -> None:
     """
-    Asynchronously reformat multiple crash log files in batches.
-    
-    This function processes crash logs concurrently for improved performance,
-    especially when dealing with many files.
-    
-    Args:
-        crashlog_list: List of crash log file paths to reformat
-        remove_list: Tuple of strings to remove from logs if simplification is enabled
+    Reformats crash log files asynchronously by processing them in manageable batches
+    to avoid overwhelming the file system. Each crash log is reformatted by removing
+    specified patterns and simplified if the respective setting is enabled.
+
+    Parameters:
+    crashlog_list (list[Path]): A list of file paths pointing to crash log files
+        to be processed.
+    remove_list (tuple[str]): A tuple of strings specifying patterns or substrings
+        to be removed from the crash log files.
+
+    Raises:
+    None
+
+    Returns:
+    None
     """
     logger.debug("- - - INITIATED ASYNC CRASH LOG FILE REFORMAT")
     simplify_logs: bool = bool(classic_settings(bool, "Simplify Logs"))
@@ -117,10 +127,21 @@ async def batch_file_move_async(
     operations: list[tuple[Path, Path]]
 ) -> None:
     """
-    Asynchronously move multiple files.
-    
-    Args:
-        operations: List of (source, destination) path tuples
+    Asynchronously performs batch file move operations.
+
+    This function takes a list of file move operations, where each operation
+    is represented as a tuple containing the source and destination paths. It
+    executes all move operations concurrently, leveraging asynchronous execution
+    to maximize efficiency. Individual move operations are performed using a thread
+    pool to handle the blocking I/O operation of renaming files.
+
+    Parameters:
+    operations: list[tuple[Path, Path]]
+        A list of tuples where each tuple contains the source file path as the
+        first element and the destination file path as the second element.
+
+    Returns:
+    None
     """
     async def move_file(src: Path, dst: Path) -> None:
         """Move a single file using thread pool for blocking operation."""
@@ -139,10 +160,24 @@ async def batch_file_copy_async(
     operations: list[tuple[Path, Path]]
 ) -> None:
     """
-    Asynchronously copy multiple files.
-    
-    Args:
-        operations: List of (source, destination) path tuples
+    Perform batch asynchronous file copy operations.
+
+    This function takes a list of file copy operations and performs them
+    concurrently using asynchronous execution. Each individual file copy
+    operation is processed through an asynchronous wrapper for non-blocking
+    execution.
+
+    Parameters:
+        operations (list[tuple[Path, Path]]): A list of source and destination
+                                              file paths as tuples. Each tuple
+                                              contains a source file path
+                                              (Path) and a destination file
+                                              path (Path).
+
+    Raises:
+        Exceptions raised during file copy operations are logged but not
+        propagated. This function ensures that all operations are attempted
+        even if some of them fail.
     """
     import shutil
     

@@ -7,53 +7,37 @@ This module detects GPU information from system specs including:
 - Identifying rival GPU for compatibility checks
 """
 
-from typing import Literal
 
-
-def scan_log_gpu(segment_system: list[str]) -> tuple[str, Literal["nvidia", "amd"] | None]:
+def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
     """
-    Scan the log to determine the GPU information and its rival.
-    
-    This method analyzes a list of system log segments to identify the primary
-    graphics processing unit (GPU) being used. It also determines the rival GPU
-    manufacturer based on the GPU identified. If the GPU information cannot be
-    determined, the method returns "Unknown" and the rival GPU is set to None.
-    
-    Args:
-        segment_system: A list of log segments containing system
-            information. Each log segment is expected to contain details about
-            hardware components including GPUs.
-            
+    Extracts and processes GPU information from a given system specification.
+
+    This function takes a list of system specification data typically in string
+    format and identifies GPU-related details such as the primary GPU name,
+    secondary GPU name, GPU manufacturer, and the rival manufacturer. It uses
+    pattern matching to extract GPU details based on keywords present in the
+    system information. Default values are used when the required information
+    is not present or cannot be determined.
+
+    Parameters:
+    segment_system: list[str]
+        A list of strings containing system specification information. Each
+        string represents a line of system description that may or may not
+        include GPU-related details.
+
     Returns:
-        Tuple containing:
-        - GPU name ("AMD", "Nvidia", or "Unknown")
-        - Rival GPU manufacturer ("nvidia", "amd", or None)
-    """
-    gpu: str
-    gpu_rival: Literal["nvidia", "amd"] | None
-    
-    if any("GPU #1" in elem and "AMD" in elem for elem in segment_system):
-        gpu = "AMD"
-        gpu_rival = "nvidia"
-    elif any("GPU #1" in elem and "Nvidia" in elem for elem in segment_system):
-        gpu = "Nvidia"
-        gpu_rival = "amd"
-    else:
-        gpu = "Unknown"
-        gpu_rival = None
-        
-    return gpu, gpu_rival
-    
-
-def get_gpu_info(segment_system: list[str]) -> dict[str, str]:
-    """
-    Extract detailed GPU information from system segment.
-    
-    Args:
-        segment_system: System specification lines
-        
-    Returns:
-        Dictionary containing GPU details
+    dict[str, str]
+        A dictionary containing GPU information with the following keys:
+            - primary: str
+                The name of the primary GPU. If not found, defaults to "Unknown".
+            - secondary: str
+                The name of the secondary GPU. If not found, defaults to None.
+            - manufacturer: str
+                The name of the GPU manufacturer (e.g., "AMD", "Nvidia"). If not
+                found, defaults to "Unknown".
+            - rival: str
+                The name of the rival GPU manufacturer. If not found, defaults to
+                None.
     """
     gpu_info: dict[str, str | None] = {
         "primary": "Unknown",

@@ -34,10 +34,20 @@ class FCXModeHandler:
         
     def check_fcx_mode(self) -> None:
         """
-        Check FCX mode status and perform file integrity checks if enabled.
-        
-        Thread-safe implementation using a lock to ensure multiple threads
-        don't run the expensive checks simultaneously.
+        Checks the current FCX mode and performs necessary validations.
+
+        This method evaluates whether the FCX mode is enabled. If enabled, it ensures that
+        FCX checks are performed only once per scan session using thread-safe class-level
+        variables. The results of these checks are then assigned to instance variables.
+        If FCX mode is disabled, default values are assigned to instance variables.
+
+        Attributes:
+            main_files_check: str
+                Stores the result of the main files check, either from the check or a
+                default message when FCX mode is disabled.
+            game_files_check: str
+                Stores the result of the game files check, either from the check or an
+                empty string when FCX mode is disabled.
         """
         if self.fcx_mode:
             # Import here to avoid circular imports
@@ -62,7 +72,23 @@ class FCXModeHandler:
             
     @classmethod
     def reset_fcx_checks(cls) -> None:
-        """Reset the FCX checks state for a new scan session."""
+        """
+        Resets specific checks and results related to FCX processing.
+
+        This method is responsible for reinitializing the FCX-related checks and clearing
+        any previously stored results for the main and game files. It ensures that the
+        associated states are reset to their default values. This method utilizes a class-level
+        lock to guarantee thread safety during the reset operation.
+
+        Sections:
+            - Parameters:
+                This method does not accept any parameters.
+            - Returns:
+                None: This method does not return any value.
+
+        Raises:
+            This method does not raise any exceptions.
+        """
         with cls._fcx_lock:
             cls._fcx_checks_run = False
             cls._main_files_result = ""
@@ -70,10 +96,18 @@ class FCXModeHandler:
             
     def get_fcx_messages(self, autoscan_report: list[str]) -> None:
         """
-        Add FCX mode messages to the autoscan report.
-        
-        Args:
-            autoscan_report: List to append FCX messages
+        Processes and appends FCX mode-related messages to the provided autoscan report.
+        This method determines whether FCX mode is enabled or disabled and appends
+        specific notification messages accordingly. It also appends the results
+        of checks on main files and game files to the autoscan report if FCX mode
+        is enabled.
+
+        Parameters:
+            autoscan_report (list[str]): The list to which the FCX mode messages and
+            other file check results will be appended.
+
+        Returns:
+            None
         """
         from ClassicLib.Util import append_or_extend
         

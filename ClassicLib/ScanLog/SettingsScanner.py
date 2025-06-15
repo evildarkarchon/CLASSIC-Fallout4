@@ -33,12 +33,19 @@ class SettingsScanner:
         self, autoscan_report: list[str], xsemodules: set[str], crashgen: dict[str, bool | int | str]
     ) -> None:
         """
-        Validate Achievements parameter configuration.
-        
+        Scans the achievements setting in the configuration for potential conflicts
+        and generates a report based on the findings. Checks whether the Achievements
+        mod or Unlimited Survival Mode are installed and whether the `Achievements`
+        parameter in the configuration is correctly set to avoid conflicts. Updates
+        the autoscan report accordingly.
+
         Args:
-            autoscan_report: Report list for messages
-            xsemodules: Set of installed XSE modules
-            crashgen: Crash generator configuration
+            autoscan_report (list[str]): The list used to store the autoscan report,
+                updated with messages about the achievements settings.
+            xsemodules (set[str]): A set of currently loaded XSE plugin modules.
+            crashgen (dict[str, bool | int | str]): A dictionary containing the
+                configuration settings for the crash generator. Used to validate
+                the "Achievements" key.
         """
         crashgen_achievements: bool | int | str | None = crashgen.get("Achievements")
         if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
@@ -59,13 +66,21 @@ class SettingsScanner:
         self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], has_xcell: bool, has_baka_scrapheap: bool
     ) -> None:
         """
-        Validate memory management settings for conflicts.
-        
-        Args:
-            autoscan_report: Report list for findings
-            crashgen: Crash generator configuration
-            has_xcell: Whether X-Cell mod is installed
-            has_baka_scrapheap: Whether Baka ScrapHeap is installed
+        Analyzes and adjusts memory management settings based on compatibility requirements and installed
+        components, updating the report with appropriate success or warning messages. This function checks
+        the configuration of the MemoryManager and additional memory-related parameters for compatibility
+        with specific mod components such as X-Cell and Baka ScrapHeap.
+
+        Arguments:
+            autoscan_report (list[str]): A list containing the current autoscan report to which success or
+                warning messages will be appended.
+            crashgen (dict[str, bool | int | str]): A dictionary containing the current memory management
+                configuration settings from the crashgen's config.
+            has_xcell (bool): A flag indicating whether the X-Cell mod is installed.
+            has_baka_scrapheap (bool): A flag indicating whether the Baka ScrapHeap mod is installed.
+
+        Returns:
+            None
         """
         # Constants for messages and settings
         separator = "\n-----\n"
@@ -137,11 +152,22 @@ class SettingsScanner:
                     
     def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str]) -> None:
         """
-        Scan ArchiveLimit setting for potential instability.
-        
+        Scans and validates the "ArchiveLimit" setting in the provided crash generation configuration.
+
+        This function checks if the "ArchiveLimit" parameter in the `crashgen` dictionary is set and takes appropriate action based
+        on its value. Warnings or positive confirmations are appended or extended to the `autoscan_report` list to notify users
+        about the configuration status of the "ArchiveLimit" setting.
+
+        Attributes:
+            autoscan_report (list[str]): List to store warnings or confirmations regarding the "ArchiveLimit" parameter.
+            crashgen (dict[str, bool | int | str]): Dictionary containing crash generation settings, including "ArchiveLimit".
+
         Args:
-            autoscan_report: Report list for messages
-            crashgen: Crash generator configuration
+            autoscan_report: A list storing messages generated as a result of scanning the "ArchiveLimit" setting.
+            crashgen: A dictionary that contains various settings for crash generation configurations.
+
+        Returns:
+            None
         """
         crashgen_archivelimit: bool | int | str | None = crashgen.get("ArchiveLimit")
         if crashgen_archivelimit:
@@ -162,12 +188,19 @@ class SettingsScanner:
         self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], xsemodules: set[str]
     ) -> None:
         """
-        Scan F4EE/Looks Menu parameter configuration.
-        
-        Args:
-            crashgen: Crash generator configuration
-            autoscan_report: Report list for messages
-            xsemodules: Set of installed modules
+        Analyzes the Looksmenu setting in the provided crash generation configuration, ensuring proper compatibility settings.
+
+        Parameters:
+            crashgen (dict[str, bool | int | str]): A mapping containing the crash generation settings,
+                with keys representing configuration parameters and associated values.
+            autoscan_report (list[str]): A list used for appending messages generated by the scan process,
+                which can be error notifications, warnings, or confirmations.
+            xsemodules (set[str]): A set of module names that indicates the external script extender modules
+                available in the current configuration.
+
+        Returns:
+            None
+
         """
         crashgen_f4ee: bool | int | str | None = crashgen.get("F4EE")
         if crashgen_f4ee is not None:
@@ -189,12 +222,25 @@ class SettingsScanner:
         self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], crashgen_ignore: set[str]
     ) -> None:
         """
-        Check for important settings that are disabled.
-        
-        Args:
-            crashgen: Crash generator configuration
-            autoscan_report: Report list for messages
-            crashgen_ignore: Set of settings to ignore
+        Check disabled settings in crash generation configuration and log notices.
+
+        Examines the provided crash generation settings (`crashgen`) to identify any
+        disabled settings that are not present in the `crashgen_ignore` set. If such
+        settings are found, it appends or extends the `autoscan_report` list with
+        appropriately formatted notice messages.
+
+        Parameters:
+            crashgen: dict[str, bool | int | str]
+                A dictionary containing crash generation settings, where the key is
+                the setting name and the value represents its state or value.
+            autoscan_report: list[str]
+                A list to which any generated notice messages will be appended.
+            crashgen_ignore: set[str]
+                A set of setting names that, even if found disabled in `crashgen`,
+                should be ignored and no notice should be logged for them.
+
+        Returns:
+            None
         """
         if crashgen:
             for setting_name, setting_value in crashgen.items():
