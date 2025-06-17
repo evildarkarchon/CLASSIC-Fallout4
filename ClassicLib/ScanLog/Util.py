@@ -1,6 +1,7 @@
 import shutil
 import sqlite3
 from pathlib import Path
+from typing import cast
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS, YAML
@@ -121,7 +122,7 @@ def is_valid_custom_scan_path(path: Path | str) -> bool:
         return False
     
     # Define restricted paths (hard-coded directories)
-    cwd = GlobalRegistry.get_local_dir().resolve()
+    cwd = cast("Path", GlobalRegistry.get_local_dir()).resolve()
     restricted_paths = [
         cwd / "Crash Logs",
         cwd / "Crash Logs" / "Pastebin",

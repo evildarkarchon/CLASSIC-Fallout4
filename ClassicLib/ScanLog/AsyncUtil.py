@@ -195,7 +195,7 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
     results = await asyncio.gather(*tasks, return_exceptions=True)
     
     for result in results:
-        if isinstance(result, Exception):
+        if isinstance(result, BaseException):
             logger.error(f"Failed to load log: {result}")
         else:
             name, lines = result

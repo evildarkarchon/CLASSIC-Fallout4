@@ -299,7 +299,7 @@ class ProgressContext:
             if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
                 self._progress_bar.hide()
             elif hasattr(self._progress_bar, "close"):
-                self._progress_bar.close()
+                self._progress_bar.close() # type: ignore[reportAttributeAccessIssue]
 
     def update(self, n: int = 1, description: str | None = None) -> None:
         """Update progress by n steps.
@@ -318,9 +318,9 @@ class ProgressContext:
                 if description:
                     self._progress_bar.setLabelText(description)
             elif hasattr(self._progress_bar, "update"):
-                self._progress_bar.update(n)
+                self._progress_bar.update(n) # type: ignore[reportAttributeAccessIssue]
                 if description and hasattr(self._progress_bar, "set_description"):
-                    self._progress_bar.set_description(description)
+                    self._progress_bar.set_description(description) # type: ignore[reportAttributeAccessIssue]
 
 
 class MessageHandler(QObject):

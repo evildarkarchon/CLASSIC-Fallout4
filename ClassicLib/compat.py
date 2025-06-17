@@ -3,13 +3,14 @@
 This module provides utilities for checking and working with optional
 dependencies like PySide6, making ClassicLib usable in both GUI and CLI modes.
 """
-
+from importlib import util
 from typing import TYPE_CHECKING, Any
 
 # Check for PySide6 availability
 try:
     import PySide6
-    from PySide6 import QtCore, QtWidgets
+    if not util.find_spec("PySide6.QtCore") or not util.find_spec("PySide6.QtWidgets"):
+        raise ImportError("PySide6.QtCore or PySide6.QtWidgets not found")  # noqa: TRY301
     HAS_PYSIDE6 = True
     PYSIDE6_VERSION = PySide6.__version__
 except ImportError:
@@ -65,11 +66,9 @@ def import_gui_component(component_name: str) -> Any:
 if TYPE_CHECKING or not HAS_PYSIDE6:
     class QObject:
         """Stub for PySide6.QtCore.QObject when PySide6 is not available."""
-        pass
     
     class QWidget:
         """Stub for PySide6.QtWidgets.QWidget when PySide6 is not available."""
-        pass
     
     class Signal:
         """Stub for PySide6.QtCore.Signal when PySide6 is not available."""

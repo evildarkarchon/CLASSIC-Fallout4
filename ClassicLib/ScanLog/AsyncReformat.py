@@ -73,7 +73,7 @@ async def reformat_single_log_async(
             
         logger.debug(f"Reformatted {file_path.name}")
         
-    except Exception as e:
+    except OSError as e:
         logger.error(f"Error reformatting {file_path}: {e}")
 
 
@@ -148,7 +148,7 @@ async def batch_file_move_async(
         try:
             await asyncio.to_thread(src.rename, dst)
             logger.debug(f"Moved {src.name} to {dst}")
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error moving {src} to {dst}: {e}")
             
     # Execute all moves concurrently
@@ -186,7 +186,7 @@ async def batch_file_copy_async(
         try:
             await asyncio.to_thread(shutil.copy2, src, dst)
             logger.debug(f"Copied {src.name} to {dst}")
-        except Exception as e:
+        except (OSError, shutil.Error) as e:
             logger.error(f"Error copying {src} to {dst}: {e}")
             
     # Execute all copies concurrently
