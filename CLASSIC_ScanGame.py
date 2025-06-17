@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 from CLASSIC_Main import initialize, main_generate_required
-from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success, msg_warning, MessageTarget
+from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
@@ -225,7 +225,7 @@ def scan_mods_unpacked() -> str:
     xse_acronym, xse_scriptfiles, mod_path = get_scan_settings()
 
     # Setup paths
-    backup_path: Path = GlobalRegistry.get_local_dir() / "CLASSIC Backup/Cleaned Files"
+    backup_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup/Cleaned Files"
     if not TEST_MODE:
         backup_path.mkdir(parents=True, exist_ok=True)
 

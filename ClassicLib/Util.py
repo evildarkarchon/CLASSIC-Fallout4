@@ -4,9 +4,11 @@ import hashlib
 import logging
 import os
 import platform
+import re
 import stat
 from collections.abc import Iterator
 from difflib import SequenceMatcher
+from importlib import util
 from io import TextIOWrapper
 from logging import Logger
 from pathlib import Path
@@ -58,11 +60,8 @@ def get_game_version(game_exe_path: Path) -> Version:
     Retrieves the version information of a game executable.
 
     This function attempts to detect the version of a given game executable
-    file located at `game_exe_path`. It is designed to work only on Windows
-    operating systems. If the function encounters any issue, such as an
-    invalid path, unavailable Windows API modules, or corrupted version
-    information, it will log the error and return a null version
-    placeholder.
+    file located at `game_exe_path`. It supports both Windows API-based
+    extraction and a cross-platform PE header parsing fallback.
 
     Args:
         game_exe_path (Path): Path to the game executable file.
@@ -71,19 +70,46 @@ def get_game_version(game_exe_path: Path) -> Version:
         Version: Parsed version of the game executable, or a null version
         placeholder if any error occurs during version detection.
     """
-    # Early return for non-Windows systems
-    if platform.system() != "Windows":
-        logger.warning("Game version detection is only supported on Windows")
-        return Constants.NULL_VERSION
-
     # Early return for invalid path
     if not _is_valid_executable_path(game_exe_path):
         logger.warning("Game executable not found or path is invalid")
         return Constants.NULL_VERSION
 
+    # Try Windows API first if on Windows
+    if platform.system() == "Windows":
+        version = _get_version_windows_api(game_exe_path)
+        if version != Constants.NULL_VERSION:
+            return version
+        logger.debug("Windows API failed, trying PE header parsing")
+
+    # Fallback to cross-platform PE header parsing
+    return _get_version_from_pe_header(game_exe_path)
+
+
+def _is_valid_executable_path(path: Path | None) -> bool:
+    """Checks if the provided path exists and is a file."""
+    return bool(path and path.is_file())
+
+
+def _extract_windows_version_info(win32api_module: Any, exe_path: Path) -> dict[str, int]:
+    """Extracts version information from a Windows executable using win32api."""
+    return cast("dict[str, int]", win32api_module.GetFileVersionInfo(str(exe_path), "\\"))
+
+
+def _create_version_from_info(version_info: dict[str, int]) -> Version:
+    """Creates a Version object from Windows version info dictionary."""
+    major: int = version_info["FileVersionMS"] >> 16
+    minor: int = version_info["FileVersionMS"] & 0xFFFF
+    patch: int = version_info["FileVersionLS"] >> 16
+    build: int = version_info["FileVersionLS"] & 0xFFFF
+    return Version(f"{major}.{minor}.{patch}.{build}")
+
+
+def _get_version_windows_api(game_exe_path: Path) -> Version:
+    """Attempts to get version using Windows API."""
     try:
         # Conditional import of Windows-specific module
-        import win32api  # pyrefly: ignore
+        import win32api  # type: ignore[reportMissingModuleSource]
 
         version_info: dict[str, int] = _extract_windows_version_info(win32api, game_exe_path)
         version: Version = _create_version_from_info(version_info)
@@ -104,23 +130,119 @@ def get_game_version(game_exe_path: Path) -> Version:
         return version
 
 
-def _is_valid_executable_path(path: Path | None) -> bool:
-    """Checks if the provided path exists and is a file."""
-    return bool(path and path.is_file())
+def _get_version_from_pe_header(exe_path: Path) -> Version:
+    """
+    Cross-platform PE header parser to extract version information.
+    
+    This function attempts to use pefile if available, otherwise falls back
+    to a simple string search for version patterns in the binary.
+    """
+    # Try pefile first if available
+    if util.find_spec("pefile"):
+        return _get_version_with_pefile(exe_path)
+    logger.warning("pefile module not found, using fallback method for version detection")
+    return _get_version_fallback(exe_path)
 
 
-def _extract_windows_version_info(win32api_module: Any, exe_path: Path) -> dict[str, int]:
-    """Extracts version information from a Windows executable using win32api."""
-    return cast("dict[str, int]", win32api_module.GetFileVersionInfo(str(exe_path), "\\"))
+def _get_version_with_pefile(exe_path: Path) -> Version:
+    """Extract version using pefile library."""
+    try:
+        import pefile  # pyrefly: ignore
+        
+        pe = pefile.PE(str(exe_path))
+        
+        # Try to get version from VS_FIXEDFILEINFO
+        if hasattr(pe, "VS_FIXEDFILEINFO") and pe.VS_FIXEDFILEINFO:
+            file_version = pe.VS_FIXEDFILEINFO[0]
+            major = (file_version.FileVersionMS >> 16) & 0xFFFF
+            minor = file_version.FileVersionMS & 0xFFFF
+            patch = (file_version.FileVersionLS >> 16) & 0xFFFF
+            build = file_version.FileVersionLS & 0xFFFF
+            
+            version = Version(f"{major}.{minor}.{patch}.{build}")
+            logger.debug(f"Game version detected from PE header: {version}")
+            return version
+        
+        # Try to get version from FileInfo
+        if hasattr(pe, "FileInfo") and pe.FileInfo:
+            for file_info in pe.FileInfo:
+                for info in file_info:
+                    if hasattr(info, "StringTable"):
+                        for st in info.StringTable:
+                            for entry in st.entries.items():
+                                if entry[0] == b"FileVersion":
+                                    version_str = entry[1].decode("utf-8", errors="ignore")
+                                    # Clean up version string
+                                    version_str = version_str.replace(",", ".").strip()
+                                    try:
+                                        version = Version(version_str)
+                                    except ValueError:
+                                        # Invalid version string format
+                                        continue
+                                    else:
+                                        logger.debug(f"Game version detected from StringTable: {version}")
+                                        return version
+        
+        logger.error("Version information not found in PE file")
+        
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Error parsing PE file with pefile: {e}")
+        return Constants.NULL_VERSION
+    else:
+        return Constants.NULL_VERSION
 
 
-def _create_version_from_info(version_info: dict[str, int]) -> Version:
-    """Creates a Version object from Windows version info dictionary."""
-    major: int = version_info["FileVersionMS"] >> 16
-    minor: int = version_info["FileVersionMS"] & 0xFFFF
-    patch: int = version_info["FileVersionLS"] >> 16
-    build: int = version_info["FileVersionLS"] & 0xFFFF
-    return Version(f"{major}.{minor}.{patch}.{build}")
+def _get_version_fallback(exe_path: Path) -> Version:
+    """
+    Fallback method to extract version by searching for version patterns in the binary.
+    This is less reliable but works without additional dependencies.
+    """
+    try:
+        # Common version patterns to search for
+        version_patterns = [
+            rb"FileVersion[\x00\s]*(\d+\.\d+\.\d+\.\d+)",
+            rb"ProductVersion[\x00\s]*(\d+\.\d+\.\d+\.\d+)",
+            rb"(\d+\.\d+\.\d+\.\d+)[\x00\s]*FileVersion",
+            rb"(\d+\.\d+\.\d+\.\d+)[\x00\s]*ProductVersion",
+        ]
+        
+        # Read file in chunks to avoid loading entire file into memory
+        chunk_size = 1024 * 1024  # 1MB chunks
+        overlap = 256  # Overlap to catch versions split between chunks
+        
+        with exe_path.open("rb") as f:
+            previous_chunk = b""
+            
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+                
+                # Combine with overlap from previous chunk
+                search_data = previous_chunk[-overlap:] + chunk if previous_chunk else chunk
+                
+                # Search for version patterns
+                for pattern in version_patterns:
+                    matches = re.findall(pattern, search_data)
+                    for match in matches:
+                        try:
+                            version_str = match.decode("utf-8", errors="ignore")
+                            version = Version(version_str)
+                            if version != Constants.NULL_VERSION:
+                                logger.debug(f"Game version detected using pattern search: {version}")
+                                return version
+                        except ValueError:
+                            # Invalid version string format
+                            continue
+                
+                previous_chunk = chunk
+        
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Error in fallback version detection: {e}")
+        return Constants.NULL_VERSION
+    else:
+        logger.warning("No version information found using fallback method")
+        return Constants.NULL_VERSION
 
 
 def crashgen_version_gen(input_string: str) -> Version:
@@ -238,7 +360,7 @@ def remove_readonly(file_path: Path) -> None:
     """
     try:
         if platform.system() == "Windows":
-            is_readonly: int = file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY
+            is_readonly: int = file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY # type: ignore[reportAttributeAccessIssue]
             if is_readonly:
                 file_path.chmod(stat.S_IWRITE)
         else:
