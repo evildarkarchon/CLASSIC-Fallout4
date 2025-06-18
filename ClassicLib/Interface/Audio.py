@@ -19,6 +19,7 @@ class AudioPlayer(QObject):
         play_notify_signal (Signal): Signal to trigger notification sound playback.
         play_custom_signal (Signal): Signal to play a custom sound file with a specified path.
     """
+
     # Constants
     DEFAULT_VOLUME = 0.5
     SOUND_DIR = "CLASSIC Data/sounds"

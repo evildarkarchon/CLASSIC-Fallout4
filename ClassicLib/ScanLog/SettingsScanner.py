@@ -19,16 +19,16 @@ if TYPE_CHECKING:
 
 class SettingsScanner:
     """Handles validation of crash generator and mod settings."""
-    
+
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
         Initialize the settings scanner.
-        
+
         Args:
             yamldata: Configuration data
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
-        
+
     def scan_buffout_achievements_setting(
         self, autoscan_report: list[str], xsemodules: set[str], crashgen: dict[str, bool | int | str]
     ) -> None:
@@ -61,7 +61,7 @@ class SettingsScanner:
                 f"✔️ Achievements parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
                 autoscan_report,
             )
-            
+
     def scan_buffout_memorymanagement_settings(
         self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], has_xcell: bool, has_baka_scrapheap: bool
     ) -> None:
@@ -88,18 +88,18 @@ class SettingsScanner:
         warning_prefix = "# ❌ CAUTION : "
         fix_prefix = " FIX: "
         crashgen_name: str = self.yamldata.crashgen_name
-        
+
         def add_success_message(message: str) -> None:
             """Add a success message to the report."""
             append_or_extend(f"{success_prefix}{message}{separator}", autoscan_report)
-            
+
         def add_warning_message(warning: str, fix: str) -> None:
             """Add a warning message with fix instructions to the report."""
             append_or_extend((f"{warning_prefix}{warning} # \n", f"{fix_prefix}{fix}{separator}"), autoscan_report)
-            
+
         # Check main MemoryManager setting
         mem_manager_enabled: bool | int | str = crashgen.get("MemoryManager", False)
-        
+
         # Handle main memory manager configuration
         if mem_manager_enabled:
             if has_xcell:
@@ -129,7 +129,7 @@ class SettingsScanner:
                 f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
                 f"Uninstall the Baka ScrapHeap Mod and open {crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.",
             )
-            
+
         # Check additional memory settings for X-Cell compatibility
         if has_xcell:
             memory_settings: dict[str, str] = {
@@ -138,7 +138,7 @@ class SettingsScanner:
                 "ScaleformAllocator": "Scaleform Allocator",
                 "SmallBlockAllocator": "Small Block Allocator",
             }
-            
+
             for setting_key, display_name in memory_settings.items():
                 if crashgen.get(setting_key):
                     add_warning_message(
@@ -149,7 +149,7 @@ class SettingsScanner:
                     add_success_message(
                         f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
                     )
-                    
+
     def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str]) -> None:
         """
         Scans and validates the "ArchiveLimit" setting in the provided crash generation configuration.
@@ -183,7 +183,7 @@ class SettingsScanner:
                 f"✔️ ArchiveLimit parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
                 autoscan_report,
             )
-            
+
     def scan_buffout_looksmenu_setting(
         self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], xsemodules: set[str]
     ) -> None:
@@ -217,10 +217,8 @@ class SettingsScanner:
                     f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
                     autoscan_report,
                 )
-                
-    def check_disabled_settings(
-        self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], crashgen_ignore: set[str]
-    ) -> None:
+
+    def check_disabled_settings(self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], crashgen_ignore: set[str]) -> None:
         """
         Check disabled settings in crash generation configuration and log notices.
 

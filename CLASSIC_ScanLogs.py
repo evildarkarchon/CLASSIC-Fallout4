@@ -48,11 +48,12 @@ class ClassicScanLogs:
 
         # Load settings
         self.remove_list: tuple[str] | tuple[Literal[""]] = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ("",)
-        
+
         # Use async file I/O for better performance
         try:
             # noinspection PyUnresolvedReferences
             from ClassicLib.ScanLog.AsyncFileIO import crashlogs_reformat_with_async
+
             crashlogs_reformat_with_async(self.crashlog_list, self.remove_list)
             logger.debug("Used async file I/O for crash log reformatting")
         except ImportError:
@@ -66,7 +67,7 @@ class ClassicScanLogs:
         self.show_formid_values: bool | None = classic_settings(bool, "Show FormID Values")
         self.formid_db_exists: bool = any(db.is_file() for db in DB_PATHS)
         self.move_unsolved_logs: bool | None = classic_settings(bool, "Move Unsolved Logs")
-        
+
         # Check if async operations should be used
         self.use_async_db: bool = self._check_async_db_availability()
         self.use_async_pipeline: bool = self._check_async_pipeline_availability()
@@ -100,17 +101,17 @@ class ClassicScanLogs:
             Tuple containing file path, report, failure status, and statistics
         """
         return self.orchestrator.process_crash_log(crashlog_file)
-    
+
     def process_crashlog_with_async_db(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Process a crash log with async database operations for FormID lookups.
-        
+
         This method uses async database operations when available, falling back
         to synchronous operations if async dependencies are not available.
-        
+
         Args:
             crashlog_file: Path to the crash log file
-            
+
         Returns:
             Tuple containing file path, report, failure status, and statistics
         """
@@ -121,44 +122,40 @@ class ClassicScanLogs:
             # Fallback to sync processing
             logger.debug(f"Async database dependencies not available, using sync processing for {crashlog_file.name}")
             return self.orchestrator.process_crash_log(crashlog_file)
-    
+
     async def _process_crashlog_async(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Async version of crash log processing with database operations.
-        
+
         Args:
             crashlog_file: Path to the crash log file
-            
+
         Returns:
             Tuple containing file path, report, failure status, and statistics
         """
         from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer
         from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
-        
+
         # Process most of the log synchronously (this is still fast)
         result = self.orchestrator.process_crash_log(crashlog_file)
         crashlog_path, autoscan_report, failure_status, stats = result
-        
+
         # If we have FormIDs and database exists, enhance with async lookups
-        if (hasattr(self.orchestrator, '_last_formids') and 
-            hasattr(self.orchestrator, '_last_plugins') and
-            self.formid_db_exists and 
-            self.orchestrator.last_formids):
-            
+        if (
+            hasattr(self.orchestrator, "_last_formids")
+            and hasattr(self.orchestrator, "_last_plugins")
+            and self.formid_db_exists
+            and self.orchestrator.last_formids
+        ):
             async with AsyncDatabasePool() as db_pool:
                 # Create async FormID analyzer
-                async_analyzer = AsyncFormIDAnalyzer(
-                    self.yamldata,
-                    self.show_formid_values or False,
-                    self.formid_db_exists,
-                    db_pool
-                )
-                
+                async_analyzer = AsyncFormIDAnalyzer(self.yamldata, self.show_formid_values or False, self.formid_db_exists, db_pool)
+
                 # Find and replace FormID section in report
                 new_report = []
                 in_formid_section = False
                 formid_section_start = -1
-                
+
                 for i, line in enumerate(autoscan_report):
                     if "FORM IDs" in line and "=" in line:
                         in_formid_section = True
@@ -166,20 +163,16 @@ class ClassicScanLogs:
                         new_report.append(line)
                         break
                     new_report.append(line)
-                
+
                 if in_formid_section and formid_section_start >= 0:
                     # Add async FormID analysis
                     formid_section: list[str] = []
-                    await async_analyzer.formid_match_async(
-                        self.orchestrator.last_formids,
-                        self.orchestrator.last_plugins,
-                        formid_section
-                    )
+                    await async_analyzer.formid_match_async(self.orchestrator.last_formids, self.orchestrator.last_plugins, formid_section)
                     new_report.extend(formid_section)
-                    
+
                     # Add the rest of the report after FormID section
                     skip_until_next_section = True
-                    for line in autoscan_report[formid_section_start + 1:]:
+                    for line in autoscan_report[formid_section_start + 1 :]:
                         if skip_until_next_section:
                             # Skip until we find the next major section
                             if (line.startswith("=") and "RECORDS" in line) or line.startswith("\n---"):
@@ -187,22 +180,22 @@ class ClassicScanLogs:
                                 new_report.append(line)
                         else:
                             new_report.append(line)
-                            
+
                     return crashlog_path, new_report, failure_status, stats
-        
+
         return result
 
     def _check_async_db_availability(self) -> bool:
         """
         Check if async database operations are available and beneficial.
-        
+
         Returns:
             bool: True if async DB operations should be used
         """
         # Only use async DB if FormID databases exist and we're showing FormID values
         if not (self.formid_db_exists and self.show_formid_values):
             return False
-            
+
         try:
             import aiosqlite  # noqa: F401
 
@@ -214,11 +207,11 @@ class ClassicScanLogs:
         else:
             logger.debug("Async database operations available")
             return True
-    
+
     def _check_async_pipeline_availability(self) -> bool:
         """
         Check if the full async pipeline is available and should be used.
-        
+
         Returns:
             bool: True if async pipeline should be used
         """
@@ -227,12 +220,12 @@ class ClassicScanLogs:
         if use_async_pipeline is False:
             logger.debug("Async pipeline disabled in settings")
             return False
-            
+
         # Only use async pipeline if we have a reasonable number of logs
         if len(self.crashlog_list) < 3:
             logger.debug("Too few crash logs for async pipeline benefit")
             return False
-            
+
         try:
             import aiofiles  # noqa: F401
 
@@ -298,16 +291,16 @@ def crashlogs_scan() -> None:
 async def crashlogs_scan_async(scanner: ClassicScanLogs) -> None:
     """
     Async crash log scanning using the full async pipeline.
-    
+
     Args:
         scanner: ClassicScanLogs instance with configuration
     """
     from ClassicLib.ScanLog.AsyncPipeline import AsyncPerformanceMonitor, run_async_crash_log_scan
-    
+
     logger.info("Using async pipeline for crash log processing")
     yamldata: ClassicScanLogsInfo = scanner.yamldata
     scan_failed_list: list = []
-    
+
     try:
         # Run the full async pipeline
         results, async_stats = await run_async_crash_log_scan(
@@ -318,32 +311,30 @@ async def crashlogs_scan_async(scanner: ClassicScanLogs) -> None:
             scanner.show_formid_values,
             scanner.formid_db_exists,
         )
-        
+
         # Process results and update statistics
         for crashlog_file, _autoscan_report, trigger_scan_failed, local_stats in results:
             # Update statistics
             for key, value in local_stats.items():
                 scanner.crashlog_stats[key] += value
-                
+
             # Track failed scans (reports are already written by async pipeline)
             if trigger_scan_failed:
                 scan_failed_list.append(crashlog_file.name)
-                
+
                 # Handle unsolved logs if needed
                 if scanner.move_unsolved_logs:
                     move_unsolved_logs(crashlog_file)
-        
+
         # Log performance summary
-        comparison = AsyncPerformanceMonitor.compare_performance(
-            async_stats, 0, len(scanner.crashlog_list)
-        )
+        comparison = AsyncPerformanceMonitor.compare_performance(async_stats, 0, len(scanner.crashlog_list))
         AsyncPerformanceMonitor.log_performance_summary(comparison)
-        
+
     except (ImportError, RuntimeError, OSError) as e:
         logger.error(f"Async pipeline failed, falling back to threaded processing: {e}")
         crashlogs_scan_threaded(scanner)
         return
-    
+
     # Complete with standard error checking and summary
     _complete_scan_with_summary(scanner, scan_failed_list, yamldata)
 
@@ -351,7 +342,7 @@ async def crashlogs_scan_async(scanner: ClassicScanLogs) -> None:
 def crashlogs_scan_threaded(scanner: ClassicScanLogs) -> None:
     """
     Traditional threaded crash log scanning.
-    
+
     Args:
         scanner: ClassicScanLogs instance with configuration
     """
@@ -368,14 +359,12 @@ def crashlogs_scan_threaded(scanner: ClassicScanLogs) -> None:
         if scanner.use_async_db:
             logger.debug("Using async database operations for FormID lookups")
             futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
-                executor.submit(scanner.process_crashlog_with_async_db, crashlog_file) 
-                for crashlog_file in scanner.crashlog_list
+                executor.submit(scanner.process_crashlog_with_async_db, crashlog_file) for crashlog_file in scanner.crashlog_list
             ]
         else:
             logger.debug("Using synchronous database operations")
             futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
-                executor.submit(scanner.process_crashlog, crashlog_file) 
-                for crashlog_file in scanner.crashlog_list
+                executor.submit(scanner.process_crashlog, crashlog_file) for crashlog_file in scanner.crashlog_list
             ]
 
         # Process results as they complete
@@ -410,7 +399,7 @@ def crashlogs_scan_threaded(scanner: ClassicScanLogs) -> None:
 def _complete_scan_with_summary(scanner: ClassicScanLogs, scan_failed_list: list, yamldata: ClassicScanLogsInfo) -> None:
     """
     Complete the scan with error checking and summary display.
-    
+
     Args:
         scanner: ClassicScanLogs instance
         scan_failed_list: List of failed log names
@@ -467,7 +456,9 @@ if __name__ == "__main__":
     parser.add_argument("--ini-path", type=Path, help="Path to the INI file")
     parser.add_argument("--scan-path", type=Path, help="Path to the scan directory")
     parser.add_argument("--mods-folder-path", type=Path, help="Path to the mods folder")
-    parser.add_argument("--simplify-logs", action=argparse.BooleanOptionalAction, help="Simplify the logs (Warning: May remove important information)")
+    parser.add_argument(
+        "--simplify-logs", action=argparse.BooleanOptionalAction, help="Simplify the logs (Warning: May remove important information)"
+    )
     parser.add_argument("--disable-progress", action=argparse.BooleanOptionalAction, help="Disable progress bars in CLI mode")
 
     args = parser.parse_args()

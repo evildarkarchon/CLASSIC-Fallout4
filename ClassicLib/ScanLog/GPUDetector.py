@@ -45,7 +45,7 @@ def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
         "manufacturer": "Unknown",
         "rival": None,
     }
-    
+
     for line in segment_system:
         if "GPU #1" in line:
             if "AMD" in line:
@@ -56,11 +56,11 @@ def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
                 gpu_info["primary"] = "Nvidia"
                 gpu_info["manufacturer"] = "Nvidia"
                 gpu_info["rival"] = "amd"
-                
+
             # Extract full GPU name if possible
             if ":" in line:
                 gpu_info["primary"] = line.split(":", 1)[1].strip()
-                
+
         elif "GPU #2" in line and ":" in line:
             gpu_info["secondary"] = line.split(":", 1)[1].strip()
             

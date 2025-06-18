@@ -7,21 +7,22 @@ Import from this module only when running in GUI mode with PySide6 available.
 try:
     from PySide6.QtCore import QObject, Signal
     from PySide6.QtWidgets import QWidget
-    
+
     HAS_PYSIDE6 = True
 except ImportError:
     HAS_PYSIDE6 = False
-    
+
     # Define dummy types for static type checking
     class QObject:
         pass
-    
+
     class QWidget:
         pass
-    
+
     class Signal:
         def __init__(self, *args):
             pass
+
 
 # Only import GUI components if PySide6 is available
 if HAS_PYSIDE6:
@@ -31,7 +32,7 @@ if HAS_PYSIDE6:
     from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
     from ClassicLib.Interface.Pastebin import PastebinFetchWorker
     from ClassicLib.Interface.PathDialog import ManualPathDialog
-    
+
     __all__ = [
         "ManualDocsPath",
         "AudioPlayer",

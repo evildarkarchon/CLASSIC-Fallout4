@@ -284,7 +284,11 @@ class ScanOrchestrator:
         self.report_generator.generate_suspect_found_footer(trigger_suspect_found, autoscan_report)
 
     def _run_mod_detection(
-        self, crashlog_plugins: dict[str, str], trigger_plugins_loaded: bool, crashlog_gpu_rival: Literal["nvidia", "amd"] | None, autoscan_report: list[str]
+        self,
+        crashlog_plugins: dict[str, str],
+        trigger_plugins_loaded: bool,
+        crashlog_gpu_rival: Literal["nvidia", "amd"] | None,
+        autoscan_report: list[str],
     ) -> None:
         """Run mod detection checks."""
         # Import at runtime to avoid circular imports
@@ -372,7 +376,7 @@ class ScanOrchestrator:
         """Check FCX mode and various settings and configurations."""
         # Check FCX mode
         self.fcx_handler.check_fcx_mode()
-        
+
         # Generate settings header
         self.report_generator.generate_settings_section_header(autoscan_report)
         self.fcx_handler.get_fcx_messages(autoscan_report)
@@ -418,7 +422,7 @@ class ScanOrchestrator:
         # FormID matching
         self.report_generator.generate_formid_section_header(autoscan_report)
         formids_matches = self.formid_analyzer.extract_formids(segment_callstack)
-        
+
         # Store FormID data for potential async processing
         self.last_formids = formids_matches
         self.last_plugins = crashlog_plugins

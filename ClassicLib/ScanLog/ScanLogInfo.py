@@ -25,8 +25,10 @@ class ThreadSafeLogCache:
         # Try async loading first for better performance
         try:
             from ClassicLib.ScanLog.AsyncFileIO import integrate_async_file_loading
+
             self.cache = integrate_async_file_loading(logfiles)
             from ClassicLib.Logger import logger
+
             logger.debug(f"Loaded {len(self.cache)} crash logs using async I/O")
         except (ImportError, Exception):
             # Fallback to sync loading
@@ -36,6 +38,7 @@ class ThreadSafeLogCache:
                 except OSError as e:
                     msg_error(f"Error reading {file}: {e}")
             from ClassicLib.Logger import logger
+
             logger.debug(f"Loaded {len(self.cache)} crash logs using sync I/O")
 
     def read_log(self, logname: str) -> list[str]:
@@ -101,7 +104,7 @@ class ThreadSafeLogCache:
         """
         with self.lock:
             self.cache.clear()
-    
+
     @classmethod
     def from_cache(cls, cache_dict: dict[str, bytes]) -> "ThreadSafeLogCache":
         """
@@ -127,10 +130,11 @@ class ThreadSafeLogCache:
         instance = cls.__new__(cls)
         instance.lock = threading.RLock()
         instance.cache = cache_dict.copy()
-        
+
         from ClassicLib.Logger import logger
+
         logger.debug(f"Created ThreadSafeLogCache from existing cache with {len(cache_dict)} logs")
-        
+
         return instance
 
 

@@ -1,6 +1,5 @@
 """Interface package - GUI components and utilities."""
 
-
 from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
 from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
 from ClassicLib.Interface.Pastebin import PastebinFetchWorker
@@ -9,6 +8,7 @@ from ClassicLib.Interface.StyleSheets import DARK_MODE
 
 try:
     from ClassicLib.Interface.Audio import AudioPlayer
+
     _has_audio = True
 except ImportError:
     _has_audio = False

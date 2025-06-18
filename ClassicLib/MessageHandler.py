@@ -27,19 +27,21 @@ try:
     HAS_TQDM = True
 except ImportError:
     HAS_TQDM = False
+
     # Define dummy tqdm for type checking when not available
     class TqdmProgress:
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
-        
+
         def update(self, n: int = 1) -> None:
             pass
-        
+
         def set_description(self, desc: str) -> None:
             pass
-        
+
         def close(self) -> None:
             pass
+
 
 # Try to import PySide6 for GUI mode
 try:
@@ -49,6 +51,7 @@ try:
     HAS_QT = True
 except ImportError:
     HAS_QT = False
+
     # Define dummy classes for type checking when Qt is not available
     class QObject:
         pass
@@ -69,7 +72,9 @@ except ImportError:
             Warning = 1
             Critical = 2
 
-        def __init__(self, icon: Any = None, title: str = "", text: str = "", parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
+        def __init__(
+            self, icon: Any = None, title: str = "", text: str = "", parent: QWidget | None = None, *args: Any, **kwargs: Any
+        ) -> None:
             pass
 
         def setDetailedText(self, text: str) -> None:
@@ -82,10 +87,18 @@ except ImportError:
         def exec(self) -> int:
             return 0
 
-
     # noinspection PyPep8Naming,PyUnusedLocal
     class QProgressDialog:
-        def __init__(self, labelText: str = "", cancelButtonText: str = "", minimum: int = 0, maximum: int = 0, parent: QWidget | None = None, *args: Any, **kwargs: Any) -> None:
+        def __init__(
+            self,
+            labelText: str = "",
+            cancelButtonText: str = "",
+            minimum: int = 0,
+            maximum: int = 0,
+            parent: QWidget | None = None,
+            *args: Any,
+            **kwargs: Any,
+        ) -> None:
             pass
 
         def hide(self) -> None:
@@ -247,16 +260,18 @@ class ProgressContext:
         self.current = 0
         self._progress_bar: TqdmProgress | CLIProgressBar | QProgressDialog | None = None
         self._using_qt_signals = False
+
     def __enter__(self) -> ProgressContext:
         """Enter the context and create appropriate progress indicator."""
         # Check if CLI progress is disabled
         try:
             from ClassicLib.YamlSettingsCache import classic_settings
+
             disable_cli_progress = classic_settings(bool, "Disable CLI Progress") or False
         except (ImportError, FileNotFoundError, KeyError, TypeError):
             # If we can't load settings, default to showing progress
             disable_cli_progress = False
-        
+
         if self.handler.is_gui_mode and HAS_QT:
             # Check if we're in the main thread and QApplication exists
             try:
@@ -272,7 +287,7 @@ class ProgressContext:
                     self._progress_bar.setAutoClose(True)
                     self._progress_bar.setAutoReset(True)
                     if self.total is None:
-                        self._progress_bar.setRange(0, 0) # Indeterminate
+                        self._progress_bar.setRange(0, 0)  # Indeterminate
                     self._progress_bar.show()
                 else:
                     # We're in a worker thread - use signals to create progress dialog in main thread
@@ -299,7 +314,7 @@ class ProgressContext:
             if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
                 self._progress_bar.hide()
             elif hasattr(self._progress_bar, "close"):
-                self._progress_bar.close() # type: ignore[reportAttributeAccessIssue]
+                self._progress_bar.close()  # type: ignore[reportAttributeAccessIssue]
 
     def update(self, n: int = 1, description: str | None = None) -> None:
         """Update progress by n steps.
@@ -318,9 +333,9 @@ class ProgressContext:
                 if description:
                     self._progress_bar.setLabelText(description)
             elif hasattr(self._progress_bar, "update"):
-                self._progress_bar.update(n) # type: ignore[reportAttributeAccessIssue]
+                self._progress_bar.update(n)  # type: ignore[reportAttributeAccessIssue]
                 if description and hasattr(self._progress_bar, "set_description"):
-                    self._progress_bar.set_description(description) # type: ignore[reportAttributeAccessIssue]
+                    self._progress_bar.set_description(description)  # type: ignore[reportAttributeAccessIssue]
 
 
 class MessageHandler(QObject):
@@ -386,17 +401,17 @@ class MessageHandler(QObject):
         # Unicode ranges for emojis and symbols
         emoji_pattern = re.compile(
             "["
-            "\U0001F600-\U0001F64F"  # emoticons
-            "\U0001F300-\U0001F5FF"  # symbols & pictographs
-            "\U0001F680-\U0001F6FF"  # transport & map symbols
-            "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-            "\U00002702-\U000027B0"  # dingbats
-            "\U000024C2-\U0001F251"
-            "\U0001F900-\U0001F9FF"  # supplemental symbols
-            "\U00002600-\U000026FF"  # miscellaneous symbols
-            "\U00002700-\U000027BF"  # dingbats
+            "\U0001f600-\U0001f64f"  # emoticons
+            "\U0001f300-\U0001f5ff"  # symbols & pictographs
+            "\U0001f680-\U0001f6ff"  # transport & map symbols
+            "\U0001f1e0-\U0001f1ff"  # flags (iOS)
+            "\U00002702-\U000027b0"  # dingbats
+            "\U000024c2-\U0001f251"
+            "\U0001f900-\U0001f9ff"  # supplemental symbols
+            "\U00002600-\U000026ff"  # miscellaneous symbols
+            "\U00002700-\U000027bf"  # dingbats
             "]+",
-            flags=re.UNICODE
+            flags=re.UNICODE,
         )
         return emoji_pattern.sub("", text).strip()
 
@@ -458,7 +473,7 @@ class MessageHandler(QObject):
         self._progress_dialog.setAutoClose(True)
         self._progress_dialog.setAutoReset(True)
         if total == 0:
-            self._progress_dialog.setRange(0, 0) # Indeterminate
+            self._progress_dialog.setRange(0, 0)  # Indeterminate
         self._progress_dialog.show()
 
     def _update_progress_dialog(self, value: int, description: str) -> None:

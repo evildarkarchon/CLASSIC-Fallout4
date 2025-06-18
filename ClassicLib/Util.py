@@ -37,6 +37,7 @@ def normalize_list(items: list[str]) -> list[str]:
     """
     return [item.lower() for item in items] if items else []
 
+
 def calculate_similarity(file1: Path, file2: Path) -> float:
     """
     Calculates the similarity ratio between the content of two text files using the
@@ -133,7 +134,7 @@ def _get_version_windows_api(game_exe_path: Path) -> Version:
 def _get_version_from_pe_header(exe_path: Path) -> Version:
     """
     Cross-platform PE header parser to extract version information.
-    
+
     This function attempts to use pefile if available, otherwise falls back
     to a simple string search for version patterns in the binary.
     """
@@ -148,9 +149,9 @@ def _get_version_with_pefile(exe_path: Path) -> Version:
     """Extract version using pefile library."""
     try:
         import pefile  # pyrefly: ignore
-        
+
         pe = pefile.PE(str(exe_path))
-        
+
         # Try to get version from VS_FIXEDFILEINFO
         if hasattr(pe, "VS_FIXEDFILEINFO") and pe.VS_FIXEDFILEINFO:
             file_version = pe.VS_FIXEDFILEINFO[0]
@@ -158,11 +159,11 @@ def _get_version_with_pefile(exe_path: Path) -> Version:
             minor = file_version.FileVersionMS & 0xFFFF
             patch = (file_version.FileVersionLS >> 16) & 0xFFFF
             build = file_version.FileVersionLS & 0xFFFF
-            
+
             version = Version(f"{major}.{minor}.{patch}.{build}")
             logger.debug(f"Game version detected from PE header: {version}")
             return version
-        
+
         # Try to get version from FileInfo
         if hasattr(pe, "FileInfo") and pe.FileInfo:
             for file_info in pe.FileInfo:
@@ -182,9 +183,9 @@ def _get_version_with_pefile(exe_path: Path) -> Version:
                                     else:
                                         logger.debug(f"Game version detected from StringTable: {version}")
                                         return version
-        
+
         logger.error("Version information not found in PE file")
-        
+
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error parsing PE file with pefile: {e}")
         return Constants.NULL_VERSION
@@ -205,22 +206,22 @@ def _get_version_fallback(exe_path: Path) -> Version:
             rb"(\d+\.\d+\.\d+\.\d+)[\x00\s]*FileVersion",
             rb"(\d+\.\d+\.\d+\.\d+)[\x00\s]*ProductVersion",
         ]
-        
+
         # Read file in chunks to avoid loading entire file into memory
         chunk_size = 1024 * 1024  # 1MB chunks
         overlap = 256  # Overlap to catch versions split between chunks
-        
+
         with exe_path.open("rb") as f:
             previous_chunk = b""
-            
+
             while True:
                 chunk = f.read(chunk_size)
                 if not chunk:
                     break
-                
+
                 # Combine with overlap from previous chunk
                 search_data = previous_chunk[-overlap:] + chunk if previous_chunk else chunk
-                
+
                 # Search for version patterns
                 for pattern in version_patterns:
                     matches = re.findall(pattern, search_data)
@@ -234,9 +235,9 @@ def _get_version_fallback(exe_path: Path) -> Version:
                         except ValueError:
                             # Invalid version string format
                             continue
-                
+
                 previous_chunk = chunk
-        
+
     except Exception as e:  # noqa: BLE001
         logger.error(f"Error in fallback version detection: {e}")
         return Constants.NULL_VERSION
@@ -360,7 +361,7 @@ def remove_readonly(file_path: Path) -> None:
     """
     try:
         if platform.system() == "Windows":
-            is_readonly: int = file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY # type: ignore[reportAttributeAccessIssue]
+            is_readonly: int = file_path.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY  # type: ignore[reportAttributeAccessIssue]
             if is_readonly:
                 file_path.chmod(stat.S_IWRITE)
         else:

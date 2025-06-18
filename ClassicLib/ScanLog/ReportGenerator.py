@@ -23,16 +23,16 @@ if TYPE_CHECKING:
 
 class ReportGenerator:
     """Handles report generation and formatting for crash log analysis."""
-    
+
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
         Initialize the report generator.
-        
+
         Args:
             yamldata: Configuration data
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
-        
+
     def generate_header(self, crashlog_filename: str, autoscan_report: list[str]) -> None:
         """
         Generates a standardized header for an autoscan report and appends it
@@ -58,10 +58,15 @@ class ReportGenerator:
             ),
             autoscan_report,
         )
-        
+
     def generate_error_section(  # noqa: PLR0913
-        self, main_error: str, crashgen_version: str, version_current: Any, version_latest: Any, 
-        version_latest_vr: Any, autoscan_report: list[str]
+        self,
+        main_error: str,
+        crashgen_version: str,
+        version_current: Any,
+        version_latest: Any,
+        version_latest_vr: Any,
+        autoscan_report: list[str],
     ) -> None:
         """
         Generates and appends an error section to the autoscan report based on the provided error
@@ -98,7 +103,7 @@ class ReportGenerator:
             ),
             autoscan_report,
         )
-        
+
     @staticmethod
     def generate_suspect_section_header(autoscan_report: list[str]) -> None:
         """
@@ -124,7 +129,7 @@ class ReportGenerator:
             ),
             autoscan_report,
         )
-        
+
     @staticmethod
     def generate_suspect_found_footer(found_suspect: bool, autoscan_report: list[str]) -> None:
         """
@@ -159,7 +164,7 @@ class ReportGenerator:
                 ),
                 autoscan_report,
             )
-            
+
     @staticmethod
     def generate_settings_section_header(autoscan_report: list[str]) -> None:
         """
@@ -184,7 +189,7 @@ class ReportGenerator:
             ),
             autoscan_report,
         )
-        
+
     @staticmethod
     def generate_mod_check_header(check_type: str, autoscan_report: list[str]) -> None:
         """
@@ -208,7 +213,7 @@ class ReportGenerator:
             ),
             autoscan_report,
         )
-        
+
     @staticmethod
     def generate_plugin_suspect_header(autoscan_report: list[str]) -> None:
         """
@@ -233,7 +238,7 @@ class ReportGenerator:
             ),
             autoscan_report,
         )
-        
+
     @staticmethod
     def generate_formid_section_header(autoscan_report: list[str]) -> None:
         """
@@ -251,7 +256,7 @@ class ReportGenerator:
             None
         """
         append_or_extend(("\n# LIST OF (POSSIBLE) FORM ID SUSPECTS #\n",), autoscan_report)
-        
+
     @staticmethod
     def generate_record_section_header(autoscan_report: list[str]) -> None:
         """
@@ -266,7 +271,7 @@ class ReportGenerator:
             None
         """
         append_or_extend(("\n# LIST OF DETECTED (NAMED) RECORDS #\n",), autoscan_report)
-        
+
     def generate_footer(self, autoscan_report: list[str]) -> None:
         """
         Generates and appends or extends footer text to the autoscan report.
@@ -285,15 +290,11 @@ class ReportGenerator:
         """
         if GlobalRegistry.get_game().replace(" ", "") == "Fallout4":
             append_or_extend(self.yamldata.autoscan_text, autoscan_report)
-        append_or_extend(
-            f"{self.yamldata.classic_version} | {self.yamldata.classic_version_date} | END OF AUTOSCAN \n", 
-            autoscan_report
-        )
-        
+        append_or_extend(f"{self.yamldata.classic_version} | {self.yamldata.classic_version_date} | END OF AUTOSCAN \n", autoscan_report)
+
     @staticmethod
     def generate_plugin_limit_warning(
-            trigger_plugin_limit: bool, trigger_limit_check_disabled: bool,
-        trigger_plugins_loaded: bool, autoscan_report: list[str]
+        trigger_plugin_limit: bool, trigger_limit_check_disabled: bool, trigger_plugins_loaded: bool, autoscan_report: list[str]
     ) -> None:
         """
         Provides a utility method to generate warnings related to plugin limit conditions during an autoscan process.
@@ -312,8 +313,7 @@ class ReportGenerator:
         """
         if trigger_plugin_limit and not trigger_limit_check_disabled and trigger_plugins_loaded:
             append_or_extend(
-                ("# 💀 CRITICAL : THE '[FF]' PLUGIN PREFIX MEANS YOU REACHED THE PLUGIN LIMIT OF 254 PLUGINS # \n",), 
-                autoscan_report
+                ("# 💀 CRITICAL : THE '[FF]' PLUGIN PREFIX MEANS YOU REACHED THE PLUGIN LIMIT OF 254 PLUGINS # \n",), autoscan_report
             )
         elif trigger_plugin_limit and trigger_limit_check_disabled and trigger_plugins_loaded:
             append_or_extend(
@@ -324,7 +324,7 @@ class ReportGenerator:
                 ),
                 autoscan_report,
             )
-            
+
     @staticmethod
     def generate_plugins_loading_failure_message() -> tuple[str, ...]:
         """

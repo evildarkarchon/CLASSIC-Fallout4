@@ -83,12 +83,13 @@ class DocumentsPathManager:
         """Find the Windows documents path using the registry."""
         # Initialize with default value first
         import winreg
+
         documents_path: Path = Path.home() / "Documents"
 
         try:
             # Open the registry key to get the user's documents path
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key: # type: ignore[reportAttributeAccessIssue]
-                documents_path = Path(winreg.QueryValueEx(key, "Personal")[0]) # type: ignore[reportAttributeAccessIssue]
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:  # type: ignore[reportAttributeAccessIssue]
+                documents_path = Path(winreg.QueryValueEx(key, "Personal")[0])  # type: ignore[reportAttributeAccessIssue]
         except (OSError, UnboundLocalError):
             # Fallback to a default path if registry key is not found
             pass  # We already initialized documents_path with the default value

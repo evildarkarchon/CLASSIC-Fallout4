@@ -19,23 +19,23 @@ from ClassicLib.Logger import logger
 
 class AsyncDatabasePool:
     """Manages a pool of async database connections for FormID lookups."""
-    
+
     def __init__(self, max_connections: int = 5) -> None:
         """Initialize the database connection pool."""
         self.max_connections = max_connections
         self.connections: dict[Path, aiosqlite.Connection] = {}
         self.query_cache: dict[tuple[str, str], str] = {}
         self._lock = asyncio.Lock()
-        
+
     async def __aenter__(self) -> "AsyncDatabasePool":
         """Async context manager entry."""
         await self.initialize()
         return self
-        
+
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Async context manager exit."""
         await self.close()
-        
+
     async def initialize(self) -> None:
         """
         Initializes asynchronous database connections.
@@ -61,14 +61,14 @@ class AsyncDatabasePool:
                         logger.debug(f"Opened async connection to {db_path}")
                     except (OSError, aiosqlite.Error) as e:
                         logger.error(f"Failed to open database {db_path}: {e}")
-                        
+
     async def close(self) -> None:
         """Close all database connections."""
         async with self._lock:
             for conn in self.connections.values():
                 await conn.close()
             self.connections.clear()
-            
+
     async def get_entry(self, formid: str, plugin: str) -> str | None:
         """
         Fetch a specific entry from the database based on the given form ID and plugin name.
@@ -97,11 +97,11 @@ class AsyncDatabasePool:
         cache_key = (formid, plugin)
         if cache_key in self.query_cache:
             return self.query_cache[cache_key]
-            
+
         # Query databases
         game_table = GlobalRegistry.get_game()
         query = f"SELECT entry FROM {game_table} WHERE formid=? AND plugin=? COLLATE nocase"
-        
+
         for db_path, conn in self.connections.items():
             try:
                 async with conn.execute(query, (formid, plugin)) as cursor:
@@ -112,7 +112,7 @@ class AsyncDatabasePool:
                         return entry
             except (aiosqlite.Error, OSError) as e:
                 logger.error(f"Database query error in {db_path}: {e}")
-                
+
         return None
 
 
@@ -137,7 +137,7 @@ async def read_file_async(file_path: Path) -> list[str]:
         Raised if the file's content cannot be decoded using the specified encoding.
     """
     try:
-        async with aiofiles.open(file_path, encoding='utf-8', errors='ignore') as f:
+        async with aiofiles.open(file_path, encoding="utf-8", errors="ignore") as f:
             content = await f.read()
             return content.splitlines()
     except (OSError, UnicodeDecodeError) as e:
@@ -162,7 +162,7 @@ async def write_file_async(file_path: Path, content: str) -> None:
         specified encoding.
     """
     try:
-        async with aiofiles.open(file_path, mode='w', encoding='utf-8', errors='ignore') as f:
+        async with aiofiles.open(file_path, mode="w", encoding="utf-8", errors="ignore") as f:
             await f.write(content)
     except (OSError, UnicodeEncodeError) as e:
         logger.error(f"Error writing {file_path}: {e}")
@@ -184,23 +184,23 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
         strings representing the content of each log file.
     """
     cache: dict[str, list[str]] = {}
-    
+
     async def load_single_log(file_path: Path) -> tuple[str, list[str]]:
         """Load a single log file."""
         inner_lines = await read_file_async(file_path)
         return file_path.name, inner_lines
-        
+
     # Load all logs concurrently
     tasks = [load_single_log(log_path) for log_path in crashlog_list]
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     for result in results:
         if isinstance(result, BaseException):
             logger.error(f"Failed to load log: {result}")
         else:
             name, lines = result
             cache[name] = lines
-            
+
     return cache
 
 
@@ -227,18 +227,20 @@ async def batch_file_operations(operations: list[tuple[str, Path, Any]]) -> None
     Returns:
     None
     """
+
     async def execute_operation(op_type: str, path: Path, data: Any) -> list[str] | None:
         """Execute a single file operation."""
-        if op_type == 'read':
+        if op_type == "read":
             return await read_file_async(path)
-        if op_type == 'write':
+        if op_type == "write":
             return await write_file_async(path, data)
-        if op_type == 'move' and isinstance(data, Path):
+        if op_type == "move" and isinstance(data, Path):
             # Use asyncio's thread pool for blocking operations
             await asyncio.to_thread(path.rename, data)
             return None
-        if op_type == 'copy' and isinstance(data, Path):
+        if op_type == "copy" and isinstance(data, Path):
             import shutil
+
             await asyncio.to_thread(shutil.copy2, path, data)
             return None
         return None

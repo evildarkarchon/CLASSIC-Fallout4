@@ -85,7 +85,9 @@ def game_path_find() -> None:
         raise TypeError
 
     if not xse_file or not Path(cast("str", xse_file)).is_file():
-        msg_error(f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n    After that, try running CLASSIC again! \n-----\n")
+        msg_error(
+            f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n    After that, try running CLASSIC again! \n-----\n"
+        )
         return
 
     with open_file_with_encoding(cast("str", xse_file)) as LOG_Check:

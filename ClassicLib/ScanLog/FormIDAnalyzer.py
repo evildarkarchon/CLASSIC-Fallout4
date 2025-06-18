@@ -26,11 +26,11 @@ if TYPE_CHECKING:
 
 class FormIDAnalyzer:
     """Handles FormID analysis and lookup operations."""
-    
+
     def __init__(self, yamldata: "ClassicScanLogsInfo", show_formid_values: bool, formid_db_exists: bool) -> None:
         """
         Initialize the FormID analyzer.
-        
+
         Args:
             yamldata: Configuration data
             show_formid_values: Whether to show FormID values
@@ -39,7 +39,7 @@ class FormIDAnalyzer:
         self.yamldata: ClassicScanLogsInfo = yamldata
         self.show_formid_values: bool = show_formid_values
         self.formid_db_exists: bool = formid_db_exists
-        
+
         # Pattern to match FormID format in crash logs (cached)
         pattern_key = "formid_pattern"
         if pattern_key not in _PATTERN_CACHE:
@@ -48,7 +48,7 @@ class FormIDAnalyzer:
                 re.IGNORECASE,
             )
         self.formid_pattern = _PATTERN_CACHE[pattern_key]
-        
+
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
         """
         Extracts Form IDs from a given call stack.
@@ -68,10 +68,10 @@ class FormIDAnalyzer:
                 that meet the criteria.
         """
         formids_matches: list[str] = []
-        
+
         if not segment_callstack:
             return formids_matches
-            
+
         for line in segment_callstack:
             match: re.Match[str] | None = self.formid_pattern.search(line)
             if match:
@@ -79,12 +79,10 @@ class FormIDAnalyzer:
                 # Skip if it starts with FF (plugin limit)
                 if not formid_id.startswith("FF"):
                     formids_matches.append(f"Form ID: {formid_id}")
-                    
+
         return formids_matches
-        
-    def formid_match(
-        self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]
-    ) -> None:
+
+    def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
         """
         Processes and appends reports based on Form ID matches retrieved from crash logs and a scan report.
 
@@ -111,20 +109,20 @@ class FormIDAnalyzer:
                 formid_split: list[str] | None = formid_full.split(": ", 1)
                 if len(formid_split) < 2:
                     continue
-                    
+
                 for plugin, plugin_id in crashlog_plugins.items():
                     if plugin_id != formid_split[1][:2]:
                         continue
-                        
+
                     if self.show_formid_values and self.formid_db_exists:
                         report: str | None = get_entry(formid_split[1][2:], plugin)
                         if report:
                             append_or_extend(f"- {formid_full} | [{plugin}] | {report} | {count}\n", autoscan_report)
                             continue
-                            
+
                     append_or_extend(f"- {formid_full} | [{plugin}] | {count}\n", autoscan_report)
                     break
-                    
+
             append_or_extend(
                 (
                     "\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
@@ -135,7 +133,7 @@ class FormIDAnalyzer:
             )
         else:
             append_or_extend("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n", autoscan_report)
-            
+
     def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
         """
         Look up the value associated with a given form ID and plugin in the database.
