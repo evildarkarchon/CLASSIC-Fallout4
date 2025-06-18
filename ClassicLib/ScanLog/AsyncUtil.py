@@ -187,8 +187,8 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
     
     async def load_single_log(file_path: Path) -> tuple[str, list[str]]:
         """Load a single log file."""
-        lines = await read_file_async(file_path)
-        return file_path.name, lines
+        inner_lines = await read_file_async(file_path)
+        return file_path.name, inner_lines
         
     # Load all logs concurrently
     tasks = [load_single_log(log_path) for log_path in crashlog_list]
@@ -227,7 +227,7 @@ async def batch_file_operations(operations: list[tuple[str, Path, Any]]) -> None
     Returns:
     None
     """
-    async def execute_operation(op_type: str, path: Path, data: Any) -> None:
+    async def execute_operation(op_type: str, path: Path, data: Any) -> list[str] | None:
         """Execute a single file operation."""
         if op_type == 'read':
             return await read_file_async(path)

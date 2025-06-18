@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# noinspection PyProtectedMember
 from bs4 import BeautifulSoup, PageElement
 
 from ClassicLib import GlobalRegistry

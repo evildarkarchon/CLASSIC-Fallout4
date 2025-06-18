@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 # Check for PySide6 availability
 try:
+    # noinspection PyUnresolvedReferences
     import PySide6
     if not util.find_spec("PySide6.QtCore") or not util.find_spec("PySide6.QtWidgets"):
         raise ImportError("PySide6.QtCore or PySide6.QtWidgets not found")  # noqa: TRY301
@@ -19,6 +20,7 @@ except ImportError:
 
 # Check for tqdm availability
 try:
+    # noinspection PyUnresolvedReferences
     import tqdm
     HAS_TQDM = True
     TQDM_VERSION = tqdm.__version__
