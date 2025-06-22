@@ -64,11 +64,11 @@ python install_requirements.py --all
   - `ScanLog/`: Async log scanning components
   - `ScanGame/`: Game file analysis
   - `Interface/`: GUI components
-  - `Globals.py`: Centralized configuration registry
+  - `GlobalRegistry.py`: Centralized configuration registry
 
 ### Key Patterns
 1. **Async Pipeline**: Heavy use of async/await for I/O operations (aiohttp, aiofiles)
-2. **Global Registry**: `ClassicLib/Globals.py` manages all configuration state
+2. **Global Registry**: `ClassicLib/GlobalRegistry.py` manages all configuration state
 3. **Message Handler**: Abstracted messaging system for GUI/CLI compatibility
 4. **YAML Configuration**: Settings and data stored in YAML format with caching
 5. **FormID Database**: Cached database for fast mod lookups
