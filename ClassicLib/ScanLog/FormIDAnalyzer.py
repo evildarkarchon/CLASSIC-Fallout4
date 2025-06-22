@@ -106,7 +106,7 @@ class FormIDAnalyzer:
         if formids_matches:
             formids_found: dict[str, int] = dict(Counter(sorted(formids_matches)))
             for formid_full, count in formids_found.items():
-                formid_split: list[str] | None = formid_full.split(": ", 1)
+                formid_split: list[str] = formid_full.split(": ", 1)
                 if len(formid_split) < 2:
                     continue
 
@@ -153,5 +153,5 @@ class FormIDAnalyzer:
         """
         if not self.formid_db_exists:
             return None
-            
+
         return get_entry(formid, plugin)

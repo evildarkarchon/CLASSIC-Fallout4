@@ -8,8 +8,6 @@ import iniparse
 import tomlkit
 from iniparse import configparser
 from tomlkit import TOMLDocument
-from tomlkit.items import Item
-from tomlkit.items import Table as TomlkitTable
 
 from ClassicLib import GlobalRegistry, msg_error
 from ClassicLib.Constants import YAML
@@ -428,7 +426,7 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
     If a new value is provided, the function updates the key with the given value. The current value
     of the key is returned, whether updated or not. If the specified section or key does not exist,
     the function returns None. The function handles file encoding and ensures the integrity of the
-    TOML’s structure during modifications.
+    TOML's structure during modifications.
 
     Args:
         toml_path (Path): Path to the TOML file to be modified.
@@ -440,7 +438,7 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
     Returns:
         Any | None: The current value of the key (either the existing or updated value if changed).
         Returns None if the specified section or key does not exist.
-    """  # noqa: RUF002
+    """
 
     file_bytes: bytes = toml_path.read_bytes()
     file_encoding: str = chardet.detect(file_bytes)["encoding"] or "utf-8"
@@ -450,21 +448,21 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
     if section not in data:
         return None
 
-    section_item: Item = data[section]  # pyrefly: ignore
+    section_item: Any = data[section]
     # section_item can be an Item or Container
-    # Ensure section_item is a tomlkit.Table (which is dict-like)
+    # Ensure section_item is a dict-like object (table) that supports key access
     # before checking for the key or trying to access section_item[key].
-    if not isinstance(section_item, TomlkitTable):
-        # If the section exists but is not a table, it cannot contain the key as expected.
+    if not hasattr(section_item, "__getitem__") or not hasattr(section_item, "__contains__"):
+        # If the section exists but is not dict-like, it cannot contain the key as expected.
         return None
 
-    if key not in section_item:  # Now section_item is known to be a Table.
+    if key not in section_item:  # Now section_item is known to be dict-like.
         # The key does not exist in the table.
         return None
 
     # If a new value is provided, update the key and return it
     if new_value is not None:
-        section_item[key] = new_value  # section_item is a Table, so assignment is valid.
+        section_item[key] = new_value  # section_item is dict-like, so assignment is valid.
         if not TEST_MODE:
             with toml_path.open("w", encoding=file_encoding, newline="") as toml_file:
                 toml_file.write(data.as_string())

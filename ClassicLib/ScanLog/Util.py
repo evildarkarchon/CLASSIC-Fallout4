@@ -122,7 +122,7 @@ def is_valid_custom_scan_path(path: Path | str) -> bool:
         return False
 
     # Define restricted paths (hard-coded directories)
-    cwd = cast("Path", GlobalRegistry.get_local_dir()).resolve()
+    cwd: Path = Path(GlobalRegistry.get_local_dir()).resolve()
     restricted_paths = [
         cwd / "Crash Logs",
         cwd / "Crash Logs" / "Pastebin",
@@ -131,6 +131,8 @@ def is_valid_custom_scan_path(path: Path | str) -> bool:
 
     # Check if the path matches any restricted path
     for restricted in restricted_paths:
+        if restricted is None:
+            continue
         try:
             if abs_path == restricted or abs_path in restricted.parents:
                 logger.warning(f"Attempted to set restricted path as custom scan directory: {path}")

@@ -89,3 +89,4 @@ python install_requirements.py --all
 3. Run `mypy .` to check types
 4. Run `pytest` to ensure tests pass
 5. Build with `pyinstaller` when ready to test executables
+

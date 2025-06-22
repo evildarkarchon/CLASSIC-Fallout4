@@ -12,7 +12,7 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, cast
 
 from CLASSIC_Main import initialize
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_progress_context
@@ -47,12 +47,12 @@ class ClassicScanLogs:
         msg_info("REFORMATTING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
 
         # Load settings
-        self.remove_list: tuple[str] | tuple[Literal[""]] = yaml_settings(tuple[str], YAML.Main, "exclude_log_records") or ("",)
+        self.remove_list: tuple[str] = yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
 
         # Use async file I/O for better performance
         try:
             # noinspection PyUnresolvedReferences
-            from ClassicLib.ScanLog.AsyncFileIO import crashlogs_reformat_with_async
+            from ClassicLib.ScanLog.AsyncFileIO import crashlogs_reformat_with_async  # noqa: PLC0415
 
             crashlogs_reformat_with_async(self.crashlog_list, self.remove_list)
             logger.debug("Used async file I/O for crash log reformatting")
@@ -133,8 +133,8 @@ class ClassicScanLogs:
         Returns:
             Tuple containing file path, report, failure status, and statistics
         """
-        from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer
-        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+        from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer  # noqa: PLC0415
+        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: PLC0415
 
         # Process most of the log synchronously (this is still fast)
         result = self.orchestrator.process_crash_log(crashlog_file)
@@ -197,10 +197,10 @@ class ClassicScanLogs:
             return False
 
         try:
-            import aiosqlite  # noqa: F401
+            import aiosqlite  # noqa: F401, PLC0415
 
-            from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer  # noqa: F401
-            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401
+            from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer  # noqa: F401, PLC0415
+            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401, PLC0415
         except ImportError:
             logger.debug("Async database dependencies not available")
             return False
@@ -227,10 +227,10 @@ class ClassicScanLogs:
             return False
 
         try:
-            import aiofiles  # noqa: F401
+            import aiofiles  # noqa: F401, PLC0415
 
-            from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline  # noqa: F401
-            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401
+            from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline  # noqa: F401, PLC0415
+            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401, PLC0415
         except ImportError as e:
             logger.debug(f"Async pipeline dependencies not available: {e}")
             return False
@@ -295,7 +295,7 @@ async def crashlogs_scan_async(scanner: ClassicScanLogs) -> None:
     Args:
         scanner: ClassicScanLogs instance with configuration
     """
-    from ClassicLib.ScanLog.AsyncPipeline import AsyncPerformanceMonitor, run_async_crash_log_scan
+    from ClassicLib.ScanLog.AsyncPipeline import AsyncPerformanceMonitor, run_async_crash_log_scan  # noqa: PLC0415
 
     logger.info("Using async pipeline for crash log processing")
     yamldata: ClassicScanLogsInfo = scanner.yamldata
@@ -356,16 +356,13 @@ def crashlogs_scan_threaded(scanner: ClassicScanLogs) -> None:
     total_logs = len(scanner.crashlog_list)
     with msg_progress_context("Processing Crash Logs", total_logs) as progress, ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all tasks - use async DB operations if available
+        futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]]
         if scanner.use_async_db:
             logger.debug("Using async database operations for FormID lookups")
-            futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
-                executor.submit(scanner.process_crashlog_with_async_db, crashlog_file) for crashlog_file in scanner.crashlog_list
-            ]
+            futures = [executor.submit(scanner.process_crashlog_with_async_db, crashlog_file) for crashlog_file in scanner.crashlog_list]
         else:
             logger.debug("Using synchronous database operations")
-            futures: list[Future[tuple[Path, list[str], bool, Counter[str]]]] = [
-                executor.submit(scanner.process_crashlog, crashlog_file) for crashlog_file in scanner.crashlog_list
-            ]
+            futures = [executor.submit(scanner.process_crashlog, crashlog_file) for crashlog_file in scanner.crashlog_list]
 
         # Process results as they complete
         for future in as_completed(futures):
@@ -503,12 +500,12 @@ if __name__ == "__main__":
         and str(args.mods_folder_path) != classic_settings(str, "MODS Folder Path")
     ):
         yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", str(args.mods_folder_path.resolve()))
-        
+
     if isinstance(args.simplify_logs, bool) and args.simplify_logs != classic_settings(bool, "Simplify Logs"):
         yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Simplify Logs", args.simplify_logs)
 
     if isinstance(args.disable_progress, bool) and args.disable_progress != classic_settings(bool, "Disable CLI Progress"):
         yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Disable CLI Progress", args.disable_progress)
-        
+
     crashlogs_scan()
     os.system("pause")

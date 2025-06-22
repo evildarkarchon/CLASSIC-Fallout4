@@ -48,9 +48,9 @@ def check_log_errors(folder_path: Path | str) -> str:
         folder_path = Path(folder_path)
 
     # Get YAML settings
-    catch_errors: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "catch_log_errors"))
-    ignore_files: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_files"))
-    ignore_errors: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_errors"))
+    catch_errors: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "catch_log_errors") or [])
+    ignore_files: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_files") or [])
+    ignore_errors: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_errors") or [])
 
     error_report: list[str] = []
 
@@ -225,7 +225,7 @@ def scan_mods_unpacked() -> str:
     xse_acronym, xse_scriptfiles, mod_path = get_scan_settings()
 
     # Setup paths
-    backup_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup/Cleaned Files"
+    backup_path: Path = Path(GlobalRegistry.get_local_dir()) / "CLASSIC Backup/Cleaned Files"
     if not TEST_MODE:
         backup_path.mkdir(parents=True, exist_ok=True)
 

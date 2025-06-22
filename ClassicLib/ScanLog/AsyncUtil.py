@@ -187,8 +187,8 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
 
     async def load_single_log(file_path: Path) -> tuple[str, list[str]]:
         """Load a single log file."""
-        inner_lines = await read_file_async(file_path)
-        return file_path.name, inner_lines
+        lines = await read_file_async(file_path)
+        return file_path.name, lines
 
     # Load all logs concurrently
     tasks = [load_single_log(log_path) for log_path in crashlog_list]
@@ -197,7 +197,7 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
     for result in results:
         if isinstance(result, BaseException):
             logger.error(f"Failed to load log: {result}")
-        else:
+        elif isinstance(result, tuple):
             name, lines = result
             cache[name] = lines
 
@@ -228,22 +228,19 @@ async def batch_file_operations(operations: list[tuple[str, Path, Any]]) -> None
     None
     """
 
-    async def execute_operation(op_type: str, path: Path, data: Any) -> list[str] | None:
+    async def execute_operation(op_type: str, path: Path, data: Any) -> None:
         """Execute a single file operation."""
         if op_type == "read":
-            return await read_file_async(path)
-        if op_type == "write":
-            return await write_file_async(path, data)
-        if op_type == "move" and isinstance(data, Path):
+            await read_file_async(path)
+        elif op_type == "write":
+            await write_file_async(path, data)
+        elif op_type == "move" and isinstance(data, Path):
             # Use asyncio's thread pool for blocking operations
             await asyncio.to_thread(path.rename, data)
-            return None
-        if op_type == "copy" and isinstance(data, Path):
+        elif op_type == "copy" and isinstance(data, Path):
             import shutil
 
             await asyncio.to_thread(shutil.copy2, path, data)
-            return None
-        return None
-            
+
     tasks = [execute_operation(op_type, path, data) for op_type, path, data in operations]
     await asyncio.gather(*tasks, return_exceptions=True)

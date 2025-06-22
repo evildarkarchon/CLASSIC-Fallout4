@@ -230,7 +230,7 @@ def _extract_xse_version(xse_log_file: str, default_version: str) -> str | None:
     try:
         with open_file_with_encoding(xse_log_file) as xse_log:
             xse_data: list[str] = xse_log.readlines()
-            xse_data_lower: list[str] = normalize_list(xse_data)
+            xse_data_lower = normalize_list(xse_data)
     except FileNotFoundError:
         pass
 
@@ -365,7 +365,7 @@ def validate_settings_paths() -> None:
     Currently validates:
     - SCAN Custom Path: Used for custom crash log scanning directories
     """
-    from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+    from ClassicLib.ScanLog.Util import is_valid_custom_scan_path  # noqa: PLC0415
 
     # Validate custom scan path
     custom_scan_path: str | None = classic_settings(str, "SCAN Custom Path")
@@ -417,7 +417,7 @@ def initialize(is_gui: bool = False) -> None:
         GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(sys.executable).parent)
     else:
         GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(__file__).parent)
-    
+
     # Validate settings after initialization
     validate_settings_paths()
 

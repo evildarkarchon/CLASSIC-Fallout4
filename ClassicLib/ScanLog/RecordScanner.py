@@ -9,7 +9,7 @@ This module handles named record detection including:
 """
 
 from collections import Counter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.Util import append_or_extend
@@ -136,8 +136,8 @@ class RecordScanner:
             list[str]: A list of strings containing the matching records identified from
             the segment callstack.
         """
-        records_matches = []
-
+        records_matches: list[Any] = []
+        
         # Constants
         rsp_marker = "[RSP+"
         rsp_offset = 30

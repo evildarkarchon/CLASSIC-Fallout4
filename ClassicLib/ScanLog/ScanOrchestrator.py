@@ -10,7 +10,7 @@ This module coordinates all crash log scanning components:
 
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 from packaging.version import Version
 
@@ -59,7 +59,7 @@ class ScanOrchestrator:
 
         # Initialize all modules
         self.plugin_analyzer = PluginAnalyzer(yamldata)
-        self.formid_analyzer = FormIDAnalyzer(yamldata, show_formid_values, formid_db_exists)
+        self.formid_analyzer = FormIDAnalyzer(yamldata, show_formid_values or False, formid_db_exists)
         self.suspect_scanner = SuspectScanner(yamldata)
         self.record_scanner = RecordScanner(yamldata)
         self.settings_scanner = SettingsScanner(yamldata)
@@ -94,7 +94,7 @@ class ScanOrchestrator:
 
         # Parse crash log segments
         (crashlog_gameversion, crashlog_crashgen, crashlog_mainerror, segments) = find_segments(
-            crash_data, self.yamldata.crashgen_name, self.yamldata.xse_acronym, self.game_root_name
+            crash_data, self.yamldata.crashgen_name, self.yamldata.xse_acronym, self.game_root_name or ""
         )
 
         # Unpack segments
@@ -167,7 +167,11 @@ class ScanOrchestrator:
 
         # Check GPU
         gpu_info = get_gpu_info(segment_system)
-        crashlog_gpu_rival = gpu_info["rival"]
+        rival_value = gpu_info["rival"]
+        # Ensure type compatibility for mod detection
+        crashlog_gpu_rival: Literal["nvidia", "amd"] | None = (
+            cast("Literal['nvidia', 'amd']", rival_value) if rival_value in ("nvidia", "amd") else None
+        )
 
         # Process plugins
         crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded = self._process_plugins(
@@ -223,7 +227,7 @@ class ScanOrchestrator:
         autoscan_report: list[str],
     ) -> tuple[dict[str, str], bool, bool, bool]:
         """Process plugin information from crash log."""
-        crashlog_plugins = {}
+        plugins: dict[str, str] = {}
         trigger_plugin_limit = False
         trigger_limit_check_disabled = False
         trigger_plugins_loaded = False
@@ -237,33 +241,33 @@ class ScanOrchestrator:
         loadorder_path = Path("loadorder.txt")
         if loadorder_path.exists():
             loadorder_plugins, trigger_plugins_loaded = self.plugin_analyzer.loadorder_scan_loadorder_txt(autoscan_report)
-            crashlog_plugins = crashlog_plugins | loadorder_plugins
+            plugins = plugins | loadorder_plugins
         else:
             log_plugins, plugin_limit, limit_check_disabled = self.plugin_analyzer.loadorder_scan_log(
                 segment_plugins, game_version, version_current
             )
-            crashlog_plugins = crashlog_plugins | log_plugins
+            plugins = plugins | log_plugins
             trigger_plugin_limit = plugin_limit
             trigger_limit_check_disabled = limit_check_disabled
 
         # Add XSE modules as DLLs
         # Convert to set for O(1) lookups instead of O(n*m) nested loops
-        existing_plugin_names = set(crashlog_plugins.keys())
+        existing_plugin_names = set(plugins.keys())
         for elem in xsemodules:
             # Check if elem is a substring of any existing plugin
             if not any(elem in plugin_name for plugin_name in existing_plugin_names):
-                crashlog_plugins[elem] = "DLL"
+                plugins[elem] = "DLL"
 
         # Add vulkan if found
         for elem in segment_allmodules if segment_allmodules else []:
             if "vulkan" in elem.lower():
                 elem_parts: list[str] = elem.strip().split(" ", 1)
-                crashlog_plugins.update({elem_parts[0]: "DLL"})
+                plugins.update({elem_parts[0]: "DLL"})
 
         # Filter ignored plugins
-        crashlog_plugins: dict[str, str] = self.plugin_analyzer.filter_ignored_plugins(crashlog_plugins)
+        plugins = self.plugin_analyzer.filter_ignored_plugins(plugins)
 
-        return crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded
+        return plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded
 
     def _run_suspect_scanning(self, crashlog_mainerror: str, segment_callstack: list[str], autoscan_report: list[str]) -> None:
         """Run suspect scanning on crash log."""
@@ -426,10 +430,10 @@ class ScanOrchestrator:
         # Store FormID data for potential async processing
         self.last_formids = formids_matches
         self.last_plugins = crashlog_plugins
-        
+
         self.formid_analyzer.formid_match(formids_matches, crashlog_plugins, autoscan_report)
 
         # Record scanning
         self.report_generator.generate_record_section_header(autoscan_report)
-        records_matches = []
+        records_matches: list[str] = []
         self.record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)

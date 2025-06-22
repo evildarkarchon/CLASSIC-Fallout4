@@ -5,3 +5,5 @@
 4. ~~Add button to open the main log directory in the GUI.~~
 5. Add a tab to the GUI for managing logs, including deleting logs and viewing them.
 6. Add functionality to select multiple custom scan directories.
+7. Look into fallback methods for finding the documents path.
+8. Look into the config file not overriding the value for the documents path.

@@ -92,7 +92,7 @@ class AsyncScanOrchestrator(ScanOrchestrator):
                 if isinstance(result, Exception):
                     # Create error result
                     results.append((Path("error.log"), [f"Error: {result}"], True, Counter(scanned=0, incomplete=0, failed=1)))
-                else:
+                elif isinstance(result, tuple):
                     results.append(result)
 
         return results
@@ -186,6 +186,6 @@ async def write_reports_batch_async(reports: list[tuple[Path, list[str], bool]])
 
         # Create write task
         write_tasks.append(write_file_async(autoscan_path, autoscan_output))
-        
+
     # Execute all writes concurrently
     await asyncio.gather(*write_tasks, return_exceptions=True)

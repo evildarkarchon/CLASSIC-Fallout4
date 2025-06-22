@@ -90,7 +90,7 @@ class AsyncFormIDAnalyzer:
         lookup_tasks: list[tuple[str, str, str, int]] = []
 
         for formid_full, count in formids_found.items():
-            formid_split: list[str] | None = formid_full.split(": ", 1)
+            formid_split: list[str] = formid_full.split(": ", 1)
             if len(formid_split) < 2:
                 continue
 
