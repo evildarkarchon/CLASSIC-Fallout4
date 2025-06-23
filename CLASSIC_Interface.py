@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from CLASSIC_Main import initialize, main_generate_required
+from ClassicLib.Main import initialize, main_generate_required
 from CLASSIC_ScanGame import game_files_manage, write_combined_results
 from CLASSIC_ScanLogs import crashlogs_scan
 from ClassicLib import GlobalRegistry

@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Literal, cast
 
-from CLASSIC_Main import initialize, main_generate_required
+from ClassicLib.Main import initialize, main_generate_required
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger

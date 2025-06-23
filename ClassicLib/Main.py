@@ -41,7 +41,7 @@ def classic_generate_files() -> None:
             or the local YAML file is not of type `str`.
     """
     """Generate `CLASSIC Ignore.yaml` and `CLASSIC Data/CLASSIC <GAME> Local.yaml`."""
-    ignore_path = Path("CLASSIC Ignore.yaml")
+    ignore_path = Path("../CLASSIC Ignore.yaml")
     if not ignore_path.exists():
         default_ignorefile = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
         if not isinstance(default_ignorefile, str):
@@ -407,7 +407,7 @@ def initialize(is_gui: bool = False) -> None:
     init_message_handler(parent=None, is_gui_mode=is_gui)
 
     yaml_cache: Any = GlobalRegistry.get_yaml_cache()
-    GlobalRegistry.register(GlobalRegistry.Keys.GUI_MODE, is_gui)
+    GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, is_gui)
     # Preload static YAML files
     for store in yaml_cache.STATIC_YAML_STORES:
         path = yaml_cache.get_path_for_store(store)
