@@ -70,7 +70,8 @@ disable_error_code = [
 	"operator",       # Redundant with Pyright reportOperatorIssue
 	"attr-defined",	 # Redundant with reportAttributeAccessIssue
 	"no-redef",
-	"empty-body"
+	"empty-body",
+	"annotation-unchecked"
 ]
 
 [tool.pyright]

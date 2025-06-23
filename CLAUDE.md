@@ -58,7 +58,7 @@ python install_requirements.py --all
 ### Core Structure
 - **CLASSIC_Main.py**: Entry point, initializes the application
 - **CLASSIC_Interface.py**: GUI implementation using PySide6
-- **CLASSIC_ScanLogs.py**: Crash log scanning functionality
+- **CLASSIC_ScanLogs.py**: Crash log scanning functionality and Command Line Interface.
 - **CLASSIC_ScanGame.py**: Game file scanning functionality
 - **ClassicLib/**: Core library modules
   - `ScanLog/`: Async log scanning components
@@ -81,7 +81,7 @@ python install_requirements.py --all
 - **Main branch**: classic-next
 - The project uses both GUI (PySide6) and CLI (tqdm) interfaces - ensure compatibility
 - FormID database operations are performance-critical - use caching
-- Async operations should use the utilities in `ClassicLib/_AsyncUtils.py`
+- Async operations should use the utilities in `ClassicLib/AsyncUtil.py`
 
 ### Development Workflow
 1. Make changes following existing code patterns
