@@ -6,6 +6,7 @@ import os
 import platform
 import re
 import stat
+import sys
 from collections.abc import Iterator
 from difflib import SequenceMatcher
 from importlib import util
@@ -95,28 +96,28 @@ def _is_valid_executable_path(path: Path | None) -> bool:
 def validate_path(path: Path | str, check_write: bool = False, check_read: bool = True) -> tuple[bool, str]:
     """
     Validate that a path exists and is accessible with appropriate permissions.
-    
+
     Args:
         path: Path to validate
         check_write: Whether to check write permissions
         check_read: Whether to check read permissions
-        
+
     Returns:
         Tuple of (is_valid, error_message). If valid, error_message is empty string.
     """
     try:
         path_obj = Path(path) if not isinstance(path, Path) else path
-        
+
         # Check if the drive exists (Windows)
         if sys.platform == "win32" or platform.system() == "Windows":
             drive = path_obj.drive
             if drive and not Path(drive + "/").exists():
                 return False, f"Drive {drive} does not exist"
-        
+
         # Check if path exists
         if not path_obj.exists():
             return False, f"Path does not exist: {path_obj}"
-            
+
         # Check read permissions
         if check_read:
             try:
@@ -125,13 +126,13 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
                     list(path_obj.iterdir())
                 # For files, check if we can open for reading
                 else:
-                    with path_obj.open('rb'):
+                    with path_obj.open("rb"):
                         pass
             except PermissionError:
                 return False, f"No read permission for: {path_obj}"
             except OSError as e:
                 return False, f"Cannot access {path_obj}: {e}"
-                
+
         # Check write permissions
         if check_write:
             try:
@@ -150,9 +151,9 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
                 return False, f"No write permission for: {path_obj}"
             except OSError as e:
                 return False, f"Cannot write to {path_obj}: {e}"
-                
+
         return True, ""
-        
+
     except Exception as e:
         return False, f"Error validating path: {e}"
 
@@ -362,7 +363,7 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
     """
     if not isinstance(file_path, Path):
         file_path = Path(file_path)
-    
+
     # Validate path before attempting to read
     is_valid, error_msg = validate_path(file_path, check_write=False, check_read=True)
     if not is_valid:
@@ -372,7 +373,7 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
             raise PermissionError(error_msg)
         else:
             raise OSError(error_msg)
-    
+
     raw_data: bytes = file_path.read_bytes()
     encoding: str | None = chardet.detect(raw_data)["encoding"]
 
