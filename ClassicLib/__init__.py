@@ -4,6 +4,7 @@ This module provides core functionality that works with or without PySide6.
 GUI-specific components are available in ClassicLib.gui when PySide6 is installed.
 """
 
+from ClassicLib.compat import HAS_PYSIDE6, HAS_TQDM, check_gui_requirements
 from ClassicLib.Constants import (
     DB_PATHS,
     F4SE_VERSIONS,
@@ -32,7 +33,6 @@ from ClassicLib.GlobalRegistry import (
     register,
 )
 from ClassicLib.Logger import logger
-from ClassicLib.compat import HAS_PYSIDE6, HAS_TQDM, check_gui_requirements
 from ClassicLib.MessageHandler import (
     Message,
     MessageHandler,
@@ -85,14 +85,13 @@ from ClassicLib.YamlSettingsCache import (
 )
 
 __all__ = [
-    # Compatibility
-    "HAS_PYSIDE6",
-    "HAS_TQDM",
-    "check_gui_requirements",
     # Constants
     "DB_PATHS",
     "F4SE_VERSIONS",
     "FO4_VERSIONS",
+    # Compatibility
+    "HAS_PYSIDE6",
+    "HAS_TQDM",
     "NG_F4SE_VERSION",
     "NG_VERSION",
     "NULL_VERSION",
@@ -125,6 +124,7 @@ __all__ = [
     "append_or_extend",
     "calculate_file_hash",
     "calculate_similarity",
+    "check_gui_requirements",
     "classic_settings",
     "configure_logging",
     "crashgen_version_gen",
