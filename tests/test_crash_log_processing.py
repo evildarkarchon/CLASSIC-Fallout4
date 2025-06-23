@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from CLASSIC_ScanLogs import ClassicScanLogs, process_crashlog
+from CLASSIC_ScanLogs import ClassicScanLogs
 from ClassicLib import GlobalRegistry
 
 
@@ -69,16 +69,19 @@ def create_crashlog_file(tmp_path: Path, sample_crashlog: str) -> Path:
 class TestCrashLogProcessingIntegration:
     """Integration tests for crash log processing."""
 
-    def test_process_crashlog_integration(self, create_crashlog_file: Path) -> None:
+    def test_process_crashlog_integration(self, create_crashlog_file: Path, init_message_handler_fixture) -> None:
         """Test the full process_crashlog function with minimal mocking."""
         crash_file = create_crashlog_file
 
-        with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml, \
-                patch("CLASSIC_ScanLogs.crashlogs_get_files") as mock_get_files, \
-                patch("ClassicLib.ScanLog.Util.crashlogs_reformat"):
+        with (
+            patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml,
+            patch("ClassicLib.YamlSettingsCache.classic_settings") as mock_classic,
+            patch("CLASSIC_ScanLogs.crashlogs_get_files") as mock_get_files,
+            patch("CLASSIC_ScanLogs.crashlogs_reformat"),
+        ):
             # Setup the mock to return values needed for crash processing
             def yaml_side_effect(
-                    _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
+                _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
             ) -> dict[str, str] | dict[str, list[str]] | None | Literal["Buffout 4"] | Literal["F4SE"]:
                 if key_path == "Game_Info.CRASHGEN_LogName":
                     return "Buffout 4"
@@ -103,8 +106,8 @@ class TestCrashLogProcessingIntegration:
                 # Create scanner instance with proper mocking
                 scanner = ClassicScanLogs()
 
-                # Process the crash log
-                result = process_crashlog(scanner, crash_file)
+                # Process the crash log using the instance method
+                result = scanner.process_crashlog(crash_file)
 
                 # Verify results
                 assert result is not None
@@ -118,29 +121,30 @@ class TestCrashLogProcessingIntegration:
                 if original_game is not None:
                     GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
 
-    def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str) -> None:
+    def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str, init_message_handler_fixture) -> None:
         """Test the entire crash log scanning process."""
         # Create crash logs directory with multiple logs
         crash_dir: Path = tmp_path / "Crash Logs"
         crash_dir.mkdir(exist_ok=True)
 
         # Create multiple crash log files
+        crash_log_files = []
         for i in range(3):
             crash_file: Path = crash_dir / f"crash-2023-01-0{i + 1}-00-00-00.log"
             crash_file.write_text(sample_crashlog)
+            crash_log_files.append(crash_file)
 
         with (
             patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml,
             patch("ClassicLib.YamlSettingsCache.classic_settings") as mock_classic,
             patch("CLASSIC_ScanLogs.crashlogs_get_files") as mock_get_files,
-            patch("CLASSIC_ScanLogs.main_combined_result") as mock_main_result,
-            patch("CLASSIC_ScanLogs.game_combined_result") as mock_game_result,
+            patch("CLASSIC_ScanLogs.crashlogs_reformat"),
             patch("CLASSIC_ScanLogs.write_report_to_file"),  # Mock the write function to prevent actual file writing
         ):
             # Configure mocks
             def yaml_side_effect(
-                    _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
-            ) -> dict[str, str] | None | Literal["Buffout 4"] | Literal["F4SE"]:
+                _type_arg: str, _yaml_store: str, key_path: str, _new_value: Any = None
+            ) -> dict[str, str] | None | Literal["Buffout 4"] | Literal["F4SE"] | tuple[str, ...]:
                 if key_path == "Game_Info.CRASHGEN_LogName":
                     return "Buffout 4"
                 if key_path == "Game_Info.XSE_Acronym":
@@ -149,13 +153,13 @@ class TestCrashLogProcessingIntegration:
                     return {"problemplugin": "This plugin causes crashes."}
                 if key_path == "Crashlog_Error_Check":
                     return {"HIGH | Access violation": "EXCEPTION_ACCESS_VIOLATION"}
+                if key_path == "exclude_log_records":
+                    return ("unwanted_record",)
                 return None
 
             mock_yaml.side_effect = yaml_side_effect
             mock_classic.return_value = False  # Default value for most settings
-            mock_get_files.return_value = [crash_dir / f"crash-2023-01-0{i + 1}-00-00-00.log" for i in range(3)]
-            mock_main_result.return_value = "Main files result"
-            mock_game_result.return_value = "Game files result"
+            mock_get_files.return_value = crash_log_files  # Use our created files
 
             # Register necessary global values
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
@@ -168,8 +172,7 @@ class TestCrashLogProcessingIntegration:
                 # Process each crash log and collect results
                 results = []
                 for crash_file in scanner.crashlog_list:
-                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = process_crashlog(scanner,
-                                                                                                        crash_file)
+                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = scanner.process_crashlog(crash_file)
                     results.append(autoscan_report)
 
                 # Verify results

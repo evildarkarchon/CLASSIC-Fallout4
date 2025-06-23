@@ -77,12 +77,13 @@ class TestYamlSettingsIntegration:
             assert "problematic_mod" in mods  # type: ignore
             assert mods["problematic_mod"] == "This mod causes crashes."  # type: ignore
 
-    def test_scan_logs_settings_integration(self, create_yaml_files: Path) -> None:
+    def test_scan_logs_settings_integration(self, create_yaml_files: Path, init_message_handler_fixture) -> None:
         """Test that ClassicScanLogs properly integrates with YAML settings."""
         with (
             patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.get_path_for_store") as mock_path,
             patch("ClassicLib.GlobalRegistry.get") as mock_registry,
-            patch("CLASSIC_ScanLogs.crashlogs_get_files") as mock_get_files,
+            patch("ClassicLib.ScanLog.crashlogs_get_files") as mock_get_files,
+            patch("ClassicLib.ScanLog.crashlogs_reformat"),
         ):
             # Configure mocks
             mock_path.side_effect = lambda _: create_yaml_files / "CLASSIC Settings.yaml"
@@ -93,12 +94,14 @@ class TestYamlSettingsIntegration:
             try:
                 scanner = ClassicScanLogs()
 
-                # Check that settings were loaded
-                assert hasattr(scanner, "xse_acronym")
-
-                # Check YAML mod data is loaded
+                # Check that settings were loaded through yamldata
                 assert hasattr(scanner, "yamldata")
                 assert scanner.yamldata is not None
+
+                # Check that orchestrator was created
+                assert hasattr(scanner, "orchestrator")
+                assert scanner.orchestrator is not None
+
             except Exception as e:  # noqa: BLE001
                 pytest.skip(f"ClassicScanLogs initialization failed: {e}")
 

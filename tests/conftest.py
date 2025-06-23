@@ -18,6 +18,18 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
+from ClassicLib.MessageHandler import init_message_handler
+
+
+@pytest.fixture
+def init_message_handler_fixture() -> Generator[None, None, None]:
+    """Initialize the MessageHandler for tests that need it."""
+    handler = init_message_handler(parent=None, is_gui_mode=False)
+    yield
+    # Clear the handler after the test
+    import ClassicLib.MessageHandler
+
+    ClassicLib.MessageHandler._message_handler = None
 
 
 @pytest.fixture
