@@ -18,7 +18,7 @@ class Keys:
     GAME_PATH_GUI = "game_path_gui"
     GAME_PATH = "game_path"
     DOCS_PATH = "docs_path"
-    GUI_MODE = "gui_mode"
+    IS_GUI_MODE = "is_gui_mode"
     OPEN_FILE_FUNC = "open_file_with_encoding"
     VR = "gamevars_vr"
     GAME = "gamevars_game"
@@ -81,7 +81,7 @@ def get_game_path_gui() -> Any:
 
 def is_gui_mode() -> bool:
     """Check if the application is running in GUI mode."""
-    return get(Keys.GUI_MODE) or False
+    return get(Keys.IS_GUI_MODE) or False
 
 
 def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore"):  # noqa: ANN201

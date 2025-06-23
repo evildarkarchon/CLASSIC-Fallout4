@@ -15,14 +15,14 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 class DocumentsPathManager:
     """Manages game document paths across different platforms."""
 
-    def __init__(self, gui_mode: bool = False) -> None:
+    def __init__(self, is_gui_mode: bool = False) -> None:
         """Initialize the document path manager.
 
         Args:
             gui_mode: Whether the program is running in GUI mode
         """
-        self.gui_mode = gui_mode
-        self.manual_docs_gui = GlobalRegistry.get_manual_docs_gui() if gui_mode else None
+        self.is_gui_mode = is_gui_mode
+        self.manual_docs_gui = GlobalRegistry.get_manual_docs_gui() if is_gui_mode else None
         self.docs_name = self._get_docs_name()
 
     @staticmethod
@@ -155,7 +155,7 @@ class DocumentsPathManager:
 
     def _get_manual_docs_path(self) -> None:
         """Get manual documents path input from the user."""
-        if self.gui_mode and self.manual_docs_gui is not None:
+        if self.is_gui_mode and self.manual_docs_gui is not None:
             self.manual_docs_gui.manual_docs_path_signal.emit()
             return
 
@@ -343,7 +343,7 @@ class DocumentsPathManager:
 
 
 # Public API functions that use the DocumentsPathManager class
-def docs_path_find(gui_mode: bool = False) -> None:
+def docs_path_find(is_gui_mode: bool = False) -> None:
     """
     Locates the documents path using a manager instance.
 
@@ -352,13 +352,13 @@ def docs_path_find(gui_mode: bool = False) -> None:
     to determine the location of the documents path.
 
     Args:
-        gui_mode (bool): If True, enables GUI mode; otherwise, operates in
+        is_gui_mode (bool): If True, enables GUI mode; otherwise, operates in
             command-line mode.
 
     Returns:
         None
     """
-    manager: DocumentsPathManager = DocumentsPathManager(gui_mode)
+    manager: DocumentsPathManager = DocumentsPathManager(is_gui_mode)
     manager.find_docs_path()
 
 
