@@ -51,7 +51,7 @@ class FCXModeHandler:
         """
         if self.fcx_mode:
             # Import here to avoid circular imports
-            from ClassicLib.Main import main_combined_result
+            from CLASSIC_Main import main_combined_result
             from CLASSIC_ScanGame import game_combined_result
 
             # Use class-level lock to ensure thread safety

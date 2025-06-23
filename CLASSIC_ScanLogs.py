@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from ClassicLib.Main import initialize
+from CLASSIC_Main import initialize
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_progress_context
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
