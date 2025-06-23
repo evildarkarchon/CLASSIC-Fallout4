@@ -117,7 +117,7 @@ def game_path_find() -> None:
         if is_valid and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
             yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
             return
-        elif not is_valid:
+        if not is_valid:
             logger.warning(f"Game path from XSE log is not accessible: {error_msg}")
         else:
             logger.warning(f"Game executable not found in path from XSE log: {game_path}")
