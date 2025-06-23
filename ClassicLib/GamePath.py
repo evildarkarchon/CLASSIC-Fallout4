@@ -84,10 +84,24 @@ def game_path_find() -> None:
     if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(game_name, str)):
         raise TypeError
 
-    if not xse_file or not Path(cast("str", xse_file)).is_file():
+    # Validate XSE file path before attempting to access it
+    from ClassicLib.Util import validate_path
+    if not xse_file:
         msg_error(
-            f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n    After that, try running CLASSIC again! \n-----\n"
+            f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE PATH IS NOT CONFIGURED! \n   Please configure the game documents folder first! \n-----\n"
         )
+        return
+    
+    is_valid, error_msg = validate_path(cast("str", xse_file), check_write=False, check_read=True)
+    if not is_valid:
+        if "does not exist" in error_msg:
+            msg_error(
+                f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n   You need to run the game at least once with {xse_acronym.lower()}_loader.exe \n    After that, try running CLASSIC again! \n   Error: {error_msg} \n-----\n"
+            )
+        else:
+            msg_error(
+                f"❌ CAUTION : CANNOT ACCESS {xse_acronym.lower()}.log FILE! \n   Error: {error_msg} \n   Please check your game documents folder and try again! \n-----\n"
+            )
         return
 
     with open_file_with_encoding(cast("str", xse_file)) as LOG_Check:
@@ -97,9 +111,16 @@ def game_path_find() -> None:
             logline: str = logline.split("=", maxsplit=1)[1].strip().replace(f"\\Data\\{xse_acronym_base}\\Plugins", "").replace("\n", "")
             game_path = Path(logline)
             break
-    if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
-        yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
-        return
+    if game_path:
+        # Validate the game path extracted from XSE log
+        is_valid, error_msg = validate_path(game_path, check_write=False, check_read=True)
+        if is_valid and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
+            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
+            return
+        elif not is_valid:
+            logger.warning(f"Game path from XSE log is not accessible: {error_msg}")
+        else:
+            logger.warning(f"Game executable not found in path from XSE log: {game_path}")
 
     if GlobalRegistry.is_gui_mode():
         # Show dialog until valid path is selected or user cancels
@@ -118,6 +139,13 @@ def game_path_find() -> None:
         path_input: str = input(rf"(EXAMPLE: C:\Steam\steamapps\common\{game_name} | Press ENTER to confirm.)\n> ")
         msg_info(f"You entered: {path_input} | This path will be automatically added to CLASSIC Settings.yaml")
         game_path = Path(path_input.strip())
+        
+        # Validate path before checking for executable
+        is_valid, error_msg = validate_path(game_path, check_write=False, check_read=True)
+        if not is_valid:
+            msg_error(f"ERROR : {error_msg}")
+            continue
+            
         if game_path and game_path.joinpath(exe_name).is_file():
             yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
             return

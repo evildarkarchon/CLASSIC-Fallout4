@@ -268,6 +268,13 @@ def _perform_backup(version: str, game_path: str | None, backup_list: list[str])
     if not game_path:
         return
 
+    # Validate game path before attempting backup
+    from ClassicLib.Util import validate_path
+    is_valid, error_msg = validate_path(game_path, check_write=False, check_read=True)
+    if not is_valid:
+        logger.warning(f"Cannot backup files - {error_msg}")
+        return
+
     # Back up the file if backup of file does not already exist
     game_files: list[Path] = list(Path(game_path).glob("*.*"))
     backup_files: list[str] = [file.name for file in backup_path.glob("*.*")]

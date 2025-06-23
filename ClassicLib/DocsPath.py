@@ -9,7 +9,7 @@ from ClassicLib import GlobalRegistry, msg_error, msg_info
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.Util import remove_readonly
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class DocumentsPathManager:
@@ -64,10 +64,33 @@ class DocumentsPathManager:
     def find_docs_path(self) -> None:
         """Find and configure the game documents folder path."""
         logger.debug("- - - INITIATED DOCS PATH CHECK")
+        
+        from ClassicLib.Util import validate_path
 
-        # Check if path already exists
+        # First check if INI Folder Path is set in CLASSIC Settings.yaml
+        ini_folder_path: str | None = classic_settings(str, "INI Folder Path")
+        if isinstance(ini_folder_path, str) and ini_folder_path.strip():
+            # Validate the configured INI folder path
+            is_valid, error_msg = validate_path(ini_folder_path, check_write=True, check_read=True)
+            if is_valid and Path(ini_folder_path).is_dir():
+                logger.debug(f"Using INI Folder Path from settings: {ini_folder_path}")
+                self._update_game_setting("Root_Folder_Docs", ini_folder_path)
+                return
+            else:
+                logger.warning(f"Configured INI Folder Path is not accessible: {error_msg}")
+                # Continue to auto-detection
+
+        # Check if path already exists and is accessible
         docs_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
-        if not isinstance(docs_path, str) or not Path(docs_path).is_dir():
+        if isinstance(docs_path, str):
+            is_valid, error_msg = validate_path(docs_path, check_write=True, check_read=True)
+            if is_valid and Path(docs_path).is_dir():
+                return  # Path is valid, no need to re-detect
+            else:
+                logger.warning(f"Existing docs path is not accessible: {error_msg}")
+                # Continue to auto-detection
+        
+        if True:  # Always attempt to find/update path if we get here
             # Find path based on platform
             if platform.system() == "Windows":
                 self._find_windows_docs_path()
