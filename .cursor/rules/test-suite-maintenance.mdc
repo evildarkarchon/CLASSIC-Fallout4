@@ -1,0 +1,125 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Test Suite Maintenance - Critical for CLASSIC-Fallout4
+
+## 🚨 Test Suite Update Priority
+
+The test suite in this project is **CRITICAL** and must be kept up to date with any code changes. The project has gone through major architectural changes (from monolithic to modular orchestrator-based architecture), and maintaining test compatibility is essential for project stability.
+
+## 📋 Current Test Suite Status
+
+The current test suite consists of **62 tests with 100% success rate** across these categories:
+
+- **Core Functionality**: [tests/test_scan_logs.py](mdc:tests/test_scan_logs.py) - Tests ClassicScanLogs orchestrator architecture
+- **Mod Detection**: [tests/test_detect_mods.py](mdc:tests/test_detect_mods.py) - Tests mod conflict and compatibility detection
+- **Thread Safety**: [tests/test_thread_safe_log_cache.py](mdc:tests/test_thread_safe_log_cache.py) - Tests concurrent log processing
+- **YAML Integration**: [tests/test_yaml_integration.py](mdc:tests/test_yaml_integration.py) - Tests settings and configuration loading
+- **Crash Log Processing**: [tests/test_crash_log_processing.py](mdc:tests/test_crash_log_processing.py) - End-to-end integration tests
+- **FormID Matching**: [tests/test_formid_matching.py](mdc:tests/test_formid_matching.py) - Tests FormID database lookups
+- **Message Handling**: [tests/test_message_handler.py](mdc:tests/test_message_handler.py) - Tests UI and CLI message systems
+
+## 🔧 Test Configuration Files
+
+Key files that define test behavior:
+- [pytest.ini](mdc:pytest.ini) - Test discovery and execution configuration
+- [tests/conftest.py](mdc:tests/conftest.py) - Shared fixtures and MessageHandler initialization
+- [tests/README.md](mdc:tests/README.md) - Test documentation and running instructions
+
+## ⚠️ When Tests MUST Be Updated
+
+### 1. **Architectural Changes**
+If you modify the core architecture (like the orchestrator pattern in `ClassicScanLogs`), you MUST update:
+- Import paths in test files
+- Mock targets to patch where functions are used, not where defined
+- API calls to match new method signatures
+- Fixture initialization to handle new dependencies
+
+### 2. **API Changes**
+When changing method signatures or return values:
+- Update test method calls to match new signatures
+- Update assertions to expect correct return value formats
+- Update mocks to return appropriate data types
+
+### 3. **New Dependencies**
+When adding new components that require initialization:
+- Add appropriate fixtures to [tests/conftest.py](mdc:tests/conftest.py)
+- Update existing fixtures to initialize new dependencies
+- Add cleanup code to prevent test interference
+
+### 4. **MessageHandler Changes**
+The MessageHandler is critical for proper test execution. Changes to [ClassicLib/MessageHandler.py](mdc:ClassicLib/MessageHandler.py) require:
+- Updating the `init_message_handler_fixture()` in [tests/conftest.py](mdc:tests/conftest.py)
+- Verifying all tests that create `ClassicScanLogs` instances still work
+- Testing both GUI and CLI modes if applicable
+
+## 🏗️ Test Architecture Patterns
+
+### Current Modular Pattern (POST-7.30)
+```python
+scanner = ClassicScanLogs()
+if hasattr(scanner.orchestrator, '_formid_analyzer'):
+    scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
+```
+
+### MessageHandler Fixture Pattern
+```python
+@pytest.fixture
+def init_message_handler_fixture():
+    handler = init_message_handler(parent=None, is_gui_mode=False)
+    yield
+    ClassicLib.MessageHandler._message_handler = None
+```
+
+## 📝 Required Actions for Code Changes
+
+### Before Making Changes:
+1. **Run the full test suite**: `python -m pytest tests/ -v`
+2. **Identify which tests cover your change area**
+3. **Plan test updates alongside code changes**
+
+### During Development:
+1. **Update tests in parallel with code changes** - don't leave tests broken
+2. **Use defensive programming** - add `hasattr()` checks for new orchestrator components
+3. **Update mock paths** to target where functions are used, not where defined
+
+### After Making Changes:
+1. **Run affected tests**: `python -m pytest tests/test_[relevant_file].py -v`
+2. **Run full test suite**: `python -m pytest tests/ -v`
+3. **Update test documentation** if test behavior changed
+4. **Update [TEST_SUITE_UPDATE_SUMMARY.md](mdc:TEST_SUITE_UPDATE_SUMMARY.md)** for major changes
+
+## 🚫 Common Pitfalls to Avoid
+
+1. **Don't ignore test failures** - they indicate real compatibility issues
+2. **Don't patch where functions are defined** - patch where they're used
+3. **Don't forget MessageHandler initialization** - it's required for ClassicScanLogs
+4. **Don't make assumptions about component availability** - use `hasattr()` checks
+5. **Don't skip test updates** - they're not optional when making architectural changes
+
+## 🎯 Testing Best Practices
+
+- **Use the existing fixtures** from [tests/conftest.py](mdc:tests/conftest.py)
+- **Follow the marker system** defined in [pytest.ini](mdc:pytest.ini) (`unit`, `integration`, `thread`, `slow`)
+- **Mock external dependencies** but test real integration paths
+- **Test both success and failure scenarios**
+- **Clean up temporary files and resources**
+
+## 📊 Success Metrics
+
+- **100% test pass rate** maintained after changes
+- **No regression in functionality** verified by integration tests
+- **New features covered** by appropriate unit tests
+- **Thread safety preserved** for concurrent operations
+
+## 🔄 Continuous Maintenance
+
+The test suite requires ongoing attention because:
+- The project is actively developed with frequent architectural changes
+- New crash log formats and game versions introduce new test scenarios
+- Community feedback identifies edge cases that need test coverage
+- Dependencies and Python versions evolve requiring test updates
+
+**Remember**: The test suite is your safety net. Keep it updated, and it will catch issues before they reach users.
