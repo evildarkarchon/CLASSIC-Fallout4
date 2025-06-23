@@ -7,3 +7,4 @@
 6. Add functionality to select multiple custom scan directories.
 7. ~~Look into fallback methods for finding the documents path.~~
 8. ~~Look into the config file not overriding the value for the documents path.~~
+9. Update and expand the test suite.
