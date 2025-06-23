@@ -1,1 +1,0 @@
-When running any terminal commands, use Powershell syntax.
