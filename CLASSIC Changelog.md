@@ -12,6 +12,8 @@
 - New SVG-based checkbox icons
 - Articles moved to a separate tab to save space
 - Papyrus log monitoring now uses a dialog box
+- Add verification of auto-detected directories to prevent crashes.
+- Fixed the "INI Folder Path" setting being ignored.
 
 ### 7.31.0 CHANGES
 - Reduced volume for audio notifications

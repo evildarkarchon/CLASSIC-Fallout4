@@ -65,7 +65,7 @@ class DocumentsPathManager:
         """Find and configure the game documents folder path."""
         logger.debug("- - - INITIATED DOCS PATH CHECK")
         
-        from ClassicLib.Util import validate_path
+        from ClassicLib.Util import validate_path  # noqa: PLC0415
 
         # First check if INI Folder Path is set in CLASSIC Settings.yaml
         ini_folder_path: str | None = classic_settings(str, "INI Folder Path")
@@ -76,8 +76,7 @@ class DocumentsPathManager:
                 logger.debug(f"Using INI Folder Path from settings: {ini_folder_path}")
                 self._update_game_setting("Root_Folder_Docs", ini_folder_path)
                 return
-            else:
-                logger.warning(f"Configured INI Folder Path is not accessible: {error_msg}")
+            logger.warning(f"Configured INI Folder Path is not accessible: {error_msg}")
                 # Continue to auto-detection
 
         # Check if path already exists and is accessible
@@ -86,8 +85,7 @@ class DocumentsPathManager:
             is_valid, error_msg = validate_path(docs_path, check_write=True, check_read=True)
             if is_valid and Path(docs_path).is_dir():
                 return  # Path is valid, no need to re-detect
-            else:
-                logger.warning(f"Existing docs path is not accessible: {error_msg}")
+            logger.warning(f"Existing docs path is not accessible: {error_msg}")
                 # Continue to auto-detection
         
         if True:  # Always attempt to find/update path if we get here
@@ -105,7 +103,7 @@ class DocumentsPathManager:
     def _find_windows_docs_path(self) -> None:
         """Find the Windows documents path using the registry."""
         # Initialize with default value first
-        import winreg
+        import winreg  # noqa: PLC0415
 
         documents_path: Path = Path.home() / "Documents"
 
