@@ -171,8 +171,12 @@ class TestDetectModsDouble:
     def test_multiple_conflicts_found(self) -> None:
         """Test when multiple conflicting mod pairs are found."""
         yaml_dict: dict[str, str] = {"mod1 | mod2": "Conflict warning 1", "mod3 | mod4": "Conflict warning 2"}
-        crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01", "mod3_plugin.esp": "02",
-                                            "mod4_plugin.esp": "03"}
+        crashlog_plugins: dict[str, str] = {
+            "mod1_plugin.esp": "00",
+            "mod2_plugin.esp": "01",
+            "mod3_plugin.esp": "02",
+            "mod4_plugin.esp": "03",
+        }
         autoscan_report: list[Any] = []
 
         result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)

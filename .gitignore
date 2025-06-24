@@ -57,6 +57,10 @@ FormID_List*
 game_vars.py
 test.*
 
+# Performance Baselines
+performance_baselines/*.json
+!performance_baselines/README.md
+
 # User Files
 *.zip
 *.7z

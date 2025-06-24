@@ -1,0 +1,2 @@
+# This file ensures the performance_baselines directory is tracked by git
+# while the actual JSON baseline files are ignored 

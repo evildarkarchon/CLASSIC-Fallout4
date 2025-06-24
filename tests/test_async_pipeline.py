@@ -26,6 +26,7 @@ from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, load_crash_logs_asyn
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 
 if TYPE_CHECKING:
+    from collections import Counter
     from collections.abc import Coroutine
 
     from psutil import Process
@@ -69,12 +70,12 @@ PLUGINS:
 @pytest.fixture
 def crash_log_files(tmp_path: Path, sample_crash_log_content: str) -> list[Path]:
     """Create multiple crash log files for testing."""
-    crash_logs_dir = tmp_path / "Crash Logs"
+    crash_logs_dir: Path = tmp_path / "Crash Logs"
     crash_logs_dir.mkdir(exist_ok=True)
 
-    files = []
+    files: list[Any] = []
     for i in range(3):
-        log_file = crash_logs_dir / f"crash-2023-01-0{i + 1}-00-00-00.log"
+        log_file: Path = crash_logs_dir / f"crash-2023-01-0{i + 1}-00-00-00.log"
         log_file.write_text(sample_crash_log_content)
         files.append(log_file)
 
@@ -84,7 +85,7 @@ def crash_log_files(tmp_path: Path, sample_crash_log_content: str) -> list[Path]
 @pytest.fixture
 def mock_yamldata() -> MagicMock:
     """Mock ClassicScanLogsInfo for testing."""
-    yamldata = MagicMock(spec=ClassicScanLogsInfo)
+    yamldata: MagicMock = MagicMock(spec=ClassicScanLogsInfo)
     yamldata.fallout4_crashlog_scan_exclusions = ["test_exclusion"]
     yamldata.fallout4_crashlog_mods_single = {"test_mod": "Test mod message"}
     yamldata.game_ignore_plugins = ["plugin1.esp", "plugin2.esp"]
@@ -109,7 +110,7 @@ class TestAsyncPipeline:
 
     async def test_async_pipeline_initialization(self, mock_yamldata: MagicMock) -> None:
         """Test that AsyncCrashLogPipeline initializes correctly."""
-        pipeline = AsyncCrashLogPipeline(
+        pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=True,
@@ -125,7 +126,7 @@ class TestAsyncPipeline:
     @pytest.mark.usefixtures("init_message_handler_fixture")
     async def test_async_pipeline_process_crash_logs(self, crash_log_files: list[Path], mock_yamldata: MagicMock) -> None:
         """Test the full async pipeline processing."""
-        pipeline = AsyncCrashLogPipeline(
+        pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=False,
@@ -144,7 +145,7 @@ class TestAsyncPipeline:
             mock_write.return_value = AsyncMock()
 
             # Create mock orchestrator instance
-            mock_orchestrator = AsyncMock()
+            mock_orchestrator: AsyncMock = AsyncMock()
             mock_orchestrator.process_crash_logs_batch_async.return_value = [
                 (log_file, [f"Report for {log_file.name}"], False, {}) for log_file in crash_log_files
             ]
@@ -173,7 +174,7 @@ class TestAsyncPipeline:
 
     async def test_async_performance_monitor(self) -> None:
         """Test the AsyncPerformanceMonitor comparison functionality."""
-        async_stats = {
+        async_stats: dict[str, float] = {
             "total_time": 5.0,
             "reformat_time": 1.0,
             "load_time": 1.5,
@@ -181,10 +182,10 @@ class TestAsyncPipeline:
             "write_time": 0.5,
             "logs_per_second": 10.0,
         }
-        sync_time = 15.0
+        sync_time: float = 15.0
         log_count = 50
 
-        comparison = AsyncPerformanceMonitor.compare_performance(async_stats, sync_time, log_count)
+        comparison: dict[str, str | float] = AsyncPerformanceMonitor.compare_performance(async_stats, sync_time, log_count)
 
         assert isinstance(comparison, dict)
         assert "speedup_factor" in comparison
@@ -202,10 +203,10 @@ class TestAsyncScanOrchestrator:
 
     async def test_async_scan_orchestrator_context_manager(self, mock_yamldata: MagicMock) -> None:
         """Test AsyncScanOrchestrator as async context manager."""
-        crashlogs = MagicMock(spec=ThreadSafeLogCache)
+        crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
 
         with patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncDatabasePool") as mock_pool_class:
-            mock_pool = AsyncMock()
+            mock_pool: AsyncMock = AsyncMock()
             mock_pool.initialize = AsyncMock()
             mock_pool.close = AsyncMock()
             mock_pool_class.return_value = mock_pool
@@ -229,10 +230,10 @@ class TestAsyncScanOrchestrator:
 
     async def test_async_scan_orchestrator_batch_processing(self, crash_log_files: list[Path], mock_yamldata: MagicMock) -> None:
         """Test batch processing of crash logs."""
-        crashlogs = MagicMock(spec=ThreadSafeLogCache)
+        crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
 
         with patch("ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool") as mock_pool_class:
-            mock_pool = AsyncMock()
+            mock_pool: AsyncMock = AsyncMock()
             mock_pool_class.return_value = mock_pool
 
             async with AsyncScanOrchestrator(
@@ -244,7 +245,9 @@ class TestAsyncScanOrchestrator:
             ) as orchestrator:
                 # Mock the parent class method
                 with patch.object(orchestrator, "process_crash_log", return_value=(Path("test.log"), ["report"], False, {})):
-                    results = await orchestrator.process_crash_logs_batch_async(crash_log_files)
+                    results: list[tuple[Path, list[str], bool, Counter[str]]] = await orchestrator.process_crash_logs_batch_async(
+                        crash_log_files
+                    )
 
                     assert len(results) == 3
                     for result in results:
@@ -261,9 +264,9 @@ class TestAsyncFormIDAnalyzer:
 
     async def test_async_formid_analyzer_initialization(self, mock_yamldata: MagicMock) -> None:
         """Test AsyncFormIDAnalyzer initialization."""
-        mock_pool = AsyncMock(spec=AsyncDatabasePool)
+        mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
 
-        analyzer = AsyncFormIDAnalyzer(
+        analyzer: AsyncFormIDAnalyzer = AsyncFormIDAnalyzer(
             yamldata=mock_yamldata,
             show_formid_values=True,
             formid_db_exists=True,
@@ -277,17 +280,17 @@ class TestAsyncFormIDAnalyzer:
 
     async def test_formid_extraction(self, mock_yamldata: MagicMock) -> None:
         """Test FormID extraction from call stack."""
-        mock_pool = AsyncMock(spec=AsyncDatabasePool)
-        analyzer = AsyncFormIDAnalyzer(mock_yamldata, True, True, mock_pool)
+        mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
+        analyzer: AsyncFormIDAnalyzer = AsyncFormIDAnalyzer(mock_yamldata, True, True, mock_pool)
 
-        callstack = [
+        callstack: list[str] = [
             "Form ID: 0x12345678",
             "Form ID: 0x87654321",
             "Form ID: 0xFF000001",  # Should be skipped (FF prefix)
             "Regular line without FormID",
         ]
 
-        formids = analyzer.extract_formids(callstack)
+        formids: list[str] = analyzer.extract_formids(callstack)
 
         assert len(formids) == 2
         assert "Form ID: 12345678" in formids
@@ -296,13 +299,13 @@ class TestAsyncFormIDAnalyzer:
 
     async def test_async_formid_matching(self, mock_yamldata: MagicMock) -> None:
         """Test async FormID matching with database lookups."""
-        mock_pool = AsyncMock(spec=AsyncDatabasePool)
+        mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         mock_pool.get_entry.return_value = "Test Entry"
 
-        analyzer = AsyncFormIDAnalyzer(mock_yamldata, True, True, mock_pool)
+        analyzer: AsyncFormIDAnalyzer = AsyncFormIDAnalyzer(mock_yamldata, True, True, mock_pool)
 
-        formids_matches = ["Form ID: 12345678", "Form ID: 87654321"]
-        crashlog_plugins = {"TestPlugin.esp": "12", "AnotherPlugin.esp": "87"}
+        formids_matches: list[str] = ["Form ID: 12345678", "Form ID: 87654321"]
+        crashlog_plugins: dict[str, str] = {"TestPlugin.esp": "12", "AnotherPlugin.esp": "87"}
         autoscan_report: list[str] = []
 
         await analyzer.formid_match_async(formids_matches, crashlog_plugins, autoscan_report)
@@ -323,7 +326,7 @@ class TestAsyncFileIO:
 
     async def test_load_crash_logs_async_optimized(self, crash_log_files: list[Path]) -> None:
         """Test optimized async crash log loading."""
-        result = await load_crash_logs_async_optimized(crash_log_files)
+        result: dict[str, bytes] = await load_crash_logs_async_optimized(crash_log_files)
 
         assert isinstance(result, dict)
         assert len(result) == 3
@@ -334,15 +337,15 @@ class TestAsyncFileIO:
 
     async def test_write_reports_batch(self, crash_log_files: list[Path]) -> None:
         """Test batch writing of reports."""
-        reports = [(log_file, [f"Report for {log_file.name}\n"], False) for log_file in crash_log_files]
+        reports: list[tuple[Path, list[str], bool]] = [(log_file, [f"Report for {log_file.name}\n"], False) for log_file in crash_log_files]
 
         await write_reports_batch(reports)
 
         # Verify reports were written
         for log_file in crash_log_files:
-            report_file = log_file.with_name(f"{log_file.stem}-AUTOSCAN.md")
+            report_file: Path = log_file.with_name(f"{log_file.stem}-AUTOSCAN.md")
             assert report_file.exists()
-            content = report_file.read_text()
+            content: str = report_file.read_text()
             assert f"Report for {log_file.name}" in content
 
 
@@ -375,7 +378,7 @@ class TestAsyncDatabasePool:
                 patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
                 patch("aiosqlite.connect", side_effect=mock_connect) as mock_connect_patch,
             ):
-                pool = AsyncDatabasePool()
+                pool: AsyncDatabasePool = AsyncDatabasePool()
                 await pool.initialize()
 
                 # Verify connection was attempted
@@ -394,7 +397,7 @@ class TestAsyncUtilityFunctions:
 
     async def test_load_crash_logs_async(self, crash_log_files: list[Path]) -> None:
         """Test async crash log loading."""
-        result = await load_crash_logs_async(crash_log_files)
+        result: dict[str, list[str]] = await load_crash_logs_async(crash_log_files)
 
         assert isinstance(result, dict)
         assert len(result) == 3
@@ -413,7 +416,7 @@ class TestAsyncPerformanceComparison:
     @pytest.mark.usefixtures("init_message_handler_fixture")
     def test_crashlogs_reformat_with_async(self, crash_log_files: list[Path]) -> None:
         """Test async reformatting with sync wrapper."""
-        remove_list = ("test_remove",)
+        remove_list: tuple[str] = ("test_remove",)
 
         # Mock the async function where it's imported in AsyncFileIO to prevent the warning
         with patch("ClassicLib.ScanLog.AsyncFileIO.crashlogs_reformat_async") as mock_async_func:
@@ -435,7 +438,7 @@ class TestAsyncPerformanceComparison:
         sync_cache: dict[Any, Any] = {}
         for log_file in crash_log_files:
             sync_cache[log_file.name] = log_file.read_text().splitlines()
-        sync_time = time.perf_counter() - sync_start
+        sync_time: float = time.perf_counter() - sync_start
 
         # Test async loading
         async def async_test() -> tuple[float, dict[str, list[str]]]:
@@ -474,11 +477,11 @@ class TestAsyncPerformanceBaselines:
 
     def create_large_crash_log_set(self, tmp_path: Path, log_count: int) -> list[Path]:
         """Create a larger set of crash logs for performance testing."""
-        crash_logs_dir = tmp_path / "Performance_Test_Logs"
+        crash_logs_dir: Path = tmp_path / "Performance_Test_Logs"
         crash_logs_dir.mkdir(parents=True, exist_ok=True)
 
         # Realistic crash log content with various sizes
-        base_content = """Fallout 4 v1.10.163
+        base_content: str = """Fallout 4 v1.10.163
 Buffout 4 v1.28.6
 
 Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
@@ -491,13 +494,13 @@ SYSTEM SPECS:
 PROBABLE CALL STACK:
 """
 
-        files = []
+        files: list[Path] = []
         for i in range(log_count):
-            log_file = crash_logs_dir / f"crash-perf-test-{i:03d}.log"
+            log_file: Path = crash_logs_dir / f"crash-perf-test-{i:03d}.log"
 
             # Vary content size to simulate real-world scenarios
-            callstack_lines = min(50 + (i % 20), 100)  # 50-100 lines of callstack
-            content_parts = [base_content]
+            callstack_lines: int = min(50 + (i % 20), 100)  # 50-100 lines of callstack
+            content_parts: list[str] = [base_content]
 
             for j in range(callstack_lines):
                 content_parts.append(f"\t[{j:2d}] 0x7FF6EF{j:06X} Fallout4.exe+{j:07X} -> {j * 1000 + 555}+0x{j:02X}\n")
@@ -525,7 +528,7 @@ PROBABLE CALL STACK:
     @pytest.mark.slow
     def test_file_io_baseline_single_files(self, tmp_path: Path) -> None:
         """Baseline: Single file I/O performance (async vs sync)."""
-        test_files = self.create_large_crash_log_set(tmp_path, 5)
+        test_files: list[Path] = self.create_large_crash_log_set(tmp_path, 5)
 
         results: dict[str, list[float]] = {
             "sync_read_times": [],
@@ -562,18 +565,18 @@ PROBABLE CALL STACK:
             assert len(sync_content) == len(async_content)
 
             # Test sync writing
-            write_content = f"Modified content for {test_file.name}\n" + sync_content
-            write_file = test_file.with_name(f"{test_file.stem}_sync_write.log")
+            write_content: str = f"Modified content for {test_file.name}\n" + sync_content
+            write_file: Path = test_file.with_name(f"{test_file.stem}_sync_write.log")
 
             sync_start = time.perf_counter()
             write_file.write_text(write_content)
-            sync_write_time = time.perf_counter() - sync_start
+            sync_write_time: float = time.perf_counter() - sync_start
             results["sync_write_times"].append(sync_write_time)
 
             # Test async writing
             async def async_write_test(file_path: Path = test_file, content: str = write_content) -> float:
                 async_start: float = time.perf_counter()
-                async_write_file = file_path.with_name(f"{file_path.stem}_async_write.log")
+                async_write_file: Path = file_path.with_name(f"{file_path.stem}_async_write.log")
                 import aiofiles
 
                 async with aiofiles.open(async_write_file, mode="w", encoding="utf-8", errors="ignore") as f:
@@ -585,11 +588,11 @@ PROBABLE CALL STACK:
             results["async_write_times"].append(async_write_time)
 
         # Log baseline metrics
-        avg_file_size = sum(results["file_sizes"]) / len(results["file_sizes"])
-        avg_sync_read = sum(results["sync_read_times"]) / len(results["sync_read_times"])
-        avg_async_read = sum(results["async_read_times"]) / len(results["async_read_times"])
-        avg_sync_write = sum(results["sync_write_times"]) / len(results["sync_write_times"])
-        avg_async_write = sum(results["async_write_times"]) / len(results["async_write_times"])
+        avg_file_size: float = sum(results["file_sizes"]) / len(results["file_sizes"])
+        avg_sync_read: float = sum(results["sync_read_times"]) / len(results["sync_read_times"])
+        avg_async_read: float = sum(results["async_read_times"]) / len(results["async_read_times"])
+        avg_sync_write: float = sum(results["sync_write_times"]) / len(results["sync_write_times"])
+        avg_async_write: float = sum(results["async_write_times"]) / len(results["async_write_times"])
 
         print("\n=== SINGLE FILE I/O BASELINE METRICS ===")
         print(f"Average file size: {avg_file_size:,.0f} bytes")
@@ -609,14 +612,14 @@ PROBABLE CALL STACK:
     @pytest.mark.slow
     def test_file_io_baseline_batch_operations(self, tmp_path: Path) -> None:
         """Baseline: Batch file I/O performance (concurrent async vs sequential sync)."""
-        test_files = self.create_large_crash_log_set(tmp_path, 20)
+        test_files: list[Path] = self.create_large_crash_log_set(tmp_path, 20)
 
         # Test sync batch reading (sequential)
         sync_start: float = time.perf_counter()
         sync_results: dict[str, list[str]] = {}
         for test_file in test_files:
             sync_results[test_file.name] = test_file.read_text().splitlines()
-        sync_total_time = time.perf_counter() - sync_start
+        sync_total_time: float = time.perf_counter() - sync_start
 
         # Test async batch reading (concurrent)
         async def async_batch_read() -> tuple[dict[str, list[str]], float]:
@@ -624,7 +627,7 @@ PROBABLE CALL STACK:
 
             async def read_single(file_path: Path) -> tuple[str, list[str]]:
                 async with aiofiles.open(file_path, encoding="utf-8", errors="ignore") as f:
-                    content = await f.read()
+                    content: str = await f.read()
                     return file_path.name, content.splitlines()
 
             async_start: float = time.perf_counter()
@@ -635,7 +638,8 @@ PROBABLE CALL STACK:
             async_results: dict[str, list[str]] = {}
             for result in results:
                 if isinstance(result, tuple):
-                    name, lines = result
+                    name: str = result[0]
+                    lines: list[str] = result[1]
                     async_results[name] = lines
 
             return async_results, async_total_time
@@ -649,12 +653,12 @@ PROBABLE CALL STACK:
             assert len(sync_value) == len(async_results[key])
 
         # Calculate performance metrics
-        total_files = len(test_files)
-        total_size = sum(f.stat().st_size for f in test_files)
+        total_files: int = len(test_files)
+        total_size: int = sum(f.stat().st_size for f in test_files)
 
-        sync_throughput = total_files / sync_total_time
-        async_throughput = total_files / async_total_time
-        speedup = sync_total_time / async_total_time
+        sync_throughput: float = total_files / sync_total_time
+        async_throughput: float = total_files / async_total_time
+        speedup: float = sync_total_time / async_total_time
 
         print("\n=== BATCH FILE I/O BASELINE METRICS ===")
         print(f"Total files:        {total_files}")
@@ -677,14 +681,14 @@ PROBABLE CALL STACK:
     @pytest.mark.usefixtures("init_message_handler_fixture")
     async def test_async_pipeline_scalability_baseline(self, tmp_path: Path, mock_yamldata: MagicMock) -> None:
         """Baseline: Full async pipeline scalability with different log counts."""
-        log_counts = [5, 10, 25, 50]  # Different scales to test
-        baseline_metrics = {}
+        log_counts: list[int] = [5, 10, 25, 50]  # Different scales to test
+        baseline_metrics: dict[int, dict[str, Any]] = {}
 
         for log_count in log_counts:
-            test_files = self.create_large_crash_log_set(tmp_path / f"scale_{log_count}", log_count)
+            test_files: list[Path] = self.create_large_crash_log_set(tmp_path / f"scale_{log_count}", log_count)
 
             # Create pipeline
-            pipeline = AsyncCrashLogPipeline(
+            pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
                 yamldata=mock_yamldata,
                 fcx_mode=False,
                 show_formid_values=False,
@@ -722,9 +726,9 @@ PROBABLE CALL STACK:
                 mock_orchestrator_class.return_value.__aexit__.return_value = None
 
                 # Time the pipeline
-                start_time = time.perf_counter()
+                start_time: float = time.perf_counter()
                 results, stats = await pipeline.process_crash_logs_async(test_files, ("test_remove",))
-                total_time = time.perf_counter() - start_time
+                total_time: float = time.perf_counter() - start_time
 
                 # Store metrics
                 baseline_metrics[log_count] = {
@@ -745,15 +749,15 @@ PROBABLE CALL STACK:
             )
 
         # Calculate scaling efficiency
-        base_count = log_counts[0]
-        base_time = baseline_metrics[base_count]["total_time"]
+        base_count: int = log_counts[0]
+        base_time: float = baseline_metrics[base_count]["total_time"]
 
         print(f"\nScaling Analysis (relative to {base_count} logs):")
         for log_count in log_counts[1:]:
             metrics = baseline_metrics[log_count]
-            expected_time = base_time * (log_count / base_count)  # Linear scaling
-            actual_time = metrics["total_time"]
-            efficiency = (expected_time / actual_time) * 100 if actual_time > 0 else 0
+            expected_time: float = base_time * (log_count / base_count)  # Linear scaling
+            actual_time: float = metrics["total_time"]
+            efficiency: float = (expected_time / actual_time) * 100 if actual_time > 0 else 0
 
             print(f"{log_count:2d} logs: Expected {expected_time:.4f}s, Actual {actual_time:.4f}s, Efficiency {efficiency:.1f}%")
 
@@ -869,7 +873,7 @@ PROBABLE CALL STACK:
             async def safe_read(file_path: Path) -> tuple[str, str | None, str | None]:
                 try:
                     async with aiofiles.open(file_path, encoding="utf-8", errors="ignore") as f:
-                        content = await f.read()
+                        content: str = await f.read()
                         return file_path.name, content, None
                 except (FileNotFoundError, PermissionError, OSError) as e:
                     return file_path.name, None, str(e)
@@ -927,10 +931,10 @@ PROBABLE CALL STACK:
     async def test_comprehensive_pipeline_baseline(self, tmp_path: Path, mock_yamldata: MagicMock) -> None:
         """Comprehensive baseline: Full realistic pipeline performance test."""
         # Create realistic test scenario
-        test_files = self.create_large_crash_log_set(tmp_path, 30)
+        test_files: list[Path] = self.create_large_crash_log_set(tmp_path, 30)
 
         # Simulate realistic processing times by using actual (but mocked) operations
-        pipeline = AsyncCrashLogPipeline(
+        pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=True,
@@ -938,7 +942,7 @@ PROBABLE CALL STACK:
         )
 
         # Record comprehensive metrics
-        full_test_start = time.perf_counter()
+        full_test_start: float = time.perf_counter()
 
         with (
             patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
@@ -977,7 +981,7 @@ PROBABLE CALL STACK:
             # Run the comprehensive test
             results, stats = await pipeline.process_crash_logs_async(test_files, ("simplify_test",))
 
-        full_test_time = time.perf_counter() - full_test_start
+        full_test_time: float = time.perf_counter() - full_test_start
 
         # Generate comprehensive baseline report
         print("\n=== COMPREHENSIVE PIPELINE BASELINE ===")
@@ -1020,11 +1024,25 @@ PROBABLE CALL STACK:
             },
         }
 
-        # Save baseline to file for future reference
-        baseline_file: Path = tmp_path / "async_pipeline_baseline.json"
+        # Save baseline to accessible location in project root
         import json
 
+        # Create performance_baselines directory in project root
+        project_root: Path = Path(__file__).parent.parent  # Go up from tests/ to project root
+        baseline_dir: Path = project_root / "performance_baselines"
+        baseline_dir.mkdir(exist_ok=True)
+
+        # Create timestamped filename for baseline data
+        timestamp: str = time.strftime("%Y%m%d_%H%M%S")
+        baseline_file: Path = baseline_dir / f"async_pipeline_baseline_{timestamp}.json"
+
+        # Also save a "latest" version for easy access
+        latest_baseline_file: Path = baseline_dir / "async_pipeline_baseline_latest.json"
+
         baseline_file.write_text(json.dumps(baseline_data, indent=2))
+        latest_baseline_file.write_text(json.dumps(baseline_data, indent=2))
 
         print(f"\nBaseline data saved to: {baseline_file}")
+        print(f"Latest baseline saved to: {latest_baseline_file}")
         print("Use this data to compare future performance improvements.")
+        print(f"Performance baselines directory: {baseline_dir}")
