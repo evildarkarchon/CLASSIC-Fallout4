@@ -57,7 +57,7 @@ def mock_yaml_settings() -> Generator:
             if key_path == "Game_Info.XSE_Acronym":
                 return "F4SE"
             if key_path == "CLASSIC_Info.default_settings":
-                return """# This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
+                return r"""# This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
 
 CLASSIC_Settings:
 

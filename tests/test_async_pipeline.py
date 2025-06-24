@@ -410,16 +410,23 @@ class TestAsyncUtilityFunctions:
 class TestAsyncPerformanceComparison:
     """Performance comparison tests between sync and async operations."""
 
+    @pytest.mark.usefixtures("init_message_handler_fixture")
     def test_crashlogs_reformat_with_async(self, crash_log_files: list[Path]) -> None:
         """Test async reformatting with sync wrapper."""
         remove_list = ("test_remove",)
 
-        with patch("asyncio.run") as mock_run:
+        # Mock the async function where it's imported in AsyncFileIO to prevent the warning
+        with patch("ClassicLib.ScanLog.AsyncFileIO.crashlogs_reformat_async") as mock_async_func:
+            # Configure the mock to return a completed future to avoid unawaited coroutine
+            future: asyncio.Future[None] = asyncio.Future()
+            future.set_result(None)
+            mock_async_func.return_value = future
+
             # This should run without errors
             crashlogs_reformat_with_async(crash_log_files, remove_list)
 
-            # Verify asyncio.run was called
-            mock_run.assert_called_once()
+            # Verify the async function was called
+            mock_async_func.assert_called_once_with(crash_log_files, remove_list)
 
     def test_async_vs_sync_file_loading_performance(self, crash_log_files: list[Path]) -> None:
         """Compare async vs sync file loading performance."""
