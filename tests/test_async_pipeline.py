@@ -1056,19 +1056,18 @@ PROBABLE CALL STACK:
         crash_logs_dir: Path = Path(__file__).parent.parent / "Crash Logs"
         if not crash_logs_dir.exists():
             pytest.skip("Crash Logs directory not found")
-        
+
         # Get all .log files (excluding AUTOSCAN files)
-        crash_log_files: list[Path] = sorted([
-            f for f in crash_logs_dir.glob("*.log")
-            if not f.name.endswith("-AUTOSCAN.md")
-        ])[:50]  # Limit to 50 files for reasonable test time
-        
+        crash_log_files: list[Path] = sorted([f for f in crash_logs_dir.glob("*.log") if not f.name.endswith("-AUTOSCAN.md")])[
+            :50
+        ]  # Limit to 50 files for reasonable test time
+
         if not crash_log_files:
             pytest.skip("No crash log files found")
-        
-        print(f"\n=== REAL-WORLD CRASH LOGS PERFORMANCE TEST ===")
+
+        print("\n=== REAL-WORLD CRASH LOGS PERFORMANCE TEST ===")
         print(f"Processing {len(crash_log_files)} actual crash logs")
-        
+
         # Create pipeline with realistic settings
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
@@ -1076,106 +1075,103 @@ PROBABLE CALL STACK:
             show_formid_values=True,
             formid_db_exists=True,
         )
-        
+
         # Process with minimal mocking - only mock the parts that require external resources
         full_test_start: float = time.perf_counter()
-        
+
         with (
             patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
             patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
         ):
             # Mock orchestrator to simulate processing without database dependencies
             mock_orchestrator: AsyncMock = AsyncMock()
-            
+
             async def process_real_logs(batch: list[Path]) -> list[tuple[Path, list[str], bool, dict[str, Any]]]:
                 """Process real crash logs with simulated analysis."""
                 results: list[tuple[Path, list[str], bool, dict[str, Any]]] = []
-                
+
                 for log_file in batch:
                     # Read actual log content
                     try:
                         content: str = log_file.read_text(encoding="utf-8", errors="ignore")
                         lines: list[str] = content.splitlines()
-                        
+
                         # Simulate real processing delay based on file size
                         await asyncio.sleep(len(lines) * 0.00001)  # ~10μs per line
-                        
+
                         # Generate realistic report
                         report: list[str] = [
-                            f"# CLASSIC Crash Log Auto-Scanner\n",
+                            "# CLASSIC Crash Log Auto-Scanner\n",
                             f"\n## Crash Log: {log_file.name}\n",
                             f"File size: {len(content):,} bytes\n",
                             f"Line count: {len(lines):,}\n",
                             "\n### Analysis Results\n",
                         ]
-                        
+
                         # Extract some real data from log
                         for i, line in enumerate(lines[:50]):  # Check first 50 lines
                             if "Form ID:" in line:
-                                report.append(f"- Found FormID at line {i+1}: {line.strip()}\n")
+                                report.append(f"- Found FormID at line {i + 1}: {line.strip()}\n")
                             elif "EXCEPTION_" in line:
-                                report.append(f"- Exception found at line {i+1}: {line.strip()}\n")
+                                report.append(f"- Exception found at line {i + 1}: {line.strip()}\n")
                             elif ".dll" in line.lower():
-                                report.append(f"- DLL reference at line {i+1}: {line.strip()}\n")
-                        
+                                report.append(f"- DLL reference at line {i + 1}: {line.strip()}\n")
+
                         results.append((log_file, report, False, {}))
-                    except Exception as e:
-                        error_report: list[str] = [f"Error processing {log_file.name}: {str(e)}\n"]
+                    except (FileNotFoundError, PermissionError, OSError, UnicodeDecodeError) as e:
+                        error_report: list[str] = [f"Error processing {log_file.name}: {e!s}\n"]
                         results.append((log_file, error_report, True, {}))
-                
+
                 return results
-            
+
             mock_orchestrator.process_crash_logs_batch_async.side_effect = process_real_logs
             mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
             mock_orchestrator_class.return_value.__aexit__.return_value = None
-            
+
             # Mock write operations to avoid file system writes
             async def mock_write_func(reports: list[Any]) -> None:
                 await asyncio.sleep(len(reports) * 0.001)  # 1ms per report
-            
+
             mock_write.side_effect = mock_write_func
-            
+
             # Run the actual pipeline with real crash logs
             try:
-                results, stats = await pipeline.process_crash_logs_async(
-                    crashlog_list=crash_log_files,
-                    remove_list=("test_remove",)
-                )
-            except Exception as e:
-                pytest.fail(f"Pipeline failed: {str(e)}")
-        
+                results, stats = await pipeline.process_crash_logs_async(crashlog_list=crash_log_files, remove_list=("test_remove",))
+            except (FileNotFoundError, PermissionError, OSError, ValueError, RuntimeError) as e:
+                pytest.fail(f"Pipeline failed: {e!s}")
+
         full_test_time: float = time.perf_counter() - full_test_start
-        
+
         # Calculate real-world metrics
         total_size: int = sum(f.stat().st_size for f in crash_log_files)
         avg_file_size: float = total_size / len(crash_log_files)
-        
-        print(f"\nTest Results:")
+
+        print("\nTest Results:")
         print(f"  Total files:          {len(crash_log_files)}")
         print(f"  Total size:           {total_size:,} bytes ({total_size / 1024 / 1024:.2f} MB)")
         print(f"  Average file size:    {avg_file_size:,.0f} bytes")
         print(f"  Total time:           {full_test_time:.4f}s")
         print(f"  Throughput:           {len(crash_log_files) / full_test_time:.2f} logs/sec")
         print(f"  Processing speed:     {total_size / 1024 / 1024 / full_test_time:.2f} MB/sec")
-        
-        print(f"\nPipeline Performance:")
+
+        print("\nPipeline Performance:")
         print(f"  Reformat time:        {stats.get('reformat_time', 0):.4f}s")
         print(f"  Load time:            {stats.get('load_time', 0):.4f}s")
         print(f"  Process time:         {stats.get('process_time', 0):.4f}s")
         print(f"  Write time:           {stats.get('write_time', 0):.4f}s")
         print(f"  Total pipeline time:  {stats.get('total_time', 0):.4f}s")
         print(f"  Logs per second:      {stats.get('logs_per_second', 0):.2f}")
-        
+
         # Performance assertions
         assert len(results) == len(crash_log_files)
         assert full_test_time > 0
-        assert stats.get('total_time', 0) > 0
-        assert stats.get('logs_per_second', 0) > 0
-        
+        assert stats.get("total_time", 0) > 0
+        assert stats.get("logs_per_second", 0) > 0
+
         # Real-world performance expectations
         # Should process at least 5 logs per second with real data
-        assert stats.get('logs_per_second', 0) > 5.0
-        
+        assert stats.get("logs_per_second", 0) > 5.0
+
         # Save real-world baseline
         baseline_data: dict[str, Any] = {
             "test_type": "real_world_crash_logs",
@@ -1188,20 +1184,21 @@ PROBABLE CALL STACK:
             "throughput_mb_per_sec": total_size / 1024 / 1024 / full_test_time,
             "pipeline_stats": stats,
         }
-        
+
         # Save to performance baselines
         import json
+
         project_root: Path = Path(__file__).parent.parent
         baseline_dir: Path = project_root / "performance_baselines"
         baseline_dir.mkdir(exist_ok=True)
-        
+
         timestamp: str = time.strftime("%Y%m%d_%H%M%S")
         baseline_file: Path = baseline_dir / f"real_world_baseline_{timestamp}.json"
         latest_file: Path = baseline_dir / "real_world_baseline_latest.json"
-        
+
         baseline_file.write_text(json.dumps(baseline_data, indent=2))
         latest_file.write_text(json.dumps(baseline_data, indent=2))
-        
+
         print(f"\nReal-world baseline saved to: {baseline_file}")
 
     @pytest.mark.slow
@@ -1213,37 +1210,36 @@ PROBABLE CALL STACK:
         crash_logs_dir: Path = Path(__file__).parent.parent / "Crash Logs"
         if not crash_logs_dir.exists():
             pytest.skip("Crash Logs directory not found")
-        
+
         # Get a subset of real crash logs for comparison
-        crash_log_files: list[Path] = sorted([
-            f for f in crash_logs_dir.glob("*.log")
-            if not f.name.endswith("-AUTOSCAN.md")
-        ])[:30]  # Use 30 files for a meaningful comparison
-        
+        crash_log_files: list[Path] = sorted([f for f in crash_logs_dir.glob("*.log") if not f.name.endswith("-AUTOSCAN.md")])[
+            :30
+        ]  # Use 30 files for a meaningful comparison
+
         if len(crash_log_files) < 10:
             pytest.skip("Not enough crash log files for comparison")
-        
-        print(f"\n=== SYNC VS ASYNC PIPELINE COMPARISON ===")
+
+        print("\n=== SYNC VS ASYNC PIPELINE COMPARISON ===")
         print(f"Testing with {len(crash_log_files)} real crash logs")
-        
+
         # Calculate total file size
         total_size: int = sum(f.stat().st_size for f in crash_log_files)
         print(f"Total data size: {total_size:,} bytes ({total_size / 1024 / 1024:.2f} MB)")
-        
+
         # Test 1: Sync Pipeline (simulated using sequential processing)
         print("\n--- SYNC PIPELINE TEST ---")
         sync_start: float = time.perf_counter()
-        
+
         # Simulate sync pipeline with sequential operations
         sync_results: list[tuple[Path, list[str], bool, dict[str, Any]]] = []
-        
+
         # Stage 1: Reformat (sequential)
         sync_reformat_start: float = time.perf_counter()
-        for log_file in crash_log_files:
+        for log_file in crash_log_files:  # noqa: B007
             # Simulate reformatting delay
-            time.sleep(0.001)  # 1ms per file
+            await asyncio.sleep(0.001)  # 1ms per file
         sync_reformat_time: float = time.perf_counter() - sync_reformat_start
-        
+
         # Stage 2: Load (sequential)
         sync_load_start: float = time.perf_counter()
         sync_cache: dict[str, list[str]] = {}
@@ -1251,7 +1247,7 @@ PROBABLE CALL STACK:
             content: str = log_file.read_text(encoding="utf-8", errors="ignore")
             sync_cache[log_file.name] = content.splitlines()
         sync_load_time: float = time.perf_counter() - sync_load_start
-        
+
         # Stage 3: Process (sequential)
         sync_process_start: float = time.perf_counter()
         for log_file in crash_log_files:
@@ -1260,19 +1256,19 @@ PROBABLE CALL STACK:
             report: list[str] = [f"Sync report for {log_file.name}\n"]
             for i, line in enumerate(lines[:50]):
                 if "Form ID:" in line or "EXCEPTION_" in line or ".dll" in line.lower():
-                    report.append(f"Found at line {i+1}: {line.strip()}\n")
-            time.sleep(0.005)  # 5ms processing per file
+                    report.append(f"Found at line {i + 1}: {line.strip()}\n")
+            await asyncio.sleep(0.005)  # 5ms processing per file
             sync_results.append((log_file, report, False, {}))
         sync_process_time: float = time.perf_counter() - sync_process_start
-        
+
         # Stage 4: Write (sequential)
         sync_write_start: float = time.perf_counter()
         for _result in sync_results:
-            time.sleep(0.002)  # 2ms write per file
+            await asyncio.sleep(0.002)  # 2ms write per file
         sync_write_time: float = time.perf_counter() - sync_write_start
-        
+
         sync_total_time: float = time.perf_counter() - sync_start
-        
+
         sync_stats: dict[str, float] = {
             "total_time": sync_total_time,
             "reformat_time": sync_reformat_time,
@@ -1281,22 +1277,22 @@ PROBABLE CALL STACK:
             "write_time": sync_write_time,
             "logs_per_second": len(crash_log_files) / sync_total_time,
         }
-        
+
         print(f"Sync total time:     {sync_total_time:.4f}s")
         print(f"Sync throughput:     {sync_stats['logs_per_second']:.2f} logs/sec")
-        
+
         # Test 2: Async Pipeline
         print("\n--- ASYNC PIPELINE TEST ---")
-        
+
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=True,
             formid_db_exists=True,
         )
-        
+
         async_start: float = time.perf_counter()
-        
+
         with (
             patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
             patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
@@ -1306,30 +1302,28 @@ PROBABLE CALL STACK:
             # Simulate async operations with concurrent processing
             async def async_reformat(files: list[Path], _remove: tuple[str]) -> None:
                 await asyncio.sleep(0.001 * len(files) / 10)  # Faster with concurrency
-            
+
             async def async_load(files: list[Path]) -> dict[str, list[str]]:
                 # Simulate concurrent file loading
                 async def load_one(f: Path) -> tuple[str, list[str]]:
                     await asyncio.sleep(0.0001)  # Minimal delay for async I/O
                     content: str = f.read_text(encoding="utf-8", errors="ignore")
                     return f.name, content.splitlines()
-                
-                tasks: list[asyncio.Task[tuple[str, list[str]]]] = [
-                    asyncio.create_task(load_one(f)) for f in files
-                ]
+
+                tasks: list[asyncio.Task[tuple[str, list[str]]]] = [asyncio.create_task(load_one(f)) for f in files]
                 results: list[tuple[str, list[str]]] = await asyncio.gather(*tasks)
                 return dict(results)
-            
+
             async def async_write(reports: list[tuple[Path, list[str], bool]]) -> None:
                 await asyncio.sleep(0.002 * len(reports) / 10)  # Faster with batching
-            
+
             mock_reformat.side_effect = async_reformat
             mock_load.side_effect = async_load
             mock_write.side_effect = async_write
-            
+
             # Mock orchestrator for async processing
             mock_orchestrator: AsyncMock = AsyncMock()
-            
+
             async def async_process_batch(batch: list[Path]) -> list[tuple[Path, list[str], bool, dict[str, Any]]]:
                 # Simulate concurrent processing
                 async def process_one(f: Path) -> tuple[Path, list[str], bool, dict[str, Any]]:
@@ -1341,41 +1335,38 @@ PROBABLE CALL STACK:
                         lines: list[str] = content.splitlines()
                         for i, line in enumerate(lines[:50]):
                             if "Form ID:" in line or "EXCEPTION_" in line or ".dll" in line.lower():
-                                report.append(f"Found at line {i+1}: {line.strip()}\n")
-                    except Exception:
+                                report.append(f"Found at line {i + 1}: {line.strip()}\n")
+                    except (FileNotFoundError, PermissionError, OSError, UnicodeDecodeError):
                         pass
                     return f, report, False, {}
-                
+
                 tasks: list[asyncio.Task[tuple[Path, list[str], bool, dict[str, Any]]]] = [
                     asyncio.create_task(process_one(f)) for f in batch
                 ]
                 return await asyncio.gather(*tasks)
-            
+
             mock_orchestrator.process_crash_logs_batch_async.side_effect = async_process_batch
             mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
             mock_orchestrator_class.return_value.__aexit__.return_value = None
-            
+
             # Run async pipeline
             async_results, async_stats = await pipeline.process_crash_logs_async(
-                crashlog_list=crash_log_files,
-                remove_list=("test_remove",)
+                crashlog_list=crash_log_files, remove_list=("test_remove",)
             )
-        
+
         async_total_time: float = time.perf_counter() - async_start
-        
+
         print(f"Async total time:    {async_total_time:.4f}s")
         print(f"Async throughput:    {async_stats['logs_per_second']:.2f} logs/sec")
-        
+
         # Compare results
         print("\n--- PERFORMANCE COMPARISON ---")
-        comparison: dict[str, Any] = AsyncPerformanceMonitor.compare_performance(
-            async_stats, sync_total_time, len(crash_log_files)
-        )
-        
+        comparison: dict[str, Any] = AsyncPerformanceMonitor.compare_performance(async_stats, sync_total_time, len(crash_log_files))
+
         print(f"Speedup factor:      {comparison['speedup_factor']:.2f}x")
         print(f"Improvement:         {comparison['improvement_percent']:.1f}%")
         print(f"Time saved:          {sync_total_time - async_total_time:.4f}s")
-        
+
         # Stage-by-stage comparison
         print("\n--- STAGE BREAKDOWN ---")
         stages: list[str] = ["reformat_time", "load_time", "process_time", "write_time"]
@@ -1383,8 +1374,10 @@ PROBABLE CALL STACK:
             sync_stage: float = sync_stats.get(stage, 0)
             async_stage: float = async_stats.get(stage, 0)
             stage_speedup: float = sync_stage / async_stage if async_stage > 0 else 0
-            print(f"{stage.replace('_', ' ').title():14s}: Sync {sync_stage:6.4f}s | Async {async_stage:6.4f}s | Speedup {stage_speedup:.2f}x")
-        
+            print(
+                f"{stage.replace('_', ' ').title():14s}: Sync {sync_stage:6.4f}s | Async {async_stage:6.4f}s | Speedup {stage_speedup:.2f}x"
+            )
+
         # Memory efficiency estimate (based on concurrent operations)
         print("\n--- EFFICIENCY METRICS ---")
         sync_efficiency: float = len(crash_log_files) / sync_total_time
@@ -1392,7 +1385,7 @@ PROBABLE CALL STACK:
         print(f"Sync efficiency:     {sync_efficiency:.2f} logs/second")
         print(f"Async efficiency:    {async_efficiency:.2f} logs/second")
         print(f"Efficiency gain:     {((async_efficiency / sync_efficiency) - 1) * 100:.1f}%")
-        
+
         # Save comparison data
         comparison_data: dict[str, Any] = {
             "test_type": "sync_vs_async_comparison",
@@ -1406,30 +1399,31 @@ PROBABLE CALL STACK:
                 stage: {
                     "sync_time": sync_stats.get(stage, 0),
                     "async_time": async_stats.get(stage, 0),
-                    "speedup": sync_stats.get(stage, 0) / async_stats.get(stage, 0) if async_stats.get(stage, 0) > 0 else 0
+                    "speedup": sync_stats.get(stage, 0) / async_stats.get(stage, 0) if async_stats.get(stage, 0) > 0 else 0,
                 }
                 for stage in stages
-            }
+            },
         }
-        
+
         # Save to performance baselines
         import json
+
         project_root: Path = Path(__file__).parent.parent
         baseline_dir: Path = project_root / "performance_baselines"
         baseline_dir.mkdir(exist_ok=True)
-        
+
         timestamp: str = time.strftime("%Y%m%d_%H%M%S")
         comparison_file: Path = baseline_dir / f"sync_async_comparison_{timestamp}.json"
         latest_comparison: Path = baseline_dir / "sync_async_comparison_latest.json"
-        
+
         comparison_file.write_text(json.dumps(comparison_data, indent=2))
         latest_comparison.write_text(json.dumps(comparison_data, indent=2))
-        
+
         print(f"\nComparison data saved to: {comparison_file}")
-        
+
         # Assertions
         assert len(async_results) == len(crash_log_files)
         assert async_total_time > 0
         assert sync_total_time > 0
-        assert comparison['speedup_factor'] > 1.0  # Async should be faster
-        assert async_stats['logs_per_second'] > sync_stats['logs_per_second']
+        assert comparison["speedup_factor"] > 1.0  # Async should be faster
+        assert async_stats["logs_per_second"] > sync_stats["logs_per_second"]
