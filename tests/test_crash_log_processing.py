@@ -6,13 +6,16 @@ of crash logs, verifying that the full pipeline works correctly.
 """
 
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 from unittest.mock import patch
 
 import pytest
 
 from CLASSIC_ScanLogs import ClassicScanLogs
 from ClassicLib import GlobalRegistry
+
+if TYPE_CHECKING:
+    from collections import Counter
 
 
 @pytest.fixture
@@ -69,13 +72,14 @@ def create_crashlog_file(tmp_path: Path, sample_crashlog: str) -> Path:
 class TestCrashLogProcessingIntegration:
     """Integration tests for crash log processing."""
 
-    def test_process_crashlog_integration(self, create_crashlog_file: Path, init_message_handler_fixture) -> None:
+    @pytest.mark.usefixtures("init_message_handler_fixture")
+    def test_process_crashlog_integration(self, create_crashlog_file: Path) -> None:
         """Test the full process_crashlog function with minimal mocking."""
-        crash_file = create_crashlog_file
+        crash_file: Path = create_crashlog_file
 
         with (
             patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml,
-            patch("ClassicLib.YamlSettingsCache.classic_settings") as mock_classic,
+            patch("ClassicLib.YamlSettingsCache.classic_settings") as mock_classic,  # noqa: F841
             patch("CLASSIC_ScanLogs.crashlogs_get_files") as mock_get_files,
             patch("CLASSIC_ScanLogs.crashlogs_reformat"),
         ):
@@ -104,10 +108,10 @@ class TestCrashLogProcessingIntegration:
 
             try:
                 # Create scanner instance with proper mocking
-                scanner = ClassicScanLogs()
+                scanner: ClassicScanLogs = ClassicScanLogs()
 
                 # Process the crash log using the instance method
-                result = scanner.process_crashlog(crash_file)
+                result: tuple[Path, list[str], bool, Counter[str]] = scanner.process_crashlog(crash_file)
 
                 # Verify results
                 assert result is not None
@@ -121,14 +125,15 @@ class TestCrashLogProcessingIntegration:
                 if original_game is not None:
                     GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
 
-    def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str, init_message_handler_fixture) -> None:
+    @pytest.mark.usefixtures("init_message_handler_fixture")
+    def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str) -> None:
         """Test the entire crash log scanning process."""
         # Create crash logs directory with multiple logs
         crash_dir: Path = tmp_path / "Crash Logs"
         crash_dir.mkdir(exist_ok=True)
 
         # Create multiple crash log files
-        crash_log_files = []
+        crash_log_files: list[Any] = []
         for i in range(3):
             crash_file: Path = crash_dir / f"crash-2023-01-0{i + 1}-00-00-00.log"
             crash_file.write_text(sample_crashlog)
@@ -167,10 +172,10 @@ class TestCrashLogProcessingIntegration:
 
             try:
                 # Run the scanner
-                scanner = ClassicScanLogs()
+                scanner: ClassicScanLogs = ClassicScanLogs()
 
                 # Process each crash log and collect results
-                results = []
+                results: list[Any] = []
                 for crash_file in scanner.crashlog_list:
                     crashlog_file, autoscan_report, trigger_scan_failed, local_stats = scanner.process_crashlog(crash_file)
                     results.append(autoscan_report)

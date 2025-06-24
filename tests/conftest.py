@@ -97,6 +97,67 @@ def mock_yaml_settings() -> Generator[MagicMock, None, None]:
                 return "Buffout 4"
             if key_path == "Game_Info.XSE_Acronym":
                 return "F4SE"
+            if key_path == "CLASSIC_Info.default_settings":
+                return """# This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
+
+CLASSIC_Settings:
+
+# Set the game that you want CLASSIC to currently manage. (Fallout 4 | Skyrim SE | Starfield)
+  Managed Game: Fallout 4
+
+# Set to true if you want CLASSIC to periodically check for its own updates online through GitHub.
+  Update Check: true
+
+# Set to true if you want CLASSIC to prioritize scanning the Virtual Reality version of your game.
+  VR Mode: false
+
+# FCX - File Check Xtended | Set to true if you want CLASSIC to check the integrity of your game files and core mods.
+  FCX Mode: true
+
+# Set to true if you want CLASSIC to remove some unnecessary lines and redundant information from your crash log files.
+# CAUTION: Changes will be permanent for each crash log you scan after. May hide info useful for debugger programs.
+  Simplify Logs: false
+
+# Set to true if you want CLASSIC to show extra stats about scanned logs in the command line / terminal window.
+# NOTICE: This setting currently has no effect, crash log stats will be fully implemented in a future update.
+  Show Statistics: false
+
+# Set to true if you want CLASSIC to look up FormID values (names) automatically while scanning crash logs.
+# This will show some extra details for Possible FormID Suspects at the expense of longer scanning times.
+  Show FormID Values: false
+
+# Set to true if you want CLASSIC to move all unsolved crash logs and their autoscans to CLASSIC UNSOLVED folder.
+# Unsolved logs are all crash logs that are incomplete or in the wrong format.
+  Move Unsolved Logs: true
+
+# Copy-paste your INI folder path below, where your main game INI files are located (Documents\My Games\*game*)
+# If you are using MO2, I recommend disabling Profile Specific Game INI Files, located in Tools > Profiles
+# This is only required if CLASSIC has problems detecting your game files or is scanning the wrong game.
+  INI Folder Path:
+
+# Copy-paste your staging mods folder path below. (Folder where your mod manager keeps all extracted mod files).
+# MO2 Ex. MODS Folder Path: C:\Mod Organizer 2\*game*\mods | Vortex Ex. MODS Folder Path: C:\Vortex Mods\*game*
+# You can also set this path to your game's Data folder, but then the scan results will be much less accurate.
+  MODS Folder Path:
+
+# Copy-paste your custom crash logs folder path below. Ex. SCAN Custom Path: C:\My Crash Logs
+# Crash logs are generated in Documents\My Games\*game*\XSE folder by default. If no path is set,
+# crash logs from that Scrip Extender folder and where the CLASSIC.exe is located will be scanned.
+  SCAN Custom Path:
+
+# Toggle audio notifications for when CLASSIC finishes scanning your crash logs and mod files.
+  Audio Notifications: true
+
+# Set the source where CLASSIC will check for updates. (Nexus | GitHub)
+  Update Source: Both
+
+# Enable or disable the use of an asynchronous pipeline for processing. This setting should not be changed and is primarily for testing purposes.
+# If you are not a developer or do not know what this means, leave it as is.
+  Use Async Pipeline: true
+
+# Set to true if you want CLASSIC to disable progress bars when running in command line mode.
+# This can be useful for cleaner output when running CLASSIC in scripts or automated environments.
+  Disable CLI Progress: false"""
             if key_path == "Crashlog_Error_Check":
                 return {"HIGH | Test Error": "error_signal"}
             if key_path == "Crashlog_Stack_Check":

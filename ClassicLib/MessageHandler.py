@@ -314,7 +314,7 @@ class ProgressContext:
             if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
                 self._progress_bar.hide()
             elif hasattr(self._progress_bar, "close"):
-                self._progress_bar.close() # type: ignore[reportAttributeAccessIssue]
+                self._progress_bar.close()  # type: ignore[reportAttributeAccessIssue]
 
     def update(self, n: int = 1, description: str | None = None) -> None:
         """Update progress by n steps.
@@ -509,8 +509,13 @@ class MessageHandler(QObject):
             output += f"\n   Details: {message.details}"
 
         # Use stderr for errors and warnings
+        # Use sys.stderr instead of sys.__stderr__ for better pytest compatibility
         if message.msg_type in (MessageType.ERROR, MessageType.WARNING, MessageType.CRITICAL):
-            print(output, file=sys.__stderr__, flush=True)
+            try:
+                print(output, file=sys.stderr, flush=True)
+            except OSError:
+                # Fallback to stdout if stderr is not available
+                print(output, flush=True)
         else:
             print(output)
 

@@ -10,7 +10,7 @@ import random
 import threading
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -27,9 +27,9 @@ def create_test_logs(tmp_path: Path) -> list[Path]:
     log_dir.mkdir()
 
     # Create test log files
-    log_files = []
+    log_files: list[Any] = []
     for i in range(5):
-        log_file = log_dir / f"test_log_{i}.log"
+        log_file: Path = log_dir / f"test_log_{i}.log"
         # Write different content to each log file
         log_file.write_text(f"Log file {i} content\nLine 2\nLine 3\n")
         log_files.append(log_file)
@@ -43,7 +43,7 @@ class TestThreadSafeLogCacheThreadSafety:
 
     def test_concurrent_log_reads(self, create_test_logs: list[Path]) -> None:
         """Test that multiple threads can read logs concurrently without conflicts."""
-        log_cache = ThreadSafeLogCache(create_test_logs)
+        log_cache: ThreadSafeLogCache = ThreadSafeLogCache(create_test_logs)
 
         # Function for threads to execute
         def read_random_log() -> None:
@@ -56,9 +56,9 @@ class TestThreadSafeLogCacheThreadSafety:
                 assert len(log_content) == 3
 
         # Create and start multiple threads
-        threads = []
+        threads: list[threading.Thread] = []
         for _ in range(10):
-            thread = threading.Thread(target=read_random_log)
+            thread: threading.Thread = threading.Thread(target=read_random_log)
             threads.append(thread)
             thread.start()
 
@@ -68,7 +68,7 @@ class TestThreadSafeLogCacheThreadSafety:
 
     def test_concurrent_reads_with_threadpool(self, create_test_logs: list[Path]) -> None:
         """Test that ThreadPoolExecutor can use the cache concurrently."""
-        log_cache = ThreadSafeLogCache(create_test_logs)
+        log_cache: ThreadSafeLogCache = ThreadSafeLogCache(create_test_logs)
         log_names: list[str] = log_cache.get_log_names()
         results: list[list[str]] = []
 
@@ -85,7 +85,7 @@ class TestThreadSafeLogCacheThreadSafety:
 
             # Collect results as they complete
             for future in concurrent.futures.as_completed(futures):
-                log_content = future.result()
+                log_content: list[str] = future.result()
                 results.append(log_content)
 
         # Verify that all results are valid
@@ -96,8 +96,8 @@ class TestThreadSafeLogCacheThreadSafety:
 
     def test_reentrant_lock_behavior(self, create_test_logs: list[Path]) -> None:
         """Test that the reentrant lock allows nested lock acquisitions from the same thread."""
-        log_cache = ThreadSafeLogCache(create_test_logs)
-        log_names = log_cache.get_log_names()
+        log_cache: ThreadSafeLogCache = ThreadSafeLogCache(create_test_logs)
+        log_names: list[str] = log_cache.get_log_names()
 
         # Create a custom method that acquires the lock twice
         def nested_lock_method() -> list[str]:
@@ -108,7 +108,7 @@ class TestThreadSafeLogCacheThreadSafety:
                     return log_cache.read_log(log_names[0])
 
         # The test will time out if the lock is not reentrant
-        result = nested_lock_method()
+        result: list[str] = nested_lock_method()
 
         # Verify we got a valid result
         assert len(result) == 3
@@ -121,26 +121,26 @@ class TestThreadSafeLogCacheEdgeCases:
 
     def test_nonexistent_log(self) -> None:
         """Test requesting a log that doesn't exist."""
-        log_cache = ThreadSafeLogCache([])  # Empty cache
-        result = log_cache.read_log("nonexistent_log.log")
+        log_cache: ThreadSafeLogCache = ThreadSafeLogCache([])  # Empty cache
+        result: list[str] = log_cache.read_log("nonexistent_log.log")
         assert result == []
 
     def test_empty_cache(self) -> None:
         """Test operations on an empty cache."""
-        log_cache = ThreadSafeLogCache([])
+        log_cache: ThreadSafeLogCache = ThreadSafeLogCache([])
         assert log_cache.get_log_names() == []
 
     def test_log_with_invalid_chars(self, tmp_path: Path) -> None:
         """Test handling of logs with invalid UTF-8 characters."""
         # Create a log file with invalid UTF-8
-        log_file = tmp_path / "invalid_utf8.log"
+        log_file: Path = tmp_path / "invalid_utf8.log"
         with log_file.open("wb") as f:
             f.write(b"Valid text\n")
             f.write(b"\xff\xfe\xfd\n")  # Invalid UTF-8
             f.write(b"More valid text\n")
 
-        log_cache = ThreadSafeLogCache([log_file])
-        result = log_cache.read_log("invalid_utf8.log")
+        log_cache: ThreadSafeLogCache = ThreadSafeLogCache([log_file])
+        result: list[str] = log_cache.read_log("invalid_utf8.log")
 
         # Should handle invalid UTF-8 with the 'ignore' error strategy
         assert len(result) == 3

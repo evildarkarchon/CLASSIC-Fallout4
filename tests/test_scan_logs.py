@@ -7,6 +7,7 @@ including segment extraction, plugin detection, and suspect identification.
 
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any, Literal
 from unittest.mock import patch
 
 import pytest
@@ -15,8 +16,6 @@ from CLASSIC_ScanLogs import ClassicScanLogs
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.DetectMods import detect_mods_important
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-from ClassicLib.Util import append_or_extend
 
 
 @pytest.fixture
@@ -44,7 +43,12 @@ def mock_yaml_settings() -> Generator:
     """Mock the yaml_settings function to return test values."""
     with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml:
         # Configure the mock to return appropriate values for different calls
-        def side_effect(type_arg, yaml_store, key_path, new_value=None):
+        def side_effect(
+            type_arg: type,  # noqa: ARG001
+            yaml_store: YAML,
+            key_path: str,
+            new_value: Any = None,  # noqa: ARG001
+        ) -> list[str] | dict[str, str] | dict[str, list[str]] | Literal["Buffout 4", "F4SE"] | str | None:
             # Handle special cases based on arguments
             if key_path == "catch_log_records":
                 return ["Record1", "Record2"]
@@ -52,6 +56,67 @@ def mock_yaml_settings() -> Generator:
                 return "Buffout 4"
             if key_path == "Game_Info.XSE_Acronym":
                 return "F4SE"
+            if key_path == "CLASSIC_Info.default_settings":
+                return """# This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
+
+CLASSIC_Settings:
+
+# Set the game that you want CLASSIC to currently manage. (Fallout 4 | Skyrim SE | Starfield)
+  Managed Game: Fallout 4
+
+# Set to true if you want CLASSIC to periodically check for its own updates online through GitHub.
+  Update Check: true
+
+# Set to true if you want CLASSIC to prioritize scanning the Virtual Reality version of your game.
+  VR Mode: false
+
+# FCX - File Check Xtended | Set to true if you want CLASSIC to check the integrity of your game files and core mods.
+  FCX Mode: true
+
+# Set to true if you want CLASSIC to remove some unnecessary lines and redundant information from your crash log files.
+# CAUTION: Changes will be permanent for each crash log you scan after. May hide info useful for debugger programs.
+  Simplify Logs: false
+
+# Set to true if you want CLASSIC to show extra stats about scanned logs in the command line / terminal window.
+# NOTICE: This setting currently has no effect, crash log stats will be fully implemented in a future update.
+  Show Statistics: false
+
+# Set to true if you want CLASSIC to look up FormID values (names) automatically while scanning crash logs.
+# This will show some extra details for Possible FormID Suspects at the expense of longer scanning times.
+  Show FormID Values: false
+
+# Set to true if you want CLASSIC to move all unsolved crash logs and their autoscans to CLASSIC UNSOLVED folder.
+# Unsolved logs are all crash logs that are incomplete or in the wrong format.
+  Move Unsolved Logs: true
+
+# Copy-paste your INI folder path below, where your main game INI files are located (Documents\My Games\*game*)
+# If you are using MO2, I recommend disabling Profile Specific Game INI Files, located in Tools > Profiles
+# This is only required if CLASSIC has problems detecting your game files or is scanning the wrong game.
+  INI Folder Path:
+
+# Copy-paste your staging mods folder path below. (Folder where your mod manager keeps all extracted mod files).
+# MO2 Ex. MODS Folder Path: C:\Mod Organizer 2\*game*\mods | Vortex Ex. MODS Folder Path: C:\Vortex Mods\*game*
+# You can also set this path to your game's Data folder, but then the scan results will be much less accurate.
+  MODS Folder Path:
+
+# Copy-paste your custom crash logs folder path below. Ex. SCAN Custom Path: C:\My Crash Logs
+# Crash logs are generated in Documents\My Games\*game*\XSE folder by default. If no path is set,
+# crash logs from that Scrip Extender folder and where the CLASSIC.exe is located will be scanned.
+  SCAN Custom Path:
+
+# Toggle audio notifications for when CLASSIC finishes scanning your crash logs and mod files.
+  Audio Notifications: true
+
+# Set the source where CLASSIC will check for updates. (Nexus | GitHub)
+  Update Source: Both
+
+# Enable or disable the use of an asynchronous pipeline for processing. This setting should not be changed and is primarily for testing purposes.
+# If you are not a developer or do not know what this means, leave it as is.
+  Use Async Pipeline: true
+
+# Set to true if you want CLASSIC to disable progress bars when running in command line mode.
+# This can be useful for cleaner output when running CLASSIC in scripts or automated environments.
+  Disable CLI Progress: false"""
             if isinstance(yaml_store, YAML) and yaml_store == YAML.Game and "Mods_" in key_path:
                 return {"test_mod": "Test mod warning message"}
             if key_path == "Crashlog_Error_Check":
@@ -99,7 +164,7 @@ def mock_crash_data() -> list[str]:
 
 
 @pytest.fixture
-def mock_scanner(setup_global_registry, mock_yaml_settings, init_message_handler_fixture) -> ClassicScanLogs:
+def mock_scanner(setup_global_registry: Generator, mock_yaml_settings: Generator, init_message_handler_fixture: Any) -> ClassicScanLogs:  # noqa: ARG001
     """Create a mock ClassicScanLogs instance with basic functionality."""
     with (
         patch("ClassicLib.ScanLog.crashlogs_get_files", return_value=[Path("crash-test.log")]),
@@ -109,11 +174,11 @@ def mock_scanner(setup_global_registry, mock_yaml_settings, init_message_handler
         scanner = ClassicScanLogs()
         scanner.yamldata.crashgen_name = "Buffout 4"
         # Mock the orchestrator components for testing
-        if hasattr(scanner.orchestrator, "_record_scanner"):
-            scanner.orchestrator._record_scanner.lower_records = {"record1", "record2"}
-            scanner.orchestrator._record_scanner.lower_ignore = {"ignored_record"}
-        if hasattr(scanner.orchestrator, "_plugin_analyzer"):
-            scanner.orchestrator._plugin_analyzer.lower_plugins_ignore = {"ignored_plugin"}
+        if hasattr(scanner.orchestrator, "record_scanner"):
+            scanner.orchestrator.record_scanner.lower_records = {"record1", "record2"}
+            scanner.orchestrator.record_scanner.lower_ignore = {"ignored_record"}
+        if hasattr(scanner.orchestrator, "plugin_analyzer"):
+            scanner.orchestrator.plugin_analyzer.lower_plugins_ignore = {"ignored_plugin"}
         scanner.formid_db_exists = True
         scanner.show_formid_values = True
         return scanner
@@ -122,24 +187,24 @@ def mock_scanner(setup_global_registry, mock_yaml_settings, init_message_handler
 class TestClassicScanLogs:
     """Tests for the ClassicScanLogs class."""
 
-    def test_formid_match(self, mock_scanner):
+    def test_formid_match(self, mock_scanner: ClassicScanLogs) -> None:
         """Test the formid_match method."""
         # Set up input data for the formid_match method - with proper formatting as expected by the implementation
         formids_matches = ["Form ID: 00123456", "Form ID: 01789ABC"]
         # The crashlog_plugins dictionary maps plugin names to their load order IDs
         crashlog_plugins = {"Plugin1.esp": "00", "Plugin2.esp": "01"}
-        autoscan_report = []
+        autoscan_report: list[str] = []
 
         # Test FormID matching through the orchestrator
-        if hasattr(mock_scanner.orchestrator, "_formid_analyzer"):
-            mock_scanner.orchestrator._formid_analyzer.formid_match(formids_matches, crashlog_plugins, autoscan_report)
+        if hasattr(mock_scanner.orchestrator, "formid_analyzer"):
+            mock_scanner.orchestrator.formid_analyzer.formid_match(formids_matches, crashlog_plugins, autoscan_report)
 
             # Verify the results - just check that the function ran without error
             assert len(autoscan_report) >= 0
             # The actual FormID matching behavior depends on the database content
             # and complex matching logic, so we just verify it runs without error
 
-    def test_scan_named_records(self, mock_scanner):
+    def test_scan_named_records(self, mock_scanner: ClassicScanLogs) -> None:
         """Test the scan_named_records method."""
         # Create test data
         segment_callstack = [
@@ -150,13 +215,13 @@ class TestClassicScanLogs:
         ]
 
         # Test the record scanning through the orchestrator
-        records_matches = []
-        autoscan_report = []
+        records_matches: list[str] = []
+        autoscan_report: list[str] = []
 
-        if hasattr(mock_scanner.orchestrator, "_record_scanner"):
+        if hasattr(mock_scanner.orchestrator, "record_scanner"):
             # The record scanner should have methods to find matching records
             # This is a simplified test - the actual implementation is complex
-            mock_scanner.orchestrator._record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)
+            mock_scanner.orchestrator.record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)
 
             # Verify records were properly found and processed
             assert len(records_matches) >= 0  # May be empty if no records match
@@ -166,12 +231,12 @@ class TestClassicScanLogs:
 class TestDetectMods:
     """Tests for the DetectMods functions."""
 
-    def test_detect_mods_important(self):
+    def test_detect_mods_important(self) -> None:
         """Test the detect_mods_important function."""
         # Case 1: A regular important mod that's installed
         yaml_dict = {"mod1 | Mod Display Name": "You should install this mod"}
         crashlog_plugins = {"plugin_with_mod1.esp": "00", "unrelated_plugin.esp": "01"}
-        autoscan_report = []
+        autoscan_report: list[str] = []
 
         # Test with installed mod and no GPU rivalry
         detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, None)

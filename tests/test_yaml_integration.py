@@ -6,6 +6,7 @@ with the scan logs functionality.
 """
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -70,14 +71,15 @@ class TestYamlSettingsIntegration:
             mock_path.return_value = create_yaml_files / "CLASSIC Settings.yaml"
 
             # Test loading settings
-            result = yaml_settings(str, YAML.Settings, "Game_Info.XSE_Acronym")
+            result: str | None = yaml_settings(str, YAML.Settings, "Game_Info.XSE_Acronym")
             assert result == "F4SE"
 
-            mods = yaml_settings(dict, YAML.Settings, "Mods_Alert_Single")
+            mods: dict[Any, Any] | None = yaml_settings(dict, YAML.Settings, "Mods_Alert_Single")
             assert "problematic_mod" in mods  # type: ignore
             assert mods["problematic_mod"] == "This mod causes crashes."  # type: ignore
 
-    def test_scan_logs_settings_integration(self, create_yaml_files: Path, init_message_handler_fixture) -> None:
+    @pytest.mark.usefixtures("init_message_handler_fixture")
+    def test_scan_logs_settings_integration(self, create_yaml_files: Path) -> None:
         """Test that ClassicScanLogs properly integrates with YAML settings."""
         with (
             patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.get_path_for_store") as mock_path,
@@ -92,7 +94,7 @@ class TestYamlSettingsIntegration:
 
             # Initialize ClassicScanLogs
             try:
-                scanner = ClassicScanLogs()
+                scanner: ClassicScanLogs = ClassicScanLogs()
 
                 # Check that settings were loaded through yamldata
                 assert hasattr(scanner, "yamldata")
@@ -109,7 +111,7 @@ class TestYamlSettingsIntegration:
         """Test that local YAML settings override global settings when appropriate."""
         with patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.get_path_for_store") as mock_path:
             # Setup mock to return different files based on the YAML enum
-            def mock_get_path(yaml_store) -> Path | None:  # noqa: ANN001
+            def mock_get_path(yaml_store: YAML) -> Path | None:
                 if yaml_store == YAML.Settings:
                     return create_yaml_files / "CLASSIC Settings.yaml"
                 if yaml_store == YAML.Game_Local:
@@ -119,7 +121,7 @@ class TestYamlSettingsIntegration:
             mock_path.side_effect = mock_get_path
 
             # Test that Game_Local settings can be accessed
-            local_records = yaml_settings(list, YAML.Game_Local, "catch_log_records")
+            local_records: list[Any] | None = yaml_settings(list, YAML.Game_Local, "catch_log_records")
             assert local_records is not None
             assert "Record1" in local_records
             assert "Record2" in local_records

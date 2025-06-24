@@ -9,21 +9,26 @@ import asyncio
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Literal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
-from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
-from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, load_crash_logs_async
 from ClassicLib.ScanLog.AsyncFileIO import (
     crashlogs_reformat_with_async,
     load_crash_logs_async_optimized,
     write_reports_batch,
 )
+from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer
+from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
+from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, load_crash_logs_async
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
+    from psutil import Process
 
 
 @pytest.fixture
@@ -117,9 +122,8 @@ class TestAsyncPipeline:
         assert pipeline.formid_db_exists is False
         assert isinstance(pipeline.performance_stats, dict)
 
-    async def test_async_pipeline_process_crash_logs(
-        self, crash_log_files: list[Path], mock_yamldata: MagicMock, init_message_handler_fixture: Any
-    ) -> None:
+    @pytest.mark.usefixtures("init_message_handler_fixture")
+    async def test_async_pipeline_process_crash_logs(self, crash_log_files: list[Path], mock_yamldata: MagicMock) -> None:
         """Test the full async pipeline processing."""
         pipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
@@ -134,10 +138,10 @@ class TestAsyncPipeline:
             patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
             patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
         ):
-            # Setup mocks
-            mock_reformat.return_value = None
+            # Setup mocks - use AsyncMock for async functions
+            mock_reformat.return_value = AsyncMock()
             mock_load.return_value = {log_file.name: ["line1", "line2"] for log_file in crash_log_files}
-            mock_write.return_value = None
+            mock_write.return_value = AsyncMock()
 
             # Create mock orchestrator instance
             mock_orchestrator = AsyncMock()
@@ -196,7 +200,7 @@ class TestAsyncPipeline:
 class TestAsyncScanOrchestrator:
     """Integration tests for AsyncScanOrchestrator."""
 
-    async def test_async_scan_orchestrator_context_manager(self, crash_log_files: list[Path], mock_yamldata: MagicMock) -> None:
+    async def test_async_scan_orchestrator_context_manager(self, mock_yamldata: MagicMock) -> None:
         """Test AsyncScanOrchestrator as async context manager."""
         crashlogs = MagicMock(spec=ThreadSafeLogCache)
 
@@ -341,17 +345,6 @@ class TestAsyncFileIO:
             content = report_file.read_text()
             assert f"Report for {log_file.name}" in content
 
-    def test_crashlogs_reformat_with_async(self, crash_log_files: list[Path]) -> None:
-        """Test async reformatting with sync wrapper."""
-        remove_list = ("test_remove",)
-
-        with patch("asyncio.run") as mock_run:
-            # This should run without errors
-            crashlogs_reformat_with_async(crash_log_files, remove_list)
-
-            # Verify asyncio.run was called
-            mock_run.assert_called_once()
-
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -370,12 +363,12 @@ class TestAsyncDatabasePool:
         """Test database pool initialization."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create a test database file
-            db_path = Path(temp_dir) / "test.db"
+            db_path: Path = Path(temp_dir) / "test.db"
             db_path.write_text("dummy content")  # Not a real SQLite file, but exists
 
             # Mock aiosqlite.connect to avoid actual database operations
-            async def mock_connect(path):
-                mock_conn = AsyncMock()
+            async def mock_connect(_path: Path) -> AsyncMock:
+                mock_conn: AsyncMock = AsyncMock()
                 return mock_conn
 
             with (
@@ -417,19 +410,30 @@ class TestAsyncUtilityFunctions:
 class TestAsyncPerformanceComparison:
     """Performance comparison tests between sync and async operations."""
 
+    def test_crashlogs_reformat_with_async(self, crash_log_files: list[Path]) -> None:
+        """Test async reformatting with sync wrapper."""
+        remove_list = ("test_remove",)
+
+        with patch("asyncio.run") as mock_run:
+            # This should run without errors
+            crashlogs_reformat_with_async(crash_log_files, remove_list)
+
+            # Verify asyncio.run was called
+            mock_run.assert_called_once()
+
     def test_async_vs_sync_file_loading_performance(self, crash_log_files: list[Path]) -> None:
         """Compare async vs sync file loading performance."""
         # Test sync loading
-        sync_start = time.perf_counter()
-        sync_cache = {}
+        sync_start: float = time.perf_counter()
+        sync_cache: dict[Any, Any] = {}
         for log_file in crash_log_files:
             sync_cache[log_file.name] = log_file.read_text().splitlines()
         sync_time = time.perf_counter() - sync_start
 
         # Test async loading
-        async def async_test():
-            async_start = time.perf_counter()
-            async_cache = await load_crash_logs_async(crash_log_files)
+        async def async_test() -> tuple[float, dict[str, list[str]]]:
+            async_start: float = time.perf_counter()
+            async_cache: dict[str, list[str]] = await load_crash_logs_async(crash_log_files)
             return time.perf_counter() - async_start, async_cache
 
         async_time, async_cache = asyncio.run(async_test())
@@ -525,23 +529,23 @@ PROBABLE CALL STACK:
         }
 
         for test_file in test_files:
-            file_size = test_file.stat().st_size
+            file_size: int = test_file.stat().st_size
             results["file_sizes"].append(file_size)
 
             # Test sync reading
-            sync_start = time.perf_counter()
-            sync_content = test_file.read_text()
-            sync_read_time = time.perf_counter() - sync_start
+            sync_start: float = time.perf_counter()
+            sync_content: str = test_file.read_text()
+            sync_read_time: float = time.perf_counter() - sync_start
             results["sync_read_times"].append(sync_read_time)
 
             # Test async reading
-            async def async_read_test():
-                async_start = time.perf_counter()
+            async def async_read_test(file_path: Path = test_file) -> tuple[float, str]:
+                async_start: float = time.perf_counter()
                 import aiofiles
 
-                async with aiofiles.open(test_file, mode="r", encoding="utf-8", errors="ignore") as f:
-                    async_content = await f.read()
-                async_read_time = time.perf_counter() - async_start
+                async with aiofiles.open(file_path, encoding="utf-8", errors="ignore") as f:
+                    async_content: str = await f.read()
+                async_read_time: float = time.perf_counter() - async_start
                 return async_read_time, async_content
 
             async_read_time, async_content = asyncio.run(async_read_test())
@@ -560,17 +564,17 @@ PROBABLE CALL STACK:
             results["sync_write_times"].append(sync_write_time)
 
             # Test async writing
-            async def async_write_test():
-                async_start = time.perf_counter()
-                async_write_file = test_file.with_name(f"{test_file.stem}_async_write.log")
+            async def async_write_test(file_path: Path = test_file, content: str = write_content) -> float:
+                async_start: float = time.perf_counter()
+                async_write_file = file_path.with_name(f"{file_path.stem}_async_write.log")
                 import aiofiles
 
                 async with aiofiles.open(async_write_file, mode="w", encoding="utf-8", errors="ignore") as f:
-                    await f.write(write_content)
-                async_write_time = time.perf_counter() - async_start
+                    await f.write(content)
+                async_write_time: float = time.perf_counter() - async_start
                 return async_write_time
 
-            async_write_time = asyncio.run(async_write_test())
+            async_write_time: float = asyncio.run(async_write_test())
             results["async_write_times"].append(async_write_time)
 
         # Log baseline metrics
@@ -580,7 +584,7 @@ PROBABLE CALL STACK:
         avg_sync_write = sum(results["sync_write_times"]) / len(results["sync_write_times"])
         avg_async_write = sum(results["async_write_times"]) / len(results["async_write_times"])
 
-        print(f"\n=== SINGLE FILE I/O BASELINE METRICS ===")
+        print("\n=== SINGLE FILE I/O BASELINE METRICS ===")
         print(f"Average file size: {avg_file_size:,.0f} bytes")
         print(f"Sync read time:    {avg_sync_read:.4f}s")
         print(f"Async read time:   {avg_async_read:.4f}s")
@@ -601,27 +605,27 @@ PROBABLE CALL STACK:
         test_files = self.create_large_crash_log_set(tmp_path, 20)
 
         # Test sync batch reading (sequential)
-        sync_start = time.perf_counter()
-        sync_results = {}
+        sync_start: float = time.perf_counter()
+        sync_results: dict[str, list[str]] = {}
         for test_file in test_files:
             sync_results[test_file.name] = test_file.read_text().splitlines()
         sync_total_time = time.perf_counter() - sync_start
 
         # Test async batch reading (concurrent)
-        async def async_batch_read():
+        async def async_batch_read() -> tuple[dict[str, list[str]], float]:
             import aiofiles
 
-            async def read_single(file_path: Path):
-                async with aiofiles.open(file_path, mode="r", encoding="utf-8", errors="ignore") as f:
+            async def read_single(file_path: Path) -> tuple[str, list[str]]:
+                async with aiofiles.open(file_path, encoding="utf-8", errors="ignore") as f:
                     content = await f.read()
                     return file_path.name, content.splitlines()
 
-            async_start = time.perf_counter()
-            tasks = [read_single(test_file) for test_file in test_files]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            async_total_time = time.perf_counter() - async_start
+            async_start: float = time.perf_counter()
+            tasks: list[Coroutine[Any, Any, tuple[str, list[str]]]] = [read_single(test_file) for test_file in test_files]
+            results: list[tuple[str, list[str]] | BaseException] = await asyncio.gather(*tasks, return_exceptions=True)
+            async_total_time: float = time.perf_counter() - async_start
 
-            async_results = {}
+            async_results: dict[str, list[str]] = {}
             for result in results:
                 if isinstance(result, tuple):
                     name, lines = result
@@ -633,9 +637,9 @@ PROBABLE CALL STACK:
 
         # Verify consistency
         assert len(sync_results) == len(async_results)
-        for key in sync_results:
+        for key, sync_value in sync_results.items():
             assert key in async_results
-            assert len(sync_results[key]) == len(async_results[key])
+            assert len(sync_value) == len(async_results[key])
 
         # Calculate performance metrics
         total_files = len(test_files)
@@ -645,7 +649,7 @@ PROBABLE CALL STACK:
         async_throughput = total_files / async_total_time
         speedup = sync_total_time / async_total_time
 
-        print(f"\n=== BATCH FILE I/O BASELINE METRICS ===")
+        print("\n=== BATCH FILE I/O BASELINE METRICS ===")
         print(f"Total files:        {total_files}")
         print(f"Total size:         {total_size:,.0f} bytes")
         print(f"Sync total time:    {sync_total_time:.4f}s")
@@ -663,9 +667,8 @@ PROBABLE CALL STACK:
 
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_async_pipeline_scalability_baseline(
-        self, tmp_path: Path, mock_yamldata: MagicMock, init_message_handler_fixture: Any
-    ) -> None:
+    @pytest.mark.usefixtures("init_message_handler_fixture")
+    async def test_async_pipeline_scalability_baseline(self, tmp_path: Path, mock_yamldata: MagicMock) -> None:
         """Baseline: Full async pipeline scalability with different log counts."""
         log_counts = [5, 10, 25, 50]  # Different scales to test
         baseline_metrics = {}
@@ -688,10 +691,20 @@ PROBABLE CALL STACK:
                 patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
                 patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
             ):
-                # Setup mocks
-                mock_reformat.return_value = None
-                mock_load.return_value = {f.name: [f"line1_{i}", f"line2_{i}"] for i, f in enumerate(test_files)}
-                mock_write.return_value = None
+                # Add realistic delays to simulate actual processing
+                async def realistic_reformat_delay(files, _remove_list) -> None:  # noqa: ANN001
+                    await asyncio.sleep(0.1 * len(files) / 10)  # Scale with file count
+
+                async def realistic_load_delay(files: list[Path]) -> dict[Any, list[str]]:
+                    await asyncio.sleep(0.05 * len(files) / 10)
+                    return {f.name: [f"Line {i}" for i in range(50)] for f in files}
+
+                async def realistic_write_delay(reports: list[Any]) -> None:
+                    await asyncio.sleep(0.02 * len(reports) / 10)
+
+                mock_reformat.return_value = AsyncMock()
+                mock_load.return_value = {f.name: [f"Line {i}" for i in range(50)] for f in test_files}
+                mock_write.return_value = AsyncMock()
 
                 # Create mock orchestrator
                 mock_orchestrator = AsyncMock()
@@ -716,7 +729,7 @@ PROBABLE CALL STACK:
                 }
 
         # Analyze scalability
-        print(f"\n=== ASYNC PIPELINE SCALABILITY BASELINE ===")
+        print("\n=== ASYNC PIPELINE SCALABILITY BASELINE ===")
         for log_count, metrics in baseline_metrics.items():
             print(
                 f"{log_count:2d} logs: {metrics['total_time']:.4f}s | "
@@ -746,22 +759,20 @@ PROBABLE CALL STACK:
     @pytest.mark.slow
     def test_memory_usage_baseline(self, tmp_path: Path) -> None:
         """Baseline: Memory usage patterns for async vs sync operations."""
-        import psutil
         import os
 
-        test_files = self.create_large_crash_log_set(tmp_path, 15)
-        process = psutil.Process(os.getpid())
+        import psutil
 
-        # Baseline memory
-        initial_memory = process.memory_info().rss
+        test_files: list[Path] = self.create_large_crash_log_set(tmp_path, 15)
+        process: Process = psutil.Process(os.getpid())
 
         # Test sync memory usage
-        sync_start_memory = process.memory_info().rss
-        sync_data = {}
+        sync_start_memory: int = process.memory_info().rss
+        sync_data: dict[Any, Any] = {}
         for test_file in test_files:
             sync_data[test_file.name] = test_file.read_text()
-        sync_peak_memory = process.memory_info().rss
-        sync_memory_delta = sync_peak_memory - sync_start_memory
+        sync_peak_memory: int = process.memory_info().rss
+        sync_memory_delta: int = sync_peak_memory - sync_start_memory
 
         # Clear sync data
         del sync_data
@@ -770,31 +781,33 @@ PROBABLE CALL STACK:
         gc.collect()
 
         # Test async memory usage
-        async def async_memory_test():
+        async def async_memory_test() -> tuple[dict[str, str], Any]:
             import aiofiles
 
-            async_start_memory = process.memory_info().rss
+            async_start_memory: int = process.memory_info().rss
 
-            async def load_file(file_path: Path):
-                async with aiofiles.open(file_path, mode="r", encoding="utf-8", errors="ignore") as f:
+            async def load_file(file_path: Path) -> tuple[str, str]:
+                async with aiofiles.open(file_path, encoding="utf-8", errors="ignore") as f:
                     return file_path.name, await f.read()
 
-            tasks = [load_file(test_file) for test_file in test_files]
-            results = await asyncio.gather(*tasks)
+            tasks: list[Coroutine[Any, Any, tuple[str, str]]] = [load_file(test_file) for test_file in test_files]
+            results: list[tuple[str, str] | BaseException] = await asyncio.gather(*tasks, return_exceptions=True)
 
-            async_peak_memory = process.memory_info().rss
-            async_memory_delta = async_peak_memory - async_start_memory
+            async_peak_memory: int = process.memory_info().rss
+            async_memory_delta: int = async_peak_memory - async_start_memory
 
-            return dict(results), async_memory_delta
+            # Filter out exceptions and create dict
+            valid_results: list[tuple[str, str]] = [r for r in results if isinstance(r, tuple)]
+            return dict(valid_results), async_memory_delta
 
         async_data, async_memory_delta = asyncio.run(async_memory_test())
 
         # Calculate memory efficiency
-        total_file_size = sum(f.stat().st_size for f in test_files)
-        sync_efficiency = total_file_size / sync_memory_delta if sync_memory_delta > 0 else 0
-        async_efficiency = total_file_size / async_memory_delta if async_memory_delta > 0 else 0
+        total_file_size: int = sum(f.stat().st_size for f in test_files)
+        sync_efficiency: float | Literal[0] = total_file_size / sync_memory_delta if sync_memory_delta > 0 else 0
+        async_efficiency: Any | Literal[0] = total_file_size / async_memory_delta if async_memory_delta > 0 else 0
 
-        print(f"\n=== MEMORY USAGE BASELINE METRICS ===")
+        print("\n=== MEMORY USAGE BASELINE METRICS ===")
         print(f"Total file size:     {total_file_size:,.0f} bytes")
         print(f"Sync memory delta:   {sync_memory_delta:,.0f} bytes")
         print(f"Async memory delta:  {async_memory_delta:,.0f} bytes")
@@ -813,12 +826,12 @@ PROBABLE CALL STACK:
     def test_error_handling_performance_baseline(self, tmp_path: Path) -> None:
         """Baseline: Performance impact of error handling in async operations."""
         # Create mixed set of valid and invalid files
-        valid_files = self.create_large_crash_log_set(tmp_path / "valid", 10)
-        invalid_files = []
+        valid_files: list[Path] = self.create_large_crash_log_set(tmp_path / "valid", 10)
+        invalid_files: list[Any] = []
 
         # Create some invalid files (non-existent, corrupted, etc.)
         for i in range(5):
-            invalid_file = tmp_path / f"invalid_{i}.log"
+            invalid_file: Path = tmp_path / f"invalid_{i}.log"
             if i % 2 == 0:
                 # Non-existent file (just the path)
                 invalid_files.append(invalid_file)
@@ -827,44 +840,44 @@ PROBABLE CALL STACK:
                 invalid_file.write_bytes(b"\x00\x01\x02\x03\x04\x05\x06\x07" * 1000)
                 invalid_files.append(invalid_file)
 
-        all_files = valid_files + invalid_files
+        all_files: list[Path] = valid_files + invalid_files
 
         # Test sync error handling performance
-        sync_start = time.perf_counter()
-        sync_results = {}
-        sync_errors = 0
+        sync_start: float = time.perf_counter()
+        sync_results: dict[str, str] = {}
+        sync_errors: int = 0
 
         for test_file in all_files:
             try:
                 sync_results[test_file.name] = test_file.read_text(errors="ignore")
-            except Exception:
+            except (FileNotFoundError, PermissionError, OSError):
                 sync_errors += 1
 
-        sync_time = time.perf_counter() - sync_start
+        sync_time: float = time.perf_counter() - sync_start
 
         # Test async error handling performance
-        async def async_error_test():
+        async def async_error_test() -> tuple[dict[str, str], int, float]:
             import aiofiles
 
-            async def safe_read(file_path: Path):
+            async def safe_read(file_path: Path) -> tuple[str, str | None, str | None]:
                 try:
-                    async with aiofiles.open(file_path, mode="r", encoding="utf-8", errors="ignore") as f:
+                    async with aiofiles.open(file_path, encoding="utf-8", errors="ignore") as f:
                         content = await f.read()
                         return file_path.name, content, None
-                except Exception as e:
+                except (FileNotFoundError, PermissionError, OSError) as e:
                     return file_path.name, None, str(e)
 
-            async_start = time.perf_counter()
-            tasks = [safe_read(test_file) for test_file in all_files]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            async_time = time.perf_counter() - async_start
+            async_start: float = time.perf_counter()
+            tasks: list[Coroutine[Any, Any, tuple[str, str | None, str | None]]] = [safe_read(test_file) for test_file in all_files]
+            results: list[tuple[str, str | None, str | None] | BaseException] = await asyncio.gather(*tasks, return_exceptions=True)
+            async_time: float = time.perf_counter() - async_start
 
-            async_results = {}
-            async_errors = 0
+            async_results: dict[str, str] = {}
+            async_errors: int = 0
             for result in results:
                 if isinstance(result, tuple):
                     name, content, error = result
-                    if error is None:
+                    if error is None and content is not None:
                         async_results[name] = content
                     else:
                         async_errors += 1
@@ -876,14 +889,14 @@ PROBABLE CALL STACK:
         async_results, async_errors, async_time = asyncio.run(async_error_test())
 
         # Calculate error handling metrics
-        total_files = len(all_files)
-        valid_file_count = len(valid_files)
-        invalid_file_count = len(invalid_files)
+        total_files: int = len(all_files)
+        valid_file_count: int = len(valid_files)
+        invalid_file_count: int = len(invalid_files)
 
-        sync_success_rate = len(sync_results) / total_files
-        async_success_rate = len(async_results) / total_files
+        sync_success_rate: float | Literal[0] = len(sync_results) / total_files
+        async_success_rate: float | Literal[0] = len(async_results) / total_files
 
-        print(f"\n=== ERROR HANDLING PERFORMANCE BASELINE ===")
+        print("\n=== ERROR HANDLING PERFORMANCE BASELINE ===")
         print(f"Total files:          {total_files}")
         print(f"Valid files:          {valid_file_count}")
         print(f"Invalid files:        {invalid_file_count}")
@@ -903,9 +916,8 @@ PROBABLE CALL STACK:
 
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_comprehensive_pipeline_baseline(
-        self, tmp_path: Path, mock_yamldata: MagicMock, init_message_handler_fixture: Any
-    ) -> None:
+    @pytest.mark.usefixtures("init_message_handler_fixture")
+    async def test_comprehensive_pipeline_baseline(self, tmp_path: Path, mock_yamldata: MagicMock) -> None:
         """Comprehensive baseline: Full realistic pipeline performance test."""
         # Create realistic test scenario
         test_files = self.create_large_crash_log_set(tmp_path, 30)
@@ -928,24 +940,26 @@ PROBABLE CALL STACK:
             patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
         ):
             # Add realistic delays to simulate actual processing
-            async def realistic_reformat_delay(files, remove_list):
+            async def realistic_reformat_delay(files, _remove_list) -> None:  # noqa: ANN001
                 await asyncio.sleep(0.1 * len(files) / 10)  # Scale with file count
 
-            async def realistic_load_delay(files):
+            async def realistic_load_delay(files: list[Path]) -> dict[Any, list[str]]:
                 await asyncio.sleep(0.05 * len(files) / 10)
                 return {f.name: [f"Line {i}" for i in range(50)] for f in files}
 
-            async def realistic_write_delay(reports):
+            async def realistic_write_delay(reports: list[Any]) -> None:
                 await asyncio.sleep(0.02 * len(reports) / 10)
 
+            mock_reformat.return_value = AsyncMock()
+            mock_load.return_value = {f.name: [f"Line {i}" for i in range(50)] for f in test_files}
             mock_reformat.side_effect = realistic_reformat_delay
             mock_load.side_effect = realistic_load_delay
             mock_write.side_effect = realistic_write_delay
 
             # Setup orchestrator with realistic processing
-            mock_orchestrator = AsyncMock()
+            mock_orchestrator: AsyncMock = AsyncMock()
 
-            async def realistic_batch_process(batch):
+            async def realistic_batch_process(batch: list[Path]) -> list[tuple[Path, list[str], bool, dict[str, Any]]]:
                 await asyncio.sleep(0.2 * len(batch) / 10)  # Simulate heavy processing
                 return [(f, [f"Detailed report for {f.name}\n" * 10], False, {}) for f in batch]
 
@@ -959,17 +973,17 @@ PROBABLE CALL STACK:
         full_test_time = time.perf_counter() - full_test_start
 
         # Generate comprehensive baseline report
-        print(f"\n=== COMPREHENSIVE PIPELINE BASELINE ===")
+        print("\n=== COMPREHENSIVE PIPELINE BASELINE ===")
         print(f"Total crash logs:     {len(test_files)}")
         print(f"Total processing time: {full_test_time:.4f}s")
         print(f"Overall throughput:   {len(test_files) / full_test_time:.2f} logs/sec")
-        print(f"\nPipeline Stage Breakdown:")
+        print("\nPipeline Stage Breakdown:")
         print(f"  Reformat time:      {stats.get('reformat_time', 0):.4f}s ({(stats.get('reformat_time', 0) / full_test_time * 100):.1f}%)")
         print(f"  Load time:          {stats.get('load_time', 0):.4f}s ({(stats.get('load_time', 0) / full_test_time * 100):.1f}%)")
         print(f"  Process time:       {stats.get('process_time', 0):.4f}s ({(stats.get('process_time', 0) / full_test_time * 100):.1f}%)")
         print(f"  Write time:         {stats.get('write_time', 0):.4f}s ({(stats.get('write_time', 0) / full_test_time * 100):.1f}%)")
         print(f"  Pipeline overhead:  {(full_test_time - stats.get('total_time', 0)):.4f}s")
-        print(f"\nEfficiency Metrics:")
+        print("\nEfficiency Metrics:")
         print(f"  Time per log:       {full_test_time / len(test_files):.4f}s")
         print(f"  Pipeline efficiency: {(stats.get('total_time', 0) / full_test_time * 100):.1f}%")
         print(f"  Results generated:  {len(results)}")
@@ -981,11 +995,11 @@ PROBABLE CALL STACK:
         assert stats.get("logs_per_second", 0) > 0
 
         # Efficiency assertions (pipeline should be reasonably efficient)
-        pipeline_efficiency = stats.get("total_time", 0) / full_test_time if full_test_time > 0 else 0
+        pipeline_efficiency: float | Literal[0] = stats.get("total_time", 0) / full_test_time if full_test_time > 0 else 0
         assert pipeline_efficiency > 0.8  # At least 80% efficient
 
         # Store baseline for future comparisons
-        baseline_data = {
+        baseline_data: dict[str, Any] = {
             "test_date": time.strftime("%Y-%m-%d %H:%M:%S"),
             "log_count": len(test_files),
             "total_time": full_test_time,
@@ -1000,7 +1014,7 @@ PROBABLE CALL STACK:
         }
 
         # Save baseline to file for future reference
-        baseline_file = tmp_path / "async_pipeline_baseline.json"
+        baseline_file: Path = tmp_path / "async_pipeline_baseline.json"
         import json
 
         baseline_file.write_text(json.dumps(baseline_data, indent=2))

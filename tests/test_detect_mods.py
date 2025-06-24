@@ -23,25 +23,25 @@ class TestConvertToLowercase:
 
     def test_empty_dict(self) -> None:
         """Test conversion of an empty dict."""
-        result = _convert_to_lowercase({})
+        result: dict[str, str] = _convert_to_lowercase({})
         assert result == {}
 
     def test_lowercase_keys(self) -> None:
         """Test conversion of dictionary with lowercase keys."""
-        input_dict = {"key1": "value1", "key2": "value2"}
-        result = _convert_to_lowercase(input_dict)
+        input_dict: dict[str, str] = {"key1": "value1", "key2": "value2"}
+        result: dict[str, str] = _convert_to_lowercase(input_dict)
         assert result == input_dict
 
     def test_mixed_case_keys(self) -> None:
         """Test conversion of dictionary with mixed case keys."""
-        input_dict = {"Key1": "value1", "KEY2": "value2", "key3": "value3"}
-        result = _convert_to_lowercase(input_dict)
+        input_dict: dict[str, str] = {"Key1": "value1", "KEY2": "value2", "key3": "value3"}
+        result: dict[str, str] = _convert_to_lowercase(input_dict)
         assert result == {"key1": "value1", "key2": "value2", "key3": "value3"}
 
     def test_special_characters(self) -> None:
         """Test conversion of dictionary with special characters in keys."""
-        input_dict = {"MOD-Name": "value1", "Mod_NAME": "value2"}
-        result = _convert_to_lowercase(input_dict)
+        input_dict: dict[str, str] = {"MOD-Name": "value1", "Mod_NAME": "value2"}
+        result: dict[str, str] = _convert_to_lowercase(input_dict)
         assert result == {"mod-name": "value1", "mod_name": "value2"}
 
 
@@ -99,7 +99,7 @@ class TestDetectModsSingle:
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01"}
         autoscan_report: list[Any] = []
 
-        result = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is True
         assert len(autoscan_report) >= 3  # [!] FOUND + 2 warnings
@@ -111,7 +111,7 @@ class TestDetectModsSingle:
         crashlog_plugins: dict[str, str] = {"Mod1_Plugin.esp": "00", "unrelated_plugin.esp": "01"}
         autoscan_report: list[Any] = []
 
-        result = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is True
         assert len(autoscan_report) == 2  # [!] FOUND + warning message
@@ -124,7 +124,7 @@ class TestDetectModsSingle:
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00"}
         autoscan_report: list[Any] = []
 
-        result = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is False
         assert len(autoscan_report) == 0
@@ -161,7 +161,7 @@ class TestDetectModsDouble:
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01"}
         autoscan_report: list[Any] = []
 
-        result = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is True
         assert len(autoscan_report) == 2  # [!] CAUTION + warning message
@@ -186,7 +186,7 @@ class TestDetectModsDouble:
         crashlog_plugins: dict[str, str] = {"Mod1_Plugin.esp": "00", "Mod2_Plugin.esp": "01"}
         autoscan_report: list[Any] = []
 
-        result = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is True
         assert len(autoscan_report) == 2  # [!] CAUTION + warning message
@@ -209,7 +209,7 @@ class TestDetectModsDouble:
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01"}
         autoscan_report: list[Any] = []
 
-        result = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is False
         assert len(autoscan_report) == 0
@@ -220,7 +220,7 @@ class TestDetectModsDouble:
         crashlog_plugins: dict[str, str] = {}
         autoscan_report: list[Any] = []
 
-        result = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is False
         assert len(autoscan_report) == 0
@@ -234,7 +234,7 @@ class TestDetectModsImportant:
         yaml_dict: dict[str, str] = {"important_mod | Important Mod": "This is an important mod for nvidia GPUs"}
         crashlog_plugins: dict[str, str] = {"important_mod_plugin.esp": "00"}
         autoscan_report: list[Any] = []
-        gpu_rival = "nvidia"
+        gpu_rival: str = "nvidia"
 
         detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
 
@@ -246,7 +246,7 @@ class TestDetectModsImportant:
         yaml_dict: dict[str, str] = {"nvidia_mod | NVIDIA Mod": "This mod requires an nvidia GPU"}
         crashlog_plugins: dict[str, str] = {"nvidia_mod_plugin.esp": "00"}
         autoscan_report: list[Any] = []
-        gpu_rival = "amd"
+        gpu_rival: str = "amd"
 
         detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
 
@@ -258,7 +258,7 @@ class TestDetectModsImportant:
         yaml_dict: dict[str, str] = {"amd_mod | AMD Mod": "This mod requires an amd GPU"}
         crashlog_plugins: dict[str, str] = {"amd_mod_plugin.esp": "00"}
         autoscan_report: list[Any] = []
-        gpu_rival = "nvidia"
+        gpu_rival: str = "nvidia"
 
         detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
 
@@ -270,7 +270,7 @@ class TestDetectModsImportant:
         yaml_dict: dict[str, str] = {"nvidia_mod | NVIDIA Mod": "This mod is important for nvidia GPUs"}
         crashlog_plugins: dict[str, str] = {"unrelated_plugin.esp": "00"}
         autoscan_report: list[Any] = []
-        gpu_rival = "nvidia"
+        gpu_rival: str = "nvidia"
 
         detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
 
@@ -281,7 +281,7 @@ class TestDetectModsImportant:
         yaml_dict: dict[str, str] = {"nvidia_mod | NVIDIA Mod": "This mod is important for nvidia GPUs"}
         crashlog_plugins: dict[str, str] = {"unrelated_plugin.esp": "00"}
         autoscan_report: list[Any] = []
-        gpu_rival = "amd"
+        gpu_rival: str = "amd"
 
         detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
 

@@ -48,6 +48,7 @@ pytest-asyncio = ">=0.24.0"
 anyio = ">=4.6.2.post1"
 pyinstaller-hooks-contrib = ">=2025.0"
 pytest-qt = ">=4.4.0"
+psutil = "^7.0.0"
 
 [tool.poetry.group.windows]
 optional = true
@@ -112,6 +113,7 @@ ignore = [
 	"PLR2004", # Allow magic values in comparisons
 	"PLW2901", # Allow overwriting loop variables
 	"SLF001",
+	"PLC0415"
 ]
 
 extend-select = [
