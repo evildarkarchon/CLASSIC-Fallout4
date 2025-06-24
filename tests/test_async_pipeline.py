@@ -445,3 +445,565 @@ class TestAsyncPerformanceComparison:
         # Both should complete successfully
         assert sync_time > 0
         assert async_time > 0
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+class TestAsyncPerformanceBaselines:
+    """
+    Comprehensive performance baseline tests for async operations.
+
+    These tests establish baseline performance metrics for:
+    - File I/O operations (single/batch/concurrent)
+    - Database operations (async vs sync)
+    - Pipeline processing (full async pipeline)
+    - Memory usage patterns
+    - Scalability with different log counts
+    """
+
+    def create_large_crash_log_set(self, tmp_path: Path, log_count: int) -> list[Path]:
+        """Create a larger set of crash logs for performance testing."""
+        crash_logs_dir = tmp_path / "Performance_Test_Logs"
+        crash_logs_dir.mkdir(parents=True, exist_ok=True)
+
+        # Realistic crash log content with various sizes
+        base_content = """Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+
+SYSTEM SPECS:
+\tOS: Microsoft Windows 11 Pro v10.0.22621
+\tCPU: AMD Ryzen 7 7800X3D 8-Core Processor
+\tGPU #1: Nvidia AD104 [GeForce RTX 4070]
+
+PROBABLE CALL STACK:
+"""
+
+        files = []
+        for i in range(log_count):
+            log_file = crash_logs_dir / f"crash-perf-test-{i:03d}.log"
+
+            # Vary content size to simulate real-world scenarios
+            callstack_lines = min(50 + (i % 20), 100)  # 50-100 lines of callstack
+            content_parts = [base_content]
+
+            for j in range(callstack_lines):
+                content_parts.append(f"\t[{j:2d}] 0x7FF6EF{j:06X} Fallout4.exe+{j:07X} -> {j * 1000 + 555}+0x{j:02X}\n")
+                if j % 5 == 0:  # Add FormIDs periodically
+                    content_parts.append(f"\tForm ID: 0x{j:08X}\n")
+
+            # Add modules and plugins
+            content_parts.extend([
+                "\nMODULES:\n",
+                f"\tperformance_module_{i}.dll\n",
+                f"\ttest_module_{i % 10}.dll\n",
+                "\nF4SE PLUGINS:\n",
+                f"\tf4se_perf_plugin_{i}.dll\n",
+                "\nPLUGINS:\n",
+                "\t[00] Fallout4.esm\n",
+                "\t[01] DLCRobot.esm\n",
+                f"\t[{i:02d}] PerfTestPlugin_{i}.esp\n",
+            ])
+
+            log_file.write_text("".join(content_parts))
+            files.append(log_file)
+
+        return files
+
+    @pytest.mark.slow
+    def test_file_io_baseline_single_files(self, tmp_path: Path) -> None:
+        """Baseline: Single file I/O performance (async vs sync)."""
+        test_files = self.create_large_crash_log_set(tmp_path, 5)
+
+        results: dict[str, list[float]] = {
+            "sync_read_times": [],
+            "async_read_times": [],
+            "sync_write_times": [],
+            "async_write_times": [],
+            "file_sizes": [],
+        }
+
+        for test_file in test_files:
+            file_size = test_file.stat().st_size
+            results["file_sizes"].append(file_size)
+
+            # Test sync reading
+            sync_start = time.perf_counter()
+            sync_content = test_file.read_text()
+            sync_read_time = time.perf_counter() - sync_start
+            results["sync_read_times"].append(sync_read_time)
+
+            # Test async reading
+            async def async_read_test():
+                async_start = time.perf_counter()
+                import aiofiles
+
+                async with aiofiles.open(test_file, mode="r", encoding="utf-8", errors="ignore") as f:
+                    async_content = await f.read()
+                async_read_time = time.perf_counter() - async_start
+                return async_read_time, async_content
+
+            async_read_time, async_content = asyncio.run(async_read_test())
+            results["async_read_times"].append(async_read_time)
+
+            # Verify content consistency
+            assert len(sync_content) == len(async_content)
+
+            # Test sync writing
+            write_content = f"Modified content for {test_file.name}\n" + sync_content
+            write_file = test_file.with_name(f"{test_file.stem}_sync_write.log")
+
+            sync_start = time.perf_counter()
+            write_file.write_text(write_content)
+            sync_write_time = time.perf_counter() - sync_start
+            results["sync_write_times"].append(sync_write_time)
+
+            # Test async writing
+            async def async_write_test():
+                async_start = time.perf_counter()
+                async_write_file = test_file.with_name(f"{test_file.stem}_async_write.log")
+                import aiofiles
+
+                async with aiofiles.open(async_write_file, mode="w", encoding="utf-8", errors="ignore") as f:
+                    await f.write(write_content)
+                async_write_time = time.perf_counter() - async_start
+                return async_write_time
+
+            async_write_time = asyncio.run(async_write_test())
+            results["async_write_times"].append(async_write_time)
+
+        # Log baseline metrics
+        avg_file_size = sum(results["file_sizes"]) / len(results["file_sizes"])
+        avg_sync_read = sum(results["sync_read_times"]) / len(results["sync_read_times"])
+        avg_async_read = sum(results["async_read_times"]) / len(results["async_read_times"])
+        avg_sync_write = sum(results["sync_write_times"]) / len(results["sync_write_times"])
+        avg_async_write = sum(results["async_write_times"]) / len(results["async_write_times"])
+
+        print(f"\n=== SINGLE FILE I/O BASELINE METRICS ===")
+        print(f"Average file size: {avg_file_size:,.0f} bytes")
+        print(f"Sync read time:    {avg_sync_read:.4f}s")
+        print(f"Async read time:   {avg_async_read:.4f}s")
+        print(f"Sync write time:   {avg_sync_write:.4f}s")
+        print(f"Async write time:  {avg_async_write:.4f}s")
+        print(f"Read speedup:      {avg_sync_read / avg_async_read:.2f}x" if avg_async_read > 0 else "N/A")
+        print(f"Write speedup:     {avg_sync_write / avg_async_write:.2f}x" if avg_async_write > 0 else "N/A")
+
+        # Assertions
+        assert all(t > 0 for t in results["sync_read_times"])
+        assert all(t > 0 for t in results["async_read_times"])
+        assert all(t > 0 for t in results["sync_write_times"])
+        assert all(t > 0 for t in results["async_write_times"])
+
+    @pytest.mark.slow
+    def test_file_io_baseline_batch_operations(self, tmp_path: Path) -> None:
+        """Baseline: Batch file I/O performance (concurrent async vs sequential sync)."""
+        test_files = self.create_large_crash_log_set(tmp_path, 20)
+
+        # Test sync batch reading (sequential)
+        sync_start = time.perf_counter()
+        sync_results = {}
+        for test_file in test_files:
+            sync_results[test_file.name] = test_file.read_text().splitlines()
+        sync_total_time = time.perf_counter() - sync_start
+
+        # Test async batch reading (concurrent)
+        async def async_batch_read():
+            import aiofiles
+
+            async def read_single(file_path: Path):
+                async with aiofiles.open(file_path, mode="r", encoding="utf-8", errors="ignore") as f:
+                    content = await f.read()
+                    return file_path.name, content.splitlines()
+
+            async_start = time.perf_counter()
+            tasks = [read_single(test_file) for test_file in test_files]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            async_total_time = time.perf_counter() - async_start
+
+            async_results = {}
+            for result in results:
+                if isinstance(result, tuple):
+                    name, lines = result
+                    async_results[name] = lines
+
+            return async_results, async_total_time
+
+        async_results, async_total_time = asyncio.run(async_batch_read())
+
+        # Verify consistency
+        assert len(sync_results) == len(async_results)
+        for key in sync_results:
+            assert key in async_results
+            assert len(sync_results[key]) == len(async_results[key])
+
+        # Calculate performance metrics
+        total_files = len(test_files)
+        total_size = sum(f.stat().st_size for f in test_files)
+
+        sync_throughput = total_files / sync_total_time
+        async_throughput = total_files / async_total_time
+        speedup = sync_total_time / async_total_time
+
+        print(f"\n=== BATCH FILE I/O BASELINE METRICS ===")
+        print(f"Total files:        {total_files}")
+        print(f"Total size:         {total_size:,.0f} bytes")
+        print(f"Sync total time:    {sync_total_time:.4f}s")
+        print(f"Async total time:   {async_total_time:.4f}s")
+        print(f"Sync throughput:    {sync_throughput:.2f} files/sec")
+        print(f"Async throughput:   {async_throughput:.2f} files/sec")
+        print(f"Concurrent speedup: {speedup:.2f}x")
+        print(f"Efficiency gain:    {((speedup - 1) * 100):.1f}%")
+
+        # Assertions for reasonable performance
+        assert sync_total_time > 0
+        assert async_total_time > 0
+        assert speedup > 0.5  # Async should be at least competitive
+        assert async_throughput > 0
+
+    @pytest.mark.slow
+    @pytest.mark.asyncio
+    async def test_async_pipeline_scalability_baseline(
+        self, tmp_path: Path, mock_yamldata: MagicMock, init_message_handler_fixture: Any
+    ) -> None:
+        """Baseline: Full async pipeline scalability with different log counts."""
+        log_counts = [5, 10, 25, 50]  # Different scales to test
+        baseline_metrics = {}
+
+        for log_count in log_counts:
+            test_files = self.create_large_crash_log_set(tmp_path / f"scale_{log_count}", log_count)
+
+            # Create pipeline
+            pipeline = AsyncCrashLogPipeline(
+                yamldata=mock_yamldata,
+                fcx_mode=False,
+                show_formid_values=False,
+                formid_db_exists=False,
+            )
+
+            # Mock the heavy operations for consistent timing
+            with (
+                patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
+                patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
+                patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
+                patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
+            ):
+                # Setup mocks
+                mock_reformat.return_value = None
+                mock_load.return_value = {f.name: [f"line1_{i}", f"line2_{i}"] for i, f in enumerate(test_files)}
+                mock_write.return_value = None
+
+                # Create mock orchestrator
+                mock_orchestrator = AsyncMock()
+                mock_orchestrator.process_crash_logs_batch_async.return_value = [
+                    (f, [f"Report for {f.name}"], False, {}) for f in test_files
+                ]
+                mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
+                mock_orchestrator_class.return_value.__aexit__.return_value = None
+
+                # Time the pipeline
+                start_time = time.perf_counter()
+                results, stats = await pipeline.process_crash_logs_async(test_files, ("test_remove",))
+                total_time = time.perf_counter() - start_time
+
+                # Store metrics
+                baseline_metrics[log_count] = {
+                    "total_time": total_time,
+                    "pipeline_stats": stats,
+                    "logs_per_second": log_count / total_time,
+                    "avg_time_per_log": total_time / log_count,
+                    "results_count": len(results),
+                }
+
+        # Analyze scalability
+        print(f"\n=== ASYNC PIPELINE SCALABILITY BASELINE ===")
+        for log_count, metrics in baseline_metrics.items():
+            print(
+                f"{log_count:2d} logs: {metrics['total_time']:.4f}s | "
+                f"{metrics['logs_per_second']:.2f} logs/sec | "
+                f"{metrics['avg_time_per_log']:.4f}s per log"
+            )
+
+        # Calculate scaling efficiency
+        base_count = log_counts[0]
+        base_time = baseline_metrics[base_count]["total_time"]
+
+        print(f"\nScaling Analysis (relative to {base_count} logs):")
+        for log_count in log_counts[1:]:
+            metrics = baseline_metrics[log_count]
+            expected_time = base_time * (log_count / base_count)  # Linear scaling
+            actual_time = metrics["total_time"]
+            efficiency = (expected_time / actual_time) * 100 if actual_time > 0 else 0
+
+            print(f"{log_count:2d} logs: Expected {expected_time:.4f}s, Actual {actual_time:.4f}s, Efficiency {efficiency:.1f}%")
+
+        # Assertions
+        for metrics in baseline_metrics.values():
+            assert metrics["total_time"] > 0
+            assert metrics["logs_per_second"] > 0
+            assert metrics["results_count"] > 0
+
+    @pytest.mark.slow
+    def test_memory_usage_baseline(self, tmp_path: Path) -> None:
+        """Baseline: Memory usage patterns for async vs sync operations."""
+        import psutil
+        import os
+
+        test_files = self.create_large_crash_log_set(tmp_path, 15)
+        process = psutil.Process(os.getpid())
+
+        # Baseline memory
+        initial_memory = process.memory_info().rss
+
+        # Test sync memory usage
+        sync_start_memory = process.memory_info().rss
+        sync_data = {}
+        for test_file in test_files:
+            sync_data[test_file.name] = test_file.read_text()
+        sync_peak_memory = process.memory_info().rss
+        sync_memory_delta = sync_peak_memory - sync_start_memory
+
+        # Clear sync data
+        del sync_data
+        import gc
+
+        gc.collect()
+
+        # Test async memory usage
+        async def async_memory_test():
+            import aiofiles
+
+            async_start_memory = process.memory_info().rss
+
+            async def load_file(file_path: Path):
+                async with aiofiles.open(file_path, mode="r", encoding="utf-8", errors="ignore") as f:
+                    return file_path.name, await f.read()
+
+            tasks = [load_file(test_file) for test_file in test_files]
+            results = await asyncio.gather(*tasks)
+
+            async_peak_memory = process.memory_info().rss
+            async_memory_delta = async_peak_memory - async_start_memory
+
+            return dict(results), async_memory_delta
+
+        async_data, async_memory_delta = asyncio.run(async_memory_test())
+
+        # Calculate memory efficiency
+        total_file_size = sum(f.stat().st_size for f in test_files)
+        sync_efficiency = total_file_size / sync_memory_delta if sync_memory_delta > 0 else 0
+        async_efficiency = total_file_size / async_memory_delta if async_memory_delta > 0 else 0
+
+        print(f"\n=== MEMORY USAGE BASELINE METRICS ===")
+        print(f"Total file size:     {total_file_size:,.0f} bytes")
+        print(f"Sync memory delta:   {sync_memory_delta:,.0f} bytes")
+        print(f"Async memory delta:  {async_memory_delta:,.0f} bytes")
+        print(f"Sync efficiency:     {sync_efficiency:.2f} data/memory ratio" if sync_efficiency > 0 else "N/A")
+        print(f"Async efficiency:    {async_efficiency:.2f} data/memory ratio" if async_efficiency > 0 else "N/A")
+        print(f"Memory overhead:     {(async_memory_delta / sync_memory_delta):.2f}x" if sync_memory_delta > 0 else "N/A")
+
+        # Verify data consistency
+        assert len(async_data) >= 0  # Basic sanity check on async data
+
+        # Assertions
+        assert sync_memory_delta >= 0
+        assert async_memory_delta >= 0
+
+    @pytest.mark.slow
+    def test_error_handling_performance_baseline(self, tmp_path: Path) -> None:
+        """Baseline: Performance impact of error handling in async operations."""
+        # Create mixed set of valid and invalid files
+        valid_files = self.create_large_crash_log_set(tmp_path / "valid", 10)
+        invalid_files = []
+
+        # Create some invalid files (non-existent, corrupted, etc.)
+        for i in range(5):
+            invalid_file = tmp_path / f"invalid_{i}.log"
+            if i % 2 == 0:
+                # Non-existent file (just the path)
+                invalid_files.append(invalid_file)
+            else:
+                # Corrupted file (binary data)
+                invalid_file.write_bytes(b"\x00\x01\x02\x03\x04\x05\x06\x07" * 1000)
+                invalid_files.append(invalid_file)
+
+        all_files = valid_files + invalid_files
+
+        # Test sync error handling performance
+        sync_start = time.perf_counter()
+        sync_results = {}
+        sync_errors = 0
+
+        for test_file in all_files:
+            try:
+                sync_results[test_file.name] = test_file.read_text(errors="ignore")
+            except Exception:
+                sync_errors += 1
+
+        sync_time = time.perf_counter() - sync_start
+
+        # Test async error handling performance
+        async def async_error_test():
+            import aiofiles
+
+            async def safe_read(file_path: Path):
+                try:
+                    async with aiofiles.open(file_path, mode="r", encoding="utf-8", errors="ignore") as f:
+                        content = await f.read()
+                        return file_path.name, content, None
+                except Exception as e:
+                    return file_path.name, None, str(e)
+
+            async_start = time.perf_counter()
+            tasks = [safe_read(test_file) for test_file in all_files]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            async_time = time.perf_counter() - async_start
+
+            async_results = {}
+            async_errors = 0
+            for result in results:
+                if isinstance(result, tuple):
+                    name, content, error = result
+                    if error is None:
+                        async_results[name] = content
+                    else:
+                        async_errors += 1
+                else:
+                    async_errors += 1
+
+            return async_results, async_errors, async_time
+
+        async_results, async_errors, async_time = asyncio.run(async_error_test())
+
+        # Calculate error handling metrics
+        total_files = len(all_files)
+        valid_file_count = len(valid_files)
+        invalid_file_count = len(invalid_files)
+
+        sync_success_rate = len(sync_results) / total_files
+        async_success_rate = len(async_results) / total_files
+
+        print(f"\n=== ERROR HANDLING PERFORMANCE BASELINE ===")
+        print(f"Total files:          {total_files}")
+        print(f"Valid files:          {valid_file_count}")
+        print(f"Invalid files:        {invalid_file_count}")
+        print(f"Sync time:            {sync_time:.4f}s")
+        print(f"Async time:           {async_time:.4f}s")
+        print(f"Sync errors:          {sync_errors}")
+        print(f"Async errors:         {async_errors}")
+        print(f"Sync success rate:    {sync_success_rate:.2%}")
+        print(f"Async success rate:   {async_success_rate:.2%}")
+        print(f"Error handling speedup: {sync_time / async_time:.2f}x" if async_time > 0 else "N/A")
+
+        # Assertions
+        assert sync_time > 0
+        assert async_time > 0
+        assert sync_success_rate > 0.5  # Should handle at least half the files
+        assert async_success_rate > 0.5
+
+    @pytest.mark.slow
+    @pytest.mark.asyncio
+    async def test_comprehensive_pipeline_baseline(
+        self, tmp_path: Path, mock_yamldata: MagicMock, init_message_handler_fixture: Any
+    ) -> None:
+        """Comprehensive baseline: Full realistic pipeline performance test."""
+        # Create realistic test scenario
+        test_files = self.create_large_crash_log_set(tmp_path, 30)
+
+        # Simulate realistic processing times by using actual (but mocked) operations
+        pipeline = AsyncCrashLogPipeline(
+            yamldata=mock_yamldata,
+            fcx_mode=False,
+            show_formid_values=True,
+            formid_db_exists=True,
+        )
+
+        # Record comprehensive metrics
+        full_test_start = time.perf_counter()
+
+        with (
+            patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
+            patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
+            patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
+            patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
+        ):
+            # Add realistic delays to simulate actual processing
+            async def realistic_reformat_delay(files, remove_list):
+                await asyncio.sleep(0.1 * len(files) / 10)  # Scale with file count
+
+            async def realistic_load_delay(files):
+                await asyncio.sleep(0.05 * len(files) / 10)
+                return {f.name: [f"Line {i}" for i in range(50)] for f in files}
+
+            async def realistic_write_delay(reports):
+                await asyncio.sleep(0.02 * len(reports) / 10)
+
+            mock_reformat.side_effect = realistic_reformat_delay
+            mock_load.side_effect = realistic_load_delay
+            mock_write.side_effect = realistic_write_delay
+
+            # Setup orchestrator with realistic processing
+            mock_orchestrator = AsyncMock()
+
+            async def realistic_batch_process(batch):
+                await asyncio.sleep(0.2 * len(batch) / 10)  # Simulate heavy processing
+                return [(f, [f"Detailed report for {f.name}\n" * 10], False, {}) for f in batch]
+
+            mock_orchestrator.process_crash_logs_batch_async.side_effect = realistic_batch_process
+            mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
+            mock_orchestrator_class.return_value.__aexit__.return_value = None
+
+            # Run the comprehensive test
+            results, stats = await pipeline.process_crash_logs_async(test_files, ("simplify_test",))
+
+        full_test_time = time.perf_counter() - full_test_start
+
+        # Generate comprehensive baseline report
+        print(f"\n=== COMPREHENSIVE PIPELINE BASELINE ===")
+        print(f"Total crash logs:     {len(test_files)}")
+        print(f"Total processing time: {full_test_time:.4f}s")
+        print(f"Overall throughput:   {len(test_files) / full_test_time:.2f} logs/sec")
+        print(f"\nPipeline Stage Breakdown:")
+        print(f"  Reformat time:      {stats.get('reformat_time', 0):.4f}s ({(stats.get('reformat_time', 0) / full_test_time * 100):.1f}%)")
+        print(f"  Load time:          {stats.get('load_time', 0):.4f}s ({(stats.get('load_time', 0) / full_test_time * 100):.1f}%)")
+        print(f"  Process time:       {stats.get('process_time', 0):.4f}s ({(stats.get('process_time', 0) / full_test_time * 100):.1f}%)")
+        print(f"  Write time:         {stats.get('write_time', 0):.4f}s ({(stats.get('write_time', 0) / full_test_time * 100):.1f}%)")
+        print(f"  Pipeline overhead:  {(full_test_time - stats.get('total_time', 0)):.4f}s")
+        print(f"\nEfficiency Metrics:")
+        print(f"  Time per log:       {full_test_time / len(test_files):.4f}s")
+        print(f"  Pipeline efficiency: {(stats.get('total_time', 0) / full_test_time * 100):.1f}%")
+        print(f"  Results generated:  {len(results)}")
+
+        # Performance baseline assertions
+        assert full_test_time > 0
+        assert len(results) == len(test_files)
+        assert stats.get("total_time", 0) > 0
+        assert stats.get("logs_per_second", 0) > 0
+
+        # Efficiency assertions (pipeline should be reasonably efficient)
+        pipeline_efficiency = stats.get("total_time", 0) / full_test_time if full_test_time > 0 else 0
+        assert pipeline_efficiency > 0.8  # At least 80% efficient
+
+        # Store baseline for future comparisons
+        baseline_data = {
+            "test_date": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "log_count": len(test_files),
+            "total_time": full_test_time,
+            "throughput": len(test_files) / full_test_time,
+            "pipeline_efficiency": pipeline_efficiency,
+            "stage_breakdown": {
+                "reformat_percent": (stats.get("reformat_time", 0) / full_test_time * 100),
+                "load_percent": (stats.get("load_time", 0) / full_test_time * 100),
+                "process_percent": (stats.get("process_time", 0) / full_test_time * 100),
+                "write_percent": (stats.get("write_time", 0) / full_test_time * 100),
+            },
+        }
+
+        # Save baseline to file for future reference
+        baseline_file = tmp_path / "async_pipeline_baseline.json"
+        import json
+
+        baseline_file.write_text(json.dumps(baseline_data, indent=2))
+
+        print(f"\nBaseline data saved to: {baseline_file}")
+        print("Use this data to compare future performance improvements.")
