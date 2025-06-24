@@ -53,6 +53,19 @@ class PapyrusStats:
             return NotImplemented
         return self.dumps == other.dumps and self.stacks == other.stacks and self.warnings == other.warnings and self.errors == other.errors
 
+    def __hash__(self) -> int:
+        """
+        Returns a hash value for this `PapyrusStats` instance.
+
+        The hash is computed based on the same attributes used for equality
+        comparison: `dumps`, `stacks`, `warnings`, and `errors`. This ensures
+        that instances that compare equal will have the same hash value.
+
+        Returns:
+            int: The hash value for this instance.
+        """
+        return hash((self.dumps, self.stacks, self.warnings, self.errors))
+
 
 class PapyrusMonitorWorker(QObject):
     """

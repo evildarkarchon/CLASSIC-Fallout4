@@ -65,7 +65,7 @@ class DocumentsPathManager:
         """Find and configure the game documents folder path."""
         logger.debug("- - - INITIATED DOCS PATH CHECK")
         
-        from ClassicLib.Util import validate_path  # noqa: PLC0415
+        from ClassicLib.Util import validate_path
 
         # First check if INI Folder Path is set in CLASSIC Settings.yaml
         ini_folder_path: str | None = classic_settings(str, "INI Folder Path")
@@ -103,7 +103,7 @@ class DocumentsPathManager:
     def _find_windows_docs_path(self) -> None:
         """Find the Windows documents path using the registry."""
         # Initialize with default value first
-        import winreg  # noqa: PLC0415
+        import winreg
 
         documents_path: Path = Path.home() / "Documents"
 

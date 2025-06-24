@@ -152,10 +152,10 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
             except OSError as e:
                 return False, f"Cannot write to {path_obj}: {e}"
 
-        return True, ""
-
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return False, f"Error validating path: {e}"
+    else:
+        return True, ""
 
 
 def _extract_windows_version_info(win32api_module: Any, exe_path: Path) -> dict[str, int]:

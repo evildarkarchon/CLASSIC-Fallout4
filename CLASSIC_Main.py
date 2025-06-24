@@ -372,7 +372,7 @@ def validate_settings_paths() -> None:
     Currently validates:
     - SCAN Custom Path: Used for custom crash log scanning directories
     """
-    from ClassicLib.ScanLog.Util import is_valid_custom_scan_path  # noqa: PLC0415
+    from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
     # Validate custom scan path
     custom_scan_path: str | None = classic_settings(str, "SCAN Custom Path")
@@ -407,7 +407,7 @@ def initialize(is_gui: bool = False) -> None:
     init_message_handler(parent=None, is_gui_mode=is_gui)
 
     yaml_cache: Any = GlobalRegistry.get_yaml_cache()
-    GlobalRegistry.register(GlobalRegistry.Keys.GUI_MODE, is_gui)
+    GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, is_gui_mode)
     # Preload static YAML files
     for store in yaml_cache.STATIC_YAML_STORES:
         path = yaml_cache.get_path_for_store(store)

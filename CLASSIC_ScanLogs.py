@@ -52,7 +52,7 @@ class ClassicScanLogs:
         # Use async file I/O for better performance
         try:
             # noinspection PyUnresolvedReferences
-            from ClassicLib.ScanLog.AsyncFileIO import crashlogs_reformat_with_async  # noqa: PLC0415
+            from ClassicLib.ScanLog.AsyncFileIO import crashlogs_reformat_with_async
 
             crashlogs_reformat_with_async(self.crashlog_list, self.remove_list)
             logger.debug("Used async file I/O for crash log reformatting")
@@ -133,8 +133,8 @@ class ClassicScanLogs:
         Returns:
             Tuple containing file path, report, failure status, and statistics
         """
-        from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer  # noqa: PLC0415
-        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: PLC0415
+        from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer
+        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
 
         # Process most of the log synchronously (this is still fast)
         result = self.orchestrator.process_crash_log(crashlog_file)
@@ -197,10 +197,10 @@ class ClassicScanLogs:
             return False
 
         try:
-            import aiosqlite  # noqa: F401, PLC0415
+            import aiosqlite  # noqa: F401
 
-            from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer  # noqa: F401, PLC0415
-            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401, PLC0415
+            from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer  # noqa: F401
+            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401
         except ImportError:
             logger.debug("Async database dependencies not available")
             return False
@@ -227,10 +227,10 @@ class ClassicScanLogs:
             return False
 
         try:
-            import aiofiles  # noqa: F401, PLC0415
+            import aiofiles  # noqa: F401
 
-            from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline  # noqa: F401, PLC0415
-            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401, PLC0415
+            from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline  # noqa: F401
+            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool  # noqa: F401
         except ImportError as e:
             logger.debug(f"Async pipeline dependencies not available: {e}")
             return False
@@ -295,7 +295,7 @@ async def crashlogs_scan_async(scanner: ClassicScanLogs) -> None:
     Args:
         scanner: ClassicScanLogs instance with configuration
     """
-    from ClassicLib.ScanLog.AsyncPipeline import AsyncPerformanceMonitor, run_async_crash_log_scan  # noqa: PLC0415
+    from ClassicLib.ScanLog.AsyncPipeline import AsyncPerformanceMonitor, run_async_crash_log_scan
 
     logger.info("Using async pipeline for crash log processing")
     yamldata: ClassicScanLogsInfo = scanner.yamldata
