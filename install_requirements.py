@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Install CLASSIC dependencies from requirements.txt"""
 
+import argparse
 import subprocess
 import sys
-import argparse
 from pathlib import Path
 
 
@@ -18,7 +18,7 @@ def install_requirements(include_gui=False, include_cli=False, include_dev=False
     requirements = []
     current_section = "core"
     
-    with open(req_file, 'r') as f:
+    with open(req_file) as f:
         for line in f:
             line = line.strip()
             
@@ -31,13 +31,7 @@ def install_requirements(include_gui=False, include_cli=False, include_dev=False
                     current_section = "dev"
                 continue
             
-            if current_section == "core":
-                requirements.append(line)
-            elif current_section == "gui" and include_gui:
-                requirements.append(line)
-            elif current_section == "cli" and include_cli:
-                requirements.append(line)
-            elif current_section == "dev" and include_dev:
+            if current_section == "core" or (current_section == "gui" and include_gui) or (current_section == "cli" and include_cli) or (current_section == "dev" and include_dev):
                 requirements.append(line)
     
     if not requirements:
@@ -51,7 +45,7 @@ def install_requirements(include_gui=False, include_cli=False, include_dev=False
         print(f"Installing: {req}")
         result = subprocess.run(
             [sys.executable, "-m", "pip", "install", req],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True
         )
         

@@ -34,14 +34,14 @@ if HAS_PYSIDE6:
     from ClassicLib.Interface.PathDialog import ManualPathDialog
 
     __all__ = [
-        "ManualDocsPath",
+        "HAS_PYSIDE6",
         "AudioPlayer",
+        "ManualDocsPath",
+        "ManualPathDialog",
+        "PapyrusMonitorDialog",
         "PapyrusMonitorWorker",
         "PapyrusStats",
         "PastebinFetchWorker",
-        "PapyrusMonitorDialog",
-        "ManualPathDialog",
-        "HAS_PYSIDE6",
     ]
 else:
     __all__ = ["HAS_PYSIDE6"]

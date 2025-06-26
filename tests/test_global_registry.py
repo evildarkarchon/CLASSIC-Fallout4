@@ -319,7 +319,7 @@ class TestThreadSafety:
         assert len(results) == 10
 
         # Check that each key has the correct value
-        for key, original_value, retrieved_value in results:
+        for _key, original_value, retrieved_value in results:
             assert original_value == retrieved_value
 
     def test_concurrent_modification_same_key(self) -> None:

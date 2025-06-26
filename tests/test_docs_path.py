@@ -5,16 +5,12 @@ This module contains tests for the DocumentsPathManager class and related
 functionality for finding and managing game document paths across platforms.
 """
 
-import platform
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from iniparse import configparser
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML
 from ClassicLib.DocsPath import (
     DocumentsPathManager,
     docs_check_ini,
@@ -53,7 +49,7 @@ class TestDocumentPathManager:
 
     @patch("ClassicLib.DocsPath.yaml_settings", return_value=None)
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
-    def test_get_docs_name_fallback(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
+    def test_get_docs_name_fallback(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:  # noqa: ARG002
         """Test _get_docs_name falls back to GlobalRegistry game name."""
         result = DocumentsPathManager._get_docs_name()
         assert result == "Fallout4"
@@ -67,7 +63,7 @@ class TestDocumentPathManager:
         assert result == "C:/Games/Fallout4"
 
     @patch("ClassicLib.DocsPath.yaml_settings", return_value=None)
-    def test_get_game_setting_path_invalid_type(self, mock_yaml_settings: MagicMock) -> None:
+    def test_get_game_setting_path_invalid_type(self, mock_yaml_settings: MagicMock) -> None:  # noqa: ARG002
         """Test _get_game_setting_path raises TypeError for non-string."""
         with pytest.raises(TypeError):
             DocumentsPathManager._get_game_setting_path("Root_Folder_Game")
@@ -81,14 +77,14 @@ class TestDocumentPathManager:
 
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("ClassicLib.DocsPath.classic_settings")
-    def test_find_docs_path_with_ini_folder_setting(self, mock_classic_settings: MagicMock, mock_msg_info: MagicMock) -> None:
+    def test_find_docs_path_with_ini_folder_setting(self, mock_classic_settings: MagicMock, mock_msg_info: MagicMock) -> None:  # noqa: ARG002
         """Test find_docs_path when INI folder setting is present in YAML."""
         manager = DocumentsPathManager()
 
         # Mock classic_settings to return a custom folder path
         mock_classic_settings.return_value = "C:/Custom/Documents/Folder"
 
-        with patch("ClassicLib.Util.validate_path", return_value=(True, "")):
+        with patch("ClassicLib.Util.validate_path", return_value=(True, "")):  # noqa: SIM117
             with patch("pathlib.Path.is_dir", return_value=True):
                 with patch.object(manager, "_update_game_setting") as mock_update:
                     manager.find_docs_path()
@@ -100,7 +96,7 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.classic_settings")
     @patch("platform.system", return_value="Windows")
     def test_find_docs_path_windows_detection(
-        self, mock_platform: MagicMock, mock_classic_settings: MagicMock, mock_msg_info: MagicMock
+        self, mock_platform: MagicMock, mock_classic_settings: MagicMock, mock_msg_info: MagicMock  # noqa: ARG002
     ) -> None:
         """Test find_docs_path on Windows using registry detection."""
         manager = DocumentsPathManager(is_gui_mode=False)
@@ -108,9 +104,9 @@ class TestDocumentPathManager:
         # Mock no ini_folder setting and no existing docs path
         mock_classic_settings.return_value = None
 
-        with patch("ClassicLib.DocsPath.yaml_settings", return_value=None):
+        with patch("ClassicLib.DocsPath.yaml_settings", return_value=None):  # noqa: SIM117
             with patch.object(manager, "_find_windows_docs_path") as mock_windows:
-                with patch.object(manager, "_get_manual_docs_path") as mock_manual:
+                with patch.object(manager, "_get_manual_docs_path") as mock_manual:  # noqa: F841
                     manager.find_docs_path()
 
                     # Should call Windows detection method
@@ -120,7 +116,7 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.classic_settings")
     @patch("platform.system", return_value="Linux")
     def test_find_docs_path_linux_detection(
-        self, mock_platform: MagicMock, mock_classic_settings: MagicMock, mock_msg_info: MagicMock
+        self, mock_platform: MagicMock, mock_classic_settings: MagicMock, mock_msg_info: MagicMock  # noqa: ARG002
     ) -> None:
         """Test find_docs_path on Linux using Steam library detection."""
         manager = DocumentsPathManager(is_gui_mode=False)
@@ -128,9 +124,9 @@ class TestDocumentPathManager:
         # Mock no ini_folder setting and no existing docs path
         mock_classic_settings.return_value = None
 
-        with patch("ClassicLib.DocsPath.yaml_settings", return_value=None):
+        with patch("ClassicLib.DocsPath.yaml_settings", return_value=None):  # noqa: SIM117
             with patch.object(manager, "_find_linux_docs_path") as mock_linux:
-                with patch.object(manager, "_get_manual_docs_path") as mock_manual:
+                with patch.object(manager, "_get_manual_docs_path") as mock_manual:  # noqa: F841
                     manager.find_docs_path()
 
                     # Should call Linux detection method
@@ -142,13 +138,13 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("builtins.input", side_effect=["C:/Valid/Path", ""])
     def test_find_docs_path_manual_fallback(
-        self, mock_input: MagicMock, mock_msg_info: MagicMock, mock_msg_error: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock
+        self, mock_input: MagicMock, mock_msg_info: MagicMock, mock_msg_error: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock  # noqa: ARG002
     ) -> None:
         """Test find_docs_path falls back to manual input when detection fails."""
         manager = DocumentsPathManager(is_gui_mode=False)
 
-        with patch("pathlib.Path.is_dir", return_value=True):
-            with patch.object(manager, "_update_game_setting") as mock_update:
+        with patch("pathlib.Path.is_dir", return_value=True):  # noqa: SIM117
+            with patch.object(manager, "_update_game_setting") as mock_update:  # noqa: F841
                 with patch.object(manager, "_find_windows_docs_path"):
                     manager.find_docs_path()
 
@@ -158,7 +154,7 @@ class TestDocumentPathManager:
 
     @patch("winreg.OpenKey")
     @patch("winreg.QueryValueEx")
-    def test_find_windows_docs_path_success(self, mock_query: MagicMock, mock_open: MagicMock) -> None:
+    def test_find_windows_docs_path_success(self, mock_query: MagicMock, mock_open: MagicMock) -> None:  # noqa: ARG002
         """Test _find_windows_docs_path successfully retrieves Windows documents path."""
         mock_query.return_value = ("C:\\Users\\Test\\Documents", None)
 
@@ -172,7 +168,7 @@ class TestDocumentPathManager:
             mock_update.assert_called_once_with("Root_Folder_Docs", expected_path)
 
     @patch("winreg.OpenKey", side_effect=OSError("Registry key not found"))
-    def test_find_windows_docs_path_registry_failure(self, mock_open: MagicMock) -> None:
+    def test_find_windows_docs_path_registry_failure(self, mock_open: MagicMock) -> None:  # noqa: ARG002
         """Test _find_windows_docs_path handles registry access failure."""
         manager = DocumentsPathManager()
         manager.docs_name = "Fallout4"
@@ -184,12 +180,13 @@ class TestDocumentPathManager:
             mock_update.assert_called_once()
             # Path should contain user home directory fallback
             args = mock_update.call_args[0]
-            assert "Documents" in args[1] and "My Games" in args[1]
+            assert "Documents" in args[1]
+            assert "My Games" in args[1]
 
     @patch("ClassicLib.DocsPath.yaml_settings")
     @patch("pathlib.Path.is_file", return_value=True)
     @patch("pathlib.Path.open")
-    def test_find_linux_docs_path_success(self, mock_open_file: MagicMock, mock_is_file: MagicMock, mock_yaml: MagicMock) -> None:
+    def test_find_linux_docs_path_success(self, mock_open_file: MagicMock, mock_is_file: MagicMock, mock_yaml: MagicMock) -> None:  # noqa: ARG002
         """Test _find_linux_docs_path successfully finds Steam library path."""
         mock_yaml.return_value = 377160  # Fallout 4 Steam ID
 
@@ -218,10 +215,11 @@ class TestDocumentPathManager:
             mock_update.assert_called_once()
             # Check that the path contains expected Linux Proton structure
             args = mock_update.call_args[0]
-            assert "compatdata" in args[1] and "377160" in args[1]
+            assert "compatdata" in args[1]
+            assert "377160" in args[1]
 
     @patch("ClassicLib.DocsPath.yaml_settings", return_value=None)
-    def test_find_linux_docs_path_invalid_steam_id(self, mock_yaml: MagicMock) -> None:
+    def test_find_linux_docs_path_invalid_steam_id(self, mock_yaml: MagicMock) -> None:  # noqa: ARG002
         """Test _find_linux_docs_path handles invalid Steam ID."""
         manager = DocumentsPathManager()
 
@@ -230,7 +228,7 @@ class TestDocumentPathManager:
 
     @patch("pathlib.Path.is_file", return_value=False)
     @patch("ClassicLib.DocsPath.yaml_settings", return_value=377160)
-    def test_find_linux_docs_path_no_steam_file(self, mock_yaml: MagicMock, mock_is_file: MagicMock) -> None:
+    def test_find_linux_docs_path_no_steam_file(self, mock_yaml: MagicMock, mock_is_file: MagicMock) -> None:  # noqa: ARG002
         """Test _find_linux_docs_path handles missing Steam library file."""
         manager = DocumentsPathManager()
 
@@ -252,7 +250,7 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("ClassicLib.DocsPath.msg_error")
     def test_get_manual_docs_path_cli_mode_success(
-        self, mock_error: MagicMock, mock_info: MagicMock, mock_input: MagicMock, tmp_path: Path
+        self, mock_error: MagicMock, mock_info: MagicMock, mock_input: MagicMock, tmp_path: Path  # noqa: ARG002
     ) -> None:
         """Test _get_manual_docs_path in CLI mode with valid input."""
         # Create a test directory
@@ -273,7 +271,7 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("ClassicLib.DocsPath.msg_error")
     def test_get_manual_docs_path_cli_mode_invalid_input(
-        self, mock_error: MagicMock, mock_info: MagicMock, mock_input: MagicMock, tmp_path: Path
+        self, mock_error: MagicMock, mock_info: MagicMock, mock_input: MagicMock, tmp_path: Path  # noqa: ARG002
     ) -> None:
         """Test _get_manual_docs_path in CLI mode with invalid then valid input."""
         # Create a test directory for the second input
@@ -300,12 +298,12 @@ class TestDocumentPathManager:
         manager = DocumentsPathManager()
 
         # Mock the required YAML settings
-        mock_yaml.side_effect = lambda type_hint, store, key, *args: {
-            f"Game_Info.XSE_Acronym": "f4se",
-            f"Game_VR_Info.XSE_Acronym": "f4sevr",
-            f"Game_Info.Root_Folder_Docs": str(tmp_path),
-            f"Game_VR_Info.Root_Folder_Docs": None,  # Force fallback
-        }.get(key, None)
+        mock_yaml.side_effect = lambda type_hint, store, key, *args: {  # noqa: ARG005
+            "Game_Info.XSE_Acronym": "f4se",
+            "Game_VR_Info.XSE_Acronym": "f4sevr",
+            "Game_Info.Root_Folder_Docs": str(tmp_path),
+            "Game_VR_Info.Root_Folder_Docs": None,  # Force fallback
+        }.get(key)
 
         with patch.object(manager, "_update_game_setting") as mock_update:
             manager.generate_paths()
@@ -368,11 +366,11 @@ iSize W=1920
         manager.docs_name = "Fallout4"
 
         # Mock settings to return the test directory
-        mock_yaml.side_effect = lambda type_hint, store, key, *args: {
-            f"Game_Info.Root_Folder_Docs": str(tmp_path),
-            f"Game_VR_Info.Root_Folder_Docs": str(tmp_path),
+        mock_yaml.side_effect = lambda type_hint, store, key, *args: {  # noqa: ARG005
+            "Game_Info.Root_Folder_Docs": str(tmp_path),
+            "Game_VR_Info.Root_Folder_Docs": str(tmp_path),
             "Default_CustomINI": "# Default custom INI content\n[Archive]\nbInvalidateOlderFiles=1\n",
-        }.get(key, None)
+        }.get(key)
 
         result = manager.check_ini("Fallout4Custom.ini")
 
@@ -390,12 +388,13 @@ iSize W=1920
         ini_file.write_text("This is not valid INI content [broken")
 
         # Mock settings
-        mock_yaml.side_effect = lambda type_hint, store, key, *args: str(tmp_path) if "Root_Folder_Docs" in key else None
+        mock_yaml.side_effect = lambda type_hint, store, key, *args: str(tmp_path) if "Root_Folder_Docs" in key else None  # noqa: ARG005
 
         result = manager.check_ini("Fallout4.ini")
 
         # Should detect corruption
-        assert "CAUTION" in result and "BROKEN" in result
+        assert "CAUTION" in result
+        assert "BROKEN" in result
 
     def test_check_ini_invalid_docs_name_type(self) -> None:
         """Test check_ini raises TypeError for invalid docs_name."""
@@ -406,7 +405,7 @@ iSize W=1920
             manager.check_ini("test.ini")
 
     @patch("ClassicLib.DocsPath.yaml_settings", return_value=None)
-    def test_check_ini_invalid_folder_docs_type(self, mock_yaml: MagicMock) -> None:
+    def test_check_ini_invalid_folder_docs_type(self, mock_yaml: MagicMock) -> None:  # noqa: ARG002
         """Test check_ini raises TypeError for invalid folder_docs."""
         manager = DocumentsPathManager()
         manager.docs_name = "Fallout4"

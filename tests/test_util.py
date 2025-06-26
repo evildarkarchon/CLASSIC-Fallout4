@@ -5,15 +5,11 @@ This module contains tests for utility functions including file operations,
 path validation, version detection, encoding handling, and network operations.
 """
 
-import contextlib
 import hashlib
 import logging
 import os
-import platform
-import tempfile
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
@@ -134,7 +130,7 @@ class TestUtilityFunctions:
 
     @patch("platform.system", return_value="Windows")
     @patch("pathlib.Path.exists", return_value=False)
-    def test_validate_path_windows_invalid_drive(self, mock_exists: MagicMock, mock_platform: MagicMock) -> None:
+    def test_validate_path_windows_invalid_drive(self, mock_exists: MagicMock, mock_platform: MagicMock) -> None:  # noqa: ARG002
         """Test validate_path with invalid Windows drive."""
         invalid_path = "Z:/nonexistent/path"
 
@@ -151,7 +147,7 @@ class TestUtilityFunctions:
 
     @patch("platform.system", return_value="Windows")
     @patch("ClassicLib.Util._get_version_windows_api")
-    def test_get_game_version_windows_success(self, mock_windows_api: MagicMock, mock_platform: MagicMock, tmp_path: Path) -> None:
+    def test_get_game_version_windows_success(self, mock_windows_api: MagicMock, mock_platform: MagicMock, tmp_path: Path) -> None:  # noqa: ARG002
         """Test get_game_version on Windows with successful API call."""
         test_exe = tmp_path / "test.exe"
         test_exe.write_bytes(b"fake exe content")
@@ -165,7 +161,7 @@ class TestUtilityFunctions:
 
     @patch("platform.system", return_value="Linux")
     @patch("ClassicLib.Util._get_version_from_pe_header")
-    def test_get_game_version_linux_fallback(self, mock_pe_header: MagicMock, mock_platform: MagicMock, tmp_path: Path) -> None:
+    def test_get_game_version_linux_fallback(self, mock_pe_header: MagicMock, mock_platform: MagicMock, tmp_path: Path) -> None:  # noqa: ARG002
         """Test get_game_version on Linux using PE header fallback."""
         test_exe = tmp_path / "test.exe"
         test_exe.write_bytes(b"fake exe content")
@@ -228,7 +224,7 @@ class TestUtilityFunctions:
         """Test open_file_with_encoding with nonexistent file."""
         nonexistent = tmp_path / "does_not_exist.txt"
 
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError):  # noqa: SIM117
             with open_file_with_encoding(nonexistent):
                 pass
 
@@ -262,7 +258,7 @@ class TestUtilityFunctions:
         assert len(test_logger.handlers) == original_handler_count
 
     @patch("ClassicLib.Util.msg_info")  # Mock msg_info to avoid MessageHandler dependency
-    def test_configure_logging_old_log_file(self, mock_msg_info: MagicMock) -> None:
+    def test_configure_logging_old_log_file(self, mock_msg_info: MagicMock) -> None:  # noqa: ARG002
         """Test configure_logging removes old log file."""
         test_logger = logging.getLogger("test_classic_logger_old")
         test_logger.handlers.clear()
@@ -337,7 +333,7 @@ class TestUtilityFunctions:
         mock_get.return_value = mock_response
 
         # Change to temp directory for test
-        original_cwd = os.getcwd()
+        original_cwd = str(Path.cwd())
         try:
             os.chdir(tmp_path)
 
@@ -360,7 +356,7 @@ class TestUtilityFunctions:
         mock_response.text = "content"
         mock_get.return_value = mock_response
 
-        original_cwd = os.getcwd()
+        original_cwd = str(Path.cwd())
         try:
             os.chdir(tmp_path)
 

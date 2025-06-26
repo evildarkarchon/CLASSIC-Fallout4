@@ -5,13 +5,10 @@ This file contains shared fixtures and configuration that are available to all t
 """
 
 import sys
-import tempfile
-import shutil
-import os
 from collections.abc import Callable, Generator
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -202,7 +199,7 @@ def temp_game_installation(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def mock_registry_entries() -> Generator[Dict[str, Dict[str, str]], None, None]:
+def mock_registry_entries() -> Generator[dict[str, dict[str, str]], None, None]:
     """Mock Windows registry entries for game path detection."""
     mock_entries = {
         r"SOFTWARE\Bethesda Softworks\Fallout4": {"installed path": r"C:\Program Files (x86)\Steam\steamapps\common\Fallout 4"},
@@ -218,7 +215,7 @@ def mock_registry_entries() -> Generator[Dict[str, Dict[str, str]], None, None]:
             for reg_path, values in mock_entries.items():
                 if value_name in values:
                     return values[value_name], 1  # REG_SZ type
-            raise FileNotFoundError()
+            raise FileNotFoundError
 
         mock_query.side_effect = query_side_effect
 
@@ -282,7 +279,7 @@ bModManagerMenuEnabled=1
 
 
 @pytest.fixture
-def mock_network_responses() -> Generator[Dict[str, Any], None, None]:
+def mock_network_responses() -> Generator[dict[str, Any], None, None]:
     """Mock network responses for testing external integrations."""
 
     with patch("requests.get") as mock_get, patch("requests.post") as mock_post, patch("urllib.request.urlopen") as mock_urlopen:

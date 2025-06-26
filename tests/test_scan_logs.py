@@ -13,7 +13,6 @@ from unittest.mock import patch
 import pytest
 
 from CLASSIC_ScanLogs import ClassicScanLogs
-from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.DetectMods import detect_mods_important
 

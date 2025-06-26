@@ -6,8 +6,7 @@ file loading, caching mechanisms, and settings access functionality.
 """
 
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -104,7 +103,7 @@ class TestYamlSettingsCache:
         cache = YamlSettingsCache()
         test_data = {"level1": {"level2": {"target_key": "target_value"}}}
 
-        with patch.object(cache, "get_path_for_store", return_value=tmp_path / "test.yaml"):
+        with patch.object(cache, "get_path_for_store", return_value=tmp_path / "test.yaml"):  # noqa: SIM117
             with patch.object(cache, "load_yaml", return_value=test_data):
                 result = cache.get_setting(str, YAML.Settings, "level1.level2.target_key")
 
@@ -116,7 +115,7 @@ class TestYamlSettingsCache:
         cache = YamlSettingsCache()
         test_data = {"level1": {"level2": "value"}}
 
-        with patch.object(cache, "get_path_for_store", return_value=tmp_path / "test.yaml"):
+        with patch.object(cache, "get_path_for_store", return_value=tmp_path / "test.yaml"):  # noqa: SIM117
             with patch.object(cache, "load_yaml", return_value=test_data):
                 result = cache.get_setting(str, YAML.Settings, "level1.nonexistent.key")
 
@@ -128,10 +127,9 @@ class TestYamlSettingsCache:
 
         test_file = tmp_path / "static.yaml"
 
-        with patch.object(cache, "get_path_for_store", return_value=test_file):
-            with patch.object(cache, "load_yaml", return_value={}):
-                with pytest.raises(ValueError, match="Attempted to modify static YAML store"):
-                    cache.get_setting(str, YAML.Main, "key", "value")  # Main is static
+        with patch.object(cache, "get_path_for_store", return_value=test_file), patch.object(cache, "load_yaml", return_value={}):  # noqa: SIM117
+            with pytest.raises(ValueError, match="Attempted to modify static YAML store"):
+                cache.get_setting(str, YAML.Main, "key", "value")  # Main is static
 
     def test_multi_file_management(self) -> None:
         """Test managing multiple YAML files simultaneously."""
@@ -149,17 +147,17 @@ class TestYamlSettingsCache:
 
         for filename, data in files_data.items():
             file_path = Path(filename)
-            with patch("pathlib.Path.exists", return_value=True):
+            with patch("pathlib.Path.exists", return_value=True):  # noqa: SIM117
                 with patch("pathlib.Path.stat") as mock_stat:
                     mock_stat.return_value.st_mtime = 1000.0
-                    with patch("ClassicLib.YamlSettingsCache.open_file_with_encoding"):
+                    with patch("ClassicLib.YamlSettingsCache.open_file_with_encoding"):  # noqa: SIM117
                         with patch("ruamel.yaml.YAML") as mock_yaml:
                             mock_yaml.return_value.load.return_value = data
                             result = cache.load_yaml(file_path)
                             assert result == data
 
         # Verify all test files are cached (should be exactly 3)
-        test_files = [f for f in cache.cache.keys() if any(str(f).endswith(name) for name in files_data.keys())]
+        test_files = [f for f in cache.cache if any(str(f).endswith(name) for name in files_data)]
         assert len(test_files) == 3
 
     def test_cache_invalidation_on_file_change(self, tmp_path: Path) -> None:
@@ -178,16 +176,16 @@ class TestYamlSettingsCache:
             mock_yaml_instance = MagicMock()
             mock_yaml_class.return_value = mock_yaml_instance
             mock_yaml_instance.load.return_value = initial_data
-            result1 = cache.load_yaml(test_file)
+            result1 = cache.load_yaml(test_file)  # noqa: F841
 
         # Verify initial load worked
         assert test_file in cache.cache
-        original_mod_time = cache.file_mod_times[test_file]
+        original_mod_time = cache.file_mod_times[test_file]  # noqa: F841
 
         # Mock the second load with updated modification time
         with patch("pathlib.Path.stat") as mock_stat:
             mock_stat.return_value.st_mtime = 2000.0  # Updated time
-            with patch("ClassicLib.YamlSettingsCache.open_file_with_encoding"):
+            with patch("ClassicLib.YamlSettingsCache.open_file_with_encoding"):  # noqa: SIM117
                 with patch("ruamel.yaml.YAML") as mock_yaml:
                     mock_yaml.return_value.load.return_value = updated_data
                     cache.load_yaml(test_file)
@@ -204,7 +202,7 @@ class TestYamlSettingsCache:
         # Create the actual empty file
         empty_file.write_text("")
 
-        with patch("ClassicLib.YamlSettingsCache.open_file_with_encoding"):
+        with patch("ClassicLib.YamlSettingsCache.open_file_with_encoding"):  # noqa: SIM117
             with patch("ruamel.yaml.YAML") as mock_yaml:
                 mock_yaml.return_value.load.return_value = None
                 result = cache.load_yaml(empty_file)
@@ -236,7 +234,7 @@ class TestYamlSettingsFunction:
         """Test yaml_settings converts string to Path for Path type."""
         test_path_str = str(tmp_path / "test" / "path")
 
-        with patch.object(yaml_cache, "get_setting", return_value=test_path_str) as mock_get:
+        with patch.object(yaml_cache, "get_setting", return_value=test_path_str) as mock_get:  # noqa: F841
             result = yaml_settings(Path, YAML.Settings, "path.key")
 
             assert isinstance(result, Path)
@@ -244,14 +242,14 @@ class TestYamlSettingsFunction:
 
     def test_yaml_settings_path_type_none_value(self) -> None:
         """Test yaml_settings returns None for Path type when setting is None."""
-        with patch.object(yaml_cache, "get_setting", return_value=None) as mock_get:
+        with patch.object(yaml_cache, "get_setting", return_value=None) as mock_get:  # noqa: F841
             result = yaml_settings(Path, YAML.Settings, "nonexistent.path")
 
             assert result is None
 
     def test_yaml_settings_path_type_non_string_value(self) -> None:
         """Test yaml_settings returns None for Path type when setting is not string."""
-        with patch.object(yaml_cache, "get_setting", return_value=123) as mock_get:
+        with patch.object(yaml_cache, "get_setting", return_value=123) as mock_get:  # noqa: F841
             result = yaml_settings(Path, YAML.Settings, "numeric.value")
 
             assert result is None
@@ -261,7 +259,7 @@ class TestClassicSettingsFunction:
     """Tests for the classic_settings function."""
 
     @patch("pathlib.Path.exists", return_value=True)
-    def test_classic_settings_existing_file(self, mock_exists: MagicMock) -> None:
+    def test_classic_settings_existing_file(self, mock_exists: MagicMock) -> None:  # noqa: ARG002
         """Test classic_settings with existing settings file."""
         with patch("ClassicLib.YamlSettingsCache.yaml_settings", return_value="test_setting_value") as mock_yaml:
             result = classic_settings(str, "test_setting")
@@ -272,7 +270,7 @@ class TestClassicSettingsFunction:
     @patch("pathlib.Path.exists", return_value=False)
     @patch("pathlib.Path.write_text")
     @patch("ClassicLib.YamlSettingsCache.yaml_settings")
-    def test_classic_settings_creates_missing_file(self, mock_yaml: MagicMock, mock_write: MagicMock, mock_exists: MagicMock) -> None:
+    def test_classic_settings_creates_missing_file(self, mock_yaml: MagicMock, mock_write: MagicMock, mock_exists: MagicMock) -> None:  # noqa: ARG002
         """Test classic_settings creates missing settings file."""
         # Setup mock responses
         mock_yaml.side_effect = [
@@ -290,7 +288,7 @@ class TestClassicSettingsFunction:
 
     @patch("pathlib.Path.exists", return_value=False)
     @patch("ClassicLib.YamlSettingsCache.yaml_settings", return_value=None)
-    def test_classic_settings_invalid_default_settings(self, mock_yaml: MagicMock, mock_exists: MagicMock) -> None:
+    def test_classic_settings_invalid_default_settings(self, mock_yaml: MagicMock, mock_exists: MagicMock) -> None:  # noqa: ARG002
         """Test classic_settings raises ValueError for invalid default settings."""
         with pytest.raises(ValueError, match="Invalid Default Settings"):
             classic_settings(str, "test_setting")
@@ -307,7 +305,7 @@ class TestCachePerformance:
         static_data = {"static": "value"}
         static_file = Path("static.yaml")
 
-        with patch.object(cache, "get_path_for_store", return_value=static_file):
+        with patch.object(cache, "get_path_for_store", return_value=static_file):  # noqa: SIM117
             with patch.object(cache, "load_yaml", return_value=static_data) as mock_load:
                 # First call
                 result1 = cache.get_setting(str, YAML.Main, "static")  # Main is static
@@ -331,7 +329,7 @@ class TestErrorHandling:
 
         complex_data = {"level1": {"level2": {"level3": {"deep_list": [1, 2, {"nested_in_list": "value"}], "deep_string": "target"}}}}
 
-        with patch.object(cache, "get_path_for_store", return_value=tmp_path / "complex.yaml"):
+        with patch.object(cache, "get_path_for_store", return_value=tmp_path / "complex.yaml"):  # noqa: SIM117
             with patch.object(cache, "load_yaml", return_value=complex_data):
                 result = cache.get_setting(str, YAML.Settings, "level1.level2.level3.deep_string")
 
@@ -348,7 +346,7 @@ class TestErrorHandling:
             }
         }
 
-        with patch.object(cache, "get_path_for_store", return_value=tmp_path / "invalid.yaml"):
+        with patch.object(cache, "get_path_for_store", return_value=tmp_path / "invalid.yaml"):  # noqa: SIM117
             with patch.object(cache, "load_yaml", return_value=invalid_data):
                 result = cache.get_setting(str, YAML.Settings, "level1.level2.level3")
 
