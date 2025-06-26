@@ -1,7 +1,6 @@
 import shutil
 import sqlite3
 from pathlib import Path
-from typing import cast
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS, YAML
