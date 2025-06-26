@@ -63,5 +63,5 @@ def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
 
         elif "GPU #2" in line and ":" in line:
             gpu_info["secondary"] = line.split(":", 1)[1].strip()
-            
+
     return gpu_info

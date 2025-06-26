@@ -270,6 +270,7 @@ def _perform_backup(version: str, game_path: str | None, backup_list: list[str])
 
     # Validate game path before attempting backup
     from ClassicLib.Util import validate_path
+
     is_valid, error_msg = validate_path(game_path, check_write=False, check_read=True)
     if not is_valid:
         logger.warning(f"Cannot backup files - {error_msg}")

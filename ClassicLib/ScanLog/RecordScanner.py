@@ -137,11 +137,11 @@ class RecordScanner:
             the segment callstack.
         """
         records_matches: list[Any] = []
-        
+
         # Constants
         rsp_marker = "[RSP+"
         rsp_offset = 30
-        
+
         self._find_matching_records(segment_callstack, records_matches, rsp_marker, rsp_offset)
-        
+
         return records_matches

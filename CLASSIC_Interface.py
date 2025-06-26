@@ -2028,6 +2028,5 @@ if __name__ == "__main__":
         msg_error(f"Unhandled exception during application startup: {exc}")
         if QApplication.instance():
             # noinspection PyTypeChecker
-            QMessageBox.critical(None, "Application Startup Error",
-                                 f"An critical error occurred: {exc}")  # pyrefly: ignore
+            QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {exc}")  # pyrefly: ignore
         sys.exit(1)

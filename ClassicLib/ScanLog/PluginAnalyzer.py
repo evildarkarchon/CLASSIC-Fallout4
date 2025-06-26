@@ -244,5 +244,5 @@ class PluginAnalyzer:
             if signal in crashlog_plugins_lower:
                 original_key: str = crashlog_plugins_lower[signal]
                 del crashlog_plugins[original_key]
-                
+
         return crashlog_plugins

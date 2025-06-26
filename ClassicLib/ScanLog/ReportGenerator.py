@@ -336,8 +336,8 @@ class ReportGenerator:
             tuple[str, ...]: A tuple containing multiple lines of failure warning
             and guidance messages.
         """
-        return ((
+        return (
             "* [!] NOTICE : BUFFOUT 4 WAS NOT ABLE TO LOAD THE PLUGIN LIST FOR THIS CRASH LOG! *\n",
             "  CLASSIC cannot perform the full scan. Provide or scan a different crash log\n",
-            "  OR copy-paste your *loadorder.txt* into your main CLASSIC folder.\n"
-        ))
+            "  OR copy-paste your *loadorder.txt* into your main CLASSIC folder.\n",
+        )

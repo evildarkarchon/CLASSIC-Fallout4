@@ -96,7 +96,10 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.classic_settings")
     @patch("platform.system", return_value="Windows")
     def test_find_docs_path_windows_detection(
-        self, mock_platform: MagicMock, mock_classic_settings: MagicMock, mock_msg_info: MagicMock  # noqa: ARG002
+        self,
+        mock_platform: MagicMock,  # noqa: ARG002
+        mock_classic_settings: MagicMock,
+        mock_msg_info: MagicMock,  # noqa: ARG002
     ) -> None:
         """Test find_docs_path on Windows using registry detection."""
         manager = DocumentsPathManager(is_gui_mode=False)
@@ -116,7 +119,10 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.classic_settings")
     @patch("platform.system", return_value="Linux")
     def test_find_docs_path_linux_detection(
-        self, mock_platform: MagicMock, mock_classic_settings: MagicMock, mock_msg_info: MagicMock  # noqa: ARG002
+        self,
+        mock_platform: MagicMock,  # noqa: ARG002
+        mock_classic_settings: MagicMock,
+        mock_msg_info: MagicMock,  # noqa: ARG002
     ) -> None:
         """Test find_docs_path on Linux using Steam library detection."""
         manager = DocumentsPathManager(is_gui_mode=False)
@@ -138,7 +144,12 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("builtins.input", side_effect=["C:/Valid/Path", ""])
     def test_find_docs_path_manual_fallback(
-        self, mock_input: MagicMock, mock_msg_info: MagicMock, mock_msg_error: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock  # noqa: ARG002
+        self,
+        mock_input: MagicMock,
+        mock_msg_info: MagicMock,  # noqa: ARG002
+        mock_msg_error: MagicMock,  # noqa: ARG002
+        mock_yaml: MagicMock,  # noqa: ARG002
+        mock_classic: MagicMock,  # noqa: ARG002
     ) -> None:
         """Test find_docs_path falls back to manual input when detection fails."""
         manager = DocumentsPathManager(is_gui_mode=False)
@@ -250,7 +261,11 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("ClassicLib.DocsPath.msg_error")
     def test_get_manual_docs_path_cli_mode_success(
-        self, mock_error: MagicMock, mock_info: MagicMock, mock_input: MagicMock, tmp_path: Path  # noqa: ARG002
+        self,
+        mock_error: MagicMock,  # noqa: ARG002
+        mock_info: MagicMock,  # noqa: ARG002
+        mock_input: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test _get_manual_docs_path in CLI mode with valid input."""
         # Create a test directory
@@ -271,7 +286,11 @@ class TestDocumentPathManager:
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("ClassicLib.DocsPath.msg_error")
     def test_get_manual_docs_path_cli_mode_invalid_input(
-        self, mock_error: MagicMock, mock_info: MagicMock, mock_input: MagicMock, tmp_path: Path  # noqa: ARG002
+        self,
+        mock_error: MagicMock,
+        mock_info: MagicMock,  # noqa: ARG002
+        mock_input: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test _get_manual_docs_path in CLI mode with invalid then valid input."""
         # Create a test directory for the second input

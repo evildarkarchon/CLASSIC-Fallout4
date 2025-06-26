@@ -190,5 +190,5 @@ def extract_module_names(module_texts: set[str]) -> set[str]:
             result.add(match.group(1))
         else:
             result.add(text)
-            
+
     return result

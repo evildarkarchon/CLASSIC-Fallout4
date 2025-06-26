@@ -175,7 +175,7 @@ async def batch_file_copy_async(operations: list[tuple[Path, Path]]) -> None:
             logger.debug(f"Copied {src.name} to {dst}")
         except (OSError, shutil.Error) as e:
             logger.error(f"Error copying {src} to {dst}: {e}")
-            
+
     # Execute all copies concurrently
     tasks = [copy_file(src, dst) for src, dst in operations]
     await asyncio.gather(*tasks, return_exceptions=True)

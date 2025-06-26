@@ -86,12 +86,13 @@ def game_path_find() -> None:
 
     # Validate XSE file path before attempting to access it
     from ClassicLib.Util import validate_path
+
     if not xse_file:
         msg_error(
             f"❌ CAUTION : THE {xse_acronym.lower()}.log FILE PATH IS NOT CONFIGURED! \n   Please configure the game documents folder first! \n-----\n"
         )
         return
-    
+
     is_valid, error_msg = validate_path(cast("str", xse_file), check_write=False, check_read=True)
     if not is_valid:
         if "does not exist" in error_msg:
@@ -139,13 +140,13 @@ def game_path_find() -> None:
         path_input: str = input(rf"(EXAMPLE: C:\Steam\steamapps\common\{game_name} | Press ENTER to confirm.)\n> ")
         msg_info(f"You entered: {path_input} | This path will be automatically added to CLASSIC Settings.yaml")
         game_path = Path(path_input.strip())
-        
+
         # Validate path before checking for executable
         is_valid, error_msg = validate_path(game_path, check_write=False, check_read=True)
         if not is_valid:
             msg_error(f"ERROR : {error_msg}")
             continue
-            
+
         if game_path and game_path.joinpath(exe_name).is_file():
             yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
             return

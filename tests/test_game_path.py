@@ -266,7 +266,11 @@ class TestGamePathDetection:
     @patch("ClassicLib.GamePath.msg_info")
     @patch("builtins.input", return_value="C:/Games/Fallout4")
     def test_game_path_find_manual_input_success(
-        self, mock_input: MagicMock, mock_msg_info: MagicMock, mock_msg_error: MagicMock, tmp_path: Path  # noqa: ARG002
+        self,
+        mock_input: MagicMock,
+        mock_msg_info: MagicMock,  # noqa: ARG002
+        mock_msg_error: MagicMock,  # noqa: ARG002
+        tmp_path: Path,
     ) -> None:
         """Test manual game path input success."""
         # Create a fake XSE log file that will be parsed but won't have plugin directory
@@ -322,7 +326,11 @@ class TestGamePathDetection:
     @patch("ClassicLib.GamePath.msg_info")
     @patch("builtins.input", side_effect=["invalid_path", "C:/Games/Fallout4"])
     def test_game_path_find_manual_input_invalid_path(
-        self, mock_input: MagicMock, mock_msg_info: MagicMock, mock_msg_error: MagicMock, tmp_path: Path  # noqa: ARG002
+        self,
+        mock_input: MagicMock,
+        mock_msg_info: MagicMock,  # noqa: ARG002
+        mock_msg_error: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test manual game path input with invalid path first."""
         # Create a fake XSE log file that will be parsed but won't have plugin directory
@@ -379,7 +387,11 @@ class TestGamePathDetection:
     @patch("ClassicLib.GamePath.msg_info")
     @patch("builtins.input", side_effect=["C:/Games/Fallout4", "C:/Games/Fallout4"])
     def test_game_path_find_manual_input_no_executable(
-        self, mock_input: MagicMock, mock_msg_info: MagicMock, mock_msg_error: MagicMock, tmp_path: Path  # noqa: ARG002
+        self,
+        mock_input: MagicMock,
+        mock_msg_info: MagicMock,  # noqa: ARG002
+        mock_msg_error: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test manual game path input when executable is missing."""
         # Create a fake XSE log file that will be parsed but won't have plugin directory
@@ -590,7 +602,11 @@ class TestGamePathGeneration:
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_missing_xse_acronym(
-        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock, tmp_path: Path  # noqa: ARG002
+        self,
+        mock_get_vr: MagicMock,  # noqa: ARG002
+        mock_get_game: MagicMock,  # noqa: ARG002
+        mock_yaml: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test game_generate_paths with missing XSE acronym."""
         game_path = str(tmp_path / "Fallout4")

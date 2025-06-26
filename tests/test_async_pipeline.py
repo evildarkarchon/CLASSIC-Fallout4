@@ -932,10 +932,10 @@ PROBABLE CALL STACK:
         """Comprehensive baseline: Full realistic pipeline performance test with sync vs async comparison."""
         # Create realistic test scenario
         test_files: list[Path] = self.create_large_crash_log_set(tmp_path, 30)
-        
+
         print("\n=== COMPREHENSIVE PIPELINE BASELINE ===")
         print(f"Testing with {len(test_files)} synthetic crash logs")
-        
+
         # Calculate total file size
         total_size: int = sum(f.stat().st_size for f in test_files)
         print(f"Total data size: {total_size:,} bytes ({total_size / 1024 / 1024:.2f} MB)")
@@ -943,17 +943,17 @@ PROBABLE CALL STACK:
         # First, run sync test for comparison
         print("\n--- SYNC PIPELINE TEST ---")
         sync_start: float = time.perf_counter()
-        
+
         # Simulate sync pipeline with sequential operations
         sync_results: list[tuple[Path, list[str], bool, dict[str, Any]]] = []
-        
+
         # Stage 1: Reformat (sequential)
         sync_reformat_start: float = time.perf_counter()
         for log_file in test_files:  # noqa: B007
             # Simulate reformatting delay
             await asyncio.sleep(0.001)  # 1ms per file
         sync_reformat_time: float = time.perf_counter() - sync_reformat_start
-        
+
         # Stage 2: Load (sequential)
         sync_load_start: float = time.perf_counter()
         sync_cache: dict[str, list[str]] = {}
@@ -962,7 +962,7 @@ PROBABLE CALL STACK:
             sync_cache[log_file.name] = [f"Line {i}" for i in range(50)]
             await asyncio.sleep(0.0005)  # 0.5ms per file
         sync_load_time: float = time.perf_counter() - sync_load_start
-        
+
         # Stage 3: Process (sequential)
         sync_process_start: float = time.perf_counter()
         for log_file in test_files:
@@ -971,15 +971,15 @@ PROBABLE CALL STACK:
             await asyncio.sleep(0.006)  # 6ms processing per file
             sync_results.append((log_file, report, False, {}))
         sync_process_time: float = time.perf_counter() - sync_process_start
-        
+
         # Stage 4: Write (sequential)
         sync_write_start: float = time.perf_counter()
         for _result in sync_results:
             await asyncio.sleep(0.002)  # 2ms write per file
         sync_write_time: float = time.perf_counter() - sync_write_start
-        
+
         sync_total_time: float = time.perf_counter() - sync_start
-        
+
         sync_stats: dict[str, float] = {
             "total_time": sync_total_time,
             "reformat_time": sync_reformat_time,
@@ -988,13 +988,13 @@ PROBABLE CALL STACK:
             "write_time": sync_write_time,
             "logs_per_second": len(test_files) / sync_total_time,
         }
-        
+
         print(f"Sync total time:     {sync_total_time:.4f}s")
         print(f"Sync throughput:     {sync_stats['logs_per_second']:.2f} logs/sec")
 
         # Now run async test
         print("\n--- ASYNC PIPELINE TEST ---")
-        
+
         # Simulate realistic processing times by using actual (but mocked) operations
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
@@ -1044,7 +1044,7 @@ PROBABLE CALL STACK:
             results, stats = await pipeline.process_crash_logs_async(test_files, ("simplify_test",))
 
         full_test_time: float = time.perf_counter() - full_test_start
-        
+
         # Rename async stats for clarity
         async_stats = stats
         avg_file_size: float = total_size / len(test_files)
@@ -1052,22 +1052,30 @@ PROBABLE CALL STACK:
         # Generate comprehensive baseline report
         print(f"\nAsync total time:    {full_test_time:.4f}s")
         print(f"Async throughput:    {async_stats['logs_per_second']:.2f} logs/sec")
-        
+
         print("\nAsync Pipeline Stage Breakdown:")
-        print(f"  Reformat time:      {async_stats.get('reformat_time', 0):.4f}s ({(async_stats.get('reformat_time', 0) / full_test_time * 100):.1f}%)")
-        print(f"  Load time:          {async_stats.get('load_time', 0):.4f}s ({(async_stats.get('load_time', 0) / full_test_time * 100):.1f}%)")
-        print(f"  Process time:       {async_stats.get('process_time', 0):.4f}s ({(async_stats.get('process_time', 0) / full_test_time * 100):.1f}%)")
-        print(f"  Write time:         {async_stats.get('write_time', 0):.4f}s ({(async_stats.get('write_time', 0) / full_test_time * 100):.1f}%)")
+        print(
+            f"  Reformat time:      {async_stats.get('reformat_time', 0):.4f}s ({(async_stats.get('reformat_time', 0) / full_test_time * 100):.1f}%)"
+        )
+        print(
+            f"  Load time:          {async_stats.get('load_time', 0):.4f}s ({(async_stats.get('load_time', 0) / full_test_time * 100):.1f}%)"
+        )
+        print(
+            f"  Process time:       {async_stats.get('process_time', 0):.4f}s ({(async_stats.get('process_time', 0) / full_test_time * 100):.1f}%)"
+        )
+        print(
+            f"  Write time:         {async_stats.get('write_time', 0):.4f}s ({(async_stats.get('write_time', 0) / full_test_time * 100):.1f}%)"
+        )
         print(f"  Pipeline overhead:  {(full_test_time - async_stats.get('total_time', 0)):.4f}s")
-        
+
         # Compare results
         print("\n--- PERFORMANCE COMPARISON ---")
         comparison: dict[str, Any] = AsyncPerformanceMonitor.compare_performance(async_stats, sync_total_time, len(test_files))
-        
+
         print(f"Speedup factor:      {comparison['speedup_factor']:.2f}x")
         print(f"Improvement:         {comparison['improvement_percent']:.1f}%")
         print(f"Time saved:          {sync_total_time - full_test_time:.4f}s")
-        
+
         # Stage-by-stage comparison
         print("\n--- STAGE BREAKDOWN ---")
         stages: list[str] = ["reformat_time", "load_time", "process_time", "write_time"]
@@ -1075,7 +1083,9 @@ PROBABLE CALL STACK:
             sync_stage: float = sync_stats.get(stage, 0)
             async_stage: float = async_stats.get(stage, 0)
             stage_speedup: float = sync_stage / async_stage if async_stage > 0 else 0
-            print(f"{stage.replace('_', ' ').title():14s}: Sync {sync_stage:6.4f}s | Async {async_stage:6.4f}s | Speedup {stage_speedup:.2f}x")
+            print(
+                f"{stage.replace('_', ' ').title():14s}: Sync {sync_stage:6.4f}s | Async {async_stage:6.4f}s | Speedup {stage_speedup:.2f}x"
+            )
 
         print("\nEfficiency Metrics:")
         print(f"  Time per log (sync):  {sync_total_time / len(test_files):.4f}s")
@@ -1172,7 +1182,7 @@ PROBABLE CALL STACK:
 
         print("\n=== REAL-WORLD CRASH LOGS PERFORMANCE TEST ===")
         print(f"Processing {len(crash_log_files)} actual crash logs")
-        
+
         # Calculate total file size
         total_size: int = sum(f.stat().st_size for f in crash_log_files)
         print(f"Total data size: {total_size:,} bytes ({total_size / 1024 / 1024:.2f} MB)")
@@ -1180,17 +1190,17 @@ PROBABLE CALL STACK:
         # First, run sync test for comparison
         print("\n--- SYNC PIPELINE TEST ---")
         sync_start: float = time.perf_counter()
-        
+
         # Simulate sync pipeline with sequential operations
         sync_results: list[tuple[Path, list[str], bool, dict[str, Any]]] = []
-        
+
         # Stage 1: Reformat (sequential)
         sync_reformat_start: float = time.perf_counter()
         for log_file in crash_log_files:  # noqa: B007
             # Simulate reformatting delay
             await asyncio.sleep(0.001)  # 1ms per file
         sync_reformat_time: float = time.perf_counter() - sync_reformat_start
-        
+
         # Stage 2: Load (sequential)
         sync_load_start: float = time.perf_counter()
         sync_cache: dict[str, list[str]] = {}
@@ -1200,7 +1210,7 @@ PROBABLE CALL STACK:
             # Add small delay to simulate sequential I/O overhead
             await asyncio.sleep(0.0002)  # 0.2ms per file
         sync_load_time: float = time.perf_counter() - sync_load_start
-        
+
         # Stage 3: Process (sequential)
         sync_process_start: float = time.perf_counter()
         for log_file in crash_log_files:
@@ -1209,19 +1219,19 @@ PROBABLE CALL STACK:
             report: list[str] = [f"Sync report for {log_file.name}\n"]
             for i, line in enumerate(lines[:50]):
                 if "Form ID:" in line or "EXCEPTION_" in line or ".dll" in line.lower():
-                    report.append(f"Found at line {i+1}: {line.strip()}\n")
+                    report.append(f"Found at line {i + 1}: {line.strip()}\n")
             await asyncio.sleep(0.005)  # 5ms processing per file
             sync_results.append((log_file, report, False, {}))
         sync_process_time: float = time.perf_counter() - sync_process_start
-        
+
         # Stage 4: Write (sequential)
         sync_write_start: float = time.perf_counter()
         for _result in sync_results:
             await asyncio.sleep(0.002)  # 2ms write per file
         sync_write_time: float = time.perf_counter() - sync_write_start
-        
+
         sync_total_time: float = time.perf_counter() - sync_start
-        
+
         sync_stats: dict[str, float] = {
             "total_time": sync_total_time,
             "reformat_time": sync_reformat_time,
@@ -1230,13 +1240,13 @@ PROBABLE CALL STACK:
             "write_time": sync_write_time,
             "logs_per_second": len(crash_log_files) / sync_total_time,
         }
-        
+
         print(f"Sync total time:     {sync_total_time:.4f}s")
         print(f"Sync throughput:     {sync_stats['logs_per_second']:.2f} logs/sec")
 
         # Now run async test
         print("\n--- ASYNC PIPELINE TEST ---")
-        
+
         # Create pipeline with realistic settings
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
@@ -1310,7 +1320,7 @@ PROBABLE CALL STACK:
                 pytest.fail(f"Pipeline failed: {e!s}")
 
         full_test_time: float = time.perf_counter() - full_test_start
-        
+
         # Rename async stats for clarity
         async_stats = stats
 
@@ -1332,15 +1342,15 @@ PROBABLE CALL STACK:
         print(f"  Write time:           {async_stats.get('write_time', 0):.4f}s")
         print(f"  Total pipeline time:  {async_stats.get('total_time', 0):.4f}s")
         print(f"  Logs per second:      {async_stats.get('logs_per_second', 0):.2f}")
-        
+
         # Compare results
         print("\n--- PERFORMANCE COMPARISON ---")
         comparison: dict[str, Any] = AsyncPerformanceMonitor.compare_performance(async_stats, sync_total_time, len(crash_log_files))
-        
+
         print(f"Speedup factor:      {comparison['speedup_factor']:.2f}x")
         print(f"Improvement:         {comparison['improvement_percent']:.1f}%")
         print(f"Time saved:          {sync_total_time - full_test_time:.4f}s")
-        
+
         # Stage-by-stage comparison
         print("\n--- STAGE BREAKDOWN ---")
         stages: list[str] = ["reformat_time", "load_time", "process_time", "write_time"]
@@ -1348,7 +1358,9 @@ PROBABLE CALL STACK:
             sync_stage: float = sync_stats.get(stage, 0)
             async_stage: float = async_stats.get(stage, 0)
             stage_speedup: float = sync_stage / async_stage if async_stage > 0 else 0
-            print(f"{stage.replace('_', ' ').title():14s}: Sync {sync_stage:6.4f}s | Async {async_stage:6.4f}s | Speedup {stage_speedup:.2f}x")
+            print(
+                f"{stage.replace('_', ' ').title():14s}: Sync {sync_stage:6.4f}s | Async {async_stage:6.4f}s | Speedup {stage_speedup:.2f}x"
+            )
 
         # Performance assertions
         assert len(results) == len(crash_log_files)

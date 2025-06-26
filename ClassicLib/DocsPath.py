@@ -64,7 +64,7 @@ class DocumentsPathManager:
     def find_docs_path(self) -> None:
         """Find and configure the game documents folder path."""
         logger.debug("- - - INITIATED DOCS PATH CHECK")
-        
+
         from ClassicLib.Util import validate_path
 
         # First check if INI Folder Path is set in CLASSIC Settings.yaml
@@ -77,7 +77,7 @@ class DocumentsPathManager:
                 self._update_game_setting("Root_Folder_Docs", ini_folder_path)
                 return
             logger.warning(f"Configured INI Folder Path is not accessible: {error_msg}")
-                # Continue to auto-detection
+            # Continue to auto-detection
 
         # Check if path already exists and is accessible
         docs_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
@@ -86,8 +86,8 @@ class DocumentsPathManager:
             if is_valid and Path(docs_path).is_dir():
                 return  # Path is valid, no need to re-detect
             logger.warning(f"Existing docs path is not accessible: {error_msg}")
-                # Continue to auto-detection
-        
+            # Continue to auto-detection
+
         if True:  # Always attempt to find/update path if we get here
             # Find path based on platform
             if platform.system() == "Windows":
