@@ -20,7 +20,7 @@ except ImportError:
         pass
 
     class Signal:
-        def __init__(self, *args):
+        def __init__(self, *args) -> None:  # noqa: ANN002
             pass
 
 
