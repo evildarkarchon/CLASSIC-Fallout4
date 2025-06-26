@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.MessageHandler import init_message_handler
+from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
 
 @pytest.fixture
@@ -320,3 +321,21 @@ Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+
         mock_urlopen.return_value.__enter__.return_value.read.return_value = b"Sample crash log content"
 
         yield {"get": mock_get, "post": mock_post, "urlopen": mock_urlopen}
+
+
+@pytest.fixture
+def setup_global_registry() -> Generator[None, None, None]:
+    """Initialize GlobalRegistry with required components for testing."""
+    # Initialize YAML cache
+    yaml_cache = YamlSettingsCache()
+    GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
+
+    # Set common registry values
+    GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
+    GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
+    GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
+
+    yield
+
+    # Clear registry after test
+    GlobalRegistry._registry.clear()

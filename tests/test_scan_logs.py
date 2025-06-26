@@ -19,26 +19,6 @@ from ClassicLib.ScanLog.DetectMods import detect_mods_important
 
 
 @pytest.fixture
-def setup_global_registry() -> Generator:
-    """Set up test values in the global registry."""
-    # Save original values to restore them after tests
-    original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
-    original_vr = GlobalRegistry.get(GlobalRegistry.Keys.VR)
-
-    # Register test values
-    GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
-    GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
-
-    yield
-
-    # Restore original values
-    if original_game is not None:
-        GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
-    if original_vr is not None:
-        GlobalRegistry.register(GlobalRegistry.Keys.VR, original_vr)
-
-
-@pytest.fixture
 def mock_yaml_settings() -> Generator:
     """Mock the yaml_settings function to return test values."""
     with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml:
