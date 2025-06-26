@@ -70,3 +70,5 @@ Crash Logs/
 compile.py
 /package-lock.json
 /Examples/
+TEST_COVERAGE_ANALYSIS.md
+TEST_IMPLEMENTATION_CHECKLIST.md
