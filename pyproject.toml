@@ -162,6 +162,54 @@ extend-select = [
 
 [tool.coverage.run]
 source = ["."]
+omit = [
+    "*/venv/*",
+    "*/env/*",
+    "*/.venv/*",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "*/build/*",
+    "*/dist/*",
+    "*/tests/*",
+    "*/_internal/*",
+    "*/Release/*",
+    "*/CLASSIC Backup/*",
+    "*/Crash Logs/*",
+    "*/Examples/*",
+    "*/performance_baselines/*",
+    "install_requirements.py",
+    "setup.py"
+]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+sort = "Cover"
+fail_under = 85
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self\\.debug",
+    "raise AssertionError",
+    "raise NotImplementedError", 
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if sys.platform",
+    "if platform.system",
+    "@app.route",
+    "app.run",
+    "logger\\.debug",
+    "logger\\.trace"
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+title = "CLASSIC-Fallout4 Test Coverage Report"
+
+[tool.coverage.xml]
+output = "coverage.xml"
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-report=lcov:lcov.info --cov-report=term"

@@ -72,3 +72,4 @@ compile.py
 /Examples/
 TEST_COVERAGE_ANALYSIS.md
 TEST_IMPLEMENTATION_CHECKLIST.md
+!tests/test_data/sample_crash_logs/*.log

@@ -5,10 +5,13 @@ This file contains shared fixtures and configuration that are available to all t
 """
 
 import sys
+import tempfile
+import shutil
+import os
 from collections.abc import Callable, Generator
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -98,7 +101,7 @@ def mock_yaml_settings() -> Generator[MagicMock, None, None]:
             if key_path == "Game_Info.XSE_Acronym":
                 return "F4SE"
             if key_path == "CLASSIC_Info.default_settings":
-                return """# This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
+                return r"""# This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
 
 CLASSIC_Settings:
 
@@ -168,3 +171,152 @@ CLASSIC_Settings:
 
         mock_yaml.side_effect = side_effect
         yield mock_yaml
+
+
+@pytest.fixture
+def temp_game_installation(tmp_path: Path) -> Path:
+    """Fixture to create a temporary game installation directory structure."""
+    game_dir = tmp_path / "Fallout4"
+    game_dir.mkdir()
+
+    # Create essential game directories
+    (game_dir / "Data").mkdir()
+    (game_dir / "Data" / "Scripts").mkdir()
+    (game_dir / "Data" / "Meshes").mkdir()
+    (game_dir / "Data" / "Textures").mkdir()
+
+    # Create game executable
+    (game_dir / "Fallout4.exe").write_text("# Fake game executable")
+
+    # Create essential game files
+    (game_dir / "Data" / "Fallout4.esm").write_text("# Master file")
+    (game_dir / "Data" / "DLCRobot.esm").write_text("# DLC file")
+    (game_dir / "Data" / "DLCCoast.esm").write_text("# DLC file")
+
+    # Create some plugin files
+    (game_dir / "Data" / "TestMod.esp").write_text("# Test mod")
+    (game_dir / "Data" / "AnotherMod.esp").write_text("# Another test mod")
+
+    return game_dir
+
+
+@pytest.fixture
+def mock_registry_entries() -> Generator[Dict[str, Dict[str, str]], None, None]:
+    """Mock Windows registry entries for game path detection."""
+    mock_entries = {
+        r"SOFTWARE\Bethesda Softworks\Fallout4": {"installed path": r"C:\Program Files (x86)\Steam\steamapps\common\Fallout 4"},
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 377160": {
+            "InstallLocation": r"C:\Program Files (x86)\Steam\steamapps\common\Fallout 4"
+        },
+    }
+
+    with patch("winreg.OpenKey"), patch("winreg.QueryValueEx") as mock_query:
+
+        def query_side_effect(key, value_name):
+            # This is a simplified mock - in real usage you'd need more sophisticated mocking
+            for reg_path, values in mock_entries.items():
+                if value_name in values:
+                    return values[value_name], 1  # REG_SZ type
+            raise FileNotFoundError()
+
+        mock_query.side_effect = query_side_effect
+
+        yield mock_entries
+
+
+@pytest.fixture
+def sample_ini_files(tmp_path: Path) -> Path:
+    """Create sample INI files for testing."""
+    ini_dir = tmp_path / "My Games" / "Fallout4"
+    ini_dir.mkdir(parents=True)
+
+    # Create Fallout4.ini
+    fallout4_ini = ini_dir / "Fallout4.ini"
+    fallout4_ini.write_text("""[Archive]
+bInvalidateOlderFiles=1
+sResourceDataDirsFinal=
+
+[Display]
+iSize H=1080
+iSize W=1920
+bFull Screen=1
+
+[General]
+sLanguage=ENGLISH
+uExteriorCellBuffer=36
+
+[Launcher]
+bEnableFileSelection=1
+""")
+
+    # Create Fallout4Prefs.ini
+    prefs_ini = ini_dir / "Fallout4Prefs.ini"
+    prefs_ini.write_text("""[Display]
+bMaximizeWindow=0
+bBorderless=1
+bFull Screen=0
+iSize H=1080
+iSize W=1920
+
+[Imagespace]
+bDoDepthOfField=1
+
+[Launcher]
+uLastAspectRatio=1
+""")
+
+    # Create Fallout4Custom.ini
+    custom_ini = ini_dir / "Fallout4Custom.ini"
+    custom_ini.write_text("""[Archive]
+bInvalidateOlderFiles=1
+
+[Display]
+sAntiAliasing=TAA
+
+[General]
+bModManagerMenuEnabled=1
+""")
+
+    return ini_dir
+
+
+@pytest.fixture
+def mock_network_responses() -> Generator[Dict[str, Any], None, None]:
+    """Mock network responses for testing external integrations."""
+
+    with patch("requests.get") as mock_get, patch("requests.post") as mock_post, patch("urllib.request.urlopen") as mock_urlopen:
+        # Configure mock GET responses
+        def get_side_effect(url, **kwargs):
+            mock_response = MagicMock()
+
+            if "pastebin.com" in url:
+                mock_response.text = """# Sample crash log from pastebin
+Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+"""
+                mock_response.status_code = 200
+
+            elif "api.github.com" in url:
+                mock_response.json.return_value = {
+                    "tag_name": "v7.31.0",
+                    "assets": [{"browser_download_url": "https://github.com/test/download.zip"}],
+                }
+                mock_response.status_code = 200
+
+            else:
+                mock_response.status_code = 404
+
+            return mock_response
+
+        mock_get.side_effect = get_side_effect
+
+        # Configure mock POST responses
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {"success": True}
+
+        # Configure urlopen for older URL handling
+        mock_urlopen.return_value.__enter__.return_value.read.return_value = b"Sample crash log content"
+
+        yield {"get": mock_get, "post": mock_post, "urlopen": mock_urlopen}

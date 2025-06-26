@@ -1,0 +1,44 @@
+CLASSIC_Settings:
+  Managed Game: Fallout 4
+  Update Check: true
+  VR Mode: false
+  FCX Mode: true
+  Simplify Logs: false
+  Show Statistics: true
+  Show FormID Values: true
+  Move Unsolved Logs: true
+  INI Folder Path: ""
+  MODS Folder Path: ""
+  SCAN Custom Path: ""
+  Audio Notifications: true
+  Update Source: Both
+  Use Async Pipeline: true
+  Disable CLI Progress: false
+
+Game_Info:
+  CRASHGEN_LogName: "Buffout 4"
+  XSE_Acronym: "F4SE"
+  Game_Plugins_Path: "Data"
+  Game_INI_Files:
+    - "Fallout4.ini"
+    - "Fallout4Prefs.ini"
+    - "Fallout4Custom.ini"
+
+Crashlog_Error_Check:
+  "HIGH | Access Violation": "EXCEPTION_ACCESS_VIOLATION"
+  "HIGH | Stack Overflow": "EXCEPTION_STACK_OVERFLOW"
+  "MEDIUM | Invalid Parameter": "EXCEPTION_INVALID_PARAMETER"
+
+Crashlog_Stack_Check:
+  "HIGH | FormID Issue":
+    - "required:FormID"
+    - "optional:TESObjectREFR"
+  "MEDIUM | Plugin Loading":
+    - "required:LoadPlugin"
+    - "optional:PluginManager"
+
+catch_log_records:
+  - "TESObjectREFR"
+  - "Actor"
+  - "TESForm"
+  - "BSXFlags"

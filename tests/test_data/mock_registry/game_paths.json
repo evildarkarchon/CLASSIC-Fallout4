@@ -1,0 +1,16 @@
+{
+    "fallout4": {
+        "steam_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4",
+        "bethesda_path": "C:\\Program Files\\Bethesda.net Launcher\\games\\Fallout4",
+        "microsoft_store_path": "C:\\XboxGames\\Fallout4\\Content"
+    },
+    "skyrimse": {
+        "steam_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition",
+        "bethesda_path": "C:\\Program Files\\Bethesda.net Launcher\\games\\SkyrimSE"
+    },
+    "starfield": {
+        "steam_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Starfield",
+        "bethesda_path": "C:\\Program Files\\Bethesda.net Launcher\\games\\Starfield",
+        "microsoft_store_path": "C:\\XboxGames\\Starfield\\Content"
+    }
+}
