@@ -52,7 +52,7 @@ async def async_crashlogs_scan() -> None:
     fcx_mode: bool | None = classic_settings(bool, "FCX Mode")
     show_formid_values: bool | None = classic_settings(bool, "Show FormID Values")
     formid_db_exists: bool = any(db.is_file() for db in DB_PATHS)
-    # move_unsolved_logs: bool | None = classic_settings(bool, "Move Unsolved Logs")
+    move_unsolved_logs: bool | None = classic_settings(bool, "Move Unsolved Logs")
 
     msg_info("SCANNING CRASH LOGS ASYNC, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
     scan_start_time: float = time.perf_counter()
@@ -97,6 +97,14 @@ async def async_crashlogs_scan() -> None:
             await write_reports_batch_async(reports_to_write)
             write_time = time.perf_counter() - write_start
             logger.info(f"Async report writing completed in {write_time:.2f} seconds")
+
+            # Handle unsolved logs if move_unsolved_logs is enabled
+            if move_unsolved_logs:
+                from CLASSIC_ScanLogs import move_unsolved_logs as move_unsolved_logs_func
+
+                for crashlog_file, _autoscan_report, trigger_scan_failed, _stats in results:
+                    if trigger_scan_failed:
+                        move_unsolved_logs_func(crashlog_file)
 
     # Calculate total time
     total_time = time.perf_counter() - scan_start_time

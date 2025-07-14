@@ -261,14 +261,27 @@ def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigge
 
 def move_unsolved_logs(crashlog_file: Path) -> None:
     """Move unsolved logs to backup location."""
+    import shutil
+
     backup_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup/Unsolved Logs"
     backup_path.mkdir(parents=True, exist_ok=True)
     autoscan_filepath: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
-    backup_filepath: Path = backup_path / autoscan_filepath.name
+
+    # Move the original crash log file
     if crashlog_file.exists():
-        crashlog_file.rename(backup_filepath)
-    else:
-        autoscan_filepath.rename(backup_path / autoscan_filepath.name)
+        backup_crashlog_path: Path = backup_path / crashlog_file.name
+        try:
+            shutil.move(str(crashlog_file), str(backup_crashlog_path))
+        except OSError as e:
+            logger.error(f"Failed to move crash log {crashlog_file} to backup: {e}")
+
+    # Move the autoscan report file
+    if autoscan_filepath.exists():
+        backup_autoscan_path: Path = backup_path / autoscan_filepath.name
+        try:
+            shutil.move(str(autoscan_filepath), str(backup_autoscan_path))
+        except OSError as e:
+            logger.error(f"Failed to move autoscan report {autoscan_filepath} to backup: {e}")
 
 
 def crashlogs_scan() -> None:
