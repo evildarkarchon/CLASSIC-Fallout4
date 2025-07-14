@@ -239,7 +239,7 @@ class CLIProgressBar:
 
         """
         if not self._closed:
-            print()  # New line after progress
+            print(flush=True)  # New line after progress
             self._closed = True
 
 
@@ -517,7 +517,7 @@ class MessageHandler(QObject):
                 # Fallback to stdout if stderr is not available
                 print(output, flush=True)
         else:
-            print(output)
+            print(output, flush=True)
 
     def show(self, message: Message) -> None:
         """

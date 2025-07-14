@@ -8,6 +8,7 @@ modular components for crash log scanning functionality.
 import asyncio
 import os
 import random
+import sys
 import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -453,6 +454,13 @@ def _complete_scan_with_summary(scanner: ClassicScanLogs, scan_failed_list: list
 
 
 if __name__ == "__main__":
+    # Ensure UTF-8 encoding for Windows console
+    if sys.platform == "win32":
+        import io
+
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True)
+
     initialize()
 
     import argparse
@@ -521,4 +529,7 @@ if __name__ == "__main__":
         yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Disable CLI Progress", args.disable_progress)
 
     crashlogs_scan()
+    # Ensure all output is flushed before pause
+    sys.stdout.flush()
+    sys.stderr.flush()
     os.system("pause")
