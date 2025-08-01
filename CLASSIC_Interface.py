@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 import regex as re
-from PySide6.QtCore import QObject, Qt, QThread, QTimer, QUrl, Signal, Slot
+from PySide6.QtCore import QMutex, QObject, Qt, QThread, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -41,6 +41,7 @@ from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
 from ClassicLib.Interface.Pastebin import PastebinFetchWorker
 from ClassicLib.Interface.PathDialog import ManualPathDialog
 from ClassicLib.Interface.StyleSheets import DARK_MODE
+from ClassicLib.Interface.ThreadManager import ThreadType, get_thread_manager
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import init_message_handler, msg_error, msg_info, msg_warning
 from ClassicLib.Update import UpdateCheckError, is_latest_version
@@ -298,6 +299,71 @@ class GameFilesScanWorker(QObject):
             raise error
 
 
+class UpdateCheckWorker(QObject):
+    """
+    Worker class to handle update checking in a separate thread using asyncio.
+    
+    This replaces the direct asyncio.run() calls that block the Qt event loop.
+    """
+    
+    # Signals
+    finished: Signal = Signal()
+    updateAvailable: Signal = Signal(bool)  # True if update available
+    error: Signal = Signal(str)
+    
+    def __init__(self, explicit: bool = False) -> None:
+        """
+        Initialize the update check worker.
+        
+        Args:
+            explicit: Whether this is an explicit user-initiated check
+        """
+        super().__init__()
+        self.explicit = explicit
+        self._loop: asyncio.AbstractEventLoop | None = None
+        
+    @Slot()
+    def run(self) -> None:
+        """
+        Main entry point for the worker thread.
+        Creates a new event loop and runs the async update check.
+        """
+        try:
+            # Create a new event loop for this thread
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
+            
+            # Check if pre-release
+            if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
+                if self.explicit:
+                    self.error.emit("Software is in pre-release stage, update check skipped.")
+                self.finished.emit()
+                return
+                
+            # Run the async update check
+            result = self._loop.run_until_complete(self._async_check())
+            self.updateAvailable.emit(not result)
+            
+        except UpdateCheckError as e:
+            self.error.emit(str(e))
+        except (RuntimeError, OSError, ValueError) as e:
+            self.error.emit(f"Unexpected error during update check: {e}")
+        finally:
+            # Clean up the event loop
+            if self._loop:
+                self._loop.close()
+            self.finished.emit()
+            
+    async def _async_check(self) -> bool:
+        """
+        Perform the actual async update check.
+        
+        Returns:
+            bool: True if up to date, False if update available
+        """
+        return await is_latest_version(quiet=True, gui_request=self.explicit)
+
+
 # noinspection DuplicatedCode
 class MainWindow(QMainWindow):
     # Style constants for the class
@@ -320,7 +386,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.pastebin_worker: PastebinFetchWorker | None = None
-        self.pastebin_thread = QThread()
+        self.pastebin_thread: QThread | None = None
         self.game_files_worker: GameFilesScanWorker | None = None
         self.crash_logs_worker: CrashLogsScanWorker | None = None
         self.papyrus_button: QPushButton | None = None
@@ -336,6 +402,15 @@ class MainWindow(QMainWindow):
         self.papyrus_monitor_dialog: PapyrusMonitorDialog | None = None
         self._last_stats: PapyrusStats | None = None
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
+        self.update_check_thread: QThread | None = None
+        self.update_check_worker: UpdateCheckWorker | None = None
+        
+        # Thread safety for scan operations
+        self._scan_mutex = QMutex()
+        self._running_scans: set[str] = set()  # Track which scans are running
+        
+        # Central thread manager
+        self.thread_manager = get_thread_manager()
 
         self.setWindowTitle(f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}")
         # Ensure GlobalRegistry.get_local_dir() returns a Path or string
@@ -411,70 +486,79 @@ class MainWindow(QMainWindow):
         """
         Initializes and starts the Papyrus monitoring process using a separate thread and worker. This allows
         asynchronous monitoring of the Papyrus system, ensuring that updates, errors, and other signals are
-        handled efficiently without blocking the main application. The method configures the worker, connects
-        necessary signals, updates the user interface to reflect the monitoring status, creates and displays
-        the Papyrus monitoring dialog, and starts the monitoring thread.
+        handled efficiently without blocking the main application. Uses ThreadManager for thread lifecycle
+        management.
 
         Raises:
             Any exception or error handling will be caught and managed by connected signals
             such as `error`.
         """
-        if self.papyrus_monitor_thread is None:
-            # Create new thread and worker
-            self.papyrus_monitor_thread = QThread()
-            self.papyrus_monitor_worker = PapyrusMonitorWorker()
-            self.papyrus_monitor_worker.moveToThread(self.papyrus_monitor_thread)
+        # Check if already running
+        if self.thread_manager.is_thread_running(ThreadType.PAPYRUS_MONITOR):
+            return  # Already monitoring
+            
+        # Create new thread and worker
+        self.papyrus_monitor_thread = QThread()
+        self.papyrus_monitor_worker = PapyrusMonitorWorker()
+        self.papyrus_monitor_worker.moveToThread(self.papyrus_monitor_thread)
 
-            # Create the dialog
-            self.papyrus_monitor_dialog = PapyrusMonitorDialog(self)
+        # Register with thread manager
+        if not self.thread_manager.register_thread(ThreadType.PAPYRUS_MONITOR, self.papyrus_monitor_thread, self.papyrus_monitor_worker):
+            logger.error("Failed to register Papyrus monitor thread")
+            return
 
-            # Connect signals
-            self.papyrus_monitor_thread.started.connect(self.papyrus_monitor_worker.run)
-            self.papyrus_monitor_worker.statsUpdated.connect(self.papyrus_monitor_dialog.update_stats)
-            self.papyrus_monitor_worker.error.connect(self.papyrus_monitor_dialog.handle_error)
-            self.papyrus_monitor_dialog.stop_monitoring.connect(self.stop_papyrus_monitoring)
+        # Create the dialog
+        self.papyrus_monitor_dialog = PapyrusMonitorDialog(self)
 
-            # Start monitoring
-            if self.papyrus_button:
-                self.papyrus_button.setText("STOP PAPYRUS MONITORING")
-                self.papyrus_button.setStyleSheet(
-                    """
-                    QPushButton {
-                        color: black;
-                        background: rgb(237, 45, 45);  /* Red background */
-                        border-radius: 10px;
-                        border: 1px solid black;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-                    """
-                )
+        # Connect signals
+        self.papyrus_monitor_thread.started.connect(self.papyrus_monitor_worker.run)
+        self.papyrus_monitor_worker.statsUpdated.connect(self.papyrus_monitor_dialog.update_stats)
+        self.papyrus_monitor_worker.error.connect(self.papyrus_monitor_dialog.handle_error)
+        self.papyrus_monitor_dialog.stop_monitoring.connect(self.stop_papyrus_monitoring)
+        self.papyrus_monitor_thread.finished.connect(self.papyrus_monitor_thread.deleteLater)
+        self.papyrus_monitor_worker.finished.connect(self.papyrus_monitor_worker.deleteLater)  # type: ignore
 
-            # Show the dialog and start the thread
-            self.papyrus_monitor_dialog.show()
-            self.papyrus_monitor_thread.start()
+        # Start monitoring
+        if self.papyrus_button:
+            self.papyrus_button.setText("STOP PAPYRUS MONITORING")
+            self.papyrus_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: black;
+                    background: rgb(237, 45, 45);  /* Red background */
+                    border-radius: 10px;
+                    border: 1px solid black;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                """
+            )
+
+        # Show the dialog and start through thread manager
+        self.papyrus_monitor_dialog.show()
+        self.thread_manager.start_thread(ThreadType.PAPYRUS_MONITOR)
 
     def stop_papyrus_monitoring(self) -> None:
         """
         Stops the papyrus monitoring process and performs necessary cleanup.
 
         This function terminates the papyrus monitoring by halting the monitor worker and
-        its associated thread. It also updates the user interface components, such as the
-        button, and closes the Papyrus monitoring dialog if it's open.
+        its associated thread using ThreadManager. It also updates the user interface components,
+        such as the button, and closes the Papyrus monitoring dialog if it's open.
 
         Returns:
             None
         """
+        # Stop the worker first for clean shutdown
         if self.papyrus_monitor_worker:
             self.papyrus_monitor_worker.stop()
 
-        if self.papyrus_monitor_thread:
-            self.papyrus_monitor_thread.quit()
-            self.papyrus_monitor_thread.wait()
+        # Stop thread through ThreadManager
+        self.thread_manager.stop_thread(ThreadType.PAPYRUS_MONITOR, wait_ms=2000)
 
-            # Reset thread and worker
-            self.papyrus_monitor_thread = None
-            self.papyrus_monitor_worker = None
+        # Reset references
+        self.papyrus_monitor_thread = None
+        self.papyrus_monitor_worker = None
 
         # Close the dialog if it exists
         if self.papyrus_monitor_dialog:
@@ -556,21 +640,37 @@ class MainWindow(QMainWindow):
         url: str = input_text if self.pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
 
         # Create thread and worker
-        # Store the thread and worker as instance attributes to prevent them from being garbage collected prematurely
+        # Check if a fetch is already in progress
+        if self.thread_manager.is_thread_running(ThreadType.PASTEBIN_FETCH):
+            QMessageBox.warning(self, "Fetch in Progress", "A Pastebin fetch is already in progress. Please wait for it to complete.")
+            return
+            
+        # Create new thread and worker for each fetch operation to prevent thread reuse
+        self.pastebin_thread = QThread()
         self.pastebin_worker = PastebinFetchWorker(url)
         self.pastebin_worker.moveToThread(self.pastebin_thread)
+
+        # Register with thread manager
+        if not self.thread_manager.register_thread(ThreadType.PASTEBIN_FETCH, self.pastebin_thread, self.pastebin_worker):
+            logger.error("Failed to register Pastebin fetch thread")
+            return
 
         # Connect signals
         self.pastebin_thread.started.connect(self.pastebin_worker.run)
         self.pastebin_worker.finished.connect(self.pastebin_thread.quit)
         self.pastebin_worker.finished.connect(self.pastebin_worker.deleteLater)
         self.pastebin_thread.finished.connect(self.pastebin_thread.deleteLater)
+        
+        # Clean up thread reference when done to allow garbage collection
+        self.pastebin_thread.finished.connect(lambda: setattr(self, 'pastebin_thread', None))
+        self.pastebin_thread.finished.connect(lambda: setattr(self, 'pastebin_worker', None))
 
         # Use lambdas or functools.partial if arguments need to be passed to slots
         self.pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
         self.pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}"))
 
-        self.pastebin_thread.start()
+        # Start through thread manager
+        self.thread_manager.start_thread(ThreadType.PASTEBIN_FETCH)
 
     def show_manual_docs_path_dialog(self) -> None:
         """
@@ -657,16 +757,37 @@ class MainWindow(QMainWindow):
 
         This method is responsible for stopping the ongoing update check timer and
         invokes the asynchronous update check function to ensure that updates are
-        checked in an orderly and non-blocking manner. It ensures the checking
-        process is executed correctly using asyncio.
-
-        Raises:
-            RuntimeError: If there is any issue in running the coroutine due to
-                an improper event loop state.
+        checked in an orderly and non-blocking manner. Uses a QThread worker
+        managed by ThreadManager.
 
         """
         self.update_check_timer.stop()
-        asyncio.run(self.async_update_check())
+        
+        # Check if update check is already running
+        if self.thread_manager.is_thread_running(ThreadType.UPDATE_CHECK):
+            return  # Update check already in progress
+            
+        # Create new thread and worker
+        self.update_check_thread = QThread()
+        self.update_check_worker = UpdateCheckWorker(explicit=False)
+        self.update_check_worker.moveToThread(self.update_check_thread)
+        
+        # Register with thread manager
+        if not self.thread_manager.register_thread(ThreadType.UPDATE_CHECK, self.update_check_thread, self.update_check_worker):
+            logger.error("Failed to register update check thread")
+            return
+        
+        # Connect signals
+        self.update_check_thread.started.connect(self.update_check_worker.run)
+        self.update_check_worker.updateAvailable.connect(self.show_update_result)
+        self.update_check_worker.error.connect(self.show_update_error)
+        self.update_check_worker.finished.connect(self.update_check_thread.quit)
+        self.update_check_worker.finished.connect(self.update_check_worker.deleteLater)
+        self.update_check_thread.finished.connect(self.update_check_thread.deleteLater)
+        self.update_check_thread.finished.connect(self._update_check_finished)
+        
+        # Start through thread manager
+        self.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
 
     def force_update_check(self) -> None:
         """
@@ -675,71 +796,47 @@ class MainWindow(QMainWindow):
         any update checking mechanism will execute explicitly without user configuration
         intervention.
 
-        Args:
-            self: Refers to the current object instance where the method is called.
-
-        Raises:
-            Any exceptions raised during the execution of the asynchronous update
-            checking routine initiated by `asyncio.run`.
         """
         # Directly perform the update check without reading from settings
         self.is_update_check_running = True
         self.update_check_timer.stop()
-        asyncio.run(self.async_update_check_explicit())  # Perform async check
-
-    async def async_update_check(self) -> None:
-        """
-        Checks for updates asynchronously to determine whether the software is up to date.
-
-        This method performs an asynchronous operation to check if the current version is
-        the latest version available. If an update is available or an error occurs during
-        the check, appropriate methods are called to handle these scenarios. Additionally,
-        a timer that monitors the update check process is stopped once the operation concludes,
-        ensuring no unnecessary resources are consumed.
-
-        Raises:
-            UpdateCheckError: If an error occurs during the version check process.
-        """
-        if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
+        
+        # Check if update check is already running
+        if self.thread_manager.is_thread_running(ThreadType.UPDATE_CHECK):
+            QMessageBox.information(self, "Update Check", "An update check is already in progress.")
             return
-        # noinspection PyShadowingNames
-        try:
-            is_up_to_date: bool = await is_latest_version(quiet=True)
-            self.show_update_result(is_up_to_date)
-        except UpdateCheckError as e:
-            self.show_update_error(str(e))
-        finally:
+            
+        # Create new thread and worker for explicit check
+        self.update_check_thread = QThread()
+        self.update_check_worker = UpdateCheckWorker(explicit=True)
+        self.update_check_worker.moveToThread(self.update_check_thread)
+        
+        # Register with thread manager
+        if not self.thread_manager.register_thread(ThreadType.UPDATE_CHECK, self.update_check_thread, self.update_check_worker):
+            logger.error("Failed to register update check thread")
             self.is_update_check_running = False
-            self.update_check_timer.stop()  # Ensure the timer is always stopped
-
-    async def async_update_check_explicit(self) -> None:
-        """
-        Asynchronously checks for software updates explicitly by calling an external
-        update-checking service and handles the results or errors appropriately.
-
-        This function ensures the application's update status is verified by querying
-        whether the current version is the latest one or not. It provides feedback on
-        the result or errors encountered during the process and ensures cleanup in
-        case of failures or exceptions.
-
-        Raises:
-            UpdateCheckError: If an error occurs when checking for updates.
-
-        Returns:
-            None: This function has no return value.
-        """
-        if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
-            self.show_update_error("Software is in pre-release stage, update check skipped.")
             return
-        # noinspection PyShadowingNames
-        try:
-            is_up_to_date: bool = await is_latest_version(quiet=True, gui_request=True)
-            self.show_update_result(is_up_to_date)
-        except UpdateCheckError as e:
-            self.show_update_error(str(e))
-        finally:
-            self.is_update_check_running = False
-            self.update_check_timer.stop()  # Ensure the timer is always stopped
+        
+        # Connect signals
+        self.update_check_thread.started.connect(self.update_check_worker.run)
+        self.update_check_worker.updateAvailable.connect(self.show_update_result)
+        self.update_check_worker.error.connect(self.show_update_error)
+        self.update_check_worker.finished.connect(self.update_check_thread.quit)
+        self.update_check_worker.finished.connect(self.update_check_worker.deleteLater)
+        self.update_check_thread.finished.connect(self.update_check_thread.deleteLater)
+        self.update_check_thread.finished.connect(self._update_check_finished)
+        
+        # Start through thread manager
+        self.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
+        
+    def _update_check_finished(self) -> None:
+        """
+        Cleanup method called when update check thread finishes.
+        """
+        self.is_update_check_running = False
+        # ThreadManager handles thread cleanup, just clear our references
+        self.update_check_thread = None
+        self.update_check_worker = None
 
     def show_update_result(self, is_up_to_date: bool) -> None:
         """
@@ -1886,60 +1983,100 @@ class MainWindow(QMainWindow):
         Initializes and starts the crash logs scanning process by setting up a worker thread.
 
         This function is responsible for scanning crash logs asynchronously through a worker
-        handled in a separate thread. The worker emits signals when certain events occur,
-        like notifying or error alerts, which are connected to appropriate handlers. Upon
-        completion, the worker and thread are cleaned up, and a callback is invoked to indicate
-        the end of the scanning process. Additionally, the UI elements related to scanning
-        are disabled during the operation to prevent multiple concurrent scans.
+        handled in a separate thread managed by ThreadManager. The worker emits signals when
+        certain events occur, like notifying or error alerts, which are connected to appropriate
+        handlers. Upon completion, the worker and thread are cleaned up, and a callback is invoked
+        to indicate the end of the scanning process. Additionally, the UI elements related to
+        scanning are disabled during the operation to prevent multiple concurrent scans.
 
         Returns:
             None
         """
-        if self.crash_logs_thread is None:
-            self.crash_logs_thread = QThread()
-            self.crash_logs_worker = CrashLogsScanWorker()
-            self.crash_logs_worker.moveToThread(self.crash_logs_thread)
+        # Thread-safe check and update
+        self._scan_mutex.lock()
+        try:
+            if "crash_logs" in self._running_scans or self.thread_manager.is_thread_running(ThreadType.CRASH_LOGS_SCAN):
+                QMessageBox.warning(self, "Scan in Progress", "A crash logs scan is already in progress.")
+                return
+            self._running_scans.add("crash_logs")
+        finally:
+            self._scan_mutex.unlock()
+            
+        # Create thread and worker
+        self.crash_logs_thread = QThread()
+        self.crash_logs_worker = CrashLogsScanWorker()
+        self.crash_logs_worker.moveToThread(self.crash_logs_thread)
 
-            self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit)  # type: ignore
-            self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
+        # Register with thread manager
+        if not self.thread_manager.register_thread(ThreadType.CRASH_LOGS_SCAN, self.crash_logs_thread, self.crash_logs_worker):
+            logger.error("Failed to register crash logs scan thread")
+            self._scan_mutex.lock()
+            self._running_scans.discard("crash_logs")
+            self._scan_mutex.unlock()
+            return
 
-            self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
-            self.crash_logs_worker.finished.connect(self.crash_logs_thread.quit)  # type: ignore
-            self.crash_logs_worker.finished.connect(self.crash_logs_worker.deleteLater)  # type: ignore
-            self.crash_logs_thread.finished.connect(self.crash_logs_thread.deleteLater)
-            self.crash_logs_thread.finished.connect(self.crash_logs_scan_finished)
+        # Connect signals
+        self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit)  # type: ignore
+        self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
 
-            # Disable buttons and update text
-            self.disable_scan_buttons()
+        self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
+        self.crash_logs_worker.finished.connect(self.crash_logs_thread.quit)  # type: ignore
+        self.crash_logs_worker.finished.connect(self.crash_logs_worker.deleteLater)  # type: ignore
+        self.crash_logs_thread.finished.connect(self.crash_logs_thread.deleteLater)
+        self.crash_logs_thread.finished.connect(self.crash_logs_scan_finished)
 
-            self.crash_logs_thread.start()
+        # Disable buttons and update text
+        self.disable_scan_buttons()
+
+        # Start through thread manager
+        self.thread_manager.start_thread(ThreadType.CRASH_LOGS_SCAN)
 
     def game_files_scan(self) -> None:
         """
         Scans game files using a separate thread and handles thread setup, worker connections, and signal
         communication to ensure non-blocking UI updates during the operation.
 
-        Starts a scanning process by initializing a worker and a thread if they are not already created.
+        Starts a scanning process by initializing a worker and a thread managed by ThreadManager.
         The worker emits signals for notifying or handling errors in the scanning process. The scanning
         process disables UI scan buttons until the operation is complete.
         """
-        if self.game_files_thread is None:
-            self.game_files_thread = QThread()
-            self.game_files_worker = GameFilesScanWorker()
-            self.game_files_worker.moveToThread(self.game_files_thread)
+        # Thread-safe check and update
+        self._scan_mutex.lock()
+        try:
+            if "game_files" in self._running_scans or self.thread_manager.is_thread_running(ThreadType.GAME_FILES_SCAN):
+                QMessageBox.warning(self, "Scan in Progress", "A game files scan is already in progress.")
+                return
+            self._running_scans.add("game_files")
+        finally:
+            self._scan_mutex.unlock()
+            
+        # Create thread and worker
+        self.game_files_thread = QThread()
+        self.game_files_worker = GameFilesScanWorker()
+        self.game_files_worker.moveToThread(self.game_files_thread)
 
-            self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
+        # Register with thread manager
+        if not self.thread_manager.register_thread(ThreadType.GAME_FILES_SCAN, self.game_files_thread, self.game_files_worker):
+            logger.error("Failed to register game files scan thread")
+            self._scan_mutex.lock()
+            self._running_scans.discard("game_files")
+            self._scan_mutex.unlock()
+            return
 
-            self.game_files_thread.started.connect(self.game_files_worker.run)
-            self.game_files_worker.finished.connect(self.game_files_thread.quit)  # type: ignore
-            self.game_files_worker.finished.connect(self.game_files_worker.deleteLater)  # type: ignore
-            self.game_files_thread.finished.connect(self.game_files_thread.deleteLater)
-            self.game_files_thread.finished.connect(self.game_files_scan_finished)
+        # Connect signals
+        self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
 
-            # Disable buttons and update text
-            self.disable_scan_buttons()
+        self.game_files_thread.started.connect(self.game_files_worker.run)
+        self.game_files_worker.finished.connect(self.game_files_thread.quit)  # type: ignore
+        self.game_files_worker.finished.connect(self.game_files_worker.deleteLater)  # type: ignore
+        self.game_files_thread.finished.connect(self.game_files_thread.deleteLater)
+        self.game_files_thread.finished.connect(self.game_files_scan_finished)
 
-            self.game_files_thread.start()
+        # Disable buttons and update text
+        self.disable_scan_buttons()
+
+        # Start through thread manager
+        self.thread_manager.start_thread(ThreadType.GAME_FILES_SCAN)
 
     def disable_scan_buttons(self) -> None:
         """
@@ -1947,26 +2084,37 @@ class MainWindow(QMainWindow):
 
         This method iterates through the buttons in the scan button group and
         disables them, ensuring they cannot be clicked or interacted with.
+        Thread-safe implementation using mutex.
 
         Returns:
             None
         """
-        for button_id in self.scan_button_group.buttons():
-            button_id.setEnabled(False)
+        self._scan_mutex.lock()
+        try:
+            for button_id in self.scan_button_group.buttons():
+                button_id.setEnabled(False)
+        finally:
+            self._scan_mutex.unlock()
 
     def enable_scan_buttons(self) -> None:
         """
         Enables all scan buttons within a button group.
 
         This method iterates through all the scan buttons in a specified button group
-        and enables them, allowing user interaction. It can be used to reset the
-        disabled state of any buttons in the group.
+        and enables them, allowing user interaction. Only enables buttons if no scans
+        are currently running. Thread-safe implementation using mutex.
 
         Returns:
             None
         """
-        for button_id in self.scan_button_group.buttons():
-            button_id.setEnabled(True)
+        self._scan_mutex.lock()
+        try:
+            # Only enable buttons if no scans are running
+            if not self._running_scans:
+                for button_id in self.scan_button_group.buttons():
+                    button_id.setEnabled(True)
+        finally:
+            self._scan_mutex.unlock()
 
     def crash_logs_scan_finished(self) -> None:
         """
@@ -1974,11 +2122,20 @@ class MainWindow(QMainWindow):
 
         This method is executed when the scan for crash logs is finished. It ensures the reset of
         internal state and re-enables UI buttons that were disabled during the scan process.
+        Thread-safe implementation using mutex.
 
         Returns:
             None: This method does not return any value.
         """
         self.crash_logs_thread = None
+        
+        # Thread-safe removal from running scans
+        self._scan_mutex.lock()
+        try:
+            self._running_scans.discard("crash_logs")
+        finally:
+            self._scan_mutex.unlock()
+            
         self.enable_scan_buttons()  # noinspection PyUnresolvedReferences
 
     def game_files_scan_finished(self) -> None:
@@ -1987,12 +2144,20 @@ class MainWindow(QMainWindow):
 
         This method is invoked when the game files scanning operation is finished. It appropriately
         resets the state by clearing the scanning thread reference and re-enables the buttons
-        associated with scanning operations.
+        associated with scanning operations. Thread-safe implementation using mutex.
 
         Returns:
             None
         """
         self.game_files_thread = None
+        
+        # Thread-safe removal from running scans
+        self._scan_mutex.lock()
+        try:
+            self._running_scans.discard("game_files")
+        finally:
+            self._scan_mutex.unlock()
+            
         self.enable_scan_buttons()
 
         # Check papyrus button state
@@ -2000,6 +2165,45 @@ class MainWindow(QMainWindow):
             self.start_papyrus_monitoring()
         else:
             self.stop_papyrus_monitoring()
+
+    def closeEvent(self, event: Any) -> None:
+        """
+        Override closeEvent to ensure proper cleanup of all running threads.
+        
+        This method is called when the main window is being closed. It ensures
+        all worker threads are properly stopped and cleaned up before the
+        application exits using the central ThreadManager.
+        
+        Args:
+            event: The close event
+        """
+        logger.info("Application closing - cleaning up resources...")
+        
+        # Stop Papyrus monitoring first to ensure worker cleanup
+        if self.papyrus_monitor_worker is not None:
+            logger.debug("Stopping Papyrus monitoring...")
+            self.stop_papyrus_monitoring()
+        
+        # Use thread manager to stop all threads gracefully
+        logger.debug("Stopping all managed threads...")
+        self.thread_manager.stop_all_threads(wait_ms=3000)
+        
+        # Clean up audio player resources
+        if hasattr(self, 'audio_player'):
+            logger.debug("Cleaning up audio player...")
+            # Stop any playing sounds
+            if hasattr(self.audio_player, 'thread') and self.audio_player.thread is not None:
+                self.audio_player.thread.quit()
+                self.audio_player.thread.wait(500)
+                
+        # Stop update check timer
+        if hasattr(self, 'update_check_timer') and self.update_check_timer:
+            self.update_check_timer.stop()
+            
+        logger.info("Resource cleanup completed")
+        
+        # Accept the close event
+        event.accept()
 
     @staticmethod
     def open_url(url: str) -> None:
