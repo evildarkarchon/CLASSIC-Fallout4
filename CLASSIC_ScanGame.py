@@ -1,4 +1,3 @@
-import os
 import shutil
 import struct
 import subprocess
@@ -17,6 +16,44 @@ from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
 from ClassicLib.Util import normalize_list, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
+# Async feature flag - can be controlled via settings
+ENABLE_ASYNC_SCANNING = yaml_settings(bool, YAML.Settings, "Enable Async Scanning") or False
+
+# Import async implementations if enabled
+if ENABLE_ASYNC_SCANNING:
+    try:
+        from ClassicLib.ScanGame.AsyncScanGame import (
+            check_log_errors_async_wrapper,
+            scan_mods_archived_async_wrapper,
+            scan_mods_unpacked_async_wrapper,
+        )
+        msg_info("✅ Async scanning enabled for improved performance")
+    except ImportError as e:
+        msg_warning(f"Failed to import async implementations: {e}")
+        ENABLE_ASYNC_SCANNING = False
+else:
+    def check_log_errors_async_wrapper(folder_path: Path | str) -> str:
+        """
+        Placeholder for async log error checking wrapper.
+        This function is a no-op if async scanning is disabled.
+        """
+        msg_warning("Async scanning is disabled, using synchronous implementation.")
+        return check_log_errors(folder_path)
+    def scan_mods_archived_async_wrapper() -> str:
+        """
+        Placeholder for async archived mods scanning wrapper.
+        This function is a no-op if async scanning is disabled.
+        """
+        msg_warning("Async scanning is disabled, using synchronous implementation.")
+        return scan_mods_archived()
+    
+    def scan_mods_unpacked_async_wrapper() -> str:
+        """
+        Placeholder for async unpacked mods scanning wrapper.
+        This function is a no-op if async scanning is disabled.
+        """
+        msg_warning("Async scanning is disabled, using synchronous implementation.")
+        return scan_mods_unpacked()
 
 # ================================================
 # CHECK ERRORS IN LOG FILES FOR GIVEN FOLDER
@@ -32,6 +69,9 @@ def check_log_errors(folder_path: Path | str) -> str:
     Returns:
         str: A detailed report of all detected errors in the relevant log files, if any.
     """
+    # Use async version if enabled
+    if ENABLE_ASYNC_SCANNING:
+        return check_log_errors_async_wrapper(folder_path)
 
     def format_error_report(file_path: Path, errors: list[str]) -> list[str]:
         """Format the error report for a specific log file."""
@@ -204,6 +244,9 @@ def scan_mods_unpacked() -> str:
     Returns:
         str: Detailed report of scan results.
     """
+    # Use async version if enabled
+    if ENABLE_ASYNC_SCANNING:
+        return scan_mods_unpacked_async_wrapper()
     # Initialize lists for reporting
     message_list: list[str] = [
         "=================== MOD FILES SCAN ====================\n",
@@ -231,88 +274,108 @@ def scan_mods_unpacked() -> str:
 
     if not mod_path:
         return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
-    if not mod_path.is_dir():
-        return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
 
     msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING INITIAL MOD FILES CLEANUP...", target=MessageTarget.CLI_ONLY)
 
     # First pass: cleanup and detect animation data
     filter_names: tuple = ("readme", "changes", "changelog", "change log")
-    for root, dirs, files in mod_path.walk(top_down=False):
-        root_main: Path = root.relative_to(mod_path).parent
-        has_anim_data = False
+    try:
+        for root, dirs, files in mod_path.walk(top_down=False):
+            root_main: Path = root.relative_to(mod_path).parent
+            has_anim_data = False
 
-        # Process directories
-        for dirname in dirs:
-            dirname_lower: str = dirname.lower()
-            if not has_anim_data and dirname_lower == "animationfiledata":
-                has_anim_data = True
-                issue_lists["animdata"].add(f"  - {root_main}\n")
-            elif dirname_lower == "fomod":
-                fomod_folder_path: Path = root / dirname
-                relative_path: Path = fomod_folder_path.relative_to(mod_path)
-                new_folder_path: Path = backup_path / relative_path
-                if not TEST_MODE:
-                    shutil.move(fomod_folder_path, new_folder_path)
-                issue_lists["cleanup"].add(f"  - {relative_path}\n")
+            # Process directories
+            for dirname in dirs:
+                dirname_lower: str = dirname.lower()
+                if not has_anim_data and dirname_lower == "animationfiledata":
+                    has_anim_data = True
+                    issue_lists["animdata"].add(f"  - {root_main}\n")
+                elif dirname_lower == "fomod":
+                    fomod_folder_path: Path = root / dirname
+                    relative_path: Path = fomod_folder_path.relative_to(mod_path)
+                    new_folder_path: Path = backup_path / relative_path
+                    if not TEST_MODE:
+                        try:
+                            shutil.move(fomod_folder_path, new_folder_path)
+                        except PermissionError:
+                            msg_error(f"Permission denied moving folder: {fomod_folder_path}")
+                            continue
+                        except (OSError, FileNotFoundError, FileExistsError) as e:
+                            msg_error(f"Failed to move folder {fomod_folder_path}: {e}")
+                            continue
+                    issue_lists["cleanup"].add(f"  - {relative_path}\n")
 
-        # Process files for cleanup
-        for filename in files:
-            filename_lower: str = filename.lower()
-            if filename_lower.endswith(".txt") and any(name in filename_lower for name in filter_names):
-                file_path: Path = root / filename
-                relative_path = file_path.relative_to(mod_path)
-                new_file_path: Path = backup_path / relative_path
-                if not TEST_MODE:
-                    new_file_path.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.move(file_path, new_file_path)
-                issue_lists["cleanup"].add(f"  - {relative_path}\n")
+            # Process files for cleanup
+            for filename in files:
+                filename_lower: str = filename.lower()
+                if filename_lower.endswith(".txt") and any(name in filename_lower for name in filter_names):
+                    file_path: Path = root / filename
+                    relative_path = file_path.relative_to(mod_path)
+                    new_file_path: Path = backup_path / relative_path
+                    if not TEST_MODE:
+                        try:
+                            new_file_path.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.move(file_path, new_file_path)
+                        except PermissionError:
+                            msg_error(f"Permission denied moving file: {file_path}")
+                            continue
+                        except (OSError, FileNotFoundError, FileExistsError) as e:
+                            msg_error(f"Failed to move file {file_path}: {e}")
+                            continue
+                    issue_lists["cleanup"].add(f"  - {relative_path}\n")
+    except (OSError, FileNotFoundError) as e:
+        msg_error(f"Error accessing mod files during cleanup: {e}")
+        return "Error: Could not complete mod cleanup"
 
     msg_info("✔️ CLEANUP COMPLETE! NOW ANALYZING ALL UNPACKED/LOOSE MOD FILES...", target=MessageTarget.CLI_ONLY)
 
     # Second pass: analyze files for issues
-    for root, _, files in mod_path.walk(top_down=False):
-        root_main = root.relative_to(mod_path).parent
-        has_previs_files = has_xse_files = False
+    try:
+        for root, _, files in mod_path.walk(top_down=False):
+            root_main = root.relative_to(mod_path).parent
+            has_previs_files = has_xse_files = False
 
-        for filename in files:
-            filename_lower = filename.lower()
-            file_path = root / filename
-            relative_path = file_path.relative_to(mod_path)
-            file_ext = file_path.suffix.lower()
+            for filename in files:
+                filename_lower = filename.lower()
+                file_path = root / filename
+                relative_path = file_path.relative_to(mod_path)
+                file_ext = file_path.suffix.lower()
 
-            # Check DDS dimensions
-            if file_ext == ".dds":
-                with file_path.open("rb") as dds_file:
-                    dds_data: bytes = dds_file.read(20)
-                if dds_data[:4] == b"DDS ":
-                    width: Any = struct.unpack("<I", dds_data[12:16])[0]
-                    height: Any = struct.unpack("<I", dds_data[16:20])[0]
-                    if width % 2 != 0 or height % 2 != 0:
-                        issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})")
+                # Check DDS dimensions
+                if file_ext == ".dds":
+                    with file_path.open("rb") as dds_file:
+                        dds_data: bytes = dds_file.read(20)
+                    if dds_data[:4] == b"DDS ":
+                        width: Any = struct.unpack("<I", dds_data[12:16])[0]
+                        height: Any = struct.unpack("<I", dds_data[16:20])[0]
+                        if width % 2 != 0 or height % 2 != 0:
+                            issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})")
 
-            # Check for invalid texture formats
-            elif file_ext in {".tga", ".png"} and "BodySlide" not in file_path.parts:
-                issue_lists["tex_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
+                # Check for invalid texture formats
+                elif file_ext in {".tga", ".png"} and "BodySlide" not in file_path.parts:
+                    issue_lists["tex_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
 
-            # Check for invalid sound formats
-            elif file_ext in {".mp3", ".m4a"}:
-                issue_lists["snd_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
+                # Check for invalid sound formats
+                elif file_ext in {".mp3", ".m4a"}:
+                    issue_lists["snd_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
 
-            # Check for XSE files
-            elif (
-                not has_xse_files
-                and any(filename_lower == key.lower() for key in xse_scriptfiles)
-                and "workshop framework" not in str(root).lower()
-                and f"Scripts\\{filename}" in str(file_path)
-            ):
-                has_xse_files = True
-                issue_lists["xse_file"].add(f"  - {root_main}\n")
+                # Check for XSE files
+                elif (
+                    not has_xse_files
+                    and any(filename_lower == key.lower() for key in xse_scriptfiles)
+                    and "workshop framework" not in str(root).lower()
+                    and f"Scripts\\{filename}" in str(file_path)
+                ):
+                    has_xse_files = True
+                    issue_lists["xse_file"].add(f"  - {root_main}\n")
 
-            # Check for previs files
-            elif not has_previs_files and filename_lower.endswith((".uvd", "_oc.nif")):
-                has_previs_files = True
-                issue_lists["previs"].add(f"  - {root_main}\n")
+                # Check for previs files
+                elif not has_previs_files and filename_lower.endswith((".uvd", "_oc.nif")):
+                    has_previs_files = True
+                    issue_lists["previs"].add(f"  - {root_main}\n")
+    except (OSError, FileNotFoundError) as e:
+        msg_error(f"Error accessing mod files during analysis: {e}")
+        return "Error: Could not complete mod file analysis"
 
     # Build the report
     issue_messages = get_issue_messages(xse_acronym, "unpacked")
@@ -344,6 +407,9 @@ def scan_mods_archived() -> str:
         subprocess.SubprocessError: If there is an error while running `BSArch`
         commands for file dumping or listing.
     """
+    # Use async version if enabled
+    if ENABLE_ASYNC_SCANNING:
+        return scan_mods_archived_async_wrapper()
     message_list: list[str] = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
 
     # Initialize sets for collecting different issue types
@@ -374,98 +440,110 @@ def scan_mods_archived() -> str:
     msg_info("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES...")
 
     # Process BA2 files
-    for root, _, files in mod_path.walk(top_down=False):
-        for filename in files:
-            filename_lower: str = filename.lower()
-            if not filename_lower.endswith(".ba2") or filename_lower == "prp - main.ba2":
-                continue
-
-            file_path: Path = root / filename
-
-            # Read BA2 header
-            try:
-                with file_path.open("rb") as f:
-                    header: bytes = f.read(12)
-            except OSError:
-                msg_warning(f"Failed to read file: {filename}")
-                continue
-
-            # Check BA2 format
-            if header[:4] != b"BTDX" or header[8:] not in {b"DX10", b"GNRL"}:
-                issue_lists["ba2_frmt"].add(f"  - {filename} : {header!s}\n")
-                continue
-
-            if header[8:] == b"DX10":
-                # Process texture-format BA2
-                command_dump: tuple = (bsarch_path, file_path, "-dump")
-                archive_dump: subprocess.CompletedProcess[str] = subprocess.run(
-                    command_dump, shell=True, capture_output=True, text=True, check=False
-                )
-
-                if archive_dump.returncode != 0:
-                    msg_error(f"BSArch command failed:\n{archive_dump.stderr}")
+    try:
+        for root, _, files in mod_path.walk(top_down=False):
+            for filename in files:
+                filename_lower: str = filename.lower()
+                if not filename_lower.endswith(".ba2") or filename_lower == "prp - main.ba2":
                     continue
 
-                output_split: list[str] = archive_dump.stdout.split("\n\n")
-                if output_split[-1].startswith("Error:"):
-                    msg_error(f"BSArch command failed:\n{output_split[-1]}\n\n{archive_dump.stderr}")
+                file_path: Path = root / filename
+
+                # Read BA2 header
+                try:
+                    with file_path.open("rb") as f:
+                        header: bytes = f.read(12)
+                except OSError:
+                    msg_warning(f"Failed to read file: {filename}")
                     continue
 
-                # Process texture information
-                for file_block in output_split[4:]:
-                    if not file_block:
+                # Check BA2 format
+                if header[:4] != b"BTDX" or header[8:] not in {b"DX10", b"GNRL"}:
+                    issue_lists["ba2_frmt"].add(f"  - {filename} : {header!s}\n")
+                    continue
+
+                if header[8:] == b"DX10":
+                    # Process texture-format BA2
+                    command_dump: list[str] = [str(bsarch_path), str(file_path), "-dump"]
+                    try:
+                        archive_dump: subprocess.CompletedProcess[str] = subprocess.run(
+                            command_dump, shell=False, capture_output=True, text=True, check=False, timeout=30
+                        )
+                    except subprocess.TimeoutExpired:
+                        msg_error(f"BSArch command timed out processing {filename}")
                         continue
 
-                    block_split: list[str] = file_block.split("\n", 3)
-
-                    # Check texture format
-                    if "Ext: dds" not in block_split[1]:
-                        issue_lists["tex_frmt"].add(f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
+                    if archive_dump.returncode != 0:
+                        msg_error(f"BSArch command failed:\n{archive_dump.stderr}")
                         continue
 
-                    # Check texture dimensions
-                    _, width, _, height, _ = block_split[2].split(maxsplit=4)
-                    if (width.isdecimal() and int(width) % 2 != 0) or (height.isdecimal() and int(height) % 2 != 0):
-                        issue_lists["tex_dims"].add(f"  - {width}x{height} : {filename} > {block_split[0]}")
+                    output_split: list[str] = archive_dump.stdout.split("\n\n")
+                    if output_split[-1].startswith("Error:"):
+                        msg_error(f"BSArch command failed:\n{output_split[-1]}\n\n{archive_dump.stderr}")
+                        continue
 
-            else:
-                # Process general-format BA2
-                command_list: tuple = (bsarch_path, file_path, "-list")
-                archive_list: subprocess.CompletedProcess[str] = subprocess.run(
-                    command_list, shell=True, capture_output=True, text=True, check=False
-                )
+                    # Process texture information
+                    for file_block in output_split[4:]:
+                        if not file_block:
+                            continue
 
-                if archive_list.returncode != 0:
-                    msg_error(f"BSArch command failed:\n{archive_list.stderr}")
-                    continue
+                        block_split: list[str] = file_block.split("\n", 3)
 
-                # Process file list
-                output_split = archive_list.stdout.lower().split("\n")
-                has_previs_files = has_anim_data = has_xse_files = False
+                        # Check texture format
+                        if "Ext: dds" not in block_split[1]:
+                            issue_lists["tex_frmt"].add(f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
+                            continue
 
-                for file in output_split[15:]:
-                    # Check sound formats
-                    if file.endswith((".mp3", ".m4a")):
-                        issue_lists["snd_frmt"].add(f"  - {file[-3:].upper()} : {filename} > {file}\n")
+                        # Check texture dimensions
+                        _, width, _, height, _ = block_split[2].split(maxsplit=4)
+                        if (width.isdecimal() and int(width) % 2 != 0) or (height.isdecimal() and int(height) % 2 != 0):
+                            issue_lists["tex_dims"].add(f"  - {width}x{height} : {filename} > {block_split[0]}")
 
-                    # Check animation data
-                    elif not has_anim_data and "animationfiledata" in file:
-                        has_anim_data = True
-                        issue_lists["animdata"].add(f"  - {filename}\n")
+                else:
+                    # Process general-format BA2
+                    command_list: list[str] = [str(bsarch_path), str(file_path), "-list"]
+                    try:
+                        archive_list: subprocess.CompletedProcess[str] = subprocess.run(
+                            command_list, shell=False, capture_output=True, text=True, check=False, timeout=30
+                        )
+                    except subprocess.TimeoutExpired:
+                        msg_error(f"BSArch command timed out processing {filename}")
+                        continue
 
-                    # Check XSE files
-                    elif (
-                        not has_xse_files
-                        and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
-                        and "workshop framework" not in str(root).lower()
-                    ):
-                        has_xse_files = True
-                        issue_lists["xse_file"].add(f"  - {filename}\n")
+                    if archive_list.returncode != 0:
+                        msg_error(f"BSArch command failed:\n{archive_list.stderr}")
+                        continue
 
-                    # Check previs files
-                    elif not has_previs_files and file.endswith((".uvd", "_oc.nif")):
-                        has_previs_files = True
-                        issue_lists["previs"].add(f"  - {filename}\n")
+                    # Process file list
+                    output_split = archive_list.stdout.lower().split("\n")
+                    has_previs_files = has_anim_data = has_xse_files = False
+
+                    for file in output_split[15:]:
+                        # Check sound formats
+                        if file.endswith((".mp3", ".m4a")):
+                            issue_lists["snd_frmt"].add(f"  - {file[-3:].upper()} : {filename} > {file}\n")
+
+                        # Check animation data
+                        elif not has_anim_data and "animationfiledata" in file:
+                            has_anim_data = True
+                            issue_lists["animdata"].add(f"  - {filename}\n")
+
+                        # Check XSE files
+                        elif (
+                            not has_xse_files
+                            and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
+                            and "workshop framework" not in str(root).lower()
+                        ):
+                            has_xse_files = True
+                            issue_lists["xse_file"].add(f"  - {filename}\n")
+
+                        # Check previs files
+                        elif not has_previs_files and file.endswith((".uvd", "_oc.nif")):
+                            has_previs_files = True
+                            issue_lists["previs"].add(f"  - {filename}\n")
+    except (OSError, FileNotFoundError) as e:
+        msg_error(f"Error accessing mod archives during analysis: {e}")
+        return "Error: Could not complete archive analysis"
 
     # Build the report using shared function
     issue_messages = get_issue_messages(xse_acronym, "archived")
@@ -516,8 +594,8 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
     manage_list: list[str] = manage_list_setting if isinstance(manage_list_setting, list) else []
 
     # Validate game path
-    if game_path is None or not game_path.is_dir():
-        raise FileNotFoundError("Game folder not found or is not a valid directory")
+    if game_path is None:
+        raise FileNotFoundError("Game folder not found")
 
     # Set up backup path
     backup_path: Path = Path(f"{BACKUP_DIR}/{classic_list}")
@@ -536,14 +614,24 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
 
     def copy_file_or_directory(source: Path, destination: Path) -> None:
         """Copy a file or directory, handling existing destinations appropriately."""
-        if source.is_file():
-            shutil.copy2(source, destination)
-        elif source.is_dir():
-            if destination.is_dir():
-                shutil.rmtree(destination)
-            elif destination.is_file():
-                destination.unlink(missing_ok=True)
-            shutil.copytree(source, destination)
+        try:
+            if source.is_file():
+                shutil.copy2(source, destination)
+            elif source.is_dir():
+                if destination.is_dir():
+                    shutil.rmtree(destination)
+                elif destination.is_file():
+                    destination.unlink(missing_ok=True)
+                shutil.copytree(source, destination)
+        except PermissionError:
+            msg_error(f"Permission denied copying {source} to {destination}")
+            raise
+        except (OSError, FileNotFoundError, FileExistsError) as e:
+            msg_error(f"Failed to copy {source} to {destination}: {e}")
+            raise
+        except Exception as e:
+            msg_error(f"Unexpected error copying {source} to {destination}: {e}")
+            raise
 
     # Perform the requested operation
     try:
@@ -628,8 +716,6 @@ def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUD
 
     if not mod_path:
         return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
-    if not mod_path.is_dir():
-        return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
 
     # Run both scans and combine results
     unpacked = scan_mods_unpacked()
@@ -662,4 +748,4 @@ if __name__ == "__main__":
         msg_info(game_combined_result())
         msg_info(mods_combined_result())
         game_files_manage("Backup ENB")
-        os.system("pause")
+        input("Press Enter to continue...")

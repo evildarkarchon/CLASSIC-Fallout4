@@ -110,8 +110,21 @@ class TestCrashLogProcessingIntegration:
                 # Create scanner instance with proper mocking
                 scanner: ClassicScanLogs = ClassicScanLogs()
 
-                # Process the crash log using the instance method
-                result: tuple[Path, list[str], bool, Counter[str]] = scanner.process_crashlog(crash_file)
+                # Process the crash log using the async method with orchestrator
+                import asyncio
+                from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+                
+                async def process_with_orchestrator():
+                    async with AsyncScanOrchestrator(
+                        scanner.yamldata,
+                        scanner.crashlogs,
+                        scanner.fcx_mode,
+                        scanner.show_formid_values,
+                        scanner.formid_db_exists
+                    ) as orchestrator:
+                        return await scanner.process_crashlog_async(crash_file, orchestrator)
+                
+                result: tuple[Path, list[str], bool, Counter[str]] = asyncio.run(process_with_orchestrator())
 
                 # Verify results
                 assert result is not None
@@ -177,7 +190,20 @@ class TestCrashLogProcessingIntegration:
                 # Process each crash log and collect results
                 results: list[Any] = []
                 for crash_file in scanner.crashlog_list:
-                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = scanner.process_crashlog(crash_file)
+                    import asyncio
+                    from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+                    
+                    async def process_with_orchestrator():
+                        async with AsyncScanOrchestrator(
+                            scanner.yamldata,
+                            scanner.crashlogs,
+                            scanner.fcx_mode,
+                            scanner.show_formid_values,
+                            scanner.formid_db_exists
+                        ) as orchestrator:
+                            return await scanner.process_crashlog_async(crash_file, orchestrator)
+                    
+                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = asyncio.run(process_with_orchestrator())
                     results.append(autoscan_report)
 
                 # Verify results
