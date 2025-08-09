@@ -1,12 +1,11 @@
-import asyncio
 import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal, cast
 
 import regex as re
-from PySide6.QtCore import QMutex, QObject, Qt, QThread, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
+from PySide6.QtCore import QMutex, Qt, QThread, QTimer, QUrl
+from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -15,7 +14,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QFileDialog,
-    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -31,20 +29,35 @@ from PySide6.QtWidgets import (
 )
 
 from CLASSIC_Main import initialize, main_generate_required
-from CLASSIC_ScanGame import game_files_manage, write_combined_results
-from CLASSIC_ScanLogs import crashlogs_scan
+from CLASSIC_ScanGame import game_files_manage
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Audio import AudioPlayer
+from ClassicLib.Interface.BackupOperations import BackupOperationsMixin
+from ClassicLib.Interface.Dialogs import CustomAboutDialog
+from ClassicLib.Interface.FolderManagement import FolderManagementMixin
 from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
 from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
 from ClassicLib.Interface.Pastebin import PastebinFetchWorker
 from ClassicLib.Interface.PathDialog import ManualPathDialog
+from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
 from ClassicLib.Interface.StyleSheets import DARK_MODE
+from ClassicLib.Interface.TabWidgets import TabSetupMixin
 from ClassicLib.Interface.ThreadManager import ThreadType, get_thread_manager
+from ClassicLib.Interface.UIHelpers import (
+    CHECKBOX_STYLE,
+    ENABLED_BUTTON_STYLE,
+    create_checkbox,
+    create_separator,
+)
+from ClassicLib.Interface.UpdateManager import UpdateManagerMixin
+from ClassicLib.Interface.Workers import (
+    CrashLogsScanWorker,
+    GameFilesScanWorker,
+    UpdateCheckWorker,
+)
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import init_message_handler, msg_error, msg_info, msg_warning
-from ClassicLib.Update import UpdateCheckError, is_latest_version
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
@@ -98,283 +111,19 @@ def show_game_path_dialog_static() -> Path | None:
             # If No, the loop continues and shows the dialog again
 
 
-class CustomAboutDialog(QDialog):
-    """
-    A class representing an "About" dialog window, providing information about the application,
-    icon, contributors, and a close button for dismissing the dialog. The dialog is designed
-    to have similar style and layout to a QMessageBox's "About" dialog, with custom text and
-    an application-specific icon.
-    """
-
-    TITLE = "About"
-    MIN_WIDTH = 500
-    MIN_HEIGHT = 200
-    ICON_SIZE = 128
-    MARGIN = 15
-
-    def __init__(self, parent: QMainWindow | QDialog | None = None) -> None:
-        """
-        Initialize the About dialog.
-
-        Args:
-            parent: Optional parent widget to associate the "About" dialog with. It can be an
-                instance of QMainWindow, QDialog, or None if no parent is provided.
-        """
-        super().__init__(parent)
-        self.setWindowTitle(self.TITLE)
-        self.setMinimumSize(self.MIN_WIDTH, self.MIN_HEIGHT)
-
-        # Create main layout
-        layout: QVBoxLayout = self._create_main_layout()
-
-        # Create and add horizontal layout with icon and text
-        h_layout: QHBoxLayout = self._create_icon_text_layout()
-        layout.addLayout(h_layout)
-
-        # Add close button
-        close_button: QPushButton = self._create_close_button()
-        layout.addWidget(close_button)
-        layout.setAlignment(close_button, Qt.AlignmentFlag.AlignRight)
-
-    def _create_main_layout(self) -> QVBoxLayout:
-        """Create and return the main layout with proper margins."""
-        layout: QVBoxLayout = QVBoxLayout(self)
-        layout.setContentsMargins(self.MARGIN, self.MARGIN, self.MARGIN, self.MARGIN)
-        return layout
-
-    def _create_icon_text_layout(self) -> QHBoxLayout:
-        """Create and return the horizontal layout with icon and text."""
-        h_layout: QHBoxLayout = QHBoxLayout()
-
-        # Add icon
-        icon_label: QLabel = QLabel(self)
-        icon_path: str = f"{GlobalRegistry.get_local_dir(as_string=True)}/CLASSIC Data/graphics/CLASSIC.ico"
-        pixmap: QPixmap = QIcon(icon_path).pixmap(self.ICON_SIZE, self.ICON_SIZE)
-
-        if not pixmap.isNull():
-            icon_label.setPixmap(pixmap)
-            icon_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        h_layout.addWidget(icon_label)
-
-        # Add text
-        text = (
-            "Crash Log Auto Scanner & Setup Integrity Checker\n\n"
-            "Made by: Poet\n"
-            "Contributors: evildarkarchon | kittivelae | AtomicFallout757 | wxMichael"
-        )
-
-        text_label: QLabel = QLabel(text)
-        text_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        text_label.setWordWrap(True)
-
-        h_layout.addWidget(text_label)
-        return h_layout
-
-    def _create_close_button(self) -> QPushButton:
-        """Create and return the close button."""
-        close_button: QPushButton = QPushButton("Close", self)
-        close_button.clicked.connect(self.accept)
-        return close_button
-
-
-class CrashLogsScanWorker(QObject):
-    """
-    CrashLogsScanWorker is a QObject-based worker class responsible for scanning crash logs and emitting signals based on the scan's outcome.
-    Methods:
-        run(): Executes the crash logs scan and emits appropriate signals based on the outcome.
-    """
-
-    finished: Signal = Signal()
-    notify_sound_signal: Signal = Signal()
-    error_sound_signal: Signal = Signal()
-    custom_sound_signal: Signal = Signal(str)  # In case a custom sound needs to be played
-
-    # noinspection PyBroadException
-
-    @Slot()
-    def run(self) -> None:
-        """
-        Triggers a scan process, determines appropriate audio notification based on the outcome,
-        and emits corresponding signals. Upon completion, it ensures the finished signal is emitted
-        regardless of the outcome.
-
-        Slot:
-            Decorates the method to indicate that it is callable as a slot in the context
-            of PyQt/PySide signal-slot mechanism.
-
-        Raises:
-            Exception: Propagates any raised exception if audio notifications are disabled.
-        """
-        # noinspection PyShadowingNames
-        try:
-            self._perform_crash_logs_scan()
-            self._play_success_notification()
-        except Exception as e:  # noqa: BLE001
-            self._handle_scan_error(e)
-        finally:
-            self.finished.emit()  # type: ignore
-
-    @staticmethod
-    def _perform_crash_logs_scan() -> None:
-        """Executes the crash logs scan operation."""
-        logger.debug("Starting crash logs scan")
-        crashlogs_scan()
-        logger.debug("Crash logs scan completed successfully")
-
-    def _play_success_notification(self) -> None:
-        """Plays a notification sound for successful scan."""
-        self.notify_sound_signal.emit()  # type: ignore
-
-    def _handle_scan_error(self, error: Exception) -> None:
-        """
-        Handles errors during the scan process based on user settings.
-
-        Args:
-            error: The exception that occurred during scanning
-
-        Raises:
-            Exception: Re-raises the exception if audio notifications are disabled
-        """
-        logger.error(f"Crash logs scan failed: {error!s}")
-
-        audio_notifications_enabled: bool | None = classic_settings(bool, "Audio Notifications")
-        if audio_notifications_enabled:
-            self.error_sound_signal.emit()  # type: ignore
-        else:
-            raise error
-
-
-# noinspection PyBroadException
-class GameFilesScanWorker(QObject):
-    """
-    A worker class responsible for scanning game files in a separate thread.
-
-    This class processes game results and provides audio notifications based on
-    the outcome of the scanning process.
-
-    Signals:
-        scan_finished: Emitted when the scanning process completes (success or failure)
-        play_success_sound: Emitted when processing completes successfully
-        play_error_sound: Emitted when an error occurs during processing
-        play_custom_sound: Emitted with a path to a custom sound to play
-    """
-
-    scan_finished: Signal = Signal()
-    play_success_sound: Signal = Signal()
-    play_error_sound: Signal = Signal()
-    play_custom_sound: Signal = Signal(str)
-
-    @Slot()
-    def run(self) -> None:
-        """
-        Executes the game files scanning process.
-
-        Processes game result data and handles appropriate audio notifications
-        based on the outcome and user settings. Always emits the scan_finished
-        signal when complete.
-        """
-        try:
-            self._process_game_results()
-            self._notify_success()
-        except Exception as e:  # noqa: BLE001
-            self._handle_error(e)
-        finally:
-            self.scan_finished.emit()  # type: ignore
-
-    @staticmethod
-    def _process_game_results() -> None:
-        """Process and write the combined game results data."""
-        write_combined_results()
-
-    def _notify_success(self) -> None:
-        """Play success notification sound."""
-        self.play_success_sound.emit()  # type: ignore
-
-    def _handle_error(self, error: Exception) -> None:
-        """Handle exceptions based on user audio notification settings."""
-        if classic_settings(bool, "Audio Notifications"):
-            self.play_error_sound.emit()  # type: ignore
-        else:
-            raise error
-
-
-class UpdateCheckWorker(QObject):
-    """
-    Worker class to handle update checking in a separate thread using asyncio.
-    
-    This replaces the direct asyncio.run() calls that block the Qt event loop.
-    """
-    
-    # Signals
-    finished: Signal = Signal()
-    updateAvailable: Signal = Signal(bool)  # True if update available
-    error: Signal = Signal(str)
-    
-    def __init__(self, explicit: bool = False) -> None:
-        """
-        Initialize the update check worker.
-        
-        Args:
-            explicit: Whether this is an explicit user-initiated check
-        """
-        super().__init__()
-        self.explicit = explicit
-        self._loop: asyncio.AbstractEventLoop | None = None
-        
-    @Slot()
-    def run(self) -> None:
-        """
-        Main entry point for the worker thread.
-        Creates a new event loop and runs the async update check.
-        """
-        try:
-            # Create a new event loop for this thread
-            self._loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self._loop)
-            
-            # Check if pre-release
-            if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
-                if self.explicit:
-                    self.error.emit("Software is in pre-release stage, update check skipped.")
-                self.finished.emit()
-                return
-                
-            # Run the async update check
-            result = self._loop.run_until_complete(self._async_check())
-            self.updateAvailable.emit(not result)
-            
-        except UpdateCheckError as e:
-            self.error.emit(str(e))
-        except (RuntimeError, OSError, ValueError) as e:
-            self.error.emit(f"Unexpected error during update check: {e}")
-        finally:
-            # Clean up the event loop
-            if self._loop:
-                self._loop.close()
-            self.finished.emit()
-            
-    async def _async_check(self) -> bool:
-        """
-        Perform the actual async update check.
-        
-        Returns:
-            bool: True if up to date, False if update available
-        """
-        return await is_latest_version(quiet=True, gui_request=self.explicit)
+# Worker classes moved to ClassicLib.Interface.Workers
 
 
 # noinspection DuplicatedCode
-class MainWindow(QMainWindow):
-    # Style constants for the class
-    ENABLED_BUTTON_STYLE = """
-            QPushButton {
-                color: black;
-                background: rgb(250, 250, 250);
-                border-radius: 10px;
-                border: 2px solid black;
-            }
-        """
+class MainWindow(
+    QMainWindow,
+    ScanOperationsMixin,
+    UpdateManagerMixin,
+    FolderManagementMixin,
+    BackupOperationsMixin,
+    TabSetupMixin,
+):
+    # Style constants are now imported from UIHelpers
 
     def __init__(self) -> None:
         """
@@ -404,11 +153,11 @@ class MainWindow(QMainWindow):
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
         self.update_check_thread: QThread | None = None
         self.update_check_worker: UpdateCheckWorker | None = None
-        
+
         # Thread safety for scan operations
         self._scan_mutex = QMutex()
         self._running_scans: set[str] = set()  # Track which scans are running
-        
+
         # Central thread manager
         self.thread_manager = get_thread_manager()
 
@@ -496,7 +245,7 @@ class MainWindow(QMainWindow):
         # Check if already running
         if self.thread_manager.is_thread_running(ThreadType.PAPYRUS_MONITOR):
             return  # Already monitoring
-            
+
         # Create new thread and worker
         self.papyrus_monitor_thread = QThread()
         self.papyrus_monitor_worker = PapyrusMonitorWorker()
@@ -644,7 +393,7 @@ class MainWindow(QMainWindow):
         if self.thread_manager.is_thread_running(ThreadType.PASTEBIN_FETCH):
             QMessageBox.warning(self, "Fetch in Progress", "A Pastebin fetch is already in progress. Please wait for it to complete.")
             return
-            
+
         # Create new thread and worker for each fetch operation to prevent thread reuse
         self.pastebin_thread = QThread()
         self.pastebin_worker = PastebinFetchWorker(url)
@@ -660,10 +409,10 @@ class MainWindow(QMainWindow):
         self.pastebin_worker.finished.connect(self.pastebin_thread.quit)
         self.pastebin_worker.finished.connect(self.pastebin_worker.deleteLater)
         self.pastebin_thread.finished.connect(self.pastebin_thread.deleteLater)
-        
+
         # Clean up thread reference when done to allow garbage collection
-        self.pastebin_thread.finished.connect(lambda: setattr(self, 'pastebin_thread', None))
-        self.pastebin_thread.finished.connect(lambda: setattr(self, 'pastebin_worker', None))
+        self.pastebin_thread.finished.connect(lambda: setattr(self, "pastebin_thread", None))
+        self.pastebin_thread.finished.connect(lambda: setattr(self, "pastebin_worker", None))
 
         # Use lambdas or functools.partial if arguments need to be passed to slots
         self.pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
@@ -762,21 +511,21 @@ class MainWindow(QMainWindow):
 
         """
         self.update_check_timer.stop()
-        
+
         # Check if update check is already running
         if self.thread_manager.is_thread_running(ThreadType.UPDATE_CHECK):
             return  # Update check already in progress
-            
+
         # Create new thread and worker
         self.update_check_thread = QThread()
         self.update_check_worker = UpdateCheckWorker(explicit=False)
         self.update_check_worker.moveToThread(self.update_check_thread)
-        
+
         # Register with thread manager
         if not self.thread_manager.register_thread(ThreadType.UPDATE_CHECK, self.update_check_thread, self.update_check_worker):
             logger.error("Failed to register update check thread")
             return
-        
+
         # Connect signals
         self.update_check_thread.started.connect(self.update_check_worker.run)
         self.update_check_worker.updateAvailable.connect(self.show_update_result)
@@ -785,7 +534,7 @@ class MainWindow(QMainWindow):
         self.update_check_worker.finished.connect(self.update_check_worker.deleteLater)
         self.update_check_thread.finished.connect(self.update_check_thread.deleteLater)
         self.update_check_thread.finished.connect(self._update_check_finished)
-        
+
         # Start through thread manager
         self.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
 
@@ -800,23 +549,23 @@ class MainWindow(QMainWindow):
         # Directly perform the update check without reading from settings
         self.is_update_check_running = True
         self.update_check_timer.stop()
-        
+
         # Check if update check is already running
         if self.thread_manager.is_thread_running(ThreadType.UPDATE_CHECK):
             QMessageBox.information(self, "Update Check", "An update check is already in progress.")
             return
-            
+
         # Create new thread and worker for explicit check
         self.update_check_thread = QThread()
         self.update_check_worker = UpdateCheckWorker(explicit=True)
         self.update_check_worker.moveToThread(self.update_check_thread)
-        
+
         # Register with thread manager
         if not self.thread_manager.register_thread(ThreadType.UPDATE_CHECK, self.update_check_thread, self.update_check_worker):
             logger.error("Failed to register update check thread")
             self.is_update_check_running = False
             return
-        
+
         # Connect signals
         self.update_check_thread.started.connect(self.update_check_worker.run)
         self.update_check_worker.updateAvailable.connect(self.show_update_result)
@@ -825,10 +574,10 @@ class MainWindow(QMainWindow):
         self.update_check_worker.finished.connect(self.update_check_worker.deleteLater)
         self.update_check_thread.finished.connect(self.update_check_thread.deleteLater)
         self.update_check_thread.finished.connect(self._update_check_finished)
-        
+
         # Start through thread manager
         self.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
-        
+
     def _update_check_finished(self) -> None:
         """
         Cleanup method called when update check thread finishes.
@@ -929,11 +678,11 @@ class MainWindow(QMainWindow):
 
         # self.setup_pastebin_elements(layout)  # Re-enabled Pastebin elements
 
-        layout.addWidget(self.create_separator())
+        layout.addWidget(create_separator())
         self.setup_main_buttons(layout)
-        # layout.addWidget(self.create_separator())
+        # layout.addWidget(create_separator())
         self.setup_checkboxes(layout)
-        layout.addWidget(self.create_separator())
+        layout.addWidget(create_separator())
         self.setup_bottom_buttons(layout)
 
     def setup_articles_tab(self) -> None:
@@ -1093,7 +842,7 @@ class MainWindow(QMainWindow):
                 Type of backup for which the section is being created.
 
         """
-        layout.addWidget(self.create_separator())
+        layout.addWidget(create_separator())
 
         title_label: QLabel = QLabel(title)
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1225,7 +974,7 @@ class MainWindow(QMainWindow):
         restore_button: Any | None = getattr(self, f"RestoreButton_{backup_type}", None)
         if restore_button:
             restore_button.setEnabled(True)
-            restore_button.setStyleSheet(self.ENABLED_BUTTON_STYLE)
+            restore_button.setStyleSheet(ENABLED_BUTTON_STYLE)
 
     def help_popup_backup(self) -> None:
         """
@@ -1297,18 +1046,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.StandardButton.Ok,
             )
 
-    @staticmethod
-    def create_separator() -> QFrame:
-        """
-        Creates a horizontal line separator widget.
-
-        Returns:
-            QFrame: A QFrame object configured as a horizontal line separator with a sunken shadow.
-        """
-        separator: QFrame = QFrame()
-        separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setFrameShadow(QFrame.Shadow.Sunken)
-        return separator
+    # create_separator moved to UIHelpers
 
     def setup_checkboxes(self, layout: QBoxLayout) -> None:
         """
@@ -1397,6 +1135,8 @@ class MainWindow(QMainWindow):
     """
 
     def create_checkbox(self, label_text: str, setting: str) -> QCheckBox:
+        """Wrapper for create_checkbox from UIHelpers."""
+        return create_checkbox(label_text, setting, CHECKBOX_STYLE)
         """
         Creates a styled QCheckBox widget linked to a specific setting and its state.
 
@@ -1701,8 +1441,7 @@ class MainWindow(QMainWindow):
         help_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
         QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
 
-    @staticmethod
-    def add_main_button(layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
+    def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
         """
         Adds a main button to the specified layout with the given text, click callback, and optional tooltip.
 
@@ -1978,222 +1717,46 @@ class MainWindow(QMainWindow):
                 QMessageBox.StandardButton.Ok,
             )
 
-    def crash_logs_scan(self) -> None:
-        """
-        Initializes and starts the crash logs scanning process by setting up a worker thread.
+    # crash_logs_scan method is now inherited from ScanOperationsMixin
 
-        This function is responsible for scanning crash logs asynchronously through a worker
-        handled in a separate thread managed by ThreadManager. The worker emits signals when
-        certain events occur, like notifying or error alerts, which are connected to appropriate
-        handlers. Upon completion, the worker and thread are cleaned up, and a callback is invoked
-        to indicate the end of the scanning process. Additionally, the UI elements related to
-        scanning are disabled during the operation to prevent multiple concurrent scans.
+    # game_files_scan method is now inherited from ScanOperationsMixin
 
-        Returns:
-            None
-        """
-        # Thread-safe check and update
-        self._scan_mutex.lock()
-        try:
-            if "crash_logs" in self._running_scans or self.thread_manager.is_thread_running(ThreadType.CRASH_LOGS_SCAN):
-                QMessageBox.warning(self, "Scan in Progress", "A crash logs scan is already in progress.")
-                return
-            self._running_scans.add("crash_logs")
-        finally:
-            self._scan_mutex.unlock()
-            
-        # Create thread and worker
-        self.crash_logs_thread = QThread()
-        self.crash_logs_worker = CrashLogsScanWorker()
-        self.crash_logs_worker.moveToThread(self.crash_logs_thread)
+    # disable_scan_buttons method is now inherited from ScanOperationsMixin
 
-        # Register with thread manager
-        if not self.thread_manager.register_thread(ThreadType.CRASH_LOGS_SCAN, self.crash_logs_thread, self.crash_logs_worker):
-            logger.error("Failed to register crash logs scan thread")
-            self._scan_mutex.lock()
-            self._running_scans.discard("crash_logs")
-            self._scan_mutex.unlock()
-            return
+    # enable_scan_buttons method is now inherited from ScanOperationsMixin
 
-        # Connect signals
-        self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit)  # type: ignore
-        self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
+    # crash_logs_scan_finished method is now inherited from ScanOperationsMixin
 
-        self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
-        self.crash_logs_worker.finished.connect(self.crash_logs_thread.quit)  # type: ignore
-        self.crash_logs_worker.finished.connect(self.crash_logs_worker.deleteLater)  # type: ignore
-        self.crash_logs_thread.finished.connect(self.crash_logs_thread.deleteLater)
-        self.crash_logs_thread.finished.connect(self.crash_logs_scan_finished)
-
-        # Disable buttons and update text
-        self.disable_scan_buttons()
-
-        # Start through thread manager
-        self.thread_manager.start_thread(ThreadType.CRASH_LOGS_SCAN)
-
-    def game_files_scan(self) -> None:
-        """
-        Scans game files using a separate thread and handles thread setup, worker connections, and signal
-        communication to ensure non-blocking UI updates during the operation.
-
-        Starts a scanning process by initializing a worker and a thread managed by ThreadManager.
-        The worker emits signals for notifying or handling errors in the scanning process. The scanning
-        process disables UI scan buttons until the operation is complete.
-        """
-        # Thread-safe check and update
-        self._scan_mutex.lock()
-        try:
-            if "game_files" in self._running_scans or self.thread_manager.is_thread_running(ThreadType.GAME_FILES_SCAN):
-                QMessageBox.warning(self, "Scan in Progress", "A game files scan is already in progress.")
-                return
-            self._running_scans.add("game_files")
-        finally:
-            self._scan_mutex.unlock()
-            
-        # Create thread and worker
-        self.game_files_thread = QThread()
-        self.game_files_worker = GameFilesScanWorker()
-        self.game_files_worker.moveToThread(self.game_files_thread)
-
-        # Register with thread manager
-        if not self.thread_manager.register_thread(ThreadType.GAME_FILES_SCAN, self.game_files_thread, self.game_files_worker):
-            logger.error("Failed to register game files scan thread")
-            self._scan_mutex.lock()
-            self._running_scans.discard("game_files")
-            self._scan_mutex.unlock()
-            return
-
-        # Connect signals
-        self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
-
-        self.game_files_thread.started.connect(self.game_files_worker.run)
-        self.game_files_worker.finished.connect(self.game_files_thread.quit)  # type: ignore
-        self.game_files_worker.finished.connect(self.game_files_worker.deleteLater)  # type: ignore
-        self.game_files_thread.finished.connect(self.game_files_thread.deleteLater)
-        self.game_files_thread.finished.connect(self.game_files_scan_finished)
-
-        # Disable buttons and update text
-        self.disable_scan_buttons()
-
-        # Start through thread manager
-        self.thread_manager.start_thread(ThreadType.GAME_FILES_SCAN)
-
-    def disable_scan_buttons(self) -> None:
-        """
-        Disables all buttons in the scan button group.
-
-        This method iterates through the buttons in the scan button group and
-        disables them, ensuring they cannot be clicked or interacted with.
-        Thread-safe implementation using mutex.
-
-        Returns:
-            None
-        """
-        self._scan_mutex.lock()
-        try:
-            for button_id in self.scan_button_group.buttons():
-                button_id.setEnabled(False)
-        finally:
-            self._scan_mutex.unlock()
-
-    def enable_scan_buttons(self) -> None:
-        """
-        Enables all scan buttons within a button group.
-
-        This method iterates through all the scan buttons in a specified button group
-        and enables them, allowing user interaction. Only enables buttons if no scans
-        are currently running. Thread-safe implementation using mutex.
-
-        Returns:
-            None
-        """
-        self._scan_mutex.lock()
-        try:
-            # Only enable buttons if no scans are running
-            if not self._running_scans:
-                for button_id in self.scan_button_group.buttons():
-                    button_id.setEnabled(True)
-        finally:
-            self._scan_mutex.unlock()
-
-    def crash_logs_scan_finished(self) -> None:
-        """
-        Marks the completion of the crash logs scanning process and resets the relevant UI components.
-
-        This method is executed when the scan for crash logs is finished. It ensures the reset of
-        internal state and re-enables UI buttons that were disabled during the scan process.
-        Thread-safe implementation using mutex.
-
-        Returns:
-            None: This method does not return any value.
-        """
-        self.crash_logs_thread = None
-        
-        # Thread-safe removal from running scans
-        self._scan_mutex.lock()
-        try:
-            self._running_scans.discard("crash_logs")
-        finally:
-            self._scan_mutex.unlock()
-            
-        self.enable_scan_buttons()  # noinspection PyUnresolvedReferences
-
-    def game_files_scan_finished(self) -> None:
-        """
-        Marks the completion of the game files scanning process.
-
-        This method is invoked when the game files scanning operation is finished. It appropriately
-        resets the state by clearing the scanning thread reference and re-enables the buttons
-        associated with scanning operations. Thread-safe implementation using mutex.
-
-        Returns:
-            None
-        """
-        self.game_files_thread = None
-        
-        # Thread-safe removal from running scans
-        self._scan_mutex.lock()
-        try:
-            self._running_scans.discard("game_files")
-        finally:
-            self._scan_mutex.unlock()
-            
-        self.enable_scan_buttons()
-
-        # Check papyrus button state
-        if self.papyrus_button is not None and self.papyrus_button.isChecked():
-            self.start_papyrus_monitoring()
-        else:
-            self.stop_papyrus_monitoring()
+    # game_files_scan_finished method is now inherited from ScanOperationsMixin
 
     def closeEvent(self, event: Any) -> None:
         """
         Override closeEvent to ensure proper cleanup of all running threads.
-        
+
         This method is called when the main window is being closed. It ensures
         all worker threads are properly stopped and cleaned up before the
         application exits using the central ThreadManager.
-        
+
         Args:
             event: The close event
         """
         logger.info("Application closing - cleaning up resources...")
-        
+
         # Stop Papyrus monitoring first to ensure worker cleanup
         if self.papyrus_monitor_worker is not None:
             logger.debug("Stopping Papyrus monitoring...")
             self.stop_papyrus_monitoring()
-        
+
         # Use thread manager to stop all threads gracefully
         logger.debug("Stopping all managed threads...")
         self.thread_manager.stop_all_threads(wait_ms=3000)
-                
+
         # Stop update check timer
-        if hasattr(self, 'update_check_timer') and self.update_check_timer:
+        if hasattr(self, "update_check_timer") and self.update_check_timer:
             self.update_check_timer.stop()
-            
+
         logger.info("Resource cleanup completed")
-        
+
         # Accept the close event
         event.accept()
 

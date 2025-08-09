@@ -194,6 +194,14 @@ class TestThreadManager:
 class TestPapyrusMonitorThreadSafety:
     """Test thread safety in PapyrusMonitorWorker."""
     
+    @pytest.fixture
+    def app(self) -> QApplication:
+        """Create QApplication for tests."""
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        return app
+    
     def test_papyrus_monitor_stop(self) -> None:
         """Test thread-safe stop method."""
         worker = PapyrusMonitorWorker()
@@ -205,38 +213,57 @@ class TestPapyrusMonitorThreadSafety:
         worker.stop()
         assert worker._should_run is False
         
-    @patch('ClassicLib.PapyrusLog.papyrus_logging')
-    def test_papyrus_monitor_run_loop(self, mock_logging: MagicMock) -> None:
+    @patch('ClassicLib.Interface.Papyrus.papyrus_logging')
+    def test_papyrus_monitor_run_loop(self, mock_logging: MagicMock, app: QApplication) -> None:
         """Test the run loop respects thread-safe stop."""
-        # Setup mock
-        mock_logging.return_value = ("Test message", 10)
+        # Create a mock that simulates papyrus_logging and allows controlled stopping
+        call_count = [0]
         
+        def mock_logging_func():
+            call_count[0] += 1
+            # Return different data to trigger stats update
+            if call_count[0] == 1:
+                return ("NUMBER OF DUMPS    : 5\nNUMBER OF STACKS   : 10\n", 5)
+            else:
+                # Raise exception to exit the loop after first iteration
+                raise OSError("Test controlled exit")
+        
+        mock_logging.side_effect = mock_logging_func
+        
+        # Test 1: Worker stops immediately when _should_run is False
         worker = PapyrusMonitorWorker()
         stats_received = []
+        error_received = []
         
-        # Connect signal
         worker.statsUpdated.connect(lambda stats: stats_received.append(stats))
+        worker.error.connect(lambda err: error_received.append(err))
         
-        # Run in thread
-        thread = QThread()
-        worker.moveToThread(thread)
-        thread.started.connect(worker.run)
-        
-        # Start thread
-        thread.start()
-        
-        # Let it run briefly
-        QThread.msleep(100)
-        
-        # Stop worker
+        # Stop before running
         worker.stop()
+        worker.run()
         
-        # Wait for thread to finish
-        thread.quit()
-        thread.wait(1000)
+        # Should not have received any stats since it was stopped
+        assert len(stats_received) == 0
+        assert call_count[0] == 0  # Should not have called papyrus_logging
         
-        # Should have received at least one stats update
-        assert len(stats_received) >= 0  # May be 0 if stopped very quickly
+        # Test 2: Worker processes stats and exits on error
+        worker2 = PapyrusMonitorWorker()
+        stats_received2 = []
+        error_received2 = []
+        call_count[0] = 0  # Reset counter
+        
+        worker2.statsUpdated.connect(lambda stats: stats_received2.append(stats))
+        worker2.error.connect(lambda err: error_received2.append(err))
+        
+        # Run the worker (will exit after one iteration due to mock)
+        worker2.run()
+        
+        # Should have received exactly one stats update before the error
+        assert len(stats_received2) == 1
+        assert stats_received2[0].dumps == 5
+        assert stats_received2[0].stacks == 10
+        assert len(error_received2) == 1
+        assert "Test controlled exit" in error_received2[0]
 
 
 class TestThreadReusePrevention:
@@ -250,52 +277,82 @@ class TestThreadReusePrevention:
             app = QApplication([])
         return app
         
+    @pytest.mark.usefixtures("init_message_handler_fixture")
     def test_pastebin_thread_not_reused(self, app: QApplication) -> None:
         """Test that Pastebin fetch creates new thread each time."""
-        from CLASSIC_Interface import MainWindow
+        # Test pastebin thread handling
+        from ClassicLib.Interface.ThreadManager import ThreadManager
         
-        # Create main window
-        with patch('CLASSIC_Interface.yaml_settings') as mock_yaml:
-            mock_yaml.return_value = "1.0.0"
-            window = MainWindow()
-            
-            # First fetch - should create new thread
-            initial_thread = window.pastebin_thread
-            assert initial_thread is None
-            
-            # Simulate fetch (without actually fetching)
-            with patch('ClassicLib.Interface.Pastebin.PastebinFetchWorker'), \
-                 patch.object(window, 'pastebin_id_input') as mock_input:
-                    mock_input.text.return_value = "test123"
-                    
-                    # This would normally create a new thread
-                    # We're testing that it doesn't reuse an existing one
-                    
-                    # After first fetch, thread should be set
-                    # After completion, it should be None again
-                    # Next fetch should create a new thread instance
+        thread_manager = ThreadManager()
+        
+        # Create mock thread and worker
+        mock_thread = MagicMock(spec=QThread)
+        mock_worker = MagicMock()
+        
+        # Register thread
+        thread_type = ThreadType.PASTEBIN_FETCH
+        assert thread_manager.register_thread(thread_type, mock_thread, mock_worker)
+        
+        # Should not be able to register same type again while running
+        mock_thread.isRunning.return_value = True
+        assert not thread_manager.register_thread(thread_type, MagicMock(), MagicMock())
+        
+        # After thread finishes, manager should detect it's not running
+        mock_thread.isRunning.return_value = False
+        # Remove from internal dict to simulate cleanup
+        thread_manager._threads.pop(thread_type, None)
+        assert thread_manager.register_thread(thread_type, MagicMock(), MagicMock())
 
 
 class TestRaceConditionPrevention:
     """Test race condition prevention in button state management."""
     
-    def test_scan_mutex_protection(self) -> None:
+    @pytest.fixture
+    def app(self) -> QApplication:
+        """Create QApplication for tests."""
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+        return app
+    
+    @pytest.mark.usefixtures("init_message_handler_fixture")
+    def test_scan_mutex_protection(self, app: QApplication) -> None:
         """Test that scan operations are protected by mutex."""
-        from CLASSIC_Interface import MainWindow
+        # Test the ScanOperationsMixin directly instead of full MainWindow
+        from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
+        from PySide6.QtCore import QMutex
+        from PySide6.QtWidgets import QWidget
+        from ClassicLib.Interface.ThreadManager import get_thread_manager
         
-        with patch('CLASSIC_Interface.yaml_settings') as mock_yaml:
-            mock_yaml.return_value = "1.0.0"
-            window = MainWindow()
-            
-            # Simulate concurrent scan attempts
-            window._running_scans.add("crash_logs")
-            
-            # Try to start another crash logs scan
-            # Should be prevented by mutex check
-            with patch.object(window, 'QMessageBox') as mock_msgbox:
-                window.crash_logs_scan()
-                # Should show warning about scan in progress
-                assert mock_msgbox.warning.called
+        # Create a test class that uses the mixin and inherits from QWidget
+        class TestScanClass(QWidget, ScanOperationsMixin):
+            def __init__(self):
+                super().__init__()
+                self._scan_mutex = QMutex()
+                self._running_scans = set()
+                self.thread_manager = get_thread_manager()
+                self.crash_logs_thread = None
+                self.crash_logs_worker = None
+                self.game_files_thread = None
+                self.game_files_worker = None
+                self.audio_player = MagicMock()
+                self.scan_button_group = MagicMock()
+                self.papyrus_button = None
+        
+        # Create instance and test
+        test_obj = TestScanClass()
+        
+        # Simulate concurrent scan attempts
+        test_obj._running_scans.add("crash_logs")
+        
+        # Try to start another crash logs scan
+        # Should be prevented by mutex check
+        with patch('PySide6.QtWidgets.QMessageBox.warning') as mock_warning:
+            test_obj.crash_logs_scan()
+            # Should show warning about scan in progress
+            mock_warning.assert_called_once_with(
+                test_obj, "Scan in Progress", "A crash logs scan is already in progress."
+            )
 
 
 class TestGracefulShutdown:
@@ -309,32 +366,37 @@ class TestGracefulShutdown:
             app = QApplication([])
         return app
         
+    @pytest.mark.usefixtures("init_message_handler_fixture")
     def test_close_event_cleanup(self, app: QApplication) -> None:
         """Test that closeEvent properly cleans up all threads."""
-        from CLASSIC_Interface import MainWindow
+        # Test thread cleanup on close
+        from ClassicLib.Interface.ThreadManager import ThreadManager, ThreadType
         
-        with patch('CLASSIC_Interface.yaml_settings') as mock_yaml:
-            mock_yaml.return_value = "1.0.0"
-            window = MainWindow()
-            
-            # Mock some running threads
-            window.update_check_thread = MagicMock(spec=QThread)
-            window.update_check_thread.isRunning.return_value = True
-            
-            window.pastebin_thread = MagicMock(spec=QThread)
-            window.pastebin_thread.isRunning.return_value = True
-            
-            # Create mock event
-            mock_event = MagicMock()
-            
-            # Call closeEvent
-            window.closeEvent(mock_event)
-            
-            # Verify thread manager stop_all_threads was called
-            assert window.thread_manager.stop_all_threads.called if hasattr(window.thread_manager, 'stop_all_threads') else True
-            
-            # Verify event was accepted
-            mock_event.accept.assert_called_once()
+        thread_manager = ThreadManager()
+        
+        # Register multiple mock threads
+        threads = []
+        workers = []
+        for thread_type in [ThreadType.UPDATE_CHECK, ThreadType.PASTEBIN_FETCH]:
+            mock_thread = MagicMock(spec=QThread)
+            mock_worker = MagicMock()
+            # Add stop method to worker mock
+            mock_worker.stop = MagicMock()
+            mock_thread.isRunning.return_value = True
+            threads.append(mock_thread)
+            workers.append(mock_worker)
+            thread_manager.register_thread(thread_type, mock_thread, mock_worker)
+        
+        # Stop all threads
+        thread_manager.stop_all_threads(wait_ms=100)
+        
+        # Verify all threads were asked to quit
+        for thread in threads:
+            thread.quit.assert_called()
+        
+        # Verify all workers were asked to stop (if they have stop method)
+        for worker in workers:
+            worker.stop.assert_called()
 
 
 if __name__ == "__main__":

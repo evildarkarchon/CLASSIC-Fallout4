@@ -96,3 +96,6 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
 3. Follow async patterns in ScanLog components
 4. Write tests for new functionality
 5. Run linter and type checker before committing
+
+## Memories
+- Output test output to a file to avoid truncation.

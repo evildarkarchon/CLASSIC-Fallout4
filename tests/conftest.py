@@ -4,8 +4,9 @@ Pytest configuration file for CLASSIC-Fallout4 test suite.
 This file contains shared fixtures and configuration that are available to all test modules.
 """
 
+import asyncio
 import sys
-from collections.abc import Callable, Generator
+from collections.abc import AsyncIterator, Callable, Generator
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -24,13 +25,35 @@ from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
 @pytest.fixture
 def init_message_handler_fixture() -> Generator[None, None, None]:
-    """Initialize the MessageHandler for tests that need it."""
-    handler = init_message_handler(parent=None, is_gui_mode=False)
-    yield
-    # Clear the handler after the test
+    """Initialize the MessageHandler for tests that need it.
+    
+    This fixture ensures proper cleanup of the MessageHandler singleton
+    between tests to prevent state leakage.
+    """
+    # Import here to avoid circular dependencies
+    import gc
     import ClassicLib.MessageHandler
-
-    ClassicLib.MessageHandler._message_handler = None
+    
+    # Store any existing handler to restore later (defensive programming)
+    original_handler = getattr(ClassicLib.MessageHandler, '_message_handler', None)
+    
+    try:
+        # Initialize fresh handler for this test
+        handler = init_message_handler(parent=None, is_gui_mode=False)
+        yield
+    finally:
+        # Ensure complete cleanup
+        ClassicLib.MessageHandler._message_handler = None
+        
+        # Clear any cached references
+        if hasattr(ClassicLib.MessageHandler, '_cached_handler'):
+            delattr(ClassicLib.MessageHandler, '_cached_handler')
+        
+        # Force garbage collection to ensure cleanup
+        gc.collect()
+        
+        # Verify cleanup was successful (defensive check)
+        assert ClassicLib.MessageHandler._message_handler is None, "MessageHandler cleanup failed"
 
 
 @pytest.fixture
@@ -336,3 +359,75 @@ def setup_global_registry() -> Generator[None, None, None]:
 
     # Clear registry after test
     GlobalRegistry._registry.clear()
+
+
+# Async test fixtures for proper resource management
+@pytest.fixture
+async def async_cleanup() -> AsyncIterator[list[Any]]:
+    """
+    Fixture that tracks async resources and ensures they are properly cleaned up.
+    
+    Usage:
+        async def test_something(async_cleanup):
+            resource = await create_async_resource()
+            async_cleanup.append(resource)
+            # Test code here
+            # Resource will be automatically cleaned up
+    """
+    resources = []
+    
+    yield resources
+    
+    # Cleanup all tracked resources
+    for resource in resources:
+        if resource is None:
+            continue
+        
+        try:
+            if hasattr(resource, "aclose"):
+                await resource.aclose()
+            elif hasattr(resource, "close"):
+                if asyncio.iscoroutinefunction(resource.close):
+                    await resource.close()
+                else:
+                    # Run sync close in executor
+                    await asyncio.get_event_loop().run_in_executor(None, resource.close)
+        except Exception as e:
+            # Log but don't fail the test on cleanup errors
+            import logging
+            logging.warning(f"Error during async resource cleanup: {e}")
+
+
+@pytest.fixture
+def event_loop_policy():
+    """Set event loop policy for consistent behavior across platforms."""
+    if sys.platform == "win32":
+        # Windows requires ProactorEventLoop for subprocess support
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    return asyncio.get_event_loop_policy()
+
+
+@pytest.fixture
+async def clean_event_loop():
+    """Ensure a clean event loop for each async test."""
+    loop = asyncio.get_event_loop()
+    
+    # Track initial state
+    initial_tasks = set(asyncio.all_tasks(loop))
+    
+    yield loop
+    
+    # Cancel any tasks created during the test
+    current_tasks = set(asyncio.all_tasks(loop))
+    new_tasks = current_tasks - initial_tasks
+    
+    for task in new_tasks:
+        if not task.done() and task != asyncio.current_task():
+            task.cancel()
+    
+    # Wait for cancellations
+    if new_tasks:
+        await asyncio.gather(*new_tasks, return_exceptions=True)
+    
+    # Allow event loop to process
+    await asyncio.sleep(0)

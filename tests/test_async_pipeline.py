@@ -363,7 +363,7 @@ class TestAsyncDatabasePool:
                 assert isinstance(pool.query_cache, dict)
 
     async def test_database_pool_initialization(self) -> None:
-        """Test database pool initialization."""
+        """Test database pool initialization with proper cleanup."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create a test database file
             db_path: Path = Path(temp_dir) / "test.db"
@@ -372,6 +372,8 @@ class TestAsyncDatabasePool:
             # Mock aiosqlite.connect to avoid actual database operations
             async def mock_connect(_path: Path) -> AsyncMock:
                 mock_conn: AsyncMock = AsyncMock()
+                # Ensure the mock has a proper async close method
+                mock_conn.close = AsyncMock(return_value=None)
                 return mock_conn
 
             with (
@@ -384,10 +386,17 @@ class TestAsyncDatabasePool:
                 # Verify connection was attempted
                 mock_connect_patch.assert_called_once_with(db_path)
                 assert db_path in pool.connections
+                
+                # Store the mock connection for verification
+                mock_conn = pool.connections[db_path]
 
                 # Test cleanup
                 await pool.close()
-                # Note: We can't easily test close() call because it's on the mock connection
+                
+                # Verify close was called on the connection
+                assert mock_conn.close.called
+                # Verify pool connections were cleared
+                assert len(pool.connections) == 0
 
 
 @pytest.mark.integration
@@ -420,10 +429,8 @@ class TestAsyncPerformanceComparison:
 
         # Mock the async function where it's imported in AsyncFileIO to prevent the warning
         with patch("ClassicLib.ScanLog.AsyncFileIO.crashlogs_reformat_async") as mock_async_func:
-            # Configure the mock to return a completed future to avoid unawaited coroutine
-            future: asyncio.Future[None] = asyncio.Future()
-            future.set_result(None)
-            mock_async_func.return_value = future
+            # Use AsyncMock which properly handles coroutines
+            mock_async_func.return_value = AsyncMock(return_value=None)()
 
             # This should run without errors
             crashlogs_reformat_with_async(crash_log_files, remove_list)
