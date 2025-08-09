@@ -2187,14 +2187,6 @@ class MainWindow(QMainWindow):
         # Use thread manager to stop all threads gracefully
         logger.debug("Stopping all managed threads...")
         self.thread_manager.stop_all_threads(wait_ms=3000)
-        
-        # Clean up audio player resources
-        if hasattr(self, 'audio_player'):
-            logger.debug("Cleaning up audio player...")
-            # Stop any playing sounds
-            if hasattr(self.audio_player, 'thread') and self.audio_player.thread is not None:
-                self.audio_player.thread.quit()
-                self.audio_player.thread.wait(500)
                 
         # Stop update check timer
         if hasattr(self, 'update_check_timer') and self.update_check_timer:
