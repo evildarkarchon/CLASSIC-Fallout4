@@ -99,4 +99,4 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
 
 ## Memories
 - Output test output to a file to avoid truncation.
-- Do not add to the `MainWindow` class in `CLASSIC_Interface.py` unless absolutely necessary. Use Mixin classes with TYPE_CHECKING stubs instead.
+- Do not make additions to the `MainWindow` class in `CLASSIC_Interface.py` unless absolutely necessary. Use Mixin classes with TYPE_CHECKING stubs instead.
