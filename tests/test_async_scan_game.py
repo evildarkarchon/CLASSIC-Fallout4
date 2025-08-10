@@ -189,7 +189,10 @@ class TestAsyncScanModsArchived:
             
             mock_proc = AsyncMock()
             mock_proc.returncode = 0
-            mock_proc.communicate = AsyncMock(side_effect=asyncio.sleep(0.1))
+            async def simulate_communicate():
+                await asyncio.sleep(0.1)
+                return ("output", "")
+            mock_proc.communicate = AsyncMock(side_effect=simulate_communicate)
             
             # Simulate process completion
             await asyncio.sleep(0.1)
@@ -512,8 +515,10 @@ class TestAsyncIntegration:
         async def slow_subprocess(*args, **kwargs):
             mock_proc = AsyncMock()
             mock_proc.returncode = 0
-            mock_proc.communicate = AsyncMock(side_effect=lambda: asyncio.sleep(0.2))
-            await asyncio.sleep(0.2)  # Simulate processing time
+            async def simulate_communicate():
+                await asyncio.sleep(0.2)
+                return ("output", "")
+            mock_proc.communicate = AsyncMock(side_effect=simulate_communicate)
             return mock_proc
         
         with patch('asyncio.create_subprocess_exec', side_effect=slow_subprocess):

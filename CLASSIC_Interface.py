@@ -1,117 +1,44 @@
 import sys
-from collections.abc import Callable
-from pathlib import Path
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any
 
 import regex as re
-from PySide6.QtCore import QMutex, Qt, QThread, QTimer, QUrl
+from PySide6.QtCore import QMutex, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QApplication,
-    QBoxLayout,
     QButtonGroup,
-    QCheckBox,
-    QComboBox,
-    QDialog,
-    QFileDialog,
-    QGridLayout,
-    QHBoxLayout,
-    QLabel,
-    QLayout,
-    QLineEdit,
     QMainWindow,
     QMessageBox,
-    QPushButton,
-    QSizePolicy,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from CLASSIC_Main import initialize, main_generate_required
-from CLASSIC_ScanGame import game_files_manage
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Audio import AudioPlayer
 from ClassicLib.Interface.BackupOperations import BackupOperationsMixin
-from ClassicLib.Interface.Dialogs import CustomAboutDialog
-from ClassicLib.Interface.FolderManagement import FolderManagementMixin
-from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
-from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
-from ClassicLib.Interface.Pastebin import PastebinFetchWorker
-from ClassicLib.Interface.PathDialog import ManualPathDialog
+from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
+from ClassicLib.Interface.HelpAndAboutMixin import HelpAndAboutMixin
+from ClassicLib.Interface.PapyrusManager import PapyrusManagerMixin
+from ClassicLib.Interface.PastebinMixin import PastebinMixin
+from ClassicLib.Interface.PathDialogMixin import PathDialogMixin
 from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
 from ClassicLib.Interface.StyleSheets import DARK_MODE
-from ClassicLib.Interface.TabWidgets import TabSetupMixin
-from ClassicLib.Interface.ThreadManager import ThreadType, get_thread_manager
-from ClassicLib.Interface.UIHelpers import (
-    CHECKBOX_STYLE,
-    ENABLED_BUTTON_STYLE,
-    create_checkbox,
-    create_separator,
-)
+from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
+from ClassicLib.Interface.ThreadManager import get_thread_manager
 from ClassicLib.Interface.UpdateManager import UpdateManagerMixin
-from ClassicLib.Interface.Workers import (
-    CrashLogsScanWorker,
-    GameFilesScanWorker,
-    UpdateCheckWorker,
-)
 from ClassicLib.Logger import logger
-from ClassicLib.MessageHandler import init_message_handler, msg_error, msg_info, msg_warning
+from ClassicLib.MessageHandler import init_message_handler, msg_error
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
-
-# noinspection PyTypeChecker
-def show_game_path_dialog_static() -> Path | None:
-    """
-    Shows a dialog for selecting the game installation path without requiring an instance.
-    Allows the user to cancel, which will exit the application.
-
-    Returns:
-        Path to the selected valid game directory if successful, None if user cancels
-    """
-    from ClassicLib.Interface.PathDialog import ManualPathDialog
-
-    exe_name: str = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
-    game_name: str = GlobalRegistry.get_game()
-    # Create a dialog with appropriate title and descriptive label
-    dialog: ManualPathDialog = ManualPathDialog(
-        parent=None,  # No parent since this is static
-        title="Set Game Installation Path",
-        label=f"Select the installation directory for {game_name}",
+if TYPE_CHECKING:
+    from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
+    from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
+    from ClassicLib.Interface.Workers import (
+        UpdateCheckWorker,
     )
-    while True:
-        # Process the dialog result
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            game_path: Path = Path(dialog.get_path())
-
-            # Validate that the directory contains the game executable
-            if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
-                return game_path
-            # Show error and continue loop to try again
-            QMessageBox.critical(
-                None,  # pyrefly: ignore
-                "Invalid Game Directory",
-                f"❌ ERROR: No {exe_name} file found in '{game_path}'!\n\nPlease select the correct game directory.",
-            )
-        else:
-            # User cancelled - show confirmation dialog
-            reply: QMessageBox.StandardButton = QMessageBox.question(
-                None,  # pyrefly: ignore
-                "Exit Application?",
-                "A valid game path is required to continue.\nDo you want to exit the application?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No,
-            )
-
-            if reply == QMessageBox.StandardButton.Yes:
-                # Exit the application
-                msg_info("User chose to exit the application.")
-                sys.exit(0)  # Exit with success code
-            # If No, the loop continues and shows the dialog again
-
-
-# Worker classes moved to ClassicLib.Interface.Workers
 
 
 # noinspection DuplicatedCode
@@ -121,31 +48,19 @@ class MainWindow(
     UpdateManagerMixin,
     FolderManagementMixin,
     BackupOperationsMixin,
+    PapyrusManagerMixin,
+    PastebinMixin,
+    PathDialogMixin,
     TabSetupMixin,
+    HelpAndAboutMixin,
 ):
     # Style constants are now imported from UIHelpers
 
     def __init__(self) -> None:
-        """
-        Represents the main application GUI for managing crash log scanning, game file integrity checking,
-        and manual document retrieval. This class handles initialization of UI components, worker threads,
-        and various functionalities pertaining to application settings and external services like Pastebin.
-        It also includes custom exception handling, style configuration, and dynamic update checking for
-        the application.
-        """
         super().__init__()
-        self.pastebin_worker: PastebinFetchWorker | None = None
-        self.pastebin_thread: QThread | None = None
-        self.game_files_worker: GameFilesScanWorker | None = None
-        self.crash_logs_worker: CrashLogsScanWorker | None = None
-        self.papyrus_button: QPushButton | None = None
-        self.game_files_button: QPushButton | None = None
-        self.crash_logs_button: QPushButton | None = None
-        self.scan_folder_edit: QLineEdit | None = None
-        self.mods_folder_edit: QLineEdit | None = None
-        self.pastebin_fetch_button: QPushButton | None = None
-        self.pastebin_id_input: QLineEdit | None = None
-        self.pastebin_label: QLabel | None = None
+        self.thread_manager = get_thread_manager()
+        self.audio_player = AudioPlayer()
+        self.scan_button_group = QButtonGroup()
         self.papyrus_monitor_thread: QThread | None = None
         self.papyrus_monitor_worker: PapyrusMonitorWorker | None = None
         self.papyrus_monitor_dialog: PapyrusMonitorDialog | None = None
@@ -153,1367 +68,42 @@ class MainWindow(
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
         self.update_check_thread: QThread | None = None
         self.update_check_worker: UpdateCheckWorker | None = None
-
-        # Thread safety for scan operations
         self._scan_mutex = QMutex()
-        self._running_scans: set[str] = set()  # Track which scans are running
-
-        # Central thread manager
-        self.thread_manager = get_thread_manager()
-
+        self._running_scans: set[str] = set()
         self.setWindowTitle(f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}")
-        # Ensure GlobalRegistry.get_local_dir() returns a Path or string
         local_dir_path = GlobalRegistry.get_local_dir(as_string=True)
         self.setWindowIcon(QIcon(f"{local_dir_path}/CLASSIC Data/graphics/CLASSIC.ico"))
-
         self.setStyleSheet(DARK_MODE)
         self.setMinimumSize(350, 475)
-        # self.setMaximumSize(700, 950) # Keep this commented or removed for resizability
-        # self.setFixedSize(700, 950)  # Set fixed size to prevent resizing, for now.
-
-        # --- Set preferred initial size ---
-        self.resize(650, 650)  # <<< SET YOUR DESIRED STARTUP SIZE HERE
-
-        self.audio_player = AudioPlayer()
-
+        self.resize(650, 650)
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout(self.central_widget)
         self.main_layout.setContentsMargins(10, 10, 10, 10)
         self.main_layout.setSpacing(10)
-
         self.tab_widget = QTabWidget()
         self.main_layout.addWidget(self.tab_widget)
-
         self.main_tab = QWidget()
         self.backups_tab = QWidget()
         self.articles_tab = QWidget()
         self.tab_widget.addTab(self.main_tab, "MAIN OPTIONS")
         self.tab_widget.addTab(self.backups_tab, "FILE BACKUP")
         self.tab_widget.addTab(self.articles_tab, "ARTICLES")
-        self.scan_button_group = QButtonGroup()
         self.setup_main_tab()
         self.setup_backups_tab()
-        self.setup_articles_tab()  # Added call
-
+        self.setup_articles_tab()
         self.initialize_folder_paths()
-        # Initialize message handler for GUI mode
-        # noinspection PyTypeChecker
         init_message_handler(parent=self, is_gui_mode=True)
         main_generate_required()
-
         if classic_settings(bool, "Update Check"):
             QTimer.singleShot(0, self.update_popup)
-
         self.update_check_timer = QTimer()
         self.update_check_timer.timeout.connect(self.perform_update_check)
         self.is_update_check_running = False
-
         self.crash_logs_thread: QThread | None = None
-        self.game_files_thread: QThread | None = None
 
-        # self.manual_docs_gui = ManualPathDialog(self)
-        # self.game_path_gui = ManualPathDialog(self)
-        GlobalRegistry.register(GlobalRegistry.Keys.MANUAL_DOCS_GUI, self.show_manual_docs_path_dialog)
-        GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH_GUI, self.show_game_path_dialog)
+    # Help and About methods are now inherited from HelpAndAboutMixin
 
-    def toggle_papyrus_worker(self) -> None:
-        """
-        Toggles the state of the Papyrus worker based on the state of the `papyrus_button`.
-
-        If the `papyrus_button` is checked, the Papyrus monitoring process is started and
-        the custom monitoring dialog is displayed. Otherwise, it stops the Papyrus monitoring
-        process and closes the dialog. This function is intended to manage the lifecycle
-        of the Papyrus worker efficiently.
-        """
-        if self.papyrus_button and self.papyrus_button.isChecked():
-            self.start_papyrus_monitoring()
-        else:
-            self.stop_papyrus_monitoring()
-
-    def start_papyrus_monitoring(self) -> None:
-        """
-        Initializes and starts the Papyrus monitoring process using a separate thread and worker. This allows
-        asynchronous monitoring of the Papyrus system, ensuring that updates, errors, and other signals are
-        handled efficiently without blocking the main application. Uses ThreadManager for thread lifecycle
-        management.
-
-        Raises:
-            Any exception or error handling will be caught and managed by connected signals
-            such as `error`.
-        """
-        # Check if already running
-        if self.thread_manager.is_thread_running(ThreadType.PAPYRUS_MONITOR):
-            return  # Already monitoring
-
-        # Create new thread and worker
-        self.papyrus_monitor_thread = QThread()
-        self.papyrus_monitor_worker = PapyrusMonitorWorker()
-        self.papyrus_monitor_worker.moveToThread(self.papyrus_monitor_thread)
-
-        # Register with thread manager
-        if not self.thread_manager.register_thread(ThreadType.PAPYRUS_MONITOR, self.papyrus_monitor_thread, self.papyrus_monitor_worker):
-            logger.error("Failed to register Papyrus monitor thread")
-            return
-
-        # Create the dialog
-        self.papyrus_monitor_dialog = PapyrusMonitorDialog(self)
-
-        # Connect signals
-        self.papyrus_monitor_thread.started.connect(self.papyrus_monitor_worker.run)
-        self.papyrus_monitor_worker.statsUpdated.connect(self.papyrus_monitor_dialog.update_stats)
-        self.papyrus_monitor_worker.error.connect(self.papyrus_monitor_dialog.handle_error)
-        self.papyrus_monitor_dialog.stop_monitoring.connect(self.stop_papyrus_monitoring)
-        self.papyrus_monitor_thread.finished.connect(self.papyrus_monitor_thread.deleteLater)
-        self.papyrus_monitor_worker.finished.connect(self.papyrus_monitor_worker.deleteLater)  # type: ignore
-
-        # Start monitoring
-        if self.papyrus_button:
-            self.papyrus_button.setText("STOP PAPYRUS MONITORING")
-            self.papyrus_button.setStyleSheet(
-                """
-                QPushButton {
-                    color: black;
-                    background: rgb(237, 45, 45);  /* Red background */
-                    border-radius: 10px;
-                    border: 1px solid black;
-                    font-weight: bold;
-                    font-size: 14px;
-                }
-                """
-            )
-
-        # Show the dialog and start through thread manager
-        self.papyrus_monitor_dialog.show()
-        self.thread_manager.start_thread(ThreadType.PAPYRUS_MONITOR)
-
-    def stop_papyrus_monitoring(self) -> None:
-        """
-        Stops the papyrus monitoring process and performs necessary cleanup.
-
-        This function terminates the papyrus monitoring by halting the monitor worker and
-        its associated thread using ThreadManager. It also updates the user interface components,
-        such as the button, and closes the Papyrus monitoring dialog if it's open.
-
-        Returns:
-            None
-        """
-        # Stop the worker first for clean shutdown
-        if self.papyrus_monitor_worker:
-            self.papyrus_monitor_worker.stop()
-
-        # Stop thread through ThreadManager
-        self.thread_manager.stop_thread(ThreadType.PAPYRUS_MONITOR, wait_ms=2000)
-
-        # Reset references
-        self.papyrus_monitor_thread = None
-        self.papyrus_monitor_worker = None
-
-        # Close the dialog if it exists
-        if self.papyrus_monitor_dialog:
-            self.papyrus_monitor_dialog.close()
-            self.papyrus_monitor_dialog = None
-
-        # Update UI
-        if self.papyrus_button:
-            self.papyrus_button.setText("START PAPYRUS MONITORING")
-            self.papyrus_button.setStyleSheet(
-                """
-                QPushButton {
-                    color: black;
-                    background: rgb(45, 237, 138);  /* Green background */
-                    border-radius: 10px;
-                    border: 1px solid black;
-                    font-weight: bold;
-                    font-size: 14px;
-                }
-                """
-            )
-            self.papyrus_button.setChecked(False)
-
-    def setup_pastebin_elements(self, layout: QVBoxLayout) -> None:
-        """
-        Set up the UI elements to fetch logs from Pastebin and add them to the provided layout.
-
-        This method initializes and configures UI components, including a QLabel for Pastebin
-        instructions, a QLineEdit for Pastebin URL or ID input, and a QPushButton to trigger
-        the fetch operation. These components are arranged in a horizontal layout before
-        being added to the parent vertical layout.
-
-        Args:
-            layout (QVBoxLayout): The parent layout to which the Pastebin elements are added.
-        """
-        pastebin_layout: QHBoxLayout = QHBoxLayout()
-
-        self.pastebin_label = QLabel("PASTEBIN LOG FETCH", self)
-        self.pastebin_label.setToolTip("Fetch a log file from Pastebin. Can be used more than once.")
-        pastebin_layout.addWidget(self.pastebin_label)
-
-        pastebin_layout.addSpacing(50)
-
-        self.pastebin_id_input = QLineEdit(self)
-        self.pastebin_id_input.setPlaceholderText("Enter Pastebin URL or ID")
-        self.pastebin_id_input.setToolTip("Enter the Pastebin URL or ID to fetch the log. Can be used more than once.")
-        pastebin_layout.addWidget(self.pastebin_id_input)
-
-        self.pastebin_fetch_button = QPushButton("Fetch Log", self)
-        self.pastebin_fetch_button.clicked.connect(self.fetch_pastebin_log)
-        if self.pastebin_id_input:  # Ensure pastebin_id_input is not None
-            self.pastebin_fetch_button.clicked.connect(self.pastebin_id_input.clear)
-        self.pastebin_fetch_button.setToolTip("Fetch the log file from Pastebin. Can be used more than once.")
-        pastebin_layout.addWidget(self.pastebin_fetch_button)
-
-        layout.addLayout(pastebin_layout)
-
-    def fetch_pastebin_log(self) -> None:
-        """
-            Fetches a log from a Pastebin URL or ID provided by the user and processes it in a separate thread
-            using asynchronous operations.
-
-            This method retrieves the text from a user input field, verifies if it matches a Pastebin URL pattern,
-            or formats it into a valid Pastebin URL if an ID is provided. It then sets up a separate thread and a
-            worker object to handle the fetching process asynchronously using the pastebin_fetch_async function,
-            ensuring the main application's UI remains responsive. User feedback is provided through message boxes
-            based on the success or failure of the log retrieval process.
-
-        Raises:
-            SignalErrors: Raised when the worker encounters an error during network operations or data processing.
-
-        Returns:
-            None
-        """
-        if self.pastebin_id_input is None:
-            return  # Should not happen if UI is setup correctly
-
-        input_text: str = self.pastebin_id_input.text().strip()
-        url: str = input_text if self.pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
-
-        # Create thread and worker
-        # Check if a fetch is already in progress
-        if self.thread_manager.is_thread_running(ThreadType.PASTEBIN_FETCH):
-            QMessageBox.warning(self, "Fetch in Progress", "A Pastebin fetch is already in progress. Please wait for it to complete.")
-            return
-
-        # Create new thread and worker for each fetch operation to prevent thread reuse
-        self.pastebin_thread = QThread()
-        self.pastebin_worker = PastebinFetchWorker(url)
-        self.pastebin_worker.moveToThread(self.pastebin_thread)
-
-        # Register with thread manager
-        if not self.thread_manager.register_thread(ThreadType.PASTEBIN_FETCH, self.pastebin_thread, self.pastebin_worker):
-            logger.error("Failed to register Pastebin fetch thread")
-            return
-
-        # Connect signals
-        self.pastebin_thread.started.connect(self.pastebin_worker.run)
-        self.pastebin_worker.finished.connect(self.pastebin_thread.quit)
-        self.pastebin_worker.finished.connect(self.pastebin_worker.deleteLater)
-        self.pastebin_thread.finished.connect(self.pastebin_thread.deleteLater)
-
-        # Clean up thread reference when done to allow garbage collection
-        self.pastebin_thread.finished.connect(lambda: setattr(self, "pastebin_thread", None))
-        self.pastebin_thread.finished.connect(lambda: setattr(self, "pastebin_worker", None))
-
-        # Use lambdas or functools.partial if arguments need to be passed to slots
-        self.pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
-        self.pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}"))
-
-        # Start through thread manager
-        self.thread_manager.start_thread(ThreadType.PASTEBIN_FETCH)
-
-    def show_manual_docs_path_dialog(self) -> None:
-        """
-        Opens a dialog for selecting the manual documentation path.
-
-        Displays a custom dialog that allows the user to browse for or manually enter
-        the documentation path. If the user confirms their selection, the path is stored
-        in the GlobalRegistry for access by other components.
-        """
-        # Create a dialog with appropriate title and descriptive label
-        dialog: ManualPathDialog = ManualPathDialog(
-            parent=self, title="Set INI Path", label=f"Select the location of your {GlobalRegistry.get_game()} INI files"
-        )
-
-        # Process the dialog result
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            manual_path: str = dialog.get_path()
-            # Store the path in the GlobalRegistry for access by other components
-            GlobalRegistry.register(GlobalRegistry.Keys.DOCS_PATH, manual_path)
-
-    def show_game_path_dialog(self) -> None:
-        """
-        Opens a dialog for selecting the game installation path.
-
-        Displays a custom dialog that allows the user to browse for or manually enter
-        the game installation directory. If the user confirms their selection, the path
-        is stored in the GlobalRegistry for access by other components.
-        """
-        # Create a dialog with appropriate title and descriptive label
-        dialog: ManualPathDialog = ManualPathDialog(
-            parent=self, title="Set Game Installation Path", label=f"Select the installation directory for {GlobalRegistry.get_game()}"
-        )
-
-        # Process the dialog result
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            game_path: str = dialog.get_path()
-            # Store the path in the GlobalRegistry for access by other components
-            GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
-
-    # noinspection PyUnresolvedReferences
-    def update_popup(self) -> None:
-        """
-        Starts the update check process when the update popup is invoked.
-
-        This method initiates the update checking process by setting the
-        `is_update_check_running` flag to True and starting the
-        `update_check_timer` with immediate execution.
-
-        Attributes:
-            is_update_check_running (bool): Tracks if the update check process is currently running.
-            update_check_timer (QTimer): Timer object used to schedule and manage the update checks.
-
-        """
-        if not self.is_update_check_running:
-            self.is_update_check_running = True
-            self.update_check_timer.start(0)  # Start immediately
-
-    # noinspection PyUnresolvedReferences
-    def update_popup_explicit(self) -> None:
-        """
-        Executes an explicit popup update by modifying the update timer's behavior and
-        initiating the update process, ensuring the check occurs immediately.
-
-        This function disconnects the timer's default slot for performing an update
-        check and reconnects it to a more immediate update check method. If no update
-        is currently in progress, it sets the appropriate flag and starts the timer
-        with no delay, triggering the explicit check process.
-
-        Attributes:
-            update_check_timer (QTimer): Timer used for managing periodic update
-                checks in the application.
-            is_update_check_running (bool): Flag indicating whether an update check
-                is currently in progress.
-        """
-        self.update_check_timer.timeout.disconnect(self.perform_update_check)
-        self.update_check_timer.timeout.connect(self.force_update_check)
-        if not self.is_update_check_running:
-            self.is_update_check_running = True
-            self.update_check_timer.start(0)
-
-    def perform_update_check(self) -> None:
-        """
-        Stops the update check timer and performs an asynchronous update check.
-
-        This method is responsible for stopping the ongoing update check timer and
-        invokes the asynchronous update check function to ensure that updates are
-        checked in an orderly and non-blocking manner. Uses a QThread worker
-        managed by ThreadManager.
-
-        """
-        self.update_check_timer.stop()
-
-        # Check if update check is already running
-        if self.thread_manager.is_thread_running(ThreadType.UPDATE_CHECK):
-            return  # Update check already in progress
-
-        # Create new thread and worker
-        self.update_check_thread = QThread()
-        self.update_check_worker = UpdateCheckWorker(explicit=False)
-        self.update_check_worker.moveToThread(self.update_check_thread)
-
-        # Register with thread manager
-        if not self.thread_manager.register_thread(ThreadType.UPDATE_CHECK, self.update_check_thread, self.update_check_worker):
-            logger.error("Failed to register update check thread")
-            return
-
-        # Connect signals
-        self.update_check_thread.started.connect(self.update_check_worker.run)
-        self.update_check_worker.updateAvailable.connect(self.show_update_result)
-        self.update_check_worker.error.connect(self.show_update_error)
-        self.update_check_worker.finished.connect(self.update_check_thread.quit)
-        self.update_check_worker.finished.connect(self.update_check_worker.deleteLater)
-        self.update_check_thread.finished.connect(self.update_check_thread.deleteLater)
-        self.update_check_thread.finished.connect(self._update_check_finished)
-
-        # Start through thread manager
-        self.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
-
-    def force_update_check(self) -> None:
-        """
-        Directly initiates an update check process, bypassing any saved settings or
-        scheduled events to trigger the process immediately. This function ensures that
-        any update checking mechanism will execute explicitly without user configuration
-        intervention.
-
-        """
-        # Directly perform the update check without reading from settings
-        self.is_update_check_running = True
-        self.update_check_timer.stop()
-
-        # Check if update check is already running
-        if self.thread_manager.is_thread_running(ThreadType.UPDATE_CHECK):
-            QMessageBox.information(self, "Update Check", "An update check is already in progress.")
-            return
-
-        # Create new thread and worker for explicit check
-        self.update_check_thread = QThread()
-        self.update_check_worker = UpdateCheckWorker(explicit=True)
-        self.update_check_worker.moveToThread(self.update_check_thread)
-
-        # Register with thread manager
-        if not self.thread_manager.register_thread(ThreadType.UPDATE_CHECK, self.update_check_thread, self.update_check_worker):
-            logger.error("Failed to register update check thread")
-            self.is_update_check_running = False
-            return
-
-        # Connect signals
-        self.update_check_thread.started.connect(self.update_check_worker.run)
-        self.update_check_worker.updateAvailable.connect(self.show_update_result)
-        self.update_check_worker.error.connect(self.show_update_error)
-        self.update_check_worker.finished.connect(self.update_check_thread.quit)
-        self.update_check_worker.finished.connect(self.update_check_worker.deleteLater)
-        self.update_check_thread.finished.connect(self.update_check_thread.deleteLater)
-        self.update_check_thread.finished.connect(self._update_check_finished)
-
-        # Start through thread manager
-        self.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
-
-    def _update_check_finished(self) -> None:
-        """
-        Cleanup method called when update check thread finishes.
-        """
-        self.is_update_check_running = False
-        # ThreadManager handles thread cleanup, just clear our references
-        self.update_check_thread = None
-        self.update_check_worker = None
-
-    def show_update_result(self, is_up_to_date: bool) -> None:
-        """
-        Displays update result to the user in a message box and handles further actions based
-        on the user's response if an update is available.
-
-        Args:
-            is_up_to_date: Indicates whether the application is already up to date. If True,
-                a message box informs the user that they have the latest version. If False, the
-                user is prompted with a choice to visit the update page.
-        """
-        if is_up_to_date:
-            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)
-        else:
-            update_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
-            result = QMessageBox.question(
-                self,
-                "CLASSIC UPDATE",
-                update_popup_text,
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.NoButton,
-            )
-            if result == QMessageBox.StandardButton.Yes:
-                QDesktopServices.openUrl(QUrl("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest"))
-
-    def show_update_error(self, error_message: str) -> None:
-        """
-        Displays a warning message with an error description when the application fails to check
-        for updates. This method provides user feedback in case of an update failure by showing
-        a warning dialog box with the specified error details.
-
-        Args:
-            error_message: The error message describing the reason for the update check failure.
-        """
-        QMessageBox.warning(
-            self,
-            "Update Check Failed",
-            f"Failed to check for updates: {error_message}",
-            QMessageBox.StandardButton.NoButton,
-            QMessageBox.StandardButton.NoButton,
-        )
-
-    # noinspection PyUnresolvedReferences
-    def setup_main_tab(self) -> None:
-        """Sets up the main UI elements for the main tab.
-
-        This method initializes and organizes various UI components on the main tab, including
-        folder selection sections, buttons, checkboxes, articles, and output sections. The layout
-        is configured with specific margins, spacing, and separator widgets to provide a structured
-        and user-friendly interface.
-
-        Attributes:
-            mods_folder_edit (QWidget): The input widget for the staging mods folder selection.
-            scan_folder_edit (QWidget): The input widget for the custom scan folder selection.
-            output_text_box (QWidget or None): The widget for the output text box, if initialized.
-
-        Returns:
-            None
-        """
-        layout: QVBoxLayout = QVBoxLayout(self.main_tab)
-        layout.setContentsMargins(20, 10, 20, 10)
-        layout.setSpacing(10)
-
-        # Top section
-        self.mods_folder_edit = self.setup_folder_section(
-            layout,
-            "STAGING MODS FOLDER",
-            "Box_SelectedMods",
-            self.select_folder_mods,
-            tooltip="Select the folder where your mod manager (e.g., MO2) stages your mods.",
-        )
-        if self.mods_folder_edit:  # Check if it was created
-            self.mods_folder_edit.setPlaceholderText("Optional: Select your mod staging folder (e.g., MO2/mods)")
-            self.mods_folder_edit.setToolTip("Select the folder where your mod manager (e.g., MO2) stages your mods.")
-
-        self.scan_folder_edit = self.setup_folder_section(
-            layout,
-            "CUSTOM SCAN FOLDER",
-            "Box_SelectedScan",
-            self.select_folder_scan,
-            tooltip="Select a supplementary custom folder containing crash logs to scan. The game directory is always used for scanning.",
-        )
-        if self.scan_folder_edit:  # Check if it was created
-            self.scan_folder_edit.setPlaceholderText("Optional: Select a supplementary custom folder with crash logs")
-            self.scan_folder_edit.setToolTip(
-                "Select a supplementary custom folder containing crash logs to scan. The game directory is always used for scanning."
-            )
-            # Connect signal to validate when user finishes editing the text
-            self.scan_folder_edit.editingFinished.connect(self.validate_scan_folder_text)
-
-        # self.setup_pastebin_elements(layout)  # Re-enabled Pastebin elements
-
-        layout.addWidget(create_separator())
-        self.setup_main_buttons(layout)
-        # layout.addWidget(create_separator())
-        self.setup_checkboxes(layout)
-        layout.addWidget(create_separator())
-        self.setup_bottom_buttons(layout)
-
-    def setup_articles_tab(self) -> None:
-        """Sets up the UI elements for the articles tab.
-        Creates a layout for the articles tab with a title label and a grid of buttons.
-        Each button is linked to a useful resource or website related to Fallout 4 modding
-        and tools. The buttons are arranged in a 3-column grid layout and styled with
-        a consistent dark theme.
-        The resources include:
-        - Buffout 4 installation guide
-        - Fallout 4 setup tips
-        - Important patches list
-        - Links to relevant Nexus Mods pages
-        - GitHub repository link
-        - Various modding tools
-        Each button, when clicked, will open the associated URL in the user's default web browser.
-        Returns:
-            None
-        """
-        layout: QVBoxLayout = QVBoxLayout(self.articles_tab)
-        layout.setContentsMargins(20, 10, 20, 10)
-        layout.setSpacing(10)
-
-        # Add a title label
-        title_label: QLabel = QLabel("USEFUL RESOURCES & LINKS")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 5px;")
-        layout.addWidget(title_label)
-
-        # Create a grid layout for the buttons
-        grid_layout: QGridLayout = QGridLayout()
-        grid_layout.setHorizontalSpacing(10)
-        grid_layout.setVerticalSpacing(10)
-
-        # Define the article buttons data
-        button_data: list[dict[str, str]] = [
-            {"text": "BUFFOUT 4 INSTALLATION", "url": "https://www.nexusmods.com/fallout4/articles/3115"},
-            {"text": "FALLOUT 4 SETUP TIPS", "url": "https://www.nexusmods.com/fallout4/articles/4141"},
-            {"text": "IMPORTANT PATCHES LIST", "url": "https://www.nexusmods.com/fallout4/articles/3769"},
-            {"text": "BUFFOUT 4 NEXUS", "url": "https://www.nexusmods.com/fallout4/mods/47359"},
-            {"text": "CLASSIC NEXUS", "url": "https://www.nexusmods.com/fallout4/mods/56255"},
-            {"text": "CLASSIC GITHUB", "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4"},
-            {"text": "DDS TEXTURE SCANNER", "url": "https://www.nexusmods.com/fallout4/mods/71588"},
-            {"text": "BETHINI PIE", "url": "https://www.nexusmods.com/site/mods/631"},
-            {"text": "WRYE BASH", "url": "https://www.nexusmods.com/fallout4/mods/20032"},
-        ]
-
-        # Define button style
-        button_style = """
-            QPushButton {
-                color: white;
-                background-color: rgba(60, 60, 60, 0.9);
-                border: 1px solid #5c5c5c;
-                border-radius: 5px;
-                padding: 8px;
-                font-size: 11px;
-                font-weight: bold;
-                min-height: 40px;
-            }
-            QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
-            QPushButton:disabled { color: gray; background-color: rgba(45, 45, 45, 0.75); }
-        """
-
-        # Create buttons and connect to URLs
-        for i, data in enumerate(button_data):
-            button: QPushButton = QPushButton(data["text"])
-            button.setStyleSheet(button_style)
-            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-            button.setToolTip(f"Open {data['url']} in your browser.")
-
-            # Fix: Use functools.partial instead of lambda to properly capture the URL
-            from functools import partial
-
-            button.clicked.connect(partial(self.open_url, data["url"]))
-
-            row, col = divmod(i, 3)  # Arrange in 3 columns
-            grid_layout.addWidget(button, row, col)
-
-        layout.addLayout(grid_layout)
-        layout.addStretch(1)  # Push content to the top
-
-    def setup_backups_tab(self) -> None:
-        """
-        Configures the user interface layout and behavior for the "Backups" tab. This includes
-        adding explanatory labels, dynamically created category buttons for managing backups,
-        and additional functionality such as enabling/disabling restore buttons based on the
-        existence of backups. The tab provides capabilities to backup, restore, and remove files
-        related to specific categories such as XSE, RESHADE, VULKAN, and ENB.
-
-        Returns:
-            None
-        """
-        layout: QVBoxLayout = QVBoxLayout(self.backups_tab)
-        layout.setContentsMargins(20, 10, 20, 10)
-        layout.setSpacing(10)
-
-        layout.addWidget(QLabel("BACKUP > Backup files from the game folder into the CLASSIC Backup folder."))
-        layout.addWidget(QLabel("RESTORE > Restore file backup from the CLASSIC Backup folder into the game folder."))
-        layout.addWidget(QLabel("REMOVE > Remove files only from the game folder without removing existing backups."))
-
-        categories: list[str] = ["XSE", "RESHADE", "VULKAN", "ENB"]
-        for category in categories:
-            self.add_backup_section(layout, category, category)  # type: ignore
-
-        layout.addStretch(1)  # Push content to the top
-
-        bottom_layout: QHBoxLayout = QHBoxLayout()
-        open_backups_button: QPushButton = QPushButton("OPEN CLASSIC BACKUPS")
-        open_backups_button.clicked.connect(self.open_backup_folder)
-        bottom_layout.addWidget(open_backups_button)
-        bottom_layout.addStretch(1)  # Keep button to the left
-        layout.addLayout(bottom_layout)
-
-        self.check_existing_backups()
-
-    def check_existing_backups(self) -> None:
-        """
-        Checks the existence of backup directories for specific categories and updates
-        UI restore buttons accordingly.
-
-        This method assesses whether backup folders for particular categories exist and
-        contain any files. If such conditions are met, corresponding restore buttons in
-        the UI are enabled and visually updated with a specific stylesheet. The process
-        is automated for the predefined categories.
-
-        Returns:
-            None
-        """
-        for category in ["XSE", "RESHADE", "VULKAN", "ENB"]:
-            backup_path: Path = Path(f"CLASSIC Backup/Game Files/Backup {category}")
-            if backup_path.is_dir() and any(backup_path.iterdir()):
-                restore_button: Any | None = getattr(self, f"RestoreButton_{category}", None)
-                if restore_button:
-                    restore_button.setEnabled(True)
-                    restore_button.setStyleSheet(
-                        """
-                        QPushButton {
-                            color: black;
-                            background: rgb(250, 250, 250);
-                            border-radius: 10px;
-                            border: 2px solid black;
-                        }
-                    """
-                    )
-
-    def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None:
-        """
-        Adds a backup section to the given layout with a specified title
-        and backup type. The section includes a title label and three buttons
-        for backup, restore, and remove actions related to the specified
-        backup type.
-
-        Args:
-            layout (QBoxLayout): Layout where the backup section will be added.
-            title (str): Title to display at the top of the backup section.
-            backup_type (Literal["XSE", "RESHADE", "VULKAN", "ENB"]):
-                Type of backup for which the section is being created.
-
-        """
-        layout.addWidget(create_separator())
-
-        title_label: QLabel = QLabel(title)
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("color: white; font-weight: bold; font-size: 14px;")
-        layout.addWidget(title_label)
-
-        buttons_layout: QHBoxLayout = QHBoxLayout()
-        buttons_layout.setSpacing(10)  # Add spacing between buttons
-
-        backup_button: QPushButton = QPushButton(f"BACKUP {backup_type}")
-        restore_button: QPushButton = QPushButton(f"RESTORE {backup_type}")
-        remove_button: QPushButton = QPushButton(f"REMOVE {backup_type}")
-
-        # Store restore button for later enabling/disabling
-        setattr(self, f"RestoreButton_{backup_type}", restore_button)
-
-        button_style_sheet = """
-            QPushButton {{
-                color: white;
-                background: rgba(60, 60, 60, 0.9); /* Slightly lighter than main background */
-                border-radius: 5px; /* Softer corners */
-                border: 1px solid #5c5c5c;
-                font-size: 12px; /* Slightly larger font */
-                padding: 8px; /* Add some padding */
-                min-height: 40px; /* Adjust height */
-            }}
-            QPushButton:hover {{
-                background-color: rgba(80, 80, 80, 0.9);
-            }}
-            QPushButton:pressed {{
-                background-color: rgba(40, 40, 40, 0.9);
-            }}
-            QPushButton:disabled {{
-                color: grey;
-                background-color: rgba(45, 45, 45, 0.75); /* Darker for disabled */
-                border: 1px solid #444444;
-            }}
-        """
-
-        for button, action in [
-            (backup_button, "BACKUP"),
-            (restore_button, "RESTORE"),
-            (remove_button, "REMOVE"),
-        ]:
-            button.clicked.connect(
-                lambda b=backup_type, a=action: self.classic_files_manage(  # checked arg for signal
-                    f"Backup {b}",
-                    a,  # type: ignore
-                )
-            )
-            button.setStyleSheet(button_style_sheet)
-            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # Allow horizontal expansion
-            buttons_layout.addWidget(button)
-
-            restore_button.setEnabled(False)  # Initially disabled
-
-        layout.addLayout(buttons_layout)
-
-    @staticmethod
-    def _validate_selected_list_format(selected_list: str) -> list[str]:
-        """
-        Validates the format of the selected list string.
-
-        Args:
-            selected_list (str): The string to validate, expected format "Backup TYPE".
-
-        Returns:
-            list[str]: A list containing the parts of the string if valid.
-
-        Raises:
-            ValueError: If the selected_list format is invalid.
-        """
-        parts: list[str] = selected_list.split()
-        if len(parts) != 2 or parts[0] != "Backup":
-            raise ValueError(f"Invalid format for selected_list: '{selected_list}'. Expected 'Backup TYPE'.")
-        return parts
-
-    def classic_files_manage(self, selected_list: str, selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
-        """
-        Manages game files by performing operations such as backup, restore, or removal
-             based on the selected mode. This function interacts with the game files and
-             updates the GUI to reflect the changes.
-             Args:
-                 selected_list (str): The selected list containing game file references, with
-                     entries separated by a space.
-                 selected_mode (Literal["BACKUP", "RESTORE", "REMOVE"], optional): The mode
-                     of operation to perform on the game files. Defaults to "BACKUP".
-             Raises:
-                 PermissionError: If the function is unable to access files in the game folder
-                     due to insufficient permissions.
-        """
-        # noinspection PyShadowingNames
-        try:
-            # Extract backup type from the selected list (format: "Backup TYPE")
-            parts: list[str] = self._validate_selected_list_format(selected_list)
-
-            backup_type: str = parts[1]
-            # Perform file operation
-            game_files_manage(selected_list, selected_mode)
-
-            # Update UI based on operation performed
-            if selected_mode == "BACKUP":
-                self._enable_restore_button_for_type(backup_type)
-
-        except PermissionError:
-            QMessageBox.critical(
-                self,
-                "Error",
-                "Unable to access files from your game folder. Please run CLASSIC in admin mode to resolve this problem.",
-                QMessageBox.StandardButton.NoButton,
-                QMessageBox.StandardButton.NoButton,
-            )
-        except ValueError as e:
-            QMessageBox.warning(
-                self,
-                "Warning",
-                str(e),
-                QMessageBox.StandardButton.NoButton,
-                QMessageBox.StandardButton.NoButton,
-            )
-
-    def _enable_restore_button_for_type(self, backup_type: str) -> None:
-        """
-        Enables the restore button for the specified backup type and updates its style.
-
-        Args:
-            backup_type (str): The type of backup (XSE, RESHADE, VULKAN, ENB, etc.)
-        """
-        restore_button: Any | None = getattr(self, f"RestoreButton_{backup_type}", None)
-        if restore_button:
-            restore_button.setEnabled(True)
-            restore_button.setStyleSheet(ENABLED_BUTTON_STYLE)
-
-    def help_popup_backup(self) -> None:
-        """
-        Displays a help popup with relevant backup assistance information to the user.
-
-        The method retrieves the help text from the YAML settings and displays it
-        in a message box titled "NEED HELP?".
-
-        Args:
-            self: Instance of the class where the method is defined.
-
-        Returns:
-            None
-        """
-        help_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_backup") or ""
-        QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
-
-    def open_backup_folder(self) -> None:
-        """
-        Opens the backup folder if it exists and is registered.
-
-        This method checks if the local directory is registered in the
-        GlobalRegistry. If registered, it attempts to open the backup folder
-        named "CLASSIC Backup/Game Files" within the directory. If the
-        registration or directory is missing, an error message is displayed
-        to the user.
-
-        Raises:
-            QMessageBox: Displays an error dialog if the backup folder is
-            not registered or missing.
-        """
-        local_dir: Path = cast("Path", GlobalRegistry.get_local_dir())
-        if local_dir.exists():
-            backup_path: Path = local_dir / "CLASSIC Backup/Game Files"
-            QDesktopServices.openUrl(QUrl.fromLocalFile(backup_path))
-        else:
-            QMessageBox.critical(
-                self,
-                "Error",
-                "Backup folder is missing or not registered. Please restart the program.",
-                QMessageBox.StandardButton.Ok,
-                QMessageBox.StandardButton.Ok,
-            )
-
-    def open_crash_logs_folder(self) -> None:
-        """
-        Opens the Crash Logs directory in the system's file explorer.
-
-        This method checks if the local directory is registered in the
-        GlobalRegistry. If registered, it attempts to open the Crash Logs folder
-        within the local directory. If the folder doesn't exist, it creates it
-        before opening. If the registration is missing, an error message is displayed.
-
-        Raises:
-            QMessageBox: Displays an error dialog if the local directory is not registered.
-        """
-        local_dir: Path = cast("Path", GlobalRegistry.get_local_dir())
-        if local_dir.exists():
-            crash_logs_path: Path = local_dir / "Crash Logs"
-            # Ensure the directory exists
-            crash_logs_path.mkdir(exist_ok=True)
-            QDesktopServices.openUrl(QUrl.fromLocalFile(crash_logs_path))
-        else:
-            QMessageBox.critical(
-                self,
-                "Error",
-                "Local directory is missing or not registered. Please restart the program.",
-                QMessageBox.StandardButton.Ok,
-                QMessageBox.StandardButton.Ok,
-            )
-
-    # create_separator moved to UIHelpers
-
-    def setup_checkboxes(self, layout: QBoxLayout) -> None:
-        """
-        Initializes and configures the checkbox and drop-down sections within the given layout for
-        user interface settings. This involves creating a group of checkboxes for various settings
-        and a combo box for selecting the update source. Checkbox settings are arranged in a grid
-        layout, and the combo box is included below the checkboxes with proper spacing and alignment.
-
-        Args:
-            layout (QBoxLayout): The parent layout to which the checkbox section, update source
-                section, and separator will be added.
-        """
-        checkbox_section_layout: QVBoxLayout = QVBoxLayout()  # Main layout for this section
-
-        title_label: QLabel = QLabel("CLASSIC SETTINGS")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 10px;")
-        checkbox_section_layout.addWidget(title_label)
-
-        grid_layout: QGridLayout = QGridLayout()
-        grid_layout.setHorizontalSpacing(20)
-        grid_layout.setVerticalSpacing(10)
-
-        checkboxes: list[tuple[str, str, str]] = [
-            ("FCX MODE", "FCX Mode", "Enable extended file integrity checks."),
-            ("SIMPLIFY LOGS", "Simplify Logs", "Remove redundant lines from crash logs."),
-            ("UPDATE CHECK", "Update Check", "Automatically check for CLASSIC updates."),
-            ("VR MODE", "VR Mode", "Prioritize settings for VR version of the game."),
-            ("SHOW FID VALUES", "Show FormID Values", "Look up FormID names (slower scans)."),
-            ("MOVE INVALID LOGS", "Move Unsolved Logs", "Move incomplete/unscannable logs to a separate folder."),
-            ("AUDIO NOTIFICATIONS", "Audio Notifications", "Play sounds for scan completion/errors."),
-        ]
-
-        for index, (label, setting, tooltip) in enumerate(checkboxes):
-            checkbox: QCheckBox = self.create_checkbox(label, setting)
-            checkbox.setToolTip(tooltip)
-            row: int = index // 2  # Arrange in 2 columns
-            col: int = index % 2
-            grid_layout.addWidget(checkbox, row, col, Qt.AlignmentFlag.AlignLeft)
-
-        checkbox_section_layout.addLayout(grid_layout)
-        checkbox_section_layout.addSpacing(15)  # Space before update source
-
-        # Update Source ComboBox
-        update_source_hbox: QHBoxLayout = QHBoxLayout()
-        update_source_label: QLabel = QLabel("Update Source:")
-        update_source_combo: QComboBox = QComboBox()
-        update_sources: tuple[str, str, str] = ("Nexus", "GitHub", "Both")
-        update_source_combo.addItems(update_sources)
-        update_source_combo.setToolTip("Select where CLASSIC checks for updates (Nexus for stable, GitHub for latest).")
-
-        current_update_source: str = classic_settings(str, "Update Source") or "Both"  # Default to Both if not set
-        if current_update_source in update_sources:
-            update_source_combo.setCurrentText(current_update_source)
-        else:  # If invalid value in settings, default to "Both" and save it
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", "Both")
-            update_source_combo.setCurrentText("Both")
-
-        update_source_combo.currentTextChanged.connect(
-            lambda value: yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", value)
-        )
-
-        update_source_hbox.addWidget(update_source_label)
-        update_source_hbox.addWidget(update_source_combo)
-        update_source_hbox.addStretch(1)  # Push to left
-        checkbox_section_layout.addLayout(update_source_hbox)
-
-        layout.addLayout(checkbox_section_layout)  # Add this section's layout to the main tab layout
-        # Separator is added after this section in setup_main_tab
-
-    # Add this constant to the MainWindow class alongside other style constants
-    CHECKBOX_STYLE = """
-        QCheckBox {
-            spacing: 10px;
-        }
-        QCheckBox::indicator {
-            width: 25px;
-            height: 25px;
-        }
-        QCheckBox::indicator:unchecked {
-            image: url("CLASSIC Data/graphics/unchecked.svg");
-        }
-        QCheckBox::indicator:checked {
-            image: url("CLASSIC Data/graphics/checked.svg");
-        }
-    """
-
-    def create_checkbox(self, label_text: str, setting: str) -> QCheckBox:
-        """Wrapper for create_checkbox from UIHelpers."""
-        return create_checkbox(label_text, setting, CHECKBOX_STYLE)
-        """
-        Creates a styled QCheckBox widget linked to a specific setting and its state.
-
-        Args:
-            label_text (str): The text label to display next to the checkbox.
-            setting (str): The name of the setting to bind with the checkbox.
-
-        Returns:
-            QCheckBox: A QCheckBox widget connected to the specified setting's state.
-        """
-        checkbox: QCheckBox = QCheckBox(label_text)
-
-        # Initialize checkbox state from settings or create default
-        value: bool | None = classic_settings(bool, setting)
-        if value is None:
-            value = False
-            yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", False)
-
-        checkbox.setChecked(value)
-
-        # Connect setting update to checkbox state
-        checkbox.stateChanged.connect(lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state)))
-
-        # Special handling for Audio Notifications
-        if setting == "Audio Notifications":
-            checkbox.stateChanged.connect(lambda state: self.audio_player.toggle_audio(state))
-
-        # Apply custom style sheet
-        checkbox.setStyleSheet(self.CHECKBOX_STYLE)
-
-        return checkbox
-
-    @staticmethod
-    def setup_folder_section(
-        layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None], tooltip: str = ""
-    ) -> QLineEdit | None:
-        """
-        Sets up a folder selection section within a provided layout. This method creates a section
-        consisting of a label, a QLineEdit for folder path input, and a browse button. Clicking the
-        browse button triggers a callback function specified by the user.
-
-        Args:
-            layout (QBoxLayout): The layout to which the folder section will be added.
-            title (str): The text to display in the label.
-            box_name (str): The object name of the QLineEdit, used for identification.
-            browse_callback (Callable[[], None]): The function to execute when the browse button is clicked.
-            tooltip (str, optional): The tooltip text to display when hovering over the browse button. Defaults to an empty string.
-
-        Returns:
-            QLineEdit: The QLineEdit widget created for folder input.
-        """
-        section_layout: QHBoxLayout = QHBoxLayout()
-        section_layout.setContentsMargins(0, 0, 0, 0)
-        section_layout.setSpacing(5)
-
-        label: QLabel = QLabel(title)
-        label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        # label.setFixedWidth(180) # Avoid fixed width for better scaling
-        label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        section_layout.addWidget(label)
-
-        line_edit: QLineEdit = QLineEdit()
-        line_edit.setObjectName(box_name)
-        line_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # Allow horizontal expansion
-        section_layout.addWidget(line_edit)
-
-        browse_button: QPushButton = QPushButton("Browse...")  # Shorter text
-        browse_button.setToolTip(tooltip if tooltip else f"Browse for {title.lower()}")
-        browse_button.clicked.connect(browse_callback)
-        browse_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        section_layout.addWidget(browse_button)
-
-        # Add the QHBoxLayout to the parent QVBoxLayout (or other QBoxLayout)
-        if isinstance(layout, QVBoxLayout | QHBoxLayout):
-            layout.addLayout(section_layout)
-        else:
-            # Fallback if layout type is unexpected, though typically it's one of these.
-            # This might indicate a need to adjust how sections are added.
-            msg_warning(f"Unexpected layout type ({type(layout)}) for folder section '{title}'")
-
-        return line_edit
-
-    def setup_main_buttons(self, layout: QBoxLayout) -> None:
-        """
-        Sets up the main buttons and bottom row buttons within the provided layout.
-        This method initializes the layout for two groups of buttons: main action buttons
-        and bottom row buttons. It organizes them in horizontal layouts, with spacing configured
-        as specified. Main buttons include "SCAN CRASH LOGS" and "SCAN GAME FILES," which are
-        added to the scan button group. Bottom row buttons feature options such as "CHANGE INI PATH,"
-        "OPEN CLASSIC SETTINGS," and "CHECK UPDATES."
-
-        Args:
-            layout: QBoxLayout instance where the main buttons and bottom row buttons
-                are to be arranged and added.
-        """
-        main_buttons_layout: QHBoxLayout = QHBoxLayout()
-        main_buttons_layout.setSpacing(10)
-        self.crash_logs_button = self.add_main_button(
-            main_buttons_layout, "SCAN CRASH LOGS", self.crash_logs_scan, "Scan all detected crash logs for issues."
-        )
-        if self.crash_logs_button:
-            self.scan_button_group.addButton(self.crash_logs_button)
-
-        self.game_files_button = self.add_main_button(
-            main_buttons_layout,
-            "SCAN GAME FILES",
-            self.game_files_scan,
-            "Scan game and mod files for potential problems (FCX Mode dependent).",
-        )
-        if self.game_files_button:
-            self.scan_button_group.addButton(self.game_files_button)
-
-        if isinstance(layout, QVBoxLayout | QHBoxLayout):  # Ensure layout supports addLayout
-            layout.addLayout(main_buttons_layout)
-
-    @staticmethod
-    def setup_articles_section(layout: QBoxLayout) -> None:
-        """
-        Sets up an "Articles/Links" section in the specified layout with a descriptive
-        title label, and populates it with buttons directing users to various helpful
-        resources. Each button links to a specific external resource or webpage.
-
-        This method creates a layout containing a title label aligned at the center,
-        followed by a grid of buttons arranged in rows and columns. Each button is
-        styled uniformly and can open a corresponding URL when clicked. After arranging
-        the buttons, additional vertical spacing is added to visually separate the
-        articles section from other content in the layout.
-
-        Args:
-            layout (QBoxLayout): The parent layout where the articles section will be
-                added.
-        """
-        articles_section_layout: QVBoxLayout = QVBoxLayout()  # Main layout for this section
-        articles_section_layout.setSpacing(10)
-
-        title_label: QLabel = QLabel("USEFUL RESOURCES & LINKS")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 5px;")
-        articles_section_layout.addWidget(title_label)
-
-        grid_layout: QGridLayout = QGridLayout()
-        grid_layout.setHorizontalSpacing(10)
-        grid_layout.setVerticalSpacing(10)
-
-        button_data: list[dict[str, str]] = [
-            {"text": "BUFFOUT 4 INSTALLATION", "url": "https://www.nexusmods.com/fallout4/articles/3115"},
-            {"text": "FALLOUT 4 SETUP TIPS", "url": "https://www.nexusmods.com/fallout4/articles/4141"},
-            {"text": "IMPORTANT PATCHES LIST", "url": "https://www.nexusmods.com/fallout4/articles/3769"},
-            {"text": "BUFFOUT 4 NEXUS", "url": "https://www.nexusmods.com/fallout4/mods/47359"},
-            {"text": "CLASSIC NEXUS", "url": "https://www.nexusmods.com/fallout4/mods/56255"},
-            {"text": "CLASSIC GITHUB", "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4"},  # Updated URL
-            {"text": "DDS TEXTURE SCANNER", "url": "https://www.nexusmods.com/fallout4/mods/71588"},
-            {"text": "BETHINI PIE", "url": "https://www.nexusmods.com/site/mods/631"},
-            {"text": "WRYE BASH", "url": "https://www.nexusmods.com/fallout4/mods/20032"},
-        ]
-
-        button_style = """
-            QPushButton {
-                color: white;
-                background-color: rgba(60, 60, 60, 0.9);
-                border: 1px solid #5c5c5c;
-                border-radius: 5px;
-                padding: 8px;
-                font-size: 11px; /* Adjusted for potentially longer text */
-                font-weight: bold;
-                min-height: 40px; /* Ensure buttons are not too small */
-            }
-            QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
-            QPushButton:disabled { color: gray; background-color: rgba(45, 45, 45, 0.75); }
-        """
-
-        for i, data in enumerate(button_data):
-            button: QPushButton = QPushButton(data["text"])
-            button.setStyleSheet(button_style)
-            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # Allow horizontal expansion
-            button.setToolTip(f"Open {data['url']} in your browser.")
-            button.clicked.connect(lambda url=data["url"]: QDesktopServices.openUrl(QUrl(url)))
-            row, col = divmod(i, 3)  # Arrange in 3 columns
-            grid_layout.addWidget(button, row, col)
-
-        articles_section_layout.addLayout(grid_layout)
-        if isinstance(layout, QVBoxLayout | QHBoxLayout):
-            layout.addLayout(articles_section_layout)
-
-    def setup_bottom_buttons(self, layout: QBoxLayout) -> None:
-        """
-        Configures and adds a set of bottom buttons to a given layout. The buttons include
-        "ABOUT", "HELP", "START PAPYRUS MONITORING", and "EXIT", each of which performs
-        specific actions when clicked. Each button is styled, and some include tooltips
-        and specific behavioral properties such as being checkable.
-        Args:
-            layout (QBoxLayout): The main layout to which the bottom button layout will
-                be added.
-        """
-        # First row of utility buttons
-        bottom_buttons_hbox: QHBoxLayout = QHBoxLayout()
-        bottom_buttons_hbox.setSpacing(10)
-
-        # Create first row of buttons
-        buttons_config: list[tuple[str, str, Callable]] = [
-            ("ABOUT", "Show application information.", self.show_about),
-            ("HELP", "Show help information for main options.", self.help_popup_main),
-            ("CHANGE INI PATH", "Manually set the path to your game's INI files folder.", self.select_folder_ini),
-            ("OPEN SETTINGS", "Open CLASSIC Settings.yaml file.", self.open_settings),
-            ("OPEN CRASH LOGS", "Open the Crash Logs directory in your file explorer.", self.open_crash_logs_folder),
-            ("CHECK UPDATES", "Manually check for CLASSIC updates.", self.update_popup_explicit),
-        ]
-
-        utility_buttons: list[QPushButton] = []
-        for text, tooltip, callback in buttons_config:
-            button: QPushButton = self._create_button(text, tooltip, callback)
-            bottom_buttons_hbox.addWidget(button)
-            utility_buttons.append(button)
-
-        # Second row with main action buttons
-        main_actions_hbox: QHBoxLayout = QHBoxLayout()
-        main_actions_hbox.setSpacing(10)  # Papyrus monitoring button (special handling for checkable button)
-        self.papyrus_button = self._create_button(
-            "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Shows statistics in a dedicated dialog.", self.toggle_papyrus_worker
-        )
-        self.papyrus_button.setCheckable(True)
-        self.update_papyrus_button_style(False)  # Initial style for "START"
-        main_actions_hbox.addWidget(self.papyrus_button, 1)  # Allow to expand
-
-        # Exit button
-        exit_button: QPushButton = self._create_button("EXIT", "Close CLASSIC.", QApplication.quit)
-        main_actions_hbox.addWidget(exit_button)
-
-        # Add both layouts to the main layout
-        if isinstance(layout, QVBoxLayout | QHBoxLayout):
-            layout.addLayout(bottom_buttons_hbox)
-            layout.addLayout(main_actions_hbox)
-
-    def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton:
-        """
-        Creates and configures a button with common styling and properties.
-
-        Args:
-            text: The button text
-            tooltip: The button tooltip
-            callback: Function to call when button is clicked
-
-        Returns:
-            Configured QPushButton instance
-        """
-        button: QPushButton = QPushButton(text)
-        button.setToolTip(tooltip)
-
-        # Connect appropriate signal based on whether it's a toggle button or regular
-        if isinstance(button, QPushButton) and button.isCheckable():
-            button.toggled.connect(callback)
-        else:
-            button.clicked.connect(callback)
-
-        # Apply common styling
-        button.setStyleSheet(self.BOTTOM_BUTTON_STYLE)
-        button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-
-        return button
-
-    # Add this as a class constant near other style constants
-    BOTTOM_BUTTON_STYLE = """
-        QPushButton {
-            color: white;
-            background: rgba(60, 60, 60, 0.9);
-            border-radius: 5px;
-            border: 1px solid #5c5c5c;
-            font-size: 11px;
-            padding: 6px 10px;
-            min-height: 30px;
-        }
-        QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
-        QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
-    """
-
-    def show_about(self) -> None:
-        """
-        Displays the "About" dialog for the application by initializing and executing
-        a custom dialog window.
-
-        This method creates an instance of the `CustomAboutDialog` class, passing the
-        current instance (self) as an argument. It then displays the dialog window
-        modally by invoking the `exec()` method on the dialog instance.
-
-        Returns:
-            None
-        """
-        dialog: CustomAboutDialog = CustomAboutDialog(self)
-        dialog.exec()
-
-    def help_popup_main(self) -> None:
-        """
-        Displays a help popup with information retrieved from the YAML settings.
-
-        The method retrieves the help text from the YAML configuration file under
-        the specified key. It then displays the retrieved text in a message box
-        with a title and an "OK" button.
-
-        Returns:
-            None
-        """
-        help_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
-        QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
-
-    def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
-        """
-        Adds a main button to the specified layout with the given text, click callback, and optional tooltip.
-
-        This method creates a QPushButton with a specific style and behavior. The button's text, callback, and optional
-        tooltip can be customized. It is then added to the provided layout and returned.
-
-        Args:
-            layout (QLayout): The layout to which the button will be added.
-            text (str): The text to display on the button.
-            callback (Callable[[], None]): The function to be called when the button is clicked.
-            tooltip (str, optional): The tooltip text to display on hover. Defaults to an empty string.
-
-        Returns:
-            QPushButton: The created button that has been added to the layout.
-        """
-        button: QPushButton = QPushButton(text)
-        button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        button.setStyleSheet(
-            """
-            QPushButton {
-                color: black;
-                background: rgba(250, 250, 250, 0.90);
-                border-radius: 10px;
-                border: 1px solid white;
-                font-size: 17px;
-                font-weight: bold;  /* Add this line to make the text bold */
-                min-height: 48px;
-                max-height: 48px;
-            }
-            QPushButton:disabled {
-                color: gray;
-                background-color: rgba(10, 10, 10, 0.75);
-            }
-        """
-        )
-        if tooltip:
-            button.setToolTip(tooltip)
-        button.clicked.connect(callback)
-        layout.addWidget(button)
-        return button
-
-    @staticmethod
-    def add_bottom_button(layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> None:
-        """
-        Adds a configurable button to the bottom of a given layout. The button adopts a specific
-        styling, size policy, and allows optional tooltip text. A callback function is associated
-        with the button's "clicked" event to define its behavior when clicked.
-
-        Args:
-            layout (QLayout): The layout where the button should be added.
-            text (str): The text to display on the button.
-            callback (Callable[[], None]): The function to invoke when the button is clicked.
-            tooltip (str, optional): The tooltip text to display when hovering over the button.
-                Defaults to an empty string.
-        """
-        button: QPushButton = QPushButton(text)
-        button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        button.setStyleSheet(
-            """
-            color: white;
-            background: rgba(10, 10, 10, 0.75);
-            border-radius: 10px;
-            border: 1px solid white;
-            font-size: 11px;
-            min-height: 32px;
-            max-height: 32px;
-        """
-        )
-        if tooltip:
-            button.setToolTip(tooltip)
-        button.clicked.connect(callback)
-        layout.addWidget(button)
 
     def update_papyrus_button_style(self, monitoring: bool) -> None:
         """Updates the style and text of the Papyrus button based on monitoring state."""
@@ -1556,167 +146,7 @@ class MainWindow(
                 """
             )
 
-    def select_folder_scan(self) -> None:
-        """
-        Prompts the user to select a folder for scanning and updates the scan folder
-        path in both the GUI and application settings.
-
-        Tracks and updates the path of a folder chosen by the user for custom
-        scans. If the user selects a valid folder, the GUI field associated with
-        scan folder input is updated, and the folder path is stored in the
-        application's settings configuration.
-
-        Returns:
-            None
-        """
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
-
-        while True:
-            folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder")
-            if not folder:  # User clicked cancel
-                break
-
-            if is_valid_custom_scan_path(folder):
-                # Valid path, update and save
-                if self.scan_folder_edit is not None:
-                    self.scan_folder_edit.setText(folder)
-                yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
-                break
-            # Invalid path, show warning and continue loop
-            QMessageBox.warning(
-                self,
-                "Invalid Custom Scan Path",
-                "The selected directory cannot be used as a custom scan path.\n\n"
-                "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
-                "and cannot be set as custom scan directories.\n\n"
-                "Please select a different directory.",
-            )
-
-    def validate_scan_folder_text(self) -> None:
-        """
-        Validates the manually entered scan folder path when the text field is edited.
-
-        This method is called when the user finishes editing the scan folder text field
-        (e.g., by pressing Enter or when the field loses focus). It validates the entered
-        path and saves it if valid, or clears it if invalid.
-        """
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
-
-        if self.scan_folder_edit is None:
-            return
-
-        folder_text = self.scan_folder_edit.text().strip()
-
-        # If empty, clear the setting
-        if not folder_text:
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", " ")
-            return
-
-        # Check if path exists
-        path_obj = Path(folder_text)
-        if not path_obj.exists() or not path_obj.is_dir():
-            QMessageBox.warning(
-                self,
-                "Invalid Path",
-                f"The path '{folder_text}' does not exist or is not a directory.\n\nThe custom scan path has been cleared.",
-            )
-            self.scan_folder_edit.clear()
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
-            return
-
-        # Check if path is restricted
-        if not is_valid_custom_scan_path(folder_text):
-            QMessageBox.warning(
-                self,
-                "Invalid Custom Scan Path",
-                "The entered directory cannot be used as a custom scan path.\n\n"
-                "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
-                "and cannot be set as custom scan directories.\n\n"
-                "The custom scan path has been cleared.",
-            )
-            self.scan_folder_edit.clear()
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
-            return
-
-        # Valid path, save it
-        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(path_obj.resolve()))
-
-    def select_folder_mods(self) -> None:
-        """
-        Handles the folder selection process for staging mods and updates the respective
-        UI component and settings configuration.
-
-        The function opens a directory selection dialog to allow the user to select a folder
-        for staging mods. If a valid folder is selected, it updates a text field in the UI with
-        the selected folder path and writes the chosen path to a YAML configuration file.
-
-        Returns:
-            None
-        """
-        folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
-        if folder:
-            if self.mods_folder_edit is not None:
-                self.mods_folder_edit.setText(folder)
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", folder)
-
-    def initialize_folder_paths(self) -> None:
-        """
-        Initializes the folder paths by retrieving settings for specific folders and updating the
-        corresponding user interface fields if available.
-
-        This method retrieves the folder paths for "SCAN Custom Path" and "MODS Folder Path"
-        from the application settings and, if applicable, populates the respective input fields
-        with the retrieved values.
-
-        Returns:
-            None
-        """
-        scan_folder: str | None = classic_settings(str, "SCAN Custom Path")
-        mods_folder: str | None = classic_settings(str, "MODS Folder Path")
-
-        if scan_folder and self.scan_folder_edit is not None:
-            self.scan_folder_edit.setText(scan_folder)
-        if mods_folder and self.mods_folder_edit is not None:
-            self.mods_folder_edit.setText(mods_folder)
-
-    def select_folder_ini(self) -> None:
-        """
-        Prompts the user to select a folder path via a directory selection dialog and updates
-        the INI settings path accordingly. Displays a confirmation message after the path
-        is successfully set.
-        """
-        folder: str = QFileDialog.getExistingDirectory(self)
-        if folder:
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
-            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}", QMessageBox.StandardButton.Ok)
-
-    def open_settings(self) -> None:
-        """
-        Opens the settings file for the application.
-
-        If the local directory is registered in the global registry, attempts to open the
-        "CLASSIC Settings.yaml" file from that directory. If the file is missing, a critical
-        error message is displayed, instructing the user to restart the application to resolve
-        the issue.
-
-        Raises:
-            Displays a QMessageBox with a critical error if the settings file is missing.
-
-        Returns:
-            None
-        """
-        settings_file: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Settings.yaml"
-        if settings_file.exists():
-            QDesktopServices.openUrl(QUrl.fromLocalFile(settings_file))
-        else:
-            QMessageBox.critical(
-                self,
-                "Settings File Missing",
-                "The settings file is missing. Please restart the application to resolve this issue.",
-                QMessageBox.StandardButton.Ok,
-                QMessageBox.StandardButton.Ok,
-            )
-
+    # Folder management methods are now inherited from FolderManagementMixin
     # crash_logs_scan method is now inherited from ScanOperationsMixin
 
     # game_files_scan method is now inherited from ScanOperationsMixin
@@ -1769,6 +199,79 @@ class MainWindow(
             url (str): The URL to open in the browser.
         """
         QDesktopServices.openUrl(QUrl(url))
+
+
+if __name__ == "__main__":
+    app: QApplication = QApplication(sys.argv)
+    initialize(is_gui=True)
+    manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
+    game_path_gui: Any = GlobalRegistry.get_game_path_gui()
+    window: MainWindow | None = None  # Initialize window to ensure it's defined
+    try:
+        window = MainWindow()
+        window.show()
+        sys.exit(app.exec())
+    except KeyboardInterrupt:
+        app.exit(1)
+    except Exception as exc:  # pyrefly: ignore  # noqa: BLE001
+        msg_error(f"Unhandled exception during application startup: {exc}")
+        if QApplication.instance():
+            # noinspection PyTypeChecker
+            QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {exc}")  # pyrefly: ignore
+        sys.exit(1)
+
+    # Backup operations methods are now inherited from BackupOperationsMixin
+
+    # create_separator moved to UIHelpers
+
+    # TabSetupMixin methods are now inherited from TabSetupMixin
+    # Add this constant to the MainWindow class alongside other style constants
+    CHECKBOX_STYLE = """
+        QCheckBox {
+            spacing: 10px;
+        }
+        QCheckBox::indicator {
+            width: 25px;
+            height: 25px;
+        }
+        QCheckBox::indicator:unchecked {
+            image: url("CLASSIC Data/graphics/unchecked.svg");
+        }
+        QCheckBox::indicator:checked {
+            image: url("CLASSIC Data/graphics/checked.svg");
+        }
+    """
+
+    # TabSetupMixin methods are now inherited from TabSetupMixin
+    # Add this as a class constant near other style constants
+    BOTTOM_BUTTON_STYLE = """
+        QPushButton {
+            color: white;
+            background: rgba(60, 60, 60, 0.9);
+            border-radius: 5px;
+            border: 1px solid #5c5c5c;
+            font-size: 11px;
+            padding: 6px 10px;
+            min-height: 30px;
+        }
+        QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
+        QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
+    """
+
+
+
+    # Folder management methods are now inherited from FolderManagementMixin
+    # crash_logs_scan method is now inherited from ScanOperationsMixin
+
+    # game_files_scan method is now inherited from ScanOperationsMixin
+
+    # disable_scan_buttons method is now inherited from ScanOperationsMixin
+
+    # enable_scan_buttons method is now inherited from ScanOperationsMixin
+
+    # crash_logs_scan_finished method is now inherited from ScanOperationsMixin
+
+    # game_files_scan_finished method is now inherited from ScanOperationsMixin
 
 
 if __name__ == "__main__":

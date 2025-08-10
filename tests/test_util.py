@@ -258,10 +258,12 @@ class TestUtilityFunctions:
         assert len(test_logger.handlers) == original_handler_count
 
     @patch("ClassicLib.Util.msg_info")  # Mock msg_info to avoid MessageHandler dependency
-    def test_configure_logging_old_log_file(self, mock_msg_info: MagicMock) -> None:  # noqa: ARG002
+    @patch("ClassicLib.Util.msg_error")  # Mock msg_error as well
+    def test_configure_logging_old_log_file(self, mock_msg_error: MagicMock, mock_msg_info: MagicMock) -> None:  # noqa: ARG002
         """Test configure_logging removes old log file."""
         test_logger = logging.getLogger("test_classic_logger_old")
         test_logger.handlers.clear()
+        test_logger.setLevel(logging.DEBUG)  # Enable DEBUG level for the test
 
         # Mock Path class to intercept Path("CLASSIC Journal.log") call
         with patch("ClassicLib.Util.Path") as mock_path_class:

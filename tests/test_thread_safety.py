@@ -20,7 +20,7 @@ from ClassicLib.Interface.ThreadManager import ThreadManager, ThreadType
 
 
 # Test worker class
-class TestWorker(QObject):
+class ThreadTestWorker(QObject):
     """Simple test worker for thread testing."""
     
     finished = Signal()
@@ -64,14 +64,14 @@ class TestThreadManager:
     def test_register_thread(self, thread_manager: ThreadManager, app: QApplication) -> None:
         """Test thread registration."""
         thread = QThread()
-        worker = TestWorker()
+        worker = ThreadTestWorker()
         
         # Should successfully register
         assert thread_manager.register_thread(ThreadType.UPDATE_CHECK, thread, worker)
         
         # Should fail to register same type while running
         thread.start()
-        assert not thread_manager.register_thread(ThreadType.UPDATE_CHECK, QThread(), TestWorker())
+        assert not thread_manager.register_thread(ThreadType.UPDATE_CHECK, QThread(), ThreadTestWorker())
         
         # Cleanup
         thread.quit()
@@ -80,7 +80,7 @@ class TestThreadManager:
     def test_start_thread(self, thread_manager: ThreadManager, app: QApplication) -> None:
         """Test thread starting."""
         thread = QThread()
-        worker = TestWorker()
+        worker = ThreadTestWorker()
         
         # Register thread
         thread_manager.register_thread(ThreadType.PAPYRUS_MONITOR, thread, worker)
@@ -101,7 +101,7 @@ class TestThreadManager:
     def test_stop_thread(self, thread_manager: ThreadManager, app: QApplication) -> None:
         """Test thread stopping."""
         thread = QThread()
-        worker = TestWorker(work_time=0.5)
+        worker = ThreadTestWorker(work_time=0.5)
         
         # Setup thread
         thread_manager.register_thread(ThreadType.CRASH_LOGS_SCAN, thread, worker)
@@ -133,7 +133,7 @@ class TestThreadManager:
         
         for thread_type in thread_types:
             thread = QThread()
-            worker = TestWorker()
+            worker = ThreadTestWorker()
             threads.append(thread)
             workers.append(worker)
             
@@ -170,7 +170,7 @@ class TestThreadManager:
         
         for thread_type in thread_types:
             thread = QThread()
-            worker = TestWorker(work_time=0.3)
+            worker = ThreadTestWorker(work_time=0.3)
             threads.append(thread)
             workers.append(worker)
             

@@ -428,9 +428,9 @@ class TestAsyncPerformanceComparison:
         remove_list: tuple[str] = ("test_remove",)
 
         # Mock the async function where it's imported in AsyncFileIO to prevent the warning
-        with patch("ClassicLib.ScanLog.AsyncFileIO.crashlogs_reformat_async") as mock_async_func:
-            # Use AsyncMock which properly handles coroutines
-            mock_async_func.return_value = AsyncMock(return_value=None)()
+        with patch("ClassicLib.ScanLog.AsyncFileIO.crashlogs_reformat_async", new_callable=AsyncMock) as mock_async_func:
+            # AsyncMock handles coroutines properly without creating them prematurely
+            mock_async_func.return_value = None
 
             # This should run without errors
             crashlogs_reformat_with_async(crash_log_files, remove_list)

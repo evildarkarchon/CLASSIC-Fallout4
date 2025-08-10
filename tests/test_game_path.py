@@ -623,6 +623,7 @@ class TestGamePathGeneration:
 class TestMultiPlatformSupport:
     """Tests for cross-platform compatibility."""
 
+    @pytest.mark.usefixtures("init_message_handler_fixture")
     @patch("platform.system", return_value="Linux")
     @patch("ClassicLib.GamePath._game_path_find_registry")
     def test_linux_skips_registry(self, mock_registry: MagicMock, mock_platform: MagicMock) -> None:  # noqa: ARG002
@@ -631,12 +632,13 @@ class TestMultiPlatformSupport:
         with patch("ClassicLib.GamePath.yaml_settings", side_effect=[None, "F4SE", "F4SE", "Fallout 4"]):  # noqa: SIM117
             with patch("ClassicLib.Util.validate_path", return_value=(False, "Missing file")):
                 with patch.object(GlobalRegistry, "is_gui_mode", return_value=True):
-                    with patch("CLASSIC_Interface.show_game_path_dialog_static", return_value=Path("/fake/path")):
+                    with patch("ClassicLib.Interface.PathDialogMixin.show_game_path_dialog_static", return_value=Path("/fake/path")):
                         game_path_find()
 
         # Registry function should not be called on Linux
         mock_registry.assert_not_called()
 
+    @pytest.mark.usefixtures("init_message_handler_fixture")
     @patch("platform.system", return_value="Windows")
     @patch("ClassicLib.GamePath._game_path_find_registry", return_value=None)
     def test_windows_uses_registry(self, mock_registry: MagicMock, mock_platform: MagicMock) -> None:  # noqa: ARG002
@@ -645,7 +647,7 @@ class TestMultiPlatformSupport:
         with patch("ClassicLib.GamePath.yaml_settings", side_effect=[None, "F4SE", "F4SE", "Fallout 4"]):  # noqa: SIM117
             with patch("ClassicLib.Util.validate_path", return_value=(False, "Missing file")):
                 with patch.object(GlobalRegistry, "is_gui_mode", return_value=True):
-                    with patch("CLASSIC_Interface.show_game_path_dialog_static", return_value=Path("/fake/path")):
+                    with patch("ClassicLib.Interface.PathDialogMixin.show_game_path_dialog_static", return_value=Path("/fake/path")):
                         game_path_find()
 
         # Registry function should be called on Windows
