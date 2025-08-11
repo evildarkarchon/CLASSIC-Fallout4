@@ -1,7 +1,6 @@
 import sys
 from typing import TYPE_CHECKING, Any
 
-import regex as re
 from PySide6.QtCore import QMutex, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import (
@@ -14,7 +13,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Audio import AudioPlayer
@@ -31,6 +29,7 @@ from ClassicLib.Interface.ThreadManager import get_thread_manager
 from ClassicLib.Interface.UpdateManager import UpdateManagerMixin
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import init_message_handler, msg_error
+from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
@@ -40,7 +39,37 @@ if TYPE_CHECKING:
         UpdateCheckWorker,
     )
 
+CHECKBOX_STYLE = """
+    QCheckBox {
+        spacing: 10px;
+    }
+    QCheckBox::indicator {
+        width: 25px;
+        height: 25px;
+    }
+    QCheckBox::indicator:unchecked {
+        image: url("CLASSIC Data/graphics/unchecked.svg");
+    }
+    QCheckBox::indicator:checked {
+        image: url("CLASSIC Data/graphics/checked.svg");
+     }
+"""
 
+    # TabSetupMixin methods are now inherited from TabSetupMixin
+    # Add this as a class constant near other style constants
+BOTTOM_BUTTON_STYLE = """
+    QPushButton {
+        color: white;
+        background: rgba(60, 60, 60, 0.9);
+        border-radius: 5px;
+        border: 1px solid #5c5c5c;
+        font-size: 11px;
+        padding: 6px 10px;
+        min-height: 30px;
+    }
+    QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
+    QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
+"""
 # noinspection DuplicatedCode
 class MainWindow(
     QMainWindow,
@@ -65,7 +94,6 @@ class MainWindow(
         self.papyrus_monitor_worker: PapyrusMonitorWorker | None = None
         self.papyrus_monitor_dialog: PapyrusMonitorDialog | None = None
         self._last_stats: PapyrusStats | None = None
-        self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
         self.update_check_thread: QThread | None = None
         self.update_check_worker: UpdateCheckWorker | None = None
         self._scan_mutex = QMutex()
@@ -230,37 +258,6 @@ if __name__ == "__main__":
 
     # TabSetupMixin methods are now inherited from TabSetupMixin
     # Add this constant to the MainWindow class alongside other style constants
-    CHECKBOX_STYLE = """
-        QCheckBox {
-            spacing: 10px;
-        }
-        QCheckBox::indicator {
-            width: 25px;
-            height: 25px;
-        }
-        QCheckBox::indicator:unchecked {
-            image: url("CLASSIC Data/graphics/unchecked.svg");
-        }
-        QCheckBox::indicator:checked {
-            image: url("CLASSIC Data/graphics/checked.svg");
-        }
-    """
-
-    # TabSetupMixin methods are now inherited from TabSetupMixin
-    # Add this as a class constant near other style constants
-    BOTTOM_BUTTON_STYLE = """
-        QPushButton {
-            color: white;
-            background: rgba(60, 60, 60, 0.9);
-            border-radius: 5px;
-            border: 1px solid #5c5c5c;
-            font-size: 11px;
-            padding: 6px 10px;
-            min-height: 30px;
-        }
-        QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
-        QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
-    """
 
 
 
@@ -276,25 +273,3 @@ if __name__ == "__main__":
     # crash_logs_scan_finished method is now inherited from ScanOperationsMixin
 
     # game_files_scan_finished method is now inherited from ScanOperationsMixin
-
-
-if __name__ == "__main__":
-    app: QApplication = QApplication(sys.argv)
-    # Initialize application using SetupCoordinator
-    coordinator = SetupCoordinator()
-    coordinator.initialize_application(is_gui=True)
-    manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
-    game_path_gui: Any = GlobalRegistry.get_game_path_gui()
-    window: MainWindow | None = None  # Initialize window to ensure it's defined
-    try:
-        window = MainWindow()
-        window.show()
-        sys.exit(app.exec())
-    except KeyboardInterrupt:
-        app.exit(1)
-    except Exception as exc:  # pyrefly: ignore  # noqa: BLE001
-        msg_error(f"Unhandled exception during application startup: {exc}")
-        if QApplication.instance():
-            # noinspection PyTypeChecker
-            QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {exc}")  # pyrefly: ignore
-        sys.exit(1)
