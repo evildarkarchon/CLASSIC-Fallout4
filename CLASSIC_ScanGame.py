@@ -4,7 +4,6 @@ import subprocess
 from pathlib import Path
 from typing import Any, Literal, cast
 
-from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
@@ -13,6 +12,7 @@ from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
 from ClassicLib.ScanGame.Config import TEST_MODE
 from ClassicLib.ScanGame.ScanModInis import scan_mod_inis
 from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
+from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.Util import normalize_list, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -21,67 +21,77 @@ _ASYNC_SCANNING_INITIALIZED = False
 _ASYNC_SCANNING_ENABLED = False
 _ASYNC_WRAPPERS_LOADED = False
 
+
 def _initialize_async_scanning():
     """Initialize async scanning settings and import implementations if needed."""
     global _ASYNC_SCANNING_INITIALIZED, _ASYNC_SCANNING_ENABLED, _ASYNC_WRAPPERS_LOADED
-    
+
     if _ASYNC_SCANNING_INITIALIZED:
         return _ASYNC_SCANNING_ENABLED
-    
+
     _ASYNC_SCANNING_INITIALIZED = True
-    
+
     # Try to read the setting, default to False if message handler not ready
     try:
         _ASYNC_SCANNING_ENABLED = yaml_settings(bool, YAML.Settings, "Enable Async Scanning") or False
     except:
         _ASYNC_SCANNING_ENABLED = False
-    
+
     # Import async implementations if enabled
     if _ASYNC_SCANNING_ENABLED and not _ASYNC_WRAPPERS_LOADED:
         try:
             from ClassicLib.ScanGame.AsyncScanGame import (
                 check_log_errors_async_wrapper as _async_check_log_errors,
+            )
+            from ClassicLib.ScanGame.AsyncScanGame import (
                 scan_mods_archived_async_wrapper as _async_scan_mods_archived,
+            )
+            from ClassicLib.ScanGame.AsyncScanGame import (
                 scan_mods_unpacked_async_wrapper as _async_scan_mods_unpacked,
             )
+
             # Store async functions in globals
-            globals()['_async_check_log_errors'] = _async_check_log_errors
-            globals()['_async_scan_mods_archived'] = _async_scan_mods_archived
-            globals()['_async_scan_mods_unpacked'] = _async_scan_mods_unpacked
+            globals()["_async_check_log_errors"] = _async_check_log_errors
+            globals()["_async_scan_mods_archived"] = _async_scan_mods_archived
+            globals()["_async_scan_mods_unpacked"] = _async_scan_mods_unpacked
             _ASYNC_WRAPPERS_LOADED = True
             msg_info("✅ Async scanning enabled for improved performance")
         except ImportError as e:
             msg_warning(f"Failed to import async implementations: {e}")
             _ASYNC_SCANNING_ENABLED = False
-    
+
     return _ASYNC_SCANNING_ENABLED
+
 
 def check_log_errors_async_wrapper(folder_path: Path | str) -> str:
     """
     Wrapper for async log error checking.
     Falls back to sync implementation if async is disabled.
     """
-    if _initialize_async_scanning() and '_async_check_log_errors' in globals():
-        return globals()['_async_check_log_errors'](folder_path)
+    if _initialize_async_scanning() and "_async_check_log_errors" in globals():
+        return globals()["_async_check_log_errors"](folder_path)
     return check_log_errors(folder_path)
+
 
 def scan_mods_archived_async_wrapper() -> str:
     """
     Wrapper for async archived mods scanning.
     Falls back to sync implementation if async is disabled.
     """
-    if _initialize_async_scanning() and '_async_scan_mods_archived' in globals():
-        return globals()['_async_scan_mods_archived']()
+    if _initialize_async_scanning() and "_async_scan_mods_archived" in globals():
+        return globals()["_async_scan_mods_archived"]()
     return scan_mods_archived()
+
 
 def scan_mods_unpacked_async_wrapper() -> str:
     """
     Wrapper for async unpacked mods scanning.
     Falls back to sync implementation if async is disabled.
     """
-    if _initialize_async_scanning() and '_async_scan_mods_unpacked' in globals():
-        return globals()['_async_scan_mods_unpacked']()
+    if _initialize_async_scanning() and "_async_scan_mods_unpacked" in globals():
+        return globals()["_async_scan_mods_unpacked"]()
     return scan_mods_unpacked()
+
 
 # ================================================
 # CHECK ERRORS IN LOG FILES FOR GIVEN FOLDER
@@ -519,7 +529,9 @@ def scan_mods_archived() -> str:
 
                         # Check texture format
                         if "Ext: dds" not in block_split[1]:
-                            issue_lists["tex_frmt"].add(f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
+                            issue_lists["tex_frmt"].add(
+                                f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n"
+                            )
                             continue
 
                         # Check texture dimensions

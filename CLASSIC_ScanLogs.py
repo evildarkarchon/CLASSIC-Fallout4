@@ -16,7 +16,6 @@ from collections import Counter
 from pathlib import Path
 from typing import cast
 
-from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_progress_context
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
@@ -28,6 +27,7 @@ from ClassicLib.ScanLog import (
 )
 from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
@@ -79,7 +79,9 @@ class ClassicScanLogs:
 
     # Removed synchronous process_crashlog method - using async version instead
 
-    async def process_crashlog_async(self, crashlog_file: Path, orchestrator: AsyncScanOrchestrator) -> tuple[Path, list[str], bool, Counter[str]]:
+    async def process_crashlog_async(
+        self, crashlog_file: Path, orchestrator: AsyncScanOrchestrator
+    ) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Process a crash log with async database operations for FormID lookups.
 
@@ -166,7 +168,7 @@ def crashlogs_scan() -> None:
 async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
     """
     Pure async crash log scanning with controlled concurrency.
-    
+
     This implementation uses Option A from the audit recommendations,
     providing proper resource management and thread safety.
 
@@ -176,39 +178,35 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
     logger.info("Using pure async processing for crash log scanning")
     yamldata: ClassicScanLogsInfo = scanner.yamldata
     scan_failed_list: list = []
-    
+
     # Create async orchestrator with context manager for proper resource management
     async with AsyncScanOrchestrator(
-        scanner.yamldata,
-        scanner.crashlogs,
-        scanner.fcx_mode,
-        scanner.show_formid_values,
-        scanner.formid_db_exists
+        scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists
     ) as orchestrator:
         # Run FCX checks if enabled
         if scanner.fcx_mode:
             orchestrator.fcx_handler.check_fcx_mode()
-        
+
         # Use semaphore to limit concurrent operations
         max_concurrent = min(10, len(scanner.crashlog_list))  # Limit to 10 concurrent operations
         semaphore = asyncio.Semaphore(max_concurrent)
-        
+
         async def process_with_limit(log_path: Path) -> tuple[Path, list[str], bool, Counter[str]]:
             """Process a single log with concurrency limiting."""
             async with semaphore:
                 return await scanner.process_crashlog_async(log_path, orchestrator)
-    
+
         # Create tasks for all crash logs
         tasks = [process_with_limit(log) for log in scanner.crashlog_list]
-        
+
         # Process with progress tracking
         total_logs = len(scanner.crashlog_list)
         completed = 0
-        
+
         with msg_progress_context("Processing Crash Logs", total_logs) as progress:
             # Use asyncio.gather with return_exceptions=True for robust error handling
             results = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             # Process results
             for i, result in enumerate(results):
                 result: Exception | tuple[Path, list[str], bool, Counter[str]]
@@ -227,30 +225,32 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
                         scanner.crashlog_stats["failed"] += 1
                         progress.update(1, "Failed to unpack result")
                         continue
-                    
+
                     # Update statistics
                     if isinstance(local_stats, Counter):
                         for key, value in local_stats.items():
                             scanner.crashlog_stats[key] += value
-                    
+
                     # Write report asynchronously
                     await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
-                    
+
                     # Track failed scans
                     if trigger_scan_failed:
                         scan_failed_list.append(crashlog_file.name)
-                    
+
                     completed += 1
                     progress.update(1, f"Processed {crashlog_file.name}")
-    
+
     # Complete with standard error checking and summary
     _complete_scan_with_summary(scanner, scan_failed_list, yamldata)
 
 
-async def write_report_to_file_async(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: ClassicScanLogs) -> None:
+async def write_report_to_file_async(
+    crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: ClassicScanLogs
+) -> None:
     """
     Async version of write_report_to_file using aiofiles.
-    
+
     Args:
         crashlog_file: Path to the crash log file
         autoscan_report: Generated report lines
@@ -259,29 +259,22 @@ async def write_report_to_file_async(crashlog_file: Path, autoscan_report: list[
     """
     try:
         import aiofiles
-        
+
         autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
         async with aiofiles.open(autoscan_path, "w", encoding="utf-8", errors="ignore") as autoscan_file:
             logger.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
             autoscan_output: str = "".join(autoscan_report)
             await autoscan_file.write(autoscan_output)
-        
+
         if trigger_scan_failed and scanner.move_unsolved_logs:
             # Run in executor since move_unsolved_logs uses sync I/O
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, move_unsolved_logs, crashlog_file)
-    
+
     except ImportError:
         # Fallback to sync write if aiofiles not available
         loop = asyncio.get_event_loop()
-        await loop.run_in_executor(
-            None,
-            write_report_to_file,
-            crashlog_file,
-            autoscan_report,
-            trigger_scan_failed,
-            scanner
-        )
+        await loop.run_in_executor(None, write_report_to_file, crashlog_file, autoscan_report, trigger_scan_failed, scanner)
 
 
 # Removed old async pipeline function - using pure async pattern instead

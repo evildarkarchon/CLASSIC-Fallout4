@@ -55,8 +55,8 @@ CHECKBOX_STYLE = """
      }
 """
 
-    # TabSetupMixin methods are now inherited from TabSetupMixin
-    # Add this as a class constant near other style constants
+# TabSetupMixin methods are now inherited from TabSetupMixin
+# Add this as a class constant near other style constants
 BOTTOM_BUTTON_STYLE = """
     QPushButton {
         color: white;
@@ -70,6 +70,8 @@ BOTTOM_BUTTON_STYLE = """
     QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
     QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
 """
+
+
 # noinspection DuplicatedCode
 class MainWindow(
     QMainWindow,
@@ -133,7 +135,6 @@ class MainWindow(
         self.crash_logs_thread: QThread | None = None
 
     # Help and About methods are now inherited from HelpAndAboutMixin
-
 
     def update_papyrus_button_style(self, monitoring: bool) -> None:
         """Updates the style and text of the Papyrus button based on monitoring state."""
@@ -258,8 +259,6 @@ if __name__ == "__main__":
 
     # TabSetupMixin methods are now inherited from TabSetupMixin
     # Add this constant to the MainWindow class alongside other style constants
-
-
 
     # Folder management methods are now inherited from FolderManagementMixin
     # crash_logs_scan method is now inherited from ScanOperationsMixin

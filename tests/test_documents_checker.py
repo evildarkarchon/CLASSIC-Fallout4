@@ -30,17 +30,15 @@ class TestDocumentsChecker:
         """Test folder configuration check when OneDrive is NOT present."""
         # Mock docs name without OneDrive
         mock_yaml_settings.return_value = "C:/Users/TestUser/Documents/My Games/Fallout4"
-        
+
         # Check folder configuration
         result = checker.check_folder_configuration()
-        
+
         # Should return empty string (no warning)
         assert result == ""
-        
+
         # Verify yaml_settings was called correctly
-        mock_yaml_settings.assert_called_once_with(
-            str, YAML.Game, "Game_Info.Main_Docs_Name"
-        )
+        mock_yaml_settings.assert_called_once_with(str, YAML.Game, "Game_Info.Main_Docs_Name")
 
     @patch("ClassicLib.YamlSettingsCache.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -52,15 +50,15 @@ class TestDocumentsChecker:
         # Mock docs name with OneDrive and warning message
         mock_yaml_settings.side_effect = [
             "C:/Users/TestUser/OneDrive/Documents/My Games/Fallout4",  # docs_name
-            "WARNING: OneDrive detected! This may cause issues."  # docs_warn
+            "WARNING: OneDrive detected! This may cause issues.",  # docs_warn
         ]
-        
+
         # Check folder configuration
         result = checker.check_folder_configuration()
-        
+
         # Should return warning message
         assert result == "WARNING: OneDrive detected! This may cause issues."
-        
+
         # Verify logging
         mock_logger.warning.assert_called_with(
             "OneDrive detected in documents path: C:/Users/TestUser/OneDrive/Documents/My Games/Fallout4"
@@ -74,14 +72,12 @@ class TestDocumentsChecker:
         """Test folder configuration check in VR mode."""
         # Mock docs name for VR
         mock_yaml_settings.return_value = "C:/Users/TestUser/Documents/My Games/Fallout4VR"
-        
+
         # Check folder configuration
         result = checker.check_folder_configuration()
-        
+
         # Verify VR suffix was used
-        mock_yaml_settings.assert_called_once_with(
-            str, YAML.Game, "GameVR_Info.Main_Docs_Name"
-        )
+        mock_yaml_settings.assert_called_once_with(str, YAML.Game, "GameVR_Info.Main_Docs_Name")
 
     @patch("ClassicLib.YamlSettingsCache.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -91,7 +87,7 @@ class TestDocumentsChecker:
         """Test TypeError when docs_name is not a string."""
         # Mock docs_name as non-string
         mock_yaml_settings.return_value = None
-        
+
         # Should raise TypeError
         with pytest.raises(TypeError, match="Document name must be a string"):
             checker.check_folder_configuration()
@@ -105,9 +101,9 @@ class TestDocumentsChecker:
         # Mock docs_name with OneDrive and non-string warning
         mock_yaml_settings.side_effect = [
             "C:/Users/TestUser/OneDrive/Documents",  # docs_name
-            123  # Invalid type for docs_warn
+            123,  # Invalid type for docs_warn
         ]
-        
+
         # Should raise TypeError
         with pytest.raises(TypeError, match="Document warning must be a string"):
             checker.check_folder_configuration()
@@ -121,33 +117,31 @@ class TestDocumentsChecker:
         # Mock docs name with mixed case OneDrive
         mock_yaml_settings.side_effect = [
             "C:/Users/TestUser/OnEDriVe/Documents/My Games",  # Mixed case
-            "OneDrive warning"
+            "OneDrive warning",
         ]
-        
+
         # Check folder configuration
         result = checker.check_folder_configuration()
-        
+
         # Should detect OneDrive regardless of case
         assert result == "OneDrive warning"
 
     @patch("ClassicLib.DocumentsChecker.docs_check_ini")
     @patch("ClassicLib.DocumentsChecker.logger")
-    def test_validate_ini_file(
-        self, mock_logger: MagicMock, mock_docs_check: MagicMock, checker: DocumentsChecker
-    ) -> None:
+    def test_validate_ini_file(self, mock_logger: MagicMock, mock_docs_check: MagicMock, checker: DocumentsChecker) -> None:
         """Test validating a specific INI file."""
         # Mock docs_check_ini return
         mock_docs_check.return_value = "INI validation result"
-        
+
         # Validate INI file
         result = checker.validate_ini_file("Fallout4.ini")
-        
+
         # Verify result
         assert result == "INI validation result"
-        
+
         # Verify docs_check_ini was called
         mock_docs_check.assert_called_once_with("Fallout4.ini")
-        
+
         # Verify logging
         mock_logger.debug.assert_called_with("Validating INI file: Fallout4.ini")
 
@@ -163,19 +157,19 @@ class TestDocumentsChecker:
         mock_validate_ini.side_effect = [
             "Fallout4.ini: OK",
             "",  # Empty result for Custom.ini
-            "Fallout4Prefs.ini: Missing settings"
+            "Fallout4Prefs.ini: Missing settings",
         ]
-        
+
         # Run all checks
         results = checker.run_all_checks()
-        
+
         # Verify all checks were called
         mock_check_folder.assert_called_once()
         assert mock_validate_ini.call_count == 3
         mock_validate_ini.assert_any_call("Fallout4.ini")
         mock_validate_ini.assert_any_call("Fallout4Custom.ini")
         mock_validate_ini.assert_any_call("Fallout4Prefs.ini")
-        
+
         # Verify results (empty strings filtered out)
         assert len(results) == 3
         assert "OneDrive warning" in results
@@ -192,10 +186,10 @@ class TestDocumentsChecker:
         # Setup mock returns
         mock_check_folder.return_value = ""
         mock_validate_ini.return_value = "OK"
-        
+
         # Run all checks
         results = checker.run_all_checks()
-        
+
         # Verify correct INI files were checked for Skyrim
         assert mock_validate_ini.call_count == 3
         mock_validate_ini.assert_any_call("SkyrimSE.ini")
@@ -212,10 +206,10 @@ class TestDocumentsChecker:
         # Setup all mocks to return empty strings
         mock_check_folder.return_value = ""
         mock_validate_ini.return_value = ""
-        
+
         # Run all checks
         results = checker.run_all_checks()
-        
+
         # Should return empty list (all empty strings filtered out)
         assert results == []
 
@@ -229,10 +223,10 @@ class TestDocumentsChecker:
         # Setup mixed returns
         mock_check_folder.return_value = ""
         mock_validate_ini.side_effect = ["INI1 OK", "", "INI3 Warning"]
-        
+
         # Run all checks
         results = checker.run_all_checks()
-        
+
         # Should only include non-empty results
         assert len(results) == 2
         assert "INI1 OK" in results
@@ -247,9 +241,7 @@ class TestDocumentsChecker:
 
     @patch.object(DocumentsChecker, "check_folder_configuration", side_effect=Exception("Folder check failed"))
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
-    def test_run_all_checks_exception(
-        self, mock_get_game: MagicMock, mock_check_folder: MagicMock, checker: DocumentsChecker
-    ) -> None:
+    def test_run_all_checks_exception(self, mock_get_game: MagicMock, mock_check_folder: MagicMock, checker: DocumentsChecker) -> None:
         """Test that exceptions in run_all_checks are propagated."""
         # Should raise the exception
         with pytest.raises(Exception, match="Folder check failed"):
@@ -264,12 +256,12 @@ class TestDocumentsChecker:
         # Mock docs name with OneDrive in middle of path
         mock_yaml_settings.side_effect = [
             "C:/Users/OneDrive User/Documents/My Games",  # OneDrive in username
-            "OneDrive warning"
+            "OneDrive warning",
         ]
-        
+
         # Check folder configuration
         result = checker.check_folder_configuration()
-        
+
         # Should detect OneDrive
         assert result == "OneDrive warning"
 
@@ -280,13 +272,10 @@ class TestDocumentsChecker:
     ) -> None:
         """Test OneDrive detection with multiple occurrences."""
         # Mock docs name with multiple OneDrive occurrences
-        mock_yaml_settings.side_effect = [
-            "C:/OneDrive/Users/TestUser/OneDrive/Documents",
-            "Multiple OneDrive warning"
-        ]
-        
+        mock_yaml_settings.side_effect = ["C:/OneDrive/Users/TestUser/OneDrive/Documents", "Multiple OneDrive warning"]
+
         # Check folder configuration
         result = checker.check_folder_configuration()
-        
+
         # Should detect OneDrive
         assert result == "Multiple OneDrive warning"

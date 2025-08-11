@@ -386,13 +386,13 @@ class TestAsyncDatabasePool:
                 # Verify connection was attempted
                 mock_connect_patch.assert_called_once_with(db_path)
                 assert db_path in pool.connections
-                
+
                 # Store the mock connection for verification
                 mock_conn = pool.connections[db_path]
 
                 # Test cleanup
                 await pool.close()
-                
+
                 # Verify close was called on the connection
                 assert mock_conn.close.called
                 # Verify pool connections were cleared

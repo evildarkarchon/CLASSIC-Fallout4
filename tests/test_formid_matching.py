@@ -60,7 +60,7 @@ class TestFormIDMatching:
                 # FormID matching is now done through the AsyncScanOrchestrator during process_crashlog_async
                 assert scanner.show_formid_values is True
                 assert scanner.formid_db_exists is True
-                assert hasattr(scanner, 'yamldata')
+                assert hasattr(scanner, "yamldata")
                 # The actual FormID matching would be tested through integration tests with async context
 
             finally:
@@ -97,7 +97,7 @@ class TestFormIDMatching:
                 # FormID matching is now done through the AsyncScanOrchestrator during process_crashlog_async
                 assert scanner.show_formid_values is True
                 assert scanner.formid_db_exists is True
-                assert hasattr(scanner, 'yamldata')
+                assert hasattr(scanner, "yamldata")
 
             finally:
                 # Restore original global registry value
@@ -130,10 +130,10 @@ class TestFormIDMatching:
                 autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
-                # FormID matching is now done through the AsyncScanOrchestrator during process_crashlog_async  
+                # FormID matching is now done through the AsyncScanOrchestrator during process_crashlog_async
                 assert scanner.show_formid_values is True
                 assert scanner.formid_db_exists is True
-                assert hasattr(scanner, 'yamldata')
+                assert hasattr(scanner, "yamldata")
 
             finally:
                 # Restore original global registry value
@@ -168,7 +168,7 @@ class TestFormIDMatching:
                 # When database doesn't exist, FormID matching shouldn't be performed
                 assert scanner.formid_db_exists is False
                 assert scanner.show_formid_values is True
-                assert hasattr(scanner, 'yamldata')
+                assert hasattr(scanner, "yamldata")
 
             finally:
                 # Restore original global registry value
@@ -204,7 +204,7 @@ class TestFormIDMatching:
                 # Multiple FormID matching is done through the AsyncScanOrchestrator
                 assert scanner.show_formid_values is True
                 assert scanner.formid_db_exists is True
-                assert hasattr(scanner, 'yamldata')
+                assert hasattr(scanner, "yamldata")
 
             finally:
                 # Restore original global registry value

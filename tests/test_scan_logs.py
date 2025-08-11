@@ -174,9 +174,9 @@ class TestClassicScanLogs:
         # The FormID matching is now done through the AsyncScanOrchestrator during process_crashlog_async
         assert mock_scanner.formid_db_exists is True
         assert mock_scanner.show_formid_values is True
-        
+
         # Verify the scanner has the necessary attributes for FormID processing
-        assert hasattr(mock_scanner, 'yamldata')
+        assert hasattr(mock_scanner, "yamldata")
         assert mock_scanner.yamldata.crashgen_name == "Buffout 4"
 
     def test_scan_named_records(self, mock_scanner: ClassicScanLogs) -> None:
@@ -191,10 +191,10 @@ class TestClassicScanLogs:
 
         # Since orchestrator is created during async execution, we'll test the basic structure
         # Record scanning is now done through the AsyncScanOrchestrator during process_crashlog_async
-        assert hasattr(mock_scanner, 'crashlog_list')
-        assert hasattr(mock_scanner, 'crashlogs')
-        assert hasattr(mock_scanner, 'yamldata')
-        
+        assert hasattr(mock_scanner, "crashlog_list")
+        assert hasattr(mock_scanner, "crashlogs")
+        assert hasattr(mock_scanner, "yamldata")
+
         # Verify the scanner is properly initialized for record scanning
         assert mock_scanner.yamldata is not None
 

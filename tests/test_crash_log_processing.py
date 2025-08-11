@@ -112,18 +112,15 @@ class TestCrashLogProcessingIntegration:
 
                 # Process the crash log using the async method with orchestrator
                 import asyncio
+
                 from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
-                
+
                 async def process_with_orchestrator():
                     async with AsyncScanOrchestrator(
-                        scanner.yamldata,
-                        scanner.crashlogs,
-                        scanner.fcx_mode,
-                        scanner.show_formid_values,
-                        scanner.formid_db_exists
+                        scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists
                     ) as orchestrator:
                         return await scanner.process_crashlog_async(crash_file, orchestrator)
-                
+
                 result: tuple[Path, list[str], bool, Counter[str]] = asyncio.run(process_with_orchestrator())
 
                 # Verify results
@@ -191,18 +188,15 @@ class TestCrashLogProcessingIntegration:
                 results: list[Any] = []
                 for crash_file in scanner.crashlog_list:
                     import asyncio
+
                     from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
-                    
+
                     async def process_with_orchestrator():
                         async with AsyncScanOrchestrator(
-                            scanner.yamldata,
-                            scanner.crashlogs,
-                            scanner.fcx_mode,
-                            scanner.show_formid_values,
-                            scanner.formid_db_exists
+                            scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists
                         ) as orchestrator:
                             return await scanner.process_crashlog_async(crash_file, orchestrator)
-                    
+
                     crashlog_file, autoscan_report, trigger_scan_failed, local_stats = asyncio.run(process_with_orchestrator())
                     results.append(autoscan_report)
 

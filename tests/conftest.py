@@ -26,17 +26,18 @@ from ClassicLib.YamlSettingsCache import YamlSettingsCache
 @pytest.fixture
 def init_message_handler_fixture() -> Generator[None, None, None]:
     """Initialize the MessageHandler for tests that need it.
-    
+
     This fixture ensures proper cleanup of the MessageHandler singleton
     between tests to prevent state leakage.
     """
     # Import here to avoid circular dependencies
     import gc
+
     import ClassicLib.MessageHandler
-    
+
     # Store any existing handler to restore later (defensive programming)
-    original_handler = getattr(ClassicLib.MessageHandler, '_message_handler', None)
-    
+    original_handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
+
     try:
         # Initialize fresh handler for this test
         handler = init_message_handler(parent=None, is_gui_mode=False)
@@ -44,14 +45,14 @@ def init_message_handler_fixture() -> Generator[None, None, None]:
     finally:
         # Ensure complete cleanup
         ClassicLib.MessageHandler._message_handler = None
-        
+
         # Clear any cached references
-        if hasattr(ClassicLib.MessageHandler, '_cached_handler'):
-            delattr(ClassicLib.MessageHandler, '_cached_handler')
-        
+        if hasattr(ClassicLib.MessageHandler, "_cached_handler"):
+            delattr(ClassicLib.MessageHandler, "_cached_handler")
+
         # Force garbage collection to ensure cleanup
         gc.collect()
-        
+
         # Verify cleanup was successful (defensive check)
         assert ClassicLib.MessageHandler._message_handler is None, "MessageHandler cleanup failed"
 
@@ -366,7 +367,7 @@ def setup_global_registry() -> Generator[None, None, None]:
 async def async_cleanup() -> AsyncIterator[list[Any]]:
     """
     Fixture that tracks async resources and ensures they are properly cleaned up.
-    
+
     Usage:
         async def test_something(async_cleanup):
             resource = await create_async_resource()
@@ -375,14 +376,14 @@ async def async_cleanup() -> AsyncIterator[list[Any]]:
             # Resource will be automatically cleaned up
     """
     resources = []
-    
+
     yield resources
-    
+
     # Cleanup all tracked resources
     for resource in resources:
         if resource is None:
             continue
-        
+
         try:
             if hasattr(resource, "aclose"):
                 await resource.aclose()
@@ -395,6 +396,7 @@ async def async_cleanup() -> AsyncIterator[list[Any]]:
         except Exception as e:
             # Log but don't fail the test on cleanup errors
             import logging
+
             logging.warning(f"Error during async resource cleanup: {e}")
 
 
@@ -411,23 +413,23 @@ def event_loop_policy():
 async def clean_event_loop():
     """Ensure a clean event loop for each async test."""
     loop = asyncio.get_event_loop()
-    
+
     # Track initial state
     initial_tasks = set(asyncio.all_tasks(loop))
-    
+
     yield loop
-    
+
     # Cancel any tasks created during the test
     current_tasks = set(asyncio.all_tasks(loop))
     new_tasks = current_tasks - initial_tasks
-    
+
     for task in new_tasks:
         if not task.done() and task != asyncio.current_task():
             task.cancel()
-    
+
     # Wait for cancellations
     if new_tasks:
         await asyncio.gather(*new_tasks, return_exceptions=True)
-    
+
     # Allow event loop to process
     await asyncio.sleep(0)
