@@ -1,18 +1,8 @@
-# Async Scanning Usage Guide
+# Async-First Architecture Guide
 
 ## Overview
 
-CLASSIC now supports asynchronous I/O operations for significantly improved performance when scanning large mod collections. The async implementation can deliver **3-8x performance improvements** compared to the traditional synchronous approach.
-
-## Enabling Async Scanning
-
-### Method 1: Settings File
-Add the following to your CLASSIC settings YAML file:
-
-```yaml
-CLASSIC_Settings:
-  Enable Async Scanning: true
-```
+CLASSIC uses an async-first architecture for all I/O operations, delivering **3-8x performance improvements** when scanning large mod collections. Async operations are always enabled and require no configuration.
 
 ## Performance Improvements
 
@@ -66,30 +56,25 @@ MAX_CONCURRENT_DDS_READS = 50     # DDS header reads
 
 ## Monitoring
 
-When async scanning is enabled, you'll see:
+During scanning operations, you'll see:
 ```
-✅ Async scanning enabled for improved performance
-✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES (ASYNC)...
+✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES...
 Processing 50 BA2 files concurrently...
 ```
 
 ## Troubleshooting
 
-### If Async Fails to Enable
-1. Check the log for import errors
-2. Verify `aiofiles` is installed: `pip install aiofiles`
-3. Ensure Python 3.12+ is being used
-4. Check settings file syntax
-
-### Performance Not Improved
-1. Verify async is actually enabled (check logs)
-2. Small mod collections may not show significant improvement
-3. Disk I/O or CPU may be bottleneck rather than concurrency
+### Performance Issues
+1. Verify `aiofiles` is installed: `pip install aiofiles`
+2. Ensure Python 3.12+ is being used
+3. Small mod collections may not show significant improvement
+4. Disk I/O or CPU may be bottleneck rather than concurrency
 
 ### Errors During Scanning
 - Async implementation preserves all error handling
-- Same error messages and warnings as sync version
+- Same error messages and warnings are shown
 - Check logs for subprocess timeout messages
+- FileIOCore provides automatic encoding detection
 
 ## Implemented Features
 
@@ -118,10 +103,10 @@ async_scanning:
 
 ## Best Practices
 
-1. **Enable for Large Collections**: Most beneficial with 20+ mods
-2. **Monitor First Run**: Check for any compatibility issues
+1. **Most Beneficial for Large Collections**: Performance gains scale with 20+ mods
+2. **Monitor Resource Usage**: Check system resources during first run
 3. **Report Issues**: Help improve the async implementation
-4. **Keep Sync Option**: Can disable if issues arise
+4. **Use FileIOCore**: For custom scripts, use FileIOCore for consistent I/O
 
 ## Technical Requirements
 

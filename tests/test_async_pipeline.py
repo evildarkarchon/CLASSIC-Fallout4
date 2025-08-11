@@ -205,7 +205,7 @@ class TestAsyncScanOrchestrator:
         """Test AsyncScanOrchestrator as async context manager."""
         crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
 
-        with patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncDatabasePool") as mock_pool_class:
+        with patch("ClassicLib.ScanLog.OrchestratorCore.AsyncDatabasePool") as mock_pool_class:
             mock_pool: AsyncMock = AsyncMock()
             mock_pool.initialize = AsyncMock()
             mock_pool.close = AsyncMock()
@@ -232,7 +232,7 @@ class TestAsyncScanOrchestrator:
         """Test batch processing of crash logs."""
         crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
 
-        with patch("ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool") as mock_pool_class:
+        with patch("ClassicLib.ScanLog.OrchestratorCore.AsyncDatabasePool") as mock_pool_class:
             mock_pool: AsyncMock = AsyncMock()
             mock_pool_class.return_value = mock_pool
 
@@ -313,8 +313,8 @@ class TestAsyncFormIDAnalyzer:
         # Verify database queries were made
         assert mock_pool.get_entry.call_count == 2
 
-        # Verify report was populated
-        assert len(autoscan_report) == 2
+        # Verify report was populated (now includes footer information)
+        assert len(autoscan_report) >= 2  # At least 2 FormID entries plus footer
         assert "TestPlugin.esp" in autoscan_report[0]
         assert "AnotherPlugin.esp" in autoscan_report[1]
 

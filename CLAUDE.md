@@ -54,16 +54,41 @@ The application uses a modular architecture with `ClassicLib/SetupCoordinator.py
 - **PathValidator** - Validates and cleans settings paths
 
 ### Core Architecture Pattern
-The project uses an **orchestrator pattern** for log scanning:
-- `ClassicLib/ScanLog/Orchestrator.py` coordinates async components
+The project uses an **async-first orchestrator pattern** for log scanning:
+- `ClassicLib/ScanLog/OrchestratorCore.py` - Async-first implementation
+- `ClassicLib/ScanLog/Orchestrator.py` - Sync adapter for backwards compatibility
 - Specialized analyzers (FormIDAnalyzer, RecordScanner, PluginAnalyzer) process specific aspects
 - MessageHandler abstracts output for both GUI and CLI modes
+
+### Async-First Architecture
+The codebase follows an async-first design pattern:
+- **Core implementations** are async (e.g., `ScanGameCore`, `FormIDAnalyzerCore`, `FileIOCore`)
+- **Sync adapters** provide backwards compatibility using `asyncio.run()`
+- **No feature flags** - async is always used internally for better performance
+- **Unified file I/O** - All file operations go through `FileIOCore`
 
 ### Key Components
 1. **MessageHandler** - Central messaging system that routes to GUI dialogs or CLI output
 2. **YamlSettingsCache** - Manages all YAML configuration files
-3. **Async Pipeline** - Log processing uses async/await for performance
-4. **FormID Database** - Identifies mods from crash data
+3. **FileIOCore** - Unified async-first file I/O operations with automatic encoding detection
+4. **Async Pipeline** - Log processing uses async/await for performance
+5. **FormID Database** - Identifies mods from crash data
+
+### Async Development Patterns
+When working with async code:
+```python
+# Use FileIOCore for all file operations
+from ClassicLib.FileIOCore import FileIOCore
+
+async def process_files():
+    io_core = FileIOCore()
+    content = await io_core.read_file(path)
+    await io_core.write_file(output_path, processed_content)
+
+# Sync adapter usage (for backwards compatibility)
+from ClassicLib.FileIOCore import read_file_sync
+content = read_file_sync(path)
+```
 
 ### Testing Patterns
 When writing tests:
@@ -74,6 +99,13 @@ def init_message_handler_fixture():
     handler = init_message_handler(parent=None, is_gui_mode=False)
     yield
     ClassicLib.MessageHandler._message_handler = None
+
+# Test async components
+@pytest.mark.asyncio
+async def test_async_operation():
+    core = ScanGameCore()
+    result = await core.check_log_errors(path)
+    assert result == expected
 
 # Access components through orchestrator
 scanner = ClassicScanLogs()

@@ -3,6 +3,8 @@ Test suite for async implementations in ClassicLib.ScanGame.AsyncScanGame
 """
 
 import asyncio
+import sys
+from contextlib import nullcontext
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -38,21 +40,24 @@ def init_message_handler_fixture():
 @pytest.fixture
 def mock_settings():
     """Mock YAML settings for tests."""
-    with patch("ClassicLib.ScanGame.AsyncScanGame.yaml_settings") as mock_yaml:
-        # Configure return values for different settings
-        def yaml_side_effect(type_, yaml_key, setting_path, default=None):
-            settings_map = {
-                "catch_log_errors": ["error", "warning", "critical"],
-                "exclude_log_files": ["ignore.log"],
-                "exclude_log_errors": ["ignorable error"],
-                "Mods_Warn.Mods_Path_Missing": "Mods path not configured",
-                "Mods_Warn.Mods_Path_Invalid": "Mods path does not exist",
-                "Mods_Warn.Mods_BSArch_Missing": "BSArch.exe not found",
-            }
-            return settings_map.get(setting_path, default)
+    # Patch yaml_settings in both places it might be imported
+    with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache:
+        with patch("ClassicLib.ScanGame.ScanGameCore.yaml_settings") as mock_yaml_core:
+            # Configure return values for different settings
+            def yaml_side_effect(type_, yaml_key, setting_path, default=None):
+                settings_map = {
+                    "catch_log_errors": ["error", "warning", "critical"],
+                    "exclude_log_files": ["ignore.log"],
+                    "exclude_log_errors": ["ignorable error"],
+                    "Mods_Warn.Mods_Path_Missing": "Mods path not configured",
+                    "Mods_Warn.Mods_Path_Invalid": "Mods path does not exist",
+                    "Mods_Warn.Mods_BSArch_Missing": "BSArch.exe not found",
+                }
+                return settings_map.get(setting_path, default)
 
-        mock_yaml.side_effect = yaml_side_effect
-        yield mock_yaml
+            mock_yaml_cache.side_effect = yaml_side_effect
+            mock_yaml_core.side_effect = yaml_side_effect
+            yield mock_yaml_cache
 
 
 @pytest.fixture
@@ -76,36 +81,44 @@ def mock_paths(tmp_path):
 def mock_scan_settings(mock_paths):
     """Mock get_scan_settings function."""
     with patch("CLASSIC_ScanGame.get_scan_settings") as mock_get:
-        mock_get.return_value = (
-            "F4SE",  # xse_acronym
-            {"f4se_loader": "hash123"},  # xse_scriptfiles
-            mock_paths["mods"],  # mod_path
-        )
-        yield mock_get
+        with patch("ClassicLib.ScanGame.ScanGameCore.ScanGameCore.get_scan_settings") as mock_core_get:
+            return_val = (
+                "F4SE",  # xse_acronym
+                {"f4se_loader": "hash123"},  # xse_scriptfiles
+                mock_paths["mods"],  # mod_path
+            )
+            mock_get.return_value = return_val
+            mock_core_get.return_value = return_val
+            yield mock_get
 
 
 @pytest.fixture
 def mock_issue_messages():
     """Mock get_issue_messages function."""
     with patch("CLASSIC_ScanGame.get_issue_messages") as mock_get:
-        mock_get.return_value = {
-            "ba2_frmt": ["[!] BA2 FORMAT ERRORS FOUND:\n"],
-            "tex_dims": ["[!] TEXTURE DIMENSION ERRORS:\n"],
-            "tex_frmt": ["[!] TEXTURE FORMAT ERRORS:\n"],
-            "snd_frmt": ["[!] SOUND FORMAT ERRORS:\n"],
-            "animdata": ["[!] ANIMATION DATA FOUND:\n"],
-            "xse_file": ["[!] F4SE FILES FOUND:\n"],
-            "previs": ["[!] PREVIS FILES FOUND:\n"],
-        }
-        yield mock_get
+        with patch("ClassicLib.ScanGame.ScanGameCore.ScanGameCore.get_issue_messages") as mock_core_get:
+            return_val = {
+                "ba2_frmt": ["[!] BA2 FORMAT ERRORS FOUND:\n"],
+                "tex_dims": ["[!] TEXTURE DIMENSION ERRORS:\n"],
+                "tex_frmt": ["[!] TEXTURE FORMAT ERRORS:\n"],
+                "snd_frmt": ["[!] SOUND FORMAT ERRORS:\n"],
+                "animdata": ["[!] ANIMATION DATA FOUND:\n"],
+                "xse_file": ["[!] F4SE FILES FOUND:\n"],
+                "previs": ["[!] PREVIS FILES FOUND:\n"],
+                "cleanup": ["[!] CLEANUP FILES:\n"],
+            }
+            mock_get.return_value = return_val
+            mock_core_get.return_value = return_val
+            yield mock_get
 
 
 @pytest.fixture
 def mock_global_registry(mock_paths):
     """Mock GlobalRegistry."""
-    with patch("ClassicLib.ScanGame.AsyncScanGame.GlobalRegistry") as mock_gr:
-        mock_gr.get_local_dir.return_value = mock_paths["tmp"]
-        yield mock_gr
+    with patch("ClassicLib.ScanGame.ScanGameCore.GlobalRegistry") as mock_gr_core:
+        mock_gr_core.get_local_dir.return_value = mock_paths["tmp"]
+        mock_gr_core.get_vr.return_value = ""
+        yield mock_gr_core
 
 
 class TestAsyncScanModsArchived:
@@ -210,7 +223,7 @@ class TestAsyncScanModsArchived:
         mock_proc.communicate = AsyncMock(side_effect=TimeoutError())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            with patch("ClassicLib.ScanGame.AsyncScanGame.msg_error") as mock_error:
+            with patch("ClassicLib.ScanGame.ScanGameCore.msg_error") as mock_error:
                 result = await scan_mods_archived_async()
 
                 # Verify timeout was handled
@@ -278,9 +291,9 @@ class TestAsyncCheckLogErrors:
         log_file.write_text("Some content")
 
         # Mock both possible file reading methods to raise OSError
-        with patch("ClassicLib.Util.open_file_with_encoding", side_effect=OSError("Permission denied")):
+        with patch("ClassicLib.ScanGame.ScanGameCore.open_file_with_encoding", side_effect=OSError("Permission denied")):
             # Also mock the async read if it exists
-            with patch("ClassicLib.ScanLog.AsyncUtil.read_file_async", side_effect=OSError("Permission denied")):
+            with patch("aiofiles.open", side_effect=OSError("Permission denied")) if "aiofiles" in str(sys.modules) else nullcontext():
                 result = await check_log_errors_async(mock_paths["logs"])
 
                 # Check for the error message (without emoji since test output may vary)
@@ -510,25 +523,18 @@ class TestAsyncIntegration:
         assert async_time < 0.6  # Allow some overhead
 
     def test_feature_flag_integration(self, mock_scan_settings, mock_issue_messages):
-        """Test that feature flag properly enables async processing."""
-        # Reset the initialization state
-        CLASSIC_ScanGame._ASYNC_SCANNING_INITIALIZED = False
-        CLASSIC_ScanGame._ASYNC_SCANNING_ENABLED = False
-        CLASSIC_ScanGame._ASYNC_WRAPPERS_LOADED = False
+        """Test that the new async-first implementation works correctly."""
+        # Test that sync adapters correctly delegate to async core
+        with patch("CLASSIC_ScanGame.ScanGameCore") as mock_core:
+            mock_instance = mock_core.return_value
+            mock_instance.scan_mods_archived = AsyncMock(return_value="Async result")
 
-        # Mock yaml_settings to return True for async scanning
-        with patch("CLASSIC_ScanGame.yaml_settings") as mock_yaml:
-            mock_yaml.return_value = True
+            # Call the sync adapter
+            result = CLASSIC_ScanGame.scan_mods_archived()
 
-            # Mock the async import to succeed
-            with patch("ClassicLib.ScanGame.AsyncScanGame.scan_mods_archived_async_wrapper") as mock_async_wrapper:
-                mock_async_wrapper.return_value = "Async result"
-
-                # Initialize and call the function
-                CLASSIC_ScanGame._initialize_async_scanning()
-
-                # Verify async scanning was enabled
-                assert CLASSIC_ScanGame._ASYNC_SCANNING_ENABLED == True
+            # Verify core was instantiated and method was called
+            mock_core.assert_called_once()
+            assert result == "Async result"
 
 
 if __name__ == "__main__":

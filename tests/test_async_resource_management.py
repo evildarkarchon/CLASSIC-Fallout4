@@ -323,7 +323,7 @@ class TestAsyncPipelineResourceManagement:
         mock_yamldata = MagicMock()
         mock_crashlogs = MagicMock(spec=ThreadSafeLogCache)
 
-        with patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncDatabasePool") as mock_pool_class:
+        with patch("ClassicLib.ScanLog.OrchestratorCore.AsyncDatabasePool") as mock_pool_class:
             mock_pool = AsyncMock()
             mock_pool.initialize = AsyncMock()
             mock_pool.close = AsyncMock()
