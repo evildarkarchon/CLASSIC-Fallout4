@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from CLASSIC_Main import initialize, main_generate_required
+from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Audio import AudioPlayer
@@ -94,7 +94,9 @@ class MainWindow(
         self.setup_articles_tab()
         self.initialize_folder_paths()
         init_message_handler(parent=self, is_gui_mode=True)
-        main_generate_required()
+        # Run initial setup using SetupCoordinator
+        coordinator = SetupCoordinator()
+        coordinator.run_initial_setup()
         if classic_settings(bool, "Update Check"):
             QTimer.singleShot(0, self.update_popup)
         self.update_check_timer = QTimer()
@@ -203,7 +205,9 @@ class MainWindow(
 
 if __name__ == "__main__":
     app: QApplication = QApplication(sys.argv)
-    initialize(is_gui=True)
+    # Initialize application using SetupCoordinator
+    coordinator = SetupCoordinator()
+    coordinator.initialize_application(is_gui=True)
     manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
     game_path_gui: Any = GlobalRegistry.get_game_path_gui()
     window: MainWindow | None = None  # Initialize window to ensure it's defined
@@ -276,7 +280,9 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     app: QApplication = QApplication(sys.argv)
-    initialize(is_gui=True)
+    # Initialize application using SetupCoordinator
+    coordinator = SetupCoordinator()
+    coordinator.initialize_application(is_gui=True)
     manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
     game_path_gui: Any = GlobalRegistry.get_game_path_gui()
     window: MainWindow | None = None  # Initialize window to ensure it's defined

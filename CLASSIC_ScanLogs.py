@@ -16,7 +16,7 @@ from collections import Counter
 from pathlib import Path
 from typing import cast
 
-from CLASSIC_Main import initialize
+from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_progress_context
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
@@ -344,7 +344,9 @@ if __name__ == "__main__":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True)
 
-    initialize()
+    # Initialize application using SetupCoordinator
+    coordinator = SetupCoordinator()
+    coordinator.initialize_application(is_gui=False)
 
     import argparse
 

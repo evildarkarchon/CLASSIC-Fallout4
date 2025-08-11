@@ -1,8 +1,32 @@
+"""
+DEPRECATED MODULE - DO NOT USE
+
+This module has been deprecated and its functionality has been moved to:
+- ClassicLib.SetupCoordinator - Main coordination of setup tasks
+- ClassicLib.FileGeneration - YAML file generation
+- ClassicLib.GameIntegrity - Game integrity checking
+- ClassicLib.BackupManager - File backup management
+- ClassicLib.DocumentsChecker - Document folder validation
+- ClassicLib.PathValidator - Path validation
+
+Please use SetupCoordinator for initialization and setup tasks.
+See docs/CLASSIC_Main_deprecation.md for migration guide.
+"""
+
 import contextlib
 import shutil
 import sys
+import warnings
 from pathlib import Path
 from typing import Any
+
+# Issue deprecation warning when module is imported
+warnings.warn(
+    "CLASSIC_Main.py is deprecated. Use ClassicLib.SetupCoordinator instead. "
+    "See docs/CLASSIC_Main_deprecation.md for migration guide.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from ClassicLib import GlobalRegistry, MessageTarget, init_message_handler, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import YAML

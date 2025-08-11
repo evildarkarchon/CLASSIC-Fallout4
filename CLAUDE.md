@@ -40,10 +40,18 @@ pyright
 ## Architecture Overview
 
 ### Entry Points
-- `CLASSIC_Main.py` - Initial setup and startup functions
-- `CLASSIC_Interface.py` - PySide6 GUI application
+- `CLASSIC_Interface.py` - PySide6 GUI application (main entry point)
 - `CLASSIC_ScanLogs.py` - Core log scanning functionality and Command Line Interface
 - `CLASSIC_ScanGame.py` - Game file integrity checking
+
+### Setup and Initialization
+The application uses a modular architecture with `ClassicLib/SetupCoordinator.py` managing initialization:
+- **SetupCoordinator** - Coordinates all setup tasks (file generation, integrity checks, backups)
+- **FileGeneration** - Handles YAML configuration file generation
+- **GameIntegrity** - Validates game installation and file integrity
+- **BackupManager** - Manages automatic game file backups
+- **DocumentsChecker** - Validates document folders and INI files
+- **PathValidator** - Validates and cleans settings paths
 
 ### Core Architecture Pattern
 The project uses an **orchestrator pattern** for log scanning:

@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Literal, cast
 
-from CLASSIC_Main import initialize, main_generate_required
+from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
@@ -768,8 +768,10 @@ def write_combined_results() -> None:
 
 
 if __name__ == "__main__":
-    initialize()
-    main_generate_required()
+    # Initialize application using SetupCoordinator
+    coordinator = SetupCoordinator()
+    coordinator.initialize_application(is_gui=False)
+    coordinator.run_initial_setup()
     if TEST_MODE:
         write_combined_results()
     else:

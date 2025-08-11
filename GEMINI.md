@@ -4,7 +4,7 @@
 
 CLASSIC is a Python-based desktop application with a graphical user interface (GUI) built using PySide6. Its primary purpose is to scan and analyze crash logs for the games Fallout 4 and Skyrim. The application helps users identify the cause of game crashes by providing detailed information about errors, settings, and mods. It also includes features for managing game files, such as backing up and restoring mod files, checking for script extender updates, and monitoring Papyrus logs.
 
-The project is managed using Poetry for dependency management and can be built into a standalone executable using PyInstaller. The codebase is well-structured, with a clear separation between the core logic (`CLASSIC_Main.py`) and the GUI (`CLASSIC_Interface.py`). It also includes a comprehensive suite of tests and uses tools like `ruff`, `mypy`, and `pyright` to ensure code quality.
+The project is managed using Poetry for dependency management and can be built into a standalone executable using PyInstaller. The codebase follows a modular architecture with specialized components in the `ClassicLib/` directory handling different aspects of functionality (setup coordination, file generation, integrity checking, backups, etc.), while `CLASSIC_Interface.py` provides the GUI. It also includes a comprehensive suite of tests and uses tools like `ruff`, `mypy`, and `pyright` to ensure code quality.
 
 ## Building and Running
 
