@@ -5,7 +5,6 @@ This module contains tests for the DocumentsPathManager class and related
 functionality for finding and managing game document paths across platforms.
 """
 
-import platform
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
