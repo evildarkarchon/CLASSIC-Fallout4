@@ -5,6 +5,8 @@ This module contains tests for the DocumentsPathManager class and related
 functionality for finding and managing game document paths across platforms.
 """
 
+import platform
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -194,6 +196,7 @@ class TestDocumentPathManager:
             assert "Documents" in args[1]
             assert "My Games" in args[1]
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Linux-specific test")
     @patch("ClassicLib.DocsPath.yaml_settings")
     @patch("pathlib.Path.is_file", return_value=True)
     @patch("pathlib.Path.open")
@@ -229,6 +232,7 @@ class TestDocumentPathManager:
             assert "compatdata" in args[1]
             assert "377160" in args[1]
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Linux-specific test")
     @patch("ClassicLib.DocsPath.yaml_settings", return_value=None)
     def test_find_linux_docs_path_invalid_steam_id(self, mock_yaml: MagicMock) -> None:  # noqa: ARG002
         """Test _find_linux_docs_path handles invalid Steam ID."""
@@ -237,6 +241,7 @@ class TestDocumentPathManager:
         with pytest.raises(TypeError):
             manager._find_linux_docs_path()
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Linux-specific test")
     @patch("pathlib.Path.is_file", return_value=False)
     @patch("ClassicLib.DocsPath.yaml_settings", return_value=377160)
     def test_find_linux_docs_path_no_steam_file(self, mock_yaml: MagicMock, mock_is_file: MagicMock) -> None:  # noqa: ARG002
