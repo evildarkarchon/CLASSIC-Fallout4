@@ -3,16 +3,15 @@
 Commit all changes and push to remote, starting with ClassicLib repository if applicable.
 
 ## Steps:
-1. Check if ClassicLib is a submodule or separate repository
-2. If ClassicLib exists as separate repo, commit and push there first
-3. Commit and push main CLASSIC-Fallout4 repository
-4. Use descriptive commit messages based on the changes made
-5. Push to the classic-next branch (or current branch)
+1. Commit and push the main repository
+2. Use descriptive commit messages based on the changes made
+3. Push to the current branch
 
 ## Commit Message Format:
 - Use prefix like "Feat:", "Fix:", "Refactor:", "Docs:", "Test:" based on change type
 - Be specific about what was changed
 - Reference any related issues if applicable
+- Add the normal "Co-Authored by Claude Code" message at the end.
 
 ## Important:
 - Always check git status before committing
