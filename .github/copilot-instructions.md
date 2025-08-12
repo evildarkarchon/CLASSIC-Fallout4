@@ -2,25 +2,58 @@
 
 ## Project Overview
 
-CLASSIC is a crash log analyzer for Fallout 4 and Skyrim that processes Buffout 4/Crash Logger output. The project evolved from monolithic to modular orchestrator-based architecture and supports both GUI (PySide6) and CLI modes with optional async processing.
+CLASSIC is a crash log analyzer for Fallout 4 and Skyrim that processes Buffout 4/Crash Logger output. The architecture evolved from monolithic to async-first orchestrator pattern supporting both GUI (PySide6) and CLI modes.
 
-## Architecture Patterns
+## Essential Development Commands
 
-### Dual Entry Point Architecture
-- **CLI entry**: `CLASSIC_ScanLogs.py` for command-line interface
-- **GUI entry**: `CLASSIC_Interface.py` for PySide6 graphical interface
-- **Game integrity**: `CLASSIC_ScanGame.py` for game file validation
-- **Component coordination**: Orchestrators manage `FormIDAnalyzer`, `PluginAnalyzer`, `SettingsScanner`, etc.
+```bash
+# Environment setup
+poetry install                          # Install all dependencies
+poetry install --with gui              # Include PySide6 for GUI development
+poetry install --with windows          # Include Windows-specific dependencies
 
-### Async-First Orchestrator Pattern
-- **Core implementation**: `ClassicLib.ScanLog.AsyncScanOrchestrator` with `AsyncCrashLogPipeline`
-- **Sync adapter**: `ClassicLib.ScanLog.ScanOrchestrator` wraps async with `asyncio.run()`
-- **Graceful fallback**: Async components fall back to sync when dependencies unavailable
-- **Thread safety**: Use `ThreadSafeLogCache` for concurrent crash log processing
+# Running the application
+python CLASSIC_Interface.py            # GUI mode
+python CLASSIC_ScanLogs.py            # CLI mode
+python CLASSIC_ScanGame.py            # Game integrity checker
 
-### Conditional Imports & Dependency Management
+# Testing (critical - maintain 100% pass rate)
+python -m pytest tests/ -v            # All tests with verbose output
+python -m pytest -n auto              # Parallel execution (auto-detect cores)
+python -m pytest -m "unit and not slow" --maxfail=3  # Quick feedback
+
+# Code quality
+ruff check .                           # Lint check
+ruff format .                          # Format code
+poetry up --latest                     # Update dependencies
+```
+
+## Architecture: Async-First Orchestrator Pattern
+
+### Core Flow
+1. **OrchestratorCore** (`ClassicLib.ScanLog.OrchestratorCore`) - Async-first implementation
+2. **ScanOrchestrator** - Sync adapter wrapping `OrchestratorCore` with `asyncio.run()`
+3. **AsyncScanOrchestrator** - DEPRECATED: Now aliases to `OrchestratorCore`
+
+### Entry Points
+- `CLASSIC_ScanLogs.py` - CLI with async/sync fallback
+- `CLASSIC_Interface.py` - GUI with PySide6
+- `CLASSIC_ScanGame.py` - Game file validation
+
+### Component Coordination
 ```python
-# Pattern for optional GUI dependencies
+# Orchestrators manage specialized analyzers:
+FormIDAnalyzer     # Database lookups for mod identification
+PluginAnalyzer     # Mod file analysis
+SettingsScanner   # Configuration validation
+SuspectScanner    # Known problematic pattern detection
+ReportGenerator   # Final output formatting
+```
+
+## Critical Patterns
+
+### Conditional Imports (GUI/CLI Compatibility)
+```python
 try:
     from PySide6.QtCore import QObject, Signal
     HAS_QT = True
@@ -30,45 +63,36 @@ except ImportError:
         """Stub for when PySide6 is not available."""
 ```
 
-### Global State Management
-- **GlobalRegistry**: Use `ClassicLib.GlobalRegistry` instead of global variables
-- **MessageHandler**: Universal system for UI/CLI output via `msg_info()`, `msg_warning()`, `msg_error()`
-- **YAML Cache**: Centralized config via `ClassicLib.YamlSettingsCache.yaml_settings()`
-
-## Critical Code Standards
-
-### Type Annotations (Python 3.12+ Syntax)
+### MessageHandler (Never Use Print)
 ```python
-# Use modern generics, complete function signatures
+from ClassicLib import msg_info, msg_warning, msg_error
+msg_info("Processing complete")         # ✓ Correct
+print("Processing complete")            # ✗ Never do this
+```
+
+### Async/Sync Compatibility
+```python
+try:
+    return asyncio.run(self._process_crashlog_async(crashlog_file))
+except ImportError:
+    return self.orchestrator.process_crash_log(crashlog_file)
+```
+
+### Type Safety (Python 3.12+)
+```python
 def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
     """All functions MUST have complete type annotations."""
 ```
 
-### Import Organization & Cleanup
-1. **Always audit for unused imports** - Remove any imports that aren't used
-2. **Group imports**: Standard library → Third-party → Local ClassicLib imports
-3. **Conditional imports**: Use try/except for optional dependencies (PySide6, aiosqlite, tqdm)
-
-### File Operations
-- Always use `pathlib.Path` objects, never string paths
-- Use `encoding="utf-8", errors="ignore"` for file operations
-- Use `open_file_with_encoding(file_path)` context manager for unknown encodings
-
 ## Testing Requirements
 
-### Test Architecture
-- **100% pass rate required** - tests are critical for stability
-- **MessageHandler initialization**: Use `init_message_handler_fixture` from `tests/conftest.py`
-- **Defensive programming**: Use `hasattr()` checks for optional orchestrator components
-- **Async testing**: Use `@pytest.mark.asyncio` for async component tests
-
-### Mock Patterns
+### Test Initialization Pattern
 ```python
-# Patch where functions are used, not where defined
-with patch.object(scanner.orchestrator, 'process_crash_log') as mock_process:
-    # Test logic here
+# REQUIRED: Initialize MessageHandler before creating ClassicScanLogs
+from tests.conftest import init_message_handler_fixture
+scanner = init_message_handler_fixture()  # Use fixture
 
-# Access components defensively
+# DEFENSIVE: Check component availability
 if hasattr(scanner.orchestrator, '_formid_analyzer'):
     scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
 ```
@@ -136,22 +160,20 @@ Available VS Code tasks:
 - **Pytest**: With coverage reporting via `pytest --cov=. --cov-report=html`
 - **Type checking**: MyPy configuration in `pyproject.toml`
 
-## Common Pitfalls
+## Common Anti-Patterns
 
-1. **Never use print statements** - always use MessageHandler system (`msg_info`, `msg_warning`, `msg_error`)
-2. **Don't patch where functions are defined** - patch where they're used in tests
-3. **Initialize MessageHandler** before creating ClassicScanLogs instances in tests
-4. **Use Path objects**, not string paths
-5. **Check component availability** with `hasattr()` for orchestrator parts
-6. **Remove unused imports** - audit all import statements
-7. **Update tests alongside code changes** - maintain 100% pass rate
+1. ❌ `print()` statements → ✅ `msg_info()`, `msg_warning()`, `msg_error()`
+2. ❌ String paths → ✅ `pathlib.Path` objects
+3. ❌ Unused imports → ✅ Audit and remove
+4. ❌ Missing type annotations → ✅ Complete function signatures
+5. ❌ Patching definitions → ✅ Patch where used in tests
+6. ❌ Skip MessageHandler init → ✅ Use `init_message_handler_fixture`
 
-## Key Reference Files
+## Key Architecture Files
 
-- `ClassicLib/__init__.py`: Main module exports and MessageHandler functions
-- `ClassicLib/ScanLog/AsyncScanOrchestrator.py`: Async-first orchestration
-- `ClassicLib/ScanLog/ScanOrchestrator.py`: Sync adapter wrapping async core
-- `ClassicLib/MessageHandler.py`: Unified output system for GUI/CLI
-- `ClassicLib/GlobalRegistry.py`: Shared state management
-- `tests/conftest.py`: Test fixtures and MessageHandler initialization
-- `.cursor/rules/classic-fallout4-standards.mdc`: Comprehensive coding standards
+- `ClassicLib/__init__.py` - Main exports and MessageHandler functions
+- `ClassicLib/ScanLog/OrchestratorCore.py` - Async-first core orchestration  
+- `ClassicLib/MessageHandler.py` - Universal output system
+- `ClassicLib/GlobalRegistry.py` - Shared state management
+- `tests/conftest.py` - Test fixtures and initialization
+- `.cursor/rules/classic-fallout4-standards.mdc` - Comprehensive standards

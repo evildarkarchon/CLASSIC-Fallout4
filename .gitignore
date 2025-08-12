@@ -8,6 +8,7 @@ __pycache__/
 *$py.class
 poetry.toml
 venv/
+.venv/
 
 # VSCode
 .vscode/*
