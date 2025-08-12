@@ -11,7 +11,6 @@ import random
 import sys
 import time
 from collections import Counter
-
 # Removed ThreadPoolExecutor - using pure async instead
 from pathlib import Path
 from typing import cast
@@ -334,7 +333,9 @@ if __name__ == "__main__":
     if sys.platform == "win32":
         import io
 
+        # noinspection PyTypeChecker
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
+        # noinspection PyTypeChecker
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True)
 
     # Initialize application using SetupCoordinator

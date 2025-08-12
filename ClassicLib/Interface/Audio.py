@@ -86,14 +86,28 @@ class AudioPlayer(QObject):
 
     def play_error_sound(self) -> None:
         """
-        Play the error sound if audio is enabled and the sound is loaded.
+        Plays an error sound if the audio system is enabled and the error sound is loaded.
+
+        This method checks whether audio playback is enabled and whether the error sound
+        resource has been successfully loaded. If both conditions are satisfied, it will trigger
+        the error sound to play.
+
+        Returns:
+            None
         """
         if self.audio_enabled and self.error_sound.isLoaded():
             self.error_sound.play()
 
     def play_notify_sound(self) -> None:
         """
-        Play the notification sound if audio is enabled and the sound is loaded.
+        Plays a notification sound if conditions are met.
+
+        This method checks whether the audio is enabled and the notification sound
+        is loaded. If both conditions are satisfied, it plays the notification sound.
+
+        Raises:
+            Exception: If the sound fails to play or is not loaded properly.
+
         """
         if self.audio_enabled and self.notify_sound.isLoaded():
             self.notify_sound.play()
@@ -101,11 +115,15 @@ class AudioPlayer(QObject):
     @staticmethod
     def play_custom_sound(sound_path: str, volume: float = 1.0) -> None:
         """
-        Play a custom sound effect from the specified file path.
+        Plays a custom sound effect from a specified file with a given volume.
+
+        This static method allows playback of sound effects using a file path and volume. The
+        sound is played by creating an instance of QSoundEffect, setting its source and volume,
+        and then triggering playback.
 
         Args:
-            sound_path (str): The file path of the sound file to play.
-            volume (float, optional): Volume level (0.0 to 1.0). Defaults to 1.0.
+            sound_path (str): The local file path to the sound file to be played.
+            volume (float): The volume for playback. Defaults to 1.0 (maximum volume).
         """
         custom_sound: QSoundEffect = QSoundEffect()
         custom_sound.setSource(QUrl.fromLocalFile(sound_path))
@@ -114,10 +132,10 @@ class AudioPlayer(QObject):
 
     def toggle_audio(self, state: bool) -> None:
         """
-        Toggle audio functionality, enabling or disabling sound signals.
+        Toggles the audio system state by enabling or disabling audio functionality.
 
         Args:
-            state (bool): If True, enable audio; otherwise, disable it.
+            state (bool): If True, enables the audio functionality. If False, disables it.
         """
         self.audio_enabled = state
         self._manage_signal_connections(connect=state)

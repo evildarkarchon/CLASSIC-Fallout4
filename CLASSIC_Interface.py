@@ -125,8 +125,8 @@ class MainWindow(
         self.initialize_folder_paths()
         init_message_handler(parent=self, is_gui_mode=True)
         # Run initial setup using SetupCoordinator
-        coordinator = SetupCoordinator()
-        coordinator.run_initial_setup()
+        setup_coordinator = SetupCoordinator()
+        setup_coordinator.run_initial_setup()
         if classic_settings(bool, "Update Check"):
             QTimer.singleShot(0, self.update_popup)
         self.update_check_timer = QTimer()
@@ -135,47 +135,6 @@ class MainWindow(
         self.crash_logs_thread: QThread | None = None
 
     # Help and About methods are now inherited from HelpAndAboutMixin
-
-    def update_papyrus_button_style(self, monitoring: bool) -> None:
-        """Updates the style and text of the Papyrus button based on monitoring state."""
-        if self.papyrus_button is None:
-            return
-        if monitoring:
-            self.papyrus_button.setText("STOP PAPYRUS MONITORING")
-            self.papyrus_button.setStyleSheet(
-                """
-                QPushButton {
-                    color: white; /* Changed to white for better contrast on red */
-                    background: rgb(180, 45, 45);  /* Darker Red background */
-                    border-radius: 5px;
-                    border: 1px solid #FF6347; /* Lighter red border */
-                    font-weight: bold;
-                    font-size: 12px; /* Consistent font size */
-                    padding: 6px 10px;
-                    min-height: 30px;
-                }
-                QPushButton:hover { background-color: rgb(200, 50, 50); }
-                QPushButton:pressed { background-color: rgb(160, 40, 40); }
-                """
-            )
-        else:
-            self.papyrus_button.setText("START PAPYRUS MONITORING")
-            self.papyrus_button.setStyleSheet(
-                """
-                QPushButton {
-                    color: white; /* Changed to white for better contrast on green */
-                    background: rgb(45, 150, 100);  /* Darker Green background */
-                    border-radius: 5px;
-                    border: 1px solid #32CD32; /* Lighter green border */
-                    font-weight: bold;
-                    font-size: 12px;
-                    padding: 6px 10px;
-                    min-height: 30px;
-                }
-                QPushButton:hover { background-color: rgb(50, 170, 110); }
-                QPushButton:pressed { background-color: rgb(40, 130, 90); }
-                """
-            )
 
     # Folder management methods are now inherited from FolderManagementMixin
     # crash_logs_scan method is now inherited from ScanOperationsMixin
