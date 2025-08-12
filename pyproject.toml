@@ -49,6 +49,7 @@ anyio = ">=4.6.2.post1"
 pyinstaller-hooks-contrib = ">=2025.0"
 pytest-qt = ">=4.4.0"
 psutil = "^7.0.0"
+pytest-xdist = "^3.8.0"
 
 [tool.poetry.group.windows]
 optional = true
@@ -213,6 +214,15 @@ output = "coverage.xml"
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-report=lcov:lcov.info --cov-report=term"
+markers = [
+    "unit: marks tests as unit tests (fast, isolated)",
+    "integration: marks tests as integration tests (slower, system dependencies)",
+    "slow: marks tests as slow running (>1 second)",
+    "performance: marks tests as performance regression tests",
+    "gui: marks tests as GUI-dependent tests requiring Qt",
+    "file_io: marks tests that perform file I/O operations",
+    "async_test: marks tests that use async/await patterns"
+]
 
 [tool.black]
 line-length = 140

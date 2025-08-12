@@ -22,6 +22,60 @@ from ClassicLib.Constants import YAML
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
+# Cache for test file generation to avoid repeated I/O
+_test_file_cache = {}
+
+
+@pytest.fixture(scope="session")
+def cached_test_files(tmp_path_factory) -> dict[str, Path]:
+    """Generate and cache common test files to avoid repeated I/O operations."""
+    global _test_file_cache
+    
+    if not _test_file_cache:
+        tmp_path = tmp_path_factory.mktemp("cached_test_files")
+        
+        # Create cached crash log
+        crash_log_dir = tmp_path / "cached_crash_logs"
+        crash_log_dir.mkdir()
+        
+        crash_log_file = crash_log_dir / "cached_crash.log"
+        crash_log_file.write_text("""Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+
+SYSTEM SPECS:
+\tOS: Microsoft Windows 11 Pro v10.0.22621
+\tCPU: AMD Ryzen 7 7800X3D 8-Core Processor
+\tGPU #1: Nvidia AD104 [GeForce RTX 4070]
+
+PLUGINS:
+\t[00] Fallout4.esm
+\t[01] DLCRobot.esm
+\t[02] TestMod.esp
+""")
+        
+        # Create cached YAML file
+        yaml_dir = tmp_path / "cached_yaml"
+        yaml_dir.mkdir()
+        
+        yaml_file = yaml_dir / "cached_settings.yaml"
+        yaml_file.write_text("""CLASSIC_Settings:
+  Managed Game: Fallout4
+  VR Mode: false
+  FCX Mode: true
+  Update Check: true
+""")
+        
+        _test_file_cache = {
+            "crash_log": crash_log_file,
+            "crash_log_dir": crash_log_dir,
+            "yaml_settings": yaml_file,
+            "yaml_dir": yaml_dir,
+        }
+    
+    return _test_file_cache
+
 
 @pytest.fixture
 def init_message_handler_fixture() -> Generator[None, None, None]:
@@ -89,9 +143,8 @@ PLUGINS:
     return _create_sample_logs
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_global_registry() -> Generator[ModuleType, None, None]:
-    """Mock the GlobalRegistry to return test values."""
     """Mock the GlobalRegistry to return test values."""
     original_values = {}
 
@@ -195,9 +248,10 @@ CLASSIC_Settings:
         yield mock_yaml
 
 
-@pytest.fixture
-def temp_game_installation(tmp_path: Path) -> Path:
+@pytest.fixture(scope="session")
+def temp_game_installation(tmp_path_factory) -> Path:
     """Fixture to create a temporary game installation directory structure."""
+    tmp_path = tmp_path_factory.mktemp("game_install")
     game_dir = tmp_path / "Fallout4"
     game_dir.mkdir()
 
@@ -222,7 +276,7 @@ def temp_game_installation(tmp_path: Path) -> Path:
     return game_dir
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_registry_entries() -> Generator[dict[str, dict[str, str]], None, None]:
     """Mock Windows registry entries for game path detection."""
     mock_entries = {
@@ -246,9 +300,10 @@ def mock_registry_entries() -> Generator[dict[str, dict[str, str]], None, None]:
         yield mock_entries
 
 
-@pytest.fixture
-def sample_ini_files(tmp_path: Path) -> Path:
+@pytest.fixture(scope="session")
+def sample_ini_files(tmp_path_factory) -> Path:
     """Create sample INI files for testing."""
+    tmp_path = tmp_path_factory.mktemp("ini_files")
     ini_dir = tmp_path / "My Games" / "Fallout4"
     ini_dir.mkdir(parents=True)
 
@@ -344,7 +399,7 @@ Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+
         yield {"get": mock_get, "post": mock_post, "urlopen": mock_urlopen}
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def setup_global_registry() -> Generator[None, None, None]:
     """Initialize GlobalRegistry with required components for testing."""
     # Initialize YAML cache
@@ -379,25 +434,29 @@ async def async_cleanup() -> AsyncIterator[list[Any]]:
 
     yield resources
 
-    # Cleanup all tracked resources
+    # Optimize cleanup with concurrent operations
+    cleanup_tasks = []
     for resource in resources:
         if resource is None:
             continue
 
         try:
             if hasattr(resource, "aclose"):
-                await resource.aclose()
+                cleanup_tasks.append(resource.aclose())
             elif hasattr(resource, "close"):
                 if asyncio.iscoroutinefunction(resource.close):
-                    await resource.close()
+                    cleanup_tasks.append(resource.close())
                 else:
                     # Run sync close in executor
-                    await asyncio.get_event_loop().run_in_executor(None, resource.close)
+                    cleanup_tasks.append(asyncio.get_event_loop().run_in_executor(None, resource.close))
         except Exception as e:
             # Log but don't fail the test on cleanup errors
             import logging
-
-            logging.warning(f"Error during async resource cleanup: {e}")
+            logging.warning(f"Error preparing async resource cleanup: {e}")
+    
+    # Execute all cleanups concurrently
+    if cleanup_tasks:
+        await asyncio.gather(*cleanup_tasks, return_exceptions=True)
 
 
 @pytest.fixture
@@ -419,17 +478,25 @@ async def clean_event_loop():
 
     yield loop
 
-    # Cancel any tasks created during the test
+    # Optimized task cleanup - use gather for concurrent cancellation
     current_tasks = set(asyncio.all_tasks(loop))
     new_tasks = current_tasks - initial_tasks
-
-    for task in new_tasks:
-        if not task.done() and task != asyncio.current_task():
-            task.cancel()
-
-    # Wait for cancellations
+    
     if new_tasks:
-        await asyncio.gather(*new_tasks, return_exceptions=True)
+        # Cancel all new tasks concurrently
+        for task in new_tasks:
+            if not task.done() and task != asyncio.current_task():
+                task.cancel()
 
-    # Allow event loop to process
+        # Wait for all cancellations with timeout to prevent hanging
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(*new_tasks, return_exceptions=True),
+                timeout=1.0  # Prevent tests from hanging on cleanup
+            )
+        except asyncio.TimeoutError:
+            # Force cleanup if tasks don't cancel gracefully
+            pass
+
+    # Single sleep instead of allowing event loop to process indefinitely
     await asyncio.sleep(0)

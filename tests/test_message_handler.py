@@ -26,12 +26,15 @@ from ClassicLib.MessageHandler import (
 class TestMessageHandler:
     """Test cases for MessageHandler class."""
 
+    @pytest.mark.unit
     def test_init_cli_mode(self) -> None:
         """Test initialization in CLI mode."""
         handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=False)
         assert handler.is_gui_mode is False
         assert handler.parent_widget is None
 
+    @pytest.mark.unit
+    @pytest.mark.gui
     @patch("ClassicLib.MessageHandler.HAS_QT", True)
     def test_init_gui_mode(self) -> None:
         """Test initialization in GUI mode."""

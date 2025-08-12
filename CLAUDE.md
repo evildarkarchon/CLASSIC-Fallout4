@@ -22,6 +22,16 @@ python -m pytest tests/ -v              # All tests with verbose output
 python -m pytest tests/ -q              # Quick run with summary only
 python -m pytest tests/test_crash_log_processing.py -v  # Specific test file
 
+# Performance-optimized test execution
+python -m pytest -n auto                # Parallel execution (auto-detect CPU cores)
+python -m pytest -n 4                   # Parallel execution with 4 workers
+python -m pytest -m "unit and not slow" --maxfail=3     # Quick feedback (unit tests only)
+python -m pytest -m "integration and not slow"          # Integration tests
+python -m pytest -m "not performance"   # All tests except performance regression tests
+python -m pytest -m "performance"       # Performance regression tests only
+python -m pytest -m "gui"               # GUI-dependent tests only
+python -m pytest -m "async_test"        # Async pattern tests only
+
 # Build executable (Windows)
 pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\CLASSIC.spec
 ```
