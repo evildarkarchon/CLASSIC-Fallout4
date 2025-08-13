@@ -14,37 +14,37 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a Python desktop a
 poetry install
 
 # Run the application
-python CLASSIC_Interface.py                  # GUI mode
-python CLASSIC_ScanLogs.py           # CLI mode
+poetry run python CLASSIC_Interface.py                  # GUI mode
+poetry run python CLASSIC_ScanLogs.py           # CLI mode
 
 # Run tests
-python -m pytest tests/ -v              # All tests with verbose output
-python -m pytest tests/ -q              # Quick run with summary only
-python -m pytest tests/test_crash_log_processing.py -v  # Specific test file
+poetry run python -m pytest tests/ -n 4 -v              # All tests with verbose output
+poetry run python -m pytest tests/ -n 4 -q              # Quick run with summary only
+poetry run python -m pytest tests/test_crash_log_processing.py -n 4 -v  # Specific test file
 
 # Performance-optimized test execution
-python -m pytest -n auto                # Parallel execution (auto-detect CPU cores)
-python -m pytest -n 4                   # Parallel execution with 4 workers
-python -m pytest -m "unit and not slow" --maxfail=3     # Quick feedback (unit tests only)
-python -m pytest -m "integration and not slow"          # Integration tests
-python -m pytest -m "not performance"   # All tests except performance regression tests
-python -m pytest -m "performance"       # Performance regression tests only
-python -m pytest -m "gui"               # GUI-dependent tests only
-python -m pytest -m "async_test"        # Async pattern tests only
+poetry run python -m pytest -n auto                # Parallel execution (auto-detect CPU cores)
+poetry run python -m pytest -n 4                   # Parallel execution with 4 workers
+poetry run python -m pytest -n 4 -m "unit and not slow" --maxfail=3     # Quick feedback (unit tests only)
+poetry run python -m pytest -n 4 -m "integration and not slow"          # Integration tests
+poetry run python -m pytest -n 4 -m "not performance"   # All tests except performance regression tests
+poetry run python -m pytest -n 4 -m "performance"       # Performance regression tests only
+poetry run python -m pytest -n 4 -m "gui"               # GUI-dependent tests only
+poetry run python -m pytest -n 4 -m "async_test"        # Async pattern tests only
 
 # Build executable (Windows)
-pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\CLASSIC.spec
+poetry run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
 ```
 
 ### Linting and Type Checking
 ```bash
 # Run Ruff linter
-ruff check .
-ruff format .
+poetry run ruff check .
+poetry run ruff format .
 
 # Type checking
-mypy .
-pyright
+poetry run mypy .
+poetry run pyright
 ```
 
 ## Architecture Overview

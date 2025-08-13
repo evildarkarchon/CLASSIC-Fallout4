@@ -11,11 +11,12 @@ import random
 import sys
 import time
 from collections import Counter
+
 # Removed ThreadPoolExecutor - using pure async instead
 from pathlib import Path
 from typing import cast
 
-from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_progress_context
+from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog import (
@@ -198,47 +199,43 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
         # Create tasks for all crash logs
         tasks = [process_with_limit(log) for log in scanner.crashlog_list]
 
-        # Process with progress tracking
-        total_logs = len(scanner.crashlog_list)
+        # Process all crash logs without progress tracking
+        len(scanner.crashlog_list)
         completed = 0
 
-        with msg_progress_context("Processing Crash Logs", total_logs) as progress:
-            # Use asyncio.gather with return_exceptions=True for robust error handling
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Use asyncio.gather with return_exceptions=True for robust error handling
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            # Process results
-            for i, result in enumerate(results):
-                result: Exception | tuple[Path, list[str], bool, Counter[str]]
-                if isinstance(result, Exception):
-                    # Handle exceptions
-                    logger.error(f"Error processing crash log: {result}")
+        # Process results
+        for i, result in enumerate(results):
+            result: Exception | tuple[Path, list[str], bool, Counter[str]]
+            if isinstance(result, Exception):
+                # Handle exceptions
+                logger.error(f"Error processing crash log: {result}")
+                scanner.crashlog_stats["failed"] += 1
+                scan_failed_list.append(scanner.crashlog_list[i].name)
+            else:
+                # Unpack successful result
+                try:
+                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = result
+                except (ValueError, TypeError) as e:
+                    logger.error(f"Error unpacking result: {e}")
                     scanner.crashlog_stats["failed"] += 1
-                    scan_failed_list.append(scanner.crashlog_list[i].name)
-                    progress.update(1, f"Failed: {scanner.crashlog_list[i].name}")
-                else:
-                    # Unpack successful result
-                    try:
-                        crashlog_file, autoscan_report, trigger_scan_failed, local_stats = result
-                    except (ValueError, TypeError) as e:
-                        logger.error(f"Error unpacking result: {e}")
-                        scanner.crashlog_stats["failed"] += 1
-                        progress.update(1, "Failed to unpack result")
-                        continue
+                    continue
 
-                    # Update statistics
-                    if isinstance(local_stats, Counter):
-                        for key, value in local_stats.items():
-                            scanner.crashlog_stats[key] += value
+                # Update statistics
+                if isinstance(local_stats, Counter):
+                    for key, value in local_stats.items():
+                        scanner.crashlog_stats[key] += value
 
-                    # Write report asynchronously
-                    await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
+                # Write report asynchronously
+                await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
 
-                    # Track failed scans
-                    if trigger_scan_failed:
-                        scan_failed_list.append(crashlog_file.name)
+                # Track failed scans
+                if trigger_scan_failed:
+                    scan_failed_list.append(crashlog_file.name)
 
-                    completed += 1
-                    progress.update(1, f"Processed {crashlog_file.name}")
+                completed += 1
 
     # Complete with standard error checking and summary
     _complete_scan_with_summary(scanner, scan_failed_list, yamldata)
@@ -356,7 +353,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--simplify-logs", action=argparse.BooleanOptionalAction, help="Simplify the logs (Warning: May remove important information)"
     )
-    parser.add_argument("--disable-progress", action=argparse.BooleanOptionalAction, help="Disable progress bars in CLI mode")
 
     args = parser.parse_args()
 
@@ -403,9 +399,6 @@ if __name__ == "__main__":
 
     if isinstance(args.simplify_logs, bool) and args.simplify_logs != classic_settings(bool, "Simplify Logs"):
         yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Simplify Logs", args.simplify_logs)
-
-    if isinstance(args.disable_progress, bool) and args.disable_progress != classic_settings(bool, "Disable CLI Progress"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Disable CLI Progress", args.disable_progress)
 
     crashlogs_scan()
     # Ensure all output is flushed before pause

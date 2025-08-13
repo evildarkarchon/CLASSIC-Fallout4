@@ -276,6 +276,22 @@ def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUD
     return unpacked + archived
 
 
+def main() -> None:
+    """Main entry point for game scanning."""
+    
+    # Initialize application using SetupCoordinator
+    coordinator = SetupCoordinator()
+    coordinator.initialize_application(is_gui=False)
+    coordinator.run_initial_setup()
+    
+    if TEST_MODE:
+        write_combined_results()
+    else:
+        msg_info(game_combined_result())
+        msg_info(mods_combined_result())
+        game_files_manage("Backup ENB")
+
+
 def write_combined_results() -> None:
     """
     Writes combined results of game and mods into a markdown report file.
@@ -293,14 +309,5 @@ def write_combined_results() -> None:
 
 
 if __name__ == "__main__":
-    # Initialize application using SetupCoordinator
-    coordinator = SetupCoordinator()
-    coordinator.initialize_application(is_gui=False)
-    coordinator.run_initial_setup()
-    if TEST_MODE:
-        write_combined_results()
-    else:
-        msg_info(game_combined_result())
-        msg_info(mods_combined_result())
-        game_files_manage("Backup ENB")
-        input("Press Enter to continue...")
+    main()
+    input("Press Enter to continue...")
