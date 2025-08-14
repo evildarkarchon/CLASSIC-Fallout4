@@ -7,9 +7,13 @@ All I/O-intensive operations are implemented asynchronously for optimal performa
 """
 
 import asyncio
+import mmap
+import os
 import shutil
 import struct
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
 from pathlib import Path
 from typing import cast
 
@@ -18,8 +22,14 @@ try:
 except ImportError:
     aiofiles = None  # Handle gracefully if not installed
 
+try:
+    import psutil
+except ImportError:
+    psutil = None  # Handle gracefully if not installed
+
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_warning
 from ClassicLib.Constants import YAML
+from ClassicLib.GlobalRegistry import get, register
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import TEST_MODE
 from ClassicLib.Util import normalize_list, open_file_with_encoding
@@ -27,37 +37,89 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 # Import async utilities if available
 try:
-    from ClassicLib.AsyncUtil import open_file_with_encoding_async, read_lines_with_encoding_async
+    from ClassicLib.AsyncUtil import read_lines_with_encoding_async
 
     ASYNC_ENCODING_AVAILABLE = True
 except ImportError:
     ASYNC_ENCODING_AVAILABLE = False
 
-# Semaphore limits for resource control
-MAX_CONCURRENT_SUBPROCESSES = 4  # Limit BSArch.exe processes
-MAX_CONCURRENT_FILE_OPS = 10  # Limit concurrent file operations
-MAX_CONCURRENT_LOG_READS = 20  # Limit concurrent log file reads
-MAX_CONCURRENT_DDS_READS = 50  # Limit concurrent DDS header reads
+def get_optimal_limits() -> dict[str, int]:
+    """Calculate optimal concurrency limits based on system resources."""
+    cpu_count = os.cpu_count() or 4
+    
+    # Try to get memory if psutil is available
+    if psutil:
+        memory_gb = psutil.virtual_memory().total / (1024**3)
+        memory_factor = min(memory_gb / 8, 2.0)  # Scale based on memory (8GB baseline)
+    else:
+        memory_factor = 1.0
+    
+    return {
+        'subprocesses': min(int(cpu_count * memory_factor), 8),  # Cap at 8 for stability
+        'file_ops': min(int(cpu_count * 4 * memory_factor), 32),
+        'log_reads': min(int(cpu_count * 8 * memory_factor), 64),
+        'dds_reads': min(int(cpu_count * 16 * memory_factor), 128),
+    }
+
+# Get optimal limits based on system
+_LIMITS = get_optimal_limits()
+MAX_CONCURRENT_SUBPROCESSES = _LIMITS['subprocesses']
+MAX_CONCURRENT_FILE_OPS = _LIMITS['file_ops']
+MAX_CONCURRENT_LOG_READS = _LIMITS['log_reads']
+MAX_CONCURRENT_DDS_READS = _LIMITS['dds_reads']
+
+
+# Registry key for ScanGameCore singleton
+SCAN_GAME_CORE_KEY = "scan_game_core"
 
 
 class ScanGameCore:
     """Async-first core implementation for game scanning operations."""
 
-    def __init__(self):
+    def __new__(cls) -> "ScanGameCore":
+        """Implement singleton pattern using GlobalRegistry."""
+        instance = get(SCAN_GAME_CORE_KEY)
+        if instance is None:
+            instance = super().__new__(cls)
+            register(SCAN_GAME_CORE_KEY, instance)
+        return instance
+
+    def __init__(self) -> None:
         """Initialize the core scanner."""
-        self.process_semaphore = asyncio.Semaphore(MAX_CONCURRENT_SUBPROCESSES)
-        self.file_ops_semaphore = asyncio.Semaphore(MAX_CONCURRENT_FILE_OPS)
-        self.log_read_semaphore = asyncio.Semaphore(MAX_CONCURRENT_LOG_READS)
-        self.dds_read_semaphore = asyncio.Semaphore(MAX_CONCURRENT_DDS_READS)
+        # Only initialize once
+        if not hasattr(self, '_initialized'):
+            # Get optimal limits dynamically
+            limits = get_optimal_limits()
+            self.process_semaphore = asyncio.Semaphore(limits['subprocesses'])
+            self.file_ops_semaphore = asyncio.Semaphore(limits['file_ops'])
+            self.log_read_semaphore = asyncio.Semaphore(limits['log_reads'])
+            self.dds_read_semaphore = asyncio.Semaphore(limits['dds_reads'])
+            
+            # Thread pool for CPU-bound operations
+            self.header_executor = ThreadPoolExecutor(max_workers=min(10, limits['file_ops'] // 2))
+            
+            # For async directory walking
+            self.walk_executor = ThreadPoolExecutor(max_workers=4)
+            
+            # Cache for frequently accessed methods
+            self._scan_settings_cache = None
+            self._issue_messages_cache = {}
+            
+            self._initialized = True
 
     def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
         """
         Gets common settings used by mod scanning functions.
+        Results are cached for the lifetime of the process.
 
         Returns:
             tuple: (xse_acronym, xse_scriptfiles, mod_path)
         """
-        # Get XSE settings
+        # Use cached value if available
+        if self._scan_settings_cache is not None:
+            return self._scan_settings_cache
+        
+        # Get XSE settings - YamlSettingsCache already caches these
         xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
         xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
             dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
@@ -68,11 +130,14 @@ class ScanGameCore:
         # Get mods path
         mod_path: Path | None = classic_settings(Path, "MODS Folder Path")
 
-        return xse_acronym, xse_scriptfiles, mod_path
+        # Cache the result
+        self._scan_settings_cache = (xse_acronym, xse_scriptfiles, mod_path)
+        return self._scan_settings_cache
 
     def get_issue_messages(self, xse_acronym: str, mode: str) -> dict[str, list[str]]:
         """
         Returns standardized issue messages for mod scan reports.
+        Results are cached for the lifetime of the process.
 
         Args:
             xse_acronym: Script extender acronym from settings
@@ -81,6 +146,10 @@ class ScanGameCore:
         Returns:
             dict: Dictionary of issue types and their message templates
         """
+        # Check cache first
+        cache_key = (xse_acronym, mode)
+        if cache_key in self._issue_messages_cache:
+            return self._issue_messages_cache[cache_key]
         base_messages = {
             "tex_dims": [
                 "\n# ⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️\n",
@@ -151,6 +220,8 @@ class ScanGameCore:
                 ],
             })
 
+        # Cache and return
+        self._issue_messages_cache[cache_key] = base_messages
         return base_messages
 
     async def check_log_errors(self, folder_path: Path | str) -> str:
@@ -365,12 +436,21 @@ class ScanGameCore:
             if file_tasks:
                 await asyncio.gather(*file_tasks, return_exceptions=True)
 
+        # Async directory walking
+        async def async_walk(path: Path) -> list[tuple[Path, list[str], list[str]]]:
+            """Async directory walker using executor."""
+            def _walk() -> list[tuple[Path, list[str], list[str]]]:
+                result = []
+                for root, dirs, files in os.walk(path, topdown=False):
+                    result.append((Path(root), list(dirs), list(files)))
+                return result
+            
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(self.walk_executor, _walk)
+        
         # Collect all directories to process
         try:
-            # Collect all directory data first (synchronous for os.walk compatibility)
-            all_dirs_data = []
-            for root, dirs, files in mod_path.walk(top_down=False):
-                all_dirs_data.append((Path(root), list(dirs), list(files)))
+            all_dirs_data = await async_walk(mod_path)
         except (OSError, FileNotFoundError) as e:
             msg_error(f"Error accessing mod files: {e}")
             return "Error: Could not access mod files"
@@ -387,16 +467,23 @@ class ScanGameCore:
             batch = tasks[i : i + batch_size]
             await asyncio.gather(*batch, return_exceptions=True)
 
-        # Build the report
+        # Build the report using StringIO for efficiency
+        output = StringIO()
         issue_messages = self.get_issue_messages(xse_acronym, "unpacked")
 
-        # Add found issues to message list
+        # Write initial messages
+        for msg in message_list:
+            output.write(msg)
+        
+        # Add found issues
         for issue_type, items in issue_lists.items():
             if items and issue_type in issue_messages:
-                message_list.extend(issue_messages[issue_type])
-                message_list.extend(sorted(items))
+                for msg in issue_messages[issue_type]:
+                    output.write(msg)
+                for item in sorted(items):
+                    output.write(item)
 
-        return "".join(message_list)
+        return output.getvalue()
 
     async def scan_mods_archived(self) -> str:
         """
@@ -438,19 +525,29 @@ class ScanGameCore:
 
         msg_info("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES (ASYNC)...")
 
-        # Collect all BA2 files first
-        ba2_files: list[tuple[Path, str]] = []
+        # Async directory walking for BA2 files
+        async def find_ba2_files(path: Path) -> list[tuple[Path, str]]:
+            """Find all BA2 files asynchronously."""
+            def _find() -> list[tuple[Path, str]]:
+                result = []
+                for root, _, files in os.walk(path, topdown=False):
+                    for filename in files:
+                        filename_lower: str = filename.lower()
+                        if filename_lower.endswith(".ba2") and filename_lower != "prp - main.ba2":
+                            result.append((Path(root) / filename, filename))
+                return result
+            
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(self.walk_executor, _find)
+        
+        # Collect all BA2 files
         try:
-            for root, _, files in mod_path.walk(top_down=False):
-                for filename in files:
-                    filename_lower: str = filename.lower()
-                    if filename_lower.endswith(".ba2") and filename_lower != "prp - main.ba2":
-                        ba2_files.append((root / filename, filename))
+            ba2_files = await find_ba2_files(mod_path)
         except OSError as e:
             msg_error(f"Error scanning for BA2 files: {e}")
             return "Error: Could not scan for BA2 files"
 
-        # Process BA2 files concurrently
+        # Process BA2 files concurrently with improved batching
         async def process_single_ba2(file_path: Path, filename: str) -> dict[str, set[str]]:
             """Process a single BA2 file and return its issues."""
             local_issues: dict[str, set[str]] = {
@@ -492,6 +589,7 @@ class ScanGameCore:
                             stdout=asyncio.subprocess.PIPE,
                             stderr=asyncio.subprocess.PIPE,
                             text=True,
+                            limit=1024*1024,  # 1MB buffer limit to prevent memory issues
                         )
 
                         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
@@ -539,6 +637,7 @@ class ScanGameCore:
                             stdout=asyncio.subprocess.PIPE,
                             stderr=asyncio.subprocess.PIPE,
                             text=True,
+                            limit=1024*1024,  # 1MB buffer limit to prevent memory issues
                         )
 
                         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
@@ -582,12 +681,23 @@ class ScanGameCore:
 
             return local_issues
 
-        # Create tasks for all BA2 files
-        tasks = [process_single_ba2(file_path, filename) for file_path, filename in ba2_files]
-
-        # Process all files concurrently and collect results
-        msg_info(f"Processing {len(ba2_files)} BA2 files concurrently...")
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Process BA2 files in optimized batches for better concurrency control
+        msg_info(f"Processing {len(ba2_files)} BA2 files with optimized batching...")
+        
+        # Calculate optimal batch size based on system resources
+        batch_size = min(MAX_CONCURRENT_SUBPROCESSES * 2, len(ba2_files))
+        results = []
+        
+        # Process in controlled batches to avoid overwhelming the system
+        for i in range(0, len(ba2_files), batch_size):
+            batch = ba2_files[i:i + batch_size]
+            batch_tasks = [process_single_ba2(file_path, filename) for file_path, filename in batch]
+            batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
+            results.extend(batch_results)
+            
+            # Small delay between batches to prevent system overload
+            if i + batch_size < len(ba2_files):
+                await asyncio.sleep(0.1)
 
         # Merge results from all tasks
         for result in results:
@@ -598,16 +708,24 @@ class ScanGameCore:
                 for issue_type, items in result.items():
                     issue_lists[issue_type].update(items)
 
-        # Build the report using shared function
+        # Build the report using StringIO for efficiency
+        output = StringIO()
+        
+        # Write initial messages
+        for msg in message_list:
+            output.write(msg)
+        
         issue_messages = self.get_issue_messages(xse_acronym, "archived")
 
-        # Add found issues to message list
+        # Add found issues
         for issue_type, items in issue_lists.items():
             if items and issue_type in issue_messages:
-                message_list.extend(issue_messages[issue_type])
-                message_list.extend(sorted(items))
+                for msg in issue_messages[issue_type]:
+                    output.write(msg)
+                for item in sorted(items):
+                    output.write(item)
 
-        return "".join(message_list)
+        return output.getvalue()
 
     # Helper methods for internal operations
     async def _move_fomod_async(self, context: dict, root: Path, dirname: str) -> None:
@@ -655,30 +773,47 @@ class ScanGameCore:
             async with context["issue_locks"]["cleanup"]:
                 context["issue_lists"]["cleanup"].add(f"  - {relative_path}\n")
 
+    def _read_dds_header_mmap(self, file_path: Path) -> tuple[int, int] | None:
+        """Read DDS header using memory mapping for efficiency."""
+        try:
+            with file_path.open("rb") as f:
+                # Check if file is at least 20 bytes
+                f.seek(0, 2)  # Seek to end
+                file_size = f.tell()
+                if file_size < 20:
+                    return None
+                f.seek(0)  # Seek back to start
+                
+                # Use mmap for efficient header reading
+                with mmap.mmap(f.fileno(), length=20, access=mmap.ACCESS_READ) as mm:
+                    if mm[:4] == b"DDS ":
+                        width = struct.unpack("<I", mm[12:16])[0]
+                        height = struct.unpack("<I", mm[16:20])[0]
+                        return width, height
+        except (OSError, ValueError):
+            return None
+        return None
+
     async def _check_dds_batch_async(self, dds_files: list[tuple[Path, Path]], issue_lists: dict, issue_locks: dict) -> None:
-        """Check DDS dimensions for a batch of files."""
-
-        async def check_single_dds(file_path: Path, relative_path: Path) -> None:
+        """Check DDS dimensions for a batch of files using memory mapping."""
+        loop = asyncio.get_event_loop()
+        
+        # Process in batches using thread pool with memory mapping
+        futures = []
+        for file_path, relative_path in dds_files:
+            future = loop.run_in_executor(
+                self.header_executor, 
+                self._read_dds_header_mmap, 
+                file_path
+            )
+            futures.append((future, relative_path))
+        
+        # Gather results with semaphore for controlled concurrency
+        for future, relative_path in futures:
             async with self.dds_read_semaphore:
-                try:
-                    if aiofiles:
-                        async with aiofiles.open(file_path, "rb") as dds_file:
-                            dds_data: bytes = await dds_file.read(20)
-                    else:
-                        # Fallback to sync read in executor
-                        loop = asyncio.get_event_loop()
-                        with file_path.open("rb") as dds_file:
-                            dds_data: bytes = await loop.run_in_executor(None, dds_file.read, 20)
-
-                    if dds_data[:4] == b"DDS ":
-                        width = struct.unpack("<I", dds_data[12:16])[0]
-                        height = struct.unpack("<I", dds_data[16:20])[0]
-                        if width % 2 != 0 or height % 2 != 0:
-                            async with issue_locks["tex_dims"]:
-                                issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})")
-                except OSError as e:
-                    msg_warning(f"Failed to read DDS file {file_path}: {e}")
-
-        # Process all DDS files concurrently
-        tasks = [check_single_dds(file_path, relative_path) for file_path, relative_path in dds_files]
-        await asyncio.gather(*tasks, return_exceptions=True)
+                result = await future
+                if result:
+                    width, height = result
+                    if width % 2 != 0 or height % 2 != 0:
+                        async with issue_locks["tex_dims"]:
+                            issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})")

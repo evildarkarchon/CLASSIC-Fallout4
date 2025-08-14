@@ -8,7 +8,7 @@ from textual.widgets import Input
 
 from ClassicLib.TUI.app import CLASSICTuiApp
 from ClassicLib.TUI.handlers.message_handler import TuiMessageHandler
-from ClassicLib.TUI.handlers.papyrus_handler import TuiPapyrusHandler, PapyrusStats
+from ClassicLib.TUI.handlers.papyrus_handler import PapyrusStats, TuiPapyrusHandler
 from ClassicLib.TUI.handlers.scan_handler import TuiScanHandler
 from ClassicLib.TUI.screens.help_screen import HelpScreen
 from ClassicLib.TUI.screens.main_screen import MainScreen
@@ -450,7 +450,7 @@ class TestPapyrusHandler:
     async def test_papyrus_handler_initialization(self):
         """Test Papyrus handler initializes correctly."""
         handler = TuiPapyrusHandler(use_unicode=True)
-        
+
         assert handler.use_unicode is True
         assert handler.is_monitoring is False
         assert handler.last_stats is None
@@ -459,11 +459,11 @@ class TestPapyrusHandler:
     async def test_papyrus_handler_unicode_detection(self):
         """Test Unicode detection in Papyrus handler."""
         handler = TuiPapyrusHandler()
-        
+
         # Test manual setting
         handler.set_unicode_mode(False)
         assert handler.use_unicode is False
-        
+
         handler.set_unicode_mode(True)
         assert handler.use_unicode is True
 
@@ -471,7 +471,7 @@ class TestPapyrusHandler:
     async def test_papyrus_handler_parse_output(self):
         """Test parsing Papyrus log output."""
         handler = TuiPapyrusHandler()
-        
+
         test_output = """
         NUMBER OF DUMPS    : 5
         NUMBER OF STACKS   : 10
@@ -479,9 +479,9 @@ class TestPapyrusHandler:
         NUMBER OF WARNINGS : 20
         NUMBER OF ERRORS   : 3
         """
-        
+
         stats = handler._parse_papyrus_output(test_output, 5)
-        
+
         assert stats.dumps == 5
         assert stats.stacks == 10
         assert stats.ratio == 0.5
@@ -492,16 +492,16 @@ class TestPapyrusHandler:
     async def test_papyrus_handler_monitoring(self):
         """Test Papyrus monitoring start/stop."""
         handler = TuiPapyrusHandler()
-        
+
         # Mock papyrus_logging
         with patch("ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging") as mock_logging:
             mock_logging.return_value = ("Test output", 0)
-            
+
             # Start monitoring
             success = await handler.start_monitoring()
             assert success is True
             assert handler.is_monitoring is True
-            
+
             # Stop monitoring
             await handler.stop_monitoring()
             assert handler.is_monitoring is False
@@ -511,40 +511,29 @@ class TestPapyrusHandler:
         """Test Papyrus handler callbacks."""
         stats_received = []
         errors_received = []
-        
+
         def stats_callback(stats):
             stats_received.append(stats)
-        
+
         def error_callback(error):
             errors_received.append(error)
-        
-        handler = TuiPapyrusHandler(
-            stats_callback=stats_callback,
-            error_callback=error_callback
-        )
-        
+
+        handler = TuiPapyrusHandler(stats_callback=stats_callback, error_callback=error_callback)
+
         # Test stats callback
-        test_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=5,
-            stacks=10,
-            warnings=15,
-            errors=2,
-            ratio=0.5,
-            raw_output="Test"
-        )
-        
+        test_stats = PapyrusStats(timestamp=datetime.now(), dumps=5, stacks=10, warnings=15, errors=2, ratio=0.5, raw_output="Test")
+
         # Manually trigger callback
         if handler.stats_callback:
             handler.stats_callback(test_stats)
-        
+
         assert len(stats_received) == 1
         assert stats_received[0] == test_stats
-        
+
         # Test error callback
         if handler.error_callback:
             handler.error_callback("Test error")
-        
+
         assert len(errors_received) == 1
         assert errors_received[0] == "Test error"
 
@@ -560,7 +549,7 @@ class TestPapyrusScreen:
             screen = PapyrusScreen(use_unicode=True)
             app.push_screen(screen)
             await pilot.pause()
-            
+
             # Check screen components exist
             assert screen.monitor_widget is not None
             assert screen.output_viewer is not None
@@ -574,18 +563,18 @@ class TestPapyrusScreen:
             screen = PapyrusScreen()
             app.push_screen(screen)
             await pilot.pause()
-            
+
             # Mock papyrus_logging
             with patch("ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging") as mock_logging:
                 mock_logging.return_value = ("Test output", 0)
-                
+
                 # Start monitoring (should auto-start on mount)
                 assert screen.is_monitoring is True
-                
+
                 # Stop monitoring
                 await screen.stop_monitoring()
                 assert screen.is_monitoring is False
-                
+
                 # Toggle back on
                 await screen.action_toggle_monitoring()
                 assert screen.is_monitoring is True
@@ -598,14 +587,14 @@ class TestPapyrusScreen:
             screen = PapyrusScreen(use_unicode=True)
             app.push_screen(screen)
             await pilot.pause()
-            
+
             # Initial state
             assert screen.use_unicode is True
-            
+
             # Toggle Unicode
             screen.action_toggle_unicode()
             assert screen.use_unicode is False
-            
+
             # Toggle back
             screen.action_toggle_unicode()
             assert screen.use_unicode is True
@@ -617,38 +606,38 @@ class TestPapyrusScreen:
         async with app.run_test() as pilot:
             # Open main screen first
             await pilot.pause()
-            
+
             # Open Papyrus screen with F7
             await pilot.press("f7")
             await pilot.pause()
-            
+
             screen = app.screen
             assert isinstance(screen, PapyrusScreen)
-            
+
             # Mock papyrus_logging for testing
             with patch("ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging") as mock_logging:
                 mock_logging.return_value = ("Test output", 0)
-                
+
                 # Test S key for start/stop
                 await pilot.press("s")
                 await pilot.pause()
-                
+
                 # Test R key for refresh
                 await pilot.press("r")
                 await pilot.pause()
-                
+
                 # Test C key for clear
                 await pilot.press("c")
                 await pilot.pause()
-                
+
                 # Test U key for Unicode toggle
                 await pilot.press("u")
                 await pilot.pause()
-                
+
                 # Test Escape to close
                 await pilot.press("escape")
                 await pilot.pause()
-                
+
                 # Should be back to main screen
                 assert isinstance(app.screen, MainScreen)
 
@@ -660,21 +649,15 @@ class TestPapyrusScreen:
             screen = PapyrusScreen()
             app.push_screen(screen)
             await pilot.pause()
-            
+
             # Create test stats
             stats = PapyrusStats(
-                timestamp=datetime.now(),
-                dumps=10,
-                stacks=20,
-                warnings=30,
-                errors=5,
-                ratio=0.5,
-                raw_output="Test output with stats"
+                timestamp=datetime.now(), dumps=10, stacks=20, warnings=30, errors=5, ratio=0.5, raw_output="Test output with stats"
             )
-            
+
             # Update screen with stats
             screen._on_stats_update(stats)
-            
+
             # Verify monitor widget was updated
             assert screen.monitor_widget.dumps == 10
             assert screen.monitor_widget.stacks == 20

@@ -121,7 +121,7 @@ class TestCompleteWorkflow:
         app = CLASSICTuiApp()
         async with app.run_test() as pilot:
             from ClassicLib.TUI.screens.papyrus_screen import PapyrusScreen
-            
+
             await pilot.pause()  # Wait for app to mount
             main_screen = app.screen
             assert isinstance(main_screen, MainScreen)
@@ -130,16 +130,25 @@ class TestCompleteWorkflow:
             with patch("ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging") as mock_logging:
                 # Simulate log data with increasing errors
                 log_outputs = [
-                    ("NUMBER OF DUMPS    : 0\nNUMBER OF STACKS   : 0\nDUMPS/STACKS RATIO : 0.0\nNUMBER OF WARNINGS : 5\nNUMBER OF ERRORS   : 2\n", 0),
-                    ("NUMBER OF DUMPS    : 2\nNUMBER OF STACKS   : 5\nDUMPS/STACKS RATIO : 0.4\nNUMBER OF WARNINGS : 10\nNUMBER OF ERRORS   : 5\n", 2),
-                    ("NUMBER OF DUMPS    : 5\nNUMBER OF STACKS   : 10\nDUMPS/STACKS RATIO : 0.5\nNUMBER OF WARNINGS : 25\nNUMBER OF ERRORS   : 12\n", 5),
+                    (
+                        "NUMBER OF DUMPS    : 0\nNUMBER OF STACKS   : 0\nDUMPS/STACKS RATIO : 0.0\nNUMBER OF WARNINGS : 5\nNUMBER OF ERRORS   : 2\n",
+                        0,
+                    ),
+                    (
+                        "NUMBER OF DUMPS    : 2\nNUMBER OF STACKS   : 5\nDUMPS/STACKS RATIO : 0.4\nNUMBER OF WARNINGS : 10\nNUMBER OF ERRORS   : 5\n",
+                        2,
+                    ),
+                    (
+                        "NUMBER OF DUMPS    : 5\nNUMBER OF STACKS   : 10\nDUMPS/STACKS RATIO : 0.5\nNUMBER OF WARNINGS : 25\nNUMBER OF ERRORS   : 12\n",
+                        5,
+                    ),
                 ]
                 mock_logging.side_effect = log_outputs
 
                 # Step 1: Open Papyrus monitor
                 await pilot.press("f7")
                 await pilot.pause()
-                
+
                 papyrus_screen = app.screen
                 assert isinstance(papyrus_screen, PapyrusScreen)
 
@@ -165,7 +174,7 @@ class TestCompleteWorkflow:
                 # Step 7: Return to main screen
                 await pilot.press("escape")
                 await pilot.pause()
-                
+
                 assert isinstance(app.screen, MainScreen)
 
     @pytest.mark.asyncio
@@ -317,7 +326,7 @@ class TestUserInteractions:
             # Main -> Papyrus Monitor
             with patch("ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging") as mock_logging:
                 mock_logging.return_value = ("Test output", 0)
-                
+
                 await pilot.press("f7")
                 await pilot.pause()
                 screens_visited.append(type(app.screen).__name__)

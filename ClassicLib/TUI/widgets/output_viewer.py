@@ -120,10 +120,7 @@ class OutputViewer(Static):
         """
         # Format the message efficiently
         formatted_text = (
-            _TIMESTAMP_FORMAT.format(
-                timestamp=datetime.now().strftime("%H:%M:%S"),
-                text=text
-            ) if self.show_timestamps else text
+            _TIMESTAMP_FORMAT.format(timestamp=datetime.now().strftime("%H:%M:%S"), text=text) if self.show_timestamps else text
         )
 
         # Apply style formatting using pre-compiled format strings
@@ -241,8 +238,7 @@ class OutputViewer(Static):
             buffer_copy = self._output_buffer.copy()
 
         # Use list comprehension for better performance
-        self.search_matches = [i for i, line in enumerate(buffer_copy) 
-                              if query_lower in line.lower()]
+        self.search_matches = [i for i, line in enumerate(buffer_copy) if query_lower in line.lower()]
 
         # Update results display
         results_label = self.query_one("#search-results", Static)

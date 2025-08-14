@@ -85,9 +85,10 @@ class TuiPapyrusHandler:
         self._stop_event = asyncio.Event()
         self._monitor_lock = asyncio.Lock()
 
+
 def _detect_unicode_support_impl() -> bool:
     """Detect if terminal supports Unicode (implementation).
-    
+
     Returns:
         True if Unicode is likely supported, False for ASCII fallback
     """
@@ -138,7 +139,7 @@ def _detect_unicode_support_impl() -> bool:
 
 def _get_unicode_support_cached() -> bool:
     """Get cached Unicode support detection result.
-    
+
     Returns:
         Cached result of Unicode support detection
     """
@@ -311,14 +312,14 @@ class TuiPapyrusHandler:
         async with self._monitor_lock:
             if not self.is_monitoring:
                 return
-                
+
             if self.monitor_task and not self.monitor_task.done():
                 self._stop_event.set()
                 self.monitor_task.cancel()
                 try:
                     # Wait for the task to complete cancellation with timeout
                     await asyncio.wait_for(self.monitor_task, timeout=5.0)
-                except (asyncio.CancelledError, asyncio.TimeoutError):
+                except (TimeoutError, asyncio.CancelledError):
                     # Expected when task is cancelled or takes too long
                     pass
                 finally:

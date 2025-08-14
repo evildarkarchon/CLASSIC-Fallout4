@@ -75,7 +75,7 @@ class TuiScanHandler:
                             orig = classic_settings(str, "Scan Folder")
                             classic_settings.set_value("Scan Folder", scan_folder)
                             return orig
-                        
+
                         original_folder = await asyncio.to_thread(batch_settings_operation)
                         self._send_output(f"📁 Scanning folder: {scan_folder}")
                     except Exception:

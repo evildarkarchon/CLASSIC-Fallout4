@@ -238,21 +238,21 @@ class PapyrusMonitorWidget(Widget):
 
     def _get_severity_class(self, value: float, warning_threshold: float, error_threshold: float) -> str:
         """Get severity class based on value and thresholds.
-        
+
         Args:
             value: The value to check
             warning_threshold: Threshold for warning level
             error_threshold: Threshold for error level
-            
+
         Returns:
             CSS class name: "normal", "warning", or "error"
         """
         if value > error_threshold:
             return "error"
-        elif value > warning_threshold:
+        if value > warning_threshold:
             return "warning"
         return "normal"
-    
+
     def _update_value_styles(self) -> None:
         """Update value label styles based on thresholds."""
         try:
@@ -263,12 +263,12 @@ class PapyrusMonitorWidget(Widget):
                 "#errors-value": (self.errors, 5, 10),
                 "#ratio-value": (self.ratio, 0.2, 0.5),
             }
-            
+
             # Batch update all labels efficiently
             for selector, (value, warn_threshold, error_threshold) in thresholds.items():
                 label = self.query_one(selector, Label)
                 severity_class = self._get_severity_class(value, warn_threshold, error_threshold)
-                
+
                 # Set classes in one operation instead of multiple add/remove calls
                 label.set_classes(f"stat-value {severity_class}")
 
@@ -320,11 +320,9 @@ class PapyrusMonitorWidget(Widget):
 
     class MonitoringToggled(Message):
         """Message sent when monitoring is toggled."""
-        pass
 
     class RefreshRequested(Message):
         """Message sent when refresh is requested."""
-        pass
 
     def action_toggle_monitoring(self) -> None:
         """Toggle monitoring action."""

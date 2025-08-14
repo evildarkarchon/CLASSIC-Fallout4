@@ -7,6 +7,7 @@ import pytest
 from textual.app import App
 from textual.widgets import Button, Label
 
+from ClassicLib.TUI.handlers.papyrus_handler import PapyrusStats
 from ClassicLib.TUI.widgets.confirmation_dialog import (
     ConfirmationDialog,
     ErrorDialog,
@@ -17,7 +18,6 @@ from ClassicLib.TUI.widgets.output_viewer import OutputViewer
 from ClassicLib.TUI.widgets.papyrus_monitor import PapyrusMonitorWidget
 from ClassicLib.TUI.widgets.scan_buttons import ScanButton
 from ClassicLib.TUI.widgets.status_bar import StatusBar
-from ClassicLib.TUI.handlers.papyrus_handler import PapyrusStats
 
 
 class TestStatusBar:
@@ -369,15 +369,7 @@ class TestPapyrusMonitorWidget:
             await pilot.pause()
 
             # Create test stats
-            stats = PapyrusStats(
-                timestamp=datetime.now(),
-                dumps=10,
-                stacks=20,
-                warnings=30,
-                errors=5,
-                ratio=0.5,
-                raw_output="Test output"
-            )
+            stats = PapyrusStats(timestamp=datetime.now(), dumps=10, stacks=20, warnings=30, errors=5, ratio=0.5, raw_output="Test output")
 
             # Update widget with stats
             widget.update_stats(stats)
@@ -398,15 +390,7 @@ class TestPapyrusMonitorWidget:
             widget_unicode = PapyrusMonitorWidget(use_unicode=True)
             pilot.app.mount(widget_unicode)
 
-            stats = PapyrusStats(
-                timestamp=datetime.now(),
-                dumps=0,
-                stacks=0,
-                warnings=0,
-                errors=0,
-                ratio=0.0,
-                raw_output=""
-            )
+            stats = PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0, raw_output="")
 
             # Check Unicode symbols
             symbol = stats.get_status_symbol(True)
@@ -440,15 +424,7 @@ class TestPapyrusMonitorWidget:
             pilot.app.mount(widget)
 
             # Set some stats
-            stats = PapyrusStats(
-                timestamp=datetime.now(),
-                dumps=10,
-                stacks=20,
-                warnings=30,
-                errors=5,
-                ratio=0.5,
-                raw_output="Test"
-            )
+            stats = PapyrusStats(timestamp=datetime.now(), dumps=10, stacks=20, warnings=30, errors=5, ratio=0.5, raw_output="Test")
             widget.update_stats(stats)
 
             # Clear stats
@@ -470,37 +446,13 @@ class TestPapyrusMonitorWidget:
             pilot.app.mount(widget)
 
             # Test normal state (green)
-            stats_normal = PapyrusStats(
-                timestamp=datetime.now(),
-                dumps=0,
-                stacks=0,
-                warnings=5,
-                errors=2,
-                ratio=0.0,
-                raw_output=""
-            )
+            stats_normal = PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=5, errors=2, ratio=0.0, raw_output="")
             assert stats_normal.get_status_color() == "green"
 
             # Test warning state (yellow)
-            stats_warning = PapyrusStats(
-                timestamp=datetime.now(),
-                dumps=5,
-                stacks=10,
-                warnings=25,
-                errors=8,
-                ratio=0.5,
-                raw_output=""
-            )
+            stats_warning = PapyrusStats(timestamp=datetime.now(), dumps=5, stacks=10, warnings=25, errors=8, ratio=0.5, raw_output="")
             assert stats_warning.get_status_color() == "yellow"
 
             # Test error state (red)
-            stats_error = PapyrusStats(
-                timestamp=datetime.now(),
-                dumps=20,
-                stacks=30,
-                warnings=100,
-                errors=15,
-                ratio=0.67,
-                raw_output=""
-            )
+            stats_error = PapyrusStats(timestamp=datetime.now(), dumps=20, stacks=30, warnings=100, errors=15, ratio=0.67, raw_output="")
             assert stats_error.get_status_color() == "red"

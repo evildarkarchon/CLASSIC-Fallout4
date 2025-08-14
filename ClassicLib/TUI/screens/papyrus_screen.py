@@ -305,7 +305,7 @@ class PapyrusScreen(Screen):
         if self.handler and self.handler.is_monitoring_active():
             # Create a task to stop monitoring properly
             asyncio.create_task(self._async_cleanup())
-    
+
     async def _async_cleanup(self) -> None:
         """Async cleanup helper."""
         try:

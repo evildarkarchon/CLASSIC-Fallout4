@@ -60,22 +60,22 @@ class MainScreen(Screen):
         # Cache frequently accessed widgets for performance
         self._widget_cache = {}
         self._cache_widgets()
-        
+
         self._load_folder_paths()
         self._setup_event_handlers()
         self._setup_focus_order()
-    
+
     def _cache_widgets(self) -> None:
         """Cache frequently accessed widgets to avoid repeated queries."""
         try:
             self._widget_cache = {
-                'mods_folder': self.query_one("#mods-folder", FolderSelector),
-                'scan_folder': self.query_one("#scan-folder", FolderSelector),
-                'crash_scan': self.query_one("#crash-scan", ScanButton),
-                'game_scan': self.query_one("#game-scan", ScanButton),
-                'papyrus_monitor': self.query_one("#papyrus-monitor", Button),
-                'update_check': self.query_one("#update-check", Checkbox),
-                'output': self.query_one("#output", OutputViewer),
+                "mods_folder": self.query_one("#mods-folder", FolderSelector),
+                "scan_folder": self.query_one("#scan-folder", FolderSelector),
+                "crash_scan": self.query_one("#crash-scan", ScanButton),
+                "game_scan": self.query_one("#game-scan", ScanButton),
+                "papyrus_monitor": self.query_one("#papyrus-monitor", Button),
+                "update_check": self.query_one("#update-check", Checkbox),
+                "output": self.query_one("#output", OutputViewer),
             }
         except Exception:
             # Widgets might not be ready yet
@@ -84,7 +84,7 @@ class MainScreen(Screen):
     def _setup_focus_order(self) -> None:
         """Set up the tab focus order for widgets."""
         # Use cached widget if available
-        mods_folder = self._widget_cache.get('mods_folder') or self.query_one("#mods-folder", FolderSelector)
+        mods_folder = self._widget_cache.get("mods_folder") or self.query_one("#mods-folder", FolderSelector)
         mods_folder.focus()
 
     def _load_folder_paths(self) -> None:
@@ -92,13 +92,13 @@ class MainScreen(Screen):
         try:
             staging_path = classic_settings(str, "ModStagingFolder")
             if staging_path:
-                mods_folder = self._widget_cache.get('mods_folder') or self.query_one("#mods-folder", FolderSelector)
+                mods_folder = self._widget_cache.get("mods_folder") or self.query_one("#mods-folder", FolderSelector)
                 mods_folder.value = staging_path
                 self.staging_folder = staging_path
 
             custom_path = classic_settings(str, "CustomScanFolder")
             if custom_path:
-                scan_folder = self._widget_cache.get('scan_folder') or self.query_one("#scan-folder", FolderSelector)
+                scan_folder = self._widget_cache.get("scan_folder") or self.query_one("#scan-folder", FolderSelector)
                 scan_folder.value = custom_path
                 self.custom_folder = custom_path
         except Exception:
@@ -107,19 +107,19 @@ class MainScreen(Screen):
     def _setup_event_handlers(self) -> None:
         """Setup event handlers for widgets."""
         # Use cached widgets if available
-        crash_scan = self._widget_cache.get('crash_scan') or self.query_one("#crash-scan", ScanButton)
+        crash_scan = self._widget_cache.get("crash_scan") or self.query_one("#crash-scan", ScanButton)
         crash_scan.on_click = self.perform_crash_scan
 
-        game_scan = self._widget_cache.get('game_scan') or self.query_one("#game-scan", ScanButton)
+        game_scan = self._widget_cache.get("game_scan") or self.query_one("#game-scan", ScanButton)
         game_scan.on_click = self.perform_game_scan
 
-        papyrus_btn = self._widget_cache.get('papyrus_monitor') or self.query_one("#papyrus-monitor", Button)
+        papyrus_btn = self._widget_cache.get("papyrus_monitor") or self.query_one("#papyrus-monitor", Button)
         papyrus_btn.on_click = self.toggle_papyrus_monitor
 
     async def perform_crash_scan(self) -> None:
         """Perform crash logs scan."""
         # Use cached widget if available
-        output = self._widget_cache.get('output') or self.query_one("#output", OutputViewer)
+        output = self._widget_cache.get("output") or self.query_one("#output", OutputViewer)
         output.clear()
         output.append_output("Starting crash logs scan...\n")
 
@@ -131,7 +131,7 @@ class MainScreen(Screen):
     async def perform_game_scan(self) -> None:
         """Perform game files scan."""
         # Use cached widget if available
-        output = self._widget_cache.get('output') or self.query_one("#output", OutputViewer)
+        output = self._widget_cache.get("output") or self.query_one("#output", OutputViewer)
         output.clear()
         output.append_output("Starting game files scan...\n")
 
@@ -203,37 +203,37 @@ class MainScreen(Screen):
 
     def action_focus_mods_folder(self) -> None:
         """Focus the mods folder input."""
-        widget = self._widget_cache.get('mods_folder') or self.query_one("#mods-folder", FolderSelector)
+        widget = self._widget_cache.get("mods_folder") or self.query_one("#mods-folder", FolderSelector)
         widget.focus()
 
     def action_focus_scan_folder(self) -> None:
         """Focus the scan folder input."""
-        widget = self._widget_cache.get('scan_folder') or self.query_one("#scan-folder", FolderSelector)
+        widget = self._widget_cache.get("scan_folder") or self.query_one("#scan-folder", FolderSelector)
         widget.focus()
 
     def action_focus_crash_scan(self) -> None:
         """Focus the crash scan button."""
-        widget = self._widget_cache.get('crash_scan') or self.query_one("#crash-scan", ScanButton)
+        widget = self._widget_cache.get("crash_scan") or self.query_one("#crash-scan", ScanButton)
         widget.focus()
 
     def action_focus_game_scan(self) -> None:
         """Focus the game scan button."""
-        widget = self._widget_cache.get('game_scan') or self.query_one("#game-scan", ScanButton)
+        widget = self._widget_cache.get("game_scan") or self.query_one("#game-scan", ScanButton)
         widget.focus()
 
     def action_focus_papyrus(self) -> None:
         """Focus the papyrus monitor button."""
-        widget = self._widget_cache.get('papyrus_monitor') or self.query_one("#papyrus-monitor", Button)
+        widget = self._widget_cache.get("papyrus_monitor") or self.query_one("#papyrus-monitor", Button)
         widget.focus()
 
     def action_focus_update_check(self) -> None:
         """Focus the update check checkbox."""
-        widget = self._widget_cache.get('update_check') or self.query_one("#update-check", Checkbox)
+        widget = self._widget_cache.get("update_check") or self.query_one("#update-check", Checkbox)
         widget.focus()
 
     def action_focus_output(self) -> None:
         """Focus the output viewer."""
-        widget = self._widget_cache.get('output') or self.query_one("#output", OutputViewer)
+        widget = self._widget_cache.get("output") or self.query_one("#output", OutputViewer)
         widget.focus()
 
     def on_key(self, event) -> None:
