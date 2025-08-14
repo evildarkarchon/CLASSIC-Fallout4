@@ -28,6 +28,7 @@ aiofiles = ">=24.1.0"
 pytest = ">=8.4.0"
 aiosqlite = ">=0.21.0"
 pefile = "<2024.8.26"
+textual = "^5.3.0"
 
 [tool.poetry.group.gui.dependencies]
 pyside6 = ">=6.8.0"
@@ -50,6 +51,8 @@ pyinstaller-hooks-contrib = ">=2025.0"
 pytest-qt = ">=4.4.0"
 psutil = "^7.0.0"
 pytest-xdist = "^3.8.0"
+pytest-textual-snapshot = "^1.1.0"
+textual-dev = "^1.7.0"
 
 [tool.poetry.group.windows]
 optional = true

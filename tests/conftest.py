@@ -30,14 +30,14 @@ _test_file_cache = {}
 def cached_test_files(tmp_path_factory) -> dict[str, Path]:
     """Generate and cache common test files to avoid repeated I/O operations."""
     global _test_file_cache
-    
+
     if not _test_file_cache:
         tmp_path = tmp_path_factory.mktemp("cached_test_files")
-        
+
         # Create cached crash log
         crash_log_dir = tmp_path / "cached_crash_logs"
         crash_log_dir.mkdir()
-        
+
         crash_log_file = crash_log_dir / "cached_crash.log"
         crash_log_file.write_text("""Fallout 4 v1.10.163
 Buffout 4 v1.28.6
@@ -54,11 +54,11 @@ PLUGINS:
 \t[01] DLCRobot.esm
 \t[02] TestMod.esp
 """)
-        
+
         # Create cached YAML file
         yaml_dir = tmp_path / "cached_yaml"
         yaml_dir.mkdir()
-        
+
         yaml_file = yaml_dir / "cached_settings.yaml"
         yaml_file.write_text("""CLASSIC_Settings:
   Managed Game: Fallout4
@@ -66,14 +66,14 @@ PLUGINS:
   FCX Mode: true
   Update Check: true
 """)
-        
+
         _test_file_cache = {
             "crash_log": crash_log_file,
             "crash_log_dir": crash_log_dir,
             "yaml_settings": yaml_file,
             "yaml_dir": yaml_dir,
         }
-    
+
     return _test_file_cache
 
 
@@ -452,8 +452,9 @@ async def async_cleanup() -> AsyncIterator[list[Any]]:
         except Exception as e:
             # Log but don't fail the test on cleanup errors
             import logging
+
             logging.warning(f"Error preparing async resource cleanup: {e}")
-    
+
     # Execute all cleanups concurrently
     if cleanup_tasks:
         await asyncio.gather(*cleanup_tasks, return_exceptions=True)
@@ -481,7 +482,7 @@ async def clean_event_loop():
     # Optimized task cleanup - use gather for concurrent cancellation
     current_tasks = set(asyncio.all_tasks(loop))
     new_tasks = current_tasks - initial_tasks
-    
+
     if new_tasks:
         # Cancel all new tasks concurrently
         for task in new_tasks:
@@ -492,9 +493,9 @@ async def clean_event_loop():
         try:
             await asyncio.wait_for(
                 asyncio.gather(*new_tasks, return_exceptions=True),
-                timeout=1.0  # Prevent tests from hanging on cleanup
+                timeout=1.0,  # Prevent tests from hanging on cleanup
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Force cleanup if tasks don't cancel gracefully
             pass
 

@@ -47,6 +47,7 @@ class YAML(Enum):
 SETTINGS_IGNORE_NONE = {
     "SCAN Custom Path",
     "MODS Folder Path",
+    "INI Folder Path",
     "Root_Folder_Game",
     "Root_Folder_Docs",
 }

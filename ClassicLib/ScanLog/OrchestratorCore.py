@@ -238,8 +238,30 @@ class OrchestratorCore:
         autoscan_report: list[str],
     ) -> None:
         """Run mod detection with async FormID analysis."""
-        # TODO: Implement proper mod detection
-        # Record scanner doesn't have detect_mods method - needs investigation
+        from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
+
+        # Run mod detection based on plugins loaded status
+        if trigger_plugins_loaded:
+            # Check for conflicting mods
+            detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins, autoscan_report)
+
+            # Check for frequently problematic mods
+            detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins, autoscan_report)
+
+            # Check for mods with known solutions
+            detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins, autoscan_report)
+
+            # Check FOLON-specific mods if Fallout: London is loaded
+            # Look for LondonWorldspace.esm in the plugin list (case-insensitive)
+            is_folon_loaded = any("londonworldspace.esm" in plugin_name.lower() for plugin_name in crashlog_plugins)
+            if is_folon_loaded and self.yamldata.game_mods_core_folon:
+                detect_mods_important(self.yamldata.game_mods_core_folon, crashlog_plugins, autoscan_report, crashlog_gpu_rival)
+            else:
+                # Check for important core mods with GPU considerations
+                detect_mods_important(self.yamldata.game_mods_core, crashlog_plugins, autoscan_report, crashlog_gpu_rival)
+
+            # Check for OPC2 mods
+            detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins, autoscan_report)
 
         # Use async FormID analyzer if available
         if self._async_formid_analyzer and self._last_formids:
@@ -403,13 +425,19 @@ class OrchestratorCore:
         self.fcx_handler.check_fcx_mode()
         self.fcx_handler.get_fcx_messages(autoscan_report)
 
-        # Scan basic settings - simplified for now
-        # TODO: Implement proper settings scanning with required mod detection
+        # Scan settings with required mod detection
+        # Check for X-Cell and Baka ScrapHeap mods for memory management settings
+        has_xcell = "xcell.dll" in xsemodules
+        has_baka_scrapheap = "bakascrapheap.dll" in xsemodules
+
+        # Scan all settings including memory management
         self.settings_scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
+        self.settings_scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, has_xcell, has_baka_scrapheap)
         self.settings_scanner.scan_archivelimit_setting(autoscan_report, crashgen)
         self.settings_scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
 
     def _scan_specific_suspects(self, segment_callstack: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
-        """Scan for specific suspects in crash log."""
-        # This method appears to be redundant with _run_suspect_scanning
-        # Left as a placeholder for potential future specific suspect scanning
+        """Scan for named records in crash log."""
+        # Scan for named records (previously called specific suspects)
+        records_matches: list[str] = []
+        self.record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)

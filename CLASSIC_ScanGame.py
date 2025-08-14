@@ -18,6 +18,12 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 # ================================================
 # CHECK ERRORS IN LOG FILES FOR GIVEN FOLDER
 # ================================================
+def get_scan_game_core() -> ScanGameCore:
+    """Get singleton ScanGameCore instance from GlobalRegistry."""
+    # ScanGameCore's __new__ method handles singleton via GlobalRegistry
+    return ScanGameCore()
+
+
 def check_log_errors(folder_path: Path | str) -> str:
     """
     Sync adapter for async check_log_errors.
@@ -33,7 +39,7 @@ def check_log_errors(folder_path: Path | str) -> str:
     Returns:
         str: A detailed report of all detected errors in the relevant log files, if any.
     """
-    core = ScanGameCore()
+    core = get_scan_game_core()
     return asyncio.run(core.check_log_errors(folder_path))
 
 
@@ -47,8 +53,8 @@ def get_scan_settings() -> tuple[str, dict[str, str], Path | None]:
     Returns:
         tuple: (xse_acronym, xse_scriptfiles, mod_path)
     """
-    # Delegate to core for consistency
-    core = ScanGameCore()
+    # Delegate to singleton core for consistency
+    core = get_scan_game_core()
     return core.get_scan_settings()
 
 
@@ -63,8 +69,8 @@ def get_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:
     Returns:
         dict: Dictionary of issue types and their message templates
     """
-    # Delegate to core for consistency
-    core = ScanGameCore()
+    # Delegate to singleton core for consistency
+    core = get_scan_game_core()
     return core.get_issue_messages(xse_acronym, mode)
 
 
@@ -82,7 +88,7 @@ def scan_mods_unpacked() -> str:
     Returns:
         str: Detailed report of scan results.
     """
-    core = ScanGameCore()
+    core = get_scan_game_core()
     return asyncio.run(core.scan_mods_unpacked())
 
 
@@ -106,7 +112,7 @@ def scan_mods_archived() -> str:
         subprocess.SubprocessError: If there is an error while running `BSArch`
         commands for file dumping or listing.
     """
-    core = ScanGameCore()
+    core = get_scan_game_core()
     return asyncio.run(core.scan_mods_archived())
 
 
@@ -276,6 +282,22 @@ def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUD
     return unpacked + archived
 
 
+def main() -> None:
+    """Main entry point for game scanning."""
+
+    # Initialize application using SetupCoordinator
+    coordinator = SetupCoordinator()
+    coordinator.initialize_application(is_gui=False)
+    coordinator.run_initial_setup()
+
+    if TEST_MODE:
+        write_combined_results()
+    else:
+        msg_info(game_combined_result())
+        msg_info(mods_combined_result())
+        game_files_manage("Backup ENB")
+
+
 def write_combined_results() -> None:
     """
     Writes combined results of game and mods into a markdown report file.
@@ -293,14 +315,5 @@ def write_combined_results() -> None:
 
 
 if __name__ == "__main__":
-    # Initialize application using SetupCoordinator
-    coordinator = SetupCoordinator()
-    coordinator.initialize_application(is_gui=False)
-    coordinator.run_initial_setup()
-    if TEST_MODE:
-        write_combined_results()
-    else:
-        msg_info(game_combined_result())
-        msg_info(mods_combined_result())
-        game_files_manage("Backup ENB")
-        input("Press Enter to continue...")
+    main()
+    input("Press Enter to continue...")
