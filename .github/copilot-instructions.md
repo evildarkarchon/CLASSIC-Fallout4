@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-CLASSIC is a crash log analyzer for Fallout 4 and Skyrim that processes Buffout 4/Crash Logger output. The architecture evolved from monolithic to async-first orchestrator pattern supporting both GUI (PySide6) and CLI modes.
+CLASSIC is a crash log analyzer for Fallout 4 and Skyrim that processes Buffout 4/Crash Logger output. The architecture evolved from monolithic to async-first orchestrator pattern supporting three interfaces: GUI (PySide6), TUI (Textual), and CLI modes.
 
 ## Essential Development Commands
 
@@ -14,6 +14,7 @@ poetry install --with windows          # Include Windows-specific dependencies
 
 # Running the application
 python CLASSIC_Interface.py            # GUI mode
+python CLASSIC_TUI.py                  # TUI mode (Terminal UI)
 python CLASSIC_ScanLogs.py            # CLI mode
 python CLASSIC_ScanGame.py            # Game integrity checker
 
@@ -38,6 +39,7 @@ poetry up --latest                     # Update dependencies
 ### Entry Points
 - `CLASSIC_ScanLogs.py` - CLI with async/sync fallback
 - `CLASSIC_Interface.py` - GUI with PySide6
+- `CLASSIC_TUI.py` - Terminal UI with Textual framework
 - `CLASSIC_ScanGame.py` - Game file validation
 
 ### Component Coordination
@@ -70,6 +72,21 @@ msg_info("Processing complete")         # ✓ Correct
 print("Processing complete")            # ✗ Never do this
 ```
 
+### FileIOCore (Unified Async File Operations)
+```python
+from ClassicLib.FileIOCore import FileIOCore
+
+# Async-first file operations
+async def process_files():
+    io_core = FileIOCore()
+    content = await io_core.read_file(path)
+    await io_core.write_file(output_path, processed_content)
+
+# Sync fallback available
+from ClassicLib.FileIOCore import read_file_sync
+content = read_file_sync(path)
+```
+
 ### Async/Sync Compatibility
 ```python
 try:
@@ -97,6 +114,18 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
     scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
 ```
 
+### Test Markers and Categories
+```python
+# Use appropriate pytest markers for test categorization
+@pytest.mark.unit                # Fast, isolated tests
+@pytest.mark.integration         # Multi-component tests
+@pytest.mark.async_test          # Async/await pattern tests
+@pytest.mark.gui                 # GUI-dependent tests (requires Qt)
+@pytest.mark.slow                # Tests taking >1 second
+@pytest.mark.performance         # Performance regression tests
+@pytest.mark.file_io             # File I/O operations
+```
+
 ## Development Workflows
 
 ### Environment Setup
@@ -116,6 +145,13 @@ Available VS Code tasks:
 - `cleanup-pyinstaller-folders`: Removes build artifacts
 
 ## Key Integration Points
+
+### TUI Architecture (Terminal User Interface)
+- **Main app**: `ClassicLib/TUI/app.py` - Textual application controller
+- **Screens**: `ClassicLib/TUI/screens/` - Full-screen interfaces (main, help, settings, papyrus)
+- **Widgets**: `ClassicLib/TUI/widgets/` - Reusable UI components (progress bars, dialogs, input forms)
+- **Handlers**: `ClassicLib/TUI/handlers/` - Business logic handlers for scan operations
+- **Themes**: `ClassicLib/TUI/themes/` - UI styling and color schemes
 
 ### Crash Log Processing Pipeline
 1. **File discovery**: `crashlogs_get_files()` finds log files
@@ -173,7 +209,9 @@ Available VS Code tasks:
 
 - `ClassicLib/__init__.py` - Main exports and MessageHandler functions
 - `ClassicLib/ScanLog/OrchestratorCore.py` - Async-first core orchestration  
+- `ClassicLib/FileIOCore.py` - Unified async file I/O operations
 - `ClassicLib/MessageHandler.py` - Universal output system
 - `ClassicLib/GlobalRegistry.py` - Shared state management
+- `ClassicLib/TUI/app.py` - Terminal UI application controller
 - `tests/conftest.py` - Test fixtures and initialization
 - `.cursor/rules/classic-fallout4-standards.mdc` - Comprehensive standards
