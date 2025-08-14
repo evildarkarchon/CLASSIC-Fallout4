@@ -278,12 +278,12 @@ def mods_combined_result() -> str:  # KEEP THESE SEPARATE SO THEY ARE NOT INCLUD
 
 def main() -> None:
     """Main entry point for game scanning."""
-    
+
     # Initialize application using SetupCoordinator
     coordinator = SetupCoordinator()
     coordinator.initialize_application(is_gui=False)
     coordinator.run_initial_setup()
-    
+
     if TEST_MODE:
         write_combined_results()
     else:

@@ -3,12 +3,12 @@
 from textual.app import ComposeResult
 from textual.containers import Container, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Button, Static, TabbedContent, TabPane, Markdown
+from textual.widgets import Button, Markdown, Static, TabbedContent, TabPane
 
 
 class HelpScreen(ModalScreen):
     """Modal help screen with keyboard shortcuts and usage information."""
-    
+
     CSS = """
     HelpScreen {
         align: center middle;
@@ -58,27 +58,27 @@ class HelpScreen(ModalScreen):
         margin-top: 1;
     }
     """
-    
+
     def compose(self) -> ComposeResult:
         """Compose help screen layout."""
         with Container(id="help-container"):
             yield Static("📚 CLASSIC TUI - Help & Documentation", classes="help-title")
-            
+
             with TabbedContent(classes="help-content"):
                 with TabPane("Keyboard Shortcuts", id="shortcuts-tab"):
                     yield VerticalScroll(Markdown(self._get_shortcuts_text()))
-                
+
                 with TabPane("Usage Guide", id="usage-tab"):
                     yield VerticalScroll(Markdown(self._get_usage_text()))
-                
+
                 with TabPane("Features", id="features-tab"):
                     yield VerticalScroll(Markdown(self._get_features_text()))
-                
+
                 with TabPane("Troubleshooting", id="troubleshooting-tab"):
                     yield VerticalScroll(Markdown(self._get_troubleshooting_text()))
-            
+
             yield Button("Close (ESC)", id="close-help", variant="primary")
-    
+
     def _get_shortcuts_text(self) -> str:
         """Generate keyboard shortcuts documentation."""
         return """
@@ -112,7 +112,7 @@ class HelpScreen(ModalScreen):
 - **Space** - Pause/Resume scan
 - **ESC** - Cancel current scan
 """
-    
+
     def _get_usage_text(self) -> str:
         """Generate usage guide."""
         return """
@@ -160,7 +160,7 @@ Access settings with **Ctrl+O** to configure:
 - Display options
 - Performance settings
 """
-    
+
     def _get_features_text(self) -> str:
         """Generate features documentation."""
         return """
@@ -219,7 +219,7 @@ Access settings with **Ctrl+O** to configure:
 - Filtering capabilities
 - History tracking
 """
-    
+
     def _get_troubleshooting_text(self) -> str:
         """Generate troubleshooting guide."""
         return """
@@ -284,12 +284,12 @@ If issues persist:
 3. Export the output log for analysis
 4. Contact support with detailed information
 """
-    
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button press."""
         if event.button.id == "close-help":
             self.dismiss()
-    
+
     def on_key(self, event) -> None:
         """Handle key press."""
         if event.key == "escape":

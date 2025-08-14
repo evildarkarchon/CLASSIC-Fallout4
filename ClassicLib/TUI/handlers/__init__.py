@@ -1,9 +1,9 @@
 """TUI handler components."""
 
-from .scan_handler import TuiScanHandler
 from .message_handler import TuiMessageHandler
+from .scan_handler import TuiScanHandler
 
 __all__ = [
-    "TuiScanHandler",
     "TuiMessageHandler",
+    "TuiScanHandler",
 ]

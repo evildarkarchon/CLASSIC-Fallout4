@@ -26,11 +26,12 @@ The CLASSIC TUI follows these architectural principles:
 
 ### Technology Stack
 
-- **Framework**: Textual 0.47+ (Terminal UI framework)
+- **Framework**: Textual 0.89+ (Terminal UI framework)
 - **Async Runtime**: Python asyncio
-- **Testing**: pytest with textual testing extensions
+- **Testing**: pytest with textual testing extensions, async support
 - **Type Checking**: mypy with strict typing
-- **Styling**: Textual CSS
+- **Styling**: Textual CSS with theme support
+- **Python**: 3.12+ (uses modern features)
 
 ### Component Hierarchy
 
@@ -39,15 +40,20 @@ CLASSICTuiApp (Main Application)
 ├── Header (Built-in)
 ├── MainScreen (Primary Interface)
 │   ├── FolderSelector (Widget)
-│   ├── ScanButton (Widget)
-│   └── OutputViewer (Widget)
+│   ├── ScanButtons (Widget)
+│   ├── OutputViewer (Widget)
+│   └── Settings Checkbox
 ├── StatusBar (Custom Widget)
 └── Footer (Built-in)
 
-Modal Screens:
-├── HelpScreen
-├── SettingsScreen
-└── Confirmation Dialogs
+Modal/Full Screens:
+├── HelpScreen (Modal)
+├── SettingsScreen (Modal)
+├── PapyrusScreen (Full-screen monitor)
+│   ├── PapyrusMonitorWidget
+│   ├── OutputViewer
+│   └── Control Bar
+└── ConfirmationDialog (Modal)
 ```
 
 ## Project Structure
@@ -60,7 +66,8 @@ ClassicLib/TUI/
 │   ├── __init__.py
 │   ├── main_screen.py    # Primary interface
 │   ├── help_screen.py    # Help documentation
-│   └── settings_screen.py # Settings configuration
+│   ├── settings_screen.py # Settings configuration
+│   └── papyrus_screen.py # Papyrus monitoring screen
 ├── widgets/              # Reusable widgets
 │   ├── __init__.py
 │   ├── folder_selector.py
@@ -68,13 +75,18 @@ ClassicLib/TUI/
 │   ├── output_viewer.py
 │   ├── status_bar.py
 │   ├── progress_bar.py
+│   ├── papyrus_monitor.py # Papyrus stats widget
 │   └── confirmation_dialog.py
 ├── handlers/             # Business logic handlers
 │   ├── __init__.py
 │   ├── scan_handler.py   # Scan operations
-│   └── message_handler.py # Message routing
+│   ├── message_handler.py # Message routing
+│   └── papyrus_handler.py # Papyrus monitoring logic
 └── themes/               # Visual themes
     └── __init__.py
+
+Entry Point:
+├── CLASSIC_TUI.py        # Main entry point script
 ```
 
 ## Core Components
@@ -294,35 +306,39 @@ class NavigationApp(App):
 
 ```python
 class TuiScanHandler:
-    """Handles scan operations for TUI."""
+    """Bridges TUI events with core scan operations."""
     
-    def __init__(self, app: App, output: OutputViewer):
-        self.app = app
-        self.output = output
-        self.scanner = None
+    def __init__(self, output_callback: Callable[[str], None] | None = None):
+        self.output_callback = output_callback
+        self.scanner: ClassicScanLogs | None = None
+        self.current_task: asyncio.Task | None = None
+        self.is_scanning = False
+        self._scan_lock = asyncio.Lock()
     
-    async def perform_crash_scan(self) -> None:
-        """Execute crash log scan."""
+    async def perform_crash_scan(self, scan_folder: str | None = None, 
+                                progress_callback: Callable[[float], None] | None = None) -> bool:
+        """Execute crash log scan with concurrency control."""
+        async with self._scan_lock:
+            if self.is_scanning:
+                self._send_output("❌ Scan already in progress")
+                return False
+            self.is_scanning = True
+        
         try:
-            # Update UI state
-            self.app.query_one(StatusBar).update_status("Scanning...")
-            
             # Initialize scanner
             self.scanner = ClassicScanLogs()
+            init_message_handler(parent=None, is_gui_mode=False)
             
-            # Configure message handler
-            handler = TuiMessageHandler(self.output)
+            # Run async scan if available
+            if hasattr(self.scanner.orchestrator, "async_scan_logs"):
+                await self.scanner.orchestrator.async_scan_logs()
+            else:
+                await asyncio.to_thread(self.scanner.scan_logs)
             
-            # Run scan
-            result = await self.scanner.scan_logs_async()
-            
-            # Process results
-            await self.process_results(result)
-            
-        except Exception as e:
-            await self.output.write(f"Error: {e}", style="error")
+            return True
         finally:
-            self.app.query_one(StatusBar).mark_scan_complete()
+            async with self._scan_lock:
+                self.is_scanning = False
 ```
 
 ### Message Handler Pattern
@@ -657,8 +673,22 @@ class MyHandler:
 All new features must include:
 1. Unit tests for individual components
 2. Integration tests for component interaction
-3. Documentation updates
-4. Example usage in docstrings
+3. End-to-end tests for workflows
+4. Concurrency tests for async operations
+5. Performance tests for critical paths
+6. Documentation updates
+7. Example usage in docstrings
+
+### Test Organization
+
+```
+tests/
+├── test_tui_widgets.py      # Widget unit tests
+├── test_tui_integration.py  # Screen integration tests
+├── test_tui_e2e.py         # End-to-end workflows
+├── test_tui_concurrency.py  # Async/concurrent operations
+└── test_tui_performance.py  # Performance benchmarks
+```
 
 ### Performance Guidelines
 
@@ -699,9 +729,21 @@ class DebugWidget(Widget):
 
 ```bash
 # Run with inspector
-textual run --dev app.py
+textual run --dev CLASSIC_TUI.py
 
 # Press Ctrl+D to open inspector
+```
+
+### Async Debugging
+
+```python
+# Debug async operations
+import asyncio
+
+async def debug_operation():
+    print(f"Tasks before: {len(asyncio.all_tasks())}")
+    await operation()
+    print(f"Tasks after: {len(asyncio.all_tasks())}")
 ```
 
 ## Resources
@@ -710,16 +752,26 @@ textual run --dev app.py
 - [Textual Documentation](https://textual.textualize.io/)
 - [Python asyncio](https://docs.python.org/3/library/asyncio.html)
 - [pytest Documentation](https://docs.pytest.org/)
+- [CLASSIC Project Docs](../README.md)
 
 ### Examples
-- See `tests/` directory for examples
+- See `tests/test_tui_*.py` for test examples
 - Check `ClassicLib/TUI/widgets/` for widget patterns
 - Review `ClassicLib/TUI/screens/` for screen patterns
+- `CLASSIC_TUI.py` for entry point implementation
 
 ### Community
 - GitHub Issues for bug reports
 - Discussions for feature requests
 - Discord for real-time help
+
+### Key Features
+- **Async-First Architecture**: All I/O operations use asyncio
+- **Concurrent Scans**: Multiple operations can run in parallel
+- **Live Monitoring**: Real-time Papyrus log analysis
+- **Theme Support**: Customizable visual themes
+- **Unicode/ASCII**: Flexible display modes
+- **Modular Design**: Easy to extend and customize
 
 ## Conclusion
 

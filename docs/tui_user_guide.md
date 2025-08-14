@@ -42,7 +42,7 @@ cd CLASSIC-Fallout4
 poetry install
 
 # Run the TUI
-python CLASSIC_TUI.py
+poetry run python CLASSIC_TUI.py
 ```
 
 ## Getting Started
@@ -73,7 +73,8 @@ When you first launch CLASSIC TUI, you'll see the main screen with:
 
 ```
 ┌─────────────────────────────────────────────────┐
-│ CLASSIC - Crash Log Auto Scanner                │
+│ CLASSIC - Crash Log Auto Scanner & Setup       │
+│ Terminal User Interface                        │
 ├─────────────────────────────────────────────────┤
 │ MAIN OPTIONS                                    │
 │                                                 │
@@ -93,7 +94,7 @@ When you first launch CLASSIC TUI, you'll see the main screen with:
 │ │                                           │ │
 │ └───────────────────────────────────────────┘ │
 │                                                 │
-│ Status: Ready | Last Scan: Never | Folder: -   │
+│ Status: Ready | Progress: 0% | Game: Fallout4  │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -183,16 +184,23 @@ The game files scan verifies the integrity of your game installation.
 
 ### Papyrus Monitor
 
-The Papyrus monitor watches script logs in real-time for issues.
+The Papyrus monitor provides comprehensive real-time script log analysis with a dedicated full-screen interface.
 
 #### To use Papyrus monitoring:
-1. Press `F7` to start monitoring
-2. The monitor will:
-   - Watch Papyrus log files
-   - Highlight script errors
-   - Track performance issues
-   - Alert on stack dumps
-3. Press `F7` again to stop monitoring
+1. Press `F7` to open the Papyrus monitoring screen
+2. The dedicated screen displays:
+   - Real-time script statistics
+   - Error tracking and categorization
+   - Stack dump detection
+   - Performance metrics
+   - Raw log output viewer
+3. Monitor controls:
+   - `S` - Start/Stop monitoring
+   - `R` - Refresh statistics
+   - `C` - Clear output
+   - `U` - Toggle Unicode/ASCII display
+   - `ESC` or `Q` - Return to main screen
+4. The monitor automatically starts when you open the screen
 
 ## Managing Output
 
@@ -294,9 +302,27 @@ Press `Ctrl+O` to open the Settings screen with three sections:
 ### Status Bar Information
 
 The status bar provides real-time information:
-- **Status**: Current operation (Ready/Scanning/Error)
-- **Last Scan**: Timestamp of last completed scan
-- **Folder**: Active scan directory
+- **Status**: Current operation (Ready/Scanning/Error/Monitoring)
+- **Progress**: Percentage completion for active operations
+- **Game**: Currently selected game (Fallout4/Skyrim/SkyrimSE)
+
+### Papyrus Monitoring Screen
+
+The dedicated Papyrus screen provides:
+- **Real-time Statistics Dashboard**:
+  - Total lines processed
+  - Error count by severity
+  - Script performance metrics
+  - Stack dump detection
+- **Interactive Controls**:
+  - Start/Stop monitoring
+  - Manual refresh
+  - Clear statistics
+  - Unicode/ASCII toggle
+- **Raw Log Viewer**:
+  - Live log output
+  - Color-coded error highlighting
+  - Searchable content
 
 ### Confirmation Dialogs
 
@@ -313,6 +339,8 @@ For best performance:
 2. Clear output between scans
 3. Disable auto-scroll for large outputs
 4. Use search instead of manual scrolling
+5. Close Papyrus monitor when not needed
+6. Use async operations for concurrent scans
 
 ### Multi-Game Support
 
