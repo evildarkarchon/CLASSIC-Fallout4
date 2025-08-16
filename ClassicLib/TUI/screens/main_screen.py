@@ -108,13 +108,13 @@ class MainScreen(Screen):
         """Setup event handlers for widgets."""
         # Use cached widgets if available
         crash_scan = self._widget_cache.get("crash_scan") or self.query_one("#crash-scan", ScanButton)
-        crash_scan.on_click = self.perform_crash_scan
+        crash_scan.on_click = lambda: self.app.call_later(self.perform_crash_scan)
 
         game_scan = self._widget_cache.get("game_scan") or self.query_one("#game-scan", ScanButton)
-        game_scan.on_click = self.perform_game_scan
+        game_scan.on_click = lambda: self.app.call_later(self.perform_game_scan)
 
         papyrus_btn = self._widget_cache.get("papyrus_monitor") or self.query_one("#papyrus-monitor", Button)
-        papyrus_btn.on_click = self.toggle_papyrus_monitor
+        papyrus_btn.on_click = lambda: self.app.call_later(self.toggle_papyrus_monitor)
 
     async def perform_crash_scan(self) -> None:
         """Perform crash logs scan."""
@@ -179,6 +179,7 @@ class MainScreen(Screen):
                 import ctypes
 
                 kernel32 = ctypes.windll.kernel32
+                # noinspection PyUnresolvedReferences
                 cp = kernel32.GetConsoleOutputCP()
                 return cp == 65001  # UTF-8 code page
             except:

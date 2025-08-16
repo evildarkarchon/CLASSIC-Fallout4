@@ -1,5 +1,7 @@
 """Main TUI application controller."""
 
+from typing import cast
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Footer, Header
@@ -133,17 +135,20 @@ class CLASSICTuiApp(App):
     async def action_run_crash_scan(self) -> None:
         """Run crash logs scan (F5/R key)."""
         if isinstance(self.screen, MainScreen):
-            await self.screen.perform_crash_scan()
+            main_screen = cast(MainScreen, self.screen)
+            await main_screen.perform_crash_scan()
 
     async def action_run_game_scan(self) -> None:
         """Run game files scan (F6/G key)."""
         if isinstance(self.screen, MainScreen):
-            await self.screen.perform_game_scan()
+            main_screen = cast(MainScreen, self.screen)
+            await main_screen.perform_game_scan()
 
     async def action_toggle_papyrus(self) -> None:
         """Toggle Papyrus monitor (F7/P key)."""
         if isinstance(self.screen, MainScreen):
-            await self.screen.toggle_papyrus_monitor()
+            main_screen = cast(MainScreen, self.screen)
+            await main_screen.toggle_papyrus_monitor()
 
     def action_clear_output(self) -> None:
         """Clear output viewer (Ctrl+L)."""

@@ -271,33 +271,33 @@ class PapyrusScreen(Screen):
     async def action_close_screen(self) -> None:
         """Close the screen and return to main."""
         await self.stop_monitoring()
-        self.app.pop_screen()
+        await self.app.pop_screen()
 
     async def action_stop_and_close(self) -> None:
         """Stop monitoring and close screen."""
         await self.stop_monitoring()
-        self.app.pop_screen()
+        await self.app.pop_screen()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button press events."""
         button_id = event.button.id
 
         if button_id == "start-stop-btn":
-            self.app.push_action(self.action_toggle_monitoring())
+            self.app.call_later(self.action_toggle_monitoring())
         elif button_id == "refresh-btn":
-            self.app.push_action(self.action_refresh_stats())
+            self.app.call_later(self.action_refresh_stats())
         elif button_id == "clear-btn":
             self.action_clear_output()
         elif button_id == "close-btn":
-            self.app.push_action(self.action_close_screen())
+            self.app.call_later(self.action_close_screen())
 
     def on_papyrus_monitor_widget_monitoring_toggled(self, event: PapyrusMonitorWidget.MonitoringToggled) -> None:
         """Handle monitoring toggle from widget."""
-        self.app.push_action(self.action_toggle_monitoring())
+        self.app.call_later(self.action_toggle_monitoring())
 
     def on_papyrus_monitor_widget_refresh_requested(self, event: PapyrusMonitorWidget.RefreshRequested) -> None:
         """Handle refresh request from widget."""
-        self.app.push_action(self.action_refresh_stats())
+        self.app.call_later(self.action_refresh_stats())
 
     def on_unmount(self) -> None:
         """Clean up when screen is unmounted."""
