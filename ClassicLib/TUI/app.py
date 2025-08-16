@@ -1,9 +1,10 @@
 """Main TUI application controller."""
 
-from typing import cast
+from typing import ClassVar, cast
 
 from textual.app import App, ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
+from textual.css.query import InvalidQueryFormat, NoMatches, WrongType
 from textual.widgets import Footer, Header
 
 from .screens.main_screen import MainScreen
@@ -88,7 +89,7 @@ class CLASSICTuiApp(App):
     }
     """
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("q", "quit", "Quit", priority=True),
         Binding("ctrl+c", "quit", "Force Quit", priority=True),
         Binding("f1", "show_help", "Help"),
@@ -135,19 +136,19 @@ class CLASSICTuiApp(App):
     async def action_run_crash_scan(self) -> None:
         """Run crash logs scan (F5/R key)."""
         if isinstance(self.screen, MainScreen):
-            main_screen = cast(MainScreen, self.screen)
+            main_screen = cast("MainScreen", self.screen)
             await main_screen.perform_crash_scan()
 
     async def action_run_game_scan(self) -> None:
         """Run game files scan (F6/G key)."""
         if isinstance(self.screen, MainScreen):
-            main_screen = cast(MainScreen, self.screen)
+            main_screen = cast("MainScreen", self.screen)
             await main_screen.perform_game_scan()
 
     async def action_toggle_papyrus(self) -> None:
         """Toggle Papyrus monitor (F7/P key)."""
         if isinstance(self.screen, MainScreen):
-            main_screen = cast(MainScreen, self.screen)
+            main_screen = cast("MainScreen", self.screen)
             await main_screen.toggle_papyrus_monitor()
 
     def action_clear_output(self) -> None:
@@ -158,7 +159,7 @@ class CLASSICTuiApp(App):
             try:
                 output = self.screen.query_one(OutputViewer)
                 output.clear()
-            except Exception:
+            except (NoMatches, WrongType, InvalidQueryFormat):
                 pass
 
     def action_open_settings(self) -> None:
@@ -175,7 +176,7 @@ class CLASSICTuiApp(App):
             try:
                 output = self.screen.query_one(OutputViewer)
                 output.start_search()
-            except Exception:
+            except (NoMatches, WrongType, InvalidQueryFormat):
                 pass
 
     def action_focus_up(self) -> None:
@@ -227,7 +228,7 @@ class CLASSICTuiApp(App):
         from textual.widgets import Button, Checkbox
 
         focused = self.focused
-        if isinstance(focused, (Button, Checkbox)):
+        if isinstance(focused, Button | Checkbox):
             if isinstance(focused, Button):
                 focused.press()
             else:

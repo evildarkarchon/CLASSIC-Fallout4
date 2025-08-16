@@ -73,6 +73,7 @@ async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str
         # Fallback implementation using basic aiofiles
         import aiofiles
 
+        # noinspection PyUnusedImports
         async def load_single_log(file_path: Path) -> tuple[str, list[str]]:
             try:
                 # Try to use async encoding detection if available

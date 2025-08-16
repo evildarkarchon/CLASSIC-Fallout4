@@ -92,7 +92,8 @@ class AsyncDatabasePool:
         if close_tasks:
             await asyncio.gather(*close_tasks, return_exceptions=True)
 
-    async def _close_connection_with_timeout(self, conn: aiosqlite.Connection, timeout: float = 5.0) -> None:
+    @staticmethod
+    async def _close_connection_with_timeout(conn: aiosqlite.Connection, timeout: float = 5.0) -> None:
         """Close a single connection with timeout."""
         try:
             await asyncio.wait_for(conn.close(), timeout=timeout)
@@ -148,6 +149,7 @@ class AsyncDatabasePool:
         return None
 
 
+# noinspection PyUnusedImports
 async def read_file_async(file_path: Path) -> list[str]:
     """
     Reads the contents of a file asynchronously and returns its lines as a list of strings.
@@ -237,8 +239,8 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
         if isinstance(result, BaseException):
             logger.error(f"Failed to load log: {result}")
         elif isinstance(result, tuple):
-            name, lines = result
-            cache[name] = lines
+            name, log_lines = result
+            cache[name] = log_lines
 
     return cache
 

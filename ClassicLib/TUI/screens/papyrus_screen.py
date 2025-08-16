@@ -1,6 +1,8 @@
 """Papyrus monitoring screen for TUI."""
 
 import asyncio
+import contextlib
+from typing import ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -9,15 +11,15 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Label, Static
 
-from ..handlers.papyrus_handler import PapyrusStats, TuiPapyrusHandler
-from ..widgets.output_viewer import OutputViewer
-from ..widgets.papyrus_monitor import PapyrusMonitorWidget
+from ClassicLib.TUI.handlers.papyrus_handler import PapyrusStats, TuiPapyrusHandler
+from ClassicLib.TUI.widgets.output_viewer import OutputViewer
+from ClassicLib.TUI.widgets.papyrus_monitor import PapyrusMonitorWidget
 
 
 class PapyrusScreen(Screen):
     """Full-screen Papyrus monitoring display."""
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[Binding]] = [
         Binding("escape", "close_screen", "Close", priority=True),
         Binding("q", "close_screen", "Close", show=False),
         Binding("s", "toggle_monitoring", "Start/Stop", priority=True),
@@ -89,7 +91,7 @@ class PapyrusScreen(Screen):
     is_monitoring = reactive(False)
     use_unicode = reactive(True)
 
-    def __init__(self, use_unicode: bool = True, **kwargs):
+    def __init__(self, use_unicode: bool = True, **kwargs) -> None:  # noqa: ANN003
         """Initialize the Papyrus monitoring screen.
 
         Args:
@@ -101,6 +103,7 @@ class PapyrusScreen(Screen):
         self.monitor_widget: PapyrusMonitorWidget | None = None
         self.output_viewer: OutputViewer | None = None
         self.monitor_task: asyncio.Task | None = None
+        self._background_tasks: set[asyncio.Task] = set()
 
     def compose(self) -> ComposeResult:
         """Compose the screen layout."""
@@ -220,8 +223,8 @@ class PapyrusScreen(Screen):
                 indicator.add_class("stopped")
                 indicator.remove_class("active")
 
-        except Exception:
-            # UI might not be fully composed yet
+        except (LookupError, AttributeError):
+            # UI might not be fully composed yet or widgets not found
             pass
 
     async def action_toggle_monitoring(self) -> None:
@@ -245,6 +248,7 @@ class PapyrusScreen(Screen):
         if self.monitor_widget:
             self.monitor_widget.clear_stats()
 
+    # noinspection PyProtectedMember
     def action_toggle_unicode(self) -> None:
         """Toggle between Unicode and ASCII display."""
         self.use_unicode = not self.use_unicode
@@ -262,7 +266,8 @@ class PapyrusScreen(Screen):
         try:
             title = self.query_one(".screen-title", Static)
             title.update(self._get_title_text())
-        except Exception:
+        except (LookupError, AttributeError):
+            # Widget might not be ready or query failed
             pass
 
         # Update status indicator
@@ -283,33 +288,36 @@ class PapyrusScreen(Screen):
         button_id = event.button.id
 
         if button_id == "start-stop-btn":
-            self.app.call_later(self.action_toggle_monitoring())
+            self.app.call_later(self.action_toggle_monitoring)
         elif button_id == "refresh-btn":
-            self.app.call_later(self.action_refresh_stats())
+            self.app.call_later(self.action_refresh_stats)
         elif button_id == "clear-btn":
             self.action_clear_output()
         elif button_id == "close-btn":
-            self.app.call_later(self.action_close_screen())
+            self.app.call_later(self.action_close_screen)
 
-    def on_papyrus_monitor_widget_monitoring_toggled(self, event: PapyrusMonitorWidget.MonitoringToggled) -> None:
+    def on_papyrus_monitor_widget_monitoring_toggled(self) -> None:
         """Handle monitoring toggle from widget."""
-        self.app.call_later(self.action_toggle_monitoring())
+        self.app.call_later(self.action_toggle_monitoring)
 
-    def on_papyrus_monitor_widget_refresh_requested(self, event: PapyrusMonitorWidget.RefreshRequested) -> None:
+    def on_papyrus_monitor_widget_refresh_requested(self) -> None:
         """Handle refresh request from widget."""
-        self.app.call_later(self.action_refresh_stats())
+        self.app.call_later(self.action_refresh_stats)
 
     def on_unmount(self) -> None:
         """Clean up when screen is unmounted."""
         # Schedule async cleanup
         if self.handler and self.handler.is_monitoring_active():
-            # Create a task to stop monitoring properly
-            asyncio.create_task(self._async_cleanup())
+            # Create a task to stop monitoring properly and store reference
+            task = asyncio.create_task(self._async_cleanup())
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
 
     async def _async_cleanup(self) -> None:
         """Async cleanup helper."""
-        try:
+        with contextlib.suppress(OSError, RuntimeError, asyncio.CancelledError):
+            # Ignore specific errors during cleanup:
+            # OSError: File/resource access issues
+            # RuntimeError: Event loop or async operation issues
+            # CancelledError: Task cancellation during shutdown
             await self.stop_monitoring()
-        except Exception:
-            # Ignore errors during cleanup
-            pass

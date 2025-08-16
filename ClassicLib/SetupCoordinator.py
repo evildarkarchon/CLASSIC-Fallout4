@@ -101,8 +101,7 @@ class SetupCoordinator:
         game_name: str = GlobalRegistry.get_game()  # noqa: F841
 
         # Run all checks and collect results
-        combined_return: list[str] = [self.integrity_checker.run_full_check(), xse_check_integrity(),
-                                      xse_check_hashes()]
+        combined_return: list[str] = [self.integrity_checker.run_full_check(), xse_check_integrity(), xse_check_hashes()]
 
         # Document checks
         combined_return.extend(self.docs_checker.run_all_checks())

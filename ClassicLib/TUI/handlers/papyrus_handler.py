@@ -11,6 +11,8 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
+import contextlib
+
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.PapyrusLog import papyrus_logging
 
@@ -60,32 +62,6 @@ class PapyrusStats:
         return "green"
 
 
-class TuiPapyrusHandler:
-    """Handles Papyrus log monitoring for TUI."""
-
-    def __init__(
-        self,
-        stats_callback: Callable[[PapyrusStats], None] | None = None,
-        error_callback: Callable[[str], None] | None = None,
-        use_unicode: bool = True,
-    ):
-        """Initialize the Papyrus handler.
-
-        Args:
-            stats_callback: Function to call with updated stats
-            error_callback: Function to call with error messages
-            use_unicode: Whether to use Unicode symbols (auto-detected if not specified)
-        """
-        self.stats_callback = stats_callback
-        self.error_callback = error_callback
-        self.use_unicode = _get_unicode_support_cached() if use_unicode else False
-        self.is_monitoring = False
-        self.monitor_task: asyncio.Task | None = None
-        self.last_stats: PapyrusStats | None = None
-        self._stop_event = asyncio.Event()
-        self._monitor_lock = asyncio.Lock()
-
-
 def _detect_unicode_support_impl() -> bool:
     """Detect if terminal supports Unicode (implementation).
 
@@ -124,17 +100,17 @@ def _detect_unicode_support_impl() -> bool:
                 kernel32 = ctypes.windll.kernel32
                 cp = kernel32.GetConsoleOutputCP()
                 # UTF-8 code page
-                return cp == 65001
+                return cp == 65001  # noqa: TRY300
             except:
                 # Default to ASCII on Windows if we can't detect
                 return False
 
-        # Default to True if we got this far without errors
-        return True
-
     except (UnicodeEncodeError, AttributeError):
         # If we can't encode Unicode, fall back to ASCII
         return False
+    else:
+        # Default to True if we got this far without errors
+        return True
 
 
 def _get_unicode_support_cached() -> bool:
@@ -143,7 +119,7 @@ def _get_unicode_support_cached() -> bool:
     Returns:
         Cached result of Unicode support detection
     """
-    global _UNICODE_SUPPORT_CACHE
+    global _UNICODE_SUPPORT_CACHE  # noqa: PLW0603
     if _UNICODE_SUPPORT_CACHE is None:
         _UNICODE_SUPPORT_CACHE = _detect_unicode_support_impl()
     return _UNICODE_SUPPORT_CACHE
@@ -157,7 +133,7 @@ class TuiPapyrusHandler:
         stats_callback: Callable[[PapyrusStats], None] | None = None,
         error_callback: Callable[[str], None] | None = None,
         use_unicode: bool = True,
-    ):
+    ) -> None:
         """Initialize the Papyrus handler.
 
         Args:
@@ -190,7 +166,8 @@ class TuiPapyrusHandler:
         """Set the error callback function."""
         self.error_callback = callback
 
-    def _parse_papyrus_output(self, output: str, dumps_count: int) -> PapyrusStats:
+    @staticmethod
+    def _parse_papyrus_output(output: str, dumps_count: int) -> PapyrusStats:
         """Parse papyrus_logging output into stats.
 
         Args:
@@ -211,25 +188,17 @@ class TuiPapyrusHandler:
                 except (IndexError, ValueError):
                     stats.dumps = dumps_count
             elif "NUMBER OF STACKS" in line:
-                try:
+                with contextlib.suppress(IndexError, ValueError):
                     stats.stacks = int(line.split(":")[1].strip())
-                except (IndexError, ValueError):
-                    pass
             elif "DUMPS/STACKS RATIO" in line:
-                try:
+                with contextlib.suppress(IndexError, ValueError):
                     stats.ratio = float(line.split(":")[1].strip())
-                except (IndexError, ValueError):
-                    pass
             elif "NUMBER OF WARNINGS" in line:
-                try:
+                with contextlib.suppress(IndexError, ValueError):
                     stats.warnings = int(line.split(":")[1].strip())
-                except (IndexError, ValueError):
-                    pass
             elif "NUMBER OF ERRORS" in line:
-                try:
+                with contextlib.suppress(IndexError, ValueError):
                     stats.errors = int(line.split(":")[1].strip())
-                except (IndexError, ValueError):
-                    pass
 
         return stats
 
@@ -260,7 +229,7 @@ class TuiPapyrusHandler:
                     # Wait before next poll (1 second)
                     await asyncio.sleep(1.0)
 
-                except Exception as e:
+                except (OSError, ValueError, AttributeError, RuntimeError) as e:
                     if self.error_callback:
                         self.error_callback(f"Monitor error: {e!s}")
                     # Continue monitoring despite errors
@@ -299,13 +268,13 @@ class TuiPapyrusHandler:
                 if self.stats_callback:
                     self.stats_callback(stats)
 
-                return True
-
-            except Exception as e:
+            except (OSError, ValueError, AttributeError, RuntimeError, asyncio.CancelledError) as e:
                 self.is_monitoring = False
                 if self.error_callback:
                     self.error_callback(f"Failed to start monitoring: {e!s}")
                 return False
+            else:
+                return True
 
     async def stop_monitoring(self) -> None:
         """Stop Papyrus log monitoring."""

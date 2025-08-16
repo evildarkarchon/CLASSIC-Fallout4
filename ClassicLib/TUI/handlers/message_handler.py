@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import Any
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -12,7 +13,7 @@ from ClassicLib.MessageHandler import MessageHandler
 class TuiMessageHandler(MessageHandler):
     """Routes messages to appropriate TUI widgets."""
 
-    def __init__(self, output_widget=None):
+    def __init__(self, output_widget: Any | None = None) -> None:
         """Initialize TUI message handler.
 
         Args:
@@ -21,7 +22,7 @@ class TuiMessageHandler(MessageHandler):
         super().__init__(parent=None, is_gui_mode=False)
         self.output_widget = output_widget
 
-    def set_output_widget(self, widget) -> None:
+    def set_output_widget(self, widget: Any | None) -> None:
         """Set the output widget for message routing."""
         self.output_widget = widget
 
@@ -36,9 +37,9 @@ class TuiMessageHandler(MessageHandler):
     def show_message(self, message: str, title: str = "") -> None:
         """Show an information message."""
         if title:
-            self._send_to_output(f"ℹ️ {title}: {message}", style="info")
+            self._send_to_output(f"ℹ️ {title}: {message}", style="info")  # noqa: RUF001
         else:
-            self._send_to_output(f"ℹ️ {message}", style="info")
+            self._send_to_output(f"ℹ️ {message}", style="info")  # noqa: RUF001
 
     def show_warning(self, message: str, title: str = "Warning") -> None:
         """Show a warning message."""
@@ -99,10 +100,7 @@ class TuiMessageHandler(MessageHandler):
             return ""
 
         # Calculate column widths
-        if headers:
-            all_rows = [headers] + data
-        else:
-            all_rows = data
+        all_rows = [headers, *data] if headers else data
 
         col_widths = []
         for col_idx in range(len(all_rows[0])):

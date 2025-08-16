@@ -59,6 +59,7 @@ class ScanOrchestrator:
         self.last_formids = []
         self.last_plugins = {}
 
+    # noinspection PyProtectedMember
     def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Sync adapter for async process_crash_log.
@@ -78,7 +79,7 @@ class ScanOrchestrator:
         result = asyncio.run(self._core.process_crash_log(crashlog_file))
 
         # Update last FormIDs and plugins for backwards compatibility
-        self.last_formids = self._core._last_formids.copy() if self._core._last_formids else []
+        self.last_formids = [] if not self._core._last_formids else self._core._last_formids.copy()
         self.last_plugins = self._core._last_plugins.copy() if self._core._last_plugins else {}
 
         return result

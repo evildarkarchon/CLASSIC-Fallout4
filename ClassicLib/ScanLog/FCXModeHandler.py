@@ -34,20 +34,15 @@ class FCXModeHandler:
 
     def check_fcx_mode(self) -> None:
         """
-        Checks the current FCX mode and performs necessary validations.
+        Performs FCX mode checks and updates instance variables based on the FCX mode status.
 
-        This method evaluates whether the FCX mode is enabled. If enabled, it ensures that
-        FCX checks are performed only once per scan session using thread-safe class-level
-        variables. The results of these checks are then assigned to instance variables.
-        If FCX mode is disabled, default values are assigned to instance variables.
+        This method checks if the FCX mode is enabled and processes checks if necessary.
+        It ensures thread safety during the FCX check execution by locking
+        and avoids redundant checks by keeping results at the class level.
 
-        Attributes:
-            main_files_check: str
-                Stores the result of the main files check, either from the check or a
-                default message when FCX mode is disabled.
-            game_files_check: str
-                Stores the result of the game files check, either from the check or an
-                empty string when FCX mode is disabled.
+        Raises:
+            Any error related to importing required modules or errors raised by the coordinator or
+            game result checker will propagate up to the caller..
         """
         if self.fcx_mode:
             # Import here to avoid circular imports

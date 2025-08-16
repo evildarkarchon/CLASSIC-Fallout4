@@ -9,14 +9,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from CLASSIC_ScanLogs import ClassicScanLogs
+from ClassicLib.Constants import YAML
 from ClassicLib.MessageHandler import init_message_handler
-from ClassicLib.YamlSettingsCache import classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class TuiScanHandler:
     """Bridges TUI events with core scan operations."""
 
-    def __init__(self, output_callback: Callable[[str], None] | None = None):
+    def __init__(self, output_callback: Callable[[str], None] | None = None) -> None:
         """Initialize the scan handler.
 
         Args:
@@ -71,15 +72,16 @@ class TuiScanHandler:
                     # Batch settings operations to minimize thread transitions
                     try:
                         # Single thread transition for both read and write
-                        def batch_settings_operation():
+                        def batch_settings_operation() -> str:
                             orig = classic_settings(str, "Scan Folder")
-                            classic_settings.set_value("Scan Folder", scan_folder)
+                            yaml_settings(str, YAML.Settings, "Scan Folder", scan_folder)
                             return orig
 
                         original_folder = await asyncio.to_thread(batch_settings_operation)
                         self._send_output(f"📁 Scanning folder: {scan_folder}")
-                    except Exception:
+                    except (OSError, KeyError, ValueError, TypeError) as e:
                         # If settings update fails, continue with default folder
+                        self._send_output(f"⚠️ Could not update scan folder setting: {e}")
                         original_folder = None
                 else:
                     self._send_output(f"❌ Invalid scan folder: {scan_folder}")
@@ -87,29 +89,53 @@ class TuiScanHandler:
                         self.is_scanning = False
                     return False
 
-            # Run the scan
+            # Run the scan using AsyncScanOrchestrator
+            from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+
             try:
-                if hasattr(self.scanner.orchestrator, "async_scan_logs"):
-                    # Use async version if available
-                    await self.scanner.orchestrator.async_scan_logs()
-                else:
-                    # Fall back to sync version
-                    await asyncio.to_thread(self.scanner.scan_logs)
+                # Create orchestrator with context manager like in crashlogs_scan_async_pure
+                async with AsyncScanOrchestrator(
+                    self.scanner.yamldata,
+                    self.scanner.crashlogs,
+                    self.scanner.fcx_mode,
+                    self.scanner.show_formid_values,
+                    self.scanner.formid_db_exists,
+                ) as orchestrator:
+                    # Run FCX checks if enabled
+                    if self.scanner.fcx_mode:
+                        orchestrator.fcx_handler.check_fcx_mode()
+
+                    # Process all crash logs
+                    tasks = [self.scanner.process_crashlog_async(log, orchestrator) for log in self.scanner.crashlog_list]
+
+                    # Execute all tasks
+                    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                    # Process results and write reports
+                    for i, result in enumerate(results):
+                        if isinstance(result, BaseException):
+                            self._send_output(f"❌ Error processing {self.scanner.crashlog_list[i].name}: {result}")
+                        else:
+                            crashlog_file, autoscan_report, trigger_scan_failed, local_stats = result
+                            # Write report using the existing async function
+                            from CLASSIC_ScanLogs import write_report_to_file_async
+
+                            await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, self.scanner)
             finally:
                 # Restore original setting after scan if we changed it
                 if original_folder:
-                    await asyncio.to_thread(classic_settings.set_value, "Scan Folder", original_folder)
+                    await asyncio.to_thread(yaml_settings, str, YAML.Settings, "SCAN Custom Path", original_folder)
 
             self._send_output("✅ Crash logs scan completed successfully")
 
             if progress_callback:
                 progress_callback(1.0)
 
-            return True
-
-        except Exception as e:
+        except (OSError, ValueError, TypeError, asyncio.CancelledError, ImportError) as e:
             self._send_output(f"❌ Error during crash scan: {e!s}")
             return False
+        else:
+            return True
         finally:
             async with self._scan_lock:
                 self.is_scanning = False
@@ -147,11 +173,11 @@ class TuiScanHandler:
             if progress_callback:
                 progress_callback(1.0)
 
-            return True
-
-        except Exception as e:
+        except (OSError, ValueError, TypeError, asyncio.CancelledError, ImportError) as e:
             self._send_output(f"❌ Error during game scan: {e!s}")
             return False
+        else:
+            return True
         finally:
             async with self._scan_lock:
                 self.is_scanning = False

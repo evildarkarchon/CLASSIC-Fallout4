@@ -43,30 +43,32 @@ try:
 except ImportError:
     ASYNC_ENCODING_AVAILABLE = False
 
+
 def get_optimal_limits() -> dict[str, int]:
     """Calculate optimal concurrency limits based on system resources."""
     cpu_count = os.cpu_count() or 4
-    
+
     # Try to get memory if psutil is available
     if psutil:
         memory_gb = psutil.virtual_memory().total / (1024**3)
         memory_factor = min(memory_gb / 8, 2.0)  # Scale based on memory (8GB baseline)
     else:
         memory_factor = 1.0
-    
+
     return {
-        'subprocesses': min(int(cpu_count * memory_factor), 8),  # Cap at 8 for stability
-        'file_ops': min(int(cpu_count * 4 * memory_factor), 32),
-        'log_reads': min(int(cpu_count * 8 * memory_factor), 64),
-        'dds_reads': min(int(cpu_count * 16 * memory_factor), 128),
+        "subprocesses": min(int(cpu_count * memory_factor), 8),  # Cap at 8 for stability
+        "file_ops": min(int(cpu_count * 4 * memory_factor), 32),
+        "log_reads": min(int(cpu_count * 8 * memory_factor), 64),
+        "dds_reads": min(int(cpu_count * 16 * memory_factor), 128),
     }
+
 
 # Get optimal limits based on system
 _LIMITS = get_optimal_limits()
-MAX_CONCURRENT_SUBPROCESSES = _LIMITS['subprocesses']
-MAX_CONCURRENT_FILE_OPS = _LIMITS['file_ops']
-MAX_CONCURRENT_LOG_READS = _LIMITS['log_reads']
-MAX_CONCURRENT_DDS_READS = _LIMITS['dds_reads']
+MAX_CONCURRENT_SUBPROCESSES = _LIMITS["subprocesses"]
+MAX_CONCURRENT_FILE_OPS = _LIMITS["file_ops"]
+MAX_CONCURRENT_LOG_READS = _LIMITS["log_reads"]
+MAX_CONCURRENT_DDS_READS = _LIMITS["dds_reads"]
 
 
 # Registry key for ScanGameCore singleton
@@ -87,24 +89,24 @@ class ScanGameCore:
     def __init__(self) -> None:
         """Initialize the core scanner."""
         # Only initialize once
-        if not hasattr(self, '_initialized'):
+        if not hasattr(self, "_initialized"):
             # Get optimal limits dynamically
             limits = get_optimal_limits()
-            self.process_semaphore = asyncio.Semaphore(limits['subprocesses'])
-            self.file_ops_semaphore = asyncio.Semaphore(limits['file_ops'])
-            self.log_read_semaphore = asyncio.Semaphore(limits['log_reads'])
-            self.dds_read_semaphore = asyncio.Semaphore(limits['dds_reads'])
-            
+            self.process_semaphore = asyncio.Semaphore(limits["subprocesses"])
+            self.file_ops_semaphore = asyncio.Semaphore(limits["file_ops"])
+            self.log_read_semaphore = asyncio.Semaphore(limits["log_reads"])
+            self.dds_read_semaphore = asyncio.Semaphore(limits["dds_reads"])
+
             # Thread pool for CPU-bound operations
-            self.header_executor = ThreadPoolExecutor(max_workers=min(10, limits['file_ops'] // 2))
-            
+            self.header_executor = ThreadPoolExecutor(max_workers=min(10, limits["file_ops"] // 2))
+
             # For async directory walking
             self.walk_executor = ThreadPoolExecutor(max_workers=4)
-            
+
             # Cache for frequently accessed methods
             self._scan_settings_cache = None
             self._issue_messages_cache = {}
-            
+
             self._initialized = True
 
     def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
@@ -118,7 +120,7 @@ class ScanGameCore:
         # Use cached value if available
         if self._scan_settings_cache is not None:
             return self._scan_settings_cache
-        
+
         # Get XSE settings - YamlSettingsCache already caches these
         xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
         xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
@@ -439,15 +441,16 @@ class ScanGameCore:
         # Async directory walking
         async def async_walk(path: Path) -> list[tuple[Path, list[str], list[str]]]:
             """Async directory walker using executor."""
+
             def _walk() -> list[tuple[Path, list[str], list[str]]]:
                 result = []
                 for root, dirs, files in os.walk(path, topdown=False):
                     result.append((Path(root), list(dirs), list(files)))
                 return result
-            
+
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(self.walk_executor, _walk)
-        
+
         # Collect all directories to process
         try:
             all_dirs_data = await async_walk(mod_path)
@@ -474,7 +477,7 @@ class ScanGameCore:
         # Write initial messages
         for msg in message_list:
             output.write(msg)
-        
+
         # Add found issues
         for issue_type, items in issue_lists.items():
             if items and issue_type in issue_messages:
@@ -528,6 +531,7 @@ class ScanGameCore:
         # Async directory walking for BA2 files
         async def find_ba2_files(path: Path) -> list[tuple[Path, str]]:
             """Find all BA2 files asynchronously."""
+
             def _find() -> list[tuple[Path, str]]:
                 result = []
                 for root, _, files in os.walk(path, topdown=False):
@@ -536,10 +540,10 @@ class ScanGameCore:
                         if filename_lower.endswith(".ba2") and filename_lower != "prp - main.ba2":
                             result.append((Path(root) / filename, filename))
                 return result
-            
+
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(self.walk_executor, _find)
-        
+
         # Collect all BA2 files
         try:
             ba2_files = await find_ba2_files(mod_path)
@@ -589,7 +593,7 @@ class ScanGameCore:
                             stdout=asyncio.subprocess.PIPE,
                             stderr=asyncio.subprocess.PIPE,
                             text=True,
-                            limit=1024*1024,  # 1MB buffer limit to prevent memory issues
+                            limit=1024 * 1024,  # 1MB buffer limit to prevent memory issues
                         )
 
                         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
@@ -637,7 +641,7 @@ class ScanGameCore:
                             stdout=asyncio.subprocess.PIPE,
                             stderr=asyncio.subprocess.PIPE,
                             text=True,
-                            limit=1024*1024,  # 1MB buffer limit to prevent memory issues
+                            limit=1024 * 1024,  # 1MB buffer limit to prevent memory issues
                         )
 
                         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
@@ -683,18 +687,18 @@ class ScanGameCore:
 
         # Process BA2 files in optimized batches for better concurrency control
         msg_info(f"Processing {len(ba2_files)} BA2 files with optimized batching...")
-        
+
         # Calculate optimal batch size based on system resources
         batch_size = min(MAX_CONCURRENT_SUBPROCESSES * 2, len(ba2_files))
         results = []
-        
+
         # Process in controlled batches to avoid overwhelming the system
         for i in range(0, len(ba2_files), batch_size):
-            batch = ba2_files[i:i + batch_size]
+            batch = ba2_files[i : i + batch_size]
             batch_tasks = [process_single_ba2(file_path, filename) for file_path, filename in batch]
             batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
             results.extend(batch_results)
-            
+
             # Small delay between batches to prevent system overload
             if i + batch_size < len(ba2_files):
                 await asyncio.sleep(0.1)
@@ -710,11 +714,11 @@ class ScanGameCore:
 
         # Build the report using StringIO for efficiency
         output = StringIO()
-        
+
         # Write initial messages
         for msg in message_list:
             output.write(msg)
-        
+
         issue_messages = self.get_issue_messages(xse_acronym, "archived")
 
         # Add found issues
@@ -783,7 +787,7 @@ class ScanGameCore:
                 if file_size < 20:
                     return None
                 f.seek(0)  # Seek back to start
-                
+
                 # Use mmap for efficient header reading
                 with mmap.mmap(f.fileno(), length=20, access=mmap.ACCESS_READ) as mm:
                     if mm[:4] == b"DDS ":
@@ -797,17 +801,13 @@ class ScanGameCore:
     async def _check_dds_batch_async(self, dds_files: list[tuple[Path, Path]], issue_lists: dict, issue_locks: dict) -> None:
         """Check DDS dimensions for a batch of files using memory mapping."""
         loop = asyncio.get_event_loop()
-        
+
         # Process in batches using thread pool with memory mapping
         futures = []
         for file_path, relative_path in dds_files:
-            future = loop.run_in_executor(
-                self.header_executor, 
-                self._read_dds_header_mmap, 
-                file_path
-            )
+            future = loop.run_in_executor(self.header_executor, self._read_dds_header_mmap, file_path)
             futures.append((future, relative_path))
-        
+
         # Gather results with semaphore for controlled concurrency
         for future, relative_path in futures:
             async with self.dds_read_semaphore:

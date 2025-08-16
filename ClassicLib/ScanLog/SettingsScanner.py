@@ -63,7 +63,12 @@ class SettingsScanner:
             )
 
     def scan_buffout_memorymanagement_settings(
-        self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], has_xcell: bool, has_old_xcell: bool, has_baka_scrapheap: bool
+        self,
+        autoscan_report: list[str],
+        crashgen: dict[str, bool | int | str],
+        has_xcell: bool,
+        has_old_xcell: bool,
+        has_baka_scrapheap: bool,
     ) -> None:
         """
         Analyzes and validates memory management settings for Buffout and other mods like X-Cell or Baka ScrapHeap. It generates a report
@@ -100,7 +105,7 @@ class SettingsScanner:
         if has_old_xcell:
             add_warning_message(
                 "You have an old version of X-Cell installed, please update it to the latest version.",
-                "Download the latest version from here: https://www.nexusmods.com/fallout4/mods/84214?tab=files"
+                "Download the latest version from here: https://www.nexusmods.com/fallout4/mods/84214?tab=files",
             )
         # Handle main memory manager configuration
         if mem_manager_enabled:

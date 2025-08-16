@@ -171,7 +171,8 @@ class FormIDAnalyzerCore:
         for result in results:
             append_or_extend(result, autoscan_report)
 
-    async def _perform_sync_lookups(self, lookup_tasks: list[tuple[str, str, str, int]], autoscan_report: list[str]) -> None:
+    @staticmethod
+    async def _perform_sync_lookups(lookup_tasks: list[tuple[str, str, str, int]], autoscan_report: list[str]) -> None:
         """
         Perform synchronous database lookups wrapped in async.
 

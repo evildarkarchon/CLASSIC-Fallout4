@@ -2,6 +2,7 @@
 
 from textual.app import ComposeResult
 from textual.containers import Container, VerticalScroll
+from textual.events import Key
 from textual.screen import ModalScreen
 from textual.widgets import Button, Markdown, Static, TabbedContent, TabPane
 
@@ -79,7 +80,8 @@ class HelpScreen(ModalScreen):
 
             yield Button("Close (ESC)", id="close-help", variant="primary")
 
-    def _get_shortcuts_text(self) -> str:
+    @staticmethod
+    def _get_shortcuts_text() -> str:
         """Generate keyboard shortcuts documentation."""
         return """
 # Keyboard Shortcuts
@@ -113,7 +115,8 @@ class HelpScreen(ModalScreen):
 - **ESC** - Cancel current scan
 """
 
-    def _get_usage_text(self) -> str:
+    @staticmethod
+    def _get_usage_text() -> str:
         """Generate usage guide."""
         return """
 # Usage Guide
@@ -161,7 +164,8 @@ Access settings with **Ctrl+O** to configure:
 - Performance settings
 """
 
-    def _get_features_text(self) -> str:
+    @staticmethod
+    def _get_features_text() -> str:
         """Generate features documentation."""
         return """
 # Features
@@ -220,7 +224,8 @@ Access settings with **Ctrl+O** to configure:
 - History tracking
 """
 
-    def _get_troubleshooting_text(self) -> str:
+    @staticmethod
+    def _get_troubleshooting_text() -> str:
         """Generate troubleshooting guide."""
         return """
 # Troubleshooting
@@ -290,7 +295,7 @@ If issues persist:
         if event.button.id == "close-help":
             self.dismiss()
 
-    def on_key(self, event) -> None:
+    def on_key(self, event: Key) -> None:
         """Handle key press."""
         if event.key == "escape":
             self.dismiss()

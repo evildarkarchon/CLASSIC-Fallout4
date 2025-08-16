@@ -26,6 +26,7 @@ from ClassicLib.ScanLog import (
     crashlogs_reformat,
 )
 from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
@@ -80,7 +81,7 @@ class ClassicScanLogs:
     # Removed synchronous process_crashlog method - using async version instead
 
     async def process_crashlog_async(
-        self, crashlog_file: Path, orchestrator: AsyncScanOrchestrator
+        self, crashlog_file: Path, orchestrator: AsyncScanOrchestrator | OrchestratorCore
     ) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Process a crash log with async database operations for FormID lookups.

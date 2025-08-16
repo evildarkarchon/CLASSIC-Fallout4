@@ -2,25 +2,27 @@
 
 import os
 import sys
+from typing import ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.events import Key
 from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Button, Checkbox, Input, Label
 
-from ClassicLib.YamlSettingsCache import classic_settings
-
-from ..widgets.folder_selector import FolderSelector
-from ..widgets.output_viewer import OutputViewer
-from ..widgets.scan_buttons import ScanButton
+from ClassicLib.Constants import YAML
+from ClassicLib.TUI.widgets.folder_selector import FolderSelector
+from ClassicLib.TUI.widgets.output_viewer import OutputViewer
+from ClassicLib.TUI.widgets.scan_buttons import ScanButton
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class MainScreen(Screen):
     """Main options screen with folder selection and scan operations."""
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[Binding]] = [
         Binding("ctrl+1", "focus_mods_folder", "Focus Mods Folder", show=False),
         Binding("ctrl+2", "focus_scan_folder", "Focus Scan Folder", show=False),
         Binding("ctrl+r", "focus_crash_scan", "Focus Crash Scan", show=False),
@@ -46,8 +48,8 @@ class MainScreen(Screen):
                 yield FolderSelector(placeholder="Enter path to custom scan folder", id="scan-folder", classes="folder-input")
 
             with Horizontal(classes="scan-buttons"):
-                yield ScanButton("Crash Logs Scan", id="crash-scan", variant="primary")
-                yield ScanButton("Game Files Scan", id="game-scan", variant="primary")
+                yield ScanButton("Crash Logs Scan", scan_type="crash", id="crash-scan", variant="primary")
+                yield ScanButton("Game Files Scan", scan_type="game", id="game-scan", variant="primary")
                 yield Button("Papyrus Monitor", id="papyrus-monitor", variant="default")
 
             with Vertical(classes="settings-section"):
@@ -77,8 +79,8 @@ class MainScreen(Screen):
                 "update_check": self.query_one("#update-check", Checkbox),
                 "output": self.query_one("#output", OutputViewer),
             }
-        except Exception:
-            # Widgets might not be ready yet
+        except (LookupError, ValueError, AttributeError):
+            # Widgets might not be ready yet or query failed
             self._widget_cache = {}
 
     def _setup_focus_order(self) -> None:
@@ -101,20 +103,15 @@ class MainScreen(Screen):
                 scan_folder = self._widget_cache.get("scan_folder") or self.query_one("#scan-folder", FolderSelector)
                 scan_folder.value = custom_path
                 self.custom_folder = custom_path
-        except Exception:
+        except (LookupError, ValueError, AttributeError, KeyError, FileNotFoundError):
+            # Handle missing widgets, invalid settings, or file access issues
             pass
 
     def _setup_event_handlers(self) -> None:
         """Setup event handlers for widgets."""
-        # Use cached widgets if available
-        crash_scan = self._widget_cache.get("crash_scan") or self.query_one("#crash-scan", ScanButton)
-        crash_scan.on_click = lambda: self.app.call_later(self.perform_crash_scan)
-
-        game_scan = self._widget_cache.get("game_scan") or self.query_one("#game-scan", ScanButton)
-        game_scan.on_click = lambda: self.app.call_later(self.perform_game_scan)
-
-        papyrus_btn = self._widget_cache.get("papyrus_monitor") or self.query_one("#papyrus-monitor", Button)
-        papyrus_btn.on_click = lambda: self.app.call_later(self.toggle_papyrus_monitor)
+        # ScanButton widgets use message-based event handling
+        # They automatically handle button presses and send ScanStarted/ScanCompleted messages
+        # The actual scan logic is handled in the message handlers below
 
     async def perform_crash_scan(self) -> None:
         """Perform crash logs scan."""
@@ -123,7 +120,7 @@ class MainScreen(Screen):
         output.clear()
         output.append_output("Starting crash logs scan...\n")
 
-        from ..handlers.scan_handler import TuiScanHandler
+        from ClassicLib.TUI.handlers.scan_handler import TuiScanHandler
 
         handler = TuiScanHandler(output_callback=output.append_output)
         await handler.perform_crash_scan()
@@ -135,7 +132,7 @@ class MainScreen(Screen):
         output.clear()
         output.append_output("Starting game files scan...\n")
 
-        from ..handlers.scan_handler import TuiScanHandler
+        from ClassicLib.TUI.handlers.scan_handler import TuiScanHandler
 
         handler = TuiScanHandler(output_callback=output.append_output)
         await handler.perform_game_scan()
@@ -149,7 +146,7 @@ class MainScreen(Screen):
         use_unicode = self._detect_unicode_support()
 
         # Push the Papyrus screen
-        self.app.push_screen(PapyrusScreen(use_unicode=use_unicode))
+        await self.app.push_screen(PapyrusScreen(use_unicode=use_unicode))
 
     def _detect_unicode_support(self) -> bool:
         """Detect if terminal supports Unicode.
@@ -181,7 +178,7 @@ class MainScreen(Screen):
                 kernel32 = ctypes.windll.kernel32
                 # noinspection PyUnresolvedReferences
                 cp = kernel32.GetConsoleOutputCP()
-                return cp == 65001  # UTF-8 code page
+                return cp == 65001  # UTF-8 code page  # noqa: TRY300
             except:
                 return False
 
@@ -191,16 +188,28 @@ class MainScreen(Screen):
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         """Handle checkbox changes."""
         if event.checkbox.id == "update-check":
-            classic_settings(bool, "Update Check", event.value)
+            yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Update Check", event.value)
+
+    def on_scan_button_scan_started(self, event: ScanButton.ScanStarted) -> None:
+        """Handle scan started events from ScanButton."""
+        if event.scan_type == "crash":
+            self.app.call_later(self.perform_crash_scan)
+        elif event.scan_type == "game":
+            self.app.call_later(self.perform_game_scan)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle button press events."""
+        if event.button.id == "papyrus-monitor":
+            self.app.call_later(self.toggle_papyrus_monitor)
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Handle input changes."""
         if event.input.id == "mods-folder":
             self.staging_folder = event.value
-            classic_settings(str, "ModStagingFolder", event.value)
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", event.value)
         elif event.input.id == "scan-folder":
             self.custom_folder = event.value
-            classic_settings(str, "CustomScanFolder", event.value)
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", event.value)
 
     def action_focus_mods_folder(self) -> None:
         """Focus the mods folder input."""
@@ -237,10 +246,9 @@ class MainScreen(Screen):
         widget = self._widget_cache.get("output") or self.query_one("#output", OutputViewer)
         widget.focus()
 
-    def on_key(self, event) -> None:
+    def on_key(self, event: Key) -> None:
         """Handle keyboard events."""
         # Handle Escape key to unfocus current widget
-        if event.key == "escape":
-            if self.focused:
-                self.focused.blur()
-                event.stop()
+        if event.key == "escape" and self.focused:
+            self.focused.blur()
+            event.stop()

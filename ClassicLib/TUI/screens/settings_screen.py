@@ -2,10 +2,12 @@
 
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.events import Key
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Input, Label, Select, Static
 
-from ClassicLib.YamlSettingsCache import classic_settings
+from ClassicLib import YAML
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class SettingsScreen(ModalScreen):
@@ -85,15 +87,15 @@ class SettingsScreen(ModalScreen):
         """Load current settings values."""
         try:
             self.original_settings = {
-                "ModStagingFolder": classic_settings(str, "ModStagingFolder") or "",
-                "CustomScanFolder": classic_settings(str, "CustomScanFolder") or "",
+                "ModStagingFolder": classic_settings(str, "MODS Folder Path") or "",
+                "CustomScanFolder": classic_settings(str, "SCAN Custom Path") or "",
                 "UpdateCheck": classic_settings(bool, "Update Check"),
-                "AutoScroll": classic_settings(bool, "AutoScroll", True),
-                "ShowTimestamps": classic_settings(bool, "ShowTimestamps", True),
-                "MaxOutputLines": classic_settings(int, "MaxOutputLines", 10000),
-                "Game": classic_settings(str, "Game", "Fallout4"),
+                "AutoScroll": yaml_settings(bool, YAML.Settings, "AutoScroll", True),
+                "ShowTimestamps": yaml_settings(bool, YAML.Settings, "ShowTimestamps", True),
+                "MaxOutputLines": yaml_settings(int, YAML.Settings, "MaxOutputLines", 10000),
+                "Game": yaml_settings(str, YAML.Settings, "Game", "Fallout4"),
             }
-        except Exception:
+        except (FileNotFoundError, KeyError, ValueError, TypeError):
             self.original_settings = {
                 "ModStagingFolder": "",
                 "CustomScanFolder": "",
@@ -197,37 +199,37 @@ class SettingsScreen(ModalScreen):
             # Save folder paths
             staging_input = self.query_one("#staging-folder", Input)
             if staging_input.value:
-                classic_settings(str, "ModStagingFolder", staging_input.value)
+                yaml_settings(str, YAML.Settings, "ModStagingFolder", staging_input.value)
 
             custom_input = self.query_one("#custom-folder", Input)
             if custom_input.value:
-                classic_settings(str, "CustomScanFolder", custom_input.value)
+                yaml_settings(str, YAML.Settings, "CustomScanFolder", custom_input.value)
 
             # Save display settings
             auto_scroll = self.query_one("#auto-scroll", Checkbox)
-            classic_settings(bool, "AutoScroll", auto_scroll.value)
+            yaml_settings(bool, YAML.Settings, "AutoScroll", auto_scroll.value)
 
             show_timestamps = self.query_one("#show-timestamps", Checkbox)
-            classic_settings(bool, "ShowTimestamps", show_timestamps.value)
+            yaml_settings(bool, YAML.Settings, "ShowTimestamps", show_timestamps.value)
 
             max_lines_input = self.query_one("#max-lines", Input)
             try:
                 max_lines = int(max_lines_input.value)
-                classic_settings(int, "MaxOutputLines", max_lines)
+                yaml_settings(int, YAML.Settings, "MaxOutputLines", max_lines)
             except ValueError:
                 pass
 
             # Save general settings
             update_check = self.query_one("#update-check", Checkbox)
-            classic_settings(bool, "Update Check", update_check.value)
+            yaml_settings(bool, YAML.Settings, "Update Check", update_check.value)
 
             game_select = self.query_one("#game-select", Select)
             if game_select.value:
-                classic_settings(str, "Game", game_select.value)
+                yaml_settings(str, YAML.Settings, "Game", game_select.value)
 
             # Show success message
             self.app.notify("Settings saved successfully", severity="information")
-        except Exception as e:
+        except (LookupError, ValueError, AttributeError, TypeError, OSError) as e:
             self.app.notify(f"Failed to save settings: {e!s}", severity="error")
 
     def _reset_settings(self) -> None:
@@ -256,7 +258,7 @@ class SettingsScreen(ModalScreen):
 
         self.app.notify("Settings reset to original values", severity="information")
 
-    def on_key(self, event) -> None:
+    def on_key(self, event: Key) -> None:
         """Handle keyboard events."""
         if event.key == "escape":
             self.dismiss(False)
