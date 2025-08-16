@@ -74,7 +74,7 @@ class OrchestratorCore:
         # Async-specific attributes
         self._db_pool: AsyncDatabasePool | None = None
         self._async_formid_analyzer: FormIDAnalyzerCore | None = None
-        self._state_lock = asyncio.Lock()
+        self._state_lock: Any = None  # asyncio.Lock - initialized in __aenter__
 
         # Store last FormIDs and plugins for async processing
         self._last_formids: list[str] = []
@@ -82,6 +82,9 @@ class OrchestratorCore:
 
     async def __aenter__(self) -> "OrchestratorCore":
         """Async context manager entry."""
+        # Initialize asyncio.Lock (type: ignore for Pylance false positive)
+        self._state_lock = asyncio.Lock()  # type: ignore[attr-defined]
+
         # Initialize database pool
         self._db_pool = AsyncDatabasePool()
         await self._db_pool.initialize()
@@ -152,7 +155,6 @@ class OrchestratorCore:
             segment_crashgen,
             segment_system,
             segment_callstack,
-            segment_allmodules,
             segment_xsemodules,
             segment_plugins,
             autoscan_report,
@@ -171,7 +173,6 @@ class OrchestratorCore:
         segment_crashgen: list[str],
         segment_system: list[str],
         segment_callstack: list[str],
-        segment_allmodules: list[str],
         segment_xsemodules: list[str],
         segment_plugins: list[str],
         autoscan_report: list[str],
@@ -203,7 +204,7 @@ class OrchestratorCore:
 
         # Process plugins
         crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded = self._process_plugins(
-            segment_plugins, segment_allmodules, segment_callstack, game_version, version_current, xsemodules, autoscan_report
+            segment_plugins, segment_callstack, game_version, version_current, autoscan_report
         )
 
         # Store for async FormID processing
@@ -217,10 +218,6 @@ class OrchestratorCore:
         self._check_fcx_and_settings(
             xsemodules,
             crashgen,
-            crashlog_crashgen,
-            trigger_plugin_limit,
-            trigger_limit_check_disabled,
-            trigger_plugins_loaded,
             autoscan_report,
         )
 
@@ -228,7 +225,7 @@ class OrchestratorCore:
         await self._run_mod_detection_async(crashlog_plugins, trigger_plugins_loaded, crashlog_gpu_rival, autoscan_report)
 
         # Scan for specific suspects
-        self._scan_specific_suspects(segment_callstack, crashlog_plugins, autoscan_report)
+        self._scan_specific_suspects(segment_callstack, autoscan_report)
 
     async def _run_mod_detection_async(
         self,
@@ -306,7 +303,7 @@ class OrchestratorCore:
 
             # Process batch concurrently
             batch_tasks = [self.process_crash_log(log_file) for log_file in batch]
-            batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
+            batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)  # type: ignore[attr-defined]
 
             # Handle results
             for result in batch_results:
@@ -318,7 +315,8 @@ class OrchestratorCore:
 
         return results
 
-    async def write_reports_batch(self, reports: list[tuple[Path, list[str], bool]]) -> None:
+    @staticmethod
+    async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:
         """
         Write a batch of reports asynchronously.
 
@@ -335,7 +333,7 @@ class OrchestratorCore:
             write_tasks.append(write_file_async(autoscan_path, autoscan_output))
 
         # Execute all writes concurrently
-        await asyncio.gather(*write_tasks, return_exceptions=True)
+        await asyncio.gather(*write_tasks, return_exceptions=True)  # type: ignore[attr-defined]
 
     # Synchronous helper methods (remain unchanged from original)
     @staticmethod
@@ -357,14 +355,12 @@ class OrchestratorCore:
                     )
         return crashgen
 
-    def _process_plugins(  # noqa: PLR0913
+    def _process_plugins(
         self,
         segment_plugins: list[str],
-        segment_allmodules: list[str],
         segment_callstack: list[str],
         game_version: Version,
         version_current: Version,
-        xsemodules: set[str],
         autoscan_report: list[str],
     ) -> tuple[dict[str, str], bool, bool, bool]:
         """Process plugin information from crash log."""
@@ -414,10 +410,6 @@ class OrchestratorCore:
         self,
         xsemodules: set[str],
         crashgen: dict[str, bool | int | str],
-        crashlog_crashgen: str,
-        trigger_plugin_limit: bool,
-        trigger_limit_check_disabled: bool,
-        trigger_plugins_loaded: bool,
         autoscan_report: list[str],
     ) -> None:
         """Check FCX mode and scan settings."""
@@ -427,17 +419,21 @@ class OrchestratorCore:
 
         # Scan settings with required mod detection
         # Check for X-Cell and Baka ScrapHeap mods for memory management settings
-        has_xcell = "xcell.dll" in xsemodules
+        has_xcell = "x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules
+        has_old_xcell = "x-cell-fo4.dll" in xsemodules
         has_baka_scrapheap = "bakascrapheap.dll" in xsemodules
 
         # Scan all settings including memory management
         self.settings_scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
-        self.settings_scanner.scan_buffout_memorymanagement_settings(autoscan_report, crashgen, has_xcell, has_baka_scrapheap)
+        self.settings_scanner.scan_buffout_memorymanagement_settings(
+            autoscan_report, crashgen, has_xcell, has_old_xcell, has_baka_scrapheap
+        )
         self.settings_scanner.scan_archivelimit_setting(autoscan_report, crashgen)
         self.settings_scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
 
-    def _scan_specific_suspects(self, segment_callstack: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
+    def _scan_specific_suspects(self, segment_callstack: list[str], autoscan_report: list[str]) -> None:
         """Scan for named records in crash log."""
         # Scan for named records (previously called specific suspects)
         records_matches: list[str] = []
+        self.record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)
         self.record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)

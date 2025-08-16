@@ -63,23 +63,21 @@ class SettingsScanner:
             )
 
     def scan_buffout_memorymanagement_settings(
-        self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], has_xcell: bool, has_baka_scrapheap: bool
+        self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], has_xcell: bool, has_old_xcell: bool, has_baka_scrapheap: bool
     ) -> None:
         """
-        Analyzes and adjusts memory management settings based on compatibility requirements and installed
-        components, updating the report with appropriate success or warning messages. This function checks
-        the configuration of the MemoryManager and additional memory-related parameters for compatibility
-        with specific mod components such as X-Cell and Baka ScrapHeap.
+        Analyzes and validates memory management settings for Buffout and other mods like X-Cell or Baka ScrapHeap. It generates a report
+        with success messages for correct configurations or warnings with proposed fixes for conflicting settings.
 
-        Arguments:
-            autoscan_report (list[str]): A list containing the current autoscan report to which success or
-                warning messages will be appended.
-            crashgen (dict[str, bool | int | str]): A dictionary containing the current memory management
-                configuration settings from the crashgen's config.
-            has_xcell (bool): A flag indicating whether the X-Cell mod is installed.
-            has_baka_scrapheap (bool): A flag indicating whether the Baka ScrapHeap mod is installed.
+        Args:
+            autoscan_report (list[str]): A mutable list that collects messages detailing results of the scan process.
+            crashgen (dict[str, bool | int | str]): A dictionary of settings fetched from the CrashGen configuration file where
+                keys are configuration options and values can be of type bool, int, or str.
+            has_xcell (bool): Indicates if the X-Cell mod is installed.
+            has_old_xcell (bool): Indicates if an outdated version of the X-Cell mod is installed.
+            has_baka_scrapheap (bool): Indicates if the Baka ScrapHeap mod is installed.
 
-        Returns:
+        Raises:
             None
         """
         # Constants for messages and settings
@@ -99,7 +97,11 @@ class SettingsScanner:
 
         # Check main MemoryManager setting
         mem_manager_enabled: bool | int | str = crashgen.get("MemoryManager", False)
-
+        if has_old_xcell:
+            add_warning_message(
+                "You have an old version of X-Cell installed, please update it to the latest version.",
+                "Download the latest version from here: https://www.nexusmods.com/fallout4/mods/84214?tab=files"
+            )
         # Handle main memory manager configuration
         if mem_manager_enabled:
             if has_xcell:
