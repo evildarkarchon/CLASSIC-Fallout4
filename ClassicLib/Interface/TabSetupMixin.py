@@ -143,6 +143,47 @@ class TabSetupMixin:
         layout.addWidget(create_separator())
         self.setup_bottom_buttons(layout)
 
+    def update_papyrus_button_style(self, monitoring: bool) -> None:
+        """Update the Papyrus button style based on monitoring state.
+        
+        Args:
+            monitoring: True if monitoring is active (red "STOP" style), 
+                       False if monitoring is inactive (green "START" style)
+        """
+        if not hasattr(self, 'papyrus_button') or self.papyrus_button is None:
+            return
+            
+        if monitoring:
+            # Red style for "STOP" state
+            self.papyrus_button.setText("STOP PAPYRUS MONITORING")
+            self.papyrus_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: black;
+                    background: rgb(237, 45, 45);  /* Red background */
+                    border-radius: 10px;
+                    border: 1px solid black;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                """
+            )
+        else:
+            # Green style for "START" state
+            self.papyrus_button.setText("START PAPYRUS MONITORING")
+            self.papyrus_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: black;
+                    background: rgb(45, 237, 138);  /* Green background */
+                    border-radius: 10px;
+                    border: 1px solid black;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                """
+            )
+
     def setup_articles_tab(self) -> None:
         """Sets up the UI elements for the articles tab.
         Creates a layout for the articles tab with a title label and a grid of buttons.
