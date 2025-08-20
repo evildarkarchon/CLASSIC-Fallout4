@@ -160,8 +160,12 @@ class YamlSettingsCache(metaclass=SingletonMeta):
             bool: True if the structure is valid, False otherwise
         """
 
+        # Check if data is None or not a dict
+        if not isinstance(data, dict):
+            return False
+            
         # Check if CLASSIC_Settings key exists and is a dict
-        if isinstance(data, dict) and "CLASSIC_Settings" not in data:
+        if "CLASSIC_Settings" not in data:
             return False
 
         return isinstance(data["CLASSIC_Settings"], dict)

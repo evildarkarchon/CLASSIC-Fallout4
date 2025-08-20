@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, cast
 
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QLineEdit
@@ -151,43 +151,36 @@ class FolderManagementMixin:
         if mods_folder and self.mods_folder_edit is not None:
             self.mods_folder_edit.setText(mods_folder)
 
-    def select_folder_ini(self) -> None:
-        """
-        Prompts the user to select a folder path via a directory selection dialog and updates
-        the INI settings path accordingly. Displays a confirmation message after the path
-        is successfully set.
-        """
-        folder: str = QFileDialog.getExistingDirectory(self)
-        if folder:
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
-            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}", QMessageBox.StandardButton.Ok)
 
     def open_settings(self) -> None:
         """
-        Opens the settings file for the application.
+        Opens the settings dialog for the application.
 
-        If the local directory is registered in the global registry, attempts to open the
-        "CLASSIC Settings.yaml" file from that directory. If the file is missing, a critical
-        error message is displayed, instructing the user to restart the application to resolve
-        the issue.
-
-        Raises:
-            Displays a QMessageBox with a critical error if the settings file is missing.
+        Displays a modal dialog where users can configure all application settings
+        in a structured interface. Changes are saved when the user clicks OK.
 
         Returns:
             None
         """
-        settings_file: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Settings.yaml"
-        if settings_file.exists():
-            QDesktopServices.openUrl(QUrl.fromLocalFile(settings_file))
-        else:
-            QMessageBox.critical(
-                self,
-                "Settings File Missing",
-                "The settings file is missing. Please restart the application to resolve this issue.",
-                QMessageBox.StandardButton.Ok,
-                QMessageBox.StandardButton.Ok,
-            )
+        from ClassicLib.Interface.SettingsDialog import SettingsDialog
+        
+        dialog = SettingsDialog(self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            # Apply any settings that need immediate effect
+            self.apply_settings_changes()
+    
+    def apply_settings_changes(self) -> None:
+        """
+        Apply settings that affect the UI immediately.
+        
+        This method is called after the settings dialog is accepted to apply
+        any changes that need to take effect immediately in the current session.
+        
+        Returns:
+            None
+        """
+        # Currently no immediate UI changes needed
+        # This method is here for future use when settings might affect the UI
 
     def open_backup_folder(self) -> None:
         """

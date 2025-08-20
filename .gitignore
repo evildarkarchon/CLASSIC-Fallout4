@@ -75,5 +75,7 @@ TEST_COVERAGE_ANALYSIS.md
 TEST_IMPLEMENTATION_CHECKLIST.md
 !tests/test_data/sample_crash_logs/*.log
 .claude/settings.local.json
-test_output.txt
-test-output.txt
+test_output*.txt
+test-output*.txt
+/test-output*.txt
+/UI Issue.png

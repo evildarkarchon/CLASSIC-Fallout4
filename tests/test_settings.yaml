@@ -1,0 +1,50 @@
+# Test settings file for CLASSIC tests
+# This file is used exclusively for testing and should not affect production settings
+
+CLASSIC_Settings:
+
+# Set the game that you want CLASSIC to currently manage. (Fallout 4 | Skyrim SE | Starfield)
+  Managed Game: Fallout 4
+
+# Set to true if you want CLASSIC to periodically check for its own updates online through GitHub.
+  Update Check: false
+
+# Set to true if you want CLASSIC to prioritize scanning the Virtual Reality version of your game.
+  VR Mode: false
+
+# FCX - File Check Xtended | Set to true if you want CLASSIC to check the integrity of your game files and core mods.
+  FCX Mode: false
+
+# Set to true if you want CLASSIC to remove some unnecessary lines and redundant information from your crash log files.
+  Simplify Logs: false
+
+# Set to true if you want CLASSIC to show extra stats about scanned logs in the command line / terminal window.
+  Show Statistics: false
+
+# Set to true if you want CLASSIC to look up FormID values (names) automatically while scanning crash logs.
+  Show FormID Values: false
+
+# Set to true if you want CLASSIC to move all unsolved crash logs and their autoscans to CLASSIC UNSOLVED folder.
+  Move Unsolved Logs: false
+
+# Copy-paste your INI folder path below, where your main game INI files are located (Documents\My Games\*game*)
+  INI Folder Path:
+
+# Copy-paste your staging mods folder path below. (Folder where your mod manager keeps all extracted mod files).
+  MODS Folder Path:
+
+# Copy-paste your custom crash logs folder path below. Ex. SCAN Custom Path: C:\My Crash Logs
+  SCAN Custom Path:
+
+# Toggle audio notifications for when CLASSIC finishes scanning your crash logs and mod files.
+  Audio Notifications: true
+
+# Set the source where CLASSIC will check for updates. (Nexus | GitHub | Both)
+  Update Source: Both
+
+# Enable or disable the use of an asynchronous pipeline for processing.
+  Use Async Pipeline: true
+
+# Set to true if you want CLASSIC to disable progress bars when running in command line mode.
+  Disable CLI Progress: false
+

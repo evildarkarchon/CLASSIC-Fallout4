@@ -15,8 +15,6 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
-    QCheckBox,
-    QComboBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -24,18 +22,15 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
+    QWidget,
 )
 
-from ClassicLib.Constants import YAML
 from ClassicLib.Interface.UIHelpers import (
     BOTTOM_BUTTON_STYLE,
-    CHECKBOX_STYLE,
     add_main_button,
-    create_checkbox,
     create_separator,
     setup_folder_section,
 )
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -66,7 +61,6 @@ class TabSetupMixin:
         # Required methods that must be implemented by the mixing class
         def select_folder_mods(self) -> None: ...
         def select_folder_scan(self) -> None: ...
-        def select_folder_ini(self) -> None: ...
         def validate_scan_folder_text(self) -> None: ...
         @staticmethod
         def open_url(url: str) -> None: ...
@@ -81,7 +75,6 @@ class TabSetupMixin:
         def game_files_scan(self) -> None: ...
         def open_backup_folder(self) -> None: ...
         def check_existing_backups(self) -> None: ...
-        def create_checkbox(self, label_text: str, setting: str) -> QCheckBox: ...
         def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton: ...
         def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton: ...
         def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None: ...
@@ -104,12 +97,19 @@ class TabSetupMixin:
             None
         """
         layout: QVBoxLayout = QVBoxLayout(self.main_tab)
-        layout.setContentsMargins(20, 10, 20, 10)
-        layout.setSpacing(10)
+        layout.setContentsMargins(15, 5, 15, 10)  # Minimal top margin to sit close to tab bar
+        layout.setSpacing(0)  # No default spacing - we'll add it manually where needed
 
-        # Top section
+        # Create a fixed header section for folder widgets
+        header_widget = QWidget()
+        header_widget.setMaximumHeight(100)  # Limit height to keep it compact
+        header_layout = QVBoxLayout(header_widget)
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        header_layout.setSpacing(5)
+
+        # Top section - folder selections grouped tightly together
         self.mods_folder_edit = setup_folder_section(
-            layout,
+            header_layout,
             "STAGING MODS FOLDER",
             "Box_SelectedMods",
             self.select_folder_mods,
@@ -119,8 +119,9 @@ class TabSetupMixin:
             self.mods_folder_edit.setPlaceholderText("Optional: Select your mod staging folder (e.g., MO2/mods)")
             self.mods_folder_edit.setToolTip("Select the folder where your mod manager (e.g., MO2) stages your mods.")
 
+        # No spacing between folder widgets - they'll be right on top of each other
         self.scan_folder_edit = setup_folder_section(
-            layout,
+            header_layout,
             "CUSTOM SCAN FOLDER",
             "Box_SelectedScan",
             self.select_folder_scan,
@@ -134,14 +135,21 @@ class TabSetupMixin:
             # Connect signal to validate when user finishes editing the text
             self.scan_folder_edit.editingFinished.connect(self.validate_scan_folder_text)
 
-        # self.setup_pastebin_elements(layout)  # Re-enabled Pastebin elements
+        # Add the header widget to main layout
+        # self.setup_pastebin_elements(header_layout)  # Re-enabled Pastebin elements
+        layout.addWidget(header_widget)
+        layout.addStretch()
 
-        layout.addWidget(create_separator())
+        # Add spacing after folder sections before main buttons
+        layout.addSpacing(5)
         self.setup_main_buttons(layout)
-        # layout.addWidget(create_separator())
-        self.setup_checkboxes(layout)
-        layout.addWidget(create_separator())
+        layout.addStretch()
+        layout.addSpacing(10)
         self.setup_bottom_buttons(layout)
+
+        
+        # Add stretch at the end to push everything up and keep folder widgets at top
+
 
     def update_papyrus_button_style(self, monitoring: bool) -> None:
         """Update the Papyrus button style based on monitoring state.
@@ -295,80 +303,6 @@ class TabSetupMixin:
 
         self.check_existing_backups()
 
-    def setup_checkboxes(self, layout: QBoxLayout) -> None:
-        """
-        Initializes and configures the checkbox and drop-down sections within the given layout for
-        user interface settings. This involves creating a group of checkboxes for various settings
-        and a combo box for selecting the update source. Checkbox settings are arranged in a grid
-        layout, and the combo box is included below the checkboxes with proper spacing and alignment.
-
-        Args:
-            layout (QBoxLayout): The parent layout to which the checkbox section, update source
-                section, and separator will be added.
-        """
-        checkbox_section_layout: QVBoxLayout = QVBoxLayout()  # Main layout for this section
-
-        title_label: QLabel = QLabel("CLASSIC SETTINGS")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 10px;")
-        checkbox_section_layout.addWidget(title_label)
-
-        grid_layout: QGridLayout = QGridLayout()
-        grid_layout.setHorizontalSpacing(20)
-        grid_layout.setVerticalSpacing(10)
-
-        checkboxes: list[tuple[str, str, str]] = [
-            ("FCX MODE", "FCX Mode", "Enable extended file integrity checks."),
-            ("SIMPLIFY LOGS", "Simplify Logs", "Remove redundant lines from crash logs."),
-            ("UPDATE CHECK", "Update Check", "Automatically check for CLASSIC updates."),
-            ("VR MODE", "VR Mode", "Prioritize settings for VR version of the game."),
-            ("SHOW FID VALUES", "Show FormID Values", "Look up FormID names (slower scans)."),
-            ("MOVE INVALID LOGS", "Move Unsolved Logs", "Move incomplete/unscannable logs to a separate folder."),
-            ("AUDIO NOTIFICATIONS", "Audio Notifications", "Play sounds for scan completion/errors."),
-        ]
-
-        for index, (label, setting, tooltip) in enumerate(checkboxes):
-            checkbox: QCheckBox = self.create_checkbox(label, setting)
-            checkbox.setToolTip(tooltip)
-            row: int = index // 2  # Arrange in 2 columns
-            col: int = index % 2
-            grid_layout.addWidget(checkbox, row, col, Qt.AlignmentFlag.AlignLeft)
-
-        checkbox_section_layout.addLayout(grid_layout)
-        checkbox_section_layout.addSpacing(15)  # Space before update source
-
-        # Update Source ComboBox
-        update_source_hbox: QHBoxLayout = QHBoxLayout()
-        update_source_label: QLabel = QLabel("Update Source:")
-        update_source_combo: QComboBox = QComboBox()
-        update_sources: tuple[str, str, str] = ("Nexus", "GitHub", "Both")
-        update_source_combo.addItems(update_sources)
-
-        # Set the combo box to the saved setting
-        saved_source: str | None = classic_settings(str, "Update Source")
-        if saved_source and saved_source in update_sources:
-            update_source_combo.setCurrentText(saved_source)
-        else:
-            # Default to "Both" if no saved setting
-            update_source_combo.setCurrentText("Both")
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", "Both")
-
-        # Connect the combo box change signal to save the setting
-        update_source_combo.currentTextChanged.connect(
-            lambda text: yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Update Source", text)
-        )
-
-        update_source_hbox.addWidget(update_source_label)
-        update_source_hbox.addWidget(update_source_combo)
-        update_source_hbox.addStretch(1)  # Push to the left
-
-        checkbox_section_layout.addLayout(update_source_hbox)
-
-        # Add the entire checkbox section to the parent layout
-        if isinstance(layout, QVBoxLayout | QHBoxLayout):
-            layout.addLayout(checkbox_section_layout)
-
-        # Separator is added after this section in setup_main_tab
 
     def setup_main_buttons(self, layout: QBoxLayout) -> None:
         """
@@ -485,13 +419,13 @@ class TabSetupMixin:
         # First row of utility buttons
         bottom_buttons_hbox: QHBoxLayout = QHBoxLayout()
         bottom_buttons_hbox.setSpacing(10)
+        bottom_buttons_hbox.setContentsMargins(0, 0, 0, 0)  # Remove extra margins
 
         # Create first row of buttons
         buttons_config: list[tuple[str, str, Callable]] = [
             ("ABOUT", "Show application information.", self.show_about),
             ("HELP", "Show help information for main options.", self.help_popup_main),
-            ("CHANGE INI PATH", "Manually set the path to your game's INI files folder.", self.select_folder_ini),
-            ("OPEN SETTINGS", "Open CLASSIC Settings.yaml file.", self.open_settings),
+            ("SETTINGS", "Open application settings dialog.", self.open_settings),
             ("OPEN CRASH LOGS", "Open the Crash Logs directory in your file explorer.", self.open_crash_logs_folder),
             ("CHECK UPDATES", "Manually check for CLASSIC updates.", self.update_popup_explicit),
         ]
@@ -504,7 +438,10 @@ class TabSetupMixin:
 
         # Second row with main action buttons
         main_actions_hbox: QHBoxLayout = QHBoxLayout()
-        main_actions_hbox.setSpacing(10)  # Papyrus monitoring button (special handling for checkable button)
+        main_actions_hbox.setSpacing(10)  
+        main_actions_hbox.setContentsMargins(0, 0, 0, 0)  # Remove extra margins
+        
+        # Papyrus monitoring button (special handling for checkable button)
         self.papyrus_button = self._create_button(
             "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Shows statistics in a dedicated dialog.", self.toggle_papyrus_worker
         )
@@ -516,9 +453,10 @@ class TabSetupMixin:
         exit_button: QPushButton = self._create_button("EXIT", "Close CLASSIC.", QApplication.quit)
         main_actions_hbox.addWidget(exit_button)
 
-        # Add both layouts to the main layout
+        # Add both layouts to the main layout with minimal spacing
         if isinstance(layout, QVBoxLayout | QHBoxLayout):
             layout.addLayout(bottom_buttons_hbox)
+            layout.addSpacing(5)  # Small spacing between button rows
             layout.addLayout(main_actions_hbox)
 
     def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton:
@@ -547,9 +485,6 @@ class TabSetupMixin:
 
         return button
 
-    def create_checkbox(self, label_text: str, setting: str) -> QCheckBox:
-        """Wrapper for create_checkbox from UIHelpers."""
-        return create_checkbox(label_text, setting, CHECKBOX_STYLE)
 
     def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
         """Wrapper for add_main_button from UIHelpers."""
