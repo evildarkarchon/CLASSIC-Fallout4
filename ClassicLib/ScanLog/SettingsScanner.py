@@ -14,6 +14,8 @@ from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
+    from packaging.version import Version
+
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 
@@ -157,25 +159,34 @@ class SettingsScanner:
                         f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
                     )
 
-    def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str]) -> None:
+    def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], crashgen_version: "Version | None" = None) -> None:
         """
         Scans and validates the "ArchiveLimit" setting in the provided crash generation configuration.
 
         This function checks if the "ArchiveLimit" parameter in the `crashgen` dictionary is set and takes appropriate action based
         on its value. Warnings or positive confirmations are appended or extended to the `autoscan_report` list to notify users
-        about the configuration status of the "ArchiveLimit" setting.
+        about the configuration status of the "ArchiveLimit" setting. Only checks this setting for crashgen versions < 1.29.0.
 
         Attributes:
             autoscan_report (list[str]): List to store warnings or confirmations regarding the "ArchiveLimit" parameter.
             crashgen (dict[str, bool | int | str]): Dictionary containing crash generation settings, including "ArchiveLimit".
+            crashgen_version (Version | None): The version of the crash generator. If None or >= 1.29.0, the check is skipped.
 
         Args:
             autoscan_report: A list storing messages generated as a result of scanning the "ArchiveLimit" setting.
             crashgen: A dictionary that contains various settings for crash generation configurations.
+            crashgen_version: Optional Version object representing the crash generator version.
 
         Returns:
             None
         """
+        # Import here to avoid circular dependency
+        from packaging.version import Version
+        
+        # Skip check for versions >= 1.29.0
+        if crashgen_version and crashgen_version >= Version("1.29.0"):
+            return
+        
         crashgen_archivelimit: bool | int | str | None = crashgen.get("ArchiveLimit")
         if crashgen_archivelimit:
             append_or_extend(

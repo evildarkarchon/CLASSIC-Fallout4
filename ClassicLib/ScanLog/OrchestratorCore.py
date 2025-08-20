@@ -219,6 +219,7 @@ class OrchestratorCore:
             xsemodules,
             crashgen,
             autoscan_report,
+            version_current,
         )
 
         # Run mod detection with async FormID analysis if available
@@ -411,6 +412,7 @@ class OrchestratorCore:
         xsemodules: set[str],
         crashgen: dict[str, bool | int | str],
         autoscan_report: list[str],
+        crashgen_version: Version,
     ) -> None:
         """Check FCX mode and scan settings."""
         # Check FCX mode
@@ -428,7 +430,7 @@ class OrchestratorCore:
         self.settings_scanner.scan_buffout_memorymanagement_settings(
             autoscan_report, crashgen, has_xcell, has_old_xcell, has_baka_scrapheap
         )
-        self.settings_scanner.scan_archivelimit_setting(autoscan_report, crashgen)
+        self.settings_scanner.scan_archivelimit_setting(autoscan_report, crashgen, crashgen_version)
         self.settings_scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
 
     def _scan_specific_suspects(self, segment_callstack: list[str], autoscan_report: list[str]) -> None:
