@@ -46,6 +46,7 @@ class FolderManagementMixin:
             None
         """
         while True:
+            # noinspection PyTypeChecker
             folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder")
             if not folder:  # User clicked cancel
                 break
@@ -57,6 +58,7 @@ class FolderManagementMixin:
                 yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", folder)
                 break
             # Invalid path, show warning and continue loop
+            # noinspection PyTypeChecker
             QMessageBox.warning(
                 self,
                 "Invalid Custom Scan Path",
@@ -87,6 +89,7 @@ class FolderManagementMixin:
         # Check if path exists
         path_obj = Path(folder_text)
         if not path_obj.exists() or not path_obj.is_dir():
+            # noinspection PyTypeChecker
             QMessageBox.warning(
                 self,
                 "Invalid Path",
@@ -98,6 +101,7 @@ class FolderManagementMixin:
 
         # Check if path is restricted
         if not is_valid_custom_scan_path(folder_text):
+            # noinspection PyTypeChecker
             QMessageBox.warning(
                 self,
                 "Invalid Custom Scan Path",
@@ -125,6 +129,7 @@ class FolderManagementMixin:
         Returns:
             None
         """
+        # noinspection PyTypeChecker
         folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
         if folder:
             if self.mods_folder_edit is not None:
@@ -163,6 +168,7 @@ class FolderManagementMixin:
         """
         from ClassicLib.Interface.SettingsDialog import SettingsDialog
 
+        # noinspection PyTypeChecker
         dialog = SettingsDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             # Apply any settings that need immediate effect
@@ -200,6 +206,7 @@ class FolderManagementMixin:
             backup_path: Path = local_dir / "CLASSIC Backup/Game Files"
             QDesktopServices.openUrl(QUrl.fromLocalFile(backup_path))
         else:
+            # noinspection PyTypeChecker
             QMessageBox.critical(
                 self,
                 "Error",
@@ -227,6 +234,7 @@ class FolderManagementMixin:
             crash_logs_path.mkdir(exist_ok=True)
             QDesktopServices.openUrl(QUrl.fromLocalFile(crash_logs_path))
         else:
+            # noinspection PyTypeChecker
             QMessageBox.critical(
                 self,
                 "Error",

@@ -86,6 +86,7 @@ class SettingsDialog(QDialog):
         self._create_updates_tab()
 
         # Create button box
+        # noinspection PyTypeChecker
         self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)

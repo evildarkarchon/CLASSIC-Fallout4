@@ -64,6 +64,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
             return self.path_cache[yaml_store]
         yaml_path: Path = Path.cwd()
         data_path: Path = Path("CLASSIC Data/")
+        # noinspection PyUnreachableCode
         match yaml_store:
             case YAML.Main:
                 yaml_path = data_path / "databases/CLASSIC Main.yaml"
@@ -78,6 +79,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
             case YAML.TEST:
                 yaml_path = Path("tests/test_settings.yaml")
             case other if other not in (YAML.Main, YAML.Settings, YAML.Ignore, YAML.Game, YAML.Game_Local, YAML.TEST):
+                # noinspection PyUnreachableCode
                 raise NotImplementedError
 
         if yaml_path != Path.cwd():
@@ -149,7 +151,8 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
         return self.cache.get(yaml_path, {})
 
-    def _validate_settings_structure(self, data: YAMLMapping) -> bool:
+    @staticmethod
+    def _validate_settings_structure(data: YAMLMapping) -> bool:
         """
         Validates that the settings file has the expected structure.
 
@@ -161,6 +164,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         """
 
         # Check if data is None or not a dict
+        # noinspection PyUnreachableCode
         if not isinstance(data, dict):
             return False
 
