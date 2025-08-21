@@ -135,6 +135,37 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
     scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
 ```
 
+### Test Isolation Rules
+**CRITICAL**: Production data and settings must be treated as READ-ONLY in tests.
+
+#### Production Data is Read-Only
+- **NEVER** modify `YAML.Settings` or other production YAML stores in tests
+- **NEVER** write to production configuration files during testing
+- **NEVER** access or modify user's actual game directories or crash logs
+- Tests that need to modify settings should use `YAML.TEST` or create temporary files
+
+#### Proper Test Isolation
+```python
+# BAD - Modifies production settings
+def test_bad_example():
+    yaml_settings(str, YAML.Settings, "some.key", "test_value")  # NEVER DO THIS
+
+# GOOD - Uses test-specific configuration
+def test_good_example(tmp_path):
+    test_file = tmp_path / "test_settings.yaml"
+    # Work with test_file, not production settings
+
+# GOOD - Uses dedicated test enum
+def test_with_test_enum():
+    yaml_settings(str, YAML.TEST, "some.key", "test_value")  # Safe for testing
+```
+
+#### Test File Management
+- Always use `tmp_path` fixture for temporary test files
+- Create isolated test directories for each test
+- Clean up resources in test teardown
+- Never rely on files existing from previous test runs
+
 ## Important Notes
 
 1. **Python 3.12+ Required** - Uses modern Python features and syntax
@@ -161,6 +192,45 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
 4. Write tests for new functionality with appropriate markers
 5. Run linter and type checker before committing
 6. Use terminal for running tests (VS Code test tool has freezing issues)
+7. Pre-commit hooks will automatically check for test isolation violations
+
+## Pre-commit Hooks
+
+The project uses pre-commit hooks to ensure code quality and test isolation:
+
+### Installation
+```bash
+# Install pre-commit (already in dev dependencies)
+poetry install
+
+# Install the git hooks
+poetry run pre-commit install
+```
+
+### Available Hooks
+- **Test Isolation Checker** - Detects violations of test isolation rules
+- **Production YAML Checker** - Prevents use of production YAML stores in tests
+- **Production Path Checker** - Prevents hardcoded production paths in tests
+- **Ruff** - Python linting and formatting
+- **Standard hooks** - Trailing whitespace, YAML validation, etc.
+
+### Running Manually
+```bash
+# Run on all files
+poetry run pre-commit run --all-files
+
+# Run on staged files
+poetry run pre-commit run
+
+# Run specific hook
+poetry run pre-commit run check-test-isolation
+```
+
+### Test Isolation Checker Script
+The `scripts/check_test_isolation.py` script can also be run standalone:
+```bash
+poetry run python scripts/check_test_isolation.py
+```
 
 ## Memories
 - Output test output to a file to avoid truncation.

@@ -326,7 +326,7 @@ class TestUtilityFunctions:
         assert all(item in destination for item in ["a", "b", "c", "d", "e", "f"])
 
     @patch("requests.get")
-    def test_pastebin_fetch_success(self, mock_get: MagicMock, tmp_path: Path) -> None:
+    def test_pastebin_fetch_success(self, mock_get: MagicMock, tmp_path: Path, monkeypatch) -> None:
         """Test pastebin_fetch with successful request."""
         # Mock response
         mock_response = MagicMock()
@@ -334,43 +334,42 @@ class TestUtilityFunctions:
         mock_response.text = "Sample crash log content"
         mock_get.return_value = mock_response
 
-        # Change to temp directory for test
-        original_cwd = str(Path.cwd())
-        try:
-            os.chdir(tmp_path)
+        # Change to temp directory for complete isolation
+        monkeypatch.chdir(tmp_path)
 
-            url = "https://pastebin.com/abc123"
-            pastebin_fetch(url)
+        # Create the directory structure that pastebin_fetch expects
+        crash_logs_dir = tmp_path / "Crash Logs" / "Pastebin"
+        crash_logs_dir.mkdir(parents=True, exist_ok=True)
 
-            # Check if file was created
-            expected_file = Path("Crash Logs/Pastebin/crash-abc123.log")
-            assert expected_file.exists()
-            assert expected_file.read_text() == "Sample crash log content"
+        url = "https://pastebin.com/abc123"
+        pastebin_fetch(url)
 
-        finally:
-            os.chdir(original_cwd)
+        # Check if file was created
+        expected_file = crash_logs_dir / "crash-abc123.log"
+        assert expected_file.exists()
+        assert expected_file.read_text() == "Sample crash log content"
 
     @patch("requests.get")
-    def test_pastebin_fetch_raw_url_conversion(self, mock_get: MagicMock, tmp_path: Path) -> None:
+    def test_pastebin_fetch_raw_url_conversion(self, mock_get: MagicMock, tmp_path: Path, monkeypatch) -> None:
         """Test pastebin_fetch converts regular URL to raw URL."""
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.text = "content"
         mock_get.return_value = mock_response
 
-        original_cwd = str(Path.cwd())
-        try:
-            os.chdir(tmp_path)
+        # Use monkeypatch for proper isolation
+        monkeypatch.chdir(tmp_path)
 
-            url = "https://pastebin.com/abc123"  # Not raw URL
-            pastebin_fetch(url)
+        # Create the directory structure that pastebin_fetch expects
+        crash_logs_dir = tmp_path / "Crash Logs" / "Pastebin"
+        crash_logs_dir.mkdir(parents=True, exist_ok=True)
 
-            # Should have called with raw URL
-            expected_url = "https://pastebin.com/raw/abc123"
-            mock_get.assert_called_once_with(expected_url)
+        url = "https://pastebin.com/abc123"  # Not raw URL
+        pastebin_fetch(url)
 
-        finally:
-            os.chdir(original_cwd)
+        # Should have called with raw URL
+        expected_url = "https://pastebin.com/raw/abc123"
+        mock_get.assert_called_once_with(expected_url)
 
     @patch("requests.get")
     def test_pastebin_fetch_http_error(self, mock_get: MagicMock) -> None:

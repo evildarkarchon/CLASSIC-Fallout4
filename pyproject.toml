@@ -53,6 +53,7 @@ psutil = "^7.0.0"
 pytest-xdist = "^3.8.0"
 pytest-textual-snapshot = "^1.1.0"
 textual-dev = "^1.7.0"
+pre-commit = "^4.3.0"
 
 [tool.poetry.group.windows]
 optional = true
@@ -111,7 +112,6 @@ ignore = [
 	"PLR0912", # too-many-branches
 	"PLR0914", # too-many-local-variables
 	"PLR0915", # too-many-statements
-	"PLR1702", # too-many-nested-blocks
 	"TRY003",  # Allow custom exception messages
 	"TRY400",  # Use `logging.exception` instead of `logging.error`
 	"PLR2004", # Allow magic values in comparisons
@@ -196,7 +196,7 @@ exclude_lines = [
     "def __repr__",
     "if self\\.debug",
     "raise AssertionError",
-    "raise NotImplementedError", 
+    "raise NotImplementedError",
     "if 0:",
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",

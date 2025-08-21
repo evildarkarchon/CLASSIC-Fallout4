@@ -19,19 +19,11 @@ class TestFileGenerator:
     """Tests for the FileGenerator class."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, tmp_path: Path) -> None:
-        """Set up test environment."""
-        self.original_cwd = Path.cwd()
-        # Change to temp directory for file operations
-        import os
-
-        os.chdir(tmp_path)
-
-    def teardown_method(self) -> None:
-        """Restore original working directory."""
-        import os
-
-        os.chdir(self.original_cwd)
+    def setup(self, tmp_path: Path, monkeypatch) -> None:
+        """Set up test environment with complete isolation."""
+        # Change to temp directory for all file operations
+        monkeypatch.chdir(tmp_path)
+        self.tmp_path = tmp_path
 
     @patch("ClassicLib.YamlSettingsCache.yaml_settings")
     def test_generate_ignore_file_creates_new_file(self, mock_yaml_settings: MagicMock) -> None:
@@ -98,15 +90,15 @@ local_paths:
 """
         mock_yaml_settings.return_value = expected_content
 
-        # Create CLASSIC Data directory
-        data_dir = Path("CLASSIC Data")
+        # Create test directory structure in temp path
+        data_dir = self.tmp_path / "CLASSIC Data"
         data_dir.mkdir(parents=True, exist_ok=True)
+        local_path = data_dir / "CLASSIC Fallout4 Local.yaml"
 
         # Ensure file doesn't exist
-        local_path = data_dir / "CLASSIC Fallout4 Local.yaml"
         assert not local_path.exists()
 
-        # Generate the file
+        # Generate the file (will use current working directory which is tmp_path)
         FileGenerator.generate_local_yaml()
 
         # Verify file was created with correct content
@@ -123,8 +115,8 @@ local_paths:
         expected_content = "# SkyrimSE Local Config"
         mock_yaml_settings.return_value = expected_content
 
-        # Create CLASSIC Data directory
-        data_dir = Path("CLASSIC Data")
+        # Create test directory structure in tmp_path
+        data_dir = self.tmp_path / "CLASSIC Data"
         data_dir.mkdir(parents=True, exist_ok=True)
 
         # Generate the file
@@ -139,8 +131,8 @@ local_paths:
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_local_yaml_skips_existing(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test that existing local YAML is not overwritten."""
-        # Create CLASSIC Data directory and existing file
-        data_dir = Path("CLASSIC Data")
+        # Create test directory and existing file
+        data_dir = self.tmp_path / "CLASSIC Data"
         data_dir.mkdir(parents=True, exist_ok=True)
         local_path = data_dir / "CLASSIC Fallout4 Local.yaml"
         existing_content = "# Existing local config"
@@ -162,8 +154,8 @@ local_paths:
         # Mock yaml_settings to return non-string
         mock_yaml_settings.return_value = 12345
 
-        # Create CLASSIC Data directory
-        data_dir = Path("CLASSIC Data")
+        # Create test directory
+        data_dir = self.tmp_path / "CLASSIC Data"
         data_dir.mkdir(parents=True, exist_ok=True)
 
         # Should raise TypeError
@@ -187,8 +179,8 @@ local_paths:
         """Test that file generation logs debug messages."""
         mock_yaml_settings.return_value = "test content"
 
-        # Create CLASSIC Data directory
-        data_dir = Path("CLASSIC Data")
+        # Create test directory
+        data_dir = self.tmp_path / "CLASSIC Data"
         data_dir.mkdir(parents=True, exist_ok=True)
 
         # Generate ignore file
@@ -207,8 +199,8 @@ local_paths:
         """Test that parent directory is created if it doesn't exist."""
         mock_yaml_settings.return_value = "test content"
 
-        # Ensure CLASSIC Data directory doesn't exist
-        data_dir = Path("CLASSIC Data")
+        # Ensure CLASSIC Data directory doesn't exist yet
+        data_dir = self.tmp_path / "CLASSIC Data"
         assert not data_dir.exists()
 
         # Generate the file (should create parent directory)

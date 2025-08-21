@@ -1,0 +1,75 @@
+# Pre-commit hooks for CLASSIC-Fallout4
+# See https://pre-commit.com for more information
+
+repos:
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Python code formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Custom hooks
+  - repo: local
+    hooks:
+      # Check for test isolation violations
+      - id: check-test-isolation
+        name: Check test isolation
+        entry: python scripts/check_test_isolation.py
+        language: python
+        files: ^tests/.*\.py$
+        pass_filenames: true
+        description: Check that tests don't access or modify production data
+
+      # Verify no production YAML access in tests
+      - id: no-production-yaml
+        name: No production YAML in tests
+        entry: 'YAML\.(Settings|Game_Local|Main)(?!\s*==\s*YAML\.TEST)'
+        language: pygrep
+        files: ^tests/.*\.py$
+        exclude: ^tests/test_yaml_integration\.py$  # This file tests YAML handling
+
+      # Check for hardcoded production paths
+      - id: no-production-paths
+        name: No hardcoded production paths
+        entry: '(CLASSIC Data|Crash Logs|Documents.*My Games)'
+        language: pygrep
+        files: ^tests/.*\.py$
+        exclude: '^tests/test_.*\.(txt|md|yaml|json)$'
+
+      # Ensure tests use tmp_path fixture
+      - id: tests-use-tmp-path
+        name: Tests should use tmp_path
+        entry: 'def test_.*\(.*\):(?!.*tmp_path)'
+        language: pygrep
+        files: ^tests/test_.*\.py$
+        exclude: ^tests/test_simple_.*\.py$  # Exclude simple unit tests
+
+# Configuration for ci
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
