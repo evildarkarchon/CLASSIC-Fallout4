@@ -163,7 +163,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         # Check if data is None or not a dict
         if not isinstance(data, dict):
             return False
-            
+
         # Check if CLASSIC_Settings key exists and is a dict
         if "CLASSIC_Settings" not in data:
             return False

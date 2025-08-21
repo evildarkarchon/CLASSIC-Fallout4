@@ -14,16 +14,6 @@ repos:
       - id: check-json
       - id: check-toml
       - id: check-merge-conflict
-      - id: mixed-line-ending
-        args: ['--fix=lf']
-
-  # Python code formatting
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
 
   # Custom hooks
   - repo: local

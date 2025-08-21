@@ -88,11 +88,6 @@ class TestPathValidator:
     # NOTE: validate_custom_scan_path tests removed as they directly modify production settings
     # These tests violated test isolation principles by accessing YAML.Settings
 
-
-
-
-
-
     @patch.object(PathValidator, "validate_custom_scan_path")
     @patch("ClassicLib.PathValidator.logger")
     def test_validate_all_settings_paths(self, mock_logger: MagicMock, mock_validate_custom: MagicMock) -> None:

@@ -159,7 +159,10 @@ class SettingsScanner:
                         f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
                     )
 
-    def scan_archivelimit_setting(self, autoscan_report: list[str], crashgen: dict[str, bool | int | str], crashgen_version: "Version | None" = None) -> None:
+    def scan_archivelimit_setting(
+            self, autoscan_report: list[str], crashgen: dict[str, bool | int | str],
+            crashgen_version: "Version | None" = None
+    ) -> None:
         """
         Scans and validates the "ArchiveLimit" setting in the provided crash generation configuration.
 
@@ -182,11 +185,11 @@ class SettingsScanner:
         """
         # Import here to avoid circular dependency
         from packaging.version import Version
-        
+
         # Skip check for versions >= 1.29.0
         if crashgen_version and crashgen_version >= Version("1.29.0"):
             return
-        
+
         crashgen_archivelimit: bool | int | str | None = crashgen.get("ArchiveLimit")
         if crashgen_archivelimit:
             append_or_extend(

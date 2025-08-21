@@ -289,4 +289,3 @@ class SettingsDialog(QDialog):
     def reject(self) -> None:
         """Handle dialog rejection (Cancel button)."""
         super().reject()
-

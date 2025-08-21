@@ -11,8 +11,8 @@ import random
 import sys
 import time
 from collections import Counter
-
 # Removed ThreadPoolExecutor - using pure async instead
+from functools import partial
 from pathlib import Path
 from typing import cast
 
@@ -270,12 +270,14 @@ async def write_report_to_file_async(
         if trigger_scan_failed and scanner.move_unsolved_logs:
             # Run in executor since move_unsolved_logs uses sync I/O
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, move_unsolved_logs, crashlog_file)
+            await loop.run_in_executor(None, partial(move_unsolved_logs, crashlog_file))
 
     except ImportError:
         # Fallback to sync write if aiofiles not available
         loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, write_report_to_file, crashlog_file, autoscan_report, trigger_scan_failed, scanner)
+        # Use partial to properly bind arguments for better type inference
+        write_func = partial(write_report_to_file, crashlog_file, autoscan_report, trigger_scan_failed, scanner)
+        await loop.run_in_executor(None, write_func)
 
 
 # Removed old async pipeline function - using pure async pattern instead
@@ -343,7 +345,7 @@ if __name__ == "__main__":
     # Initialize application using SetupCoordinator
     coordinator = SetupCoordinator()
     coordinator.initialize_application(is_gui=False)
-    
+
     # Disable progress bars in CLI mode (TUI has its own progress handling)
     yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Disable CLI Progress", True)
 

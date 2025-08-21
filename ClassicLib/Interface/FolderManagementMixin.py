@@ -151,7 +151,6 @@ class FolderManagementMixin:
         if mods_folder and self.mods_folder_edit is not None:
             self.mods_folder_edit.setText(mods_folder)
 
-
     def open_settings(self) -> None:
         """
         Opens the settings dialog for the application.
@@ -163,19 +162,19 @@ class FolderManagementMixin:
             None
         """
         from ClassicLib.Interface.SettingsDialog import SettingsDialog
-        
+
         dialog = SettingsDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             # Apply any settings that need immediate effect
             self.apply_settings_changes()
-    
+
     def apply_settings_changes(self) -> None:
         """
         Apply settings that affect the UI immediately.
-        
+
         This method is called after the settings dialog is accepted to apply
         any changes that need to take effect immediately in the current session.
-        
+
         Returns:
             None
         """

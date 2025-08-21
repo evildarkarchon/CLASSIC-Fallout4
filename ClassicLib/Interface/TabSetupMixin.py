@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
-    QWidget,
 )
 
 from ClassicLib.Interface.UIHelpers import (
@@ -146,9 +145,7 @@ class TabSetupMixin:
         layout.addSpacing(10)
         self.setup_bottom_buttons(layout)
 
-
         # Add stretch at the end to push everything up and keep folder widgets at top
-
 
     def update_papyrus_button_style(self, monitoring: bool) -> None:
         """Update the Papyrus button style based on monitoring state.
@@ -157,7 +154,7 @@ class TabSetupMixin:
             monitoring: True if monitoring is active (red "STOP" style),
                        False if monitoring is inactive (green "START" style)
         """
-        if not hasattr(self, 'papyrus_button') or self.papyrus_button is None:
+        if not hasattr(self, "papyrus_button") or self.papyrus_button is None:
             return
 
         if monitoring:
@@ -301,7 +298,6 @@ class TabSetupMixin:
         layout.addLayout(bottom_layout)
 
         self.check_existing_backups()
-
 
     def setup_main_buttons(self, layout: QBoxLayout) -> None:
         """
@@ -483,7 +479,6 @@ class TabSetupMixin:
         button.setStyleSheet(BOTTOM_BUTTON_STYLE)
 
         return button
-
 
     def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
         """Wrapper for add_main_button from UIHelpers."""
