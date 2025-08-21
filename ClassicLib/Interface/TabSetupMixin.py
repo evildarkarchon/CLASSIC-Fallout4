@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
+    QWidget,
 )
 
 from ClassicLib.Interface.UIHelpers import (
@@ -33,7 +34,7 @@ from ClassicLib.Interface.UIHelpers import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from PySide6.QtWidgets import QButtonGroup, QLineEdit, QWidget
+    from PySide6.QtWidgets import QButtonGroup, QLineEdit
 
 
 class TabSetupMixin:

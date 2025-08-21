@@ -27,6 +27,7 @@ from ClassicLib.Interface.StyleSheets import DARK_MODE
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
 from ClassicLib.Interface.ThreadManager import get_thread_manager
 from ClassicLib.Interface.UpdateManager import UpdateManagerMixin
+from ClassicLib.Interface.WindowGeometryMixin import WindowGeometryMixin
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import init_message_handler, msg_error
 from ClassicLib.SetupCoordinator import SetupCoordinator
@@ -84,6 +85,7 @@ class MainWindow(
     PathDialogMixin,
     TabSetupMixin,
     HelpAndAboutMixin,
+    WindowGeometryMixin,
 ):
     # Style constants are now imported from UIHelpers
 
@@ -104,8 +106,9 @@ class MainWindow(
         local_dir_path = GlobalRegistry.get_local_dir(as_string=True)
         self.setWindowIcon(QIcon(f"{local_dir_path}/CLASSIC Data/graphics/CLASSIC.ico"))
         self.setStyleSheet(DARK_MODE)
-        self.setMinimumSize(550, 350)
-        self.resize(650, 350)
+        # Initial size will be set by WindowGeometryMixin
+        self.setMinimumSize(550, 350)  # Default minimum, will be adjusted per tab
+        self.resize(650, 350)  # Default size, will be overridden by saved geometry
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout(self.central_widget)
@@ -122,6 +125,9 @@ class MainWindow(
         self.setup_main_tab()
         self.setup_backups_tab()
         self.setup_articles_tab()
+
+        # Initialize window geometry management after tabs are set up
+        self.setup_window_geometry()
         self.initialize_folder_paths()
         init_message_handler(parent=self, is_gui_mode=True)
         # Run initial setup using SetupCoordinator
@@ -161,6 +167,9 @@ class MainWindow(
             event: The close event
         """
         logger.info("Application closing - cleaning up resources...")
+
+        # Save current tab's window geometry
+        self.save_current_tab_geometry()
 
         # Stop Papyrus monitoring first to ensure worker cleanup
         if self.papyrus_monitor_worker is not None:

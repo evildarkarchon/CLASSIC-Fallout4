@@ -59,7 +59,7 @@ class SuspectScanner:
             formatted_error_name: str = error_name.ljust(max_warn_length, ".")
 
             # Add the error to the report
-            report_entry: str = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
+            report_entry: str = f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n-----\n"
             append_or_extend(report_entry, autoscan_report)
 
             # Update suspect found status
