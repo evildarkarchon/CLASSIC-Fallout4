@@ -28,38 +28,26 @@ repos:
   # Custom hooks
   - repo: local
     hooks:
-      # Check for test isolation violations
+      # Comprehensive test isolation checker with context awareness
+      # This script understands context and avoids false positives for:
+      # - Mock assertions (assert_called_with)
+      # - Paths under tmp_path
+      # - Files created from tmp_path fixtures
       - id: check-test-isolation
-        name: Check test isolation
+        name: Check test isolation (context-aware)
         entry: python scripts/check_test_isolation.py
         language: python
         files: ^tests/.*\.py$
         pass_filenames: true
-        description: Check that tests don't access or modify production data
+        description: Context-aware check for test isolation violations
 
-      # Verify no production YAML access in tests
-      - id: no-production-yaml
-        name: No production YAML in tests
-        entry: 'YAML\.(Settings|Game_Local|Main)(?!\s*==\s*YAML\.TEST)'
+      # Quick check for the most obvious violation - directly modifying production settings
+      - id: no-modify-production-settings
+        name: No direct production settings modification
+        entry: 'yaml_settings\([^)]*YAML\.Settings[^)]*new_value'
         language: pygrep
         files: ^tests/.*\.py$
-        exclude: ^tests/test_yaml_integration\.py$  # This file tests YAML handling
-
-      # Check for hardcoded production paths
-      - id: no-production-paths
-        name: No hardcoded production paths
-        entry: '(CLASSIC Data|Crash Logs|Documents.*My Games)'
-        language: pygrep
-        files: ^tests/.*\.py$
-        exclude: '^tests/test_.*\.(txt|md|yaml|json)$'
-
-      # Ensure tests use tmp_path fixture
-      - id: tests-use-tmp-path
-        name: Tests should use tmp_path
-        entry: 'def test_.*\(.*\):(?!.*tmp_path)'
-        language: pygrep
-        files: ^tests/test_.*\.py$
-        exclude: ^tests/test_simple_.*\.py$  # Exclude simple unit tests
+        description: Detects direct modification of production settings
 
 # Configuration for ci
 ci:

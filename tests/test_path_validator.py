@@ -10,7 +10,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Constants import YAML
 from ClassicLib.PathValidator import PathValidator
 
 
@@ -116,29 +115,22 @@ class TestPathValidator:
         with pytest.raises(Exception, match="Validation failed"):
             PathValidator.validate_all_settings_paths()
 
-    def test_is_valid_path_relative(self, tmp_path: Path) -> None:
+    def test_is_valid_path_relative(self, tmp_path: Path, monkeypatch) -> None:
         """Test is_valid_path with relative paths."""
         # Change to temp directory
-        import os
+        monkeypatch.chdir(tmp_path)
 
-        original_cwd = os.getcwd()
-        os.chdir(tmp_path)
+        # Create a test file
+        test_file = Path("test.txt")
+        test_file.write_text("content")
 
-        try:
-            # Create a test file
-            test_file = Path("test.txt")
-            test_file.write_text("content")
+        # Relative path should work
+        assert PathValidator.is_valid_path("test.txt") is True
+        assert PathValidator.is_valid_path("./test.txt") is True
+        assert PathValidator.is_valid_path(test_file) is True
 
-            # Relative path should work
-            assert PathValidator.is_valid_path("test.txt") is True
-            assert PathValidator.is_valid_path("./test.txt") is True
-            assert PathValidator.is_valid_path(test_file) is True
-
-            # Non-existent relative path
-            assert PathValidator.is_valid_path("nonexistent.txt") is False
-
-        finally:
-            os.chdir(original_cwd)
+        # Non-existent relative path
+        assert PathValidator.is_valid_path("nonexistent.txt") is False
 
     def test_is_valid_path_special_chars(self, tmp_path: Path) -> None:
         """Test is_valid_path with special characters in path."""
@@ -155,4 +147,3 @@ class TestPathValidator:
         mock_is_valid.return_value = False
 
         assert PathValidator.is_restricted_path("") is True
-

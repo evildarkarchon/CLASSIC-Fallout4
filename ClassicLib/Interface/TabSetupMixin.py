@@ -28,7 +28,6 @@ from PySide6.QtWidgets import (
 from ClassicLib.Interface.UIHelpers import (
     BOTTOM_BUTTON_STYLE,
     add_main_button,
-    create_separator,
     setup_folder_section,
 )
 
@@ -147,20 +146,20 @@ class TabSetupMixin:
         layout.addSpacing(10)
         self.setup_bottom_buttons(layout)
 
-        
+
         # Add stretch at the end to push everything up and keep folder widgets at top
 
 
     def update_papyrus_button_style(self, monitoring: bool) -> None:
         """Update the Papyrus button style based on monitoring state.
-        
+
         Args:
-            monitoring: True if monitoring is active (red "STOP" style), 
+            monitoring: True if monitoring is active (red "STOP" style),
                        False if monitoring is inactive (green "START" style)
         """
         if not hasattr(self, 'papyrus_button') or self.papyrus_button is None:
             return
-            
+
         if monitoring:
             # Red style for "STOP" state
             self.papyrus_button.setText("STOP PAPYRUS MONITORING")
@@ -438,9 +437,9 @@ class TabSetupMixin:
 
         # Second row with main action buttons
         main_actions_hbox: QHBoxLayout = QHBoxLayout()
-        main_actions_hbox.setSpacing(10)  
+        main_actions_hbox.setSpacing(10)
         main_actions_hbox.setContentsMargins(0, 0, 0, 0)  # Remove extra margins
-        
+
         # Papyrus monitoring button (special handling for checkable button)
         self.papyrus_button = self._create_button(
             "START PAPYRUS MONITORING", "Toggle Papyrus log monitoring. Shows statistics in a dedicated dialog.", self.toggle_papyrus_worker

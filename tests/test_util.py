@@ -7,7 +7,6 @@ path validation, version detection, encoding handling, and network operations.
 
 import hashlib
 import logging
-import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
