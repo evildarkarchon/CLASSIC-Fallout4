@@ -208,72 +208,54 @@ class TestBackupManager:
         # Should return None for empty log
         assert version is None
 
-    def test_create_backup_directory(self, manager: BackupManager, tmp_path: Path) -> None:
+    def test_create_backup_directory(self, manager: BackupManager, tmp_path: Path, monkeypatch) -> None:
         """Test creating versioned backup directory."""
-        # Change to temp directory
-        import os
+        # Change to temp directory using monkeypatch
+        monkeypatch.chdir(tmp_path)
 
-        original_cwd = os.getcwd()
-        os.chdir(tmp_path)
+        # Create backup directory
+        backup_path = manager.create_backup_directory("0.6.23")
 
-        try:
-            # Create backup directory
-            backup_path = manager.create_backup_directory("0.6.23")
-
-            # Verify directory was created
-            expected_path = Path("CLASSIC Backup/Game Files/0.6.23")
-            assert backup_path == expected_path
-            assert backup_path.exists()
-            assert backup_path.is_dir()
-        finally:
-            os.chdir(original_cwd)
+        # Verify directory was created
+        expected_path = Path("CLASSIC Backup/Game Files/0.6.23")
+        assert backup_path == expected_path
+        assert backup_path.exists()
+        assert backup_path.is_dir()
 
     @patch("ClassicLib.BackupManager.logger")
-    def test_create_backup_directory_with_logging(self, mock_logger: MagicMock, manager: BackupManager, tmp_path: Path) -> None:
+    def test_create_backup_directory_with_logging(self, mock_logger: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch) -> None:
         """Test that creating backup directory logs debug message."""
-        import os
+        # Change to temp directory using monkeypatch
+        monkeypatch.chdir(tmp_path)
 
-        original_cwd = os.getcwd()
-        os.chdir(tmp_path)
-
-        try:
-            backup_path = manager.create_backup_directory("0.6.23")
-            mock_logger.debug.assert_called_with(f"Created backup directory: {backup_path}")
-        finally:
-            os.chdir(original_cwd)
+        backup_path = manager.create_backup_directory("0.6.23")
+        mock_logger.debug.assert_called_with(f"Created backup directory: {backup_path}")
 
     @patch("ClassicLib.Util.validate_path")
     @patch("shutil.copy2")
-    def test_backup_files_success(self, mock_copy: MagicMock, mock_validate: MagicMock, manager: BackupManager, tmp_path: Path) -> None:
+    def test_backup_files_success(self, mock_copy: MagicMock, mock_validate: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch) -> None:
         """Test successful backup of files."""
-        # Setup temp directory structure
-        import os
+        # Change to temp directory using monkeypatch
+        monkeypatch.chdir(tmp_path)
 
-        original_cwd = os.getcwd()
-        os.chdir(tmp_path)
+        source_dir = tmp_path / "Game"
+        source_dir.mkdir()
 
-        try:
-            source_dir = tmp_path / "Game"
-            source_dir.mkdir()
+        # Create test files
+        (source_dir / "test.dll").write_text("dll content")
+        (source_dir / "game.exe").write_text("exe content")
+        (source_dir / "config.ini").write_text("ini content")
+        (source_dir / "readme.txt").write_text("txt content")
 
-            # Create test files
-            (source_dir / "test.dll").write_text("dll content")
-            (source_dir / "game.exe").write_text("exe content")
-            (source_dir / "config.ini").write_text("ini content")
-            (source_dir / "readme.txt").write_text("txt content")
+        # Mock validation
+        mock_validate.return_value = (True, "")
 
-            # Mock validation
-            mock_validate.return_value = (True, "")
+        # Perform backup
+        backup_list = ["test.dll", "game.exe", "config.ini"]
+        manager.backup_files(str(source_dir), backup_list, "0.6.23")
 
-            # Perform backup
-            backup_list = ["test.dll", "game.exe", "config.ini"]
-            manager.backup_files(str(source_dir), backup_list, "0.6.23")
-
-            # Verify copy was called for matching files
-            assert mock_copy.call_count == 3
-
-        finally:
-            os.chdir(original_cwd)
+        # Verify copy was called for matching files
+        assert mock_copy.call_count == 3
 
     @patch("ClassicLib.Util.validate_path")
     @patch("ClassicLib.BackupManager.logger")
@@ -292,34 +274,28 @@ class TestBackupManager:
     @patch("shutil.copy2")
     @patch("ClassicLib.BackupManager.logger")
     def test_backup_files_skip_existing(
-        self, mock_logger: MagicMock, mock_copy: MagicMock, mock_validate: MagicMock, manager: BackupManager, tmp_path: Path
+        self, mock_logger: MagicMock, mock_copy: MagicMock, mock_validate: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch
     ) -> None:
         """Test that existing backup files are not overwritten."""
-        import os
+        # Change to temp directory using monkeypatch
+        monkeypatch.chdir(tmp_path)
 
-        original_cwd = os.getcwd()
-        os.chdir(tmp_path)
+        source_dir = tmp_path / "Game"
+        source_dir.mkdir()
+        backup_dir = tmp_path / "CLASSIC Backup" / "Game Files" / "0.6.23"
+        backup_dir.mkdir(parents=True)
 
-        try:
-            source_dir = tmp_path / "Game"
-            source_dir.mkdir()
-            backup_dir = tmp_path / "CLASSIC Backup" / "Game Files" / "0.6.23"
-            backup_dir.mkdir(parents=True)
+        # Create source file and existing backup
+        (source_dir / "test.dll").write_text("new content")
+        (backup_dir / "test.dll").write_text("old backup")
 
-            # Create source file and existing backup
-            (source_dir / "test.dll").write_text("new content")
-            (backup_dir / "test.dll").write_text("old backup")
+        mock_validate.return_value = (True, "")
 
-            mock_validate.return_value = (True, "")
+        # Perform backup
+        manager.backup_files(str(source_dir), ["test.dll"], "0.6.23")
 
-            # Perform backup
-            manager.backup_files(str(source_dir), ["test.dll"], "0.6.23")
-
-            # Verify copy was NOT called (file already exists)
-            mock_copy.assert_not_called()
-
-        finally:
-            os.chdir(original_cwd)
+        # Verify copy was NOT called (file already exists)
+        mock_copy.assert_not_called()
 
     @patch.object(BackupManager, "load_backup_configuration")
     @patch.object(BackupManager, "extract_xse_version")

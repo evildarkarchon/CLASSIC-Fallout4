@@ -114,12 +114,12 @@ class TestMainScreen:
                 mods_actual_input = mods_input._input
                 scan_actual_input = scan_input._input
 
-                # Simulate input changes
+                # Simulate input changes - call on_input_changed on the FolderSelector, not MainScreen
                 mods_actual_input.value = "/path/to/mods"
-                main_screen.on_input_changed(Input.Changed(mods_actual_input, "/path/to/mods"))
+                mods_input.on_input_changed(Input.Changed(mods_actual_input, "/path/to/mods"))
 
                 scan_actual_input.value = "/path/to/custom"
-                main_screen.on_input_changed(Input.Changed(scan_actual_input, "/path/to/custom"))
+                scan_input.on_input_changed(Input.Changed(scan_actual_input, "/path/to/custom"))
 
                 # Verify settings were called
                 # Note: The mock may not be called if classic_settings is imported differently

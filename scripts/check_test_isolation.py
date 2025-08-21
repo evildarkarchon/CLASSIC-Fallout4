@@ -58,6 +58,14 @@ class TestIsolationChecker:
             if any(pattern in prev_line for pattern in ["@patch", "with patch", "@mock", "with mock"]):
                 return True
 
+        # Check if we're in a function that's testing the YAML infrastructure itself
+        # These tests need to use the actual enum values to test the mapping functionality
+        if "test_yaml" in line or "YamlSettingsCache" in line:
+            # If it's in a with patch context, it's mocked
+            for prev_line in prev_lines[-10:]:
+                if "with patch" in prev_line:
+                    return True
+
         return False
 
     def _is_safe_path_usage(self, line: str, prev_lines: list[str]) -> bool:
@@ -68,6 +76,7 @@ class TestIsolationChecker:
         - Subdirectories of tmp_path
         - Inside mock/patch contexts
         - String literals for comparison
+        - Path construction relative to __file__ (test fixtures)
         """
         # Check if it's a subdirectory of tmp_path
         if "tmp_path" in line:
@@ -79,6 +88,11 @@ class TestIsolationChecker:
         for prev_line in prev_lines[-2:]:
             if "self.tmp_path" in prev_line:
                 return True
+
+        # Check if it's using Path(__file__).parent to reference test fixtures
+        if "__file__" in line and "Path" in line:
+            # This is likely referencing test fixtures relative to the test file
+            return True
 
         # Check if it's in a string comparison or assertion
         if any(pattern in line for pattern in ["assert", "==", "!=", "in", "not in"]):
@@ -99,6 +113,7 @@ class TestIsolationChecker:
         Safe patterns include:
         - Writing to files created from tmp_path
         - Writing to files in fixtures with tmp_path parameter
+        - Writing to files within tempfile.TemporaryDirectory() context
         """
         # Extract the variable being written to
         match = re.search(r"(\w+)\.write_(text|bytes)\(", line)
@@ -111,7 +126,8 @@ class TestIsolationChecker:
         derived_from = {var_name}
 
         # Look backwards for where this variable was defined and track derivations
-        for i in range(max(0, line_num - 30), line_num):
+        # Increase range to 50 lines to catch more complex variable chains
+        for i in range(max(0, line_num - 50), line_num):
             if i >= len(file_lines):
                 continue
             check_line = file_lines[i]
@@ -137,6 +153,10 @@ class TestIsolationChecker:
                 ):
                     return True
 
+        # Check if we're within a tempfile.TemporaryDirectory() context
+        if self._is_in_tempfile_context(file_lines, line_num):
+            return True
+
         # Check if we're in a test function with tmp_path fixture
         if self._has_tmp_path_fixture(file_lines, line_num):
             # If the test has tmp_path fixture and uses self.tmp_path, it's safe
@@ -144,6 +164,46 @@ class TestIsolationChecker:
                 if i >= len(file_lines):
                     continue
                 if "self.tmp_path" in file_lines[i]:
+                    return True
+
+        return False
+
+    def _is_in_tempfile_context(self, lines: list[str], line_num: int) -> bool:
+        """
+        Check if the current line is within a tempfile.TemporaryDirectory() context.
+
+        Safe patterns include:
+        - with tempfile.TemporaryDirectory() as temp_dir:
+        - with TemporaryDirectory() as temp_dir:
+        """
+        # Track indentation level
+        current_line = lines[line_num - 1] if line_num <= len(lines) else ""
+        current_indent = len(current_line) - len(current_line.lstrip())
+
+        # Look backwards for tempfile context
+        for i in range(line_num - 2, max(0, line_num - 50), -1):
+            line = lines[i]
+
+            # Skip empty lines
+            if not line.strip():
+                continue
+
+            # Get indentation of this line
+            line_indent = len(line) - len(line.lstrip())
+
+            # If we've gone to a lower indentation level, we're outside any context
+            if line_indent < current_indent - 4:  # Allow for some flexibility
+                break
+
+            # Check for tempfile.TemporaryDirectory() context
+            if "TemporaryDirectory()" in line and "with" in line:
+                # Verify it's at the right indentation level (parent context)
+                if line_indent <= current_indent:
+                    return True
+
+            # Also check for the import pattern
+            if "tempfile.TemporaryDirectory()" in line and "with" in line:
+                if line_indent <= current_indent:
                     return True
 
         return False
@@ -162,8 +222,8 @@ class TestIsolationChecker:
                         is_fixture = True
                         break
 
-                # If it's a test function or a fixture, check for tmp_path
-                if line.startswith("def test_") or is_fixture:
+                # If it's a test function or a fixture or any method, check for tmp_path
+                if line.startswith("def test_") or is_fixture or line.startswith("def "):
                     # Check this line and potentially the next few for parameters
                     full_def = line
                     # Handle multi-line function definitions

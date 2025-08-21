@@ -19,35 +19,48 @@ class TestConcurrencySafety:
         handler = TuiScanHandler()
         call_count = 0
 
-        async def mock_scan_delay():
+        async def mock_scan_delay(*args, **kwargs):
             """Simulate a scan that takes some time."""
             nonlocal call_count
             call_count += 1
             await asyncio.sleep(0.05)  # Simulate scan time
+            return ("Success", ["Result"])  # Return tuple like scan_logs
 
         # Mock the scanner to simulate a long-running scan
         with patch("ClassicLib.TUI.handlers.scan_handler.ClassicScanLogs") as mock_cls:
             mock_scanner = MagicMock()
-            # Mock the orchestrator with async_scan_logs method
-            mock_orchestrator = MagicMock()
-            mock_orchestrator.async_scan_logs = mock_scan_delay
-            mock_scanner.orchestrator = mock_orchestrator
+            # Set up attributes that the handler expects
+            mock_scanner.yamldata = MagicMock()
+            mock_scanner.crashlogs = []
+            mock_scanner.fcx_mode = False
+            mock_scanner.show_formid_values = False
+            mock_scanner.formid_db_exists = False
+            mock_scanner.crashlog_list = ["test.log"]
+            mock_scanner.process_crashlog_async = mock_scan_delay
             mock_cls.return_value = mock_scanner
 
-            with patch("ClassicLib.TUI.handlers.scan_handler.init_message_handler"):
-                # Try to start multiple scans concurrently
-                results = await asyncio.gather(
-                    handler.perform_crash_scan(), handler.perform_crash_scan(), handler.perform_crash_scan(), return_exceptions=True
-                )
+            # Mock AsyncScanOrchestrator as a context manager (patch where it's imported from)
+            from unittest.mock import AsyncMock
+            with patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_cls:
+                mock_orchestrator = AsyncMock()
+                mock_orchestrator.__aenter__ = AsyncMock(return_value=mock_orchestrator)
+                mock_orchestrator.__aexit__ = AsyncMock(return_value=None)
+                mock_orchestrator_cls.return_value = mock_orchestrator
 
-                # Count successes and failures
-                success_count = sum(1 for r in results if r is True)
-                failure_count = sum(1 for r in results if r is False)
+                with patch("ClassicLib.TUI.handlers.scan_handler.init_message_handler"):
+                    # Try to start multiple scans concurrently
+                    results = await asyncio.gather(
+                        handler.perform_crash_scan(), handler.perform_crash_scan(), handler.perform_crash_scan(), return_exceptions=True
+                    )
 
-                # Only one scan should actually run
-                assert call_count == 1, f"Expected 1 scan to run, but {call_count} ran"
-                assert success_count == 1, f"Expected 1 success, got {success_count}"
-                assert failure_count == 2, f"Expected 2 blocked scans, got {failure_count}"
+                    # Count successes and failures
+                    success_count = sum(1 for r in results if r is True)
+                    failure_count = sum(1 for r in results if r is False)
+
+                    # Only one scan should actually run
+                    assert call_count == 1, f"Expected 1 scan to run, but {call_count} ran"
+                    assert success_count == 1, f"Expected 1 success, got {success_count}"
+                    assert failure_count == 2, f"Expected 2 blocked scans, got {failure_count}"
 
     @pytest.mark.asyncio
     async def test_papyrus_monitoring_cleanup(self):

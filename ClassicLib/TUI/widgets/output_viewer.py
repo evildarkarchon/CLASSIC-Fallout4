@@ -41,23 +41,23 @@ class OutputViewer(Static):
         layout: vertical;
         border: none;
     }
-    
+
     OutputViewer:focus {
         border: solid $accent;
     }
-    
+
     .output-container {
         height: 1fr;
         border: solid $primary;
         padding: 1;
     }
-    
+
     .output-controls {
         dock: bottom;
         height: 3;
         align: center middle;
     }
-    
+
     .search-container {
         dock: top;
         height: 3;
@@ -65,15 +65,15 @@ class OutputViewer(Static):
         background: $panel;
         display: none;
     }
-    
+
     .search-container.visible {
         display: block;
     }
-    
+
     .search-input {
         width: 100%;
     }
-    
+
     .search-results {
         margin-left: 1;
         color: $text-muted;
@@ -190,6 +190,20 @@ class OutputViewer(Static):
         self.max_lines = max_lines
         if self._log_widget:
             self._log_widget.max_lines = max_lines
+        # Update buffer size with thread safety
+        with self._buffer_lock:
+            # Create new deque with new max size, preserving existing data
+            old_buffer = list(self._output_buffer)
+            self._output_buffer = deque(old_buffer, maxlen=max_lines)
+
+    def get_buffer_contents(self) -> list[str]:
+        """Get a thread-safe copy of the buffer contents.
+
+        Returns:
+            List copy of buffer contents
+        """
+        with self._buffer_lock:
+            return list(self._output_buffer)
 
     def start_search(self) -> None:
         """Start search mode."""
@@ -268,7 +282,7 @@ class OutputViewer(Static):
         try:
             btn = self.query_one("#toggle-scroll", Button)
             btn.label = f"Auto-scroll: {'ON' if self.auto_scroll else 'OFF'}"
-        except:
+        except (LookupError, AttributeError):
             # Button not yet composed or doesn't exist
             pass
 

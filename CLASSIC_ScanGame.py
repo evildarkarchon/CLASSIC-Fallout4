@@ -40,7 +40,18 @@ def check_log_errors(folder_path: Path | str) -> str:
         str: A detailed report of all detected errors in the relevant log files, if any.
     """
     core = get_scan_game_core()
-    return asyncio.run(core.check_log_errors(folder_path))
+
+    # Check if we're already in an async context
+    try:
+        loop = asyncio.get_running_loop()
+        # We're in an async context, create a new event loop in a thread
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, core.check_log_errors(folder_path))
+            return future.result()
+    except RuntimeError:
+        # No running loop, safe to use asyncio.run
+        return asyncio.run(core.check_log_errors(folder_path))
 
 
 # ================================================
@@ -89,7 +100,18 @@ def scan_mods_unpacked() -> str:
         str: Detailed report of scan results.
     """
     core = get_scan_game_core()
-    return asyncio.run(core.scan_mods_unpacked())
+
+    # Check if we're already in an async context
+    try:
+        loop = asyncio.get_running_loop()
+        # We're in an async context, create a new event loop in a thread
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, core.scan_mods_unpacked())
+            return future.result()
+    except RuntimeError:
+        # No running loop, safe to use asyncio.run
+        return asyncio.run(core.scan_mods_unpacked())
 
 
 def scan_mods_archived() -> str:

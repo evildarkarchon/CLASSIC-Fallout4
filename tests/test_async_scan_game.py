@@ -18,7 +18,6 @@ from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.ScanGame.AsyncScanGame import (
     MAX_CONCURRENT_DDS_READS,
     MAX_CONCURRENT_LOG_READS,
-    MAX_CONCURRENT_SUBPROCESSES,
     check_log_errors_async,
     check_log_errors_async_wrapper,
     scan_mods_archived_async,
@@ -206,7 +205,9 @@ class TestAsyncScanModsArchived:
             await scan_mods_archived_async()
 
         # Verify concurrency was limited
-        assert max_concurrent <= MAX_CONCURRENT_SUBPROCESSES
+        # Import the actual dynamic limit from ScanGameCore
+        from ClassicLib.ScanGame.ScanGameCore import MAX_CONCURRENT_SUBPROCESSES as ACTUAL_LIMIT
+        assert max_concurrent <= ACTUAL_LIMIT
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_async_timeout_handling(

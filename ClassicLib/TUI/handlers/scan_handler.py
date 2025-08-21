@@ -139,6 +139,7 @@ class TuiScanHandler:
         finally:
             async with self._scan_lock:
                 self.is_scanning = False
+                self.current_task = None
 
     async def perform_game_scan(self, progress_callback: Callable[[float], None] | None = None) -> bool:
         """Perform game files scan.
@@ -181,14 +182,19 @@ class TuiScanHandler:
         finally:
             async with self._scan_lock:
                 self.is_scanning = False
+                self.current_task = None
 
-    def cancel_scan(self) -> None:
+    async def cancel_scan(self) -> None:
         """Cancel the current scan operation."""
-        if self.current_task and not self.current_task.done():
-            self.current_task.cancel()
-            self._send_output("⚠️ Scan cancelled by user")
-        self.is_scanning = False
+        async with self._scan_lock:
+            if self.current_task and not self.current_task.done():
+                self.current_task.cancel()
+                self._send_output("⚠️ Scan cancelled by user")
+            self.is_scanning = False
+            self.current_task = None
 
     def is_scan_running(self) -> bool:
-        """Check if a scan is currently running."""
+        """Check if a scan is currently running (thread-safe check)."""
+        # Note: This is a simple read, but for complete thread safety,
+        # callers should use this with awareness that state might change immediately after
         return self.is_scanning

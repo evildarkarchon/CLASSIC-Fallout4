@@ -10,9 +10,10 @@ from textual.containers import Horizontal, Vertical
 from textual.events import Key
 from textual.reactive import reactive
 from textual.screen import Screen
-from textual.widgets import Button, Checkbox, Input, Label
+from textual.widgets import Button, Checkbox, Label
 
 from ClassicLib.Constants import YAML
+from ClassicLib.TUI.input_validator import InputValidator
 from ClassicLib.TUI.widgets.folder_selector import FolderSelector
 from ClassicLib.TUI.widgets.output_viewer import OutputViewer
 from ClassicLib.TUI.widgets.scan_buttons import ScanButton
@@ -53,7 +54,12 @@ class MainScreen(Screen):
                 yield Button("Papyrus Monitor", id="papyrus-monitor", variant="default")
 
             with Vertical(classes="settings-section"):
-                yield Checkbox("Check for Updates", id="update-check", value=classic_settings(bool, "Update Check"))
+                # Safe settings retrieval with default value
+                try:
+                    update_check_value = classic_settings(bool, "Update Check") or False
+                except (RuntimeError, KeyError, ValueError):
+                    update_check_value = False
+                yield Checkbox("Check for Updates", id="update-check", value=update_check_value)
 
             yield OutputViewer(id="output")
 
@@ -92,6 +98,11 @@ class MainScreen(Screen):
     def _load_folder_paths(self) -> None:
         """Load saved folder paths from settings."""
         try:
+            # Initialize message handler if not already done (for tests)
+            from ClassicLib.MessageHandler import init_message_handler
+
+            init_message_handler(parent=None, is_gui_mode=False)
+
             staging_path = classic_settings(str, "ModStagingFolder")
             if staging_path:
                 mods_folder = self._widget_cache.get("mods_folder") or self.query_one("#mods-folder", FolderSelector)
@@ -179,7 +190,8 @@ class MainScreen(Screen):
                 # noinspection PyUnresolvedReferences
                 cp = kernel32.GetConsoleOutputCP()
                 return cp == 65001  # UTF-8 code page  # noqa: TRY300
-            except:
+            except (ImportError, AttributeError, OSError):
+                # ctypes not available, attribute error, or OS error
                 return False
 
         # Default to ASCII for safety
@@ -202,14 +214,27 @@ class MainScreen(Screen):
         if event.button.id == "papyrus-monitor":
             self.app.call_later(self.toggle_papyrus_monitor)
 
-    def on_input_changed(self, event: Input.Changed) -> None:
-        """Handle input changes."""
-        if event.input.id == "mods-folder":
-            self.staging_folder = event.value
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", event.value)
-        elif event.input.id == "scan-folder":
-            self.custom_folder = event.value
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", event.value)
+    def on_folder_selector_path_changed(self, event: FolderSelector.PathChanged) -> None:
+        """Handle secure path changes from FolderSelector widgets."""
+        # Only save valid paths
+        if not event.valid:
+            return
+
+        # Get the sender to identify which folder selector
+        sender_id = event.sender.id if hasattr(event, "sender") and event.sender else None
+
+        if sender_id == "mods-folder":
+            # Validate and sanitize before saving
+            is_valid, sanitized = InputValidator.validate_settings_value("CLASSIC_Settings.MODS Folder Path", event.path)
+            if is_valid and sanitized:
+                self.staging_folder = sanitized
+                yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", sanitized)
+        elif sender_id == "scan-folder":
+            # Validate and sanitize before saving
+            is_valid, sanitized = InputValidator.validate_settings_value("CLASSIC_Settings.SCAN Custom Path", event.path)
+            if is_valid and sanitized:
+                self.custom_folder = sanitized
+                yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", sanitized)
 
     def action_focus_mods_folder(self) -> None:
         """Focus the mods folder input."""

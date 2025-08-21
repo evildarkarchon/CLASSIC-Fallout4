@@ -97,11 +97,20 @@ def _detect_unicode_support_impl() -> bool:
                 # Try to get console output code page
                 import ctypes
 
+                # Safely access Windows API
+                if not hasattr(ctypes, "windll"):
+                    return False
+
                 kernel32 = ctypes.windll.kernel32
+                if not hasattr(kernel32, "GetConsoleOutputCP"):
+                    return False
+
+                # Get console code page with error handling
                 cp = kernel32.GetConsoleOutputCP()
                 # UTF-8 code page
                 return cp == 65001  # noqa: TRY300
-            except:
+            except (ImportError, AttributeError, OSError, ValueError):
+                # ctypes not available, attribute error, OS error, or invalid value
                 # Default to ASCII on Windows if we can't detect
                 return False
 
@@ -277,23 +286,35 @@ class TuiPapyrusHandler:
                 return True
 
     async def stop_monitoring(self) -> None:
-        """Stop Papyrus log monitoring."""
+        """Stop Papyrus log monitoring with proper cleanup."""
         async with self._monitor_lock:
             if not self.is_monitoring:
                 return
 
-            if self.monitor_task and not self.monitor_task.done():
-                self._stop_event.set()
-                self.monitor_task.cancel()
+            # Set stop event first to signal the loop
+            self._stop_event.set()
+
+            # Store reference to task before clearing
+            task_to_cancel = self.monitor_task
+
+            # Clear state first
+            self.is_monitoring = False
+            self.monitor_task = None
+
+            # Now handle task cancellation outside of state management
+            if task_to_cancel and not task_to_cancel.done():
+                task_to_cancel.cancel()
                 try:
                     # Wait for the task to complete cancellation with timeout
-                    await asyncio.wait_for(self.monitor_task, timeout=5.0)
+                    await asyncio.wait_for(asyncio.shield(task_to_cancel), timeout=5.0)
                 except (TimeoutError, asyncio.CancelledError):
                     # Expected when task is cancelled or takes too long
-                    pass
-                finally:
-                    self.monitor_task = None
-            self.is_monitoring = False
+                    # Force collection of the task
+                    try:
+                        await task_to_cancel
+                    except (asyncio.CancelledError, Exception):
+                        # Ignore any exceptions from the cancelled task
+                        pass
 
     def is_monitoring_active(self) -> bool:
         """Check if monitoring is currently active."""

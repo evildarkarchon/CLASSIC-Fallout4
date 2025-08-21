@@ -1,13 +1,13 @@
 """Folder selector widget for TUI."""
 
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Button, Input, Static
+
+from ClassicLib.TUI.input_validator import InputValidator
 
 
 class FolderSelector(Static):
@@ -26,32 +26,32 @@ class FolderSelector(Static):
         layout: vertical;
         border: none;
     }
-    
+
     FolderSelector:focus-within {
         border: solid $primary;
     }
-    
+
     .folder-selector-container {
         height: 3;
         layout: horizontal;
     }
-    
+
     .folder-input {
         width: 1fr;
         height: 3;
     }
-    
+
     .browse-button {
         width: 10;
         height: 3;
         margin-left: 1;
     }
-    
+
     .error-label {
         height: 1;
         color: $error;
     }
-    
+
     .error-label.hidden {
         display: none;
     }
@@ -79,7 +79,9 @@ class FolderSelector(Static):
     def compose(self) -> ComposeResult:
         """Compose the widget."""
         with Horizontal(classes="folder-selector-container"):
-            self._input = Input(placeholder=self.placeholder, value=self.initial_path, classes="folder-input")
+            self._input = Input(
+                placeholder=self.placeholder, value=self.initial_path, classes="folder-input", max_length=InputValidator.MAX_PATH_LENGTH
+            )
             yield self._input
             yield Button("Browse", id="browse-btn", classes="browse-button")
 
@@ -112,32 +114,33 @@ class FolderSelector(Static):
             self.action_browse()
 
     def _check_path_validity(self) -> None:
-        """Validate the current path."""
+        """Validate the current path using secure validation."""
         if not self.path:
             self.valid = True
             self._hide_error()
             return
 
-        if self.validate_exists:
-            path_obj = Path(self.path)
-            if not path_obj.exists():
-                self.valid = False
-                self._show_error("Path does not exist")
-            elif not path_obj.is_dir():
-                self.valid = False
-                self._show_error("Path is not a directory")
-            else:
-                self.valid = True
-                self._hide_error()
+        # Check input length first
+        length_valid, length_error = InputValidator.validate_input_length(self.path, InputValidator.MAX_PATH_LENGTH)
+        if not length_valid:
+            self.valid = False
+            self._show_error(length_error)
+            return
+
+        # Use the secure path validation
+        is_valid, error_msg, resolved_path = InputValidator.validate_path(self.path, must_exist=self.validate_exists, must_be_dir=True)
+
+        if not is_valid:
+            self.valid = False
+            # Sanitize error message to avoid information disclosure
+            safe_error = InputValidator.sanitize_output_message(error_msg)
+            self._show_error(safe_error)
         else:
-            # Just check if it's a valid path format
-            try:
-                Path(self.path)
-                self.valid = True
-                self._hide_error()
-            except (ValueError, OSError):
-                self.valid = False
-                self._show_error("Invalid path format")
+            self.valid = True
+            self._hide_error()
+            # Update the path with the resolved version to prevent traversal
+            if resolved_path and str(resolved_path) != self.path:
+                self.path = str(resolved_path)
 
     def _show_error(self, message: str) -> None:
         """Show error message."""
