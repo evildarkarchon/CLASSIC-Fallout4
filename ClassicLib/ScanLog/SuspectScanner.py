@@ -59,7 +59,7 @@ class SuspectScanner:
             formatted_error_name: str = error_name.ljust(max_warn_length, ".")
 
             # Add the error to the report
-            report_entry: str = f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n-----\n"
+            report_entry: str = f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n-----\n"
             append_or_extend(report_entry, autoscan_report)
 
             # Update suspect found status
@@ -170,7 +170,7 @@ class SuspectScanner:
     def _add_suspect_to_report(error_name: str, error_severity: str, max_warn_length: int, autoscan_report: list[str]) -> None:
         """Add a found suspect to the report with proper formatting."""
         formatted_error_name: str = error_name.ljust(max_warn_length, ".")
-        message: str = f"# Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity} # \n-----\n"
+        message: str = f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n-----\n"
         append_or_extend(message, autoscan_report)
 
     @staticmethod
@@ -196,7 +196,7 @@ class SuspectScanner:
             append_or_extend(
                 (
                     "* NOTICE : MAIN ERROR REPORTS THAT A DLL FILE WAS INVOLVED IN THIS CRASH! * \n",
-                    "If that dll file belongs to a mod, that mod is a prime suspect for the crash. \n-----\n",
+                    "If that dll file belongs to a mod, that mod is a prime suspect for the crash. \n\n-----\n",
                 ),
                 autoscan_report,
             )

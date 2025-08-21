@@ -54,13 +54,13 @@ class SettingsScanner:
             append_or_extend(
                 (
                     "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {self.yamldata.crashgen_name}.\n-----\n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {self.yamldata.crashgen_name}.\n\n-----\n",
                 ),
                 autoscan_report,
             )
         else:
             append_or_extend(
-                f"✔️ Achievements parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                f"✔️ Achievements parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n",
                 autoscan_report,
             )
 
@@ -88,7 +88,7 @@ class SettingsScanner:
             None
         """
         # Constants for messages and settings
-        separator = "\n-----\n"
+        separator = "\n\n-----\n"
         success_prefix = "✔️ "
         warning_prefix = "# ❌ CAUTION : "
         fix_prefix = " FIX: "
@@ -195,13 +195,13 @@ class SettingsScanner:
             append_or_extend(
                 (
                     "# ❌ CAUTION : ArchiveLimit is set to TRUE, this setting is known to cause instability. # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ArchiveLimit to FALSE.\n-----\n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ArchiveLimit to FALSE.\n\n-----\n",
                 ),
                 autoscan_report,
             )
         else:
             append_or_extend(
-                f"✔️ ArchiveLimit parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                f"✔️ ArchiveLimit parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n",
                 autoscan_report,
             )
 
@@ -229,13 +229,13 @@ class SettingsScanner:
                 append_or_extend(
                     (
                         "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE # \n",
-                        f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu.\n-----\n",
+                        f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu.\n\n-----\n",
                     ),
                     autoscan_report,
                 )
             else:
                 append_or_extend(
-                    f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n-----\n",
+                    f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n",
                     autoscan_report,
                 )
 
@@ -265,6 +265,6 @@ class SettingsScanner:
             for setting_name, setting_value in crashgen.items():
                 if setting_value is False and setting_name not in crashgen_ignore:
                     append_or_extend(
-                        f"* NOTICE : {setting_name} is disabled in your {self.yamldata.crashgen_name} settings, is this intentional? * \n-----\n",
+                        f"* NOTICE : {setting_name} is disabled in your {self.yamldata.crashgen_name} settings, is this intentional? * \n\n-----\n",
                         autoscan_report,
                     )
