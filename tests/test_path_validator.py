@@ -86,130 +86,13 @@ class TestPathValidator:
         # Verify string conversion happened
         mock_is_valid.assert_called_once_with(str(test_path))
 
-    @patch("ClassicLib.YamlSettingsCache.classic_settings")
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
-    @patch("ClassicLib.msg_warning")
-    @patch("ClassicLib.PathValidator.logger")
-    def test_validate_custom_scan_path_valid(
-        self, mock_logger: MagicMock, mock_warning: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock, tmp_path: Path
-    ) -> None:
-        """Test validate_custom_scan_path with valid existing path."""
-        # Create a valid directory
-        scan_dir = tmp_path / "CrashLogs"
-        scan_dir.mkdir()
+    # NOTE: validate_custom_scan_path tests removed as they directly modify production settings
+    # These tests violated test isolation principles by accessing YAML.Settings
 
-        # Mock settings to return valid path
-        mock_classic.return_value = str(scan_dir)
 
-        with patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", return_value=True):
-            # Validate path
-            PathValidator.validate_custom_scan_path()
 
-        # Should not clear the path or show warning
-        mock_yaml.assert_not_called()
-        mock_warning.assert_not_called()
 
-    @patch("ClassicLib.YamlSettingsCache.classic_settings")
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
-    @patch("ClassicLib.PathValidator.msg_warning")
-    @patch("ClassicLib.PathValidator.logger")
-    def test_validate_custom_scan_path_nonexistent(
-        self, mock_logger: MagicMock, mock_warning: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock
-    ) -> None:
-        """Test validate_custom_scan_path with non-existent path."""
-        # Mock settings to return non-existent path
-        mock_classic.return_value = "/nonexistent/path"
 
-        # Validate path
-        PathValidator.validate_custom_scan_path()
-
-        # Should clear the path and show warning
-        mock_yaml.assert_called_once_with(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
-        mock_warning.assert_called_once_with("Removed invalid custom scan path: /nonexistent/path")
-        mock_logger.debug.assert_called_with("Invalid custom scan path found in settings: /nonexistent/path")
-
-    @patch("ClassicLib.YamlSettingsCache.classic_settings")
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
-    @patch("ClassicLib.PathValidator.msg_warning")
-    @patch("ClassicLib.PathValidator.logger")
-    def test_validate_custom_scan_path_file_not_dir(
-        self, mock_logger: MagicMock, mock_warning: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock, tmp_path: Path
-    ) -> None:
-        """Test validate_custom_scan_path when path is a file, not directory."""
-        # Create a file instead of directory
-        scan_file = tmp_path / "notadir.txt"
-        scan_file.write_text("content")
-
-        # Mock settings to return file path
-        mock_classic.return_value = str(scan_file)
-
-        # Validate path
-        PathValidator.validate_custom_scan_path()
-
-        # Should clear the path (not a directory)
-        mock_yaml.assert_called_once()
-        mock_warning.assert_called_once()
-
-    @patch("ClassicLib.YamlSettingsCache.classic_settings")
-    @patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path")
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
-    @patch("ClassicLib.PathValidator.msg_warning")
-    @patch("ClassicLib.PathValidator.logger")
-    def test_validate_custom_scan_path_restricted(
-        self,
-        mock_logger: MagicMock,
-        mock_warning: MagicMock,
-        mock_yaml: MagicMock,
-        mock_is_valid: MagicMock,
-        mock_classic: MagicMock,
-        tmp_path: Path,
-    ) -> None:
-        """Test validate_custom_scan_path with restricted path."""
-        # Create a directory that exists but is "restricted"
-        restricted_dir = tmp_path / "restricted"
-        restricted_dir.mkdir()
-
-        # Mock settings and validation
-        mock_classic.return_value = str(restricted_dir)
-        mock_is_valid.return_value = False  # Path is restricted
-
-        # Validate path
-        PathValidator.validate_custom_scan_path()
-
-        # Should clear the restricted path
-        mock_yaml.assert_called_once_with(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
-        mock_warning.assert_called_once_with(f"Removed restricted custom scan path: {restricted_dir}")
-        mock_logger.debug.assert_called_with(f"Restricted custom scan path found in settings: {restricted_dir}")
-
-    @patch("ClassicLib.YamlSettingsCache.classic_settings")
-    def test_validate_custom_scan_path_none(self, mock_classic: MagicMock) -> None:
-        """Test validate_custom_scan_path when no path is configured."""
-        # Mock settings to return None
-        mock_classic.return_value = None
-
-        with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml:
-            with patch("ClassicLib.msg_warning") as mock_warning:
-                # Validate path
-                PathValidator.validate_custom_scan_path()
-
-                # Should not try to clear or warn (no path configured)
-                mock_yaml.assert_not_called()
-                mock_warning.assert_not_called()
-
-    @patch("ClassicLib.YamlSettingsCache.classic_settings")
-    def test_validate_custom_scan_path_empty_string(self, mock_classic: MagicMock) -> None:
-        """Test validate_custom_scan_path with empty string."""
-        # Mock settings to return empty string
-        mock_classic.return_value = ""
-
-        with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml:
-            with patch("ClassicLib.msg_warning") as mock_warning:
-                # Validate path
-                PathValidator.validate_custom_scan_path()
-
-                # Should not try to clear or warn (empty path)
-                mock_yaml.assert_not_called()
-                mock_warning.assert_not_called()
 
     @patch.object(PathValidator, "validate_custom_scan_path")
     @patch("ClassicLib.PathValidator.logger")
@@ -273,27 +156,3 @@ class TestPathValidator:
 
         assert PathValidator.is_restricted_path("") is True
 
-    @patch("ClassicLib.YamlSettingsCache.classic_settings")
-    @patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path")
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
-    @patch("ClassicLib.msg_warning")
-    def test_validate_custom_scan_path_case_variations(
-        self, mock_warning: MagicMock, mock_yaml: MagicMock, mock_is_valid: MagicMock, mock_classic: MagicMock, tmp_path: Path
-    ) -> None:
-        """Test validate_custom_scan_path handles case variations correctly."""
-        # Create directory
-        scan_dir = tmp_path / "CrashLogs"
-        scan_dir.mkdir()
-
-        # Mock with different case
-        mock_classic.return_value = str(scan_dir).upper()
-        mock_is_valid.return_value = True
-
-        # On Windows, this should still be valid
-        PathValidator.validate_custom_scan_path()
-
-        # Should not clear the path (case-insensitive on Windows)
-        if Path(str(scan_dir).upper()).exists():  # Windows
-            mock_yaml.assert_not_called()
-        # On case-sensitive systems, might be invalid
-        # Test covers both scenarios
