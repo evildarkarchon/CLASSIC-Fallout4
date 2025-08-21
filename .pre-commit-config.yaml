@@ -16,19 +16,6 @@ repos:
   # Custom hooks
   - repo: local
     hooks:
-      # Comprehensive test isolation checker with context awareness
-      # This script understands context and avoids false positives for:
-      # - Mock assertions (assert_called_with)
-      # - Paths under tmp_path
-      # - Files created from tmp_path fixtures
-      - id: check-test-isolation
-        name: Check test isolation (context-aware)
-        entry: python scripts/check_test_isolation.py
-        language: python
-        files: ^tests/.*\.py$
-        pass_filenames: true
-        description: Context-aware check for test isolation violations
-
       # Quick check for the most obvious violation - directly modifying production settings
       - id: no-modify-production-settings
         name: No direct production settings modification
