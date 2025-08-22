@@ -22,6 +22,7 @@ from ClassicLib.Interface.HelpAndAboutMixin import HelpAndAboutMixin
 from ClassicLib.Interface.PapyrusManager import PapyrusManagerMixin
 from ClassicLib.Interface.PastebinMixin import PastebinMixin
 from ClassicLib.Interface.PathDialogMixin import PathDialogMixin
+from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
 from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
 from ClassicLib.Interface.StyleSheets import DARK_MODE
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
@@ -84,6 +85,7 @@ class MainWindow(
     PastebinMixin,
     PathDialogMixin,
     TabSetupMixin,
+    ResultsViewerMixin,
     HelpAndAboutMixin,
     WindowGeometryMixin,
 ):
@@ -119,12 +121,15 @@ class MainWindow(
         self.main_tab = QWidget()
         self.backups_tab = QWidget()
         self.articles_tab = QWidget()
+        self.results_tab = QWidget()
         self.tab_widget.addTab(self.main_tab, "MAIN OPTIONS")
         self.tab_widget.addTab(self.backups_tab, "FILE BACKUP")
         self.tab_widget.addTab(self.articles_tab, "ARTICLES")
+        self.tab_widget.addTab(self.results_tab, "RESULTS")
         self.setup_main_tab()
         self.setup_backups_tab()
         self.setup_articles_tab()
+        self.setup_results_tab()
 
         # Initialize window geometry management after tabs are set up
         self.setup_window_geometry()

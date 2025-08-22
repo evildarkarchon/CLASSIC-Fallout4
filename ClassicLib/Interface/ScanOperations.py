@@ -18,7 +18,7 @@ from ClassicLib.Logger import logger
 
 if TYPE_CHECKING:
     from PySide6.QtCore import QMutex
-    from PySide6.QtWidgets import QButtonGroup, QPushButton
+    from PySide6.QtWidgets import QButtonGroup, QPushButton, QTabWidget
 
     from ClassicLib.Interface.Audio import AudioPlayer
     from ClassicLib.Interface.ThreadManager import ThreadManager
@@ -53,10 +53,12 @@ class ScanOperationsMixin:
         crash_logs_worker: CrashLogsScanWorker | None
         game_files_thread: QThread | None
         game_files_worker: GameFilesScanWorker | None
+        tab_widget: QTabWidget | None  # For switching to Results tab
 
         # Required methods that must be implemented by the mixing class
         def start_papyrus_monitoring(self) -> None: ...
         def stop_papyrus_monitoring(self) -> None: ...
+        def refresh_reports_list(self) -> None: ...  # From ResultsViewerMixin
 
     def crash_logs_scan(self) -> None:
         """
@@ -218,6 +220,9 @@ class ScanOperationsMixin:
 
         self.enable_scan_buttons()  # noinspection PyUnresolvedReferences
 
+        # Switch to Results tab if configured and available
+        self._switch_to_results_tab_if_enabled()
+
     def game_files_scan_finished(self) -> None:
         """
         Marks the completion of the game files scanning process.
@@ -245,3 +250,40 @@ class ScanOperationsMixin:
             self.start_papyrus_monitoring()
         else:
             self.stop_papyrus_monitoring()
+
+    def _switch_to_results_tab_if_enabled(self) -> None:
+        """
+        Switch to the Results tab after scan completion if configured.
+
+        This method checks if automatic tab switching is enabled in settings
+        and switches to the Results tab if available. Also refreshes the
+        reports list to ensure latest results are displayed.
+        """
+        try:
+            # Check if we have a tab widget and results tab
+            if not hasattr(self, "tab_widget") or not hasattr(self, "results_tab"):
+                return
+
+            # Check if auto-switch is enabled (default to True for better UX)
+            from ClassicLib.Constants import YAML
+            from ClassicLib.YamlSettingsCache import yaml_settings
+
+            auto_switch = yaml_settings(bool, YAML.Settings, "ResultsViewer.AutoSwitchAfterScan", True)
+
+            if auto_switch and self.tab_widget and self.results_tab:
+                # Find the index of the Results tab
+                for i in range(self.tab_widget.count()):
+                    if self.tab_widget.widget(i) == self.results_tab:
+                        # Switch to Results tab
+                        self.tab_widget.setCurrentIndex(i)
+
+                        # Refresh the reports list to show new results
+                        if hasattr(self, "refresh_reports_list"):
+                            self.refresh_reports_list()
+
+                        logger.debug("Switched to Results tab after scan completion")
+                        break
+
+        except Exception as e:
+            # Don't let tab switching errors break the scan completion
+            logger.debug(f"Could not switch to Results tab: {e}")

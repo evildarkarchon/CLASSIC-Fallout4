@@ -50,6 +50,7 @@ class TabSetupMixin:
         main_tab: QWidget
         articles_tab: QWidget
         backups_tab: QWidget
+        results_tab: QWidget
         mods_folder_edit: QLineEdit | None
         scan_folder_edit: QLineEdit | None
         scan_button_group: QButtonGroup

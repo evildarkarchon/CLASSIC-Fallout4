@@ -223,7 +223,7 @@ class OrchestratorCore:
         )
 
         # Run mod detection with async FormID analysis if available
-        await self._run_mod_detection_async(crashlog_plugins, trigger_plugins_loaded, crashlog_gpu_rival, autoscan_report)
+        await self._run_mod_detection_async(crashlog_plugins, segment_callstack, trigger_plugins_loaded, crashlog_gpu_rival, autoscan_report)
 
         # Scan for specific suspects
         self._scan_specific_suspects(segment_callstack, autoscan_report)
@@ -231,23 +231,46 @@ class OrchestratorCore:
     async def _run_mod_detection_async(
         self,
         crashlog_plugins: dict[str, str],
+        segment_callstack: list[str],
         trigger_plugins_loaded: bool,
         crashlog_gpu_rival: Literal["nvidia", "amd"] | None,
         autoscan_report: list[str],
     ) -> None:
         """Run mod detection with async FormID analysis."""
         from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
+        from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
 
         # Run mod detection based on plugins loaded status
         if trigger_plugins_loaded:
-            # Check for conflicting mods
-            detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins, autoscan_report)
+            # Check for conflicting mods (conditional header)
+            initial_len = len(autoscan_report)
+            if detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins, autoscan_report):
+                # Add header at the position before the content was added
+                header_lines = []
+                ReportGenerator.generate_mod_check_header("CONFLICT (TOGETHER)", header_lines)
+                # Insert header before the detected mods
+                for i, line in enumerate(header_lines):
+                    autoscan_report.insert(initial_len + i, line)
 
-            # Check for frequently problematic mods
-            detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins, autoscan_report)
+            # Check for frequently problematic mods (conditional header)
+            initial_len = len(autoscan_report)
+            if detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins, autoscan_report):
+                # Add header at the position before the content was added
+                header_lines = []
+                ReportGenerator.generate_mod_check_header("FREQUENTLY CRASH", header_lines)
+                # Insert header before the detected mods
+                for i, line in enumerate(header_lines):
+                    autoscan_report.insert(initial_len + i, line)
 
-            # Check for mods with known solutions
-            detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins, autoscan_report)
+            # Check for mods with known solutions (conditional header)
+            initial_len = len(autoscan_report)
+            if detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins, autoscan_report):
+                # Add header at the position before the content was added
+                header_lines = []
+                ReportGenerator.generate_mod_check_header("HAVE SOLUTIONS", header_lines)
+                # Insert header before the detected mods
+                for i, line in enumerate(header_lines):
+                    autoscan_report.insert(initial_len + i, line)
 
             # Check FOLON-specific mods if Fallout: London is loaded
             # Look for LondonWorldspace.esm in the plugin list (case-insensitive)
@@ -258,32 +281,46 @@ class OrchestratorCore:
                 # Check for important core mods with GPU considerations
                 detect_mods_important(self.yamldata.game_mods_core, crashlog_plugins, autoscan_report, crashlog_gpu_rival)
 
-            # Check for OPC2 mods
-            detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins, autoscan_report)
+            # Check for OPC2 mods (conditional header)
+            initial_len = len(autoscan_report)
+            if detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins, autoscan_report):
+                # Add header at the position before the content was added
+                header_lines = []
+                ReportGenerator.generate_mod_check_header("ARE OUTDATED, REDUNDANT, OR INCLUDED IN OPC2", header_lines)
+                # Insert header before the detected mods
+                for i, line in enumerate(header_lines):
+                    autoscan_report.insert(initial_len + i, line)
+
+        # Plugin suspect scanning (plugins found in crash stack)
+        if trigger_plugins_loaded and crashlog_plugins:
+            # Save current position for conditional header
+            initial_len = len(autoscan_report)
+
+            # Convert callstack to lowercase for matching
+            segment_callstack_lower = [line.lower() for line in segment_callstack]
+
+            # Convert plugins to lowercase set for matching
+            crashlog_plugins_lower = set(plugin.lower() for plugin in crashlog_plugins.keys())
+
+            # Run plugin matching (it adds content only if plugins are found)
+            self.plugin_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower, autoscan_report)
+
+            # Check if content was added (plugin_match adds content when plugins are found)
+            if len(autoscan_report) > initial_len:
+                # Add header at the position before the plugin matches
+                header_lines = []
+                ReportGenerator.generate_plugin_suspect_header(header_lines)
+                # Insert header before the plugin matches
+                for i, line in enumerate(header_lines):
+                    autoscan_report.insert(initial_len + i, line)
 
         # Use async FormID analyzer if available
         if self._async_formid_analyzer and self._last_formids:
-            # Find FormID section in report and replace with async version
-            formid_section_start = -1
-            for i, line in enumerate(autoscan_report):
-                if "FORM IDs" in line:
-                    formid_section_start = i
-                    break
+            # Add FormID section header
+            ReportGenerator.generate_formid_section_header(autoscan_report)
 
-            if formid_section_start >= 0:
-                # Find end of FormID section
-                formid_section_end = formid_section_start + 1
-                for i in range(formid_section_start + 1, len(autoscan_report)):
-                    if not autoscan_report[i].startswith("-"):
-                        formid_section_end = i
-                        break
-
-                # Replace with async analysis
-                new_formid_section = []
-                await self._async_formid_analyzer.formid_match(self._last_formids, crashlog_plugins, new_formid_section)
-
-                # Replace section in report
-                autoscan_report[formid_section_start + 1 : formid_section_end] = new_formid_section
+            # Process FormIDs
+            await self._async_formid_analyzer.formid_match(self._last_formids, crashlog_plugins, autoscan_report)
 
     async def process_crash_logs_batch(self, crashlog_files: list[Path]) -> list[tuple[Path, list[str], bool, Counter[str]]]:
         """
@@ -397,6 +434,10 @@ class OrchestratorCore:
 
     def _run_suspect_scanning(self, crashlog_mainerror: str, segment_callstack: list[str], autoscan_report: list[str]) -> None:
         """Run suspect scanning on crash log."""
+        from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
+
+        ReportGenerator.generate_suspect_section_header(autoscan_report)
+
         # Scan main error for suspects
         self.suspect_scanner.suspect_scan_mainerror(autoscan_report, crashlog_mainerror, 50)
 
@@ -435,7 +476,18 @@ class OrchestratorCore:
 
     def _scan_specific_suspects(self, segment_callstack: list[str], autoscan_report: list[str]) -> None:
         """Scan for named records in crash log."""
+        from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
+
         # Scan for named records (previously called specific suspects)
         records_matches: list[str] = []
+        initial_len = len(autoscan_report)
         self.record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)
-        self.record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)
+
+        # Only add header if records were found
+        if records_matches:
+            # Add header at the position before the content was added
+            header_lines = []
+            ReportGenerator.generate_record_section_header(header_lines)
+            # Insert header before the records
+            for i, line in enumerate(header_lines):
+                autoscan_report.insert(initial_len + i, line)

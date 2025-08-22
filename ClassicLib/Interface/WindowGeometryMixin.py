@@ -31,6 +31,7 @@ class WindowGeometryMixin:
         0: (550, 350),  # Main Options tab
         1: (750, 450),  # File Backup tab (larger)
         2: (550, 350),  # Articles tab
+        3: (750, 450)   # Results tab
     }
 
     # Tab names for settings storage
@@ -38,6 +39,7 @@ class WindowGeometryMixin:
         0: "main_tab",
         1: "backups_tab",
         2: "articles_tab",
+        3: "results_tab"
     }
 
     # Type stubs for attributes that must be provided by the mixing class
