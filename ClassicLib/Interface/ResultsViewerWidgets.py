@@ -417,8 +417,26 @@ class MarkdownViewer(QTextBrowser):
         Returns:
             Processed markdown text.
         """
-        # Add CSS classes for specific content types
+        # For better line break preservation, wrap content sections in code blocks
+        # This ensures QTextBrowser preserves formatting
         processed = markdown
+
+        # Find [!] FOUND sections and wrap multiline content in code blocks
+        import re
+
+        def wrap_multiline_content(match):
+            header = match.group(1)
+            content = match.group(2).rstrip()  # Remove trailing whitespace/newlines
+            # Wrap the content in a code block to preserve formatting
+            return f"{header}\n```\n{content}\n```\n"
+
+        # Match [!] FOUND : [XX] followed by multiline content that starts with spaces
+        # Stop at the first completely empty line or non-indented line
+        processed = re.sub(
+            r'(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)',
+            wrap_multiline_content,
+            processed
+        )
 
         # Highlight error messages
         processed = re.sub(

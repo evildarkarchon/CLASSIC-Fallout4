@@ -65,7 +65,7 @@ CLASSIC_Info:
     # Enable or disable the use of an asynchronous pipeline for processing. This setting should not be changed and is primarily for testing purposes.
     # If you are not a developer or do not know what this means, leave it as is.
       Use Async Pipeline: true
-    
+
     # Set to true if you want CLASSIC to disable progress bars when running in command line mode.
     # This can be useful for cleaner output when running CLASSIC in scripts or automated environments.
       Disable CLI Progress: false
@@ -172,10 +172,15 @@ CLASSIC_Interface:
 
   autoscan_text_Fallout4: |
     FOR FULL LIST OF MODS THAT CAUSE PROBLEMS, THEIR ALTERNATIVES AND DETAILED SOLUTIONS
+
     VISIT THE BUFFOUT 4 CRASH ARTICLE: https://www.nexusmods.com/fallout4/articles/3115
-    ===============================================================================
+
+    ---
+
     Author/Made By: Poet (guidance.of.grace) | https://discord.gg/DfFYJtt8p4
+
     CONTRIBUTORS | evildarkarchon | kittivelae | AtomicFallout757 | wxMichael
+
     FO4 CLASSIC | https://www.nexusmods.com/fallout4/mods/56255
 
 # ================= GAME WARNINGS =================

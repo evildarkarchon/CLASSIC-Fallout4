@@ -41,7 +41,12 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         for plugin_name, plugin_id in crashlog_plugins_lower.items():
             if mod_name in plugin_name:
                 _validate_warning(mod_name, mod_warning)
-                autoscan_report.extend((f"[!] FOUND : [{plugin_id}] ", mod_warning))
+                autoscan_report.append(f"[!] FOUND : [{plugin_id}] ")
+                # Preserve the exact formatting of the YAML warning text
+                autoscan_report.append(mod_warning)
+                if not mod_warning.endswith('\n'):
+                    autoscan_report.append('\n')
+                autoscan_report.append("\n")
                 mods_found = True
                 break
 
@@ -83,7 +88,11 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
         if mod1_found and mod2_found:
             _validate_warning(mod_pair, mod_warning)
-            autoscan_report.extend(("[!] CAUTION : ", mod_warning))
+            autoscan_report.append("[!] CAUTION : Conflicting mods detected\n")
+            autoscan_report.append(mod_warning)
+            if not mod_warning.endswith('\n'):
+                autoscan_report.append('\n')
+            autoscan_report.append("\n")
             mods_found = True
 
     return mods_found
@@ -118,11 +127,12 @@ def detect_mods_important(
 
         if mod_found:
             if gpu_rival and cast("str", gpu_rival) in mod_warning.lower():
+                autoscan_report.append("\n\n")
                 autoscan_report.extend((
                     f"❓ {mod_display_name} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n",
                     "IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n",
                 ))
             else:
-                autoscan_report.append(f"✔️ {mod_display_name} is installed!\n\n")
+                autoscan_report.append(f"\n✔️ {mod_display_name} is installed!\n\n")
         elif (gpu_rival and mod_warning) and gpu_rival not in mod_warning.lower():
-            autoscan_report.extend((f"❌ {mod_display_name} is not installed!\n", mod_warning, "\n"))
+            autoscan_report.extend((f"\n❌ {mod_display_name} is not installed!\n", mod_warning, "\n\n"))
