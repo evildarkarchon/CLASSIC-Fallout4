@@ -148,6 +148,58 @@ class AsyncDatabasePool:
 
         return None
 
+    async def get_entries_batch(self, formid_plugin_pairs: list[tuple[str, str]], batch_size: int = 100) -> dict[tuple[str, str], str]:
+        """
+        Batch query for multiple FormID/plugin pairs to optimize database performance.
+
+        Args:
+            formid_plugin_pairs: List of (formid, plugin) tuples to query
+            batch_size: Maximum number of pairs to query at once (default: 100)
+
+        Returns:
+            Dictionary mapping (formid, plugin) tuples to entry text
+        """
+        results = {}
+
+        # First check cache for all pairs
+        uncached_pairs = []
+        for pair in formid_plugin_pairs:
+            if pair in self.query_cache:
+                results[pair] = self.query_cache[pair]
+            else:
+                uncached_pairs.append(pair)
+
+        if not uncached_pairs:
+            return results
+
+        # Query databases for uncached pairs
+        game_table = GlobalRegistry.get_game()
+
+        # Process in batches to avoid SQL query size limits
+        for i in range(0, len(uncached_pairs), batch_size):
+            batch = uncached_pairs[i:i + batch_size]
+
+            # Build parameterized query with OR conditions
+            conditions = " OR ".join(["(formid=? AND plugin=?)"] * len(batch))
+            query = f"SELECT formid, plugin, entry FROM {game_table} WHERE {conditions} COLLATE nocase"
+
+            # Flatten parameters
+            params = [item for pair in batch for item in pair]
+
+            # Query each database
+            for db_path, conn in self.connections.items():
+                try:
+                    async with conn.execute(query, params) as cursor:
+                        async for row in cursor:
+                            formid, plugin, entry = row
+                            cache_key = (formid, plugin)
+                            results[cache_key] = entry
+                            self.query_cache[cache_key] = entry
+                except (aiosqlite.Error, OSError) as e:
+                    logger.error(f"Batch query error in {db_path}: {e}")
+
+        return results
+
 
 # noinspection PyUnusedImports
 async def read_file_async(file_path: Path) -> list[str]:

@@ -1,6 +1,8 @@
 import shutil
 import sqlite3
+import threading
 from pathlib import Path
+from typing import ContextManager
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS, YAML
@@ -10,6 +12,63 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 # Constants for file patterns
 CRASH_LOG_PATTERN = "crash-*.log"
 CRASH_AUTOSCAN_PATTERN = "crash-*-AUTOSCAN.md"
+
+
+class SyncDatabasePool:
+    """Thread-safe connection pool for synchronous database operations."""
+
+    _instance = None
+    _lock = threading.Lock()
+
+    def __init__(self) -> None:
+        self._connections: dict[Path, sqlite3.Connection] = {}
+        self._connection_lock = threading.Lock()
+
+    @classmethod
+    def get_instance(cls) -> "SyncDatabasePool":
+        """Get the singleton instance of the database pool."""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+    def get_connection(self, db_path: Path) -> ContextManager[sqlite3.Connection]:
+        """Get or create a connection for the given database."""
+        with self._connection_lock:
+            if db_path not in self._connections or not self._is_connection_alive(self._connections[db_path]):
+                try:
+                    conn = sqlite3.connect(
+                        db_path,
+                        check_same_thread=False,
+                        timeout=30.0
+                    )
+                    conn.row_factory = sqlite3.Row
+                    self._connections[db_path] = conn
+                    logger.debug(f"Created new connection for {db_path}")
+                except sqlite3.Error as e:
+                    logger.error(f"Failed to connect to {db_path}: {e}")
+                    raise
+
+            return self._connections[db_path]
+
+    def _is_connection_alive(self, conn: sqlite3.Connection) -> bool:
+        """Check if a connection is still alive."""
+        try:
+            conn.execute("SELECT 1")
+            return True
+        except sqlite3.Error:
+            return False
+
+    def close_all(self) -> None:
+        """Close all connections in the pool."""
+        with self._connection_lock:
+            for conn in self._connections.values():
+                try:
+                    conn.close()
+                except sqlite3.Error:
+                    pass  # Ignore errors when closing
+            self._connections.clear()
 
 
 def ensure_directory_exists(directory: Path) -> None:
@@ -206,9 +265,13 @@ def get_entry(formid: str, plugin: str) -> str | None:
     if (entry := query_cache.get((formid, plugin))) is not None:
         return entry
 
+    # Use connection pool for better performance
+    pool = SyncDatabasePool.get_instance()
+
     for db_path in DB_PATHS:
         if db_path.is_file():
-            with sqlite3.connect(db_path) as conn:
+            try:
+                conn = pool.get_connection(db_path)
                 c: sqlite3.Cursor = conn.cursor()
                 c.execute(
                     f"SELECT entry FROM {GlobalRegistry.get_game()} WHERE formid=? AND plugin=? COLLATE nocase",
@@ -218,6 +281,8 @@ def get_entry(formid: str, plugin: str) -> str | None:
                 if entry:
                     query_cache[formid, plugin] = entry[0]
                     return entry[0]
+            except sqlite3.Error as e:
+                logger.error(f"Database query error in {db_path}: {e}")
 
     return None
 

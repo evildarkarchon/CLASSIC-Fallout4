@@ -6,6 +6,7 @@ all async components for maximum performance improvement.
 """
 
 import asyncio
+import os
 import time
 from collections import Counter
 from pathlib import Path
@@ -98,8 +99,21 @@ class AsyncCrashLogPipeline:
                 self.show_formid_values,
                 self.formid_db_exists,
             ) as orchestrator:
-                # Process logs in batches for optimal performance
-                batch_size = 10
+                # Dynamic batch sizing based on CPU count and log count
+                cpu_count = os.cpu_count() or 4
+                log_count = len(crashlog_list)
+
+                # Calculate optimal batch size
+                # - Use more parallelism on systems with more CPUs
+                # - Adjust for log count to avoid too many small batches
+                if log_count <= 10:
+                    batch_size = max(2, log_count)  # Small number of logs
+                elif log_count <= 50:
+                    batch_size = min(cpu_count * 2, 10)  # Medium number
+                else:
+                    batch_size = min(cpu_count * 3, 20)  # Large number
+
+                logger.debug(f"Using dynamic batch size: {batch_size} (CPU cores: {cpu_count}, logs: {log_count})")
                 all_results = []
 
                 for i in range(0, len(crashlog_list), batch_size):

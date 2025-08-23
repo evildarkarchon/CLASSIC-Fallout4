@@ -8,6 +8,9 @@ extraction of game version, crash generator version, and main error information.
 
 import regex as re
 
+# Pre-compiled regex patterns for better performance
+_MODULE_NAME_PATTERN = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
+
 
 def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name: str) -> tuple[str, str, str]:
     """
@@ -179,13 +182,11 @@ def extract_module_names(module_texts: set[str]) -> set[str]:
     if not module_texts:
         return set()
 
-    # Pattern matches module name potentially followed by version
-    pattern: re.Pattern[str] = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
-
+    # Use pre-compiled pattern for better performance
     result: set[str] = set()
     for text in module_texts:
         text: str = text.strip()
-        match: re.Match[str] | None = pattern.match(text)
+        match: re.Match[str] | None = _MODULE_NAME_PATTERN.match(text)
         if match:
             result.add(match.group(1))
         else:

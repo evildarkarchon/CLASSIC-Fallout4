@@ -37,18 +37,36 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     yaml_dict_lower: dict[str, str] = _convert_to_lowercase(yaml_dict)
     crashlog_plugins_lower: dict[str, str] = _convert_to_lowercase(crashlog_plugins)
 
-    for mod_name, mod_warning in yaml_dict_lower.items():
-        for plugin_name, plugin_id in crashlog_plugins_lower.items():
+    # Build optimized search structure - sort mod names by length (longest first)
+    # This ensures we find the most specific matches first
+    mod_items = sorted(yaml_dict_lower.items(), key=lambda x: len(x[0]), reverse=True)
+
+    # Track matching plugins for each mod to consolidate output
+    mod_matches: dict[str, list[str]] = {}
+
+    # Process each plugin once and check against all mods
+    for plugin_name, plugin_id in crashlog_plugins_lower.items():
+        for mod_name, _mod_warning in mod_items:
             if mod_name in plugin_name:
-                _validate_warning(mod_name, mod_warning)
-                autoscan_report.append(f"[!] FOUND : [{plugin_id}] ")
-                # Preserve the exact formatting of the YAML warning text
-                autoscan_report.append(mod_warning)
-                if not mod_warning.endswith('\n'):
-                    autoscan_report.append('\n')
-                autoscan_report.append("\n")
-                mods_found = True
-                break
+                # Track the match but don't add duplicate solutions
+                if mod_name not in mod_matches:
+                    mod_matches[mod_name] = []
+                mod_matches[mod_name].append(plugin_id)
+                break  # Found a match for this plugin, move to next plugin
+
+    # Now output consolidated results - one entry per mod with all matching plugins
+    for mod_name in sorted(mod_matches.keys(), key=lambda x: len(x), reverse=True):
+        mod_warning = yaml_dict_lower[mod_name]
+        _validate_warning(mod_name, mod_warning)
+
+        plugin_ids = mod_matches[mod_name]
+        # List all matching plugins in one entry
+        plugin_list = f"[{plugin_ids[0]}]" if len(plugin_ids) == 1 else f"[{'], ['.join(plugin_ids)}]"
+
+        # Build the complete entry at once to avoid multiple appends
+        entry_parts = [f"[!] FOUND : {plugin_list} ", mod_warning, "\n" if not mod_warning.endswith("\n") else "", "\n"]
+        autoscan_report.extend(entry_parts)
+        mods_found = True
 
     return mods_found
 
@@ -88,11 +106,9 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
         if mod1_found and mod2_found:
             _validate_warning(mod_pair, mod_warning)
-            autoscan_report.append("[!] CAUTION : Conflicting mods detected\n")
-            autoscan_report.append(mod_warning)
-            if not mod_warning.endswith('\n'):
-                autoscan_report.append('\n')
-            autoscan_report.append("\n")
+            # Build the complete entry at once to avoid multiple appends
+            entry_parts = ["[!] CAUTION : Conflicting mods detected\n", mod_warning, "\n" if not mod_warning.endswith("\n") else "", "\n"]
+            autoscan_report.extend(entry_parts)
             mods_found = True
 
     return mods_found

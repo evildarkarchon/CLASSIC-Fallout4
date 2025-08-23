@@ -1,4 +1,5 @@
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -45,15 +46,25 @@ class ThreadSafeLogCache:
 
             logger.debug(f"Loaded {len(self.cache)} crash logs using FileIOCore")
         except (ImportError, RuntimeError, OSError):
-            # Fallback to sync loading
-            for file in logfiles:
+            # Fallback to parallel sync loading for better performance
+            def load_file(file: Path) -> tuple[str, bytes | None]:
+                """Load a single file and return its name and content."""
                 try:
-                    self.cache[file.name] = file.read_bytes()
+                    return file.name, file.read_bytes()
                 except OSError as e:
                     msg_error(f"Error reading {file}: {e}")
-            from ClassicLib.Logger import logger
+                    return file.name, None
 
-            logger.debug(f"Loaded {len(self.cache)} crash logs using sync I/O")
+            # Use ThreadPoolExecutor for parallel file loading
+            with ThreadPoolExecutor(max_workers=min(8, len(logfiles))) as executor:
+                futures = {executor.submit(load_file, file): file for file in logfiles}
+                for future in as_completed(futures):
+                    name, content = future.result()
+                    if content is not None:
+                        self.cache[name] = content
+
+            from ClassicLib.Logger import logger
+            logger.debug(f"Loaded {len(self.cache)} crash logs using parallel sync I/O")
 
     def read_log(self, logname: str) -> list[str]:
         """

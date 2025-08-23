@@ -89,7 +89,7 @@ class TestDetectModsSingle:
         result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is True
-        assert len(autoscan_report) == 2  # [!] FOUND + warning message
+        assert len(autoscan_report) == 4  # [!] FOUND + warning message + 2 newlines
         assert "[!] FOUND" in autoscan_report[0]
         assert "Warning for mod1" in autoscan_report[1]
 
@@ -114,7 +114,7 @@ class TestDetectModsSingle:
         result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is True
-        assert len(autoscan_report) == 2  # [!] FOUND + warning message
+        assert len(autoscan_report) == 4  # [!] FOUND + warning message + 2 newlines
         assert "[!] FOUND" in autoscan_report[0]
         assert "Warning for mod1" in autoscan_report[1]
 
@@ -164,7 +164,7 @@ class TestDetectModsDouble:
         result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is True
-        assert len(autoscan_report) == 2  # [!] CAUTION + warning message
+        assert len(autoscan_report) == 4  # [!] CAUTION + warning message + 2 newlines
         assert "[!] CAUTION" in autoscan_report[0]
         assert "Conflict warning" in autoscan_report[1]
 
@@ -193,7 +193,7 @@ class TestDetectModsDouble:
         result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
 
         assert result is True
-        assert len(autoscan_report) == 2  # [!] CAUTION + warning message
+        assert len(autoscan_report) == 4  # [!] CAUTION + warning message + 2 newlines
         assert "[!] CAUTION" in autoscan_report[0]
         assert "Conflict warning" in autoscan_report[1]
 
@@ -243,7 +243,9 @@ class TestDetectModsImportant:
         detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
 
         assert len(autoscan_report) >= 1
-        assert "Important Mod is installed" in autoscan_report[0]
+        # The actual output contains newlines and formatting, so check the entire output
+        report_str = "".join(str(item) for item in autoscan_report)
+        assert "Important Mod is installed" in report_str
 
     def test_nvidia_mod_with_amd_gpu(self) -> None:
         """Test when a NVIDIA mod is installed with an AMD GPU."""
@@ -301,7 +303,9 @@ class TestDetectModsImportant:
         detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, None)
 
         assert len(autoscan_report) >= 1
-        assert "Important Mod is installed" in autoscan_report[0]
+        # The actual output contains newlines and formatting, so check the entire output
+        report_str = "".join(str(item) for item in autoscan_report)
+        assert "Important Mod is installed" in report_str
 
     def test_empty_yaml_dict(self) -> None:
         """Test with empty YAML dictionary."""

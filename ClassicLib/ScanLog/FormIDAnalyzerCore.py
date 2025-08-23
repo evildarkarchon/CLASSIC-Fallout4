@@ -8,6 +8,7 @@ into a single async-first design.
 
 import asyncio
 from collections import Counter
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
 import regex as re
@@ -21,6 +22,24 @@ if TYPE_CHECKING:
 
 # Module-level regex pattern cache to avoid recompilation
 _PATTERN_CACHE: dict[str, re.Pattern[str]] = {}
+
+# LRU cache for FormID lookup results to avoid repeated database queries
+@lru_cache(maxsize=512)
+def _cached_formid_lookup(formid: str, plugin: str) -> str | None:
+    """
+    Cached wrapper for FormID database lookups.
+
+    The cache key is (formid, plugin) tuple, and results are cached
+    to avoid repeated database queries for the same FormID/plugin combinations.
+
+    Args:
+        formid: FormID to look up (without prefix)
+        plugin: Plugin name
+
+    Returns:
+        FormID description if found, None otherwise
+    """
+    return get_entry(formid, plugin)
 
 
 class FormIDAnalyzerCore:
@@ -184,8 +203,8 @@ class FormIDAnalyzerCore:
             autoscan_report: List to append results to
         """
         for formid_full, formid_suffix, plugin, count in lookup_tasks:
-            # Use sync database lookup
-            report = await asyncio.to_thread(get_entry, formid_suffix, plugin)
+            # Use cached sync database lookup to avoid repeated queries
+            report = await asyncio.to_thread(_cached_formid_lookup, formid_suffix, plugin)
             if report:
                 append_or_extend(f"- {formid_full} | [{plugin}] | {report} | {count}\n", autoscan_report)
             else:
@@ -208,8 +227,8 @@ class FormIDAnalyzerCore:
         if self.db_pool:
             # Use async database pool
             return await self.db_pool.get_entry(formid, plugin)
-        # Fallback to sync lookup in thread
-        return await asyncio.to_thread(get_entry, formid, plugin)
+        # Fallback to cached sync lookup in thread
+        return await asyncio.to_thread(_cached_formid_lookup, formid, plugin)
 
     # Synchronous wrapper methods for backwards compatibility
     def formid_match_sync(self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
