@@ -112,7 +112,7 @@ class ReportListWidget(QListWidget):
         status = self._determine_report_status(report_path)
 
         # Create item with display text
-        display_text = filename.replace("-AUTOSCAN", "")
+        # display_text = filename.replace("-AUTOSCAN", "") # looks to be unused.
         if timestamp_str:
             display_text = f"{timestamp_str}\n{report_path.name}"
         else:
@@ -136,7 +136,8 @@ class ReportListWidget(QListWidget):
 
         return item
 
-    def _extract_timestamp(self, filename: str) -> str | None:
+    @staticmethod
+    def _extract_timestamp(filename: str) -> str | None:
         """
         Extract timestamp from crash log filename.
 
@@ -166,7 +167,8 @@ class ReportListWidget(QListWidget):
         # Fallback to file modification time
         return None
 
-    def _determine_report_status(self, report_path: Path) -> str:
+    @staticmethod
+    def _determine_report_status(report_path: Path) -> str:
         """
         Determine the status of a report by examining its content.
 
@@ -192,7 +194,8 @@ class ReportListWidget(QListWidget):
             logger.debug(f"Could not determine status for {report_path.name}: {e}")
             return "unknown"
 
-    def _apply_status_styling(self, item: QListWidgetItem, status: str) -> None:
+    @staticmethod
+    def _apply_status_styling(item: QListWidgetItem, status: str) -> None:
         """
         Apply visual styling based on report status.
 
@@ -231,7 +234,8 @@ class ReportListWidget(QListWidget):
                           text.lower() in item.toolTip().lower())
                 item.setHidden(not matches)
 
-    def get_report_path(self, item: QListWidgetItem) -> Path | None:
+    @staticmethod
+    def get_report_path(item: QListWidgetItem) -> Path | None:
         """
         Get the report path for a list item.
 
@@ -401,7 +405,8 @@ class MarkdownViewer(QTextBrowser):
         # Scroll to top
         self.moveCursor(QTextCursor.MoveOperation.Start)
 
-    def _process_markdown(self, markdown: str) -> str:
+    @staticmethod
+    def _process_markdown(markdown: str) -> str:
         """
         Process markdown for enhanced display.
 
@@ -479,7 +484,12 @@ class MarkdownViewer(QTextBrowser):
 
     def _apply_zoom(self) -> None:
         """Apply the current zoom level."""
-        self.setZoomFactor(self._zoom_level / 100.0)
+        # Apply zoom by scaling the font size
+        font = self.font()
+        base_size = 14  # Base font size from CSS
+        new_size = int(base_size * (self._zoom_level / 100.0))
+        font.setPointSize(max(8, new_size))  # Minimum size of 8pt
+        self.setFont(font)
 
     def get_zoom_level(self) -> int:
         """Get the current zoom level as a percentage."""
@@ -568,7 +578,8 @@ class ReportMetadataWidget(QGroupBox):
         issues = self._count_issues(content)
         self.issues_label.setText(f"Issues: {issues}")
 
-    def _determine_status(self, content: str) -> str:
+    @staticmethod
+    def _determine_status(content: str) -> str:
         """
         Determine report status from content.
 
@@ -590,7 +601,9 @@ class ReportMetadataWidget(QGroupBox):
             return "Has Errors"
         return "Analyzed"
 
-    def _count_issues(self, content: str) -> str:
+    # noinspection RegExpRedundantEscape
+    @staticmethod
+    def _count_issues(content: str) -> str:
         """
         Count the number of issues in the report.
 
