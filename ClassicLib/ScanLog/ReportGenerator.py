@@ -94,7 +94,7 @@ class ReportGenerator:
         """
         append_or_extend(
             (
-                f"### Error Information\n\n",
+                "### Error Information\n\n",
                 f"**Main Error:** {main_error}\n\n",
                 f"**Detected {self.yamldata.crashgen_name} Version:** {crashgen_version}\n\n",
                 (

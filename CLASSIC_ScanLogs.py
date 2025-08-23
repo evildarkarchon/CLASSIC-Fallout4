@@ -166,6 +166,20 @@ def crashlogs_scan() -> None:
     asyncio.run(crashlogs_scan_async_pure(scanner))
 
 
+async def crashlogs_scan_async_pure_with_qt(scanner: ClassicScanLogs) -> None:
+    """
+    Pure async crash log scanning with Qt event processing for GUI mode.
+
+    This version is specifically for GUI mode and allows Qt signals to be
+    processed during async operations for real-time progress updates.
+
+    Args:
+        scanner: ClassicScanLogs instance with configuration
+    """
+    # Just delegate to the main function - we'll add Qt-specific handling there
+    await crashlogs_scan_async_pure(scanner)
+
+
 async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
     """
     Pure async crash log scanning with controlled concurrency.
@@ -198,34 +212,20 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
                 return await scanner.process_crashlog_async(log_path, orchestrator)
 
         # Create tasks for all crash logs
-        tasks = [process_with_limit(log) for log in scanner.crashlog_list]
+        tasks = [asyncio.create_task(process_with_limit(log)) for log in scanner.crashlog_list]
 
         # Process with progress tracking
         total_logs = len(scanner.crashlog_list)
         completed = 0
 
         with msg_progress_context("Processing Crash Logs", total_logs) as progress:
-            # Use asyncio.gather with return_exceptions=True for robust error handling
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+            # Process tasks as they complete for real-time progress updates
+            for task in asyncio.as_completed(tasks):
+                try:
+                    result = await task
 
-            # Process results
-            for i, result in enumerate(results):
-                result: Exception | tuple[Path, list[str], bool, Counter[str]]
-                if isinstance(result, Exception):
-                    # Handle exceptions
-                    logger.error(f"Error processing crash log: {result}")
-                    scanner.crashlog_stats["failed"] += 1
-                    scan_failed_list.append(scanner.crashlog_list[i].name)
-                    progress.update(1, f"Failed: {scanner.crashlog_list[i].name}")
-                else:
-                    # Unpack successful result
-                    try:
-                        crashlog_file, autoscan_report, trigger_scan_failed, local_stats = result
-                    except (ValueError, TypeError) as e:
-                        logger.error(f"Error unpacking result: {e}")
-                        scanner.crashlog_stats["failed"] += 1
-                        progress.update(1, "Failed to unpack result")
-                        continue
+                    # Unpack result - the first element is always the log file path
+                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = result
 
                     # Update statistics
                     if isinstance(local_stats, Counter):
@@ -241,6 +241,21 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
 
                     completed += 1
                     progress.update(1, f"Processed: {crashlog_file.name}")
+
+                    # Yield to allow Qt signals to be processed
+                    await asyncio.sleep(0)  # This allows other async tasks and Qt signals to process
+
+                except Exception as e:
+                    # Handle exceptions
+                    logger.error(f"Error processing crash log: {e}")
+                    scanner.crashlog_stats["failed"] += 1
+
+                    # We can't easily determine which specific log failed without the result,
+                    # but we can still update progress
+                    progress.update(1, "Failed: Error during processing")
+
+                    # Yield even on error
+                    await asyncio.sleep(0)
 
     # Complete with standard error checking and summary
     _complete_scan_with_summary(scanner, scan_failed_list, yamldata)

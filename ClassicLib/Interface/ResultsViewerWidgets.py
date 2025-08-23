@@ -10,10 +10,9 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QDateTime, Qt
-from PySide6.QtGui import QBrush, QColor, QFont, QIcon, QTextCursor
+from PySide6.QtGui import QBrush, QColor, QFont, QTextCursor
 from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
@@ -22,14 +21,10 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QTextBrowser,
-    QVBoxLayout,
     QWidget,
 )
 
 from ClassicLib.Logger import logger
-
-if TYPE_CHECKING:
-    from typing import Any
 
 
 class ReportListWidget(QListWidget):
@@ -187,12 +182,11 @@ class ReportListWidget(QListWidget):
             # Check for status indicators in content
             if "INCOMPLETE" in content.upper():
                 return "incomplete"
-            elif "UNSOLVED" in content.upper() or "could not be determined" in content.lower():
+            if "UNSOLVED" in content.upper() or "could not be determined" in content.lower():
                 return "unsolved"
-            elif "SOLVED" in content.upper() or "RECOMMENDATIONS" in content:
+            if "SOLVED" in content.upper() or "RECOMMENDATIONS" in content:
                 return "solved"
-            else:
-                return "unknown"
+            return "unknown"
 
         except Exception as e:
             logger.debug(f"Could not determine status for {report_path.name}: {e}")
@@ -432,6 +426,7 @@ class MarkdownViewer(QTextBrowser):
 
         # Match [!] FOUND : [XX] followed by multiline content that starts with spaces
         # Stop at the first completely empty line or non-indented line
+        # noinspection RegExpRedundantEscape
         processed = re.sub(
             r'(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)',
             wrap_multiline_content,
@@ -439,6 +434,7 @@ class MarkdownViewer(QTextBrowser):
         )
 
         # Highlight error messages
+        # noinspection RegExpRedundantEscape
         processed = re.sub(
             r'\[!?\s*ERROR\s*\]([^\n]*)',
             r'<span class="error">[ERROR]\1</span>',
@@ -447,6 +443,7 @@ class MarkdownViewer(QTextBrowser):
         )
 
         # Highlight warnings
+        # noinspection RegExpRedundantEscape
         processed = re.sub(
             r'\[!?\s*WARNING\s*\]([^\n]*)',
             r'<span class="warning">[WARNING]\1</span>',
@@ -455,6 +452,7 @@ class MarkdownViewer(QTextBrowser):
         )
 
         # Highlight success messages
+        # noinspection RegExpRedundantEscape
         processed = re.sub(
             r'\[!?\s*SOLVED\s*\]([^\n]*)',
             r'<span class="success">[SOLVED]\1</span>',
@@ -584,14 +582,13 @@ class ReportMetadataWidget(QGroupBox):
 
         if "INCOMPLETE" in content_upper:
             return "Incomplete"
-        elif "UNSOLVED" in content_upper:
+        if "UNSOLVED" in content_upper:
             return "Unsolved"
-        elif "SOLVED" in content_upper:
+        if "SOLVED" in content_upper:
             return "Solved"
-        elif "ERROR" in content_upper:
+        if "ERROR" in content_upper:
             return "Has Errors"
-        else:
-            return "Analyzed"
+        return "Analyzed"
 
     def _count_issues(self, content: str) -> str:
         """
@@ -612,12 +609,11 @@ class ReportMetadataWidget(QGroupBox):
 
         if errors > 0:
             return f"{errors} errors, {warnings} warnings"
-        elif warnings > 0:
+        if warnings > 0:
             return f"{warnings} warnings"
-        elif issues > 0:
+        if issues > 0:
             return f"{issues} items"
-        else:
-            return "None found"
+        return "None found"
 
     def _apply_status_color(self, status: str) -> None:
         """

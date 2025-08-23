@@ -7,12 +7,11 @@ in a dedicated tab with markdown rendering support.
 
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QFileSystemWatcher, QTimer, Qt, Signal
-from PySide6.QtGui import QAction, QTextDocument
+from PySide6.QtCore import QFileSystemWatcher, Qt, QTimer, Signal
+from PySide6.QtGui import QAction
 from PySide6.QtPrintSupport import QPrintDialog, QPrinter
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -32,7 +31,6 @@ from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
-    from PySide6.QtWidgets import QListWidgetItem
 
     from ClassicLib.Interface.ResultsViewerWidgets import (
         MarkdownViewer,
@@ -65,11 +63,6 @@ class ResultsViewerMixin:
 
     def setup_results_tab(self) -> None:
         """Initialize the results viewer tab with all components."""
-        from ClassicLib.Interface.ResultsViewerWidgets import (
-            MarkdownViewer,
-            ReportListWidget,
-            ReportMetadataWidget,
-        )
 
         # Create main layout
         layout = QHBoxLayout(self.results_tab)
@@ -447,6 +440,7 @@ class ResultsViewerMixin:
         dialog = QPrintDialog(printer, self.results_tab)
 
         if dialog.exec() == QPrintDialog.DialogCode.Accepted:
+            # noinspection PyUnresolvedReferences
             self.markdown_viewer.print(printer)
             msg_info("Report sent to printer")
 

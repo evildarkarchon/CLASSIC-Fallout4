@@ -300,7 +300,7 @@ class OrchestratorCore:
             segment_callstack_lower = [line.lower() for line in segment_callstack]
 
             # Convert plugins to lowercase set for matching
-            crashlog_plugins_lower = set(plugin.lower() for plugin in crashlog_plugins.keys())
+            crashlog_plugins_lower = set(plugin.lower() for plugin in crashlog_plugins)
 
             # Run plugin matching (it adds content only if plugins are found)
             self.plugin_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower, autoscan_report)

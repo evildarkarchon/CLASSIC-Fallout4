@@ -10,7 +10,6 @@ import asyncio
 from PySide6.QtCore import QObject, Signal, Slot
 
 from CLASSIC_ScanGame import write_combined_results
-from CLASSIC_ScanLogs import crashlogs_scan
 from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.Update import UpdateCheckError, is_latest_version
@@ -54,11 +53,51 @@ class CrashLogsScanWorker(QObject):
         finally:
             self.finished.emit()  # type: ignore
 
-    @staticmethod
-    def _perform_crash_logs_scan() -> None:
-        """Executes the crash logs scan operation."""
-        logger.debug("Starting crash logs scan")
-        crashlogs_scan()
+    def _perform_crash_logs_scan(self) -> None:
+        """
+        Executes the crash logs scan operation with proper async/Qt integration.
+
+        Runs the async scan in a non-blocking way, allowing Qt signals to be
+        processed during the operation for real-time progress updates.
+        """
+        logger.debug("Starting crash logs scan with non-blocking async")
+
+        # Import here to avoid circular dependency
+        from CLASSIC_ScanLogs import ClassicScanLogs, crashlogs_scan_async_pure
+        from ClassicLib.ScanLog import FCXModeHandler
+
+        # Initialize scanner
+        scanner = ClassicScanLogs()
+        FCXModeHandler.reset_fcx_checks()
+
+        # Create a new event loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            # Create the main coroutine as a task
+            main_task = loop.create_task(crashlogs_scan_async_pure(scanner))
+
+            # Run the event loop in small chunks to allow Qt processing
+            while not main_task.done():
+                # Run the event loop for a short time
+                # This allows async work to progress while yielding periodically
+                loop.call_soon(loop.stop)  # Schedule stop after one iteration
+                loop.run_forever()  # Run until stop is called
+
+                # Brief yield to allow Qt's cross-thread signal delivery
+                # Without this, signals queue up until the entire operation completes
+                import time
+                time.sleep(0.001)  # 1ms is enough for thread switching
+
+            # Get the result (or raise any exception that occurred)
+            main_task.result()
+
+        finally:
+            # Clean up the event loop
+            loop.close()
+            asyncio.set_event_loop(None)
+
         logger.debug("Crash logs scan completed successfully")
 
     def _play_success_notification(self) -> None:

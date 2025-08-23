@@ -133,7 +133,7 @@ class TestIsolationChecker:
             check_line = file_lines[i]
 
             # Check if any tracked variable is assigned from another variable
-            for tracked_var in list(derived_from):
+            for tracked_var in derived_from:
                 # Pattern: tracked_var = something / "path"
                 if re.search(rf"{tracked_var}\s*=\s*(\w+)\s*/", check_line):
                     match = re.search(rf"{tracked_var}\s*=\s*(\w+)\s*/", check_line)
