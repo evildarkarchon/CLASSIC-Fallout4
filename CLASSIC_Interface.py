@@ -134,6 +134,7 @@ class MainWindow(
         # Initialize window geometry management after tabs are set up
         self.setup_window_geometry()
         self.initialize_folder_paths()
+        # noinspection PyTypeChecker
         init_message_handler(parent=self, is_gui_mode=True)
         # Run initial setup using SetupCoordinator
         setup_coordinator = SetupCoordinator()
