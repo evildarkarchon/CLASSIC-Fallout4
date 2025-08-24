@@ -16,14 +16,15 @@ except ImportError:
     aiofiles = None
     AIOFILES_AVAILABLE = False
 
+from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Logger import logger
 
 # Import async utilities if available
 try:
     from ClassicLib.AsyncUtil import (
-        open_file_with_encoding_async,
+        open_file_with_encoding_async,  # noqa: F401
         read_file_with_encoding_async,
-        read_lines_with_encoding_async,
+        read_lines_with_encoding_async,  # noqa: F401
     )
 
     ASYNC_ENCODING_AVAILABLE = True
@@ -34,7 +35,7 @@ except ImportError:
 class FileIOCore:
     """Async-first core implementation for all file I/O operations."""
 
-    def __init__(self, encoding: str = "utf-8", errors: str = "ignore"):
+    def __init__(self, encoding: str = "utf-8", errors: str = "ignore") -> None:
         """
         Initialize FileIOCore with default encoding settings.
 
@@ -227,7 +228,7 @@ class FileIOCore:
             # Fallback to sync append in executor
             loop = asyncio.get_event_loop()
 
-            def append_sync():
+            def append_sync() -> None:
                 with open(path, "a", encoding=self.default_encoding, errors=self.default_errors) as f:
                     f.write(content)
 
@@ -308,7 +309,7 @@ class FileIOCore:
             files: Dictionary mapping paths to contents
         """
 
-        async def write_single(path, content):
+        async def write_single(path, content) -> None:
             try:
                 await self.write_file(path, content)
             except Exception as e:
@@ -367,52 +368,55 @@ def read_file_sync(path: Path | str) -> str:
     """Sync adapter for reading file contents."""
     try:
         # Try to get the current event loop
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file reading
         if not isinstance(path, Path):
             path = Path(path)
         return path.read_text(encoding="utf-8", errors="ignore")
     except RuntimeError:
-        # No event loop, we can use asyncio.run
-        return asyncio.run(FileIOCore().read_file(path))
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        return bridge.run_async(FileIOCore().read_file(path))
 
 
 def read_lines_sync(path: Path | str) -> list[str]:
     """Sync adapter for reading file lines."""
     try:
         # Try to get the current event loop
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file reading
         if not isinstance(path, Path):
             path = Path(path)
         return path.read_text(encoding="utf-8", errors="ignore").splitlines()
     except RuntimeError:
-        # No event loop, we can use asyncio.run
-        return asyncio.run(FileIOCore().read_lines(path))
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        return bridge.run_async(FileIOCore().read_lines(path))
 
 
 def read_bytes_sync(path: Path | str) -> bytes:
     """Sync adapter for reading file bytes."""
     try:
         # Try to get the current event loop
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file reading
         if not isinstance(path, Path):
             path = Path(path)
         return path.read_bytes()
     except RuntimeError:
-        # No event loop, we can use asyncio.run
-        return asyncio.run(FileIOCore().read_bytes(path))
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        return bridge.run_async(FileIOCore().read_bytes(path))
 
 
 def write_file_sync(path: Path | str, content: str) -> None:
     """Sync adapter for writing file contents."""
     try:
         # Try to get the current event loop
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file writing
         if not isinstance(path, Path):
@@ -420,35 +424,94 @@ def write_file_sync(path: Path | str, content: str) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8", errors="ignore")
     except RuntimeError:
-        # No event loop, we can use asyncio.run
-        asyncio.run(FileIOCore().write_file(path, content))
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        bridge.run_async(FileIOCore().write_file(path, content))
 
 
 def write_lines_sync(path: Path | str, lines: list[str]) -> None:
     """Sync adapter for writing file lines."""
-    asyncio.run(FileIOCore().write_lines(path, lines))
+    try:
+        # Try to get the current event loop
+        asyncio.get_running_loop()
+        # We're in an async context, can't use asyncio.run
+        # Fall back to sync file writing
+        if not isinstance(path, Path):
+            path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        content = "\n".join(lines)
+        if not content.endswith("\n"):
+            content += "\n"
+        path.write_text(content, encoding="utf-8", errors="ignore")
+    except RuntimeError:
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        bridge.run_async(FileIOCore().write_lines(path, lines))
 
 
 def write_bytes_sync(path: Path | str, content: bytes) -> None:
     """Sync adapter for writing file bytes."""
-    asyncio.run(FileIOCore().write_bytes(path, content))
+    try:
+        # Try to get the current event loop
+        asyncio.get_running_loop()
+        # We're in an async context, can't use asyncio.run
+        # Fall back to sync file writing
+        if not isinstance(path, Path):
+            path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    except RuntimeError:
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        bridge.run_async(FileIOCore().write_bytes(path, content))
 
 
 def read_crash_log_sync(path: Path | str) -> list[str]:
     """Sync adapter for reading crash logs."""
-    return asyncio.run(FileIOCore().read_crash_log(path))
+    try:
+        # Try to get the current event loop
+        asyncio.get_running_loop()
+        # We're in an async context, can't use asyncio.run
+        # Fall back to sync file reading
+        if not isinstance(path, Path):
+            path = Path(path)
+        lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        # Strip any trailing empty lines for consistency
+        while lines and not lines[-1].strip():
+            lines.pop()
+        return lines
+    except RuntimeError:
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        return bridge.run_async(FileIOCore().read_crash_log(path))
 
 
 def write_crash_report_sync(path: Path | str, report_lines: list[str]) -> None:
     """Sync adapter for writing crash reports."""
-    asyncio.run(FileIOCore().write_crash_report(path, report_lines))
+    try:
+        # Try to get the current event loop
+        asyncio.get_running_loop()
+        # We're in an async context, can't use asyncio.run
+        # Fall back to sync file writing
+        if not isinstance(path, Path):
+            path = Path(path)
+        report_path = path.with_suffix(".md")
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        content = "".join(report_lines)  # Assume lines already have newlines
+        report_path.write_text(content, encoding="utf-8", errors="ignore")
+        from ClassicLib.Logger import logger
+        logger.info(f"Report written to: {report_path}")
+    except RuntimeError:
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        bridge.run_async(FileIOCore().write_crash_report(path, report_lines))
 
 
 def append_file_sync(path: Path | str, content: str) -> None:
     """Sync adapter for appending to files."""
     try:
         # Try to get the current event loop
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file appending
         if not isinstance(path, Path):
@@ -457,5 +520,6 @@ def append_file_sync(path: Path | str, content: str) -> None:
         with open(path, "a", encoding="utf-8", errors="ignore") as f:
             f.write(content)
     except RuntimeError:
-        # No event loop, we can use asyncio.run
-        asyncio.run(FileIOCore().append_file(path, content))
+        # No event loop, use AsyncBridge for efficient execution
+        bridge = AsyncBridge.get_instance()
+        bridge.run_async(FileIOCore().append_file(path, content))

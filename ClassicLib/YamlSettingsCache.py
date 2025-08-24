@@ -1,3 +1,4 @@
+import time
 from functools import reduce
 from io import StringIO
 from pathlib import Path
@@ -38,12 +39,17 @@ class YamlSettingsCache(metaclass=SingletonMeta):
     # Static YAML stores that won't change during program execution
     STATIC_YAML_STORES: ClassVar[set[YAML]] = {YAML.Main, YAML.Game}
 
+    # TTL for cache validity checks (in seconds)
+    CACHE_TTL: ClassVar[float] = 5.0
+
     def __init__(self) -> None:
         """Initialize the instance attributes."""
         self.cache: dict[Path, YAMLMapping] = {}
         self.file_mod_times: dict[Path, float] = {}
         self.path_cache: dict[YAML, Path] = {}
         self.settings_cache: dict[tuple[YAML, str, type], Any] = {}
+        # TTL tracking for dynamic files
+        self.last_check_time: dict[Path, float] = {}
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """
@@ -139,15 +145,32 @@ class YamlSettingsCache(metaclass=SingletonMeta):
                 logger.debug(f"Loading static YAML file: {yaml_path}")
                 cache_file(yaml_path)
         else:
-            # For dynamic files, check modification time
-            last_mod_time = yaml_path.stat().st_mtime
-            if yaml_path not in self.file_mod_times or self.file_mod_times[yaml_path] != last_mod_time:
-                # Update the file modification time
-                self.file_mod_times[yaml_path] = last_mod_time
+            # For dynamic files, use TTL-based checking
+            current_time = time.time()
 
-                logger.debug(f"Loading dynamic YAML file: {yaml_path}")
-                # Reload the YAML file
-                cache_file(yaml_path)
+            # Check if we need to verify file modification
+            should_check = False
+            if yaml_path not in self.last_check_time:
+                # Never checked before
+                should_check = True
+            elif current_time - self.last_check_time[yaml_path] >= self.CACHE_TTL:
+                # TTL expired, should check
+                should_check = True
+
+            if should_check:
+                # Update check time
+                self.last_check_time[yaml_path] = current_time
+
+                # Now check modification time
+                last_mod_time = yaml_path.stat().st_mtime
+                if yaml_path not in self.file_mod_times or self.file_mod_times[yaml_path] != last_mod_time:
+                    # File has been modified
+                    self.file_mod_times[yaml_path] = last_mod_time
+
+                    logger.debug(f"Loading dynamic YAML file: {yaml_path}")
+                    # Reload the YAML file
+                    cache_file(yaml_path)
+            # If should_check is False, we just return the cached version without checking
 
         return self.cache.get(yaml_path, {})
 
