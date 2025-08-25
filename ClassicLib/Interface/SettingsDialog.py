@@ -15,9 +15,11 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
@@ -47,6 +49,7 @@ class SettingsDialog(QDialog):
         "move_invalid_logs": "Move Unsolved Logs",  # Note: YAML uses "Unsolved" not "Invalid"
         "update_check": "Update Check",
         "update_source": "Update Source",
+        "ini_folder_path": "INI Folder Path",
     }
 
     def __init__(self, parent: QWidget | None = None, yaml_store: YAML = YAML.Settings) -> None:
@@ -83,6 +86,7 @@ class SettingsDialog(QDialog):
         # Create tabs
         self._create_general_tab()
         self._create_scanning_tab()
+        self._create_paths_tab()
         self._create_updates_tab()
 
         # Create button box
@@ -166,6 +170,75 @@ class SettingsDialog(QDialog):
 
         # Add tab to widget
         self.tab_widget.addTab(scanning_widget, "Scanning")
+
+    def _create_paths_tab(self) -> None:
+        """Create the Paths settings tab."""
+        paths_widget = QWidget()
+        layout = QVBoxLayout(paths_widget)
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+
+        # Create paths settings group
+        paths_group = QGroupBox("Path Settings")
+        paths_layout = QVBoxLayout(paths_group)
+        paths_layout.setSpacing(15)
+
+        # INI Folder Path setting
+        ini_path_label = QLabel("INI Folder Path:")
+        ini_path_label.setToolTip("Path to your game's INI files directory\nUsually located in Documents/My Games/[Game Name]")
+        paths_layout.addWidget(ini_path_label)
+
+        # Create horizontal layout for input and browse button
+        ini_path_layout = QHBoxLayout()
+        ini_path_layout.setSpacing(10)
+
+        self.ini_folder_input = QLineEdit()
+        self.ini_folder_input.setPlaceholderText("Enter INI folder path or click Browse...")
+        self.ini_folder_input.setToolTip(
+            "Specify the folder containing your game's INI configuration files\nLeave empty to use automatic detection"
+        )
+        ini_path_layout.addWidget(self.ini_folder_input)
+        self.settings_widgets["ini_folder_path"] = self.ini_folder_input
+
+        # Browse button for INI folder
+        self.ini_browse_button = QPushButton("Browse...")
+        self.ini_browse_button.setToolTip("Browse for INI folder location")
+        self.ini_browse_button.setMaximumWidth(100)
+        self.ini_browse_button.clicked.connect(self._browse_ini_folder)
+        ini_path_layout.addWidget(self.ini_browse_button)
+
+        paths_layout.addLayout(ini_path_layout)
+
+        # Help text
+        help_label = QLabel(
+            "If CLASSIC has trouble detecting your game files, specify the INI folder manually.\n"
+            "This is typically found in your Documents folder under 'My Games'."
+        )
+        help_label.setWordWrap(True)
+        help_label.setStyleSheet("QLabel { color: #888888; font-size: 11px; }")
+        paths_layout.addWidget(help_label)
+
+        layout.addWidget(paths_group)
+        layout.addStretch()
+
+        # Add tab to widget
+        self.tab_widget.addTab(paths_widget, "Paths")
+
+    def _browse_ini_folder(self) -> None:
+        """Open a folder browser dialog for selecting the INI folder."""
+        from ClassicLib import GlobalRegistry
+
+        try:
+            game = GlobalRegistry.get_game()
+        except (TypeError, ValueError, AttributeError):
+            game = "Game"
+
+        folder = QFileDialog.getExistingDirectory(
+            self, f"Select INI Folder for {game}", self.ini_folder_input.text() or "", QFileDialog.Option.ShowDirsOnly
+        )
+
+        if folder:
+            self.ini_folder_input.setText(folder)
 
     def _create_updates_tab(self) -> None:
         """Create the Updates settings tab."""
@@ -259,6 +332,16 @@ class SettingsDialog(QDialog):
                 if index >= 0:
                     widget.setCurrentIndex(index)
 
+            elif isinstance(widget, QLineEdit):
+                # Handle text input settings
+                if self.yaml_store == YAML.Settings:
+                    value = classic_settings(str, yaml_key)
+                else:
+                    value = yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}")
+                if value is None:
+                    value = ""
+                widget.setText(value)
+
     def save_settings(self) -> None:
         """
         Save current settings to YAML configuration.
@@ -266,6 +349,10 @@ class SettingsDialog(QDialog):
         Writes the current UI widget values back to CLASSIC Settings.yaml
         for persistence across application sessions.
         """
+        ini_path_changed = False
+        old_ini_path = None
+        new_ini_path = None
+
         for widget_key, yaml_key in self.SETTINGS_MAP.items():
             widget = self.settings_widgets.get(widget_key)
             if not widget:
@@ -281,6 +368,78 @@ class SettingsDialog(QDialog):
                 # Save combo box selection
                 value = widget.currentText()
                 yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}", value)
+
+            elif isinstance(widget, QLineEdit):
+                # Save text input value
+                value = widget.text()
+
+                # Check if this is the INI Folder Path and if it changed
+                if widget_key == "ini_folder_path":
+                    # Get the old value to compare
+                    if self.yaml_store == YAML.Settings:
+                        old_ini_path = classic_settings(str, yaml_key)
+                    else:
+                        old_ini_path = yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}")
+
+                    new_ini_path = value.strip()
+                    ini_path_changed = (old_ini_path or "") != new_ini_path
+
+                yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}", value)
+
+        # If INI Folder Path changed, recalculate derivative paths
+        if ini_path_changed:
+            self._recalculate_derivative_paths(new_ini_path)
+
+    def _recalculate_derivative_paths(self, new_ini_path: str) -> None:
+        """
+        Recalculate derivative paths when INI Folder Path changes.
+
+        Updates Root_Folder_Docs in Game_Local YAML and regenerates all
+        Docs_Folder_* and Docs_File_* paths that depend on it.
+
+        Args:
+            new_ini_path: The new INI folder path
+        """
+        try:
+            from ClassicLib import GlobalRegistry
+            from ClassicLib.DocsPath import docs_generate_paths
+            from ClassicLib.Logger import logger
+
+            # Check if we have a valid game context
+            try:
+                game = GlobalRegistry.get_game()
+                if not game:
+                    logger.warning("Cannot recalculate derivative paths: No game configured")
+                    return
+            except (TypeError, ValueError, AttributeError):
+                logger.warning("Cannot recalculate derivative paths: Unable to get game context")
+                return
+
+            # Update Root_Folder_Docs in Game_Local YAML
+            vr_suffix = GlobalRegistry.get_vr()  # Returns "_VR" or empty string
+            root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
+
+            if new_ini_path:
+                # Set the new path
+                yaml_settings(str, YAML.Game_Local, root_docs_key, new_ini_path)
+                logger.info(f"Updated Root_Folder_Docs to: {new_ini_path}")
+            else:
+                # Clear the path to trigger auto-detection
+                yaml_settings(str, YAML.Game_Local, root_docs_key, "")
+                logger.info("Cleared Root_Folder_Docs - will use auto-detection")
+
+            # Regenerate all derivative paths
+            docs_generate_paths()
+            logger.info("Recalculated all derivative document paths")
+
+        except (ImportError, TypeError, ValueError, OSError) as e:
+            # Log the error but don't crash the settings dialog
+            try:
+                from ClassicLib.Logger import logger
+                logger.error(f"Failed to recalculate derivative paths: {e}")
+            except ImportError:
+                # If logger import fails, just continue silently
+                pass
 
     def accept(self) -> None:
         """Handle dialog acceptance (OK button)."""
