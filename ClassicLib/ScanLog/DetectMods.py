@@ -51,24 +51,25 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     mod_lookup = {mod_name: warning for mod_name, warning in mod_items}
 
     # Track matching plugins for each mod to consolidate output
-    mod_matches: dict[str, list[str]] = {}
+    # Only store the first matching plugin ID for each mod
+    mod_matches: dict[str, str] = {}
 
     # Process each plugin once with the combined pattern
     for plugin_name, plugin_id in crashlog_plugins_lower.items():
         match = combined_pattern.search(plugin_name)
         if match:
             matched_mod = match.group().lower()
+            # Only store the first match for each mod
             if matched_mod not in mod_matches:
-                mod_matches[matched_mod] = []
-            mod_matches[matched_mod].append(plugin_id)
+                mod_matches[matched_mod] = plugin_id
 
     # Build output lines for all matches
     for mod_name in sorted(mod_matches.keys(), key=lambda x: len(x), reverse=True):
         mod_warning = mod_lookup[mod_name]
         _validate_warning(mod_name, mod_warning)
 
-        plugin_ids = mod_matches[mod_name]
-        plugin_list = ", ".join(f"[{pid}]" for pid in plugin_ids)
+        plugin_id = mod_matches[mod_name]
+        plugin_list = f"[{plugin_id}]"
 
         # Build the complete entry
         lines.append("```\n")

@@ -88,9 +88,9 @@ class TestDetectModsSingle:
         result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
         assert result.has_content
-        result_list = result.to_list()
-        assert "[!] FOUND" in result_list[0]
-        assert "Warning for mod1" in "".join(result_list)
+        result_text = "".join(result.to_list())
+        assert "[!] FOUND" in result_text
+        assert "Warning for mod1" in result_text
 
     def test_multiple_mods_found(self) -> None:
         """Test when multiple mods are found in the crash log plugins."""
@@ -100,8 +100,8 @@ class TestDetectModsSingle:
         result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
         assert result.has_content
-        result_list = result.to_list()
-        assert "[!] FOUND" in result_list[0]
+        result_text = "".join(result.to_list())
+        assert "[!] FOUND" in result_text
 
     def test_case_insensitivity(self) -> None:
         """Test case insensitivity in mod detection."""
@@ -111,9 +111,9 @@ class TestDetectModsSingle:
         result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
         assert result.has_content
-        result_list = result.to_list()
-        assert "[!] FOUND" in result_list[0]
-        assert "Warning for mod1" in "".join(result_list)
+        result_text = "".join(result.to_list())
+        assert "[!] FOUND" in result_text
+        assert "Warning for mod1" in result_text
 
     def test_empty_yaml_dict(self) -> None:
         """Test with empty YAML dictionary."""

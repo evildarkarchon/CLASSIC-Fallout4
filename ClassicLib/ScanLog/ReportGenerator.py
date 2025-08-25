@@ -74,10 +74,14 @@ class ReportGeneratorFragments:
             f"**Detected {crashgen_name} Version:** {crashgen_version}\n\n",
         ]
 
-        # Add version warning if outdated
+        # Add version status - always show whether current or outdated
         game_is_vr = GlobalRegistry.get_vr() == "VR"
-        if (game_is_vr and version_current < version_latest_vr) or (not game_is_vr and version_current < version_latest):
+        if (version_current < version_latest_vr and version_current != version_latest) or (
+            not game_is_vr and version_current < version_latest
+        ):
             lines.append(f"***WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***\n\n")
+        else:
+            lines.append(f"✅ *You have the latest version of {crashgen_name}!*\n\n")
 
         lines.append("---\n\n")
 

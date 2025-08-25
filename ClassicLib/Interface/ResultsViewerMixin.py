@@ -12,9 +12,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QFileSystemWatcher, Qt, QTimer, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtPrintSupport import QPrintDialog, QPrinter
 from PySide6.QtWidgets import (
-    QFileDialog,
     QHBoxLayout,
     QMenu,
     QMessageBox,
@@ -180,18 +178,6 @@ class ResultsViewerMixin:
         toolbar_layout = QHBoxLayout(toolbar)
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(5)
-
-        # Export button
-        export_btn = QPushButton("Export")
-        export_btn.clicked.connect(self._export_report)
-        export_btn.setToolTip("Export the current report")
-        toolbar_layout.addWidget(export_btn)
-
-        # Print button
-        print_btn = QPushButton("Print")
-        print_btn.clicked.connect(self._print_report)
-        print_btn.setToolTip("Print the current report")
-        toolbar_layout.addWidget(print_btn)
 
         # Copy button
         copy_btn = QPushButton("Copy")
@@ -395,56 +381,6 @@ class ResultsViewerMixin:
                 msg_error(f"Failed to delete report: {e}")
                 logger.error(f"Error deleting report {report_path}: {e}")
 
-    def _export_report(self) -> None:
-        """Export the current report to various formats."""
-        if not self.current_report_path:
-            msg_warning("No report loaded")
-            return
-
-        # File dialog for export location
-        file_path, selected_filter = QFileDialog.getSaveFileName(
-            self.results_tab,
-            "Export Report",
-            str(self.current_report_path.with_suffix("")),
-            "Markdown Files (*.md);;HTML Files (*.html);;Text Files (*.txt);;All Files (*.*)",
-        )
-
-        if not file_path:
-            return
-
-        try:
-            export_path = Path(file_path)
-
-            if "html" in selected_filter.lower():
-                # Export as HTML
-                html_content = self.markdown_viewer.toHtml()
-                export_path.write_text(html_content, encoding="utf-8")
-            else:
-                # Export as markdown or text
-                content = self.current_report_path.read_text(encoding="utf-8", errors="ignore")
-                export_path.write_text(content, encoding="utf-8")
-
-            msg_info(f"Report exported to: {export_path.name}")
-            logger.info(f"Exported report to: {export_path}")
-
-        except Exception as e:
-            msg_error(f"Failed to export report: {e}")
-            logger.error(f"Error exporting report: {e}")
-
-    def _print_report(self) -> None:
-        """Print the current report."""
-        if not self.current_report_path:
-            msg_warning("No report loaded")
-            return
-
-        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-        dialog = QPrintDialog(printer, self.results_tab)
-
-        if dialog.exec() == QPrintDialog.DialogCode.Accepted:
-            # noinspection PyUnresolvedReferences
-            self.markdown_viewer.print(printer)
-            msg_info("Report sent to printer")
-
     def _copy_report(self) -> None:
         """Copy the current report content to clipboard."""
         if not self.current_report_path:
@@ -499,11 +435,6 @@ class ResultsViewerMixin:
         menu.addAction(view_action)
 
         menu.addSeparator()
-
-        # Export action
-        export_action = QAction("Export...", menu)
-        export_action.triggered.connect(self._export_report)
-        menu.addAction(export_action)
 
         # Copy action
         copy_action = QAction("Copy to Clipboard", menu)
