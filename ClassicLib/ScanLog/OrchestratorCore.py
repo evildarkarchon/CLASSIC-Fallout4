@@ -288,8 +288,7 @@ class OrchestratorCore:
 
             # Check for OPC2 mods with conditional header
             opc2_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins),
-                "ARE OUTDATED, REDUNDANT, OR INCLUDED IN OPC2"
+                lambda: detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins), "ARE OUTDATED, REDUNDANT, OR INCLUDED IN OPC2"
             )
             composer.add(opc2_fragment)
 
@@ -298,7 +297,7 @@ class OrchestratorCore:
             # Convert callstack to lowercase for matching
             segment_callstack_lower = [line.lower() for line in segment_callstack]
             # Convert plugins to lowercase set for matching
-            crashlog_plugins_lower = set(plugin.lower() for plugin in crashlog_plugins)
+            crashlog_plugins_lower = {plugin.lower() for plugin in crashlog_plugins}
 
             # Run plugin matching and add with conditional header
             plugin_fragment = ConditionalSection.with_header(
@@ -330,8 +329,7 @@ class OrchestratorCore:
 
         # Scan call stack for suspects
         segment_callstack_intact = "\n".join(segment_callstack)
-        stack_fragment, found_stack_suspect = self.suspect_scanner.suspect_scan_stack(crashlog_mainerror,
-                                                                                      segment_callstack_intact, 50)
+        stack_fragment, found_stack_suspect = self.suspect_scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, 50)
         composer.add(stack_fragment)
 
         # Check for DLL crashes
@@ -368,8 +366,7 @@ class OrchestratorCore:
 
         # Scan all settings
         composer.add(self.settings_scanner.scan_buffout_achievements_setting(xsemodules, crashgen))
-        composer.add(self.settings_scanner.scan_buffout_memorymanagement_settings(crashgen, has_xcell, has_old_xcell,
-                                                                                  has_baka_scrapheap))
+        composer.add(self.settings_scanner.scan_buffout_memorymanagement_settings(crashgen, has_xcell, has_old_xcell, has_baka_scrapheap))
         composer.add(self.settings_scanner.scan_archivelimit_setting(crashgen, crashgen_version))
         composer.add(self.settings_scanner.scan_buffout_looksmenu_setting(crashgen, xsemodules))
 

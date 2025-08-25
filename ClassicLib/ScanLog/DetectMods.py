@@ -68,12 +68,14 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         _validate_warning(mod_name, mod_warning)
 
         plugin_ids = mod_matches[mod_name]
-        plugin_list = f"{plugin_ids[0]}" if len(plugin_ids) == 1 else f"{'], ['.join(plugin_ids)}"
+        plugin_list = ", ".join(f"[{pid}]" for pid in plugin_ids)
 
         # Build the complete entry
+        lines.append("```\n")
         lines.append(f"[!] FOUND : {plugin_list} {mod_warning}")
         if not mod_warning.endswith("\n"):
             lines.append("\n")
+        lines.append("```\n")
         lines.append("\n")
 
     return ReportFragment.from_lines(lines)

@@ -12,6 +12,7 @@ import pytest
 # Import wrappers from CLASSIC_ScanGame since they're now defined there
 import CLASSIC_ScanGame
 import ClassicLib.MessageHandler
+
 # Import for MessageHandler initialization
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.ScanGame.AsyncScanGame import (

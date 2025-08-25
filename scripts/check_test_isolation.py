@@ -39,8 +39,7 @@ class TestIsolationChecker:
         - Assertions checking mock call arguments
         """
         # Check if it's in an assertion about mock calls
-        if any(pattern in line for pattern in
-               ["assert_called_once_with", "assert_called_with", "assert_any_call", "assert_has_calls"]):
+        if any(pattern in line for pattern in ["assert_called_once_with", "assert_called_with", "assert_any_call", "assert_has_calls"]):
             return True
 
         # Check if it's in an assertion or comparison (likely checking mock args)
@@ -156,7 +155,7 @@ class TestIsolationChecker:
             # Check if any tracked variable comes from tmp_path
             for tracked_var in derived_from:
                 if tracked_var in check_line and any(
-                        pattern in check_line for pattern in ["tmp_path /", "tmp_path/", "self.tmp_path", "tmp_path\\"]
+                    pattern in check_line for pattern in ["tmp_path /", "tmp_path/", "self.tmp_path", "tmp_path\\"]
                 ):
                     return True
 
@@ -273,13 +272,12 @@ class TestIsolationChecker:
                 continue
 
             # Get previous lines for context
-            prev_lines = lines[max(0, line_num - 4): line_num - 1]
+            prev_lines = lines[max(0, line_num - 4) : line_num - 1]
 
             # Check for YAML.Main/Settings/Game_Local usage
             if re.search(r"YAML\.(Main|Settings|Game_Local)", line):
                 if not self._is_safe_yaml_usage(line, prev_lines):
-                    self.violations.append(
-                        (filepath, line_num, line.strip(), "Using production YAML store - use YAML.TEST or mock"))
+                    self.violations.append((filepath, line_num, line.strip(), "Using production YAML store - use YAML.TEST or mock"))
                     file_has_violations = True
                     if self.verbose:
                         print(f"{filepath}:{line_num}: Production YAML usage")
@@ -288,8 +286,7 @@ class TestIsolationChecker:
             # Check for "CLASSIC Data" or "Crash Logs" paths
             if re.search(r'["\'](CLASSIC Data|Crash Logs)["\']', line):
                 if not self._is_safe_path_usage(line, prev_lines):
-                    self.violations.append(
-                        (filepath, line_num, line.strip(), "Using production path - ensure it's under tmp_path"))
+                    self.violations.append((filepath, line_num, line.strip(), "Using production path - ensure it's under tmp_path"))
                     file_has_violations = True
                     if self.verbose:
                         print(f"{filepath}:{line_num}: Production path usage")
@@ -300,8 +297,7 @@ class TestIsolationChecker:
                 # Only check if NOT in a test with tmp_path fixture
                 if not self._has_tmp_path_fixture(lines, line_num):
                     if not self._is_safe_write_operation(line, lines, line_num):
-                        self.violations.append(
-                            (filepath, line_num, line.strip(), "Writing files without tmp_path fixture"))
+                        self.violations.append((filepath, line_num, line.strip(), "Writing files without tmp_path fixture"))
                         file_has_violations = True
                         if self.verbose:
                             print(f"{filepath}:{line_num}: File write without tmp_path")
@@ -313,8 +309,7 @@ class TestIsolationChecker:
                     # Check previous lines for monkeypatch context
                     has_monkeypatch = any("monkeypatch" in prev for prev in prev_lines[-3:])
                     if not has_monkeypatch:
-                        self.violations.append(
-                            (filepath, line_num, line.strip(), "Using os.chdir without monkeypatch.chdir"))
+                        self.violations.append((filepath, line_num, line.strip(), "Using os.chdir without monkeypatch.chdir"))
                         file_has_violations = True
 
         return file_has_violations

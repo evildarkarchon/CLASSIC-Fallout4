@@ -11,6 +11,7 @@ import random
 import sys
 import time
 from collections import Counter
+
 # Removed ThreadPoolExecutor - using pure async instead
 from functools import partial
 from pathlib import Path
@@ -50,10 +51,9 @@ class ClassicScanLogs:
         # Load settings
         self.remove_list: tuple[str] = yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
 
-        # Always use sync version for initialization to avoid event loop issues
-        # The async reformatting will be done in the main scan process
+        # Optimized reformatting - only writes files that actually change
         crashlogs_reformat(self.crashlog_list, self.remove_list)
-        logger.debug("Used sync file I/O for crash log reformatting during init")
+        logger.debug("Used optimized crash log reformatting")
 
         # Initialize configuration
         self.yamldata = ClassicScanLogsInfo()
@@ -64,7 +64,6 @@ class ClassicScanLogs:
 
         # Async database operations are handled by AsyncScanOrchestrator
 
-        msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
         self.scan_start_time: float = time.perf_counter()
 
         # Initialize thread-safe log cache
@@ -195,6 +194,8 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
     yamldata: ClassicScanLogsInfo = scanner.yamldata
     scan_failed_list: list = []
 
+    msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
+
     # Create async orchestrator with context manager for proper resource management
     async with AsyncScanOrchestrator(
         scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists
@@ -215,7 +216,7 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
         # Create tasks for all crash logs
         tasks = [asyncio.create_task(process_with_limit(log)) for log in scanner.crashlog_list]
 
-        # Process with progress tracking
+        # Process with progress tracking (continue using existing progress context)
         total_logs = len(scanner.crashlog_list)
         completed = 0
 

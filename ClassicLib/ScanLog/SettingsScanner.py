@@ -28,8 +28,7 @@ class SettingsScannerFragments:
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
 
-    def scan_buffout_achievements_setting(self, xsemodules: set[str],
-                                          crashgen: dict[str, bool | int | str]) -> ReportFragment:
+    def scan_buffout_achievements_setting(self, xsemodules: set[str], crashgen: dict[str, bool | int | str]) -> ReportFragment:
         """
         Scan the achievements setting for potential conflicts.
 
@@ -49,8 +48,7 @@ class SettingsScannerFragments:
                 f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {self.yamldata.crashgen_name}.\n\n-----\n",
             ])
         else:
-            lines.append(
-                f"✔️ Achievements parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n")
+            lines.append(f"✔️ Achievements parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n")
 
         return ReportFragment.from_lines(lines)
 
@@ -149,8 +147,7 @@ class SettingsScannerFragments:
 
         return ReportFragment.from_lines(lines)
 
-    def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str],
-                                  crashgen_version: "Version | None" = None) -> ReportFragment:
+    def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: "Version | None" = None) -> ReportFragment:
         """
         Scan and validate the "ArchiveLimit" setting.
 
@@ -177,13 +174,11 @@ class SettingsScannerFragments:
                 f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ArchiveLimit to FALSE.\n\n-----\n",
             ])
         else:
-            lines.append(
-                f"✔️ ArchiveLimit parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n")
+            lines.append(f"✔️ ArchiveLimit parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n")
 
         return ReportFragment.from_lines(lines)
 
-    def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str],
-                                       xsemodules: set[str]) -> ReportFragment:
+    def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], xsemodules: set[str]) -> ReportFragment:
         """
         Analyze the Looksmenu setting for proper compatibility.
 
@@ -210,8 +205,7 @@ class SettingsScannerFragments:
 
         return ReportFragment.from_lines(lines)
 
-    def check_disabled_settings(self, crashgen: dict[str, bool | int | str],
-                                crashgen_ignore: set[str]) -> ReportFragment:
+    def check_disabled_settings(self, crashgen: dict[str, bool | int | str], crashgen_ignore: set[str]) -> ReportFragment:
         """
         Check disabled settings in crash generation configuration.
 

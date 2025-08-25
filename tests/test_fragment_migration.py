@@ -69,8 +69,7 @@ class TestFragmentMigration:
     def test_conditional_header_only_when_content_exists(self, sample_yaml_single, sample_plugins):
         """Test that conditional headers are only added when content exists."""
         # Test with content
-        with_content = ConditionalSection.with_header(lambda: detect_mods_single(sample_yaml_single, sample_plugins),
-                                                      "FREQUENTLY CRASH")
+        with_content = ConditionalSection.with_header(lambda: detect_mods_single(sample_yaml_single, sample_plugins), "FREQUENTLY CRASH")
 
         assert with_content.has_content
         assert "### Checking For Mods That FREQUENTLY CRASH" in with_content.content[0]

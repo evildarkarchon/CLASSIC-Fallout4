@@ -298,12 +298,16 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
     logger.debug("- - - INITIATED CRASH LOG FILE REFORMAT")
     simplify_logs: bool | None = classic_settings(bool, "Simplify Logs")
 
+    # Track how many files were actually modified
+    files_modified = 0
+
     for file in crashlog_list:
         with file.open(encoding="utf-8", errors="ignore") as crash_log:
             original_lines: list[str] = crash_log.readlines()
 
         processed_lines_reversed: list[str] = []
         in_plugins_section = True  # State for tracking if currently in the PLUGINS section
+        file_was_modified = False  # Track if this file needs to be written
 
         # Iterate over lines from bottom to top to correctly handle PLUGINS section logic
         for line in reversed(original_lines):
@@ -313,6 +317,7 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
             # Condition for removing lines if Simplify Logs is enabled
             if simplify_logs and any(string in line for string in remove_list):
                 # Skip this line by not adding it to processed_lines_reversed
+                file_was_modified = True  # Mark that we removed a line
                 continue
 
             # Condition for reformatting lines within the PLUGINS section
@@ -325,8 +330,14 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
                 try:
                     indent, rest = line.split("[", 1)
                     fid, name = rest.split("]", 1)
-                    modified_line: str = f"{indent}[{fid.replace(' ', '0')}]{name}"
-                    processed_lines_reversed.append(modified_line)
+                    # Check if modification is actually needed
+                    if " " in fid:
+                        modified_line: str = f"{indent}[{fid.replace(' ', '0')}]{name}"
+                        processed_lines_reversed.append(modified_line)
+                        file_was_modified = True  # Mark that we modified a line
+                    else:
+                        # No spaces to replace, keep original
+                        processed_lines_reversed.append(line)
                 except ValueError:
                     # If line format is unexpected (e.g., no ']' after '['), keep original line
                     processed_lines_reversed.append(line)
@@ -334,8 +345,16 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
                 # Line is not removed or modified, keep as is
                 processed_lines_reversed.append(line)
 
-        # The processed_lines_reversed list is in reverse order, so reverse it back
-        final_processed_lines: list[str] = list(reversed(processed_lines_reversed))
+        # Only write the file if it was actually modified
+        if file_was_modified:
+            # The processed_lines_reversed list is in reverse order, so reverse it back
+            final_processed_lines: list[str] = list(reversed(processed_lines_reversed))
 
-        with file.open("w", encoding="utf-8", errors="ignore") as crash_log:
-            crash_log.writelines(final_processed_lines)
+            with file.open("w", encoding="utf-8", errors="ignore") as crash_log:
+                crash_log.writelines(final_processed_lines)
+            files_modified += 1
+
+    if files_modified > 0:
+        logger.debug(f"- - - REFORMATTED {files_modified} OF {len(crashlog_list)} FILES")
+    else:
+        logger.debug("- - - NO FILES REQUIRED REFORMATTING")

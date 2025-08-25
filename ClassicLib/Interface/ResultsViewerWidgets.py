@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QDateTime, Qt
 from PySide6.QtGui import QBrush, QColor, QFont, QTextCursor
@@ -26,10 +26,17 @@ from PySide6.QtWidgets import (
 
 from ClassicLib.Logger import logger
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 # Pre-compiled regex patterns for performance optimization
+# noinspection RegExpRedundantEscape
 _FOUND_SECTION_PATTERN = re.compile(r"(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)")
+# noinspection RegExpRedundantEscape
 _ERROR_PATTERN = re.compile(r"\[!?\s*ERROR\s*\]([^\n]*)", re.IGNORECASE)
+# noinspection RegExpRedundantEscape
 _WARNING_PATTERN = re.compile(r"\[!?\s*WARNING\s*\]([^\n]*)", re.IGNORECASE)
+# noinspection RegExpRedundantEscape
 _SOLVED_PATTERN = re.compile(r"\[!?\s*SOLVED\s*\]([^\n]*)", re.IGNORECASE)
 _ISSUE_LIST_PATTERN = re.compile(r"^[-*]\s+.+", re.MULTILINE)
 
@@ -117,13 +124,7 @@ class ReportListWidget(QListWidget):
 
         # Determine report status
         status = self._determine_report_status(report_path)
-
-        # Create item with display text
-        # display_text = filename.replace("-AUTOSCAN", "") # looks to be unused.
-        if timestamp_str:
-            display_text = f"{timestamp_str}\n{report_path.name}"
-        else:
-            display_text = report_path.name
+        display_text = f"{timestamp_str}\n{report_path.name}" if timestamp_str else report_path.name
 
         item = QListWidgetItem(display_text)
 
@@ -424,10 +425,10 @@ class MarkdownViewer(QTextBrowser):
         processed = markdown
 
         # Find [!] FOUND sections and wrap multiline content in code blocks
-        def wrap_multiline_content(match):
+        def wrap_multiline_content(match):  # noqa: ANN001, ANN202
             header = match.group(1)
             content = match.group(2).rstrip()  # Remove trailing whitespace/newlines
-            # Wrap the content in a code block to preserve formatting
+            # Wrap the content in a code b
             return f"{header}\n```\n{content}\n```\n"
 
         # Use pre-compiled regex patterns for performance
@@ -436,7 +437,7 @@ class MarkdownViewer(QTextBrowser):
         processed = _WARNING_PATTERN.sub(r'<span class="warning">[WARNING]\1</span>', processed)
         processed = _SOLVED_PATTERN.sub(r'<span class="success">[SOLVED]\1</span>', processed)
 
-        return processed
+        return processed  # noqa: RET504
 
     def zoom_in(self) -> None:
         """Increase zoom level by 10%."""
