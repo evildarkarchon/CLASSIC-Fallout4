@@ -254,16 +254,16 @@ class ScanGameCore:
         if isinstance(folder_path, str):
             folder_path = Path(folder_path)
 
-        # Get YAML settings
-        catch_errors: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "catch_log_errors") or [])
-        ignore_files: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_files") or [])
-        ignore_errors: list[str] = normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_errors") or [])
+        # Get YAML settings and convert to sets for faster lookups
+        catch_errors_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "catch_log_errors") or []))
+        ignore_files_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_files") or []))
+        ignore_errors_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_errors") or []))
 
         # Find valid log files (excluding crash logs)
         valid_log_files: list[Path] = [
             file
             for file in folder_path.glob("*.log")
-            if "crash-" not in file.name.lower() and not any(part in str(file).lower() for part in ignore_files)
+            if "crash-" not in file.name.lower() and not any(part in str(file).lower() for part in ignore_files_set)
         ]
 
         async def process_single_log(log_file_path: Path) -> list[str]:
@@ -287,8 +287,8 @@ class ScanGameCore:
                     detected_errors = [
                         f"ERROR > {line}"
                         for line in log_lines
-                        if any(error in line.lower() for error in catch_errors)
-                        and all(ignore not in line.lower() for ignore in ignore_errors)
+                        if any(error in line.lower() for error in catch_errors_set)
+                        and all(ignore not in line.lower() for ignore in ignore_errors_set)
                     ]
 
                 except OSError:

@@ -13,6 +13,7 @@ from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ClassicLib.AsyncBridge import run_async
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
 if TYPE_CHECKING:
@@ -76,7 +77,7 @@ class ScanOrchestrator:
         Counter object containing local statistics related to the scanning process.
         """
         # Run async method synchronously
-        result = asyncio.run(self._core.process_crash_log(crashlog_file))
+        result = run_async(self._core.process_crash_log(crashlog_file))
 
         # Update last FormIDs and plugins for backwards compatibility
         self.last_formids = [] if not self._core._last_formids else self._core._last_formids.copy()

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success
+from ClassicLib.AsyncBridge import run_async
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
 from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
@@ -40,18 +41,7 @@ def check_log_errors(folder_path: Path | str) -> str:
         str: A detailed report of all detected errors in the relevant log files, if any.
     """
     core = get_scan_game_core()
-
-    # Check if we're already in an async context
-    try:
-        loop = asyncio.get_running_loop()
-        # We're in an async context, create a new event loop in a thread
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio.run, core.check_log_errors(folder_path))
-            return future.result()
-    except RuntimeError:
-        # No running loop, safe to use asyncio.run
-        return asyncio.run(core.check_log_errors(folder_path))
+    return run_async(core.check_log_errors(folder_path))
 
 
 # ================================================
@@ -100,18 +90,7 @@ def scan_mods_unpacked() -> str:
         str: Detailed report of scan results.
     """
     core = get_scan_game_core()
-
-    # Check if we're already in an async context
-    try:
-        loop = asyncio.get_running_loop()
-        # We're in an async context, create a new event loop in a thread
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio.run, core.scan_mods_unpacked())
-            return future.result()
-    except RuntimeError:
-        # No running loop, safe to use asyncio.run
-        return asyncio.run(core.scan_mods_unpacked())
+    return run_async(core.scan_mods_unpacked())
 
 
 def scan_mods_archived() -> str:
@@ -135,7 +114,7 @@ def scan_mods_archived() -> str:
         commands for file dumping or listing.
     """
     core = get_scan_game_core()
-    return asyncio.run(core.scan_mods_archived())
+    return run_async(core.scan_mods_archived())
 
 
 # ================================================

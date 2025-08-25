@@ -1,26 +1,22 @@
 """
-Settings scanner module for CLASSIC.
+Fragment-based settings scanner for CLASSIC.
 
-This module validates crash generator and mod settings including:
-- Buffout 4 configuration settings validation
-- Compatibility settings for installed mods
-- Memory management parameters checking
-- F4EE/Looks Menu configuration verification
+This module provides fragment-returning versions of all settings scanning functions,
+replacing the mutable list pattern with immutable fragment composition.
 """
 
 from typing import TYPE_CHECKING
 
+from ClassicLib.ScanLog.ReportFragment import ReportFragment
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
     from packaging.version import Version
-
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 
-class SettingsScanner:
-    """Handles validation of crash generator and mod settings."""
+class SettingsScannerFragments:
+    """Fragment-based settings scanner for crash log analysis."""
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
@@ -32,83 +28,76 @@ class SettingsScanner:
         self.yamldata: ClassicScanLogsInfo = yamldata
 
     def scan_buffout_achievements_setting(
-        self, autoscan_report: list[str], xsemodules: set[str], crashgen: dict[str, bool | int | str]
-    ) -> None:
+        self, xsemodules: set[str], crashgen: dict[str, bool | int | str]
+    ) -> ReportFragment:
         """
-        Scans the achievements setting in the configuration for potential conflicts
-        and generates a report based on the findings. Checks whether the Achievements
-        mod or Unlimited Survival Mode are installed and whether the `Achievements`
-        parameter in the configuration is correctly set to avoid conflicts. Updates
-        the autoscan report accordingly.
+        Scan the achievements setting for potential conflicts.
 
         Args:
-            autoscan_report (list[str]): The list used to store the autoscan report,
-                updated with messages about the achievements settings.
-            xsemodules (set[str]): A set of currently loaded XSE plugin modules.
-            crashgen (dict[str, bool | int | str]): A dictionary containing the
-                configuration settings for the crash generator. Used to validate
-                the "Achievements" key.
+            xsemodules: A set of currently loaded XSE plugin modules.
+            crashgen: Configuration settings for the crash generator.
+
+        Returns:
+            ReportFragment containing the scan results.
         """
-        crashgen_achievements: bool | int | str | None = crashgen.get("Achievements")
+        lines = []
+        crashgen_achievements = crashgen.get("Achievements")
+
         if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
-            append_or_extend(
-                (
-                    "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {self.yamldata.crashgen_name}.\n\n-----\n",
-                ),
-                autoscan_report,
-            )
+            lines.extend([
+                "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n",
+                f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {self.yamldata.crashgen_name}.\n\n-----\n",
+            ])
         else:
-            append_or_extend(
-                f"✔️ Achievements parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n",
-                autoscan_report,
+            lines.append(
+                f"✔️ Achievements parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n"
             )
+
+        return ReportFragment.from_lines(lines)
 
     def scan_buffout_memorymanagement_settings(
         self,
-        autoscan_report: list[str],
         crashgen: dict[str, bool | int | str],
         has_xcell: bool,
         has_old_xcell: bool,
         has_baka_scrapheap: bool,
-    ) -> None:
+    ) -> ReportFragment:
         """
-        Analyzes and validates memory management settings for Buffout and other mods like X-Cell or Baka ScrapHeap. It generates a report
-        with success messages for correct configurations or warnings with proposed fixes for conflicting settings.
+        Analyze and validate memory management settings.
 
         Args:
-            autoscan_report (list[str]): A mutable list that collects messages detailing results of the scan process.
-            crashgen (dict[str, bool | int | str]): A dictionary of settings fetched from the CrashGen configuration file where
-                keys are configuration options and values can be of type bool, int, or str.
-            has_xcell (bool): Indicates if the X-Cell mod is installed.
-            has_old_xcell (bool): Indicates if an outdated version of the X-Cell mod is installed.
-            has_baka_scrapheap (bool): Indicates if the Baka ScrapHeap mod is installed.
+            crashgen: Configuration settings from CrashGen.
+            has_xcell: Whether X-Cell mod is installed.
+            has_old_xcell: Whether an outdated X-Cell is installed.
+            has_baka_scrapheap: Whether Baka ScrapHeap mod is installed.
 
-        Raises:
-            None
+        Returns:
+            ReportFragment containing the scan results.
         """
-        # Constants for messages and settings
+        lines = []
         separator = "\n\n-----\n"
         success_prefix = "✔️ "
         warning_prefix = "# ❌ CAUTION : "
         fix_prefix = " FIX: "
-        crashgen_name: str = self.yamldata.crashgen_name
+        crashgen_name = self.yamldata.crashgen_name
 
         def add_success_message(message: str) -> None:
-            """Add a success message to the report."""
-            append_or_extend(f"{success_prefix}{message}{separator}", autoscan_report)
+            """Add a success message to the lines."""
+            lines.append(f"{success_prefix}{message}{separator}")
 
         def add_warning_message(warning: str, fix: str) -> None:
-            """Add a warning message with fix instructions to the report."""
-            append_or_extend((f"{warning_prefix}{warning} # \n", f"{fix_prefix}{fix}{separator}"), autoscan_report)
+            """Add a warning message with fix instructions to the lines."""
+            lines.extend([f"{warning_prefix}{warning} # \n", f"{fix_prefix}{fix}{separator}"])
 
         # Check main MemoryManager setting
-        mem_manager_enabled: bool | int | str = crashgen.get("MemoryManager", False)
+        mem_manager_enabled = crashgen.get("MemoryManager", False)
+
         if has_old_xcell:
             add_warning_message(
                 "You have an old version of X-Cell installed, please update it to the latest version.",
                 "Download the latest version from here: https://www.nexusmods.com/fallout4/mods/84214?tab=files",
             )
+
         # Handle main memory manager configuration
         if mem_manager_enabled:
             if has_xcell:
@@ -141,7 +130,7 @@ class SettingsScanner:
 
         # Check additional memory settings for X-Cell compatibility
         if has_xcell:
-            memory_settings: dict[str, str] = {
+            memory_settings = {
                 "HavokMemorySystem": "Havok Memory System",
                 "BSTextureStreamerLocalHeap": "BSTextureStreamerLocalHeap",
                 "ScaleformAllocator": "Scaleform Allocator",
@@ -159,112 +148,92 @@ class SettingsScanner:
                         f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
                     )
 
+        return ReportFragment.from_lines(lines)
+
     def scan_archivelimit_setting(
-            self, autoscan_report: list[str], crashgen: dict[str, bool | int | str],
-            crashgen_version: "Version | None" = None
-    ) -> None:
+        self, crashgen: dict[str, bool | int | str], crashgen_version: "Version | None" = None
+    ) -> ReportFragment:
         """
-        Scans and validates the "ArchiveLimit" setting in the provided crash generation configuration.
-
-        This function checks if the "ArchiveLimit" parameter in the `crashgen` dictionary is set and takes appropriate action based
-        on its value. Warnings or positive confirmations are appended or extended to the `autoscan_report` list to notify users
-        about the configuration status of the "ArchiveLimit" setting. Only checks this setting for crashgen versions < 1.29.0.
-
-        Attributes:
-            autoscan_report (list[str]): List to store warnings or confirmations regarding the "ArchiveLimit" parameter.
-            crashgen (dict[str, bool | int | str]): Dictionary containing crash generation settings, including "ArchiveLimit".
-            crashgen_version (Version | None): The version of the crash generator. If None or >= 1.29.0, the check is skipped.
+        Scan and validate the "ArchiveLimit" setting.
 
         Args:
-            autoscan_report: A list storing messages generated as a result of scanning the "ArchiveLimit" setting.
-            crashgen: A dictionary that contains various settings for crash generation configurations.
-            crashgen_version: Optional Version object representing the crash generator version.
+            crashgen: Configuration settings from CrashGen.
+            crashgen_version: The version of the crash generator.
 
         Returns:
-            None
+            ReportFragment containing the scan results.
         """
         # Import here to avoid circular dependency
         from packaging.version import Version
 
         # Skip check for versions >= 1.29.0
         if crashgen_version and crashgen_version >= Version("1.29.0"):
-            return
+            return ReportFragment.empty()
 
-        crashgen_archivelimit: bool | int | str | None = crashgen.get("ArchiveLimit")
+        lines = []
+        crashgen_archivelimit = crashgen.get("ArchiveLimit")
+
         if crashgen_archivelimit:
-            append_or_extend(
-                (
-                    "# ❌ CAUTION : ArchiveLimit is set to TRUE, this setting is known to cause instability. # \n",
-                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ArchiveLimit to FALSE.\n\n-----\n",
-                ),
-                autoscan_report,
-            )
+            lines.extend([
+                "# ❌ CAUTION : ArchiveLimit is set to TRUE, this setting is known to cause instability. # \n",
+                f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ArchiveLimit to FALSE.\n\n-----\n",
+            ])
         else:
-            append_or_extend(
-                f"✔️ ArchiveLimit parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n",
-                autoscan_report,
+            lines.append(
+                f"✔️ ArchiveLimit parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n"
             )
+
+        return ReportFragment.from_lines(lines)
 
     def scan_buffout_looksmenu_setting(
-        self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], xsemodules: set[str]
-    ) -> None:
+        self, crashgen: dict[str, bool | int | str], xsemodules: set[str]
+    ) -> ReportFragment:
         """
-        Analyzes the Looksmenu setting in the provided crash generation configuration, ensuring proper compatibility settings.
+        Analyze the Looksmenu setting for proper compatibility.
 
-        Parameters:
-            crashgen (dict[str, bool | int | str]): A mapping containing the crash generation settings,
-                with keys representing configuration parameters and associated values.
-            autoscan_report (list[str]): A list used for appending messages generated by the scan process,
-                which can be error notifications, warnings, or confirmations.
-            xsemodules (set[str]): A set of module names that indicates the external script extender modules
-                available in the current configuration.
+        Args:
+            crashgen: Configuration settings from CrashGen.
+            xsemodules: A set of currently loaded XSE plugin modules.
 
         Returns:
-            None
-
+            ReportFragment containing the scan results.
         """
-        crashgen_f4ee: bool | int | str | None = crashgen.get("F4EE")
+        lines = []
+        crashgen_f4ee = crashgen.get("F4EE")
+
         if crashgen_f4ee is not None:
             if not crashgen_f4ee and "f4ee.dll" in xsemodules:
-                append_or_extend(
-                    (
-                        "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE # \n",
-                        f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu.\n\n-----\n",
-                    ),
-                    autoscan_report,
-                )
+                lines.extend([
+                    "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE # \n",
+                    f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu.\n\n-----\n",
+                ])
             else:
-                append_or_extend(
-                    f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n",
-                    autoscan_report,
+                lines.append(
+                    f"✔️ F4EE (Looks Menu) parameter is correctly configured in your {self.yamldata.crashgen_name} settings! \n\n-----\n"
                 )
 
-    def check_disabled_settings(self, crashgen: dict[str, bool | int | str], autoscan_report: list[str], crashgen_ignore: set[str]) -> None:
+        return ReportFragment.from_lines(lines)
+
+    def check_disabled_settings(
+        self, crashgen: dict[str, bool | int | str], crashgen_ignore: set[str]
+    ) -> ReportFragment:
         """
-        Check disabled settings in crash generation configuration and log notices.
+        Check disabled settings in crash generation configuration.
 
-        Examines the provided crash generation settings (`crashgen`) to identify any
-        disabled settings that are not present in the `crashgen_ignore` set. If such
-        settings are found, it appends or extends the `autoscan_report` list with
-        appropriately formatted notice messages.
-
-        Parameters:
-            crashgen: dict[str, bool | int | str]
-                A dictionary containing crash generation settings, where the key is
-                the setting name and the value represents its state or value.
-            autoscan_report: list[str]
-                A list to which any generated notice messages will be appended.
-            crashgen_ignore: set[str]
-                A set of setting names that, even if found disabled in `crashgen`,
-                should be ignored and no notice should be logged for them.
+        Args:
+            crashgen: Configuration settings from CrashGen.
+            crashgen_ignore: Settings to ignore even if disabled.
 
         Returns:
-            None
+            ReportFragment containing any notices about disabled settings.
         """
+        lines = []
+
         if crashgen:
             for setting_name, setting_value in crashgen.items():
                 if setting_value is False and setting_name not in crashgen_ignore:
-                    append_or_extend(
-                        f"* NOTICE : {setting_name} is disabled in your {self.yamldata.crashgen_name} settings, is this intentional? * \n\n-----\n",
-                        autoscan_report,
+                    lines.append(
+                        f"* NOTICE : {setting_name} is disabled in your {self.yamldata.crashgen_name} settings, is this intentional? * \n\n-----\n"
                     )
+
+        return ReportFragment.from_lines(lines)

@@ -26,6 +26,15 @@ from PySide6.QtWidgets import (
 
 from ClassicLib.Logger import logger
 
+# Pre-compiled regex patterns for performance optimization
+_FOUND_SECTION_PATTERN = re.compile(
+    r'(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)'
+)
+_ERROR_PATTERN = re.compile(r'\[!?\s*ERROR\s*\]([^\n]*)', re.IGNORECASE)
+_WARNING_PATTERN = re.compile(r'\[!?\s*WARNING\s*\]([^\n]*)', re.IGNORECASE)
+_SOLVED_PATTERN = re.compile(r'\[!?\s*SOLVED\s*\]([^\n]*)', re.IGNORECASE)
+_ISSUE_LIST_PATTERN = re.compile(r'^[-*]\s+.+', re.MULTILINE)
+
 
 class ReportListWidget(QListWidget):
     """
@@ -421,49 +430,17 @@ class MarkdownViewer(QTextBrowser):
         processed = markdown
 
         # Find [!] FOUND sections and wrap multiline content in code blocks
-        import re
-
         def wrap_multiline_content(match):
             header = match.group(1)
             content = match.group(2).rstrip()  # Remove trailing whitespace/newlines
             # Wrap the content in a code block to preserve formatting
             return f"{header}\n```\n{content}\n```\n"
 
-        # Match [!] FOUND : [XX] followed by multiline content that starts with spaces
-        # Stop at the first completely empty line or non-indented line
-        # noinspection RegExpRedundantEscape
-        processed = re.sub(
-            r'(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)',
-            wrap_multiline_content,
-            processed
-        )
-
-        # Highlight error messages
-        # noinspection RegExpRedundantEscape
-        processed = re.sub(
-            r'\[!?\s*ERROR\s*\]([^\n]*)',
-            r'<span class="error">[ERROR]\1</span>',
-            processed,
-            flags=re.IGNORECASE
-        )
-
-        # Highlight warnings
-        # noinspection RegExpRedundantEscape
-        processed = re.sub(
-            r'\[!?\s*WARNING\s*\]([^\n]*)',
-            r'<span class="warning">[WARNING]\1</span>',
-            processed,
-            flags=re.IGNORECASE
-        )
-
-        # Highlight success messages
-        # noinspection RegExpRedundantEscape
-        processed = re.sub(
-            r'\[!?\s*SOLVED\s*\]([^\n]*)',
-            r'<span class="success">[SOLVED]\1</span>',
-            processed,
-            flags=re.IGNORECASE
-        )
+        # Use pre-compiled regex patterns for performance
+        processed = _FOUND_SECTION_PATTERN.sub(wrap_multiline_content, processed)
+        processed = _ERROR_PATTERN.sub(r'<span class="error">[ERROR]\1</span>', processed)
+        processed = _WARNING_PATTERN.sub(r'<span class="warning">[WARNING]\1</span>', processed)
+        processed = _SOLVED_PATTERN.sub(r'<span class="success">[SOLVED]\1</span>', processed)
 
         return processed
 
@@ -613,12 +590,12 @@ class ReportMetadataWidget(QGroupBox):
         Returns:
             Issue count string.
         """
-        # Count various issue indicators
-        errors = len(re.findall(r'\[!?\s*ERROR\s*\]', content, re.IGNORECASE))
-        warnings = len(re.findall(r'\[!?\s*WARNING\s*\]', content, re.IGNORECASE))
+        # Count various issue indicators using pre-compiled patterns
+        errors = len(_ERROR_PATTERN.findall(content))
+        warnings = len(_WARNING_PATTERN.findall(content))
 
         # Look for issue lists
-        issues = len(re.findall(r'^[-*]\s+.+', content, re.MULTILINE))
+        issues = len(_ISSUE_LIST_PATTERN.findall(content))
 
         if errors > 0:
             return f"{errors} errors, {warnings} warnings"

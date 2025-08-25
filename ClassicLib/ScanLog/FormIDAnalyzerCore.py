@@ -12,6 +12,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
 import regex as re
+from ClassicLib.AsyncBridge import run_async
 
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
 from ClassicLib.ScanLog.Util import get_entry
@@ -103,7 +104,7 @@ class FormIDAnalyzerCore:
 
         return formids_matches
 
-    async def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
+    async def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
         """
         Async-first implementation for FormID matching with optional concurrent database lookups.
 
@@ -114,12 +115,16 @@ class FormIDAnalyzerCore:
         Args:
             formids_matches: List of FormID strings extracted from the crash log
             crashlog_plugins: Dictionary mapping plugin filenames to plugin IDs
-            autoscan_report: List to append analysis results to
-        """
-        if not formids_matches:
-            append_or_extend("* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n", autoscan_report)
-            return
 
+        Returns:
+            ReportFragment containing the FormID analysis results
+        """
+        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+
+        if not formids_matches:
+            return ReportFragment.from_lines(["* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n"])
+
+        lines = []
         formids_found: dict[str, int] = dict(Counter(sorted(formids_matches)))
 
         # Prepare all lookup tasks
@@ -143,32 +148,31 @@ class FormIDAnalyzerCore:
         # Execute database lookups
         if self.show_formid_values and self.formid_db_exists and self.db_pool and lookup_tasks:
             # Use async database pool for concurrent lookups
-            await self._perform_async_lookups(lookup_tasks, autoscan_report)
+            await self._perform_async_lookups(lookup_tasks, lines)
         elif self.show_formid_values and self.formid_db_exists and lookup_tasks:
             # Fallback to sync database lookups
-            await self._perform_sync_lookups(lookup_tasks, autoscan_report)
+            await self._perform_sync_lookups(lookup_tasks, lines)
         else:
             # No database lookups needed
             for formid_full, _formid_suffix, plugin, count in lookup_tasks:
-                append_or_extend(f"- {formid_full} | [{plugin}] | {count}\n", autoscan_report)
+                lines.append(f"- {formid_full} | [{plugin}] | {count}\n")
 
         # Add footer information
-        append_or_extend(
-            (
-                "\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
-                f"These Form IDs were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n",
-                "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n",
-            ),
-            autoscan_report,
-        )
+        lines.extend([
+            "\n[Last number counts how many times each Form ID shows up in the crash log.]\n",
+            f"These Form IDs were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n",
+            "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n",
+        ])
 
-    async def _perform_async_lookups(self, lookup_tasks: list[tuple[str, str, str, int]], autoscan_report: list[str]) -> None:
+        return ReportFragment.from_lines(lines)
+
+    async def _perform_async_lookups(self, lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
         """
         Perform concurrent database lookups using async database pool.
 
         Args:
             lookup_tasks: List of tuples containing (formid_full, formid_suffix, plugin, count)
-            autoscan_report: List to append results to
+            lines: List to append results to
         """
 
         async def lookup_and_format(full_formid: str, formid: str, plugin_name: str, formid_count: int) -> str:
@@ -187,11 +191,10 @@ class FormIDAnalyzerCore:
         results = await asyncio.gather(*lookup_coroutines)
 
         # Append all results
-        for result in results:
-            append_or_extend(result, autoscan_report)
+        lines.extend(results)
 
     @staticmethod
-    async def _perform_sync_lookups(lookup_tasks: list[tuple[str, str, str, int]], autoscan_report: list[str]) -> None:
+    async def _perform_sync_lookups(lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
         """
         Perform synchronous database lookups wrapped in async.
 
@@ -200,15 +203,15 @@ class FormIDAnalyzerCore:
 
         Args:
             lookup_tasks: List of tuples containing (formid_full, formid_suffix, plugin, count)
-            autoscan_report: List to append results to
+            lines: List to append results to
         """
         for formid_full, formid_suffix, plugin, count in lookup_tasks:
             # Use cached sync database lookup to avoid repeated queries
             report = await asyncio.to_thread(_cached_formid_lookup, formid_suffix, plugin)
             if report:
-                append_or_extend(f"- {formid_full} | [{plugin}] | {report} | {count}\n", autoscan_report)
+                lines.append(f"- {formid_full} | [{plugin}] | {report} | {count}\n")
             else:
-                append_or_extend(f"- {formid_full} | [{plugin}] | {count}\n", autoscan_report)
+                lines.append(f"- {formid_full} | [{plugin}] | {count}\n")
 
     async def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
         """
@@ -231,13 +234,16 @@ class FormIDAnalyzerCore:
         return await asyncio.to_thread(_cached_formid_lookup, formid, plugin)
 
     # Synchronous wrapper methods for backwards compatibility
-    def formid_match_sync(self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
+    def formid_match_sync(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
         """
         Synchronous wrapper for formid_match.
 
         This method provides backwards compatibility for sync callers.
+
+        Returns:
+            ReportFragment containing the FormID analysis results
         """
-        asyncio.run(self.formid_match(formids_matches, crashlog_plugins, autoscan_report))
+        return run_async(self.formid_match(formids_matches, crashlog_plugins))
 
     def lookup_formid_value_sync(self, formid: str, plugin: str) -> str | None:
         """
@@ -245,4 +251,4 @@ class FormIDAnalyzerCore:
 
         This method provides backwards compatibility for sync callers.
         """
-        return asyncio.run(self.lookup_formid_value(formid, plugin))
+        return run_async(self.lookup_formid_value(formid, plugin))

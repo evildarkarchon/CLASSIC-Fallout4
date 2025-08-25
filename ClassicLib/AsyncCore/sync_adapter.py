@@ -7,6 +7,8 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar
 
+from ClassicLib.AsyncBridge import run_async
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
@@ -71,7 +73,7 @@ class SyncAdapter:
     def _run_async(self, coro: Any) -> Any:
         """Run async coroutine in sync context
 
-        Handles existing event loops gracefully.
+        Uses AsyncBridge for efficient sync-to-async execution.
 
         Args:
             coro: Coroutine to run
@@ -79,20 +81,7 @@ class SyncAdapter:
         Returns:
             Result of coroutine
         """
-        try:
-            # Check if we're already in an async context
-            loop = asyncio.get_running_loop()
-            # We're in an async context, this shouldn't happen for sync adapter
-            logger.warning("SyncAdapter called from async context, consider using async version directly")
-            # Create a new event loop in a thread to avoid conflicts
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(asyncio.run, coro)
-                return future.result()
-        except RuntimeError:
-            # No event loop, safe to run normally
-            return asyncio.run(coro)
+        return run_async(coro)
 
     def __getattr__(self, name: str) -> Any:
         """Delegate attribute access to async instance for non-methods"""
@@ -152,17 +141,8 @@ def create_sync_adapter(async_class: type[T], *args, **kwargs) -> Any:
             return sync_wrapper
 
         def _run_async(self, coro: Any) -> Any:
-            """Run async coroutine in sync context"""
-            try:
-                loop = asyncio.get_running_loop()
-                # In async context, use thread executor
-                import concurrent.futures
-
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(asyncio.run, coro)
-                    return future.result()
-            except RuntimeError:
-                return asyncio.run(coro)
+            """Run async coroutine in sync context using AsyncBridge"""
+            return run_async(coro)
 
         def __getattr__(self, name: str) -> Any:
             """Delegate to async instance"""
@@ -217,16 +197,7 @@ def async_to_sync_method(async_func: Callable) -> Callable:
 
     @wraps(async_func)
     def sync_wrapper(*args, **kwargs):
-        try:
-            loop = asyncio.get_running_loop()
-            # In async context, use thread executor
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(asyncio.run, async_func(*args, **kwargs))
-                return future.result()
-        except RuntimeError:
-            return asyncio.run(async_func(*args, **kwargs))
+        return run_async(async_func(*args, **kwargs))
 
     return sync_wrapper
 
@@ -274,18 +245,8 @@ class BoundHybridMethod:
         return await self.async_func(self.instance, *args, **kwargs)
 
     def sync(self, *args, **kwargs):
-        """Sync call"""
-        try:
-            loop = asyncio.get_running_loop()
-            # In async context, use thread executor
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                coro = self.async_func(self.instance, *args, **kwargs)
-                future = executor.submit(asyncio.run, coro)
-                return future.result()
-        except RuntimeError:
-            return asyncio.run(self.async_func(self.instance, *args, **kwargs))
+        """Sync call using AsyncBridge"""
+        return run_async(self.async_func(self.instance, *args, **kwargs))
 
 
 def create_sync_wrapper(async_func: Callable, preserve_annotations: bool = True) -> Callable:
@@ -308,17 +269,7 @@ def create_sync_wrapper(async_func: Callable, preserve_annotations: bool = True)
 
     @wraps(async_func)
     def sync_wrapper(*args, **kwargs):
-        try:
-            loop = asyncio.get_running_loop()
-            # In async context, use thread executor to avoid conflicts
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(asyncio.run, async_func(*args, **kwargs))
-                return future.result()
-        except RuntimeError:
-            # No event loop, safe to run normally
-            return asyncio.run(async_func(*args, **kwargs))
+        return run_async(async_func(*args, **kwargs))
 
     if preserve_annotations:
         # Copy annotations from async function
@@ -357,7 +308,7 @@ class AsyncCompatibilityMixin:
                 def make_sync_method(async_method):
                     @wraps(async_method)
                     def sync_method(self, *args, **kwargs):
-                        return asyncio.run(async_method(self, *args, **kwargs))
+                        return run_async(async_method(self, *args, **kwargs))
 
                     return sync_method
 

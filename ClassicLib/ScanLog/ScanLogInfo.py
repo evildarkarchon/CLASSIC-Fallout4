@@ -28,6 +28,7 @@ class ThreadSafeLogCache:
             # Use FileIOCore for async loading
             import asyncio
 
+            from ClassicLib.AsyncBridge import run_async
             from ClassicLib.FileIOCore import FileIOCore
 
             async def load_all_logs() -> dict[str, bytes]:
@@ -41,7 +42,7 @@ class ThreadSafeLogCache:
                         msg_error(f"Error reading {file}: {e}")
                 return results
 
-            self.cache = asyncio.run(load_all_logs())
+            self.cache = run_async(load_all_logs())
             from ClassicLib.Logger import logger
 
             logger.debug(f"Loaded {len(self.cache)} crash logs using FileIOCore")

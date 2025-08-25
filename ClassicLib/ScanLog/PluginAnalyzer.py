@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING, Any
 import regex as re
 from packaging.version import Version
 
+from ClassicLib.ScanLog.ReportFragment import ReportFragment
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
@@ -40,29 +40,20 @@ class PluginAnalyzer:
         self.ignore_plugins_list: set[str] = {item.lower() for item in yamldata.ignore_list} if yamldata.ignore_list else set()
 
     @staticmethod
-    def loadorder_scan_loadorder_txt(autoscan_report: list[str]) -> tuple[dict[str, str], bool]:
+    def loadorder_scan_loadorder_txt() -> tuple[dict[str, str], bool, ReportFragment]:
         """
-        Loads and processes the "loadorder.txt" file from the main "CLASSIC" folder, if available. This
-        method reads the file to determine the list of plugins specified for use. It returns a dictionary
-        of plugin names with their origin marker, as well as whether any plugins were successfully loaded.
-        If any file access errors occur, these are logged into the provided autoscan_report list.
-
-        Arguments:
-            autoscan_report (list[str]): A list to log messages or errors related to the scanning process.
+        Loads and processes the "loadorder.txt" file from the main "CLASSIC" folder, if available.
 
         Returns:
-            tuple[dict[str, str], bool]: A dictionary of plugin names mapped to their origin markers
-                                         and a boolean indicating whether any plugins were loaded.
+            Tuple of (dict of plugin names to origin markers, bool indicating if plugins loaded, ReportFragment).
         """
-        loadorder_messages = (
-            "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
-            "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
-            "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
-        )
+        lines = []
         loadorder_origin = "LO"  # Origin marker for plugins from loadorder.txt
         loadorder_path = Path("loadorder.txt")
 
-        append_or_extend(loadorder_messages, autoscan_report)
+        lines.append("* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n")
+        lines.append("CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n")
+        lines.append("[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n")
 
         loadorder_plugins: dict = {}
 
@@ -78,13 +69,12 @@ class PluginAnalyzer:
                         loadorder_plugins[plugin_entry] = loadorder_origin
         except OSError as e:
             # Log file access error but continue execution
-            error_msg: str = f"Error reading loadorder.txt: {e!s}"
-            append_or_extend(error_msg, autoscan_report)
+            lines.append(f"Error reading loadorder.txt: {e!s}")
 
         # Check if any plugins were loaded
         plugins_loaded = bool(loadorder_plugins)
 
-        return loadorder_plugins, plugins_loaded
+        return loadorder_plugins, plugins_loaded, ReportFragment.from_lines(lines)
 
     def loadorder_scan_log(
         self, segment_plugins: list[str], game_version: Version, version_current: Version
@@ -163,24 +153,20 @@ class PluginAnalyzer:
 
         return plugin_map, plugin_limit_triggered, limit_check_disabled
 
-    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str], autoscan_report: list[str]) -> None:
+    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> ReportFragment:
         """
-        Analyzes crash logs for relevant plugin references and updates the autoscan report with
-        any matches found. It optimizes the matching process for speed and accuracy by ignoring
-        irrelevant lines and filtering out plugins present in an ignore list.
+        Analyzes crash logs for relevant plugin references.
 
-        Parameters:
-            segment_callstack_lower (list[str]): A list of lowercased strings representing
-                the crash stack of a segment.
-            crashlog_plugins_lower (set[str]): A set of lowercased plugin names derived from
-                the crash log for matching purposes.
-            autoscan_report (list[str]): A mutable list to which the results of the analysis
-                will be appended.
+        Args:
+            segment_callstack_lower: A list of lowercased strings representing the crash stack.
+            crashlog_plugins_lower: A set of lowercased plugin names from the crash log.
 
         Returns:
-            None
+            ReportFragment containing plugin match results.
         """
         from collections import Counter
+
+        lines = []
 
         # Pre-filter call stack lines that won't match
         relevant_lines: list[str] = [line for line in segment_callstack_lower if "modified by:" not in line]
@@ -199,20 +185,17 @@ class PluginAnalyzer:
                     plugins_matches[plugin] += 1
 
         if plugins_matches:
-            append_or_extend("The following PLUGINS were found in the CRASH STACK:\n", autoscan_report)
+            lines.append("The following PLUGINS were found in the CRASH STACK:\n")
             # Sort by count (descending) then by name for consistent output
             for plugin, count in sorted(plugins_matches.items(), key=lambda x: (-x[1], x[0])):
-                append_or_extend(f"- {plugin} | {count}\n", autoscan_report)
-            append_or_extend(
-                (
-                    "\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n",
-                    f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n",
-                    "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n",
-                ),
-                autoscan_report,
-            )
+                lines.append(f"- {plugin} | {count}\n")
+            lines.append("\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n")
+            lines.append(f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n")
+            lines.append("You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n")
         else:
-            append_or_extend("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n", autoscan_report)
+            lines.append("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n")
+
+        return ReportFragment.from_lines(lines)
 
     def filter_ignored_plugins(self, crashlog_plugins: dict[str, str]) -> dict[str, str]:
         """

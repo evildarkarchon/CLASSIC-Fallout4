@@ -299,6 +299,8 @@ class TestAsyncFormIDAnalyzer:
 
     async def test_async_formid_matching(self, mock_yamldata: MagicMock) -> None:
         """Test async FormID matching with database lookups."""
+        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         mock_pool.get_entry.return_value = "Test Entry"
 
@@ -306,17 +308,20 @@ class TestAsyncFormIDAnalyzer:
 
         formids_matches: list[str] = ["Form ID: 12345678", "Form ID: 87654321"]
         crashlog_plugins: dict[str, str] = {"TestPlugin.esp": "12", "AnotherPlugin.esp": "87"}
-        autoscan_report: list[str] = []
 
-        await analyzer.formid_match_async(formids_matches, crashlog_plugins, autoscan_report)
+        # Use the new formid_match method that returns a ReportFragment
+        result: ReportFragment = await analyzer.formid_match(formids_matches, crashlog_plugins)
 
         # Verify database queries were made
         assert mock_pool.get_entry.call_count == 2
 
-        # Verify report was populated (now includes footer information)
-        assert len(autoscan_report) >= 2  # At least 2 FormID entries plus footer
-        assert "TestPlugin.esp" in autoscan_report[0]
-        assert "AnotherPlugin.esp" in autoscan_report[1]
+        # Verify report fragment was populated
+        assert result.has_content
+        result_list = result.to_list()
+        assert len(result_list) >= 2  # At least 2 FormID entries plus footer
+        result_str = "".join(result_list)
+        assert "TestPlugin.esp" in result_str
+        assert "AnotherPlugin.esp" in result_str
 
 
 @pytest.mark.integration

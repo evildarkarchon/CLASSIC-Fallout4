@@ -130,12 +130,13 @@ class BackupManager:
 
         # Get lists of game files and existing backup files
         game_files: list[Path] = list(Path(source_dir).glob("*.*"))
-        backup_files: list[str] = [file.name for file in backup_path.glob("*.*")]
+        backup_files_set: set[str] = {file.name for file in backup_path.glob("*.*")}
+        backup_list_set: set[str] = set(backup_list)
 
         # Back up files that don't already exist in backup
         backed_up_count = 0
         for file in game_files:
-            if file.name not in backup_files and any(file.name in item for item in backup_list):
+            if file.name not in backup_files_set and file.name in backup_list_set:
                 destination_file: Path = backup_path / file.name
                 shutil.copy2(file, destination_file)
                 backed_up_count += 1

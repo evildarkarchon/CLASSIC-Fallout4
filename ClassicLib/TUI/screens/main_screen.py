@@ -178,7 +178,8 @@ class MainScreen(Screen):
             return True
 
         # Check if running in common modern terminals
-        if any(t in term for t in ["xterm", "vt100", "linux", "screen", "tmux"]):
+        from ClassicLib.TUI.constants import UNICODE_TERMINAL_TYPES
+        if any(t in term for t in UNICODE_TERMINAL_TYPES):
             return True
 
         # Windows Console Host

@@ -24,6 +24,14 @@ from packaging.version import Version
 from ClassicLib import Constants, GlobalRegistry, msg_error, msg_info
 from ClassicLib.Logger import logger
 
+# Pre-compiled regex patterns for version detection performance optimization
+_VERSION_PATTERNS = [
+    re.compile(rb"FileVersion[\x00\s]*(\d+\.\d+\.\d+\.\d+)"),
+    re.compile(rb"ProductVersion[\x00\s]*(\d+\.\d+\.\d+\.\d+)"),
+    re.compile(rb"(\d+\.\d+\.\d+\.\d+)[\x00\s]*FileVersion"),
+    re.compile(rb"(\d+\.\d+\.\d+\.\d+)[\x00\s]*ProductVersion"),
+]
+
 
 def normalize_list(items: list[str]) -> list[str]:
     """
@@ -265,14 +273,6 @@ def _get_version_fallback(exe_path: Path) -> Version:
     This is less reliable but works without additional dependencies.
     """
     try:
-        # Common version patterns to search for
-        version_patterns = [
-            rb"FileVersion[\x00\s]*(\d+\.\d+\.\d+\.\d+)",
-            rb"ProductVersion[\x00\s]*(\d+\.\d+\.\d+\.\d+)",
-            rb"(\d+\.\d+\.\d+\.\d+)[\x00\s]*FileVersion",
-            rb"(\d+\.\d+\.\d+\.\d+)[\x00\s]*ProductVersion",
-        ]
-
         # Read file in chunks to avoid loading entire file into memory
         chunk_size = 1024 * 1024  # 1MB chunks
         overlap = 256  # Overlap to catch versions split between chunks
@@ -288,9 +288,9 @@ def _get_version_fallback(exe_path: Path) -> Version:
                 # Combine with overlap from previous chunk
                 search_data = previous_chunk[-overlap:] + chunk if previous_chunk else chunk
 
-                # Search for version patterns
-                for pattern in version_patterns:
-                    matches = re.findall(pattern, search_data)
+                # Search for version patterns using pre-compiled patterns
+                for compiled_pattern in _VERSION_PATTERNS:
+                    matches = compiled_pattern.findall(search_data)
                     for match in matches:
                         try:
                             version_str = match.decode("utf-8", errors="ignore")

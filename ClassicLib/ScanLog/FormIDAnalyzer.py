@@ -11,6 +11,7 @@ New code should use FormIDAnalyzerCore directly for async operations.
 import asyncio
 from typing import TYPE_CHECKING
 
+from ClassicLib.AsyncBridge import run_async
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 if TYPE_CHECKING:
@@ -55,21 +56,24 @@ class FormIDAnalyzer:
         # Delegate to core (this method is already synchronous in core)
         return self._core.extract_formids(segment_callstack)
 
-    def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str], autoscan_report: list[str]) -> None:
+    def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
         """
         Sync adapter for FormID matching.
 
-        Processes and appends reports based on Form ID matches retrieved from crash logs.
+        Processes and returns a report fragment based on Form ID matches retrieved from crash logs.
         This method analyzes Form ID matches, compares them with plugins listed in the crash log,
         and optionally retrieves additional data from a Form ID database.
 
         Args:
             formids_matches: A list of Form ID matches extracted from the crash log.
             crashlog_plugins: A dictionary mapping plugin filenames to plugin IDs found in the crash log.
-            autoscan_report: A mutable list to which the generated or default report will be appended.
+
+        Returns:
+            ReportFragment containing the FormID analysis results.
         """
-        # Run async method synchronously
-        asyncio.run(self._core.formid_match(formids_matches, crashlog_plugins, autoscan_report))
+        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        # Run async method using AsyncBridge
+        return run_async(self._core.formid_match(formids_matches, crashlog_plugins))
 
     def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
         """
@@ -86,5 +90,5 @@ class FormIDAnalyzer:
             found in the database, or None if the database does not exist or the
             value is not found.
         """
-        # Run async method synchronously
-        return asyncio.run(self._core.lookup_formid_value(formid, plugin))
+        # Run async method using AsyncBridge
+        return run_async(self._core.lookup_formid_value(formid, plugin))

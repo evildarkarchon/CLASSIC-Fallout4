@@ -6,6 +6,7 @@ consolidating functionality from various modules into a single async-first desig
 """
 
 import asyncio
+from functools import lru_cache
 from pathlib import Path
 
 try:
@@ -32,6 +33,28 @@ except ImportError:
     ASYNC_ENCODING_AVAILABLE = False
 
 
+# ==========================================
+# Path Conversion Optimization
+# ==========================================
+
+
+@lru_cache(maxsize=512)
+def _cached_path_conversion(path_str: str) -> Path:
+    """
+    Cached conversion of string paths to Path objects.
+
+    The LRU cache stores up to 512 most recently used paths,
+    significantly reducing overhead for frequently accessed files.
+
+    Args:
+        path_str: String representation of the path
+
+    Returns:
+        Path: Cached Path object
+    """
+    return Path(path_str)
+
+
 class FileIOCore:
     """Async-first core implementation for all file I/O operations."""
 
@@ -45,6 +68,24 @@ class FileIOCore:
         """
         self.default_encoding = encoding
         self.default_errors = errors
+
+    @staticmethod
+    def _ensure_path(path: Path | str) -> Path:
+        """
+        Efficiently convert string to Path object with caching.
+
+        This method provides a single point for path conversion with LRU caching
+        for string paths, significantly reducing overhead for frequently accessed files.
+
+        Args:
+            path: Path object or string representation
+
+        Returns:
+            Path: Path object (cached if originally a string)
+        """
+        if isinstance(path, Path):
+            return path
+        return _cached_path_conversion(str(path))
 
     # ==========================================
     # Core Read Operations
@@ -64,8 +105,7 @@ class FileIOCore:
             FileNotFoundError: If file doesn't exist
             PermissionError: If file cannot be read
         """
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         # Use encoding detection if available
         if ASYNC_ENCODING_AVAILABLE:
@@ -92,8 +132,7 @@ class FileIOCore:
             FileNotFoundError: If file doesn't exist
             PermissionError: If file cannot be read
         """
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         # Use encoding detection if available
         if ASYNC_ENCODING_AVAILABLE:
@@ -123,8 +162,7 @@ class FileIOCore:
             FileNotFoundError: If file doesn't exist
             PermissionError: If file cannot be read
         """
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         if AIOFILES_AVAILABLE:
             async with aiofiles.open(path, mode="rb") as f:
@@ -149,8 +187,7 @@ class FileIOCore:
         Raises:
             PermissionError: If file cannot be written
         """
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         # Ensure parent directory exists
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -190,8 +227,7 @@ class FileIOCore:
         Raises:
             PermissionError: If file cannot be written
         """
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         # Ensure parent directory exists
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -215,8 +251,7 @@ class FileIOCore:
         Raises:
             PermissionError: If file cannot be written
         """
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         # Ensure parent directory exists
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -229,7 +264,7 @@ class FileIOCore:
             loop = asyncio.get_event_loop()
 
             def append_sync() -> None:
-                with open(path, "a", encoding=self.default_encoding, errors=self.default_errors) as f:
+                with path.open("a", encoding=self.default_encoding, errors=self.default_errors) as f:
                     f.write(content)
 
             await loop.run_in_executor(None, append_sync)
@@ -263,8 +298,7 @@ class FileIOCore:
             report_lines: Lines of the report
         """
         # Generate report file path
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         report_path = path.with_suffix(".md")
         content = "".join(report_lines)  # Assume lines already have newlines
@@ -287,15 +321,15 @@ class FileIOCore:
             dict: Mapping of file names to contents
         """
 
-        async def read_single(path):
-            if not isinstance(path, Path):
-                path = Path(path)
+        async def read_single(path: Path | str) -> tuple[str, str]:
+            path = self._ensure_path(path)
             try:
                 content = await self.read_file(path)
-                return path.name, content
             except Exception as e:
                 logger.error(f"Error reading {path}: {e}")
                 return path.name, ""
+            else:
+                return path.name, content
 
         tasks = [read_single(path) for path in paths]
         results = await asyncio.gather(*tasks)
@@ -309,7 +343,7 @@ class FileIOCore:
             files: Dictionary mapping paths to contents
         """
 
-        async def write_single(path, content) -> None:
+        async def write_single(path: Path | str, content: str) -> None:
             try:
                 await self.write_file(path, content)
             except Exception as e:
@@ -332,8 +366,7 @@ class FileIOCore:
         Returns:
             bool: True if file exists
         """
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, path.exists)
@@ -348,15 +381,15 @@ class FileIOCore:
         Returns:
             int: File size in bytes, or -1 if file doesn't exist
         """
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = self._ensure_path(path)
 
         try:
             loop = asyncio.get_event_loop()
             stat = await loop.run_in_executor(None, path.stat)
-            return stat.st_size
         except (OSError, FileNotFoundError):
             return -1
+        else:
+            return stat.st_size
 
 
 # ==========================================
@@ -371,8 +404,7 @@ def read_file_sync(path: Path | str) -> str:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file reading
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         return path.read_text(encoding="utf-8", errors="ignore")
     except RuntimeError:
         # No event loop, use AsyncBridge for efficient execution
@@ -387,8 +419,7 @@ def read_lines_sync(path: Path | str) -> list[str]:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file reading
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         return path.read_text(encoding="utf-8", errors="ignore").splitlines()
     except RuntimeError:
         # No event loop, use AsyncBridge for efficient execution
@@ -403,8 +434,7 @@ def read_bytes_sync(path: Path | str) -> bytes:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file reading
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         return path.read_bytes()
     except RuntimeError:
         # No event loop, use AsyncBridge for efficient execution
@@ -419,8 +449,7 @@ def write_file_sync(path: Path | str, content: str) -> None:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file writing
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8", errors="ignore")
     except RuntimeError:
@@ -436,8 +465,7 @@ def write_lines_sync(path: Path | str, lines: list[str]) -> None:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file writing
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         content = "\n".join(lines)
         if not content.endswith("\n"):
@@ -456,8 +484,7 @@ def write_bytes_sync(path: Path | str, content: bytes) -> None:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file writing
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(content)
     except RuntimeError:
@@ -473,17 +500,17 @@ def read_crash_log_sync(path: Path | str) -> list[str]:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file reading
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
         # Strip any trailing empty lines for consistency
         while lines and not lines[-1].strip():
             lines.pop()
-        return lines
     except RuntimeError:
         # No event loop, use AsyncBridge for efficient execution
         bridge = AsyncBridge.get_instance()
         return bridge.run_async(FileIOCore().read_crash_log(path))
+    else:
+        return lines
 
 
 def write_crash_report_sync(path: Path | str, report_lines: list[str]) -> None:
@@ -493,13 +520,13 @@ def write_crash_report_sync(path: Path | str, report_lines: list[str]) -> None:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file writing
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         report_path = path.with_suffix(".md")
         report_path.parent.mkdir(parents=True, exist_ok=True)
         content = "".join(report_lines)  # Assume lines already have newlines
         report_path.write_text(content, encoding="utf-8", errors="ignore")
         from ClassicLib.Logger import logger
+
         logger.info(f"Report written to: {report_path}")
     except RuntimeError:
         # No event loop, use AsyncBridge for efficient execution
@@ -514,10 +541,9 @@ def append_file_sync(path: Path | str, content: str) -> None:
         asyncio.get_running_loop()
         # We're in an async context, can't use asyncio.run
         # Fall back to sync file appending
-        if not isinstance(path, Path):
-            path = Path(path)
+        path = FileIOCore._ensure_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "a", encoding="utf-8", errors="ignore") as f:
+        with path.open("a", encoding="utf-8", errors="ignore") as f:
             f.write(content)
     except RuntimeError:
         # No event loop, use AsyncBridge for efficient execution

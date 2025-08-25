@@ -15,8 +15,10 @@ class InputValidator:
     # Maximum input length for general text fields
     MAX_INPUT_LENGTH = 1024
 
-    # Regex patterns for validation
+    # Pre-compiled regex patterns for performance optimization
     YAML_INJECTION_PATTERN = re.compile(r"[\r\n\x00-\x08\x0b\x0c\x0e-\x1f]")
+    WINDOWS_PATH_PATTERN = re.compile(r'[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*')
+    UNIX_PATH_PATTERN = re.compile(r"/(?:[^/\0]+/)*[^/\0]*")
 
     # Allowed base directories for path operations
     ALLOWED_BASE_DIRS = None  # Will be initialized on first use
@@ -164,14 +166,9 @@ class InputValidator:
         Returns:
             Sanitized message
         """
-        # Hide full system paths in error messages
-        import re
-
-        # Windows paths
-        message = re.sub(r'[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*', "[PATH]", message)
-
-        # Unix paths
-        message = re.sub(r"/(?:[^/\0]+/)*[^/\0]*", "[PATH]", message)
+        # Hide full system paths in error messages using pre-compiled patterns
+        message = cls.WINDOWS_PATH_PATTERN.sub("[PATH]", message)
+        message = cls.UNIX_PATH_PATTERN.sub("[PATH]", message)
 
         # Hide usernames
         if Path.home().name:

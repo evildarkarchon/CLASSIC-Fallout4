@@ -16,6 +16,13 @@ from pathlib import Path
 class TestIsolationChecker:
     """Check test files for isolation violations with context awareness."""
 
+    # Pattern constants optimized with sets for O(1) lookup performance
+    COMPARISON_OPERATORS: set[str] = {" == ", " != ", " is ", " is not "}
+    MOCK_PATTERNS: set[str] = {"@patch", "with patch", "@mock", "with mock"}
+    ASSERTION_PATTERNS: set[str] = {"assert", "==", "!=", "in", "not in"}
+    MOCK_PATH_PATTERNS: set[str] = {"@patch", "with patch", "mock_path"}
+    SAFE_TEST_PATTERNS: set[str] = {"monkeypatch", "tmp_path"}
+
     def __init__(self, verbose: bool = False):
         """Initialize the checker."""
         self.verbose = verbose
@@ -39,7 +46,7 @@ class TestIsolationChecker:
         # Check if it's in an assertion or comparison (likely checking mock args)
         if line.strip().startswith("assert "):
             return True
-        if any(op in line for op in [" == ", " != ", " is ", " is not "]):
+        if any(op in line for op in self.COMPARISON_OPERATORS):
             # Likely a comparison, not actual usage
             return True
 
@@ -55,7 +62,7 @@ class TestIsolationChecker:
 
         # Check previous lines for mock/patch context
         for prev_line in prev_lines[-3:]:  # Check last 3 lines
-            if any(pattern in prev_line for pattern in ["@patch", "with patch", "@mock", "with mock"]):
+            if any(pattern in prev_line for pattern in self.MOCK_PATTERNS):
                 return True
 
         # Check if we're in a function that's testing the YAML infrastructure itself
@@ -95,13 +102,13 @@ class TestIsolationChecker:
             return True
 
         # Check if it's in a string comparison or assertion
-        if any(pattern in line for pattern in ["assert", "==", "!=", "in", "not in"]):
+        if any(pattern in line for pattern in self.ASSERTION_PATTERNS):
             # Might be comparing paths, which is OK
             return True
 
         # Check if it's inside a mock/patch
         for prev_line in prev_lines[-3:]:
-            if any(pattern in prev_line for pattern in ["@patch", "with patch", "mock_path"]):
+            if any(pattern in prev_line for pattern in self.MOCK_PATH_PATTERNS):
                 return True
 
         return False
@@ -302,7 +309,7 @@ class TestIsolationChecker:
 
             # Check for os.chdir without monkeypatch
             if "os.chdir(" in line:
-                if not any(pattern in line for pattern in ["monkeypatch", "tmp_path"]):
+                if not any(pattern in line for pattern in self.SAFE_TEST_PATTERNS):
                     # Check previous lines for monkeypatch context
                     has_monkeypatch = any("monkeypatch" in prev for prev in prev_lines[-3:])
                     if not has_monkeypatch:

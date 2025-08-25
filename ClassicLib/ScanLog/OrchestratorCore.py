@@ -1,9 +1,8 @@
 """
-Async-first core implementation for scan orchestration.
+Fragment-based async-first core implementation for scan orchestration.
 
-This module provides the primary async implementation for crash log orchestration,
-consolidating the functionality of both ScanOrchestrator and AsyncScanOrchestrator
-into a single async-first design.
+This module provides the refactored async implementation for crash log orchestration,
+using immutable fragments throughout instead of mutable lists.
 """
 
 import asyncio
@@ -16,15 +15,17 @@ from packaging.version import Version
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, write_file_async
-from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandler
+from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from ClassicLib.ScanLog.Parser import extract_module_names, find_segments
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
-from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
-from ClassicLib.ScanLog.SettingsScanner import SettingsScanner
+from ClassicLib.ScanLog.ReportComposition import ConditionalSection, ReportComposer
+from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
+from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
 from ClassicLib.Util import crashgen_version_gen
 from ClassicLib.YamlSettingsCache import yaml_settings
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class OrchestratorCore:
-    """Async-first core implementation for crash log orchestration."""
+    """Fragment-based async-first core implementation for crash log orchestration."""
 
     def __init__(
         self,
@@ -59,14 +60,14 @@ class OrchestratorCore:
         self.show_formid_values = show_formid_values
         self.formid_db_exists = formid_db_exists
 
-        # Initialize all modules
+        # Initialize all modules (using refactored versions where available)
         self.plugin_analyzer = PluginAnalyzer(yamldata)
         self.formid_analyzer = FormIDAnalyzer(yamldata, show_formid_values or False, formid_db_exists)
         self.suspect_scanner = SuspectScanner(yamldata)
         self.record_scanner = RecordScanner(yamldata)
-        self.settings_scanner = SettingsScanner(yamldata)
-        self.report_generator = ReportGenerator(yamldata)
-        self.fcx_handler = FCXModeHandler(fcx_mode)
+        self.settings_scanner = SettingsScannerFragments(yamldata)
+        self.report_generator = ReportGeneratorFragments(yamldata)
+        self.fcx_handler = FCXModeHandlerFragments(fcx_mode)
 
         # Get game info
         self.game_root_name: str | None = yaml_settings(str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name")
@@ -82,8 +83,8 @@ class OrchestratorCore:
 
     async def __aenter__(self) -> "OrchestratorCore":
         """Async context manager entry."""
-        # Initialize asyncio.Lock (type: ignore for Pylance false positive)
-        self._state_lock = asyncio.Lock()  # type: ignore[attr-defined]
+        # Initialize asyncio.Lock
+        self._state_lock = asyncio.Lock()
 
         # Initialize database pool
         self._db_pool = AsyncDatabasePool()
@@ -102,7 +103,7 @@ class OrchestratorCore:
 
     async def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
         """
-        Async-first implementation for processing a crash log file.
+        Fragment-based async implementation for processing a crash log file.
 
         Args:
             crashlog_file: Path to the crash log file to be processed
@@ -110,19 +111,21 @@ class OrchestratorCore:
         Returns:
             Tuple containing:
             - Path of the crash log file
-            - Generated report as list of strings
+            - Generated report as list of strings (converted from fragments)
             - Boolean indicating if the scan failed
             - Counter with local statistics
         """
-        autoscan_report: list[str] = []
         trigger_scan_failed = False
         local_stats: Counter[str] = Counter(scanned=1, incomplete=0, failed=0)
 
-        # Read crash data (could be made async in the future)
+        # Read crash data
         crash_data: list[str] = self.crashlogs.read_log(crashlog_file.name)
 
+        # Create report composer
+        composer = ReportComposer()
+
         # Generate report header
-        self.report_generator.generate_header(crashlog_file.name, autoscan_report)
+        composer.add(self.report_generator.generate_header(crashlog_file.name))
 
         # Parse crash log segments
         (crashlog_gameversion, crashlog_crashgen, crashlog_mainerror, segments) = find_segments(
@@ -147,8 +150,8 @@ class OrchestratorCore:
             local_stats["failed"] += 1
             trigger_scan_failed = True
 
-        # Process crash log sections
-        await self._process_log_sections_async(
+        # Process crash log sections and compose fragments
+        section_fragments = await self._process_log_sections_async(
             crashlog_gameversion,
             crashlog_crashgen,
             crashlog_mainerror,
@@ -157,11 +160,15 @@ class OrchestratorCore:
             segment_callstack,
             segment_xsemodules,
             segment_plugins,
-            autoscan_report,
         )
 
+        composer.add(section_fragments)
+
         # Generate footer
-        self.report_generator.generate_footer(autoscan_report)
+        composer.add(self.report_generator.generate_footer())
+
+        # Convert final composed fragment to list
+        autoscan_report = composer.to_list()
 
         return crashlog_file, autoscan_report, trigger_scan_failed, local_stats
 
@@ -175,9 +182,10 @@ class OrchestratorCore:
         segment_callstack: list[str],
         segment_xsemodules: list[str],
         segment_plugins: list[str],
-        autoscan_report: list[str],
-    ) -> None:
-        """Process all sections of the crash log asynchronously."""
+    ) -> ReportFragment:
+        """Process all sections of the crash log asynchronously and return composed fragment."""
+        composer = ReportComposer()
+
         # Version checking
         game_version: Version = crashgen_version_gen(crashlog_gameversion)
         version_current: Version = crashgen_version_gen(crashlog_crashgen)
@@ -185,9 +193,9 @@ class OrchestratorCore:
         version_latest_vr: Version = crashgen_version_gen(self.yamldata.crashgen_latest_vr)
 
         # Generate error section
-        self.report_generator.generate_error_section(
-            crashlog_mainerror, crashlog_crashgen, version_current, version_latest, version_latest_vr, autoscan_report
-        )
+        composer.add(self.report_generator.generate_error_section(
+            crashlog_mainerror, crashlog_crashgen, version_current, version_latest, version_latest_vr
+        ))
 
         # Extract module names
         xsemodules: set[str] = extract_module_names(set(segment_xsemodules))
@@ -204,7 +212,7 @@ class OrchestratorCore:
 
         # Process plugins
         crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded = self._process_plugins(
-            segment_plugins, segment_callstack, game_version, version_current, autoscan_report
+            segment_plugins, segment_callstack, game_version, version_current
         )
 
         # Store for async FormID processing
@@ -212,21 +220,28 @@ class OrchestratorCore:
             self._last_plugins = crashlog_plugins.copy()
 
         # Run suspect scanning
-        self._run_suspect_scanning(crashlog_mainerror, segment_callstack, autoscan_report)
+        suspect_fragments = self._run_suspect_scanning(crashlog_mainerror, segment_callstack)
+        composer.add(suspect_fragments)
 
         # Check FCX mode and settings
-        self._check_fcx_and_settings(
+        fcx_and_settings_fragments = self._check_fcx_and_settings(
             xsemodules,
             crashgen,
-            autoscan_report,
             version_current,
         )
+        composer.add(fcx_and_settings_fragments)
 
         # Run mod detection with async FormID analysis if available
-        await self._run_mod_detection_async(crashlog_plugins, segment_callstack, trigger_plugins_loaded, crashlog_gpu_rival, autoscan_report)
+        mod_detection_fragments = await self._run_mod_detection_async(
+            crashlog_plugins, segment_callstack, trigger_plugins_loaded, crashlog_gpu_rival
+        )
+        composer.add(mod_detection_fragments)
 
-        # Scan for specific suspects
-        self._scan_specific_suspects(segment_callstack, autoscan_report)
+        # Scan for specific suspects (named records)
+        record_fragments = self._scan_specific_suspects(segment_callstack)
+        composer.add(record_fragments)
+
+        return composer.build()
 
     async def _run_mod_detection_async(
         self,
@@ -234,93 +249,204 @@ class OrchestratorCore:
         segment_callstack: list[str],
         trigger_plugins_loaded: bool,
         crashlog_gpu_rival: Literal["nvidia", "amd"] | None,
-        autoscan_report: list[str],
-    ) -> None:
-        """Run mod detection with async FormID analysis."""
+    ) -> ReportFragment:
+        """Run mod detection with async FormID analysis and return composed fragments."""
         from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
-        from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
+
+        composer = ReportComposer()
 
         # Run mod detection based on plugins loaded status
         if trigger_plugins_loaded:
-            # Check for conflicting mods (conditional header)
-            initial_len = len(autoscan_report)
-            if detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins, autoscan_report):
-                # Add header at the position before the content was added
-                header_lines = []
-                ReportGenerator.generate_mod_check_header("CONFLICT (TOGETHER)", header_lines)
-                # Insert header before the detected mods
-                for i, line in enumerate(header_lines):
-                    autoscan_report.insert(initial_len + i, line)
+            # Check for conflicting mods with conditional header
+            conflict_fragment = ConditionalSection.with_header(
+                lambda: detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins),
+                "CONFLICT (TOGETHER)"
+            )
+            composer.add(conflict_fragment)
 
-            # Check for frequently problematic mods (conditional header)
-            initial_len = len(autoscan_report)
-            if detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins, autoscan_report):
-                # Add header at the position before the content was added
-                header_lines = []
-                ReportGenerator.generate_mod_check_header("FREQUENTLY CRASH", header_lines)
-                # Insert header before the detected mods
-                for i, line in enumerate(header_lines):
-                    autoscan_report.insert(initial_len + i, line)
+            # Check for frequently problematic mods with conditional header
+            freq_fragment = ConditionalSection.with_header(
+                lambda: detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins),
+                "FREQUENTLY CRASH"
+            )
+            composer.add(freq_fragment)
 
-            # Check for mods with known solutions (conditional header)
-            initial_len = len(autoscan_report)
-            if detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins, autoscan_report):
-                # Add header at the position before the content was added
-                header_lines = []
-                ReportGenerator.generate_mod_check_header("HAVE SOLUTIONS", header_lines)
-                # Insert header before the detected mods
-                for i, line in enumerate(header_lines):
-                    autoscan_report.insert(initial_len + i, line)
+            # Check for mods with known solutions with conditional header
+            solution_fragment = ConditionalSection.with_header(
+                lambda: detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins),
+                "HAVE SOLUTIONS"
+            )
+            composer.add(solution_fragment)
 
             # Check FOLON-specific mods if Fallout: London is loaded
-            # Look for LondonWorldspace.esm in the plugin list (case-insensitive)
             is_folon_loaded = any("londonworldspace.esm" in plugin_name.lower() for plugin_name in crashlog_plugins)
             if is_folon_loaded and self.yamldata.game_mods_core_folon:
-                detect_mods_important(self.yamldata.game_mods_core_folon, crashlog_plugins, autoscan_report, crashlog_gpu_rival)
+                important_fragment = detect_mods_important(self.yamldata.game_mods_core_folon, crashlog_plugins, crashlog_gpu_rival)
             else:
                 # Check for important core mods with GPU considerations
-                detect_mods_important(self.yamldata.game_mods_core, crashlog_plugins, autoscan_report, crashlog_gpu_rival)
+                important_fragment = detect_mods_important(self.yamldata.game_mods_core, crashlog_plugins, crashlog_gpu_rival)
+            composer.add(important_fragment)
 
-            # Check for OPC2 mods (conditional header)
-            initial_len = len(autoscan_report)
-            if detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins, autoscan_report):
-                # Add header at the position before the content was added
-                header_lines = []
-                ReportGenerator.generate_mod_check_header("ARE OUTDATED, REDUNDANT, OR INCLUDED IN OPC2", header_lines)
-                # Insert header before the detected mods
-                for i, line in enumerate(header_lines):
-                    autoscan_report.insert(initial_len + i, line)
+            # Check for OPC2 mods with conditional header
+            opc2_fragment = ConditionalSection.with_header(
+                lambda: detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins),
+                "ARE OUTDATED, REDUNDANT, OR INCLUDED IN OPC2"
+            )
+            composer.add(opc2_fragment)
 
         # Plugin suspect scanning (plugins found in crash stack)
         if trigger_plugins_loaded and crashlog_plugins:
-            # Save current position for conditional header
-            initial_len = len(autoscan_report)
-
             # Convert callstack to lowercase for matching
             segment_callstack_lower = [line.lower() for line in segment_callstack]
-
             # Convert plugins to lowercase set for matching
             crashlog_plugins_lower = set(plugin.lower() for plugin in crashlog_plugins)
 
-            # Run plugin matching (it adds content only if plugins are found)
-            self.plugin_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower, autoscan_report)
-
-            # Check if content was added (plugin_match adds content when plugins are found)
-            if len(autoscan_report) > initial_len:
-                # Add header at the position before the plugin matches
-                header_lines = []
-                ReportGenerator.generate_plugin_suspect_header(header_lines)
-                # Insert header before the plugin matches
-                for i, line in enumerate(header_lines):
-                    autoscan_report.insert(initial_len + i, line)
+            # Run plugin matching and add with conditional header
+            plugin_fragment = ConditionalSection.with_header(
+                lambda: self.plugin_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower),
+                header_text=None,  # plugin_match has its own header logic
+                header_generator=lambda: self.report_generator.generate_plugin_suspect_header()
+            )
+            composer.add(plugin_fragment)
 
         # Use async FormID analyzer if available
         if self._async_formid_analyzer and self._last_formids:
-            # Add FormID section header
-            ReportGenerator.generate_formid_section_header(autoscan_report)
+            # Add FormID section header and results
+            composer.add(self.report_generator.generate_formid_section_header())
+            formid_fragment = await self._async_formid_analyzer.formid_match(self._last_formids, crashlog_plugins)
+            composer.add(formid_fragment)
 
-            # Process FormIDs
-            await self._async_formid_analyzer.formid_match(self._last_formids, crashlog_plugins, autoscan_report)
+        return composer.build()
+
+    def _run_suspect_scanning(self, crashlog_mainerror: str, segment_callstack: list[str]) -> ReportFragment:
+        """Run suspect scanning on crash log and return composed fragments."""
+        composer = ReportComposer()
+
+        # Add suspect section header
+        composer.add(self.report_generator.generate_suspect_section_header())
+
+        # Scan main error for suspects
+        main_error_fragment, found_main_suspect = self.suspect_scanner.suspect_scan_mainerror(crashlog_mainerror, 50)
+        composer.add(main_error_fragment)
+
+        # Scan call stack for suspects
+        segment_callstack_intact = "\n".join(segment_callstack)
+        stack_fragment, found_stack_suspect = self.suspect_scanner.suspect_scan_stack(
+            crashlog_mainerror, segment_callstack_intact, 50
+        )
+        composer.add(stack_fragment)
+
+        # Check for DLL crashes
+        dll_fragment = self.suspect_scanner.check_dll_crash(crashlog_mainerror)
+        composer.add(dll_fragment)
+
+        # Add suspect footer based on whether any suspects were found
+        found_suspect = found_main_suspect or found_stack_suspect
+        composer.add(self.report_generator.generate_suspect_found_footer(found_suspect))
+
+        return composer.build()
+
+    def _check_fcx_and_settings(
+        self,
+        xsemodules: set[str],
+        crashgen: dict[str, bool | int | str],
+        crashgen_version: Version,
+    ) -> ReportFragment:
+        """Check FCX mode and scan settings, return composed fragments."""
+        composer = ReportComposer()
+
+        # Check FCX mode
+        self.fcx_handler.check_fcx_mode()
+        composer.add(self.fcx_handler.get_fcx_messages())
+
+        # Add settings section header
+        composer.add(self.report_generator.generate_settings_section_header())
+
+        # Scan settings with required mod detection
+        # Check for X-Cell and Baka ScrapHeap mods for memory management settings
+        has_xcell = "x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules
+        has_old_xcell = "x-cell-fo4.dll" in xsemodules
+        has_baka_scrapheap = "bakascrapheap.dll" in xsemodules
+
+        # Scan all settings
+        composer.add(self.settings_scanner.scan_buffout_achievements_setting(xsemodules, crashgen))
+        composer.add(self.settings_scanner.scan_buffout_memorymanagement_settings(
+            crashgen, has_xcell, has_old_xcell, has_baka_scrapheap
+        ))
+        composer.add(self.settings_scanner.scan_archivelimit_setting(crashgen, crashgen_version))
+        composer.add(self.settings_scanner.scan_buffout_looksmenu_setting(crashgen, xsemodules))
+
+        return composer.build()
+
+    def _scan_specific_suspects(self, segment_callstack: list[str]) -> ReportFragment:
+        """Scan for named records in crash log and return composed fragments."""
+        composer = ReportComposer()
+
+        # Add section header
+        composer.add(self.report_generator.generate_record_section_header())
+
+        # Scan for named records
+        record_fragment, records_matches = self.record_scanner.scan_named_records(segment_callstack)
+        composer.add(record_fragment)
+
+        return composer.build()
+
+    def _process_plugins(
+        self,
+        segment_plugins: list[str],
+        segment_callstack: list[str],
+        game_version: Version,
+        version_current: Version,
+    ) -> tuple[dict[str, str], bool, bool, bool]:
+        """Process plugin information from crash log."""
+        plugins: dict[str, str] = {}
+        trigger_plugin_limit = False
+        trigger_limit_check_disabled = False
+        trigger_plugins_loaded = False
+
+        # Check if plugins loaded
+        esm_name: str = f"{GlobalRegistry.get_game()}.esm"
+        if any(esm_name in elem for elem in segment_plugins):
+            trigger_plugins_loaded = True
+
+        # Check for loadorder.txt
+        loadorder_path = Path("loadorder.txt")
+        if loadorder_path.exists():
+            loadorder_plugins, trigger_plugins_loaded, _loadorder_fragment = self.plugin_analyzer.loadorder_scan_loadorder_txt()
+            plugins = plugins | loadorder_plugins
+        else:
+            log_plugins, plugin_limit, limit_check_disabled = self.plugin_analyzer.loadorder_scan_log(
+                segment_plugins, game_version, version_current
+            )
+            plugins = plugins | log_plugins
+            trigger_plugin_limit = plugin_limit
+            trigger_limit_check_disabled = limit_check_disabled
+
+        # Extract FormIDs if analyzer available
+        if self._async_formid_analyzer:
+            formids_matches = self._async_formid_analyzer.extract_formids(segment_callstack)
+            self._last_formids = formids_matches
+
+        return plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded
+
+    @staticmethod
+    def _parse_crashgen_settings(segment_crashgen: list[str]) -> dict[str, bool | int | str]:
+        """Parse crashgen configuration from segment."""
+        crashgen = {}
+        if segment_crashgen:
+            for elem in segment_crashgen:
+                if ":" in elem:
+                    key, value = elem.split(":", 1)
+                    crashgen[key] = (
+                        True
+                        if value == " true"
+                        else False
+                        if value == " false"
+                        else int(value)
+                        if value.strip().isdecimal()
+                        else value.strip()
+                    )
+        return crashgen
 
     async def process_crash_logs_batch(self, crashlog_files: list[Path]) -> list[tuple[Path, list[str], bool, Counter[str]]]:
         """
@@ -341,7 +467,7 @@ class OrchestratorCore:
 
             # Process batch concurrently
             batch_tasks = [self.process_crash_log(log_file) for log_file in batch]
-            batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)  # type: ignore[attr-defined]
+            batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
 
             # Handle results
             for result in batch_results:
@@ -371,123 +497,4 @@ class OrchestratorCore:
             write_tasks.append(write_file_async(autoscan_path, autoscan_output))
 
         # Execute all writes concurrently
-        await asyncio.gather(*write_tasks, return_exceptions=True)  # type: ignore[attr-defined]
-
-    # Synchronous helper methods (remain unchanged from original)
-    @staticmethod
-    def _parse_crashgen_settings(segment_crashgen: list[str]) -> dict[str, bool | int | str]:
-        """Parse crashgen configuration from segment."""
-        crashgen = {}
-        if segment_crashgen:
-            for elem in segment_crashgen:
-                if ":" in elem:
-                    key, value = elem.split(":", 1)
-                    crashgen[key] = (
-                        True
-                        if value == " true"
-                        else False
-                        if value == " false"
-                        else int(value)
-                        if value.strip().isdecimal()
-                        else value.strip()
-                    )
-        return crashgen
-
-    def _process_plugins(
-        self,
-        segment_plugins: list[str],
-        segment_callstack: list[str],
-        game_version: Version,
-        version_current: Version,
-        autoscan_report: list[str],
-    ) -> tuple[dict[str, str], bool, bool, bool]:
-        """Process plugin information from crash log."""
-        plugins: dict[str, str] = {}
-        trigger_plugin_limit = False
-        trigger_limit_check_disabled = False
-        trigger_plugins_loaded = False
-
-        # Check if plugins loaded
-        esm_name: str = f"{GlobalRegistry.get_game()}.esm"
-        if any(esm_name in elem for elem in segment_plugins):
-            trigger_plugins_loaded = True
-
-        # Check for loadorder.txt
-        loadorder_path = Path("loadorder.txt")
-        if loadorder_path.exists():
-            loadorder_plugins, trigger_plugins_loaded = self.plugin_analyzer.loadorder_scan_loadorder_txt(autoscan_report)
-            plugins = plugins | loadorder_plugins
-        else:
-            log_plugins, plugin_limit, limit_check_disabled = self.plugin_analyzer.loadorder_scan_log(
-                segment_plugins, game_version, version_current
-            )
-            plugins = plugins | log_plugins
-            trigger_plugin_limit = plugin_limit
-            trigger_limit_check_disabled = limit_check_disabled
-
-        # Extract FormIDs if analyzer available
-        if self._async_formid_analyzer:
-            formids_matches = self._async_formid_analyzer.extract_formids(segment_callstack)
-            self._last_formids = formids_matches
-
-        return plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded
-
-    def _run_suspect_scanning(self, crashlog_mainerror: str, segment_callstack: list[str], autoscan_report: list[str]) -> None:
-        """Run suspect scanning on crash log."""
-        from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
-
-        ReportGenerator.generate_suspect_section_header(autoscan_report)
-
-        # Scan main error for suspects
-        self.suspect_scanner.suspect_scan_mainerror(autoscan_report, crashlog_mainerror, 50)
-
-        # Scan call stack for suspects (convert list to string)
-        segment_callstack_intact = "\n".join(segment_callstack)
-        self.suspect_scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, autoscan_report, 50)
-
-        # Check for DLL crashes
-        self.suspect_scanner.check_dll_crash(crashlog_mainerror, autoscan_report)
-
-    def _check_fcx_and_settings(
-        self,
-        xsemodules: set[str],
-        crashgen: dict[str, bool | int | str],
-        autoscan_report: list[str],
-        crashgen_version: Version,
-    ) -> None:
-        """Check FCX mode and scan settings."""
-        # Check FCX mode
-        self.fcx_handler.check_fcx_mode()
-        self.fcx_handler.get_fcx_messages(autoscan_report)
-
-        # Scan settings with required mod detection
-        # Check for X-Cell and Baka ScrapHeap mods for memory management settings
-        has_xcell = "x-cell-fo4.dll" in xsemodules or "x-cell-og.dll" in xsemodules or "x-cell-ng2.dll" in xsemodules
-        has_old_xcell = "x-cell-fo4.dll" in xsemodules
-        has_baka_scrapheap = "bakascrapheap.dll" in xsemodules
-
-        # Scan all settings including memory management
-        self.settings_scanner.scan_buffout_achievements_setting(autoscan_report, xsemodules, crashgen)
-        self.settings_scanner.scan_buffout_memorymanagement_settings(
-            autoscan_report, crashgen, has_xcell, has_old_xcell, has_baka_scrapheap
-        )
-        self.settings_scanner.scan_archivelimit_setting(autoscan_report, crashgen, crashgen_version)
-        self.settings_scanner.scan_buffout_looksmenu_setting(crashgen, autoscan_report, xsemodules)
-
-    def _scan_specific_suspects(self, segment_callstack: list[str], autoscan_report: list[str]) -> None:
-        """Scan for named records in crash log."""
-        from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
-
-        # Scan for named records (previously called specific suspects)
-        records_matches: list[str] = []
-        initial_len = len(autoscan_report)
-        self.record_scanner.scan_named_records(segment_callstack, records_matches, autoscan_report)
-
-        # Only add header if records were found
-        if records_matches:
-            # Add header at the position before the content was added
-            header_lines = []
-            ReportGenerator.generate_record_section_header(header_lines)
-            # Insert header before the records
-            for i, line in enumerate(header_lines):
-                autoscan_report.insert(initial_len + i, line)
+        await asyncio.gather(*write_tasks, return_exceptions=True)

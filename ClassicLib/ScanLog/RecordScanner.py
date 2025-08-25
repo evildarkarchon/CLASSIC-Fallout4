@@ -11,8 +11,8 @@ This module handles named record detection including:
 from collections import Counter
 from typing import TYPE_CHECKING, Any
 
+from ClassicLib.ScanLog.ReportFragment import ReportFragment
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
@@ -32,37 +32,32 @@ class RecordScanner:
         self.lower_records: set[str] = {record.lower() for record in yamldata.classic_records_list} or set()
         self.lower_ignore: set[str] = {record.lower() for record in yamldata.game_ignore_records} or set()
 
-    def scan_named_records(self, segment_callstack: list[str], records_matches: list[str], autoscan_report: list[str]) -> None:
+    def scan_named_records(self, segment_callstack: list[str]) -> tuple[ReportFragment, list[str]]:
         """
-        Scans named records in the provided segment callstack, identifies matches,
-        and updates the autoscan report accordingly.
+        Scans named records in the provided segment callstack and identifies matches.
 
-        This function processes the provided callstack to locate specific named
-        records, utilizing defined markers and offsets. Any matches found are
-        added to the records_matches list and subsequently reported in the
-        autoscan report. If no matches are identified, a corresponding message
-        is appended to the report.
-
-        Arguments:
-            segment_callstack (list[str]): The callstack to scan for named records.
-            records_matches (list[str]): A list to hold records that match the scan criteria.
-            autoscan_report (list[str]): The report to be updated based on scanning results.
+        Args:
+            segment_callstack: The callstack to scan for named records.
 
         Returns:
-            None
+            Tuple of (ReportFragment containing results, list of found records).
         """
         # Constants
         rsp_marker = "[RSP+"
         rsp_offset = 30
 
+        records_matches: list[str] = []
+
         # Find matching records
         self._find_matching_records(segment_callstack, records_matches, rsp_marker, rsp_offset)
 
-        # Report results
+        # Generate report fragment
         if records_matches:
-            self._report_found_records(records_matches, autoscan_report)
+            fragment = self._generate_found_records_fragment(records_matches)
         else:
-            append_or_extend("* COULDN'T FIND ANY NAMED RECORDS *\n\n", autoscan_report)
+            fragment = ReportFragment.from_lines(["* COULDN'T FIND ANY NAMED RECORDS *\n\n"])
+
+        return fragment, records_matches
 
     def _find_matching_records(self, segment_callstack: list[str], records_matches: list[str], rsp_marker: str, rsp_offset: int) -> None:
         """
@@ -97,28 +92,31 @@ class RecordScanner:
                 else:
                     records_matches.append(line.strip())
 
-    def _report_found_records(self, records_matches: list[str], autoscan_report: list[str]) -> None:
+    def _generate_found_records_fragment(self, records_matches: list[str]) -> ReportFragment:
         """
-        Format and add report entries for found records.
+        Generate report fragment for found records.
 
         Args:
             records_matches: List of found records
-            autoscan_report: List to append formatted report
+
+        Returns:
+            ReportFragment containing formatted record report.
         """
+        lines = []
+
         # Count and sort the records
         records_found: dict[str, int] = dict(Counter(sorted(records_matches)))
 
         # Add each record with its count
         for record, count in records_found.items():
-            append_or_extend(f"- {record} | {count}\n", autoscan_report)
+            lines.append(f"- {record} | {count}\n")
 
         # Add explanatory notes
-        explanatory_notes: tuple[str, str, str] = (
-            "\n[Last number counts how many times each Named Record shows up in the crash log.]\n",
-            f"These records were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n",
-            "Named records should give extra info on involved game objects, record types or mod files.\n\n",
-        )
-        append_or_extend(explanatory_notes, autoscan_report)
+        lines.append("\n[Last number counts how many times each Named Record shows up in the crash log.]\n")
+        lines.append(f"These records were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n")
+        lines.append("Named records should give extra info on involved game objects, record types or mod files.\n\n")
+
+        return ReportFragment.from_lines(lines)
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
         """

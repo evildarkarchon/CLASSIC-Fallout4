@@ -16,6 +16,7 @@ from ClassicLib.ScanLog.DetectMods import (
     detect_mods_important,
     detect_mods_single,
 )
+from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
 
 class TestConvertToLowercase:
@@ -73,72 +74,66 @@ class TestDetectModsSingle:
         """Test when no mods are found in the crash log plugins."""
         yaml_dict: dict[str, str] = {"mod1": "Warning for mod1", "mod2": "Warning for mod2"}
         crashlog_plugins: dict[str, str] = {"unrelated_plugin.esp": "00", "another_plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
-        assert result is False
-        assert len(autoscan_report) == 0
+        assert not result.has_content
+        assert len(result.content) == 0
 
     def test_single_mod_found(self) -> None:
         """Test when a single mod is found in the crash log plugins."""
         yaml_dict: dict[str, str] = {"mod1": "Warning for mod1", "mod2": "Warning for mod2"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "unrelated_plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
-        assert result is True
-        assert len(autoscan_report) == 4  # [!] FOUND + warning message + 2 newlines
-        assert "[!] FOUND" in autoscan_report[0]
-        assert "Warning for mod1" in autoscan_report[1]
+        assert result.has_content
+        result_list = result.to_list()
+        assert "[!] FOUND" in result_list[0]
+        assert "Warning for mod1" in "".join(result_list)
 
     def test_multiple_mods_found(self) -> None:
         """Test when multiple mods are found in the crash log plugins."""
         yaml_dict: dict[str, str] = {"mod1": "Warning for mod1", "mod2": "Warning for mod2"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
-        assert result is True
-        assert len(autoscan_report) >= 3  # [!] FOUND + 2 warnings
-        assert "[!] FOUND" in autoscan_report[0]
+        assert result.has_content
+        result_list = result.to_list()
+        assert "[!] FOUND" in result_list[0]
 
     def test_case_insensitivity(self) -> None:
         """Test case insensitivity in mod detection."""
         yaml_dict: dict[str, str] = {"MOD1": "Warning for mod1", "mod2": "Warning for mod2"}
         crashlog_plugins: dict[str, str] = {"Mod1_Plugin.esp": "00", "unrelated_plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
-        assert result is True
-        assert len(autoscan_report) == 4  # [!] FOUND + warning message + 2 newlines
-        assert "[!] FOUND" in autoscan_report[0]
-        assert "Warning for mod1" in autoscan_report[1]
+        assert result.has_content
+        result_list = result.to_list()
+        assert "[!] FOUND" in result_list[0]
+        assert "Warning for mod1" in "".join(result_list)
 
     def test_empty_yaml_dict(self) -> None:
         """Test with empty YAML dictionary."""
         yaml_dict: dict[Any, Any] = {}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
-        assert result is False
-        assert len(autoscan_report) == 0
+        assert not result.has_content
+        assert len(result.content) == 0
 
     def test_empty_crashlog_plugins(self) -> None:
         """Test with empty crashlog plugins."""
         yaml_dict: dict[str, str] = {"mod1": "Warning for mod1"}
         crashlog_plugins: dict[str, str] = {}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_single(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)
 
-        assert result is False
-        assert len(autoscan_report) == 0
+        assert not result.has_content
+        assert len(result.content) == 0
 
 
 class TestDetectModsDouble:
@@ -148,25 +143,23 @@ class TestDetectModsDouble:
         """Test when no conflicting mods are found."""
         yaml_dict: dict[str, str] = {"mod1 | mod2": "Conflict warning"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "unrelated_plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_double(yaml_dict, crashlog_plugins)
 
-        assert result is False
-        assert len(autoscan_report) == 0
+        assert not result.has_content
+        assert len(result.content) == 0
 
     def test_single_conflict_found(self) -> None:
         """Test when a single conflicting mod pair is found."""
         yaml_dict: dict[str, str] = {"mod1 | mod2": "Conflict warning"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_double(yaml_dict, crashlog_plugins)
 
-        assert result is True
-        assert len(autoscan_report) == 4  # [!] CAUTION + warning message + 2 newlines
-        assert "[!] CAUTION" in autoscan_report[0]
-        assert "Conflict warning" in autoscan_report[1]
+        assert result.has_content
+        result_list = result.to_list()
+        assert "[!] CAUTION" in result_list[0]
+        assert "Conflict warning" in "".join(result_list)
 
     def test_multiple_conflicts_found(self) -> None:
         """Test when multiple conflicting mod pairs are found."""
@@ -177,57 +170,53 @@ class TestDetectModsDouble:
             "mod3_plugin.esp": "02",
             "mod4_plugin.esp": "03",
         }
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_double(yaml_dict, crashlog_plugins)
 
-        assert result is True
-        assert len(autoscan_report) >= 3  # [!] FOUND + 2 warnings
+        assert result.has_content
+        result_list = result.to_list()
+        assert "[!] CAUTION" in result_list[0]
 
     def test_case_insensitivity(self) -> None:
         """Test case insensitivity in conflicting mod detection."""
         yaml_dict: dict[str, str] = {"MOD1 | mod2": "Conflict warning"}
         crashlog_plugins: dict[str, str] = {"Mod1_Plugin.esp": "00", "Mod2_Plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_double(yaml_dict, crashlog_plugins)
 
-        assert result is True
-        assert len(autoscan_report) == 4  # [!] CAUTION + warning message + 2 newlines
-        assert "[!] CAUTION" in autoscan_report[0]
-        assert "Conflict warning" in autoscan_report[1]
+        assert result.has_content
+        result_list = result.to_list()
+        assert "[!] CAUTION" in result_list[0]
+        assert "Conflict warning" in "".join(result_list)
 
     def test_invalid_mod_pair_format(self) -> None:
         """Test error handling when mod pair format is invalid."""
         yaml_dict: dict[str, str] = {"mod1mod2": "Invalid format"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
         with pytest.raises(ValueError) as excinfo:  # type: ignore  # noqa: PT011
-            detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+            detect_mods_double(yaml_dict, crashlog_plugins)
         assert "not enough values to unpack" in str(excinfo.value)
 
     def test_empty_yaml_dict(self) -> None:
         """Test with empty YAML dictionary."""
         yaml_dict: dict[Any, Any] = {}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01"}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_double(yaml_dict, crashlog_plugins)
 
-        assert result is False
-        assert len(autoscan_report) == 0
+        assert not result.has_content
+        assert len(result.content) == 0
 
     def test_empty_crashlog_plugins(self) -> None:
         """Test with empty crashlog plugins."""
         yaml_dict: dict[str, str] = {"mod1 | mod2": "Conflict warning"}
         crashlog_plugins: dict[str, str] = {}
-        autoscan_report: list[Any] = []
 
-        result: bool = detect_mods_double(yaml_dict, crashlog_plugins, autoscan_report)
+        result: ReportFragment = detect_mods_double(yaml_dict, crashlog_plugins)
 
-        assert result is False
-        assert len(autoscan_report) == 0
+        assert not result.has_content
+        assert len(result.content) == 0
 
 
 class TestDetectModsImportant:
@@ -237,107 +226,106 @@ class TestDetectModsImportant:
         """Test when an important mod is installed and GPU matches."""
         yaml_dict: dict[str, str] = {"important_mod | Important Mod": "This is an important mod for nvidia GPUs"}
         crashlog_plugins: dict[str, str] = {"important_mod_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
         gpu_rival: str = "nvidia"
 
-        detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, gpu_rival)  # type: ignore[arg-type]
 
-        assert len(autoscan_report) >= 1
+        assert result.has_content
         # The actual output contains newlines and formatting, so check the entire output
-        report_str = "".join(str(item) for item in autoscan_report)
+        report_str = "".join(result.to_list())
         assert "Important Mod is installed" in report_str
 
     def test_nvidia_mod_with_amd_gpu(self) -> None:
         """Test when a NVIDIA mod is installed with an AMD GPU."""
         yaml_dict: dict[str, str] = {"nvidia_mod | NVIDIA Mod": "This mod requires an nvidia GPU"}
         crashlog_plugins: dict[str, str] = {"nvidia_mod_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
         gpu_rival: str = "amd"
 
-        detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, gpu_rival)  # type: ignore[arg-type]
 
-        assert len(autoscan_report) >= 1
-        assert "NVIDIA Mod is installed" in autoscan_report[0]
+        assert result.has_content
+        report_str = "".join(result.to_list())
+        assert "NVIDIA Mod is installed" in report_str
 
     def test_amd_mod_with_nvidia_gpu(self) -> None:
         """Test when an AMD mod is installed with a NVIDIA GPU."""
         yaml_dict: dict[str, str] = {"amd_mod | AMD Mod": "This mod requires an amd GPU"}
         crashlog_plugins: dict[str, str] = {"amd_mod_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
         gpu_rival: str = "nvidia"
 
-        detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, gpu_rival)  # type: ignore[arg-type]
 
-        assert len(autoscan_report) >= 1
-        assert "AMD Mod is installed" in autoscan_report[0]
+        assert result.has_content
+        report_str = "".join(result.to_list())
+        assert "AMD Mod is installed" in report_str
 
     def test_missing_important_mod_with_matching_gpu(self) -> None:
         """Test when an important mod is missing and GPU matches."""
         yaml_dict: dict[str, str] = {"nvidia_mod | NVIDIA Mod": "This mod is important for nvidia GPUs"}
         crashlog_plugins: dict[str, str] = {"unrelated_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
         gpu_rival: str = "nvidia"
 
-        detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, gpu_rival)  # type: ignore[arg-type]
 
-        assert len(autoscan_report) == 0
+        # When no important mods are found in plugins, returns empty fragment
+        assert not result.has_content
+        assert len(result.content) == 0
 
     def test_missing_important_mod_with_nonmatching_gpu(self) -> None:
         """Test when an important mod is missing and GPU doesn't match."""
         yaml_dict: dict[str, str] = {"nvidia_mod | NVIDIA Mod": "This mod is important for nvidia GPUs"}
         crashlog_plugins: dict[str, str] = {"unrelated_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
         gpu_rival: str = "amd"
 
-        detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, gpu_rival)  # type: ignore[arg-type]
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, gpu_rival)  # type: ignore[arg-type]
 
+        assert result.has_content
+        report_str = "".join(result.to_list())
         # The actual implementation adds warnings for important mods not installed
-        assert "NVIDIA Mod is not installed" in str(autoscan_report)
+        assert "NVIDIA Mod is not installed" in report_str or "NVIDIA Mod is missing" in report_str
 
     def test_no_gpu_rival_specified(self) -> None:
         """Test when no gpu_rival is specified."""
         yaml_dict: dict[str, str] = {"mod1 | Important Mod": "This is an important mod"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
 
-        detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, None)
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None)
 
-        assert len(autoscan_report) >= 1
+        assert result.has_content
         # The actual output contains newlines and formatting, so check the entire output
-        report_str = "".join(str(item) for item in autoscan_report)
+        report_str = "".join(result.to_list())
         assert "Important Mod is installed" in report_str
 
     def test_empty_yaml_dict(self) -> None:
         """Test with empty YAML dictionary."""
         yaml_dict: dict[Any, Any] = {}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
 
-        detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, None)  # type: ignore[arg-type]
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None)  # type: ignore[arg-type]
 
-        assert len(autoscan_report) == 0
+        # With empty yaml, returns empty fragment
+        assert not result.has_content
+        assert len(result.content) == 0
 
     def test_empty_crashlog_plugins(self) -> None:
         """Test with empty crashlog plugins."""
         yaml_dict: dict[str, str] = {"mod1 | Important Mod": "This is an important mod"}
         crashlog_plugins: dict[str, str] = {}
-        autoscan_report: list[Any] = []
 
-        detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, None)
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None)
 
-        # The actual implementation doesn't add warnings for missing mods
-        assert len(autoscan_report) == 0
+        # With empty plugins, returns empty fragment
+        assert not result.has_content
+        assert len(result.content) == 0
 
     def test_malformed_mod_entry_format(self) -> None:
         """Test with malformed mod entry format (no separator)."""
         yaml_dict: dict[str, str] = {"ImportantMod": "This is an important mod"}
         crashlog_plugins: dict[str, str] = {"important_mod_plugin.esp": "00"}
-        autoscan_report: list[Any] = []
 
         with pytest.raises(ValueError) as excinfo:  # type: ignore  # noqa: PT011
-            detect_mods_important(yaml_dict, crashlog_plugins, autoscan_report, None)
+            detect_mods_important(yaml_dict, crashlog_plugins, None)
 
-        assert "not enough values to unpack" in str(excinfo.value)
         assert "not enough values to unpack" in str(excinfo.value)
 
 

@@ -11,6 +11,8 @@ import random
 import sys
 import time
 from collections import Counter
+
+from ClassicLib.AsyncBridge import run_async
 # Removed ThreadPoolExecutor - using pure async instead
 from functools import partial
 from pathlib import Path
@@ -163,7 +165,7 @@ def crashlogs_scan() -> None:
     FCXModeHandler.reset_fcx_checks()  # Reset FCX checks for new scan session
 
     # Always use pure async processing
-    asyncio.run(crashlogs_scan_async_pure(scanner))
+    run_async(crashlogs_scan_async_pure(scanner))
 
 
 async def crashlogs_scan_async_pure_with_qt(scanner: ClassicScanLogs) -> None:

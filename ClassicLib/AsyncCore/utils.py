@@ -7,6 +7,8 @@ from collections.abc import Callable, Iterable
 from functools import partial, wraps
 from typing import Any, TypeVar
 
+from ClassicLib.AsyncBridge import run_async
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
@@ -68,9 +70,9 @@ async def batch_process(items: list[T], processor: Callable[[T], Any], batch_siz
 
 
 def run_async_safe(coro: Callable | Any) -> Any:
-    """Safely run an async coroutine from sync context
+    """Safely run an async coroutine from sync context using AsyncBridge
 
-    Handles existing event loops gracefully.
+    Uses AsyncBridge for efficient sync-to-async execution with persistent event loops.
 
     Args:
         coro: Coroutine to run
@@ -81,21 +83,11 @@ def run_async_safe(coro: Callable | Any) -> Any:
     Example:
         result = run_async_safe(async_function())
     """
-    try:
-        # Try to get existing event loop
-        loop = asyncio.get_running_loop()
-        # We're already in an async context
-        if asyncio.iscoroutine(coro):
-            # Create a task and return a future that can be awaited
-            return asyncio.create_task(coro)
-        return coro
-    except RuntimeError:
-        # No event loop, create one
-        if asyncio.iscoroutine(coro):
-            return asyncio.run(coro)
-        if asyncio.iscoroutinefunction(coro):
-            return asyncio.run(coro())
-        return coro
+    if asyncio.iscoroutine(coro):
+        return run_async(coro)
+    if asyncio.iscoroutinefunction(coro):
+        return run_async(coro())
+    return coro
 
 
 def async_retry(max_attempts: int = 3, delay: float = 1.0, backoff: float = 2.0, exceptions: tuple = (Exception,)):

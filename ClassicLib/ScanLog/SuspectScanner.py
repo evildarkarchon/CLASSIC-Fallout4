@@ -10,8 +10,8 @@ This module scans for known crash patterns and suspects including:
 
 from typing import TYPE_CHECKING
 
+from ClassicLib.ScanLog.ReportFragment import ReportFragment
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
@@ -29,22 +29,18 @@ class SuspectScanner:
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
 
-    def suspect_scan_mainerror(self, autoscan_report: list[str], crashlog_mainerror: str, max_warn_length: int) -> bool:
+    def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[ReportFragment, bool]:
         """
-        Scans the crash log for errors listed in a predefined suspect error list, updates the
-        autoscan report upon detection, and determines if any suspects are found.
+        Scans the crash log for errors listed in a predefined suspect error list.
 
-        Parameters:
-        autoscan_report (list[str]): A list to store formatted strings of identified suspect
-            errors and their associated details.
-        crashlog_mainerror (str): The main error output from a crash log to scan for
-            suspect errors.
-        max_warn_length (int): The maximum length for formatting the error name in the autoscan
-            report.
+        Args:
+            crashlog_mainerror: The main error output from a crash log to scan for suspect errors.
+            max_warn_length: The maximum length for formatting the error name in the report.
 
         Returns:
-        bool: A boolean indicating whether any suspect errors were found in the crash log.
+            Tuple of (ReportFragment containing findings, bool indicating if suspects found).
         """
+        lines = []
         found_suspect = False
 
         for error_key, signal in self.yamldata.suspects_error_list.items():
@@ -56,35 +52,32 @@ class SuspectScanner:
             error_severity, error_name = error_key.split(" | ", 1)
 
             # Format the error name for report
-            formatted_error_name: str = error_name.ljust(max_warn_length, ".")
+            formatted_error_name = error_name.ljust(max_warn_length, ".")
 
             # Add the error to the report
-            report_entry: str = f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n-----\n"
-            append_or_extend(report_entry, autoscan_report)
+            lines.append(f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n")
+            lines.append("-----\n")
 
             # Update suspect found status
             found_suspect = True
 
-        return found_suspect
+        return ReportFragment.from_lines(lines), found_suspect
 
     def suspect_scan_stack(
-        self, crashlog_mainerror: str, segment_callstack_intact: str, autoscan_report: list[str], max_warn_length: int
-    ) -> bool:
+        self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
+    ) -> tuple[ReportFragment, bool]:
         """
-        Analyzes a crash report and call stack information to identify potential suspect errors
-        and integrates findings into an autoscan report. The function evaluates signal
-        criteria from a YAML configuration to detect mismatches, potential issues, and specific
-        patterns in the provided crash log and call stack details.
+        Analyzes a crash report and call stack information to identify potential suspect errors.
 
-        Parameters:
-            crashlog_mainerror (str): The main error extracted from the crash log.
-            segment_callstack_intact (str): The intact segment of the call stack relevant to the analysis.
-            autoscan_report (list[str]): A mutable report list where detected suspects are appended.
-            max_warn_length (int): Maximum allowed length for warnings included in the report.
+        Args:
+            crashlog_mainerror: The main error extracted from the crash log.
+            segment_callstack_intact: The intact segment of the call stack relevant to the analysis.
+            max_warn_length: Maximum allowed length for warnings included in the report.
 
         Returns:
-            bool: Indicates whether any suspect has been identified and added to the autoscan report.
+            Tuple of (ReportFragment containing findings, bool indicating if suspects found).
         """
+        lines = []
         any_suspect_found = False
 
         for error_key, signal_list in self.yamldata.suspects_stack_list.items():
@@ -114,10 +107,12 @@ class SuspectScanner:
             # Determine if we have a match based on the processed signals
             if self._is_suspect_match(match_status):
                 # Add the suspect to the report and update the found status
-                self._add_suspect_to_report(error_name, error_severity, max_warn_length, autoscan_report)
+                formatted_error_name = error_name.ljust(max_warn_length, ".")
+                lines.append(f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n")
+                lines.append("-----\n")
                 any_suspect_found = True
 
-        return any_suspect_found
+        return ReportFragment.from_lines(lines), any_suspect_found
 
     @staticmethod
     def _process_signal(signal: str, crashlog_mainerror: str, segment_callstack_intact: str, match_status: dict[str, bool]) -> bool:
@@ -167,36 +162,27 @@ class SuspectScanner:
         return match_status["error_opt_found"] or match_status["stack_found"]
 
     @staticmethod
-    def _add_suspect_to_report(error_name: str, error_severity: str, max_warn_length: int, autoscan_report: list[str]) -> None:
-        """Add a found suspect to the report with proper formatting."""
-        formatted_error_name: str = error_name.ljust(max_warn_length, ".")
-        message: str = f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n-----\n"
-        append_or_extend(message, autoscan_report)
+    def _format_suspect_message(error_name: str, error_severity: str, max_warn_length: int) -> str:
+        """Format a suspect message for the report."""
+        formatted_error_name = error_name.ljust(max_warn_length, ".")
+        return f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n-----\n"
 
     @staticmethod
-    def check_dll_crash(crashlog_mainerror: str, autoscan_report: list[str]) -> None:
+    def check_dll_crash(crashlog_mainerror: str) -> ReportFragment:
         """
-        A static method designed to analyze a crash log and identify if a DLL file is implicated in the crash.
-        The method evaluates the primary error message from the crash log to determine if it references a DLL
-        file, excluding specific cases such as "tbbmalloc". If a potentially problematic DLL is detected, the
-        method appends a formatted notification to the autoscan report.
+        Analyze a crash log to identify if a DLL file is implicated in the crash.
 
-        Arguments:
-            crashlog_mainerror: str
-                The main error message extracted from the crash log, which is inspected for DLL-related
-                mentions.
-            autoscan_report: list[str]
-                A reference to a list where any relevant findings or alerts about the crash will be appended.
+        Args:
+            crashlog_mainerror: The main error message extracted from the crash log.
 
         Returns:
-            None
+            ReportFragment containing DLL crash notification, or empty fragment.
         """
-        crashlog_mainerror_lower: str = crashlog_mainerror.lower()
+        crashlog_mainerror_lower = crashlog_mainerror.lower()
         if ".dll" in crashlog_mainerror_lower and "tbbmalloc" not in crashlog_mainerror_lower:
-            append_or_extend(
-                (
-                    "* NOTICE : MAIN ERROR REPORTS THAT A DLL FILE WAS INVOLVED IN THIS CRASH! * \n",
-                    "If that dll file belongs to a mod, that mod is a prime suspect for the crash. \n\n-----\n",
-                ),
-                autoscan_report,
-            )
+            return ReportFragment.from_lines([
+                "* NOTICE : MAIN ERROR REPORTS THAT A DLL FILE WAS INVOLVED IN THIS CRASH! * \n",
+                "If that dll file belongs to a mod, that mod is a prime suspect for the crash. \n\n",
+                "-----\n",
+            ])
+        return ReportFragment.empty()

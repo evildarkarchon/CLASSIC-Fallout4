@@ -19,16 +19,16 @@ from ClassicLib.ScanLog.AsyncReformat import (
 from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator, write_reports_batch_async
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, write_file_async
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
-from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandler
+from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments as FCXModeHandler
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from ClassicLib.ScanLog.Parser import extract_module_names, extract_segments, find_segments, parse_crash_header
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
-from ClassicLib.ScanLog.ReportGenerator import ReportGenerator
+from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments as ReportGenerator
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 from ClassicLib.ScanLog.ScanOrchestrator import ScanOrchestrator
-from ClassicLib.ScanLog.SettingsScanner import SettingsScanner
+from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments as SettingsScanner
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
 
 # Utility functions

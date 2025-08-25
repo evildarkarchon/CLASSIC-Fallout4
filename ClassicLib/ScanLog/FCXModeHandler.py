@@ -1,127 +1,87 @@
 """
-FCX mode handler module for CLASSIC.
+Fragment-based FCX mode handler for CLASSIC.
 
-This module manages FCX mode operations including:
-- Performing file integrity checks
-- Handling game file validation
-- Managing thread-safe FCX operations
-- Caching FCX check results to avoid redundant operations
+This module provides fragment-returning version of FCX mode handling,
+replacing the mutable list pattern with immutable fragment composition.
 """
 
 import threading
-from typing import Literal
+from typing import ClassVar
+
+from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
 
-class FCXModeHandler:
-    """Handles FCX mode file integrity checking operations."""
+class FCXModeHandlerFragments:
+    """Fragment-based FCX mode handler for crash log analysis."""
 
-    # Class-level variables for thread-safe caching
-    _fcx_lock: threading.RLock = threading.RLock()
-    _fcx_checks_run: bool = False
-    _main_files_result: str = ""
-    _game_files_result: str = ""
+    # Class-level attributes shared across all instances
+    _fcx_lock: ClassVar[threading.Lock] = threading.Lock()
+    _fcx_checks_run: ClassVar[bool] = False
+    _main_files_result: ClassVar[str] = ""
+    _game_files_result: ClassVar[str] = ""
 
     def __init__(self, fcx_mode: bool | None) -> None:
         """
-        Initialize FCX mode handler.
+        Initialize the FCX mode handler.
 
         Args:
             fcx_mode: Whether FCX mode is enabled
         """
-        self.fcx_mode: bool | None = fcx_mode
-        self.main_files_check: str | Literal[""] = ""
-        self.game_files_check: str | Literal[""] = ""
+        self.fcx_mode = fcx_mode
 
     def check_fcx_mode(self) -> None:
-        """
-        Performs FCX mode checks and updates instance variables based on the FCX mode status.
-
-        This method checks if the FCX mode is enabled and processes checks if necessary.
-        It ensures thread safety during the FCX check execution by locking
-        and avoids redundant checks by keeping results at the class level.
-
-        Raises:
-            Any error related to importing required modules or errors raised by the coordinator or
-            game result checker will propagate up to the caller..
-        """
+        """Check FCX mode and run necessary file checks if enabled."""
         if self.fcx_mode:
-            # Import here to avoid circular imports
-            from CLASSIC_ScanGame import game_combined_result
+            from ClassicLib.ScanGame import game_combined_result
             from ClassicLib.SetupCoordinator import SetupCoordinator
 
             # Use class-level lock to ensure thread safety
-            with FCXModeHandler._fcx_lock:
+            with FCXModeHandlerFragments._fcx_lock:
                 # Check if we've already run the FCX checks in this scan session
-                if not FCXModeHandler._fcx_checks_run:
+                if not FCXModeHandlerFragments._fcx_checks_run:
                     # Run the checks once and store results in class variables
                     coordinator = SetupCoordinator()
-                    FCXModeHandler._main_files_result = coordinator.generate_combined_results()
-                    FCXModeHandler._game_files_result = game_combined_result()
-                    FCXModeHandler._fcx_checks_run = True
+                    FCXModeHandlerFragments._main_files_result = coordinator.generate_combined_results()
+                    FCXModeHandlerFragments._game_files_result = game_combined_result()
+                    FCXModeHandlerFragments._fcx_checks_run = True
 
             # Always assign the stored results to instance variables
-            self.main_files_check = FCXModeHandler._main_files_result
-            self.game_files_check = FCXModeHandler._game_files_result
+            self.main_files_check = FCXModeHandlerFragments._main_files_result
+            self.game_files_check = FCXModeHandlerFragments._game_files_result
         else:
             self.main_files_check = "❌ FCX Mode is disabled, skipping game files check... \n-----\n"
             self.game_files_check = ""
 
     @classmethod
     def reset_fcx_checks(cls) -> None:
-        """
-        Resets specific checks and results related to FCX processing.
-
-        This method is responsible for reinitializing the FCX-related checks and clearing
-        any previously stored results for the main and game files. It ensures that the
-        associated states are reset to their default values. This method utilizes a class-level
-        lock to guarantee thread safety during the reset operation.
-
-        Sections:
-            - Parameters:
-                This method does not accept any parameters.
-            - Returns:
-                None: This method does not return any value.
-
-        Raises:
-            This method does not raise any exceptions.
-        """
+        """Reset FCX checks and results."""
         with cls._fcx_lock:
             cls._fcx_checks_run = False
             cls._main_files_result = ""
             cls._game_files_result = ""
 
-    def get_fcx_messages(self, autoscan_report: list[str]) -> None:
+    def get_fcx_messages(self) -> ReportFragment:
         """
-        Processes and appends FCX mode-related messages to the provided autoscan report.
-        This method determines whether FCX mode is enabled or disabled and appends
-        specific notification messages accordingly. It also appends the results
-        of checks on main files and game files to the autoscan report if FCX mode
-        is enabled.
-
-        Parameters:
-            autoscan_report (list[str]): The list to which the FCX mode messages and
-            other file check results will be appended.
+        Get FCX mode-related messages as a fragment.
 
         Returns:
-            None
+            ReportFragment containing FCX mode messages and file check results.
         """
-        from ClassicLib.Util import append_or_extend
+        lines = []
 
         if self.fcx_mode:
-            append_or_extend(
-                (
-                    "* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n",
-                    "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n",
-                ),
-                autoscan_report,
-            )
-            append_or_extend(self.main_files_check, autoscan_report)
-            append_or_extend(self.game_files_check, autoscan_report)
+            lines.extend([
+                "* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n",
+                "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n",
+            ])
+            if self.main_files_check:
+                lines.append(self.main_files_check)
+            if self.game_files_check:
+                lines.append(self.game_files_check)
         else:
-            append_or_extend(
-                (
-                    "* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n",
-                    "[ FCX Mode can be enabled in the exe or CLASSIC Settings.yaml located in your CLASSIC folder. ] \n\n",
-                ),
-                autoscan_report,
-            )
+            lines.extend([
+                "* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n",
+                "[ FCX Mode can be enabled in the exe or CLASSIC Settings.yaml located in your CLASSIC folder. ] \n\n",
+            ])
+
+        return ReportFragment.from_lines(lines)
