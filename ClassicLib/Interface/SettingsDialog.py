@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.StyleSheets import DARK_MODE
+from ClassicLib.MessageHandler import msg_error, msg_success, msg_warning
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
@@ -200,6 +201,13 @@ class SettingsDialog(QDialog):
         ini_path_layout.addWidget(self.ini_folder_input)
         self.settings_widgets["ini_folder_path"] = self.ini_folder_input
 
+        # Reset button for INI folder
+        self.ini_reset_button = QPushButton("Reset")
+        self.ini_reset_button.setToolTip("Reset to auto-detected INI folder location")
+        self.ini_reset_button.setMaximumWidth(80)
+        self.ini_reset_button.clicked.connect(self._reset_ini_folder)
+        ini_path_layout.addWidget(self.ini_reset_button)
+
         # Browse button for INI folder
         self.ini_browse_button = QPushButton("Browse...")
         self.ini_browse_button.setToolTip("Browse for INI folder location")
@@ -239,6 +247,68 @@ class SettingsDialog(QDialog):
 
         if folder:
             self.ini_folder_input.setText(folder)
+
+    def _reset_ini_folder(self) -> None:
+        """Reset the INI folder path to auto-detected value."""
+        from ClassicLib import GlobalRegistry
+        from ClassicLib.Logger import logger
+
+        try:
+            # Clear the INI Folder Path setting in CLASSIC Settings.yaml
+            yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['ini_folder_path']}", "")
+            logger.info("Cleared INI Folder Path setting for autodetection")
+
+            # Clear the Root_Folder_Docs in Game_Local YAML to trigger fresh detection
+            vr_suffix = GlobalRegistry.get_vr()
+            root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
+            yaml_settings(str, YAML.Game_Local, root_docs_key, "")
+            logger.info("Cleared Root_Folder_Docs for fresh autodetection")
+
+            # Run the autodetection
+            self._autodetect_ini_folder()
+
+        except (ImportError, TypeError, ValueError, OSError) as e:
+            logger.error(f"Failed to reset INI folder path: {e}")
+            # Show error to user
+            msg_error(f"Failed to reset INI folder path: {e!s}\n\nPlease try again or set the path manually.")
+
+    def _autodetect_ini_folder(self) -> None:
+        """Trigger autodetection of the INI folder path and update the UI."""
+        from ClassicLib import GlobalRegistry
+        from ClassicLib.DocsPath import docs_path_find
+        from ClassicLib.Logger import logger
+
+        try:
+            # Run the autodetection logic (same as first run)
+            docs_path_find(is_gui_mode=True)
+            logger.info("Ran INI folder autodetection")
+
+            # Retrieve the newly detected path from Game_Local YAML
+            vr_suffix = GlobalRegistry.get_vr()
+            root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
+            detected_path = yaml_settings(str, YAML.Game_Local, root_docs_key)
+
+            # Update the UI with the detected path
+            if detected_path:
+                self.ini_folder_input.setText(detected_path)
+                logger.info(f"Updated INI folder path to: {detected_path}")
+                # Show success message to user
+                msg_success(f"INI folder path reset successfully!\n\nDetected path: {detected_path}")
+            else:
+                # If autodetection failed, clear the input field
+                self.ini_folder_input.clear()
+                logger.warning("Autodetection did not find a valid INI folder path")
+                # Show warning to user
+                msg_warning(
+                    "Could not auto-detect INI folder path.\n\n"
+                    "Please use the Browse button to manually select your game's INI folder.\n"
+                    "This is typically located in Documents/My Games/[Game Name]"
+                )
+
+        except (ImportError, TypeError, ValueError, OSError) as e:
+            logger.error(f"Failed to autodetect INI folder path: {e}")
+            # Show error to user
+            msg_error(f"Failed to auto-detect INI folder path: {e!s}\n\nPlease set the path manually using the Browse button.")
 
     def _create_updates_tab(self) -> None:
         """Create the Updates settings tab."""
@@ -436,6 +506,7 @@ class SettingsDialog(QDialog):
             # Log the error but don't crash the settings dialog
             try:
                 from ClassicLib.Logger import logger
+
                 logger.error(f"Failed to recalculate derivative paths: {e}")
             except ImportError:
                 # If logger import fails, just continue silently
