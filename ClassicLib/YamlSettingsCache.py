@@ -1,367 +1,164 @@
-import time
-from functools import reduce
-from io import StringIO
+"""
+Sync wrapper for AsyncYamlSettingsCore providing synchronous YAML settings access.
+
+This module provides a synchronous interface to the async-first YAML settings system,
+using AsyncBridge for efficient sync-to-async execution without event loop overhead.
+"""
+
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, TypeVar
 
-import ruamel.yaml
-
-from ClassicLib import GlobalRegistry, MessageTarget, msg_error
-from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML
-from ClassicLib.FileIOCore import read_file_sync, write_file_sync
-from ClassicLib.Logger import logger
+from ClassicLib import GlobalRegistry
+from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.AsyncYamlSettingsCore import (
+    YAMLLiteral,
+    YAMLMapping,
+    YAMLSequence,
+    YAMLValue,
+    YAMLValueOptional,
+    get_async_yaml_core,
+)
+from ClassicLib.Constants import YAML
 from ClassicLib.Meta import SingletonMeta
 
-type YAMLLiteral = str | int | bool
-type YAMLSequence = list[str]
-type YAMLMapping = dict[str, "YAMLValue"]
-type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
-type YAMLValueOptional = YAMLValue | None
+T = TypeVar("T")
 
 
 class YamlSettingsCache(metaclass=SingletonMeta):
     """
-    A utility class for managing and caching YAML settings.
+    Synchronous wrapper for AsyncYamlSettingsCore.
 
-    This class provides mechanisms for working with YAML configurations, including
-    retrieving paths, loading YAML files with caching, and accessing or modifying
-    settings in a structured YAML format. It employs a singleton pattern to ensure
-    a single instance across the application. Static YAML files (those that don't
-    change during program execution) are handled differently from dynamic YAML
-    files, with separate caching mechanisms for improved performance.
-
-    Attributes:
-        STATIC_YAML_STORES (set[YAML]): A set of YAML stores considered static,
-            meaning their contents won't be expected to change during program
-            execution. Examples include Main, Game YAML files.
+    This class provides a sync interface to the async YAML settings core,
+    maintaining singleton behavior and using AsyncBridge for efficient
+    sync-to-async execution.
     """
 
-    # Static YAML stores that won't change during program execution
-    STATIC_YAML_STORES: ClassVar[set[YAML]] = {YAML.Main, YAML.Game}
-
-    # TTL for cache validity checks (in seconds)
-    CACHE_TTL: ClassVar[float] = 5.0
-
     def __init__(self) -> None:
-        """Initialize the instance attributes."""
-        self.cache: dict[Path, YAMLMapping] = {}
-        self.file_mod_times: dict[Path, float] = {}
-        self.path_cache: dict[YAML, Path] = {}
-        self.settings_cache: dict[tuple[YAML, str, type], Any] = {}
-        # TTL tracking for dynamic files
-        self.last_check_time: dict[Path, float] = {}
+        """Initialize the sync wrapper with async core and bridge."""
+        self._async_core = get_async_yaml_core()
+        self._bridge = AsyncBridge.get_instance()
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """
-        Determines and returns the file path for a given YAML configuration type. The file path is derived based on the
-        specific YAML store requested. A cache is utilized to avoid recalculating paths for previously accessed stores.
+        Get the file path for a given YAML configuration type.
 
         Args:
-            yaml_store (YAML): The identifier for the configuration type. Specifies which YAML file's path is being requested.
+            yaml_store: The identifier for the configuration type
 
         Returns:
-            Path: The resolved file path corresponding to the provided YAML store.
-
-        Raises:
-            NotImplementedError: If the provided yaml_store does not match any of the predefined YAML types.
-            FileNotFoundError: If no valid file path could be resolved for the provided yaml_store.
+            Path: The resolved file path for the YAML store
         """
-        if yaml_store in self.path_cache:
-            return self.path_cache[yaml_store]
-        yaml_path: Path = Path.cwd()
-        data_path: Path = Path("CLASSIC Data/")
-        # noinspection PyUnreachableCode
-        match yaml_store:
-            case YAML.Main:
-                yaml_path = data_path / "databases/CLASSIC Main.yaml"
-            case YAML.Settings:
-                yaml_path = Path("CLASSIC Settings.yaml")
-            case YAML.Ignore:
-                yaml_path = Path("CLASSIC Ignore.yaml")
-            case YAML.Game:
-                yaml_path = data_path / f"databases/CLASSIC {GlobalRegistry.get_game()}.yaml"
-            case YAML.Game_Local:
-                yaml_path = data_path / f"CLASSIC {GlobalRegistry.get_game()} Local.yaml"
-            case YAML.TEST:
-                yaml_path = Path("tests/test_settings.yaml")
-            case other if other not in (YAML.Main, YAML.Settings, YAML.Ignore, YAML.Game, YAML.Game_Local, YAML.TEST):
-                # noinspection PyUnreachableCode
-                raise NotImplementedError
-
-        if yaml_path != Path.cwd():
-            self.path_cache[yaml_store] = yaml_path
-        else:
-            raise FileNotFoundError(f"No YAML file found for {yaml_store}")
-        return yaml_path
+        return self._bridge.run_async(self._async_core.get_path_for_store(yaml_store))
 
     def load_yaml(self, yaml_path: Path) -> YAMLMapping:
         """
-        Loads the content of a YAML file into a cache and retrieves it. Supports static and dynamic YAML files,
-        with handling for file modification times to reload dynamic files when they change.
+        Load a YAML file with caching.
 
         Args:
-            yaml_path (Path): The path to the YAML file to be loaded.
+            yaml_path: Path to the YAML file
 
         Returns:
-            YAMLMapping: The content of the YAML file, either from the cache or loaded dynamically. Returns
-                an empty dictionary if the file does not exist.
+            YAMLMapping: The loaded YAML data
         """
-        if not yaml_path.exists():
-            return {}
+        return self._bridge.run_async(self._async_core.load_yaml(yaml_path))
 
-        # Determine if this is a static file
-        is_static = any(yaml_path == self.get_path_for_store(store) for store in self.STATIC_YAML_STORES)
-
-        def cache_file(yaml_path_obj: Path) -> None:
-            content = read_file_sync(yaml_path_obj)
-            yaml: ruamel.yaml.YAML = ruamel.yaml.YAML()
-            yaml.indent(offset=2)
-            yaml.width = 300
-            try:
-                loaded_data = yaml.load(StringIO(content))
-                # Validate settings file structure if it's the settings file
-                if yaml_path_obj.name == "CLASSIC Settings.yaml" and not self._validate_settings_structure(loaded_data):
-                    logger.warning(f"Invalid settings file structure detected in {yaml_path_obj}, regenerating...")
-                    self._regenerate_settings_file(yaml_path_obj)
-                    # Reload after regeneration
-                    content = read_file_sync(yaml_path_obj)
-                    loaded_data = yaml.load(StringIO(content))
-                self.cache[yaml_path_obj] = loaded_data
-            except (ruamel.yaml.YAMLError, OSError) as e:
-                logger.error(f"Failed to load YAML file {yaml_path_obj}: {e}")
-                # If it's the settings file and failed to load, regenerate it
-                if yaml_path_obj.name == "CLASSIC Settings.yaml":
-                    logger.warning(f"Corrupted settings file detected, regenerating {yaml_path_obj}...")
-                    self._regenerate_settings_file(yaml_path_obj)
-                    # Reload after regeneration
-                    content = read_file_sync(yaml_path_obj)
-                    self.cache[yaml_path_obj] = yaml.load(StringIO(content))
-                else:
-                    self.cache[yaml_path_obj] = {}
-
-        if is_static:
-            # For static files, just load once
-            if yaml_path not in self.cache:
-                logger.debug(f"Loading static YAML file: {yaml_path}")
-                cache_file(yaml_path)
-        else:
-            # For dynamic files, use TTL-based checking
-            current_time = time.time()
-
-            # Check if we need to verify file modification
-            should_check = False
-            if yaml_path not in self.last_check_time:
-                # Never checked before
-                should_check = True
-            elif current_time - self.last_check_time[yaml_path] >= self.CACHE_TTL:
-                # TTL expired, should check
-                should_check = True
-
-            if should_check:
-                # Update check time
-                self.last_check_time[yaml_path] = current_time
-
-                # Now check modification time
-                last_mod_time = yaml_path.stat().st_mtime
-                if yaml_path not in self.file_mod_times or self.file_mod_times[yaml_path] != last_mod_time:
-                    # File has been modified
-                    self.file_mod_times[yaml_path] = last_mod_time
-
-                    logger.debug(f"Loading dynamic YAML file: {yaml_path}")
-                    # Reload the YAML file
-                    cache_file(yaml_path)
-            # If should_check is False, we just return the cached version without checking
-
-        return self.cache.get(yaml_path, {})
-
-    @staticmethod
-    def _validate_settings_structure(data: YAMLMapping) -> bool:
+    def get_setting(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """
-        Validates that the settings file has the expected structure.
+        Get or set a setting in the YAML store.
 
         Args:
-            data: The loaded YAML data to validate
+            _type: Expected type of the setting
+            yaml_store: YAML store to access
+            key_path: Dot-delimited path to the setting
+            new_value: New value to set (None for read-only)
 
         Returns:
-            bool: True if the structure is valid, False otherwise
+            The setting value or None
         """
+        return self._bridge.run_async(self._async_core.get_setting(_type, yaml_store, key_path, new_value))
 
-        # Check if data is None or not a dict
-        # noinspection PyUnreachableCode
-        if not isinstance(data, dict):
-            return False
-
-        # Check if CLASSIC_Settings key exists and is a dict
-        if "CLASSIC_Settings" not in data:
-            return False
-
-        return isinstance(data["CLASSIC_Settings"], dict)
-
-    def _regenerate_settings_file(self, yaml_path: Path) -> None:
+    def load_multiple_stores(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
         """
-        Regenerates the settings file from the default template.
-        Creates a backup of the corrupted file if it exists.
+        Load multiple YAML stores concurrently.
 
         Args:
-            yaml_path: Path to the settings file to regenerate
-        """
-        # Create backup of corrupted file if it exists and has content
-        if yaml_path.exists():
-            try:
-                content = read_file_sync(yaml_path)
-                if content.strip():  # Only backup if not empty
-                    backup_path = yaml_path.with_suffix(".corrupted.bak")
-                    counter = 1
-                    while backup_path.exists():
-                        backup_path = yaml_path.with_suffix(f".corrupted.{counter}.bak")
-                        counter += 1
-                    write_file_sync(backup_path, content)
-                    logger.info(f"Backed up corrupted settings to {backup_path}")
-            except (OSError, PermissionError) as e:
-                logger.warning(f"Could not backup corrupted settings file: {e}")
-
-        # Get default settings from CLASSIC Main.yaml
-        try:
-            main_path = self.get_path_for_store(YAML.Main)
-            main_data = {}
-            if main_path.exists():
-                content = read_file_sync(main_path)
-                yaml = ruamel.yaml.YAML()
-                main_data = yaml.load(StringIO(content))
-
-            default_settings = main_data.get("CLASSIC_Info", {}).get("default_settings", "")
-            if default_settings:
-                write_file_sync(yaml_path, default_settings)
-                logger.info(f"Successfully regenerated settings file at {yaml_path}")
-            else:
-                logger.error("Could not find default settings template in CLASSIC Main.yaml")
-                # Create minimal valid structure
-                minimal_settings = "CLASSIC_Settings:\n  Managed Game: Fallout 4\n"
-                write_file_sync(yaml_path, minimal_settings)
-                logger.info("Created minimal settings file")
-        except (ruamel.yaml.YAMLError, OSError, PermissionError, KeyError) as e:
-            logger.error(f"Failed to regenerate settings file: {e}")
-            # Last resort: create minimal structure
-            minimal_settings = "CLASSIC_Settings:\n  Managed Game: Fallout 4\n"
-            write_file_sync(yaml_path, minimal_settings)
-
-    def get_setting[T](self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
-        """
-        Retrieves or updates a setting from a nested YAML data structure. This method allows you to perform both
-        read and write operations on YAML files while incorporating caching mechanisms for improved performance
-        when accessing static YAML stores. If a new value is provided, the corresponding YAML file is updated
-        and the cache is refreshed to reflect the changes.
-
-        Args:
-            _type: The expected type of the setting value.
-            yaml_store: The YAML store from which the setting is retrieved or updated.
-            key_path: The dot-delimited path specifying the location of the setting within the YAML structure.
-            new_value: The new value to update the setting with. If None, the method operates as a read.
+            stores: List of YAML stores to load
 
         Returns:
-            The existing or updated setting value if successful, otherwise None.
-
-        Raises:
-            ValueError: If a static YAML store is being modified.
+            dict: Mapping of YAML store to loaded data
         """
-        # If this is a read operation for a static store, check cache first
-        cache_key: tuple[YAML, str, type[T]] = (yaml_store, key_path, _type)
-        if new_value is None and yaml_store in self.STATIC_YAML_STORES and cache_key in self.settings_cache:
-            return self.settings_cache[cache_key]
+        return self._bridge.run_async(self._async_core.load_multiple_stores(stores))
 
-        yaml_path: Path = self.get_path_for_store(yaml_store)
+    def batch_get_settings(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
+        """
+        Get multiple settings in a single batch operation.
 
-        # Load YAML with caching logic
-        data: dict = self.load_yaml(yaml_path)
-        keys: list[str] = key_path.split(".")
+        Args:
+            requests: List of (type, yaml_store, key_path) tuples
 
-        def setdefault(dictionary: dict[str, YAMLValue], key: str) -> dict[str, YAMLValue]:
-            """
-            A utility class for managing and working with YAML settings. This class provides
-            methods to retrieve and modify settings within a nested YAML data structure.
-            """
-            if key not in dictionary:
-                dictionary[key] = {}
-            next_value = dictionary[key]
-            if not isinstance(next_value, dict):
-                raise TypeError
-            return next_value
+        Returns:
+            list: Setting values in the same order as requests
+        """
+        return self._bridge.run_async(self._async_core.batch_get_settings(requests))
 
-        try:
-            setting_container = reduce(setdefault, keys[:-1], data)
-        except TypeError:
-            # Handle the case where a non-dictionary value is encountered
-            logger.error(f"Invalid path structure for {key_path} in {yaml_store}")
-            return None
+    def prefetch_all_settings(self) -> None:
+        """Prefetch common settings into cache for better performance."""
+        self._bridge.run_async(self._async_core.prefetch_all_settings())
 
-        # If new_value is provided, update the value
-        if new_value is not None:
-            # If this is a static file and we're trying to modify it, raise a ValueError
-            if yaml_store in self.STATIC_YAML_STORES:
-                logger.error(f"Attempting to modify static YAML store {yaml_store} at {key_path}")
-                raise ValueError(f"Attempted to modify static YAML store {yaml_store} at {key_path}")
+    def get_metrics(self) -> dict[str, int]:
+        """
+        Get performance metrics from the async core.
 
-            setting_container[keys[-1]] = new_value  # type: ignore[assignment]
+        Returns:
+            dict: Current performance metrics
+        """
+        return self._bridge.run_async(self._async_core.get_metrics())
 
-            # Write changes back to the YAML file
-            yaml: ruamel.yaml.YAML = ruamel.yaml.YAML()
-            yaml.indent(offset=2)
-            yaml.width = 300
-            output = StringIO()
-            yaml.dump(data, output)
-            write_file_sync(yaml_path, output.getvalue())
+    # Property accessors for direct cache access (if needed by existing code)
+    @property
+    def cache(self) -> dict[Path, YAMLMapping]:
+        """Direct access to the cache dictionary."""
+        return self._async_core.cache
 
-            # Update the cache
-            self.cache[yaml_path] = data
+    @property
+    def path_cache(self) -> dict[YAML, Path]:
+        """Direct access to the path cache."""
+        return self._async_core.path_cache
 
-            # Clear any cached results for this path
-            if cache_key in self.settings_cache:
-                del self.settings_cache[cache_key]
-
-            return new_value
-
-        # Traverse YAML structure to get value
-        setting_value = setting_container.get(keys[-1])
-        if setting_value is None and keys[-1] not in SETTINGS_IGNORE_NONE:
-            msg_error(f"ERROR (yaml_settings) : Trying to grab a None value for : '{key_path}'", target=MessageTarget.CLI_ONLY)
-
-        # Cache the result for static stores
-        if yaml_store in self.STATIC_YAML_STORES:
-            self.settings_cache[cache_key] = setting_value
-
-        return setting_value  # type: ignore[return-value]
+    @property
+    def settings_cache(self) -> dict[tuple[YAML, str, type], Any]:
+        """Direct access to the settings cache."""
+        return self._async_core.settings_cache
 
 
-yaml_cache: YamlSettingsCache = YamlSettingsCache()
+# Create singleton instance and register it
+yaml_cache = YamlSettingsCache()
 GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
+
+
+# ==========================================
+# Module-level convenience functions
+# ==========================================
 
 
 def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
     """
-    Manages YAML settings by retrieving or updating a specific setting in the YAML store.
+    Manages YAML settings by retrieving or updating a specific setting.
 
-    This function operates on YAML configuration data. It retrieves or updates a setting
-    based on the provided key path. The function ensures that types are consistent with
-    the required input or output. If `new_value` is provided, it updates the setting in
-    the YAML store, otherwise it fetches the current value. If `_type` is `Path`, it
-    attempts to convert the setting to a `Path` object before returning it.
+    This function provides synchronous access to YAML configuration data.
+    It retrieves or updates a setting based on the provided key path.
 
     Args:
-        _type: The expected type of the setting value. It defines the type of the value
-            to be retrieved or updated in the YAML store.
-        yaml_store: The YAML object where the settings are stored and managed.
-        key_path: The key path in the YAML store that points to the specific setting.
-        new_value: The new value for the setting that is to be updated in the YAML
-            store. If not provided, the function simply retrieves the current value.
-            Defaults to None.
+        _type: The expected type of the setting value
+        yaml_store: The YAML store to access
+        key_path: The dot-delimited path to the setting
+        new_value: Optional new value to set
 
     Returns:
-        The value of the setting retrieved from the YAML store if `new_value` is not
-        provided. If `_type` is `Path`, it returns the value as a `Path` object;
-        otherwise, it returns it with the specified type `_type`. Returns None if the
-        setting is not found.
+        The setting value, properly typed
     """
-    setting: T | None = yaml_cache.get_setting(_type, yaml_store, key_path, new_value)
+    setting = yaml_cache.get_setting(_type, yaml_store, key_path, new_value)
+
     if _type is Path:
         return Path(setting) if setting and isinstance(setting, str) else None  # type: ignore[return-value]
     return setting
@@ -369,30 +166,43 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
 
 def classic_settings[T](_type: type[T], setting: str) -> T | None:
     """
-    Fetches a specific setting from a CLASSIC settings file or creates the settings file
-    if it does not exist.
+    Fetches a specific setting from the CLASSIC settings file.
 
-    This function ensures that a settings file named "CLASSIC Settings.yaml" exists in the
-    current directory. If the file does not exist, it creates the file based on default
-    settings specified in another YAML configuration. The function then retrieves and
-    returns the requested setting based on the provided type and setting key.
+    This function ensures that a settings file exists and retrieves
+    the requested setting from it.
 
     Args:
-        _type: The expected type of the setting value. This helps ensure the retrieved
-            setting is appropriately cast to the desired type.
-        setting: The key of the setting to retrieve from the "CLASSIC Settings.yaml"
-            file.
+        _type: The expected type of the setting value
+        setting: The key of the setting to retrieve
 
     Returns:
-        The value of the requested setting, cast to the specified type `_type`. If the
-        setting is not found, or if an error occurs, it returns `None`.
+        The value of the requested setting
     """
-    settings_path: Path = Path("CLASSIC Settings.yaml")
+    # Check if settings file exists, create if needed
+    settings_path = Path("CLASSIC Settings.yaml")
     if not settings_path.exists():
-        default_settings: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_settings")
+        # Get default settings from Main YAML
+        default_settings = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_settings")
         if not isinstance(default_settings, str):
             raise ValueError("Invalid Default Settings in 'CLASSIC Main.yaml'")
+
+        # Use FileIOCore for consistency
+        from ClassicLib.FileIOCore import write_file_sync
 
         write_file_sync(settings_path, default_settings)
 
     return yaml_settings(_type, YAML.Settings, f"CLASSIC_Settings.{setting}")
+
+
+# Export all types for backward compatibility
+__all__ = [
+    "YAMLLiteral",
+    "YAMLMapping",
+    "YAMLSequence",
+    "YAMLValue",
+    "YAMLValueOptional",
+    "YamlSettingsCache",
+    "classic_settings",
+    "yaml_cache",
+    "yaml_settings",
+]
