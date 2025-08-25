@@ -157,7 +157,9 @@ def detect_mods_important(
     Returns:
         ReportFragment containing important mod status.
     """
-    lines = []
+    lines = [
+        "### Checking for Important Mods\n\n",
+    ]
 
     # Convert plugin names to lowercase once
     plugin_names_lower = list(_convert_to_lowercase(crashlog_plugins).keys())
