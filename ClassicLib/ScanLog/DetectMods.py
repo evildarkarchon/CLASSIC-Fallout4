@@ -45,7 +45,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         return ReportFragment.empty()
 
     # Create a single compiled pattern with alternation for efficient matching
-    combined_pattern = re.compile('|'.join(mod_patterns), re.IGNORECASE)
+    combined_pattern = re.compile("|".join(mod_patterns), re.IGNORECASE)
 
     # Create a lookup dictionary for O(1) access to mod warnings
     mod_lookup = {mod_name: warning for mod_name, warning in mod_items}
@@ -115,7 +115,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     # Create a single regex pattern to find all mods in one pass
     mod_patterns = [re.escape(mod) for mod in all_mod_names]
-    combined_pattern = re.compile('|'.join(mod_patterns), re.IGNORECASE)
+    combined_pattern = re.compile("|".join(mod_patterns), re.IGNORECASE)
 
     # Find which mods are present in the plugins
     mods_present: set[str] = set()
@@ -158,11 +158,11 @@ def detect_mods_important(
 
     # Convert plugin names to lowercase once
     plugin_names_lower = list(_convert_to_lowercase(crashlog_plugins).keys())
-    all_plugins_text = ' '.join(plugin_names_lower)
+    all_plugins_text = " ".join(plugin_names_lower)
 
     # Build patterns for all mod IDs
     mod_patterns: dict[str, re.Pattern[str]] = {}
-    for mod_entry in yaml_dict.keys():
+    for mod_entry in yaml_dict:
         mod_id, _ = mod_entry.split(" | ", 1)
         mod_patterns[mod_entry] = re.compile(re.escape(mod_id.lower()), re.IGNORECASE)
 

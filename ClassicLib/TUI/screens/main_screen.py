@@ -179,6 +179,7 @@ class MainScreen(Screen):
 
         # Check if running in common modern terminals
         from ClassicLib.TUI.constants import UNICODE_TERMINAL_TYPES
+
         if any(t in term for t in UNICODE_TERMINAL_TYPES):
             return True
 

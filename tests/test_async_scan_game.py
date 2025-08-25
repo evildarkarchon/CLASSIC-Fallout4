@@ -12,7 +12,6 @@ import pytest
 # Import wrappers from CLASSIC_ScanGame since they're now defined there
 import CLASSIC_ScanGame
 import ClassicLib.MessageHandler
-
 # Import for MessageHandler initialization
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.ScanGame.AsyncScanGame import (
@@ -207,6 +206,7 @@ class TestAsyncScanModsArchived:
         # Verify concurrency was limited
         # Import the actual dynamic limit from ScanGameCore
         from ClassicLib.ScanGame.ScanGameCore import MAX_CONCURRENT_SUBPROCESSES as ACTUAL_LIMIT
+
         assert max_concurrent <= ACTUAL_LIMIT
 
     @pytest.mark.asyncio

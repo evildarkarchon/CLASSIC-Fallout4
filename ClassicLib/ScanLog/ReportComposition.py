@@ -5,7 +5,7 @@ This module provides utilities for the common pattern of adding headers
 only when content exists, replacing the retroactive header insertion pattern.
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 from ClassicLib.ScanLog.ReportFragment import ReportFragment
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments

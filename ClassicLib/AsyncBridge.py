@@ -11,7 +11,7 @@ import threading
 from collections.abc import Coroutine
 from typing import Any, ClassVar, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class AsyncBridge:
@@ -23,7 +23,7 @@ class AsyncBridge:
     """
 
     # Class-level storage for thread-local instances
-    _instances: ClassVar[dict[int, 'AsyncBridge']] = {}
+    _instances: ClassVar[dict[int, "AsyncBridge"]] = {}
     _lock: ClassVar[threading.Lock] = threading.Lock()
     _cleanup_registered: ClassVar[bool] = False
 
@@ -35,7 +35,7 @@ class AsyncBridge:
         self._shutdown = False
 
     @classmethod
-    def get_instance(cls) -> 'AsyncBridge':
+    def get_instance(cls) -> "AsyncBridge":
         """
         Get or create the AsyncBridge instance for the current thread.
 
@@ -82,11 +82,7 @@ class AsyncBridge:
         self._loop = asyncio.new_event_loop()
 
         # Start the loop in a background thread
-        self._thread = threading.Thread(
-            target=self._run_loop,
-            daemon=True,
-            name=f"AsyncBridge-{self._thread_id}"
-        )
+        self._thread = threading.Thread(target=self._run_loop, daemon=True, name=f"AsyncBridge-{self._thread_id}")
         self._thread.start()
 
         # Wait for loop to be ready
@@ -119,8 +115,7 @@ class AsyncBridge:
             asyncio.get_running_loop()
             # We're in an async context, this shouldn't happen
             raise RuntimeError(  # noqa: TRY301
-                "Cannot use AsyncBridge.run_async() from within an async context. "
-                "Use 'await' directly instead."
+                "Cannot use AsyncBridge.run_async() from within an async context. Use 'await' directly instead."
             )
         except RuntimeError:
             # Good, we're not in an async context

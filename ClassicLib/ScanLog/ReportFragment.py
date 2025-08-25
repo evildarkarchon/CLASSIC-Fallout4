@@ -8,8 +8,8 @@ shared mutable state while maintaining identical output format.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 
 @dataclass(frozen=True)
@@ -51,20 +51,14 @@ class ReportFragment:
             return self
 
         header_tuple = tuple(header_lines) if isinstance(header_lines, list) else header_lines
-        return ReportFragment(
-            content=header_tuple + self.content,
-            has_content=True
-        )
+        return ReportFragment(content=header_tuple + self.content, has_content=True)
 
     def __add__(self, other: ReportFragment) -> ReportFragment:
         """Combine two fragments."""
         if not self.has_content and not other.has_content:
             return ReportFragment.empty()
 
-        return ReportFragment(
-            content=self.content + other.content,
-            has_content=self.has_content or other.has_content
-        )
+        return ReportFragment(content=self.content + other.content, has_content=self.has_content or other.has_content)
 
     def to_list(self) -> list[str]:
         """Convert to mutable list for backwards compatibility."""
@@ -125,10 +119,9 @@ def detect_mods_single_fragment(
             required_plugins = [p.strip() for p in mod_name.split("|")]
             if not all(any(p.lower() in plugin.lower() for plugin in crashlog_plugins) for p in required_plugins):
                 continue
-        else:
-            # Single plugin check
-            if not any(mod_name.lower() in plugin.lower() for plugin in crashlog_plugins):
-                continue
+        # Single plugin check
+        elif not any(mod_name.lower() in plugin.lower() for plugin in crashlog_plugins):
+            continue
 
         # Add the warning for this mod
         lines.append(f"* ⚠️ {yaml_dict[mod_name]}\n")

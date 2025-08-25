@@ -8,7 +8,6 @@ NOTE: This is now a thin sync adapter for backwards compatibility.
 New code should use OrchestratorCore directly for async operations.
 """
 
-import asyncio
 from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING

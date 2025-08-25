@@ -8,7 +8,6 @@ NOTE: This is now a thin sync adapter for backwards compatibility.
 New code should use FormIDAnalyzerCore directly for async operations.
 """
 
-import asyncio
 from typing import TYPE_CHECKING
 
 from ClassicLib.AsyncBridge import run_async
@@ -71,7 +70,6 @@ class FormIDAnalyzer:
         Returns:
             ReportFragment containing the FormID analysis results.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
         # Run async method using AsyncBridge
         return run_async(self._core.formid_match(formids_matches, crashlog_plugins))
 

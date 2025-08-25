@@ -38,11 +38,7 @@ class SyncDatabasePool:
         with self._connection_lock:
             if db_path not in self._connections or not self._is_connection_alive(self._connections[db_path]):
                 try:
-                    conn = sqlite3.connect(
-                        db_path,
-                        check_same_thread=False,
-                        timeout=30.0
-                    )
+                    conn = sqlite3.connect(db_path, check_same_thread=False, timeout=30.0)
                     conn.row_factory = sqlite3.Row
                     self._connections[db_path] = conn
                     logger.debug(f"Created new connection for {db_path}")

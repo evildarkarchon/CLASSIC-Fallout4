@@ -223,7 +223,9 @@ class TestBackupManager:
         assert backup_path.is_dir()
 
     @patch("ClassicLib.BackupManager.logger")
-    def test_create_backup_directory_with_logging(self, mock_logger: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch) -> None:
+    def test_create_backup_directory_with_logging(
+            self, mock_logger: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch
+    ) -> None:
         """Test that creating backup directory logs debug message."""
         # Change to temp directory using monkeypatch
         monkeypatch.chdir(tmp_path)
@@ -233,7 +235,9 @@ class TestBackupManager:
 
     @patch("ClassicLib.Util.validate_path")
     @patch("shutil.copy2")
-    def test_backup_files_success(self, mock_copy: MagicMock, mock_validate: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch) -> None:
+    def test_backup_files_success(
+            self, mock_copy: MagicMock, mock_validate: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch
+    ) -> None:
         """Test successful backup of files."""
         # Change to temp directory using monkeypatch
         monkeypatch.chdir(tmp_path)

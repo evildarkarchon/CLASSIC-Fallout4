@@ -1,8 +1,10 @@
 """Performance tests for DetectMods optimization."""
 
 import time
+
 import pytest
-from ClassicLib.ScanLog.DetectMods import detect_mods_single, detect_mods_double, detect_mods_important
+
+from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 
 
 @pytest.mark.performance
@@ -124,8 +126,7 @@ def test_detect_mods_scaling():
     for size in sizes:
         # Create datasets proportional to size
         yaml_dict = {f"mod_{i:04d}": f"Warning {i}" for i in range(size)}
-        crashlog_plugins = {f"plugin_mod_{j % size:04d}_{j}.esp": f"[{j:02X}]"
-                          for j in range(size * 2)}
+        crashlog_plugins = {f"plugin_mod_{j % size:04d}_{j}.esp": f"[{j:02X}]" for j in range(size * 2)}
         autoscan_report = []
 
         # Measure time
@@ -138,11 +139,10 @@ def test_detect_mods_scaling():
     # The ratio of times should not grow exponentially
     for i in range(1, len(times)):
         # Time should at most double when size doubles
-        size_ratio = sizes[i] / sizes[i-1]
-        time_ratio = times[i] / times[i-1]
+        size_ratio = sizes[i] / sizes[i - 1]
+        time_ratio = times[i] / times[i - 1]
         # Allow some variance but ensure it's not quadratic (which would be 4x)
-        assert time_ratio < size_ratio * 2.5, \
-            f"Performance degraded: size increased {size_ratio}x but time increased {time_ratio:.1f}x"
+        assert time_ratio < size_ratio * 2.5, f"Performance degraded: size increased {size_ratio}x but time increased {time_ratio:.1f}x"
 
 
 if __name__ == "__main__":

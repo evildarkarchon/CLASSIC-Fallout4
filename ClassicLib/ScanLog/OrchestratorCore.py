@@ -193,9 +193,11 @@ class OrchestratorCore:
         version_latest_vr: Version = crashgen_version_gen(self.yamldata.crashgen_latest_vr)
 
         # Generate error section
-        composer.add(self.report_generator.generate_error_section(
-            crashlog_mainerror, crashlog_crashgen, version_current, version_latest, version_latest_vr
-        ))
+        composer.add(
+            self.report_generator.generate_error_section(
+                crashlog_mainerror, crashlog_crashgen, version_current, version_latest, version_latest_vr
+            )
+        )
 
         # Extract module names
         xsemodules: set[str] = extract_module_names(set(segment_xsemodules))
@@ -259,22 +261,19 @@ class OrchestratorCore:
         if trigger_plugins_loaded:
             # Check for conflicting mods with conditional header
             conflict_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins),
-                "CONFLICT (TOGETHER)"
+                lambda: detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins), "CONFLICT (TOGETHER)"
             )
             composer.add(conflict_fragment)
 
             # Check for frequently problematic mods with conditional header
             freq_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins),
-                "FREQUENTLY CRASH"
+                lambda: detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins), "FREQUENTLY CRASH"
             )
             composer.add(freq_fragment)
 
             # Check for mods with known solutions with conditional header
             solution_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins),
-                "HAVE SOLUTIONS"
+                lambda: detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins), "HAVE SOLUTIONS"
             )
             composer.add(solution_fragment)
 
@@ -305,7 +304,7 @@ class OrchestratorCore:
             plugin_fragment = ConditionalSection.with_header(
                 lambda: self.plugin_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower),
                 header_text=None,  # plugin_match has its own header logic
-                header_generator=lambda: self.report_generator.generate_plugin_suspect_header()
+                header_generator=lambda: self.report_generator.generate_plugin_suspect_header(),
             )
             composer.add(plugin_fragment)
 
@@ -331,9 +330,8 @@ class OrchestratorCore:
 
         # Scan call stack for suspects
         segment_callstack_intact = "\n".join(segment_callstack)
-        stack_fragment, found_stack_suspect = self.suspect_scanner.suspect_scan_stack(
-            crashlog_mainerror, segment_callstack_intact, 50
-        )
+        stack_fragment, found_stack_suspect = self.suspect_scanner.suspect_scan_stack(crashlog_mainerror,
+                                                                                      segment_callstack_intact, 50)
         composer.add(stack_fragment)
 
         # Check for DLL crashes
@@ -370,9 +368,8 @@ class OrchestratorCore:
 
         # Scan all settings
         composer.add(self.settings_scanner.scan_buffout_achievements_setting(xsemodules, crashgen))
-        composer.add(self.settings_scanner.scan_buffout_memorymanagement_settings(
-            crashgen, has_xcell, has_old_xcell, has_baka_scrapheap
-        ))
+        composer.add(self.settings_scanner.scan_buffout_memorymanagement_settings(crashgen, has_xcell, has_old_xcell,
+                                                                                  has_baka_scrapheap))
         composer.add(self.settings_scanner.scan_archivelimit_setting(crashgen, crashgen_version))
         composer.add(self.settings_scanner.scan_buffout_looksmenu_setting(crashgen, xsemodules))
 

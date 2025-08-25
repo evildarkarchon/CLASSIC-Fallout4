@@ -88,6 +88,7 @@ class CrashLogsScanWorker(QObject):
                 # Brief yield to allow Qt's cross-thread signal delivery
                 # Without this, signals queue up until the entire operation completes
                 import time
+
                 time.sleep(0.001)  # 1ms is enough for thread switching
 
             # Get the result (or raise any exception that occurred)

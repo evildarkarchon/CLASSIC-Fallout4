@@ -111,11 +111,10 @@ class ReportGeneratorFragments:
                 "* **ONE OR MORE SUSPECTS DETECTED! CHECK LOG ABOVE FOR MORE INFORMATION!** *\n\n",
                 "---\n\n",
             ])
-        else:
-            return ReportFragment.from_lines([
-                "* **NO SUSPECTS DETECTED** *\n\n",
-                "---\n\n",
-            ])
+        return ReportFragment.from_lines([
+            "* **NO SUSPECTS DETECTED** *\n\n",
+            "---\n\n",
+        ])
 
     @staticmethod
     def generate_settings_section_header() -> ReportFragment:

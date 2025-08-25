@@ -31,7 +31,6 @@ from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
-
     from ClassicLib.Interface.ResultsViewerWidgets import (
         MarkdownViewer,
         ReportListWidget,
@@ -288,7 +287,9 @@ class ResultsViewerMixin:
         if not reports:
             self.metadata_widget.clear()
             self.markdown_viewer.clear()
-            self.markdown_viewer.setMarkdown("# No Reports Found\n\nNo scan reports are available. Run a crash log scan to generate reports.")
+            self.markdown_viewer.setMarkdown(
+                "# No Reports Found\n\nNo scan reports are available. Run a crash log scan to generate reports."
+            )
 
         logger.info(f"Refreshed reports list: {len(reports)} reports found")
 
@@ -362,7 +363,7 @@ class ResultsViewerMixin:
             "Delete Report",
             f"Are you sure you want to delete:\n{report_path.name}?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -405,7 +406,7 @@ class ResultsViewerMixin:
             self.results_tab,
             "Export Report",
             str(self.current_report_path.with_suffix("")),
-            "Markdown Files (*.md);;HTML Files (*.html);;Text Files (*.txt);;All Files (*.*)"
+            "Markdown Files (*.md);;HTML Files (*.html);;Text Files (*.txt);;All Files (*.*)",
         )
 
         if not file_path:

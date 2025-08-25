@@ -7,7 +7,7 @@ to fragment-based composition maintains identical markdown output.
 
 import pytest
 
-from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_single, detect_mods_important
+from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.ReportComposition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.ReportFragment import ReportFragment
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
@@ -69,10 +69,8 @@ class TestFragmentMigration:
     def test_conditional_header_only_when_content_exists(self, sample_yaml_single, sample_plugins):
         """Test that conditional headers are only added when content exists."""
         # Test with content
-        with_content = ConditionalSection.with_header(
-            lambda: detect_mods_single(sample_yaml_single, sample_plugins),
-            "FREQUENTLY CRASH"
-        )
+        with_content = ConditionalSection.with_header(lambda: detect_mods_single(sample_yaml_single, sample_plugins),
+                                                      "FREQUENTLY CRASH")
 
         assert with_content.has_content
         assert "### Checking For Mods That FREQUENTLY CRASH" in with_content.content[0]
@@ -80,8 +78,7 @@ class TestFragmentMigration:
 
         # Test without content
         without_content = ConditionalSection.with_header(
-            lambda: detect_mods_single({"NoMatch": "Warning"}, sample_plugins),
-            "FREQUENTLY CRASH"
+            lambda: detect_mods_single({"NoMatch": "Warning"}, sample_plugins), "FREQUENTLY CRASH"
         )
 
         assert not without_content.has_content
@@ -96,15 +93,9 @@ class TestFragmentMigration:
         composer.add(header)
 
         # Add conditional sections
-        composer.add_conditional(
-            lambda: detect_mods_single(sample_yaml_single, sample_plugins),
-            "FREQUENTLY CRASH"
-        )
+        composer.add_conditional(lambda: detect_mods_single(sample_yaml_single, sample_plugins), "FREQUENTLY CRASH")
 
-        composer.add_conditional(
-            lambda: detect_mods_double(sample_yaml_double, sample_plugins),
-            "CONFLICT (TOGETHER)"
-        )
+        composer.add_conditional(lambda: detect_mods_double(sample_yaml_double, sample_plugins), "CONFLICT (TOGETHER)")
 
         # Compose and convert to list
         result = composer.to_list()
@@ -151,11 +142,14 @@ class TestFragmentMigration:
         assert "[!] FOUND : [01] This mod frequently causes crashes!" in output
         assert output.endswith("\n\n")  # Should have double newline at end
 
-    @pytest.mark.parametrize("check_type,expected_header", [
-        ("FREQUENTLY CRASH", "### Checking For Mods That FREQUENTLY CRASH\n\n"),
-        ("CONFLICT (TOGETHER)", "### Checking For Mods That CONFLICT (TOGETHER)\n\n"),
-        ("HAVE SOLUTIONS", "### Checking For Mods That HAVE SOLUTIONS\n\n"),
-    ])
+    @pytest.mark.parametrize(
+        "check_type,expected_header",
+        [
+            ("FREQUENTLY CRASH", "### Checking For Mods That FREQUENTLY CRASH\n\n"),
+            ("CONFLICT (TOGETHER)", "### Checking For Mods That CONFLICT (TOGETHER)\n\n"),
+            ("HAVE SOLUTIONS", "### Checking For Mods That HAVE SOLUTIONS\n\n"),
+        ],
+    )
     def test_header_generation(self, check_type, expected_header):
         """Test that headers are generated correctly."""
         gen = ReportGeneratorFragments(None)

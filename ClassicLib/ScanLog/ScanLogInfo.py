@@ -65,6 +65,7 @@ class ThreadSafeLogCache:
                         self.cache[name] = content
 
             from ClassicLib.Logger import logger
+
             logger.debug(f"Loaded {len(self.cache)} crash logs using parallel sync I/O")
 
     def read_log(self, logname: str) -> list[str]:

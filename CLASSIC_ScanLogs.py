@@ -11,14 +11,13 @@ import random
 import sys
 import time
 from collections import Counter
-
-from ClassicLib.AsyncBridge import run_async
 # Removed ThreadPoolExecutor - using pure async instead
 from functools import partial
 from pathlib import Path
 from typing import cast
 
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_progress_context
+from ClassicLib.AsyncBridge import run_async
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog import (

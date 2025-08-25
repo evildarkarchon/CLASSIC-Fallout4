@@ -177,7 +177,7 @@ class AsyncDatabasePool:
 
         # Process in batches to avoid SQL query size limits
         for i in range(0, len(uncached_pairs), batch_size):
-            batch = uncached_pairs[i:i + batch_size]
+            batch = uncached_pairs[i: i + batch_size]
 
             # Build parameterized query with OR conditions
             conditions = " OR ".join(["(formid=? AND plugin=?)"] * len(batch))

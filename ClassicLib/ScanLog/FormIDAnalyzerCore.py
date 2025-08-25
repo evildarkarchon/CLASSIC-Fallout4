@@ -12,17 +12,17 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
 import regex as re
-from ClassicLib.AsyncBridge import run_async
 
+from ClassicLib.AsyncBridge import run_async
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
 from ClassicLib.ScanLog.Util import get_entry
-from ClassicLib.Util import append_or_extend
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 # Module-level regex pattern cache to avoid recompilation
 _PATTERN_CACHE: dict[str, re.Pattern[str]] = {}
+
 
 # LRU cache for FormID lookup results to avoid repeated database queries
 @lru_cache(maxsize=512)

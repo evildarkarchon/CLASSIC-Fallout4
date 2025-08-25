@@ -27,13 +27,11 @@ from PySide6.QtWidgets import (
 from ClassicLib.Logger import logger
 
 # Pre-compiled regex patterns for performance optimization
-_FOUND_SECTION_PATTERN = re.compile(
-    r'(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)'
-)
-_ERROR_PATTERN = re.compile(r'\[!?\s*ERROR\s*\]([^\n]*)', re.IGNORECASE)
-_WARNING_PATTERN = re.compile(r'\[!?\s*WARNING\s*\]([^\n]*)', re.IGNORECASE)
-_SOLVED_PATTERN = re.compile(r'\[!?\s*SOLVED\s*\]([^\n]*)', re.IGNORECASE)
-_ISSUE_LIST_PATTERN = re.compile(r'^[-*]\s+.+', re.MULTILINE)
+_FOUND_SECTION_PATTERN = re.compile(r"(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)")
+_ERROR_PATTERN = re.compile(r"\[!?\s*ERROR\s*\]([^\n]*)", re.IGNORECASE)
+_WARNING_PATTERN = re.compile(r"\[!?\s*WARNING\s*\]([^\n]*)", re.IGNORECASE)
+_SOLVED_PATTERN = re.compile(r"\[!?\s*SOLVED\s*\]([^\n]*)", re.IGNORECASE)
+_ISSUE_LIST_PATTERN = re.compile(r"^[-*]\s+.+", re.MULTILINE)
 
 
 class ReportListWidget(QListWidget):
@@ -136,12 +134,10 @@ class ReportListWidget(QListWidget):
         self._apply_status_styling(item, status)
 
         # Store metadata
-        item.setData(Qt.ItemDataRole.UserRole, {
-            "path": report_path,
-            "status": status,
-            "timestamp": timestamp_str,
-            "size": report_path.stat().st_size
-        })
+        item.setData(
+            Qt.ItemDataRole.UserRole,
+            {"path": report_path, "status": status, "timestamp": timestamp_str, "size": report_path.stat().st_size},
+        )
 
         return item
 
@@ -167,8 +163,7 @@ class ReportListWidget(QListWidget):
             second = time[4:6]
 
             try:
-                dt = datetime(int(year), int(month), int(day),
-                            int(hour), int(minute), int(second))
+                dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
                 return dt.strftime("%Y-%m-%d %H:%M:%S")
             except ValueError:
                 pass
@@ -239,8 +234,7 @@ class ReportListWidget(QListWidget):
             item = self.item(i)
             if item:
                 # Check if search text is in item text or tooltip
-                matches = (text.lower() in item.text().lower() or
-                          text.lower() in item.toolTip().lower())
+                matches = text.lower() in item.text().lower() or text.lower() in item.toolTip().lower()
                 item.setHidden(not matches)
 
     @staticmethod

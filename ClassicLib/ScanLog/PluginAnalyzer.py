@@ -190,8 +190,12 @@ class PluginAnalyzer:
             for plugin, count in sorted(plugins_matches.items(), key=lambda x: (-x[1], x[0])):
                 lines.append(f"- {plugin} | {count}\n")
             lines.append("\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n")
-            lines.append(f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n")
-            lines.append("You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n")
+            lines.append(
+                f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n"
+            )
+            lines.append(
+                "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n"
+            )
         else:
             lines.append("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n")
 
