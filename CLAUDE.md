@@ -62,7 +62,7 @@ poetry run pyright
 ### Setup and Initialization
 The application uses a modular architecture with `ClassicLib/SetupCoordinator.py` managing initialization:
 - **SetupCoordinator** - Coordinates all setup tasks (file generation, integrity checks, backups)
-- **FileGeneration** - Handles YAML configuration file generation
+- **FileGeneration** - Handles YAML configuration file generation (now with async support)
 - **GameIntegrity** - Validates game installation and file integrity
 - **BackupManager** - Manages automatic game file backups
 - **DocumentsChecker** - Validates document folders and INI files
@@ -79,15 +79,27 @@ The project uses an **async-first orchestrator pattern** for log scanning:
 The codebase follows an async-first design pattern:
 - **Core implementations** are async (e.g., `ScanGameCore`, `FormIDAnalyzerCore`, `FileIOCore`)
 - **Sync adapters** provide backwards compatibility using `asyncio.run()`
+- **AsyncBridge** manages async operations in sync contexts without creating new event loops
 - **No feature flags** - async is always used internally for better performance
 - **Unified file I/O** - All file operations go through `FileIOCore`
 
 ### Key Components
 1. **MessageHandler** - Central messaging system that routes to GUI dialogs, TUI widgets, or CLI output
-2. **YamlSettingsCache** - Manages all YAML configuration files with caching
+2. **YamlSettingsCache** - Manages all YAML configuration files with caching and batch operations
 3. **FileIOCore** - Unified async-first file I/O operations with automatic encoding detection
 4. **AsyncDatabasePool** - Connection pooling for FormID database operations
 5. **ThreadSafeLogCache** - Thread-safe caching for crash log data
+6. **PerformanceMonitor** - Performance tracking decorators and utilities
+7. **AsyncBridge** - Singleton bridge for running async code in sync contexts
+
+### Performance Optimizations
+
+The codebase uses several performance optimization patterns:
+
+- **Batch loading** - YamlSettingsCache supports `batch_get_settings()` for loading multiple settings at once
+- **Performance monitoring** - `PerformanceMonitor` module provides decorators and context managers
+- **Concurrent operations** - File generation and other I/O operations use `asyncio.gather()`
+- **Connection pooling** - Database operations use `AsyncDatabasePool` for efficient FormID lookups
 
 ### TUI Architecture (Terminal UI)
 The TUI uses Textual framework with these components:
@@ -110,6 +122,48 @@ async def process_files():
 # Sync adapter usage (for backwards compatibility)
 from ClassicLib.FileIOCore import read_file_sync
 content = read_file_sync(path)
+
+# Use AsyncBridge for async in sync contexts
+from ClassicLib.AsyncBridge import AsyncBridge
+
+bridge = AsyncBridge.get_instance()
+result = bridge.run_async(async_function())
+```
+
+### Performance Monitoring Patterns
+
+Use the PerformanceMonitor module for tracking operations:
+
+```python
+from ClassicLib.PerformanceMonitor import timed_operation, TimedBlock
+
+
+@timed_operation("Database query")
+def query_database():
+    # Your code here
+    pass
+
+
+# Context manager for timing blocks
+with TimedBlock("YAML loading", log_level="debug"):
+    # Your code here
+    pass
+```
+
+### Batch Settings Loading
+
+For improved performance, use batch loading when accessing multiple YAML settings:
+
+```python
+from ClassicLib.YamlSettingsCache import yaml_cache
+
+# Instead of multiple individual calls, batch them
+requests = [
+    (str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path"),
+    (bool, YAML.Settings, "CLASSIC_Settings.Update Check"),
+    (int, YAML.Settings, "MaxOutputLines")
+]
+values = yaml_cache.batch_get_settings(requests)
 ```
 
 ### Testing Patterns
@@ -166,6 +220,32 @@ def test_with_test_enum():
 - Clean up resources in test teardown
 - Never rely on files existing from previous test runs
 
+## Code Quality Standards
+
+### Type Annotations (Python 3.12+)
+
+- All functions must have complete type annotations including return types
+- Use modern Python 3.12+ generic syntax: `list[str]`, `dict[str, Any]`
+- Use `TYPE_CHECKING` imports for circular import resolution
+
+### Import Organization
+
+- Remove unused imports
+- Group imports: standard library, third-party, local project
+- Use conditional imports for optional dependencies (PySide6, tqdm, aiosqlite)
+
+### Path Management
+
+- Always use `pathlib.Path` instead of string paths
+- Use `encoding="utf-8", errors="ignore"` for file operations
+- Use `open_file_with_encoding()` context manager for unknown encodings
+
+### Message Handling
+
+- Never use direct print statements - use MessageHandler system
+- Use `msg_info()`, `msg_warning()`, `msg_error()` functions
+- Initialize MessageHandler in test fixtures
+
 ## Important Notes
 
 1. **Python 3.12+ Required** - Uses modern Python features and syntax
@@ -189,10 +269,12 @@ def test_with_test_enum():
 1. Changes should maintain the modular architecture
 2. Use MessageHandler for all user communication
 3. Follow async patterns in ScanLog components
-4. Write tests for new functionality with appropriate markers
-5. Run linter and type checker before committing
-6. Use terminal for running tests (VS Code test tool has freezing issues)
-7. Pre-commit hooks will automatically check for test isolation violations
+4. Use batch operations for YAML settings when loading multiple values
+5. Add performance monitoring for critical operations
+6. Write tests for new functionality with appropriate markers
+7. Run linter and type checker before committing
+8. Use terminal for running tests (VS Code test tool has freezing issues)
+9. Pre-commit hooks will automatically check for test isolation violations
 
 ## Pre-commit Hooks
 
@@ -208,10 +290,8 @@ poetry run pre-commit install
 ```
 
 ### Available Hooks
-- **Test Isolation Checker** - Detects violations of test isolation rules
 - **Production YAML Checker** - Prevents use of production YAML stores in tests
 - **Production Path Checker** - Prevents hardcoded production paths in tests
-- **Ruff** - Python linting and formatting
 - **Standard hooks** - Trailing whitespace, YAML validation, etc.
 
 ### Running Manually
@@ -224,12 +304,6 @@ poetry run pre-commit run
 
 # Run specific hook
 poetry run pre-commit run check-test-isolation
-```
-
-### Test Isolation Checker Script
-The `scripts/check_test_isolation.py` script can also be run standalone:
-```bash
-poetry run python scripts/check_test_isolation.py
 ```
 
 ## Memories
