@@ -46,17 +46,25 @@ class SetupCoordinator:
         Raises:
             TypeError: If the classic version or game name settings are not of type str.
         """
-        from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings  # noqa: F401
+        from ClassicLib.PerformanceMonitor import TimedBlock
+        from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings  # noqa: F401
 
         # Configure logging
         configure_logging(logger)
 
         # Generate required files
-        self.file_generator.generate_all_files()
+        with TimedBlock("File Generation", log_level="debug"):
+            self.file_generator.generate_all_files()
 
-        # Get version and game information
-        classic_ver: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
-        game_name: str | None = yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name")
+        # Batch load version, game information, and game path
+        with TimedBlock("Initial Settings Load", log_level="debug"):
+            requests = [
+                (str, YAML.Main, "CLASSIC_Info.version"),
+                (str, YAML.Game, "Game_Info.Main_Root_Name"),
+                (str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+            ]
+
+            classic_ver, game_name, game_path = yaml_cache.batch_get_settings(requests)
 
         if not (isinstance(classic_ver, str) and isinstance(game_name, str)):
             raise TypeError("Classic version and game name must be strings")
@@ -68,9 +76,6 @@ class SetupCoordinator:
         msg_info("REMINDER: COMPATIBLE CRASH LOGS MUST START WITH 'crash-' AND MUST HAVE .log EXTENSION", target=MessageTarget.CLI_ONLY)
         msg_info("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...", target=MessageTarget.CLI_ONLY)
         logger.debug(f"> > > STARTED {classic_ver}")
-
-        # Check if game path is configured
-        game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
         if not game_path:
             # Generate paths if not configured
@@ -121,31 +126,37 @@ class SetupCoordinator:
             parent: Optional parent widget for GUI mode. This is passed to the
                 message handler to ensure proper dialog parenting in GUI applications.
         """
-        from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+        from ClassicLib.YamlSettingsCache import yaml_cache
 
         # Initialize message handler first
         # Note: init_message_handler will replace any existing handler
         # In GUI mode, the MainWindow should initialize its own handler with itself as parent
         init_message_handler(parent=parent, is_gui_mode=is_gui)
 
-        # Get and configure YAML cache
-        yaml_cache: Any = GlobalRegistry.get_yaml_cache()
+        # Get and configure YAML cache (already registered as singleton)
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, is_gui)
 
-        # Preload static YAML files
-        for store in yaml_cache.STATIC_YAML_STORES:
-            path = yaml_cache.get_path_for_store(store)
-            yaml_cache.load_yaml(path)
+        # Prefetch all common settings at startup for better performance
+        # This loads Main, Settings, and Game YAML files concurrently
+        yaml_cache.prefetch_all_settings()
+
+        # Batch load all application settings
+        requests = [
+            (bool, YAML.Settings, "CLASSIC_Settings.VR Mode"),
+            (str, YAML.Settings, "CLASSIC_Settings.Managed Game"),
+            (bool, YAML.Main, "CLASSIC_Info.is_prerelease")
+        ]
+
+        vr_mode, managed_game_setting, is_prerelease = yaml_cache.batch_get_settings(requests)
 
         # Register application settings
         # noinspection PyTypedDict
-        GlobalRegistry.register(GlobalRegistry.Keys.VR, "" if not classic_settings(bool, "VR Mode") else "VR")
+        GlobalRegistry.register(GlobalRegistry.Keys.VR, "" if not vr_mode else "VR")
 
-        managed_game_setting: str | None = classic_settings(str, "Managed Game")
         game_value: str = managed_game_setting.replace(" ", "") if isinstance(managed_game_setting, str) else ""
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, game_value)
 
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_PRERELEASE, yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease"))
+        GlobalRegistry.register(GlobalRegistry.Keys.IS_PRERELEASE, is_prerelease)
 
         # Set local directory
         if getattr(sys, "frozen", False):

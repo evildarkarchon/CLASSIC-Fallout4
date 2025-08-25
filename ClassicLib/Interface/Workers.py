@@ -199,18 +199,18 @@ class UpdateCheckWorker(QObject):
         """
         super().__init__()
         self.explicit = explicit
-        self._loop: asyncio.AbstractEventLoop | None = None
 
     @Slot()
     def run(self) -> None:
         """
         Main entry point for the worker thread.
-        Creates a new event loop and runs the async update check.
+        Uses AsyncBridge for efficient async operations in worker thread.
         """
         try:
-            # Create a new event loop for this thread
-            self._loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self._loop)
+            from ClassicLib.AsyncBridge import AsyncBridge
+
+            # Use AsyncBridge instead of creating new event loop
+            bridge = AsyncBridge.get_instance()
 
             # Check if pre-release
             if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
@@ -219,8 +219,8 @@ class UpdateCheckWorker(QObject):
                 self.finished.emit()
                 return
 
-            # Run the async update check
-            result = self._loop.run_until_complete(self._async_check())
+            # Run the async update check using AsyncBridge
+            result = bridge.run_async(self._async_check())
             self.updateAvailable.emit(not result)
 
         except UpdateCheckError as e:
@@ -228,9 +228,6 @@ class UpdateCheckWorker(QObject):
         except (RuntimeError, OSError, ValueError) as e:
             self.error.emit(f"Unexpected error during update check: {e}")
         finally:
-            # Clean up the event loop
-            if self._loop:
-                self._loop.close()
             self.finished.emit()
 
     async def _async_check(self) -> bool:

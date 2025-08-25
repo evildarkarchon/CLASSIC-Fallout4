@@ -7,7 +7,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Input, Label, Select, Static
 
 from ClassicLib import YAML
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
 
 
 class SettingsScreen(ModalScreen):
@@ -17,7 +17,7 @@ class SettingsScreen(ModalScreen):
     SettingsScreen {
         align: center middle;
     }
-    
+
     #settings-container {
         width: 70;
         height: 35;
@@ -25,7 +25,7 @@ class SettingsScreen(ModalScreen):
         padding: 1;
         background: $surface;
     }
-    
+
     .settings-title {
         text-align: center;
         text-style: bold;
@@ -33,44 +33,44 @@ class SettingsScreen(ModalScreen):
         color: $primary;
         text-style: bold underline;
     }
-    
+
     .settings-content {
         height: 100%;
         margin: 1 0;
     }
-    
+
     .setting-group {
         margin: 1 0;
         padding: 1;
         border: solid $border;
     }
-    
+
     .setting-group-title {
         text-style: bold;
         color: $primary;
         margin-bottom: 1;
     }
-    
+
     .setting-item {
         margin: 1 0;
     }
-    
+
     .setting-label {
         width: 30;
         color: $text-muted;
     }
-    
+
     .setting-input {
         width: 100%;
     }
-    
+
     .settings-buttons {
         dock: bottom;
         height: 3;
         align: center middle;
         margin-top: 1;
     }
-    
+
     .settings-buttons Button {
         margin: 0 1;
         min-width: 12;
@@ -86,15 +86,40 @@ class SettingsScreen(ModalScreen):
     def _load_current_settings(self) -> None:
         """Load current settings values."""
         try:
+            # Batch load all settings at once
+            requests = [
+                (str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path"),
+                (str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path"),
+                (bool, YAML.Settings, "CLASSIC_Settings.Update Check"),
+                (bool, YAML.Settings, "AutoScroll"),
+                (bool, YAML.Settings, "ShowTimestamps"),
+                (int, YAML.Settings, "MaxOutputLines"),
+                (str, YAML.Settings, "Game")
+            ]
+
+            values = yaml_cache.batch_get_settings(requests)
+
+            # Create settings dictionary with defaults
             self.original_settings = {
-                "ModStagingFolder": classic_settings(str, "MODS Folder Path") or "",
-                "CustomScanFolder": classic_settings(str, "SCAN Custom Path") or "",
-                "UpdateCheck": classic_settings(bool, "Update Check"),
-                "AutoScroll": yaml_settings(bool, YAML.Settings, "AutoScroll", True),
-                "ShowTimestamps": yaml_settings(bool, YAML.Settings, "ShowTimestamps", True),
-                "MaxOutputLines": yaml_settings(int, YAML.Settings, "MaxOutputLines", 10000),
-                "Game": yaml_settings(str, YAML.Settings, "Game", "Fallout4"),
+                "ModStagingFolder": values[0] or "",
+                "CustomScanFolder": values[1] or "",
+                "UpdateCheck": values[2] if values[2] is not None else True,
+                "AutoScroll": values[3] if values[3] is not None else True,
+                "ShowTimestamps": values[4] if values[4] is not None else True,
+                "MaxOutputLines": values[5] if values[5] is not None else 10000,
+                "Game": values[6] if values[6] is not None else "Fallout4",
             }
+
+            # Set defaults for None values
+            if values[3] is None:
+                yaml_settings(bool, YAML.Settings, "AutoScroll", True)
+            if values[4] is None:
+                yaml_settings(bool, YAML.Settings, "ShowTimestamps", True)
+            if values[5] is None:
+                yaml_settings(int, YAML.Settings, "MaxOutputLines", 10000)
+            if values[6] is None:
+                yaml_settings(str, YAML.Settings, "Game", "Fallout4")
+
         except (FileNotFoundError, KeyError, ValueError, TypeError):
             self.original_settings = {
                 "ModStagingFolder": "",

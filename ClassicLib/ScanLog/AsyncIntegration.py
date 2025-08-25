@@ -32,14 +32,27 @@ async def async_crashlogs_scan() -> None:
     4. Async database lookups
     """
     from ClassicLib.Constants import DB_PATHS, YAML
-    from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+    from ClassicLib.YamlSettingsCache import yaml_cache
 
     # Get crash log files
     crashlog_list: list[Path] = crashlogs_get_files()
     msg_info("REFORMATTING CRASH LOGS ASYNC, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
 
-    # Load settings
-    remove_list: tuple[str] = yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
+    # Batch load all settings at once
+    requests = [
+        (tuple, YAML.Main, "exclude_log_records"),
+        (bool, YAML.Settings, "CLASSIC_Settings.FCX Mode"),
+        (bool, YAML.Settings, "CLASSIC_Settings.Show FormID Values"),
+        (bool, YAML.Settings, "CLASSIC_Settings.Move Unsolved Logs")
+    ]
+
+    values = yaml_cache.batch_get_settings(requests)
+
+    # Unpack settings
+    remove_list: tuple[str] = values[0] or ("",)
+    fcx_mode: bool | None = values[1]
+    show_formid_values: bool | None = values[2]
+    move_unsolved_logs: bool | None = values[3]
 
     # Reformat logs asynchronously
     reformat_start = time.perf_counter()
@@ -49,10 +62,7 @@ async def async_crashlogs_scan() -> None:
 
     # Initialize configuration
     yamldata = ClassicScanLogsInfo()
-    fcx_mode: bool | None = classic_settings(bool, "FCX Mode")
-    show_formid_values: bool | None = classic_settings(bool, "Show FormID Values")
     formid_db_exists: bool = any(db.is_file() for db in DB_PATHS)
-    move_unsolved_logs: bool | None = classic_settings(bool, "Move Unsolved Logs")
 
     msg_info("SCANNING CRASH LOGS ASYNC, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
     scan_start_time: float = time.perf_counter()

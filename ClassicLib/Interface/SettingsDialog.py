@@ -369,48 +369,65 @@ class SettingsDialog(QDialog):
         Reads settings from CLASSIC Settings.yaml and updates the UI widgets
         to reflect the current configuration values.
         """
+        from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
+
+        # Prepare batch requests for all settings
+        requests = []
+        widget_info = []  # Store widget info to match with results
+
         for widget_key, yaml_key in self.SETTINGS_MAP.items():
             widget = self.settings_widgets.get(widget_key)
             if not widget:
                 continue
 
-            # Read the setting value from YAML
+            widget_info.append((widget_key, widget))
+
+            # Determine the type and create request
             if isinstance(widget, QCheckBox):
-                # Handle checkbox settings
                 if self.yaml_store == YAML.Settings:
-                    value = classic_settings(bool, yaml_key)
+                    requests.append((bool, YAML.Settings, f"CLASSIC_Settings.{yaml_key}"))
                 else:
-                    value = yaml_settings(bool, self.yaml_store, f"CLASSIC_Settings.{yaml_key}")
-                if value is None:
-                    # Set default value if not found
-                    value = False
-                    yaml_settings(bool, self.yaml_store, f"CLASSIC_Settings.{yaml_key}", False)
-                widget.setChecked(value)
-
+                    requests.append((bool, self.yaml_store, f"CLASSIC_Settings.{yaml_key}"))
             elif isinstance(widget, QComboBox):
-                # Handle combo box settings
                 if self.yaml_store == YAML.Settings:
-                    value = classic_settings(str, yaml_key)
+                    requests.append((str, YAML.Settings, f"CLASSIC_Settings.{yaml_key}"))
                 else:
-                    value = yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}")
-                if value is None:
-                    # Set default value if not found
-                    value = "Both"
-                    yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}", "Both")
-                # Find and set the matching item in the combo box
-                index = widget.findText(value)
-                if index >= 0:
-                    widget.setCurrentIndex(index)
-
+                    requests.append((str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}"))
             elif isinstance(widget, QLineEdit):
-                # Handle text input settings
                 if self.yaml_store == YAML.Settings:
-                    value = classic_settings(str, yaml_key)
+                    requests.append((str, YAML.Settings, f"CLASSIC_Settings.{yaml_key}"))
                 else:
-                    value = yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}")
-                if value is None:
-                    value = ""
-                widget.setText(value)
+                    requests.append((str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}"))
+
+        # Batch load all settings at once
+        if requests:
+            values = yaml_cache.batch_get_settings(requests)
+
+            # Apply loaded values to widgets
+            for (widget_key, widget), value, request in zip(widget_info, values, requests):
+                yaml_key = self.SETTINGS_MAP[widget_key]
+
+                if isinstance(widget, QCheckBox):
+                    if value is None:
+                        # Set default value if not found
+                        value = False
+                        yaml_settings(bool, self.yaml_store, f"CLASSIC_Settings.{yaml_key}", False)
+                    widget.setChecked(value)
+
+                elif isinstance(widget, QComboBox):
+                    if value is None:
+                        # Set default value if not found
+                        value = "Both"
+                        yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}", "Both")
+                    # Find and set the matching item in the combo box
+                    index = widget.findText(value)
+                    if index >= 0:
+                        widget.setCurrentIndex(index)
+
+                elif isinstance(widget, QLineEdit):
+                    if value is None:
+                        value = ""
+                    widget.setText(value)
 
     def save_settings(self) -> None:
         """
