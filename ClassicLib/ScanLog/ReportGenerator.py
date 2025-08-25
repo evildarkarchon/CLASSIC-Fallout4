@@ -79,7 +79,7 @@ class ReportGeneratorFragments:
         if (version_current < version_latest_vr and version_current != version_latest) or (
             not game_is_vr and version_current < version_latest
         ):
-            lines.append(f"***WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***\n\n")
+            lines.append(f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***\n\n")
         else:
             lines.append(f"✅ *You have the latest version of {crashgen_name}!*\n\n")
 
