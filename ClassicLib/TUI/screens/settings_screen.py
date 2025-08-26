@@ -94,15 +94,15 @@ class SettingsScreen(ModalScreen):
                 (bool, YAML.Settings, "AutoScroll"),
                 (bool, YAML.Settings, "ShowTimestamps"),
                 (int, YAML.Settings, "MaxOutputLines"),
-                (str, YAML.Settings, "Game")
+                (str, YAML.Settings, "Game"),
             ]
 
             values = yaml_cache.batch_get_settings(requests)
 
             # Create settings dictionary with defaults
             self.original_settings = {
-                "ModStagingFolder": values[0] or "",
-                "CustomScanFolder": values[1] or "",
+                "CLASSIC_Settings.MODS Folder Path": values[0] or "",
+                "CLASSIC_Settings.SCAN Custom Path": values[1] or "",
                 "UpdateCheck": values[2] if values[2] is not None else True,
                 "AutoScroll": values[3] if values[3] is not None else True,
                 "ShowTimestamps": values[4] if values[4] is not None else True,
@@ -122,8 +122,8 @@ class SettingsScreen(ModalScreen):
 
         except (FileNotFoundError, KeyError, ValueError, TypeError):
             self.original_settings = {
-                "ModStagingFolder": "",
-                "CustomScanFolder": "",
+                "CLASSIC_Settings.MODS Folder Path": "",
+                "CLASSIC_Settings.SCAN Custom Path": "",
                 "UpdateCheck": True,
                 "AutoScroll": True,
                 "ShowTimestamps": True,
@@ -144,7 +144,7 @@ class SettingsScreen(ModalScreen):
                     with Vertical(classes="setting-item"):
                         yield Label("Staging Mods Folder:", classes="setting-label")
                         yield Input(
-                            value=self.original_settings.get("ModStagingFolder", ""),
+                            value=self.original_settings.get("CLASSIC_Settings.MODS Folder Path", ""),
                             placeholder="Path to staging mods folder",
                             id="staging-folder",
                             classes="setting-input",
@@ -153,7 +153,7 @@ class SettingsScreen(ModalScreen):
                     with Vertical(classes="setting-item"):
                         yield Label("Custom Scan Folder:", classes="setting-label")
                         yield Input(
-                            value=self.original_settings.get("CustomScanFolder", ""),
+                            value=self.original_settings.get("CLASSIC_Settings.SCAN Custom Path", ""),
                             placeholder="Path to custom scan folder",
                             id="custom-folder",
                             classes="setting-input",
@@ -224,11 +224,11 @@ class SettingsScreen(ModalScreen):
             # Save folder paths
             staging_input = self.query_one("#staging-folder", Input)
             if staging_input.value:
-                yaml_settings(str, YAML.Settings, "ModStagingFolder", staging_input.value)
+                yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", staging_input.value)
 
             custom_input = self.query_one("#custom-folder", Input)
             if custom_input.value:
-                yaml_settings(str, YAML.Settings, "CustomScanFolder", custom_input.value)
+                yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", custom_input.value)
 
             # Save display settings
             auto_scroll = self.query_one("#auto-scroll", Checkbox)
@@ -261,10 +261,10 @@ class SettingsScreen(ModalScreen):
         """Reset settings to original values."""
         # Reset inputs
         staging_input = self.query_one("#staging-folder", Input)
-        staging_input.value = self.original_settings.get("ModStagingFolder", "")
+        staging_input.value = self.original_settings.get("CLASSIC_Settings.MODS Folder Path", "")
 
         custom_input = self.query_one("#custom-folder", Input)
-        custom_input.value = self.original_settings.get("CustomScanFolder", "")
+        custom_input.value = self.original_settings.get("CLASSIC_Settings.SCAN Custom Path", "")
 
         auto_scroll = self.query_one("#auto-scroll", Checkbox)
         auto_scroll.value = self.original_settings.get("AutoScroll", True)

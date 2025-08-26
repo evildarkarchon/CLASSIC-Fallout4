@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from textual.widgets import Input
 
+from ClassicLib.Constants import YAML
 from ClassicLib.TUI.app import CLASSICTuiApp
 from ClassicLib.TUI.handlers.message_handler import TuiMessageHandler
 from ClassicLib.TUI.handlers.papyrus_handler import PapyrusStats, TuiPapyrusHandler
@@ -332,20 +333,23 @@ class TestSettingsScreen:
         """Test saving settings."""
         app = CLASSICTuiApp()
         async with app.run_test() as pilot:
-            # Mock classic_settings to return proper values
-            def mock_classic_settings(type_hint, key, default=None):
-                values = {
-                    "ModStagingFolder": "/mock/staging",
-                    "CustomScanFolder": "/mock/custom",
-                    "Update Check": True,
-                    "AutoScroll": True,
-                    "ShowTimestamps": True,
-                    "MaxOutputLines": 10000,
-                    "Game": "Fallout4",
-                }
-                return values.get(key, default)
+            # Mock yaml_cache.batch_get_settings to return proper values
+            def mock_batch_get_settings(requests):
+                # Return values in the same order as requested
+                return [
+                    "/mock/staging",  # MODS Folder Path
+                    "/mock/custom",  # SCAN Custom Path
+                    True,  # Update Check
+                    True,  # AutoScroll
+                    True,  # ShowTimestamps
+                    10000,  # MaxOutputLines
+                    "Fallout4",  # Game
+                ]
 
-            with patch("ClassicLib.TUI.screens.settings_screen.classic_settings", side_effect=mock_classic_settings) as mock_settings:
+            with (
+                patch("ClassicLib.TUI.screens.settings_screen.yaml_cache.batch_get_settings", side_effect=mock_batch_get_settings),
+                patch("ClassicLib.TUI.screens.settings_screen.yaml_settings") as mock_yaml_settings,
+            ):
                 # Open settings
                 await pilot.press("ctrl+o")
                 await pilot.pause()
@@ -361,8 +365,10 @@ class TestSettingsScreen:
                 # Save settings - directly call the method
                 settings_screen._save_settings()
 
-                # Verify settings were saved
-                assert mock_settings.call_count > 0
+                # Verify settings were saved (yaml_settings was called)
+                assert mock_yaml_settings.call_count > 0
+                # Verify the correct value was written with proper key
+                mock_yaml_settings.assert_any_call(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", "/new/path")
 
     @pytest.mark.asyncio
     async def test_settings_cancel(self):
