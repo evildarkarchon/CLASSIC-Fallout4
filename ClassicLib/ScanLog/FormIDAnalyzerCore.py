@@ -18,6 +18,7 @@ from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
 from ClassicLib.ScanLog.Util import get_entry
 
 if TYPE_CHECKING:
+    from ClassicLib.ScanLog.ReportFragment import ReportFragment
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 # Module-level regex pattern cache to avoid recompilation
