@@ -49,7 +49,15 @@ __all__ = [
     "AsyncDatabasePool",
     "AsyncFormIDAnalyzer",
     "AsyncScanOrchestrator",
-    # Core components
+    "batch_file_copy_async",
+    "batch_file_move_async",
+    "crashlogs_reformat_async",
+    "integrate_async_file_loading",
+    "reformat_single_log_async",
+    "run_async_scan",
+    "write_file_async",
+    "write_reports_batch_async",
+    # Core scanner components
     "ClassicScanLogsInfo",
     "FCXModeHandler",
     "FormIDAnalyzer",
@@ -60,32 +68,24 @@ __all__ = [
     "SettingsScanner",
     "SuspectScanner",
     "ThreadSafeLogCache",
-    "batch_file_copy_async",
-    "batch_file_move_async",
-    # Utility functions
-    "copy_files",
-    "crashlogs_get_files",
-    "crashlogs_reformat",
-    "crashlogs_reformat_async",
     # Detection functions
     "detect_mods_double",
     "detect_mods_important",
     "detect_mods_single",
-    "ensure_directory_exists",
+    # GPU functions
+    "get_gpu_info",
     # Parser functions
     "extract_module_names",
     "extract_segments",
     "find_segments",
+    "parse_crash_header",
+    # Utility functions
+    "copy_files",
+    "crashlogs_get_files",
+    "crashlogs_reformat",
+    "ensure_directory_exists",
     "get_entry",
-    # GPU functions
-    "get_gpu_info",
     "get_path_from_setting",
-    "integrate_async_file_loading",
     "is_valid_custom_scan_path",
     "move_files",
-    "parse_crash_header",
-    "reformat_single_log_async",
-    "run_async_scan",
-    "write_file_async",
-    "write_reports_batch_async",
 ]
