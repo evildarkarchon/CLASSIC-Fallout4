@@ -31,8 +31,6 @@ if TYPE_CHECKING:
 
 # Pre-compiled regex patterns for performance optimization
 # noinspection RegExpRedundantEscape
-_FOUND_SECTION_PATTERN = re.compile(r"(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)")
-# noinspection RegExpRedundantEscape
 _ERROR_PATTERN = re.compile(r"\[!?\s*ERROR\s*\]([^\n]*)", re.IGNORECASE)
 # noinspection RegExpRedundantEscape
 _WARNING_PATTERN = re.compile(r"\[!?\s*WARNING\s*\]([^\n]*)", re.IGNORECASE)
@@ -364,19 +362,11 @@ class MarkdownViewer(QTextBrowser):
         Returns:
             Processed markdown text.
         """
-        # For better line break preservation, wrap content sections in code blocks
-        # This ensures QTextBrowser preserves formatting
+        # Process markdown for enhanced display
         processed = markdown
 
-        # Find [!] FOUND sections and wrap multiline content in code blocks
-        def wrap_multiline_content(match):  # noqa: ANN001, ANN202
-            header = match.group(1)
-            content = match.group(2).rstrip()  # Remove trailing whitespace/newlines
-            # Wrap the content in a code b
-            return f"{header}\n```\n{content}\n```\n"
-
-        # Use pre-compiled regex patterns for performance
-        processed = _FOUND_SECTION_PATTERN.sub(wrap_multiline_content, processed)
+        # Note: [!] FOUND sections now use bold markdown format (**[!] FOUND**)
+        # and don't require special code block wrapping
         processed = _ERROR_PATTERN.sub(r'<span class="error">[ERROR]\1</span>', processed)
         processed = _WARNING_PATTERN.sub(r'<span class="warning">[WARNING]\1</span>', processed)
         processed = _SOLVED_PATTERN.sub(r'<span class="success">[SOLVED]\1</span>', processed)

@@ -71,13 +71,22 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         plugin_id = mod_matches[mod_name]
         plugin_list = f"[{plugin_id}]"
 
-        # Build the complete entry
-        lines.append("```\n")
-        lines.append(f"[!] FOUND : {plugin_list} {mod_warning}")
-        if not mod_warning.endswith("\n"):
-            lines.append("\n")
-        lines.append("```\n")
-        lines.append("\n")
+        # Build the complete entry using hybrid approach with Qt-compatible newlines
+        warning_lines = mod_warning.splitlines()
+        if warning_lines:
+            # First line (mod name) goes on the same line as FOUND header
+            mod_name = warning_lines[0].strip()
+            lines.append(f"**[!] FOUND : {plugin_list} {mod_name}**\n\n")
+
+            # Remaining lines are indented with double newlines for Qt compatibility
+            for line in warning_lines[1:]:
+                if line.strip():  # Only add content lines
+                    lines.append(f"    {line}\n\n")
+                else:
+                    lines.append("\n")  # Preserve empty lines as single newlines
+        else:
+            # Fallback if no warning content
+            lines.append(f"**[!] FOUND : {plugin_list}**\n\n")
 
     return ReportFragment.from_lines(lines)
 
