@@ -1,14 +1,17 @@
 """Papyrus monitoring widget for TUI."""
 
+from typing import ClassVar
+
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Container, Horizontal
+from textual.css.query import NoMatches
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Button, Label, Static
 
-from ..handlers.papyrus_handler import PapyrusStats
+from ClassicLib.TUI.handlers.papyrus_handler import PapyrusStats
 
 
 class PapyrusMonitorWidget(Widget):
@@ -22,78 +25,78 @@ class PapyrusMonitorWidget(Widget):
         padding: 1;
         border: solid $primary;
     }
-    
+
     PapyrusMonitorWidget:focus {
         border: solid $accent;
     }
-    
+
     .papyrus-title {
         text-align: center;
         text-style: bold;
         color: $primary;
         margin-bottom: 1;
     }
-    
+
     .papyrus-stats {
         layout: grid;
         grid-size: 2 5;
         grid-gutter: 1 2;
         margin: 0 1;
     }
-    
+
     .stat-label {
         text-align: right;
         color: $text-muted;
     }
-    
+
     .stat-value {
         text-align: left;
         text-style: bold;
     }
-    
+
     .stat-value.normal {
         color: $success;
     }
-    
+
     .stat-value.warning {
         color: $warning;
     }
-    
+
     .stat-value.error {
         color: $error;
     }
-    
+
     .papyrus-status {
         margin-top: 1;
         padding: 1;
         text-align: center;
         border: solid $primary;
     }
-    
+
     .papyrus-status.monitoring {
         background: $panel;
         border: solid $success;
         color: $success;
     }
-    
+
     .papyrus-status.error {
         background: $panel;
         border: solid $error;
         color: $error;
     }
-    
+
     .papyrus-status.warning {
         background: $panel;
         border: solid $warning;
         color: $warning;
     }
-    
+
     .papyrus-timestamp {
         text-align: center;
         color: $text-muted;
         margin-top: 1;
     }
-    
+
     .papyrus-controls {
         layout: horizontal;
         align: center middle;
@@ -102,7 +105,7 @@ class PapyrusMonitorWidget(Widget):
     }
     """
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("r", "refresh", "Refresh Stats", show=False),
         Binding("s", "toggle_monitoring", "Start/Stop", show=False),
         Binding("c", "clear_stats", "Clear", show=False),
@@ -118,7 +121,7 @@ class PapyrusMonitorWidget(Widget):
     last_update = reactive("")
     use_unicode = reactive(True)
 
-    def __init__(self, use_unicode: bool = True, show_controls: bool = True, **kwargs):
+    def __init__(self, use_unicode: bool = True, show_controls: bool = True, **kwargs) -> None:  # noqa: ANN003
         """Initialize the Papyrus monitor widget.
 
         Args:
@@ -232,7 +235,7 @@ class PapyrusMonitorWidget(Widget):
             # Update status box class
             status_box.set_class(self._get_status_class())
 
-        except Exception:
+        except NoMatches:
             # Widget might not be fully composed yet
             pass
 
@@ -272,7 +275,7 @@ class PapyrusMonitorWidget(Widget):
                 # Set classes in one operation instead of multiple add/remove calls
                 label.set_classes(f"stat-value {severity_class}")
 
-        except Exception:
+        except NoMatches:
             # Widget might not be fully composed yet
             pass
 
@@ -295,7 +298,7 @@ class PapyrusMonitorWidget(Widget):
                 else:
                     toggle_btn.label = "Start"
                     toggle_btn.variant = "success"
-            except Exception:
+            except NoMatches:
                 pass
 
     def clear_stats(self) -> None:
@@ -321,8 +324,16 @@ class PapyrusMonitorWidget(Widget):
     class MonitoringToggled(Message):
         """Message sent when monitoring is toggled."""
 
+        def __init__(self, sender: "PapyrusMonitorWidget") -> None:
+            super().__init__()
+            self.sender = sender
+
     class RefreshRequested(Message):
         """Message sent when refresh is requested."""
+
+        def __init__(self, sender: "PapyrusMonitorWidget") -> None:
+            super().__init__()
+            self.sender = sender
 
     def action_toggle_monitoring(self) -> None:
         """Toggle monitoring action."""

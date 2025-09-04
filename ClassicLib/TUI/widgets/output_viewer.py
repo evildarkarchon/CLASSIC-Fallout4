@@ -3,9 +3,10 @@
 import threading
 from collections import deque
 from datetime import datetime
+from typing import ClassVar
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Container, Horizontal, VerticalScroll
 from textual.reactive import reactive
 from textual.widgets import Button, Input, RichLog, Static
@@ -23,7 +24,7 @@ _STYLE_FORMATS = {
 class OutputViewer(Static):
     """Scrollable log output display with search functionality."""
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("ctrl+f", "start_search", "Find", show=False),
         Binding("f3", "find_next", "Find Next", show=False),
         Binding("shift+f3", "find_previous", "Find Previous", show=False),
@@ -83,13 +84,13 @@ class OutputViewer(Static):
     show_search = reactive(False)
     search_query = reactive("")
     search_index = reactive(0)
-    search_matches: list[int] = []
 
-    def __init__(self, max_lines: int = 10000, auto_scroll: bool = True, show_timestamps: bool = True, *args, **kwargs) -> None:
+    def __init__(self, max_lines: int = 10000, auto_scroll: bool = True, show_timestamps: bool = True, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
         super().__init__(*args, **kwargs)
         self.max_lines = max_lines
         self.auto_scroll = auto_scroll
         self.show_timestamps = show_timestamps
+        self.search_matches: list[int] = []  # Initialize as instance attribute
         self._log_widget: RichLog | None = None
         self._output_buffer: deque[str] = deque(maxlen=max_lines)
         self._buffer_lock = threading.Lock()
@@ -98,10 +99,9 @@ class OutputViewer(Static):
     def compose(self) -> ComposeResult:
         """Compose the widget."""
         # Search bar (hidden by default)
-        with Container(classes="search-container", id="search-container"):
-            with Horizontal():
-                yield Input(placeholder="Search...", id="search-input", classes="search-input")
-                yield Static("", id="search-results", classes="search-results")
+        with Container(classes="search-container", id="search-container"), Horizontal():
+            yield Input(placeholder="Search...", id="search-input", classes="search-input")
+            yield Static("", id="search-results", classes="search-results")
 
         with VerticalScroll(classes="output-container"):
             self._log_widget = RichLog(highlight=True, markup=True, wrap=True, max_lines=self.max_lines, classes="output-log")
@@ -230,11 +230,10 @@ class OutputViewer(Static):
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle search input submission."""
-        if event.input.id == "search-input":
-            if self.search_matches:
-                # Move to next match
-                self.search_index = (self.search_index + 1) % len(self.search_matches)
-                self._highlight_match()
+        if event.input.id == "search-input" and self.search_matches:
+            # Move to next match
+            self.search_index = (self.search_index + 1) % len(self.search_matches)
+            self._highlight_match()
 
     def _perform_search(self) -> None:
         """Perform the search and update results."""
@@ -290,7 +289,7 @@ class OutputViewer(Static):
         """Async write method for compatibility."""
         self.append_output(text, style)
 
-    def on_key(self, event) -> None:
+    def on_key(self, event) -> None:  # noqa: ANN001
         """Handle keyboard events."""
         if event.key == "escape":
             if self.show_search:
@@ -300,16 +299,14 @@ class OutputViewer(Static):
                 # Blur the widget
                 self.blur()
                 event.stop()
-        elif event.key == "up":
+        elif event.key == "up" and self._log_widget:
             # Scroll up one line
-            if self._log_widget:
-                self._log_widget.scroll_up(animate=False)
-                event.stop()
-        elif event.key == "down":
+            self._log_widget.scroll_up(animate=False)
+            event.stop()
+        elif event.key == "down" and self._log_widget:
             # Scroll down one line
-            if self._log_widget:
-                self._log_widget.scroll_down(animate=False)
-                event.stop()
+            self._log_widget.scroll_down(animate=False)
+            event.stop()
 
     def action_start_search(self) -> None:
         """Start search mode (Ctrl+F)."""

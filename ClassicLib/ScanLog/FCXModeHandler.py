@@ -32,7 +32,13 @@ class FCXModeHandlerFragments:
     def check_fcx_mode(self) -> None:
         """Check FCX mode and run necessary file checks if enabled."""
         if self.fcx_mode:
-            from ClassicLib.ScanGame import game_combined_result
+            try:
+                from CLASSIC_ScanGame import game_combined_result as scan_game_files
+            except ImportError:
+                # Fallback if the function doesn't exist
+                def scan_game_files() -> str:
+                    return "Game files check not available\n"
+
             from ClassicLib.SetupCoordinator import SetupCoordinator
 
             # Use class-level lock to ensure thread safety
@@ -42,7 +48,7 @@ class FCXModeHandlerFragments:
                     # Run the checks once and store results in class variables
                     coordinator = SetupCoordinator()
                     FCXModeHandlerFragments._main_files_result = coordinator.generate_combined_results()
-                    FCXModeHandlerFragments._game_files_result = game_combined_result()
+                    FCXModeHandlerFragments._game_files_result = scan_game_files()
                     FCXModeHandlerFragments._fcx_checks_run = True
 
             # Always assign the stored results to instance variables

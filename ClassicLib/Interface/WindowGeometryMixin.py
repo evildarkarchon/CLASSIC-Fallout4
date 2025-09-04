@@ -41,8 +41,6 @@ class WindowGeometryMixin:
     if TYPE_CHECKING:
         tab_widget: QTabWidget
 
-        def resize(self, width: int, height: int) -> None: ...
-        def setMinimumSize(self, width: int, height: int) -> None: ...
         def size(self) -> QSize: ...
 
     def __init__(self) -> None:
@@ -143,8 +141,8 @@ class WindowGeometryMixin:
             logger.debug(f"Using default minimum size for {tab_name}: {width}x{height}")
 
         # Update window minimum size and actual size
-        self.setMinimumSize(min_width, min_height)
-        self.resize(width, height)
+        self.setMinimumSize(min_width, min_height)  # type: ignore[attr-defined]
+        self.resize(width, height)  # type: ignore[attr-defined]
 
     def get_minimum_size_for_tab(self, tab_index: int) -> tuple[int, int]:
         """

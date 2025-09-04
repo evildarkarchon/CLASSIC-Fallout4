@@ -14,7 +14,7 @@ class ProgressBar(Static):
     label = reactive("")
 
     def __init__(
-        self, label: str = "", total: float = 100.0, show_percentage: bool = True, show_eta: bool = False, *args, **kwargs
+        self, label: str = "", total: float = 100.0, show_percentage: bool = True, show_eta: bool = False, *args, **kwargs  # noqa: ANN002, ANN003
     ) -> None:
         super().__init__(*args, **kwargs)
         self.label = label

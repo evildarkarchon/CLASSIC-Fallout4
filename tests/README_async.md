@@ -14,13 +14,13 @@ Tests the main async pipeline orchestration:
 - Full end-to-end async processing workflow
 - Performance monitoring and metrics collection
 
-### 2. AsyncScanOrchestrator Tests  
+### 2. OrchestratorCore Tests
 Tests the async scan orchestrator component:
 - Async context manager lifecycle
 - Batch processing of multiple crash logs
 - Integration with database pool
 
-### 3. AsyncFormIDAnalyzer Tests
+### 3. FormIDAnalyzerCore Tests
 Tests async FormID analysis functionality:
 - FormID extraction from crash log segments
 - Concurrent database lookups
@@ -62,10 +62,10 @@ python -m pytest tests/test_async_pipeline.py -v
 
 ### Run Specific Test Categories
 ```bash
-# Run only AsyncFormIDAnalyzer tests
-python -m pytest tests/test_async_pipeline.py::TestAsyncFormIDAnalyzer -v
+# Run only FormIDAnalyzerCore tests
+python -m pytest tests/test_async_pipeline.py::TestFormIDAnalyzerCore -v
 
-# Run only performance tests  
+# Run only performance tests
 python -m pytest tests/test_async_pipeline.py::TestAsyncPerformanceComparison -v
 ```
 
@@ -124,18 +124,18 @@ def test_performance_comparison(self, crash_log_files: list[Path]) -> None:
     sync_start = time.perf_counter()
     sync_result = sync_function(crash_log_files)
     sync_time = time.perf_counter() - sync_start
-    
+
     # Async timing
     async def async_test():
         async_start = time.perf_counter()
         async_result = await async_function(crash_log_files)
         return time.perf_counter() - async_start, async_result
-    
+
     async_time, async_result = asyncio.run(async_test())
-    
+
     # Verify both produce same results
     assert len(sync_result) == len(async_result)
-    
+
     # Both should complete successfully
     assert sync_time > 0 and async_time > 0
 ```
@@ -147,10 +147,10 @@ async def test_with_async_mocks(self) -> None:
     with patch("module.async_function") as mock_async:
         # Create async mock
         mock_async.return_value = AsyncMock()
-        
+
         # Test your code
         result = await my_function()
-        
+
         # Verify async call was made
         mock_async.assert_called_once()
 ```
@@ -165,7 +165,7 @@ async def test_with_async_mocks(self) -> None:
 async def test_wrong():
     result = asyncio.run(my_async_function())
 
-# Correct  
+# Correct
 async def test_correct():
     result = await my_async_function()
 ```
@@ -246,7 +246,7 @@ When adding new async components to CLASSIC:
 Planned improvements for the async test suite:
 
 - [ ] Integration with actual crash log database
-- [ ] Load testing with large numbers of crash logs  
+- [ ] Load testing with large numbers of crash logs
 - [ ] Benchmark suite for performance regression testing
 - [ ] CI/CD integration with performance thresholds
-- [ ] Memory usage profiling for async operations 
+- [ ] Memory usage profiling for async operations

@@ -1,8 +1,8 @@
+import contextlib
 import shutil
 import sqlite3
 import threading
 from pathlib import Path
-from typing import ContextManager
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS, YAML
@@ -33,7 +33,7 @@ class SyncDatabasePool:
                     cls._instance = cls()
         return cls._instance
 
-    def get_connection(self, db_path: Path) -> ContextManager[sqlite3.Connection]:
+    def get_connection(self, db_path: Path) -> sqlite3.Connection:
         """Get or create a connection for the given database."""
         with self._connection_lock:
             if db_path not in self._connections or not self._is_connection_alive(self._connections[db_path]):
@@ -52,18 +52,17 @@ class SyncDatabasePool:
         """Check if a connection is still alive."""
         try:
             conn.execute("SELECT 1")
-            return True
         except sqlite3.Error:
             return False
+        else:
+            return True
 
     def close_all(self) -> None:
         """Close all connections in the pool."""
         with self._connection_lock:
             for conn in self._connections.values():
-                try:
+                with contextlib.suppress(sqlite3.Error):
                     conn.close()
-                except sqlite3.Error:
-                    pass  # Ignore errors when closing
             self._connections.clear()
 
 
@@ -174,28 +173,28 @@ def is_valid_custom_scan_path(path: Path | str) -> bool:
         abs_path = path.resolve()
     except (OSError, RuntimeError):
         return False
+    else:
+        # Define restricted paths (hard-coded directories)
+        cwd: Path = Path(GlobalRegistry.get_local_dir()).resolve()
+        restricted_paths = [
+            cwd / "Crash Logs",
+            cwd / "Crash Logs" / "Pastebin",
+            yaml_settings(Path, YAML.Game_Local, "Game_Info.Docs_Folder_XSE"),
+        ]
 
-    # Define restricted paths (hard-coded directories)
-    cwd: Path = Path(GlobalRegistry.get_local_dir()).resolve()
-    restricted_paths = [
-        cwd / "Crash Logs",
-        cwd / "Crash Logs" / "Pastebin",
-        yaml_settings(Path, YAML.Game_Local, "Game_Info.Docs_Folder_XSE"),
-    ]
+        # Check if the path matches any restricted path
+        for restricted in restricted_paths:
+            if restricted is None:
+                continue
+            try:
+                if abs_path == restricted or abs_path in restricted.parents:
+                    logger.warning(f"Attempted to set restricted path as custom scan directory: {path}")
+                    return False
+            except ValueError:
+                # Can happen if paths are on different drives on Windows
+                pass
 
-    # Check if the path matches any restricted path
-    for restricted in restricted_paths:
-        if restricted is None:
-            continue
-        try:
-            if abs_path == restricted or abs_path in restricted.parents:
-                logger.warning(f"Attempted to set restricted path as custom scan directory: {path}")
-                return False
-        except ValueError:
-            # Can happen if paths are on different drives on Windows
-            pass
-
-    return True
+        return True
 
 
 def crashlogs_get_files() -> list[Path]:
@@ -357,4 +356,5 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
     if files_modified > 0:
         logger.debug(f"- - - REFORMATTED {files_modified} OF {len(crashlog_list)} FILES")
     else:
+        logger.debug("- - - NO FILES REQUIRED REFORMATTING")
         logger.debug("- - - NO FILES REQUIRED REFORMATTING")

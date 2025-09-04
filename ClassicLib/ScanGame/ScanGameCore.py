@@ -43,6 +43,11 @@ try:
 except ImportError:
     ASYNC_ENCODING_AVAILABLE = False
 
+    # Provide a stub to satisfy type checker
+    async def read_lines_with_encoding_async(file_path: Path) -> list[str]:
+        """Stub function - should never be called when ASYNC_ENCODING_AVAILABLE is False."""
+        raise NotImplementedError("Async encoding utilities not available")
+
 
 def get_optimal_limits() -> dict[str, int]:
     """Calculate optimal concurrency limits based on system resources."""

@@ -17,8 +17,8 @@ try:
 
     AIOFILES_AVAILABLE = True
 except ImportError:
-    aiofiles = None
-    chardet = None
+    aiofiles = None  # type: ignore
+    chardet = None  # type: ignore
     AIOFILES_AVAILABLE = False
 
 from ClassicLib.Util import validate_path
@@ -44,7 +44,7 @@ async def detect_encoding_async(file_path: Path | str | os.PathLike, sample_size
         PermissionError: If the file cannot be read due to permissions
         ImportError: If aiofiles or chardet are not available
     """
-    if not AIOFILES_AVAILABLE:
+    if not AIOFILES_AVAILABLE or aiofiles is None or chardet is None:
         raise ImportError("aiofiles and chardet are required for async encoding detection")
 
     if not isinstance(file_path, Path):
@@ -103,7 +103,7 @@ async def open_file_with_encoding_async(file_path: Path | str | os.PathLike, mod
         async with open_file_with_encoding_async(log_file) as f:
             contents = await f.read()
     """
-    if not AIOFILES_AVAILABLE:
+    if not AIOFILES_AVAILABLE or aiofiles is None:
         raise ImportError("aiofiles is required for async file operations")
 
     if not isinstance(file_path, Path):
@@ -113,7 +113,7 @@ async def open_file_with_encoding_async(file_path: Path | str | os.PathLike, mod
     encoding = await detect_encoding_async(file_path, sample_size)
 
     # Open file with detected encoding
-    async with aiofiles.open(file_path, mode=mode, encoding=encoding, errors="ignore") as f:
+    async with aiofiles.open(file_path, mode=mode, encoding=encoding, errors="ignore") as f:  # type: ignore[misc]
         yield f
 
 
@@ -178,7 +178,7 @@ async def fallback_to_sync_encoding_detection(file_path: Path | str | os.PathLik
     # Run in executor to avoid blocking
     loop = asyncio.get_event_loop()
 
-    def get_encoding():
+    def get_encoding() -> str:
         with open_file_with_encoding(file_path) as f:
             # The encoding is already detected by open_file_with_encoding
             # We need to extract it from the file object

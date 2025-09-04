@@ -28,7 +28,7 @@ CLASSIC_Settings:
   Move Unsolved Logs: false
 
 # Copy-paste your INI folder path below, where your main game INI files are located (Documents\My Games\*game*)
-  INI Folder Path:
+  INI Folder Path: ''
 
 # Copy-paste your staging mods folder path below. (Folder where your mod manager keeps all extracted mod files).
   MODS Folder Path:
@@ -47,4 +47,3 @@ CLASSIC_Settings:
 
 # Set to true if you want CLASSIC to disable progress bars when running in command line mode.
   Disable CLI Progress: false
-

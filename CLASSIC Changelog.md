@@ -18,6 +18,7 @@
 - Many markdown compliance fixes for the reports.
 - Most sections that have no content will now be hidden in the report.
 - Probably a bunch of other things I forgot to write down.
+- This version is not API compatible with previous versions (thus the major version update).
 
 ### 7.31.0 CHANGES
 - Reduced volume for audio notifications

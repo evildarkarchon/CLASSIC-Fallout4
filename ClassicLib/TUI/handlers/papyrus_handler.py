@@ -312,9 +312,9 @@ class TuiPapyrusHandler:
                 except (TimeoutError, asyncio.CancelledError):
                     # Expected when task is cancelled or takes too long
                     # Force collection of the task
-                    try:
+                    try:  # noqa: SIM105
                         await task_to_cancel
-                    except (asyncio.CancelledError, Exception):
+                    except (asyncio.CancelledError, Exception):  # noqa: BLE001
                         # Ignore any exceptions from the cancelled task
                         pass
 

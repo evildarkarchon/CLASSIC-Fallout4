@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 from ClassicLib import MessageTarget, msg_info, msg_progress_context
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
-from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator, write_reports_batch_async
+from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 from ClassicLib.ScanLog.Util import crashlogs_get_files
@@ -79,7 +79,7 @@ async def async_crashlogs_scan() -> None:
     crashlogs.cache = {name: "\n".join(lines).encode("utf-8") for name, lines in crash_log_cache.items()}
 
     # Process crash logs with async orchestrator
-    async with AsyncScanOrchestrator(yamldata, crashlogs, fcx_mode, show_formid_values, formid_db_exists) as orchestrator:
+    async with OrchestratorCore(yamldata, crashlogs, fcx_mode, show_formid_values, formid_db_exists) as orchestrator:
         # Process in batches with progress tracking
         total_logs = len(crashlog_list)
         with msg_progress_context("Processing Crash Logs Async", total_logs) as progress:
@@ -104,7 +104,7 @@ async def async_crashlogs_scan() -> None:
 
             # Write all reports concurrently
             write_start = time.perf_counter()
-            await write_reports_batch_async(reports_to_write)
+            await OrchestratorCore.write_reports_batch(reports_to_write)
             write_time = time.perf_counter() - write_start
             logger.info(f"Async report writing completed in {write_time:.2f} seconds")
 

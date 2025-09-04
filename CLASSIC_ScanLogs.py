@@ -24,12 +24,11 @@ from ClassicLib.Logger import logger
 from ClassicLib.ScanLog import (
     FCXModeHandler,
     ThreadSafeLogCache,
-    crashlogs_get_files,
     crashlogs_reformat,
 )
-from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.Util import crashlogs_get_files
 from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -81,7 +80,7 @@ class ClassicScanLogs:
     # Removed synchronous process_crashlog method - using async version instead
 
     async def process_crashlog_async(
-        self, crashlog_file: Path, orchestrator: AsyncScanOrchestrator | OrchestratorCore
+        self, crashlog_file: Path, orchestrator: OrchestratorCore
     ) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Process a crash log with async database operations for FormID lookups.
@@ -96,8 +95,8 @@ class ClassicScanLogs:
             Tuple containing file path, report, failure status, and statistics
         """
         try:
-            # Use the async orchestrator directly
-            return await orchestrator.process_crash_log_async(crashlog_file)
+            # OrchestratorCore uses the base method name
+            return await orchestrator.process_crash_log(crashlog_file)
         except (RuntimeError, ImportError, OSError) as e:
             logger.error(f"Error processing crash log {crashlog_file}: {e}")
             # Return failure result
@@ -197,7 +196,7 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
     msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
 
     # Create async orchestrator with context manager for proper resource management
-    async with AsyncScanOrchestrator(
+    async with OrchestratorCore(
         scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists
     ) as orchestrator:
         # Run FCX checks if enabled
@@ -247,8 +246,8 @@ async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
                     # Yield to allow Qt signals to be processed
                     await asyncio.sleep(0)  # This allows other async tasks and Qt signals to process
 
-                except Exception as e:
-                    # Handle exceptions
+                except (RuntimeError, ImportError, OSError, asyncio.CancelledError) as e:
+                    # Handle specific exceptions that can occur during async processing
                     logger.error(f"Error processing crash log: {e}")
                     scanner.crashlog_stats["failed"] += 1
 

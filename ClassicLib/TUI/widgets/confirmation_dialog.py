@@ -15,7 +15,7 @@ class ConfirmationDialog(ModalScreen[bool]):
     ConfirmationDialog {
         align: center middle;
     }
-    
+
     ConfirmationDialog > Container {
         width: 60;
         height: 11;
@@ -23,39 +23,39 @@ class ConfirmationDialog(ModalScreen[bool]):
         border: thick $primary;
         padding: 1 2;
     }
-    
+
     ConfirmationDialog .dialog-title {
         text-style: bold;
         color: $primary;
         margin-bottom: 1;
     }
-    
+
     ConfirmationDialog .dialog-message {
         margin: 1 0;
         color: $text;
     }
-    
+
     ConfirmationDialog .dialog-buttons {
         margin-top: 1;
         align: center middle;
         height: 3;
     }
-    
+
     ConfirmationDialog Button {
         margin: 0 1;
         min-width: 12;
     }
-    
+
     ConfirmationDialog .confirm-button {
         background: $primary;
     }
-    
+
     ConfirmationDialog .cancel-button {
         background: $secondary;
     }
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         title: str = "Confirm",
         message: str = "Are you sure?",
@@ -84,13 +84,12 @@ class ConfirmationDialog(ModalScreen[bool]):
 
     def compose(self) -> ComposeResult:
         """Compose the dialog layout."""
-        with Container():
-            with Vertical():
-                yield Label(self.title, classes="dialog-title")
-                yield Label(self.message, classes="dialog-message")
-                with Horizontal(classes="dialog-buttons"):
-                    yield Button(self.confirm_text, variant="primary", id="confirm", classes="confirm-button")
-                    yield Button(self.cancel_text, variant="default", id="cancel", classes="cancel-button")
+        with Container(), Vertical():
+            yield Label(self.title, classes="dialog-title")
+            yield Label(self.message, classes="dialog-message")
+            with Horizontal(classes="dialog-buttons"):
+                yield Button(self.confirm_text, variant="primary", id="confirm", classes="confirm-button")
+                yield Button(self.cancel_text, variant="default", id="cancel", classes="cancel-button")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button press events."""
@@ -103,7 +102,7 @@ class ConfirmationDialog(ModalScreen[bool]):
                 self.cancel_callback()
             self.dismiss(False)
 
-    def on_key(self, event) -> None:
+    def on_key(self, event) -> None:  # noqa: ANN001
         """Handle keyboard events."""
         if event.key == "escape":
             if self.cancel_callback:
@@ -122,7 +121,7 @@ class ErrorDialog(ModalScreen):
     ErrorDialog {
         align: center middle;
     }
-    
+
     ErrorDialog > Container {
         width: 70;
         height: auto;
@@ -131,18 +130,18 @@ class ErrorDialog(ModalScreen):
         border: thick $error;
         padding: 1 2;
     }
-    
+
     ErrorDialog .error-title {
         text-style: bold;
         color: $error;
         margin-bottom: 1;
     }
-    
+
     ErrorDialog .error-message {
         margin: 1 0;
         color: $text;
     }
-    
+
     ErrorDialog .error-details {
         margin: 1 0;
         color: $text-muted;
@@ -151,7 +150,7 @@ class ErrorDialog(ModalScreen):
         max-height: 10;
         overflow-y: auto;
     }
-    
+
     ErrorDialog Button {
         align: center middle;
         margin-top: 1;
@@ -182,21 +181,20 @@ class ErrorDialog(ModalScreen):
 
     def compose(self) -> ComposeResult:
         """Compose the dialog layout."""
-        with Container():
-            with Vertical():
-                yield Label(f"❌ {self.title}", classes="error-title")
-                yield Label(self.message, classes="error-message")
-                if self.details:
-                    yield Label(self.details, classes="error-details")
-                yield Button("Close", variant="error", id="close")
+        with Container(), Vertical():
+            yield Label(f"❌ {self.title}", classes="error-title")
+            yield Label(self.message, classes="error-message")
+            if self.details:
+                yield Label(self.details, classes="error-details")
+            yield Button("Close", variant="error", id="close")
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    def on_button_pressed(self, event: Button.Pressed) -> None:  # noqa: ARG002
         """Handle button press events."""
         if self.close_callback:
             self.close_callback()
         self.dismiss()
 
-    def on_key(self, event) -> None:
+    def on_key(self, event) -> None:  # noqa: ANN001
         """Handle keyboard events."""
         if event.key in ["escape", "enter"]:
             if self.close_callback:
@@ -211,7 +209,7 @@ class ProgressDialog(ModalScreen):
     ProgressDialog {
         align: center middle;
     }
-    
+
     ProgressDialog > Container {
         width: 60;
         height: 10;
@@ -219,30 +217,30 @@ class ProgressDialog(ModalScreen):
         border: thick $primary;
         padding: 1 2;
     }
-    
+
     ProgressDialog .progress-title {
         text-style: bold;
         color: $primary;
         margin-bottom: 1;
     }
-    
+
     ProgressDialog .progress-message {
         margin: 1 0;
         color: $text;
     }
-    
+
     ProgressDialog .progress-bar {
         margin: 1 0;
         height: 1;
         background: $panel;
         border: solid $border;
     }
-    
+
     ProgressDialog .progress-fill {
         background: $success;
         height: 1;
     }
-    
+
     ProgressDialog Button {
         align: center middle;
         margin-top: 1;
@@ -274,14 +272,13 @@ class ProgressDialog(ModalScreen):
 
     def compose(self) -> ComposeResult:
         """Compose the dialog layout."""
-        with Container():
-            with Vertical():
-                yield Label(self.title, classes="progress-title")
-                yield Label(self.message, id="progress-message", classes="progress-message")
-                with Container(classes="progress-bar"):
-                    yield Container(id="progress-fill", classes="progress-fill")
-                if self.can_cancel:
-                    yield Button("Cancel", variant="warning", id="cancel")
+        with Container(), Vertical():
+            yield Label(self.title, classes="progress-title")
+            yield Label(self.message, id="progress-message", classes="progress-message")
+            with Container(classes="progress-bar"):
+                yield Container(id="progress-fill", classes="progress-fill")
+            if self.can_cancel:
+                yield Button("Cancel", variant="warning", id="cancel")
 
     def update_progress(self, progress: int, message: str | None = None) -> None:
         """Update the progress bar and message.
@@ -312,7 +309,7 @@ class ProgressDialog(ModalScreen):
             self.cancel_callback()
             self.dismiss()
 
-    def on_key(self, event) -> None:
+    def on_key(self, event) -> None:  # noqa: ANN001
         """Handle keyboard events."""
         if event.key == "escape" and self.can_cancel:
             if self.cancel_callback:

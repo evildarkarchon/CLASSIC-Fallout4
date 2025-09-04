@@ -5,9 +5,9 @@ This package contains modules for scanning and analyzing crash logs.
 """
 
 # Core scanning components
-# Async components
-from ClassicLib.ScanLog.AsyncFileIO import integrate_async_file_loading
-from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer
+# Modern async-first core components
+from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
+from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.AsyncIntegration import run_async_scan
 from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline
 from ClassicLib.ScanLog.AsyncReformat import (
@@ -16,7 +16,6 @@ from ClassicLib.ScanLog.AsyncReformat import (
     crashlogs_reformat_async,
     reformat_single_log_async,
 )
-from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator, write_reports_batch_async
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, write_file_async
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments as FCXModeHandler
@@ -47,16 +46,14 @@ __all__ = [
     # Async components
     "AsyncCrashLogPipeline",
     "AsyncDatabasePool",
-    "AsyncFormIDAnalyzer",
-    "AsyncScanOrchestrator",
+    "FormIDAnalyzerCore",
+    "OrchestratorCore",
     "batch_file_copy_async",
     "batch_file_move_async",
     "crashlogs_reformat_async",
-    "integrate_async_file_loading",
     "reformat_single_log_async",
     "run_async_scan",
     "write_file_async",
-    "write_reports_batch_async",
     # Core scanner components
     "ClassicScanLogsInfo",
     "FCXModeHandler",

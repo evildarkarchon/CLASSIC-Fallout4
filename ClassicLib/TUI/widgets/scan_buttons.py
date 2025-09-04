@@ -1,17 +1,20 @@
 """Scan button widgets for TUI."""
 
-import asyncio
+from typing import TYPE_CHECKING, ClassVar
 
 from textual.binding import Binding
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Button
 
+if TYPE_CHECKING:
+    import asyncio
+
 
 class ScanButton(Button):
     """Scan operation trigger button with progress support."""
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[Binding | tuple[str, str] | tuple[str, str, str]]] = [
         Binding("enter", "activate", "Activate", show=False),
         Binding("space", "activate", "Activate", show=False),
     ]
@@ -34,7 +37,7 @@ class ScanButton(Button):
             self.scan_type = scan_type
             self.success = success
 
-    def __init__(self, label: str, scan_type: str = "generic", *args, **kwargs) -> None:
+    def __init__(self, label: str, scan_type: str = "generic", *args, **kwargs) -> None:  # noqa: ANN002, ANN003
         super().__init__(label, *args, **kwargs)
         self.scan_type = scan_type
         self.original_label = label
@@ -107,7 +110,7 @@ class ScanButton(Button):
         if not self.disabled and not self.scanning:
             self.start_scan()
 
-    def on_key(self, event) -> None:
+    def on_key(self, event) -> None:  # noqa: ANN001
         """Handle keyboard events."""
         # Allow cancellation with Escape during scan
         if event.key == "escape" and self.scanning:

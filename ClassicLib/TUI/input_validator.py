@@ -3,7 +3,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 
 class InputValidator:
@@ -20,13 +20,13 @@ class InputValidator:
     WINDOWS_PATH_PATTERN = re.compile(r'[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*')
     UNIX_PATH_PATTERN = re.compile(r"/(?:[^/\0]+/)*[^/\0]*")
 
-    # Allowed base directories for path operations
-    ALLOWED_BASE_DIRS = None  # Will be initialized on first use
+    # Allowed base directories for path operations - initialize as empty list
+    ALLOWED_BASE_DIRS: ClassVar[list[Path]] = []
 
     @classmethod
     def _init_allowed_dirs(cls) -> None:
         """Initialize allowed directories list."""
-        if cls.ALLOWED_BASE_DIRS is None:
+        if not cls.ALLOWED_BASE_DIRS:  # Check if list is empty instead of None
             cls.ALLOWED_BASE_DIRS = [
                 Path.home(),
                 Path.cwd(),
@@ -79,7 +79,9 @@ class InputValidator:
 
             # Check if path is within allowed directories
             is_allowed = False
-            for allowed_dir in cls.ALLOWED_BASE_DIRS:
+            # Defensive check to ensure ALLOWED_BASE_DIRS is not None
+            allowed_dirs = cls.ALLOWED_BASE_DIRS or []
+            for allowed_dir in allowed_dirs:
                 try:
                     # Check if path is relative to allowed directory
                     path_obj.relative_to(allowed_dir)
@@ -107,10 +109,10 @@ class InputValidator:
                 if not must_be_dir and not path_obj.is_file():
                     return False, "Path is not a file", None
 
-            return True, "", path_obj
-
         except (ValueError, OSError, RuntimeError) as e:
             return False, f"Invalid path format: {e!s}", None
+        else:
+            return True, "", path_obj
 
     @classmethod
     def sanitize_for_yaml(cls, value: str) -> str:
@@ -248,11 +250,11 @@ class InputValidator:
             sanitized = cls.sanitize_for_yaml(value)
             return True, sanitized
 
-        elif isinstance(value, (int, float, bool)):
+        elif isinstance(value, int | float | bool):
             # Numeric or boolean values are generally safe
             return True, value
 
-        elif isinstance(value, (list, dict)):
+        elif isinstance(value, list | dict):
             # Complex types need more validation (not implemented here)
             return False, None
 

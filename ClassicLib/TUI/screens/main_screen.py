@@ -223,7 +223,7 @@ class MainScreen(Screen):
             return
 
         # Get the sender to identify which folder selector
-        sender_id = event.sender.id if hasattr(event, "sender") and event.sender else None
+        sender_id = event.sender.id if event.sender else None
 
         if sender_id == "mods-folder":
             # Validate and sanitize before saving

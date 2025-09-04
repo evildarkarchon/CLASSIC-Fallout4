@@ -316,8 +316,8 @@ class TestAsyncPipelineResourceManagement:
             assert isinstance(pipeline.performance_stats, dict)
 
     async def test_orchestrator_resource_cleanup(self):
-        """Test that AsyncScanOrchestrator properly manages database pool resources."""
-        from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+        """Test that OrchestratorCore properly manages database pool resources."""
+        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
         from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 
         mock_yamldata = MagicMock()
@@ -330,7 +330,7 @@ class TestAsyncPipelineResourceManagement:
             mock_pool_class.return_value = mock_pool
 
             # Test normal flow
-            async with AsyncScanOrchestrator(
+            async with OrchestratorCore(
                 yamldata=mock_yamldata,
                 crashlogs=mock_crashlogs,
                 fcx_mode=False,
@@ -349,7 +349,7 @@ class TestAsyncPipelineResourceManagement:
 
             # Test cleanup on exception during context
             # Create a new orchestrator that will fail during usage
-            orchestrator = AsyncScanOrchestrator(
+            orchestrator = OrchestratorCore(
                 yamldata=mock_yamldata,
                 crashlogs=mock_crashlogs,
                 fcx_mode=False,

@@ -39,10 +39,10 @@ class TestConcurrencySafety:
             mock_scanner.process_crashlog_async = mock_scan_delay
             mock_cls.return_value = mock_scanner
 
-            # Mock AsyncScanOrchestrator as a context manager (patch where it's imported from)
+            # Mock OrchestratorCore as a context manager (patch where it's imported from)
             from unittest.mock import AsyncMock
 
-            with patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_cls:
+            with patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orchestrator_cls:
                 mock_orchestrator = AsyncMock()
                 mock_orchestrator.__aenter__ = AsyncMock(return_value=mock_orchestrator)
                 mock_orchestrator.__aexit__ = AsyncMock(return_value=None)

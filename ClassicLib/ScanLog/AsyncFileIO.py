@@ -24,28 +24,6 @@ except ImportError:
             await f.write(content)
 
 
-def crashlogs_reformat_with_async(crashlog_list: list[Path], remove_list: tuple[str]) -> None:
-    """
-    DEPRECATED: Use crashlogs_reformat_async directly or through FileIOCore.
-
-    Drop-in replacement for crashlogs_reformat that uses async I/O.
-
-    This function can be used as a direct replacement for the synchronous
-    crashlogs_reformat function to get the performance benefits of async I/O.
-
-    Args:
-        crashlog_list: List of crash log file paths to reformat
-        remove_list: Tuple of strings to remove from logs if simplification is enabled
-    """
-    import warnings
-
-    warnings.warn("crashlogs_reformat_with_async is deprecated. Use crashlogs_reformat_async directly.", DeprecationWarning, stacklevel=2)
-    logger.debug("- - - INITIATED ASYNC CRASH LOG FILE REFORMAT")
-
-    # Run the async function using asyncio.run
-    asyncio.run(crashlogs_reformat_async(crashlog_list, remove_list))
-
-    logger.debug("- - - COMPLETED ASYNC CRASH LOG FILE REFORMAT")
 
 
 async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str, bytes]:
@@ -110,27 +88,6 @@ async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str
     return bytes_cache
 
 
-def integrate_async_file_loading(crashlog_list: list[Path]) -> dict[str, bytes]:
-    """
-    DEPRECATED: Use FileIOCore.read_multiple_files() instead.
-
-    Drop-in replacement for synchronous crash log loading.
-
-    This can replace the file loading in ThreadSafeLogCache.__init__
-    to use async I/O for better performance.
-
-    Args:
-        crashlog_list: List of crash log file paths
-
-    Returns:
-        Dictionary suitable for ThreadSafeLogCache.cache
-    """
-    import warnings
-
-    warnings.warn(
-        "integrate_async_file_loading is deprecated. Use FileIOCore.read_multiple_files() instead.", DeprecationWarning, stacklevel=2
-    )
-    return asyncio.run(load_crash_logs_async_optimized(crashlog_list))
 
 
 def time_async_operation(operation_name: str) -> Callable:
@@ -175,20 +132,6 @@ async def write_report_async(crashlog_file: Path, autoscan_report: list[str]) ->
     logger.debug(f"Wrote async report for {crashlog_file.name}")
 
 
-def write_report_with_async(crashlog_file: Path, autoscan_report: list[str]) -> None:
-    """
-    DEPRECATED: Use write_report_async directly or FileIOCore.write_crash_report().
-
-    Drop-in replacement for synchronous report writing using async I/O.
-
-    Args:
-        crashlog_file: Path to the crash log file
-        autoscan_report: Generated report lines
-    """
-    import warnings
-
-    warnings.warn("write_report_with_async is deprecated. Use write_report_async directly or FileIOCore.", DeprecationWarning, stacklevel=2)
-    asyncio.run(write_report_async(crashlog_file, autoscan_report))
 
 
 async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:

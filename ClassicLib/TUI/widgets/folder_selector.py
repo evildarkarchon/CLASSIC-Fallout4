@@ -1,7 +1,9 @@
 """Folder selector widget for TUI."""
 
+from typing import ClassVar
+
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Horizontal
 from textual.message import Message
 from textual.reactive import reactive
@@ -13,7 +15,8 @@ from ClassicLib.TUI.input_validator import InputValidator
 class FolderSelector(Static):
     """Custom folder path input with validation and browse button."""
 
-    BINDINGS = [
+    # Use the same BindingType as the base DOMNode to avoid invariant override issues.
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("enter", "submit_path", "Submit Path", show=False),
         Binding("ctrl+b", "browse", "Browse", show=False),
         Binding("ctrl+v", "paste_path", "Paste Path", show=False),
@@ -63,12 +66,13 @@ class FolderSelector(Static):
     class PathChanged(Message):
         """Message sent when path changes."""
 
-        def __init__(self, path: str, valid: bool) -> None:
+        def __init__(self, sender: "FolderSelector", path: str, valid: bool) -> None:
             super().__init__()
+            self.sender = sender
             self.path = path
             self.valid = valid
 
-    def __init__(self, placeholder: str = "", initial_path: str = "", validate_exists: bool = True, *args, **kwargs) -> None:
+    def __init__(self, placeholder: str = "", initial_path: str = "", validate_exists: bool = True, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
         super().__init__(*args, **kwargs)
         self.placeholder = placeholder
         self.initial_path = initial_path
@@ -97,7 +101,7 @@ class FolderSelector(Static):
         # Make the widget focusable
         self.can_focus = True
 
-    def watch_path(self, old_path: str, new_path: str) -> None:
+    def watch_path(self, old_path: str, new_path: str) -> None:  # noqa: ARG002
         """React to path changes."""
         self._check_path_validity()
 
@@ -106,7 +110,7 @@ class FolderSelector(Static):
         if event.input == self._input:
             self.path = event.value
             self._check_path_validity()
-            self.post_message(self.PathChanged(self.path, self.valid))
+            self.post_message(self.PathChanged(self, self.path, self.valid))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle browse button click."""
@@ -210,7 +214,7 @@ class FolderSelector(Static):
         if self._input:
             self._input.focus()
 
-    def on_key(self, event) -> None:
+    def on_key(self, event) -> None:  # noqa: ANN001
         """Handle keyboard events."""
         # Arrow keys navigation within the widget
         if event.key == "tab":
@@ -225,7 +229,6 @@ class FolderSelector(Static):
         elif event.key == "shift+tab":
             # Reverse tab navigation
             browse_btn = self.query_one("#browse-btn", Button)
-            if browse_btn.has_focus:
-                if self._input:
-                    self._input.focus()
-                    event.stop()
+            if browse_btn.has_focus and self._input:
+                self._input.focus()
+                event.stop()

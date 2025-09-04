@@ -388,12 +388,7 @@ class SettingsDialog(QDialog):
                     requests.append((bool, YAML.Settings, f"CLASSIC_Settings.{yaml_key}"))
                 else:
                     requests.append((bool, self.yaml_store, f"CLASSIC_Settings.{yaml_key}"))
-            elif isinstance(widget, QComboBox):
-                if self.yaml_store == YAML.Settings:
-                    requests.append((str, YAML.Settings, f"CLASSIC_Settings.{yaml_key}"))
-                else:
-                    requests.append((str, self.yaml_store, f"CLASSIC_Settings.{yaml_key}"))
-            elif isinstance(widget, QLineEdit):
+            elif isinstance(widget, QComboBox | QLineEdit):
                 if self.yaml_store == YAML.Settings:
                     requests.append((str, YAML.Settings, f"CLASSIC_Settings.{yaml_key}"))
                 else:
@@ -404,7 +399,7 @@ class SettingsDialog(QDialog):
             values = yaml_cache.batch_get_settings(requests)
 
             # Apply loaded values to widgets
-            for (widget_key, widget), value, request in zip(widget_info, values, requests):
+            for (widget_key, widget), value, _request in zip(widget_info, values, requests, strict=False):
                 yaml_key = self.SETTINGS_MAP[widget_key]
 
                 if isinstance(widget, QCheckBox):

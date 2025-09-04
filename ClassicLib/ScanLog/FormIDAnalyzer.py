@@ -8,19 +8,22 @@ NOTE: This is now a thin sync adapter for backwards compatibility.
 New code should use FormIDAnalyzerCore directly for async operations.
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from ClassicLib.AsyncBridge import run_async
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 if TYPE_CHECKING:
+    from ClassicLib.ScanLog.ReportFragment import ReportFragment
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 
 class FormIDAnalyzer:
     """Sync adapter for FormIDAnalyzerCore - provides backwards compatibility."""
 
-    def __init__(self, yamldata: "ClassicScanLogsInfo", show_formid_values: bool, formid_db_exists: bool) -> None:
+    def __init__(self, yamldata: ClassicScanLogsInfo, show_formid_values: bool, formid_db_exists: bool) -> None:
         """
         Initialize the sync FormID analyzer adapter.
 
@@ -55,7 +58,7 @@ class FormIDAnalyzer:
         # Delegate to core (this method is already synchronous in core)
         return self._core.extract_formids(segment_callstack)
 
-    def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
+    def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> ReportFragment:
         """
         Sync adapter for FormID matching.
 

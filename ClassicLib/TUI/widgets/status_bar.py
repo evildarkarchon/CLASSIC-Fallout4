@@ -21,33 +21,33 @@ class StatusBar(Widget):
         background: $panel;
         padding: 0 1;
     }
-    
+
     StatusBar Horizontal {
         height: 1;
         width: 100%;
     }
-    
+
     StatusBar .status-item {
         margin: 0 2;
     }
-    
+
     StatusBar .status-label {
         color: $primary;
         text-style: bold;
     }
-    
+
     StatusBar .status-value {
         color: $text;
     }
-    
+
     StatusBar .status-active {
         color: $success;
     }
-    
+
     StatusBar .status-error {
         color: $error;
     }
-    
+
     StatusBar .status-warning {
         color: $warning;
     }
@@ -99,7 +99,7 @@ class StatusBar(Widget):
             return "Active"
         return "Inactive"
 
-    def watch_current_status(self, old_status: str, new_status: str) -> None:
+    def watch_current_status(self, old_status: str, new_status: str) -> None:  # noqa: ARG002
         """React to status changes."""
         try:
             status_label = self.query_one("#status-text", Label)
@@ -121,7 +121,7 @@ class StatusBar(Widget):
             # Widget not yet composed, ignore
             pass
 
-    def watch_last_scan_time(self, old_time: str, new_time: str) -> None:
+    def watch_last_scan_time(self, old_time: str, new_time: str) -> None:  # noqa: ARG002
         """React to last scan time changes."""
         try:
             scan_label = self.query_one("#last-scan", Label)
@@ -130,7 +130,7 @@ class StatusBar(Widget):
             # Widget not yet composed, ignore
             pass
 
-    def watch_scan_folder(self, old_folder: str, new_folder: str) -> None:
+    def watch_scan_folder(self, old_folder: str, new_folder: str) -> None:  # noqa: ARG002
         """React to scan folder changes."""
         try:
             folder_label = self.query_one("#scan-folder", Label)
@@ -139,7 +139,7 @@ class StatusBar(Widget):
             # Widget not yet composed, ignore
             pass
 
-    def update_status(self, status: str, is_error: bool = False) -> None:
+    def update_status(self, status: str, is_error: bool = False) -> None:  # noqa: ARG002
         """Update the current status text."""
         self.current_status = status
         self.is_scanning = "Scanning" in status or "Processing" in status
@@ -156,7 +156,7 @@ class StatusBar(Widget):
         """Set the current scan folder."""
         self.scan_folder = folder
 
-    def watch_papyrus_monitoring(self, old_state: bool, new_state: bool) -> None:
+    def watch_papyrus_monitoring(self, old_state: bool, new_state: bool) -> None:  # noqa: ARG002
         """React to Papyrus monitoring state changes."""
         try:
             papyrus_label = self.query_one("#papyrus-status", Label)
@@ -172,7 +172,7 @@ class StatusBar(Widget):
             # Widget not yet composed, ignore
             pass
 
-    def watch_papyrus_stats(self, old_stats: str, new_stats: str) -> None:
+    def watch_papyrus_stats(self, old_stats: str, new_stats: str) -> None:  # noqa: ARG002
         """React to Papyrus stats changes."""
         try:
             papyrus_label = self.query_one("#papyrus-status", Label)

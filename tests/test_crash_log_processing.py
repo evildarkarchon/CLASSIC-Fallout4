@@ -113,10 +113,10 @@ class TestCrashLogProcessingIntegration:
                 # Process the crash log using the async method with orchestrator
                 import asyncio
 
-                from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+                from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
                 async def process_with_orchestrator():
-                    async with AsyncScanOrchestrator(
+                    async with OrchestratorCore(
                         scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists
                     ) as orchestrator:
                         return await scanner.process_crashlog_async(crash_file, orchestrator)
@@ -189,10 +189,10 @@ class TestCrashLogProcessingIntegration:
                 for crash_file in scanner.crashlog_list:
                     import asyncio
 
-                    from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+                    from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
                     async def process_with_orchestrator():
-                        async with AsyncScanOrchestrator(
+                        async with OrchestratorCore(
                             scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists
                         ) as orchestrator:
                             return await scanner.process_crashlog_async(crash_file, orchestrator)

@@ -54,6 +54,7 @@ class ScanOperationsMixin:
         game_files_thread: QThread | None
         game_files_worker: GameFilesScanWorker | None
         tab_widget: QTabWidget | None  # For switching to Results tab
+        results_tab: object | None  # Results tab widget
 
         # Required methods that must be implemented by the mixing class
         def start_papyrus_monitoring(self) -> None: ...
@@ -284,6 +285,6 @@ class ScanOperationsMixin:
                         logger.debug("Switched to Results tab after scan completion")
                         break
 
-        except Exception as e:
+        except (AttributeError, ImportError, KeyError) as e:
             # Don't let tab switching errors break the scan completion
             logger.debug(f"Could not switch to Results tab: {e}")

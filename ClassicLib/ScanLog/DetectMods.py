@@ -48,7 +48,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     combined_pattern = re.compile("|".join(mod_patterns), re.IGNORECASE)
 
     # Create a lookup dictionary for O(1) access to mod warnings
-    mod_lookup = {mod_name: warning for mod_name, warning in mod_items}
+    mod_lookup = dict(mod_items)
 
     # Track matching plugins for each mod to consolidate output
     # Only store the first matching plugin ID for each mod
@@ -131,7 +131,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     # Find which mods are present in the plugins
     mods_present: set[str] = set()
-    for plugin_name in crashlog_plugins_lower.keys():
+    for plugin_name in crashlog_plugins_lower:
         matches = combined_pattern.findall(plugin_name)
         mods_present.update(match.lower() for match in matches)
 

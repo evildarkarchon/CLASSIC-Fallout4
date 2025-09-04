@@ -86,11 +86,14 @@ class AsyncBridge:
         self._thread.start()
 
         # Wait for loop to be ready
-        while not self._loop.is_running():
+        while self._loop and not self._loop.is_running():
             threading.Event().wait(0.001)
 
     def _run_loop(self) -> None:
         """Run the event loop in the background thread."""
+        if self._loop is None:
+            return  # Should never happen, but satisfies type checker
+
         asyncio.set_event_loop(self._loop)
         try:
             self._loop.run_forever()

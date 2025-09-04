@@ -15,13 +15,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ClassicLib.ScanLog.AsyncFileIO import (
-    crashlogs_reformat_with_async,
     load_crash_logs_async_optimized,
     write_reports_batch,
 )
-from ClassicLib.ScanLog.AsyncFormIDAnalyzer import AsyncFormIDAnalyzer
+from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
 from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
-from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
+from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, load_crash_logs_async
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 
@@ -137,7 +137,7 @@ class TestAsyncPipeline:
             patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
             patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
             patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
-            patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
+            patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Setup mocks - use AsyncMock for async functions
             mock_reformat.return_value = AsyncMock()
@@ -146,7 +146,7 @@ class TestAsyncPipeline:
 
             # Create mock orchestrator instance
             mock_orchestrator: AsyncMock = AsyncMock()
-            mock_orchestrator.process_crash_logs_batch_async.return_value = [
+            mock_orchestrator.process_crash_logs_batch.return_value = [
                 (log_file, [f"Report for {log_file.name}"], False, {}) for log_file in crash_log_files
             ]
 
@@ -198,11 +198,11 @@ class TestAsyncPipeline:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-class TestAsyncScanOrchestrator:
-    """Integration tests for AsyncScanOrchestrator."""
+class TestOrchestratorCore:
+    """Integration tests for OrchestratorCore."""
 
-    async def test_async_scan_orchestrator_context_manager(self, mock_yamldata: MagicMock) -> None:
-        """Test AsyncScanOrchestrator as async context manager."""
+    async def test_orchestrator_core_context_manager(self, mock_yamldata: MagicMock) -> None:
+        """Test OrchestratorCore as async context manager."""
         crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
 
         with patch("ClassicLib.ScanLog.OrchestratorCore.AsyncDatabasePool") as mock_pool_class:
@@ -211,7 +211,7 @@ class TestAsyncScanOrchestrator:
             mock_pool.close = AsyncMock()
             mock_pool_class.return_value = mock_pool
 
-            async with AsyncScanOrchestrator(
+            async with OrchestratorCore(
                 yamldata=mock_yamldata,
                 crashlogs=crashlogs,
                 fcx_mode=False,
@@ -228,7 +228,7 @@ class TestAsyncScanOrchestrator:
             # Verify cleanup was called
             mock_pool.close.assert_called_once()
 
-    async def test_async_scan_orchestrator_batch_processing(self, crash_log_files: list[Path], mock_yamldata: MagicMock) -> None:
+    async def test_orchestrator_core_batch_processing(self, crash_log_files: list[Path], mock_yamldata: MagicMock) -> None:
         """Test batch processing of crash logs."""
         crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
 
@@ -236,16 +236,16 @@ class TestAsyncScanOrchestrator:
             mock_pool: AsyncMock = AsyncMock()
             mock_pool_class.return_value = mock_pool
 
-            async with AsyncScanOrchestrator(
+            async with OrchestratorCore(
                 yamldata=mock_yamldata,
                 crashlogs=crashlogs,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,
             ) as orchestrator:
-                # Mock the parent class method
+                # Mock the core method
                 with patch.object(orchestrator, "process_crash_log", return_value=(Path("test.log"), ["report"], False, {})):
-                    results: list[tuple[Path, list[str], bool, Counter[str]]] = await orchestrator.process_crash_logs_batch_async(
+                    results: list[tuple[Path, list[str], bool, Counter[str]]] = await orchestrator.process_crash_logs_batch(
                         crash_log_files
                     )
 
@@ -259,14 +259,14 @@ class TestAsyncScanOrchestrator:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-class TestAsyncFormIDAnalyzer:
-    """Integration tests for AsyncFormIDAnalyzer."""
+class TestFormIDAnalyzerCore:
+    """Integration tests for FormIDAnalyzerCore."""
 
-    async def test_async_formid_analyzer_initialization(self, mock_yamldata: MagicMock) -> None:
-        """Test AsyncFormIDAnalyzer initialization."""
+    async def test_formid_analyzer_core_initialization(self, mock_yamldata: MagicMock) -> None:
+        """Test FormIDAnalyzerCore initialization."""
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
 
-        analyzer: AsyncFormIDAnalyzer = AsyncFormIDAnalyzer(
+        analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(
             yamldata=mock_yamldata,
             show_formid_values=True,
             formid_db_exists=True,
@@ -281,7 +281,7 @@ class TestAsyncFormIDAnalyzer:
     async def test_formid_extraction(self, mock_yamldata: MagicMock) -> None:
         """Test FormID extraction from call stack."""
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
-        analyzer: AsyncFormIDAnalyzer = AsyncFormIDAnalyzer(mock_yamldata, True, True, mock_pool)
+        analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(mock_yamldata, True, True, mock_pool)
 
         callstack: list[str] = [
             "Form ID: 0x12345678",
@@ -304,7 +304,7 @@ class TestAsyncFormIDAnalyzer:
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         mock_pool.get_entry.return_value = "Test Entry"
 
-        analyzer: AsyncFormIDAnalyzer = AsyncFormIDAnalyzer(mock_yamldata, True, True, mock_pool)
+        analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(mock_yamldata, True, True, mock_pool)
 
         formids_matches: list[str] = ["Form ID: 12345678", "Form ID: 87654321"]
         crashlog_plugins: dict[str, str] = {"TestPlugin.esp": "12", "AnotherPlugin.esp": "87"}
@@ -428,17 +428,18 @@ class TestAsyncPerformanceComparison:
     """Performance comparison tests between sync and async operations."""
 
     @pytest.mark.usefixtures("init_message_handler_fixture")
-    def test_crashlogs_reformat_with_async(self, crash_log_files: list[Path]) -> None:
-        """Test async reformatting with sync wrapper."""
+    def test_crashlogs_reformat_async_direct(self, crash_log_files: list[Path]) -> None:
+        """Test direct async reformatting call."""
         remove_list: tuple[str] = ("test_remove",)
 
-        # Mock the async function where it's imported in AsyncFileIO to prevent the warning
-        with patch("ClassicLib.ScanLog.AsyncFileIO.crashlogs_reformat_async", new_callable=AsyncMock) as mock_async_func:
+        # Mock the async function at the local import location
+        with patch("tests.test_async_pipeline.crashlogs_reformat_async", new_callable=AsyncMock) as mock_async_func:
             # AsyncMock handles coroutines properly without creating them prematurely
             mock_async_func.return_value = None
 
-            # This should run without errors
-            crashlogs_reformat_with_async(crash_log_files, remove_list)
+            # This should run without errors using asyncio.run
+            import asyncio
+            asyncio.run(crashlogs_reformat_async(crash_log_files, remove_list))
 
             # Verify the async function was called
             mock_async_func.assert_called_once_with(crash_log_files, remove_list)
@@ -712,7 +713,7 @@ PROBABLE CALL STACK:
                 patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
                 patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
                 patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
-                patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
+                patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orchestrator_class,
             ):
                 # Add realistic delays to simulate actual processing
                 async def realistic_reformat_delay(files, _remove_list) -> None:  # noqa: ANN001
@@ -731,7 +732,7 @@ PROBABLE CALL STACK:
 
                 # Create mock orchestrator
                 mock_orchestrator = AsyncMock()
-                mock_orchestrator.process_crash_logs_batch_async.return_value = [
+                mock_orchestrator.process_crash_logs_batch.return_value = [
                     (f, [f"Report for {f.name}"], False, {}) for f in test_files
                 ]
                 mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
@@ -1022,7 +1023,7 @@ PROBABLE CALL STACK:
             patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
             patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
             patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
-            patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
+            patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Add realistic delays to simulate actual processing
             async def realistic_reformat_delay(files, _remove_list) -> None:  # noqa: ANN001
@@ -1048,7 +1049,7 @@ PROBABLE CALL STACK:
                 await asyncio.sleep(0.2 * len(batch) / 10)  # Simulate heavy processing
                 return [(f, [f"Detailed report for {f.name}\n" * 10], False, {}) for f in batch]
 
-            mock_orchestrator.process_crash_logs_batch_async.side_effect = realistic_batch_process
+            mock_orchestrator.process_crash_logs_batch.side_effect = realistic_batch_process
             mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
             mock_orchestrator_class.return_value.__aexit__.return_value = None
 
@@ -1271,7 +1272,7 @@ PROBABLE CALL STACK:
         full_test_start: float = time.perf_counter()
 
         with (
-            patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
+            patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orchestrator_class,
             patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
         ):
             # Mock orchestrator to simulate processing without database dependencies
@@ -1315,7 +1316,7 @@ PROBABLE CALL STACK:
 
                 return results
 
-            mock_orchestrator.process_crash_logs_batch_async.side_effect = process_real_logs
+            mock_orchestrator.process_crash_logs_batch.side_effect = process_real_logs
             mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
             mock_orchestrator_class.return_value.__aexit__.return_value = None
 
@@ -1527,7 +1528,7 @@ PROBABLE CALL STACK:
             patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
             patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
             patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
-            patch("ClassicLib.ScanLog.AsyncScanOrchestrator.AsyncScanOrchestrator") as mock_orchestrator_class,
+            patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Simulate async operations with concurrent processing
             async def async_reformat(files: list[Path], _remove: tuple[str]) -> None:
@@ -1575,7 +1576,7 @@ PROBABLE CALL STACK:
                 ]
                 return await asyncio.gather(*tasks)
 
-            mock_orchestrator.process_crash_logs_batch_async.side_effect = async_process_batch
+            mock_orchestrator.process_crash_logs_batch.side_effect = async_process_batch
             mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
             mock_orchestrator_class.return_value.__aexit__.return_value = None
 

@@ -16,7 +16,7 @@ from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_progress_context
 from ClassicLib.ScanLog.AsyncFileIO import write_reports_batch
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
-from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
 from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 
@@ -92,7 +92,7 @@ class AsyncCrashLogPipeline:
         # Process logs with progress tracking
         total_logs = len(crashlog_list)
         with msg_progress_context("Processing Crash Logs", total_logs) as progress:
-            async with AsyncScanOrchestrator(
+            async with OrchestratorCore(
                 self.yamldata,
                 crashlogs,
                 self.fcx_mode,
@@ -118,7 +118,7 @@ class AsyncCrashLogPipeline:
 
                 for i in range(0, len(crashlog_list), batch_size):
                     batch = crashlog_list[i : i + batch_size]
-                    batch_results = await orchestrator.process_crash_logs_batch_async(batch)
+                    batch_results = await orchestrator.process_crash_logs_batch(batch)
                     all_results.extend(batch_results)
 
                     # Update progress with batch results

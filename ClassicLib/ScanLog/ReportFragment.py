@@ -8,8 +8,11 @@ shared mutable state while maintaining identical output format.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass(frozen=True)
@@ -113,7 +116,7 @@ def detect_mods_single_fragment(
     lines = []
     found_count = 0
 
-    for mod_name in yaml_dict:
+    for mod_name, mod_description in yaml_dict.items():
         # Check if all required plugins are present
         if "|" in mod_name:
             required_plugins = [p.strip() for p in mod_name.split("|")]
@@ -124,7 +127,7 @@ def detect_mods_single_fragment(
             continue
 
         # Add the warning for this mod
-        lines.append(f"* ⚠️ {yaml_dict[mod_name]}\n")
+        lines.append(f"* ⚠️ {mod_description}\n")
         found_count += 1
 
     if found_count > 0:

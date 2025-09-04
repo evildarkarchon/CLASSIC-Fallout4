@@ -89,12 +89,12 @@ class TuiScanHandler:
                         self.is_scanning = False
                     return False
 
-            # Run the scan using AsyncScanOrchestrator
-            from ClassicLib.ScanLog.AsyncScanOrchestrator import AsyncScanOrchestrator
+            # Run the scan using OrchestratorCore
+            from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
             try:
                 # Create orchestrator with context manager like in crashlogs_scan_async_pure
-                async with AsyncScanOrchestrator(
+                async with OrchestratorCore(
                     self.scanner.yamldata,
                     self.scanner.crashlogs,
                     self.scanner.fcx_mode,

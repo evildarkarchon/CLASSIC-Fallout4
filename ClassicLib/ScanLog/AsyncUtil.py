@@ -64,12 +64,13 @@ class AsyncDatabasePool:
                             logger.debug(f"Opened async connection to {db_path}")
                         except (OSError, aiosqlite.Error) as e:
                             logger.error(f"Failed to open database {db_path}: {e}")
-            except Exception:
+            except (OSError, aiosqlite.Error, asyncio.CancelledError, MemoryError) as e:
                 # Clean up any connections that were opened before the exception
+                logger.error(f"Critical error during database initialization: {e}")
                 for conn in opened_connections:
                     try:
                         await conn.close()
-                    except Exception as close_error:
+                    except (TimeoutError, aiosqlite.Error, OSError) as close_error:
                         logger.error(f"Error closing connection during cleanup: {close_error}")
                 self.connections.clear()
                 raise
@@ -93,13 +94,13 @@ class AsyncDatabasePool:
             await asyncio.gather(*close_tasks, return_exceptions=True)
 
     @staticmethod
-    async def _close_connection_with_timeout(conn: aiosqlite.Connection, timeout: float = 5.0) -> None:
+    async def _close_connection_with_timeout(conn: aiosqlite.Connection) -> None:
         """Close a single connection with timeout."""
         try:
-            await asyncio.wait_for(conn.close(), timeout=timeout)
+            await asyncio.wait_for(conn.close(), timeout=5.0)
         except TimeoutError:
-            logger.error(f"Timeout closing database connection after {timeout}s")
-        except Exception as e:
+            logger.error("Timeout closing database connection after 5.0s")
+        except (aiosqlite.Error, OSError, asyncio.CancelledError) as e:
             logger.error(f"Error closing database connection: {e}")
 
     async def get_entry(self, formid: str, plugin: str) -> str | None:

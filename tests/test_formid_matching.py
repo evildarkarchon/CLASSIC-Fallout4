@@ -57,7 +57,7 @@ class TestFormIDMatching:
                 autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
-                # FormID matching is now done through the AsyncScanOrchestrator during process_crashlog_async
+                # FormID matching is now done through the OrchestratorCore during process_crashlog_async
                 assert scanner.show_formid_values is True
                 assert scanner.formid_db_exists is True
                 assert hasattr(scanner, "yamldata")
@@ -94,7 +94,7 @@ class TestFormIDMatching:
                 autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
-                # FormID matching is now done through the AsyncScanOrchestrator during process_crashlog_async
+                # FormID matching is now done through the OrchestratorCore during process_crashlog_async
                 assert scanner.show_formid_values is True
                 assert scanner.formid_db_exists is True
                 assert hasattr(scanner, "yamldata")
@@ -130,7 +130,7 @@ class TestFormIDMatching:
                 autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
-                # FormID matching is now done through the AsyncScanOrchestrator during process_crashlog_async
+                # FormID matching is now done through the OrchestratorCore during process_crashlog_async
                 assert scanner.show_formid_values is True
                 assert scanner.formid_db_exists is True
                 assert hasattr(scanner, "yamldata")
@@ -201,7 +201,7 @@ class TestFormIDMatching:
                 autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
-                # Multiple FormID matching is done through the AsyncScanOrchestrator
+                # Multiple FormID matching is done through the OrchestratorCore
                 assert scanner.show_formid_values is True
                 assert scanner.formid_db_exists is True
                 assert hasattr(scanner, "yamldata")

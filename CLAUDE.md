@@ -309,3 +309,4 @@ poetry run pre-commit run check-test-isolation
 ## Memories
 - Output test output to a file to avoid truncation.
 - Do not make additions to the `MainWindow` class in `CLASSIC_Interface.py` unless absolutely necessary. Use Mixin classes with TYPE_CHECKING stubs instead.
+- API compatibility is a priority. Any API-breaking change should also come with a way to access it with the old API, but with a DeprecationWarning.

@@ -1,5 +1,5 @@
 """
-Test suite for async implementations in ClassicLib.ScanGame.AsyncScanGame
+Test suite for async implementations in ClassicLib.ScanGame.ScanGameCore
 """
 
 import asyncio
@@ -15,16 +15,7 @@ import ClassicLib.MessageHandler
 
 # Import for MessageHandler initialization
 from ClassicLib.MessageHandler import init_message_handler
-from ClassicLib.ScanGame.AsyncScanGame import (
-    MAX_CONCURRENT_DDS_READS,
-    MAX_CONCURRENT_LOG_READS,
-    check_log_errors_async,
-    check_log_errors_async_wrapper,
-    scan_mods_archived_async,
-    scan_mods_archived_async_wrapper,
-    scan_mods_unpacked_async,
-    scan_mods_unpacked_async_wrapper,
-)
+from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 
 
 @pytest.fixture(autouse=True)
@@ -120,11 +111,11 @@ def mock_global_registry(mock_paths):
         yield mock_gr_core
 
 
-class TestAsyncScanModsArchived:
-    """Test cases for scan_mods_archived_async function."""
+class TestScanModsArchived:
+    """Test cases for ScanGameCore.scan_mods_archived method."""
 
     @pytest.mark.asyncio
-    async def test_scan_mods_archived_async_with_valid_ba2(
+    async def test_scan_mods_archived_with_valid_ba2(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test scanning valid BA2 archives."""
@@ -144,13 +135,14 @@ class TestAsyncScanModsArchived:
         mock_proc.communicate = AsyncMock(return_value=("Header\n\n\n\n\nFile: test.dds\nExt: dds\nWidth: 1024 Height: 1024", ""))
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            result = await scan_mods_archived_async()
+            core = ScanGameCore()
+            result = await core.scan_mods_archived()
 
         assert "RESULTS FROM ARCHIVED / BA2 FILES" in result
         assert mock_proc.communicate.called
 
     @pytest.mark.asyncio
-    async def test_scan_mods_archived_async_with_invalid_ba2(
+    async def test_scan_mods_archived_with_invalid_ba2(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test scanning invalid BA2 archives."""
@@ -159,13 +151,14 @@ class TestAsyncScanModsArchived:
         with open(ba2_file, "wb") as f:
             f.write(b"INVALID_HEADER")
 
-        result = await scan_mods_archived_async()
+        core = ScanGameCore()
+        result = await core.scan_mods_archived()
 
         assert "BA2 FORMAT ERRORS FOUND" in result
         assert "invalid.ba2" in result
 
     @pytest.mark.asyncio
-    async def test_scan_mods_archived_async_concurrency_limit(
+    async def test_scan_mods_archived_concurrency_limit(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test that concurrency is limited by semaphore."""
@@ -202,16 +195,18 @@ class TestAsyncScanModsArchived:
             return mock_proc
 
         with patch("asyncio.create_subprocess_exec", side_effect=mock_subprocess):
-            await scan_mods_archived_async()
+            core = ScanGameCore()
+            await core.scan_mods_archived()
 
         # Verify concurrency was limited
         # Import the actual dynamic limit from ScanGameCore
-        from ClassicLib.ScanGame.ScanGameCore import MAX_CONCURRENT_SUBPROCESSES as ACTUAL_LIMIT
+        from ClassicLib.ScanGame.ScanGameCore import get_optimal_limits
+        ACTUAL_LIMIT = get_optimal_limits()["subprocesses"]
 
         assert max_concurrent <= ACTUAL_LIMIT
 
     @pytest.mark.asyncio
-    async def test_scan_mods_archived_async_timeout_handling(
+    async def test_scan_mods_archived_timeout_handling(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test timeout handling for BSArch subprocess."""
@@ -226,17 +221,18 @@ class TestAsyncScanModsArchived:
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
             with patch("ClassicLib.ScanGame.ScanGameCore.msg_error") as mock_error:
-                result = await scan_mods_archived_async()
+                core = ScanGameCore()
+                result = await core.scan_mods_archived()
 
                 # Verify timeout was handled
                 mock_error.assert_called_with("BSArch command timed out processing timeout.ba2")
 
 
-class TestAsyncCheckLogErrors:
-    """Test cases for check_log_errors_async function."""
+class TestCheckLogErrors:
+    """Test cases for ScanGameCore.check_log_errors method."""
 
     @pytest.mark.asyncio
-    async def test_check_log_errors_async_with_errors(self, mock_settings, mock_paths):
+    async def test_check_log_errors_with_errors(self, mock_settings, mock_paths):
         """Test checking log files with errors."""
         # Create test log files
         log1 = mock_paths["logs"] / "test1.log"
@@ -247,14 +243,15 @@ class TestAsyncCheckLogErrors:
         log2.write_text("WARNING: This is a warning\nNormal operation")
         log3.write_text("ERROR: Crash log should be ignored")
 
-        result = await check_log_errors_async(mock_paths["logs"])
+        core = ScanGameCore()
+        result = await core.check_log_errors(mock_paths["logs"])
 
         assert "ERROR > ERROR: Something went wrong" in result
         assert "ERROR > WARNING: This is a warning" in result
         assert "Crash log should be ignored" not in result
 
     @pytest.mark.asyncio
-    async def test_check_log_errors_async_concurrency(self, mock_settings, mock_paths):
+    async def test_check_log_errors_concurrency(self, mock_settings, mock_paths):
         """Test concurrent log file processing."""
         # Create many log files
         for i in range(30):
@@ -276,17 +273,20 @@ class TestAsyncCheckLogErrors:
             return result
 
         with patch("builtins.open", side_effect=track_concurrent_open):
-            result = await check_log_errors_async(mock_paths["logs"])
+            core = ScanGameCore()
+            result = await core.check_log_errors(mock_paths["logs"])
 
         # Verify all errors were found
         for i in range(30):
             assert f"Error in file {i}" in result
 
         # Verify concurrency was limited
-        assert max_concurrent_reads <= MAX_CONCURRENT_LOG_READS
+        from ClassicLib.ScanGame.ScanGameCore import get_optimal_limits
+        ACTUAL_LIMIT = get_optimal_limits()["log_reads"]
+        assert max_concurrent_reads <= ACTUAL_LIMIT
 
     @pytest.mark.asyncio
-    async def test_check_log_errors_async_with_unreadable_file(self, mock_settings, mock_paths):
+    async def test_check_log_errors_with_unreadable_file(self, mock_settings, mock_paths):
         """Test handling of unreadable log files."""
         # Create a log file
         log_file = mock_paths["logs"] / "unreadable.log"
@@ -296,18 +296,19 @@ class TestAsyncCheckLogErrors:
         with patch("ClassicLib.ScanGame.ScanGameCore.open_file_with_encoding", side_effect=OSError("Permission denied")):
             # Also mock the async read if it exists
             with patch("aiofiles.open", side_effect=OSError("Permission denied")) if "aiofiles" in str(sys.modules) else nullcontext():
-                result = await check_log_errors_async(mock_paths["logs"])
+                core = ScanGameCore()
+                result = await core.check_log_errors(mock_paths["logs"])
 
                 # Check for the error message (without emoji since test output may vary)
                 assert "Unable to scan this log file" in result or "ERROR" in result
                 assert "unreadable.log" in result
 
 
-class TestAsyncScanModsUnpacked:
-    """Test cases for scan_mods_unpacked_async function."""
+class TestScanModsUnpacked:
+    """Test cases for ScanGameCore.scan_mods_unpacked method."""
 
     @pytest.mark.asyncio
-    async def test_scan_mods_unpacked_async_basic(
+    async def test_scan_mods_unpacked_basic(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test basic scanning of unpacked mod files."""
@@ -333,14 +334,15 @@ class TestAsyncScanModsUnpacked:
         anim_dir.mkdir(parents=True)
         (anim_dir / "AnimationFileData").mkdir()
 
-        result = await scan_mods_unpacked_async()
+        core = ScanGameCore()
+        result = await core.scan_mods_unpacked()
 
         assert "RESULTS FROM UNPACKED / LOOSE FILES" in result
         # Should find various issues
         assert any(keyword in result for keyword in ["CLEANUP", "TEXTURE", "SOUND", "ANIMATION"])
 
     @pytest.mark.asyncio
-    async def test_scan_mods_unpacked_async_dds_dimensions(
+    async def test_scan_mods_unpacked_dds_dimensions(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test detection of invalid DDS dimensions."""
@@ -356,13 +358,14 @@ class TestAsyncScanModsUnpacked:
         dds2 = mod_dir / "odd_height.dds"
         dds2.write_bytes(b"DDS \x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\x00\xff\x03\x00\x00")
 
-        result = await scan_mods_unpacked_async()
+        core = ScanGameCore()
+        result = await core.scan_mods_unpacked()
 
         assert "odd_width.dds (1023x1024)" in result
         assert "odd_height.dds (1024x1023)" in result
 
     @pytest.mark.asyncio
-    async def test_scan_mods_unpacked_async_concurrent_dds_processing(
+    async def test_scan_mods_unpacked_concurrent_dds_processing(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test concurrent DDS file processing with semaphore limits."""
@@ -392,13 +395,16 @@ class TestAsyncScanModsUnpacked:
             return result
 
         with patch("builtins.open", side_effect=track_concurrent_open):
-            await scan_mods_unpacked_async()
+            core = ScanGameCore()
+            await core.scan_mods_unpacked()
 
         # Verify concurrency was limited
-        assert max_concurrent_reads <= MAX_CONCURRENT_DDS_READS
+        from ClassicLib.ScanGame.ScanGameCore import get_optimal_limits
+        ACTUAL_LIMIT = get_optimal_limits()["dds_reads"]
+        assert max_concurrent_reads <= ACTUAL_LIMIT
 
     @pytest.mark.asyncio
-    async def test_scan_mods_unpacked_async_xse_and_previs_detection(
+    async def test_scan_mods_unpacked_xse_and_previs_detection(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test detection of XSE files and previs files."""
@@ -413,14 +419,15 @@ class TestAsyncScanModsUnpacked:
         (previs_mod / "test.uvd").touch()
         (previs_mod / "test_oc.nif").touch()
 
-        result = await scan_mods_unpacked_async()
+        core = ScanGameCore()
+        result = await core.scan_mods_unpacked()
 
         # Check that issues were detected
         assert "F4SE FILES FOUND" in result or "xse_file" in result.lower()
         assert "PREVIS FILES FOUND" in result or "previs" in result.lower()
 
     @pytest.mark.asyncio
-    async def test_scan_mods_unpacked_async_cleanup_operations(
+    async def test_scan_mods_unpacked_cleanup_operations(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
         """Test file cleanup operations (moving files to backup)."""
@@ -447,7 +454,8 @@ class TestAsyncScanModsUnpacked:
 
         with patch("shutil.move", side_effect=track_move):
             with patch("ClassicLib.ScanGame.Config.TEST_MODE", False):
-                result = await scan_mods_unpacked_async()
+                core = ScanGameCore()
+                result = await core.scan_mods_unpacked()
 
         # Verify files were marked for cleanup
         assert len(moved_files) >= 3  # readme, changelog, fomod
@@ -456,45 +464,60 @@ class TestAsyncScanModsUnpacked:
         assert any("fomod" in str(src) for src, dst in moved_files)
 
 
-class TestAsyncWrappers:
+class TestSyncWrappers:
     """Test synchronous wrapper functions."""
 
-    def test_scan_mods_archived_async_wrapper(self, mock_settings):
-        """Test synchronous wrapper for scan_mods_archived_async."""
-        # Mock the async function to be an AsyncMock
-        mock_async_func = AsyncMock(return_value="Test result")
+    def test_scan_mods_archived_wrapper(self, mock_settings):
+        """Test synchronous wrapper for scan_mods_archived."""
+        # Mock the get_scan_game_core function and run_async
+        with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core:
+            with patch("CLASSIC_ScanGame.run_async") as mock_run_async:
+                mock_core = mock_get_core.return_value
+                mock_core.scan_mods_archived = AsyncMock(return_value="Test result")
+                mock_run_async.return_value = "Test result"
 
-        with patch("ClassicLib.ScanGame.AsyncScanGame.scan_mods_archived_async", mock_async_func):
-            result = scan_mods_archived_async_wrapper()
-            assert result == "Test result"
+                # Test the sync adapter in the main module
+                import CLASSIC_ScanGame
+                result = CLASSIC_ScanGame.scan_mods_archived()
+                assert result == "Test result"
 
-    def test_check_log_errors_async_wrapper(self, mock_settings, mock_paths):
-        """Test synchronous wrapper for check_log_errors_async."""
-        # Mock the async function to be an AsyncMock
-        mock_async_func = AsyncMock(return_value="Test log result")
+    def test_check_log_errors_wrapper(self, mock_settings, mock_paths):
+        """Test synchronous wrapper for check_log_errors."""
+        # Mock the get_scan_game_core function and run_async
+        with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core:
+            with patch("CLASSIC_ScanGame.run_async") as mock_run_async:
+                mock_core = mock_get_core.return_value
+                mock_core.check_log_errors = AsyncMock(return_value="Test log result")
+                mock_run_async.return_value = "Test log result"
 
-        with patch("ClassicLib.ScanGame.AsyncScanGame.check_log_errors_async", mock_async_func):
-            result = check_log_errors_async_wrapper(mock_paths["logs"])
-            assert result == "Test log result"
+                # Test the sync adapter in the main module
+                import CLASSIC_ScanGame
+                result = CLASSIC_ScanGame.check_log_errors(mock_paths["logs"])
+                assert result == "Test log result"
 
-    def test_scan_mods_unpacked_async_wrapper(self, mock_settings):
-        """Test synchronous wrapper for scan_mods_unpacked_async."""
-        # Mock the async function to be an AsyncMock
-        mock_async_func = AsyncMock(return_value="Test unpacked result")
+    def test_scan_mods_unpacked_wrapper(self, mock_settings):
+        """Test synchronous wrapper for scan_mods_unpacked."""
+        # Mock the get_scan_game_core function and run_async
+        with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core:
+            with patch("CLASSIC_ScanGame.run_async") as mock_run_async:
+                mock_core = mock_get_core.return_value
+                mock_core.scan_mods_unpacked = AsyncMock(return_value="Test unpacked result")
+                mock_run_async.return_value = "Test unpacked result"
 
-        with patch("ClassicLib.ScanGame.AsyncScanGame.scan_mods_unpacked_async", mock_async_func):
-            result = scan_mods_unpacked_async_wrapper()
-            assert result == "Test unpacked result"
+                # Test the sync adapter in the main module
+                import CLASSIC_ScanGame
+                result = CLASSIC_ScanGame.scan_mods_unpacked()
+                assert result == "Test unpacked result"
 
 
-class TestAsyncIntegration:
-    """Integration tests for async functionality."""
+class TestScanGameCoreIntegration:
+    """Integration tests for ScanGameCore async functionality."""
 
     @pytest.mark.asyncio
-    async def test_async_performance_improvement(
+    async def test_scan_game_core_performance_improvement(
         self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
     ):
-        """Test that async version is faster than sequential processing."""
+        """Test that ScanGameCore async methods are faster than sequential processing."""
         import time
 
         # Create multiple BA2 files
@@ -517,15 +540,16 @@ class TestAsyncIntegration:
 
         with patch("asyncio.create_subprocess_exec", side_effect=slow_subprocess):
             start_time = time.time()
-            await scan_mods_archived_async()
+            core = ScanGameCore()
+            await core.scan_mods_archived()
             async_time = time.time() - start_time
 
         # With semaphore limit of 4, 5 files should take ~0.4s (2 batches)
         # Sequential would take ~1.0s (5 * 0.2s)
         assert async_time < 0.6  # Allow some overhead
 
-    def test_feature_flag_integration(self, mock_scan_settings, mock_issue_messages):
-        """Test that the new async-first implementation works correctly."""
+    def test_sync_adapter_integration(self, mock_scan_settings, mock_issue_messages):
+        """Test that sync adapters correctly delegate to ScanGameCore."""
         # Test that sync adapters correctly delegate to async core
         with patch("CLASSIC_ScanGame.ScanGameCore") as mock_core:
             mock_instance = mock_core.return_value
