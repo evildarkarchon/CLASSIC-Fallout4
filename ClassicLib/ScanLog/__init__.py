@@ -8,6 +8,19 @@ This package contains modules for scanning and analyzing crash logs.
 # Modern async-first core components
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+
+# New modular components
+from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
+from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor, ClassicScanLogs
+from ClassicLib.ScanLog.ScanLogsUtils import (
+    crashlogs_scan,
+    crashlogs_scan_async_pure,
+    crashlogs_scan_async_pure_with_qt,
+    write_report_to_file,
+    write_report_to_file_async,
+    move_unsolved_logs,
+    complete_scan_with_summary,
+)
 from ClassicLib.ScanLog.AsyncIntegration import run_async_scan
 from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline
 from ClassicLib.ScanLog.AsyncReformat import (
@@ -43,6 +56,19 @@ from ClassicLib.ScanLog.Util import (
 )
 
 __all__ = [
+    # New modular components
+    "ScanConfig",
+    "ScanResult",
+    "ScanStatistics",
+    "ScanLogsExecutor",
+    "ClassicScanLogs",  # Backward compatibility alias
+    "crashlogs_scan",
+    "crashlogs_scan_async_pure",
+    "crashlogs_scan_async_pure_with_qt",
+    "write_report_to_file",
+    "write_report_to_file_async",
+    "move_unsolved_logs",
+    "complete_scan_with_summary",
     # Async components
     "AsyncCrashLogPipeline",
     "AsyncDatabasePool",

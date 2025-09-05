@@ -1,354 +1,215 @@
 """
-Refactored CLASSIC_ScanLogs module using the new modular architecture.
+CLASSIC ScanLogs CLI interface.
 
-This module maintains backward compatibility while delegating to the new
-modular components for crash log scanning functionality.
+This module provides a command-line interface for CLASSIC crash log scanning.
+It has been refactored to use the new modular architecture while maintaining
+backward compatibility.
 """
 
-import asyncio
 import os
-import random
 import sys
-import time
+import warnings
 from collections import Counter
-
-# Removed ThreadPoolExecutor - using pure async instead
-from functools import partial
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, Union
 
-from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_progress_context
-from ClassicLib.AsyncBridge import run_async
-from ClassicLib.Constants import DB_PATHS, YAML
-from ClassicLib.Logger import logger
-from ClassicLib.ScanLog import (
-    FCXModeHandler,
-    ThreadSafeLogCache,
-    crashlogs_reformat,
-)
+from ClassicLib.Constants import YAML
+from ClassicLib.ScanLog.models import ScanConfig, ScanResult
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-from ClassicLib.ScanLog.Util import crashlogs_get_files
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
+from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
+from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan as _crashlogs_scan
 from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
+if TYPE_CHECKING:
+    import argparse
+    from argparse import Namespace
+
+# Backward compatibility imports with deprecation warnings
+
+
+def _deprecated_import_warning(old_name: str, new_location: str) -> None:
+    """Issue a deprecation warning for moved imports."""
+    warnings.warn(
+        f"Importing {old_name} from CLASSIC_ScanLogs is deprecated. Import from {new_location} instead.", DeprecationWarning, stacklevel=3
+    )
+
 
 class ClassicScanLogs:
-    """
-    Refactored ClassicScanLogs that delegates to modular components.
-
-    This class maintains the same interface as the original implementation
-    but uses the new modular architecture internally.
-    """
+    """Backward compatibility wrapper for ScanLogsExecutor."""
 
     def __init__(self) -> None:
-        """Initialize the crash log scanner with new modular components."""
-        # Get crash log files
-        self.crashlog_list: list[Path] = crashlogs_get_files()
-        msg_info("REFORMATTING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
+        _deprecated_import_warning("ClassicScanLogs", "ClassicLib.ScanLog.ScanLogsExecutor")
+        self._executor = ScanLogsExecutor()
 
-        # Load settings
-        self.remove_list: tuple[str] = yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
+        # Provide backward compatibility attributes
+        self.crashlog_list: list[Path] = self._executor.crashlog_list
+        self.yamldata: ClassicScanLogsInfo = self._executor.yamldata
+        self.fcx_mode: bool | None = self._executor.config.fcx_mode
+        self.show_formid_values: bool | None = self._executor.config.show_formid_values
+        self.formid_db_exists: bool = self._executor.config.formid_db_exists
+        self.move_unsolved_logs: bool | None = self._executor.config.move_unsolved_logs
+        self.scan_start_time: float = self._executor.statistics.scan_start_time
+        self.crashlogs: ThreadSafeLogCache = self._executor.crashlogs
 
-        # Optimized reformatting - only writes files that actually change
-        crashlogs_reformat(self.crashlog_list, self.remove_list)
-        logger.debug("Used optimized crash log reformatting")
-
-        # Initialize configuration
-        self.yamldata = ClassicScanLogsInfo()
-        self.fcx_mode: bool | None = classic_settings(bool, "FCX Mode")
-        self.show_formid_values: bool | None = classic_settings(bool, "Show FormID Values")
-        self.formid_db_exists: bool = any(db.is_file() for db in DB_PATHS)
-        self.move_unsolved_logs: bool | None = classic_settings(bool, "Move Unsolved Logs")
-
-        # Async database operations are handled by AsyncScanOrchestrator
-
-        self.scan_start_time: float = time.perf_counter()
-
-        # Initialize thread-safe log cache
-        self.crashlogs = ThreadSafeLogCache(self.crashlog_list)
-
-        # We'll initialize the async orchestrator in the async context
-
-        # Statistics tracking
-        self.crashlog_stats: Counter[str] = Counter(scanned=0, incomplete=0, failed=0)
-
-        logger.debug(f"Initiated crash log scan for {len(self.crashlog_list)} files")
-
-        # FCX checks will be done in the async orchestrator
-
-    # Removed synchronous process_crashlog method - using async version instead
+        # Provide access to statistics through Counter interface
+        self.crashlog_stats = self._executor.statistics.to_counter()
 
     async def process_crashlog_async(
         self, crashlog_file: Path, orchestrator: OrchestratorCore
     ) -> tuple[Path, list[str], bool, Counter[str]]:
-        """
-        Process a crash log with async database operations for FormID lookups.
-
-        This method is now fully async and doesn't create nested event loops.
-
-        Args:
-            crashlog_file: Path to the crash log file
-            orchestrator: The async orchestrator instance
-
-        Returns:
-            Tuple containing file path, report, failure status, and statistics
-        """
-        try:
-            # OrchestratorCore uses the base method name
-            return await orchestrator.process_crash_log(crashlog_file)
-        except (RuntimeError, ImportError, OSError) as e:
-            logger.error(f"Error processing crash log {crashlog_file}: {e}")
-            # Return failure result
-            return crashlog_file, [f"Error processing log: {e}"], True, Counter(failed=1)
-
-    # Removed _process_crashlog_async - now using AsyncScanOrchestrator directly
-
-    # Removed _check_async_db_availability - AsyncScanOrchestrator handles this internally
+        """Backward compatibility method."""
+        return await self._executor._process_crashlog_async(crashlog_file, orchestrator)
 
 
-def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: ClassicScanLogs) -> None:
-    """
-    Write report to file and handle unsolved logs.
+def write_report_to_file(
+    crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: Union["ClassicScanLogs", "ScanLogsExecutor"]
+) -> None:
+    """Backward compatibility function."""
+    _deprecated_import_warning("write_report_to_file", "ClassicLib.ScanLog.ScanLogsUtils")
+    from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file as _write_report_to_file
 
-    Args:
-        crashlog_file: Path to the crash log file
-        autoscan_report: Generated report lines
-        trigger_scan_failed: Whether the scan failed
-        scanner: The scanner instance
-    """
-    autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
-    with autoscan_path.open("w", encoding="utf-8", errors="ignore") as autoscan_file:
-        logger.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
-        autoscan_output: str = "".join(autoscan_report)
-        autoscan_file.write(autoscan_output)
-
-    if trigger_scan_failed and scanner.move_unsolved_logs:
-        move_unsolved_logs(crashlog_file)
+    # Convert ClassicScanLogs to ScanLogsExecutor if needed
+    executor: ScanLogsExecutor = scanner._executor if isinstance(scanner, ClassicScanLogs) else scanner
+    _write_report_to_file(crashlog_file, autoscan_report, trigger_scan_failed, executor)
 
 
 def move_unsolved_logs(crashlog_file: Path) -> None:
-    """Move unsolved logs to backup location."""
-    import shutil
+    """Backward compatibility function."""
+    _deprecated_import_warning("move_unsolved_logs", "ClassicLib.ScanLog.ScanLogsUtils")
+    from ClassicLib.ScanLog.ScanLogsUtils import move_unsolved_logs as _move_unsolved_logs
 
-    backup_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup/Unsolved Logs"
-    backup_path.mkdir(parents=True, exist_ok=True)
-    autoscan_filepath: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
-
-    # Move the original crash log file
-    if crashlog_file.exists():
-        backup_crashlog_path: Path = backup_path / crashlog_file.name
-        try:
-            shutil.move(str(crashlog_file), str(backup_crashlog_path))
-        except OSError as e:
-            logger.error(f"Failed to move crash log {crashlog_file} to backup: {e}")
-
-    # Move the autoscan report file
-    if autoscan_filepath.exists():
-        backup_autoscan_path: Path = backup_path / autoscan_filepath.name
-        try:
-            shutil.move(str(autoscan_filepath), str(backup_autoscan_path))
-        except OSError as e:
-            logger.error(f"Failed to move autoscan report {autoscan_filepath} to backup: {e}")
+    _move_unsolved_logs(crashlog_file)
 
 
 def crashlogs_scan() -> None:
-    """
-    Main entry point for crash log scanning.
-
-    Uses pure async processing for better resource management and thread safety.
-    """
-    scanner = ClassicScanLogs()
-    FCXModeHandler.reset_fcx_checks()  # Reset FCX checks for new scan session
-
-    # Always use pure async processing
-    run_async(crashlogs_scan_async_pure(scanner))
+    """Main entry point for crash log scanning."""
+    _crashlogs_scan()
 
 
-async def crashlogs_scan_async_pure_with_qt(scanner: ClassicScanLogs) -> None:
-    """
-    Pure async crash log scanning with Qt event processing for GUI mode.
+async def crashlogs_scan_async_pure_with_qt(scanner: Union["ClassicScanLogs", "ScanLogsExecutor"]) -> None:
+    """Backward compatibility function."""
+    _deprecated_import_warning("crashlogs_scan_async_pure_with_qt", "ClassicLib.ScanLog.ScanLogsUtils")
+    from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan_async_pure_with_qt as _func
 
-    This version is specifically for GUI mode and allows Qt signals to be
-    processed during async operations for real-time progress updates.
-
-    Args:
-        scanner: ClassicScanLogs instance with configuration
-    """
-    # Just delegate to the main function - we'll add Qt-specific handling there
-    await crashlogs_scan_async_pure(scanner)
+    executor: ScanLogsExecutor = scanner._executor if isinstance(scanner, ClassicScanLogs) else scanner
+    await _func(executor)
 
 
-async def crashlogs_scan_async_pure(scanner: ClassicScanLogs) -> None:
-    """
-    Pure async crash log scanning with controlled concurrency.
+async def crashlogs_scan_async_pure(scanner: Union["ClassicScanLogs", "ScanLogsExecutor"]) -> None:
+    """Backward compatibility function."""
+    _deprecated_import_warning("crashlogs_scan_async_pure", "ClassicLib.ScanLog.ScanLogsUtils")
+    from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan_async_pure as _func
 
-    This implementation uses Option A from the audit recommendations,
-    providing proper resource management and thread safety.
-
-    Args:
-        scanner: ClassicScanLogs instance with configuration
-    """
-    logger.info("Using pure async processing for crash log scanning")
-    yamldata: ClassicScanLogsInfo = scanner.yamldata
-    scan_failed_list: list = []
-
-    msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
-
-    # Create async orchestrator with context manager for proper resource management
-    async with OrchestratorCore(
-        scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists
-    ) as orchestrator:
-        # Run FCX checks if enabled
-        if scanner.fcx_mode:
-            orchestrator.fcx_handler.check_fcx_mode()
-
-        # Use semaphore to limit concurrent operations
-        max_concurrent = min(10, len(scanner.crashlog_list))  # Limit to 10 concurrent operations
-        semaphore = asyncio.Semaphore(max_concurrent)
-
-        async def process_with_limit(log_path: Path) -> tuple[Path, list[str], bool, Counter[str]]:
-            """Process a single log with concurrency limiting."""
-            async with semaphore:
-                return await scanner.process_crashlog_async(log_path, orchestrator)
-
-        # Create tasks for all crash logs
-        tasks = [asyncio.create_task(process_with_limit(log)) for log in scanner.crashlog_list]
-
-        # Process with progress tracking (continue using existing progress context)
-        total_logs = len(scanner.crashlog_list)
-        completed = 0
-
-        with msg_progress_context("Processing Crash Logs", total_logs) as progress:
-            # Process tasks as they complete for real-time progress updates
-            for task in asyncio.as_completed(tasks):
-                try:
-                    result = await task
-
-                    # Unpack result - the first element is always the log file path
-                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = result
-
-                    # Update statistics
-                    if isinstance(local_stats, Counter):
-                        for key, value in local_stats.items():
-                            scanner.crashlog_stats[key] += value
-
-                    # Write report asynchronously
-                    await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
-
-                    # Track failed scans
-                    if trigger_scan_failed:
-                        scan_failed_list.append(crashlog_file.name)
-
-                    completed += 1
-                    progress.update(1, f"Processed: {crashlog_file.name}")
-
-                    # Yield to allow Qt signals to be processed
-                    await asyncio.sleep(0)  # This allows other async tasks and Qt signals to process
-
-                except (RuntimeError, ImportError, OSError, asyncio.CancelledError) as e:
-                    # Handle specific exceptions that can occur during async processing
-                    logger.error(f"Error processing crash log: {e}")
-                    scanner.crashlog_stats["failed"] += 1
-
-                    # We can't easily determine which specific log failed without the result,
-                    # but we can still update progress
-                    progress.update(1, "Failed: Error during processing")
-
-                    # Yield even on error
-                    await asyncio.sleep(0)
-
-    # Complete with standard error checking and summary
-    _complete_scan_with_summary(scanner, scan_failed_list, yamldata)
+    executor: ScanLogsExecutor = scanner._executor if isinstance(scanner, ClassicScanLogs) else scanner
+    await _func(executor)
 
 
 async def write_report_to_file_async(
-    crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: ClassicScanLogs
+    crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, scanner: Union["ClassicScanLogs", "ScanLogsExecutor"]
 ) -> None:
-    """
-    Async version of write_report_to_file using aiofiles.
+    """Backward compatibility function."""
+    _deprecated_import_warning("write_report_to_file_async", "ClassicLib.ScanLog.ScanLogsUtils")
+    from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file_async as _func
 
-    Args:
-        crashlog_file: Path to the crash log file
-        autoscan_report: Generated report lines
-        trigger_scan_failed: Whether the scan failed
-        scanner: The scanner instance
-    """
-    try:
-        import aiofiles
-
-        autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
-        async with aiofiles.open(autoscan_path, "w", encoding="utf-8", errors="ignore") as autoscan_file:
-            logger.debug(f"- - -> RUNNING CRASH LOG FILE SCAN >>> SCANNED {crashlog_file.name}")
-            autoscan_output: str = "".join(autoscan_report)
-            await autoscan_file.write(autoscan_output)
-
-        if trigger_scan_failed and scanner.move_unsolved_logs:
-            # Run in executor since move_unsolved_logs uses sync I/O
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, partial(move_unsolved_logs, crashlog_file))
-
-    except ImportError:
-        # Fallback to sync write if aiofiles not available
-        loop = asyncio.get_running_loop()
-        # Use partial to properly bind arguments for better type inference
-        write_func = partial(write_report_to_file, crashlog_file, autoscan_report, trigger_scan_failed, scanner)
-        await loop.run_in_executor(None, write_func)
+    executor: ScanLogsExecutor = scanner._executor if isinstance(scanner, ClassicScanLogs) else scanner
+    await _func(crashlog_file, autoscan_report, trigger_scan_failed, executor)
 
 
-# Removed old async pipeline function - using pure async pattern instead
+def _complete_scan_with_summary(
+    scanner: Union["ClassicScanLogs", "ScanLogsExecutor"], scan_failed_list: list, yamldata: ClassicScanLogsInfo
+) -> None:
+    """Backward compatibility function."""
+    _deprecated_import_warning("_complete_scan_with_summary", "ClassicLib.ScanLog.ScanLogsUtils")
+    from ClassicLib.ScanLog.ScanLogsUtils import _complete_scan_with_summary as _func
+
+    executor: ScanLogsExecutor = scanner._executor if isinstance(scanner, ClassicScanLogs) else scanner
+    _func(executor, scan_failed_list, yamldata)
 
 
-# Removed threaded implementation - using pure async pattern instead
+def parse_arguments() -> "argparse.Namespace":
+    """Parse command line arguments."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Command-line arguments for CLASSIC's Command Line Interface")
+
+    parser.add_argument("--fcx-mode", action=argparse.BooleanOptionalAction, help="Enable FCX mode")
+    parser.add_argument("--show-fid-values", action=argparse.BooleanOptionalAction, help="Show FormID values")
+    parser.add_argument("--stat-logging", action=argparse.BooleanOptionalAction, help="Enable statistical logging")
+    parser.add_argument("--move-unsolved", action=argparse.BooleanOptionalAction, help="Move unsolved logs")
+    parser.add_argument("--ini-path", type=Path, help="Path to the INI file")
+    parser.add_argument("--scan-path", type=Path, help="Path to the scan directory")
+    parser.add_argument("--mods-folder-path", type=Path, help="Path to the mods folder")
+    parser.add_argument(
+        "--simplify-logs", action=argparse.BooleanOptionalAction, help="Simplify the logs (Warning: May remove important information)"
+    )
+
+    return parser.parse_args()
 
 
-def _complete_scan_with_summary(scanner: ClassicScanLogs, scan_failed_list: list, yamldata: ClassicScanLogsInfo) -> None:
-    """
-    Complete the scan with error checking and summary display.
+def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
+    """Create scan configuration from CLI arguments."""
+    from ClassicLib import msg_error
 
-    Args:
-        scanner: ClassicScanLogs instance
-        scan_failed_list: List of failed log names
-        yamldata: Configuration data
-    """
-    # Check for failed or invalid crash logs
-    scan_invalid_list: list[Path] = sorted(Path.cwd().glob("crash-*.txt"))
-    if scan_failed_list or scan_invalid_list:
-        error_msg = "NOTICE : CLASSIC WAS UNABLE TO PROPERLY SCAN THE FOLLOWING LOG(S):\n"
-        if scan_failed_list:
-            error_msg += "\n".join(scan_failed_list) + "\n"
-        if scan_invalid_list:
-            error_msg += "\n"
-            for file in scan_invalid_list:
-                error_msg += f"{file}\n"
-        error_msg += "===============================================================================\n"
-        error_msg += "Most common reason for this are logs being incomplete or in the wrong format.\n"
-        error_msg += "Make sure that your crash log files have the .log file format, NOT .txt!"
-        msg_error(error_msg)
+    config = ScanConfig()
 
-    # Display completion information
-    logger.debug("Completed crash log file scan")
+    # Handle command line arguments by updating settings
+    if isinstance(args.fcx_mode, bool) and args.fcx_mode != classic_settings(bool, "FCX Mode"):
+        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.FCX Mode", args.fcx_mode)
+        config.fcx_mode = args.fcx_mode
 
-    if scanner.crashlog_stats["scanned"] == 0 and scanner.crashlog_stats["incomplete"] == 0:
-        msg_error("CLASSIC found no crash logs to scan or the scan failed.\n    There are no statistics to show (at this time).")
-    else:
-        success_message = "SCAN COMPLETE! (IT MIGHT TAKE SEVERAL SECONDS FOR SCAN RESULTS TO APPEAR)\n"
-        success_message += "SCAN RESULTS ARE AVAILABLE IN FILES NAMED crash-date-and-time-AUTOSCAN.md\n"
+    if isinstance(args.show_fid_values, bool) and args.show_fid_values != classic_settings(bool, "Show FormID Values"):
+        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Show FormID Values", args.show_fid_values)
+        config.show_formid_values = args.show_fid_values
 
-        # Display hint and statistics
-        success_message += f"Scanned all available logs in {str(time.perf_counter() - 0.5 - scanner.scan_start_time)[:5]} seconds.\n"
-        success_message += f"Number of Scanned Logs (No Autoscan Errors): {scanner.crashlog_stats['scanned']}\n"
-        success_message += f"Number of Incomplete Logs (No Plugins List): {scanner.crashlog_stats['incomplete']}\n"
-        success_message += f"Number of Failed Logs (Autoscan Can't Scan): {scanner.crashlog_stats['failed']}\n-----"
-        msg_info(success_message)
-        msg_info(f"{random.choice(yamldata.classic_game_hints)}", target=MessageTarget.CLI_ONLY)
+    if isinstance(args.move_unsolved, bool) and args.move_unsolved != classic_settings(bool, "Move Unsolved Logs"):
+        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Move Unsolved Logs", args.move_unsolved)
+        config.move_unsolved_logs = args.move_unsolved
 
-        if GlobalRegistry.get_game() == "Fallout4":
-            msg_info("\n-----\n", target=MessageTarget.CLI_ONLY)
-            msg_info(yamldata.autoscan_text, target=MessageTarget.CLI_ONLY)
+    if (
+        isinstance(args.ini_path, Path)
+        and args.ini_path.resolve().is_dir()
+        and str(args.ini_path) != classic_settings(str, "INI Folder Path")
+    ):
+        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", str(args.ini_path.resolve()))
+        config.custom_paths["ini_path"] = args.ini_path.resolve()
+
+    if (
+        isinstance(args.scan_path, Path)
+        and args.scan_path.resolve().is_dir()
+        and str(args.scan_path) != classic_settings(str, "SCAN Custom Path")
+    ):
+        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+
+        if is_valid_custom_scan_path(args.scan_path):
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))
+            config.custom_paths["scan_path"] = args.scan_path.resolve()
+        else:
+            msg_error(
+                "WARNING: The specified scan path cannot be used as a custom scan directory.\n"
+                "The 'Crash Logs' folder and its subfolders are managed by CLASSIC and cannot be set as custom scan directories.\n"
+                "Resetting custom scan path."
+            )
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
+
+    if (
+        isinstance(args.mods_folder_path, Path)
+        and args.mods_folder_path.resolve().is_dir()
+        and str(args.mods_folder_path) != classic_settings(str, "MODS Folder Path")
+    ):
+        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", str(args.mods_folder_path.resolve()))
+        config.custom_paths["mods_folder_path"] = args.mods_folder_path.resolve()
+
+    if isinstance(args.simplify_logs, bool) and args.simplify_logs != classic_settings(bool, "Simplify Logs"):
+        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Simplify Logs", args.simplify_logs)
+        config.simplify_logs = args.simplify_logs
+
+    return config
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main CLI entry point."""
     # Ensure UTF-8 encoding for Windows console
     if sys.platform == "win32":
         import io
@@ -365,69 +226,22 @@ if __name__ == "__main__":
     # Disable progress bars in CLI mode (TUI has its own progress handling)
     yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Disable CLI Progress", True)
 
-    import argparse
+    # Parse command line arguments and create configuration
+    args: Namespace = parse_arguments()
+    config: ScanConfig = create_config_from_args(args)
 
-    parser = argparse.ArgumentParser(description="Command-line arguments for CLASSIC's Command Line Interface")
+    # Create executor and run scan
+    executor = ScanLogsExecutor(config)
+    result: ScanResult = executor.scan_sync()
 
-    parser.add_argument("--fcx-mode", action=argparse.BooleanOptionalAction, help="Enable FCX mode")
-    parser.add_argument("--show-fid-values", action=argparse.BooleanOptionalAction, help="Show FormID values")
-    parser.add_argument("--stat-logging", action=argparse.BooleanOptionalAction, help="Enable statistical logging")
-    parser.add_argument("--move-unsolved", action=argparse.BooleanOptionalAction, help="Move unsolved logs")
-    parser.add_argument("--ini-path", type=Path, help="Path to the INI file")
-    parser.add_argument("--scan-path", type=Path, help="Path to the scan directory")
-    parser.add_argument("--mods-folder-path", type=Path, help="Path to the mods folder")
-    parser.add_argument(
-        "--simplify-logs", action=argparse.BooleanOptionalAction, help="Simplify the logs (Warning: May remove important information)"
-    )
+    # Display results summary
+    print(executor.generate_summary(result))
 
-    args = parser.parse_args()
-
-    # Handle command line arguments
-    if isinstance(args.fcx_mode, bool) and args.fcx_mode != classic_settings(bool, "FCX Mode"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.FCX Mode", args.fcx_mode)
-
-    if isinstance(args.show_fid_values, bool) and args.show_fid_values != classic_settings(bool, "Show FormID Values"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Show FormID Values", args.show_fid_values)
-
-    if isinstance(args.move_unsolved, bool) and args.move_unsolved != classic_settings(bool, "Move Unsolved Logs"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Move Unsolved Logs", args.move_unsolved)
-
-    if (
-        isinstance(args.ini_path, Path)
-        and args.ini_path.resolve().is_dir()
-        and str(args.ini_path) != classic_settings(str, "INI Folder Path")
-    ):
-        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", str(args.ini_path.resolve()))
-
-    if (
-        isinstance(args.scan_path, Path)
-        and args.scan_path.resolve().is_dir()
-        and str(args.scan_path) != classic_settings(str, "SCAN Custom Path")
-    ):
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
-
-        if is_valid_custom_scan_path(args.scan_path):
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))
-        else:
-            msg_error(
-                "WARNING: The specified scan path cannot be used as a custom scan directory.\n"
-                "The 'Crash Logs' folder and its subfolders are managed by CLASSIC and cannot be set as custom scan directories.\n"
-                "Resetting custom scan path."
-            )
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
-
-    if (
-        isinstance(args.mods_folder_path, Path)
-        and args.mods_folder_path.resolve().is_dir()
-        and str(args.mods_folder_path) != classic_settings(str, "MODS Folder Path")
-    ):
-        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", str(args.mods_folder_path.resolve()))
-
-    if isinstance(args.simplify_logs, bool) and args.simplify_logs != classic_settings(bool, "Simplify Logs"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Simplify Logs", args.simplify_logs)
-
-    crashlogs_scan()
     # Ensure all output is flushed before pause
     sys.stdout.flush()
     sys.stderr.flush()
     os.system("pause")
+
+
+if __name__ == "__main__":
+    main()

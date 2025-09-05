@@ -7,6 +7,20 @@ from ClassicLib.ScanGame.CheckXsePlugins import (
     check_xse_plugins,
 )
 from ClassicLib.ScanGame.Config import ConfigFile, ConfigFileCache, compare_ini_files, mod_toml_config
+from ClassicLib.ScanGame.GameFilesManager import (
+    manage_game_files,
+    manage_game_files_async,
+    get_game_files_manager_core,
+)
+from ClassicLib.ScanGame.GameIntegrityOrchestrator import (
+    generate_game_combined_result,
+    generate_game_combined_result_async,
+    generate_mods_combined_result,
+    generate_mods_combined_result_async,
+    write_combined_results,
+    write_combined_results_async,
+    get_game_integrity_orchestrator_core,
+)
 from ClassicLib.ScanGame.ScanModInis import (
     apply_all_ini_fixes,
     apply_ini_fix,
@@ -31,6 +45,18 @@ __all__ = [
     "ConfigFileCache",
     # CheckCrashgen
     "CrashgenChecker",
+    # GameFilesManager
+    "manage_game_files",
+    "manage_game_files_async",
+    "get_game_files_manager_core",
+    # GameIntegrityOrchestrator
+    "generate_game_combined_result",
+    "generate_game_combined_result_async",
+    "generate_mods_combined_result",
+    "generate_mods_combined_result_async",
+    "write_combined_results",
+    "write_combined_results_async",
+    "get_game_integrity_orchestrator_core",
     # ScanModInis
     "apply_all_ini_fixes",
     "apply_ini_fix",
