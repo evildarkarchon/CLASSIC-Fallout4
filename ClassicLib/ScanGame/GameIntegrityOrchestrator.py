@@ -50,25 +50,33 @@ class GameIntegrityOrchestratorCore:
             if not (game_path and docs_path):
                 return ""
 
-            # Run all checks concurrently for better performance
-            results = await asyncio.gather(
-                self._run_xse_plugins_check_async(),
-                self._run_crashgen_check_async(),
-                self._check_log_errors_async(docs_path),
-                self._check_log_errors_async(game_path),
-                self._run_wryecheck_async(),
-                self._run_mod_inis_scan_async(),
-                return_exceptions=True,
-            )
+            # Run all checks concurrently with fail-fast behavior
+            # If any critical check fails, abort all checks
+            try:
+                async with asyncio.TaskGroup() as tg:
+                    xse_task = tg.create_task(self._run_xse_plugins_check_async())
+                    crashgen_task = tg.create_task(self._run_crashgen_check_async())
+                    docs_log_task = tg.create_task(self._check_log_errors_async(docs_path))
+                    game_log_task = tg.create_task(self._check_log_errors_async(game_path))
+                    wrye_task = tg.create_task(self._run_wryecheck_async())
+                    mod_inis_task = tg.create_task(self._run_mod_inis_scan_async())
 
-            # Filter out any exceptions and join results
-            valid_results = []
-            for result in results:
-                if isinstance(result, Exception):
-                    logger.error(f"Error in game integrity check: {result}")
-                    continue
-                if isinstance(result, str):
-                    valid_results.append(result)
+                # All checks completed successfully - collect results
+                valid_results = [
+                    xse_task.result(),
+                    crashgen_task.result(),
+                    docs_log_task.result(),
+                    game_log_task.result(),
+                    wrye_task.result(),
+                    mod_inis_task.result(),
+                ]
+            except* Exception as eg:
+                # Log all integrity check failures
+                logger.error("Game integrity checks failed:")
+                for e in eg.exceptions:
+                    logger.error(f"  - {type(e).__name__}: {e}")
+                # Re-raise to propagate the failure
+                raise
 
             return "".join(valid_results)
 
@@ -132,22 +140,39 @@ class GameIntegrityOrchestratorCore:
         This function aggregates results from both game and mods processes and writes
         their combined output into a markdown file named "CLASSIC GFS Report.md".
         The report file is encoded in UTF-8 with error handling.
+
+        Uses TaskGroup for atomic operation - both reports must generate successfully
+        before writing to file. If either report generation fails, no file is written.
         """
         try:
-            # Generate both results concurrently
-            game_task = self.generate_game_combined_result_async()
-            mods_task = self.generate_mods_combined_result_async()
+            # Generate both results concurrently with fail-fast behavior
+            # Both reports must succeed for the operation to complete
+            async with asyncio.TaskGroup() as tg:
+                game_task = tg.create_task(self.generate_game_combined_result_async())
+                mods_task = tg.create_task(self.generate_mods_combined_result_async())
 
-            game_result, mods_result = await asyncio.gather(game_task, mods_task)
+            # Both reports generated successfully - combine and write
+            game_result = game_task.result()
+            mods_result = mods_task.result()
 
             # Write the combined results to file
             gfs_report: Path = Path("CLASSIC GFS Report.md")
             combined_content = game_result + mods_result
 
             await self.file_io.write_file(gfs_report, combined_content)
+            logger.info(f"Successfully wrote combined results to {gfs_report}")
 
-        except (OSError, RuntimeError) as e:
-            logger.error(f"Error writing combined results: {e}")
+        except* (OSError, RuntimeError) as eg:
+            # Handle file system and runtime errors
+            logger.error("Failed to write combined results:")
+            for e in eg.exceptions:
+                logger.error(f"  - {type(e).__name__}: {e}")
+            raise
+        except* Exception as eg:
+            # Catch-all for unexpected errors
+            logger.error("Unexpected error generating reports:")
+            for e in eg.exceptions:
+                logger.error(f"  - {type(e).__name__}: {e}")
             raise
 
     async def _run_xse_plugins_check_async(self) -> str:

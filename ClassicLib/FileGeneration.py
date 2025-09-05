@@ -114,23 +114,48 @@ class FileGenerator:
         """
         Async version: Generate all required CLASSIC configuration files concurrently.
 
-        This method generates files in parallel using asyncio.gather:
+        This method generates files in parallel using asyncio.TaskGroup:
         - CLASSIC Ignore.yaml: Contains ignore patterns for file scanning
         - CLASSIC Data/CLASSIC <GAME> Local.yaml: Contains game-specific local settings
 
-        Files are generated concurrently for improved performance.
+        Files are generated concurrently with fail-fast behavior - if one file fails
+        to generate, the entire operation is aborted.
+
+        Raises:
+            ExceptionGroup: If any file generation tasks fail. The exception group
+                contains the individual exceptions from failed tasks.
         """
         import time
         start = time.perf_counter()
 
-        # Generate files concurrently
-        await asyncio.gather(
-            FileGenerator.generate_ignore_file_async(),
-            FileGenerator.generate_local_yaml_async()
-        )
+        try:
+            # Generate files concurrently with fail-fast behavior
+            async with asyncio.TaskGroup() as tg:
+                tg.create_task(FileGenerator.generate_ignore_file_async())
+                tg.create_task(FileGenerator.generate_local_yaml_async())
 
-        elapsed = time.perf_counter() - start
-        logger.info(f"Async file generation completed in {elapsed:.3f}s")
+            # All files generated successfully if we reach here
+            elapsed = time.perf_counter() - start
+            logger.info(f"Async file generation completed successfully in {elapsed:.3f}s")
+
+        except* TypeError as eg:
+            # Handle type errors from invalid YAML content
+            logger.error("File generation failed due to invalid content type")
+            for e in eg.exceptions:
+                logger.error(f"  - {e}")
+            raise
+        except* (OSError, PermissionError) as eg:
+            # Handle file system errors
+            logger.error("File generation failed due to file system error")
+            for e in eg.exceptions:
+                logger.error(f"  - {e}")
+            raise
+        except* Exception as eg:
+            # Catch-all for unexpected errors
+            logger.error("Unexpected error during file generation")
+            for e in eg.exceptions:
+                logger.error(f"  - {e}")
+            raise
 
     @staticmethod
     def generate_all_files() -> None:
