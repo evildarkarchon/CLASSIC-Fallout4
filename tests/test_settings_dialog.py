@@ -141,8 +141,8 @@ class TestSettingsPersistence:
         settings_dialog.load_settings()
 
         # Verify loaded values
-        assert settings_dialog.audio_checkbox.isChecked() == True
-        assert settings_dialog.fcx_checkbox.isChecked() == False
+        assert settings_dialog.audio_checkbox.isChecked()
+        assert not settings_dialog.fcx_checkbox.isChecked()
         assert settings_dialog.update_source_combo.currentText() == "GitHub"
 
     def test_save_settings(self, settings_dialog, reset_settings):
@@ -156,8 +156,8 @@ class TestSettingsPersistence:
         settings_dialog.save_settings()
 
         # Verify saved values
-        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications") == False
-        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode") == True
+        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications")
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "Nexus"
 
     def test_settings_persistence_across_instances(self, app, reset_settings):
@@ -171,8 +171,8 @@ class TestSettingsPersistence:
 
         # Second dialog - verify settings persist
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        assert dialog2.audio_checkbox.isChecked() == False
-        assert dialog2.vr_checkbox.isChecked() == True
+        assert not dialog2.audio_checkbox.isChecked()
+        assert dialog2.vr_checkbox.isChecked()
         dialog2.close()
 
 
@@ -189,8 +189,8 @@ class TestDialogBehavior:
         settings_dialog.accept()
 
         # Verify settings were saved
-        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode") == True
-        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs") == True
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs")
         assert settings_dialog.result() == QDialog.DialogCode.Accepted
 
     def test_reject_does_not_save(self, settings_dialog, reset_settings):
@@ -259,15 +259,15 @@ class TestUIInteraction:
 
         # Test audio checkbox - set to known state first
         settings_dialog.audio_checkbox.setChecked(False)
-        assert settings_dialog.audio_checkbox.isChecked() == False
+        assert not settings_dialog.audio_checkbox.isChecked()
         settings_dialog.audio_checkbox.click()  # Use click() method directly
-        assert settings_dialog.audio_checkbox.isChecked() == True
+        assert settings_dialog.audio_checkbox.isChecked()
 
         # Test FCX checkbox - set to known state first
         settings_dialog.fcx_checkbox.setChecked(True)
-        assert settings_dialog.fcx_checkbox.isChecked() == True
+        assert settings_dialog.fcx_checkbox.isChecked()
         settings_dialog.fcx_checkbox.click()  # Use click() method directly
-        assert settings_dialog.fcx_checkbox.isChecked() == False
+        assert not settings_dialog.fcx_checkbox.isChecked()
 
     def test_combobox_interaction(self, settings_dialog, app):
         """Test that combo box selection works."""
@@ -352,7 +352,7 @@ class TestIntegration:
 
             # Verify apply_settings_changes was called
             assert hasattr(window, "settings_applied")
-            assert window.settings_applied == True
+            assert window.settings_applied
 
     def test_settings_affect_application(self, app, reset_settings):
         """Test that changed settings affect application behavior."""
@@ -365,10 +365,10 @@ class TestIntegration:
 
         # Example: Test that FCX mode setting is accessible
         yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode", True)
-        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode") == True
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
 
         yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode", False)
-        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode") == False
+        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
 
 
 class TestEdgeCases:
@@ -391,8 +391,8 @@ class TestEdgeCases:
         dialog2.audio_checkbox.setChecked(False)
 
         # Each dialog should maintain its own state until saved
-        assert dialog1.audio_checkbox.isChecked() == True
-        assert dialog2.audio_checkbox.isChecked() == False
+        assert dialog1.audio_checkbox.isChecked()
+        assert not dialog2.audio_checkbox.isChecked()
 
         dialog1.close()
         dialog2.close()

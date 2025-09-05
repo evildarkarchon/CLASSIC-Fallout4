@@ -5,7 +5,7 @@ This module contains tests focused on the FormID matching functionality
 which is an essential part of the crash log analysis.
 """
 
-from typing import Any, LiteralString
+from typing import LiteralString
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -52,9 +52,11 @@ class TestFormIDMatching:
                 scanner.formid_db_exists = True
 
                 # Test the FormID matching with a known FormID
-                formids: list[str] = ["Form ID: 00001234"]
-                crashlog_plugins: dict[str, str] = {"Fallout4.esm": "01"}
-                autoscan_report: list[Any] = []
+                # Note: FormID matching is now done through the OrchestratorCore during process_crashlog_async
+                # The following would be used in actual FormID matching:
+                # formids: list[str] = ["Form ID: 00001234"]
+                # crashlog_plugins: dict[str, str] = {"Fallout4.esm": "01"}
+                # autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
                 # FormID matching is now done through the OrchestratorCore during process_crashlog_async
@@ -89,9 +91,11 @@ class TestFormIDMatching:
                 scanner.formid_db_exists = True
 
                 # Test with plugin-prefixed FormID
-                formids: list[str] = ["Form ID: DLCRobot.esm:00002468"]
-                crashlog_plugins: dict[str, str] = {"DLCRobot.esm": "02"}
-                autoscan_report: list[Any] = []
+                # Note: FormID matching is now done through the OrchestratorCore during process_crashlog_async
+                # The following would be used in actual FormID matching:
+                # formids: list[str] = ["Form ID: DLCRobot.esm:00002468"]
+                # crashlog_plugins: dict[str, str] = {"DLCRobot.esm": "02"}
+                # autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
                 # FormID matching is now done through the OrchestratorCore during process_crashlog_async
@@ -125,9 +129,11 @@ class TestFormIDMatching:
                 scanner.formid_db_exists = True
 
                 # Test with an unknown FormID
-                formids: list[str] = ["Form ID: ABCDEF"]
-                crashlog_plugins: dict[str, str] = {"Fallout4.esm": "01"}
-                autoscan_report: list[Any] = []
+                # Note: FormID matching is now done through the OrchestratorCore during process_crashlog_async
+                # The following would be used in actual FormID matching:
+                # formids: list[str] = ["Form ID: ABCDEF"]
+                # crashlog_plugins: dict[str, str] = {"Fallout4.esm": "01"}
+                # autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
                 # FormID matching is now done through the OrchestratorCore during process_crashlog_async
@@ -160,9 +166,11 @@ class TestFormIDMatching:
                 scanner.formid_db_exists = False
                 scanner.show_formid_values = True  # Even though this is True
 
-                test_formids: list[str] = ["Form ID: 00001234"]
-                test_plugins: dict[str, str] = {"Fallout4.esm": "01"}
-                test_report: list[Any] = []
+                # Note: FormID matching is now done through the OrchestratorCore during process_crashlog_async
+                # The following would be used in actual FormID matching:
+                # test_formids: list[str] = ["Form ID: 00001234"]
+                # test_plugins: dict[str, str] = {"Fallout4.esm": "01"}
+                # test_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
                 # When database doesn't exist, FormID matching shouldn't be performed
@@ -196,9 +204,11 @@ class TestFormIDMatching:
                 scanner.formid_db_exists = True
 
                 # Test with multiple FormIDs
-                formids: list[str] = ["Form ID: 00001234", "Form ID: 00005678"]
-                crashlog_plugins: dict[str, str] = {"Fallout4.esm": "01"}
-                autoscan_report: list[Any] = []
+                # Note: FormID matching is now done through the OrchestratorCore during process_crashlog_async
+                # The following would be used in actual FormID matching:
+                # formids: list[str] = ["Form ID: 00001234", "Form ID: 00005678"]
+                # crashlog_plugins: dict[str, str] = {"Fallout4.esm": "01"}
+                # autoscan_report: list[Any] = []
 
                 # Since orchestrator is created during async execution, we'll test the basic structure
                 # Multiple FormID matching is done through the OrchestratorCore

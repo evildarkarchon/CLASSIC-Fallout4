@@ -331,7 +331,7 @@ class TestAsyncResourceManager:
             nonlocal cleanup_called
             cleanup_called = True
 
-        resource = await manager.acquire_resource("test", lambda: "resource", cleanup)
+        await manager.acquire_resource("test", lambda: "resource", cleanup)
         await manager.release_resource("test")
 
         assert cleanup_called
@@ -379,10 +379,9 @@ class TestAsyncSemaphorePool:
         """Test multiple independent semaphores"""
         pool = AsyncSemaphorePool()
 
-        async with pool.acquire("type1", limit=1):
-            # Should be able to acquire different type
-            async with pool.acquire("type2", limit=1):
-                pass
+        async with pool.acquire("type1", limit=1), pool.acquire("type2", limit=1):
+            # Should be able to acquire different types simultaneously
+            pass
 
 
 class TestSyncAdapter:
@@ -569,10 +568,10 @@ class TestAsyncConnectionPool:
 
         # Acquire max connections
         conn1_ctx = pool.acquire()
-        conn1 = await conn1_ctx.__aenter__()
+        await conn1_ctx.__aenter__()
 
         conn2_ctx = pool.acquire()
-        conn2 = await conn2_ctx.__aenter__()
+        await conn2_ctx.__aenter__()
 
         # Third should wait
         acquire_task = asyncio.create_task(pool._acquire())

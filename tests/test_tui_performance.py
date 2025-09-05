@@ -187,20 +187,22 @@ class TestPerformanceBenchmarks:
         """Test batched settings operations in ScanHandler."""
         handler = TuiScanHandler()
 
-        with patch("ClassicLib.TUI.handlers.scan_handler.ClassicScanLogs"):
-            with patch("ClassicLib.TUI.handlers.scan_handler.init_message_handler"):
-                with patch("ClassicLib.TUI.handlers.scan_handler.classic_settings") as mock_settings:
-                    mock_settings.return_value = "/old/path"
-                    mock_settings.set_value = MagicMock()
+        with (
+            patch("ClassicLib.TUI.handlers.scan_handler.ClassicScanLogs"),
+            patch("ClassicLib.TUI.handlers.scan_handler.init_message_handler"),
+            patch("ClassicLib.TUI.handlers.scan_handler.classic_settings") as mock_settings,
+        ):
+            mock_settings.return_value = "/old/path"
+            mock_settings.set_value = MagicMock()
 
-                    # Measure time for scan with custom folder (batched operations)
-                    start_time = time.perf_counter()
-                    await handler.perform_crash_scan("/custom/folder")
-                    batched_time = time.perf_counter() - start_time
+            # Measure time for scan with custom folder (batched operations)
+            start_time = time.perf_counter()
+            await handler.perform_crash_scan("/custom/folder")
+            batched_time = time.perf_counter() - start_time
 
-                    # Should complete quickly with batched operations
-                    assert batched_time < 0.1, f"Batched operations took {batched_time:.3f}s"
-                    print(f"[PASS] Settings batching: {batched_time:.3f}s")
+            # Should complete quickly with batched operations
+            assert batched_time < 0.1, f"Batched operations took {batched_time:.3f}s"
+            print(f"[PASS] Settings batching: {batched_time:.3f}s")
 
     def test_memory_optimization_with_slots(self):
         """Test memory optimization with __slots__ in dataclasses."""

@@ -21,7 +21,7 @@ class TestAsyncEncodingDetection:
     """Test cases for async encoding detection utilities."""
 
     @pytest.mark.asyncio
-    async def test_detect_encoding_utf8(self):
+    async def test_detect_encoding_utf8(self) -> None:
         """Test detection of UTF-8 encoded files."""
         with tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=".txt") as f:
             test_path = Path(f.name)
@@ -36,7 +36,7 @@ class TestAsyncEncodingDetection:
             test_path.unlink()
 
     @pytest.mark.asyncio
-    async def test_detect_encoding_latin1(self):
+    async def test_detect_encoding_latin1(self) -> None:
         """Test detection of Latin-1 encoded files."""
         with tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=".txt") as f:
             test_path = Path(f.name)
@@ -51,7 +51,7 @@ class TestAsyncEncodingDetection:
             test_path.unlink()
 
     @pytest.mark.asyncio
-    async def test_detect_encoding_with_small_sample(self):
+    async def test_detect_encoding_with_small_sample(self) -> None:
         """Test encoding detection with custom sample size."""
         with tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=".txt") as f:
             test_path = Path(f.name)
@@ -68,7 +68,7 @@ class TestAsyncEncodingDetection:
             test_path.unlink()
 
     @pytest.mark.asyncio
-    async def test_open_file_with_encoding_async(self):
+    async def test_open_file_with_encoding_async(self) -> None:
         """Test opening file with automatic encoding detection."""
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False, suffix=".txt") as f:
             test_path = Path(f.name)
@@ -84,7 +84,7 @@ class TestAsyncEncodingDetection:
             test_path.unlink()
 
     @pytest.mark.asyncio
-    async def test_read_file_with_encoding_async(self):
+    async def test_read_file_with_encoding_async(self) -> None:
         """Test reading entire file with automatic encoding detection."""
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-16", delete=False, suffix=".txt") as f:
             test_path = Path(f.name)
@@ -98,7 +98,7 @@ class TestAsyncEncodingDetection:
             test_path.unlink()
 
     @pytest.mark.asyncio
-    async def test_read_lines_with_encoding_async(self):
+    async def test_read_lines_with_encoding_async(self) -> None:
         """Test reading file lines with automatic encoding detection."""
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False, suffix=".txt") as f:
             test_path = Path(f.name)
@@ -114,7 +114,7 @@ class TestAsyncEncodingDetection:
             test_path.unlink()
 
     @pytest.mark.asyncio
-    async def test_nonexistent_file(self):
+    async def test_nonexistent_file(self) -> None:
         """Test handling of nonexistent files."""
         nonexistent_path = Path("/tmp/nonexistent_file_12345.txt")
 
@@ -124,13 +124,13 @@ class TestAsyncEncodingDetection:
         with pytest.raises(FileNotFoundError):
             await read_file_with_encoding_async(nonexistent_path)
 
-    def test_encoding_detection_available(self):
+    def test_encoding_detection_available(self) -> None:
         """Test checking if async encoding detection is available."""
         # Should be True since we have aiofiles and chardet installed
         assert get_encoding_detection_available() is True
 
     @pytest.mark.asyncio
-    async def test_concurrent_encoding_detection(self):
+    async def test_concurrent_encoding_detection(self) -> None:
         """Test concurrent encoding detection on multiple files."""
         # Create multiple files with different encodings
         test_files = []

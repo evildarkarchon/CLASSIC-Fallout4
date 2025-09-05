@@ -90,11 +90,11 @@ def init_message_handler_fixture() -> Generator[None, None, None]:
     import ClassicLib.MessageHandler
 
     # Store any existing handler to restore later (defensive programming)
-    original_handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
+    _ = getattr(ClassicLib.MessageHandler, "_message_handler", None)
 
     try:
         # Initialize fresh handler for this test
-        handler = init_message_handler(parent=None, is_gui_mode=False)
+        init_message_handler(parent=None, is_gui_mode=False)
         yield
     finally:
         # Ensure complete cleanup
@@ -290,7 +290,7 @@ def mock_registry_entries() -> Generator[dict[str, dict[str, str]], None, None]:
 
         def query_side_effect(key, value_name):
             # This is a simplified mock - in real usage you'd need more sophisticated mocking
-            for reg_path, values in mock_entries.items():
+            for values in mock_entries.values():
                 if value_name in values:
                     return values[value_name], 1  # REG_SZ type
             raise FileNotFoundError
@@ -453,7 +453,8 @@ async def async_cleanup() -> AsyncIterator[list[Any]]:
             # Log but don't fail the test on cleanup errors
             import logging
 
-            logging.warning(f"Error preparing async resource cleanup: {e}")
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Error preparing async resource cleanup: {e}")
 
     # Execute all cleanups concurrently
     if cleanup_tasks:
@@ -490,14 +491,13 @@ async def clean_event_loop():
                 task.cancel()
 
         # Wait for all cancellations with timeout to prevent hanging
-        try:
+        import contextlib
+
+        with contextlib.suppress(TimeoutError):
             await asyncio.wait_for(
                 asyncio.gather(*new_tasks, return_exceptions=True),
                 timeout=1.0,  # Prevent tests from hanging on cleanup
             )
-        except TimeoutError:
-            # Force cleanup if tasks don't cancel gracefully
-            pass
 
     # Single sleep instead of allowing event loop to process indefinitely
     await asyncio.sleep(0)

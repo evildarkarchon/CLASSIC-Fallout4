@@ -78,3 +78,4 @@ TEST_IMPLEMENTATION_CHECKLIST.md
 test_output*.txt
 test-output*.txt
 /test-output*.txt
+ruff_output.json

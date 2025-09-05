@@ -4,8 +4,9 @@ Test suite for async implementations in ClassicLib.ScanGame.ScanGameCore
 
 import asyncio
 import sys
+from collections.abc import Generator
 from contextlib import nullcontext
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -19,7 +20,7 @@ from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 
 
 @pytest.fixture(autouse=True)
-def init_message_handler_fixture():
+def init_message_handler_fixture() -> Generator[None, None, None]:
     """Initialize MessageHandler for tests."""
     handler = init_message_handler(parent=None, is_gui_mode=False)
     yield
@@ -470,12 +471,15 @@ class TestSyncWrappers:
 
     def test_scan_mods_archived_wrapper(self, mock_settings):
         """Test synchronous wrapper for scan_mods_archived."""
-        # Mock the get_scan_game_core function and run_async
+        # Mock the get_scan_game_core function and AsyncBridge
         with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core:
-            with patch("CLASSIC_ScanGame.run_async") as mock_run_async:
+            with patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
+                mock_bridge = MagicMock()
+                mock_bridge_class.get_instance.return_value = mock_bridge
+
                 mock_core = mock_get_core.return_value
                 mock_core.scan_mods_archived = AsyncMock(return_value="Test result")
-                mock_run_async.return_value = "Test result"
+                mock_bridge.run_async.return_value = "Test result"
 
                 # Test the sync adapter in the main module
                 import CLASSIC_ScanGame
@@ -485,12 +489,15 @@ class TestSyncWrappers:
 
     def test_check_log_errors_wrapper(self, mock_settings, mock_paths):
         """Test synchronous wrapper for check_log_errors."""
-        # Mock the get_scan_game_core function and run_async
+        # Mock the get_scan_game_core function and AsyncBridge
         with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core:
-            with patch("CLASSIC_ScanGame.run_async") as mock_run_async:
+            with patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
+                mock_bridge = MagicMock()
+                mock_bridge_class.get_instance.return_value = mock_bridge
+
                 mock_core = mock_get_core.return_value
                 mock_core.check_log_errors = AsyncMock(return_value="Test log result")
-                mock_run_async.return_value = "Test log result"
+                mock_bridge.run_async.return_value = "Test log result"
 
                 # Test the sync adapter in the main module
                 import CLASSIC_ScanGame
@@ -500,12 +507,15 @@ class TestSyncWrappers:
 
     def test_scan_mods_unpacked_wrapper(self, mock_settings):
         """Test synchronous wrapper for scan_mods_unpacked."""
-        # Mock the get_scan_game_core function and run_async
+        # Mock the get_scan_game_core function and AsyncBridge
         with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core:
-            with patch("CLASSIC_ScanGame.run_async") as mock_run_async:
+            with patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
+                mock_bridge = MagicMock()
+                mock_bridge_class.get_instance.return_value = mock_bridge
+
                 mock_core = mock_get_core.return_value
                 mock_core.scan_mods_unpacked = AsyncMock(return_value="Test unpacked result")
-                mock_run_async.return_value = "Test unpacked result"
+                mock_bridge.run_async.return_value = "Test unpacked result"
 
                 # Test the sync adapter in the main module
                 import CLASSIC_ScanGame

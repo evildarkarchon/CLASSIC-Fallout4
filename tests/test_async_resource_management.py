@@ -23,6 +23,14 @@ from tests.test_async_utils import (
 )
 
 
+class SimulatedConnectionError(Exception):
+    """Custom exception for simulating database connection errors in tests."""
+
+
+class ContextTestError(Exception):
+    """Custom exception for testing exception handling during context operations."""
+
+
 @pytest.mark.asyncio
 class TestAsyncResourceManagement:
     """Tests for async resource management and cleanup verification."""
@@ -60,20 +68,21 @@ class TestAsyncResourceManagement:
         assert len(leaks) == 0
 
     @ensure_event_loop_cleanup
-    async def test_event_loop_cleanup_decorator(self):
+    async def test_event_loop_cleanup_decorator(self) -> None:
         """Test that the event loop cleanup decorator cancels pending tasks."""
         tasks_created = []
 
-        async def background_task():
+        async def background_task() -> None:
             """A task that runs indefinitely."""
             try:
-                while True:
-                    await asyncio.sleep(1)
+                # Use an Event instead of sleep loop for better efficiency
+                stop_event = asyncio.Event()
+                await stop_event.wait()
             except asyncio.CancelledError:
                 pass
 
         # Create some background tasks
-        for i in range(3):
+        for _ in range(3):
             task = asyncio.create_task(background_task())
             tasks_created.append(task)
 
@@ -84,7 +93,7 @@ class TestAsyncResourceManagement:
         assert len(tasks_created) == 3
         assert all(not task.done() for task in tasks_created)
 
-    async def test_safe_async_cleanup_handles_various_resources(self):
+    async def test_safe_async_cleanup_handles_various_resources(self) -> None:
         """Test that safe_async_cleanup handles different types of resources."""
 
         # Mock resources with different close methods
@@ -200,10 +209,10 @@ class TestAsyncResourceManagement:
 
         # Clean it up
         task.cancel()
-        try:
+        import contextlib
+
+        with contextlib.suppress(asyncio.CancelledError):
             await task
-        except asyncio.CancelledError:
-            pass
 
         # Verify cleanup
         current_tasks = set(asyncio.all_tasks(loop))
@@ -237,7 +246,7 @@ class TestDatabasePoolResourceManagement:
                 opened_connections.append(mock_conn)
 
                 if open_count > 1:
-                    raise Exception("Simulated connection error")
+                    raise SimulatedConnectionError("Simulated connection error")
 
                 return mock_conn
 
@@ -248,7 +257,7 @@ class TestDatabasePoolResourceManagement:
                 pool = AsyncDatabasePool()
 
                 # Initialize should fail
-                with pytest.raises(Exception, match="Simulated connection error"):
+                with pytest.raises(SimulatedConnectionError, match="Simulated connection error"):
                     await pool.initialize()
 
                 # Verify connections were cleaned up
@@ -323,6 +332,10 @@ class TestAsyncPipelineResourceManagement:
         mock_yamldata = MagicMock()
         mock_crashlogs = MagicMock(spec=ThreadSafeLogCache)
 
+        def _raise_test_exception():
+            """Helper function to raise a test exception during context operations."""
+            raise ContextTestError("Test exception during context")
+
         with patch("ClassicLib.ScanLog.OrchestratorCore.AsyncDatabasePool") as mock_pool_class:
             mock_pool = AsyncMock()
             mock_pool.initialize = AsyncMock()
@@ -361,8 +374,8 @@ class TestAsyncPipelineResourceManagement:
             try:
                 async with orchestrator:
                     # Force an exception after initialization
-                    raise Exception("Test exception during context")
-            except Exception as e:
+                    _raise_test_exception()
+            except ContextTestError as e:
                 if "Test exception" not in str(e):
                     raise
 

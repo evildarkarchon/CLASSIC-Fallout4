@@ -189,6 +189,122 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
     scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
 ```
 
+### Test-Driven Development (TDD) Method
+
+Follow the **Red-Green-Refactor** cycle for all new features and bug fixes:
+
+#### 1. Red Phase - Write a Failing Test First
+```python
+# Example: Writing test for a new FormID validation feature
+@pytest.mark.asyncio
+async def test_validate_formid_format():
+    """Test that FormID validation correctly identifies valid/invalid formats."""
+    validator = FormIDValidator()
+
+    # Test valid FormIDs
+    assert await validator.is_valid("0x12345678") is True
+    assert await validator.is_valid("12345678") is True
+
+    # Test invalid FormIDs
+    assert await validator.is_valid("invalid") is False
+    assert await validator.is_valid("0xGGGGGGGG") is False
+```
+
+#### 2. Green Phase - Write Minimal Implementation
+```python
+# Minimal code to make the test pass
+class FormIDValidator:
+    async def is_valid(self, formid: str) -> bool:
+        """Validate FormID format."""
+        cleaned = formid.replace("0x", "").replace("0X", "")
+        try:
+            int(cleaned, 16)
+            return len(cleaned) <= 8
+        except ValueError:
+            return False
+```
+
+#### 3. Refactor Phase - Improve Code Quality
+```python
+# Refactored with better structure and performance
+from functools import lru_cache
+import re
+
+class FormIDValidator:
+    FORMID_PATTERN = re.compile(r'^(?:0x)?[0-9a-fA-F]{1,8}$')
+
+    @lru_cache(maxsize=1024)
+    def _validate_format(self, formid: str) -> bool:
+        """Cache validation results for frequently checked FormIDs."""
+        return bool(self.FORMID_PATTERN.match(formid))
+
+    async def is_valid(self, formid: str) -> bool:
+        """Validate FormID format with caching."""
+        return self._validate_format(formid.strip())
+```
+
+#### TDD Best Practices
+
+1. **Write One Test at a Time** - Focus on a single behavior or requirement
+2. **Keep Tests Simple** - Each test should verify one specific aspect
+3. **Use Descriptive Test Names** - Test names should describe what they verify
+4. **Test Edge Cases** - Include boundary conditions and error scenarios
+5. **Mock External Dependencies** - Keep tests isolated and fast
+
+```python
+# Good test structure
+class TestAsyncLogProcessor:
+    """Tests for async log processing functionality."""
+
+    @pytest.fixture
+    async def processor(self, tmp_path):
+        """Create processor with mocked dependencies."""
+        mock_db = AsyncMock()
+        return AsyncLogProcessor(db=mock_db, cache_dir=tmp_path)
+
+    @pytest.mark.asyncio
+    async def test_processes_valid_log_file(self, processor, sample_log):
+        """Should successfully process a valid crash log."""
+        result = await processor.process(sample_log)
+        assert result.status == "success"
+        assert len(result.errors) == 0
+
+    @pytest.mark.asyncio
+    async def test_handles_corrupted_log_gracefully(self, processor):
+        """Should return error status for corrupted logs."""
+        corrupted_log = Path("corrupted.log")
+        result = await processor.process(corrupted_log)
+        assert result.status == "error"
+        assert "corrupted" in result.error_message.lower()
+```
+
+#### When to Apply TDD
+
+- **New Features** - Always start with tests when adding new functionality
+- **Bug Fixes** - Write a test that reproduces the bug before fixing it
+- **Refactoring** - Ensure existing tests pass, add new tests for changed behavior
+- **Performance Improvements** - Write performance tests with benchmarks
+
+#### TDD with Async Code
+
+For async components, follow the same TDD cycle with async test patterns:
+
+```python
+# Test async operations with proper fixtures
+@pytest.mark.asyncio
+async def test_concurrent_file_operations(tmp_path):
+    """Test that multiple files can be processed concurrently."""
+    files = [tmp_path / f"test_{i}.log" for i in range(10)]
+    for f in files:
+        f.write_text("test content")
+
+    processor = AsyncFileProcessor()
+    results = await processor.process_batch(files)
+
+    assert len(results) == 10
+    assert all(r.success for r in results)
+```
+
 ### Test Isolation Rules
 **CRITICAL**: Production data and settings must be treated as READ-ONLY in tests.
 

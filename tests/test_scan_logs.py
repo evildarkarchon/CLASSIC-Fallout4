@@ -165,10 +165,11 @@ class TestClassicScanLogs:
     def test_formid_match(self, mock_scanner: ClassicScanLogs) -> None:
         """Test the formid_match method."""
         # Set up input data for the formid_match method - with proper formatting as expected by the implementation
-        formids_matches = ["Form ID: 00123456", "Form ID: 01789ABC"]
-        # The crashlog_plugins dictionary maps plugin names to their load order IDs
-        crashlog_plugins = {"Plugin1.esp": "00", "Plugin2.esp": "01"}
-        autoscan_report: list[str] = []
+        # Note: FormID matching is now done through the OrchestratorCore during process_crashlog_async
+        # The following would be used in actual FormID matching:
+        # formids_matches = ["Form ID: 00123456", "Form ID: 01789ABC"]
+        # crashlog_plugins = {"Plugin1.esp": "00", "Plugin2.esp": "01"}
+        # autoscan_report: list[str] = []
 
         # Since orchestrator is created during async execution, we'll test the basic structure
         # The FormID matching is now done through the OrchestratorCore during process_crashlog_async
@@ -182,12 +183,14 @@ class TestClassicScanLogs:
     def test_scan_named_records(self, mock_scanner: ClassicScanLogs) -> None:
         """Test the scan_named_records method."""
         # Create test data
-        segment_callstack = [
-            "[RSP+10] 0x123 (record1)",  # Should match because "record1" is in lower_records
-            "[RSP+20] 0x456 (Some other text)",
-            "[RSP+30] 0x789 (record2)",  # Should match because "record2" is in lower_records
-            "[RSP+40] 0xABC (ignored_record)",  # Should be ignored
-        ]
+        # Note: Record scanning is now done through the OrchestratorCore during process_crashlog_async
+        # The following would be used in actual record scanning:
+        # segment_callstack = [
+        #     "[RSP+10] 0x123 (record1)",  # Should match because "record1" is in lower_records
+        #     "[RSP+20] 0x456 (Some other text)",
+        #     "[RSP+30] 0x789 (record2)",  # Should match because "record2" is in lower_records
+        #     "[RSP+40] 0xABC (ignored_record)",  # Should be ignored
+        # ]
 
         # Since orchestrator is created during async execution, we'll test the basic structure
         # Record scanning is now done through the OrchestratorCore during process_crashlog_async

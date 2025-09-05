@@ -153,7 +153,7 @@ class TestConcurrencySafety:
         def searcher():
             for _ in range(20):
                 with viewer._buffer_lock:
-                    buffer_copy = list(viewer._output_buffer)
+                    _ = list(viewer._output_buffer)
                 # Simulate search operation
                 time.sleep(0.002)
 
@@ -177,19 +177,21 @@ class TestConcurrencySafety:
         """Test that settings operations don't block the event loop."""
         handler = TuiScanHandler()
 
-        with patch("ClassicLib.TUI.handlers.scan_handler.ClassicScanLogs"):
-            with patch("ClassicLib.TUI.handlers.scan_handler.init_message_handler"):
-                with patch("ClassicLib.TUI.handlers.scan_handler.classic_settings") as mock_settings:
-                    mock_settings.return_value = "/old/path"
-                    mock_settings.set_value = MagicMock()
+        with (
+            patch("ClassicLib.TUI.handlers.scan_handler.ClassicScanLogs"),
+            patch("ClassicLib.TUI.handlers.scan_handler.init_message_handler"),
+            patch("ClassicLib.TUI.handlers.scan_handler.classic_settings") as mock_settings,
+        ):
+            mock_settings.return_value = "/old/path"
+            mock_settings.set_value = MagicMock()
 
-                    # This should complete quickly without blocking
-                    start_time = asyncio.get_event_loop().time()
-                    await handler.perform_crash_scan("/custom/folder")
-                    end_time = asyncio.get_event_loop().time()
+            # This should complete quickly without blocking
+            start_time = asyncio.get_event_loop().time()
+            await handler.perform_crash_scan("/custom/folder")
+            end_time = asyncio.get_event_loop().time()
 
-                    # Should complete in reasonable time (not blocked)
-                    assert (end_time - start_time) < 1.0
+            # Should complete in reasonable time (not blocked)
+            assert (end_time - start_time) < 1.0
 
     @pytest.mark.asyncio
     async def test_concurrent_monitoring_requests(self):

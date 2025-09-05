@@ -100,7 +100,7 @@ class TestMainScreen:
             def mock_classic_settings(type_hint, key, default=None):
                 return "" if "Folder" in key else default
 
-            with patch("ClassicLib.TUI.screens.main_screen.classic_settings", side_effect=mock_classic_settings) as mock_settings:
+            with patch("ClassicLib.TUI.screens.main_screen.classic_settings", side_effect=mock_classic_settings):
                 # Get input fields
                 from ClassicLib.TUI.widgets.folder_selector import FolderSelector
 
@@ -158,7 +158,7 @@ class TestScanHandler:
     async def test_scan_handler_crash_scan(self):
         """Test scan handler performs crash scan."""
         app = CLASSICTuiApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             output_viewer = OutputViewer()
             app.mount(output_viewer)
 
@@ -181,7 +181,7 @@ class TestScanHandler:
     async def test_scan_handler_game_scan(self):
         """Test scan handler performs game scan."""
         app = CLASSICTuiApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             output_viewer = OutputViewer()
             app.mount(output_viewer)
 
@@ -203,7 +203,7 @@ class TestScanHandler:
     async def test_scan_handler_error_handling(self):
         """Test scan handler handles errors gracefully."""
         app = CLASSICTuiApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             output_viewer = OutputViewer()
             app.mount(output_viewer)
 
@@ -227,7 +227,7 @@ class TestMessageHandler:
     async def test_message_handler_routing(self):
         """Test message handler routes messages correctly."""
         app = CLASSICTuiApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             output_viewer = OutputViewer()
             app.mount(output_viewer)
 
@@ -252,7 +252,7 @@ class TestMessageHandler:
     async def test_message_handler_progress(self):
         """Test message handler handles progress updates."""
         app = CLASSICTuiApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             output_viewer = OutputViewer()
             app.mount(output_viewer)
 
@@ -411,15 +411,17 @@ class TestKeyboardShortcuts:
             main_screen = app.screen
             assert isinstance(main_screen, MainScreen)
 
-            with patch.object(main_screen, "perform_crash_scan", new=AsyncMock()) as mock_crash:
-                with patch.object(main_screen, "perform_game_scan", new=AsyncMock()) as mock_game:
-                    # Test F5 for crash scan
-                    await pilot.press("f5")
-                    mock_crash.assert_called_once()
+            with (
+                patch.object(main_screen, "perform_crash_scan", new=AsyncMock()) as mock_crash,
+                patch.object(main_screen, "perform_game_scan", new=AsyncMock()) as mock_game,
+            ):
+                # Test F5 for crash scan
+                await pilot.press("f5")
+                mock_crash.assert_called_once()
 
-                    # Test F6 for game scan
-                    await pilot.press("f6")
-                    mock_game.assert_called_once()
+                # Test F6 for game scan
+                await pilot.press("f6")
+                mock_game.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_output_shortcuts(self):

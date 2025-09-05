@@ -53,24 +53,22 @@ class AsyncDatabasePool:
 
         """
         async with self._lock:
-            opened_connections = []
             try:
                 for db_path in DB_PATHS:
                     if db_path.is_file():
                         try:
                             conn = await aiosqlite.connect(db_path)
                             self.connections[db_path] = conn
-                            opened_connections.append(conn)
                             logger.debug(f"Opened async connection to {db_path}")
                         except (OSError, aiosqlite.Error) as e:
                             logger.error(f"Failed to open database {db_path}: {e}")
-            except (OSError, aiosqlite.Error, asyncio.CancelledError, MemoryError) as e:
+            except Exception as e:
                 # Clean up any connections that were opened before the exception
                 logger.error(f"Critical error during database initialization: {e}")
-                for conn in opened_connections:
+                for conn in self.connections.values():
                     try:
                         await conn.close()
-                    except (TimeoutError, aiosqlite.Error, OSError) as close_error:
+                    except Exception as close_error:
                         logger.error(f"Error closing connection during cleanup: {close_error}")
                 self.connections.clear()
                 raise
