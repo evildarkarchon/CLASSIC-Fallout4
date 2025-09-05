@@ -18,11 +18,11 @@ from ClassicLib.ScanLog.AsyncFileIO import (
     load_crash_logs_async_optimized,
     write_reports_batch,
 )
-from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
 from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
+from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
+from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, load_crash_logs_async
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, load_crash_logs_async
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 
 if TYPE_CHECKING:
@@ -245,9 +245,7 @@ class TestOrchestratorCore:
             ) as orchestrator:
                 # Mock the core method
                 with patch.object(orchestrator, "process_crash_log", return_value=(Path("test.log"), ["report"], False, {})):
-                    results: list[tuple[Path, list[str], bool, Counter[str]]] = await orchestrator.process_crash_logs_batch(
-                        crash_log_files
-                    )
+                    results: list[tuple[Path, list[str], bool, Counter[str]]] = await orchestrator.process_crash_logs_batch(crash_log_files)
 
                     assert len(results) == 3
                     for result in results:
@@ -439,6 +437,7 @@ class TestAsyncPerformanceComparison:
 
             # This should run without errors using asyncio.run
             import asyncio
+
             asyncio.run(crashlogs_reformat_async(crash_log_files, remove_list))
 
             # Verify the async function was called
@@ -732,9 +731,7 @@ PROBABLE CALL STACK:
 
                 # Create mock orchestrator
                 mock_orchestrator = AsyncMock()
-                mock_orchestrator.process_crash_logs_batch.return_value = [
-                    (f, [f"Report for {f.name}"], False, {}) for f in test_files
-                ]
+                mock_orchestrator.process_crash_logs_batch.return_value = [(f, [f"Report for {f.name}"], False, {}) for f in test_files]
                 mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
                 mock_orchestrator_class.return_value.__aexit__.return_value = None
 

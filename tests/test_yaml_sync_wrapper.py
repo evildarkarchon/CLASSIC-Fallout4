@@ -28,6 +28,7 @@ def init_message_handler_fixture():
     yield
     # Clean up
     import ClassicLib.MessageHandler
+
     ClassicLib.MessageHandler._message_handler = None
 
 
@@ -35,20 +36,11 @@ def init_message_handler_fixture():
 def temp_yaml_file(tmp_path):
     """Create a temporary YAML file for testing."""
     yaml_file = tmp_path / "test.yaml"
-    data = {
-        "test_settings": {
-            "string_value": "test",
-            "bool_value": True,
-            "int_value": 42,
-            "nested": {
-                "deep_value": "deep"
-            }
-        }
-    }
+    data = {"test_settings": {"string_value": "test", "bool_value": True, "int_value": 42, "nested": {"deep_value": "deep"}}}
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(offset=2)
-    with open(yaml_file, 'w') as f:
+    with open(yaml_file, "w") as f:
         yaml.dump(data, f)
 
     return yaml_file
@@ -90,6 +82,7 @@ class TestYamlSettingsCacheSync:
 
     def test_get_setting_sync(self, sync_yaml_cache, temp_yaml_file, monkeypatch):
         """Test get_setting through sync wrapper."""
+
         # Mock the async core's get_path_for_store
         async def mock_get_path(store):
             return temp_yaml_file
@@ -106,6 +99,7 @@ class TestYamlSettingsCacheSync:
 
     def test_batch_operations_sync(self, sync_yaml_cache, temp_yaml_file, monkeypatch):
         """Test batch operations through sync wrapper."""
+
         # Mock the async core's get_path_for_store
         async def mock_get_path(store):
             return temp_yaml_file
@@ -130,7 +124,7 @@ class TestYamlSettingsCacheSync:
             yaml_file = tmp_path / f"{store.name}.yaml"
             data = {f"{store.name}_data": {"key": f"value_{store.name}"}}
             yaml = ruamel.yaml.YAML()
-            with open(yaml_file, 'w') as f:
+            with open(yaml_file, "w") as f:
                 yaml.dump(data, f)
             files[store] = yaml_file
 
@@ -164,10 +158,10 @@ class TestYamlSettingsCacheSync:
         """Test metrics retrieval through sync wrapper."""
         metrics = sync_yaml_cache.get_metrics()
         assert isinstance(metrics, dict)
-        assert 'cache_hits' in metrics
-        assert 'cache_misses' in metrics
-        assert 'file_reads' in metrics
-        assert 'file_writes' in metrics
+        assert "cache_hits" in metrics
+        assert "cache_misses" in metrics
+        assert "file_reads" in metrics
+        assert "file_writes" in metrics
 
     def test_cache_property_access(self, sync_yaml_cache):
         """Test direct cache property access."""
@@ -187,6 +181,7 @@ class TestModuleLevelFunctions:
 
     def test_yaml_settings_function(self, temp_yaml_file, monkeypatch):
         """Test yaml_settings module function."""
+
         # Mock the global cache's get_path_for_store
         async def mock_get_path(store):
             return temp_yaml_file
@@ -198,7 +193,7 @@ class TestModuleLevelFunctions:
         assert value == "test"
 
         # Test Path type conversion
-        with patch.object(yaml_cache, 'get_setting', return_value="/some/path"):
+        with patch.object(yaml_cache, "get_setting", return_value="/some/path"):
             path_value = yaml_settings(Path, YAML.TEST, "some.path")
             assert isinstance(path_value, Path)
             # Path normalizes to OS-specific format
@@ -208,14 +203,9 @@ class TestModuleLevelFunctions:
         """Test classic_settings module function."""
         # Create a mock settings file
         settings_file = tmp_path / "CLASSIC Settings.yaml"
-        data = {
-            "CLASSIC_Settings": {
-                "Test Setting": "test value",
-                "Bool Setting": True
-            }
-        }
+        data = {"CLASSIC_Settings": {"Test Setting": "test value", "Bool Setting": True}}
         yaml = ruamel.yaml.YAML()
-        with open(settings_file, 'w') as f:
+        with open(settings_file, "w") as f:
             yaml.dump(data, f)
 
         # Mock paths
@@ -240,13 +230,9 @@ class TestModuleLevelFunctions:
         main_file = tmp_path / "CLASSIC Main.yaml"
 
         # Create Main.yaml with default settings
-        main_data = {
-            "CLASSIC_Info": {
-                "default_settings": "CLASSIC_Settings:\n  Default: true\n"
-            }
-        }
+        main_data = {"CLASSIC_Info": {"default_settings": "CLASSIC_Settings:\n  Default: true\n"}}
         yaml = ruamel.yaml.YAML()
-        with open(main_file, 'w') as f:
+        with open(main_file, "w") as f:
             yaml.dump(main_data, f)
 
         async def mock_get_path(store):
@@ -286,6 +272,7 @@ class TestSyncWrapperPerformance:
 
     def test_batch_vs_sequential_sync(self, sync_yaml_cache, temp_yaml_file, monkeypatch):
         """Test that batch operations are efficient in sync wrapper."""
+
         # Mock get_path_for_store
         async def mock_get_path(store):
             return temp_yaml_file
@@ -316,5 +303,4 @@ class TestSyncWrapperPerformance:
         assert batch_results == sequential_results
 
         # Batch shouldn't be too much slower (accounting for overhead)
-        assert batch_time <= sequential_time * 3.0, \
-            f"Batch took {batch_time:.3f}s vs sequential {sequential_time:.3f}s"
+        assert batch_time <= sequential_time * 3.0, f"Batch took {batch_time:.3f}s vs sequential {sequential_time:.3f}s"

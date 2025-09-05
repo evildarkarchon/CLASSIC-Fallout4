@@ -28,6 +28,7 @@ def init_message_handler_fixture():
     yield
     # Clean up
     import ClassicLib.MessageHandler
+
     ClassicLib.MessageHandler._message_handler = None
 
 
@@ -46,20 +47,11 @@ async def async_yaml_core():
 def temp_yaml_file(tmp_path):
     """Create a temporary YAML file for testing."""
     yaml_file = tmp_path / "test.yaml"
-    data = {
-        "test_settings": {
-            "string_value": "test",
-            "bool_value": True,
-            "int_value": 42,
-            "nested": {
-                "deep_value": "deep"
-            }
-        }
-    }
+    data = {"test_settings": {"string_value": "test", "bool_value": True, "int_value": 42, "nested": {"deep_value": "deep"}}}
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(offset=2)
-    with open(yaml_file, 'w') as f:
+    with open(yaml_file, "w") as f:
         yaml.dump(data, f)
 
     return yaml_file
@@ -98,6 +90,7 @@ class TestAsyncYamlSettingsCore:
     @pytest.mark.asyncio
     async def test_get_setting_basic(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test basic get_setting functionality."""
+
         # Mock get_path_for_store to return our temp file
         async def mock_get_path(store):
             return temp_yaml_file
@@ -119,6 +112,7 @@ class TestAsyncYamlSettingsCore:
     @pytest.mark.asyncio
     async def test_get_setting_with_update(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test setting update functionality."""
+
         # Mock get_path_for_store
         async def mock_get_path(store):
             return temp_yaml_file
@@ -127,9 +121,7 @@ class TestAsyncYamlSettingsCore:
 
         # Update a value
         new_value = "updated"
-        result = await async_yaml_core.get_setting(
-            str, YAML.TEST, "test_settings.string_value", new_value
-        )
+        result = await async_yaml_core.get_setting(str, YAML.TEST, "test_settings.string_value", new_value)
         assert result == new_value
 
         # Verify it was written
@@ -139,6 +131,7 @@ class TestAsyncYamlSettingsCore:
     @pytest.mark.asyncio
     async def test_static_store_protection(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test that static stores cannot be modified."""
+
         # Mock get_path_for_store
         async def mock_get_path(store):
             return temp_yaml_file
@@ -147,9 +140,7 @@ class TestAsyncYamlSettingsCore:
 
         # Attempt to modify a static store should raise ValueError
         with pytest.raises(ValueError, match="Attempted to modify static YAML store"):
-            await async_yaml_core.get_setting(
-                str, YAML.Main, "test_settings.string_value", "new_value"
-            )
+            await async_yaml_core.get_setting(str, YAML.Main, "test_settings.string_value", "new_value")
 
     @pytest.mark.asyncio
     async def test_concurrent_loads(self, async_yaml_core, tmp_path):
@@ -160,7 +151,7 @@ class TestAsyncYamlSettingsCore:
             yaml_file = tmp_path / f"test_{i}.yaml"
             data = {"index": i, "value": f"test_{i}"}
             yaml = ruamel.yaml.YAML()
-            with open(yaml_file, 'w') as f:
+            with open(yaml_file, "w") as f:
                 yaml.dump(data, f)
             files.append(yaml_file)
 
@@ -176,6 +167,7 @@ class TestAsyncYamlSettingsCore:
     @pytest.mark.asyncio
     async def test_batch_get_settings(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test batch settings retrieval."""
+
         # Mock get_path_for_store
         async def mock_get_path(store):
             return temp_yaml_file
@@ -205,7 +197,7 @@ class TestAsyncYamlSettingsCore:
             yaml_file = tmp_path / f"{store.name}.yaml"
             data = {f"{store.name}_data": {"key": f"value_{store.name}"}}
             yaml = ruamel.yaml.YAML()
-            with open(yaml_file, 'w') as f:
+            with open(yaml_file, "w") as f:
                 yaml.dump(data, f)
             files[store] = yaml_file
 
@@ -235,7 +227,7 @@ class TestAsyncYamlSettingsCore:
         with open(temp_yaml_file) as f:
             data = yaml.load(f)
         data["test_settings"]["string_value"] = "modified"
-        with open(temp_yaml_file, 'w') as f:
+        with open(temp_yaml_file, "w") as f:
             yaml.dump(data, f)
 
         # Immediate load should still use cache
@@ -243,7 +235,7 @@ class TestAsyncYamlSettingsCore:
         assert data2["test_settings"]["string_value"] == original_value
 
         # Mock time to simulate TTL expiration
-        with patch('time.time', return_value=time.time() + 10):
+        with patch("time.time", return_value=time.time() + 10):
             # After TTL, should reload from file
             data3 = await async_yaml_core.load_yaml(temp_yaml_file)
             assert data3["test_settings"]["string_value"] == "modified"
@@ -292,17 +284,12 @@ class TestAsyncYamlSettingsCore:
     async def test_metrics_tracking(self, async_yaml_core):
         """Test performance metrics tracking."""
         initial_metrics = await async_yaml_core.get_metrics()
-        assert initial_metrics == {
-            'cache_hits': 0,
-            'cache_misses': 0,
-            'file_reads': 0,
-            'file_writes': 0
-        }
+        assert initial_metrics == {"cache_hits": 0, "cache_misses": 0, "file_reads": 0, "file_writes": 0}
 
         # Metrics should be a copy, not reference
-        initial_metrics['cache_hits'] = 100
+        initial_metrics["cache_hits"] = 100
         current_metrics = await async_yaml_core.get_metrics()
-        assert current_metrics['cache_hits'] == 0
+        assert current_metrics["cache_hits"] == 0
 
     @pytest.mark.asyncio
     async def test_error_handling_corrupted_yaml(self, async_yaml_core, tmp_path):
@@ -332,13 +319,9 @@ class TestAsyncYamlSettingsCore:
 
         # Create a mock Main.yaml with default settings
         main_file = tmp_path / "CLASSIC Main.yaml"
-        main_data = {
-            "CLASSIC_Info": {
-                "default_settings": "CLASSIC_Settings:\n  Managed Game: Fallout 4\n"
-            }
-        }
+        main_data = {"CLASSIC_Info": {"default_settings": "CLASSIC_Settings:\n  Managed Game: Fallout 4\n"}}
         yaml = ruamel.yaml.YAML()
-        with open(main_file, 'w') as f:
+        with open(main_file, "w") as f:
             yaml.dump(main_data, f)
 
         # Loading should trigger regeneration
@@ -365,7 +348,7 @@ class TestAsyncConvenienceFunctions:
 
         monkeypatch.setattr(core, "get_path_for_store", mock_get_path)
 
-        with patch('ClassicLib.AsyncYamlSettingsCore.get_async_yaml_core', return_value=core):
+        with patch("ClassicLib.AsyncYamlSettingsCore.get_async_yaml_core", return_value=core):
             value = await yaml_settings_async(str, YAML.TEST, "test_settings.string_value")
             assert value == "test"
 
@@ -383,16 +366,12 @@ class TestAsyncConvenienceFunctions:
         monkeypatch.setattr(core, "get_path_for_store", mock_get_path)
 
         # Modify temp file to have CLASSIC_Settings structure
-        data = {
-            "CLASSIC_Settings": {
-                "Test Setting": "test value"
-            }
-        }
+        data = {"CLASSIC_Settings": {"Test Setting": "test value"}}
         yaml = ruamel.yaml.YAML()
-        with open(temp_yaml_file, 'w') as f:
+        with open(temp_yaml_file, "w") as f:
             yaml.dump(data, f)
 
-        with patch('ClassicLib.AsyncYamlSettingsCore.get_async_yaml_core', return_value=core):
+        with patch("ClassicLib.AsyncYamlSettingsCore.get_async_yaml_core", return_value=core):
             value = await classic_settings_async(str, "Test Setting")
             assert value == "test value"
 
@@ -411,11 +390,11 @@ class TestPerformance:
             data = {
                 "data": {
                     "index": i,
-                    "nested": {"value": f"test_{i}" * 100}  # Some bulk
+                    "nested": {"value": f"test_{i}" * 100},  # Some bulk
                 }
             }
             yaml = ruamel.yaml.YAML()
-            with open(yaml_file, 'w') as f:
+            with open(yaml_file, "w") as f:
                 yaml.dump(data, f)
             files.append(yaml_file)
 
@@ -449,6 +428,7 @@ class TestPerformance:
     @pytest.mark.performance
     async def test_batch_operation_performance(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test performance advantage of batch operations."""
+
         # Mock get_path_for_store
         async def mock_get_path(store):
             return temp_yaml_file
@@ -456,10 +436,7 @@ class TestPerformance:
         monkeypatch.setattr(async_yaml_core, "get_path_for_store", mock_get_path)
 
         # Prepare 100 requests
-        requests = [
-            (str, YAML.TEST, "test_settings.string_value")
-            for _ in range(100)
-        ]
+        requests = [(str, YAML.TEST, "test_settings.string_value") for _ in range(100)]
 
         # Time batch operation
         start = time.time()
@@ -474,5 +451,4 @@ class TestPerformance:
 
         # For cached operations, batch might have overhead but shouldn't be too much slower
         # (batch operations shine more with actual I/O operations)
-        assert batch_time <= sequential_time * 3.0, \
-            f"Batch took {batch_time:.3f}s vs sequential {sequential_time:.3f}s"
+        assert batch_time <= sequential_time * 3.0, f"Batch took {batch_time:.3f}s vs sequential {sequential_time:.3f}s"

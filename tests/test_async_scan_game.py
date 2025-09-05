@@ -201,6 +201,7 @@ class TestScanModsArchived:
         # Verify concurrency was limited
         # Import the actual dynamic limit from ScanGameCore
         from ClassicLib.ScanGame.ScanGameCore import get_optimal_limits
+
         ACTUAL_LIMIT = get_optimal_limits()["subprocesses"]
 
         assert max_concurrent <= ACTUAL_LIMIT
@@ -282,6 +283,7 @@ class TestCheckLogErrors:
 
         # Verify concurrency was limited
         from ClassicLib.ScanGame.ScanGameCore import get_optimal_limits
+
         ACTUAL_LIMIT = get_optimal_limits()["log_reads"]
         assert max_concurrent_reads <= ACTUAL_LIMIT
 
@@ -308,9 +310,7 @@ class TestScanModsUnpacked:
     """Test cases for ScanGameCore.scan_mods_unpacked method."""
 
     @pytest.mark.asyncio
-    async def test_scan_mods_unpacked_basic(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
-    ):
+    async def test_scan_mods_unpacked_basic(self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry):
         """Test basic scanning of unpacked mod files."""
         # Create test file structure
         mod1_dir = mock_paths["mods"] / "TestMod1"
@@ -400,6 +400,7 @@ class TestScanModsUnpacked:
 
         # Verify concurrency was limited
         from ClassicLib.ScanGame.ScanGameCore import get_optimal_limits
+
         ACTUAL_LIMIT = get_optimal_limits()["dds_reads"]
         assert max_concurrent_reads <= ACTUAL_LIMIT
 
@@ -478,6 +479,7 @@ class TestSyncWrappers:
 
                 # Test the sync adapter in the main module
                 import CLASSIC_ScanGame
+
                 result = CLASSIC_ScanGame.scan_mods_archived()
                 assert result == "Test result"
 
@@ -492,6 +494,7 @@ class TestSyncWrappers:
 
                 # Test the sync adapter in the main module
                 import CLASSIC_ScanGame
+
                 result = CLASSIC_ScanGame.check_log_errors(mock_paths["logs"])
                 assert result == "Test log result"
 
@@ -506,6 +509,7 @@ class TestSyncWrappers:
 
                 # Test the sync adapter in the main module
                 import CLASSIC_ScanGame
+
                 result = CLASSIC_ScanGame.scan_mods_unpacked()
                 assert result == "Test unpacked result"
 
