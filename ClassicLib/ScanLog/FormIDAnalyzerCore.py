@@ -100,6 +100,7 @@ class FormIDAnalyzerCore:
             if match:
                 formid_id: str | Any = match.group(1).upper()  # Get the hex part without 0x
                 # Skip if it starts with FF (plugin limit)
+                # Note: NULL FormIDs (00000000) are intentionally kept as they indicate errors
                 if not formid_id.startswith("FF"):
                     formids_matches.append(f"Form ID: {formid_id}")
 

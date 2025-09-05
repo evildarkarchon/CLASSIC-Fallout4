@@ -1,8 +1,9 @@
 """
-Real-world performance tests using actual crash logs.
+Real-world performance tests using sample crash logs.
 
-This module contains performance tests that use real crash logs from the
-Crash Logs directory to measure actual pipeline performance.
+This module contains performance tests that use sample crash logs from the
+test_data directory to measure pipeline performance. This ensures test
+isolation and reproducibility without depending on production data.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
@@ -18,7 +19,6 @@ from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline, AsyncPerform
 from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
 
 if TYPE_CHECKING:
-    from collections import Counter
     from collections.abc import Coroutine
 
 
@@ -49,20 +49,14 @@ class TestRealWorldPerformance:
     """Real-world performance tests using actual crash logs."""
 
     @pytest.mark.usefixtures("init_message_handler_fixture")
-    async def test_real_world_crash_logs_performance(self, mock_yamldata: MagicMock) -> None:
-        """Real-world performance test: Process actual crash logs from Crash Logs directory."""
-        # Get actual crash log files
-        crash_logs_dir: Path = Path(__file__).parent.parent.parent / "Crash Logs"
-        if not crash_logs_dir.exists():
-            pytest.skip("Crash Logs directory not found")
+    async def test_real_world_crash_logs_performance(self, mock_yamldata: MagicMock, performance_test_logs: list[Path]) -> None:
+        """Real-world performance test: Process crash logs using test fixtures.
 
-        # Get all .log files (excluding AUTOSCAN files)
-        crash_log_files: list[Path] = sorted(
-            [f for f in crash_logs_dir.glob("*.log") if not f.name.endswith("-AUTOSCAN.md")]
-        )[:50]  # Limit to 50 files for reasonable test time
-
-        if not crash_log_files:
-            pytest.skip("No crash log files found")
+        This test uses sample crash logs from test_data directory to ensure
+        test isolation and reproducibility.
+        """
+        # Use fixture-provided crash log files
+        crash_log_files: list[Path] = performance_test_logs
 
         print("\n=== REAL-WORLD CRASH LOGS PERFORMANCE TEST ===")
         print(f"Processing {len(crash_log_files)} actual crash logs")
@@ -159,7 +153,7 @@ class TestRealWorldPerformance:
             # Setup orchestrator with realistic processing
             mock_orchestrator: AsyncMock = AsyncMock()
 
-            async def process_real_logs(batch: list[Path]) -> list[tuple[Path, list[str], bool, Counter[str]]]:
+            async def process_real_logs(batch: list[Path]) -> list[tuple[Path, list[str], bool, dict]]:
                 results = []
                 for log_file in batch:
                     lines = async_cache.get(log_file.name, [])
@@ -174,8 +168,8 @@ class TestRealWorldPerformance:
             mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
             mock_orchestrator_class.return_value.__aexit__.return_value = None
 
-            # Run the pipeline
-            results, stats = await pipeline.process_crash_logs_async(crash_log_files)
+            # Run the pipeline (provide empty remove_list)
+            results, stats = await pipeline.process_crash_logs_async(crash_log_files, [])
 
         full_test_time: float = time.perf_counter() - full_test_start
         async_stats = stats
@@ -204,19 +198,17 @@ class TestRealWorldPerformance:
         )
 
     @pytest.mark.usefixtures("init_message_handler_fixture")
-    async def test_sync_vs_async_real_world_comparison(self, mock_yamldata: MagicMock) -> None:
-        """Direct comparison of sync vs async processing with real crash logs."""
-        # Get actual crash log files
-        crash_logs_dir: Path = Path(__file__).parent.parent.parent / "Crash Logs"
-        if not crash_logs_dir.exists():
-            pytest.skip("Crash Logs directory not found")
+    async def test_sync_vs_async_real_world_comparison(self, mock_yamldata: MagicMock, small_performance_test_logs: list[Path]) -> None:
+        """Direct comparison of sync vs async processing with test crash logs.
 
-        crash_log_files: list[Path] = sorted(
-            [f for f in crash_logs_dir.glob("*.log") if not f.name.endswith("-AUTOSCAN.md")]
-        )[:20]  # Use 20 files for quicker comparison
+        This test uses sample crash logs from test_data directory to ensure
+        test isolation and reproducibility.
+        """
+        # Use fixture-provided crash log files (20 files)
+        crash_log_files: list[Path] = small_performance_test_logs
 
         if len(crash_log_files) < 5:
-            pytest.skip("Not enough crash log files for comparison")
+            pytest.skip("Not enough crash log files for comparison - need at least 5 crash logs")
 
         print("\n=== SYNC VS ASYNC REAL-WORLD COMPARISON ===")
         print(f"Testing with {len(crash_log_files)} crash logs")

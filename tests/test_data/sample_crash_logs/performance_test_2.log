@@ -1,0 +1,46 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_INT_DIVIDE_BY_ZERO" at 0x7FF6EF123456 Fallout4.exe+0123456
+
+	SYSTEM SPECS:
+		OS: Microsoft Windows 10 Pro v10.0.19045
+		CPU: Intel Core i9-12900K
+		GPU #1: Nvidia GA104 [GeForce RTX 3070 Ti]
+		PHYSICAL MEMORY: 64 GB
+
+	PROBABLE CALL STACK:
+		[ 0] 0x7FF6EF123456      Fallout4.exe+0123456 -> 12345+0x56
+		[ 1] 0x7FF6EEABC789      Fallout4.exe+0ABC789 -> 67890+0x89
+		[ 2] 0x7FF6EEDEF012      Fallout4.exe+0DEF012 -> 11111+0x12
+		[ 3] 0x180004567         SomeModule.dll+0004567
+		[ 4] 0x180008901         SomeModule.dll+0008901
+
+	MODULES:
+		SomeModule.dll
+		AnotherModule.dll
+		ProblemDLL.dll
+
+	OBJECT REFERENCES:
+		Form ID: 0x00ABCDEF
+		Form ID: 0x12345678
+		Form ID: 0x87654321
+		Form ID: 0xFE002345
+		Form ID: 0x00000000 (NULL - Error indicator)
+
+	EXCEPTION_RECORD:
+		Exception Code: EXCEPTION_INT_DIVIDE_BY_ZERO
+		Exception Flags: 0
+		Exception Address: 0x7FF6EF123456
+
+	PLUGINS:
+		[00]     Fallout4.esm
+		[01]     DLCRobot.esm
+		[02]     DLCCoast.esm
+		[03]     DLCWorkshop01.esm
+		[FE:000] ccBGSFO4001-PipBoy(Black).esl
+		[FE:001] ccBGSFO4002-PipBoy(Blue).esl
+		[FE:002] SomeESL.esl
+		[12]     ModA.esp
+		[AB]     ModB.esp
+		[FE:003] AnotherESL.esl

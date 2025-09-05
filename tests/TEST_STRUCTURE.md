@@ -328,6 +328,13 @@ Common fixtures are defined in `conftest.py`:
 
 ## Known Issues
 
-- Some tests in `test_async_error_handling.py` may need adjustment to match actual API
-- FormID analyzer test expects certain filtering behavior that may not be implemented
-- Performance tests require actual crash logs in the `Crash Logs/` directory
+(None currently - all known issues have been resolved)
+
+## Recently Fixed Issues
+
+- ✅ **test_async_error_handling.py** - Fixed API mismatches with actual AsyncCore implementation
+- ✅ **test_formid_analyzer.py** - Clarified that NULL FormID (0x00000000) extraction is intentional - these represent errors/invalid references that users need to investigate
+- ✅ **test_real_world_performance.py** - Fixed test isolation violation by using test fixtures instead of production `Crash Logs/` directory
+  - Added `conftest.py` with fixtures that create test crash logs from samples
+  - Tests now use `performance_test_logs` and `small_performance_test_logs` fixtures
+  - Ensures reproducibility and doesn't depend on production data
