@@ -12,8 +12,8 @@ from typing import TYPE_CHECKING
 from ClassicLib import MessageTarget, msg_info, msg_progress_context
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
+from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
 from ClassicLib.ScanLog.Util import crashlogs_get_files
 
@@ -43,7 +43,7 @@ async def async_crashlogs_scan() -> None:
         (tuple, YAML.Main, "exclude_log_records"),
         (bool, YAML.Settings, "CLASSIC_Settings.FCX Mode"),
         (bool, YAML.Settings, "CLASSIC_Settings.Show FormID Values"),
-        (bool, YAML.Settings, "CLASSIC_Settings.Move Unsolved Logs")
+        (bool, YAML.Settings, "CLASSIC_Settings.Move Unsolved Logs"),
     ]
 
     values = yaml_cache.batch_get_settings(requests)

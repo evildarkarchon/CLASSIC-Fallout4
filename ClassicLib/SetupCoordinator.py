@@ -61,7 +61,7 @@ class SetupCoordinator:
             requests = [
                 (str, YAML.Main, "CLASSIC_Info.version"),
                 (str, YAML.Game, "Game_Info.Main_Root_Name"),
-                (str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+                (str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game"),
             ]
 
             classic_ver, game_name, game_path = yaml_cache.batch_get_settings(requests)
@@ -144,7 +144,7 @@ class SetupCoordinator:
         requests = [
             (bool, YAML.Settings, "CLASSIC_Settings.VR Mode"),
             (str, YAML.Settings, "CLASSIC_Settings.Managed Game"),
-            (bool, YAML.Main, "CLASSIC_Info.is_prerelease")
+            (bool, YAML.Main, "CLASSIC_Info.is_prerelease"),
         ]
 
         vr_mode, managed_game_setting, is_prerelease = yaml_cache.batch_get_settings(requests)

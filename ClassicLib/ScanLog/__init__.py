@@ -6,21 +6,6 @@ This package contains modules for scanning and analyzing crash logs.
 
 # Core scanning components
 # Modern async-first core components
-from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-
-# New modular components
-from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
-from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor, ClassicScanLogs
-from ClassicLib.ScanLog.ScanLogsUtils import (
-    crashlogs_scan,
-    crashlogs_scan_async_pure,
-    crashlogs_scan_async_pure_with_qt,
-    write_report_to_file,
-    write_report_to_file_async,
-    move_unsolved_logs,
-    complete_scan_with_summary,
-)
 from ClassicLib.ScanLog.AsyncIntegration import run_async_scan
 from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline
 from ClassicLib.ScanLog.AsyncReformat import (
@@ -33,12 +18,27 @@ from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, write_file_async
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments as FCXModeHandler
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
+from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
+
+# New modular components
+from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
+from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.Parser import extract_module_names, extract_segments, find_segments, parse_crash_header
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments as ReportGenerator
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
+from ClassicLib.ScanLog.ScanLogsExecutor import ClassicScanLogs, ScanLogsExecutor
+from ClassicLib.ScanLog.ScanLogsUtils import (
+    complete_scan_with_summary,
+    crashlogs_scan,
+    crashlogs_scan_async_pure,
+    crashlogs_scan_async_pure_with_qt,
+    move_unsolved_logs,
+    write_report_to_file,
+    write_report_to_file_async,
+)
 from ClassicLib.ScanLog.ScanOrchestrator import ScanOrchestrator
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments as SettingsScanner
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner

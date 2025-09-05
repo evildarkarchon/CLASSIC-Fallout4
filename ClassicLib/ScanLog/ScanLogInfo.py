@@ -227,7 +227,7 @@ class ClassicScanLogsInfo:
                 (dict[str, str], YAML.Game, "Mods_SOLU"),
                 (str, YAML.Game, "Game_Info.GameVersion"),
                 (str, YAML.Game, "Game_Info.GameVersionNEW"),
-                (str, YAML.Game, "GameVR_Info.GameVersion")
+                (str, YAML.Game, "GameVR_Info.GameVersion"),
             ]
 
             # Get all values in one batch operation

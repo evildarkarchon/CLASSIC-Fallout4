@@ -126,6 +126,7 @@ class FileGenerator:
                 contains the individual exceptions from failed tasks.
         """
         import time
+
         start = time.perf_counter()
 
         try:

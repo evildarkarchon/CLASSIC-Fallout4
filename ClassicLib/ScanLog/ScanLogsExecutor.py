@@ -91,11 +91,7 @@ class ScanLogsExecutor:
 
         # Create async orchestrator with context manager for proper resource management
         async with OrchestratorCore(
-            self.yamldata,
-            self.crashlogs,
-            self.config.fcx_mode,
-            self.config.show_formid_values,
-            self.config.formid_db_exists
+            self.yamldata, self.crashlogs, self.config.fcx_mode, self.config.show_formid_values, self.config.formid_db_exists
         ) as orchestrator:
             # Run FCX checks if enabled
             if self.config.fcx_mode:
@@ -135,6 +131,7 @@ class ScanLogsExecutor:
 
                         # Write report using utils function
                         from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file_async
+
                         await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, self)
 
                         # Track failed scans
@@ -215,7 +212,7 @@ class ScanLogsExecutor:
         ]
 
         # Add random hint
-        if hasattr(self.yamldata, 'classic_game_hints') and self.yamldata.classic_game_hints:
+        if hasattr(self.yamldata, "classic_game_hints") and self.yamldata.classic_game_hints:
             summary_lines.append(random.choice(self.yamldata.classic_game_hints))
 
         # Add game-specific text
@@ -225,7 +222,7 @@ class ScanLogsExecutor:
                 "-----",
                 "",
             ])
-            if hasattr(self.yamldata, 'autoscan_text'):
+            if hasattr(self.yamldata, "autoscan_text"):
                 summary_lines.append(self.yamldata.autoscan_text)
 
         return "\n".join(summary_lines)

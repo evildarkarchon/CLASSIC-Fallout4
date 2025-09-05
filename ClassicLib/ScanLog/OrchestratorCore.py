@@ -288,7 +288,8 @@ class OrchestratorCore:
 
             # Check for OPC2 mods with conditional header
             opc2_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins), "ARE OUTDATED, REDUNDANT, OR HAVE COMMUNITY PATCHES"
+                lambda: detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins),
+                "ARE OUTDATED, REDUNDANT, OR HAVE COMMUNITY PATCHES",
             )
             composer.add(opc2_fragment)
 

@@ -24,8 +24,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib.Logger import logger
-
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -164,7 +162,6 @@ class ReportListWidget(QListWidget):
 
         # Fallback to file modification time
         return None
-
 
     def _filter_reports(self, text: str) -> None:
         """

@@ -90,17 +90,13 @@ class ScanStatistics:
 
     def to_counter(self) -> Counter[str]:
         """Convert to Counter format for backward compatibility."""
-        return Counter(
-            scanned=self.scanned,
-            incomplete=self.incomplete,
-            failed=self.failed
-        )
+        return Counter(scanned=self.scanned, incomplete=self.incomplete, failed=self.failed)
 
     def update_from_counter(self, counter: Counter[str]) -> None:
         """Update statistics from a Counter object."""
-        self.scanned += counter.get('scanned', 0)
-        self.incomplete += counter.get('incomplete', 0)
-        self.failed += counter.get('failed', 0)
+        self.scanned += counter.get("scanned", 0)
+        self.incomplete += counter.get("incomplete", 0)
+        self.failed += counter.get("failed", 0)
 
 
 @dataclass
@@ -145,21 +141,20 @@ class ScanResult:
     def is_successful(self) -> bool:
         """Check if the scan was generally successful."""
         return (
-            self.stats.scanned > 0 and
-            self.stats.failed < self.stats.total_files * 0.5  # Less than 50% failure rate
+            self.stats.scanned > 0 and self.stats.failed < self.stats.total_files * 0.5  # Less than 50% failure rate
         )
 
     def get_summary(self) -> dict[str, Any]:
         """Get a summary of the scan results."""
         return {
-            'total_files': self.stats.total_files,
-            'scanned': self.stats.scanned,
-            'incomplete': self.stats.incomplete,
-            'failed': self.stats.failed,
-            'success_rate': self.stats.get_success_rate(),
-            'scan_duration': self.scan_time,
-            'failed_logs_count': len(self.failed_logs),
-            'error_messages_count': len(self.error_messages),
+            "total_files": self.stats.total_files,
+            "scanned": self.stats.scanned,
+            "incomplete": self.stats.incomplete,
+            "failed": self.stats.failed,
+            "success_rate": self.stats.get_success_rate(),
+            "scan_duration": self.scan_time,
+            "failed_logs_count": len(self.failed_logs),
+            "error_messages_count": len(self.error_messages),
         }
 
 

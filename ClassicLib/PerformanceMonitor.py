@@ -6,10 +6,10 @@ performance metrics throughout the application, particularly for YAML
 operations and async improvements.
 """
 
-import asyncio
 import functools
 import time
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 from ClassicLib.Logger import logger
 
@@ -28,6 +28,7 @@ def timed_operation(name: str | None = None, log_level: str = "info") -> Callabl
     Returns:
         Decorated function that logs execution time
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -57,6 +58,7 @@ def timed_operation(name: str | None = None, log_level: str = "info") -> Callabl
                 raise
 
         return wrapper  # type: ignore
+
     return decorator
 
 
@@ -71,6 +73,7 @@ def async_timed_operation(name: str | None = None, log_level: str = "info") -> C
     Returns:
         Decorated async function that logs execution time
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -100,6 +103,7 @@ def async_timed_operation(name: str | None = None, log_level: str = "info") -> C
                 raise
 
         return wrapper  # type: ignore
+
     return decorator
 
 
@@ -115,6 +119,7 @@ def batch_operation_monitor(operation_name: str) -> Callable[[F], F]:
     Returns:
         Decorated function that logs batch performance metrics
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -130,10 +135,7 @@ def batch_operation_monitor(operation_name: str) -> Callable[[F], F]:
 
             avg_time = elapsed / batch_size if batch_size > 0 else 0
 
-            logger.info(
-                f"{operation_name}: {batch_size} items in {elapsed:.3f}s "
-                f"(avg: {avg_time*1000:.1f}ms per item)"
-            )
+            logger.info(f"{operation_name}: {batch_size} items in {elapsed:.3f}s (avg: {avg_time * 1000:.1f}ms per item)")
 
             _store_metric(operation_name, elapsed)
             _store_metric(f"{operation_name}_per_item", avg_time)
@@ -141,6 +143,7 @@ def batch_operation_monitor(operation_name: str) -> Callable[[F], F]:
             return result
 
         return wrapper  # type: ignore
+
     return decorator
 
 
@@ -190,12 +193,7 @@ def log_performance_summary() -> None:
     logger.info("=" * 60)
 
     for operation, stats in sorted(summary.items()):
-        logger.info(
-            f"{operation:30} | "
-            f"Count: {stats['count']:4d} | "
-            f"Avg: {stats['average']*1000:7.2f}ms | "
-            f"Total: {stats['total']:.3f}s"
-        )
+        logger.info(f"{operation:30} | Count: {stats['count']:4d} | Avg: {stats['average'] * 1000:7.2f}ms | Total: {stats['total']:.3f}s")
 
     logger.info("=" * 60)
 

@@ -24,8 +24,6 @@ except ImportError:
             await f.write(content)
 
 
-
-
 async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str, bytes]:
     """
     Optimized async loading of crash logs with batching and progress tracking.
@@ -88,8 +86,6 @@ async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str
     return bytes_cache
 
 
-
-
 def time_async_operation(operation_name: str) -> Callable:
     def decorator(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
         async def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
@@ -130,8 +126,6 @@ async def write_report_async(crashlog_file: Path, autoscan_report: list[str]) ->
     autoscan_output: str = "".join(autoscan_report)
     await write_file_async(autoscan_path, autoscan_output)
     logger.debug(f"Wrote async report for {crashlog_file.name}")
-
-
 
 
 async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:

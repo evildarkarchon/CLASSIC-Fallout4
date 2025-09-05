@@ -16,8 +16,8 @@ from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_progress_context
 from ClassicLib.ScanLog.AsyncFileIO import write_reports_batch
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
+from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 
 if TYPE_CHECKING:

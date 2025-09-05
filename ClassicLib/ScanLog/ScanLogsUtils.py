@@ -24,10 +24,7 @@ if TYPE_CHECKING:
 
 
 async def write_report_to_file_async(
-    crashlog_file: Path,
-    autoscan_report: list[str],
-    trigger_scan_failed: bool,
-    executor: "ScanLogsExecutor"
+    crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, executor: "ScanLogsExecutor"
 ) -> None:
     """
     Async version of write_report_to_file using aiofiles.
@@ -60,12 +57,7 @@ async def write_report_to_file_async(
         await loop.run_in_executor(None, write_func)
 
 
-def write_report_to_file(
-    crashlog_file: Path,
-    autoscan_report: list[str],
-    trigger_scan_failed: bool,
-    executor: "ScanLogsExecutor"
-) -> None:
+def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, executor: "ScanLogsExecutor") -> None:
     """
     Write report to file and handle unsolved logs.
 
@@ -115,11 +107,7 @@ def move_unsolved_logs(crashlog_file: Path) -> None:
             logger.error(f"Failed to move autoscan report {autoscan_filepath} to backup: {e}")
 
 
-def complete_scan_with_summary(
-    result: ScanResult,
-    yamldata: ClassicScanLogsInfo,
-    scan_start_time: float
-) -> None:
+def complete_scan_with_summary(result: ScanResult, yamldata: ClassicScanLogsInfo, scan_start_time: float) -> None:
     """
     Complete the scan with error checking and summary display.
 
@@ -163,13 +151,13 @@ def complete_scan_with_summary(
         msg_info(success_message)
 
         # Show random hint
-        if hasattr(yamldata, 'classic_game_hints') and yamldata.classic_game_hints:
+        if hasattr(yamldata, "classic_game_hints") and yamldata.classic_game_hints:
             msg_info(f"{random.choice(yamldata.classic_game_hints)}", target=MessageTarget.CLI_ONLY)
 
         # Show game-specific information
         if GlobalRegistry.get_game() == "Fallout4":
             msg_info("\n-----\n", target=MessageTarget.CLI_ONLY)
-            if hasattr(yamldata, 'autoscan_text'):
+            if hasattr(yamldata, "autoscan_text"):
                 msg_info(yamldata.autoscan_text, target=MessageTarget.CLI_ONLY)
 
 
@@ -190,6 +178,7 @@ async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:
 
     # Reset FCX checks for new scan session
     from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
+
     FCXModeHandlerFragments.reset_fcx_checks()
 
     # Execute the scan
@@ -219,11 +208,7 @@ def crashlogs_scan() -> ScanResult:
 
 
 # Legacy function names for backward compatibility
-def _complete_scan_with_summary(
-    executor: "ScanLogsExecutor",
-    scan_failed_list: list[str],
-    yamldata: ClassicScanLogsInfo
-) -> None:
+def _complete_scan_with_summary(executor: "ScanLogsExecutor", scan_failed_list: list[str], yamldata: ClassicScanLogsInfo) -> None:
     """
     Legacy wrapper for complete_scan_with_summary.
 
