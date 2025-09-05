@@ -103,6 +103,34 @@ def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool,
 
 ## Testing Requirements
 
+### Test-Driven Development (TDD) Cycle
+```python
+# 1. RED: Write failing test first
+@pytest.mark.asyncio
+async def test_new_feature():
+    result = await new_async_function()
+    assert result.status == "success"
+
+# 2. GREEN: Minimal implementation
+async def new_async_function():
+    return SimpleResult(status="success")
+
+# 3. REFACTOR: Improve with performance/structure
+```
+
+### Test Isolation (CRITICAL)
+```python
+# NEVER access production YAML stores in tests
+yaml_settings(str, YAML.Settings, "key")     # ❌ FORBIDDEN
+yaml_settings(str, YAML.TEST, "key")         # ✅ Safe for testing
+
+# NEVER create production directories
+Path("CLASSIC Data").mkdir()                 # ❌ FORBIDDEN
+Path(tmp_path / "CLASSIC Data").mkdir()      # ✅ Use tmp_path
+
+# Pre-commit hooks enforce these rules automatically
+```
+
 ### Test Initialization Pattern
 ```python
 # REQUIRED: Initialize MessageHandler before creating ClassicScanLogs
@@ -141,10 +169,46 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
 ### Task Management
 Available VS Code tasks:
 - `delete-runtime-files`: Cleans log/config files
-- `delete-runtime-folders`: Removes generated directories  
+- `delete-runtime-folders`: Removes generated directories
 - `cleanup-pyinstaller-folders`: Removes build artifacts
 
+### Code Quality Enforcement
+- **Pre-commit hooks**: Automatically check test isolation, YAML usage, and code quality
+- **Installation**: `poetry run pre-commit install`
+- **Manual run**: `poetry run pre-commit run --all-files`
+- **Test isolation**: Prevents production YAML/path usage in tests
+
 ## Key Integration Points
+
+### Fragment-Based Architecture (NEW)
+```python
+# Modern immutable fragment composition pattern replaces mutable lists
+from ClassicLib.ScanLog.ReportFragment import ReportFragment, ReportComposer
+
+# Generate fragments instead of mutating lists
+def detect_mods_new() -> ReportFragment:
+    lines = ["* ⚠️ Mod warning\n"]
+    return ReportFragment.from_lines(lines)
+
+# Compose fragments immutably
+composer = ReportComposer()
+composer.add(header_fragment)
+composer.add_conditional(lambda: detect_mods(), "SECTION HEADER")
+final_report = composer.build()
+```
+
+### AsyncBridge Pattern (Critical)
+```python
+# Efficient sync-to-async execution without creating new event loops
+from ClassicLib.AsyncBridge import AsyncBridge
+
+bridge = AsyncBridge.get_instance()
+result = bridge.run_async(async_function())
+
+# Never create event loops manually - use AsyncBridge
+# ❌ Don't: asyncio.run() in sync context repeatedly
+# ✅ Do: AsyncBridge for persistent thread-local event loops
+```
 
 ### TUI Architecture (Terminal User Interface)
 - **Main app**: `ClassicLib/TUI/app.py` - Textual application controller
@@ -156,9 +220,9 @@ Available VS Code tasks:
 ### Crash Log Processing Pipeline
 1. **File discovery**: `crashlogs_get_files()` finds log files
 2. **Reformatting**: `crashlogs_reformat()` or `crashlogs_reformat_async()` standardizes formats
-3. **Async orchestration**: `AsyncScanOrchestrator` with `AsyncCrashLogPipeline` coordinates analysis
+3. **Async orchestration**: `OrchestratorCore` (async-first) coordinates analysis via fragments
 4. **Component analysis**: FormID, plugin, settings, and suspect scanning via specialized analyzers
-5. **Report generation**: `ReportGenerator` produces final output
+5. **Fragment composition**: `ReportComposer` builds immutable reports from fragments
 
 ### FormID Database System
 - **Async-first lookups**: `AsyncFormIDAnalyzer` with sync fallback to `FormIDAnalyzer`
@@ -192,7 +256,7 @@ Available VS Code tasks:
 
 ## Code Quality Tools
 
-- **Ruff**: Configured in `pyproject.toml` for linting/formatting  
+- **Ruff**: Configured in `pyproject.toml` for linting/formatting
 - **Pytest**: With coverage reporting via `pytest --cov=. --cov-report=html`
 - **Type checking**: MyPy configuration in `pyproject.toml`
 
@@ -204,14 +268,20 @@ Available VS Code tasks:
 4. ❌ Missing type annotations → ✅ Complete function signatures
 5. ❌ Patching definitions → ✅ Patch where used in tests
 6. ❌ Skip MessageHandler init → ✅ Use `init_message_handler_fixture`
+7. ❌ `asyncio.run()` in sync context → ✅ Use `AsyncBridge.get_instance().run_async()`
+8. ❌ Mutable lists in reports → ✅ Use `ReportFragment` composition
+9. ❌ Production YAML in tests → ✅ Use `YAML.TEST` or mock `yaml_settings()`
+10. ❌ Creating event loops manually → ✅ Use `AsyncBridge` for persistent loops
 
 ## Key Architecture Files
 
 - `ClassicLib/__init__.py` - Main exports and MessageHandler functions
-- `ClassicLib/ScanLog/OrchestratorCore.py` - Async-first core orchestration  
+- `ClassicLib/ScanLog/OrchestratorCore.py` - Async-first core orchestration
 - `ClassicLib/FileIOCore.py` - Unified async file I/O operations
 - `ClassicLib/MessageHandler.py` - Universal output system
 - `ClassicLib/GlobalRegistry.py` - Shared state management
 - `ClassicLib/TUI/app.py` - Terminal UI application controller
+- `ClassicLib/AsyncBridge.py` - Sync-to-async execution bridge
+- `ClassicLib/ScanLog/ReportFragment.py` - Immutable fragment composition system
 - `tests/conftest.py` - Test fixtures and initialization
 - `.cursor/rules/classic-fallout4-standards.mdc` - Comprehensive standards
