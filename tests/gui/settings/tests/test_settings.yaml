@@ -1,0 +1,10 @@
+CLASSIC_Settings:
+  FCX Mode: false
+  Audio Notifications: true
+  VR Mode: false
+  Simplify Logs: false
+  Show FormID Values: false
+  Move Unsolved Logs: false
+  Update Check: false
+  Update Source: Both
+  INI Folder Path: ''

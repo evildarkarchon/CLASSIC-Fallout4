@@ -130,6 +130,11 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         """Direct access to the settings cache."""
         return self._async_core.settings_cache
 
+    @property
+    def file_mod_times(self) -> dict[Path, float]:
+        """Direct access to the file modification times cache."""
+        return self._async_core.file_mod_times
+
 
 # Create singleton instance and register it
 yaml_cache = YamlSettingsCache()

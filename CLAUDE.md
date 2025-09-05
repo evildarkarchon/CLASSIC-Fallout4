@@ -189,6 +189,37 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
     scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
 ```
 
+### Test Organization Rules
+**CRITICAL**: Maintain clean test architecture to prevent test suite degradation.
+
+#### File Size Limits
+- **Maximum 300 lines per test file** - Split larger files into logical components
+- Files approaching 250 lines should be considered for refactoring
+- Exception allowed only when tests are tightly coupled and splitting would harm maintainability
+
+#### New Test Placement
+- **NO tests in root `tests/` directory** - All tests must be in subdirectories
+- New tests must be added to the appropriate subdirectory:
+  - `tests/async_tests/` - Async patterns and infrastructure
+  - `tests/core/` - Core functionality (crash logs, FormID, etc.)
+  - `tests/scanning/` - Log and mod scanning
+  - `tests/game/` - Game path and integrity
+  - `tests/settings/` - YAML and settings management
+  - `tests/performance/` - Performance benchmarks
+  - `tests/concurrency/` - Thread safety
+  - `tests/backup/` - Backup operations
+  - `tests/io/` - File I/O operations
+  - `tests/mods/` - Mod detection
+  - `tests/utils/` - Utility functions
+  - `tests/gui/` - GUI components
+  - `tests/tui/` - TUI components
+- Create new subdirectories if testing a new major component
+
+#### Test File Naming
+- Use descriptive names: `test_<component>_<aspect>.py`
+- Examples: `test_backup_creation.py`, `test_async_error_handling.py`
+- Avoid generic names like `test_utils.py` for new files
+
 ### Test-Driven Development (TDD) Method
 
 Follow the **Red-Green-Refactor** cycle for all new features and bug fixes:
