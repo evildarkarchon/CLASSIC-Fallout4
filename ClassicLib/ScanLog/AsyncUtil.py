@@ -68,7 +68,7 @@ class AsyncDatabasePool:
                 for conn in self.connections.values():
                     try:
                         await conn.close()
-                    except Exception as close_error:
+                    except Exception as close_error:  # noqa: BLE001
                         logger.error(f"Error closing connection during cleanup: {close_error}")
                 self.connections.clear()
                 raise
