@@ -7,10 +7,8 @@ All I/O-intensive operations are implemented asynchronously for optimal performa
 """
 
 import asyncio
-import mmap
 import os
 import shutil
-import struct
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
@@ -22,11 +20,6 @@ try:
 except ImportError:
     aiofiles = None  # Handle gracefully if not installed
 
-try:
-    import psutil
-except ImportError:
-    psutil = None  # Handle gracefully if not installed
-
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.GlobalRegistry import get, register
@@ -35,49 +28,17 @@ from ClassicLib.ScanGame.Config import TEST_MODE
 from ClassicLib.Util import normalize_list, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
-# Import async utilities if available
-try:
-    from ClassicLib.AsyncUtil import read_lines_with_encoding_async
-
-    ASYNC_ENCODING_AVAILABLE = True
-except ImportError:
-    ASYNC_ENCODING_AVAILABLE = False
-
-    # Provide a stub to satisfy type checker
-    async def read_lines_with_encoding_async(file_path: Path) -> list[str]:
-        """Stub function - should never be called when ASYNC_ENCODING_AVAILABLE is False."""
-        raise NotImplementedError("Async encoding utilities not available")
-
-
-def get_optimal_limits() -> dict[str, int]:
-    """Calculate optimal concurrency limits based on system resources."""
-    cpu_count = os.cpu_count() or 4
-
-    # Try to get memory if psutil is available
-    if psutil:
-        memory_gb = psutil.virtual_memory().total / (1024**3)
-        memory_factor = min(memory_gb / 8, 2.0)  # Scale based on memory (8GB baseline)
-    else:
-        memory_factor = 1.0
-
-    return {
-        "subprocesses": min(int(cpu_count * memory_factor), 8),  # Cap at 8 for stability
-        "file_ops": min(int(cpu_count * 4 * memory_factor), 32),
-        "log_reads": min(int(cpu_count * 8 * memory_factor), 64),
-        "dds_reads": min(int(cpu_count * 16 * memory_factor), 128),
-    }
-
-
-# Get optimal limits based on system
-_LIMITS = get_optimal_limits()
-MAX_CONCURRENT_SUBPROCESSES = _LIMITS["subprocesses"]
-MAX_CONCURRENT_FILE_OPS = _LIMITS["file_ops"]
-MAX_CONCURRENT_LOG_READS = _LIMITS["log_reads"]
-MAX_CONCURRENT_DDS_READS = _LIMITS["dds_reads"]
-
-
-# Registry key for ScanGameCore singleton
-SCAN_GAME_CORE_KEY = "scan_game_core"
+# Import refactored components
+from ClassicLib.ScanGame.core import (
+    ASYNC_ENCODING_AVAILABLE,
+    SCAN_GAME_CORE_KEY,
+    DDSProcessor,
+    FileOperations,
+    LogProcessor,
+    ScanValidators,
+    get_optimal_limits,
+    read_lines_with_encoding_async,
+)
 
 
 class ScanGameCore:
@@ -108,9 +69,11 @@ class ScanGameCore:
             # For async directory walking
             self.walk_executor = ThreadPoolExecutor(max_workers=4)
 
-            # Cache for frequently accessed methods
-            self._scan_settings_cache = None
-            self._issue_messages_cache = {}
+            # Initialize extracted components
+            self.validators = ScanValidators()
+            self.log_processor = LogProcessor(self.log_read_semaphore)
+            self.dds_processor = DDSProcessor(self.dds_read_semaphore)
+            self.file_operations = FileOperations(self.file_ops_semaphore)
 
             self._initialized = True
 
@@ -122,24 +85,7 @@ class ScanGameCore:
         Returns:
             tuple: (xse_acronym, xse_scriptfiles, mod_path)
         """
-        # Use cached value if available
-        if self._scan_settings_cache is not None:
-            return self._scan_settings_cache
-
-        # Get XSE settings - YamlSettingsCache already caches these
-        xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-        xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
-            dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
-        )
-        xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
-        xse_scriptfiles: dict[str, str] = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
-
-        # Get mods path
-        mod_path: Path | None = classic_settings(Path, "MODS Folder Path")
-
-        # Cache the result
-        self._scan_settings_cache = (xse_acronym, xse_scriptfiles, mod_path)
-        return self._scan_settings_cache
+        return self.validators.get_scan_settings()
 
     def get_issue_messages(self, xse_acronym: str, mode: str) -> dict[str, list[str]]:
         """
@@ -153,83 +99,7 @@ class ScanGameCore:
         Returns:
             dict: Dictionary of issue types and their message templates
         """
-        # Check cache first
-        cache_key = (xse_acronym, mode)
-        if cache_key in self._issue_messages_cache:
-            return self._issue_messages_cache[cache_key]
-        base_messages = {
-            "tex_dims": [
-                "\n# ⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️\n",
-                "▶️ Any mods that have texture files with incorrect dimensions\n",
-                "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
-                "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
-            ],
-            "tex_frmt": [
-                "\n# ❓ TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS ❓\n",
-                "▶️ Any files with an incorrect file format will not work.\n",
-                "  Mod authors should convert these files to their proper game format.\n",
-                "  If possible, notify the original mod authors about these problems.\n\n",
-            ],
-            "snd_frmt": [
-                "\n# ❓ SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV ❓\n",
-                "▶️ Any files with an incorrect file format will not work.\n",
-                "  Mod authors should convert these files to their proper game format.\n",
-                "  If possible, notify the original mod authors about these problems.\n\n",
-            ],
-        }
-
-        # Add mode-specific messages
-        if mode == "unpacked":
-            base_messages.update({
-                "xse_file": [
-                    f"\n# ⚠️ FOLDERS CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
-                    "▶️ Any mods with copies of original Script Extender files\n",
-                    "  may cause script related problems or crashes.\n\n",
-                ],
-                "previs": [
-                    "\n# ⚠️ FOLDERS CONTAIN LOOSE PRECOMBINE / PREVIS FILES ⚠️\n",
-                    "▶️ Any mods that contain custom precombine/previs files\n",
-                    "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
-                    "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
-                ],
-                "animdata": [
-                    "\n# ❓ FOLDERS CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
-                    "▶️ Any mods that have their own custom Animation File Data\n",
-                    "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
-                    "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
-                ],
-                "cleanup": ["\n# 📄 DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' 📄\n"],
-            })
-        else:  # archived
-            base_messages.update({
-                "xse_file": [
-                    f"\n# ⚠️ BA2 ARCHIVES CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
-                    "▶️ Any mods with copies of original Script Extender files\n",
-                    "  may cause script related problems or crashes.\n\n",
-                ],
-                "previs": [
-                    "\n# ⚠️ BA2 ARCHIVES CONTAIN CUSTOM PRECOMBINE / PREVIS FILES ⚠️\n",
-                    "▶️ Any mods that contain custom precombine/previs files\n",
-                    "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
-                    "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
-                ],
-                "animdata": [
-                    "\n# ❓ BA2 ARCHIVES CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
-                    "▶️ Any mods that have their own custom Animation File Data\n",
-                    "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
-                    "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
-                ],
-                "ba2_frmt": [
-                    "\n# ❓ BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 ❓\n",
-                    "▶️ Any files with an incorrect file format will not work.\n",
-                    "  Mod authors should convert these files to their proper game format.\n",
-                    "  If possible, notify the original mod authors about these problems.\n\n",
-                ],
-            })
-
-        # Cache and return
-        self._issue_messages_cache[cache_key] = base_messages
-        return base_messages
+        return self.validators.get_issue_messages(xse_acronym, mode)
 
     async def check_log_errors(self, folder_path: Path | str) -> str:
         """
@@ -244,83 +114,7 @@ class ScanGameCore:
         Returns:
             str: A detailed report of all detected errors in the relevant log files, if any.
         """
-
-        def format_error_report(file_path: Path, errors: list[str]) -> list[str]:
-            """Format the error report for a specific log file."""
-            return [
-                "[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n",
-                "[ Errors do not necessarily mean that the mod is not working. ]\n",
-                f"\nLOG PATH > {file_path}\n",
-                *errors,
-                f"\n* TOTAL NUMBER OF DETECTED LOG ERRORS * : {len(errors)}\n",
-            ]
-
-        # Convert string path to Path object if needed
-        if isinstance(folder_path, str):
-            folder_path = Path(folder_path)
-
-        # Get YAML settings and convert to sets for faster lookups
-        catch_errors_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "catch_log_errors") or []))
-        ignore_files_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_files") or []))
-        ignore_errors_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_errors") or []))
-
-        # Find valid log files (excluding crash logs)
-        valid_log_files: list[Path] = [
-            file
-            for file in folder_path.glob("*.log")
-            if "crash-" not in file.name.lower() and not any(part in str(file).lower() for part in ignore_files_set)
-        ]
-
-        async def process_single_log(log_file_path: Path) -> list[str]:
-            """Process a single log file and return formatted error report."""
-            async with self.log_read_semaphore:
-                try:
-                    # Use async encoding detection if available
-                    if ASYNC_ENCODING_AVAILABLE:
-                        log_lines = await read_lines_with_encoding_async(log_file_path)
-                    elif aiofiles:
-                        # Fallback to aiofiles with utf-8 if async encoding not available
-                        async with aiofiles.open(log_file_path, "r", encoding="utf-8", errors="ignore") as log_file:
-                            log_lines = await log_file.readlines()
-                    else:
-                        # Fallback to sync read with async wrapper
-                        loop = asyncio.get_event_loop()
-                        with open_file_with_encoding(log_file_path) as log_file:
-                            log_lines = await loop.run_in_executor(None, log_file.readlines)
-
-                    # Filter for relevant errors
-                    detected_errors = [
-                        f"ERROR > {line}"
-                        for line in log_lines
-                        if any(error in line.lower() for error in catch_errors_set)
-                        and all(ignore not in line.lower() for ignore in ignore_errors_set)
-                    ]
-
-                except OSError:
-                    error_message = f"❌ ERROR : Unable to scan this log file :\n  {log_file_path}"
-                    logger.warning(f"> ! > DETECT LOG ERRORS > UNABLE TO SCAN : {log_file_path}")
-                    return [error_message]
-                else:
-                    if detected_errors:
-                        return format_error_report(log_file_path, detected_errors)
-                    return []
-
-        # Process all log files concurrently
-        if valid_log_files:
-            msg_info(f"Processing {len(valid_log_files)} log files concurrently...")
-        tasks = [process_single_log(log_file) for log_file in valid_log_files]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        # Collect all error reports
-        error_report: list[str] = []
-        for result in results:
-            if isinstance(result, Exception):
-                msg_error(f"Task failed with exception: {result}")
-                continue
-            if isinstance(result, list):
-                error_report.extend(result)
-
-        return "".join(error_report)
+        return await self.log_processor.check_log_errors(folder_path)
 
     async def scan_mods_unpacked(self) -> str:
         """

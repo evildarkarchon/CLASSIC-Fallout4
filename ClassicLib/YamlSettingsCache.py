@@ -35,8 +35,9 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
     def __init__(self) -> None:
         """Initialize the sync wrapper with async core and bridge."""
-        self._async_core = get_async_yaml_core()
         self._bridge = AsyncBridge.get_instance()
+        # Get the async core instance using the bridge
+        self._async_core = self._bridge.run_async(get_async_yaml_core())
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """

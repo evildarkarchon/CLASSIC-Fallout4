@@ -1,15 +1,14 @@
-"""Unified async utilities for CLASSIC"""
+"""General async utility functions for CLASSIC
+
+This module contains general-purpose async utilities that were previously
+in AsyncCore but are still useful for async programming patterns.
+"""
 
 import asyncio
-import logging
 import time
 from collections.abc import Callable, Iterable
 from functools import partial, wraps
 from typing import Any, TypeVar
-
-from ClassicLib.AsyncBridge import run_async
-
-logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
@@ -36,7 +35,12 @@ async def gather_with_concurrency(max_concurrent: int, *coros) -> list:
     return await asyncio.gather(*[bounded_coro(c) for c in coros])
 
 
-async def batch_process(items: list[T], processor: Callable[[T], Any], batch_size: int = 10, max_concurrent: int = 5) -> list[Any]:
+async def batch_process(
+    items: list[T],
+    processor: Callable[[T], Any],
+    batch_size: int = 10,
+    max_concurrent: int = 5
+) -> list[Any]:
     """Process items in batches with concurrency control
 
     Args:
@@ -69,27 +73,6 @@ async def batch_process(items: list[T], processor: Callable[[T], Any], batch_siz
     return results
 
 
-def run_async_safe(coro: Callable | Any) -> Any:
-    """Safely run an async coroutine from sync context using AsyncBridge
-
-    Uses AsyncBridge for efficient sync-to-async execution with persistent event loops.
-
-    Args:
-        coro: Coroutine to run
-
-    Returns:
-        Result of coroutine
-
-    Example:
-        result = run_async_safe(async_function())
-    """
-    if asyncio.iscoroutine(coro):
-        return run_async(coro)
-    if asyncio.iscoroutinefunction(coro):
-        return run_async(coro())
-    return coro
-
-
 def async_retry(max_attempts: int = 3, delay: float = 1.0, backoff: float = 2.0, exceptions: tuple = (Exception,)):
     """Decorator for retrying async functions
 
@@ -104,7 +87,6 @@ def async_retry(max_attempts: int = 3, delay: float = 1.0, backoff: float = 2.0,
         async def flaky_api_call():
             ...
     """
-
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -117,11 +99,9 @@ def async_retry(max_attempts: int = 3, delay: float = 1.0, backoff: float = 2.0,
                 except exceptions as e:
                     last_error = e
                     if attempt < max_attempts - 1:
-                        logger.debug(f"Retry {attempt + 1}/{max_attempts} for {func.__name__}: {e}")
                         await asyncio.sleep(current_delay)
                         current_delay *= backoff
 
-            logger.error(f"All {max_attempts} attempts failed for {func.__name__}")
             raise last_error
 
         return wrapper
@@ -140,15 +120,13 @@ def async_timeout(seconds: float):
         async def slow_operation():
             ...
     """
-
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             try:
                 return await asyncio.wait_for(func(*args, **kwargs), timeout=seconds)
-            except TimeoutError:
-                logger.error(f"{func.__name__} timed out after {seconds} seconds")
-                raise
+            except asyncio.TimeoutError:
+                raise TimeoutError(f"{func.__name__} timed out after {seconds} seconds")
 
         return wrapper
 
@@ -170,8 +148,7 @@ async def run_with_timeout(coro: Callable | Any, timeout: float, default: Any = 
         if asyncio.iscoroutinefunction(coro):
             return await asyncio.wait_for(coro(), timeout=timeout)
         return await asyncio.wait_for(coro, timeout=timeout)
-    except TimeoutError:
-        logger.debug(f"Operation timed out after {timeout} seconds")
+    except asyncio.TimeoutError:
         return default
 
 
@@ -198,9 +175,7 @@ async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent
                     return await func(item)
                 loop = asyncio.get_event_loop()
                 return await loop.run_in_executor(None, func, item)
-
     else:
-
         async def bounded_func(item):
             if asyncio.iscoroutinefunction(func):
                 return await func(item)
@@ -236,9 +211,7 @@ async def async_filter(predicate: Callable[[T], bool], items: Iterable[T], max_c
                     return await predicate(item)
                 loop = asyncio.get_event_loop()
                 return await loop.run_in_executor(None, predicate, item)
-
     else:
-
         async def check_item(item):
             if asyncio.iscoroutinefunction(predicate):
                 return await predicate(item)
@@ -305,30 +278,6 @@ async def throttle(rate_limit: int, time_window: float = 1.0):
 
     await limiter.acquire()
     asyncio.create_task(release_after_delay())
-
-
-def create_async_queue(maxsize: int = 0) -> asyncio.Queue:
-    """Create an async queue with proper typing
-
-    Args:
-        maxsize: Maximum queue size (0 for unlimited)
-
-    Returns:
-        AsyncIO queue
-    """
-    return asyncio.Queue(maxsize=maxsize)
-
-
-async def async_chain(*iterables):
-    """Chain multiple async iterables
-
-    Example:
-        async for item in async_chain(iter1, iter2, iter3):
-            process(item)
-    """
-    for iterable in iterables:
-        async for item in iterable:
-            yield item
 
 
 async def run_in_executor(func: Callable, *args, executor=None, **kwargs) -> Any:

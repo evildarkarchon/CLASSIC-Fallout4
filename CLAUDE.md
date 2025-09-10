@@ -109,6 +109,9 @@ The TUI uses Textual framework with these components:
 - `ClassicLib/TUI/handlers/` - Business logic handlers for scan operations
 
 ### Async Development Patterns
+
+**IMPORTANT**: The `ClassicLib.AsyncCore` module is deprecated as of v2.x and will be removed in v3.0.0. Use `AsyncBridge` for all sync/async bridging needs.
+
 When working with async code:
 ```python
 # Use FileIOCore for all file operations
@@ -119,15 +122,21 @@ async def process_files():
     content = await io_core.read_file(path)
     await io_core.write_file(output_path, processed_content)
 
-# Sync adapter usage (for backwards compatibility)
-from ClassicLib.FileIOCore import read_file_sync
-content = read_file_sync(path)
-
-# Use AsyncBridge for async in sync contexts
+# ALWAYS use AsyncBridge for running async code in sync contexts
+# This is optimized for performance and prevents event loop conflicts
 from ClassicLib.AsyncBridge import AsyncBridge
 
 bridge = AsyncBridge.get_instance()
 result = bridge.run_async(async_function())
+
+# Sync adapter usage (for backwards compatibility)
+# Note: These adapters internally use AsyncBridge
+from ClassicLib.FileIOCore import read_file_sync
+content = read_file_sync(path)
+
+# DEPRECATED - Do not use AsyncCore patterns:
+# from ClassicLib.AsyncCore import SyncAdapter  # Use AsyncBridge instead
+# from ClassicLib.AsyncCore import create_sync_adapter  # Use AsyncBridge.run_async() instead
 ```
 
 ### Performance Monitoring Patterns
@@ -384,6 +393,13 @@ def test_with_test_enum():
   - A main class and its small exception classes
   - A class and its TypedDict definitions
 
+#### Refactoring Guidelines
+- When files contain multiple classes, split them into subdirectories
+- Maintain backward compatibility with re-exports and deprecation warnings
+- Group related components in logical subdirectories
+- Use descriptive file names that match the primary class name
+- Helper functions should remain with their primary usage context
+
 ### Type Annotations (Python 3.12+)
 
 - All functions must have complete type annotations including return types
@@ -418,24 +434,132 @@ def test_with_test_enum():
 6. **Configuration** - YAML files in `CLASSIC Data/` for settings and mod databases
 
 ## File Organization
+
+### Root Level
 - Main scripts at root level (CLASSIC_*.py)
-- Core library in `ClassicLib/` with modular components
-- TUI components in `ClassicLib/TUI/`
-- Tests in `tests/` directory with test markers for categorization
-- Sample crash logs in `Crash Logs/`
+- Built executables in `Release/`
 - Configuration and assets in `CLASSIC Data/`
 - Documentation in `docs/`
-- Built executables in `Release/`
+- Sample crash logs in `Crash Logs/`
+
+### ClassicLib Structure (Refactored)
+The core library follows a modular, one-class-per-file organization after comprehensive refactoring:
+
+#### Phase 1: Critical File Size Violations (Completed)
+
+**MessageHandler** - `ClassicLib/MessageHandler/`
+- `enums.py` - MessageType, MessageTarget enums
+- `models.py` - Message class
+- `cli_progress.py` - CLIProgressBar class
+- `progress_context.py` - ProgressContext class
+- `handler.py` - Main MessageHandler class
+- `qt_compat.py` - Qt compatibility utilities
+- `__init__.py` - Backward compatibility re-exports
+
+**Utils** - `ClassicLib/Utils/`
+- `path_utils.py` - Path-related utilities
+- `string_utils.py` - String manipulation utilities
+- `file_utils.py` - File operation utilities
+- `logging_utils.py` - Logging utilities
+- `version_utils.py` - Version handling utilities
+- `web_utils.py` - Web-related utilities
+- `__init__.py` - Re-exports all utilities
+
+**FileIO** - `ClassicLib/FileIO/`
+- `core.py` - Main FileIOCore class
+- `path_utils.py` - Path handling utilities
+- `sync_adapters.py` - Synchronous adapter methods
+- `__init__.py` - Backward compatibility
+
+**AsyncYamlSettings** - `ClassicLib/AsyncYamlSettings/`
+- `core.py` - Main async settings class
+- `cache.py` - Caching logic
+- `validators.py` - Validation logic
+- `file_operations.py` - File I/O operations
+- `types.py` - Type definitions
+- `__init__.py` - Re-exports
+
+**ScanGame** - `ClassicLib/ScanGame/core/`
+- `dds_processor.py` - DDS file processing
+- `file_operations.py` - File operations
+- `log_processor.py` - Log processing logic
+- `utils.py` - Utility functions
+- `validators.py` - Validation methods
+- `__init__.py` - Core exports
+
+#### Phase 2: High Priority Violations (Completed)
+
+**Interface/Settings** - `ClassicLib/Interface/Settings/`
+- `dialog.py` - Main settings dialog
+- `path_manager.py` - Path management logic
+- `tab_creators.py` - Tab creation utilities
+- `__init__.py` - Settings exports
+
+**Interface/Widgets** - `ClassicLib/Interface/Widgets/`
+- `report_list.py` - ReportListWidget class
+- `markdown_viewer.py` - MarkdownViewer class
+- `report_metadata.py` - ReportMetadataWidget class
+- `__init__.py` - Widget exports
+
+#### Phase 3: ScanLog Module (Completed)
+
+**ScanLog/fragments** - `ClassicLib/ScanLog/fragments/`
+- `report_fragment.py` - Core ReportFragment class
+- `report_composer.py` - Fragment composition logic
+- `fragment_collector.py` - Backward compatibility wrapper
+- `report_generator_functional.py` - Functional report generation
+- `mod_detection.py` - Mod detection utilities
+
+**ScanLog/models** - `ClassicLib/ScanLog/models/`
+- `scan_config.py` - Configuration dataclass
+- `scan_statistics.py` - Statistics tracking
+- `scan_result.py` - Result container
+
+**ScanLog/pipeline** - `ClassicLib/ScanLog/pipeline/`
+- `async_crash_log_pipeline.py` - Main pipeline class
+- `async_performance_monitor.py` - Performance monitoring
+
+**ScanLog/scanloginfo** - `ClassicLib/ScanLog/scanloginfo/`
+- `thread_safe_log_cache.py` - Thread-safe caching
+- `classic_scan_logs_info.py` - Configuration dataclass
+
+**ScanLog/composition** - `ClassicLib/ScanLog/composition/`
+- `conditional_section.py` - Conditional header logic
+- `report_composer.py` - Report composition class
+
+#### Phase 5: TUI Module (Completed)
+
+**TUI/widgets/dialogs** - `ClassicLib/TUI/widgets/dialogs/`
+- `confirmation_dialog.py` - Confirmation dialog
+- `error_dialog.py` - Error display dialog
+- `progress_dialog.py` - Progress tracking dialog
+
+**TUI/handlers/papyrus** - `ClassicLib/TUI/handlers/papyrus/`
+- `papyrus_stats.py` - Statistics dataclass
+- `tui_papyrus_handler.py` - Main handler class
+
+### Backward Compatibility
+All refactored modules maintain backward compatibility through re-exports:
+- Original import paths still work with deprecation warnings
+- Example: `from ClassicLib.ScanLog.models import ScanConfig` works
+- New path: `from ClassicLib.ScanLog.models.scan_config import ScanConfig`
+- Deprecation warnings guide migration to new structure
+
+### Tests Organization
+- `tests/` directory with test markers for categorization
+- Subdirectories by functionality (async_tests, core, scanning, etc.)
+- Maximum 300 lines per test file
 
 ## Development Workflow
 1. Changes should maintain the modular architecture
 2. Use MessageHandler for all user communication
 3. Follow async patterns in ScanLog components
-4. Use batch operations for YAML settings when loading multiple values
-5. Add performance monitoring for critical operations
-6. Write tests for new functionality with appropriate markers
-7. Run linter and type checker before committing
-8. Use terminal for running tests (VS Code test tool has freezing issues)
+4. Always use AsyncBridge for running async code in sync contexts (optimized for performance)
+5. Use batch operations for YAML settings when loading multiple values
+6. Add performance monitoring for critical operations
+7. Write tests for new functionality with appropriate markers
+8. Run linter and type checker before committing
+9. Use terminal for running tests (VS Code test tool has freezing issues)
 
 ## Pre-commit Hooks
 

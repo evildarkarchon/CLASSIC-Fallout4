@@ -1,0 +1,293 @@
+"""
+Settings dialog for CLASSIC application configuration.
+
+This module provides a centralized settings dialog that replaces the scattered
+settings previously embedded in the main window's grid layout.
+"""
+
+from __future__ import annotations
+
+from typing import ClassVar
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QLineEdit,
+    QPushButton,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
+
+from ClassicLib.Constants import YAML
+from ClassicLib.Interface.Settings.path_manager import PathManager
+from ClassicLib.Interface.Settings.tab_creators import TabCreator
+from ClassicLib.Interface.StyleSheets import DARK_MODE
+from ClassicLib.MessageHandler import msg_error, msg_success
+from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
+
+
+class SettingsDialog(QDialog):
+    """
+    Dedicated settings dialog for CLASSIC application configuration.
+
+    Centralizes all application settings in a single modal dialog with
+    tabbed organization for better UX and maintainability.
+    """
+
+    # Mapping between widget keys and YAML setting names
+    SETTINGS_MAP: ClassVar[dict[str, str]] = {
+        "audio_notifications": "Audio Notifications",
+        "vr_mode": "VR Mode",
+        "fcx_mode": "FCX Mode",
+        "simplify_logs": "Simplify Logs",
+        "show_fid_values": "Show FormID Values",
+        "move_invalid_logs": "Move Unsolved Logs",  # Note: YAML uses "Unsolved" not "Invalid"
+        "update_check": "Update Check",
+        "update_source": "Update Source",
+        "ini_folder_path": "INI Folder Path",
+    }
+
+    def __init__(self, parent: QWidget | None = None, yaml_store: YAML = YAML.Settings) -> None:
+        """
+        Initialize the settings dialog.
+
+        Args:
+            parent: Parent widget for the dialog
+            yaml_store: YAML store to use for settings (defaults to YAML.Settings)
+        """
+        super().__init__(parent)
+        self.yaml_store = yaml_store
+
+        # Set dialog properties
+        self.setWindowTitle("CLASSIC Settings")
+        self.setMinimumSize(600, 500)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
+
+        # Apply dark mode styling
+        self.setStyleSheet(DARK_MODE)
+
+        # Store references to settings widgets for easy access
+        self.settings_widgets: dict[str, QWidget] = {}
+
+        # Initialize path manager
+        self.path_manager = PathManager(self, yaml_store)
+
+        # Create main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+
+        # Create tab widget
+        self.tab_widget = QTabWidget()
+        main_layout.addWidget(self.tab_widget)
+
+        # Create tabs using TabCreator
+        self._create_tabs()
+
+        # Create button box
+        # noinspection PyTypeChecker
+        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        main_layout.addWidget(self.button_box)
+
+        # Load current settings
+        self.load_settings()
+
+    def _create_tabs(self) -> None:
+        """Create all tabs using the TabCreator factory."""
+        # General tab
+        general_widget, general_widgets = TabCreator.create_general_tab(self)
+        self.settings_widgets.update(general_widgets)
+        self.tab_widget.addTab(general_widget, "General")
+
+        # Store widget references for backwards compatibility
+        self.audio_checkbox = general_widgets.get("audio_notifications")
+        self.vr_checkbox = general_widgets.get("vr_mode")
+
+        # Scanning tab
+        scanning_widget, scanning_widgets = TabCreator.create_scanning_tab(self)
+        self.settings_widgets.update(scanning_widgets)
+        self.tab_widget.addTab(scanning_widget, "Scanning")
+
+        # Store widget references for backwards compatibility
+        self.fcx_checkbox = scanning_widgets.get("fcx_mode")
+        self.simplify_checkbox = scanning_widgets.get("simplify_logs")
+        self.show_fid_checkbox = scanning_widgets.get("show_fid_values")
+        self.move_invalid_checkbox = scanning_widgets.get("move_invalid_logs")
+
+        # Paths tab
+        paths_widget, paths_widgets = TabCreator.create_paths_tab(self, self.path_manager)
+        self.settings_widgets.update(paths_widgets)
+        self.tab_widget.addTab(paths_widget, "Paths")
+
+        # Store widget references for backwards compatibility
+        self.ini_folder_input = paths_widgets.get("ini_folder_path")
+        # Create proxy methods for backwards compatibility
+        self.ini_reset_button = QPushButton()  # Dummy button for attribute access
+        self.ini_browse_button = QPushButton()  # Dummy button for attribute access
+
+        # Updates tab
+        updates_widget, updates_widgets, check_now_button = TabCreator.create_updates_tab(self)
+        self.settings_widgets.update(updates_widgets)
+        self.tab_widget.addTab(updates_widget, "Updates")
+
+        # Store widget references for backwards compatibility
+        self.update_check_checkbox = updates_widgets.get("update_check")
+        self.update_source_combo = updates_widgets.get("update_source")
+        self.check_now_button = check_now_button
+
+    # Backwards compatibility methods
+    def _browse_ini_folder(self) -> None:
+        """Open a folder browser dialog for selecting the INI folder."""
+        self.path_manager.browse_ini_folder()
+
+    def _reset_ini_folder(self) -> None:
+        """Reset the INI folder path to auto-detected value."""
+        self.path_manager.reset_ini_folder()
+
+    def _autodetect_ini_folder(self) -> None:
+        """Trigger autodetection of the INI folder path and update the UI."""
+        self.path_manager.autodetect_ini_folder()
+
+    def load_settings(self) -> None:
+        """Load current settings from YAML and populate the UI."""
+        from ClassicLib.Logger import logger
+
+        try:
+            # Get current settings
+            requests = [
+                (bool, self.yaml_store, f"CLASSIC_Settings.{setting_name}")
+                for key, setting_name in self.SETTINGS_MAP.items()
+                if key not in ["update_source", "ini_folder_path"]
+            ]
+            # Add string settings
+            requests.extend([
+                (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}"),
+                (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['ini_folder_path']}"),
+            ])
+
+            # Batch load all settings
+            values = yaml_cache.batch_get_settings(requests)
+            value_iter = iter(values)
+
+            # Update checkboxes
+            for key in ["audio_notifications", "vr_mode", "fcx_mode", "simplify_logs", "show_fid_values", "move_invalid_logs", "update_check"]:
+                widget = self.settings_widgets.get(key)
+                if isinstance(widget, QCheckBox):
+                    widget.setChecked(next(value_iter) or False)
+
+            # Update combo box
+            update_source = next(value_iter) or "Nexus"
+            if isinstance(self.update_source_combo, QComboBox):
+                index = self.update_source_combo.findText(update_source)
+                if index != -1:
+                    self.update_source_combo.setCurrentIndex(index)
+
+            # Update INI folder path
+            ini_path = next(value_iter) or ""
+            if isinstance(self.ini_folder_input, QLineEdit):
+                if not ini_path:
+                    # Try to get from Game_Local YAML if not set in settings
+                    from ClassicLib import GlobalRegistry
+
+                    try:
+                        vr_suffix = GlobalRegistry.get_vr()
+                        root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
+                        ini_path = yaml_settings(str, YAML.Game_Local, root_docs_key) or ""
+                    except (ImportError, TypeError, ValueError):
+                        pass
+                self.ini_folder_input.setText(ini_path)
+
+            logger.info("Loaded settings into dialog")
+
+        except (TypeError, ValueError, KeyError) as e:
+            logger.error(f"Failed to load settings: {e}")
+            msg_error(f"Failed to load some settings: {e!s}\n\nDefault values will be used.")
+
+    def save_settings(self) -> None:
+        """Save current UI values to YAML settings."""
+        from ClassicLib.Logger import logger
+
+        try:
+            # Save checkboxes
+            for key in ["audio_notifications", "vr_mode", "fcx_mode", "simplify_logs", "show_fid_values", "move_invalid_logs", "update_check"]:
+                widget = self.settings_widgets.get(key)
+                if isinstance(widget, QCheckBox):
+                    setting_name = self.SETTINGS_MAP[key]
+                    yaml_settings(bool, self.yaml_store, f"CLASSIC_Settings.{setting_name}", widget.isChecked())
+
+            # Save combo box
+            if isinstance(self.update_source_combo, QComboBox):
+                yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}", self.update_source_combo.currentText())
+
+            # Save INI folder path
+            if isinstance(self.ini_folder_input, QLineEdit):
+                ini_path = self.ini_folder_input.text().strip()
+                yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['ini_folder_path']}", ini_path)
+
+                # Also update Game_Local YAML if path is set
+                if ini_path:
+                    from ClassicLib import GlobalRegistry
+
+                    try:
+                        vr_suffix = GlobalRegistry.get_vr()
+                        root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
+                        yaml_settings(str, YAML.Game_Local, root_docs_key, ini_path)
+                    except (ImportError, TypeError, ValueError):
+                        pass
+
+            logger.info("Saved settings from dialog")
+            msg_success("Settings saved successfully!")
+
+        except (TypeError, ValueError, OSError) as e:
+            logger.error(f"Failed to save settings: {e}")
+            msg_error(f"Failed to save settings: {e!s}\n\nPlease check file permissions and try again.")
+
+    def _recalculate_derivative_paths(self) -> None:
+        """
+        Recalculate derivative paths when base paths change.
+
+        This ensures that game installations and mod folders are properly
+        detected when the user changes fundamental path settings.
+        """
+        from ClassicLib.DocsPath import docs_path_find
+        from ClassicLib.GamePath import game_path_find
+        from ClassicLib.Logger import logger
+        from ClassicLib.ModsPath import mods_path_find
+
+        try:
+            # Recalculate document paths if INI folder was changed
+            if isinstance(self.ini_folder_input, QLineEdit):
+                ini_path = self.ini_folder_input.text().strip()
+                if ini_path:
+                    logger.info(f"Recalculating paths based on INI folder: {ini_path}")
+                    # This will update the derived paths
+                    docs_path_find(is_gui_mode=True)
+
+            # Recalculate game paths
+            game_path_find(is_gui_mode=True)
+
+            # Recalculate mods paths
+            mods_path_find(is_gui_mode=True)
+
+            logger.info("Successfully recalculated derivative paths")
+
+        except (ImportError, TypeError, ValueError, OSError) as e:
+            logger.error(f"Failed to recalculate paths: {e}")
+            # Don't show error to user as this is a background operation
+
+    def accept(self) -> None:
+        """Handle dialog acceptance (OK button)."""
+        self.save_settings()
+        self._recalculate_derivative_paths()
+        super().accept()
+
+    def reject(self) -> None:
+        """Handle dialog rejection (Cancel button)."""
+        # Just close without saving
+        super().reject()
