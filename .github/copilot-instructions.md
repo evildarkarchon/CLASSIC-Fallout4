@@ -154,6 +154,21 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
 @pytest.mark.file_io             # File I/O operations
 ```
 
+### Test Organization Rules
+```python
+# NEW: File size limits and organization requirements
+# - Maximum 300 lines per test file
+# - NO tests in root tests/ directory - must be in subdirectories
+# - Use descriptive names: test_<component>_<aspect>.py
+
+# Test directories by functionality:
+tests/async_tests/     # Async patterns and infrastructure
+tests/core/           # Core functionality (crash logs, FormID, etc.)
+tests/scanning/       # Log and mod scanning
+tests/game/          # Game path and integrity
+tests/settings/      # YAML and settings management
+```
+
 ## Development Workflows
 
 ### Environment Setup
@@ -180,10 +195,10 @@ Available VS Code tasks:
 
 ## Key Integration Points
 
-### Fragment-Based Architecture (NEW)
+### Fragment-Based Architecture (CURRENT)
 ```python
-# Modern immutable fragment composition pattern replaces mutable lists
-from ClassicLib.ScanLog.ReportFragment import ReportFragment, ReportComposer
+# Modern immutable fragment composition pattern - REQUIRED for new report code
+from ClassicLib.ScanLog.fragments import ReportFragment, ReportComposer
 
 # Generate fragments instead of mutating lists
 def detect_mods_new() -> ReportFragment:
@@ -195,19 +210,61 @@ composer = ReportComposer()
 composer.add(header_fragment)
 composer.add_conditional(lambda: detect_mods(), "SECTION HEADER")
 final_report = composer.build()
+
+# Conditional sections with automatic headers
+from ClassicLib.ScanLog.composition import ConditionalSection
+section = ConditionalSection.with_header(
+    lambda: content_fragment,
+    "Header added only if content exists"
+)
 ```
 
-### AsyncBridge Pattern (Critical)
+### AsyncBridge Pattern (Critical Performance)
 ```python
-# Efficient sync-to-async execution without creating new event loops
+# Thread-safe singleton for efficient sync-to-async execution
 from ClassicLib.AsyncBridge import AsyncBridge
 
 bridge = AsyncBridge.get_instance()
 result = bridge.run_async(async_function())
 
-# Never create event loops manually - use AsyncBridge
-# ❌ Don't: asyncio.run() in sync context repeatedly
+# PERFORMANCE: Maintains persistent thread-local event loops
+# ❌ Don't: asyncio.run() repeatedly (creates new loops each time)
 # ✅ Do: AsyncBridge for persistent thread-local event loops
+# ❌ Don't: Create event loops manually
+# ✅ Do: Use AsyncBridge singleton pattern
+```
+
+### Modular File Organization (CURRENT STRUCTURE)
+```python
+# Post-refactoring: One class per file, logical subdirectories
+ClassicLib/
+  ScanLog/
+    fragments/          # Fragment composition system
+      report_fragment.py
+      report_composer.py
+      fragment_collector.py
+    composition/        # Conditional sections
+      conditional_section.py
+      report_composer.py
+    models/            # Data classes
+      scan_config.py
+      scan_statistics.py
+      scan_result.py
+  MessageHandler/      # Messaging system
+    handler.py         # Main handler
+    models.py         # Message data classes
+    enums.py          # Message types
+  FileIO/             # File operations
+    core.py           # FileIOCore class
+    sync_adapters.py  # Sync compatibility
+  Utils/              # Utilities by category
+    path_utils.py
+    string_utils.py
+    file_utils.py
+
+# Backward compatibility maintained via re-exports
+from ClassicLib.ScanLog.ReportFragment import ReportFragment  # ✅ Works but deprecated
+from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment  # ✅ Preferred
 ```
 
 ### TUI Architecture (Terminal User Interface)
@@ -272,16 +329,19 @@ result = bridge.run_async(async_function())
 8. ❌ Mutable lists in reports → ✅ Use `ReportFragment` composition
 9. ❌ Production YAML in tests → ✅ Use `YAML.TEST` or mock `yaml_settings()`
 10. ❌ Creating event loops manually → ✅ Use `AsyncBridge` for persistent loops
+11. ❌ Large files (>500 lines) → ✅ Split into logical components with subdirectories
+12. ❌ Multiple classes per file → ✅ One primary class per file
+13. ❌ Tests in root tests/ → ✅ Organize in subdirectories by functionality
 
 ## Key Architecture Files
 
 - `ClassicLib/__init__.py` - Main exports and MessageHandler functions
 - `ClassicLib/ScanLog/OrchestratorCore.py` - Async-first core orchestration
 - `ClassicLib/FileIOCore.py` - Unified async file I/O operations
-- `ClassicLib/MessageHandler.py` - Universal output system
+- `ClassicLib/MessageHandler/handler.py` - Universal output system
 - `ClassicLib/GlobalRegistry.py` - Shared state management
 - `ClassicLib/TUI/app.py` - Terminal UI application controller
 - `ClassicLib/AsyncBridge.py` - Sync-to-async execution bridge
-- `ClassicLib/ScanLog/ReportFragment.py` - Immutable fragment composition system
+- `ClassicLib/ScanLog/fragments/report_fragment.py` - Immutable fragment composition system
+- `ClassicLib/ScanLog/composition/report_composer.py` - Fragment composition utilities
 - `tests/conftest.py` - Test fixtures and initialization
-- `.cursor/rules/classic-fallout4-standards.mdc` - Comprehensive standards

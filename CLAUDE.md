@@ -591,6 +591,19 @@ poetry run pre-commit run
 poetry run pre-commit run check-test-isolation
 ```
 
+## Common Anti-Patterns to Avoid
+
+1. ❌ `print()` statements → ✅ `msg_info()`, `msg_warning()`, `msg_error()`
+2. ❌ String paths → ✅ `pathlib.Path` objects
+3. ❌ Unused imports → ✅ Audit and remove
+4. ❌ Missing type annotations → ✅ Complete function signatures
+5. ❌ Patching definitions → ✅ Patch where used in tests
+6. ❌ Skip MessageHandler init → ✅ Use `init_message_handler_fixture`
+7. ❌ `asyncio.run()` in sync context → ✅ Use `AsyncBridge.get_instance().run_async()`
+8. ❌ Mutable lists in reports → ✅ Use `ReportFragment` composition
+9. ❌ Production YAML in tests → ✅ Use `YAML.TEST` or mock `yaml_settings()`
+10. ❌ Creating event loops manually → ✅ Use `AsyncBridge` for persistent loops
+
 ## Memories
 - Output test output to a file to avoid truncation.
 - Do not make additions to the `MainWindow` class in `CLASSIC_Interface.py` unless absolutely necessary. Use Mixin classes with TYPE_CHECKING stubs instead.
