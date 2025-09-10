@@ -369,6 +369,21 @@ def test_with_test_enum():
 
 ## Code Quality Standards
 
+### Python File Organization
+
+#### File Size Limits
+- **500-line soft limit** - Files approaching this should be considered for refactoring
+- **550-line hard limit** - Files must not exceed this size
+- When files grow too large, split them into logical components
+
+#### Class Organization
+- **One class per file** - Each file should contain a single primary class
+- **Exception**: Small, tightly related helper classes can be included in the same file
+- Examples of acceptable related classes:
+  - A data class and its associated enum
+  - A main class and its small exception classes
+  - A class and its TypedDict definitions
+
 ### Type Annotations (Python 3.12+)
 
 - All functions must have complete type annotations including return types
@@ -421,7 +436,6 @@ def test_with_test_enum():
 6. Write tests for new functionality with appropriate markers
 7. Run linter and type checker before committing
 8. Use terminal for running tests (VS Code test tool has freezing issues)
-9. Pre-commit hooks will automatically check for test isolation violations
 
 ## Pre-commit Hooks
 
