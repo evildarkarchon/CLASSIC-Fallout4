@@ -229,6 +229,33 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
 - Examples: `test_backup_creation.py`, `test_async_error_handling.py`
 - Avoid generic names like `test_utils.py` for new files
 
+#### Test Type Separation
+**CRITICAL**: Different test types must be in separate files for maintainability and execution control.
+
+- **Unit Tests** - Must be in files named `test_<component>_unit.py`
+  - Test individual functions/methods in isolation
+  - Mock all external dependencies
+  - Should run quickly (< 100ms per test)
+  - Example: `test_formid_analyzer_unit.py`
+
+- **Integration Tests** - Must be in files named `test_<component>_integration.py`
+  - Test interaction between multiple components
+  - May use real file I/O with temp directories
+  - Can test database connections and external services
+  - Example: `test_scan_pipeline_integration.py`
+
+- **End-to-End Tests** - Must be in files named `test_<component>_e2e.py`
+  - Test complete workflows from entry point to output
+  - Simulate real user scenarios
+  - May involve GUI/TUI interactions
+  - Example: `test_crash_log_scanning_e2e.py`
+
+**Never mix test types in the same file** - This ensures:
+- Faster test execution by running only needed test types
+- Clear dependency requirements for each test file
+- Better mock management and test isolation
+- Easier debugging when tests fail
+
 ### Test-Driven Development (TDD) Method
 
 Follow the **Red-Green-Refactor** cycle for all new features and bug fixes:
