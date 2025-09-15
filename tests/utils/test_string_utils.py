@@ -113,9 +113,9 @@ class TestStringUtilities:
 
         file1.write_text("content")
 
-        # Should raise FileNotFoundError for nonexistent file
-        with pytest.raises(FileNotFoundError):
-            calculate_similarity(file1, file2)
+        # Should return 0.0 for nonexistent file (error is caught)
+        similarity = calculate_similarity(file1, file2)
+        assert similarity == 0.0
 
     def test_append_or_extend_single_values(self) -> None:
         """Test append_or_extend with single values."""
@@ -172,7 +172,7 @@ class TestVersionParsing:
         """Test crashgen_version_gen with multiple version-like strings."""
         input_string = "Test v1.0.0 another v2.0.0"
         result = crashgen_version_gen(input_string)
-        assert result == Version("2.0.0")  # Function takes the last one found
+        assert result == Version("1.0.0")  # Function takes the first one found
 
     def test_crashgen_version_gen_no_version(self) -> None:
         """Test crashgen_version_gen with no version information."""

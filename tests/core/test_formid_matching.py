@@ -37,8 +37,8 @@ class TestFormIDMatching:
         with (
             patch("builtins.open", mock_open(read_data=mock_formid_db)),
             patch("os.path.isfile", return_value=True),
-            patch("ClassicLib.ScanLog.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.crashlogs_reformat"),
+            patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
         ):
             # Setup GlobalRegistry
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
@@ -76,8 +76,8 @@ class TestFormIDMatching:
         with (
             patch("builtins.open", mock_open(read_data=mock_formid_db)),
             patch("os.path.isfile", return_value=True),
-            patch("ClassicLib.ScanLog.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.crashlogs_reformat"),
+            patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
         ):
             # Setup GlobalRegistry
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
@@ -114,8 +114,8 @@ class TestFormIDMatching:
         with (
             patch("builtins.open", mock_open(read_data=mock_formid_db)),
             patch("os.path.isfile", return_value=True),
-            patch("ClassicLib.ScanLog.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.crashlogs_reformat"),
+            patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
         ):
             # Setup GlobalRegistry
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
@@ -151,8 +151,8 @@ class TestFormIDMatching:
         """Test behavior when FormID database does not exist."""
         with (
             patch("os.path.isfile", return_value=False),
-            patch("ClassicLib.ScanLog.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.crashlogs_reformat"),
+            patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
         ):
             # Setup GlobalRegistry
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
@@ -189,8 +189,8 @@ class TestFormIDMatching:
         with (
             patch("builtins.open", mock_open(read_data=mock_formid_db)),
             patch("os.path.isfile", return_value=True),
-            patch("ClassicLib.ScanLog.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.crashlogs_reformat"),
+            patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
         ):
             # Setup GlobalRegistry
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)

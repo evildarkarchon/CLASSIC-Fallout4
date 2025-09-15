@@ -1,6 +1,6 @@
 """Validation utilities for AsyncYamlSettings."""
 
-from typing import Any
+from typing import Any, get_origin
 
 from ClassicLib import msg_error
 from ClassicLib.Constants import SETTINGS_IGNORE_NONE
@@ -45,9 +45,16 @@ def validate_setting_value(value: Any, expected_type: type) -> bool:
     if value is None:
         return not SETTINGS_IGNORE_NONE
 
-    # Direct type match
-    if isinstance(value, expected_type):
-        return True
+    # Handle parameterized generics (e.g., list[str], dict[str, Any])
+    origin_type = get_origin(expected_type)
+    if origin_type is not None:
+        # For generic types, check against the origin (e.g., list for list[str])
+        if isinstance(value, origin_type):
+            return True
+    else:
+        # Direct type match for non-generic types
+        if isinstance(value, expected_type):
+            return True
 
     # Special case for Path
     if expected_type.__name__ == "Path":
@@ -75,7 +82,11 @@ def coerce_setting_value(value: Any, expected_type: type) -> Any:
     Returns:
         Coerced value or original if coercion fails
     """
-    if value is None or isinstance(value, expected_type):
+    # Handle parameterized generics
+    origin_type = get_origin(expected_type)
+    check_type = origin_type if origin_type is not None else expected_type
+
+    if value is None or isinstance(value, check_type):
         return value
 
     try:

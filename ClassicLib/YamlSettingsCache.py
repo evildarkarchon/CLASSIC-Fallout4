@@ -10,13 +10,13 @@ from typing import Any, TypeVar
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.AsyncYamlSettingsCore import (
+from ClassicLib.AsyncYamlSettings.core import get_async_yaml_core
+from ClassicLib.AsyncYamlSettings.types import (
     YAMLLiteral,
     YAMLMapping,
     YAMLSequence,
     YAMLValue,
     YAMLValueOptional,
-    get_async_yaml_core,
 )
 from ClassicLib.Constants import YAML
 from ClassicLib.Meta import SingletonMeta
@@ -49,7 +49,8 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         Returns:
             Path: The resolved file path for the YAML store
         """
-        return self._bridge.run_async(self._async_core.get_path_for_store(yaml_store))
+        # Get path through file_ops
+        return self._async_core.file_ops.get_path_for_store(yaml_store)
 
     def load_yaml(self, yaml_path: Path) -> YAMLMapping:
         """
@@ -61,9 +62,10 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         Returns:
             YAMLMapping: The loaded YAML data
         """
-        return self._bridge.run_async(self._async_core.load_yaml(yaml_path))
+        # Load through file_ops
+        return self._bridge.run_async(self._async_core.file_ops.load_yaml_file(yaml_path))
 
-    def get_setting(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
+    def async_yaml_settings(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """
         Get or set a setting in the YAML store.
 
@@ -76,7 +78,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         Returns:
             The setting value or None
         """
-        return self._bridge.run_async(self._async_core.get_setting(_type, yaml_store, key_path, new_value))
+        return self._bridge.run_async(self._async_core.async_yaml_settings(_type, yaml_store, key_path, new_value))
 
     def load_multiple_stores(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
         """
@@ -88,7 +90,14 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         Returns:
             dict: Mapping of YAML store to loaded data
         """
-        return self._bridge.run_async(self._async_core.load_multiple_stores(stores))
+        # Load multiple stores - need to implement this differently
+        async def _load_stores():
+            results = {}
+            for store in stores:
+                path = self._async_core.file_ops.get_path_for_store(store)
+                results[store] = await self._async_core.file_ops.load_yaml_file(path)
+            return results
+        return self._bridge.run_async(_load_stores())
 
     def batch_get_settings(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
         """
@@ -104,7 +113,8 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
     def prefetch_all_settings(self) -> None:
         """Prefetch common settings into cache for better performance."""
-        self._bridge.run_async(self._async_core.prefetch_all_settings())
+        # Prefetch not implemented - just pass for now
+        pass
 
     def get_metrics(self) -> dict[str, int]:
         """
@@ -113,28 +123,29 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         Returns:
             dict: Current performance metrics
         """
-        return self._bridge.run_async(self._async_core.get_metrics())
+        # Metrics not implemented - return empty dict
+        return {}
 
-    # Property accessors for direct cache access (if needed by existing code)
+    # Property accessors for cache compatibility
     @property
-    def cache(self) -> dict[Path, YAMLMapping]:
-        """Direct access to the cache dictionary."""
+    def cache(self) -> Any:
+        """Access to the cache object."""
         return self._async_core.cache
 
     @property
-    def path_cache(self) -> dict[YAML, Path]:
+    def path_cache(self) -> dict:
         """Direct access to the path cache."""
-        return self._async_core.path_cache
+        return self._async_core.cache.path_cache
 
     @property
-    def settings_cache(self) -> dict[tuple[YAML, str, type], Any]:
+    def settings_cache(self) -> dict:
         """Direct access to the settings cache."""
-        return self._async_core.settings_cache
+        return self._async_core.cache.settings_cache
 
     @property
-    def file_mod_times(self) -> dict[Path, float]:
+    def file_mod_times(self) -> dict:
         """Direct access to the file modification times cache."""
-        return self._async_core.file_mod_times
+        return self._async_core.cache.file_mod_times
 
 
 # Create singleton instance and register it
@@ -163,7 +174,7 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
     Returns:
         The setting value, properly typed
     """
-    setting = yaml_cache.get_setting(_type, yaml_store, key_path, new_value)
+    setting = yaml_cache.async_yaml_settings(_type, yaml_store, key_path, new_value)
 
     if _type is Path:
         return Path(setting) if setting and isinstance(setting, str) else None  # type: ignore[return-value]

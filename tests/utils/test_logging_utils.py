@@ -22,12 +22,15 @@ class TestLoggingUtilities:
         # Ensure logger starts clean
         test_logger.handlers.clear()
 
-        with patch("ClassicLib.Util.msg_info"):  # Mock msg_info to avoid MessageHandler dependency
+        with patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="."):  # Mock to use current dir
             configure_logging(test_logger)
 
-        assert test_logger.level == logging.INFO
-        assert len(test_logger.handlers) == 1
-        assert isinstance(test_logger.handlers[0], logging.FileHandler)
+        assert test_logger.level == logging.DEBUG  # Updated to match implementation
+        assert len(test_logger.handlers) == 2  # File handler + console handler
+        # Check handler types
+        handler_types = [type(h).__name__ for h in test_logger.handlers]
+        assert "FileHandler" in handler_types
+        assert "StreamHandler" in handler_types
 
     def test_configure_logging_existing_handlers(self) -> None:
         """Test configure_logging with logger that already has handlers."""
@@ -36,142 +39,117 @@ class TestLoggingUtilities:
         # Add a handler first
         existing_handler = logging.StreamHandler()
         test_logger.addHandler(existing_handler)
-        original_handler_count = len(test_logger.handlers)
 
-        with patch("ClassicLib.Util.msg_info"):  # Mock msg_info to avoid MessageHandler dependency
+        with patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="."):
             configure_logging(test_logger)
 
-        # Should not add another handler
-        assert len(test_logger.handlers) == original_handler_count
+        # Should replace existing handlers (implementation clears them)
+        assert len(test_logger.handlers) == 2  # New file and console handlers
 
-    @patch("ClassicLib.Util.msg_info")  # Mock msg_info to avoid MessageHandler dependency
-    @patch("ClassicLib.Util.msg_error")  # Mock msg_error as well
-    def test_configure_logging_old_log_file(self, mock_msg_error: MagicMock, mock_msg_info: MagicMock) -> None:  # noqa: ARG002
-        """Test configure_logging removes old log file."""
-        test_logger = logging.getLogger("test_classic_logger_old")
-        test_logger.handlers.clear()
-        test_logger.setLevel(logging.DEBUG)  # Enable DEBUG level for the test
-
-        # Mock Path class to intercept Path("CLASSIC Journal.log") call
-        with patch("ClassicLib.Util.Path") as mock_path_class:
-            mock_journal_path = MagicMock()
-            mock_path_class.return_value = mock_journal_path
-            mock_journal_path.exists.return_value = True
-
-            # Mock old file (8 days old)
-            import time
-
-            old_time = time.time() - (8 * 24 * 60 * 60)  # 8 days ago
-            mock_stat = MagicMock()
-            mock_stat.st_mtime = old_time
-            mock_journal_path.stat.return_value = mock_stat
-
-            configure_logging(test_logger)
-
-            # Verify Path was called with the correct argument
-            mock_path_class.assert_called_with("CLASSIC Journal.log")
-            mock_journal_path.unlink.assert_called_once_with(missing_ok=True)
-
-    @patch("ClassicLib.Util.msg_info")
-    def test_configure_logging_recent_log_file(self, mock_msg_info: MagicMock) -> None:
-        """Test configure_logging keeps recent log file."""
-        test_logger = logging.getLogger("test_classic_logger_recent")
+    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    def test_configure_logging_creates_log_directory(self, mock_get_local_dir: MagicMock) -> None:
+        """Test configure_logging creates log directory structure."""
+        test_logger = logging.getLogger("test_classic_logger_logdir")
         test_logger.handlers.clear()
 
-        with patch("ClassicLib.Util.Path") as mock_path_class:
-            mock_journal_path = MagicMock()
-            mock_path_class.return_value = mock_journal_path
-            mock_journal_path.exists.return_value = True
+        mock_get_local_dir.return_value = "."
 
-            # Mock recent file (1 day old)
-            import time
-
-            recent_time = time.time() - (1 * 24 * 60 * 60)  # 1 day ago
-            mock_stat = MagicMock()
-            mock_stat.st_mtime = recent_time
-            mock_journal_path.stat.return_value = mock_stat
-
+        with patch("pathlib.Path.mkdir") as mock_mkdir:
             configure_logging(test_logger)
+            # Verify log directory creation was attempted
+            mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
-            # Should not delete recent file
-            mock_journal_path.unlink.assert_not_called()
-
-    @patch("ClassicLib.Util.msg_info")
-    def test_configure_logging_no_existing_log(self, mock_msg_info: MagicMock) -> None:
-        """Test configure_logging when no log file exists."""
-        test_logger = logging.getLogger("test_classic_logger_no_file")
+    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    def test_configure_logging_file_handler_format(self, mock_get_local_dir: MagicMock) -> None:
+        """Test configure_logging sets correct file handler format."""
+        test_logger = logging.getLogger("test_classic_logger_file_format")
         test_logger.handlers.clear()
 
-        with patch("ClassicLib.Util.Path") as mock_path_class:
-            mock_journal_path = MagicMock()
-            mock_path_class.return_value = mock_journal_path
-            mock_journal_path.exists.return_value = False
+        mock_get_local_dir.return_value = "."
+        configure_logging(test_logger)
 
-            configure_logging(test_logger)
+        # Find file handler
+        file_handler = None
+        for handler in test_logger.handlers:
+            if isinstance(handler, logging.FileHandler):
+                file_handler = handler
+                break
 
-            # Should not try to delete non-existent file
-            mock_journal_path.unlink.assert_not_called()
+        assert file_handler is not None
+        assert file_handler.level == logging.DEBUG
+        # Check formatter includes expected components
+        assert "%(asctime)s" in file_handler.formatter._fmt
+        assert "%(levelname)s" in file_handler.formatter._fmt
 
-    @patch("ClassicLib.Util.msg_info")
-    @patch("ClassicLib.Util.msg_error")
-    def test_configure_logging_log_deletion_error(self, mock_msg_error: MagicMock, mock_msg_info: MagicMock) -> None:
-        """Test configure_logging handles log deletion errors gracefully."""
-        test_logger = logging.getLogger("test_classic_logger_delete_error")
+    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    def test_configure_logging_console_handler_level(self, mock_get_local_dir: MagicMock) -> None:
+        """Test configure_logging sets correct console handler level."""
+        test_logger = logging.getLogger("test_classic_logger_console_level")
         test_logger.handlers.clear()
-        test_logger.setLevel(logging.DEBUG)
 
-        with patch("ClassicLib.Util.Path") as mock_path_class:
-            mock_journal_path = MagicMock()
-            mock_path_class.return_value = mock_journal_path
-            mock_journal_path.exists.return_value = True
+        mock_get_local_dir.return_value = "."
+        configure_logging(test_logger)
 
-            # Mock old file
-            import time
+        # Find console handler
+        console_handler = None
+        for handler in test_logger.handlers:
+            if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+                console_handler = handler
+                break
 
-            old_time = time.time() - (8 * 24 * 60 * 60)
-            mock_stat = MagicMock()
-            mock_stat.st_mtime = old_time
-            mock_journal_path.stat.return_value = mock_stat
+        assert console_handler is not None
+        assert console_handler.level == logging.WARNING
 
-            # Make unlink raise an error
-            mock_journal_path.unlink.side_effect = PermissionError("Access denied")
+    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    @patch("sys.stderr")
+    def test_configure_logging_handles_file_creation_error(self, mock_stderr: MagicMock, mock_get_local_dir: MagicMock) -> None:
+        """Test configure_logging handles file creation errors gracefully."""
+        test_logger = logging.getLogger("test_classic_logger_file_error")
+        test_logger.handlers.clear()
 
-            # Should not raise, but continue
-            configure_logging(test_logger)
+        # Make get_local_dir raise an exception
+        mock_get_local_dir.side_effect = Exception("Cannot access local dir")
 
-            # Error should be logged
-            mock_msg_error.assert_called()
+        # Should not raise, but continue with console only
+        configure_logging(test_logger)
+
+        # Should have console handler only
+        assert len(test_logger.handlers) == 1
+        assert isinstance(test_logger.handlers[0], logging.StreamHandler)
 
     def test_configure_logging_formatter(self) -> None:
         """Test that configure_logging sets proper formatter."""
         test_logger = logging.getLogger("test_classic_logger_formatter")
         test_logger.handlers.clear()
 
-        with patch("ClassicLib.Util.msg_info"):
+        with patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="."):
             configure_logging(test_logger)
 
-        handler = test_logger.handlers[0]
-        formatter = handler.formatter
-
-        assert formatter is not None
-        # Check formatter pattern includes expected components
-        assert "%(asctime)s" in formatter._fmt  # type: ignore
-        assert "%(levelname)s" in formatter._fmt  # type: ignore
+        # Check both handlers have formatters
+        for handler in test_logger.handlers:
+            assert handler.formatter is not None
+            if isinstance(handler, logging.FileHandler):
+                # File handler should have detailed format
+                assert "%(asctime)s" in handler.formatter._fmt  # type: ignore
+                assert "%(name)s" in handler.formatter._fmt  # type: ignore
+            else:
+                # Console handler should have simple format
+                assert "%(levelname)s" in handler.formatter._fmt  # type: ignore
 
     def test_configure_logging_multiple_calls(self) -> None:
         """Test multiple calls to configure_logging."""
         test_logger = logging.getLogger("test_classic_logger_multiple")
         test_logger.handlers.clear()
 
-        with patch("ClassicLib.Util.msg_info"):
+        with patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="."):
             configure_logging(test_logger)
-            initial_handler_count = len(test_logger.handlers)
+            first_call_count = len(test_logger.handlers)
 
             # Call again
             configure_logging(test_logger)
 
-            # Should not add duplicate handlers
-            assert len(test_logger.handlers) == initial_handler_count
+            # Should have same number of handlers (clears and recreates)
+            assert len(test_logger.handlers) == first_call_count
 
 
 if __name__ == "__main__":

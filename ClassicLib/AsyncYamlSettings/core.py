@@ -3,7 +3,7 @@
 import asyncio
 from functools import reduce
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error
 from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML
@@ -17,260 +17,264 @@ from .validators import coerce_setting_value, validate_setting_value, validate_s
 
 
 class AsyncYamlSettingsCore:
-    """
-    Async-first YAML settings management with caching and concurrent access.
+    """Core async YAML settings manager with caching and validation."""
 
-    This class provides high-performance YAML settings access with:
-    - Automatic file change detection and reloading
-    - TTL-based caching
-    - Concurrent access with proper locking
-    - Batch operations for efficiency
-    """
-
-    def __init__(self) -> None:
-        """Initialize the async YAML settings core."""
-        # Initialize components
+    def __init__(self, settings_dir: Path | None = None):
+        """Initialize the async YAML settings manager."""
+        self.settings_dir = Path(settings_dir) if settings_dir else Path("CLASSIC Data")
         self.cache = YamlCache()
         self.file_ops = YamlFileOperations()
+        self._lock = asyncio.Lock()
+        self._file_locks: dict[Path, asyncio.Lock] = {}
 
-        # Use shared FileIOCore instance
-        self.io_core = FileIOCore()
-        self.file_ops.io_core = self.io_core
+    def _get_file_lock(self, file_path: Path) -> asyncio.Lock:
+        """Get or create a lock for a specific file."""
+        if file_path not in self._file_locks:
+            self._file_locks[file_path] = asyncio.Lock()
+        return self._file_locks[file_path]
 
-    async def load_yaml(self, yaml_store: YAML, force_reload: bool = False) -> dict[str, Any]:
-        """
-        Load a YAML file with caching and automatic reload on changes.
-
-        Args:
-            yaml_store: The YAML store to load
-            force_reload: Force reload even if cached
-
-        Returns:
-            Loaded YAML data
-        """
-        store_key = str(yaml_store)
-
-        # Get file path
-        file_path = await self.file_ops.get_path_for_store(yaml_store)
-
-        # Get file-specific lock
-        file_lock = await self.cache.get_file_lock(str(file_path))
-
-        async with file_lock:
-            # Check if we need to reload
-            needs_reload = (
-                force_reload
-                or store_key not in self.cache.cache
-                or await self.cache.check_file_modification(file_path)
-            )
-
-            if needs_reload:
-                # Load from file
-                data = await self.file_ops.load_yaml_file(file_path)
-
-                # Validate structure
-                if data:
-                    try:
-                        validate_settings_structure(data, str(yaml_store))
-                    except ValueError as e:
-                        logger.error(f"Invalid {yaml_store} structure: {e}")
-                        # Try to regenerate if it's a settings file
-                        if yaml_store in self.file_ops.STATIC_YAML_STORES:
-                            data = await self.file_ops.regenerate_settings_file(yaml_store)
-
-                # Update cache
-                self.cache.cache[store_key] = data
-                self.cache.update_metrics("file_reloads")
-
-                logger.debug(f"Loaded {yaml_store} from file")
-            else:
-                # Use cached data
-                data = self.cache.cache[store_key]
-                self.cache.update_metrics("cache_hits")
-
-                logger.debug(f"Using cached {yaml_store}")
-
-        self.cache.update_metrics("total_reads")
-        return data
-
-    async def get_setting(
+    async def async_yaml_settings(
         self,
-        return_type: type[T],
+        variable_type: type[T],
         yaml_store: YAML,
-        key_path: str,
-        default: T | None = None,
+        key: str,
+        value: T | None = None,
     ) -> T | None:
         """
-        Get a setting value from a YAML store.
+        Read or write a setting in a YAML file asynchronously.
 
         Args:
-            return_type: Expected return type
-            yaml_store: YAML store to read from
-            key_path: Dot-separated path to the setting
-            default: Default value if not found
+            variable_type: The expected type of the value
+            yaml_store: Which YAML store to use
+            key: The key path in dot notation (e.g., "CLASSIC_Settings.MaxOutputLines")
+            value: If provided, write this value; otherwise read
 
         Returns:
-            Setting value or default
+            The value from the YAML file, or None if not found
+
+        Raises:
+            yaml.YAMLError: If the YAML file is invalid
+            OSError: If the file cannot be accessed
         """
-        # Check cache first
-        cache_key = (return_type, yaml_store, key_path)
-        if cache_key in self.cache.settings_cache:
-            self.cache.update_metrics("cache_hits")
-            return self.cache.settings_cache[cache_key]
+        file_path = self.file_ops.get_path_for_store(yaml_store)
+        file_lock = self._get_file_lock(file_path)
 
-        self.cache.update_metrics("cache_misses")
+        async with file_lock:
+            # Check cache first for reads
+            if value is None:
+                cache_key = (variable_type, yaml_store, key)
+                if cache_key in self.cache.settings_cache:
+                    return cast(T, self.cache.settings_cache[cache_key])
 
-        # Load YAML data
-        data = await self.load_yaml(yaml_store)
+            # Load the YAML file
+            data = await self.file_ops.load_yaml_file(file_path)
 
-        if not data:
-            logger.debug(f"No data in {yaml_store} for {key_path}")
-            return default
+            # Parse the key path
+            keys = key.split(".")
+            current = data
 
-        # Navigate to the key
-        try:
-            keys = key_path.split(".")
-            value = reduce(lambda d, k: d.get(k, {}) if isinstance(d, dict) else {}, keys, data)
+            if value is None:
+                # Read operation
+                for k in keys:
+                    if isinstance(current, dict) and k in current:
+                        current = current[k]
+                    else:
+                        return None
 
-            if not value:
-                logger.debug(f"Key {key_path} not found in {yaml_store}")
-                return default
+                # Validate type using imported function
+                if not validate_setting_value(current, variable_type):
+                    return None
 
-            # Validate and coerce type
-            if not validate_setting_value(value, return_type):
-                value = coerce_setting_value(value, return_type)
+                # Cache the result
+                cache_key = (variable_type, yaml_store, key)
+                self.cache.settings_cache[cache_key] = current
+                return cast(T, current)
+            else:
+                # Write operation
+                # Navigate to the parent of the target key
+                for k in keys[:-1]:
+                    if k not in current:
+                        current[k] = {}
+                    current = current[k]
 
-            # Handle None values
-            if value is None and SETTINGS_IGNORE_NONE:
-                return default
+                # Set the value
+                current[keys[-1]] = value
 
-            # Cache the result
-            self.cache.settings_cache[cache_key] = value
+                # Save the file
+                await self.file_ops.save_yaml_file(file_path, data)
 
-            return value
-
-        except Exception as e:
-            logger.error(f"Error getting {key_path} from {yaml_store}: {e}")
-            msg_error(
-                f"Failed to get setting {key_path}",
-                details=str(e),
-                target=MessageTarget.LOG_ONLY,
-            )
-            return default
-
-    async def set_setting(
-        self,
-        yaml_store: YAML,
-        key_path: str,
-        value: Any,
-    ) -> bool:
-        """
-        Set a setting value in a YAML store.
-
-        Args:
-            yaml_store: YAML store to write to
-            key_path: Dot-separated path to the setting
-            value: Value to set
-
-        Returns:
-            True if successful
-        """
-        # Load current data
-        data = await self.load_yaml(yaml_store, force_reload=True)
-
-        # Navigate to the parent key and set value
-        keys = key_path.split(".")
-        current = data
-
-        # Create nested structure if needed
-        for key in keys[:-1]:
-            if key not in current:
-                current[key] = {}
-            current = current[key]
-
-        # Set the final value
-        current[keys[-1]] = value
-
-        # Save back to file
-        file_path = await self.file_ops.get_path_for_store(yaml_store)
-        success = await self.file_ops.save_yaml_file(file_path, data)
-
-        if success:
-            # Update cache
-            self.cache.cache[str(yaml_store)] = data
-            # Clear settings cache for this store
-            keys_to_clear = [k for k in self.cache.settings_cache if k[1] == yaml_store]
-            for k in keys_to_clear:
-                del self.cache.settings_cache[k]
-
-        return success
-
-    async def load_multiple_stores(self, stores: list[YAML]) -> dict[YAML, dict[str, Any]]:
-        """
-        Load multiple YAML stores concurrently.
-
-        Args:
-            stores: List of stores to load
-
-        Returns:
-            Dictionary mapping stores to their data
-        """
-        tasks = [self.load_yaml(store) for store in stores]
-        results = await asyncio.gather(*tasks)
-        return dict(zip(stores, results))
+                # Update cache
+                cache_key = (variable_type, yaml_store, key)
+                self.cache.settings_cache[cache_key] = value
+                return value
 
     async def batch_get_settings(
-        self,
-        requests: list[tuple[type, YAML, str]],
+        self, requests: list[tuple[type, YAML, str]]
     ) -> list[Any]:
         """
-        Get multiple settings in a single batch operation.
+        Get multiple settings in a batch operation.
 
         Args:
-            requests: List of (return_type, yaml_store, key_path) tuples
+            requests: List of tuples (variable_type, yaml_store, key)
 
         Returns:
-            List of setting values
+            List of values corresponding to each request
         """
-        tasks = [self.get_setting(rt, store, key) for rt, store, key in requests]
+        tasks = [
+            self.async_yaml_settings(var_type, store, key)
+            for var_type, store, key in requests
+        ]
         return await asyncio.gather(*tasks)
 
-    async def prefetch_all_settings(self) -> None:
+    async def batch_set_settings(
+        self, updates: list[tuple[type, YAML, str, Any]]
+    ) -> list[Any]:
         """
-        Prefetch all static YAML stores for faster access.
-
-        Useful during application startup.
-        """
-        stores = list(self.file_ops.STATIC_YAML_STORES)
-        await self.load_multiple_stores(stores)
-        logger.info(f"Prefetched {len(stores)} YAML stores")
-
-    async def clear_cache(self, store: YAML | None = None) -> None:
-        """
-        Clear cache for a specific store or all stores.
+        Set multiple settings in a batch operation.
 
         Args:
-            store: Optional store to clear, None for all
+            updates: List of tuples (variable_type, yaml_store, key, value)
+
+        Returns:
+            List of values that were set
         """
-        if store:
-            self.cache.clear_cache(str(store))
+        tasks = [
+            self.async_yaml_settings(var_type, store, key, value)
+            for var_type, store, key, value in updates
+        ]
+        return await asyncio.gather(*tasks)
+
+    async def clear_cache(self, yaml_store: YAML | None = None) -> None:
+        """Clear the cache for a specific store or all stores."""
+        if yaml_store:
+            # Clear entries for specific store from settings cache
+            keys_to_remove = [k for k in self.cache.settings_cache if k[1] == yaml_store]
+            for key in keys_to_remove:
+                del self.cache.settings_cache[key]
         else:
-            self.cache.clear_cache()
+            # Clear all caches
+            self.cache.cache.clear()
+            self.cache.settings_cache.clear()
+            self.cache.path_cache.clear()
 
-    def get_metrics(self) -> dict[str, int]:
-        """Get cache performance metrics."""
-        return self.cache.get_metrics()
+    async def reload_settings(self, yaml_store: YAML) -> dict[str, Any]:
+        """
+        Reload settings from disk, bypassing cache.
 
-    # Context manager support
-    async def __aenter__(self) -> "AsyncYamlSettingsCore":
-        """Enter async context - prefetch settings."""
-        await self.prefetch_all_settings()
-        return self
+        Args:
+            yaml_store: Which YAML store to reload
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Exit async context - cleanup if needed."""
-        # Could add cleanup logic here if needed
-        pass
+        Returns:
+            The reloaded settings dictionary
+        """
+        file_path = self.file_ops.get_path_for_store(yaml_store)
+        file_lock = self._get_file_lock(file_path)
+
+        async with file_lock:
+            # Clear cache for this file
+            if str(file_path) in self.cache.cache:
+                del self.cache.cache[str(file_path)]
+
+            # Load fresh from disk
+            return await self.file_ops.load_yaml_file(file_path)
+
+    async def ensure_file_exists(self, yaml_store: YAML) -> None:
+        """Ensure that a YAML file exists, creating it if necessary."""
+        file_path = self.file_ops.get_path_for_store(yaml_store)
+        file_lock = self._get_file_lock(file_path)
+
+        async with file_lock:
+            await self.file_ops.ensure_file_exists(file_path)
+
+    async def backup_file(self, yaml_store: YAML, backup_suffix: str = ".bak") -> Path:
+        """
+        Create a backup of a YAML file.
+
+        Args:
+            yaml_store: Which YAML store to backup
+            backup_suffix: Suffix to append to the backup file
+
+        Returns:
+            Path to the backup file
+        """
+        file_path = self.file_ops.get_path_for_store(yaml_store)
+        file_lock = self._get_file_lock(file_path)
+
+        async with file_lock:
+            return await self.file_ops.backup_file(file_path, backup_suffix)
+
+    async def validate_file(self, yaml_store: YAML) -> bool:
+        """
+        Validate that a YAML file can be loaded without errors.
+
+        Args:
+            yaml_store: Which YAML store to validate
+
+        Returns:
+            True if the file is valid, False otherwise
+        """
+        file_path = self.file_ops.get_path_for_store(yaml_store)
+        file_lock = self._get_file_lock(file_path)
+
+        async with file_lock:
+            try:
+                await self.file_ops.load_yaml_file(file_path)
+                return True
+            except Exception:
+                return False
+
+    async def get_all_settings(self, yaml_store: YAML) -> dict[str, Any]:
+        """
+        Get all settings from a YAML store.
+
+        Args:
+            yaml_store: Which YAML store to read
+
+        Returns:
+            Dictionary of all settings
+        """
+        file_path = self.file_ops.get_path_for_store(yaml_store)
+        file_lock = self._get_file_lock(file_path)
+
+        async with file_lock:
+            return await self.file_ops.load_yaml_file(file_path)
+
+    async def update_settings(
+        self, yaml_store: YAML, updates: dict[str, Any]
+    ) -> None:
+        """
+        Update multiple settings in a single file operation.
+
+        Args:
+            yaml_store: Which YAML store to update
+            updates: Dictionary of key-value pairs to update
+        """
+        file_path = self.file_ops.get_path_for_store(yaml_store)
+        file_lock = self._get_file_lock(file_path)
+
+        async with file_lock:
+            data = await self.file_ops.load_yaml_file(file_path)
+
+            # Apply updates
+            for key, value in updates.items():
+                keys = key.split(".")
+                current = data
+
+                # Navigate to parent
+                for k in keys[:-1]:
+                    if k not in current:
+                        current[k] = {}
+                    current = current[k]
+
+                # Set value
+                current[keys[-1]] = value
+
+                # Update cache
+                cache_key = (type(value), yaml_store, key)
+                self.cache.settings_cache[cache_key] = value
+
+            # Save once
+            await self.file_ops.save_yaml_file(file_path, data)
 
 
 # Global instance management
@@ -316,7 +320,8 @@ async def yaml_settings_async(
         Setting value or default
     """
     core = await get_async_yaml_core()
-    return await core.get_setting(return_type, yaml_store, key_path, default)
+    result = await core.async_yaml_settings(return_type, yaml_store, key_path)
+    return result if result is not None else default
 
 
 async def classic_settings_async(

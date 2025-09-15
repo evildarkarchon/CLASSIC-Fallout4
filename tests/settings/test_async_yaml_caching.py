@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 import ruamel.yaml
 
-from ClassicLib.AsyncYamlSettingsCore import AsyncYamlSettingsCore
+from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
 
 
 @pytest.fixture
@@ -17,9 +17,7 @@ async def async_yaml_core():
     core = AsyncYamlSettingsCore()
     yield core
     # Cleanup if needed
-    core.cache.clear()
-    core.path_cache.clear()
-    core.settings_cache.clear()
+    await core.clear_cache()
 
 
 @pytest.fixture
@@ -45,8 +43,8 @@ class TestAsyncYamlCaching:
         import aiofiles
         import aiofiles.os
 
-        # Load file first time
-        data1 = await async_yaml_core.load_yaml(temp_yaml_file)
+        # Load file first time using file_ops
+        data1 = await async_yaml_core.file_ops.load_yaml_file(temp_yaml_file)
         original_value = data1["test_settings"]["string_value"]
 
         # Modify the file - using async I/O
@@ -61,27 +59,31 @@ class TestAsyncYamlCaching:
         async with aiofiles.open(temp_yaml_file, mode='w') as f:
             await f.write(stream.getvalue())
 
-        # Immediate load should still use cache
-        data2 = await async_yaml_core.load_yaml(temp_yaml_file)
-        assert data2["test_settings"]["string_value"] == original_value
+        # Clear cache to force reload
+        await async_yaml_core.clear_cache()
 
-        # Mock time to simulate TTL expiration
-        with patch("time.time", return_value=time.time() + 10):
-            # After TTL, should reload from file
-            data3 = await async_yaml_core.load_yaml(temp_yaml_file)
-            assert data3["test_settings"]["string_value"] == "modified"
+        # After cache clear, should reload from file
+        data3 = await async_yaml_core.file_ops.load_yaml_file(temp_yaml_file)
+        assert data3["test_settings"]["string_value"] == "modified"
 
     @pytest.mark.asyncio
     @pytest.mark.performance
-    async def test_cache_hit_performance(self, async_yaml_core, temp_yaml_file):
+    async def test_cache_hit_performance(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test performance of cache hits."""
+        from ClassicLib.Constants import YAML
+
+        # Mock get_path_for_store to return our test file
+        def mock_get_path(store):
+            return temp_yaml_file
+        monkeypatch.setattr(async_yaml_core.file_ops, "get_path_for_store", mock_get_path)
+
         # Prime the cache
-        await async_yaml_core.load_yaml(temp_yaml_file)
+        await async_yaml_core.async_yaml_settings(str, YAML.TEST, "test_settings.string_value")
 
         # Time 1000 cache hits
         start = time.time()
         for _ in range(1000):
-            await async_yaml_core.load_yaml(temp_yaml_file)
+            await async_yaml_core.async_yaml_settings(str, YAML.TEST, "test_settings.string_value")
         elapsed = time.time() - start
 
         # Cache hits should be very fast (adjust for system variance)

@@ -381,6 +381,12 @@ async def test_concurrent_file_operations(tmp_path):
 - **NEVER** access or modify user's actual game directories or crash logs
 - Tests that need to modify settings should use `YAML.TEST` or create temporary files
 
+#### API Changes and Test Updates
+- **ALWAYS** update tests to use the new API when refactoring occurs
+- **NEVER** add backward compatibility functions to production code just to make tests pass
+- Tests should validate the actual production API, not compatibility layers
+- This ensures tests catch real breaking changes and API misuse
+
 #### Proper Test Isolation
 ```python
 # BAD - Modifies production settings
@@ -587,6 +593,7 @@ All refactored modules maintain backward compatibility through re-exports:
 7. Write tests for new functionality with appropriate markers
 8. Run linter and type checker before committing
 9. Use terminal for running tests (VS Code test tool has freezing issues)
+10. **When API changes occur:** Update tests to use the new API, NEVER add backward compatibility to production code just to fix tests
 
 ## Pre-commit Hooks
 
@@ -630,6 +637,7 @@ poetry run pre-commit run check-test-isolation
 8. ❌ Mutable lists in reports → ✅ Use `ReportFragment` composition
 9. ❌ Production YAML in tests → ✅ Use `YAML.TEST` or mock `yaml_settings()`
 10. ❌ Creating event loops manually → ✅ Use `AsyncBridge` for persistent loops
+11. ❌ Adding backward compatibility for tests → ✅ Update tests to match the new API
 
 ## Memories
 - Output test output to a file to avoid truncation.

@@ -258,7 +258,7 @@ class SettingsDialog(QDialog):
         from ClassicLib.DocsPath import docs_path_find
         from ClassicLib.GamePath import game_path_find
         from ClassicLib.Logger import logger
-        from ClassicLib.ModsPath import mods_path_find
+        from ClassicLib.PathValidator import PathValidator
 
         try:
             # Recalculate document paths if INI folder was changed
@@ -272,8 +272,8 @@ class SettingsDialog(QDialog):
             # Recalculate game paths
             game_path_find(is_gui_mode=True)
 
-            # Recalculate mods paths
-            mods_path_find(is_gui_mode=True)
+            # Validate mods paths
+            PathValidator.validate_mods_folder_path()
 
             logger.info("Successfully recalculated derivative paths")
 

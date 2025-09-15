@@ -25,7 +25,7 @@ class TestAsyncPipelineResourceManagement:
     @pytest.mark.usefixtures("init_message_handler_fixture")
     async def test_pipeline_cleanup_on_exception(self):
         """Test that pipeline properly cleans up resources on exception."""
-        from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline
+        from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
 
         mock_yamldata = MagicMock()
         pipeline = AsyncCrashLogPipeline(
@@ -37,8 +37,8 @@ class TestAsyncPipelineResourceManagement:
 
         # Mock to make processing fail
         with (
-            patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
-            patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.load_crash_logs_async") as mock_load,
         ):
             # Make reformat raise an exception
             mock_reformat.side_effect = Exception("Simulated error")
@@ -110,7 +110,7 @@ class TestAsyncPipelineResourceManagement:
 
     async def test_pipeline_state_management(self):
         """Test that pipeline maintains proper state throughout lifecycle."""
-        from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline
+        from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
 
         mock_yamldata = MagicMock()
         pipeline = AsyncCrashLogPipeline(

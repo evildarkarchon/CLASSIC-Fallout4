@@ -222,6 +222,7 @@ def crashgen_version_gen(input_string: str) -> Version:
     Generate a Version object from CrashGen version string.
 
     Parses version information from various CrashGen output formats.
+    Supports both 3-part (e.g., "1.28.6") and 4-part (e.g., "1.10.163.0") versions.
 
     Args:
         input_string: String containing version information
@@ -229,20 +230,31 @@ def crashgen_version_gen(input_string: str) -> Version:
     Returns:
         Version object or NULL_VERSION if parsing fails
     """
-    # Pattern for standard version format (e.g., "1.10.163.0")
-    version_pattern = re.compile(r"(\d+)\.(\d+)\.(\d+)\.(\d+)")
+    # Pattern for 4-part version format (e.g., "1.10.163.0")
+    version_pattern_4 = re.compile(r"(\d+)\.(\d+)\.(\d+)\.(\d+)")
 
-    # Search for version pattern in the input
-    match = version_pattern.search(input_string)
+    # Pattern for 3-part version format (e.g., "v1.28.6" or "1.28.6")
+    version_pattern_3 = re.compile(r"v?(\d+)\.(\d+)\.(\d+)(?!\.\d)")
 
+    # Try 4-part pattern first
+    match = version_pattern_4.search(input_string)
     if match:
         try:
-            # Extract version components
             major, minor, patch, build = match.groups()
             version_string = f"{major}.{minor}.{patch}.{build}"
             return Version(version_string)
         except Exception as e:  # noqa: BLE001
-            logger.debug(f"Failed to parse version from CrashGen string: {e}")
+            logger.debug(f"Failed to parse 4-part version from CrashGen string: {e}")
+
+    # Try 3-part pattern
+    match = version_pattern_3.search(input_string)
+    if match:
+        try:
+            major, minor, patch = match.groups()
+            version_string = f"{major}.{minor}.{patch}"
+            return Version(version_string)
+        except Exception as e:  # noqa: BLE001
+            logger.debug(f"Failed to parse 3-part version from CrashGen string: {e}")
 
     # If no match found or parsing failed
     logger.debug(f"Could not extract version from: {input_string[:100]}")  # Log first 100 chars

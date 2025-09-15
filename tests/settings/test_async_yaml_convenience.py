@@ -7,9 +7,10 @@ from unittest.mock import patch
 import pytest
 import ruamel.yaml
 
-from ClassicLib.AsyncYamlSettingsCore import (
+from ClassicLib.AsyncYamlSettings.core import (
     AsyncYamlSettingsCore,
     classic_settings_async,
+    get_async_yaml_core,
     yaml_settings_async,
 )
 from ClassicLib.Constants import YAML
@@ -38,12 +39,12 @@ class TestAsyncConvenienceFunctions:
         # Mock the global core instance
         core = AsyncYamlSettingsCore()
 
-        async def mock_get_path(store):
+        def mock_get_path(store):
             return temp_yaml_file
 
-        monkeypatch.setattr(core, "get_path_for_store", mock_get_path)
+        monkeypatch.setattr(core.file_ops, "get_path_for_store", mock_get_path)
 
-        with patch("ClassicLib.AsyncYamlSettingsCore.get_async_yaml_core", return_value=core):
+        with patch("ClassicLib.AsyncYamlSettings.core.get_async_yaml_core", return_value=core):
             value = await yaml_settings_async(str, YAML.TEST, "test_settings.string_value")
             assert value == "test"
 
@@ -55,12 +56,12 @@ class TestAsyncConvenienceFunctions:
         # Mock the global core instance
         core = AsyncYamlSettingsCore()
 
-        async def mock_get_path(store):
+        def mock_get_path(store):
             if store == YAML.Settings:
                 return temp_yaml_file
             return Path("nonexistent.yaml")
 
-        monkeypatch.setattr(core, "get_path_for_store", mock_get_path)
+        monkeypatch.setattr(core.file_ops, "get_path_for_store", mock_get_path)
 
         # Modify temp file to have CLASSIC_Settings structure
         data = {"CLASSIC_Settings": {"Test Setting": "test value"}}
@@ -71,6 +72,6 @@ class TestAsyncConvenienceFunctions:
         async with aiofiles.open(temp_yaml_file, mode='w') as f:
             await f.write(stream.getvalue())
 
-        with patch("ClassicLib.AsyncYamlSettingsCore.get_async_yaml_core", return_value=core):
+        with patch("ClassicLib.AsyncYamlSettings.core.get_async_yaml_core", return_value=core):
             value = await classic_settings_async(str, "Test Setting")
             assert value == "test value"

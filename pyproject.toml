@@ -83,6 +83,7 @@ disable_error_code = [
 
 [tool.pyright]
 typeCheckingMode = "standard"
+extraPaths = ["."]
 reportArgumentType = false         # Redundant with Mypy arg-type
 reportAssignmentType = false       # Redundant with Mypy assignment
 reportMissingParameterType = false # Redundant with Ruff ANN001

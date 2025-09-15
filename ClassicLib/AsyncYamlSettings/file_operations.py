@@ -13,6 +13,8 @@ from ClassicLib.FileIOCore import FileIOCore
 from ClassicLib.Logger import logger
 
 
+# TODO: Make Static YAML Stores read-only in the future
+# Static stores should not be written to at runtime.
 class YamlFileOperations:
     """Handles YAML file I/O operations."""
 
@@ -28,38 +30,27 @@ class YamlFileOperations:
         """Initialize with FileIOCore instance."""
         self.io_core = io_core or FileIOCore()
 
-    async def get_path_for_store(self, yaml_store: YAML, name: str | None = None) -> Path:
-        """
-        Get the file path for a YAML store.
-
-        Args:
-            yaml_store: The YAML store enum
-            name: Optional name for dynamic stores
-
-        Returns:
-            Path to the YAML file
-        """
-        base_path = Path(GlobalRegistry.get_local_dir()) / "CLASSIC Data"
-
-        # Map store types to file paths
+    def get_path_for_store(self, yaml_store: YAML) -> Path:
+        """Get the file path for a specific YAML store."""
+        base_path: Path = Path(GlobalRegistry.get_local_dir(as_string=False)) / "CLASSIC Data"
         match yaml_store:
+            case YAML.Settings:
+                return base_path / "CLASSIC Settings.yaml"
             case YAML.Main:
                 return base_path / "databases" / "CLASSIC Main.yaml"
-            case YAML.Settings:
-                return base_path.parent / "CLASSIC Settings.yaml"  # Settings is at root level
             case YAML.Ignore:
                 return base_path.parent / "CLASSIC Ignore.yaml"  # Ignore is at root level
             case YAML.Game:
-                game_name = GlobalRegistry.get_selected_game()
+                game_name = GlobalRegistry.get_game()
                 return base_path / "databases" / f"CLASSIC {game_name}.yaml"
             case YAML.Game_Local:
-                game_name = GlobalRegistry.get_selected_game()
+                game_name = GlobalRegistry.get_game()
                 return base_path / f"CLASSIC {game_name} Local.yaml"
             case YAML.TEST:
                 # Test store for unit tests
-                return Path("tests") / "test_settings.yaml"
+                return Path(GlobalRegistry.get_local_dir()) / "tests" / "test_settings.yaml"
             case _:
-                raise ValueError(f"Unknown YAML store type: {yaml_store}")
+                raise ValueError(f"Unknown YAML store: {yaml_store}")
 
     async def parse_yaml_content(self, content: str) -> dict[str, Any]:
         """
@@ -192,7 +183,7 @@ class YamlFileOperations:
 
             if success:
                 # Reload the regenerated file
-                file_path = await self.get_path_for_store(yaml_store)
+                file_path = self.get_path_for_store(yaml_store)
                 return await self.load_yaml_file(file_path)
 
         except ImportError:

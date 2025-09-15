@@ -35,10 +35,12 @@ class TestAsyncDatabasePool:
             db_path.write_text("dummy content")  # Not a real SQLite file, but exists
 
             # Mock aiosqlite.connect to avoid actual database operations
+            mock_conn: AsyncMock = AsyncMock()
+            # Ensure the mock has a proper async close method
+            mock_conn.close = AsyncMock(return_value=None)
+
+            # Create a coroutine that returns the mock
             async def mock_connect(_path: Path) -> AsyncMock:
-                mock_conn: AsyncMock = AsyncMock()
-                # Ensure the mock has a proper async close method
-                mock_conn.close = AsyncMock(return_value=None)
                 return mock_conn
 
             with (

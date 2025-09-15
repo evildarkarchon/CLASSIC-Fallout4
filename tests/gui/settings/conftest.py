@@ -10,8 +10,11 @@ Due to concurrent file access on the test YAML file, these tests should be run:
 import pytest
 from PySide6.QtWidgets import QWidget
 
+from unittest.mock import patch, MagicMock
+
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.SettingsDialog import SettingsDialog
+from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 
@@ -24,9 +27,20 @@ def app(qapp):
 @pytest.fixture
 def settings_dialog(app):
     """Create a SettingsDialog instance for testing."""
+    # Initialize message handler for GUI mode
+    handler = init_message_handler(parent=None, is_gui_mode=True)
+
+    # Mock the message signal to prevent actual dialog creation
+    # This prevents blocking dialogs during tests
+    handler.message_signal = MagicMock()
+
     dialog = SettingsDialog(yaml_store=YAML.TEST)
     yield dialog
     dialog.close()
+
+    # Clean up message handler
+    import ClassicLib.MessageHandler
+    ClassicLib.MessageHandler._message_handler = None
 
 
 @pytest.fixture

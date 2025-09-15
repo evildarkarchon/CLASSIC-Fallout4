@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
+from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
 
 if TYPE_CHECKING:
     from collections import Counter
@@ -119,10 +119,10 @@ class TestAsyncPipeline:
         )
 
         with (
-            patch("ClassicLib.ScanLog.AsyncPipeline.crashlogs_reformat_async") as mock_reformat,
-            patch("ClassicLib.ScanLog.AsyncPipeline.load_crash_logs_async") as mock_load,
-            patch("ClassicLib.ScanLog.AsyncPipeline.write_reports_batch") as mock_write,
-            patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orchestrator_class,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.load_crash_logs_async") as mock_load,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch") as mock_write,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Setup mocks - use AsyncMock for async functions
             mock_reformat.return_value = AsyncMock()

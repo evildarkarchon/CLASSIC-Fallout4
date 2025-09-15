@@ -13,9 +13,16 @@ import requests
 
 from ClassicLib.Util import pastebin_fetch
 
+# Message handler fixture is imported via conftest automatically
+
 
 class TestPastebinOperations:
     """Tests for Pastebin fetching operations."""
+
+    @pytest.fixture(autouse=True)
+    def setup_message_handler(self, init_message_handler_fixture):
+        """Ensure MessageHandler is initialized for all tests."""
+        pass
 
     @patch("requests.get")
     def test_pastebin_fetch_success(self, mock_get: MagicMock, tmp_path: Path, monkeypatch) -> None:
@@ -61,7 +68,7 @@ class TestPastebinOperations:
 
         # Should have called with raw URL
         expected_url = "https://pastebin.com/raw/abc123"
-        mock_get.assert_called_once_with(expected_url)
+        mock_get.assert_called_once_with(expected_url, timeout=10)
 
     @patch("requests.get")
     def test_pastebin_fetch_http_error(self, mock_get: MagicMock) -> None:
@@ -92,7 +99,7 @@ class TestPastebinOperations:
         pastebin_fetch(url)
 
         # Should use URL as-is
-        mock_get.assert_called_once_with(url)
+        mock_get.assert_called_once_with(url, timeout=10)
 
     @patch("requests.get")
     def test_pastebin_fetch_timeout(self, mock_get: MagicMock) -> None:
