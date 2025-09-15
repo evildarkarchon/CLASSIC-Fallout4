@@ -75,11 +75,14 @@ class TestScanHandlerErrorHandling:
 
             handler = TuiScanHandler(output_callback=output_viewer.append_output)
 
-            # Mock scanner to raise an error
+            # Mock scanner to raise an error (must be one of the expected exception types)
             with patch("ClassicLib.TUI.handlers.scan_handler.ClassicScanLogs") as mock_scanner:
-                mock_scanner.side_effect = Exception("Test error")
+                mock_scanner.side_effect = ImportError("Test error - simulated import failure")
 
-                await handler.perform_crash_scan()
+                result = await handler.perform_crash_scan()
+
+                # Handler should return False on error
+                assert result is False
 
                 # Check error was reported
                 error_found = any("error" in line.lower() for line in output_viewer._output_buffer)

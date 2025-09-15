@@ -162,15 +162,18 @@ local_paths:
         with pytest.raises(TypeError, match="Default local YAML content must be a string"):
             FileGenerator.generate_local_yaml()
 
-    @patch.object(FileGenerator, "generate_ignore_file")
-    @patch.object(FileGenerator, "generate_local_yaml")
-    def test_generate_all_files(self, mock_generate_local: MagicMock, mock_generate_ignore: MagicMock) -> None:
-        """Test that generate_all_files calls both generation methods."""
+    @patch.object(FileGenerator, "generate_all_files_async")
+    def test_generate_all_files(self, mock_generate_async: MagicMock) -> None:
+        """Test that generate_all_files calls the async implementation."""
+        from unittest.mock import AsyncMock
+
+        # Make the async method return a completed coroutine
+        mock_generate_async.return_value = AsyncMock()()
+
         FileGenerator.generate_all_files()
 
-        # Verify both methods were called
-        mock_generate_ignore.assert_called_once()
-        mock_generate_local.assert_called_once()
+        # Verify the async method was called
+        mock_generate_async.assert_called_once()
 
     @patch("ClassicLib.YamlSettingsCache.yaml_settings")
     @patch("ClassicLib.FileGeneration.logger")

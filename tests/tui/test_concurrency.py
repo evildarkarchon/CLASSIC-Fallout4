@@ -24,9 +24,13 @@ class TestConcurrencySafety:
             nonlocal call_count
             call_count += 1
             await asyncio.sleep(0.05)  # Simulate scan time
-            return ("Success", ["Result"])  # Return tuple like scan_logs
+            # Return 4-item tuple as expected by scan_handler line 119
+            return ("test.log", "Scan report", False, {"stats": "test"})
 
         # Mock the scanner to simulate a long-running scan
+        # Patch where ClassicScanLogs is used (in scan_handler's namespace)
+        from pathlib import Path
+
         with patch("ClassicLib.TUI.handlers.scan_handler.ClassicScanLogs") as mock_cls:
             mock_scanner = MagicMock()
             # Set up attributes that the handler expects
@@ -35,7 +39,7 @@ class TestConcurrencySafety:
             mock_scanner.fcx_mode = False
             mock_scanner.show_formid_values = False
             mock_scanner.formid_db_exists = False
-            mock_scanner.crashlog_list = ["test.log"]
+            mock_scanner.crashlog_list = [Path("test.log")]  # Use Path object
             mock_scanner.process_crashlog_async = mock_scan_delay
             mock_cls.return_value = mock_scanner
 
@@ -48,7 +52,10 @@ class TestConcurrencySafety:
                 mock_orchestrator.__aexit__ = AsyncMock(return_value=None)
                 mock_orchestrator_cls.return_value = mock_orchestrator
 
-                with patch("ClassicLib.TUI.handlers.scan_handler.init_message_handler"):
+                # Mock write_report_to_file_async (imported locally in the function)
+                with patch("CLASSIC_ScanLogs.write_report_to_file_async", AsyncMock()), patch(
+                    "ClassicLib.TUI.handlers.scan_handler.init_message_handler"
+                ):
                     # Try to start multiple scans concurrently
                     results = await asyncio.gather(
                         handler.perform_crash_scan(), handler.perform_crash_scan(), handler.perform_crash_scan(), return_exceptions=True
@@ -68,7 +75,8 @@ class TestConcurrencySafety:
         """Test proper cleanup of monitoring tasks."""
         handler = TuiPapyrusHandler()
 
-        with patch("ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging") as mock_logging:
+        # Patch where papyrus_logging is imported in the actual handler
+        with patch("ClassicLib.TUI.handlers.papyrus.tui_papyrus_handler.papyrus_logging") as mock_logging:
             mock_logging.return_value = ("Test output", 0)
 
             # Start monitoring
@@ -92,7 +100,8 @@ class TestConcurrencySafety:
         """Test rapid start/stop cycles don't cause issues."""
         handler = TuiPapyrusHandler()
 
-        with patch("ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging") as mock_logging:
+        # Patch where papyrus_logging is imported in the actual handler
+        with patch("ClassicLib.TUI.handlers.papyrus.tui_papyrus_handler.papyrus_logging") as mock_logging:
             mock_logging.return_value = ("Test output", 0)
 
             # Rapid start/stop cycles
@@ -198,7 +207,8 @@ class TestConcurrencySafety:
         """Test handling of concurrent monitoring start requests."""
         handler = TuiPapyrusHandler()
 
-        with patch("ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging") as mock_logging:
+        # Patch where papyrus_logging is imported in the actual handler
+        with patch("ClassicLib.TUI.handlers.papyrus.tui_papyrus_handler.papyrus_logging") as mock_logging:
             mock_logging.return_value = ("Test output", 0)
 
             # Try to start monitoring multiple times concurrently

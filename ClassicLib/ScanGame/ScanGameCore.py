@@ -7,13 +7,17 @@ All I/O-intensive operations are implemented asynchronously for optimal performa
 """
 
 import asyncio
+import mmap
 import os
 import shutil
+import struct
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
 from pathlib import Path
 from typing import cast
+
+from .core.utils import MAX_CONCURRENT_SUBPROCESSES
 
 try:
     import aiofiles
@@ -615,4 +619,4 @@ class ScanGameCore:
                     width, height = result
                     if width % 2 != 0 or height % 2 != 0:
                         async with issue_locks["tex_dims"]:
-                            issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})")
+                            issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})\n")

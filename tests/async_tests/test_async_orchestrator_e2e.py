@@ -4,6 +4,7 @@ E2E tests for async_orchestrator - e2e logic testing.
 This file contains e2e tests that test complete workflows from entry to output.
 """
 
+from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch

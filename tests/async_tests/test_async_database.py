@@ -112,6 +112,9 @@ class TestAsyncDatabasePool:
 
             mock_conn: AsyncMock = AsyncMock()
             mock_conn.close = AsyncMock(return_value=None)
+            # Add async context manager support
+            mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
+            mock_conn.__aexit__ = AsyncMock(return_value=None)
 
             # Mock execute to return query results
             mock_cursor: AsyncMock = AsyncMock()
@@ -119,11 +122,21 @@ class TestAsyncDatabasePool:
             mock_cursor.__aenter__ = AsyncMock(return_value=mock_cursor)
             mock_cursor.__aexit__ = AsyncMock(return_value=None)
 
-            mock_conn.execute = AsyncMock(return_value=mock_cursor)
+            # Track execute calls for cache testing
+            execute_call_count = 0
+            def mock_execute(*args, **kwargs):
+                nonlocal execute_call_count
+                execute_call_count += 1
+                return mock_cursor
+            mock_conn.execute = mock_execute
+
+            # Create an async function that returns the mock connection
+            async def mock_connect(*args, **kwargs):
+                return mock_conn
 
             with (
                 patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
-                patch("aiosqlite.connect", return_value=mock_conn),
+                patch("aiosqlite.connect", side_effect=mock_connect),
             ):
                 pool: AsyncDatabasePool = AsyncDatabasePool()
                 await pool.initialize()
@@ -131,17 +144,18 @@ class TestAsyncDatabasePool:
                 # First query - should hit database
                 result1 = await pool.get_entry(db_path, "12345678")
                 assert result1 == "Test Result"
-                mock_conn.execute.assert_called_once()
+                assert execute_call_count == 1
 
                 # Second query with same FormID - should use cache
                 result2 = await pool.get_entry(db_path, "12345678")
                 assert result2 == "Test Result"
                 # Execute should still have been called only once (cached)
-                assert mock_conn.execute.call_count == 1
+                assert execute_call_count == 1
 
                 # Query with different FormID - should hit database again
                 result3 = await pool.get_entry(db_path, "87654321")
-                assert mock_conn.execute.call_count == 2
+                assert result3 == "Test Result"
+                assert execute_call_count == 2
 
                 await pool.close()
 
@@ -153,7 +167,9 @@ class TestAsyncDatabasePool:
 
             # Mock connection that raises an error
             async def mock_connect_error(_path: Path):
-                raise Exception("Database connection failed")
+                # Raise aiosqlite.Error which the code specifically catches
+                import aiosqlite
+                raise aiosqlite.Error("Database connection failed")
 
             with (
                 patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
@@ -179,11 +195,14 @@ class TestAsyncDatabasePool:
 
             mock_conn: AsyncMock = AsyncMock()
             mock_conn.close = AsyncMock(return_value=None)
+            # Add async context manager support for the connection
+            mock_conn.__aenter__ = AsyncMock(return_value=mock_conn)
+            mock_conn.__aexit__ = AsyncMock(return_value=None)
 
             # Counter for unique results
             call_count = 0
 
-            async def mock_execute(_query):
+            def mock_execute(_query, _params=None):
                 nonlocal call_count
                 call_count += 1
                 mock_cursor: AsyncMock = AsyncMock()
@@ -194,9 +213,13 @@ class TestAsyncDatabasePool:
 
             mock_conn.execute = mock_execute
 
+            # Create an async function that returns the mock connection
+            async def mock_connect(*args, **kwargs):
+                return mock_conn
+
             with (
                 patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
-                patch("aiosqlite.connect", return_value=mock_conn),
+                patch("aiosqlite.connect", side_effect=mock_connect),
             ):
                 pool: AsyncDatabasePool = AsyncDatabasePool()
                 await pool.initialize()

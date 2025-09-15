@@ -42,7 +42,7 @@ class TestPapyrusScreenMonitoring:
             screen = PapyrusScreen()
             app.push_screen(screen)
             await pilot.pause()
-            with patch('ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging') as mock_logging:
+            with patch('ClassicLib.TUI.handlers.papyrus.tui_papyrus_handler.papyrus_logging') as mock_logging:
                 mock_logging.return_value = ('Test output', 0)
                 assert screen.is_monitoring is True
                 await screen.stop_monitoring()

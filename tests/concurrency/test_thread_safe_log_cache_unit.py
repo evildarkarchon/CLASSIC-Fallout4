@@ -5,6 +5,7 @@ This file contains unit tests that test individual functions with mocked depende
 """
 
 import concurrent.futures
+from concurrent.futures import Future
 import random
 import threading
 import time

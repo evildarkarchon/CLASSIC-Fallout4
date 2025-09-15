@@ -64,7 +64,7 @@ class TestInvalidInputHandling:
                     pass  # Field may not exist
 
                 # Try to save
-                with patch("ClassicLib.TUI.screens.settings_screen.classic_settings"):
+                with patch("ClassicLib.TUI.screens.settings_screen.yaml_settings"):
                     settings_screen._save_settings()
 
                 # Dismiss settings

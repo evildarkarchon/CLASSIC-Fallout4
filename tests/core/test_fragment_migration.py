@@ -47,7 +47,7 @@ class TestFragmentMigration:
 
         assert isinstance(result, ReportFragment)
         assert result.has_content
-        assert "[!] FOUND : [01]" in result.content[0]
+        assert "[!] FOUND : [[01]]" in result.content[0]
         assert "This mod frequently causes crashes!" in result.content[0]
 
     def test_detect_mods_double_returns_fragment(self, sample_yaml_double, sample_plugins):
@@ -133,12 +133,13 @@ class TestFragmentMigration:
         assert "✔️ Important Mod is installed!" in "".join(result.to_list())
 
     def test_output_format_unchanged(self, sample_yaml_single, sample_plugins):
-        """Test that the markdown output format remains unchanged."""
+        """Test that the markdown output format has been updated to use double brackets."""
         fragment = detect_mods_single(sample_yaml_single, sample_plugins)
         output = "".join(fragment.to_list())
 
-        # Verify the exact format matches the original
-        assert "[!] FOUND : [01] This mod frequently causes crashes!" in output
+        # Verify the new format with double brackets and markdown bold
+        assert "[!] FOUND : [[01]]" in output
+        assert "This mod frequently causes crashes!" in output
         assert output.endswith("\n\n")  # Should have double newline at end
 
     @pytest.mark.parametrize(

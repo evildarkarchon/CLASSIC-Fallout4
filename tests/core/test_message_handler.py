@@ -35,7 +35,7 @@ class TestMessageHandler:
 
     @pytest.mark.unit
     @pytest.mark.gui
-    @patch("ClassicLib.MessageHandler.HAS_QT", True)
+    @patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True)
     def test_init_gui_mode(self) -> None:
         """Test initialization in GUI mode."""
         mock_parent: MagicMock = MagicMock()
@@ -55,7 +55,7 @@ class TestMessageHandler:
         assert cli_handler._should_display(MessageTarget.LOG_ONLY) is False
 
         # GUI mode handler (mocked)
-        with patch("ClassicLib.MessageHandler.HAS_QT", True):
+        with patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True):
             gui_handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=True)
             assert gui_handler._should_display(MessageTarget.ALL) is True
             assert gui_handler._should_display(MessageTarget.CLI_ONLY) is False
@@ -226,10 +226,10 @@ class TestGlobalFunctions:
 class TestThreadSafety:
     """Test thread safety of message handler."""
 
-    @patch("ClassicLib.MessageHandler.HAS_QT", True)
+    @patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True)
     def test_gui_signal_emission(self) -> None:
         """Test that GUI mode uses signals for thread safety."""
-        with patch("ClassicLib.MessageHandler.QMessageBox") as mock_msgbox:  # noqa: F841
+        with patch("ClassicLib.MessageHandler.qt_compat.QMessageBox") as mock_msgbox:  # noqa: F841
             handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=True)
 
             # Mock the signal

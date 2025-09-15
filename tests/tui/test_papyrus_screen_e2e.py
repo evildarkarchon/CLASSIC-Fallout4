@@ -28,7 +28,7 @@ class TestPapyrusScreenKeyboardShortcuts:
             await pilot.pause()
             screen = app.screen
             assert isinstance(screen, PapyrusScreen)
-            with patch('ClassicLib.TUI.handlers.papyrus_handler.papyrus_logging') as mock_logging:
+            with patch('ClassicLib.TUI.handlers.papyrus.tui_papyrus_handler.papyrus_logging') as mock_logging:
                 mock_logging.return_value = ('Test output', 0)
                 await pilot.press('s')
                 await pilot.pause()

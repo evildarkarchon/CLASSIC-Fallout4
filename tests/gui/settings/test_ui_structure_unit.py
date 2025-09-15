@@ -25,10 +25,11 @@ class TestDialogStructure:
     def test_tab_widget_exists(self, settings_dialog):
         """Test that tab widget is created with correct tabs."""
         assert settings_dialog.tab_widget is not None
-        assert settings_dialog.tab_widget.count() == 3
+        assert settings_dialog.tab_widget.count() == 4
         assert settings_dialog.tab_widget.tabText(0) == 'General'
         assert settings_dialog.tab_widget.tabText(1) == 'Scanning'
-        assert settings_dialog.tab_widget.tabText(2) == 'Updates'
+        assert settings_dialog.tab_widget.tabText(2) == 'Paths'
+        assert settings_dialog.tab_widget.tabText(3) == 'Updates'
 
     def test_general_tab_widgets(self, settings_dialog):
         """Test that General tab has correct widgets."""
@@ -69,8 +70,8 @@ class TestDialogStructure:
 
     def test_settings_widgets_dictionary(self, settings_dialog):
         """Test that settings_widgets dictionary is properly populated."""
-        assert len(settings_dialog.settings_widgets) == 8
-        expected_keys = ['audio_notifications', 'vr_mode', 'fcx_mode', 'simplify_logs', 'show_fid_values', 'move_invalid_logs', 'update_check', 'update_source']
+        assert len(settings_dialog.settings_widgets) == 9
+        expected_keys = ['audio_notifications', 'vr_mode', 'fcx_mode', 'simplify_logs', 'show_fid_values', 'move_invalid_logs', 'update_check', 'update_source', 'ini_folder_path']
         for key in expected_keys:
             assert key in settings_dialog.settings_widgets
 

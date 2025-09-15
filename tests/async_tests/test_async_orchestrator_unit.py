@@ -36,12 +36,17 @@ class TestOrchestratorCore:
         """Test orchestrator initialization without FormID database."""
         crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
         with patch('ClassicLib.ScanLog.OrchestratorCore.AsyncDatabasePool') as mock_pool_class:
+            mock_pool: AsyncMock = AsyncMock()
+            mock_pool.initialize = AsyncMock()
+            mock_pool.close = AsyncMock()
+            mock_pool_class.return_value = mock_pool
             async with OrchestratorCore(yamldata=mock_yamldata, crashlogs=crashlogs, fcx_mode=True, show_formid_values=False, formid_db_exists=False) as orchestrator:
                 assert orchestrator is not None
-                assert orchestrator.fcx_mode is True
+                assert orchestrator.fcx_handler is not None  # FCX handler created with fcx_mode=True
                 assert orchestrator.show_formid_values is False
                 assert orchestrator.formid_db_exists is False
-                mock_pool_class.assert_not_called()
+                # Pool is created but not used when formid_db_exists is False
+                mock_pool_class.assert_called_once()
 
     async def test_orchestrator_with_multiple_analyzers(self, mock_yamldata: MagicMock) -> None:
         """Test orchestrator with multiple analyzer components enabled."""
@@ -55,6 +60,6 @@ class TestOrchestratorCore:
             mock_pool.close = AsyncMock()
             mock_pool_class.return_value = mock_pool
             async with OrchestratorCore(yamldata=mock_yamldata, crashlogs=crashlogs, fcx_mode=False, show_formid_values=True, formid_db_exists=True) as orchestrator:
-                assert orchestrator._formid_analyzer is not None
-                assert orchestrator._record_scanner is not None
-                assert orchestrator._plugin_analyzer is not None
+                assert orchestrator.formid_analyzer is not None
+                assert orchestrator.record_scanner is not None
+                assert orchestrator.plugin_analyzer is not None

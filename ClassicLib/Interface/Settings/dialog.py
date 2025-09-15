@@ -187,6 +187,11 @@ class SettingsDialog(QDialog):
                 index = self.update_source_combo.findText(update_source)
                 if index != -1:
                     self.update_source_combo.setCurrentIndex(index)
+                else:
+                    # Invalid value - use default
+                    default_index = self.update_source_combo.findText("Both")
+                    if default_index != -1:
+                        self.update_source_combo.setCurrentIndex(default_index)
 
             # Update INI folder path
             ini_path = next(value_iter) or ""

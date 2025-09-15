@@ -143,7 +143,7 @@ def mock_crash_data() -> list[str]:
 
 
 @pytest.fixture
-def mock_scanner(setup_global_registry: Generator, mock_yaml_settings: Generator, init_message_handler_fixture: Any) -> ClassicScanLogs:  # noqa: ARG001
+def mock_scanner(setup_global_registry: Generator, mock_yaml_settings: Generator, init_message_handler_fixture: Any) -> Generator[ClassicScanLogs, None, None]:  # noqa: ARG001
     """Create a mock ClassicScanLogs instance with basic functionality."""
     with (
         patch("ClassicLib.ScanLog.crashlogs_get_files", return_value=[Path("crash-test.log")]),
@@ -156,7 +156,7 @@ def mock_scanner(setup_global_registry: Generator, mock_yaml_settings: Generator
         # We'll set up any needed attributes directly on the scanner
         scanner.formid_db_exists = True
         scanner.show_formid_values = True
-        return scanner
+        yield scanner  # Use yield to keep patches active during test
 
 
 class TestClassicScanLogs:

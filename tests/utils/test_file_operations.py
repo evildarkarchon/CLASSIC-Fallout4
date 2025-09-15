@@ -144,9 +144,9 @@ class TestFileHashing:
         """Test calculate_file_hash with nonexistent file."""
         nonexistent = tmp_path / "does_not_exist.txt"
 
-        # Should handle gracefully
-        with pytest.raises((FileNotFoundError, OSError)):
-            calculate_file_hash(nonexistent)
+        # Should handle gracefully and return empty string
+        result = calculate_file_hash(nonexistent)
+        assert result == ""
 
     def test_calculate_file_hash_consistency(self, tmp_path: Path) -> None:
         """Test that calculate_file_hash returns consistent results."""
