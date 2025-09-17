@@ -8,7 +8,7 @@ performance through concurrent execution.
 import asyncio
 from itertools import starmap
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import aiofiles
 import aiosqlite
@@ -16,6 +16,57 @@ import aiosqlite
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS
 from ClassicLib.Logger import logger
+
+
+class DatabasePoolManager:
+    """
+    Singleton manager for AsyncDatabasePool instances.
+
+    This manager ensures that database connections are reused across multiple
+    orchestrator instances, avoiding the overhead of recreating connections
+    for each batch of logs. This provides significant performance improvements
+    when processing multiple crash logs in sequence.
+    """
+
+    _instance: ClassVar["DatabasePoolManager | None"] = None
+    _pool: "AsyncDatabasePool | None" = None
+    _lock: ClassVar[asyncio.Lock | None] = None
+
+    def __new__(cls) -> "DatabasePoolManager":
+        """Ensure only one instance of DatabasePoolManager exists."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._lock = None
+        return cls._instance
+
+    async def get_pool(self) -> "AsyncDatabasePool":
+        """
+        Get or create the singleton database pool.
+
+        Returns:
+            The singleton AsyncDatabasePool instance, initialized if necessary.
+        """
+        # Initialize the lock if needed (must be done in async context)
+        if self._lock is None:
+            self.__class__._lock = asyncio.Lock()
+
+        async with self._lock:
+            if self._pool is None:
+                self._pool = AsyncDatabasePool()
+                await self._pool.initialize()
+                logger.debug("Created singleton database pool")
+            return self._pool
+
+    async def close_pool(self) -> None:
+        """Close the singleton database pool if it exists."""
+        if self._lock is None:
+            return
+
+        async with self._lock:
+            if self._pool is not None:
+                await self._pool.close()
+                self._pool = None
+                logger.debug("Closed singleton database pool")
 
 
 class AsyncDatabasePool:

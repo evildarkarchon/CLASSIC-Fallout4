@@ -3,6 +3,9 @@ Test suite for string utility functions in ClassicLib/Util.py.
 
 This module contains tests for string manipulation, version parsing,
 and text similarity functions.
+
+IMPORTANT: The crashgen_version_gen function uses @lru_cache for performance.
+The clean_version_caches autouse fixture ensures cache is cleared between tests.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841
 from pathlib import Path
@@ -163,7 +166,10 @@ class TestVersionParsing:
     """Tests for version parsing utility functions."""
 
     def test_crashgen_version_gen_valid_version(self) -> None:
-        """Test crashgen_version_gen with valid version string."""
+        """Test crashgen_version_gen with valid version string.
+
+        The clean_version_caches fixture ensures cache is clear for this test.
+        """
         input_string = "Buffout 4 v1.28.6"
         result = crashgen_version_gen(input_string)
         assert result == Version("1.28.6")

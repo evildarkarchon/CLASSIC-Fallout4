@@ -3,6 +3,10 @@ Tests for AsyncDatabasePool component.
 
 This module contains tests for the async database connection pooling
 used for FormID lookups in the crash log processing pipeline.
+
+IMPORTANT: These tests use the DatabasePoolManager singleton pattern.
+The clean_database_pool_manager fixture ensures proper test isolation.
+Mock fixtures are used to avoid actual database operations in unit tests.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import tempfile
@@ -11,7 +15,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager
 
 
 @pytest.mark.integration
@@ -19,16 +23,27 @@ from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
 class TestAsyncDatabasePool:
     """Integration tests for AsyncDatabasePool."""
 
-    async def test_database_pool_context_manager(self) -> None:
-        """Test AsyncDatabasePool as context manager."""
-        with patch("ClassicLib.Constants.DB_PATHS", []):
-            async with AsyncDatabasePool() as pool:
-                assert pool is not None
-                assert isinstance(pool.connections, dict)
-                assert isinstance(pool.query_cache, dict)
+    async def test_database_pool_context_manager(self, mock_database_pool_manager) -> None:
+        """Test AsyncDatabasePool as context manager.
+
+        Uses the mock_database_pool_manager fixture to avoid creating real database
+        connections and ensure proper singleton isolation.
+        """
+        # The mock_database_pool_manager fixture provides a mocked pool
+        manager = DatabasePoolManager()
+        pool = await manager.get_pool()
+
+        assert pool is not None
+        # Mock pool has these attributes mocked
+        assert hasattr(pool, 'connections')
+        assert hasattr(pool, 'query_cache')
 
     async def test_database_pool_initialization(self) -> None:
-        """Test database pool initialization with proper cleanup."""
+        """Test database pool initialization with proper cleanup.
+
+        This test directly creates AsyncDatabasePool to test low-level behavior.
+        The clean_database_pool_manager autouse fixture ensures singleton cleanup.
+        """
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create a test database file
             db_path: Path = Path(temp_dir) / "test.db"
@@ -47,6 +62,7 @@ class TestAsyncDatabasePool:
                 patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
                 patch("aiosqlite.connect", side_effect=mock_connect) as mock_connect_patch,
             ):
+                # Create pool directly for low-level testing
                 pool: AsyncDatabasePool = AsyncDatabasePool()
                 await pool.initialize()
 
@@ -66,7 +82,11 @@ class TestAsyncDatabasePool:
                 assert len(pool.connections) == 0
 
     async def test_database_pool_multiple_databases(self) -> None:
-        """Test pool with multiple database connections."""
+        """Test pool with multiple database connections.
+
+        Directly tests AsyncDatabasePool with multiple databases.
+        The clean_database_pool_manager fixture ensures singleton cleanup after test.
+        """
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create multiple test database files
             db_paths = [

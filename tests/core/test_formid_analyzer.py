@@ -3,13 +3,16 @@ Tests for the FormIDAnalyzerCore component.
 
 This module contains tests for FormID extraction, matching, and database lookups
 in the async crash log processing pipeline.
+
+IMPORTANT: These tests use mocked AsyncDatabasePool to avoid actual database connections.
+The clean_database_pool_manager fixture ensures proper singleton isolation.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 
@@ -30,7 +33,11 @@ class TestFormIDAnalyzerCore:
     """Integration tests for FormIDAnalyzerCore."""
 
     async def test_formid_analyzer_core_initialization(self, mock_yamldata: MagicMock) -> None:
-        """Test FormIDAnalyzerCore initialization."""
+        """Test FormIDAnalyzerCore initialization.
+
+        Uses a mocked AsyncDatabasePool to avoid actual database connections.
+        The clean_database_pool_manager fixture ensures singleton cleanup.
+        """
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
 
         analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(
@@ -46,7 +53,10 @@ class TestFormIDAnalyzerCore:
         assert analyzer.db_pool == mock_pool
 
     async def test_formid_extraction(self, mock_yamldata: MagicMock) -> None:
-        """Test FormID extraction from call stack."""
+        """Test FormID extraction from call stack.
+
+        Creates analyzer with mocked pool to test FormID extraction logic.
+        """
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(mock_yamldata, True, True, mock_pool)
 
@@ -93,11 +103,21 @@ class TestFormIDAnalyzerCore:
         assert "Form ID: 00000000" in formids
 
     async def test_async_formid_matching(self, mock_yamldata: MagicMock) -> None:
-        """Test async FormID matching with database lookups."""
+        """Test async FormID matching with database lookups.
+
+        Uses AsyncMock correctly to simulate async database operations.
+        The FormIDAnalyzerCore uses batch queries for performance.
+        """
         from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
-        mock_pool.get_entry.return_value = "Test Entry"
+        # FormIDAnalyzerCore uses batch queries for performance
+        # Mock the batch query method to return a dictionary of results
+        mock_batch_results = {
+            ("12345678", "TestPlugin.esp"): "Test Entry 1",
+            ("87654321", "AnotherPlugin.esp"): "Test Entry 2"
+        }
+        mock_pool.get_entries_batch = AsyncMock(return_value=mock_batch_results)
 
         analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(mock_yamldata, True, True, mock_pool)
 
@@ -107,8 +127,8 @@ class TestFormIDAnalyzerCore:
         # Use the new formid_match method that returns a ReportFragment
         result: ReportFragment = await analyzer.formid_match(formids_matches, crashlog_plugins)
 
-        # Verify database queries were made
-        assert mock_pool.get_entry.call_count == 2
+        # Verify batch database query was made
+        assert mock_pool.get_entries_batch.call_count == 1
 
         # Verify report fragment was populated
         assert result.has_content
@@ -140,11 +160,19 @@ class TestFormIDAnalyzerCore:
         assert "TestPlugin.esp" in result_str
 
     async def test_formid_with_ignored_plugins(self, mock_yamldata: MagicMock) -> None:
-        """Test FormID matching with ignored plugins."""
+        """Test FormID matching with ignored plugins.
+
+        Uses AsyncMock correctly to simulate async database operations.
+        """
         from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
-        mock_pool.get_entry.return_value = "Test Entry"
+        # FormIDAnalyzerCore uses batch queries for performance
+        mock_batch_results = {
+            ("12345678", "TestPlugin.esp"): "Test Entry 1",
+            ("87654321", "IgnoredPlugin.esp"): "Test Entry 2"
+        }
+        mock_pool.get_entries_batch = AsyncMock(return_value=mock_batch_results)
 
         # Set ignored plugins
         mock_yamldata.game_ignore_plugins = ["IgnoredPlugin.esp"]

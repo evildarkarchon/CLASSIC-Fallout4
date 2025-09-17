@@ -16,13 +16,15 @@ Test pollution manifests in several ways:
 
 ## Pollution Sources in CLASSIC
 
-The CLASSIC codebase has **7 major test pollution sources** that require careful handling:
+The CLASSIC codebase has **9 major test pollution sources** that require careful handling:
 
 | Component | Type | Severity | Parallel Impact |
 |-----------|------|----------|-----------------|
 | [AsyncBridge](#asyncbridge) | Singleton | Critical | High |
 | [GlobalRegistry](#globalregistry) | Singleton Registry | Critical | High |
 | [YamlSettingsCache](#yamlsettingscache) | Cached Singleton | Critical | High |
+| [DatabasePoolManager](#databasepoolmanager) | Singleton Pool | Critical | High |
+| [Version String Cache](#version-string-cache) | LRU Cache | High | Medium |
 | [MessageHandler](#messagehandler) | Singleton | High | Medium |
 | [Database Pools](#database-pools) | Connection Pools | High | High |
 | [ThreadSafeLogCache](#threadsafelogcache) | Thread-Safe Cache | Medium | High |
@@ -94,7 +96,53 @@ def test_settings(mock_yaml):
 
 **📖 [Complete Guide: Testing YamlSettingsCache](testing_yaml_cache.md)**
 
+### DatabasePoolManager
+
+**Problem**: Singleton database connection pool manager that persists across tests
+- **Symptoms**: Shared database connections, pool not initialized errors, connection reuse issues
+- **Impact**: All async FormID lookups and database operations
+- **Solution**: Use fixture to reset singleton state
+
+```python
+# ❌ Wrong - Singleton persists
+async def test_database_pool():
+    manager = DatabasePoolManager()
+    pool = await manager.get_pool()  # May get pool from previous test
+
+# ✅ Correct - Use isolation fixture
+@pytest.fixture(autouse=True)
+def clean_database_pool_manager():
+    DatabasePoolManager._instance = None
+    DatabasePoolManager._lock = None
+    yield
+    DatabasePoolManager._instance = None
+```
+
+**Fixture Available**: `clean_database_pool_manager` (autouse in tests/fixtures/database_pool_fixtures.py)
+
 ## 🟡 High Impact Pollution Sources
+
+### Version String Cache
+
+**Problem**: LRU cache for version parsing that accumulates entries across tests
+- **Symptoms**: Cached results from previous tests, incorrect cache hit rates, memory growth
+- **Impact**: All version parsing operations
+- **Solution**: Clear LRU cache between tests
+
+```python
+# ❌ Wrong - Cache persists
+def test_version_parsing():
+    version = crashgen_version_gen("1.28.6")  # May use cached result
+
+# ✅ Correct - Clear cache
+@pytest.fixture(autouse=True)
+def clean_version_caches():
+    crashgen_version_gen.cache_clear()
+    yield
+    crashgen_version_gen.cache_clear()
+```
+
+**Fixture Available**: `clean_version_caches` (autouse in tests/fixtures/version_cache_fixtures.py)
 
 ### MessageHandler
 
