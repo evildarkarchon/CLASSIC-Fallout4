@@ -125,6 +125,22 @@ def create_checkbox(label_text: str, setting: str, style: str = CHECKBOX_STYLE) 
     return checkbox
 
 
+def supports_add_layout(layout: QLayout) -> bool:
+    """
+    Check if a layout supports the addLayout method.
+
+    This helper method encapsulates the type checking logic to improve testability.
+    In tests, this method can be mocked to return True without needing to mock Qt classes.
+
+    Args:
+        layout: The layout to check
+
+    Returns:
+        True if the layout supports addLayout, False otherwise
+    """
+    return isinstance(layout, (QVBoxLayout, QHBoxLayout))
+
+
 def setup_folder_section(
     layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None], tooltip: str = ""
 ) -> QLineEdit | None:

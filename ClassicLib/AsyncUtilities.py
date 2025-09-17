@@ -250,34 +250,100 @@ class AsyncTimer:
         return self.end_time - self.start_time
 
 
+class Throttler:
+    """A testable throttling context manager for rate limiting.
+
+    This class provides a cleaner, more testable alternative to the
+    function-based throttle approach. It tracks background tasks and
+    provides cleanup methods for testing.
+
+    Example:
+        throttler = Throttler(10, 1.0)  # 10 ops per second
+        async with throttler:
+            await process_item(item)
+    """
+
+    def __init__(self, rate_limit: int, time_window: float = 1.0):
+        """Initialize the throttler.
+
+        Args:
+            rate_limit: Maximum operations per time window
+            time_window: Time window in seconds
+        """
+        self.rate_limit = rate_limit
+        self.time_window = time_window
+        self._semaphore = asyncio.Semaphore(rate_limit)
+        self._tasks: set[asyncio.Task] = set()
+
+    async def __aenter__(self):
+        """Acquire throttle permission."""
+        await self._semaphore.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Schedule release after time window."""
+        task = asyncio.create_task(self._release_after_delay())
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
+
+    async def _release_after_delay(self):
+        """Release the semaphore after the time window."""
+        await asyncio.sleep(self.time_window)
+        self._semaphore.release()
+
+    async def cleanup(self):
+        """Cancel all background tasks. Useful for testing."""
+        for task in list(self._tasks):
+            if not task.done():
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+        self._tasks.clear()
+
+
+# Global throttler registry for backward compatibility
+_throttler_registry: dict[tuple[int, float], Throttler] = {}
+
+
 async def throttle(rate_limit: int, time_window: float = 1.0):
-    """Throttle async operations to a specific rate
+    """Throttle async operations to a specific rate.
+
+    This is a backward-compatible wrapper that uses the new Throttler class
+    internally. For new code, consider using Throttler directly as it's more
+    testable and provides cleanup methods.
 
     Args:
         rate_limit: Maximum operations per time window
         time_window: Time window in seconds
 
     Example:
-        throttler = throttle(10, 1.0)  # 10 ops per second
         for item in items:
-            await throttler
+            await throttle(10, 1.0)  # 10 ops per second
             await process_item(item)
     """
-    if not hasattr(throttle, "_limiters"):
-        throttle._limiters = {}
-
     key = (rate_limit, time_window)
-    if key not in throttle._limiters:
-        throttle._limiters[key] = asyncio.Semaphore(rate_limit)
+    if key not in _throttler_registry:
+        _throttler_registry[key] = Throttler(rate_limit, time_window)
 
-    limiter = throttle._limiters[key]
+    throttler = _throttler_registry[key]
+    await throttler._semaphore.acquire()
 
-    async def release_after_delay():
-        await asyncio.sleep(time_window)
-        limiter.release()
+    # Schedule release
+    task = asyncio.create_task(throttler._release_after_delay())
+    throttler._tasks.add(task)
+    task.add_done_callback(throttler._tasks.discard)
 
-    await limiter.acquire()
-    asyncio.create_task(release_after_delay())
+
+def reset_throttlers():
+    """Reset all throttler state. Useful for testing.
+
+    This function clears the global throttler registry, effectively
+    resetting all rate limits. Should be called in test setup/teardown.
+    """
+    global _throttler_registry
+    _throttler_registry.clear()
 
 
 async def run_in_executor(func: Callable, *args, executor=None, **kwargs) -> Any:

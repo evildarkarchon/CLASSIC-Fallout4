@@ -90,12 +90,23 @@ class TestWidgetFocus:
 
     def test_focus_traversal(self, settings_dialog, app):
         """Test that widgets can receive focus."""
+        from PySide6.QtWidgets import QApplication
+        from PySide6.QtTest import QTest
+
         settings_dialog.show()
+        QApplication.processEvents()  # Ensure the dialog is fully shown
+        QTest.qWait(10)  # Small delay for focus to settle
+
         settings_dialog.audio_checkbox.setFocus()
+        QApplication.processEvents()
         assert settings_dialog.audio_checkbox.hasFocus()
+
         settings_dialog.update_source_combo.setFocus()
+        QApplication.processEvents()
         assert settings_dialog.update_source_combo.hasFocus()
+
         settings_dialog.check_now_button.setFocus()
+        QApplication.processEvents()
         assert settings_dialog.check_now_button.hasFocus()
 
     def test_tab_order(self, settings_dialog, app):

@@ -31,8 +31,7 @@ PROBABLE CALL STACK:
 class TestCrashLogProcessingIntegration:
     """Integration tests for crash log processing."""
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
-    def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str) -> None:
+    def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str, message_handler, async_bridge) -> None:
         """Test the entire crash log scanning process."""
         crash_dir: Path = tmp_path / 'Crash Logs'
         crash_dir.mkdir(exist_ok=True)
@@ -60,24 +59,33 @@ class TestCrashLogProcessingIntegration:
             mock_get_files.return_value = crash_log_files
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
             GlobalRegistry.register(GlobalRegistry.Keys.GAME, 'Fallout4')
-            try:
-                scanner: ClassicScanLogs = ClassicScanLogs()
-                # The scanner's crashlog_list should use our mocked files
-                scanner.crashlog_list = crash_log_files
-                results: list[Any] = []
-                for crash_file in scanner.crashlog_list:
-                    import asyncio
-                    from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+            # Ensure YAML cache is registered
+            if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
+                from unittest.mock import MagicMock
+                mock_cache = MagicMock()
+                GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, mock_cache)
+            # Add ThreadSafeLogCache mock
+            with patch('ClassicLib.ScanLog.ThreadSafeLogCache'):
+                try:
+                    scanner: ClassicScanLogs = ClassicScanLogs()
+                    # The scanner's crashlog_list should use our mocked files
+                    scanner.crashlog_list = crash_log_files
+                    results: list[Any] = []
+                    for crash_file in scanner.crashlog_list:
+                        from ClassicLib.AsyncBridge import AsyncBridge
+                        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
-                    async def process_with_orchestrator():
-                        async with OrchestratorCore(scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
-                            return await scanner.process_crashlog_async(crash_file, orchestrator)
-                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = asyncio.run(process_with_orchestrator())
-                    results.append(autoscan_report)
-                assert scanner.crashlog_list is not None
-                assert len(scanner.crashlog_list) == 3
-                assert len(results) == 3
-                # Note: mock_get_files is not called because we manually set crashlog_list
-            finally:
-                if original_game is not None:
-                    GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
+                        async def process_with_orchestrator():
+                            async with OrchestratorCore(scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
+                                return await scanner.process_crashlog_async(crash_file, orchestrator)
+
+                        bridge = AsyncBridge.get_instance()
+                        crashlog_file, autoscan_report, trigger_scan_failed, local_stats = bridge.run_async(process_with_orchestrator())
+                        results.append(autoscan_report)
+                    assert scanner.crashlog_list is not None
+                    assert len(scanner.crashlog_list) == 3
+                    assert len(results) == 3
+                    # Note: mock_get_files is not called because we manually set crashlog_list
+                finally:
+                    if original_game is not None:
+                        GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)

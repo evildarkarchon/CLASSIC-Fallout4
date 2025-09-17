@@ -13,6 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from ClassicLib.AsyncBridge import AsyncBridge
+
 from ClassicLib.ScanLog.AsyncFileIO import load_crash_logs_async_optimized
 
 pytestmark = pytest.mark.performance
@@ -73,7 +75,7 @@ class TestAsyncPerformanceMemory:
     """Performance baseline tests for memory usage patterns."""
 
     @pytest.mark.slow
-    def test_memory_usage_baseline(self, tmp_path: Path) -> None:
+    def test_memory_usage_baseline(self, tmp_path: Path, message_handler, async_bridge) -> None:
         """Baseline: Memory usage patterns for async operations."""
         try:
             import psutil
@@ -103,7 +105,8 @@ class TestAsyncPerformanceMemory:
         async def async_load():
             return await load_crash_logs_async_optimized(test_files)
 
-        async_data = asyncio.run(async_load())
+        bridge = AsyncBridge.get_instance()
+        async_data = bridge.run_async(async_load())
 
         async_peak_memory = process.memory_info().rss / 1024 / 1024  # MB
         async_memory_increase = async_peak_memory - initial_memory

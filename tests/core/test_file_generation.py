@@ -162,18 +162,26 @@ local_paths:
         with pytest.raises(TypeError, match="Default local YAML content must be a string"):
             FileGenerator.generate_local_yaml()
 
+    @patch("ClassicLib.AsyncBridge.AsyncBridge.get_instance")
     @patch.object(FileGenerator, "generate_all_files_async")
-    def test_generate_all_files(self, mock_generate_async: MagicMock) -> None:
+    def test_generate_all_files(self, mock_generate_async: MagicMock, mock_bridge_get_instance: MagicMock) -> None:
         """Test that generate_all_files calls the async implementation."""
         from unittest.mock import AsyncMock
 
-        # Make the async method return a completed coroutine
-        mock_generate_async.return_value = AsyncMock()()
+        # Create async mock that doesn't need to be called
+        async_mock = AsyncMock()
+        mock_generate_async.return_value = async_mock
+
+        # Mock the bridge to handle the async call
+        mock_bridge = MagicMock()
+        mock_bridge_get_instance.return_value = mock_bridge
+        mock_bridge.run_async.return_value = None  # Simulate successful completion
 
         FileGenerator.generate_all_files()
 
         # Verify the async method was called
         mock_generate_async.assert_called_once()
+        mock_bridge.run_async.assert_called_once()
 
     @patch("ClassicLib.YamlSettingsCache.yaml_settings")
     @patch("ClassicLib.FileGeneration.logger")
@@ -181,6 +189,9 @@ local_paths:
     def test_generate_files_with_logging(self, mock_get_game: MagicMock, mock_logger: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test that file generation logs debug messages."""
         mock_yaml_settings.return_value = "test content"
+
+        # Ensure logger.debug is a regular MagicMock, not an AsyncMock
+        mock_logger.debug = MagicMock()
 
         # Create test directory
         data_dir = self.tmp_path / "CLASSIC Data"

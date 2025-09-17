@@ -15,7 +15,6 @@ pytestmark = pytest.mark.unit
 class TestXSELogParsing:
     """Tests for XSE log file parsing to find game path."""
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     @patch('ClassicLib.GamePath.msg_error')
     @patch('ClassicLib.GamePath.msg_info')
     def test_game_path_find_missing_xse_file(self, mock_msg_info: MagicMock, mock_msg_error: MagicMock, tmp_path: Path) -> None:
@@ -25,7 +24,6 @@ class TestXSELogParsing:
             game_path_find()
             mock_msg_error.assert_called()
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     @patch('ClassicLib.GamePath.msg_error')
     @patch('ClassicLib.GamePath.msg_info')
     def test_game_path_find_missing_xse_path_config(self, mock_msg_info: MagicMock, mock_msg_error: MagicMock) -> None:
@@ -38,7 +36,6 @@ class TestXSELogParsing:
 class TestYAMLValidation:
     """Tests for YAML settings validation and error handling."""
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     @patch('ClassicLib.GamePath.msg_error')
     @patch('ClassicLib.GamePath.msg_info')
     def test_game_path_find_invalid_yaml_types(self, mock_msg_info: MagicMock, mock_msg_error: MagicMock) -> None:

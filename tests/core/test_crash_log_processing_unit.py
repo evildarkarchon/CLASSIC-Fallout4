@@ -43,8 +43,7 @@ def create_crashlog_file(tmp_path: Path, sample_crashlog: str) -> Path:
 class TestCrashLogProcessingUnit:
     """Unit tests for crash log processing."""
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
-    def test_process_crashlog_unit(self, create_crashlog_file: Path) -> None:
+    def test_process_crashlog_unit(self, create_crashlog_file: Path, message_handler, async_bridge) -> None:
         """Test the full process_crashlog function with minimal mocking."""
         crash_file: Path = create_crashlog_file
         with patch('ClassicLib.YamlSettingsCache.yaml_settings') as mock_yaml, patch('ClassicLib.YamlSettingsCache.classic_settings') as mock_classic, patch('ClassicLib.ScanLog.Util.crashlogs_get_files') as mock_get_files, patch('ClassicLib.ScanLog.Util.crashlogs_reformat'):
@@ -65,20 +64,29 @@ class TestCrashLogProcessingUnit:
             mock_get_files.return_value = [crash_file]
             original_game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
             GlobalRegistry.register(GlobalRegistry.Keys.GAME, 'Fallout4')
-            try:
-                scanner: ClassicScanLogs = ClassicScanLogs()
-                import asyncio
-                from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+            # Ensure YAML cache is registered
+            if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
+                from unittest.mock import MagicMock
+                mock_cache = MagicMock()
+                GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, mock_cache)
+            # Add ThreadSafeLogCache mock
+            with patch('ClassicLib.ScanLog.ThreadSafeLogCache'):
+                try:
+                    scanner: ClassicScanLogs = ClassicScanLogs()
+                    from ClassicLib.AsyncBridge import AsyncBridge
+                    from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
-                async def process_with_orchestrator():
-                    async with OrchestratorCore(scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
-                        return await scanner.process_crashlog_async(crash_file, orchestrator)
-                result: tuple[Path, list[str], bool, Any] = asyncio.run(process_with_orchestrator())
-                assert result is not None
-                assert len(result) == 4
-                assert result[0] == crash_file
-                assert isinstance(result[1], list)
-                assert isinstance(result[2], bool)
-            finally:
-                if original_game is not None:
-                    GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
+                    async def process_with_orchestrator():
+                        async with OrchestratorCore(scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
+                            return await scanner.process_crashlog_async(crash_file, orchestrator)
+
+                    bridge = AsyncBridge.get_instance()
+                    result: tuple[Path, list[str], bool, Any] = bridge.run_async(process_with_orchestrator())
+                    assert result is not None
+                    assert len(result) == 4
+                    assert result[0] == crash_file
+                    assert isinstance(result[1], list)
+                    assert isinstance(result[2], bool)
+                finally:
+                    if original_game is not None:
+                        GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)

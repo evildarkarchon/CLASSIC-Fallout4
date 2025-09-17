@@ -20,6 +20,27 @@ class AsyncBridge:
 
     This class maintains a single event loop per thread, avoiding the expensive overhead
     of creating and destroying event loops for each sync-to-async call.
+
+    Testing Note:
+    -------------
+    When testing code that uses AsyncBridge, mock the bridge's run_async method,
+    NOT the underlying async functions. This avoids RuntimeWarning about unawaited coroutines.
+
+    Example for testing:
+    ```python
+    from unittest.mock import MagicMock, patch
+
+    with patch("module.AsyncBridge") as mock_bridge_class:
+        mock_bridge = MagicMock()
+        mock_bridge_class.get_instance.return_value = mock_bridge
+        mock_bridge.run_async.return_value = "expected_result"
+
+        # Now test your sync wrapper that uses AsyncBridge
+        result = your_sync_function()
+        assert result == "expected_result"
+    ```
+
+    For comprehensive testing guidance, see: docs/testing_async_bridge.md
     """
 
     # Class-level storage for thread-local instances

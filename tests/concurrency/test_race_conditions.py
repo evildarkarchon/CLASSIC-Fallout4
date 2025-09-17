@@ -23,7 +23,6 @@ class TestRaceConditionPrevention:
             app = QApplication([])
         return app
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     def test_scan_mutex_protection(self, app: QApplication) -> None:
         """Test that scan operations are protected by mutex."""
         # Test the ScanOperationsMixin directly instead of full MainWindow
@@ -69,7 +68,6 @@ class TestThreadReusePrevention:
             app = QApplication([])
         return app
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     def test_pastebin_thread_not_reused(self, app: QApplication) -> None:
         """Test that Pastebin fetch creates new thread each time."""
         # Test pastebin thread handling

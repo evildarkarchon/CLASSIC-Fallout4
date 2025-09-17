@@ -17,13 +17,13 @@ from ClassicLib.GamePath import game_path_find
 class TestMultiPlatformSupport:
     """Tests for cross-platform compatibility."""
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     @patch("platform.system", return_value="Linux")
     @patch("ClassicLib.GamePath._game_path_find_registry")
     def test_linux_skips_registry(
         self,
         mock_registry: MagicMock,
-        mock_platform: MagicMock  # noqa: ARG002
+        mock_platform: MagicMock,  # noqa: ARG002
+        message_handler
     ) -> None:
         """Test that Linux systems skip Windows registry detection."""
         # Mock other dependencies to focus on the platform check
@@ -36,7 +36,6 @@ class TestMultiPlatformSupport:
         # Registry function should not be called on Linux
         mock_registry.assert_not_called()
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     @patch("platform.system", return_value="Windows")
     @patch("ClassicLib.GamePath._game_path_find_registry", return_value=None)
     def test_windows_uses_registry(

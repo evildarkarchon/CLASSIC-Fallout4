@@ -13,6 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from ClassicLib.AsyncBridge import AsyncBridge
+
 from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
 
 pytestmark = pytest.mark.performance
@@ -73,7 +75,7 @@ class TestAsyncPerformanceErrorHandling:
     """Performance baseline tests for error handling patterns."""
 
     @pytest.mark.slow
-    def test_error_handling_performance_baseline(self, tmp_path: Path) -> None:
+    def test_error_handling_performance_baseline(self, tmp_path: Path, message_handler, async_bridge) -> None:
         """Baseline: Performance impact of error handling."""
         # Mix of valid and problematic files
         valid_files = create_large_crash_log_set(tmp_path / "valid", 10)
@@ -99,7 +101,8 @@ class TestAsyncPerformanceErrorHandling:
                 result = {}
             return time.perf_counter() - start, result
 
-        time_with_errors, result = asyncio.run(with_error_handling())
+        bridge = AsyncBridge.get_instance()
+        time_with_errors, result = bridge.run_async(with_error_handling())
 
         # Time without problematic files
         async def without_errors():
@@ -107,7 +110,7 @@ class TestAsyncPerformanceErrorHandling:
             result = await load_crash_logs_async(valid_files)
             return time.perf_counter() - start, result
 
-        time_without_errors, _ = asyncio.run(without_errors())
+        time_without_errors, _ = bridge.run_async(without_errors())
 
         print("\n=== ERROR HANDLING PERFORMANCE ===")
         print(f"With problematic files:    {time_with_errors:.4f}s")

@@ -12,18 +12,18 @@ from PySide6.QtCore import QFileSystemWatcher, Qt, QTimer
 
 from ClassicLib import GlobalRegistry, MessageHandler
 from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
+from ClassicLib.MessageHandler import init_message_handler
+from tests.fixtures.qt_fixtures import qt_application
+
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
 
 
 @pytest.fixture
-def init_message_handler():
-    """Initialize MessageHandler for tests."""
-    handler = MessageHandler.init_message_handler(parent=None, is_gui_mode=False)
-    yield
-    MessageHandler._message_handler = None
-
-
-@pytest.fixture
-def integrated_viewer(tmp_path, init_message_handler):
+def integrated_viewer(tmp_path, init_message_handler_fixture, qt_application):
     """Create ResultsViewerMixin with minimal mocking for integration tests."""
 
     class IntegratedViewer(ResultsViewerMixin):
@@ -66,10 +66,12 @@ def integrated_viewer(tmp_path, init_message_handler):
     return viewer
 
 
+@pytest.mark.integration
+@pytest.mark.gui
 class TestReportScanningIntegration:
     """Integration tests for report scanning with real file operations."""
 
-    def test_scan_multiple_directories(self, integrated_viewer, tmp_path):
+    def test_scan_multiple_directories(self, integrated_viewer, tmp_path, gui_message_handler):
         """Should scan multiple directories and combine results."""
         # Create reports in different directories
         crash_report1 = integrated_viewer.crash_logs_dir / "crash1-AUTOSCAN.md"
@@ -96,7 +98,7 @@ class TestReportScanningIntegration:
             assert report_names[1] == "crash2-AUTOSCAN.md"
             assert report_names[2] == "crash1-AUTOSCAN.md"
 
-    def test_scan_with_custom_path(self, integrated_viewer, tmp_path):
+    def test_scan_with_custom_path(self, integrated_viewer, tmp_path, gui_message_handler):
         """Should include custom scan path in results."""
         custom_dir = tmp_path / "CustomScans"
         custom_dir.mkdir()
@@ -119,7 +121,7 @@ class TestReportScanningIntegration:
             assert "crash-AUTOSCAN.md" in report_names
             assert "custom-AUTOSCAN.md" in report_names
 
-    def test_file_watcher_registration(self, integrated_viewer, tmp_path):
+    def test_file_watcher_registration(self, integrated_viewer, tmp_path, gui_message_handler):
         """Should register directories with file watcher."""
         # Create a report to trigger directory scanning
         report = integrated_viewer.crash_logs_dir / "test-AUTOSCAN.md"
@@ -136,10 +138,12 @@ class TestReportScanningIntegration:
             )
 
 
+@pytest.mark.integration
+@pytest.mark.gui
 class TestReportLifecycleIntegration:
     """Integration tests for complete report lifecycle."""
 
-    def test_complete_report_workflow(self, integrated_viewer, tmp_path):
+    def test_complete_report_workflow(self, integrated_viewer, tmp_path, gui_message_handler):
         """Test complete workflow: create, load, modify, delete."""
         # Step 1: Create report
         report_path = integrated_viewer.crash_logs_dir / "workflow-AUTOSCAN.md"
@@ -174,7 +178,7 @@ class TestReportLifecycleIntegration:
         loaded = integrated_viewer.load_report(report_path)
         assert loaded is False
 
-    def test_refresh_reports_list_integration(self, integrated_viewer, tmp_path):
+    def test_refresh_reports_list_integration(self, integrated_viewer, tmp_path, gui_message_handler):
         """Test refreshing reports list with real files."""
         # Start with no reports
         with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
@@ -198,7 +202,7 @@ class TestReportLifecycleIntegration:
             assert len(call_args) == 2
             integrated_viewer.reports_refreshed.emit.assert_called_with(2)
 
-    def test_concurrent_report_operations(self, integrated_viewer, tmp_path):
+    def test_concurrent_report_operations(self, integrated_viewer, tmp_path, gui_message_handler):
         """Test handling concurrent report operations."""
         report_paths = []
 
@@ -227,10 +231,12 @@ class TestReportLifecycleIntegration:
             assert len(reports) == 2
 
 
+@pytest.mark.integration
+@pytest.mark.gui
 class TestErrorHandlingIntegration:
     """Integration tests for error handling."""
 
-    def test_handles_permission_errors(self, integrated_viewer, tmp_path):
+    def test_handles_permission_errors(self, integrated_viewer, tmp_path, gui_message_handler):
         """Should handle permission errors gracefully."""
         report_path = integrated_viewer.crash_logs_dir / "protected-AUTOSCAN.md"
         report_path.write_text("Protected")
@@ -240,7 +246,7 @@ class TestErrorHandlingIntegration:
             loaded = integrated_viewer.load_report(report_path)
             assert loaded is False
 
-    def test_handles_corrupted_report_files(self, integrated_viewer):
+    def test_handles_corrupted_report_files(self, integrated_viewer, gui_message_handler):
         """Should handle corrupted or binary report files."""
         binary_report = integrated_viewer.crash_logs_dir / "binary-AUTOSCAN.md"
 
@@ -251,7 +257,7 @@ class TestErrorHandlingIntegration:
         loaded = integrated_viewer.load_report(binary_report)
         assert loaded is True
 
-    def test_handles_missing_directories(self, integrated_viewer, tmp_path):
+    def test_handles_missing_directories(self, integrated_viewer, tmp_path, gui_message_handler):
         """Should handle missing directories gracefully."""
         # Remove crash logs directory
         import shutil
@@ -264,10 +270,12 @@ class TestErrorHandlingIntegration:
             assert reports == []
 
 
+@pytest.mark.integration
+@pytest.mark.gui
 class TestAutoRefreshIntegration:
     """Integration tests for auto-refresh functionality."""
 
-    def test_auto_refresh_workflow(self, integrated_viewer, tmp_path):
+    def test_auto_refresh_workflow(self, integrated_viewer, tmp_path, gui_message_handler):
         """Test auto-refresh detecting new reports."""
         with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)), \
              patch("ClassicLib.Interface.ResultsViewerMixin.yaml_settings") as mock_settings:
@@ -298,10 +306,12 @@ class TestAutoRefreshIntegration:
                 assert integrated_viewer._refresh_pending is False
 
 
+@pytest.mark.integration
+@pytest.mark.gui
 class TestContextMenuIntegration:
     """Integration tests for context menu operations."""
 
-    def test_context_menu_actions(self, integrated_viewer, tmp_path):
+    def test_context_menu_actions(self, integrated_viewer, tmp_path, gui_message_handler):
         """Test context menu actions on reports."""
         report_path = integrated_viewer.crash_logs_dir / "context-AUTOSCAN.md"
         report_path.write_text("Context menu test")
@@ -331,3 +341,188 @@ class TestContextMenuIntegration:
             # Verify menu created with correct actions
             assert mock_menu.addAction.call_count >= 3
             mock_menu.exec.assert_called_once()
+
+
+@pytest.mark.integration
+@pytest.mark.gui
+class TestReportDeletionIntegration:
+    """Integration tests for report deletion with file system operations."""
+
+    def test_delete_report_and_associated_crash_log(self, integrated_viewer, tmp_path, gui_message_handler):
+        """Should delete both report and associated crash log file."""
+        # Create report and associated crash log
+        report_path = integrated_viewer.crash_logs_dir / "crash-AUTOSCAN.md"
+        crash_log_path = integrated_viewer.crash_logs_dir / "crash-AUTOSCAN.log"
+
+        report_path.write_text("Report content")
+        crash_log_path.write_text("Crash log content")
+
+        # Setup selection
+        mock_item = MagicMock()
+        integrated_viewer.results_list.selectedItems.return_value = [mock_item]
+        integrated_viewer.results_list.get_report_path.return_value = report_path
+        integrated_viewer.current_report_path = report_path
+
+        with patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox, \
+             patch.object(integrated_viewer, "refresh_reports_list"):
+
+            # Mock user confirmation
+            mock_msgbox.StandardButton = QMessageBox.StandardButton
+            mock_msgbox.question.return_value = QMessageBox.StandardButton.Yes
+
+            integrated_viewer._delete_selected_report()
+
+            # Both files should be deleted
+            assert not report_path.exists()
+            assert not crash_log_path.exists()
+
+    def test_delete_report_only_when_no_crash_log(self, integrated_viewer, tmp_path, gui_message_handler):
+        """Should handle deletion when only report exists without crash log."""
+        report_path = integrated_viewer.crash_logs_dir / "report-only-AUTOSCAN.md"
+        report_path.write_text("Report without crash log")
+
+        # Setup selection
+        mock_item = MagicMock()
+        integrated_viewer.results_list.selectedItems.return_value = [mock_item]
+        integrated_viewer.results_list.get_report_path.return_value = report_path
+
+        with patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox:
+            mock_msgbox.StandardButton = QMessageBox.StandardButton
+            mock_msgbox.question.return_value = QMessageBox.StandardButton.Yes
+
+            integrated_viewer._delete_selected_report()
+
+            # Only report should be deleted (no crash log to delete)
+            assert not report_path.exists()
+
+
+@pytest.mark.integration
+@pytest.mark.gui
+class TestBackupLocationIntegration:
+    """Integration tests for backup location scanning."""
+
+    def test_scan_includes_backup_location(self, integrated_viewer, tmp_path, gui_message_handler):
+        """Should scan backup location for unsolved logs."""
+        # Create report in backup location
+        backup_report = integrated_viewer.backup_dir / "unsolved-AUTOSCAN.md"
+        backup_report.write_text("Unsolved report")
+
+        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+            reports = integrated_viewer.scan_for_reports()
+
+            # Should find report in backup location
+            assert len(reports) == 1
+            assert reports[0].name == "unsolved-AUTOSCAN.md"
+            assert "Unsolved Logs" in str(reports[0].parent)
+
+
+@pytest.mark.integration
+@pytest.mark.gui
+class TestReportListRefreshIntegration:
+    """Integration tests for report list refresh operations."""
+
+    def test_refresh_clears_viewer_when_no_reports(self, integrated_viewer, gui_message_handler):
+        """Should clear viewer and show message when no reports found."""
+        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(integrated_viewer.test_dir)):
+            integrated_viewer.refresh_reports_list()
+
+            # Viewer should be cleared
+            integrated_viewer.markdown_viewer.clear.assert_called()
+            integrated_viewer.metadata_widget.clear.assert_called()
+
+            # Should show "No Reports Found" message
+            integrated_viewer.markdown_viewer.setMarkdown.assert_called()
+            call_args = integrated_viewer.markdown_viewer.setMarkdown.call_args[0][0]
+            assert "No Reports Found" in call_args
+
+    def test_refresh_maintains_viewer_content_after_refresh(self, integrated_viewer, tmp_path, gui_message_handler):
+        """Should maintain viewer content when refreshing with existing report loaded."""
+        # Create and load a report
+        report_path = integrated_viewer.crash_logs_dir / "loaded-AUTOSCAN.md"
+        report_content = "Loaded report content"
+        report_path.write_text(report_content)
+
+        # Load the report
+        integrated_viewer.load_report(report_path)
+        assert integrated_viewer.current_report_path == report_path
+
+        # Add a new report
+        new_report = integrated_viewer.crash_logs_dir / "new-AUTOSCAN.md"
+        new_report.write_text("New report")
+
+        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+            # Clear call counts
+            integrated_viewer.markdown_viewer.clear.reset_mock()
+            integrated_viewer.metadata_widget.clear.reset_mock()
+
+            integrated_viewer.refresh_reports_list()
+
+            # Viewer should NOT be cleared (report still loaded)
+            integrated_viewer.markdown_viewer.clear.assert_not_called()
+            integrated_viewer.metadata_widget.clear.assert_not_called()
+
+            # Current report should remain loaded
+            assert integrated_viewer.current_report_path == report_path
+
+
+@pytest.mark.integration
+@pytest.mark.gui
+class TestFileWatcherIntegration:
+    """Integration tests for file system watcher functionality."""
+
+    def test_watcher_monitors_multiple_directories(self, integrated_viewer, tmp_path, gui_message_handler):
+        """Should monitor multiple directories for changes."""
+        # Create custom scan directory
+        custom_dir = tmp_path / "CustomScans"
+        custom_dir.mkdir()
+
+        # Create reports in both locations
+        crash_report = integrated_viewer.crash_logs_dir / "crash-AUTOSCAN.md"
+        custom_report = custom_dir / "custom-AUTOSCAN.md"
+        crash_report.write_text("Crash")
+        custom_report.write_text("Custom")
+
+        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)), \
+             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=str(custom_dir)):
+
+            integrated_viewer.scan_for_reports()
+
+            # Both directories should be added to watcher
+            assert integrated_viewer.file_watcher.addPath.call_count == 2
+            calls = [call[0][0] for call in integrated_viewer.file_watcher.addPath.call_args_list]
+            assert str(integrated_viewer.crash_logs_dir) in calls
+            assert str(custom_dir) in calls
+
+
+@pytest.mark.integration
+@pytest.mark.gui
+class TestSettingsIntegration:
+    """Integration tests for settings-based functionality."""
+
+    def test_auto_refresh_timer_interval_from_settings(self, integrated_viewer, gui_message_handler):
+        """Should use refresh interval from settings."""
+        with patch("ClassicLib.Interface.ResultsViewerMixin.yaml_settings") as mock_settings:
+            # Return enabled=True, interval=3000ms
+            mock_settings.side_effect = [True, 3000]
+
+            integrated_viewer._setup_auto_refresh()
+
+            # Timer should start with configured interval
+            integrated_viewer.refresh_timer.start.assert_called_with(3000)
+
+    def test_custom_scan_path_from_settings(self, integrated_viewer, tmp_path, gui_message_handler):
+        """Should use custom scan path from settings."""
+        custom_dir = tmp_path / "MyCustomPath"
+        custom_dir.mkdir()
+
+        custom_report = custom_dir / "custom-AUTOSCAN.md"
+        custom_report.write_text("Custom scan")
+
+        with patch.object(GlobalRegistry, "get_local_dir", return_value=None), \
+             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=str(custom_dir)):
+
+            reports = integrated_viewer.scan_for_reports()
+
+            # Should find report from custom path
+            assert len(reports) == 1
+            assert reports[0] == custom_report

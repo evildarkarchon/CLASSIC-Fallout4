@@ -142,6 +142,79 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
     scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
 ```
 
+### Testing AsyncBridge and Async Code
+
+**IMPORTANT**: When testing code that uses AsyncBridge, proper mocking is critical to avoid `RuntimeWarning: coroutine was never awaited` errors.
+
+```python
+# ✅ CORRECT: Mock AsyncBridge.run_async for sync wrappers
+with patch("module.AsyncBridge") as mock_bridge_class:
+    mock_bridge = MagicMock()
+    mock_bridge_class.get_instance.return_value = mock_bridge
+    mock_bridge.run_async.return_value = "expected_result"
+
+    result = sync_wrapper_function()
+    assert result == "expected_result"
+
+# ❌ WRONG: Don't use AsyncMock for bridge-wrapped methods
+mock_instance.async_method = AsyncMock()  # This causes RuntimeWarning!
+```
+
+### Testing GlobalRegistry and Singletons
+
+**CRITICAL**: GlobalRegistry manages singleton instances that persist across tests, causing test pollution and race conditions in parallel execution.
+
+```python
+# ✅ CORRECT: Clear registry in fixtures
+@pytest.fixture(autouse=True)
+def clean_global_registry():
+    GlobalRegistry._registry.clear()
+    yield
+    GlobalRegistry._registry.clear()
+
+# ✅ CORRECT: Use unique keys for parallel tests
+test_key = f"key_{uuid.uuid4()}"
+GlobalRegistry.register(test_key, value)
+```
+
+### Testing YamlSettingsCache
+
+**WARNING**: NEVER modify production YAML files in tests. Always use mocks or the YAML.TEST enum.
+
+```python
+# ✅ CORRECT: Mock yaml_settings for tests
+@patch("ClassicLib.YamlSettingsCache.yaml_settings")
+def test_with_mock(mock_yaml):
+    mock_yaml.return_value = "test_value"
+    # Your test code
+
+# ❌ FORBIDDEN: Never modify production settings
+yaml_settings(str, YAML.Settings, "key", "value")  # NEVER in tests!
+
+# ✅ CORRECT: Use test enum or temp files
+yaml_settings(str, YAML.TEST, "key", "value")  # Safe for testing
+```
+
+### Testing Guides Index
+
+Complete testing documentation for CLASSIC components and test pollution prevention:
+
+#### Core Pollution Sources (Critical)
+1. **[Testing AsyncBridge](../docs/testing_async_bridge.md)** - Async/sync bridge mocking patterns
+2. **[Testing GlobalRegistry](../docs/testing_global_registry.md)** - Singleton isolation and parallel testing
+3. **[Testing YamlSettingsCache](../docs/testing_yaml_cache.md)** - Configuration testing without pollution
+
+#### Additional Pollution Sources
+4. **[Testing MessageHandler](../docs/testing_message_handler.md)** - Message system singleton isolation
+5. **[Testing Database Pools](../docs/testing_database_pools.md)** - Connection pool resource management
+6. **[Testing ThreadSafeLogCache](../docs/testing_thread_safe_cache.md)** - Thread-safe cache isolation
+7. **[Testing FileIOCore](../docs/testing_fileio_core.md)** - File I/O operations without bridge pollution
+
+#### Master Guide
+8. **[Test Pollution Prevention Guide](../docs/test_pollution_guide.md)** - **Comprehensive guide covering all pollution sources with quick reference patterns**
+
+These guides are essential for writing reliable, isolated tests, especially when using `pytest-xdist` for parallel execution.
+
 ### Test Markers and Categories
 ```python
 # Use appropriate pytest markers for test categorization
@@ -169,6 +242,48 @@ tests/game/          # Game path and integrity
 tests/settings/      # YAML and settings management
 ```
 
+#### Test Type Separation
+**CRITICAL**: Different test types must be in separate files for maintainability and execution control.
+
+- **Unit Tests** - Must be in files named `test_<component>_unit.py`
+  - Test individual functions/methods in isolation
+  - Mock all external dependencies
+  - Should run quickly (< 100ms per test)
+  - Example: `test_formid_analyzer_unit.py`
+
+- **Integration Tests** - Must be in files named `test_<component>_integration.py`
+  - Test interaction between multiple components
+  - May use real file I/O with temp directories
+  - Can test database connections and external services
+  - Example: `test_scan_pipeline_integration.py`
+
+- **End-to-End Tests** - Must be in files named `test_<component>_e2e.py`
+  - Test complete workflows from entry point to output
+  - Simulate real user scenarios
+  - May involve GUI/TUI interactions
+  - Example: `test_crash_log_scanning_e2e.py`
+
+**Never mix test types in the same file** - This ensures:
+- Faster test execution by running only needed test types
+- Clear dependency requirements for each test file
+- Better mock management and test isolation
+- Easier debugging when tests fail
+
+### Test Isolation Rules
+**CRITICAL**: Production data and settings must be treated as READ-ONLY in tests.
+
+#### Production Data is Read-Only
+- **NEVER** modify `YAML.Settings` or other production YAML stores in tests
+- **NEVER** write to production configuration files during testing
+- **NEVER** access or modify user's actual game directories or crash logs
+- Tests that need to modify settings should use `YAML.TEST` or create temporary files
+
+#### API Changes and Test Updates
+- **ALWAYS** update tests to use the new API when refactoring occurs
+- **NEVER** add backward compatibility functions to production code just to make tests pass
+- Tests should validate the actual production API, not compatibility layers
+- This ensures tests catch real breaking changes and API misuse
+
 ## Development Workflows
 
 ### Environment Setup
@@ -192,6 +307,23 @@ Available VS Code tasks:
 - **Installation**: `poetry run pre-commit install`
 - **Manual run**: `poetry run pre-commit run --all-files`
 - **Test isolation**: Prevents production YAML/path usage in tests
+
+#### Available Hooks
+- **Production YAML Checker** - Prevents use of production YAML stores in tests
+- **Production Path Checker** - Prevents hardcoded production paths in tests
+- **Standard hooks** - Trailing whitespace, YAML validation, etc.
+
+#### Running Pre-commit Manually
+```bash
+# Run on all files
+poetry run pre-commit run --all-files
+
+# Run on staged files
+poetry run pre-commit run
+
+# Run specific hook
+poetry run pre-commit run check-test-isolation
+```
 
 ## Key Integration Points
 
@@ -332,6 +464,7 @@ from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment  # ✅ P
 11. ❌ Large files (>500 lines) → ✅ Split into logical components with subdirectories
 12. ❌ Multiple classes per file → ✅ One primary class per file
 13. ❌ Tests in root tests/ → ✅ Organize in subdirectories by functionality
+14. ❌ Adding backward compatibility for tests → ✅ Update tests to match the new API
 
 ## Key Architecture Files
 

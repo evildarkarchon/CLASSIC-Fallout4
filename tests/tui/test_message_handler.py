@@ -7,13 +7,19 @@ from ClassicLib.TUI.app import CLASSICTuiApp
 from ClassicLib.TUI.handlers.message_handler import TuiMessageHandler
 from ClassicLib.TUI.widgets.output_viewer import OutputViewer
 
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
+
 
 class TestMessageHandlerRouting:
     """Test message routing in TuiMessageHandler."""
 
     @pytest.mark.asyncio
     @pytest.mark.gui
-    async def test_message_handler_routing(self):
+    async def test_message_handler_routing(self, message_handler):
         """Test message handler routes messages correctly."""
         app = CLASSICTuiApp()
         async with app.run_test():
@@ -43,7 +49,7 @@ class TestMessageHandlerProgress:
 
     @pytest.mark.asyncio
     @pytest.mark.gui
-    async def test_message_handler_progress(self):
+    async def test_message_handler_progress(self, message_handler):
         """Test message handler handles progress updates."""
         app = CLASSICTuiApp()
         async with app.run_test():

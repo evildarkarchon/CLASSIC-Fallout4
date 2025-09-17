@@ -11,7 +11,12 @@ import pytest
 import ruamel.yaml
 from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
 from ClassicLib.Constants import YAML
-from ClassicLib.MessageHandler import init_message_handler
+
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
 
 pytestmark = pytest.mark.unit
 
@@ -35,7 +40,6 @@ class TestAsyncYamlEdgeCases:
         assert null_result is None or null_result == {}
 
     @pytest.mark.asyncio
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     async def test_deeply_nested_path_navigation(self, async_yaml_core, tmp_path: Path) -> None:
         """Test navigation through very deeply nested YAML structures."""
         deep_data = {'level1': {'level2': {'level3': {'level4': {'level5': {'level6': {'target': 'found', 'list': [{'item': 1}, {'item': 2}]}}}}}}}

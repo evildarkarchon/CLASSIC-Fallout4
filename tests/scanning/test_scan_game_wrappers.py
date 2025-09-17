@@ -21,8 +21,11 @@ class TestSyncWrappers:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
 
+            # Create a regular mock for the core
             mock_core = mock_get_core.return_value
-            mock_core.scan_mods_archived = AsyncMock(return_value="Test result")
+
+            # Since AsyncBridge.run_async will handle the async execution,
+            # we just need to mock what run_async returns
             mock_bridge.run_async.return_value = "Test result"
 
             # Test the sync adapter in the main module
@@ -41,8 +44,11 @@ class TestSyncWrappers:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
 
+            # Create a regular mock for the core
             mock_core = mock_get_core.return_value
-            mock_core.check_log_errors = AsyncMock(return_value="Test log result")
+
+            # Since AsyncBridge.run_async will handle the async execution,
+            # we just need to mock what run_async returns
             mock_bridge.run_async.return_value = "Test log result"
 
             # Test the sync adapter in the main module
@@ -58,8 +64,11 @@ class TestSyncWrappers:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
 
+            # Create a regular mock for the core
             mock_core = mock_get_core.return_value
-            mock_core.scan_mods_unpacked = AsyncMock(return_value="Test unpacked result")
+
+            # Since AsyncBridge.run_async will handle the async execution,
+            # we just need to mock what run_async returns
             mock_bridge.run_async.return_value = "Test unpacked result"
 
             # Test the sync adapter in the main module
@@ -71,17 +80,23 @@ class TestSyncWrappers:
     def test_sync_adapter_integration(self):
         """Test that sync adapters correctly delegate to ScanGameCore."""
         # Test that sync adapters correctly delegate to async core
-        with patch("CLASSIC_ScanGame.ScanGameCore") as mock_core:
-            mock_instance = mock_core.return_value
-            mock_instance.scan_mods_archived = AsyncMock(return_value="Async result")
+        with patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
+            mock_bridge = MagicMock()
+            mock_bridge_class.get_instance.return_value = mock_bridge
+            mock_bridge.run_async.return_value = "Async result"
 
-            # Call the sync adapter
-            import CLASSIC_ScanGame
-            result = CLASSIC_ScanGame.scan_mods_archived()
+            with patch("CLASSIC_ScanGame.ScanGameCore") as mock_core:
+                mock_instance = mock_core.return_value
+                # Don't create an AsyncMock here, the bridge handles the async part
+                mock_instance.scan_mods_archived = MagicMock()
 
-            # Verify core was instantiated and method was called
-            mock_core.assert_called_once()
-            assert result == "Async result"
+                # Call the sync adapter
+                import CLASSIC_ScanGame
+                result = CLASSIC_ScanGame.scan_mods_archived()
+
+                # Verify core was instantiated
+                mock_core.assert_called_once()
+                assert result == "Async result"
 
 
 if __name__ == "__main__":

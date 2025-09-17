@@ -13,6 +13,8 @@ from ClassicLib.Constants import YAML
 
 pytestmark = pytest.mark.integration
 
+@pytest.mark.integration
+@pytest.mark.asyncio
 class TestAsyncYamlBatchOperations:
     """Test suite for batch and concurrent operations."""
 

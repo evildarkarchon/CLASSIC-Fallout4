@@ -8,22 +8,18 @@ import pytest
 from ClassicLib import init_message_handler
 from tests.async_resources.conftest import ContextTestError
 
-
-@pytest.fixture
-def init_message_handler_fixture():
-    """Initialize MessageHandler for tests that need it."""
-    handler = init_message_handler(parent=None, is_gui_mode=False)
-    yield
-    import ClassicLib.MessageHandler
-    ClassicLib.MessageHandler._message_handler = None
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
 
 
 @pytest.mark.asyncio
 class TestAsyncPipelineResourceManagement:
     """Tests for async pipeline resource management."""
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
-    async def test_pipeline_cleanup_on_exception(self):
+    async def test_pipeline_cleanup_on_exception(self, message_handler):
         """Test that pipeline properly cleans up resources on exception."""
         from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
 
@@ -50,7 +46,7 @@ class TestAsyncPipelineResourceManagement:
             # Pipeline should still be in a valid state for cleanup
             assert isinstance(pipeline.performance_stats, dict)
 
-    async def test_orchestrator_resource_cleanup(self):
+    async def test_orchestrator_resource_cleanup(self, message_handler):
         """Test that OrchestratorCore properly manages database pool resources."""
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
         from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
@@ -108,7 +104,7 @@ class TestAsyncPipelineResourceManagement:
             # Cleanup should have been called
             mock_pool.close.assert_called_once()
 
-    async def test_pipeline_state_management(self):
+    async def test_pipeline_state_management(self, message_handler):
         """Test that pipeline maintains proper state throughout lifecycle."""
         from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
 
@@ -131,7 +127,7 @@ class TestAsyncPipelineResourceManagement:
         assert pipeline.fcx_mode is True
         assert pipeline.show_formid_values is True
 
-    async def test_orchestrator_concurrent_processing(self):
+    async def test_orchestrator_concurrent_processing(self, message_handler):
         """Test that orchestrator can handle concurrent processing."""
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
         from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache

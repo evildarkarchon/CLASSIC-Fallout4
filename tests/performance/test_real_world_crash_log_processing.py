@@ -49,7 +49,6 @@ def mock_yamldata() -> MagicMock:
 class TestRealWorldCrashLogProcessing:
     """Real-world crash log processing performance tests."""
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     async def test_real_world_crash_logs_performance(self, mock_yamldata: MagicMock, performance_test_logs: list[Path]) -> None:
         """Real-world performance test: Process crash logs using test fixtures.
 

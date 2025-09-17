@@ -8,6 +8,9 @@ from pathlib import Path
 from unittest.mock import MagicMock
 import pytest
 
+# Import AsyncBridge fixtures for proper test isolation
+from tests.fixtures.registry_fixtures import async_bridge, ensure_async_bridge_cleanup
+
 
 @pytest.fixture
 def mock_yamldata() -> MagicMock:

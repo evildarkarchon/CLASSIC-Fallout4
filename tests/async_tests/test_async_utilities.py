@@ -92,7 +92,6 @@ class TestAsyncUtilityFunctions:
         assert "utf8.log" in result
         assert "ascii.log" in result
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     async def test_crashlogs_reformat_async(self, sample_crash_logs: list[Path]) -> None:
         """Test async crash log reformatting."""
         remove_list = ("test_remove",)
@@ -106,7 +105,6 @@ class TestAsyncUtilityFunctions:
             # Verify each log was processed
             assert mock_process.call_count == 3
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     async def test_crashlogs_reformat_with_exclusions(self, tmp_path: Path) -> None:
         """Test crash log reformatting with exclusion list."""
         # Create logs with different patterns

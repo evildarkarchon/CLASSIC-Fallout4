@@ -1,0 +1,30 @@
+{
+  "include": [
+    "ClassicLib/**/*.py",
+    "tests/**/*.py",
+    "*.py"
+  ],
+  "extraPaths": [
+    ".",
+    "./ClassicLib",
+    "./tests"
+  ],
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "standard",
+  "reportMissingImports": true,
+  "reportImportCycles": false,
+  "reportUnusedImport": false,
+  "reportAttributeAccessIssue": "warning",
+  "verboseOutput": false,
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "pythonVersion": "3.12",
+      "extraPaths": [
+        ".",
+        "./ClassicLib",
+        "./tests"
+      ]
+    }
+  ]
+}

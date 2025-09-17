@@ -10,15 +10,21 @@ from unittest.mock import patch
 import pytest
 import ruamel.yaml
 from ClassicLib.Constants import YAML
-from ClassicLib.MessageHandler import init_message_handler
+
 from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_cache, yaml_settings
+
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
 
 pytestmark = pytest.mark.integration
 
 class TestModuleLevelFunctions:
     """Test module-level convenience functions."""
 
-    def test_classic_settings_creates_file_if_missing(self, tmp_path, monkeypatch):
+    def test_classic_settings_creates_file_if_missing(self, tmp_path, monkeypatch, message_handler, async_bridge):
         """Test that classic_settings creates settings file if missing."""
         settings_file = tmp_path / 'CLASSIC Settings.yaml'
         main_file = tmp_path / 'CLASSIC Main.yaml'
@@ -42,7 +48,7 @@ class TestModuleLevelFunctions:
 class TestBatchOperations:
     """Test batch operations through sync wrapper."""
 
-    def test_batch_operations_multiple_stores(self, tmp_path, monkeypatch):
+    def test_batch_operations_multiple_stores(self, tmp_path, monkeypatch, message_handler, async_bridge):
         """Test batch operations with multiple stores through sync wrapper."""
         cache = YamlSettingsCache()
         files = {}

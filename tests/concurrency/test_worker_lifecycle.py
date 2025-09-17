@@ -96,7 +96,6 @@ class TestGracefulShutdown:
             app = QApplication([])
         return app
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     def test_close_event_cleanup(self, app: QApplication) -> None:
         """Test that closeEvent properly cleans up all threads."""
         # Test thread cleanup on close

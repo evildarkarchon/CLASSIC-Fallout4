@@ -1,52 +1,308 @@
-"""Registry fixtures for GlobalRegistry and MessageHandler initialization."""
+"""Registry fixtures for singleton management in tests.
+
+This module provides standardized fixtures for managing singleton state
+in tests, ensuring proper isolation and preventing test pollution.
+Covers GlobalRegistry, MessageHandler, and AsyncBridge singletons.
+"""
 
 import gc
+import threading
 from collections.abc import Generator
 from pathlib import Path
 from types import ModuleType
+from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.MessageHandler import init_message_handler
+from ClassicLib.MessageHandler import MessageHandler, init_message_handler
 from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
 
+# Thread-local storage for singleton state tracking
+_handler_lock = threading.Lock()
+_handler_states = threading.local()
+_bridge_lock = threading.Lock()
+_bridge_states = threading.local()
+
+
 @pytest.fixture
-def init_message_handler_fixture() -> Generator[None, None, None]:
-    """Initialize the MessageHandler for tests that need it.
+def init_message_handler_fixture() -> Generator[MessageHandler, None, None]:
+    """Initialize the MessageHandler for non-GUI tests.
 
     This fixture ensures proper cleanup of the MessageHandler singleton
-    between tests to prevent state leakage.
+    between tests to prevent state leakage. Thread-safe for parallel testing.
+
+    Returns:
+        MessageHandler instance configured for non-GUI mode.
+
+    Usage:
+        def test_something(init_message_handler_fixture):
+            # MessageHandler is automatically initialized and cleaned up
+            from ClassicLib.MessageHandler import msg_info
+            msg_info("Test message")
     """
-    # Import here to avoid circular dependencies
     import ClassicLib.MessageHandler
 
-    # Store any existing handler to restore later (defensive programming)
-    _ = getattr(ClassicLib.MessageHandler, "_message_handler", None)
+    with _handler_lock:
+        # Store any existing handler (for nested fixtures)
+        old_handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
 
+        # Track if this thread already has a handler to prevent double initialization
+        if not hasattr(_handler_states, 'handler_stack'):
+            _handler_states.handler_stack = []
+
+        _handler_states.handler_stack.append(old_handler)
+
+        try:
+            # Initialize fresh handler for this test
+            handler = init_message_handler(parent=None, is_gui_mode=False)
+            yield handler
+        finally:
+            # Restore previous state or clean up completely
+            if _handler_states.handler_stack:
+                previous = _handler_states.handler_stack.pop()
+                ClassicLib.MessageHandler._message_handler = previous
+            else:
+                ClassicLib.MessageHandler._message_handler = None
+
+            # Clear any cached references
+            if hasattr(ClassicLib.MessageHandler, "_cached_handler"):
+                delattr(ClassicLib.MessageHandler, "_cached_handler")
+
+            # Force garbage collection to ensure cleanup
+            gc.collect()
+
+
+@pytest.fixture
+def message_handler(init_message_handler_fixture) -> Generator[MessageHandler, None, None]:
+    """Alias for init_message_handler_fixture for more intuitive naming.
+
+    This is the preferred fixture name for new tests.
+    """
+    yield init_message_handler_fixture
+
+
+@pytest.fixture(autouse=True)
+def ensure_message_handler_cleanup() -> Generator[None, None, None]:
+    """Automatically ensure MessageHandler is cleaned up after each test.
+
+    This autouse fixture runs for ALL tests and ensures that any MessageHandler
+    state is properly cleaned up, even if tests don't use the fixtures properly.
+    This prevents test pollution from tests that might initialize MessageHandler
+    directly without proper cleanup.
+    """
+    yield
+
+    # Post-test cleanup - only if MessageHandler module was used
     try:
-        # Initialize fresh handler for this test
-        init_message_handler(parent=None, is_gui_mode=False)
-        yield
-    finally:
-        # Ensure complete cleanup
-        ClassicLib.MessageHandler._message_handler = None
+        import ClassicLib.MessageHandler
 
-        # Clear any cached references
-        if hasattr(ClassicLib.MessageHandler, "_cached_handler"):
-            delattr(ClassicLib.MessageHandler, "_cached_handler")
+        # Check if the module has the singleton attribute
+        if hasattr(ClassicLib.MessageHandler, "_message_handler"):
+            handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
+            if handler is not None:
+                # Only clean up if not managed by another fixture
+                if not hasattr(_handler_states, 'handler_stack') or not _handler_states.handler_stack:
+                    ClassicLib.MessageHandler._message_handler = None
 
-        # Force garbage collection to ensure cleanup
-        gc.collect()
+                    # Clear cached references
+                    if hasattr(ClassicLib.MessageHandler, "_cached_handler"):
+                        delattr(ClassicLib.MessageHandler, "_cached_handler")
+    except (ImportError, AttributeError):
+        # Module not imported or attribute doesn't exist - nothing to clean
+        pass
 
-        # Verify cleanup was successful (defensive check)
-        assert ClassicLib.MessageHandler._message_handler is None, "MessageHandler cleanup failed"
+
+# ============================================================================
+# AsyncBridge Fixtures
+# ============================================================================
+
+
+@pytest.fixture
+def async_bridge() -> Generator[Any, None, None]:
+    """Provide a clean AsyncBridge instance for testing.
+
+    This fixture ensures AsyncBridge is properly isolated between tests,
+    preventing event loop and thread pollution in parallel testing.
+
+    Returns:
+        AsyncBridge instance for the current test.
+
+    Usage:
+        def test_async_operations(async_bridge):
+            result = async_bridge.run_async(some_async_function())
+            assert result == expected
+    """
+    from ClassicLib.AsyncBridge import AsyncBridge
+
+    with _bridge_lock:
+        # Store current thread's instance if it exists
+        thread_id = threading.get_ident()
+        original_instance = AsyncBridge._instances.get(thread_id)
+
+        # Track bridge state
+        if not hasattr(_bridge_states, 'instance_stack'):
+            _bridge_states.instance_stack = []
+
+        _bridge_states.instance_stack.append(original_instance)
+
+        try:
+            # Get or create instance for this test
+            bridge = AsyncBridge.get_instance()
+            yield bridge
+        finally:
+            # Clean up the bridge instance
+            if thread_id in AsyncBridge._instances:
+                current = AsyncBridge._instances[thread_id]
+                # Shutdown the current instance
+                current.shutdown()
+
+            # Restore or remove instance
+            if _bridge_states.instance_stack:
+                previous = _bridge_states.instance_stack.pop()
+                if previous is not None:
+                    AsyncBridge._instances[thread_id] = previous
+                else:
+                    # Remove from instances dict
+                    AsyncBridge._instances.pop(thread_id, None)
+            else:
+                AsyncBridge._instances.pop(thread_id, None)
+
+            # Force garbage collection
+            gc.collect()
+
+
+@pytest.fixture(autouse=True)
+def ensure_async_bridge_cleanup() -> Generator[None, None, None]:
+    """Automatically ensure AsyncBridge is cleaned up after each test.
+
+    This autouse fixture runs for ALL tests and ensures that any AsyncBridge
+    instances are properly cleaned up, preventing event loop leakage between tests.
+    """
+    yield
+
+    # Post-test cleanup - only if AsyncBridge was imported
+    try:
+        from ClassicLib.AsyncBridge import AsyncBridge
+
+        # Clean up current thread's instance if it exists
+        thread_id = threading.get_ident()
+
+        # Only clean up if not managed by another fixture
+        if not hasattr(_bridge_states, 'instance_stack') or not _bridge_states.instance_stack:
+            if thread_id in AsyncBridge._instances:
+                instance = AsyncBridge._instances[thread_id]
+                # Shutdown and remove
+                instance.shutdown()
+                AsyncBridge._instances.pop(thread_id, None)
+
+        # Clean up any orphaned instances from other threads (e.g., from async tasks)
+        # This is important for parallel testing with pytest-xdist
+        dead_threads = []
+        for tid, instance in list(AsyncBridge._instances.items()):
+            # Check if thread is still alive
+            if tid != thread_id:
+                # Try to find if thread exists
+                found = False
+                for thread in threading.enumerate():
+                    if thread.ident == tid:
+                        found = True
+                        break
+                if not found:
+                    dead_threads.append(tid)
+
+        # Clean up dead thread instances
+        for tid in dead_threads:
+            if tid in AsyncBridge._instances:
+                instance = AsyncBridge._instances[tid]
+                instance.shutdown()
+                AsyncBridge._instances.pop(tid, None)
+
+    except (ImportError, AttributeError):
+        # Module not imported or doesn't exist - nothing to clean
+        pass
+
+
+@pytest.fixture
+def mock_async_bridge(monkeypatch) -> Generator[Any, None, None]:
+    """Mock AsyncBridge for tests that don't need actual async execution.
+
+    This fixture is useful for unit tests where you want to test code that
+    uses AsyncBridge without actually running async code.
+
+    Usage:
+        def test_sync_wrapper(mock_async_bridge):
+            mock_async_bridge.run_async.return_value = "mocked_result"
+            result = some_function_using_bridge()
+            assert result == "mocked_result"
+    """
+    from unittest.mock import MagicMock
+
+    mock_bridge = MagicMock()
+    mock_bridge.run_async = MagicMock(side_effect=lambda coro: coro)
+    mock_bridge.run_async_with_timeout = MagicMock(side_effect=lambda coro, timeout: coro)
+    mock_bridge.shutdown = MagicMock()
+
+    # Mock the get_instance method
+    with monkeypatch.context() as m:
+        m.setattr("ClassicLib.AsyncBridge.AsyncBridge.get_instance", lambda: mock_bridge)
+        yield mock_bridge
+
+        # Ensure cleanup
+        mock_bridge.shutdown.assert_not_called()  # Can be checked in tests
+
+
+# ============================================================================
+# GlobalRegistry Fixtures
+# ============================================================================
+
+
+@pytest.fixture(autouse=True)
+def clean_global_registry() -> Generator[None, None, None]:
+    """Automatically clear GlobalRegistry before and after each test.
+
+    This ensures complete isolation of GlobalRegistry state between tests,
+    preventing test pollution from registry modifications. This is critical
+    for parallel test execution with pytest-xdist.
+    """
+    # Clear before test
+    GlobalRegistry._registry.clear()
+    yield
+    # Clear after test
+    GlobalRegistry._registry.clear()
+
+
+@pytest.fixture
+def global_registry() -> Generator[type[GlobalRegistry], None, None]:
+    """Provide a clean GlobalRegistry instance for testing.
+
+    This fixture ensures the registry is clean before use and properly
+    cleaned up after the test completes.
+
+    Usage:
+        def test_registry(global_registry):
+            global_registry.register("key", "value")
+            assert global_registry.get("key") == "value"
+    """
+    # Clear registry before test
+    GlobalRegistry._registry.clear()
+
+    yield GlobalRegistry
+
+    # Clear registry after test
+    GlobalRegistry._registry.clear()
 
 
 @pytest.fixture(scope="session")
 def mock_global_registry() -> Generator[ModuleType, None, None]:
-    """Mock the GlobalRegistry to return test values."""
+    """Mock the GlobalRegistry to return test values for session-wide use.
+
+    Note: Use with caution as this is session-scoped and may affect
+    multiple tests. Prefer the function-scoped 'global_registry' fixture
+    for better isolation.
+    """
     original_values = {}
 
     # Save original values
@@ -83,8 +339,15 @@ def setup_global_registry_session() -> Generator[None, None, None]:
         GlobalRegistry._registry.clear()
 
         # Initialize YAML cache (many components depend on this)
-        yaml_cache = YamlSettingsCache()
-        GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
+        # Check if yaml_cache already exists in the module to avoid re-initialization issues
+        try:
+            from ClassicLib.YamlSettingsCache import yaml_cache
+            # Re-register the existing instance
+            GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
+        except ImportError:
+            # If import fails, create a new instance
+            yaml_cache = YamlSettingsCache()
+            GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
 
         # Set core game settings
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
@@ -121,8 +384,17 @@ def setup_global_registry() -> Generator[None, None, None]:
     This wraps the session fixture but allows tests to have isolated registry state
     when needed. Most tests should use the session fixture via autouse.
     """
-    # The session fixture handles the actual setup
-    # This function fixture is for backward compatibility
+    # Ensure YAML cache is always registered for function-scoped tests
+    # This is critical for parallel test execution where each worker needs initialization
+    if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
+        try:
+            from ClassicLib.YamlSettingsCache import yaml_cache
+            GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
+        except (ImportError, TypeError):
+            # If we can't import or yaml_cache initialization failed, create a new one
+            yaml_cache = YamlSettingsCache()
+            GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
+
     yield
 
 
@@ -133,3 +405,153 @@ def _ensure_global_registry(setup_global_registry_session):
     # This fixture is automatically used by all tests
     # It depends on setup_global_registry_session to do the actual work
     pass
+
+
+# ============================================================================
+# YAML Cache Fixtures
+# ============================================================================
+
+
+@pytest.fixture
+def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
+    """Initialize a clean YAML cache instance for testing.
+
+    This fixture provides a properly initialized YAML cache with test-safe
+    configuration, preventing pollution between tests and avoiding actual
+    file I/O to production YAML files.
+
+    Returns:
+        YamlSettingsCache instance configured for testing.
+
+    Usage:
+        def test_something(yaml_cache_fixture):
+            # YAML cache is automatically initialized and cleaned up
+            from ClassicLib.YamlSettingsCache import yaml_settings
+            result = yaml_settings(str, YAML.TEST, "test.key")
+    """
+    import ClassicLib.YamlSettingsCache
+    from unittest.mock import MagicMock, patch
+
+    # Save the original yaml_cache if it exists
+    original_cache = getattr(ClassicLib.YamlSettingsCache, 'yaml_cache', None)
+
+    # Create a mock async core that doesn't need actual files
+    mock_async_core = MagicMock()
+    mock_async_core.file_ops.get_path_for_store = MagicMock(return_value=tmp_path / "test.yaml")
+    mock_async_core.cache.settings_cache = {}
+    mock_async_core.cache.file_mod_times = {}
+
+    # Create a mock YamlSettingsCache that doesn't initialize AsyncBridge
+    with patch('ClassicLib.YamlSettingsCache.AsyncBridge') as mock_bridge_class:
+        mock_bridge = MagicMock()
+        mock_bridge_class.get_instance.return_value = mock_bridge
+
+        # Make run_async return values directly (not coroutines)
+        def run_async_side_effect(coro):
+            # If it's already a value, return it
+            if not hasattr(coro, '__await__'):
+                return coro
+            # Otherwise mock it as returning the mock_async_core
+            return mock_async_core
+
+        mock_bridge.run_async.side_effect = run_async_side_effect
+
+        # Create a new cache instance
+        from ClassicLib.YamlSettingsCache import YamlSettingsCache
+        test_cache = YamlSettingsCache()
+        test_cache._async_core = mock_async_core
+
+        # Mock the async_yaml_settings method to return test values
+        def async_yaml_settings_side_effect(_type, yaml_store, key_path, new_value=None):
+            # Return sensible defaults for common settings
+            defaults = {
+                'FCX Mode': False,
+                'Game_Info.CRASHGEN_LogName': 'Buffout 4',
+                'Game_Info.XSE_Acronym': 'F4SE',
+            }
+            return defaults.get(key_path, None)
+
+        test_cache.async_yaml_settings = MagicMock(side_effect=async_yaml_settings_side_effect)
+
+        # Replace the module-level yaml_cache
+        ClassicLib.YamlSettingsCache.yaml_cache = test_cache
+
+        # Register in GlobalRegistry
+        GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, test_cache)
+
+        try:
+            yield test_cache
+        finally:
+            # Restore original cache
+            if original_cache is not None:
+                ClassicLib.YamlSettingsCache.yaml_cache = original_cache
+                GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, original_cache)
+            else:
+                # Clean up if there was no original
+                if hasattr(ClassicLib.YamlSettingsCache, 'yaml_cache'):
+                    delattr(ClassicLib.YamlSettingsCache, 'yaml_cache')
+                if GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
+                    GlobalRegistry._registry.pop(GlobalRegistry.Keys.YAML_CACHE, None)
+
+
+@pytest.fixture
+def mock_yaml_settings(monkeypatch) -> Generator[Any, None, None]:
+    """Mock yaml_settings function for tests that don't need actual YAML files.
+
+    This fixture is useful for unit tests where you want to control what
+    yaml_settings returns without actual file I/O.
+
+    Usage:
+        def test_something(mock_yaml_settings):
+            mock_yaml_settings.return_value = "test_value"
+            result = some_function_using_yaml_settings()
+            assert result == "test_value"
+    """
+    mock = MagicMock()
+
+    # Common default return values
+    def yaml_side_effect(_type, yaml_store, key_path, new_value=None):
+        # Provide sensible defaults for common settings
+        defaults = {
+            'Game_Info.CRASHGEN_LogName': 'Buffout 4',
+            'Game_Info.XSE_Acronym': 'F4SE',
+            'exclude_log_records': (),
+            'exclude_log_files': [],
+            'exclude_log_errors': [],
+            'catch_log_errors': ['error', 'warning', 'critical'],
+        }
+
+        if key_path in defaults:
+            return defaults[key_path]
+        return mock.return_value
+
+    mock.side_effect = yaml_side_effect
+
+    with monkeypatch.context() as m:
+        m.setattr("ClassicLib.YamlSettingsCache.yaml_settings", mock)
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def ensure_yaml_cache_cleanup() -> Generator[None, None, None]:
+    """Automatically ensure YAML cache is cleaned up after each test.
+
+    This autouse fixture runs for ALL tests and ensures that any YAML cache
+    modifications are properly cleaned up, preventing test pollution.
+    """
+    yield
+
+    # Post-test cleanup - clear any cached data if YamlSettingsCache was used
+    try:
+        import ClassicLib.YamlSettingsCache
+
+        if hasattr(ClassicLib.YamlSettingsCache, 'yaml_cache'):
+            cache = ClassicLib.YamlSettingsCache.yaml_cache
+            if hasattr(cache, '_async_core') and hasattr(cache._async_core, 'cache'):
+                # Clear the caches
+                cache._async_core.cache.settings_cache.clear()
+                cache._async_core.cache.file_mod_times.clear()
+
+    except (ImportError, AttributeError):
+        # Module not imported or doesn't exist - nothing to clean
+        pass

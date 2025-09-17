@@ -46,7 +46,6 @@ def mock_yamldata() -> MagicMock:
 class TestRealWorldSyncAsyncComparison:
     """Real-world sync vs async performance comparison tests."""
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
     async def test_sync_vs_async_real_world_comparison(self, mock_yamldata: MagicMock, small_performance_test_logs: list[Path]) -> None:
         """Direct comparison of sync vs async processing with test crash logs.
 

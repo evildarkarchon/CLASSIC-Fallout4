@@ -198,31 +198,134 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
     scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
 ```
 
+### Testing AsyncBridge and Async Code
+
+**IMPORTANT**: When testing code that uses AsyncBridge, proper mocking is critical to avoid `RuntimeWarning: coroutine was never awaited` errors.
+
+For comprehensive guidance on testing async code and AsyncBridge patterns, see: [Testing AsyncBridge Guide](docs/testing_async_bridge.md)
+
+Quick reference for common patterns:
+```python
+# ✅ CORRECT: Mock AsyncBridge.run_async for sync wrappers
+with patch("module.AsyncBridge") as mock_bridge_class:
+    mock_bridge = MagicMock()
+    mock_bridge_class.get_instance.return_value = mock_bridge
+    mock_bridge.run_async.return_value = "expected_result"
+
+    result = sync_wrapper_function()
+    assert result == "expected_result"
+
+# ❌ WRONG: Don't use AsyncMock for bridge-wrapped methods
+mock_instance.async_method = AsyncMock()  # This causes RuntimeWarning!
+```
+
+### Testing GlobalRegistry and Singletons
+
+**CRITICAL**: GlobalRegistry manages singleton instances that persist across tests, causing test pollution and race conditions in parallel execution.
+
+For comprehensive guidance, see: [Testing GlobalRegistry Guide](docs/testing_global_registry.md)
+
+Key patterns for test isolation:
+```python
+# ✅ CORRECT: Clear registry in fixtures
+@pytest.fixture(autouse=True)
+def clean_global_registry():
+    GlobalRegistry._registry.clear()
+    yield
+    GlobalRegistry._registry.clear()
+
+# ✅ CORRECT: Use unique keys for parallel tests
+test_key = f"key_{uuid.uuid4()}"
+GlobalRegistry.register(test_key, value)
+```
+
+### Testing YamlSettingsCache
+
+**WARNING**: NEVER modify production YAML files in tests. Always use mocks or the YAML.TEST enum.
+
+For comprehensive guidance, see: [Testing YamlSettingsCache Guide](docs/testing_yaml_cache.md)
+
+Essential patterns:
+```python
+# ✅ CORRECT: Mock yaml_settings for tests
+@patch("ClassicLib.YamlSettingsCache.yaml_settings")
+def test_with_mock(mock_yaml):
+    mock_yaml.return_value = "test_value"
+    # Your test code
+
+# ❌ FORBIDDEN: Never modify production settings
+yaml_settings(str, YAML.Settings, "key", "value")  # NEVER in tests!
+
+# ✅ CORRECT: Use test enum or temp files
+yaml_settings(str, YAML.TEST, "key", "value")  # Safe for testing
+```
+
+### Testing Guides Index
+
+Complete testing documentation for CLASSIC components and test pollution prevention:
+
+#### Core Pollution Sources (Critical)
+1. **[Testing AsyncBridge](docs/testing_async_bridge.md)** - Async/sync bridge mocking patterns
+2. **[Testing GlobalRegistry](docs/testing_global_registry.md)** - Singleton isolation and parallel testing
+3. **[Testing YamlSettingsCache](docs/testing_yaml_cache.md)** - Configuration testing without pollution
+
+#### Additional Pollution Sources
+4. **[Testing MessageHandler](docs/testing_message_handler.md)** - Message system singleton isolation
+5. **[Testing Database Pools](docs/testing_database_pools.md)** - Connection pool resource management
+6. **[Testing ThreadSafeLogCache](docs/testing_thread_safe_cache.md)** - Thread-safe cache isolation
+7. **[Testing FileIOCore](docs/testing_fileio_core.md)** - File I/O operations without bridge pollution
+
+#### Master Guide
+8. **[Test Pollution Prevention Guide](docs/test_pollution_guide.md)** - **Comprehensive guide covering all pollution sources with quick reference patterns**
+
+These guides are essential for writing reliable, isolated tests, especially when using `pytest-xdist` for parallel execution. The master guide provides a complete overview and links to all component-specific documentation.
+
 ### Test Organization Rules
 **CRITICAL**: Maintain clean test architecture to prevent test suite degradation.
 
+For comprehensive test organization details, see: [Test Structure Guide](docs/TEST_STRUCTURE.md)
+
 #### File Size Limits
-- **Maximum 300 lines per test file** - Split larger files into logical components
-- Files approaching 250 lines should be considered for refactoring
+- **500-line soft limit** - Files approaching this should be considered for refactoring
+- **600-line hard limit** - Files must not exceed this size
+- When files grow too large, split them into logical components
 - Exception allowed only when tests are tightly coupled and splitting would harm maintainability
 
-#### New Test Placement
-- **NO tests in root `tests/` directory** - All tests must be in subdirectories
-- New tests must be added to the appropriate subdirectory:
-  - `tests/async_tests/` - Async patterns and infrastructure
-  - `tests/core/` - Core functionality (crash logs, FormID, etc.)
-  - `tests/scanning/` - Log and mod scanning
-  - `tests/game/` - Game path and integrity
-  - `tests/settings/` - YAML and settings management
-  - `tests/performance/` - Performance benchmarks
-  - `tests/concurrency/` - Thread safety
-  - `tests/backup/` - Backup operations
-  - `tests/io/` - File I/O operations
-  - `tests/mods/` - Mod detection
-  - `tests/utils/` - Utility functions
-  - `tests/gui/` - GUI components
-  - `tests/tui/` - TUI components
-- Create new subdirectories if testing a new major component
+#### New Test Placement (Domain-Driven Structure)
+- **NO tests in root `tests/` directory** - All tests must be in domain-specific subdirectories
+- Tests are organized by functionality and domain areas rather than by source file
+- New tests must be added to the appropriate domain subdirectory:
+
+**Core Functionality**:
+  - `tests/async_resources/` - Async/await patterns, resource management, AsyncBridge
+  - `tests/io/` - File I/O operations, encoding detection, crash log handling
+  - `tests/concurrency/` - Thread safety, worker management, race conditions
+  - `tests/performance/` - Performance monitoring and benchmarking
+
+**Application Features**:
+  - `tests/backup/` - Game file backup and restoration
+  - `tests/documents/` - Document path validation and INI file handling
+  - `tests/game/integrity/` - Game installation and version checking
+  - `tests/mods/` - Mod detection, conflict checking, metadata extraction
+  - `tests/registry/` - Global game registry and MO2 integration
+  - `tests/settings/` - YAML settings management and caching
+
+**User Interface**:
+  - `tests/gui/` - GUI components and dialogs
+  - `tests/gui/settings/` - Settings dialog and widget state management
+  - `tests/tui/` - Terminal UI components
+
+**Setup & Configuration**:
+  - `tests/setup/` - Application initialization and file generation
+
+**Legacy Directories** (being phased out):
+  - `tests/async_tests/` - Moving to `tests/async_resources/`
+  - `tests/core/` - Being distributed to appropriate domain directories
+  - `tests/scanning/` - Moving to `tests/mods/` and `tests/io/`
+  - `tests/utils/` - Being distributed to appropriate domain directories
+
+- Each domain directory contains a `conftest.py` with shared fixtures specific to that domain
+- Create new subdirectories only if introducing a new major domain area
 
 #### Test File Naming
 - Use descriptive names: `test_<component>_<aspect>.py`
@@ -255,6 +358,53 @@ if hasattr(scanner.orchestrator, '_formid_analyzer'):
 - Clear dependency requirements for each test file
 - Better mock management and test isolation
 - Easier debugging when tests fail
+
+#### Test Markers (Required)
+**ALL tests MUST be properly marked with pytest markers for categorization**. This enables efficient test filtering and execution strategies.
+
+**Required Markers**:
+- `@pytest.mark.unit` - Unit tests (fast, isolated, mock all external dependencies)
+- `@pytest.mark.integration` - Integration tests (test component interactions)
+- `@pytest.mark.asyncio` - Async tests requiring event loop
+- `@pytest.mark.slow` - Tests that take longer to run (stress tests, performance tests)
+- `@pytest.mark.gui` - Tests requiring GUI components or Qt framework
+- `@pytest.mark.performance` - Performance regression tests
+
+**Marker Usage Examples**:
+```python
+# Unit test with async
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_async_operation():
+    ...
+
+# Slow stress test
+@pytest.mark.unit
+@pytest.mark.slow
+class TestStressScenarios:
+    ...
+
+# GUI integration test
+@pytest.mark.integration
+@pytest.mark.gui
+def test_dialog_workflow():
+    ...
+```
+
+**Running Tests by Marker**:
+```bash
+# Run only unit tests
+poetry run pytest -m "unit" -n auto
+
+# Run integration tests
+poetry run pytest -m "integration" -v
+
+# Skip slow tests for quick feedback
+poetry run pytest -m "not slow" -n auto
+
+# Run unit tests excluding slow ones
+poetry run pytest -m "unit and not slow" -n 4
+```
 
 ### Test-Driven Development (TDD) Method
 
@@ -415,7 +565,7 @@ def test_with_test_enum():
 
 #### File Size Limits
 - **500-line soft limit** - Files approaching this should be considered for refactoring
-- **550-line hard limit** - Files must not exceed this size
+- **600-line hard limit** - Files must not exceed this size
 - When files grow too large, split them into logical components
 
 #### Class Organization

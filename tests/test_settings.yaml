@@ -1,11 +1,10 @@
 CLASSIC_Settings:
-  Audio Notifications: true
-  Simplify Logs: false
-  FCX Mode: false
-  Move Unsolved Logs: false
-  Show FormID Values: false
   Update Source: Both
-  Update Check: false
+  Audio Notifications: true
   VR Mode: false
+  FCX Mode: false
+  Simplify Logs: false
+  Show FormID Values: false
+  Move Unsolved Logs: false
+  Update Check: false
   INI Folder Path: C:\Users\evild\Documents\My Games\Fallout4
-s: false

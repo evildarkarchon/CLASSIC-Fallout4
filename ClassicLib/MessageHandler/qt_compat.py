@@ -21,7 +21,7 @@ except ImportError:
     class QThread:
         # noinspection PyPep8Naming
         @staticmethod
-        def currentThread() -> QThread:
+        def currentThread() -> "QThread":
             pass
 
     # noinspection PyUnusedLocal,PyPep8Naming

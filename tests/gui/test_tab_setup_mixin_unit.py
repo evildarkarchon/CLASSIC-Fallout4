@@ -1,26 +1,48 @@
+
 """Unit tests for TabSetupMixin.
 
 Tests tab setup functionality in isolation with mocked Qt components.
 """
 
+import pytest
+
+import builtins
 from functools import partial
 from typing import Callable
+from unittest import mock
 from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QButtonGroup,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
+from tests.gui.qt_mock_helpers import (
+    create_layout_mock_factory,
+    create_mock_layout_with_union_support,
 )
 
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
 from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noqa: F401
+
+# Create mock Qt classes for testing to avoid importing real Qt
+# These are only used for spec= parameters and isinstance checks
+class MockQWidget:
+    pass
+
+class MockQVBoxLayout:
+    pass
+
+class MockQHBoxLayout:
+    pass
+
+class MockQButtonGroup:
+    pass
+
+class MockQLineEdit:
+    pass
+
+class MockQPushButton:
+    pass
+
+class MockQLabel:
+    pass
 
 
 @pytest.fixture
@@ -30,8 +52,8 @@ def mock_qt_layouts():
          patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox, \
          patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid:
 
-        mock_vbox_instance = MagicMock(spec=QVBoxLayout)
-        mock_hbox_instance = MagicMock(spec=QHBoxLayout)
+        mock_vbox_instance = MagicMock()
+        mock_hbox_instance = MagicMock()
         mock_grid_instance = MagicMock()
 
         mock_vbox.return_value = mock_vbox_instance
@@ -57,17 +79,17 @@ def tab_setup_mixin(mock_qt_layouts, init_message_handler_fixture):
 
         def __init__(self):
             # Mock tab widgets
-            self.main_tab = MagicMock(spec=QWidget)
-            self.articles_tab = MagicMock(spec=QWidget)
-            self.backups_tab = MagicMock(spec=QWidget)
-            self.results_tab = MagicMock(spec=QWidget)
+            self.main_tab = MagicMock()
+            self.articles_tab = MagicMock()
+            self.backups_tab = MagicMock()
+            self.results_tab = MagicMock()
 
             # Mock edit widgets
             self.mods_folder_edit = None
             self.scan_folder_edit = None
 
             # Mock button groups
-            self.scan_button_group = MagicMock(spec=QButtonGroup)
+            self.scan_button_group = MagicMock()
 
             # Mock buttons
             self.crash_logs_button = None
@@ -91,9 +113,17 @@ def tab_setup_mixin(mock_qt_layouts, init_message_handler_fixture):
             self.check_existing_backups = MagicMock()
             self.add_backup_section = MagicMock()
 
+            # Add the add_main_button method that delegates to UIHelpers
+            def add_main_button_impl(layout, text, callback, tooltip=""):
+                from ClassicLib.Interface.UIHelpers import add_main_button
+                return add_main_button(layout, text, callback, tooltip)
+            self.add_main_button = MagicMock(side_effect=add_main_button_impl)
+
     return TestTabSetup()
 
 
+@pytest.mark.unit
+@pytest.mark.gui
 class TestMainTabSetup:
     """Tests for main tab setup."""
 
@@ -101,14 +131,44 @@ class TestMainTabSetup:
         """Should create proper layout structure for main tab."""
         with patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder_section, \
              patch.object(tab_setup_mixin, "setup_main_buttons") as mock_main_buttons, \
-             patch.object(tab_setup_mixin, "setup_bottom_buttons") as mock_bottom_buttons:
+             patch.object(tab_setup_mixin, "setup_bottom_buttons") as mock_bottom_buttons, \
+             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
+             patch("ClassicLib.Interface.TabSetupMixin.QWidget") as mock_widget, \
+             patch("ClassicLib.Interface.TabSetupMixin.supports_add_layout", return_value=True):
 
             # Mock folder section returns
-            mock_mods_edit = MagicMock(spec=QLineEdit)
-            mock_scan_edit = MagicMock(spec=QLineEdit)
+            mock_mods_edit = MagicMock()
+            mock_scan_edit = MagicMock()
             mock_folder_section.side_effect = [mock_mods_edit, mock_scan_edit]
 
-            tab_setup_mixin.setup_main_tab()
+            # Mock layout with proper class attribute
+            mock_layout = MagicMock()
+            # Set __class__.__name__ for isinstance checks if needed
+            mock_layout.__class__.__name__ = "QVBoxLayout"
+            mock_layout.addLayout = MagicMock()
+            mock_layout.addWidget = MagicMock()
+            mock_layout.addStretch = MagicMock()
+            mock_layout.addSpacing = MagicMock()
+            mock_layout.setContentsMargins = MagicMock()
+            mock_layout.setSpacing = MagicMock()
+
+            # QVBoxLayout can be called with or without parent widget
+            def vbox_constructor(*args, **kwargs):
+                return mock_layout
+
+            mock_vbox.side_effect = vbox_constructor
+
+            # Mock widget creation
+            mock_widget_instance = MagicMock()
+            mock_widget.return_value = mock_widget_instance
+
+            # Call setup_main_tab
+            result = tab_setup_mixin.setup_main_tab()
+
+            # Verify layout was created (setup_main_tab returns None)
+            assert result is None
+            # QVBoxLayout is called twice: once for main layout, once for header layout
+            assert mock_vbox.call_count == 2
 
             # Verify folder sections created
             assert mock_folder_section.call_count == 2
@@ -128,11 +188,21 @@ class TestMainTabSetup:
 
     def test_setup_main_buttons_creates_scan_buttons(self, tab_setup_mixin):
         """Should create main scan buttons and add to button group."""
+        # Create a mock layout
         mock_layout = MagicMock()
+        mock_layout.addLayout = MagicMock()
 
-        with patch.object(tab_setup_mixin, "add_main_button") as mock_add_button:
-            mock_crash_button = MagicMock(spec=QPushButton)
-            mock_game_button = MagicMock(spec=QPushButton)
+        with patch("ClassicLib.Interface.TabSetupMixin.add_main_button") as mock_add_button, \
+             patch("ClassicLib.Interface.TabSetupMixin.supports_add_layout", return_value=True), \
+             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox:
+            # Mock HBoxLayout creation
+            mock_hbox_instance = MagicMock()
+            mock_hbox_instance.setSpacing = MagicMock()
+            mock_hbox.return_value = mock_hbox_instance
+
+            # Setup buttons
+            mock_crash_button = MagicMock()
+            mock_game_button = MagicMock()
             mock_add_button.side_effect = [mock_crash_button, mock_game_button]
 
             tab_setup_mixin.setup_main_buttons(mock_layout)
@@ -150,12 +220,28 @@ class TestMainTabSetup:
 
     def test_setup_bottom_buttons_creates_utility_buttons(self, tab_setup_mixin):
         """Should create bottom utility buttons."""
-        mock_layout = MagicMock(spec=QVBoxLayout)
+        mock_layout = MagicMock()
+        mock_layout.addLayout = MagicMock()
+        mock_layout.addSpacing = MagicMock()
 
         with patch.object(tab_setup_mixin, "_create_button") as mock_create_button, \
-             patch("ClassicLib.Interface.TabSetupMixin.QApplication") as mock_app:
+             patch("PySide6.QtWidgets.QApplication") as mock_app, \
+             patch.object(tab_setup_mixin, "update_papyrus_button_style") as mock_update_style, \
+             patch("ClassicLib.Interface.TabSetupMixin.supports_add_layout", return_value=True), \
+             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox:
 
-            mock_buttons = [MagicMock(spec=QPushButton) for _ in range(7)]
+            # Mock HBoxLayout creation
+            mock_hbox_instance = MagicMock()
+            mock_hbox_instance.setSpacing = MagicMock()
+            mock_hbox_instance.setContentsMargins = MagicMock()
+            mock_hbox_instance.addWidget = MagicMock()
+            mock_hbox.return_value = mock_hbox_instance
+
+            mock_buttons = [MagicMock() for _ in range(7)]
+            for btn in mock_buttons:
+                btn.isCheckable.return_value = False
+            # Make the papyrus button (6th button) checkable
+            mock_buttons[5].isCheckable.return_value = True
             mock_create_button.side_effect = mock_buttons
 
             tab_setup_mixin.setup_bottom_buttons(mock_layout)
@@ -180,7 +266,7 @@ class TestMainTabSetup:
 
     def test_update_papyrus_button_style_monitoring_active(self, tab_setup_mixin):
         """Should update button style when monitoring is active."""
-        mock_button = MagicMock(spec=QPushButton)
+        mock_button = MagicMock()
         tab_setup_mixin.papyrus_button = mock_button
 
         tab_setup_mixin.update_papyrus_button_style(True)
@@ -193,7 +279,7 @@ class TestMainTabSetup:
 
     def test_update_papyrus_button_style_monitoring_inactive(self, tab_setup_mixin):
         """Should update button style when monitoring is inactive."""
-        mock_button = MagicMock(spec=QPushButton)
+        mock_button = MagicMock()
         tab_setup_mixin.papyrus_button = mock_button
 
         tab_setup_mixin.update_papyrus_button_style(False)
@@ -205,6 +291,8 @@ class TestMainTabSetup:
         assert "rgb(45, 237, 138)" in style_call
 
 
+@pytest.mark.unit
+@pytest.mark.gui
 class TestArticlesTabSetup:
     """Tests for articles tab setup."""
 
@@ -214,7 +302,7 @@ class TestArticlesTabSetup:
              patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
              patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial:
 
-            mock_button_instances = [MagicMock(spec=QPushButton) for _ in range(9)]
+            mock_button_instances = [MagicMock() for _ in range(9)]
             mock_button.side_effect = mock_button_instances
 
             tab_setup_mixin.setup_articles_tab()
@@ -238,15 +326,38 @@ class TestArticlesTabSetup:
         """Should create buttons with correct URLs."""
         captured_urls = []
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
+        # Need to mock all Qt classes used in setup_articles_tab
+        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
+             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label, \
+             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid, \
+             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
+             patch("ClassicLib.Interface.TabSetupMixin.QSizePolicy") as mock_size_policy, \
+             patch("ClassicLib.Interface.TabSetupMixin.Qt") as mock_qt, \
              patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial:
+
+            # Setup mock returns
+            mock_vbox_instance = MagicMock()
+            mock_vbox.return_value = mock_vbox_instance
+
+            mock_label_instance = MagicMock()
+            mock_label.return_value = mock_label_instance
+
+            mock_grid_instance = MagicMock()
+            mock_grid.return_value = mock_grid_instance
+
+            # Mock Qt.AlignmentFlag
+            mock_qt.AlignmentFlag.AlignCenter = MagicMock()
+
+            # Mock QSizePolicy.Policy
+            mock_size_policy.Policy.Expanding = MagicMock()
+            mock_size_policy.Policy.Fixed = MagicMock()
 
             def capture_partial(func, url):
                 captured_urls.append(url)
                 return MagicMock()
 
             mock_partial.side_effect = capture_partial
-            mock_button.return_value = MagicMock(spec=QPushButton)
+            mock_button.return_value = MagicMock()
 
             tab_setup_mixin.setup_articles_tab()
 
@@ -266,6 +377,8 @@ class TestArticlesTabSetup:
             assert captured_urls == expected_urls
 
 
+@pytest.mark.unit
+@pytest.mark.gui
 class TestBackupsTabSetup:
     """Tests for backups tab setup."""
 
@@ -274,7 +387,7 @@ class TestBackupsTabSetup:
         with patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label, \
              patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button:
 
-            mock_button_instance = MagicMock(spec=QPushButton)
+            mock_button_instance = MagicMock()
             mock_button.return_value = mock_button_instance
 
             tab_setup_mixin.setup_backups_tab()
@@ -299,6 +412,8 @@ class TestBackupsTabSetup:
             tab_setup_mixin.check_existing_backups.assert_called_once()
 
 
+@pytest.mark.unit
+@pytest.mark.gui
 class TestButtonCreation:
     """Tests for button creation utilities."""
 
@@ -334,23 +449,12 @@ class TestButtonCreation:
             # Should not connect clicked for checkable buttons
             mock_button.clicked.connect.assert_not_called()
 
-    def test_add_main_button_wrapper(self, tab_setup_mixin):
-        """Should wrap add_main_button from UIHelpers."""
-        mock_layout = MagicMock()
-        callback = MagicMock()
-
-        with patch("ClassicLib.Interface.TabSetupMixin.add_main_button") as mock_add_main:
-            mock_button = MagicMock(spec=QPushButton)
-            mock_add_main.return_value = mock_button
-
-            result = tab_setup_mixin.add_main_button(
-                mock_layout, "Text", callback, "Tooltip"
-            )
-
-            assert result == mock_button
-            mock_add_main.assert_called_with(mock_layout, "Text", callback, "Tooltip")
+    # Note: add_main_button is not a method of TabSetupMixin, it's imported from UIHelpers
+    # The TYPE_CHECKING stub is just for type hints, not an actual method
 
 
+@pytest.mark.unit
+@pytest.mark.gui
 class TestLayoutStructure:
     """Tests for layout structure and organization."""
 
@@ -365,12 +469,12 @@ class TestLayoutStructure:
             layouts_created = {"vbox": [], "hbox": []}
 
             def track_vbox(*args, **kwargs):
-                layout = MagicMock(spec=QVBoxLayout)
+                layout = MagicMock()
                 layouts_created["vbox"].append(layout)
                 return layout
 
             def track_hbox(*args, **kwargs):
-                layout = MagicMock(spec=QHBoxLayout)
+                layout = MagicMock()
                 layouts_created["hbox"].append(layout)
                 return layout
 
@@ -392,19 +496,41 @@ class TestLayoutStructure:
 
     def test_articles_tab_grid_layout(self, tab_setup_mixin):
         """Should arrange article buttons in grid."""
-        with patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid_class, \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class:
+        # Need to mock all Qt classes used in setup_articles_tab
+        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
+             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label, \
+             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid_class, \
+             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class, \
+             patch("ClassicLib.Interface.TabSetupMixin.QSizePolicy") as mock_size_policy, \
+             patch("ClassicLib.Interface.TabSetupMixin.Qt") as mock_qt, \
+             patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial:
+
+            # Setup mock returns
+            mock_vbox_instance = MagicMock()
+            mock_vbox.return_value = mock_vbox_instance
+
+            mock_label_instance = MagicMock()
+            mock_label.return_value = mock_label_instance
 
             mock_grid = MagicMock()
             mock_grid_class.return_value = mock_grid
 
+            # Mock Qt.AlignmentFlag
+            mock_qt.AlignmentFlag.AlignCenter = MagicMock()
+
+            # Mock QSizePolicy.Policy
+            mock_size_policy.Policy.Expanding = MagicMock()
+            mock_size_policy.Policy.Fixed = MagicMock()
+
+            # Track button positions
             button_positions = []
 
             def track_add_widget(widget, row, col):
                 button_positions.append((row, col))
 
             mock_grid.addWidget.side_effect = track_add_widget
-            mock_button_class.return_value = MagicMock(spec=QPushButton)
+            mock_button_class.return_value = MagicMock()
+            mock_partial.return_value = MagicMock()
 
             tab_setup_mixin.setup_articles_tab()
 
@@ -416,3 +542,248 @@ class TestLayoutStructure:
             ]
 
             assert button_positions == expected_positions
+
+
+@pytest.mark.unit
+@pytest.mark.gui
+class TestEdgeCases:
+    """Tests for edge cases and error handling."""
+
+    def test_update_papyrus_button_style_no_button(self, tab_setup_mixin):
+        """Should handle gracefully when papyrus button doesn't exist."""
+        # Test when attribute doesn't exist
+        if hasattr(tab_setup_mixin, "papyrus_button"):
+            delattr(tab_setup_mixin, "papyrus_button")
+
+        # Should not raise error
+        tab_setup_mixin.update_papyrus_button_style(True)
+        tab_setup_mixin.update_papyrus_button_style(False)
+
+        # Test when attribute is None
+        tab_setup_mixin.papyrus_button = None
+        tab_setup_mixin.update_papyrus_button_style(True)
+        tab_setup_mixin.update_papyrus_button_style(False)
+
+    def test_setup_main_tab_with_none_edits(self, tab_setup_mixin):
+        """Should handle None returned from setup_folder_section."""
+        with patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder, \
+             patch.object(tab_setup_mixin, "setup_main_buttons"), \
+             patch.object(tab_setup_mixin, "setup_bottom_buttons"), \
+             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
+             patch("ClassicLib.Interface.TabSetupMixin.QWidget"):
+
+            # setup_folder_section returns None for both edits
+            mock_folder.return_value = None
+            mock_vbox.return_value = MagicMock()
+
+            tab_setup_mixin.setup_main_tab()
+
+            # Should handle None gracefully
+            assert tab_setup_mixin.mods_folder_edit is None
+            assert tab_setup_mixin.scan_folder_edit is None
+            # Should not try to connect signal on None
+            assert mock_folder.call_count == 2
+
+    def test_create_button_with_mock_qt_classes(self, tab_setup_mixin):
+        """Should handle mocked Qt classes properly in tests."""
+        callback = MagicMock()
+
+        # Create mock button without isCheckable attribute initially
+        mock_button = MagicMock()
+        # Remove isCheckable if it exists to test hasattr logic
+        if hasattr(mock_button, "isCheckable"):
+            delattr(mock_button, "isCheckable")
+
+        with patch("ClassicLib.Interface.TabSetupMixin.QPushButton", return_value=mock_button):
+            result = tab_setup_mixin._create_button("Test", "Tooltip", callback)
+
+            # Should handle missing isCheckable gracefully
+            assert result == mock_button
+            mock_button.clicked.connect.assert_called_with(callback)
+
+    def test_setup_articles_tab_empty_button_data(self, tab_setup_mixin):
+        """Should handle empty button data gracefully."""
+        # This test demonstrates that the method works even with no buttons
+        # by directly mocking the button creation to return nothing
+        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
+             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label, \
+             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid, \
+             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
+             patch("ClassicLib.Interface.TabSetupMixin.partial"):
+
+            mock_vbox.return_value = MagicMock()
+            mock_grid.return_value = MagicMock()
+            mock_label.return_value = MagicMock()
+
+            # Track if buttons are created
+            buttons_created = 0
+
+            def button_creator(text):
+                nonlocal buttons_created
+                buttons_created += 1
+                return MagicMock()
+
+            mock_button.side_effect = button_creator
+
+            # Call the actual method - it will create 9 buttons by default
+            tab_setup_mixin.setup_articles_tab()
+
+            # The implementation always creates 9 buttons (hardcoded in button_data)
+            assert buttons_created == 9
+
+
+@pytest.mark.unit
+@pytest.mark.gui
+class TestStaticMethod:
+    """Tests for static methods."""
+
+    def test_setup_articles_section_static(self, tab_setup_mixin):
+        """Should properly setup articles section as static method."""
+        mock_layout = MagicMock()
+
+        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
+             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label, \
+             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid, \
+             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
+             patch("ClassicLib.Interface.TabSetupMixin.QDesktopServices") as mock_desktop, \
+             patch("ClassicLib.Interface.TabSetupMixin.supports_add_layout", return_value=True):
+
+            mock_vbox.return_value = MagicMock()
+            mock_grid.return_value = MagicMock()
+            mock_button.return_value = MagicMock()
+
+            # Call static method directly from class
+            TabSetupMixin.setup_articles_section(mock_layout)
+
+            # Should create title label
+            mock_label.assert_called_with("USEFUL RESOURCES & LINKS")
+
+            # Should create 9 buttons
+            assert mock_button.call_count == 9
+
+            # Should add layout if supported
+            mock_layout.addLayout.assert_called()
+
+
+@pytest.mark.unit
+@pytest.mark.gui
+class TestSignalConnections:
+    """Tests for signal connections and callbacks."""
+
+    def test_scan_folder_edit_signal_connection(self, tab_setup_mixin):
+        """Should connect editingFinished signal for scan folder validation."""
+        with patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder, \
+             patch.object(tab_setup_mixin, "setup_main_buttons"), \
+             patch.object(tab_setup_mixin, "setup_bottom_buttons"), \
+             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"), \
+             patch("ClassicLib.Interface.TabSetupMixin.QWidget"):
+
+            # Create mock edits with signal
+            mock_mods_edit = MagicMock()
+            mock_scan_edit = MagicMock()
+            mock_scan_edit.editingFinished = MagicMock()
+            mock_scan_edit.editingFinished.connect = MagicMock()
+
+            mock_folder.side_effect = [mock_mods_edit, mock_scan_edit]
+
+            tab_setup_mixin.setup_main_tab()
+
+            # Verify signal connected
+            mock_scan_edit.editingFinished.connect.assert_called_once_with(
+                tab_setup_mixin.validate_scan_folder_text
+            )
+
+    def test_button_group_additions(self, tab_setup_mixin):
+        """Should add scan buttons to button group."""
+        mock_layout = MagicMock()
+
+        with patch("ClassicLib.Interface.TabSetupMixin.add_main_button") as mock_add:
+            mock_crash_button = MagicMock()
+            mock_game_button = MagicMock()
+            mock_add.side_effect = [mock_crash_button, mock_game_button]
+
+            # Reset button group mock to track calls
+            tab_setup_mixin.scan_button_group.reset_mock()
+
+            tab_setup_mixin.setup_main_buttons(mock_layout)
+
+            # Should add both buttons to group
+            calls = tab_setup_mixin.scan_button_group.addButton.call_args_list
+            assert len(calls) == 2
+            assert calls[0][0][0] == mock_crash_button
+            assert calls[1][0][0] == mock_game_button
+
+
+@pytest.mark.unit
+@pytest.mark.gui
+class TestTooltipsAndStyles:
+    """Tests for tooltips and button styles."""
+
+    def test_button_tooltips_set(self, tab_setup_mixin):
+        """Should set tooltips for all buttons."""
+        with patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class:
+            buttons_created = []
+
+            def track_button(text):
+                btn = MagicMock()
+                btn.text = text
+                btn.isCheckable.return_value = False
+                buttons_created.append(btn)
+                return btn
+
+            mock_button_class.side_effect = track_button
+
+            # Test _create_button tooltip setting
+            btn = tab_setup_mixin._create_button(
+                "TEST", "Test tooltip", MagicMock()
+            )
+
+            btn.setToolTip.assert_called_with("Test tooltip")
+
+    def test_button_styles_applied(self, tab_setup_mixin):
+        """Should apply correct styles to buttons."""
+        with patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class:
+            mock_button = MagicMock()
+            mock_button.isCheckable.return_value = False
+            mock_button_class.return_value = mock_button
+
+            # Test bottom button style
+            btn = tab_setup_mixin._create_button(
+                "TEST", "Tooltip", MagicMock()
+            )
+
+            # Should apply BOTTOM_BUTTON_STYLE from UIHelpers
+            mock_button.setStyleSheet.assert_called()
+            style_arg = mock_button.setStyleSheet.call_args[0][0]
+            # Check for key style properties
+            assert "QPushButton" in style_arg
+            assert "border-radius" in style_arg
+
+
+@pytest.mark.unit
+@pytest.mark.gui
+class TestPlaceholderText:
+    """Tests for placeholder text in edit fields."""
+
+    def test_folder_edit_placeholders(self, tab_setup_mixin):
+        """Should set placeholder text for folder edit fields."""
+        with patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder, \
+             patch.object(tab_setup_mixin, "setup_main_buttons"), \
+             patch.object(tab_setup_mixin, "setup_bottom_buttons"), \
+             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"), \
+             patch("ClassicLib.Interface.TabSetupMixin.QWidget"):
+
+            # Create mock edits
+            mock_mods_edit = MagicMock()
+            mock_scan_edit = MagicMock()
+            mock_folder.side_effect = [mock_mods_edit, mock_scan_edit]
+
+            tab_setup_mixin.setup_main_tab()
+
+            # Verify placeholder text set
+            mock_mods_edit.setPlaceholderText.assert_called_with(
+                "Optional: Select your mod staging folder (e.g., MO2/mods)"
+            )
+            mock_scan_edit.setPlaceholderText.assert_called_with(
+                "Optional: Select a supplementary custom folder with crash logs"
+            )

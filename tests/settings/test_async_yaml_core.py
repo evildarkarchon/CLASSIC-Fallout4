@@ -12,16 +12,11 @@ from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
 from ClassicLib.Constants import YAML
 from ClassicLib.MessageHandler import init_message_handler
 
-
-@pytest.fixture
-def init_message_handler_fixture():
-    """Initialize message handler for tests."""
-    handler = init_message_handler(parent=None, is_gui_mode=False)
-    yield
-    # Clean up
-    import ClassicLib.MessageHandler
-
-    ClassicLib.MessageHandler._message_handler = None
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
 
 
 @pytest.fixture
@@ -52,7 +47,7 @@ class TestAsyncYamlSettingsCore:
     """Test suite for AsyncYamlSettingsCore basic functionality."""
 
     @pytest.mark.asyncio
-    async def test_path_resolution(self, async_yaml_core):
+    async def test_path_resolution(self, async_yaml_core, message_handler, async_bridge):
         """Test YAML store path resolution."""
         # Test Main store path
         # Use file_ops for path resolution (not async)
@@ -69,7 +64,7 @@ class TestAsyncYamlSettingsCore:
         assert settings_path2 == settings_path  # Should be same path
 
     @pytest.mark.asyncio
-    async def test_load_yaml_caching(self, async_yaml_core, temp_yaml_file):
+    async def test_load_yaml_caching(self, async_yaml_core, temp_yaml_file, message_handler, async_bridge):
         """Test YAML loading and caching behavior."""
         # First load should read from file through file_ops
         data1 = await async_yaml_core.file_ops.load_yaml_file(temp_yaml_file)
@@ -82,7 +77,7 @@ class TestAsyncYamlSettingsCore:
         # Note: file_ops doesn't cache at file level, settings are cached at the async_yaml_settings level
 
     @pytest.mark.asyncio
-    async def test_get_setting_basic(self, async_yaml_core, temp_yaml_file, monkeypatch):
+    async def test_get_setting_basic(self, async_yaml_core, temp_yaml_file, monkeypatch, message_handler, async_bridge):
         """Test basic get_setting functionality."""
 
         # Mock get_path_for_store to return our temp file
@@ -104,7 +99,7 @@ class TestAsyncYamlSettingsCore:
         assert value == "deep"
 
     @pytest.mark.asyncio
-    async def test_get_setting_with_update(self, async_yaml_core, temp_yaml_file, monkeypatch):
+    async def test_get_setting_with_update(self, async_yaml_core, temp_yaml_file, monkeypatch, message_handler, async_bridge):
         """Test setting update functionality."""
 
         # Mock get_path_for_store
@@ -124,7 +119,7 @@ class TestAsyncYamlSettingsCore:
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="Static store protection not implemented in current version")
-    async def test_static_store_protection(self, async_yaml_core, temp_yaml_file, monkeypatch):
+    async def test_static_store_protection(self, async_yaml_core, temp_yaml_file, monkeypatch, message_handler, async_bridge):
         """Test that static stores cannot be modified."""
 
         # Mock get_path_for_store
@@ -139,7 +134,7 @@ class TestAsyncYamlSettingsCore:
             await async_yaml_core.async_yaml_settings(str, YAML.Main, "test_settings.string_value", "new_value")
 
     @pytest.mark.asyncio
-    async def test_context_manager(self, async_yaml_core, monkeypatch):
+    async def test_context_manager(self, async_yaml_core, monkeypatch, message_handler):
         """Test async context manager support."""
         prefetch_called = False
 
@@ -156,7 +151,7 @@ class TestAsyncYamlSettingsCore:
         assert async_yaml_core is not None
 
     @pytest.mark.asyncio
-    async def test_metrics_tracking(self, async_yaml_core):
+    async def test_metrics_tracking(self, async_yaml_core, message_handler):
         """Test performance metrics tracking."""
         # Metrics tracking is not implemented in the core
         # This test should check cache state instead

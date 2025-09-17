@@ -10,6 +10,7 @@ from collections.abc import Callable, Coroutine
 from pathlib import Path
 from typing import Any
 
+from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
 
@@ -195,7 +196,8 @@ def run_performance_test(crashlog_list: list[Path], remove_list: tuple[str]) -> 
 
         # Test async version
         async_start: float = time.perf_counter()
-        asyncio.run(timed_reformat_async(test_files, remove_list))
+        bridge = AsyncBridge.get_instance()
+        bridge.run_async(timed_reformat_async(test_files, remove_list))
         async_time: float = time.perf_counter() - async_start
 
         # Results

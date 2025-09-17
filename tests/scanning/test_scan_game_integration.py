@@ -14,17 +14,14 @@ from unittest.mock import AsyncMock, patch
 import aiofiles
 import pytest
 
-import ClassicLib.MessageHandler
-from ClassicLib.MessageHandler import init_message_handler
+
 from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 
-
-@pytest.fixture(autouse=True)
-def init_message_handler_fixture() -> Generator[None, None, None]:
-    """Initialize MessageHandler for tests."""
-    _handler = init_message_handler(parent=None, is_gui_mode=False)
-    yield
-    ClassicLib.MessageHandler._message_handler = None
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
 
 
 @pytest.fixture
@@ -117,8 +114,8 @@ class TestScanGameCoreIntegration:
     @pytest.mark.asyncio
     @pytest.mark.performance
     async def test_scan_game_core_performance_improvement(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
-    ):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
+        message_handler):
         """Test that ScanGameCore async methods are faster than sequential processing."""
         # Create multiple BA2 files
         for i in range(5):

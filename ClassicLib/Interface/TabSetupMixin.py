@@ -29,6 +29,7 @@ from ClassicLib.Interface.UIHelpers import (
     BOTTOM_BUTTON_STYLE,
     add_main_button,
     setup_folder_section,
+    supports_add_layout,
 )
 
 if TYPE_CHECKING:
@@ -316,13 +317,13 @@ class TabSetupMixin:
         """
         main_buttons_layout: QHBoxLayout = QHBoxLayout()
         main_buttons_layout.setSpacing(10)
-        self.crash_logs_button = self.add_main_button(
+        self.crash_logs_button = add_main_button(
             main_buttons_layout, "SCAN CRASH LOGS", self.crash_logs_scan, "Scan all detected crash logs for issues."
         )
         if self.crash_logs_button:
             self.scan_button_group.addButton(self.crash_logs_button)
 
-        self.game_files_button = self.add_main_button(
+        self.game_files_button = add_main_button(
             main_buttons_layout,
             "SCAN GAME FILES",
             self.game_files_scan,
@@ -331,7 +332,7 @@ class TabSetupMixin:
         if self.game_files_button:
             self.scan_button_group.addButton(self.game_files_button)
 
-        if isinstance(layout, QVBoxLayout | QHBoxLayout):  # Ensure layout supports addLayout
+        if supports_add_layout(layout):  # Ensure layout supports addLayout
             layout.addLayout(main_buttons_layout)
 
     @staticmethod
@@ -400,7 +401,7 @@ class TabSetupMixin:
             grid_layout.addWidget(button, row, col)
 
         articles_section_layout.addLayout(grid_layout)
-        if isinstance(layout, QVBoxLayout | QHBoxLayout):
+        if supports_add_layout(layout):
             layout.addLayout(articles_section_layout)
 
     def setup_bottom_buttons(self, layout: QBoxLayout) -> None:
@@ -451,7 +452,7 @@ class TabSetupMixin:
         main_actions_hbox.addWidget(exit_button)
 
         # Add both layouts to the main layout with minimal spacing
-        if isinstance(layout, QVBoxLayout | QHBoxLayout):
+        if supports_add_layout(layout):
             layout.addLayout(bottom_buttons_hbox)
             layout.addSpacing(5)  # Small spacing between button rows
             layout.addLayout(main_actions_hbox)
@@ -472,7 +473,8 @@ class TabSetupMixin:
         button.setToolTip(tooltip)
 
         # Connect appropriate signal based on whether it's a toggle button or regular
-        if isinstance(button, QPushButton) and button.isCheckable():
+        # Use hasattr to avoid isinstance issues with mocked objects in tests
+        if hasattr(button, 'isCheckable') and button.isCheckable():
             button.toggled.connect(callback)
         else:
             button.clicked.connect(callback)
@@ -481,7 +483,3 @@ class TabSetupMixin:
         button.setStyleSheet(BOTTOM_BUTTON_STYLE)
 
         return button
-
-    def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
-        """Wrapper for add_main_button from UIHelpers."""
-        return add_main_button(layout, text, callback, tooltip)

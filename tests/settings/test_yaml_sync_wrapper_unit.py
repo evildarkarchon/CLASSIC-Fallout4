@@ -10,22 +10,28 @@ from unittest.mock import patch
 import pytest
 import ruamel.yaml
 from ClassicLib.Constants import YAML
-from ClassicLib.MessageHandler import init_message_handler
+
 from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_cache, yaml_settings
+
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
 
 pytestmark = pytest.mark.unit
 
 class TestSyncWrapperCompatibility:
     """Essential tests for sync wrapper compatibility."""
 
-    def test_singleton_behavior(self):
+    def test_singleton_behavior(self, message_handler, async_bridge):
         """Test that YamlSettingsCache maintains singleton pattern."""
         cache1 = YamlSettingsCache()
         cache2 = YamlSettingsCache()
         assert cache1 is cache2
         assert cache1 is yaml_cache
 
-    def test_sync_wrapper_delegates_to_async_core(self, temp_yaml_file, init_message_handler_fixture):
+    def test_sync_wrapper_delegates_to_async_core(self, temp_yaml_file, message_handler, async_bridge):
         """Test that sync wrapper correctly delegates to async core."""
         cache = YamlSettingsCache()
         assert hasattr(cache, '_async_core')
@@ -35,7 +41,7 @@ class TestSyncWrapperCompatibility:
         data = bridge.run_async(cache._async_core.file_ops.load_yaml_file(temp_yaml_file))
         assert data['test_settings']['string_value'] == 'test'
 
-    def test_cache_property_forwarding(self):
+    def test_cache_property_forwarding(self, message_handler, async_bridge):
         """Test that cache properties forward to async core."""
         cache = YamlSettingsCache()
         assert hasattr(cache._async_core, 'cache')
@@ -46,7 +52,7 @@ class TestSyncWrapperCompatibility:
 class TestModuleLevelFunctions:
     """Test module-level convenience functions."""
 
-    def test_yaml_settings_function(self, temp_yaml_file, monkeypatch):
+    def test_yaml_settings_function(self, temp_yaml_file, monkeypatch, message_handler, async_bridge):
         """Test yaml_settings module function."""
 
         def mock_get_path(store):
@@ -55,7 +61,7 @@ class TestModuleLevelFunctions:
         value = yaml_settings(str, YAML.TEST, 'test_settings.string_value')
         assert value == 'test'
 
-    def test_yaml_settings_path_conversion(self):
+    def test_yaml_settings_path_conversion(self, message_handler, async_bridge):
         """Test yaml_settings converts strings to Path objects."""
         with patch.object(yaml_cache, 'async_yaml_settings', return_value='/some/path'):
             path_value = yaml_settings(Path, YAML.TEST, 'some.path')
@@ -68,7 +74,7 @@ class TestModuleLevelFunctions:
             path_value = yaml_settings(Path, YAML.TEST, 'numeric.value')
             assert path_value is None
 
-    def test_classic_settings_function(self, tmp_path, monkeypatch):
+    def test_classic_settings_function(self, tmp_path, monkeypatch, message_handler, async_bridge):
         """Test classic_settings module function."""
         settings_file = tmp_path / 'CLASSIC Settings.yaml'
         data = {'CLASSIC_Settings': {'Test Setting': 'test value', 'Bool Setting': True}}
@@ -89,7 +95,7 @@ class TestModuleLevelFunctions:
 class TestBatchOperations:
     """Test batch operations through sync wrapper."""
 
-    def test_batch_get_settings_sync(self, temp_yaml_file, monkeypatch):
+    def test_batch_get_settings_sync(self, temp_yaml_file, monkeypatch, message_handler, async_bridge):
         """Test batch_get_settings through sync wrapper."""
         cache = YamlSettingsCache()
 

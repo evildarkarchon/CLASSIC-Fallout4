@@ -34,7 +34,6 @@ class TestRegistryDetection:
         result = _game_path_find_registry('Fallout4.exe')
         assert result is None
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     @patch('ClassicLib.GamePath.msg_info')
     @patch('platform.system', return_value='Windows')
     def test_game_path_find_windows_registry_success(self, mock_platform: MagicMock, mock_msg_info: MagicMock) -> None:

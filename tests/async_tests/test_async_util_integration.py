@@ -12,6 +12,8 @@ from ClassicLib.AsyncUtil import detect_encoding_async, get_encoding_detection_a
 
 pytestmark = pytest.mark.integration
 
+@pytest.mark.integration
+@pytest.mark.asyncio
 class TestAsyncEncodingDetection:
     """Test cases for async encoding detection utilities."""
 

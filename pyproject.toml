@@ -52,6 +52,7 @@ pytest-qt = ">=4.4.0"
 psutil = "^7.0.0"
 pytest-xdist = "^3.8.0"
 pytest-textual-snapshot = "^1.1.0"
+pytest-timeout = ">=2.4"
 textual-dev = "^1.7.0"
 pre-commit = "^4.3.0"
 
@@ -83,7 +84,7 @@ disable_error_code = [
 
 [tool.pyright]
 typeCheckingMode = "standard"
-extraPaths = ["."]
+extraPaths = [".", "./ClassicLib", "./tests"]
 reportArgumentType = false         # Redundant with Mypy arg-type
 reportAssignmentType = false       # Redundant with Mypy assignment
 reportMissingParameterType = false # Redundant with Ruff ANN001
@@ -104,6 +105,7 @@ quote-style = "double"
 skip-magic-trailing-comma = false
 
 [tool.ruff.lint]
+preview = true
 ignore = [
 	"ANN401",  # Allow use of typing.Any
 	"E501",    # Duplicate of B950 line-too-long
@@ -111,6 +113,7 @@ ignore = [
 	"PLR0904", # too-many-public-methods
 	"PLR0911", # too-many-return-statements
 	"PLR0912", # too-many-branches
+	"PLR0913",
 	"PLR0914", # too-many-local-variables
 	"PLR0915", # too-many-statements
 	"TRY003",  # Allow custom exception messages
@@ -118,7 +121,9 @@ ignore = [
 	"PLR2004", # Allow magic values in comparisons
 	"PLW2901", # Allow overwriting loop variables
 	"SLF001",
-	"PLC0415"
+	"PLC0415",
+	"DOC502",
+	"Q000"
 ]
 
 extend-select = [
@@ -150,6 +155,26 @@ extend-select = [
 	"TID",   # Tidy Imports
 	"TRY",   # Exception Anti-Patterns
 	"UP",    # pyupgrade (New Syntax Suggestions)
+	"FIX",
+	"FA",
+	"Q",
+	"TID252",
+	"DOC",
+	"D100",
+	"D101",
+	"D102",
+	"D103",
+	"D104",
+	"D105",
+	"D106",
+	"D107",
+	"D200",
+	"D300",
+	"D301",
+	"D414",
+	"D417",
+	"D418",
+	"D419"
 
 	# "D",     # pydocstyle
 	# "C901",  # Complex Structures
@@ -161,10 +186,11 @@ extend-select = [
 	# "N",     # PEP8 Naming Conventions
 	# "PGH",   # PyGrep Hooks
 	# "PYI",   # Stub Files
-	# "Q",     # Quotes
 	# "S",     # Security Testing
 ]
-
+[tool.ruff.lint.flake8-tidy-imports]
+# Disallow all relative imports.
+ban-relative-imports = "all"
 [tool.coverage.run]
 source = ["."]
 omit = [

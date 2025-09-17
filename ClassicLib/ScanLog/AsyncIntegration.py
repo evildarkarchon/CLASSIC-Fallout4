@@ -10,6 +10,7 @@ import time
 from typing import TYPE_CHECKING
 
 from ClassicLib import MessageTarget, msg_info, msg_progress_context
+from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
 from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
@@ -132,5 +133,10 @@ def run_async_scan() -> None:
     Run the async crash log scan.
 
     This function can be called from synchronous code to run the async scan.
+    Uses AsyncBridge for thread-safe async execution.
     """
-    asyncio.run(async_crashlogs_scan())
+    bridge = AsyncBridge.get_instance()
+    bridge.run_async(async_crashlogs_scan())
+
+
+__all__ = ['async_crashlogs_scan']

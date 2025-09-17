@@ -5,40 +5,57 @@ from unittest.mock import MagicMock
 import pytest
 
 
-@pytest.fixture(scope="function")
-def qt_application():
+@pytest.fixture(scope="session", autouse=True)
+def qt_application_session():
     """
-    Ensure a QApplication instance exists for Qt/PySide6 tests.
+    Session-scoped QApplication management.
 
-    This fixture handles the complex lifecycle of QApplication:
-    - Creates an instance if none exists
-    - Reuses existing instance if present (Qt requirement)
-    - Properly cleans up after tests
+    This fixture ensures:
+    - A single QApplication instance for the entire test session
+    - Proper cleanup at the end of all tests
+    - Prevents app.quit() from being called between tests
     """
-    from PySide6.QtCore import QCoreApplication
     from PySide6.QtWidgets import QApplication
 
-    # Check if QApplication already exists
+    # Create or get QApplication for the session
     app = QApplication.instance()
-
     if app is None:
-        # Create new QApplication
         app = QApplication([])
-        created = True
-    else:
-        created = False
 
     yield app
 
-    # Clean up if we created the app
-    if created:
+    # Clean up at the end of the session
+    if app:
         app.quit()
-        # Process remaining events
-        app.processEvents()
-        # Delete the application
-        del app
-        # Ensure it's really gone
-        QCoreApplication.instance = lambda: None
+        app.deleteLater()
+        # Process events to ensure deletion
+        try:
+            app.processEvents()
+        except:
+            pass  # App may already be deleted
+
+
+@pytest.fixture(scope="function")
+def qt_application(qt_application_session):
+    """
+    Function-scoped fixture that provides the session QApplication.
+
+    This fixture:
+    - Provides the QApplication instance to tests
+    - Processes events after each test to prevent freezing
+    - Does NOT quit or delete the app (managed by session fixture)
+    """
+    app = qt_application_session
+
+    yield app
+
+    # Clean up after each test - process events but don't quit app
+    if app:
+        # Process any pending events to avoid freezing
+        try:
+            app.processEvents()
+        except:
+            pass  # App may be in an invalid state
 
 
 @pytest.fixture(scope="function")
@@ -75,17 +92,25 @@ def gui_message_handler(qt_parent_widget):
     import ClassicLib.MessageHandler
     from ClassicLib.MessageHandler import init_message_handler
 
-    # Initialize in GUI mode with parent widget
-    handler = init_message_handler(parent=qt_parent_widget, is_gui_mode=True)
+    # Store any existing handler
+    old_handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
 
-    # Mock the message signal to prevent actual dialog creation
-    # This prevents blocking dialogs during tests
-    handler.message_signal = MagicMock()
+    try:
+        # Initialize in GUI mode with parent widget
+        handler = init_message_handler(parent=qt_parent_widget, is_gui_mode=True)
 
-    yield handler
+        # Mock the message signal to prevent actual dialog creation
+        # This prevents blocking dialogs during tests
+        handler.message_signal = MagicMock()
 
-    # Clean up
-    ClassicLib.MessageHandler._message_handler = None
+        yield handler
+    finally:
+        # Restore previous state or clean up
+        ClassicLib.MessageHandler._message_handler = old_handler
+
+        # Clear any cached references
+        if hasattr(ClassicLib.MessageHandler, "_cached_handler"):
+            delattr(ClassicLib.MessageHandler, "_cached_handler")
 
 
 @pytest.fixture(scope="function")

@@ -108,8 +108,7 @@ class TestAsyncPipeline:
         assert pipeline.formid_db_exists is False
         assert isinstance(pipeline.performance_stats, dict)
 
-    @pytest.mark.usefixtures("init_message_handler_fixture")
-    async def test_async_pipeline_process_crash_logs(self, crash_log_files: list[Path], mock_yamldata: MagicMock) -> None:
+    async def test_async_pipeline_process_crash_logs(self, crash_log_files: list[Path], mock_yamldata: MagicMock, message_handler) -> None:
         """Test the full async pipeline processing."""
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,

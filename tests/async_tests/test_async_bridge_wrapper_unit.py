@@ -19,53 +19,64 @@ pytestmark = pytest.mark.unit
 class TestAsyncBridgeWrapper:
     """Test AsyncBridge wrapper patterns"""
 
-    def test_function_wrapper_basic(self):
-        """Test wrapping async functions for sync use"""
+    def test_function_wrapper_basic(self, async_bridge):
+        """Test wrapping async functions for sync use.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+        """
 
         async def async_function(x):
             await asyncio.sleep(0.001)
             return x * 2
 
-        bridge = AsyncBridge.get_instance()
-
-        # Create sync wrapper
+        # Create sync wrapper using fixture-provided bridge
         def sync_wrapper(x):
-            return bridge.run_async(async_function(x))
+            return async_bridge.run_async(async_function(x))
 
         assert sync_wrapper(5) == 10
         assert sync_wrapper(0) == 0
 
-    def test_function_wrapper_with_kwargs(self):
-        """Test wrapping functions with keyword arguments"""
+    def test_function_wrapper_with_kwargs(self, async_bridge):
+        """Test wrapping functions with keyword arguments.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+        """
 
         async def async_calc(a, b=10, c=20):
             await asyncio.sleep(0.001)
             return a + b + c
 
-        bridge = AsyncBridge.get_instance()
-
         def sync_calc(**kwargs):
-            return bridge.run_async(async_calc(**kwargs))
+            return async_bridge.run_async(async_calc(**kwargs))
 
         assert sync_calc(a=1) == 31
         assert sync_calc(a=1, b=2) == 23
         assert sync_calc(a=1, b=2, c=3) == 6
 
-    def test_lambda_wrapper_pattern(self):
-        """Test using lambdas for quick sync wrappers"""
+    def test_lambda_wrapper_pattern(self, async_bridge):
+        """Test using lambdas for quick sync wrappers.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+        """
 
         async def async_upper(text):
             await asyncio.sleep(0.001)
             return text.upper()
 
-        bridge = AsyncBridge.get_instance()
-        sync_upper = lambda text: bridge.run_async(async_upper(text))
+        sync_upper = lambda text: async_bridge.run_async(async_upper(text))
 
         assert sync_upper("hello") == "HELLO"
         assert sync_upper("world") == "WORLD"
 
-    def test_nested_async_calls(self):
-        """Test bridging nested async calls"""
+    def test_nested_async_calls(self, async_bridge):
+        """Test bridging nested async calls.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+        """
 
         class OuterAsync:
             async def process(self, value):
@@ -81,7 +92,7 @@ class TestAsyncBridgeWrapper:
         class OuterSync:
             def __init__(self):
                 self.outer_async = OuterAsync()
-                self.bridge = AsyncBridge.get_instance()
+                self.bridge = async_bridge
 
             def process_with_inner(self, value):
                 return self.bridge.run_async(self.outer_async.process(value))
@@ -94,48 +105,69 @@ class TestAsyncBridgeWrapper:
 class TestAsyncBridgeBehavior:
     """Test AsyncBridge behavioral characteristics"""
 
-    def test_bridge_reuses_event_loop(self):
-        """Test that AsyncBridge reuses the same event loop in a thread"""
-        bridge = AsyncBridge.get_instance()
+    def test_bridge_reuses_event_loop(self, async_bridge):
+        """Test that AsyncBridge reuses the same event loop in a thread.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+        """
 
         async def get_loop_id():
             return id(asyncio.get_running_loop())
 
         # Multiple calls should use the same loop
-        loop_id1 = bridge.run_async(get_loop_id())
-        loop_id2 = bridge.run_async(get_loop_id())
-        loop_id3 = bridge.run_async(get_loop_id())
+        loop_id1 = async_bridge.run_async(get_loop_id())
+        loop_id2 = async_bridge.run_async(get_loop_id())
+        loop_id3 = async_bridge.run_async(get_loop_id())
 
         assert loop_id1 == loop_id2 == loop_id3
 
-    def test_bridge_handles_concurrent_calls(self):
-        """Test AsyncBridge handles sequential operations correctly"""
-        bridge = AsyncBridge.get_instance()
+    def test_bridge_handles_concurrent_calls(self, async_bridge):
+        """Test AsyncBridge handles sequential operations correctly.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+        """
         results = []
 
         async def async_task(n):
             await asyncio.sleep(0.001)
             return n * 2
 
-        # Sequential calls through bridge
+        # Sequential calls through fixture-provided bridge
         for i in range(5):
-            result = bridge.run_async(async_task(i))
+            result = async_bridge.run_async(async_task(i))
             results.append(result)
 
         assert results == [0, 2, 4, 6, 8]
 
-    def test_bridge_singleton_pattern(self):
-        """Test that AsyncBridge follows singleton pattern"""
+    def test_bridge_singleton_pattern(self, async_bridge):
+        """Test that AsyncBridge follows singleton pattern.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+
+        Note: This test verifies that within a thread, get_instance() returns
+        the same instance. The fixture ensures proper isolation between tests.
+        """
+        # The fixture provides the instance for this test
+        # Verify that get_instance returns the same instance within the test
         bridge1 = AsyncBridge.get_instance()
         bridge2 = AsyncBridge.get_instance()
 
+        # Both should be the same as the fixture-provided instance
         assert bridge1 is bridge2
+        assert bridge1 is async_bridge
 
-    def test_bridge_thread_safety(self):
-        """Test AsyncBridge thread safety characteristics"""
+    def test_bridge_thread_safety(self, async_bridge):
+        """Test AsyncBridge thread safety characteristics.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+        """
         import threading
 
-        bridge = AsyncBridge.get_instance()
+        # Use the fixture-provided bridge instance for proper test isolation
         results = []
 
         async def async_work(thread_id):
@@ -143,7 +175,8 @@ class TestAsyncBridgeBehavior:
             return f"thread_{thread_id}"
 
         def thread_work(thread_id):
-            result = bridge.run_async(async_work(thread_id))
+            # Each thread uses the same bridge instance from the fixture
+            result = async_bridge.run_async(async_work(thread_id))
             results.append(result)
 
         threads = []
@@ -159,22 +192,25 @@ class TestAsyncBridgeBehavior:
         assert len(results) == 3
         assert all(r.startswith("thread_") for r in results)
 
-    def test_bridge_error_propagation(self):
-        """Test that AsyncBridge properly propagates errors"""
-        bridge = AsyncBridge.get_instance()
+    def test_bridge_error_propagation(self, async_bridge):
+        """Test that AsyncBridge properly propagates errors.
+
+        Args:
+            async_bridge: Properly isolated AsyncBridge instance from fixture
+        """
 
         async def async_error():
             await asyncio.sleep(0.001)
             raise ValueError("Test error")
 
         with pytest.raises(ValueError, match="Test error"):
-            bridge.run_async(async_error())
+            async_bridge.run_async(async_error())
 
         # Bridge should still work after error
         async def async_ok():
             return "ok"
 
-        assert bridge.run_async(async_ok()) == "ok"
+        assert async_bridge.run_async(async_ok()) == "ok"
 
 
 if __name__ == "__main__":

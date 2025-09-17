@@ -15,7 +15,6 @@ pytestmark = pytest.mark.integration
 class TestXSELogParsing:
     """Tests for XSE log file parsing to find game path."""
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     @patch('ClassicLib.GamePath.msg_info')
     def test_game_path_find_xse_log_parsing(self, mock_msg_info: MagicMock, tmp_path: Path) -> None:
         """Test game path detection from XSE log file."""
@@ -31,7 +30,6 @@ class TestXSELogParsing:
 class TestManualPathInput:
     """Tests for manual game path input and validation."""
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     @patch('ClassicLib.GamePath.msg_error')
     @patch('ClassicLib.GamePath.msg_info')
     @patch('builtins.input', return_value='C:/Games/Fallout4')
@@ -60,7 +58,6 @@ class TestManualPathInput:
                                     game_path_find()
                                     mock_input.assert_called()
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     @patch('ClassicLib.GamePath.msg_error')
     @patch('ClassicLib.GamePath.msg_info')
     @patch('builtins.input', side_effect=['invalid_path', 'C:/Games/Fallout4'])
@@ -90,7 +87,6 @@ class TestManualPathInput:
                                     assert mock_input.call_count == 2
                                     assert mock_msg_error.call_count >= 1
 
-    @pytest.mark.usefixtures('init_message_handler_fixture')
     @patch('ClassicLib.GamePath.msg_error')
     @patch('ClassicLib.GamePath.msg_info')
     @patch('builtins.input', side_effect=['C:/Games/Fallout4', 'C:/Games/Fallout4'])

@@ -17,14 +17,11 @@ import ClassicLib.MessageHandler
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 
-
-@pytest.fixture(autouse=True)
-def init_message_handler_fixture() -> Generator[None, None, None]:
-    """Initialize MessageHandler for tests."""
-    _handler = init_message_handler(parent=None, is_gui_mode=False)
-    yield
-    # Clean up after test
-    ClassicLib.MessageHandler._message_handler = None
+# Note: MessageHandler initialization is now handled by standardized
+# fixtures in tests/fixtures/registry_fixtures.py which provide:
+# - message_handler: For non-GUI tests
+# - gui_message_handler: For GUI tests (from qt_fixtures.py)
+# - Automatic cleanup via ensure_message_handler_cleanup
 
 
 @pytest.fixture
@@ -120,8 +117,8 @@ class TestScanModsArchived:
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_with_valid_ba2(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
-    ):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
+        message_handler):
         """Test scanning valid BA2 archives."""
         # Create test BA2 files
         ba2_file1 = mock_paths["mods"] / "test1.ba2"
@@ -147,8 +144,8 @@ class TestScanModsArchived:
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_with_invalid_ba2(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
-    ):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
+        message_handler):
         """Test scanning invalid BA2 archives."""
         # Create test BA2 file with invalid header
         ba2_file = mock_paths["mods"] / "invalid.ba2"
@@ -163,8 +160,8 @@ class TestScanModsArchived:
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_concurrency_limit(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
-    ):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
+        message_handler):
         """Test that concurrency is limited by semaphore."""
         # Create multiple BA2 files
         ba2_files = []
@@ -210,8 +207,8 @@ class TestScanModsArchived:
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_timeout_handling(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry
-    ):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
+        message_handler):
         """Test timeout handling for BSArch subprocess."""
         # Create test BA2 file
         ba2_file = mock_paths["mods"] / "timeout.ba2"
