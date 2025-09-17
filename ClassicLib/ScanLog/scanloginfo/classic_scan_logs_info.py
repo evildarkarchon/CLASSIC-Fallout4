@@ -1,8 +1,10 @@
-"""
-Configuration dataclass for scan log operations.
+"""A module for handling classic scan log information with dataclass modeling.
 
-This module provides the ClassicScanLogsInfo dataclass that holds
-all configuration data loaded from YAML settings for scan operations.
+This module defines the `ClassicScanLogsInfo` class, which encapsulates various
+properties and configurations related to classic scan logs, including game hints,
+records, versioning details, and plugin/mod configurations. The information is
+populated from cached YAML settings, and the class verifies the initialization of
+necessary resources during its instantiation.
 """
 
 from dataclasses import dataclass, field
@@ -16,6 +18,42 @@ from ClassicLib.Constants import NULL_VERSION, YAML
 # noinspection PyUnresolvedReferences
 @dataclass
 class ClassicScanLogsInfo:
+    """
+    Represents the information and metadata regarding classic scan logs in a gaming system.
+
+    This class is used for managing and organizing details about classic scan logs, including
+    game hints, records, versions, crash generation details, warnings, and mod configuration.
+    It also ensures that necessary external dependencies, such as YAML cache, are properly
+    initialized before accessing the data.
+
+    Attributes:
+        classic_game_hints (list[str]): List of game hints related to classic logs.
+        classic_records_list (list[str]): List of classic record data related to logs.
+        classic_version (str): Version of the classic log system.
+        classic_version_date (str): Release date of the classic version.
+        crashgen_name (str): Name of the crash generation log.
+        crashgen_latest_og (str): Latest version detail for the crash generation (original).
+        crashgen_latest_vr (str): Latest version detail for the crash generation (VR).
+        crashgen_ignore (set): Set of ignored crash generation logs.
+        warn_noplugins (str): Warning message for missing plugins.
+        warn_outdated (str): Warning message for outdated records or configurations.
+        xse_acronym (str): Acronym used for XSE terminology in the classic logs.
+        game_ignore_plugins (list[str]): List of plugins to ignore during game scanning.
+        game_ignore_records (list[str]): List of records to ignore during game scanning.
+        suspects_error_list (dict[str, str]): Mapping of error codes to respective descriptions.
+        suspects_stack_list (dict[str, list[str]]): Mapping of suspect stack traces to descriptions.
+        autoscan_text (str): Auto-scan text output for classic interface.
+        ignore_list (list[str]): List of entries to ignore in classic logs processing.
+        game_mods_conf (dict[str, str]): Configuration details for mods in the game.
+        game_mods_core (dict[str, str]): Core mods configuration details.
+        game_mods_core_folon (dict[str, str]): FOLON mods configuration details.
+        game_mods_freq (dict[str, str]): Frequency mods configuration data.
+        game_mods_opc2 (dict[str, str]): OPC2 mods configuration details.
+        game_mods_solu (dict[str, str]): Solution mods configuration data.
+        game_version (Version): The detected version of the game.
+        game_version_new (Version): The new or updated detected version of the game.
+        game_version_vr (Version): The detected version of the game in VR mode.
+    """
     classic_game_hints: list[str] = field(default_factory=list)
     classic_records_list: list[str] = field(default_factory=list)
     classic_version: str = ""
@@ -44,6 +82,18 @@ class ClassicScanLogsInfo:
     game_version_vr: Version = field(default=NULL_VERSION, init=False)
 
     def __post_init__(self) -> None:
+        """
+        Initializes and validates YAML cache settings while performing batch operations
+        to retrieve essential configuration values. This method is executed after the
+        dataclass initialization (`__post_init__`). It ensures mandatory dependencies
+        are registered in the `GlobalRegistry` and retrieves a comprehensive set of
+        game-specific configurations from a YAML cache. The retrieved values are then
+        processed and assigned as attributes.
+
+        Raises:
+            TypeError: If `YAML Cache` is not initialized in `GlobalRegistry`.
+
+        """
         if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
             raise TypeError("YAML Cache is not initialized.")
 

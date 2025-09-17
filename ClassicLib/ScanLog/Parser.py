@@ -44,25 +44,21 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
 
 def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, str]], eof_marker: str) -> list[list[str]]:
     """
-    Extracts multiple segments from crash data based on specified segment boundaries and an
-    end-of-file (EOF) marker. The function processes the crash data line by line and divides it
-    into separate segments bounded by the given start and end markers.
+    Extract segments of data from the crash_data based on provided segment boundaries and an EOF marker.
 
-    Parameters:
-        crash_data (list[str]): The list of strings containing the crash data to segment.
-        segment_boundaries (list[tuple[str, str]]): A list of tuples where each tuple contains
-            a start and end marker for a segment. The function processes the crash data
-            in order of these tuples.
-        eof_marker (str): A special marker indicating the end of the file. When the function
-            encounters this marker during collection, it collects all remaining lines of the
-            crash data until the end.
+    This function processes a list of crash data lines and extracts segments defined by start
+    and end boundaries. It supports dynamic handling of multiple segment boundaries and handles
+    edge cases, such as EOF markers or overlapping boundaries.
+
+    Args:
+        crash_data: List of strings where each string represents a line of crash data.
+        segment_boundaries: A list of tuples, where each tuple contains the start and end boundary
+            markers for a segment.
+        eof_marker: Marker string to indicate the end of the file. If encountered while collecting data
+            for a segment, all remaining lines will be appended to that segment.
 
     Returns:
-        list[list[str]]: A list where each element is a list of strings representing a
-        specific segment extracted from the crash data.
-
-    Raises:
-        None
+        List of lists, where each inner list represents a segment of extracted data.
     """
     segments: list[list[str]] = []
     total_lines: int = len(crash_data)

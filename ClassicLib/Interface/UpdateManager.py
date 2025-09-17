@@ -45,21 +45,19 @@ class UpdateManagerMixin:
         update_check_worker: UpdateCheckWorker | None
 
         # Required methods that must be implemented by the mixing class
-        def perform_update_check(self) -> None: ...
-        def force_update_check(self) -> None: ...
+        def perform_update_check(self) -> None: ...  # noqa: D102
+        def force_update_check(self) -> None: ...  # noqa: D102
 
     def update_popup(self) -> None:
         """
-        Starts the update check process when the update popup is invoked.
+        Updates the popup display by initiating an update check if one is not already running.
 
-        This method initiates the update checking process by setting the
-        `is_update_check_running` flag to True and starting the
-        `update_check_timer` with immediate execution.
+        This method ensures that the update checking process is initiated only
+        if no other update check is currently ongoing. It flags the update as
+        running and starts the update timer immediately.
 
-        Attributes:
-            is_update_check_running (bool): Tracks if the update check process is currently running.
-            update_check_timer (QTimer): Timer object used to schedule and manage the update checks.
-
+        Raises:
+            None
         """
         if not self.is_update_check_running:
             self.is_update_check_running = True
@@ -168,7 +166,10 @@ class UpdateManagerMixin:
 
     def _update_check_finished(self) -> None:
         """
-        Cleanup method called when update check thread finishes.
+        Sets the status of the update check process to finished.
+
+        This method clears internal references to the update check thread and worker
+        for proper cleanup after the update process has completed.
         """
         self.is_update_check_running = False
         # ThreadManager handles thread cleanup, just clear our references

@@ -1,3 +1,15 @@
+"""
+This module analyzes and modifies game-related INI configuration files to ensure optimal game
+performance, user experience, and adherence to desirable settings. It performs tasks such as
+checking for specific console command settings that might affect startup time, evaluating VSync
+settings across configuration files, applying required fixes, and logging messages for user
+notification.
+
+The module includes functionalities to:
+- Identify problematic settings in INI files and notify users.
+- Apply specific fixes to ensure compatibility and performance.
+- Detect duplicate configuration files and notify users.
+"""
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib import GlobalRegistry
@@ -70,7 +82,16 @@ def scan_mod_inis() -> str:
 
 
 def check_starting_console_command(config_files: ConfigFileCache, message_list: list[str]) -> None:
-    """Check for console command settings that might slow down game startup."""
+    """
+    Checks for the presence of a specific console command setting in configuration files
+    matching the current game's name, and updates the message list with relevant notices.
+
+    Args:
+        config_files: A cache of configuration files containing file paths and their
+            corresponding sections and settings.
+        message_list: A list of messages to be updated with notices if configuration files
+            contain the specific console command setting.
+    """
     game_lower: str = GlobalRegistry.get_game().lower()
 
     for file_lower, file_path in config_files.items():
@@ -82,7 +103,21 @@ def check_starting_console_command(config_files: ConfigFileCache, message_list: 
 
 
 def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
-    """Check for VSync settings in various configuration files."""
+    """
+    Checks the VSync settings in the given configuration files.
+
+    This function iterates through a predefined list of VSYNC_SETTINGS to determine
+    if VSync is enabled for specific files and settings. Additionally, it performs a specific
+    check for the "highfpsphysicsfix.ini" configuration file to validate its VSync settings.
+
+    Args:
+        config_files (ConfigFileCache): A cache object containing the configuration
+            files and their respective settings.
+
+    Returns:
+        list[str]: A list containing formatted strings that indicate which configuration
+        files have VSync settings enabled.
+    """
     vsync_list: list[str] = []
 
     # Check standard VSync settings
@@ -97,7 +132,7 @@ def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
     return vsync_list
 
 
-def apply_ini_fix(  # noqa: PLR0913
+def apply_ini_fix(  # noqa: PLR0917
     config_files: ConfigFileCache,
     file_name: str,
     section: str,
@@ -107,25 +142,20 @@ def apply_ini_fix(  # noqa: PLR0913
     message_list: list[str],
 ) -> None:
     """
-    Applies a fix to a configuration file by updating its settings and logs the operation.
+    Applies a fix to an INI configuration by updating the specified setting with a new value.
 
-    This function applies a specified fix by updating a setting within a specified section
-    of a configuration file. It logs the details of the fix operation and also appends a
-    formatted message about the performed fix to a given message list.
+    This function modifies the specified INI configuration file by setting the provided value
+    for a given section and setting. It logs the performed fix and appends a corresponding
+    message to the provided list of messages.
 
-    Parameters:
-    config_files (ConfigFileCache): An object that represents a cache of configuration
-        files and provides methods to interact with them.
-    file_name (str): The name of the configuration file to which the fix is applied.
-    section (str): The section within the configuration file where the setting is located.
-    setting (str): The specific setting within the section to be updated.
-    value (Any): The new value to set for the specified setting.
-    fix_description (str): A human-readable description of the fix being applied.
-    message_list (list[str]): A list where a formatted message about the performed fix
-        will be appended.
-
-    Returns:
-    None
+    Args:
+        config_files: The configuration file cache used to manage INI configurations.
+        file_name: The name of the configuration file to update.
+        section: The section in the INI file where the setting resides.
+        setting: The specific setting within the section to be updated.
+        value: The new value to be set for the specified setting.
+        fix_description: A textual description of the fix being performed.
+        message_list: A list to which a formatted message about the performed fix is appended.
     """
     config_files.set(type(value), file_name, section, setting, value)
     logger.info(f"> > > PERFORMED {fix_description} FIX FOR {config_files[file_name]}")
@@ -134,16 +164,18 @@ def apply_ini_fix(  # noqa: PLR0913
 
 def apply_all_ini_fixes(config_files: ConfigFileCache, message_list: list[str]) -> None:
     """
-    Applies all necessary fixes to the specified configuration files to ensure correct settings and values. This function
-    performs multiple checks and updates for specific configuration entries across different INI files. It modifies values
-    only if the current ones do not meet the desired conditions. Additionally, it logs all the changes as messages in a list.
+    Applies a set of fixes to specific `.ini` configuration files to address common
+    issues or enforce desired settings. The function checks the state of several
+    keys within predefined configuration files and applies corrections or updates
+    as necessary. If a correction is made, a corresponding message is added to
+    the provided message list.
 
-    Parameters:
-        config_files (ConfigFileCache): The configuration file cache that provides access to the INI files and their contents.
-        message_list (list[str]): A list where messages about applied fixes are appended.
+    Args:
+        config_files: A cache of configuration files allowing retrieval and update
+            of specific keys and sections within those files.
+        message_list: A list where confirmation or status messages are appended
+            whenever a fix is applied.
 
-    Returns:
-        None: This function does not return a value.
     """
     # Fix ESPExplorer hotkey
     if "; F10" in config_files.get_strict(str, "espexplorer.ini", "General", "HotKey"):

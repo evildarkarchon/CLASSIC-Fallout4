@@ -20,10 +20,26 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 class GameFilesManagerCore:
-    """Async-first core implementation for game file management operations."""
+    """
+    Core functionality for managing game files.
+
+    This class provides asynchronous methods to handle operations such as backing up,
+    restoring, and removing game files. It leverages a file I/O core utility to
+    interact with the filesystem and maintain the integrity of game data during these
+    operations.
+
+    Attributes:
+        file_io (FileIOCore): The file I/O core utility used to manage file operations.
+    """
 
     def __init__(self) -> None:
-        """Initialize the game files manager core."""
+        """
+        Initializes an instance of the class.
+
+        This constructor sets up an instance of the class with the default
+        settings and initializes necessary components for managing file input
+        and output operations.
+        """
         self.file_io = FileIOCore()
 
     async def manage_game_files_async(self, classic_list: str, mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
@@ -50,10 +66,25 @@ class GameFilesManagerCore:
                 operation from completing.
         """
         # Constants
+        # noinspection PyPep8Naming
         BACKUP_DIR = "CLASSIC Backup/Game Files"
 
         def _validate_game_path(path: Path | None) -> None:
-            """Validate that the game path exists."""
+            """
+            Validates the provided game folder path.
+
+            This function ensures that the given `path` is not `None`. If the `path`
+            is `None`, it raises a `FileNotFoundError` indicating that the game
+            folder was not found.
+
+            Args:
+                path (Path | None): The path to the game folder being validated. If
+                    `None`, it triggers an error.
+
+            Raises:
+                FileNotFoundError: If the `path` is `None`, indicating the game
+                    folder could not be located.
+            """
             if path is None:
                 raise FileNotFoundError("Game folder not found")
 
@@ -88,13 +119,34 @@ class GameFilesManagerCore:
             logger.error(f"Unexpected error in manage_game_files_async: {e}")
             raise
 
-    async def _ensure_directory_exists_async(self, path: Path) -> None:
-        """Ensure directory exists asynchronously."""
+    # noinspection PyUnresolvedReferences,PyTypeChecker
+    @staticmethod
+    async def _ensure_directory_exists_async(path: Path) -> None:
+        """
+        Ensures that the specified directory exists asynchronously. If the directory does not
+        exist, it will be created along with any necessary parent directories.
+
+        Args:
+            path (Path): The path of the directory to check or create.
+        """
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, lambda: path.mkdir(parents=True, exist_ok=True))
 
     async def _backup_files_async(self, game_path: Path, backup_path: Path, manage_list: list[str], list_name: str) -> None:
-        """Backup files asynchronously."""
+        """
+        Creates a backup of specified game files asynchronously.
+
+        This function identifies all files in the provided game directory that match
+        a predefined list of managed file patterns. It then makes use of asynchronous
+        file copying operations, with a concurrency limit enforced by a semaphore,
+        to back up these files to the specified backup location.
+
+        Args:
+            game_path (Path): Path to the game directory containing files to be backed up.
+            backup_path (Path): Path to the destination directory where the backups will be stored.
+            manage_list (list[str]): List of file patterns or names specifying which files should be backed up.
+            list_name (str): Friendly name used to describe the collection of files being backed up.
+        """
         msg_info(f"CREATING A BACKUP OF {list_name} FILES, PLEASE WAIT...")
 
         # Get all matching files
@@ -110,7 +162,19 @@ class GameFilesManagerCore:
         msg_success(f"SUCCESSFULLY CREATED A BACKUP OF {list_name} FILES\n")
 
     async def _restore_files_async(self, game_path: Path, backup_path: Path, manage_list: list[str], list_name: str) -> None:
-        """Restore files asynchronously."""
+        """
+        Restores files from a backup directory to the game directory asynchronously. This method identifies
+        files in the game directory that match a specific list of managed files and restores their backups
+        from the provided backup path, if available. Restoration operations are limited to a specified
+        number of concurrent tasks.
+
+        Args:
+            game_path: A Path object representing the directory containing game files.
+            backup_path: A Path object representing the directory containing backup files.
+            manage_list: A list of strings representing the names or patterns of files to be managed
+                during the restoration process.
+            list_name: A string specifying the name or identifier of the list of files being restored.
+        """
         msg_info(f"RESTORING {list_name} FILES FROM A BACKUP, PLEASE WAIT...")
 
         # Get all matching files that have backups
@@ -129,7 +193,18 @@ class GameFilesManagerCore:
         msg_success(f"SUCCESSFULLY RESTORED {list_name} FILES TO THE GAME FOLDER\n")
 
     async def _remove_files_async(self, game_path: Path, manage_list: list[str], list_name: str) -> None:
-        """Remove files asynchronously."""
+        """
+        Asynchronously removes files from a game directory based on a specified list of managed file patterns.
+
+        This method identifies files in the specified game path that match the patterns provided in
+        the manage_list and removes them. File operations are performed concurrently with a semaphore
+        to restrict the number of simultaneous file operations.
+
+        Args:
+            game_path (Path): Path to the game directory where files will be removed.
+            manage_list (list[str]): List of file name patterns to match and remove from the game directory.
+            list_name (str): Name or category of the managed files being removed.
+        """
         msg_info(f"REMOVING {list_name} FILES FROM YOUR GAME FOLDER, PLEASE WAIT...")
 
         # Get all matching files
@@ -145,20 +220,80 @@ class GameFilesManagerCore:
         msg_success(f"SUCCESSFULLY REMOVED {list_name} FILES FROM THE GAME FOLDER\n")
 
     async def _copy_file_with_semaphore(self, semaphore: asyncio.Semaphore, source: Path, destination: Path) -> None:
-        """Copy a file or directory with semaphore control."""
+        """
+        Copies a file while ensuring the operation adheres to a limit on concurrent tasks,
+        enforced by a semaphore.
+
+        This coroutine ensures that the copying operation does not exceed the
+        maximum number of concurrent operations specified by the semaphore.
+
+        Args:
+            semaphore (asyncio.Semaphore): Semaphore used to limit the number of concurrent tasks.
+            source (Path): The source file path to copy from.
+            destination (Path): The destination file path to copy to.
+        """
         async with semaphore:
             await self._copy_file_or_directory_async(source, destination)
 
     async def _remove_file_with_semaphore(self, semaphore: asyncio.Semaphore, file: Path) -> None:
-        """Remove a file or directory with semaphore control."""
+        """
+        Removes a file asynchronously, ensuring that the operation respects the limitation
+        imposed by the provided semaphore. This function enables concurrency control to
+        prevent exceeding specified limits in operations such as file deletions.
+
+        Args:
+            semaphore: An asyncio.Semaphore instance used to control the number of concurrent
+                asynchronous file operations.
+            file: A Path object representing the file to be removed.
+
+        """
         async with semaphore:
             await self._remove_file_async(file)
 
-    async def _copy_file_or_directory_async(self, source: Path, destination: Path) -> None:
-        """Copy a file or directory asynchronously, handling existing destinations."""
+    # noinspection PyUnresolvedReferences,PyTypeChecker
+    @staticmethod
+    async def _copy_file_or_directory_async(source: Path, destination: Path) -> None:
+        """
+        Asynchronously copies a file or directory from the source to the destination
+        using a synchronous copy operation executed in a thread pool.
+
+        The method attempts to replicate the source file or directory structure at
+        the destination. For files, it uses a standard file copy. For directories,
+        it handles edge cases like overwriting existing files or directories at the
+        destination. Errors during the copying process are logged and re-raised.
+
+        Args:
+            source (Path): The path of the file or directory to be copied.
+            destination (Path): The target path for the copied file or directory.
+
+        Raises:
+            PermissionError: If permission is denied while copying.
+            OSError: If a system-related error occurs.
+            FileNotFoundError: If the source does not exist.
+            FileExistsError: If a naming conflict occurs during copying.
+            Exception: For any other unexpected error during copying.
+        """
 
         def copy_operation() -> None:
-            """Synchronous copy operation to run in thread executor."""
+            """
+            Copies a file or directory from a source to a destination with error handling.
+
+            The function checks whether the source is a file or a directory. Based on this
+            check, it uses appropriate methods to copy the source to the destination. If the
+            destination already exists, it handles this case by either removing the existing
+            destination directory or unlinking the file. During the operation, any relevant
+            exceptions are caught and logged.
+
+            Raises:
+                PermissionError: If permission is denied while accessing the source or
+                    destination.
+                OSError: Raised for system-related errors during the copy operation.
+                FileNotFoundError: If the source or destination paths are invalid.
+                FileExistsError: If the destination file or directory unexpectedly exists when
+                    it shouldn't.
+                Exception: For any other unexpected errors encountered during the copy
+                    operation.
+            """
             try:
                 if source.is_file():
                     shutil.copy2(source, destination)
@@ -181,11 +316,36 @@ class GameFilesManagerCore:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, copy_operation)
 
-    async def _remove_file_async(self, file: Path) -> None:
-        """Remove a file or directory asynchronously."""
+    # noinspection PyUnresolvedReferences,PyTypeChecker
+    @staticmethod
+    async def _remove_file_async(file: Path) -> None:
+        """
+        Asynchronously removes a file or directory. This method ensures that the file or directory is
+        deleted using an asynchronous approach via a thread executor to avoid blocking the event loop.
+
+        Args:
+            file (Path): The file or directory path that needs to be removed.
+
+        Raises:
+            PermissionError: If permission is denied while attempting to remove the file or directory.
+            Exception: If an unexpected error occurs during the removal process.
+        """
 
         def remove_operation() -> None:
-            """Synchronous remove operation to run in thread executor."""
+            """
+            Removes a file or directory specified by the `file` variable.
+
+            This function attempts to remove the specified file or directory.
+            If the file or directory does not exist, or it is inaccessible due to
+            specific file permissions, appropriate error handling is applied.
+
+            Raises:
+                PermissionError: If the operation lacks necessary permissions to
+                    delete the file or directory.
+                Exception: For any unexpected errors that occur during the removal
+                    process. The original error message is included in the raised
+                    exception.
+            """
             try:
                 if file.is_file():
                     file.unlink(missing_ok=True)
@@ -201,12 +361,39 @@ class GameFilesManagerCore:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, remove_operation)
 
-    def _matches_managed_file(self, file_name: str, manage_list: list[str]) -> bool:
-        """Check if the file name matches any item in the manage list."""
+    @staticmethod
+    def _matches_managed_file(file_name: str, manage_list: list[str]) -> bool:
+        """
+        Determines if a file name matches any of the criteria in the managed list.
+
+        This static method checks whether the given file name contains any of the
+        strings specified in the managed list, ignoring case.
+
+        Args:
+            file_name (str): The name of the file to be checked.
+            manage_list (list[str]): A list of strings representing the criteria
+                to check against the file name.
+
+        Returns:
+            bool: True if the file name matches any entry in the managed list,
+            otherwise False.
+        """
         return any(item.lower() in file_name.lower() for item in manage_list)
 
-    def _handle_permission_error(self, operation: str, list_name: str) -> None:
-        """Print consistent error message for permission errors."""
+    @staticmethod
+    def _handle_permission_error(operation: str, list_name: str) -> None:
+        """
+        Handles permission-related errors encountered during file operations.
+
+        This utility function logs an error message when the program is unable
+        to perform the specified operation on the specified file due to file
+        permissions. It advises the user to run the program in admin mode to
+        resolve the issue.
+
+        Args:
+            operation (str): The attempted operation (e.g., 'read', 'write', 'delete').
+            list_name (str): The name of the file or list the operation is targeting.
+        """
         ERROR_PREFIX = "ERROR :"
         ADMIN_SUGGESTION = "    TRY RUNNING CLASSIC.EXE IN ADMIN MODE TO RESOLVE THIS PROBLEM.\n"
         msg_error(f"{ERROR_PREFIX} UNABLE TO {operation} {list_name} FILES DUE TO FILE PERMISSIONS!\n{ADMIN_SUGGESTION}")
@@ -217,7 +404,16 @@ _game_files_manager_core: GameFilesManagerCore | None = None
 
 
 def get_game_files_manager_core() -> GameFilesManagerCore:
-    """Get singleton GameFilesManagerCore instance."""
+    """
+    Retrieves or initializes the global instance of the `GameFilesManagerCore` class.
+
+    This function ensures that a single instance of the `GameFilesManagerCore`
+    is created and reused across the application. It initializes the global
+    instance if it has not been created already.
+
+    Returns:
+        GameFilesManagerCore: The global instance of the `GameFilesManagerCore` class.
+    """
     global _game_files_manager_core  # noqa: PLW0603
     if _game_files_manager_core is None:
         _game_files_manager_core = GameFilesManagerCore()

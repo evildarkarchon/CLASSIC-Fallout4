@@ -57,23 +57,21 @@ class ScanOperationsMixin:
         results_tab: object | None  # Results tab widget
 
         # Required methods that must be implemented by the mixing class
-        def start_papyrus_monitoring(self) -> None: ...
-        def stop_papyrus_monitoring(self) -> None: ...
-        def refresh_reports_list(self) -> None: ...  # From ResultsViewerMixin
+        def start_papyrus_monitoring(self) -> None: ...  # noqa: D102
+        def stop_papyrus_monitoring(self) -> None: ...  # noqa: D102
+        def refresh_reports_list(self) -> None: ...  # From ResultsViewerMixin  # noqa: D102
 
     def crash_logs_scan(self) -> None:
         """
-        Initializes and starts the crash logs scanning process by setting up a worker thread.
+        Initiates a crash logs scan in a thread-safe manner, creating a dedicated worker for the scan.
 
-        This function is responsible for scanning crash logs asynchronously through a worker
-        handled in a separate thread managed by ThreadManager. The worker emits signals when
-        certain events occur, like notifying or error alerts, which are connected to appropriate
-        handlers. Upon completion, the worker and thread are cleaned up, and a callback is invoked
-        to indicate the end of the scanning process. Additionally, the UI elements related to
-        scanning are disabled during the operation to prevent multiple concurrent scans.
+        This method ensures that only one crash logs scan is executed at a time by acquiring a mutex lock
+        and checking the current state of scans. If a scan is already in progress, it shows a warning message
+        to the user. Otherwise, it creates a new thread and associated worker, registers them with the thread manager,
+        and starts the scan process.
 
-        Returns:
-            None
+        Additionally, it connects various signals between the worker and other components to handle notifications
+        and cleanup actions when the scan is completed.
         """
         # Thread-safe check and update
         self._scan_mutex.lock()
@@ -163,14 +161,16 @@ class ScanOperationsMixin:
 
     def disable_scan_buttons(self) -> None:
         """
-        Disables all buttons in the scan button group.
+        Disables all scan buttons in the button group to prevent user interaction during a
+        scanning operation.
 
-        This method iterates through the buttons in the scan button group and
-        disables them, ensuring they cannot be clicked or interacted with.
-        Thread-safe implementation using mutex.
+        This method ensures thread-safe interaction with the scan buttons by using a mutex
+        lock. It disables all buttons within the scan button group to prevent user actions
+        such as initiating scans when the system is already processing.
 
-        Returns:
-            None
+        Raises:
+            Any exception raised during button group iteration or setting button states
+            will be propagated to the caller.
         """
         self._scan_mutex.lock()
         try:
@@ -181,14 +181,14 @@ class ScanOperationsMixin:
 
     def enable_scan_buttons(self) -> None:
         """
-        Enables all scan buttons within a button group.
+        Enables scan buttons when no scans are running.
 
-        This method iterates through all the scan buttons in a specified button group
-        and enables them, allowing user interaction. Only enables buttons if no scans
-        are currently running. Thread-safe implementation using mutex.
+        This method ensures that scan buttons within a button group are enabled
+        only if there are no active scans currently running. It uses a mutex to
+        ensure thread-safe access to the running scans state and button group.
 
-        Returns:
-            None
+        Raises:
+            Any error that might arise from locking or unlocking the mutex.
         """
         self._scan_mutex.lock()
         try:
@@ -201,14 +201,10 @@ class ScanOperationsMixin:
 
     def crash_logs_scan_finished(self) -> None:
         """
-        Marks the completion of the crash logs scanning process and resets the relevant UI components.
-
-        This method is executed when the scan for crash logs is finished. It ensures the reset of
-        internal state and re-enables UI buttons that were disabled during the scan process.
-        Thread-safe implementation using mutex.
-
-        Returns:
-            None: This method does not return any value.
+        Handles the completion of the crash logs scan operation. This method is executed
+        when the crash logs scan thread finishes its work. It ensures the safe removal of
+        the scan from active scans, manages scan button states, and optionally switches the
+        interface to the Results tab if configured to do so.
         """
         self.crash_logs_thread = None
 
@@ -226,13 +222,14 @@ class ScanOperationsMixin:
 
     def game_files_scan_finished(self) -> None:
         """
-        Marks the completion of the game files scanning process.
+        Handles the completion process of the game files scanning thread.
 
-        This method is invoked when the game files scanning operation is finished. It appropriately
-        resets the state by clearing the scanning thread reference and re-enables the buttons
-        associated with scanning operations. Thread-safe implementation using mutex.
+        This method is called when the game files scanning thread finishes its execution.
+        It resets the thread instance, safely removes the "game_files" entry from the list of
+        currently running scans, re-enables the scan buttons in the user interface,
+        and adjusts the state of Papyrus monitoring based on the Papyrus button state.
 
-        Returns:
+        Raises:
             None
         """
         self.game_files_thread = None

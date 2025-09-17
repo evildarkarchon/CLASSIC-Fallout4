@@ -8,13 +8,9 @@ CLASSIC scan reports with custom styling and zoom controls.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import QTextBrowser, QWidget
-
-if TYPE_CHECKING:
-    pass
 
 # Pre-compiled regex patterns for performance optimization
 # noinspection RegExpRedundantEscape
@@ -26,14 +22,32 @@ _SOLVED_PATTERN = re.compile(r"\[!?\s*SOLVED\s*\]([^\n]*)", re.IGNORECASE)
 
 
 class MarkdownViewer(QTextBrowser):
-    """
-    Enhanced text browser for displaying markdown-formatted reports.
+    """Custom QTextBrowser-based widget for viewing and processing markdown content.
 
-    Provides markdown rendering, zoom controls, and custom styling.
+    MarkdownViewer is a specialized widget designed to render and display markdown
+    content with custom styling and enhanced processing capabilities. It incorporates
+    features for zoom control, markdown-specific CSS styling, and the ability to
+    handle processed markdown input. This class is ideal for use in applications
+    where enriched markdown visualization is needed.
+
+    Attributes:
+        _zoom_level (int): Current zoom level of the viewer, represented as a
+            percentage.
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """Initialize the markdown viewer."""
+        """
+        A viewer class for displaying rich text content with markdown support.
+
+        This class allows for displaying rich text content with support for Markdown
+        rendering. It provides configurations for controlling external links, read-only
+        status, and custom styling. Additionally, it initializes with a default zoom
+        level and offers the ability to style the viewer.
+
+        Args:
+            parent (QWidget | None): The parent widget for this viewer. Can be None if
+                no parent widget is specified.
+        """
         super().__init__(parent)
 
         # Configure viewer properties
@@ -50,7 +64,15 @@ class MarkdownViewer(QTextBrowser):
         self._apply_styling()
 
     def _apply_styling(self) -> None:
-        """Apply custom CSS styling for markdown content."""
+        """
+        Applies a predefined CSS stylesheet for consistent styling of markdown content.
+
+        This method sets the default stylesheet for a document object with specific
+        style rules, ensuring a cohesive visual appearance for markdown rendering.
+        The styles include configurations for text elements like headings, lists,
+        tables, blockquotes, and others. The design primarily targets dark-themed
+        interfaces with emphasis on color-coded elements for better readability.
+        """
         # Base stylesheet for markdown rendering
         style = """
         body {
@@ -147,10 +169,13 @@ class MarkdownViewer(QTextBrowser):
 
     def setMarkdown(self, markdown: str) -> None:
         """
-        Set markdown content with enhanced processing.
+        Processes and sets the given markdown string for display. This method enhances the provided
+        markdown by preprocessing it and then utilizes the base class's functionality to render it
+        properly. Additionally, it moves the cursor to the starting position to ensure the content
+        begins at the top of the display.
 
         Args:
-            markdown: The markdown text to display.
+            markdown (str): The markdown string to be processed and displayed.
         """
         # Process markdown for better display
         processed = self._process_markdown(markdown)
@@ -164,13 +189,19 @@ class MarkdownViewer(QTextBrowser):
     @staticmethod
     def _process_markdown(markdown: str) -> str:
         """
-        Process markdown for enhanced display.
+        Processes the given markdown text for enhanced display by applying custom styling
+        to specific patterns found in the text. The method identifies predefined tags,
+        such as [ERROR], [WARNING], and [SOLVED], and replaces them with styled spans
+        for improved visualization.
 
         Args:
-            markdown: Raw markdown text.
+            markdown (str): The markdown text to be processed.
 
         Returns:
-            Processed markdown text.
+            str: The processed markdown text with applied style replacements.
+
+        Raises:
+            None
         """
         # Process markdown for enhanced display
         processed = markdown
@@ -184,22 +215,44 @@ class MarkdownViewer(QTextBrowser):
         return processed  # noqa: RET504
 
     def zoom_in(self) -> None:
-        """Increase zoom level by 10%."""
+        """
+        Zooms in by increasing the current zoom level and applies the updated zoom setting.
+
+        Raises:
+            None: This method does not raise exceptions.
+        """
         self._zoom_level = min(200, self._zoom_level + 10)
         self._apply_zoom()
 
     def zoom_out(self) -> None:
-        """Decrease zoom level by 10%."""
+        """
+        Decreases the zoom level by reducing it in increments of 10 units, with a
+        minimum allowable zoom level of 50. Applies the updated zoom level.
+        """
         self._zoom_level = max(50, self._zoom_level - 10)
         self._apply_zoom()
 
     def reset_zoom(self) -> None:
-        """Reset zoom to 100%."""
+        """
+        Resets the zoom level to the default value and applies the change.
+
+        This method restores the zoom level to its default value of 100% and applies
+        the adjustment to ensure the associated display or view reflects the change
+        immediately.
+        """
         self._zoom_level = 100
         self._apply_zoom()
 
     def _apply_zoom(self) -> None:
-        """Apply the current zoom level."""
+        """
+        Applies the zoom level to adjust the font size of the text display.
+
+        This function calculates the new font size based on a base font size and the
+        current zoom level, ensuring the font size does not drop below a minimum value.
+        It then updates the font of the corresponding component to reflect the adjusted
+        zoom level.
+
+        """
         # Apply zoom by scaling the font size
         font = self.font()
         base_size = 14  # Base font size from CSS
@@ -208,5 +261,13 @@ class MarkdownViewer(QTextBrowser):
         self.setFont(font)
 
     def get_zoom_level(self) -> int:
-        """Get the current zoom level as a percentage."""
+        """
+        Gets the current zoom level.
+
+        This method retrieves the zoom level of the object. The zoom level is an integer
+        representing the current state.
+
+        Returns:
+            int: The current zoom level of the object.
+        """
         return self._zoom_level

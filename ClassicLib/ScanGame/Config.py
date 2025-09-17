@@ -1,3 +1,13 @@
+"""
+A module for managing and comparing configuration files, including detecting duplicates
+and loading file data into structured formats.
+
+The module provides utilities for comparing INI files, managing configuration files
+in a cache, detecting duplicates based on file properties, and applying heuristic
+checks for similarity. It also defines a `ConfigFile` type for structured representation
+of configuration data.
+"""
+
 import io
 from collections.abc import ItemsView
 from pathlib import Path

@@ -32,10 +32,16 @@ class ScanLogsExecutor:
 
     def __init__(self, config: ScanConfig | None = None) -> None:
         """
-        Initialize the crash log scanner with configuration.
+        Initializes the crash log scan process by setting up configuration, retrieving crash log files,
+        and applying settings for crash log reformatting. It also initializes various components such
+        as a thread-safe log cache, database availability, and statistics tracking.
 
         Args:
-            config: Scan configuration. If None, loads from settings.
+            config (ScanConfig | None): Optional ScanConfig object containing scan-specific settings.
+                If not provided, the configuration will be loaded from default settings.
+
+        Raises:
+            None
         """
         self.config = config or self._load_config_from_settings()
 
@@ -48,6 +54,7 @@ class ScanLogsExecutor:
             self.config.remove_list = yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
 
         # Optimized reformatting - only writes files that actually change
+        # noinspection PyTypeChecker
         crashlogs_reformat(self.crashlog_list, self.config.remove_list)
         logger.debug("Used optimized crash log reformatting")
 
@@ -66,8 +73,18 @@ class ScanLogsExecutor:
 
         logger.debug(f"Initiated crash log scan for {len(self.crashlog_list)} files")
 
-    def _load_config_from_settings(self) -> ScanConfig:
-        """Load scan configuration from YAML settings."""
+    @staticmethod
+    def _load_config_from_settings() -> ScanConfig:
+        """
+        Loads and returns the scan configuration from application settings.
+
+        This static method retrieves various settings required for scan configuration using
+        classic settings function calls. The retrieved values are then used to
+        construct and return a `ScanConfig` object.
+
+        Returns:
+            ScanConfig: An object containing the scan configuration settings.
+        """
         return ScanConfig(
             fcx_mode=classic_settings(bool, "FCX Mode"),
             show_formid_values=classic_settings(bool, "Show FormID Values"),
@@ -77,10 +94,24 @@ class ScanLogsExecutor:
 
     async def execute_scan(self) -> ScanResult:
         """
-        Execute the crash log scanning operation.
+        Executes the crash log scanning process asynchronously.
+
+        This method handles the entire lifecycle of crash log scanning, including setup,
+        processing, and cleanup. It creates an `OrchestratorCore` to manage resources,
+        implements concurrency limitations for processing crash logs, and updates
+        statistics and progress tracking during execution. It also generates reports
+        for each processed crash log and handles errors that occur during the process.
 
         Returns:
-            ScanResult containing scan outcomes and statistics
+            ScanResult: An object containing results of the scan, including processed
+                logs, failed logs, error messages, and scan duration.
+
+        Raises:
+            RuntimeError: If an error occurs during the execution of the process.
+            ImportError: If an import fails during the operation.
+            OSError: If a file system-related error is encountered during scanning.
+            asyncio.CancelledError: If the asynchronous task is cancelled during execution.
+
         """
         logger.info("Starting crash log scan execution")
 
@@ -102,7 +133,17 @@ class ScanLogsExecutor:
             semaphore = asyncio.Semaphore(max_concurrent)
 
             async def process_with_limit(log_path: Path) -> tuple[Path, list[str], bool, Counter[str]]:
-                """Process a single log with concurrency limiting."""
+                """
+                Processes a crash log file asynchronously while respecting a semaphore limit.
+
+                Args:
+                    log_path (Path): Path to the log file to be processed.
+
+                Returns:
+                    tuple[Path, list[str], bool, Counter[str]]: A tuple containing the log path,
+                    list of strings (e.g., messages or findings), a boolean flag indicating a status
+                    or result, and a counter of occurrences for specific elements in the log.
+                """
                 async with semaphore:
                     return await self._process_crashlog_async(log_path, orchestrator)
 
@@ -163,8 +204,9 @@ class ScanLogsExecutor:
         logger.info(f"Completed crash log scan execution in {result.scan_time:.2f} seconds")
         return result
 
+    @staticmethod
     async def _process_crashlog_async(
-        self, crashlog_file: Path, orchestrator: OrchestratorCore
+            crashlog_file: Path, orchestrator: OrchestratorCore
     ) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Process a crash log with async database operations for FormID lookups.
@@ -229,10 +271,11 @@ class ScanLogsExecutor:
 
     def scan_sync(self) -> ScanResult:
         """
-        Synchronous wrapper for execute_scan().
+        Executes a synchronous scan by running the associated asynchronous scan
+        function and collecting the results.
 
         Returns:
-            ScanResult from the async scan operation
+            ScanResult: The result of the executed scan.
         """
         return run_async(self.execute_scan())
 

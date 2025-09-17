@@ -12,11 +12,20 @@ from dataclasses import dataclass, field
 
 @dataclass
 class ScanStatistics:
-    """
-    Statistics tracking for scan operations.
+    """Represents the statistics of a scanning operation.
 
-    Tracks various metrics about the scanning process for reporting
-    and performance monitoring purposes.
+    This class provides a way to track and update statistics related to a scanning
+    operation. Attributes such as the number of successfully scanned logs, incomplete
+    logs, and failed logs are tracked. Additional functionalities include calculating
+    scan duration, determining success rates, and converting the statistics into
+    different formats for compatibility.
+
+    Attributes:
+        scanned (int): The number of successfully scanned logs.
+        incomplete (int): The number of incomplete logs.
+        failed (int): The number of failed logs.
+        total_files (int): The total number of files to scan.
+        scan_start_time (float): The start time of the scan, as a performance counter.
     """
 
     scanned: int = 0
@@ -38,17 +47,17 @@ class ScanStatistics:
         self.failed += 1
 
     def get_scan_duration(self) -> float:
-        """Get the duration of the scan in seconds."""
+        """Get the duration of the scan in seconds."""  # noqa: DOC201
         return time.perf_counter() - self.scan_start_time
 
     def get_success_rate(self) -> float:
-        """Get the success rate as a percentage."""
+        """Get the success rate as a percentage."""  # noqa: DOC201
         if self.total_files == 0:
             return 0.0
         return (self.scanned / self.total_files) * 100.0
 
     def to_counter(self) -> Counter[str]:
-        """Convert to Counter format for backward compatibility."""
+        """Convert to Counter format for backward compatibility."""  # noqa: DOC201
         return Counter(scanned=self.scanned, incomplete=self.incomplete, failed=self.failed)
 
     def update_from_counter(self, counter: Counter[str]) -> None:

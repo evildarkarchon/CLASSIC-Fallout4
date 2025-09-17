@@ -115,12 +115,6 @@ class PapyrusMonitorWorker(QObject):
         This function modifies the state of the instance to indicate that the process or
         operation managed by this method should be halted. The actual stopping logic or
         implementation might need to check this internal flag periodically.
-
-        Raises:
-            None: The method does not raise any exceptions.
-
-        Returns:
-            None: There are no return values for this method.
         """
         self._should_run_mutex.lock()
         try:

@@ -31,13 +31,29 @@ _ISSUE_LIST_PATTERN = re.compile(r"^[-*]\s+.+", re.MULTILINE)
 
 class ReportMetadataWidget(QGroupBox):
     """
-    Widget for displaying report metadata and statistics.
+    A widget for displaying report metadata like date, size, and issues.
 
-    Shows information about the scan report including date, size, and issue counts.
+    This class provides a compact user interface component for showing metadata
+    about a report. The metadata includes the report's last modification date,
+    size in kilobytes, and count of issues (errors, warnings, etc.). The widget
+    can be updated dynamically with a report file's path and content.
+
+    Attributes:
+        date_label (QLabel): Label for displaying the report modification date.
+        size_label (QLabel): Label for displaying the report size in KB.
+        issues_label (QLabel): Label for displaying the count of issues in the
+            report.
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """Initialize the metadata widget."""
+        """
+        Initializes a QWidget-based component that displays report metadata including
+        date, size, and the number of issues. This compact widget is styled and designed
+        to fit efficiently within layouts.
+
+        Args:
+            parent (QWidget | None): The parent widget for this component. Defaults to None.
+        """
         super().__init__("Report Information", parent)
 
         # Create layout
@@ -62,7 +78,14 @@ class ReportMetadataWidget(QGroupBox):
         self.setMaximumHeight(60)
 
     def _apply_styling(self) -> None:
-        """Apply custom styling to the widget."""
+        """
+        Applies a predefined stylesheet to the current widget to modify its visual
+        appearance.
+
+        The method is responsible for setting a specific style for QGroupBox and QLabel
+        in the widget hierarchy. This includes setting font properties, borders, and
+        margins. The styling is applied consistently to ensure a unified visual design.
+        """
         self.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
@@ -83,11 +106,12 @@ class ReportMetadataWidget(QGroupBox):
 
     def update_metadata(self, report_path: Path, content: str) -> None:
         """
-        Update the displayed metadata from a report.
+        Updates the metadata display labels with file information such as modification date,
+        file size, and the number of issues present in the content.
 
         Args:
-            report_path: Path to the report file.
-            content: The report content.
+            report_path (Path): The file path of the report used to retrieve metadata.
+            content (str): The textual content of the report required for counting issues.
         """
         # Update date from file modification time
         stat = report_path.stat()
@@ -106,13 +130,19 @@ class ReportMetadataWidget(QGroupBox):
     @staticmethod
     def _count_issues(content: str) -> str:
         """
-        Count the number of issues in the report.
+        Counts various issue indicators within the provided content using
+        pre-compiled patterns.
+
+        This method analyzes a string input and identifies occurrences
+        of errors, warnings, or issue lists based on specific patterns.
+        It then summarizes the results in a formatted string.
 
         Args:
-            content: The report content.
+            content: A string to analyze for errors, warnings, and issue lists.
 
         Returns:
-            Issue count string.
+            A string summarizing the count of errors, warnings, or items
+            found. If none are found, it returns "None found".
         """
         # Count various issue indicators using pre-compiled patterns
         errors = len(_ERROR_PATTERN.findall(content))
@@ -130,7 +160,13 @@ class ReportMetadataWidget(QGroupBox):
         return "None found"
 
     def clear(self) -> None:
-        """Clear all metadata displays."""
+        """
+        Clears the values displayed on the labels for date, size, and issues, setting
+        them to default "N/A" values.
+
+        This method is used to reset the state of the labels to indicate that no
+        specific information is available.
+        """
         self.date_label.setText("Date: N/A")
         self.size_label.setText("Size: N/A")
         self.issues_label.setText("Issues: N/A")

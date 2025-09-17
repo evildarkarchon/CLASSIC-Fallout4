@@ -1,4 +1,13 @@
-"""Help screen for CLASSIC TUI."""
+"""
+A modal help screen providing keyboard shortcuts, usage information, and
+other documentation for easier application navigation and functionality
+understanding.
+
+This module defines the HelpScreen class, a modal dialog component
+designed to offer a structured view of available application features,
+guides, and troubleshooting steps. The screen uses tabbed content to
+organize sections, improving accessibility and user experience.
+"""
 
 from textual.app import ComposeResult
 from textual.containers import Container, VerticalScroll
@@ -8,13 +17,23 @@ from textual.widgets import Button, Markdown, Static, TabbedContent, TabPane
 
 
 class HelpScreen(ModalScreen):
-    """Modal help screen with keyboard shortcuts and usage information."""
+    """
+    Represents a help screen modal for displaying documentation and guides within a text-based user interface.
+
+    The `HelpScreen` class manages the layout and content of a modal window, presenting various tabs of
+    information such as keyboard shortcuts, a usage guide, features, and troubleshooting tips. Users can
+    navigate and interact with the content through tabs and buttons. This screen offers guidance on using
+    the application and troubleshooting common issues.
+
+    Attributes:
+        CSS (str): A stylesheet that defines the layout, styling, and behavior of the help screen components.
+    """
 
     CSS = """
     HelpScreen {
         align: center middle;
     }
-    
+
     #help-container {
         width: 80;
         height: 40;
@@ -22,7 +41,7 @@ class HelpScreen(ModalScreen):
         padding: 1;
         background: $surface;
     }
-    
+
     .help-title {
         text-align: center;
         text-style: bold;
@@ -30,29 +49,29 @@ class HelpScreen(ModalScreen):
         color: $primary;
         text-style: bold underline;
     }
-    
+
     .help-content {
         margin: 1 0;
         height: 100%;
     }
-    
+
     TabbedContent {
         height: 100%;
     }
-    
+
     TabPane {
         padding: 1;
     }
-    
+
     .shortcut-key {
         color: $primary;
         text-style: bold;
     }
-    
+
     .shortcut-desc {
         color: $text;
     }
-    
+
     #close-help {
         dock: bottom;
         width: 100%;
@@ -61,7 +80,17 @@ class HelpScreen(ModalScreen):
     """
 
     def compose(self) -> ComposeResult:
-        """Compose help screen layout."""
+        """
+        Composes the UI structure for the help and documentation interface within
+        the application. This method defines the layout and content of the help
+        screen, including tabs for keyboard shortcuts, usage guide, features, and
+        troubleshooting sections.
+
+        Yields:
+            ComposeResult: The visual components of the help interface,
+            including a container with a help title, tabbed content, and a close
+            button.
+        """
         with Container(id="help-container"):
             yield Static("📚 CLASSIC TUI - Help & Documentation", classes="help-title")
 
@@ -82,7 +111,15 @@ class HelpScreen(ModalScreen):
 
     @staticmethod
     def _get_shortcuts_text() -> str:
-        """Generate keyboard shortcuts documentation."""
+        """
+        Returns a formatted string containing keyboard shortcuts instructions for application navigation,
+        control, scan operations, output management, and settings. These shortcuts provide quick access
+        to various functionalities, including navigation between elements, activating inputs, and managing
+        scans or application settings.
+
+        Returns:
+            str: A markdown-formatted string detailing keyboard shortcuts grouped by functionality.
+        """
         return """
 # Keyboard Shortcuts
 
@@ -99,7 +136,7 @@ class HelpScreen(ModalScreen):
 
 ## Scan Operations
 - **F5** / **R** - Run crash logs scan
-- **F6** / **G** - Run game files scan  
+- **F6** / **G** - Run game files scan
 - **F7** / **P** - Toggle Papyrus monitor
 
 ## Output Management
@@ -117,7 +154,16 @@ class HelpScreen(ModalScreen):
 
     @staticmethod
     def _get_usage_text() -> str:
-        """Generate usage guide."""
+        """
+        Fetches the usage guide for the application.
+
+        This static method provides a detailed guide on configuring folder paths,
+        running scans, monitoring real-time logs, managing outputs, and adjusting
+        application settings.
+
+        Returns:
+            str: The formatted usage guide as a string.
+        """
         return """
 # Usage Guide
 
@@ -166,7 +212,15 @@ Access settings with **Ctrl+O** to configure:
 
     @staticmethod
     def _get_features_text() -> str:
-        """Generate features documentation."""
+        """
+        Generates a string detailing the features of software, broken down into core functionality,
+        user interface enhancements, and data management capabilities. This static method is designed
+        to provide organized and detailed feature information for documentation or presentation purposes.
+
+        Returns:
+            str: A structured text containing an overview of specific software features categorized
+            into sections such as Core Functionality, User Interface, and Data Management.
+        """
         return """
 # Features
 
@@ -226,7 +280,15 @@ Access settings with **Ctrl+O** to configure:
 
     @staticmethod
     def _get_troubleshooting_text() -> str:
-        """Generate troubleshooting guide."""
+        """
+        Provides troubleshooting information and common problem resolutions for issues faced
+        during the scanning process. Includes potential fixes for common problems, detailed
+        explanations of error messages, and guidance on obtaining additional support.
+
+        Returns:
+            str: A formatted troubleshooting guide containing descriptions of issues, solutions,
+            error message interpretations, and helpful tips to resolve common problems.
+        """
         return """
 # Troubleshooting
 

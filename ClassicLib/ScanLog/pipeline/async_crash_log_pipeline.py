@@ -25,7 +25,21 @@ if TYPE_CHECKING:
 
 
 class AsyncCrashLogPipeline:
-    """Complete async pipeline for crash log processing."""
+    """
+    Handles the asynchronous processing of crash logs.
+
+    This class provides methods to process crash log files using a fully asynchronous pipeline. It operates in various stages:
+    reformatting log files, loading logs asynchronously, orchestrating processing using an external core system, and finally
+    writing the processing results as reports. The implementation allows for dynamic batching and leverages concurrency for
+    improved performance on systems with higher CPU counts.
+
+    Attributes:
+        yamldata (ClassicScanLogsInfo): Configuration data for processing.
+        fcx_mode (bool | None): Indicates whether FCX mode is enabled.
+        show_formid_values (bool | None): Indicates whether FormID values are displayed in the results.
+        formid_db_exists (bool): Indicates whether the FormID database is present for use during processing.
+        performance_stats (dict): Tracks performance metrics including processing times for different stages of the pipeline.
+    """
 
     def __init__(
         self,
@@ -35,13 +49,17 @@ class AsyncCrashLogPipeline:
         formid_db_exists: bool,
     ) -> None:
         """
-        Initialize the async pipeline.
+        Initializes an instance for managing and processing classic scan logs information.
+
+        This constructor sets up various attributes related to scan logs, modes, and database
+        status. It prepares the object for performance tracking by initializing a dictionary
+        to store performance statistics.
 
         Args:
-            yamldata: Configuration data
-            fcx_mode: Whether FCX mode is enabled
-            show_formid_values: Whether to show FormID values
-            formid_db_exists: Whether FormID database exists
+            yamldata: ClassicScanLogsInfo-like object representing scan log data.
+            fcx_mode: Boolean or None indicating whether the FCX mode is active or unset.
+            show_formid_values: Boolean or None to specify whether to display form ID values.
+            formid_db_exists: Boolean indicating whether the form ID database already exists.
         """
         self.yamldata = yamldata
         self.fcx_mode = fcx_mode
@@ -55,16 +73,26 @@ class AsyncCrashLogPipeline:
         self, crashlog_list: list[Path], remove_list: tuple[str]
     ) -> tuple[list[tuple[Path, list[str], bool, Counter[str]]], dict[str, float]]:
         """
-        Process crash logs using fully async pipeline.
+        Processes a list of crash log files asynchronously, performing reformatting, loading,
+        database processing, and report writing within an optimized pipeline. Tracks performance
+        metrics throughout the pipeline, including reformatting time, log loading time,
+        processing time, report writing time, and overall throughput.
 
         Args:
-            crashlog_list: List of crash log file paths
-            remove_list: Tuple of strings to remove during reformatting
+            crashlog_list (list[Path]): List of crash log file paths to be processed.
+            remove_list (tuple[str]): Tuple of strings specifying patterns to be removed
+                during reformatting.
 
         Returns:
-            Tuple containing:
-            - List of processing results
-            - Performance statistics dictionary
+            tuple: A tuple containing:
+                - A list of tuples, each representing the result for a crash log file:
+                  (file path, autoscan report, trigger scan result, error counts).
+                - A dictionary with performance statistics including times for each stage
+                  and logs processed per second.
+
+        Raises:
+            Various exceptions may be raised depending on failures in file access,
+            asynchronous tasks, or processing errors, which should be handled by the caller.
         """
         logger.info("Starting async crash log processing pipeline")
         total_start = time.perf_counter()
@@ -157,7 +185,7 @@ class AsyncCrashLogPipeline:
         return all_results, self.performance_stats
 
 
-async def run_async_crash_log_scan(  # noqa: PLR0913
+async def run_async_crash_log_scan(  # noqa: PLR0917
     crashlog_list: list[Path],
     remove_list: tuple[str],
     yamldata: "ClassicScanLogsInfo",
@@ -166,18 +194,31 @@ async def run_async_crash_log_scan(  # noqa: PLR0913
     formid_db_exists: bool,
 ) -> tuple[list[tuple[Path, list[str], bool, Counter[str]]], dict[str, float]]:
     """
-    Convenience function to run the full async crash log scanning pipeline.
+    Executes an asynchronous scan of crash logs and processes them based on the specified parameters.
+
+    This function utilizes an asynchronous pipeline to perform a comprehensive analysis of crash log files.
+    The function prepares and processes provided crash logs and applies necessary filtration and decoding
+    specified through other parameters. Finally, it returns the processed log details and summary statistics.
 
     Args:
-        crashlog_list: List of crash log file paths
-        remove_list: Tuple of strings to remove during reformatting
-        yamldata: Configuration data
-        fcx_mode: Whether FCX mode is enabled
-        show_formid_values: Whether to show FormID values
-        formid_db_exists: Whether FormID database exists
+        crashlog_list (list[Path]): A list of paths pointing to the crash log files.
+        remove_list (tuple[str]): A tuple containing identifiers or patterns that need to be filtered out
+            while processing the logs.
+        yamldata (ClassicScanLogsInfo): An object containing configuration data and parsing rules for the log
+            scanning process.
+        fcx_mode (bool | None): A flag indicating whether the processing should operate in FCX mode.
+        show_formid_values (bool | None): A flag to decide if "formid" values in the logs should be displayed.
+        formid_db_exists (bool): A flag indicating if the "formid" database exists.
 
     Returns:
-        Tuple containing processing results and performance statistics
+        tuple: A tuple consisting of two elements:
+            - A list of tuples containing processed log details:
+                - Path: The path of the processed crash log.
+                - list[str]: A list of decoded log strings.
+                - bool: A flag indicating the status of the processing for that log.
+                - Counter[str]: A counter object containing statistical data of processed elements in the log.
+            - dict[str, float]: A dictionary containing performance statistics or other summary metrics from
+              the scan process.
     """
     pipeline = AsyncCrashLogPipeline(yamldata, fcx_mode, show_formid_values, formid_db_exists)
 

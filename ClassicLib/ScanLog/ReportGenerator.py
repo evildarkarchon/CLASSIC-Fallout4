@@ -16,26 +16,44 @@ if TYPE_CHECKING:
 
 
 class ReportGeneratorFragments:
-    """Fragment-based report generator for crash log analysis."""
+    """
+    Manage the generation of various sections and fragments for an autoscan report.
+
+    This class provides methods for generating standardized report fragments,
+    including headers, error sections, suspect sections, and footers. The class
+    leverages input configuration data and contextual information to produce
+    formatted outputs useful for identifying crash issues, errors, and other
+    relevant details in autoscan reports.
+
+    Attributes:
+        yamldata (ClassicScanLogsInfo): Configuration data for generating the report.
+    """
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
-        Initialize the report generator.
+        Initializes the instance with the given ClassicScanLogsInfo data.
 
         Args:
-            yamldata: Configuration data
+            yamldata: Instance of ClassicScanLogsInfo containing YAML data.
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
 
     def generate_header(self, crashlog_filename: str) -> ReportFragment:
         """
-        Generate a standardized header for an autoscan report.
+        Generates a header section for an autoscan report.
+
+        This method creates a formatted header for the generated report fragment,
+        including the crash log filename and details about the autoscan version.
+        It provides best viewing instructions and cautions the reader about the
+        possibility of false positives.
 
         Args:
-            crashlog_filename: The name of the crash log file being processed.
+            crashlog_filename (str): Name of the crash log file to be included in the
+                report header.
 
         Returns:
-            ReportFragment containing the header.
+            ReportFragment: A report fragment object containing the formatted report
+                header.
         """
         version = self.yamldata.classic_version if self.yamldata else "CLASSIC"
         return ReportFragment.from_lines([
@@ -55,17 +73,20 @@ class ReportGeneratorFragments:
         version_latest_vr: Any,
     ) -> ReportFragment:
         """
-        Generate an error section for the autoscan report.
+        Generates an error section of a report indicating the current status of the Crashgen
+        version and whether the version is outdated or up-to-date. This section also includes
+        the main error information and relevant version statuses.
 
         Args:
-            main_error: The main error message to be displayed.
-            crashgen_version: The version string of the crashgen component.
-            version_current: The current version of the crashgen.
-            version_latest: The latest available version of the crashgen.
-            version_latest_vr: The latest available VR version of the crashgen.
+            main_error: A string describing the primary error encountered.
+            crashgen_version: A string representing the detected version of the Crashgen.
+            version_current: The currently installed version of Crashgen.
+            version_latest: The latest available version of Crashgen.
+            version_latest_vr: The latest available version of Crashgen for VR.
 
         Returns:
-            ReportFragment containing the error section.
+            ReportFragment: A structured report fragment containing error and version
+            information formatted as lines of text.
         """
         crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
         lines = [
@@ -90,10 +111,13 @@ class ReportGeneratorFragments:
     @staticmethod
     def generate_suspect_section_header() -> ReportFragment:
         """
-        Generate header for the suspect section.
+        Generates and returns a predefined header for the suspect section in the report.
+
+        This method creates a ReportFragment containing lines formatted specifically for
+        highlighting crash messages, errors, and suspects in a report structure.
 
         Returns:
-            ReportFragment containing the suspect section header.
+            ReportFragment: A fragment of the report pre-populated with relevant lines.
         """
         return ReportFragment.from_lines([
             "### Checking for Known Crash Messages, Errors and Suspects\n\n",
@@ -102,13 +126,19 @@ class ReportGeneratorFragments:
     @staticmethod
     def generate_suspect_found_footer(found_suspect: bool) -> ReportFragment:
         """
-        Generate footer for suspect section based on whether suspects were found.
+        Generate a footer section for a report indicating whether suspects were found.
+
+        This static method creates a footer composed of formatted lines that summarize
+        if suspects were detected. It calls `ReportFragment.from_lines` to produce
+        the properly structured report fragment. The text content of the footer differs
+        based on whether suspects were found or not.
 
         Args:
-            found_suspect: Whether any suspects were found.
+            found_suspect (bool): Flag indicating if one or more suspects were detected.
 
         Returns:
-            ReportFragment containing the appropriate footer.
+            ReportFragment: A formatted report fragment containing the footer
+            indicating the result of the suspect detection.
         """
         if found_suspect:
             return ReportFragment.from_lines([
@@ -123,10 +153,14 @@ class ReportGeneratorFragments:
     @staticmethod
     def generate_settings_section_header() -> ReportFragment:
         """
-        Generate header for the settings section.
+        Generates a section header for reporting settings-related issues.
+
+        This static method creates and returns a `ReportFragment` instance that contains
+        a formatted header indicating the start of a section focused on
+        settings-related issues.
 
         Returns:
-            ReportFragment containing the settings section header.
+            ReportFragment: A fragment containing the settings-related issues header.
         """
         return ReportFragment.from_lines([
             "### Checking for Settings-related Issues\n\n",
@@ -135,13 +169,13 @@ class ReportGeneratorFragments:
     @staticmethod
     def generate_mod_check_header(check_type: str) -> ReportFragment:
         """
-        Generate header for mod checking sections.
+        Generates a report fragment header for mod checks based on the provided check type.
 
         Args:
-            check_type: Type of mod check being performed.
+            check_type (str): The type of mod check to include in the header.
 
         Returns:
-            ReportFragment containing the mod check header.
+            ReportFragment: A fragment containing the formatted header lines.
         """
         return ReportFragment.from_lines([
             f"### Checking For Mods That {check_type}\n\n",
@@ -150,10 +184,16 @@ class ReportGeneratorFragments:
     @staticmethod
     def generate_plugin_suspect_header() -> ReportFragment:
         """
-        Generate header for plugin suspect section.
+        Generates a header fragment for reports related to plugin-related errors.
+
+        This static method provides a descriptive header indicating the section
+        of the report that pertains to identifying and analyzing plugin-related
+        errors. The header serves to improve report readability and structure,
+        aiding users in quickly pinpointing relevant sections.
 
         Returns:
-            ReportFragment containing the plugin suspect header.
+            ReportFragment: A fragment containing formatted header information with
+            the required lines specifying plugin-related error checks.
         """
         return ReportFragment.from_lines([
             "### Checking for Plugin-related Errors\n\n",
@@ -162,10 +202,13 @@ class ReportGeneratorFragments:
     @staticmethod
     def generate_formid_section_header() -> ReportFragment:
         """
-        Generate header for FormID section.
+        Generates a section header for FormID checks.
+
+        This static method creates a ReportFragment containing a segment of text
+        used as a header for indicating the FormID checking process in a report.
 
         Returns:
-            ReportFragment containing the FormID section header.
+            ReportFragment: A segment of the report containing the FormID check header.
         """
         return ReportFragment.from_lines([
             "### Checking FormIDs\n\n",
@@ -174,10 +217,14 @@ class ReportGeneratorFragments:
     @staticmethod
     def generate_record_section_header() -> ReportFragment:
         """
-        Generate header for named records section.
+        Generates a section header for checking named records.
+
+        This method returns a preformatted ReportFragment object that contains
+        the section header used during the process of evaluating named records.
 
         Returns:
-            ReportFragment containing the record section header.
+            ReportFragment: An instance of ReportFragment initialized with the
+                predefined header lines.
         """
         return ReportFragment.from_lines([
             "### Checking for Named Records\n\n",
@@ -185,10 +232,14 @@ class ReportGeneratorFragments:
 
     def generate_footer(self) -> ReportFragment:
         """
-        Generate the report footer.
+        Generates a footer section for the report.
+
+        The method uses the `classic_version` from `yamldata` if available; otherwise,
+        it defaults to "CLASSIC". The footer includes a line stating the end of the
+        report and indicates the generator version.
 
         Returns:
-            ReportFragment containing the footer.
+            ReportFragment: The report fragment representing the footer section.
         """
         version = self.yamldata.classic_version if self.yamldata else "CLASSIC"
         return ReportFragment.from_lines([

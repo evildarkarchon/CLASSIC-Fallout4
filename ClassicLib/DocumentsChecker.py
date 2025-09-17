@@ -11,19 +11,19 @@ class DocumentsChecker:
 
     def check_folder_configuration(self) -> str:
         """
-        Check for OneDrive and other problematic folder configurations.
+        Validates and checks the folder configuration for specific document paths.
 
-        This method verifies the documentation path and checks for specific
-        keywords like "onedrive" in the documentation path name. If problematic
-        configurations are found, it returns appropriate warning messages.
-
-        Returns:
-            A warning message string if problematic configuration is found,
-            otherwise an empty string.
+        This method evaluates the configuration of document paths based on the settings
+        from the YAML configuration. It performs checks to ensure the validity of the
+        document name and warns if the path includes specific conditions (e.g., the
+        presence of 'OneDrive'). Errors are raised when expected types are not met.
 
         Raises:
-            TypeError: If the docs_name or docs_warn obtained from YAML
-                settings is not of type str.
+            TypeError: If the document name or document warning is not a string.
+
+        Returns:
+            str: A concatenated message list containing warnings or an empty string if
+            no warnings are applicable.
         """
         from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -44,16 +44,14 @@ class DocumentsChecker:
 
     def validate_ini_file(self, ini_filename: str) -> str:
         """
-        Validate a specific INI file configuration.
-
-        This method delegates to the docs_check_ini function to validate
-        the specified INI file.
+        Validates if the provided INI filename refers to a valid INI file. This ensures that
+        the given file adheres to the expected structure, syntax, and format of INI files.
 
         Args:
-            ini_filename: Name of the INI file to validate (e.g., "Fallout4.ini")
+            ini_filename (str): The name of the INI file to validate.
 
         Returns:
-            A message string containing validation results or warnings.
+            str: A string result indicating the outcome of the INI file validation.
         """
         logger.debug(f"Validating INI file: {ini_filename}")
         return docs_check_ini(ini_filename)

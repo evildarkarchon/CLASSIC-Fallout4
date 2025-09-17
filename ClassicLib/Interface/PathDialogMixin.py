@@ -1,3 +1,11 @@
+"""
+Module providing dialog functionality for selecting paths in a user-friendly way.
+
+This module includes mixin classes and standalone functions to integrate dialogs
+for selecting paths such as game installation directories or manual documentation
+directories. These paths can be stored and managed globally for further access
+throughout the application.
+"""
 import sys
 from pathlib import Path
 
@@ -9,6 +17,17 @@ from ClassicLib.MessageHandler import msg_info
 
 
 class PathDialogMixin:
+    """
+    Provides mixin methods for showing custom file path selection dialogs.
+
+    This class is used to add functionality for displaying dialogs that allow
+    users to select file paths, such as manual documentation paths or game
+    installation directories. The selected paths can then be registered in a
+    global registry for further use.
+
+    Methods defined in this mixin should be invoked from a parent class and are
+    designed to handle both dialog creation and result processing.
+    """
     def show_manual_docs_path_dialog(self) -> None:
         """
         Opens a dialog for selecting the manual documentation path.
@@ -50,11 +69,17 @@ class PathDialogMixin:
 
 def show_game_path_dialog_static() -> Path | None:
     """
-    Shows a dialog for selecting the game installation path without requiring an instance.
-    Allows the user to cancel, which will exit the application.
+    Displays a modal dialog to let the user select the installation path of the game.
+
+    This function repeatedly prompts the user to select a valid installation directory for the game
+    until a valid path is provided or the user chooses to exit the application. It validates whether
+    the directory selected by the user contains the correct game executable. If an invalid directory
+    is chosen, an error is shown, and the dialog is re-displayed. If the user cancels and opts to
+    exit, the application exits immediately.
 
     Returns:
-        Path to the selected valid game directory if successful, None if user cancels
+        Path | None: The validated path to the game's installation directory, or None in the case of an
+        unrecoverable error or user cancellation followed by exiting the application.
     """
     from ClassicLib.Interface.PathDialog import ManualPathDialog
 

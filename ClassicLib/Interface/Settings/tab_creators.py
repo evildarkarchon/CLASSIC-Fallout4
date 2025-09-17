@@ -28,14 +28,17 @@ class TabCreator:
     """Factory class for creating settings dialog tabs."""
 
     @staticmethod
-    def create_general_tab(parent: QWidget) -> tuple[QWidget, dict[str, QWidget]]:
+    def create_general_tab(parent: QWidget | None = None) -> tuple[QWidget, dict[str, QWidget]]:
         """
         Create the General settings tab.
+
+        Args:
+            parent: Parent widget for the tab
 
         Returns:
             Tuple of (tab widget, settings widgets dict)
         """
-        general_widget = QWidget()
+        general_widget = QWidget(parent)
         layout = QVBoxLayout(general_widget)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -65,14 +68,17 @@ class TabCreator:
         return general_widget, settings_widgets
 
     @staticmethod
-    def create_scanning_tab(parent: QWidget) -> tuple[QWidget, dict[str, QWidget]]:
+    def create_scanning_tab(parent: QWidget | None = None) -> tuple[QWidget, dict[str, QWidget]]:
         """
         Create the Scanning settings tab.
+
+        Args:
+            parent: Parent widget for the tab
 
         Returns:
             Tuple of (tab widget, settings widgets dict)
         """
-        scanning_widget = QWidget()
+        scanning_widget = QWidget(parent)
         layout = QVBoxLayout(scanning_widget)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -114,18 +120,18 @@ class TabCreator:
         return scanning_widget, settings_widgets
 
     @staticmethod
-    def create_paths_tab(parent: QWidget, path_manager: PathManager) -> tuple[QWidget, dict[str, QWidget]]:
+    def create_paths_tab(parent: QWidget | None, path_manager: PathManager) -> tuple[QWidget, dict[str, QWidget]]:
         """
         Create the Paths settings tab.
 
         Args:
-            parent: Parent widget
+            parent: Parent widget for the tab
             path_manager: PathManager instance for handling path operations
 
         Returns:
             Tuple of (tab widget, settings widgets dict)
         """
-        paths_widget = QWidget()
+        paths_widget = QWidget(parent)
         layout = QVBoxLayout(paths_widget)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -188,14 +194,17 @@ class TabCreator:
         return paths_widget, settings_widgets
 
     @staticmethod
-    def create_updates_tab(parent: QWidget) -> tuple[QWidget, dict[str, QWidget]]:
+    def create_updates_tab(parent: QWidget | None = None) -> tuple[QWidget, dict[str, QWidget], QPushButton]:
         """
         Create the Updates settings tab.
+
+        Args:
+            parent: Parent widget for the tab
 
         Returns:
             Tuple of (tab widget, settings widgets dict, check_now_button)
         """
-        updates_widget = QWidget()
+        updates_widget = QWidget(parent)
         layout = QVBoxLayout(updates_widget)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)

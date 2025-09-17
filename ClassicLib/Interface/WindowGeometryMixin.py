@@ -46,15 +46,15 @@ class WindowGeometryMixin:
     if TYPE_CHECKING:
         tab_widget: QTabWidget
 
-        def size(self) -> QSize: ...
+        def size(self) -> QSize: ...  # noqa: D102
 
-        def windowState(self) -> Qt.WindowState: ...
+        def windowState(self) -> Qt.WindowState: ...  # noqa: D102
 
-        def showMaximized(self) -> None: ...
+        def showMaximized(self) -> None: ...  # noqa: D102
 
-        def showNormal(self) -> None: ...
+        def showNormal(self) -> None: ...  # noqa: D102
 
-        def normalGeometry(self) -> object: ...
+        def normalGeometry(self) -> object: ...  # noqa: D102
 
     def __init__(self) -> None:
         """Initialize window geometry tracking."""
@@ -64,9 +64,18 @@ class WindowGeometryMixin:
 
     def setup_window_geometry(self) -> None:
         """
-        Initialize window geometry management.
+        Handles the setup and initialization of the window geometry for the tab widget, ensuring that
+        the initial window size is set correctly and updates when the active tab changes.
 
-        Should be called after tab widget is created and tabs are added.
+        Attributes:
+            tab_widget: The tab widget whose geometry is being managed. Geometry changes are applied
+                based on the active tab.
+
+        Raises:
+            AttributeError: Raised if the tab widget is not correctly initialized and its attributes
+                are accessed before setup.
+            RuntimeError: Raised if an attempt is made to operate on the geometry management before
+                initialization.
         """
         if not hasattr(self, "tab_widget"):
             logger.warning("Tab widget not found, skipping geometry setup")
@@ -85,10 +94,16 @@ class WindowGeometryMixin:
 
     def handle_tab_changed(self, index: int) -> None:
         """
-        Handle tab change event to save and restore window geometry.
+        Handles tab changes in a user interface component.
+
+        This method is called when the selected tab is changed. It ensures the geometry
+        (properties such as size, position) of the previous tab is saved before switching
+        to the new tab. After the switch, it restores the geometry for the newly selected
+        tab. If geometry initialization hasn't occurred, the function exits without
+        modifying any geometry information.
 
         Args:
-            index: The index of the newly selected tab
+            index (int): The index of the new tab that is being selected.
         """
         if not self._geometry_initialized:
             return
@@ -207,21 +222,33 @@ class WindowGeometryMixin:
 
     def get_minimum_size_for_tab(self, tab_index: int) -> tuple[int, int]:
         """
-        Get the minimum size for a specific tab.
+        Retrieves the minimum size for a specified tab.
+
+        This method returns the width and height of the minimum size for the
+        tab identified by its index. If the specified tab index does not exist,
+        it provides a default size.
 
         Args:
-            tab_index: The index of the tab
+            tab_index (int): The index of the tab to retrieve the minimum size for.
 
         Returns:
-            Tuple of (width, height) for the minimum size
+            tuple[int, int]: A tuple containing the width and height of the
+            minimum size for the tab.
         """
         return self.DEFAULT_MIN_SIZES.get(tab_index, (550, 350))
 
     def save_current_tab_geometry(self) -> None:
         """
-        Save the geometry of the currently active tab.
+        Saves the current geometry of the tab.
 
-        Should be called before the application closes.
+        This method checks if the object has a `tab_widget` attribute and if the
+        geometry has been initialized. If both conditions are met, it retrieves
+        the current tab index of the tab widget and saves the geometry for that
+        specific tab. A debug message is logged indicating the tab for which the
+        geometry has been saved.
+
+        Raises:
+            AttributeError: If the `tab_widget` attribute is not found.
         """
         if hasattr(self, "tab_widget") and self._geometry_initialized:
             current_index = self.tab_widget.currentIndex()

@@ -159,24 +159,34 @@ class SettingsDialog(QDialog):
         from ClassicLib.Logger import logger
 
         try:
-            # Get current settings
-            requests = [
+            # Get current settings - boolean settings
+            bool_requests = [
                 (bool, self.yaml_store, f"CLASSIC_Settings.{setting_name}")
                 for key, setting_name in self.SETTINGS_MAP.items()
-                if key not in ["update_source", "ini_folder_path"]
+                if key not in {"update_source", "ini_folder_path"}
             ]
-            # Add string settings
-            requests.extend([
+            # String settings
+            str_requests = [
                 (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}"),
                 (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['ini_folder_path']}"),
-            ])
+            ]
+            # Combine all requests
+            requests = bool_requests + str_requests
 
             # Batch load all settings
             values = yaml_cache.batch_get_settings(requests)
             value_iter = iter(values)
 
             # Update checkboxes
-            for key in ["audio_notifications", "vr_mode", "fcx_mode", "simplify_logs", "show_fid_values", "move_invalid_logs", "update_check"]:
+            for key in [
+                "audio_notifications",
+                "vr_mode",
+                "fcx_mode",
+                "simplify_logs",
+                "show_fid_values",
+                "move_invalid_logs",
+                "update_check",
+            ]:
                 widget = self.settings_widgets.get(key)
                 if isinstance(widget, QCheckBox):
                     widget.setChecked(next(value_iter) or False)
@@ -220,7 +230,15 @@ class SettingsDialog(QDialog):
 
         try:
             # Save checkboxes
-            for key in ["audio_notifications", "vr_mode", "fcx_mode", "simplify_logs", "show_fid_values", "move_invalid_logs", "update_check"]:
+            for key in [
+                "audio_notifications",
+                "vr_mode",
+                "fcx_mode",
+                "simplify_logs",
+                "show_fid_values",
+                "move_invalid_logs",
+                "update_check",
+            ]:
                 widget = self.settings_widgets.get(key)
                 if isinstance(widget, QCheckBox):
                     setting_name = self.SETTINGS_MAP[key]
@@ -228,7 +246,9 @@ class SettingsDialog(QDialog):
 
             # Save combo box
             if isinstance(self.update_source_combo, QComboBox):
-                yaml_settings(str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}", self.update_source_combo.currentText())
+                yaml_settings(
+                    str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}", self.update_source_combo.currentText()
+                )
 
             # Save INI folder path
             if isinstance(self.ini_folder_input, QLineEdit):
@@ -275,7 +295,7 @@ class SettingsDialog(QDialog):
                     docs_path_find(is_gui_mode=True)
 
             # Recalculate game paths
-            game_path_find(is_gui_mode=True)
+            game_path_find()
 
             # Validate mods paths
             PathValidator.validate_mods_folder_path()

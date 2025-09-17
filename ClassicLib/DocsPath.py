@@ -1,3 +1,11 @@
+"""
+Manages game document paths across different platforms.
+
+This module provides functionalities to manage and configure document
+paths used by games. The paths are determined based on the platform
+being used, retrieved or updated in the corresponding configuration
+settings, and optional user input is considered when necessary.
+"""
 import contextlib
 import platform
 from io import StringIO
@@ -15,13 +23,30 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class DocumentsPathManager:
-    """Manages game document paths across different platforms."""
+    """
+    Manages paths related to documentation and game files.
+
+    The DocumentsPathManager class handles the retrieval, validation, and configuration
+    of file paths necessary for managing game-related documents. The class can determine
+    the appropriate directories for documents based on the platform, user input, or
+    application settings. This includes interacting with system registries, file system
+    APIs, and game configuration files.
+
+    Attributes:
+        is_gui_mode (bool): Whether the application is running in GUI mode.
+        manual_docs_gui: GUI component for handling manual document path input, available
+            only when in GUI mode.
+        docs_name (str): The name of the documentation folder, derived from YAML settings.
+    """
 
     def __init__(self, is_gui_mode: bool = False) -> None:
-        """Initialize the document path manager.
+        """
+        Initializes the core settings for the application's documentation mode, allowing differentiation
+        between GUI-based and non-GUI modes. Depending on the specified mode, additional resources
+        may be initialized.
 
         Args:
-            gui_mode: Whether the program is running in GUI mode
+            is_gui_mode (bool): Indicates whether the application should operate in GUI mode.
         """
         self.is_gui_mode = is_gui_mode
         self.manual_docs_gui = GlobalRegistry.get_manual_docs_gui() if is_gui_mode else None
@@ -29,7 +54,13 @@ class DocumentsPathManager:
 
     @staticmethod
     def _get_docs_name() -> str:
-        """Get the document folder name from settings."""
+        """
+        Retrieves the name of the main documentation file for the game or returns the default game name.
+
+        Returns:
+            str: The name of the main documentation file if available; otherwise, the
+            default game name is returned.
+        """
         docs_name: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
         if not isinstance(docs_name, str):
             docs_name = GlobalRegistry.get_game()
@@ -64,7 +95,22 @@ class DocumentsPathManager:
         yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}", value)
 
     def find_docs_path(self) -> None:
-        """Find and configure the game documents folder path."""
+        """
+        Validates and determines the path used for documentation files in the system,
+        with a focus on detecting and validating user-specified or auto-detected paths.
+
+        The method first attempts to retrieve and validate a user-configured folder path
+        for documentation via settings. If the user-configured path is unavailable or
+        invalid, it proceeds to verify an existing path in the system. Finally, if no
+        valid path is found, it tries to auto-detect the documentation path based on
+        the platform or prompt the user for manual input.
+
+        Args:
+            None
+
+        Raises:
+            None
+        """
         logger.debug("- - - INITIATED DOCS PATH CHECK")
 
         from ClassicLib.Util import validate_path
@@ -124,7 +170,17 @@ class DocumentsPathManager:
         self._update_game_setting("Root_Folder_Docs", win_docs)
 
     def _find_linux_docs_path(self) -> None:
-        """Find the Linux documents path using Steam library configuration."""
+        """
+        Identifies and sets the Linux file path to game-specific documents.
+
+        This method retrieves the Steam ID from the YAML settings and locates the corresponding directory
+        within the Steam library in a Linux environment. If the Steam ID is invalid or the library configuration
+        file is missing, the function either raises an error or exits gracefully. Upon successfully locating
+        the path, it updates the game settings with the found directory path.
+
+        Raises:
+            TypeError: If the Steam ID retrieved from the YAML settings is not an integer.
+        """
         # Retrieve the Steam ID from YAML settings
         game_sid: int | None = yaml_settings(int, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_SteamID")
         if not isinstance(game_sid, int):
@@ -312,14 +368,21 @@ class DocumentsPathManager:
         return message_list
 
     def _handle_missing_ini(self, ini_path: Path, ini_name: str) -> list[str]:
-        """Handle a missing INI file.
+        """
+        Handles situations where an expected INI file is missing by providing user
+        messages or taking corrective actions. Depending on the specific INI file
+        name, it guides the user to fix the issue or performs automatic adjustments.
 
         Args:
-            ini_path: Path where the INI file should be
-            ini_name: Name of the INI file
+            ini_path (Path): The file path where the missing INI file is expected.
+            ini_name (str): The name of the missing INI file.
 
         Returns:
-            List of messages about the missing file
+            list[str]: A list of messages to inform the user about the status and
+                necessary actions regarding the missing INI file.
+
+        Raises:
+            TypeError: If the custom INI configuration retrieved is not of type str.
         """
         message_list: list[str] = []
 
@@ -345,18 +408,13 @@ class DocumentsPathManager:
 # Public API functions that use the DocumentsPathManager class
 def docs_path_find(is_gui_mode: bool = False) -> None:
     """
-    Locates the documents path using a manager instance.
+    Finds the document path using the DocumentsPathManager.
 
-    This function initializes a `DocumentsPathManager` object, passing the
-    specified mode (GUI or non-GUI) and invokes its `find_docs_path` method
-    to determine the location of the documents path.
+    This function creates an instance of the DocumentsPathManager and uses it to
+    find the appropriate document path based on the given mode.
 
     Args:
-        is_gui_mode (bool): If True, enables GUI mode; otherwise, operates in
-            command-line mode.
-
-    Returns:
-        None
+        is_gui_mode (bool): Specifies whether the mode is GUI-based or not. The default value is False.
     """
     manager: DocumentsPathManager = DocumentsPathManager(is_gui_mode)
     manager.find_docs_path()
@@ -364,11 +422,15 @@ def docs_path_find(is_gui_mode: bool = False) -> None:
 
 def docs_generate_paths() -> None:
     """
-    Executes the process to generate document paths using the DocumentsPathManager.
+    Generates and manages document paths using DocumentsPathManager.
 
-    The function initializes a DocumentsPathManager instance and invokes its
-    generate_paths method to perform the document paths generation.
+    This function initializes a DocumentsPathManager instance and executes
+    the method to generate document paths. It serves as a utility for path
+    management and organization of documents.
 
+    Raises:
+        Raises any exceptions originating from the initialization or methods
+        of DocumentsPathManager during its execution.
     """
     manager: DocumentsPathManager = DocumentsPathManager()
     manager.generate_paths()
@@ -376,14 +438,14 @@ def docs_generate_paths() -> None:
 
 def docs_check_ini(ini_name: str) -> str:
     """
-    Checks the validity of the provided ini file by utilizing the DocumentsPathManager
-    to determine its existence or setup requirements.
+    Checks the existence and validity of the specified ini file by utilizing the
+    DocumentsPathManager class.
 
     Args:
         ini_name (str): The name of the ini file to be checked.
 
     Returns:
-        str: A status message indicating the result of the check.
+        str: The result of the ini file validation as a string.
     """
     manager: DocumentsPathManager = DocumentsPathManager()
     return manager.check_ini(ini_name)

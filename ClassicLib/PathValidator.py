@@ -1,4 +1,16 @@
-"""Path validation module for settings and configuration paths."""
+"""
+A module for validating and maintaining file path configurations.
+
+This module provides utilities for ensuring configurable paths, such as custom
+scan directories or game root folders, are valid and accessible. It also includes
+methods to clean up invalid or restricted path settings from application
+configuration.
+
+Methods in this module perform checks to ensure paths exist, are directories,
+contain expected files if necessary, and are not restricted by predefined rules.
+Users of this module can integrate these methods to maintain the validity and
+consistency of configuration paths.
+"""
 
 from pathlib import Path
 

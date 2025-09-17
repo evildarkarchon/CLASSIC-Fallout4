@@ -14,6 +14,7 @@ from typing import Any, ClassVar, TypeVar
 T = TypeVar("T")
 
 
+# noinspection PyTypeChecker
 class AsyncBridge:
     """
     High-performance bridge between sync and async code using persistent thread-local event loops.
@@ -204,6 +205,7 @@ class AsyncBridge:
         """Cleanup all event loops on program exit."""
         with cls._lock:
             for instance in cls._instances.values():
+                # noinspection PyBroadException
                 try:  # noqa: SIM105
                     instance.shutdown()
                 except Exception:  # noqa: BLE001

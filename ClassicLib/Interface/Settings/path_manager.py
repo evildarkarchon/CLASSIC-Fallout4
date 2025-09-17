@@ -1,7 +1,7 @@
 """
-Path management functionality for CLASSIC settings dialog.
-
-This module handles INI folder path detection, browsing, and resetting.
+Manages path-related settings and operations effectively, allowing the user to interact
+with path settings such as INI folder paths. Provides functionalities including setting,
+browsing, resetting, and auto-detecting path values for customization and ease of use.
 """
 
 from __future__ import annotations
@@ -19,26 +19,59 @@ if TYPE_CHECKING:
 
 
 class PathManager:
-    """Manages path-related settings and operations."""
+    """
+    Manage the operations related to the path configuration for INI folder settings.
+
+    This class provides methods for managing the INI folder settings using a graphical
+    user interface (GUI). It enables browsing for a specific folder, resetting the INI
+    folder to its auto-detected value, and triggering auto-detection of the folder path.
+    The operations involve interactions with the YAML settings and executing folder
+    detection logic to update the relevant user interface components.
+
+    Attributes:
+        parent (QWidget): The parent widget for displaying file dialogs and messages.
+        yaml_store (YAML): The YAML store instance utilized for managing settings.
+        ini_folder_input (QLineEdit | None): Reference to the input widget for displaying
+            and modifying the INI folder path.
+    """
 
     def __init__(self, parent: QWidget, yaml_store: YAML = YAML.Settings) -> None:
         """
-        Initialize the path manager.
+        Initializes a new instance of the class.
 
         Args:
-            parent: Parent widget for dialogs
-            yaml_store: YAML store to use for settings
+            parent (QWidget): The parent widget associated with the instance.
+            yaml_store (YAML): The YAML configuration or settings object.
         """
         self.parent = parent
         self.yaml_store = yaml_store
         self.ini_folder_input: QLineEdit | None = None
 
     def set_ini_folder_input(self, input_widget: QLineEdit) -> None:
-        """Set the INI folder input widget reference."""
+        """
+        Sets the folder input widget for the application.
+
+        This method assigns an input widget to the attribute responsible for managing
+        the folder path input. It should be used to dynamically set the widget for
+        user interaction with folder path inputs.
+
+        Args:
+            input_widget (QLineEdit): The input widget to set as the folder input
+                handler.
+        """
         self.ini_folder_input = input_widget
 
     def browse_ini_folder(self) -> None:
-        """Open a folder browser dialog for selecting the INI folder."""
+        """
+        Opens a folder dialog to allow the user to select an INI folder for a game. The selected
+        folder path is then set to the corresponding input field. If no input or folder is
+        selected, the function exits without changes.
+
+        Raises:
+            TypeError: Raised if an invalid type is provided when retrieving the game information.
+            ValueError: Raised if an invalid value is encountered during game information retrieval.
+            AttributeError: Raised if an attribute is missing during game information retrieval.
+        """
         from ClassicLib import GlobalRegistry
 
         if not self.ini_folder_input:
@@ -60,7 +93,27 @@ class PathManager:
             self.ini_folder_input.setText(folder)
 
     def reset_ini_folder(self) -> None:
-        """Reset the INI folder path to auto-detected value."""
+        """
+        Resets the INI folder path in the configuration and triggers a fresh autodetection process.
+
+        This method performs the following operations:
+        1. Clears the INI folder path setting in the CLASSIC_Settings.yaml file and logs this
+           action for tracking purposes.
+        2. Clears the Root_Folder_Docs key in the Game_Local YAML file to ensure a fresh
+           detection of the folder paths specific to the game configuration.
+        3. Invokes the autodetection mechanism to reinitialize the configuration for the
+           INI folder path based on the current environment.
+
+        Relevant exceptions caught include ImportError, TypeError, ValueError, and OSError,
+        and appropriate error messages are logged and displayed to the user.
+
+        Raises:
+            ImportError: If required modules or components are not found.
+            TypeError: If the provided data type is not as expected.
+            ValueError: If the operation encounters invalid data or values.
+            OSError: On operating system-related failures.
+
+        """
         from ClassicLib import GlobalRegistry
         from ClassicLib.Logger import logger
 
@@ -84,7 +137,20 @@ class PathManager:
             msg_error(f"Failed to reset INI folder path: {e!s}\n\nPlease try again or set the path manually.")
 
     def autodetect_ini_folder(self) -> None:
-        """Trigger autodetection of the INI folder path and update the UI."""
+        """
+        Autodetects the INI folder path and updates the user interface.
+
+        This method attempts to automatically detect the INI folder path used by the application or
+        game. If a new path is successfully detected, the method updates the relevant UI element
+        and notifies the user. In case the detection fails or encounters an error, it clears the
+        input UI element, logs the incident, and informs the user with an appropriate message.
+
+        Raises:
+            ImportError: If there is an error importing necessary modules or libraries.
+            TypeError: If there is a type-related error during the operation.
+            ValueError: If a value-related error occurs, such as invalid YAML content.
+            OSError: If a system-related error occurs, like file-related issues.
+        """
         from ClassicLib import GlobalRegistry
         from ClassicLib.DocsPath import docs_path_find
         from ClassicLib.Logger import logger

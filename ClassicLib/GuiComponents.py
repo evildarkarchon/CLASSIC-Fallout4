@@ -1,3 +1,13 @@
+"""
+Defines a QObject-based class for handling manual documentation paths and game paths for configuration updates.
+
+This module contains the `ManualDocsPath` class, which manages and validates user-provided
+directory paths related to manual documentation and game data. Upon validation, the paths
+are updated in a settings YAML file. Invalid paths trigger signals requesting new input.
+
+Classes:
+    ManualDocsPath: Handles validation and updating of manual documentation paths and game paths.
+"""
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
@@ -8,10 +18,30 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 class ManualDocsPath(QObject):
+    """
+    Handles the management and validation of directory paths related to manual documentation and game files.
+
+    This class provides methods to validate user-provided paths and update configuration files if the paths
+    are deemed valid. If invalid paths are provided, appropriate signals are emitted to re-prompt the user.
+
+    Attributes:
+        manual_docs_path_signal (Signal): Signal emitted to request a new manual documentation path when
+            the provided path is invalid.
+        game_path_signal (Signal): Signal emitted to request a new game directory path when the provided
+            path is invalid.
+    """
     manual_docs_path_signal: Signal = Signal()
     game_path_signal: Signal = Signal()
 
     def __init__(self) -> None:
+        """
+        Initializes an instance of a class.
+
+        This constructor method is used to create and initialize an object of a class. It calls
+        the parent class's constructor to ensure proper initialization, especially in cases where
+        the class is inheriting from another base class.
+
+        """
         super().__init__()
 
     def get_manual_docs_path_gui(self, path: str) -> None:

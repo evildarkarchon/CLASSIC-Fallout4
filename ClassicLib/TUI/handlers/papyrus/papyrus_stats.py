@@ -1,4 +1,11 @@
-"""Papyrus log statistics data model."""
+"""
+A module for analyzing statistics derived from Papyrus log files.
+
+This module provides a dataclass `PapyrusStats` for storing and summarizing
+information, such as the number of errors, warnings, and dumps from Papyrus
+log analysis. It also includes utility methods for determining visual status
+representations based on the analyzed statistics.
+"""
 
 from dataclasses import dataclass
 from datetime import datetime

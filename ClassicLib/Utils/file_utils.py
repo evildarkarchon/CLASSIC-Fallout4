@@ -1,4 +1,14 @@
-"""File operations and encoding utilities."""
+"""
+This module provides utilities for text file similarity comparison, file hashing, and
+file handling with automatic encoding detection. It includes functionalities to calculate
+the similarity between text files, compute SHA256 file hashes, and open files with
+encoding detection, ensuring robustness against various encoding issues.
+
+Functions:
+- calculate_similarity: Computes the similarity ratio between the content of two text files.
+- calculate_file_hash: Generates a SHA256 hash string for a file.
+- open_file_with_encoding: Context manager to open and read files with detected encoding.
+"""
 
 import contextlib
 import hashlib
@@ -45,10 +55,12 @@ def calculate_file_hash(file_path: Path) -> str:
         with file_path.open("rb") as f:
             # Read in chunks for memory efficiency
             for byte_block in iter(lambda: f.read(4096), b""):
+                # noinspection PyTypeChecker
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
-    except (OSError, IOError) as e:
+    except OSError as e:
         from ClassicLib.Logger import logger
+
         logger.error(f"Failed to calculate hash for {file_path}: {e}")
         return ""
 
@@ -86,7 +98,7 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
                     # Use detected encoding if confidence is high enough
                     if result.get("confidence", 0) > 0.7:
                         encoding = detected_encoding
-    except (OSError, IOError):
+    except OSError:
         # If we can't read for detection, fall back to UTF-8
         pass
 

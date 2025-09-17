@@ -21,8 +21,19 @@ from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 
+# noinspection PyUnresolvedReferences,PyTypeChecker
 class GameIntegrityOrchestratorCore:
-    """Async-first core implementation for game integrity orchestration operations."""
+    """
+    Facilitates the orchestration of integrity checks for games and mods.
+
+    This class is responsible for asynchronously performing and combining results
+    from various integrity and validation checks related to game files, mod files,
+    and associated documentation. It also handles writing the combined results into
+    a report file for further analysis.
+
+    Attributes:
+        file_io (FileIOCore): Handles file input-output operations.
+    """
 
     def __init__(self) -> None:
         """Initialize the game integrity orchestrator core."""
@@ -84,17 +95,24 @@ class GameIntegrityOrchestratorCore:
             logger.error(f"Error in generate_game_combined_result_async: {e}")
             return ""
 
-    async def generate_mods_combined_result_async(self) -> str:
+    @staticmethod
+    async def generate_mods_combined_result_async() -> str:
         """
-        Async implementation for combining the results of scanning unpacked and archived mods.
+        Asynchronously generates a combined result of scans for both unpacked and archived mods.
 
-        This function first checks if the mods path is provided. If not, it returns a
-        relevant message. Otherwise, it performs both unpacked and archived mod scans
-        concurrently and combines their results.
+        The method performs concurrent execution of two mod scans: one for unpacked mods and the other
+        for archived mods. If a mod path is not available, a warning message from the YAML settings is returned.
+        Exceptions occurring during the scan processes are logged without being raised again, and a concatenated
+        result string of the successful scan(s) is returned. If both scans fail due to exceptions, an empty
+        result string is returned.
 
         Returns:
-            str: The combined results of the unpacked and archived mods scans, or a
-            message indicating that the mods folder path is not provided.
+            str: The concatenated results of the scans for unpacked and archived mods, or an appropriate
+            warning message or empty string in the event of errors.
+
+        Raises:
+            OSError: If an OS-level error occurs during execution.
+            RuntimeError: If a runtime error occurs during execution.
         """
         try:
             # Import here to avoid circular imports
@@ -135,14 +153,17 @@ class GameIntegrityOrchestratorCore:
 
     async def write_combined_results_async(self) -> None:
         """
-        Async implementation for writing combined results to a markdown report file.
+        Asynchronously writes combined results from game and mod reports to a file.
 
-        This function aggregates results from both game and mods processes and writes
-        their combined output into a markdown file named "CLASSIC GFS Report.md".
-        The report file is encoded in UTF-8 with error handling.
+        This method generates game and mod reports concurrently, ensuring both tasks succeed
+        before continuing. If successful, the combined content of both reports is written
+        to a specified file. In case of errors during the report generation or file writing
+        process, appropriate error handling is performed to log and re-raise exceptions.
 
-        Uses TaskGroup for atomic operation - both reports must generate successfully
-        before writing to file. If either report generation fails, no file is written.
+        Raises:
+            OSError: Raised when a file system error occurs while writing the file.
+            RuntimeError: Raised when unexpected runtime issues are encountered.
+            Exception: Catches and logs all other unexpected errors before re-raising.
         """
         try:
             # Generate both results concurrently with fail-fast behavior
@@ -175,31 +196,89 @@ class GameIntegrityOrchestratorCore:
                 logger.error(f"  - {type(e).__name__}: {e}")
             raise
 
-    async def _run_xse_plugins_check_async(self) -> str:
-        """Run XSE plugins check asynchronously."""
+    @staticmethod
+    async def _run_xse_plugins_check_async() -> str:
+        """
+        Runs the XSE plugins check asynchronously.
+
+        This static method facilitates the execution of the XSE plugins check
+        function in an asynchronous manner. It utilizes an event loop to run
+        the `check_xse_plugins` function in a separate thread for non-blocking
+        behavior.
+
+        Returns:
+            str: The result of the `check_xse_plugins` function executed
+            asynchronously.
+        """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, check_xse_plugins)
 
-    async def _run_crashgen_check_async(self) -> str:
-        """Run crashgen settings check asynchronously."""
+    @staticmethod
+    async def _run_crashgen_check_async() -> str:
+        """
+        Asynchronously runs a crash generation configuration check.
+
+        This method uses an event loop to run a crash generation settings check in a
+        separate thread executor, ensuring that the application remains responsive while
+        performing potentially blocking I/O operations.
+
+        Returns:
+            str: The result of the crash generation settings check.
+
+        """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, check_crashgen_settings)
 
-    async def _check_log_errors_async(self, folder_path: Path) -> str:
-        """Check log errors asynchronously."""
+    @staticmethod
+    async def _check_log_errors_async(folder_path: Path) -> str:
+        """
+        Asynchronously checks for log errors in the specified folder.
+
+        This method interacts with a core scanning module to analyze log files
+        within the provided folder path and identify any potential issues. It is
+        designed to be used in asynchronous contexts.
+
+        Args:
+            folder_path (Path): Path to the folder containing log files to be checked.
+
+        Returns:
+            str: A string that contains the results of the log error check.
+        """
         # Import here to avoid circular imports
         from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 
         core = ScanGameCore()
         return await core.check_log_errors(folder_path)
 
-    async def _run_wryecheck_async(self) -> str:
-        """Run Wrye check asynchronously."""
+    @staticmethod
+    async def _run_wryecheck_async() -> str:
+        """
+        Runs the WryeCheck functionality asynchronously.
+
+        This static method executes the WryeCheck process in a separate thread
+        using an event loop to avoid blocking the main thread. The process is
+        performed asynchronously, ensuring responsive performance when executed
+        in a concurrent environment.
+
+        Returns:
+            str: The result of the WryeCheck process as returned by the
+            `scan_wryecheck` function.
+        """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, scan_wryecheck)
 
-    async def _run_mod_inis_scan_async(self) -> str:
-        """Run mod INIs scan asynchronously."""
+    @staticmethod
+    async def _run_mod_inis_scan_async() -> str:
+        """
+        Executes the `scan_mod_inis` function asynchronously in a separate thread.
+
+        This static method utilizes an event loop to schedule the execution of the
+        `scan_mod_inis` function in an executor, operating in a non-blocking manner.
+        It returns the result of the function execution.
+
+        Returns:
+            str: The result of the `scan_mod_inis` function.
+        """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, scan_mod_inis)
 
@@ -209,7 +288,19 @@ _game_integrity_orchestrator_core: GameIntegrityOrchestratorCore | None = None
 
 
 def get_game_integrity_orchestrator_core() -> GameIntegrityOrchestratorCore:
-    """Get singleton GameIntegrityOrchestratorCore instance."""
+    """
+    Fetches or initializes the global instance of GameIntegrityOrchestratorCore.
+
+    This function serves as a singleton accessor for the global instance of the
+    GameIntegrityOrchestratorCore. If the instance does not already exist, it
+    creates and initializes it. Subsequent calls to this function will return
+    the same initialized instance, ensuring a single shared instance is used
+    across the application.
+
+    Returns:
+        GameIntegrityOrchestratorCore: The global instance of
+        GameIntegrityOrchestratorCore.
+    """
     global _game_integrity_orchestrator_core  # noqa: PLW0603
     if _game_integrity_orchestrator_core is None:
         _game_integrity_orchestrator_core = GameIntegrityOrchestratorCore()
@@ -219,10 +310,14 @@ def get_game_integrity_orchestrator_core() -> GameIntegrityOrchestratorCore:
 # Async-first interfaces
 async def generate_game_combined_result_async() -> str:
     """
-    Async interface for generating combined game integrity results.
+    Generates the combined result of the game asynchronously.
+
+    This function interacts with the game integrity orchestrator core to
+    generate and retrieve the combined result of the game in an asynchronous
+    manner.
 
     Returns:
-        str: A string summarizing the results of all performed checks and scans.
+        str: The combined result of the game.
     """
     core = get_game_integrity_orchestrator_core()
     return await core.generate_game_combined_result_async()
@@ -230,10 +325,14 @@ async def generate_game_combined_result_async() -> str:
 
 async def generate_mods_combined_result_async() -> str:
     """
-    Async interface for generating combined mods scan results.
+    Asynchronously generates a combined result from mods data.
+
+    This function utilizes the game integrity orchestrator core to
+    generate and return a combined result based on mods data. It
+    operates asynchronously to allow non-blocking execution.
 
     Returns:
-        str: The combined results of the unpacked and archived mods scans.
+        str: The combined mods result.
     """
     core = get_game_integrity_orchestrator_core()
     return await core.generate_mods_combined_result_async()
@@ -241,7 +340,16 @@ async def generate_mods_combined_result_async() -> str:
 
 async def write_combined_results_async() -> None:
     """
-    Async interface for writing combined results to a markdown report file.
+    Writes the combined game integrity results asynchronously.
+
+    This method orchestrates the process of writing the combined results
+    for game integrity by utilizing the core logic component. It ensures
+    that the process is executed asynchronously.
+
+    Raises:
+        Any exceptions raised by the invoked methods within
+        `get_game_integrity_orchestrator_core` or
+        `write_combined_results_async`.
     """
     core = get_game_integrity_orchestrator_core()
     await core.write_combined_results_async()

@@ -1,3 +1,10 @@
+"""
+Parses and identifies potential issues in Wrye Bash plugin checker reports and provides
+detailed guidance and warnings based on parsed data and configuration settings.
+
+This module includes functions for scanning the Wrye Bash report, parsing the content,
+and presenting summarized or actionable information for users regarding their plugins.
+"""
 from pathlib import Path
 
 # noinspection PyProtectedMember
@@ -126,19 +133,16 @@ def parse_wrye_report(report_path: Path, wrye_warnings: dict[str, str]) -> list[
 
 def extract_plugins_from_section(section: PageElement) -> list[str]:
     """
-    Extracts plugin file names from a specified section of a web page.
+    Extracts a list of plugins from a specified section of a page element. A plugin is
+    identified as text containing specific extensions (.esp, .esl, .esm). The function
+    searches through paragraphs in the given section, parsing relevant text while
+    ensuring it does not process content from other sections.
 
-    Traverses paragraphs following a given section header to collect
-    plugin file names based on their respective extensions. Stops processing
-    if a paragraph belongs to a different section.
-
-    Parameters:
-    section (PageElement): The header element representing the section from
-    which plugins are to be extracted.
+    Args:
+        section (PageElement): The section of the page to extract plugin information from.
 
     Returns:
-    list[str]: A list of plugin file names found within the given section, where
-    each file name must contain one of the following extensions: .esp, .esl, or .esm.
+        list[str]: A list of strings representing detected plugins.
     """
     plugins: list[str] = []
     for paragraph in section.find_next_siblings("p"):
@@ -156,16 +160,15 @@ def extract_plugins_from_section(section: PageElement) -> list[str]:
 
 def format_section_header(title: str) -> str:
     """
-    Formats a section header with adjustable padding to center-align the title.
-    If the title is shorter than 32 characters, it adds equal padding on both
-    sides to ensure consistent alignment. For titles longer than 32 characters,
-    it directly returns the title without any modification.
+    Formats a section header with a title string, aligning it symmetrically with padding
+    if the title's length is less than 32 characters. Adds an equal sign (`=`)
+    padding around the title to create a visually distinct section.
 
-    Parameters:
-        title (str): The title string to be formatted as a section header.
+    Args:
+        title (str): The title of the section to format.
 
     Returns:
-        str: The formatted section header with or without applied padding.
+        str: A formatted section header string.
     """
     if len(title) < 32:
         diff: int = 32 - len(title)

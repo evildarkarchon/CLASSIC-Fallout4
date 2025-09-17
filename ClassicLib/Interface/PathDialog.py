@@ -1,3 +1,14 @@
+"""
+Defines a dialog for manually setting the directory path to INI files.
+
+This module provides the `ManualPathDialog` class, which allows users to input or
+select a directory path for INI files associated with a game. It includes features
+such as a text field for manual input, a "Browse" button for directory selection
+via a file dialog, and an OK button to confirm the choice.
+
+Primarily, the `ManualPathDialog` class is designed for use in GUI applications
+where users may need to configure paths manually.
+"""
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout
 
 from ClassicLib import GlobalRegistry
@@ -19,16 +30,21 @@ class ManualPathDialog(QDialog):
 
     def __init__(self, parent: QMainWindow | None = None, title: str = "", label: str = "", placeholder: str = "") -> None:
         """
-        Initializes a dialog window for setting the INI files directory for a game. The
-        dialog allows the user to either enter the directory path manually or select
-        it using a file browser. It also contains an OK button to confirm the directory
-        choice.
+        Initializes a dialog for selecting an INI files directory. This dialog provides a text
+        input field where the user can manually enter a directory path or use a "Browse" button
+        to select it. The dialog also includes an OK button to confirm the selection.
 
         Args:
-            parent (QMainWindow | None): The parent window of the dialog. Defaults to None.
+            parent (QMainWindow | None): The parent window of the dialog.
+            title (str): The title of the dialog window. Defaults to an empty string,
+                which sets a predefined title "Set INI Files Directory".
+            label (str): The label text displayed in the dialog. Defaults to an empty string,
+                which sets a predefined instruction based on the current game in the global registry.
+            placeholder (str): The placeholder text for the input field. Defaults to an empty
+                string, which sets a predefined placeholder text.
         """
         super().__init__(parent)
-        self.setWindowTitle(title if title else "Set INI Files Directory")
+        self.setWindowTitle(title or "Set INI Files Directory")
         self.setFixedSize(700, 150)
 
         # Create layout and input field
@@ -37,16 +53,14 @@ class ManualPathDialog(QDialog):
 
         # Add a label
         info_label: QLabel = QLabel(
-            label
-            if label
-            else f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
+            label or f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
             self,
         )
         layout.addWidget(info_label)
 
         inputlayout: QHBoxLayout = QHBoxLayout()
         self.input_field = QLineEdit(self)
-        self.input_field.setPlaceholderText(placeholder if placeholder else "Enter the INI directory or click 'Browse'...")
+        self.input_field.setPlaceholderText(placeholder or "Enter the INI directory or click 'Browse'...")
         inputlayout.addWidget(self.input_field)
 
         # Create the "Browse" button
@@ -63,30 +77,21 @@ class ManualPathDialog(QDialog):
 
     def browse_directory(self, caption: str = "") -> None:
         """
-        Browse a directory using a dialog and update the input field with the selected path.
-
-        This method opens a directory browser dialog. If the user selects a directory, the input
-        field will be updated with the selected directory path.
+        Opens a directory browser dialog to allow the user to select a directory and updates
+        the input field with the chosen path.
 
         Args:
-            caption: str
-                An optional caption for the directory browser dialog. Defaults to an empty
-                string, which will use the default caption "Select Directory for INI Files".
-
-        Returns:
-            None
+            caption (str): Optional. The caption text to display on the directory browser dialog.
+                           Defaults to an empty string, which displays "Select Directory for INI Files".
         """
         # Open directory browser and update the input field
-        manual_path: str = QFileDialog.getExistingDirectory(self, caption if caption else "Select Directory for INI Files")
+        manual_path: str = QFileDialog.getExistingDirectory(self, caption or "Select Directory for INI Files")
         if manual_path:
             self.input_field.setText(manual_path)
 
     def get_path(self) -> str:
         """
-        Returns the text from the input field.
-
-        This method retrieves the current text from the input field and returns it as
-        a string. It is useful for accessing user-provided input data.
+        Retrieves the text from the input field widget.
 
         Returns:
             str: The text retrieved from the input field.

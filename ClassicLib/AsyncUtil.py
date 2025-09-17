@@ -26,23 +26,25 @@ from ClassicLib.Util import validate_path
 
 async def detect_encoding_async(file_path: Path | str | os.PathLike, sample_size: int = 65536) -> str:
     """
-    Asynchronously detect the encoding of a text file.
-
-    This function reads a sample of the file to determine its encoding using chardet.
-    For better performance on large files, it only reads the first `sample_size` bytes
-    by default rather than the entire file.
+    Asynchronously detects the encoding of a given file by reading a sample of its
+    content and using the chardet library for encoding detection.
 
     Args:
-        file_path: Path to the file to detect encoding for
-        sample_size: Number of bytes to read for detection (default 65536)
+        file_path (Path | str | os.PathLike): The path to the file whose encoding
+            needs to be detected. It can be provided as a Path object, a string,
+            or any os.PathLike object.
+        sample_size (int): The number of bytes to read from the file for encoding
+            detection. Defaults to 65536.
 
     Returns:
-        str: The detected encoding (e.g., 'utf-8', 'iso-8859-1', etc.)
+        str: The detected encoding of the provided file. If the detection confidence
+        is low or detection fails, defaults to 'utf-8'.
 
     Raises:
-        FileNotFoundError: If the file does not exist
-        PermissionError: If the file cannot be read due to permissions
-        ImportError: If aiofiles or chardet are not available
+        ImportError: If aiofiles or chardet are not available.
+        FileNotFoundError: If the specified file does not exist.
+        PermissionError: If the file cannot be read due to permission issues.
+        OSError: If there is an OS-related issue with accessing the file.
     """
     if not AIOFILES_AVAILABLE or aiofiles is None or chardet is None:
         raise ImportError("aiofiles and chardet are required for async encoding detection")
@@ -159,15 +161,37 @@ async def read_lines_with_encoding_async(file_path: Path | str | os.PathLike, sa
 
 # Fallback implementations for when aiofiles is not available
 def get_encoding_detection_available() -> bool:
-    """Check if async encoding detection is available."""
+    """
+    Determines if encoding detection is available based on the availability of aiofiles.
+
+    This function checks whether the encoding detection functionality can be used
+    by evaluating the availability of aiofiles in the environment. Returns True if
+    aiofiles is available, otherwise returns False.
+
+    Returns:
+        bool: True if encoding detection is supported, False otherwise.
+    """
     return AIOFILES_AVAILABLE
 
 
+# noinspection PyUnresolvedReferences,PyTypeChecker
 async def fallback_to_sync_encoding_detection(file_path: Path | str | os.PathLike) -> str:
     """
-    Fallback to synchronous encoding detection when aiofiles is not available.
+    Determines the encoding of a given file path using a synchronous method executed
+    in an asynchronous context.
 
-    This runs the synchronous chardet detection in an executor to avoid blocking.
+    The function resolves the encoding of the file by leveraging the synchronous
+    utility `open_file_with_encoding`. It ensures the synchronous logic does not
+    block the flow of an asynchronous application by delegating the execution to
+    an executor context.
+
+    Args:
+        file_path: The path to the file whose encoding is to be determined. Can
+            be provided as a `Path`, `str`, or `os.PathLike` object.
+
+    Returns:
+        str: The detected encoding of the file. Defaults to "utf-8" if the
+            encoding could not be determined.
     """
     if not isinstance(file_path, Path):
         file_path = Path(file_path)

@@ -8,28 +8,60 @@ and comparing async vs sync performance metrics.
 from typing import TYPE_CHECKING
 
 from ClassicLib.Logger import logger
-from .async_crash_log_pipeline import run_async_crash_log_scan
+from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import run_async_crash_log_scan
 
 if TYPE_CHECKING:
     from pathlib import Path
+
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 
 class AsyncPerformanceMonitor:
-    """Monitor and compare async vs sync performance."""
+    """
+    Monitor and compare asynchronous vs synchronous performance metrics.
+
+    This class provides functionalities for comparing the performance of asynchronous
+    and synchronous processes, generating detailed metrics, and logging performance
+    summaries, making it useful for analyzing and optimizing the performance of
+    asynchronous pipelines.
+
+    Methods defined in this class include:
+    - compare_performance: Compares asynchronous and synchronous performance and
+      calculates performance metrics.
+    - log_performance_summary: Logs a detailed summary of the performance metrics
+      for easy analysis.
+    """
 
     @staticmethod
     def compare_performance(async_stats: dict[str, float], sync_time: float, log_count: int) -> dict[str, str | float]:
         """
-        Compare async vs sync performance and generate metrics.
+        Compares the performance of asynchronous and synchronous logging methods based on provided
+        statistics of execution times and the number of processed logs.
 
         Args:
-            async_stats: Performance statistics from async pipeline
-            sync_time: Total time for synchronous processing
-            log_count: Number of logs processed
+            async_stats (dict[str, float]): A dictionary containing the timing statistics for the
+                asynchronous method. The keys may include "total_time", "reformat_time", "load_time",
+                "process_time", and "write_time" with their respective durations.
+            sync_time (float): The total execution time for the synchronous method.
+            log_count (int): The total number of logs processed during execution.
 
         Returns:
-            Dictionary containing comparison metrics
+            dict[str, str | float]: A dictionary summarizing the performance results. Includes keys
+                such as:
+                    - "async_total_time" (float): The total execution time for the asynchronous method.
+                    - "sync_total_time" (float): The total execution time for the synchronous method
+                      (only if `sync_time` > 0).
+                    - "speedup_factor" (float): Speed-up factor comparing synchronous and asynchronous
+                      times (only if `sync_time` and "total_time" > 0).
+                    - "improvement_percent" (float): Percentage improvement of asynchronous processing
+                      compared to synchronous (only if `sync_time` and "total_time" > 0).
+                    - "async_logs_per_sec" (float): Logs processed per second in asynchronous execution.
+                    - "sync_logs_per_sec" (float): Logs processed per second in synchronous execution
+                      (only if `sync_time` > 0).
+                    - "reformat_time" (float): Time spent on reformatting during asynchronous processing.
+                    - "load_time" (float): Time spent on loading during asynchronous processing.
+                    - "process_time" (float): Time spent on processing during asynchronous processing.
+                    - "write_time" (float): Time spent on writing during asynchronous processing.
         """
         async_total = async_stats.get("total_time", 0)
 
@@ -61,7 +93,18 @@ class AsyncPerformanceMonitor:
 
     @staticmethod
     def log_performance_summary(comparison: dict[str, str | float]) -> None:
-        """Log a detailed performance summary."""
+        """
+        Logs a summary of asynchronous performance metrics, providing insights into
+        processing speed improvements, pipeline stage durations, and overall performance
+        comparison against synchronous methods.
+
+        Args:
+            comparison (dict[str, str | float]): A dictionary containing performance
+                metrics for both asynchronous and synchronous processing. The keys may
+                include 'speedup_factor', 'improvement_percent', 'async_logs_per_sec',
+                'sync_logs_per_sec', 'reformat_time', 'load_time', 'process_time',
+                'write_time', and 'async_total_time'.
+        """
         logger.info("=== ASYNC PERFORMANCE SUMMARY ===")
 
         if "speedup_factor" in comparison:
@@ -81,7 +124,7 @@ class AsyncPerformanceMonitor:
         logger.info("=================================")
 
 
-async def benchmark_async_pipeline(  # noqa: PLR0913
+async def benchmark_async_pipeline(  # noqa: PLR0917
     crashlog_list: list["Path"],
     remove_list: tuple[str],
     yamldata: "ClassicScanLogsInfo",
@@ -91,24 +134,27 @@ async def benchmark_async_pipeline(  # noqa: PLR0913
     sync_baseline: float | None = None,
 ) -> dict[str, str | float]:
     """
-    Benchmark the async pipeline and optionally compare with sync baseline.
+    Benchmarks the asynchronous pipeline process by running a crash log scan, generating
+    performance comparison, and logging the performance summary. This function allows for
+    the analysis of asynchronous performance metrics and comparison with a synchronous
+    baseline if provided.
 
     Args:
-        crashlog_list: List of crash log file paths
-        remove_list: Tuple of strings to remove during reformatting
-        yamldata: Configuration data
-        fcx_mode: Whether FCX mode is enabled
-        show_formid_values: Whether to show FormID values
-        formid_db_exists: Whether FormID database exists
-        sync_baseline: Optional sync processing time for comparison
+        crashlog_list (list[Path]): List of paths to crash log files to be scanned.
+        remove_list (tuple[str]): Tuple containing strings of items to be removed.
+        yamldata (ClassicScanLogsInfo): Data for the classic scan logs configuration.
+        fcx_mode (bool | None): Indicates whether the FCX mode is enabled.
+        show_formid_values (bool | None): Indicates whether to display form ID values during processing.
+        formid_db_exists (bool): Specifies whether the FormID database exists.
+        sync_baseline (float | None, optional): Baseline value for synchronous performance comparison.
 
     Returns:
-        Performance comparison metrics
+        dict[str, str | float]: Performance comparison data, including metrics and analysis results.
     """
     logger.info("Starting async pipeline benchmark...")
 
     # Run async pipeline
-    results, async_stats = await run_async_crash_log_scan(
+    _results, async_stats = await run_async_crash_log_scan(
         crashlog_list, remove_list, yamldata, fcx_mode, show_formid_values, formid_db_exists
     )
 

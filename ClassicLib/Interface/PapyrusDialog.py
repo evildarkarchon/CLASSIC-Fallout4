@@ -1,3 +1,11 @@
+"""
+A module for monitoring and displaying real-time statistics from Papyrus log data.
+
+This module provides a dialog that visualizes Papyrus statistics, such as dump and
+stack counts, error and warning counts, and the dumps-to-stacks ratio, in a user-friendly
+interface. The dialog updates in real-time and includes mechanisms for halting the
+monitoring process and visually indicating the status of metrics.
+"""
 from datetime import datetime
 
 from PySide6.QtCore import Qt, Signal
@@ -112,19 +120,13 @@ class PapyrusMonitorDialog(QDialog):
 
     def update_stats(self, stats: PapyrusStats) -> None:
         """
-        Updates statistical data and UI elements with the given stats object.
+        Updates the UI with the latest statistics and modifies status indicators
+        and messages based on the provided statistical data.
 
-        This method updates UI elements such as labels and status indicators with the
-        latest statistics provided in the `stats` parameter. It processes various
-        metrics, including dump counts, stack counts, dump-stack ratios, and warning
-        and error counts. Additionally, it invokes helper methods to update status
-        indicators and messages based on the state of the provided stats.
-
-        Parameters
-        ----------
-        stats : PapyrusStats
-            An object containing the latest statistics, including metrics such as
-            timestamp, dumps, stacks, ratio, warnings, and errors.
+        Args:
+            stats (PapyrusStats): An object containing statistical data, such as
+                timestamp, counts of dumps and stacks, their ratio, warning count,
+                and error count.
         """
         # Update timestamp
         self.timestamp_label.setText(f"Last Updated: {stats.timestamp.strftime('%H:%M:%S')}")  # Update stat values
@@ -143,14 +145,16 @@ class PapyrusMonitorDialog(QDialog):
 
     def _update_status_indicators(self, stats: PapyrusStats) -> None:
         """
-        Updates the status indicators for various statistical metrics based on the provided
-        statistics data. This function modifies the appearance and text of relevant status
-        indicators to reflect the current state of the statistics. The status indicators
-        use icons and color coding to provide a visual representation of the statistical metrics.
+        Updates the status indicators based on the provided statistics, reflecting the
+        state of ratio, warnings, and errors using visual cues such as icons and text
+        color. High ratios, non-zero warnings, and errors are flagged visually, while
+        acceptable states are indicated differently to enhance readability and quick
+        assessment of system health.
 
-        Parameters:
-            stats (PapyrusStats): The statistics object containing the data to be represented
-            in the status indicators.
+        Args:
+            stats (PapyrusStats): An object containing statistics to evaluate and use
+                for status updates, including attributes such as ratio, warnings, and
+                errors.
         """  # A high ratio is bad
         if stats.ratio > 0.8:
             self.stat_status_labels["dumps_stacks_ratio"].setText("❌")
@@ -180,22 +184,16 @@ class PapyrusMonitorDialog(QDialog):
 
     def _update_message(self, stats: PapyrusStats) -> None:
         """
-        Updates the message label based on the statistics provided by the PapyrusStats object.
+        Updates the message label to reflect the state of the Papyrus log based on statistics.
 
-        This method evaluates errors, warnings, and the dumps-to-stacks ratio from the
-        given PapyrusStats instance and updates the message label's text and style
-        accordingly. If the number of errors is greater than zero, an error message
-        will be displayed in bold red. If there are warnings, a warning message will
-        be displayed in bold orange. If the ratio exceeds specific thresholds, caution
-        or warning messages will be displayed. If no issues are detected, the log is
-        considered normal and the label is updated with this information in green.
+        This method examines the provided PapyrusStats object and updates the user interface
+        by setting the appropriate text and style for the message label. The text and style
+        are adjusted based on the number of errors, warnings, or the ratio of dumps to stacks
+        contained in the provided statistics.
 
-        Parameters:
-            stats (PapyrusStats): The statistics object containing error counts, warning
-                counts, and the dumps-to-stacks ratio to analyze.
-
-        Returns:
-            None
+        Args:
+            stats: PapyrusStats object containing the error count, warning count, and
+                dumps-to-stacks ratio used to determine the message to display.
         """
         if stats.errors > 0:
             self.message_label.setText(f"{stats.errors} errors detected in Papyrus log!")
@@ -215,15 +213,10 @@ class PapyrusMonitorDialog(QDialog):
 
     def on_stop_clicked(self) -> None:
         """
-        Emits a signal to stop monitoring and closes the dialog.
-
-        This method is intended to be connected to a user action, such as clicking a
-        stop button. It emits a signal to indicate monitoring should be stopped and
-        subsequently closes the dialog by invoking the `accept` function.
+        Handles the action triggered when the stop button is clicked. This method emits a
+        signal to stop monitoring and closes the associated dialog.
 
         Raises:
-            None
-        Returns:
             None
         """
         self.stop_monitoring.emit()
@@ -231,25 +224,29 @@ class PapyrusMonitorDialog(QDialog):
 
     def handle_error(self, error_msg: str) -> None:
         """
-        Handles the display of an error message in the user interface by updating the
-        text and style of a message label to indicate an error visually. It sets the
-        label's text to include the given error message and changes its appearance to
-        red, bold text for clearer visibility to the user.
+        Handles and displays an error message in a formatted style.
+
+        This method updates the text and style of the `message_label` to indicate an
+        error message to the user. Specifically, it sets the text to the provided error
+        message prefixed with 'Error:' and applies a red bold font style to the label.
 
         Args:
-            error_msg: The error message to be displayed on the message label.
+            error_msg (str): The error message to be displayed.
         """
         self.message_label.setText(f"Error: {error_msg}")
         self.message_label.setStyleSheet("color: red; font-weight: bold;")
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """
-        Handle the dialog close event.
+        Handles the close event for the application window.
 
-        Ensures that monitoring is stopped when the dialog is closed.
+        This method is triggered when the close event is emitted for the associated
+        window. It stops monitoring processes by emitting the `stop_monitoring` signal
+        and marks the event as accepted.
 
         Args:
-            event: The close event
+            event: The close event object passed by the framework, providing context
+                and actions related to the close operation.
         """
         self.stop_monitoring.emit()
         event.accept()

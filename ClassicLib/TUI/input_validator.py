@@ -1,4 +1,11 @@
-"""Input validation and sanitization for TUI components."""
+"""Handles centralized input validation and sanitization.
+
+Provides utility methods for validating, sanitizing, and securing
+user input and file paths. Includes mechanisms for secure path
+validation, YAML string sanitization, input length checks, and
+settings validation. The module ensures compliance with system
+and application constraints while preventing potential vulnerabilities.
+"""
 
 import os
 import re
@@ -7,7 +14,25 @@ from typing import Any, ClassVar
 
 
 class InputValidator:
-    """Centralized input validation and sanitization."""
+    """Utility class for input validation and data sanitization.
+
+    This class provides methods to validate and sanitize file system paths, input strings,
+    and other user-provided data. It is designed to ensure that potentially unsafe inputs
+    are handled securely and adheres to defined constraints.
+
+    Attributes:
+        MAX_PATH_LENGTH (int): Maximum allowed length for file system paths, set
+            specifically to accommodate limitations in Windows systems.
+        MAX_INPUT_LENGTH (int): Maximum allowed length for general input strings.
+        YAML_INJECTION_PATTERN (re.Pattern): Precompiled regex pattern to match control
+            characters unsafe for YAML storage.
+        WINDOWS_PATH_PATTERN (re.Pattern): Precompiled regex pattern for matching Windows
+            file system paths.
+        UNIX_PATH_PATTERN (re.Pattern): Precompiled regex pattern for matching Unix/Linux
+            file system paths.
+        ALLOWED_BASE_DIRS (ClassVar[list[Path]]): List of directories permitted for
+            file system operations, initialized during runtime.
+    """
 
     # Maximum path length for Windows
     MAX_PATH_LENGTH = 260
@@ -25,7 +50,20 @@ class InputValidator:
 
     @classmethod
     def _init_allowed_dirs(cls) -> None:
-        """Initialize allowed directories list."""
+        """
+        Initializes the class-level variable `ALLOWED_BASE_DIRS` with a list of default allowed directories.
+
+        Ensures that essential directories like the user's home, current working directory, and temporary directories
+        are included. On Windows systems, adds the "Documents" folder and searches common drives for game-related
+        directories like "Program Files" or "Games".
+
+        This method is primarily intended to configure the list of directories where operations can be performed securely by
+        methods that rely on the `ALLOWED_BASE_DIRS`.
+
+        Raises:
+            No known errors are explicitly raised, but potential file system checks depend on the permissions and
+            availability of the directories being accessed.
+        """
         if not cls.ALLOWED_BASE_DIRS:  # Check if list is empty instead of None
             cls.ALLOWED_BASE_DIRS = [
                 Path.home(),

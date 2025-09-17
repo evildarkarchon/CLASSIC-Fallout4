@@ -2,7 +2,7 @@
 
 import asyncio
 import contextlib
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -33,13 +33,13 @@ class PapyrusScreen(Screen):
     PapyrusScreen {
         background: $surface;
     }
-    
+
     #papyrus-container {
         layout: vertical;
         height: 100%;
         padding: 1;
     }
-    
+
     .screen-title {
         text-align: center;
         text-style: bold;
@@ -48,18 +48,18 @@ class PapyrusScreen(Screen):
         border: double $primary;
         margin-bottom: 1;
     }
-    
+
     #monitor-widget {
         height: auto;
         margin-bottom: 1;
     }
-    
+
     #log-output {
         height: 1fr;
         border: solid $primary;
         min-height: 10;
     }
-    
+
     .control-bar {
         height: 3;
         dock: bottom;
@@ -67,21 +67,21 @@ class PapyrusScreen(Screen):
         align: center middle;
         padding: 0 2;
     }
-    
+
     .control-button {
         margin: 0 1;
     }
-    
+
     .status-indicator {
         dock: right;
         width: auto;
         padding: 0 2;
     }
-    
+
     .status-indicator.active {
         color: $success;
     }
-    
+
     .status-indicator.stopped {
         color: $error;
     }
@@ -91,11 +91,21 @@ class PapyrusScreen(Screen):
     is_monitoring = reactive(False)
     use_unicode = reactive(True)
 
-    def __init__(self, use_unicode: bool = True, **kwargs) -> None:  # noqa: ANN003
-        """Initialize the Papyrus monitoring screen.
+    def __init__(self, use_unicode: bool = True, **kwargs: Any) -> None:
+        """
+        Initializes the instance of the class with specified parameters. Sets up default
+        values for attributes and prepares the class for use.
 
         Args:
-            use_unicode: Whether to use Unicode symbols
+            use_unicode (bool): Determines whether Unicode encoding should be used. Defaults to True.
+            **kwargs (Any): Additional keyword arguments to be passed to the superclass initializer.
+
+        Attributes:
+            use_unicode (bool): Determines whether Unicode encoding is used.
+            handler (TuiPapyrusHandler | None): Handler for TUI operations, initialized as None.
+            monitor_widget (PapyrusMonitorWidget | None): Widget for monitoring, initialized as None.
+            output_viewer (OutputViewer | None): Viewer for output display, initialized as None.
+            monitor_task (asyncio.Task | None): Async task for monitoring, initialized as None.
         """
         super().__init__(**kwargs)
         self.use_unicode = use_unicode
@@ -106,7 +116,18 @@ class PapyrusScreen(Screen):
         self._background_tasks: set[asyncio.Task] = set()
 
     def compose(self) -> ComposeResult:
-        """Compose the screen layout."""
+        """
+        Generates and arranges UI components for a monitoring screen within an application.
+
+        This method defines the UI layout and components needed for a monitoring interface. It includes
+        a header, a vertical container for a title, a monitor widget, and an output viewer for raw log
+        data. Additionally, a horizontal control bar is defined with buttons for managing monitoring
+        operations such as start, refresh, clear, and close. A footer is included to complete the
+        interface. Components use defined classes and IDs for identification and styling.
+
+        Yields:
+            ComposeResult: A generator yielding UI components arranged in the required hierarchy.
+        """
         yield Header()
 
         with Vertical(id="papyrus-container"):
@@ -134,13 +155,32 @@ class PapyrusScreen(Screen):
         yield Footer()
 
     def _get_title_text(self) -> str:
-        """Get the title text with appropriate symbols."""
+        """
+        Generates the title text for the log monitoring system.
+
+        This method determines the appropriate title format based on the `use_unicode`
+        flag. If the `use_unicode` attribute is set to True, the title includes emoji
+        characters for visually enhanced display. Otherwise, it defaults to a plain
+        text format for compatibility.
+
+        Returns:
+            str: The formatted title text.
+
+        """
         if self.use_unicode:
             return "📊 PAPYRUS LOG MONITORING 📊"
         return "=== PAPYRUS LOG MONITORING ==="
 
     def _get_status_text(self) -> str:
-        """Get status indicator text."""
+        """
+        Generates the status text based on the monitoring state and Unicode usage.
+
+        Determines the appropriate status text to display depending on whether
+        the monitoring is active and if Unicode symbols are enabled.
+
+        Returns:
+            str: The textual representation of the current monitoring status.
+        """
         if self.is_monitoring:
             if self.use_unicode:
                 return "● MONITORING"

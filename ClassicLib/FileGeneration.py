@@ -9,7 +9,19 @@ from ClassicLib.Logger import logger
 
 
 class FileGenerator:
-    """Manages generation of CLASSIC configuration files."""
+    """
+    This class is responsible for generating essential configuration files required
+    by the CLASSIC application. It ensures the presence of default files like CLASSIC Ignore.yaml
+    and CLASSIC Data/CLASSIC <GAME> Local.yaml. These files are created with default content
+    retrieved from YAML settings.
+
+    The class provides both synchronous and asynchronous methods for generating files, enabling
+    flexibility in various runtime environments. The asynchronous methods allow files to be generated
+    concurrently, ensuring better performance and fail-fast error handling.
+
+    Attributes:
+        None
+    """
 
     @staticmethod
     def generate_ignore_file() -> None:
@@ -104,26 +116,27 @@ class FileGenerator:
             if not isinstance(default_yaml, str):
                 raise TypeError("Default local YAML content must be a string")
             # Create parent directory if it doesn't exist (using sync method in executor)
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, lambda: local_path.parent.mkdir(parents=True, exist_ok=True))
+            await asyncio.to_thread(local_path.parent.mkdir, parents=True, exist_ok=True)
             await io_core.write_file(local_path, default_yaml)
             logger.debug(f"Generated local YAML at {local_path} (async)")
 
     @staticmethod
     async def generate_all_files_async() -> None:
         """
-        Async version: Generate all required CLASSIC configuration files concurrently.
-
-        This method generates files in parallel using asyncio.TaskGroup:
-        - CLASSIC Ignore.yaml: Contains ignore patterns for file scanning
-        - CLASSIC Data/CLASSIC <GAME> Local.yaml: Contains game-specific local settings
-
-        Files are generated concurrently with fail-fast behavior - if one file fails
-        to generate, the entire operation is aborted.
+        Executes asynchronous file generation of multiple files concurrently with a fail-fast
+        behavior. This method ensures that all files are generated correctly, handles allowable
+        errors such as type or filesystem errors, and logs relevant events or issues that
+        occur during the process.
 
         Raises:
-            ExceptionGroup: If any file generation tasks fail. The exception group
-                contains the individual exceptions from failed tasks.
+            TypeError: Raised if there is an issue with the YAML content that causes type
+                errors during file generation. All type errors are logged.
+            OSError: Raised if there is an operating system-level error such as file system
+                access issues. All relevant file system errors are logged.
+            PermissionError: Raised if there are permission issues with file operations.
+                All relevant permission-related errors are logged.
+            Exception: Raised for any unexpected errors during file generation that do not
+                fall into the known error categories. Such errors are logged for troubleshooting.
         """
         import time
 

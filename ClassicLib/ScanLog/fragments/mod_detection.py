@@ -7,7 +7,7 @@ related to mod detection and warnings.
 
 from __future__ import annotations
 
-from .report_fragment import ReportFragment
+from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment
 
 
 def detect_mods_single_fragment(
@@ -15,9 +15,20 @@ def detect_mods_single_fragment(
     crashlog_plugins: dict[str, str],
 ) -> ReportFragment:
     """
-    Functional version of detect_mods_single that returns a fragment.
+    Detects mod-related warnings by analyzing YAML-defined mod descriptions
+    against provided crashlog plugins and returns a formatted report fragment.
 
-    This is what the refactored version would look like.
+    Args:
+        yaml_dict (dict[str, str]): A dictionary where keys are mod names
+            (including conditions for required plugins separated by "|") and
+            values are their corresponding descriptive warnings.
+        crashlog_plugins (dict[str, str]): A dictionary representing detected
+            plugins in the crash log where keys are plugin identifiers and values
+            are plugin descriptions.
+
+    Returns:
+        ReportFragment: An object representing the formatted list of mod-related
+            warnings if any are found; otherwise, an empty report fragment.
     """
     lines = []
     found_count = 0
@@ -43,5 +54,17 @@ def detect_mods_single_fragment(
 
 
 def generate_mod_check_header_fragment(check_type: str) -> tuple[str, ...]:
-    """Generate header lines for mod check sections."""
+    """
+    Generates a markdown header fragment for mods based on the specified check type.
+
+    This function creates a tuple containing a single markdown header string for
+    displaying mod check information, which is formatted to include the provided
+    `check_type`.
+
+    Args:
+        check_type (str): The type of check to be included in the header fragment.
+
+    Returns:
+        tuple[str, ...]: A tuple containing the formatted markdown header string.
+    """
     return (f"### Checking For Mods That {check_type}\n\n",)

@@ -411,6 +411,77 @@ def _ensure_global_registry(setup_global_registry_session):
 # YAML Cache Fixtures
 # ============================================================================
 
+# Thread-local storage for YAML cache state tracking
+_yaml_cache_lock = threading.Lock()
+_yaml_cache_states = threading.local()
+
+
+@pytest.fixture
+def clean_yaml_cache_singleton() -> Generator[Any, None, None]:
+    """Provide a clean YamlSettingsCache singleton instance for testing.
+
+    This fixture ensures YamlSettingsCache singleton is properly isolated between tests,
+    similar to how AsyncBridge is handled. Critical for parallel testing.
+
+    Returns:
+        YamlSettingsCache instance for the current test.
+
+    Usage:
+        def test_yaml_operations(clean_yaml_cache_singleton):
+            from ClassicLib.YamlSettingsCache import yaml_settings
+            result = yaml_settings(str, YAML.TEST, "test.key")
+    """
+    from ClassicLib.YamlSettingsCache import YamlSettingsCache
+    import ClassicLib.YamlSettingsCache
+
+    with _yaml_cache_lock:
+        # Store the original singleton instance if it exists
+        original_instance = YamlSettingsCache._instance if hasattr(YamlSettingsCache, '_instance') else None
+        original_module_cache = getattr(ClassicLib.YamlSettingsCache, 'yaml_cache', None)
+
+        # Track cache state
+        if not hasattr(_yaml_cache_states, 'instance_stack'):
+            _yaml_cache_states.instance_stack = []
+
+        _yaml_cache_states.instance_stack.append((original_instance, original_module_cache))
+
+        try:
+            # Clear the singleton to force fresh instance
+            YamlSettingsCache._instance = None
+
+            # Get or create new instance for this test
+            cache = YamlSettingsCache.get_instance()
+            ClassicLib.YamlSettingsCache.yaml_cache = cache
+
+            # Register in GlobalRegistry if needed
+            if GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
+                GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, cache)
+
+            yield cache
+        finally:
+            # Clear any cached data in the instance
+            if hasattr(cache, '_async_core') and hasattr(cache._async_core, 'cache'):
+                cache._async_core.cache.settings_cache.clear()
+                cache._async_core.cache.file_mod_times.clear()
+                if hasattr(cache._async_core.cache, 'path_cache'):
+                    cache._async_core.cache.path_cache.clear()
+
+            # Restore or clear singleton
+            if _yaml_cache_states.instance_stack:
+                prev_instance, prev_module_cache = _yaml_cache_states.instance_stack.pop()
+                YamlSettingsCache._instance = prev_instance
+                if prev_module_cache is not None:
+                    ClassicLib.YamlSettingsCache.yaml_cache = prev_module_cache
+                    if GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
+                        GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, prev_module_cache)
+            else:
+                YamlSettingsCache._instance = None
+                if hasattr(ClassicLib.YamlSettingsCache, 'yaml_cache'):
+                    delattr(ClassicLib.YamlSettingsCache, 'yaml_cache')
+
+            # Force garbage collection
+            gc.collect()
+
 
 @pytest.fixture
 def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
@@ -527,8 +598,10 @@ def mock_yaml_settings(monkeypatch) -> Generator[Any, None, None]:
 
     mock.side_effect = yaml_side_effect
 
+    # yaml_settings is a module-level function, not a class attribute
+    import ClassicLib.YamlSettingsCache
     with monkeypatch.context() as m:
-        m.setattr("ClassicLib.YamlSettingsCache.yaml_settings", mock)
+        m.setattr(ClassicLib.YamlSettingsCache, "yaml_settings", mock)
         yield mock
 
 
@@ -544,13 +617,21 @@ def ensure_yaml_cache_cleanup() -> Generator[None, None, None]:
     # Post-test cleanup - clear any cached data if YamlSettingsCache was used
     try:
         import ClassicLib.YamlSettingsCache
+        from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
+        # Clear singleton instance to ensure fresh state for next test
+        # This is critical for parallel testing with pytest-xdist
+        if hasattr(YamlSettingsCache, '_instance'):
+            YamlSettingsCache._instance = None
+
+        # Also clear the module-level yaml_cache reference
         if hasattr(ClassicLib.YamlSettingsCache, 'yaml_cache'):
             cache = ClassicLib.YamlSettingsCache.yaml_cache
+            # Clear internal caches if they exist
             if hasattr(cache, '_async_core') and hasattr(cache._async_core, 'cache'):
-                # Clear the caches
                 cache._async_core.cache.settings_cache.clear()
                 cache._async_core.cache.file_mod_times.clear()
+                cache._async_core.cache.path_cache.clear()
 
     except (ImportError, AttributeError):
         # Module not imported or doesn't exist - nothing to clean

@@ -26,13 +26,26 @@ if TYPE_CHECKING:
 
 class ReportListWidget(QListWidget):
     """
-    Custom list widget for displaying scan reports with enhanced features.
+    A widget for managing and displaying a list of reports.
 
-    Provides sorting, filtering, and custom item display with report metadata.
+    This class extends the functionality of QListWidget to provide an enhanced
+    user interface for handling a collection of report files. The widget includes
+    features like report searching, dynamic styling, and sorting. It is specifically
+    designed for reports stored in a directory as markdown (.md) files.
+
+    Attributes:
+        search_box (QLineEdit): Input box for filtering reports in the list.
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """Initialize the report list widget."""
+        """
+        Initializes a custom widget with advanced styling and features like sorting, alternating
+        row colors, and a single selection mode. Additionally, sets up a search filter for
+        improved usability.
+
+        Args:
+            parent (QWidget | None): The parent widget. Defaults to None.
+        """
         super().__init__(parent)
 
         # Store report paths for later retrieval
@@ -50,14 +63,28 @@ class ReportListWidget(QListWidget):
         self._setup_styling()
 
     def _setup_search_filter(self) -> None:
-        """Set up the search/filter functionality."""
+        """
+        Initializes the search filter functionality for report filtering.
+
+        This method sets up a search box widget and configures its placeholder text.
+        It connects the text change event of the search box to the filtering function,
+        allowing for dynamic filtering of reports based on the user's input.
+
+        Raises:
+            Exception: If there is an error during the setup or connection of the search box.
+        """
         # Create search box (will be added to layout by parent)
         self.search_box = QLineEdit()
         self.search_box.setPlaceholderText("Search reports...")
         self.search_box.textChanged.connect(self._filter_reports)
 
     def _setup_styling(self) -> None:
-        """Apply enhanced styling to the list widget."""
+        """
+        Sets up the styling for the QListWidget by applying a predefined stylesheet.
+
+        This method configures the visual appearance of the QListWidget component
+        by setting a stylesheet that defines its border, border radius, and padding.
+        """
         self.setStyleSheet("""
             QListWidget {
                 border: 1px solid #555;
@@ -68,10 +95,14 @@ class ReportListWidget(QListWidget):
 
     def populate_reports(self, reports_dir: Path) -> None:
         """
-        Populate the list with report files from the specified directory.
+        Populates the reports in the collection by scanning the provided directory
+        for markdown files. The reports are added in the order of their last
+        modification time, starting from the most recently modified.
 
         Args:
-            reports_dir: Directory containing report files
+            reports_dir: The directory containing markdown report files. Only files
+                with a '.md' extension will be considered. If the directory does not
+                exist, no action will be performed.
         """
         self.clear()
         self._report_paths.clear()
@@ -89,13 +120,18 @@ class ReportListWidget(QListWidget):
 
     def _create_report_item(self, report_file: Path) -> QListWidgetItem | None:
         """
-        Create a list item for a report file.
+        Creates a QListWidgetItem for a given report file.
+
+        The method extracts metadata, formats display text, and associates additional
+        data such as tooltips and sorting information with the created item. If an error
+        occurs during the process, it logs the issue and safely returns None.
 
         Args:
-            report_file: Path to the report file
+            report_file (Path): The path of the report file to create a QListWidgetItem for.
 
         Returns:
-            Configured list item or None if creation fails
+            QListWidgetItem | None: The created QListWidgetItem if successful, or None if
+            there is an error.
         """
         try:
             # Extract timestamp from filename or use file modification time
@@ -126,13 +162,20 @@ class ReportListWidget(QListWidget):
     @staticmethod
     def _extract_timestamp(report_file: Path) -> str:
         """
-        Extract timestamp from report filename or file metadata.
+        Extracts a timestamp from the given report file.
+
+        This method tries to extract a timestamp from the file name of the report,
+        assuming it follows a specific format: "GameName_YYYYMMDD_HHMMSS_report.md".
+        If the file name does not match the expected format or fails to provide a
+        valid timestamp, the method falls back to using the file's modification time.
 
         Args:
-            report_file: Path to the report file
+            report_file (Path): The path to the report file from which a timestamp
+                is to be extracted.
 
         Returns:
-            Formatted timestamp string
+            str: The extracted timestamp in the format "YYYY-MM-DD HH:MM:SS". If the
+            extraction from the file name fails, the file's modification time is used.
         """
         # Try to extract timestamp from filename first
         # Expected format: GameName_YYYYMMDD_HHMMSS_report.md
@@ -165,10 +208,12 @@ class ReportListWidget(QListWidget):
 
     def _filter_reports(self, text: str) -> None:
         """
-        Filter visible reports based on search text.
+        Filters and hides list items based on a case-insensitive search in their text.
 
         Args:
-            text: Search text to filter by
+            text (str): The text to filter list items by. Items that do not contain
+                this text (case-insensitive) will be hidden.
+
         """
         for i in range(self.count()):
             item = self.item(i)
@@ -178,22 +223,28 @@ class ReportListWidget(QListWidget):
 
     def get_report_path(self, item_text: str) -> Path | None:
         """
-        Get the full path for a report item.
+        Retrieves the file path for a given item text from the report paths.
 
         Args:
-            item_text: Text of the list item
+            item_text: A string representing the text identifier for which the
+                file path is retrieved.
 
         Returns:
-            Full path to the report file or None if not found
+            Path | None: The file path associated with the given item text if
+            it exists; otherwise, None.
         """
         return self._report_paths.get(item_text)
 
     def get_search_widget(self) -> QWidget:
         """
-        Get a widget containing the search functionality.
+        Creates and returns a search widget containing a search box.
+
+        This method initializes a QWidget and sets a QHBoxLayout to it with no margins.
+        The provided search box is added to the layout, and the fully configured widget
+        is returned.
 
         Returns:
-            Widget with search box properly laid out
+            QWidget: The search widget containing the search box.
         """
         search_widget = QWidget()
         layout = QHBoxLayout(search_widget)

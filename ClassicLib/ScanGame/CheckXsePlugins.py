@@ -1,3 +1,11 @@
+"""
+Module to verify and ensure the correct Address Library version and plugins compatibility
+for specific game setups.
+
+This module includes functionality to determine the correct Address Library version based on
+game mode (VR or non-VR) and to validate the presence of the appropriate plugins for the game.
+It provides user-friendly messages to guide the resolution of compatibility issues.
+"""
 from pathlib import Path
 from typing import TypedDict
 
@@ -8,6 +16,21 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class AddressLibVersionInfo(TypedDict):
+    """
+    Represents structured information about a library version, including its
+    version constants, associated file, description, and URL for reference.
+
+    This class is designed to provide clarity and uniformity in the handling
+    of library version information throughout the application.
+
+    Attributes:
+        version_const (Version): The version constant specifying the library
+            version.
+        filename (str): The name of the file associated with the library version.
+        description (str): A brief description of the library or its purpose.
+        url (str): The URL with more information about the library or its
+            version.
+    """
     version_const: Version
     filename: str
     description: str
@@ -37,7 +60,21 @@ ALL_ADDRESS_LIB_INFO: dict[str, AddressLibVersionInfo] = {
 
 
 def _determine_relevant_versions(is_vr_mode: bool) -> tuple[list[AddressLibVersionInfo], list[AddressLibVersionInfo]]:
-    """Determines correct and wrong Address Library versions based on VR mode."""
+    """
+    Determines and returns the relevant and non-relevant address library versions based on
+    whether the mode is VR or not.
+
+    This function separates the address library versions into two categories: correct versions
+    and wrong versions. The categorization depends on whether the provided mode is VR mode.
+
+    Args:
+        is_vr_mode (bool): A boolean indicating if the mode is VR mode.
+
+    Returns:
+        tuple[list[AddressLibVersionInfo], list[AddressLibVersionInfo]]: A tuple containing two
+        lists, where the first list has the correct address library versions and the second list
+        contains the wrong or non-relevant ones.
+    """
     if is_vr_mode:
         correct_versions: list = [ALL_ADDRESS_LIB_INFO["VR"]]
         wrong_versions: list = [ALL_ADDRESS_LIB_INFO["OG"], ALL_ADDRESS_LIB_INFO["NG"]]
@@ -48,7 +85,17 @@ def _determine_relevant_versions(is_vr_mode: bool) -> tuple[list[AddressLibVersi
 
 
 def _format_game_version_not_detected_message() -> list[str]:
-    """Formats message for when game version cannot be detected."""
+    """
+    Generates a message to inform the user that the game version was not detected.
+
+    This function returns a list of strings that represent a detailed, pre-formatted
+    message suggesting the user check for the installation and path configuration of
+    the Address Library. It also provides guidance on where to find and download the
+    library if necessary, including links for both regular and VR versions.
+
+    Returns:
+        list[str]: A list of strings representing the notification message.
+    """
     return [
         "❓ NOTICE : Unable to locate Address Library\n",
         "  If you have Address Library installed, please check the path in your settings.\n",
@@ -58,17 +105,39 @@ def _format_game_version_not_detected_message() -> list[str]:
 
 
 def _format_plugins_path_not_found_message() -> list[str]:
-    """Formats message for when plugins path is not found in settings."""
+    """
+    Formats and returns an error message indicating that the plugins folder path could not
+    be located in the settings.
+
+    Returns:
+        list[str]: A list containing the formatted error message.
+    """
     return ["❌ ERROR: Could not locate plugins folder path in settings\n-----\n"]
 
 
 def _format_correct_address_lib_message() -> list[str]:
-    """Formats message for when the correct Address Library version is found."""
+    """
+    Formats and returns a success message indicating the Address Library file is correct.
+
+    Returns:
+        list[str]: A list containing a success message as a single string.
+    """
     return ["✔️ You have the correct version of the Address Library file!\n-----\n"]
 
 
 def _format_wrong_address_lib_message(correct_version_info: AddressLibVersionInfo) -> list[str]:
-    """Formats message for when a wrong Address Library version is found."""
+    """
+    Formats and returns a list of strings containing a warning message about an incorrect
+    version of the Address Library file. The correct information for addressing this issue
+    is provided via the `correct_version_info` argument.
+
+    Args:
+        correct_version_info (AddressLibVersionInfo): Dictionary containing the correct
+            version description and URL to resolve the installed version problem.
+
+    Returns:
+        list[str]: A list of strings containing the formatted warning message.
+    """
     return [
         "❌ CAUTION: You have installed the wrong version of the Address Library file!\n",
         f"  Remove the current Address Library file and install the {correct_version_info['description']}.\n",
@@ -77,7 +146,17 @@ def _format_wrong_address_lib_message(correct_version_info: AddressLibVersionInf
 
 
 def _format_address_lib_not_found_message(correct_version_info: AddressLibVersionInfo) -> list[str]:
-    """Formats message for when Address Library file is not found."""
+    """
+    Formats a message to notify the user that the Address Library is not found and provides
+    instructions to install the appropriate version.
+
+    Args:
+        correct_version_info (AddressLibVersionInfo): An object containing the description and
+            URL for the correct version of the Address Library needed.
+
+    Returns:
+        list[str]: A list of strings representing the formatted notification message.
+    """
     return [
         "❓ NOTICE: Address Library file not found\n",
         f"  Please install the {correct_version_info['description']} for proper functionality.\n",

@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QFileSystemWatcher, Qt, QTimer, Signal
+from PySide6.QtCore import QFileSystemWatcher, QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -29,19 +29,32 @@ from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.ResultsViewerWidgets import (
-        MarkdownViewer,
-        ReportListWidget,
-        ReportMetadataWidget,
-    )
+    from ClassicLib.Interface.Widgets.markdown_viewer import MarkdownViewer
+    from ClassicLib.Interface.Widgets.report_list import ReportListWidget
+    from ClassicLib.Interface.Widgets.report_metadata import ReportMetadataWidget
 
 
 class ResultsViewerMixin:
     """
-    Mixin class providing results viewer functionality for the MainWindow.
+    Provides functionality for viewing and managing results or scan reports in a tab interface.
 
-    This class manages the display and interaction with CLASSIC scan reports,
-    including report discovery, loading, rendering, and management operations.
+    ResultsViewerMixin contains utilities for displaying a list of reports, viewing report contents
+    in markdown format, and managing report files. It handles initializing interface components,
+    loading reports, refreshing the report list, and interacting with file system events via
+    directory watching. This mixin is designed to be used within a graphical interface.
+
+    Attributes:
+        results_tab (QWidget): Widget serving as the main container for the results viewer tab.
+        results_list (ReportListWidget): List widget displaying the available scan reports.
+        markdown_viewer (MarkdownViewer): Viewer widget for rendering and displaying markdown content.
+        metadata_widget (ReportMetadataWidget): Widget for displaying metadata of selected reports.
+        file_watcher (QFileSystemWatcher): File watcher for monitoring directories for new or updated reports.
+        refresh_timer (QTimer): Timer for periodically refreshing the reports list.
+        current_report_path (Path | None): Path to the currently loaded report file, or None if no report is loaded.
+
+    Signals:
+        report_loaded (Path): Emitted when a report is successfully loaded, with the loaded report's path.
+        reports_refreshed (int): Emitted when the reports list is refreshed, indicating the number of reports found.
     """
 
     # Type stubs for attributes that must be provided by the mixing class
@@ -59,7 +72,15 @@ class ResultsViewerMixin:
     reports_refreshed = Signal(int)  # Number of reports found
 
     def setup_results_tab(self) -> None:
-        """Initialize the results viewer tab with all components."""
+        """
+        Sets up the results tab with a layout and functionality for displaying and managing
+        reports.
+
+        This method initializes the user interface elements, creates panels for report display
+        and a viewer, and includes functionalities for refreshing the list of reports
+        automatically when the associated directory changes. It also configures a timer
+        to periodically refresh the reports list if auto-refresh is enabled.
+        """
 
         # Create main layout
         layout = QHBoxLayout(self.results_tab)
@@ -106,8 +127,20 @@ class ResultsViewerMixin:
         logger.debug("Results viewer tab initialized")
 
     def _create_reports_panel(self) -> QWidget:
-        """Create the left panel containing the reports list."""
-        from ClassicLib.Interface.ResultsViewerWidgets import ReportListWidget
+        """
+        Creates a reports panel containing a list widget to display reports and a button bar
+        for additional actions like refreshing, deleting, and opening the reports folder.
+
+        The panel includes:
+        - A list widget (`ReportListWidget`) for displaying reports, allowing item selection
+          and interaction via a context menu.
+        - A button bar with buttons for refreshing the list, deleting a selected report,
+          and opening the folder containing the crash logs.
+
+        Returns:
+            QWidget: The constructed reports panel containing the reports list and button bar.
+        """
+        from ClassicLib.Interface.Widgets.report_list import ReportListWidget
 
         panel = QWidget()
         layout = QVBoxLayout(panel)
@@ -153,12 +186,24 @@ class ResultsViewerMixin:
 
         return panel
 
+    # noinspection PyUnresolvedReferences
     def _create_viewer_panel(self) -> QWidget:
-        """Create the right panel containing the report viewer."""
-        from ClassicLib.Interface.ResultsViewerWidgets import (
-            MarkdownViewer,
-            ReportMetadataWidget,
-        )
+        """
+        Creates and returns a viewer panel containing a metadata widget, markdown
+        viewer, and a toolbar with various controls.
+
+        The panel includes:
+        - A metadata widget for displaying report metadata.
+        - A markdown viewer for rendering markdown content.
+        - A toolbar for interactions such as copying the report to the clipboard
+          and zoom controls for the markdown viewer.
+
+        Returns:
+            QWidget: A fully constructed viewer panel containing the components
+            described above.
+        """
+        from Classiclib.Interface.Widgets.markdown_viewer import MarkdownViewer
+        from ClassicLib.Interface.Widgets.report_metadata import ReportMetadataWidget
 
         panel = QWidget()
         layout = QVBoxLayout(panel)
@@ -188,7 +233,7 @@ class ResultsViewerMixin:
         toolbar_layout.addStretch()
 
         # Zoom controls
-        zoom_out_btn = QPushButton("−")
+        zoom_out_btn = QPushButton("−")  # noqa: RUF001
         zoom_out_btn.clicked.connect(self.markdown_viewer.zoom_out)
         zoom_out_btn.setFixedWidth(30)
         zoom_out_btn.setToolTip("Zoom out")
@@ -212,10 +257,18 @@ class ResultsViewerMixin:
 
     def scan_for_reports(self) -> list[Path]:
         """
-        Scan for available report files in configured directories.
+        Scans multiple directories for specific report files and returns them in a sorted list.
+
+        The method searches for report files with names matching the pattern "*-AUTOSCAN.md"
+        in predefined directories. These include the "Crash Logs" folder in the local
+        directory, a custom scan folder defined in the settings, and a backup folder for
+        unsolved logs. The function also ensures that the directories are monitored by
+        the file watcher for modifications. Duplicates in the list of found reports are removed,
+        and the results are sorted by their last modification time in descending order.
 
         Returns:
-            List of Path objects for found report files.
+            list[Path]: A sorted list of paths to all unique report files found, ordered
+            by their last modification time (newest first).
         """
         reports = []
 
@@ -256,7 +309,11 @@ class ResultsViewerMixin:
         return unique_reports
 
     def refresh_reports_list(self) -> None:
-        """Refresh the list of available reports."""
+        """
+        Clears the current list of reports, scans for updated reports, and populates
+        the list with new data. Updates associated widgets and emits a signal to notify
+        listeners of changes.
+        """
         # Clear current list
         self.results_list.clear()
 
@@ -281,13 +338,15 @@ class ResultsViewerMixin:
 
     def load_report(self, report_path: Path) -> bool:
         """
-        Load and display a report file.
+        Loads a report file specified by the given path, displays its content in a markdown viewer,
+        updates associated metadata, and signals the completion of the process. Verifies the
+        existence of the file before attempting to load it, and handles errors gracefully.
 
         Args:
-            report_path: Path to the report file to load.
+            report_path (Path): The path to the report file to be loaded.
 
         Returns:
-            True if report was loaded successfully, False otherwise.
+            bool: True if the report is loaded successfully; False otherwise.
         """
         try:
             if not report_path.exists():
@@ -310,12 +369,13 @@ class ResultsViewerMixin:
             self.report_loaded.emit(report_path)
 
             logger.debug(f"Loaded report: {report_path.name}")
-            return True
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             msg_error(f"Failed to load report: {e}")
             logger.error(f"Error loading report {report_path}: {e}")
             return False
+        else:
+            return True
 
     def _on_report_selected(self) -> None:
         """Handle report selection from the list."""
@@ -398,7 +458,8 @@ class ResultsViewerMixin:
             msg_error(f"Failed to copy report: {e}")
             logger.error(f"Error copying report: {e}")
 
-    def _open_reports_folder(self) -> None:
+    @staticmethod
+    def _open_reports_folder() -> None:
         """Open the Crash Logs folder in the file explorer."""
         local_dir = GlobalRegistry.get_local_dir()
         if not local_dir:
@@ -421,7 +482,7 @@ class ResultsViewerMixin:
             msg_error(f"Failed to open folder: {e}")
             logger.error(f"Error opening folder: {e}")
 
-    def _show_context_menu(self, position) -> None:
+    def _show_context_menu(self, position: QPoint) -> None:
         """Show context menu for report list."""
         item = self.results_list.itemAt(position)
         if not item:

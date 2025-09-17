@@ -1,3 +1,14 @@
+"""
+PapyrusManagerMixin module for managing the Papyrus monitoring processes.
+
+This module defines the PapyrusManagerMixin class, which provides methods and attributes
+to manage the lifecycle of a Papyrus monitoring worker and its associated UI elements, such
+as a monitoring dialog and control button. The mixing class is expected to implement specific
+attributes for functionality, including instances of QPushButton, ThreadManager, and optional
+Papyrus monitoring components (worker, thread, and dialog). The mixin facilitates asynchronous
+monitoring, ensuring efficient thread management and responsive UI updates.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -112,9 +123,6 @@ class PapyrusManagerMixin:
         This function terminates the papyrus monitoring by halting the monitor worker and
         its associated thread using ThreadManager. It also updates the user interface components,
         such as the button, and closes the Papyrus monitoring dialog if it's open.
-
-        Returns:
-            None
         """
         # Stop the worker first for clean shutdown
         if self.papyrus_monitor_worker:

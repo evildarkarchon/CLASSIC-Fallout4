@@ -20,6 +20,14 @@ type GameID = (
 
 
 class YAML(Enum):
+    """Enumeration for representing various YAML file paths.
+
+    This Enum class provides identifiers for different YAML file
+    configurations used within the system. It maps descriptive enum
+    members to their associated auto-generated values, each of which
+    corresponds to a specific YAML file path in the application.
+    """
+
     Main = auto()
     """CLASSIC Data/databases/CLASSIC Main.yaml"""
     Settings = auto()

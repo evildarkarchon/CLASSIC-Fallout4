@@ -11,7 +11,17 @@ from ClassicLib.MessageHandler import MessageHandler
 
 
 class TuiMessageHandler(MessageHandler):
-    """Routes messages to appropriate TUI widgets."""
+    """Handle TUI messages and interactions.
+
+    This class is designed to manage textual user interactions in a Text User
+    Interface (TUI) environment. It provides methods for displaying messages,
+    handling questions, progress displays, output formatting, and logging.
+    Messages can be routed to a specific output widget or fallback to console
+    output if no output widget is provided.
+
+    Attributes:
+        output_widget (Any | None): An optional widget to which messages are sent.
+    """
 
     def __init__(self, output_widget: Any | None = None) -> None:
         """Initialize TUI message handler.

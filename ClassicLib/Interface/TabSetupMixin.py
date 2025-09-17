@@ -60,42 +60,35 @@ class TabSetupMixin:
         papyrus_button: QPushButton | None
 
         # Required methods that must be implemented by the mixing class
-        def select_folder_mods(self) -> None: ...
-        def select_folder_scan(self) -> None: ...
-        def validate_scan_folder_text(self) -> None: ...
+        def select_folder_mods(self) -> None: ...  # noqa: D102
+        def select_folder_scan(self) -> None: ...  # noqa: D102
+        def validate_scan_folder_text(self) -> None: ...  # noqa: D102
         @staticmethod
-        def open_url(url: str) -> None: ...
-        def show_about(self) -> None: ...
-        def help_popup_main(self) -> None: ...
-        def open_settings(self) -> None: ...
-        def open_crash_logs_folder(self) -> None: ...
-        def update_popup_explicit(self) -> None: ...
-        def toggle_papyrus_worker(self) -> None: ...
-        def update_papyrus_button_style(self, monitoring: bool) -> None: ...
-        def crash_logs_scan(self) -> None: ...
-        def game_files_scan(self) -> None: ...
-        def open_backup_folder(self) -> None: ...
-        def check_existing_backups(self) -> None: ...
-        def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton: ...
+        def open_url(url: str) -> None: ...  # noqa: D102
+        def show_about(self) -> None: ...  # noqa: D102
+        def help_popup_main(self) -> None: ...  # noqa: D102
+        def open_settings(self) -> None: ...  # noqa: D102
+        def open_crash_logs_folder(self) -> None: ...  # noqa: D102
+        def update_popup_explicit(self) -> None: ...  # noqa: D102
+        def toggle_papyrus_worker(self) -> None: ...  # noqa: D102
+        def update_papyrus_button_style(self, monitoring: bool) -> None: ...  # noqa: D102
+        def crash_logs_scan(self) -> None: ...  # noqa: D102
+        def game_files_scan(self) -> None: ...  # noqa: D102
+        def open_backup_folder(self) -> None: ...  # noqa: D102
+        def check_existing_backups(self) -> None: ...  # noqa: D102
+        def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton: ...  # noqa: D102
         def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton: ...
-        def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None: ...
+        def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None: ...  # noqa: D102
 
     # noinspection PyUnresolvedReferences
     def setup_main_tab(self) -> None:
-        """Sets up the main UI elements for the main tab.
+        """
+        Configures the main tab layout for the application's graphical user interface.
 
-        This method initializes and organizes various UI components on the main tab, including
-        folder selection sections, buttons, checkboxes, articles, and output sections. The layout
-        is configured with specific margins, spacing, and separator widgets to provide a structured
-        and user-friendly interface.
-
-        Attributes:
-            mods_folder_edit (QWidget): The input widget for the staging mods folder selection.
-            scan_folder_edit (QWidget): The input widget for the custom scan folder selection.
-            output_text_box (QWidget or None): The widget for the output text box, if initialized.
-
-        Returns:
-            None
+        This method sets up the layout, header section for folder input widgets, and buttons within
+        the main tab. It ensures the content is compact, aligned, and user-friendly by customizing
+        spacing and margins. The function manages folder selection fields, validates user input,
+        and organizes related user interface elements systematically.
         """
         layout: QVBoxLayout = QVBoxLayout(self.main_tab)
         layout.setContentsMargins(15, 5, 15, 10)  # Minimal top margin to sit close to tab bar
@@ -151,11 +144,17 @@ class TabSetupMixin:
         # Add stretch at the end to push everything up and keep folder widgets at top
 
     def update_papyrus_button_style(self, monitoring: bool) -> None:
-        """Update the Papyrus button style based on monitoring state.
+        """
+        Updates the style and text of the Papyrus button based on the monitoring state.
+
+        This method adjusts the visual appearance and label of the Papyrus button
+        to reflect whether monitoring is active or inactive. The button is styled
+        in red for the "STOP" state and green for the "START" state.
 
         Args:
-            monitoring: True if monitoring is active (red "STOP" style),
-                       False if monitoring is inactive (green "START" style)
+            monitoring (bool): A boolean indicating whether monitoring is active. If
+                True, the button is styled as "STOP PAPYRUS MONITORING". If False,
+                the button is styled as "START PAPYRUS MONITORING".
         """
         if not hasattr(self, "papyrus_button") or self.papyrus_button is None:
             return
@@ -192,21 +191,14 @@ class TabSetupMixin:
             )
 
     def setup_articles_tab(self) -> None:
-        """Sets up the UI elements for the articles tab.
-        Creates a layout for the articles tab with a title label and a grid of buttons.
-        Each button is linked to a useful resource or website related to Fallout 4 modding
-        and tools. The buttons are arranged in a 3-column grid layout and styled with
-        a consistent dark theme.
-        The resources include:
-        - Buffout 4 installation guide
-        - Fallout 4 setup tips
-        - Important patches list
-        - Links to relevant Nexus Mods pages
-        - GitHub repository link
-        - Various modding tools
-        Each button, when clicked, will open the associated URL in the user's default web browser.
-        Returns:
-            None
+        """
+        Sets up the articles tab in the application's user interface by creating and styling a layout,
+        adding a title label, dynamically generating clickable buttons (each linked to a URL), and
+        organizing the buttons within a grid layout. The articles tab provides users with quick access
+        to useful links and resources.
+
+        Raises:
+            Any exceptions that may occur during the creation or setup of UI components.
         """
         layout: QVBoxLayout = QVBoxLayout(self.articles_tab)
         layout.setContentsMargins(20, 10, 20, 10)
@@ -270,14 +262,11 @@ class TabSetupMixin:
 
     def setup_backups_tab(self) -> None:
         """
-        Configures the user interface layout and behavior for the "Backups" tab. This includes
-        adding explanatory labels, dynamically created category buttons for managing backups,
-        and additional functionality such as enabling/disabling restore buttons based on the
-        existence of backups. The tab provides capabilities to backup, restore, and remove files
-        related to specific categories such as XSE, RESHADE, VULKAN, and ENB.
+        Sets up the backups tab of the GUI by arranging layout, adding widget controls, and configuring interactions.
 
-        Returns:
-            None
+        This function initializes the backup tab by creating a vertical layout, adding informational labels, and dynamically
+        creating sections for backup-related actions. It also includes a button to open the CLASSIC Backups folder
+        and ensures existing backups are checked.
         """
         layout: QVBoxLayout = QVBoxLayout(self.backups_tab)
         layout.setContentsMargins(20, 10, 20, 10)
@@ -459,15 +448,19 @@ class TabSetupMixin:
 
     def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton:
         """
-        Creates and configures a button with common styling and properties.
+        Creates a QPushButton with the specified text, tooltip, and callback functionality.
+
+        This function initializes a QPushButton, sets its tooltip, connects the provided
+        callback to the appropriate signal based on the button type (toggle button or
+        regular), and applies style and size policies.
 
         Args:
-            text: The button text
-            tooltip: The button tooltip
-            callback: Function to call when button is clicked
+            text (str): The label text to display on the button.
+            tooltip (str): The text to be shown as a tooltip when hovering over the button.
+            callback (Callable): The function that will be connected to the button's signal.
 
         Returns:
-            Configured QPushButton instance
+            QPushButton: The configured button instance.
         """
         button: QPushButton = QPushButton(text)
         button.setToolTip(tooltip)

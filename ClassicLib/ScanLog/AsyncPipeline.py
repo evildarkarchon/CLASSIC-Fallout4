@@ -28,7 +28,20 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    """Provide deprecation warnings for imports."""
+    """
+    Gets an attribute of the module. Handles deprecated attribute imports and raises an
+    error if the attribute does not exist.
+
+    Args:
+        name (str): The name of the attribute to retrieve.
+
+    Returns:
+        object: The attribute with the requested name if it is found and not deprecated.
+
+    Raises:
+        AttributeError: If the attribute with the specified name does not exist in the
+            module.
+    """
     if name in __all__:
         warnings.warn(
             f"Importing {name} from ClassicLib.ScanLog.AsyncPipeline is deprecated. "

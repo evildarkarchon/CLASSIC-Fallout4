@@ -1,6 +1,14 @@
-# ================================================
-# PAPYRUS MONITORING / LOGGING
-# ================================================
+"""
+This module processes and analyzes Papyrus log files to extract statistics and
+summarize relevant data such as the number of dumps, stacks, warnings, and errors.
+
+The module relies on external utility libraries to locate and process log files.
+If logs are not accessible, the module provides guidance for enabling logging.
+
+The primary function returns a summary of log details and the total count of
+recorded dumps and raises specific errors for encoding-related issues.
+"""
+
 from pathlib import Path
 
 import chardet

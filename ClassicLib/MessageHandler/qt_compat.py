@@ -12,43 +12,43 @@ except ImportError:
     HAS_QT = False
 
     # Define dummy classes for type checking when Qt is not available
-    class QObject:
+    class QObject:  # noqa: D101
         pass
 
-    class QWidget:
+    class QWidget:  # noqa: D101
         pass
 
-    class QThread:
+    class QThread:  # noqa: D101
         # noinspection PyPep8Naming
         @staticmethod
-        def currentThread() -> "QThread":
+        def currentThread() -> "QThread":  # noqa: D102
             pass
 
     # noinspection PyUnusedLocal,PyPep8Naming
-    class QMessageBox:
-        class Icon:
+    class QMessageBox:  # noqa: D101
+        class Icon:  # noqa: D106
             Information = 0
             Warning = 1
             Critical = 2
 
-        def __init__(
+        def __init__(  # noqa: D107
             self, icon: Any = None, title: str = "", text: str = "", parent: QWidget | None = None, *args: Any, **kwargs: Any
         ) -> None:
             pass
 
-        def setDetailedText(self, text: str) -> None:
+        def setDetailedText(self, text: str) -> None:  # noqa: D102
             pass
 
-        def setWindowTitle(self, title: str) -> None:
+        def setWindowTitle(self, title: str) -> None:  # noqa: D102
             pass
 
         # noinspection PyMethodMayBeStatic
-        def exec(self) -> int:
+        def exec(self) -> int:  # noqa: D102, PLR6301
             return 0
 
     # noinspection PyPep8Naming,PyUnusedLocal
-    class QProgressDialog:
-        def __init__(
+    class QProgressDialog:  # noqa: D101
+        def __init__(  # noqa: D107
             self,
             labelText: str = "",
             cancelButtonText: str = "",
@@ -60,47 +60,47 @@ except ImportError:
         ) -> None:
             pass
 
-        def setWindowTitle(self, title: str) -> None:
+        def setWindowTitle(self, title: str) -> None:  # noqa: D102
             pass
 
-        def setAutoClose(self, close: bool) -> None:
+        def setAutoClose(self, close: bool) -> None:  # noqa: D102
             pass
 
-        def setAutoReset(self, reset: bool) -> None:
+        def setAutoReset(self, reset: bool) -> None:  # noqa: D102
             pass
 
-        def setRange(self, minimum: int, maximum: int) -> None:
+        def setRange(self, minimum: int, maximum: int) -> None:  # noqa: D102
             pass
 
-        def show(self) -> None:
+        def show(self) -> None:  # noqa: D102
             pass
 
-        def hide(self) -> None:
+        def hide(self) -> None:  # noqa: D102
             pass
 
-        def setValue(self, value: int) -> None:
+        def setValue(self, value: int) -> None:  # noqa: D102
             pass
 
-        def setLabelText(self, text: str) -> None:
+        def setLabelText(self, text: str) -> None:  # noqa: D102
             pass
 
-    class Signal:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
+    class Signal:  # noqa: D101
+        def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: D107
             pass
 
-        def emit(self, *args: Any) -> None:
+        def emit(self, *args: Any) -> None:  # noqa: D102
             pass
 
-        def connect(self, func: Any) -> None:
+        def connect(self, func: Any) -> None:  # noqa: D102
             pass
 
 
 __all__ = [
     "HAS_QT",
-    "QObject",
-    "QWidget",
-    "QThread",
     "QMessageBox",
+    "QObject",
     "QProgressDialog",
+    "QThread",
+    "QWidget",
     "Signal",
 ]

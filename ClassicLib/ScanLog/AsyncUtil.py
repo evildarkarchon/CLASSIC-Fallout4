@@ -6,6 +6,7 @@ performance through concurrent execution.
 """
 
 import asyncio
+from itertools import starmap
 from pathlib import Path
 from typing import Any
 
@@ -18,22 +19,60 @@ from ClassicLib.Logger import logger
 
 
 class AsyncDatabasePool:
-    """Manages a pool of async database connections for FormID lookups."""
+    """
+    Represents an asynchronous connection pool for handling database operations efficiently.
+
+    Provides an interface for managing multiple SQLite database connections asynchronously.
+    Allows querying for specific entries or batches of entries while supporting caching
+    to minimize database load.
+
+    Attributes:
+        max_connections (int): Maximum number of database connections allowed concurrently.
+        connections (dict[Path, aiosqlite.Connection]): A mapping of database paths to their
+            respective asynchronous SQLite connection objects.
+        query_cache (dict[tuple[str, str], str]): A cache for storing query results to reduce
+            redundant database lookups.
+    """
 
     def __init__(self, max_connections: int = 5) -> None:
-        """Initialize the database connection pool."""
+        """
+        Initializes a connection manager for handling database connections and caching query results.
+
+        This class is designed to manage a limited number of database connections, implement query
+        caching for efficiency, and ensure thread safety when operating on internal data structures.
+
+        Args:
+            max_connections: The maximum number of database connections allowed to be managed
+                simultaneously. Defaults to 5.
+        """
         self.max_connections = max_connections
         self.connections: dict[Path, aiosqlite.Connection] = {}
         self.query_cache: dict[tuple[str, str], str] = {}
         self._lock = asyncio.Lock()
 
     async def __aenter__(self) -> "AsyncDatabasePool":
-        """Async context manager entry."""
+        """
+        Handles the asynchronous context management protocol for the AsyncDatabasePool
+        object. Ensures the pool is properly initialized upon entering the async context.
+
+        Returns:
+            AsyncDatabasePool: The initialized instance of the database pool.
+        """
         await self.initialize()
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Async context manager exit."""
+        """
+        Handles the asynchronous exit process for the context manager.
+        Ensures proper cleanup of resources by invoking the `close` method.
+
+        Args:
+            exc_type: Exception type if an exception is raised inside the context.
+            exc_val: Exception instance providing details about the raised exception.
+            exc_tb: Traceback object representing the point at which
+                the exception occurred.
+
+        """
         await self.close()
 
     async def initialize(self) -> None:
@@ -74,7 +113,19 @@ class AsyncDatabasePool:
                 raise
 
     async def close(self) -> None:
-        """Close all database connections with timeout protection."""
+        """
+        Closes all active connections managed by the object in an asynchronous manner.
+
+        This method ensures that all active connections are closed gracefully while
+        avoiding potential deadlocks by managing the closure of connections outside the
+        main locking mechanism. Each connection is closed with a defined timeout to
+        prevent indefinite hanging.
+
+        Raises:
+            Exception: If an error occurs during the closure of any active connection,
+                it is captured and returned as an exception in the gathering process.
+
+        """
         # Get a copy of connections to close without holding the lock
         async with self._lock:
             connections_to_close = list(self.connections.values())
@@ -93,7 +144,17 @@ class AsyncDatabasePool:
 
     @staticmethod
     async def _close_connection_with_timeout(conn: aiosqlite.Connection) -> None:
-        """Close a single connection with timeout."""
+        """
+        Closes the given SQLite database connection with a timeout.
+
+        This method attempts to close the specified database connection within the
+        defined timeout period. If the connection does not close within the given
+        timeout, a TimeoutError is logged. Other potential errors during the closing
+        process are also logged for debugging purposes.
+
+        Args:
+            conn (aiosqlite.Connection): The SQLite database connection to be closed.
+        """
         try:
             await asyncio.wait_for(conn.close(), timeout=5.0)
         except TimeoutError:
@@ -149,14 +210,23 @@ class AsyncDatabasePool:
 
     async def get_entries_batch(self, formid_plugin_pairs: list[tuple[str, str]], batch_size: int = 100) -> dict[tuple[str, str], str]:
         """
-        Batch query for multiple FormID/plugin pairs to optimize database performance.
+        Fetch entries from the cache or databases for given pairs of form IDs and plugins.
+
+        This asynchronous method retrieves data associated with specified pairs of form IDs
+        and plugin names. For each pair, it first checks an internal cache for pre-existing data.
+        If any data is not found in the cache, the method queries the available databases in
+        batches to minimize the potential SQL query size limits. The queried data is then stored
+        in the cache for future usage.
 
         Args:
-            formid_plugin_pairs: List of (formid, plugin) tuples to query
-            batch_size: Maximum number of pairs to query at once (default: 100)
+            formid_plugin_pairs (list[tuple[str, str]]): A list of (form ID, plugin) tuples to
+                retrieve entries for.
+            batch_size (int): The maximum number of pairs to process in a single batch
+                when querying the databases. Defaults to 100.
 
         Returns:
-            Dictionary mapping (formid, plugin) tuples to entry text
+            dict[tuple[str, str], str]: A dictionary mapping (form ID, plugin) pairs to their
+                respective queried entries.
         """
         results = {}
 
@@ -202,24 +272,19 @@ class AsyncDatabasePool:
 
 # noinspection PyUnusedImports
 async def read_file_async(file_path: Path) -> list[str]:
-    """
-    Reads the contents of a file asynchronously and returns its lines as a list of strings.
-    Handles file reading errors and logs them without raising exceptions.
+    """Reads the content of a file asynchronously and returns its lines as a list of strings.
 
-    Parameters:
-    file_path: Path
-        The path to the file to be read. Must be a valid file path.
+    This function attempts to read the file content using an async encoding detection utility if
+    available. If the utility is not available, it defaults to reading the file using UTF-8 encoding
+    while ignoring errors. If the file cannot be read due to OS or decoding errors, an empty list is
+    returned.
+
+    Args:
+        file_path (Path): The path of the file to be read.
 
     Returns:
-    list[str]
-        A list of strings where each string corresponds to a line from the file. Returns an empty list
-        if an error occurs during file reading.
-
-    Raises:
-    OSError
-        Raised if there's an issue opening or reading the file.
-    UnicodeDecodeError
-        Raised if the file's content cannot be decoded using the specified encoding.
+        list[str]: A list of strings, where each string represents a line in the file. If an error
+        occurs during file reading, an empty list is returned.
     """
     try:
         # Try to use async encoding detection if available
@@ -278,7 +343,22 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
     cache: dict[str, list[str]] = {}
 
     async def load_single_log(file_path: Path) -> tuple[str, list[str]]:
-        """Load a single log file."""
+        """
+        Loads a single log file asynchronously and retrieves its content as a tuple.
+
+        The function reads the content of a specified log file asynchronously and
+        returns the file name along with its content as a list of lines. The file
+        is opened and processed in a non-blocking asynchronous manner to enable
+        efficient handling of I/O-bound operations.
+
+        Args:
+            file_path (Path): The path of the log file to be read.
+
+        Returns:
+            tuple: A tuple where the first element is the file name as a string,
+            and the second element is a list of strings containing the lines of
+            the file.
+        """
         lines = await read_file_async(file_path)
         return file_path.name, lines
 
@@ -298,26 +378,22 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
 
 async def batch_file_operations(operations: list[tuple[str, Path, Any]]) -> None:
     """
-    Perform a batch of asynchronous file operations.
+    Perform batch file operations asynchronously.
 
-    This function processes multiple file-related operations concurrently. Each operation
-    must be specified as a tuple containing the type of operation, the target file path,
-    and any associated data. Supported file operation types include reading, writing,
-    moving, and copying files. For operations requiring blocking calls such as file moves
-    or copies, the implementation ensures that these calls run in asyncio's thread pool
-    to avoid blocking the event loop.
+    This function accepts a list of operations to perform on files asynchronously.
+    Each operation is defined as a tuple containing the operation type, the file path,
+    and any additional data required for that operation. Supported operations include
+    read, write, move, and copy. File operations are executed in parallel to enhance
+    performance.
 
-    Parameters:
-    operations (list[tuple[str, Path, Any]]): A list where each item is a tuple representing
-        a file operation. The tuple consists of three elements:
-        - op_type (str): Specifies the operation type ('read', 'write', 'move', or 'copy').
-        - path (Path): A Path object representing the target file.
-        - data (Any): Additional information required for the operation.
-            * For 'write', this is the content to write to the file.
-            * For 'move' and 'copy', this is the destination Path for the operation.
-
-    Returns:
-    None
+    Args:
+        operations (list[tuple[str, Path, Any]]): A list of tuples, where each tuple
+            represents a file operation. The tuple consists of:
+                - op_type (str): The type of operation to perform ("read", "write",
+                  "move", "copy").
+                - path (Path): The path to the file involved in the operation.
+                - data (Any): Additional data required for the operation. For example,
+                  file content for "write" or destination path for "move" or "copy".
     """
 
     async def execute_operation(op_type: str, path: Path, data: Any) -> None:
@@ -334,5 +410,5 @@ async def batch_file_operations(operations: list[tuple[str, Path, Any]]) -> None
 
             await asyncio.to_thread(shutil.copy2, path, data)
 
-    tasks = [execute_operation(op_type, path, data) for op_type, path, data in operations]
+    tasks = list(starmap(execute_operation, operations))
     await asyncio.gather(*tasks, return_exceptions=True)

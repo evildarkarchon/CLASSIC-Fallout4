@@ -8,9 +8,6 @@ GUI-specific components are available in ClassicLib.Interface when PySide6 is in
 # Core async infrastructure
 from ClassicLib.AsyncBridge import AsyncBridge
 
-# Compatibility utilities
-from ClassicLib.compat import HAS_PYSIDE6, HAS_TQDM, check_gui_requirements
-
 # Core constants
 from ClassicLib.Constants import (
     DB_PATHS,
@@ -65,9 +62,6 @@ from ClassicLib.MessageHandler import (
     msg_success,
     msg_warning,
 )
-
-# Meta utilities
-from ClassicLib.Meta import SingletonMeta
 
 # Performance monitoring
 from ClassicLib.PerformanceMonitor import TimedBlock, async_timed_operation, timed_operation
@@ -142,10 +136,6 @@ __all__ = [
     "SETTINGS_IGNORE_NONE",
     "VR_VERSION",
     "YAML",
-    # Compatibility
-    "HAS_PYSIDE6",
-    "HAS_TQDM",
-    "check_gui_requirements",
     # File I/O
     "FileIOCore",
     "read_file_sync",
@@ -179,8 +169,6 @@ __all__ = [
     "msg_progress_context",
     "msg_success",
     "msg_warning",
-    # Meta utilities
-    "SingletonMeta",
     # Performance monitoring
     "TimedBlock",
     "async_timed_operation",

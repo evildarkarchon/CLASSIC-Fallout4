@@ -85,10 +85,13 @@ MAIN_BUTTON_STYLE = """
 
 def create_separator() -> QFrame:
     """
-    Creates a horizontal line separator widget.
+    Creates and returns a horizontal line separator.
+
+    This function creates a QFrame widget configured to represent
+    a horizontal line separator with a sunken shadow.
 
     Returns:
-        QFrame: A QFrame object configured as a horizontal line separator with a sunken shadow.
+        QFrame: The QFrame instance configured as a horizontal line separator.
     """
     separator: QFrame = QFrame()
     separator.setFrameShape(QFrame.Shape.HLine)
@@ -98,15 +101,22 @@ def create_separator() -> QFrame:
 
 def create_checkbox(label_text: str, setting: str, style: str = CHECKBOX_STYLE) -> QCheckBox:
     """
-    Creates a styled QCheckBox widget linked to a specific setting and its state.
+    Creates a QCheckBox with specified label text, initializes its state based on provided
+    settings, and applies a given style.
+
+    The checkbox state is synchronized with the settings dynamically. If the initial state
+    is not found in the settings, a default value is used and updated in the settings.
 
     Args:
-        label_text (str): The text label to display next to the checkbox.
-        setting (str): The name of the setting to bind with the checkbox.
-        style (str): Optional custom style for the checkbox. Defaults to CHECKBOX_STYLE.
+        label_text (str): The text to display alongside the QCheckBox.
+        setting (str): The key name used to retrieve and store the checkbox state
+            in the settings.
+        style (str, optional): The stylesheet to apply to the checkbox. Defaults
+            to CHECKBOX_STYLE.
 
     Returns:
-        QCheckBox: A QCheckBox widget connected to the specified setting's state.
+        QCheckBox: A checkbox widget initialized with the specified label, style,
+        and linked to the settings.
     """
     checkbox: QCheckBox = QCheckBox(label_text)
 
@@ -127,16 +137,17 @@ def create_checkbox(label_text: str, setting: str, style: str = CHECKBOX_STYLE) 
 
 def supports_add_layout(layout: QLayout) -> bool:
     """
-    Check if a layout supports the addLayout method.
+    Checks if the given layout is supported.
 
-    This helper method encapsulates the type checking logic to improve testability.
-    In tests, this method can be mocked to return True without needing to mock Qt classes.
+    This function verifies whether the provided layout is an instance of QVBoxLayout
+    or QHBoxLayout, effectively determining if it is a supported type of layout.
 
     Args:
-        layout: The layout to check
+        layout: The layout to be checked, provided as an instance of QLayout.
 
     Returns:
-        True if the layout supports addLayout, False otherwise
+        bool: True if the layout is supported (QVBoxLayout or QHBoxLayout).
+        False otherwise.
     """
     return isinstance(layout, (QVBoxLayout, QHBoxLayout))
 
@@ -145,19 +156,23 @@ def setup_folder_section(
     layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None], tooltip: str = ""
 ) -> QLineEdit | None:
     """
-    Sets up a folder selection section within a provided layout. This method creates a section
-    consisting of a label, a QLineEdit for folder path input, and a browse button. Clicking the
-    browse button triggers a callback function specified by the user.
+    Sets up a folder selection section within the provided layout using a label, line edit,
+    and a browse button. This creates a horizontal arrangement of these widgets which
+    is added into the given parent layout (usually a QVBoxLayout or QHBoxLayout).
 
     Args:
-        layout (QBoxLayout): The layout to which the folder section will be added.
-        title (str): The text to display in the label.
-        box_name (str): The object name of the QLineEdit, used for identification.
-        browse_callback (Callable[[], None]): The function to execute when the browse button is clicked.
-        tooltip (str, optional): The tooltip text to display when hovering over the browse button. Defaults to an empty string.
+        layout (QBoxLayout): The parent layout where the folder section should be added.
+                             Typically a vertical or horizontal box layout.
+        title (str): The text to display on the label.
+        box_name (str): The object name to assign to the QLineEdit widget for identification.
+        browse_callback (Callable[[], None]): A callback function to handle actions when the
+                                              browse button is clicked.
+        tooltip (str, optional): An optional tooltip for the browse button. If not provided,
+                                 a default tooltip based on the label title is generated.
 
     Returns:
-        QLineEdit: The QLineEdit widget created for folder input.
+        QLineEdit | None: Returns the QLineEdit widget created for the folder input, or None
+                          if the provided layout type is not expected.
     """
     section_layout: QHBoxLayout = QHBoxLayout()
     section_layout.setContentsMargins(0, 0, 0, 0)
@@ -174,7 +189,7 @@ def setup_folder_section(
     section_layout.addWidget(line_edit)
 
     browse_button: QPushButton = QPushButton("Browse...")  # Shorter text
-    browse_button.setToolTip(tooltip if tooltip else f"Browse for {title.lower()}")
+    browse_button.setToolTip(tooltip or f"Browse for {title.lower()}")
     browse_button.clicked.connect(browse_callback)
     browse_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
     section_layout.addWidget(browse_button)
@@ -192,19 +207,22 @@ def setup_folder_section(
 
 def add_main_button(layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
     """
-    Adds a main button to the specified layout with the given text, click callback, and optional tooltip.
+    Add a main button to the specified layout with customizable appearance and behavior.
 
-    This method creates a QPushButton with a specific style and behavior. The button's text, callback, and optional
-    tooltip can be customized. It is then added to the provided layout and returned.
+    This function creates a QPushButton with a predefined style and size policy,
+    sets its tooltip if provided, connects it to a callback, and adds it to the
+    given layout.
 
     Args:
-        layout (QLayout): The layout to which the button will be added.
-        text (str): The text to display on the button.
-        callback (Callable[[], None]): The function to be called when the button is clicked.
-        tooltip (str, optional): The tooltip text to display on hover. Defaults to an empty string.
+        layout (QLayout): The layout where the button will be added as a widget.
+        text (str): The text to be displayed on the button.
+        callback (Callable[[], None]): The function to be executed when the button is
+            clicked.
+        tooltip (str, optional): The tooltip text to be displayed on hover. Defaults
+            to an empty string.
 
     Returns:
-        QPushButton: The created button that has been added to the layout.
+        QPushButton: The created QPushButton instance.
     """
     button: QPushButton = QPushButton(text)
     button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -218,16 +236,14 @@ def add_main_button(layout: QLayout, text: str, callback: Callable[[], None], to
 
 def add_bottom_button(layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> None:
     """
-    Adds a configurable button to the bottom of a given layout. The button adopts a specific
-    styling, size policy, and allows optional tooltip text. A callback function is associated
-    with the button's "clicked" event to define its behavior when clicked.
+    Adds a styled button to the specified layout. The button expands horizontally, has a fixed
+    height, and a custom visual appearance. Optionally, a tooltip can be added to the button.
 
     Args:
-        layout (QLayout): The layout where the button should be added.
-        text (str): The text to display on the button.
-        callback (Callable[[], None]): The function to invoke when the button is clicked.
-        tooltip (str, optional): The tooltip text to display when hovering over the button.
-            Defaults to an empty string.
+        layout: The layout to which the button will be added.
+        text: The text displayed on the button.
+        callback: The function to be triggered when the button is clicked.
+        tooltip: Optional tooltip text for the button.
     """
     button: QPushButton = QPushButton(text)
     button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -248,17 +264,23 @@ def add_bottom_button(layout: QLayout, text: str, callback: Callable[[], None], 
     layout.addWidget(button)
 
 
-def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton:  # noqa: ANN001, ARG001
+def _create_button(text: str, tooltip: str, callback: Callable) -> QPushButton:
     """
-    Creates and configures a button with common styling and properties.
+    Creates and returns a styled QPushButton with given text, tooltip, and callback function.
+
+    The function initializes a QPushButton, sets its tooltip, and connects the appropriate
+    signal to the provided callback. If the button is checkable, the `toggled` signal is
+    connected; otherwise, the `clicked` signal is used. The button's appearance is styled
+    using a predefined stylesheet, and its size policy is set to preferred width with fixed
+    height.
 
     Args:
-        text: The button text
-        tooltip: The button tooltip
-        callback: Function to call when button is clicked
+        text: The text label displayed on the button.
+        tooltip: The text displayed as a tooltip when hovering over the button.
+        callback: The callable function to be triggered by the button's interaction.
 
     Returns:
-        Configured QPushButton instance
+        QPushButton: A styled and configured QPushButton instance.
     """
     button: QPushButton = QPushButton(text)
     button.setToolTip(tooltip)
@@ -278,9 +300,13 @@ def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushBu
 
 def open_url(url: str) -> None:
     """
-    Opens the specified URL in the default web browser.
+    Opens a given URL in the default system web browser.
+
+    This function utilizes the QDesktopServices class from the Qt framework to
+    open the specified URL. It ensures that the URL is parsed and handled using
+    the QUrl class before being opened. It does not return any value.
 
     Args:
-        url (str): The URL to open in the browser.
+        url (str): The URL to be opened in the default web browser.
     """
     QDesktopServices.openUrl(QUrl(url))

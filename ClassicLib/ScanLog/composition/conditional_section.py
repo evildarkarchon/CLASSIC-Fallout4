@@ -12,7 +12,17 @@ from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 
 
 class ConditionalSection:
-    """Helper for creating sections with conditional headers."""
+    """
+    ConditionalSection class.
+
+    Provides static methods for generating sections with headers, which are added
+    only if corresponding content exists. These methods aim to simplify the process
+    of conditionally appending headers to content fragments.
+
+    Methods:
+        with_header: Generate a section with a header only if content exists.
+        with_custom_header: Generate a section with a custom header fragment only if content exists.
+    """
 
     @staticmethod
     def with_header(

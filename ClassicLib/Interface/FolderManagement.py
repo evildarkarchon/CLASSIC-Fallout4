@@ -43,9 +43,6 @@ class FolderManagementMixin:
         scans. If the user selects a valid folder, the GUI field associated with
         scan folder input is updated, and the folder path is stored in the
         application's settings configuration.
-
-        Returns:
-            None
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
@@ -127,9 +124,6 @@ class FolderManagementMixin:
         The function opens a directory selection dialog to allow the user to select a folder
         for staging mods. If a valid folder is selected, it updates a text field in the UI with
         the selected folder path and writes the chosen path to a YAML configuration file.
-
-        Returns:
-            None
         """
         folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
         if folder:
@@ -145,9 +139,6 @@ class FolderManagementMixin:
         This method retrieves the folder paths for "SCAN Custom Path" and "MODS Folder Path"
         from the application settings and, if applicable, populates the respective input fields
         with the retrieved values.
-
-        Returns:
-            None
         """
         scan_folder: str | None = classic_settings(str, "SCAN Custom Path")
         mods_folder: str | None = classic_settings(str, "MODS Folder Path")
@@ -179,9 +170,6 @@ class FolderManagementMixin:
 
         Raises:
             Displays a QMessageBox with a critical error if the settings file is missing.
-
-        Returns:
-            None
         """
         settings_file: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Settings.yaml"
         if not settings_file.is_file():
@@ -194,7 +182,8 @@ class FolderManagementMixin:
         else:
             self._open_file_with_notepadpp(settings_file)
 
-    def open_backup_folder(self) -> None:
+    @staticmethod
+    def open_backup_folder() -> None:
         """
         Opens the backup folder in a file explorer or displays an error if the folder
         is not found.
@@ -202,9 +191,6 @@ class FolderManagementMixin:
         This function attempts to open the backup folder using the system's default file
         explorer. If the folder exists, it will be opened, otherwise an error message
         will be displayed to inform the user that the folder has not been created yet.
-
-        Returns:
-            None
         """
         backup_folder: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup"
         if backup_folder.is_dir():
@@ -213,13 +199,11 @@ class FolderManagementMixin:
         else:
             msg_error("Backup folder has not been created yet.")
 
-    def open_crash_logs_folder(self) -> None:
+    @staticmethod
+    def open_crash_logs_folder() -> None:
         """
         Opens the crash logs folder in the system's file explorer. Creates the folder
         if it doesn't exist.
-
-        Returns:
-            None
         """
         crash_logs_folder: Path = cast("Path", GlobalRegistry.get_local_dir()) / "Crash Logs"
         if not crash_logs_folder.is_dir():

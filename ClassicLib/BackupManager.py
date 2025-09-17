@@ -1,4 +1,12 @@
-"""Backup management module for automatic game file backups."""
+"""
+Provides functionality to manage automatic backups for game files.
+
+This module allows users to:
+- Load configuration for backup settings.
+- Extract XSE version information from log files.
+- Create versioned directories for storing backup files.
+- Execute the full backup process including validation and copying of files.
+"""
 
 import shutil
 from pathlib import Path
@@ -10,10 +18,28 @@ from ClassicLib.Util import normalize_list, open_file_with_encoding
 
 
 class BackupManager:
-    """Manages automatic backup of game files."""
+    """
+    Manages the process of creating backups for specified files.
+
+    This class provides methods to load backup configurations, extract information from
+    logs, create versioned backup directories, and backup specified files. The aim is to
+    facilitate easy and organized backup management for game files or any other workflows
+    that require systematic data backups.
+
+    Attributes:
+        None
+    """
 
     def __init__(self) -> None:
-        """Initialize the BackupManager."""
+        """
+        Represents a class initializing configuration for backups.
+
+        This class is used to handle and store the configuration for backup processes.
+        It initializes an internal storage for backup-related settings.
+
+        Attributes:
+            None
+        """
         self._backup_config: dict[str, str | list[str] | None] = {}
 
     def load_backup_configuration(self) -> None:
@@ -95,13 +121,17 @@ class BackupManager:
 
     def create_backup_directory(self, version: str) -> Path:
         """
-        Create versioned backup directory.
+        Creates a backup directory for the specified game version.
+
+        The method constructs a backup directory path using the given game
+        version and creates the directory, including any necessary parent
+        directories. If the directory already exists, no exception is raised.
 
         Args:
-            version: Version string to use in directory name
+            version (str): The game version used to name the backup directory.
 
         Returns:
-            Path object for the created backup directory
+            Path: A Path object representing the created backup directory.
         """
         backup_path = Path(f"CLASSIC Backup/Game Files/{version}")
         backup_path.mkdir(parents=True, exist_ok=True)

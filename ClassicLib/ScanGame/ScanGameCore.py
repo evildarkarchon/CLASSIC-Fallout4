@@ -17,39 +17,68 @@ from io import StringIO
 from pathlib import Path
 from typing import cast
 
-from .core.utils import MAX_CONCURRENT_SUBPROCESSES
+from ClassicLib.ScanGame.core.utils import MAX_CONCURRENT_SUBPROCESSES
 
 try:
     import aiofiles
 except ImportError:
     aiofiles = None  # Handle gracefully if not installed
 
+from itertools import starmap
+
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.GlobalRegistry import get, register
-from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import TEST_MODE
-from ClassicLib.Util import normalize_list, open_file_with_encoding
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 # Import refactored components
 from ClassicLib.ScanGame.core import (
-    ASYNC_ENCODING_AVAILABLE,
     SCAN_GAME_CORE_KEY,
     DDSProcessor,
     FileOperations,
     LogProcessor,
     ScanValidators,
     get_optimal_limits,
-    read_lines_with_encoding_async,
 )
+from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 class ScanGameCore:
-    """Async-first core implementation for game scanning operations."""
+    """
+    Implements the core functionalities for scanning mods in an optimized and
+    concurrent manner. The class applies singleton design principles, ensuring
+    only one instance exists and centralizes management of scan and validation
+    operations for efficiency.
+
+    The primary use of this class is to provide an interface for assessing mods'
+    files, validating their structure and content, and offering error reporting
+    or issue lists derived from the scans.
+
+    Attributes:
+        process_semaphore (asyncio.Semaphore): Semaphore to limit subprocess execution.
+        file_ops_semaphore (asyncio.Semaphore): Semaphore to limit concurrent file operations.
+        log_read_semaphore (asyncio.Semaphore): Semaphore to limit the examination of log reads.
+        dds_read_semaphore (asyncio.Semaphore): Semaphore to regulate DDS file reads.
+        header_executor (ThreadPoolExecutor): Thread pool for managing CPU-intensive tasks (e.g., file headers).
+        walk_executor (ThreadPoolExecutor): Thread pool for handling async directory operations.
+        validators (ScanValidators): Collection of validators used during scanning processes.
+        log_processor (LogProcessor): Processor to analyze error logs.
+        dds_processor (DDSProcessor): Component for handling DDS image scans.
+        file_operations (FileOperations): Facilitates safe file operations under semaphore limits.
+    """
 
     def __new__(cls) -> "ScanGameCore":
-        """Implement singleton pattern using GlobalRegistry."""
+        """
+        Creates a new instance of the ScanGameCore class or retrieves an existing one
+        from a shared store. Implements a Singleton pattern to ensure only one
+        instance of the class exists.
+
+        Args:
+            cls: The class to instantiate.
+
+        Returns:
+            ScanGameCore: The instance of the ScanGameCore class.
+        """
         instance = get(SCAN_GAME_CORE_KEY)
         if instance is None:
             instance = super().__new__(cls)
@@ -57,7 +86,17 @@ class ScanGameCore:
         return instance
 
     def __init__(self) -> None:
-        """Initialize the core scanner."""
+        """
+        Initializes the class and configures internal semaphores, thread pools, and
+        other components required for processing operations.
+
+        This method ensures initialization is only performed once and sets up
+        semaphores for managing different asynchronous tasks. It dynamically fetches
+        optimal limits for subprocesses, file operations, log reads, and DDS reads.
+        Thread pool executors are created to handle CPU-bound and asynchronous
+        directory walking operations. The method also initializes various components
+        required for validation, log handling, DDS handling, and file operations.
+        """
         # Only initialize once
         if not hasattr(self, "_initialized"):
             # Get optimal limits dynamically
@@ -83,52 +122,75 @@ class ScanGameCore:
 
     def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
         """
-        Gets common settings used by mod scanning functions.
-        Results are cached for the lifetime of the process.
+        Retrieves settings required for a scanning process.
+
+        This method returns a tuple containing three items: a string, a dictionary where
+        both keys and values are strings, and an optional Path object. These settings
+        are essential for configuring and executing a scan.
 
         Returns:
-            tuple: (xse_acronym, xse_scriptfiles, mod_path)
+            tuple[str, dict[str, str], Path | None]: A tuple containing the scan settings,
+            where the first element is a string, the second is a dictionary with string
+            keys and values, and the third is an optional Path object.
         """
         return self.validators.get_scan_settings()
 
     def get_issue_messages(self, xse_acronym: str, mode: str) -> dict[str, list[str]]:
         """
-        Returns standardized issue messages for mod scan reports.
-        Results are cached for the lifetime of the process.
+        Retrieves issue messages for the given acronym and mode.
+
+        This method fetches issue messages using the specified acronym and mode as input
+        parameters. It is commonly used to validate or retrieve diagnostic messages
+        associated with certain operations or processes.
 
         Args:
-            xse_acronym: Script extender acronym from settings
-            mode: Either "unpacked" or "archived"
+            xse_acronym (str): The acronym representing the entity or category for which
+                issue messages are retrieved.
+            mode (str): The operational mode or context in which issue messages are
+                being queried.
 
         Returns:
-            dict: Dictionary of issue types and their message templates
+            dict[str, list[str]]: A dictionary where the keys represent categories or
+            issue types, and the values are lists of issue messages corresponding to
+            those keys.
         """
         return self.validators.get_issue_messages(xse_acronym, mode)
 
     async def check_log_errors(self, folder_path: Path | str) -> str:
         """
-        Async-first implementation for checking log file errors.
+        Checks for errors in log files within the specified folder.
 
-        Inspects log files within a specified folder for recorded errors, processing
-        multiple log files concurrently for improved performance.
+        This method processes the log files found in the given folder, identifies error entries,
+        and returns a summary of the errors. It relies on an internal log processor to perform
+        the analysis.
 
         Args:
-            folder_path (Path | str): Path to the folder containing log files for error inspection.
+            folder_path (Path | str): The path to the folder containing the log files to be
+                analyzed.
 
         Returns:
-            str: A detailed report of all detected errors in the relevant log files, if any.
+            str: A summary of errors found within the processed log files.
         """
         return await self.log_processor.check_log_errors(folder_path)
 
     async def scan_mods_unpacked(self) -> str:
         """
-        Async-first implementation for scanning unpacked/loose mod files.
+        Scans and processes unpacked mod files for cleanup and issue detection. The method performs
+        a comprehensive analysis of directories and files within a specified mod folder, identifying
+        and reporting various issues, such as file format inconsistencies, directory misplacements,
+        and other indicators for mod improvements.
 
-        Combines cleanup and analysis passes into a single traversal with
-        concurrent file operations for significant performance improvements.
+        This is an asynchronous operation that utilizes concurrent processing for efficiency and
+        supports large-scale file management. The function organizes detected issues into categories,
+        applies cleanup operations on specific files and directories, and generates a detailed
+        report summarizing all findings.
 
         Returns:
-            str: Detailed report of scan results.
+            str: A report summarizing findings from the unpacked mod files scan.
+
+        Raises:
+            OSError: If there is an error accessing the mod files.
+            FileNotFoundError: If the specified mod folder path does not exist.
         """
         # Initialize lists for reporting
         message_list: list[str] = [
@@ -167,7 +229,20 @@ class ScanGameCore:
         issue_locks = {issue_type: asyncio.Lock() for issue_type in issue_lists}
 
         async def process_directory(root: Path, dirs: list[str], files: list[str]) -> None:
-            """Process a single directory with concurrent file operations."""
+            """
+            Processes a directory with both files and subdirectories, performing cleanup and analysis operations
+            while leveraging asynchronous tasks for concurrency. It supports operations like moving directories,
+            analyzing file formats for specific issues, and processing DDS files in batches.
+
+            Args:
+                root (Path): The root directory currently being processed.
+                dirs (list[str]): List of subdirectory names within the root directory.
+                files (list[str]): List of filenames within the root directory.
+
+            Raises:
+                Any exceptions encountered during asynchronous operations are captured and handled
+                via `return_exceptions` in asyncio gathering.
+            """
             root_main: Path = root.relative_to(mod_path).parent
             has_anim_data = False
             has_previs_files = False
@@ -242,10 +317,39 @@ class ScanGameCore:
                 await asyncio.gather(*file_tasks, return_exceptions=True)
 
         # Async directory walking
+        # noinspection PyUnresolvedReferences,PyTypeChecker
         async def async_walk(path: Path) -> list[tuple[Path, list[str], list[str]]]:
-            """Async directory walker using executor."""
+            """
+            Recursively walks through the directory tree starting from the given path using
+            an asynchronous approach. Returns all directory paths, subdirectory names, and
+            file names within the directory tree.
+
+            This function leverages `os.walk` to iterate over directories and performs the
+            operation asynchronously to avoid blocking on long-running file system tasks.
+
+            Args:
+                path (Path): The starting directory path for traversing the directory tree.
+
+            Returns:
+                list[tuple[Path, list[str], list[str]]]: A list of tuples where each tuple
+                contains:
+                    - A `Path` object representing the current directory
+                    - A list of subdirectory names within the current directory
+                    - A list of file names within the current directory
+            """
 
             def _walk() -> list[tuple[Path, list[str], list[str]]]:
+                """
+                Recursively traverses a directory tree starting from the specified path.
+
+                This function walks through a directory tree in bottom-up order, collecting
+                the path to each directory, its subdirectories, and its files.
+
+                Returns:
+                    list[tuple[Path, list[str], list[str]]]: A list of tuples, where each tuple
+                    contains a Path object for the directory, a list of its subdirectory names,
+                    and a list of its file names.
+                """
                 result = []
                 for root, dirs, files in os.walk(path, topdown=False):
                     result.append((Path(root), list(dirs), list(files)))
@@ -265,7 +369,7 @@ class ScanGameCore:
         msg_info(f"Processing {len(all_dirs_data)} directories with async pipeline...")
 
         # Create tasks for all directories
-        tasks = [process_directory(root, dirs, files) for root, dirs, files in all_dirs_data]
+        tasks = list(starmap(process_directory, all_dirs_data))
 
         # Process in batches to avoid overwhelming the system
         batch_size = 50
@@ -293,14 +397,25 @@ class ScanGameCore:
 
     async def scan_mods_archived(self) -> str:
         """
-        Async-first implementation for scanning archived BA2 mod files.
-
-        Analyzes archived BA2 mod files to identify potential issues, processing
-        multiple archives concurrently for significant performance improvements.
+        Asynchronously scans for archived .ba2 mod files and processes them to detect potential issues
+        like texture format problems, invalid dimensions, incorrect sound formats, and other file
+        anomalies. Utilizes asynchronous I/O and controlled subprocess execution to ensure optimized
+        performance.
 
         Returns:
-            str: A report detailing the findings, including errors and warnings
-            regarding issues found in the BA2 files.
+            str: A string summary outlining any detected issues, or an appropriate status message if
+            no issues are found or requirements are not satisfied.
+
+        Raises:
+            OSError: If there is an error accessing the filesystem.
+            TimeoutError: If a subprocess execution exceeds the specified timeout duration.
+
+        Notes:
+            - The method checks .ba2 archive format validity and extracts file-level metadata to
+              analyze textures, sound formats, animation data, XSE files, Previs files, etc.
+            - Processes files in controlled asynchronous batches, leveraging system resources effectively.
+            - Relies on external tools like BSArch.exe for parsing archive files and retrieving necessary
+              metadata.
         """
         message_list: list[str] = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
 
@@ -332,8 +447,23 @@ class ScanGameCore:
         msg_info("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES (ASYNC)...")
 
         # Async directory walking for BA2 files
+        # noinspection PyUnresolvedReferences,PyTypeChecker
         async def find_ba2_files(path: Path) -> list[tuple[Path, str]]:
-            """Find all BA2 files asynchronously."""
+            """
+            Searches for .ba2 files in the specified directory and its subdirectories.
+
+            This asynchronous function scans the given directory for files with the
+            ".ba2" extension, excluding files named "prp - main.ba2". It returns a
+            list of tuples, where each tuple contains the full path to the .ba2
+            file and its filename.
+
+            Args:
+                path (Path): The directory path to search for .ba2 files.
+
+            Returns:
+                list[tuple[Path, str]]: A list of tuples containing the full path
+                and filename of the .ba2 files found.
+            """
 
             def _find() -> list[tuple[Path, str]]:
                 result = []
@@ -356,7 +486,22 @@ class ScanGameCore:
 
         # Process BA2 files concurrently with improved batching
         async def process_single_ba2(file_path: Path, filename: str) -> dict[str, set[str]]:
-            """Process a single BA2 file and return its issues."""
+            """
+            Processes a single BA2 file to identify and collect potential issues including format
+            discrepancies, texture properties, sound formats, and specific file types.
+
+            The function first determines the format of the BA2 file and accordingly processes
+            either texture-format or general-format files. It uses BSArch for extracting file data
+            and validates various aspects such as texture dimensions, sound formats, and the
+            presence of specific file groups like animation data or previs files.
+
+            Args:
+                file_path (Path): The path to the BA2 file to be processed.
+                filename (str): The name of the BA2 file.
+
+            Returns:
+                dict[str, set[str]]: A dictionary categorizing identified issues with the BA2 file.
+            """
             local_issues: dict[str, set[str]] = {
                 "ba2_frmt": set(),
                 "animdata": set(),
@@ -389,17 +534,19 @@ class ScanGameCore:
                 if header[8:] == b"DX10":
                     # Process texture-format BA2
                     try:
+                        # noinspection PyTypeChecker
                         proc = await asyncio.create_subprocess_exec(
                             str(bsarch_path),
                             str(file_path),
                             "-dump",
                             stdout=asyncio.subprocess.PIPE,
                             stderr=asyncio.subprocess.PIPE,
-                            text=True,
                             limit=1024 * 1024,  # 1MB buffer limit to prevent memory issues
                         )
 
-                        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+                        stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=30)
+                        stdout = stdout_bytes.decode("utf-8", errors="replace") if stdout_bytes else ""
+                        stderr = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
 
                         if proc.returncode != 0:
                             msg_error(f"BSArch command failed for {filename}:\n{stderr}")
@@ -443,11 +590,12 @@ class ScanGameCore:
                             "-list",
                             stdout=asyncio.subprocess.PIPE,
                             stderr=asyncio.subprocess.PIPE,
-                            text=True,
                             limit=1024 * 1024,  # 1MB buffer limit to prevent memory issues
                         )
 
-                        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+                        stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=30)
+                        stdout = stdout_bytes.decode("utf-8", errors="replace") if stdout_bytes else ""
+                        stderr = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
 
                         if proc.returncode != 0:
                             msg_error(f"BSArch command failed for {filename}:\n{stderr}")
@@ -498,7 +646,7 @@ class ScanGameCore:
         # Process in controlled batches to avoid overwhelming the system
         for i in range(0, len(ba2_files), batch_size):
             batch = ba2_files[i : i + batch_size]
-            batch_tasks = [process_single_ba2(file_path, filename) for file_path, filename in batch]
+            batch_tasks = list(starmap(process_single_ba2, batch))
             batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
             results.extend(batch_results)
 
@@ -536,7 +684,23 @@ class ScanGameCore:
 
     # Helper methods for internal operations
     async def _move_fomod_async(self, context: dict, root: Path, dirname: str) -> None:
-        """Async move FOMOD folder to backup."""
+        """
+        Asynchronously moves a specified folder to a backup location within the context of a file
+        operation semaphore to ensure concurrent operations are managed correctly. This function utilizes
+        an executor for potentially blocking `shutil.move` operations and handles exceptions that may
+        arise during the move process.
+
+        Args:
+            context (dict): A dictionary containing context-specific information such as paths and locks.
+            root (Path): The root path where the folder to be moved is located.
+            dirname (str): The name of the directory to move.
+
+        Raises:
+            PermissionError: If permission is denied when attempting to move the folder.
+            OSError: If a general operating system-related failure occurs during the move operation.
+            FileNotFoundError: If the folder to be moved does not exist.
+            FileExistsError: If the destination already contains the target folder.
+        """
         async with self.file_ops_semaphore:
             fomod_folder_path: Path = root / dirname
             relative_path: Path = fomod_folder_path.relative_to(context["mod_path"])
@@ -558,7 +722,26 @@ class ScanGameCore:
                 context["issue_lists"]["cleanup"].add(f"  - {relative_path}\n")
 
     async def _move_file_async(self, context: dict, file_path: Path) -> None:
-        """Async move file to backup."""
+        """
+        Asynchronously moves a file to a backup location specified in the context.
+
+        This function is designed to operate within an asyncio-based application. It
+        ensures that a file is moved from its current location to a specified backup
+        path while respecting a semaphore to limit concurrency. In the event of
+        errors like permission issues or file operations, it logs those errors
+        rather than propagating exceptions. It also updates the cleanup issue list
+        in the provided context.
+
+        Args:
+            context (dict): A dictionary containing paths and other operational data
+                needed for the file-moving process. Must include the keys:
+                - "mod_path" (Path): Base path for deriving relative file paths.
+                - "backup_path" (Path): Target directory to move the file into.
+                - "issue_locks" (dict): Contains asyncio locks for concurrent updates.
+                - "issue_lists" (dict): Contains issue lists for tracking cleanup
+                  operations.
+            file_path (Path): The path of the file to be moved.
+        """
         async with self.file_ops_semaphore:
             relative_path = file_path.relative_to(context["mod_path"])
             new_file_path: Path = context["backup_path"] / relative_path
@@ -581,7 +764,19 @@ class ScanGameCore:
                 context["issue_lists"]["cleanup"].add(f"  - {relative_path}\n")
 
     def _read_dds_header_mmap(self, file_path: Path) -> tuple[int, int] | None:
-        """Read DDS header using memory mapping for efficiency."""
+        """Reads a DDS file header using memory mapping.
+
+        This method checks if the file is a valid DDS file and extracts its width
+        and height from the header if the file is of sufficient size. It utilizes
+        memory mapping for efficient header reading.
+
+        Args:
+            file_path (Path): The path to the DDS file to be read.
+
+        Returns:
+            tuple[int, int] | None: A tuple containing the width and height of the
+            DDS file if valid, or None if the file is invalid or an error occurs.
+        """
         try:
             with file_path.open("rb") as f:
                 # Check if file is at least 20 bytes
@@ -602,7 +797,23 @@ class ScanGameCore:
         return None
 
     async def _check_dds_batch_async(self, dds_files: list[tuple[Path, Path]], issue_lists: dict, issue_locks: dict) -> None:
-        """Check DDS dimensions for a batch of files using memory mapping."""
+        """
+        Checks a batch of DDS files asynchronously to validate their dimensions and adds issues
+        to provided lists if any discrepancies are found.
+
+        This function processes DDS files in batches, reads their headers using memory mapping
+        for efficiency, and verifies if their dimensions meet specific criteria (e.g., both width
+        and height should be even). Results are added to issue lists under controlled concurrency.
+
+        Args:
+            dds_files (list[tuple[Path, Path]]): A list of tuples where each tuple contains the
+                full file path and the relative path of a DDS file.
+            issue_lists (dict): A dictionary of issue lists where any detected issues will be
+                appended based on the type of issue.
+            issue_locks (dict): A dictionary of asynchronous locks to ensure thread-safe additions
+                to the issue lists.
+
+        """
         loop = asyncio.get_event_loop()
 
         # Process in batches using thread pool with memory mapping

@@ -1,4 +1,17 @@
 # =========== CHECK GAME XSE SCRIPTS -> GET PATH AND HASHES ===========
+"""
+Module for validating the integrity of the XSE installation and associated configurations.
+
+This module contains functions for checking the integrity of the XSE installation,
+verifying configuration settings, validating script file hashes, and identifying issues
+in associated log files. It utilizes external settings loaded from YAML files and performs
+comparisons to expected values.
+
+The primary purposes of this module are:
+- To ensure the user's XSE installation is configured properly.
+- To verify the presence and validity of required dependencies, such as Address Library.
+- To check for mismatches in hashes for script files.
+"""
 import hashlib
 from collections.abc import Iterable
 from pathlib import Path
@@ -11,20 +24,34 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 class Tokens:
+    """
+    Represents a collection of token-related configurations or constants.
+
+    This class defines and stores constants or configuration values related to token
+    management, which can assist in managing states or properties associated with
+    tokens within a given system.
+
+    Attributes:
+        XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED (bool): Indicates whether a type error
+            was raised in the context of hashed scripts processing.
+    """
     XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED: bool = False
 
 
 # noinspection DuplicatedCode
 def xse_check_integrity() -> str:
     """
-    Performs an integrity check for the XSE framework, ensuring the necessary configurations,
-    libraries, and installation files are correctly set up and free of critical errors. This
-    function analyzes configuration settings, validates the address library, and examines logs for
-    patterns indicating issues. Results are compiled and returned as a single message string.
+    Performs an integrity check for the XSE installation by verifying associated configurations,
+    address library, and log file for potential issues based on predefined error patterns.
+
+    Returns a string compiled from all generated messages during the checking process, summarizing
+    the integrity status of the XSE installation.
+
+    Raises:
+        TypeError: If error patterns from the settings configuration are not of type list.
 
     Returns:
-        str: A comprehensive message summarizing the results of the integrity check, including
-        detected issues or confirmation of successful checks.
+        str: A summary of messages created during the XSE integrity check.
     """
     logger.debug("- - - INITIATED XSE INTEGRITY CHECK")
     messages: list[str] = []
@@ -54,7 +81,24 @@ def xse_check_integrity() -> str:
 
 # noinspection PyUnusedLocal
 def _load_xse_config(game_vr: str) -> dict:
-    """Load XSE configuration settings from YAML files"""
+    """
+    Loads the configuration related to a game's XSE (eXtensible Script Engine) details and
+    various associated components from a YAML settings file.
+
+    This function retrieves and organizes information such as the acronym, full name,
+    latest version, log file path, and address library file path for the specified game's XSE.
+
+    Args:
+        game_vr (str): The unique identifier for the game version for which the XSE configuration should be loaded.
+
+    Returns:
+        dict: A dictionary containing the following keys:
+            - acronym (str | None): The acronym associated with the game's XSE.
+            - full_name (str | None): The full name of the game's XSE.
+            - latest_version (str | None): The latest version of the game's XSE.
+            - log_file (str | None): The path to the XSE log file.
+            - adlib_file (Path | None): A `Path` object representing the game's address library file, or None if not found.
+    """
     xse_acronym: str | None = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
     xse_full_name: str | None = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_FullName")
     xse_latest_version: str | None = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
@@ -73,7 +117,18 @@ def _load_xse_config(game_vr: str) -> dict:
 
 
 def _check_address_library(adlib_file: Path | None, game_name: str, messages: list[str]) -> None:
-    """Check if Address Library for Script Extender is installed"""
+    """
+    Checks the validity and existence of an Address Library file required for a game and updates the
+    provided messages list with a status message accordingly.
+
+    Args:
+        adlib_file (Path | None): The path to the Address Library file, or None if not specified.
+        game_name (str): The name of the game for which the Address Library is being validated.
+        messages (list[str]): A list of messages to update with the validation results.
+
+    Raises:
+        TypeError: If the warning message for a missing Address Library is not a string.
+    """
     if isinstance(adlib_file, str | Path):
         if Path(adlib_file).exists():
             messages.append("✔️ REQUIRED: *Address Library* for Script Extender is installed! \n-----\n")
@@ -86,10 +141,33 @@ def _check_address_library(adlib_file: Path | None, game_name: str, messages: li
         messages.append(f"❌ Value for Address Library is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
 
 
-def _check_xse_installation(  # noqa: PLR0913
+def _check_xse_installation(  # noqa: PLR0917
     log_file: str | None, acronym: str, full_name: str, latest_version: str, error_patterns: list[str], messages: list[str]
 ) -> None:
-    """Check XSE installation status, version, and log for errors"""
+    """
+    Checks the installation and error states of XSE (eXtendable System Environment)
+    based on log files, and updates the messages list accordingly to indicate
+    installation status, version status, or log errors.
+
+    Args:
+        log_file (str | None): The path to the log file. If None or invalid,
+            an error message is appended to `messages`.
+        acronym (str): The acronym representing the system being checked.
+        full_name (str): The full name of the XSE system for proper reporting in
+            messages.
+        latest_version (str): The latest supported version of the XSE system to
+            verify against the log contents.
+        error_patterns (list[str]): A list of error patterns to search for in the
+            log file. If matched, errors are appended to the `messages`.
+        messages (list[str]): A mutable list to which status messages, error
+            reports, or warnings will be appended.
+
+    Raises:
+        TypeError: If the outdated warning message specified in the YAML settings
+            is not a string. This occurs when attempting to report warnings for
+            an outdated version in the log.
+
+    """
     if not isinstance(log_file, str | Path):
         messages.append(f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC Local.yaml!\n-----\n")
         return
@@ -152,7 +230,25 @@ def xse_check_hashes() -> str:
 
 
 def _get_expected_script_hashes() -> dict[str, str]:
-    """Get expected script hashes from config."""
+    """
+    Retrieves the expected script hashes from the YAML configuration file.
+
+    This function loads and validates the expected script hashes configuration
+    from a YAML file. The configuration must be a dictionary mapping strings
+    to strings. If the loaded value from the YAML file is not a dictionary,
+    the function raises a TypeError unless the error has already been raised.
+    In such cases, it returns an empty dictionary instead to prevent repeated
+    errors and allow the program to continue or handle the issue further up
+    the call stack.
+
+    Returns:
+        dict[str, str]: A dictionary containing the expected script hashes.
+                        Returns an empty dictionary if the configuration is invalid.
+
+    Raises:
+        TypeError: If the expected script hashes configuration is not a dictionary
+                   and the error has not already been raised previously.
+    """
     xse_hashedscripts = yaml_settings(dict[str, str], Constants.YAML.Game, "Game_Info.XSE_HashedScripts")
     if not isinstance(xse_hashedscripts, dict):
         if not Tokens.XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED:
@@ -165,7 +261,22 @@ def _get_expected_script_hashes() -> dict[str, str]:
 
 
 def _get_scripts_folder_path() -> str:
-    """Get scripts folder path from config."""
+    """
+    Retrieves the path for the game's scripts folder.
+
+    This function fetches the folder path where the game's scripts are located
+    by utilizing configuration settings and the global registry. The path is
+    fetched based on the current game's virtual reality configuration. If the
+    retrieved path is None, the function raises a ValueError indicating that the
+    scripts folder path cannot be None.
+
+    Raises:
+        ValueError: If the game scripts folder path retrieved from the configuration
+            is None.
+
+    Returns:
+        str: The path of the game's scripts folder.
+    """
     game_folder_scripts: str | None = yaml_settings(
         str, Constants.YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts"
     )
@@ -175,7 +286,22 @@ def _get_scripts_folder_path() -> str:
 
 
 def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: str) -> dict[str, str | None]:
-    """Calculate actual hashes for script files."""
+    """
+    Calculates and returns the SHA-256 hash values for a list of script files. If a file cannot
+    be read or does not exist, its hash value will be set to None. The method iterates through
+    the provided script filenames, verifies their existence, and calculates their hashes.
+    Exceptions that occur during file reading are logged and handled gracefully.
+
+    Args:
+        script_filenames (Iterable[str]): A list of script filenames for which the hashes are
+            to be calculated.
+        scripts_folder (str): The path to the folder containing the script files.
+
+    Returns:
+        dict[str, str | None]: A dictionary where the keys are the script filenames and the
+            values are the SHA-256 hash values of the corresponding files or None if the file
+            cannot be read or does not exist.
+    """
     actual_hashes: dict[str, str | None] = {}
 
     for filename in script_filenames:
@@ -185,6 +311,7 @@ def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: st
             try:
                 file_contents = read_bytes_sync(script_path)
                 # Algo should match the one used for Database YAML!
+                # noinspection PyTypeChecker
                 file_hash = hashlib.sha256(file_contents).hexdigest()
                 actual_hashes[filename] = file_hash
             except (OSError, FileNotFoundError, PermissionError) as e:
@@ -198,7 +325,24 @@ def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: st
 
 
 def _generate_result_message(expected_hashes: dict[str, str], actual_hashes: dict[str, str | None]) -> str:
-    """Generate result message based on hash comparison."""
+    """
+    Generates a result message based on comparisons of expected script hashes and actual script hashes.
+    This function examines each filename-hash pair from the expected data against the actual data provided.
+    It identifies missing or mismatched script extender files, compiles related warning messages,
+    and summarizes the findings into a single output string.
+
+    Args:
+        expected_hashes (dict[str, str]): A dictionary where keys are filenames and values are the expected hashes
+            of script extender files.
+        actual_hashes (dict[str, str | None]): A dictionary where keys are filenames and values are the actual
+            hashes of script extender files, or `None` if the file is missing.
+
+    Returns:
+        str: A single formatted string summarizing the presence and validity of all script extender files.
+
+    Raises:
+        TypeError: If the warning messages obtained from the configuration are not strings.
+    """
     message_list: list[str] = []
     has_missing_scripts = False
     has_mismatched_scripts = False

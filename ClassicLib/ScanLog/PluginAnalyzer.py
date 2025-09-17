@@ -22,14 +22,35 @@ if TYPE_CHECKING:
 
 
 class PluginAnalyzer:
-    """Handles plugin analysis and matching operations."""
+    """
+    Analyzes plugins and manages their relationships with crash logs by processing plugin data,
+    scanning load orders, detecting issues, and filtering ignored plugins.
+
+    The class specializes in handling plugin-related operations, including identifying plugin
+    references in crash logs, parsing plugin load order files, and implementing filtering logic
+    to exclude ignored plugins. It utilizes regex patterns for efficient data extraction and
+    provides feedback for troubleshooting plugin-related crashes.
+
+    Attributes:
+        yamldata (ClassicScanLogsInfo): Configuration object containing plugin settings
+            and game version details.
+        pluginsearch (re.Pattern[str]): Regular expression to match plugin identifiers and names.
+        lower_plugins_ignore (set[str]): Set of ignored plugins in lowercase for case-insensitive
+            comparisons.
+        ignore_plugins_list (set[str]): Set of plugins specifically excluded from analysis, derived
+            from the provided configuration.
+    """
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
-        Initialize the plugin analyzer.
+        Initializes the object with provided YAML data and processes plugin-related
+        information.
 
         Args:
-            yamldata: Configuration data containing plugin-related settings
+            yamldata (ClassicScanLogsInfo): An object containing YAML configuration
+                information, which includes game-related plugin ignore lists and
+                other relevant data.
+
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
         self.pluginsearch: re.Pattern[str] = re.compile(
@@ -42,18 +63,29 @@ class PluginAnalyzer:
     @staticmethod
     def loadorder_scan_loadorder_txt() -> tuple[dict[str, str], bool, ReportFragment]:
         """
-        Loads and processes the "loadorder.txt" file from the main "CLASSIC" folder, if available.
+        Parses the `loadorder.txt` file in the main CLASSIC folder to detect and load plugin data.
+
+        This method attempts to read the `loadorder.txt` file and extract a list of plugins.
+        Detected plugins are marked with their origin. If the file cannot be accessed, an error
+        message is logged. This feature enables CLASSIC to selectively track plugins only from
+        the specified file and ignore others in crash logs. The parsing skips the header line of
+        the file and processes the remaining entries.
 
         Returns:
-            Tuple of (dict of plugin names to origin markers, bool indicating if plugins loaded, ReportFragment).
+            tuple[dict[str, str], bool, ReportFragment]: A tuple containing:
+                - A dictionary mapping plugin names to their origin.
+                - A boolean indicating if any plugins were successfully loaded.
+                - A `ReportFragment` object containing logs of the operation.
         """
         lines = []
         loadorder_origin = "LO"  # Origin marker for plugins from loadorder.txt
         loadorder_path = Path("loadorder.txt")
 
-        lines.append("* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n")
-        lines.append("CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n")
-        lines.append("[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n")
+        lines.extend((
+            "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n",
+            "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
+            "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
+        ))
 
         loadorder_plugins: dict = {}
 
@@ -113,7 +145,7 @@ class PluginAnalyzer:
         plugin_limit_marker = "[FF]"
 
         # Determine game version characteristics
-        is_original_game = game_version in (self.yamldata.game_version, self.yamldata.game_version_vr)
+        is_original_game = game_version in {self.yamldata.game_version, self.yamldata.game_version_vr}
         is_new_game_crashgen_pre_137 = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
 
         # Initialize return values
@@ -155,14 +187,23 @@ class PluginAnalyzer:
 
     def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> ReportFragment:
         """
-        Analyzes crash logs for relevant plugin references.
+        Matches plugins to call stack lines and generates a report fragment.
+
+        This function analyzes the provided call stack segment and identifies plugins
+        present within the crash log. It optimizes the matching process by pre-filtering
+        irrelevant lines, skips ignored plugins, and counts occurrences of each matched
+        plugin. Finally, it generates a report fragment detailing the results of the
+        analysis.
 
         Args:
-            segment_callstack_lower: A list of lowercased strings representing the crash stack.
-            crashlog_plugins_lower: A set of lowercased plugin names from the crash log.
+            segment_callstack_lower (list[str]): A list of call stack lines in lowercase
+                to analyze for plugin matches.
+            crashlog_plugins_lower (set[str]): A set of plugin names in lowercase to
+                match against the call stack lines.
 
         Returns:
-            ReportFragment containing plugin match results.
+            ReportFragment: A report fragment consolidating the matched plugins and
+            their occurrences in the analyzed crash log segment.
         """
         from collections import Counter
 
@@ -189,13 +230,11 @@ class PluginAnalyzer:
             # Sort by count (descending) then by name for consistent output
             for plugin, count in sorted(plugins_matches.items(), key=lambda x: (-x[1], x[0])):
                 lines.append(f"- {plugin} | {count}\n")
-            lines.append("\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n")
-            lines.append(
-                f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n"
-            )
-            lines.append(
-                "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n"
-            )
+            lines.extend((
+                "\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n",
+                f"These Plugins were caught by {self.yamldata.crashgen_name} and some of them might be responsible for this crash.\n",
+                "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n",
+            ))
         else:
             lines.append("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n")
 
@@ -203,22 +242,17 @@ class PluginAnalyzer:
 
     def filter_ignored_plugins(self, crashlog_plugins: dict[str, str]) -> dict[str, str]:
         """
-        Filters out ignored plugins from a dictionary of crash log plugins.
+        Filters out plugins listed in the ignore list from the given crashlog plugins.
 
-        This method removes plugins listed in the `ignore_plugins_list` from the
-        provided `crashlog_plugins` dictionary. It performs a case-insensitive
-        comparison of plugin names, ensuring that ignored plugins are removed
-        regardless of their case.
+        This method takes a dictionary of crashlog plugins and removes any plugin whose name
+        matches an entry in the ignore plugins list. Matching is case-insensitive.
 
-        Parameters:
-            crashlog_plugins: dict[str, str]
-                The dictionary containing plugin names as keys and their associated
-                values. The dictionary may include plugins that need to be filtered
-                out based on the `ignore_plugins_list`.
+        Args:
+            crashlog_plugins (dict[str, str]): A dictionary of crashlog plugins with plugin names
+                as keys and corresponding values.
 
         Returns:
-            dict[str, str]: A dictionary of crash log plugins with the ignored plugins
-            removed.
+            dict[str, str]: A dictionary of crashlog plugins with ignored plugins removed.
         """
         if not self.ignore_plugins_list:
             return crashlog_plugins

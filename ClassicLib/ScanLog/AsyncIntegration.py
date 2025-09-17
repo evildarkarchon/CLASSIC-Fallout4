@@ -1,8 +1,10 @@
 """
-Example integration of async components for crash log scanning.
+Module for asynchronous crash log scanning.
 
-This module demonstrates how to integrate the async components into the
-existing crash log scanning workflow for improved performance.
+This module provides improved performance for processing crash logs by leveraging
+asynchronous capabilities. It includes functions for concurrent file reformatting,
+batch processing, and report writing, along with coordination of async database
+lookups and other operations.
 """
 
 import asyncio
@@ -24,13 +26,26 @@ if TYPE_CHECKING:
 
 async def async_crashlogs_scan() -> None:
     """
-    Async version of crash log scanning with improved performance.
+    Scans and processes crash logs asynchronously.
 
-    This function demonstrates how to use async components for:
-    1. Concurrent file reformatting
-    2. Batch crash log processing
-    3. Concurrent report writing
-    4. Async database lookups
+    This function handles the asynchronous retrieval, reformatting, caching,
+    processing, and reporting of crash logs. It supports batch processing, utilizes
+    settings from a configuration cache, and dynamically handles unsolved logs
+    based on settings. Timing of different stages (reformatting, loading,
+    processing, and report writing) for performance insights is logged.
+
+    The expected workflow includes:
+    1. Retrieving all crash log files.
+    2. Loading and utilizing cached user settings for various log-handling
+       configurations.
+    3. Asynchronous reformatting of crash logs.
+    4. Loading crash logs into an asynchronous in-memory cache.
+    5. Processing crash logs in batches using an orchestrator.
+    6. Writing reports in batch asynchronously following processing.
+    7. Optionally moving unsolved logs if configured.
+
+    The function ensures thread-safe access to crash logs and manages progress and
+    error reporting through logging and CLI messages.
     """
     from ClassicLib.Constants import DB_PATHS, YAML
     from ClassicLib.YamlSettingsCache import yaml_cache
@@ -130,10 +145,15 @@ async def async_crashlogs_scan() -> None:
 
 def run_async_scan() -> None:
     """
-    Run the async crash log scan.
+    Executes an asynchronous scan operation using an asynchronous bridge.
 
-    This function can be called from synchronous code to run the async scan.
-    Uses AsyncBridge for thread-safe async execution.
+    This function retrieves an instance of the asynchronous bridge and triggers
+    an asynchronous scan operation to detect crash logs.
+
+    Raises:
+        No specific errors are individually raised by this function, but it relies
+        on external components that potentially might raise exceptions that should
+        be handled by the caller.
     """
     bridge = AsyncBridge.get_instance()
     bridge.run_async(async_crashlogs_scan())

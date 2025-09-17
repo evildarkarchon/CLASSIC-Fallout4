@@ -11,7 +11,18 @@ from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
 
 
 class SettingsScreen(ModalScreen):
-    """Modal settings screen for configuration options."""
+    """
+    Manages the settings screen for the application, providing UI components for users to
+    configure various settings and persist those settings.
+
+    The settings screen includes folder configuration, display options, and general settings
+    that are divided into separate groups. Users can interact with text inputs, checkboxes,
+    and dropdown menus to adjust application settings. Changes can be saved, reset, or
+    discarded using buttons provided on the screen.
+
+    Attributes:
+        original_settings (dict): Stores the currently loaded settings and their default values.
+    """
 
     CSS = """
     SettingsScreen {
@@ -78,13 +89,31 @@ class SettingsScreen(ModalScreen):
     """
 
     def __init__(self) -> None:
-        """Initialize settings screen."""
+        """
+        Initializes an instance of the class.
+
+        This constructor sets up the initial state for the object and loads the
+        current settings into the `original_settings` attribute.
+        """
         super().__init__()
         self.original_settings = {}
         self._load_current_settings()
 
     def _load_current_settings(self) -> None:
-        """Load current settings values."""
+        """
+        Loads the current application settings from a YAML settings configuration file,
+        while applying default values for missing or invalid entries.
+
+        Handles reading and initializing various settings, setting default values for
+        missing keys, and ensures the internal settings dictionary is populated with
+        appropriate defaults or user-defined configurations.
+
+        Raises:
+            FileNotFoundError: If the settings file does not exist.
+            KeyError: If a required key is missing or invalid in the YAML configuration.
+            ValueError: If a setting's value is not the expected data type or malformed.
+            TypeError: If a setting retrieval fails due to unexpected data type.
+        """
         try:
             # Batch load all settings at once
             requests = [
@@ -132,7 +161,26 @@ class SettingsScreen(ModalScreen):
             }
 
     def compose(self) -> ComposeResult:
-        """Compose settings screen layout."""
+        """
+        Compose and organize the user interface components for the settings menu.
+
+        This method constructs the layout for a settings interface, structured into
+        multiple setting groups, each containing configurable options. The user
+        interface components include text labels, input fields, checkboxes, and
+        buttons to provide a graphical interface for modifying application settings.
+
+        The settings groups within this method are logically organized into:
+        1. Folder Configuration
+        2. Display Settings
+        3. General Settings
+
+        Additionally, it includes action buttons to save, reset, or cancel the
+        modifications in the settings.
+
+        Yields:
+            ComposeResult: A textual representation or data structure describing the
+            UI components and their hierarchy for rendering the settings menu.
+        """
         with Container(id="settings-container"):
             yield Static("⚙️ Settings", classes="settings-title")
 
@@ -209,7 +257,18 @@ class SettingsScreen(ModalScreen):
                 yield Button("Cancel", variant="default", id="cancel-settings")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle button presses."""
+        """
+        Handles button press events for settings-related actions.
+
+        This method determines the button pressed based on its `id` and executes
+        the associated functionality such as saving settings, resetting settings,
+        or dismissing the dialog.
+
+        Args:
+            event: Button.Pressed
+                The button press event containing the button's identifier.
+
+        """
         if event.button.id == "save-settings":
             self._save_settings()
             self.dismiss(True)
@@ -219,7 +278,23 @@ class SettingsScreen(ModalScreen):
             self.dismiss(False)
 
     def _save_settings(self) -> None:
-        """Save all settings."""
+        """
+        Saves application settings to a YAML configuration file and updates the user interface
+        with the results.
+
+        This method retrieves user-inputted values from various UI components (e.g., inputs,
+        checkboxes, and dropdowns) using their corresponding identifiers. The values are then
+        used to update specific fields in the application's YAML settings. If the operation
+        succeeds, a success message is displayed to the user. In case of a failure during
+        the saving process, an error notification with the reason is displayed.
+
+        Raises:
+            LookupError: Raised if query_one fails to find the specified UI component.
+            ValueError: Raised if the max_lines input cannot be converted to an integer.
+            AttributeError: Raised if accessed attributes do not exist.
+            TypeError: Raised if a mismatch occurs during type conversion.
+            OSError: Raised in case of failure during file-related operations.
+        """
         try:
             # Save folder paths
             staging_input = self.query_one("#staging-folder", Input)
@@ -258,7 +333,17 @@ class SettingsScreen(ModalScreen):
             self.app.notify(f"Failed to save settings: {e!s}", severity="error")
 
     def _reset_settings(self) -> None:
-        """Reset settings to original values."""
+        """
+        Resets application settings to their original values.
+
+        This method resets various input fields, checkboxes, and select elements in the
+        application's interface to their initial state, as defined by the original
+        settings. The method also provides a notification indicating that the settings
+        have been successfully reset.
+
+        Raises:
+            None
+        """
         # Reset inputs
         staging_input = self.query_one("#staging-folder", Input)
         staging_input.value = self.original_settings.get("CLASSIC_Settings.MODS Folder Path", "")
@@ -284,6 +369,11 @@ class SettingsScreen(ModalScreen):
         self.app.notify("Settings reset to original values", severity="information")
 
     def on_key(self, event: Key) -> None:
-        """Handle keyboard events."""
+        """
+        Handles a key press event, checking for the "escape" key to perform an action.
+
+        Args:
+            event (Key): The key event object containing details of the key press.
+        """
         if event.key == "escape":
             self.dismiss(False)

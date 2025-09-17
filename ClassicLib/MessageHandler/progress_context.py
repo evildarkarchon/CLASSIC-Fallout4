@@ -1,15 +1,24 @@
-"""Progress context manager for both GUI and CLI modes."""
+"""
+Context manager for progress tracking that works in both GUI and CLI modes.
+
+This module provides a context manager that adapts to either GUI (Qt-based)
+or CLI environments, displaying appropriate progress indicators based on
+the runtime conditions and the environment's capabilities. It supports
+configurable progress bars and provides compatibility with both thread-safe
+Qt progress dialogs and CLI text-based progress bars, with the optional
+use of the tqdm library for enhanced CLI support.
+"""
 
 from __future__ import annotations
 
 import sys
 from typing import TYPE_CHECKING, Any
 
-from .cli_progress import CLIProgressBar
-from .qt_compat import HAS_QT, QProgressDialog, QThread
+from ClassicLib.MessageHandler.cli_progress import CLIProgressBar
+from ClassicLib.MessageHandler.qt_compat import HAS_QT, QProgressDialog, QThread
 
 if TYPE_CHECKING:
-    from .handler import MessageHandler
+    from ClassicLib.MessageHandler.handler import MessageHandler
 
 # Try to import tqdm for enhanced CLI progress bars
 try:
@@ -21,30 +30,49 @@ except ImportError:
     HAS_TQDM = False
 
     # Define dummy tqdm for type checking when not available
-    class TqdmProgress:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
+    class TqdmProgress:  # noqa: D101
+        def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: D107
             pass
 
-        def update(self, n: int = 1) -> None:
+        def update(self, n: int = 1) -> None:  # noqa: D102
             pass
 
-        def set_description(self, desc: str) -> None:
+        def set_description(self, desc: str) -> None:  # noqa: D102
             pass
 
-        def close(self) -> None:
+        def close(self) -> None:  # noqa: D102
             pass
 
 
 class ProgressContext:
-    """Context manager for progress tracking that works in both GUI and CLI modes."""
+    """Manage progress indicators in GUI or CLI environments.
+
+    This class provides context management for displaying a progress bar,
+    handling both GUI and CLI environments. Depending on the environment,
+    it creates and updates the relevant progress bar type. In GUI mode and
+    when using PySide6, it initializes a `QProgressDialog`. For CLI mode, it
+    creates a progress bar using `tqdm` or falls back to a basic CLI progress
+    bar.
+
+    Attributes:
+        handler (MessageHandler): The message handler instance managing
+            communication between the context and other systems.
+        description (str): A textual description of the operation being
+            performed.
+        total (int | None): The total number of items to process, or `None`
+            for an indeterminate progress bar.
+        current (int): The current progress state, updated as items are
+            processed.
+    """
 
     def __init__(self, handler: MessageHandler, description: str, total: int | None = None) -> None:
-        """Initialize progress context.
+        """
+        Initializes an object with attributes for managing progress tracking and display.
 
         Args:
-            handler: The message handler instance
-            description: Description of the operation
-            total: Total number of items to process
+            handler (MessageHandler): The handler to manage messages or tasks related to progress.
+            description (str): A textual description for the operation or task.
+            total (int | None): The total number of steps for the progress, or None if unspecified.
         """
         self.handler = handler
         self.description = description
@@ -54,7 +82,23 @@ class ProgressContext:
         self._using_qt_signals = False
 
     def __enter__(self) -> ProgressContext:
-        """Enter the context and create appropriate progress indicator."""
+        """
+        Context manager for establishing and managing a progress interface.
+
+        When invoked, this method creates a progress interface suitable for the current environment,
+        determined by whether the application is running in GUI or CLI mode. Depending on availability
+        and requirements, progress can be shown via a GUI progress dialog (Qt-based) or in the CLI
+        (using text-based progress bars). The method also accounts for settings enabled or disabled
+        within the application and manages worker thread interactions if necessary.
+
+        Returns:
+            ProgressContext: The current instance of the progress context manager, allowing
+            for chaining or further interaction within the context block.
+
+        Raises:
+            ImportError: If required dependencies or modules for specific environments are missing.
+            RuntimeError: If GUI operations fail in a context where GUI mode is active.
+        """
         # Check if CLI progress is disabled
         try:
             from ClassicLib.YamlSettingsCache import classic_settings
@@ -99,7 +143,19 @@ class ProgressContext:
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Exit the context and clean up progress indicator."""
+        """
+        Handles cleanup actions for the context manager, ensuring proper resource management
+        depending on the attribute states and type of progress bar used.
+
+        Args:
+            exc_type: Any: The exception type, if an exception occurred during the context
+                execution.
+            exc_val: Any: The exception value, if an exception occurred during the context
+                execution.
+            exc_tb: Any: The traceback object, if an exception occurred during the context
+                execution.
+
+        """
         if self._using_qt_signals:
             self.handler.progress_close_signal.emit()
         elif self._progress_bar is not None:
@@ -109,11 +165,16 @@ class ProgressContext:
                 self._progress_bar.close()  # type: ignore[reportAttributeAccessIssue]
 
     def update(self, n: int = 1, description: str | None = None) -> None:
-        """Update progress by n steps.
+        """
+        Updates the progress value by a specified amount and optionally updates
+        the description. This method handles the progress bar and Qt signals
+        depending on the configuration of the object.
 
         Args:
-            n: Number of steps to advance
-            description: Optional new description
+            n (int): The number by which the current progress should be incremented.
+                Defaults to 1.
+            description (str | None): An optional description to update alongside
+                the progress. If None, no description is updated.
         """
         self.current += n
 

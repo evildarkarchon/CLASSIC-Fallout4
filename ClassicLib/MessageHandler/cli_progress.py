@@ -1,8 +1,30 @@
-"""CLI progress bar implementation for when tqdm is not available."""
+"""
+A command-line interface (CLI) progress bar utility.
+
+This module implements a class that provides a CLI-based progress bar for
+tracking iterative tasks in command-line applications. The progress bar
+supports both percentage-based and item count representations based on
+the task requirements. The user can update the progress, set a description,
+and manage the lifecycle of the progress bar using dedicated methods.
+"""
 
 
 class CLIProgressBar:
-    """Simple progress bar for CLI when tqdm is not available."""
+    """
+    A command-line interface (CLI) progress bar utility.
+
+    This class provides a text-based progress indicator for tracking the progress
+    of iterative tasks in command-line applications. It can display the progress
+    in the form of a percentage-based bar when a total is provided, or as simply
+    the count of processed items if no total is defined. The progress bar can be
+    updated as the task progresses, and a description can be set for improved
+    context.
+
+    Attributes:
+        desc (str): A description displayed alongside the progress bar.
+        total (int | None): The total number of items to process.
+        current (int): The current progress or number of items processed.
+    """
 
     def __init__(self, desc: str = "", total: int | None = None) -> None:
         """Initialize CLI progress bar.
@@ -18,23 +40,13 @@ class CLIProgressBar:
 
     def update(self, n: int = 1) -> None:
         """
-        Updates the progress bar or item processing status.
+        Updates the current progress of the operation and displays it to the user
+        in the form of a progress bar. If the total value for the progress operation
+        is specified, it will show a percentage-based progress bar. Otherwise, it will
+        display an ongoing count of processed items.
 
-        This method increments the current progress by a specified amount
-        and prints the updated progress to the console. If the total value is
-        set, it displays a progress bar along with the percentage of completion.
-        If the total is not specified, it shows the number of items processed.
-        The progress will not update if the related task or process is marked
-        as closed.
-
-        Parameters:
-            n (int): The number by which to increment the current progress. Defaults to 1.
-
-        Returns:
-            None
-
-        Raises:
-            None
+        Args:
+            n (int): The number of items to increment the progress by. Default is 1.
         """
         if self._closed:
             return
@@ -51,13 +63,13 @@ class CLIProgressBar:
 
     def set_description(self, desc: str) -> None:
         """
-        Sets a description for the object.
+        Sets the description for the instance.
 
-        This method assigns the given string description to the `desc`
-        attribute of the object.
+        This method updates the `desc` attribute of the object to the
+        specified description string.
 
-        Parameters:
-            desc (str): The description to assign to the object.
+        Args:
+            desc (str): The description to set for the instance.
         """
         self.desc = desc
 

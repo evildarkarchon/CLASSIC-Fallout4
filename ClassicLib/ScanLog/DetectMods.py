@@ -1,3 +1,17 @@
+"""
+Detect and evaluate modifications (mods) using YAML mappings and crash log plugins.
+
+This module provides functions to detect the presence of modifications (mods),
+evaluate conflicts or combinations of modifications, and assess important mods'
+status and compatibility with a GPU type. It uses provided mappings in YAML format
+and plugin information extracted from crash logs.
+
+Functions:
+    - detect_mods_single: Identifies mods based on direct matches in the mappings.
+    - detect_mods_double: Detects combinations or conflicts of mods using specified pairs.
+    - detect_mods_important: Evaluates important mod statuses and their GPU compatibility.
+"""
+
 import re
 from typing import Literal, cast
 
@@ -5,12 +19,37 @@ from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
 
 def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
-    """Convert dictionary keys to lowercase for case-insensitive comparisons."""
+    """
+    Converts all keys in a dictionary to lowercase.
+
+    This function takes a dictionary with string keys and values, and returns a new
+    dictionary where all the keys are transformed to lowercase. The values remain
+    unchanged.
+
+    Args:
+        data: A dictionary where both keys and values are strings.
+
+    Returns:
+        A new dictionary with all keys converted to lowercase, while retaining the
+        original values.
+    """
     return {key.lower(): value for key, value in data.items()}
 
 
 def _validate_warning(mod_name: str, warning: str) -> None:
-    """Validate that a mod has an associated warning message."""
+    """
+    Validates the presence of a warning message for a given module.
+
+    This function checks if the provided warning message is non-empty for the given
+    module name. If the warning message is empty, it raises a `ValueError`.
+
+    Args:
+        mod_name (str): The name of the module to validate.
+        warning (str): The warning message associated with the module.
+
+    Raises:
+        ValueError: If the warning message is empty or not provided.
+    """
     if not warning:
         raise ValueError(f"ERROR: {mod_name} has no warning in the database!")
 
@@ -64,7 +103,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
                 mod_matches[matched_mod] = plugin_id
 
     # Build output lines for all matches
-    for mod_name in sorted(mod_matches.keys(), key=lambda x: len(x), reverse=True):
+    for mod_name in sorted(mod_matches.keys(), key=lambda x: len(x), reverse=True):  # noqa: PLW0108
         mod_warning = mod_lookup[mod_name]
         _validate_warning(mod_name, mod_warning)
 
@@ -120,7 +159,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         mod1, mod2 = mod_pair.split(" | ", 1)
         all_mod_names.add(mod1)
         all_mod_names.add(mod2)
-        mod_pairs_map[(mod1, mod2)] = mod_warning
+        mod_pairs_map[mod1, mod2] = mod_warning
 
     if not all_mod_names:
         return ReportFragment.empty()
@@ -139,8 +178,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     for (mod1, mod2), mod_warning in mod_pairs_map.items():
         if mod1 in mods_present and mod2 in mods_present:
             _validate_warning(f"{mod1} | {mod2}", mod_warning)
-            lines.append("[!] CAUTION : Conflicting mods detected\n")
-            lines.append(mod_warning)
+            lines.extend(("[!] CAUTION : Conflicting mods detected\n", mod_warning))
             if not mod_warning.endswith("\n"):
                 lines.append("\n")
             lines.append("\n")
@@ -186,15 +224,15 @@ def detect_mods_important(
 
         if mod_found:
             if gpu_rival and cast("str", gpu_rival) in mod_warning.lower():
-                lines.append("\n\n")
-                lines.append(f"❓ {mod_display_name} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n")
-                lines.append("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n")
+                lines.extend((
+                    "\n\n",
+                    f"❓ {mod_display_name} is installed, BUT IT SEEMS YOU DON'T HAVE AN {gpu_rival.upper()} GPU?\n",
+                    "IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n",
+                ))
             else:
                 lines.append(f"\n✔️ {mod_display_name} is installed!\n\n")
         elif (gpu_rival and mod_warning) and gpu_rival not in mod_warning.lower():
-            lines.append(f"\n❌ {mod_display_name} is not installed!\n")
-            lines.append(mod_warning)
-            lines.append("\n\n")
+            lines.extend((f"\n❌ {mod_display_name} is not installed!\n", mod_warning, "\n\n"))
 
     # For important mods, we return content even if empty as absence is information
     return ReportFragment.from_lines(lines, check_content=False) if lines else ReportFragment.empty()

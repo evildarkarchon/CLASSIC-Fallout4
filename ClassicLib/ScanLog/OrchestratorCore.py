@@ -35,7 +35,38 @@ if TYPE_CHECKING:
 
 
 class OrchestratorCore:
-    """Fragment-based async-first core implementation for crash log orchestration."""
+    """
+    Core class for orchestrating crash log processing and analysis.
+
+    This class serves as the primary core for handling crash log processing,
+    analysis, and report generation using various modules. It incorporates both
+    synchronous and asynchronous methods to provide comprehensive functionality.
+    It is designed for working with specific YAML configuration data and
+    thread-safe log operations.
+
+    Attributes:
+        yamldata (ClassicScanLogsInfo): Configuration data for the crash log
+            processing and analysis.
+        crashlogs (ThreadSafeLogCache): Thread-safe cache for managing crash logs.
+        show_formid_values (bool | None): Specifies whether to display FormID
+            values in reports.
+        formid_db_exists (bool): Indicates whether the FormID database is available.
+        plugin_analyzer (PluginAnalyzer): Module responsible for analyzing plugins.
+        formid_analyzer (FormIDAnalyzer): FormID analysis module with support for
+            configuration-controlled display.
+        suspect_scanner (SuspectScanner): Module for scanning crash logs for suspect
+            metadata.
+        record_scanner (RecordScanner): Module for scanning specific record data in
+            crash logs.
+        settings_scanner (SettingsScannerFragments): Module providing functionality
+            to scan and process setting-related fragments.
+        report_generator (ReportGeneratorFragments): Module for generating report
+            fragments such as headers and footers for crash log reports.
+        fcx_handler (FCXModeHandlerFragments): Handles operations related to the
+            FCX mode functionality.
+        game_root_name (str | None): Name of the game root directory from YAML
+            settings.
+    """
 
     def __init__(
         self,
@@ -46,14 +77,24 @@ class OrchestratorCore:
         formid_db_exists: bool,
     ) -> None:
         """
-        Initialize the orchestrator core.
+        Initializes an instance of the class with necessary dependencies and configurations.
+
+        This constructor sets up various analyzers and scanners, initializes a report
+        generator, manages game-specific configurations, and sets up handlers based
+        on the provided input arguments. Some attributes tailored for asynchronous
+        processing are also defined here.
 
         Args:
-            yamldata: Configuration data
-            crashlogs: Thread-safe log cache
-            fcx_mode: Whether FCX mode is enabled
-            show_formid_values: Whether to show FormID values
-            formid_db_exists: Whether FormID database exists
+            yamldata: ClassicScanLogsInfo object containing YAML data and related
+                configurations.
+            crashlogs: ThreadSafeLogCache instance used for handling thread-safe
+                logging of crash data.
+            fcx_mode: Optional boolean flag indicating if the FCX mode functionality
+                should be enabled.
+            show_formid_values: Optional boolean flag to control whether FormID values
+                should be displayed.
+            formid_db_exists: Boolean indicating whether the FormID database is
+                available.
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
         self.crashlogs: ThreadSafeLogCache = crashlogs
@@ -82,7 +123,15 @@ class OrchestratorCore:
         self._last_plugins: dict[str, str] = {}
 
     async def __aenter__(self) -> "OrchestratorCore":
-        """Async context manager entry."""
+        """
+        Handles asynchronous context manager entry for initializing resources required
+        for orchestrator operations. These resources include an asyncio lock, a database
+        pool, and a FormID analyzer.
+
+        Returns:
+            OrchestratorCore: The initialized orchestrator core instance.
+
+        """
         # Initialize asyncio.Lock
         self._state_lock = asyncio.Lock()
 
@@ -97,7 +146,16 @@ class OrchestratorCore:
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Async context manager exit."""
+        """Handles the exiting of an asynchronous context, ensuring the closure of the database connection pool.
+
+        This method is invoked when the asynchronous context associated with this object exits. If a database
+        connection pool exists, it ensures that the pool is properly closed.
+
+        Args:
+            exc_type: The exception type that was raised during the context, if any.
+            exc_val: The exception instance that was raised, if any.
+            exc_tb: The traceback object associated with the exception, if any.
+        """
         if self._db_pool:
             await self._db_pool.close()
 
@@ -137,7 +195,7 @@ class OrchestratorCore:
             segment_crashgen,
             segment_system,
             segment_callstack,
-            segment_allmodules,
+            _segment_allmodules,
             segment_xsemodules,
             segment_plugins,
         ) = segments
@@ -172,7 +230,7 @@ class OrchestratorCore:
 
         return crashlog_file, autoscan_report, trigger_scan_failed, local_stats
 
-    async def _process_log_sections_async(  # noqa: PLR0913
+    async def _process_log_sections_async(  # noqa: PLR0917
         self,
         crashlog_gameversion: str,
         crashlog_crashgen: str,
@@ -183,7 +241,35 @@ class OrchestratorCore:
         segment_xsemodules: list[str],
         segment_plugins: list[str],
     ) -> ReportFragment:
-        """Process all sections of the crash log asynchronously and return composed fragment."""
+        """
+        Processes and analyzes various segments of a crash log to generate a detailed
+        ReportFragment. This includes error section generation, plugin processing,
+        suspect scanning, and mod detection using data extracted from the provided
+        input.
+
+        Args:
+            crashlog_gameversion: A string representing the game version obtained from
+                the crash log.
+            crashlog_crashgen: A string indicating the specific crash generation
+                version.
+            crashlog_mainerror: A string representing the main error message from the
+                crash log.
+            segment_crashgen: A list of strings detailing specific crash generation
+                settings.
+            segment_system: A list of strings providing system information extracted
+                from the crash log.
+            segment_callstack: A list of strings representing the call stack data from
+                the crash log.
+            segment_xsemodules: A list of strings detailing the module data from the
+                crash log.
+            segment_plugins: A list of strings representing the plugins loaded during
+                the crash event.
+
+        Returns:
+            A ReportFragment object containing the compiled and analyzed report based
+            on the provided crash log segments.
+
+        """
         composer = ReportComposer()
 
         # Version checking
@@ -209,11 +295,11 @@ class OrchestratorCore:
         gpu_info = get_gpu_info(segment_system)
         rival_value = gpu_info["rival"]
         crashlog_gpu_rival: Literal["nvidia", "amd"] | None = (
-            cast("Literal['nvidia', 'amd']", rival_value) if rival_value in ("nvidia", "amd") else None
+            cast("Literal['nvidia', 'amd']", rival_value) if rival_value in {"nvidia", "amd"} else None
         )
 
         # Process plugins
-        crashlog_plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded = self._process_plugins(
+        crashlog_plugins, _trigger_plugin_limit, _trigger_limit_check_disabled, trigger_plugins_loaded = self._process_plugins(
             segment_plugins, segment_callstack, game_version, version_current
         )
 
@@ -252,7 +338,25 @@ class OrchestratorCore:
         trigger_plugins_loaded: bool,
         crashlog_gpu_rival: Literal["nvidia", "amd"] | None,
     ) -> ReportFragment:
-        """Run mod detection with async FormID analysis and return composed fragments."""
+        """
+        Runs asynchronous mod detection based on the crash log, plugins, and other provided
+        information. This detection process includes examining various types of game modifications
+        that may cause crashes or are otherwise significant for diagnosing issues.
+
+        Args:
+            crashlog_plugins (dict[str, str]): Dictionary of loaded plugins from the crash log,
+                where keys represent plugin names and values provide relevant metadata.
+            segment_callstack (list[str]): List of strings representing the call stack segments
+                from the crash log, used for cross-referencing plugins.
+            trigger_plugins_loaded (bool): Flag indicating whether the loaded plugins should be
+                analyzed for mod detection.
+            crashlog_gpu_rival (Literal["nvidia", "amd"] | None): Specifies the GPU type to refine mod
+                detection for GPU-specific conflicts, or None if not applicable.
+
+        Returns:
+            ReportFragment: A composed report fragment summarizing findings from the asynchronous
+            mod detection process, including identified issues or problematic mods.
+        """
         from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 
         composer = ReportComposer()
@@ -304,7 +408,7 @@ class OrchestratorCore:
             plugin_fragment = ConditionalSection.with_header(
                 lambda: self.plugin_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower),
                 header_text=None,  # plugin_match has its own header logic
-                header_generator=lambda: self.report_generator.generate_plugin_suspect_header(),
+                header_generator=self.report_generator.generate_plugin_suspect_header,
             )
             composer.add(plugin_fragment)
 
@@ -318,7 +422,24 @@ class OrchestratorCore:
         return composer.build()
 
     def _run_suspect_scanning(self, crashlog_mainerror: str, segment_callstack: list[str]) -> ReportFragment:
-        """Run suspect scanning on crash log and return composed fragments."""
+        """
+        Executes the suspect scanning process on a given main error and call stack.
+
+        This function analyzes a main error message and a call stack segment to identify
+        potential suspects that might have caused a crash. The process includes scanning
+        both the main error and the call stack, checking for DLL-related crashes, and
+        adding relevant sections to the report. A footer indicating whether any suspects
+        were found is appended to the final report.
+
+        Args:
+            crashlog_mainerror (str): The main error message from the crash log.
+            segment_callstack (list[str]): The list of strings representing the call stack
+                segment.
+
+        Returns:
+            ReportFragment: The complete report fragment constructed after the scanning
+                and analysis process.
+        """
         composer = ReportComposer()
 
         # Add suspect section header
@@ -349,7 +470,20 @@ class OrchestratorCore:
         crashgen: dict[str, bool | int | str],
         crashgen_version: Version,
     ) -> ReportFragment:
-        """Check FCX mode and scan settings, return composed fragments."""
+        """
+        Analyzes and validates settings, FCX mode, and required modules against the given configurations
+        to generate a structured report fragment.
+
+        Args:
+            xsemodules (set[str]): A set of module names representing loaded XSE plugins.
+            crashgen (dict[str, bool | int | str]): A dictionary containing various configuration settings
+                relevant to crash generation.
+            crashgen_version (Version): The version information of the current crash generation configuration.
+
+        Returns:
+            ReportFragment: A compiled report fragment containing the analysis results of the settings,
+            FCX mode, and required module checks.
+        """
         composer = ReportComposer()
 
         # Check FCX mode
@@ -374,7 +508,19 @@ class OrchestratorCore:
         return composer.build()
 
     def _scan_specific_suspects(self, segment_callstack: list[str]) -> ReportFragment:
-        """Scan for named records in crash log and return composed fragments."""
+        """
+        Scans a specific segment of the call stack for suspicious records and returns a report
+        fragment based on the findings. Combines sections of the report generated by scanning
+        for named records.
+
+        Args:
+            segment_callstack (list[str]): The segment of the call stack to scan for suspicious
+                records.
+
+        Returns:
+            ReportFragment: A report fragment containing scanned records and their associated
+                findings.
+        """
         composer = ReportComposer()
 
         # Add section header
@@ -393,7 +539,29 @@ class OrchestratorCore:
         game_version: Version,
         version_current: Version,
     ) -> tuple[dict[str, str], bool, bool, bool]:
-        """Process plugin information from crash log."""
+        """
+        Processes plugins and extracts relevant plugin data, determines trigger states based
+        on loaded plugins, load order, and specific checks. It handles merging plugin data,
+        checking plugin limits, and identifying conditions such as the availability of plugins
+        or specific settings.
+
+        Args:
+            segment_plugins (list[str]): The list of plugins present in the analyzed game
+                segment.
+            segment_callstack (list[str]): The callstack related to the game execution,
+                potentially used to identify plugin-related issues.
+            game_version (Version): The current game version to be considered for
+                compatibility checks.
+            version_current (Version): The current application version analyzed for
+                compatibility with the loaded plugins.
+
+        Returns:
+            tuple[dict[str, str], bool, bool, bool]: A tuple containing the following:
+                - Dictionary of loaded plugins with relevant details.
+                - Boolean indicating whether a plugin limit is triggered.
+                - Boolean indicating whether the plugin limit check is disabled.
+                - Boolean indicating whether the plugins have been successfully loaded.
+        """
         plugins: dict[str, str] = {}
         trigger_plugin_limit = False
         trigger_limit_check_disabled = False
@@ -426,7 +594,23 @@ class OrchestratorCore:
 
     @staticmethod
     def _parse_crashgen_settings(segment_crashgen: list[str]) -> dict[str, bool | int | str]:
-        """Parse crashgen configuration from segment."""
+        """
+        Parses a list of crash generation settings and converts them into a dictionary with appropriate types.
+
+        The method takes a list of strings representing crash generation settings in the format
+        "key:value". It processes each string, splits it into a key and a value, and converts the
+        value to the appropriate data type. Boolean "true" and "false" values, integers, and
+        strings are recognized and handled accordingly. If the input list is empty or None,
+        an empty dictionary is returned.
+
+        Args:
+            segment_crashgen (list[str]): A list of strings containing crash generation settings
+                in the "key:value" format.
+
+        Returns:
+            dict[str, bool | int | str]: A dictionary mapping the keys to their corresponding
+                converted values.
+        """
         crashgen = {}
         if segment_crashgen:
             for elem in segment_crashgen:
@@ -445,13 +629,27 @@ class OrchestratorCore:
 
     async def process_crash_logs_batch(self, crashlog_files: list[Path]) -> list[tuple[Path, list[str], bool, Counter[str]]]:
         """
-        Process a batch of crash log files asynchronously.
+        Processes a batch of crash log files concurrently and collects the results.
+
+        Processes the given list of crash log files in batches to manage system resources
+        efficiently. Each batch is processed concurrently, and the results from all
+        batches are aggregated into a single list. In case of any errors during the
+        processing of individual log files, those errors are captured and represented
+        in the results as error logs.
 
         Args:
-            crashlog_files: List of crash log file paths
+            crashlog_files (list[Path]): A list of file paths representing crash log files
+                to be processed.
 
         Returns:
-            List of processing results for each file
+            list[tuple[Path, list[str], bool, Counter[str]]]: A list of tuples where each
+            tuple contains the following:
+                - Path: The file path of the processed log or error log.
+                - list[str]: A list of strings representing the processed content or
+                  error messages.
+                - bool: A flag indicating success (False) or failure (True).
+                - Counter[str]: A counter object summarizing the processing results
+                  (e.g., counts of scanned, incomplete, or failed logs).
         """
         # Process logs in batches to avoid overwhelming the system
         batch_size = 10
@@ -477,10 +675,20 @@ class OrchestratorCore:
     @staticmethod
     async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:
         """
-        Write a batch of reports asynchronously.
+        Writes batch reports to their respective files asynchronously.
+
+        This method processes a batch of reports provided as tuples, where each tuple
+        contains the path to a crash log file, its associated autoscan report, and a
+        boolean indicating whether a scan failure occurred. The method generates a
+        new file name for the autoscan report, writes the report content to the file,
+        and performs these write operations concurrently.
 
         Args:
-            reports: List of reports to write
+            reports (list[tuple[Path, list[str], bool]]): A list of tuples, where each
+                tuple contains:
+                - A Path object pointing to the crash log file.
+                - A list of strings representing the autoscan report content.
+                - A boolean indicating whether a scan failure occurred.
         """
         write_tasks = []
 

@@ -40,6 +40,15 @@ class ClassicScanLogs:
     """Backward compatibility wrapper for ScanLogsExecutor."""
 
     def __init__(self) -> None:
+        """
+        Initialize ClassicScanLogs as a backward compatibility wrapper.
+
+        This class wraps ScanLogsExecutor to maintain backward compatibility
+        for existing code that depends on the ClassicScanLogs interface.
+
+        Note:
+            This class is deprecated. Use ClassicLib.ScanLog.ScanLogsExecutor directly.
+        """
         _deprecated_import_warning("ClassicScanLogs", "ClassicLib.ScanLog.ScanLogsExecutor")
         self._executor = ScanLogsExecutor()
 
@@ -59,7 +68,20 @@ class ClassicScanLogs:
     async def process_crashlog_async(
         self, crashlog_file: Path, orchestrator: OrchestratorCore
     ) -> tuple[Path, list[str], bool, Counter[str]]:
-        """Backward compatibility method."""
+        """
+        Backward compatibility method.
+
+        Args:
+            crashlog_file: Path to the crash log file to process.
+            orchestrator: The orchestrator core instance for processing.
+
+        Returns:
+            A tuple containing:
+                - Path to the processed crash log file
+                - List of report lines generated
+                - Boolean indicating if scanning failed
+                - Counter of crash log statistics
+        """
         return await self._executor._process_crashlog_async(crashlog_file, orchestrator)
 
 
@@ -122,14 +144,18 @@ def _complete_scan_with_summary(
 ) -> None:
     """Backward compatibility function."""
     _deprecated_import_warning("_complete_scan_with_summary", "ClassicLib.ScanLog.ScanLogsUtils")
-    from ClassicLib.ScanLog.ScanLogsUtils import _complete_scan_with_summary as _func
+    from ClassicLib.ScanLog.ScanLogsUtils import _complete_scan_with_summary as _func  # noqa: PLC2701
 
     executor: ScanLogsExecutor = scanner._executor if isinstance(scanner, ClassicScanLogs) else scanner
     _func(executor, scan_failed_list, yamldata)
 
 
 def parse_arguments() -> "argparse.Namespace":
-    """Parse command line arguments."""
+    """Parse command line arguments.
+
+    Returns:
+        Parsed command line arguments containing configuration options for CLASSIC.
+    """
     import argparse
 
     parser = argparse.ArgumentParser(description="Command-line arguments for CLASSIC's Command Line Interface")
@@ -149,7 +175,15 @@ def parse_arguments() -> "argparse.Namespace":
 
 
 def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
-    """Create scan configuration from CLI arguments."""
+    """Create scan configuration from CLI arguments.
+
+    Args:
+        args: Parsed command line arguments containing configuration options.
+
+    Returns:
+        ScanConfig: A configured ScanConfig instance with settings applied from
+            command line arguments. Settings are also persisted to YAML files.
+    """
     from ClassicLib import msg_error
 
     config = ScanConfig()
@@ -211,7 +245,9 @@ def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
 def main() -> None:
     """Main CLI entry point."""
     # Ensure UTF-8 encoding for Windows console
-    if sys.platform == "win32":
+    from ClassicLib.MessageHandler import msg_info
+
+    if sys.platform == "win32":  # type: ignore
         import io
 
         # noinspection PyTypeChecker
@@ -235,7 +271,7 @@ def main() -> None:
     result: ScanResult = executor.scan_sync()
 
     # Display results summary
-    print(executor.generate_summary(result))
+    msg_info(executor.generate_summary(result))
 
     # Ensure all output is flushed before pause
     sys.stdout.flush()

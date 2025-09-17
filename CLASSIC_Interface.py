@@ -1,3 +1,13 @@
+"""
+This module defines the main application window for the CLASSIC GUI.
+
+It initializes and sets up the main GUI, including tabs, threads, and event
+handlers necessary for the application's functionality. The application utilizes
+multiple mix-ins to manage separate components such as folder management, backup
+operations, and style setup. The main interaction entry point includes an instance
+of MainWindow.
+"""
+
 import sys
 from typing import TYPE_CHECKING, Any
 
@@ -92,6 +102,18 @@ class MainWindow(
     # Style constants are now imported from UIHelpers
 
     def __init__(self) -> None:
+        """
+        Initializes the main application window and sets up its elements and layout.
+
+        This constructor initializes the main application window, setting up various visual
+        components, tabs, and threads necessary for the application's functionality. It configures
+        the window properties such as title, icon, size, and layout while preparing the widgets and
+        their placement in the UI. Additional application setup, including initializing paths,
+        message handling, and the optional update check, is also performed.
+
+        Raises:
+            None
+        """
         super().__init__()
         self.thread_manager = get_thread_manager()
         self.audio_player = AudioPlayer()

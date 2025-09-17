@@ -1,4 +1,15 @@
-"""Logging configuration utilities."""
+"""
+This module configures and sets up logging for the CLASSIC application.
+
+The module is responsible for setting up a logger with file and console handlers,
+applying appropriate log levels, and formatting. File logging includes a timestamped
+log file stored in a designated directory. Console logging provides messages for
+warnings and higher severity levels. If the file logging setup fails, the system
+falls back to console logging only.
+
+Functions:
+    configure_logging: Configures the provided logger for application use.
+"""
 
 import datetime
 import logging
@@ -9,16 +20,12 @@ from pathlib import Path
 
 def configure_logging(classic_logger: Logger) -> None:
     """
-    Configures logging settings for the CLASSIC application.
-
-    Sets up file and console handlers with appropriate formatting and
-    log levels based on application state.
+    Configures logging for the given logger instance, setting up both file-based and console-based
+    log handlers. The function ensures a detailed log file is created with debug-level messages,
+    and a console handler is set for warning-level and higher messages.
 
     Args:
-        classic_logger: The logger instance to configure
-
-    Returns:
-        None
+        classic_logger: The logger instance to configure, typically an instance of `logging.Logger`.
     """
     # Configure log format
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

@@ -34,6 +34,10 @@ def test_good():
         # Your test code here
 ```
 
+## Important Note on Singleton Pattern
+
+As of the latest refactoring, YamlSettingsCache now uses the same singleton pattern as AsyncBridge with a `_instance` class variable and `get_instance()` method. The fixtures have been updated to handle singleton cleanup properly.
+
 ## Correct Testing Patterns
 
 ### ✅ Pattern 1: Mock yaml_settings Function
@@ -63,27 +67,38 @@ def test_with_mocked_yaml(mock_yaml_settings):
     mock_yaml_settings.assert_called()
 ```
 
-### ✅ Pattern 2: Clear Cache in Fixtures
+### ✅ Pattern 2: Use clean_yaml_cache_singleton Fixture
+
+```python
+import pytest
+
+def test_with_clean_cache(clean_yaml_cache_singleton):
+    """Test with a clean YamlSettingsCache singleton instance."""
+    from ClassicLib.YamlSettingsCache import yaml_settings
+    from ClassicLib.Constants import YAML
+
+    # The fixture ensures a fresh singleton instance
+    result = yaml_settings(str, YAML.TEST, "test.key", "test_value")
+
+    # Cache is automatically cleaned up after test
+```
+
+Or manually clear the singleton:
 
 ```python
 import pytest
 from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
 @pytest.fixture(autouse=True)
-def clear_yaml_cache():
-    """Clear YAML cache before and after each test."""
-    # Get the singleton instance
-    cache = YamlSettingsCache()
-
-    # Clear cache before test
-    cache._cache.clear()
-    cache._last_modified.clear()
+def clear_yaml_singleton():
+    """Clear YAML cache singleton before and after each test."""
+    # Clear singleton instance
+    YamlSettingsCache._instance = None
 
     yield
 
-    # Clear cache after test
-    cache._cache.clear()
-    cache._last_modified.clear()
+    # Clear singleton instance again after test
+    YamlSettingsCache._instance = None
 ```
 
 ### ✅ Pattern 3: Use Test-Specific YAML Files

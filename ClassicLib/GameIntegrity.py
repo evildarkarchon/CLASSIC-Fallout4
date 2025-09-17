@@ -1,4 +1,8 @@
-"""Game integrity checking module for validating game installation and files."""
+"""
+GameIntegrityChecker module provides tools to validate the integrity and proper installation
+of a game. This includes ensuring that the executable files are up to date and verifying
+that the installation complies with recommended practices.
+"""
 
 from pathlib import Path
 
@@ -9,10 +13,26 @@ from ClassicLib.Util import calculate_file_hash
 
 
 class GameIntegrityChecker:
-    """Validates game installation and file integrity."""
+    """
+    GameIntegrityChecker is a utility class for validating the integrity and installation
+    configuration of a game.
+
+    It ensures the game executable and its version are up-to-date and checks that the game
+    is installed in a recommended location. This class provides detailed messages about the
+    results of its checks to aid users in resolving potential issues.
+
+    Attributes:
+        _config (dict[str, str | None]): Stores configuration details such as paths to the
+            game executable, expected hash values, and location information.
+    """
 
     def __init__(self) -> None:
-        """Initialize the GameIntegrityChecker."""
+        """
+        Represents the initialization method for the class.
+
+        Initializes the class attributes to their default values. This method sets up
+        internal configuration storage.
+        """
         self._config: dict[str, str | None] = {}
 
     def load_configuration(self) -> None:
@@ -67,7 +87,7 @@ class GameIntegrityChecker:
         local_hash: str = calculate_file_hash(exe_path)
 
         # Check if hash matches known versions
-        is_valid_version: bool = local_hash in (self._config["exe_hash_old"], self._config["exe_hash_new"])
+        is_valid_version: bool = local_hash in {self._config["exe_hash_old"], self._config["exe_hash_new"]}
 
         # Check for Steam INI (indicates outdated installation)
         steam_ini_path = Path(self._config["steam_ini_path"]) if self._config["steam_ini_path"] else None
@@ -99,7 +119,7 @@ class GameIntegrityChecker:
         if "Program Files" not in str(exe_path):
             message = f"✔️ Your {self._config['root_name']} game files are installed outside of the Program Files folder! \n-----\n"
             return True, message
-        message = self._config["root_warn"] if self._config["root_warn"] else ""
+        message = self._config["root_warn"] or ""
         return False, message
 
     def run_full_check(self) -> str:

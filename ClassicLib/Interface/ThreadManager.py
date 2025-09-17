@@ -23,16 +23,48 @@ class ThreadType(Enum):
 
 
 class ManagedThread:
-    """Container for a managed thread and its worker."""
+    """
+    Encapsulates threading functionality for managing a thread and its associated worker.
+
+    This class is designed to handle the lifecycle of a thread and its associated
+    worker with an optional type categorization. It provides utility to track
+    thread execution and to determine whether the thread is running.
+
+    Attributes:
+        thread (QThread): Represents the managed thread.
+        worker (QObject): The worker object associated with the thread.
+        thread_type (ThreadType): The type or category of the thread.
+        start_time (Any): The time when the thread was started.
+    """
 
     def __init__(self, thread: QThread, worker: QObject, thread_type: ThreadType) -> None:
+        """
+        Initializes the thread manager with provided thread, worker, and thread type.
+
+        This constructor sets up the thread manager object with a specific thread, worker,
+        and thread type. It prepares the instance for handling operations that will involve
+        threading and the associated worker.
+
+        Args:
+            thread: The thread object to manage.
+            worker: The worker object that will perform tasks.
+            thread_type: Specifies the type of thread being initialized.
+        """
         self.thread = thread
         self.worker = worker
         self.thread_type = thread_type
         self.start_time = None
 
     def is_running(self) -> bool:
-        """Check if the thread is currently running."""
+        """
+        Checks if the thread is currently running.
+
+        This method verifies whether the thread associated with the instance
+        is not None and is actively running.
+
+        Returns:
+            bool: True if the thread exists and is running, False otherwise.
+        """
         return self.thread is not None and self.thread.isRunning()
 
 
@@ -50,6 +82,13 @@ class ThreadManager(QObject):
     threadError: Signal = Signal(str, str)  # Thread type, error message
 
     def __init__(self) -> None:
+        """
+        Initializes the class instance.
+
+        This constructor initializes internal structures and synchronization mechanisms
+        required for managing threads. It sets up an empty registry for threads, a mutex
+        for ensuring concurrency safety, and a flag to track ongoing shutdown operations.
+        """
         super().__init__()
         self._threads: dict[ThreadType, ManagedThread] = {}
         self._mutex = QMutex()
@@ -244,7 +283,13 @@ _thread_manager: ThreadManager | None = None
 
 
 def get_thread_manager() -> ThreadManager:
-    """Get the global ThreadManager instance."""
+    """
+    Retrieves the global instance of ThreadManager. If the instance does not
+    exist, it initializes and assigns it.
+
+    Returns:
+        ThreadManager: The global instance of the ThreadManager.
+    """
     global _thread_manager  # noqa: PLW0603
     if _thread_manager is None:
         _thread_manager = ThreadManager()

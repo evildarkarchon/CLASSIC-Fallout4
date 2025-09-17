@@ -18,7 +18,18 @@ if TYPE_CHECKING:
 
 
 class SuspectScanner:
-    """Handles scanning for known crash patterns and suspects."""
+    """
+    Provides functionality to scan crash logs for suspect errors using predefined lists of errors and stack
+    signatures.
+
+    The `SuspectScanner` class analyzes crash logs and call stack details to identify potential suspect errors.
+    It uses predefined lists stored in `ClassicScanLogsInfo` to match against errors and stack traces and report
+    findings accordingly.
+
+    Attributes:
+        yamldata (ClassicScanLogsInfo): Configuration data containing the suspect error and stack lists used
+            for analysis.
+    """
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
@@ -55,8 +66,7 @@ class SuspectScanner:
             formatted_error_name = error_name.ljust(max_warn_length, ".")
 
             # Add the error to the report
-            lines.append(f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n")
-            lines.append("-----\n")
+            lines.extend((f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n", "-----\n"))
 
             # Update suspect found status
             found_suspect = True
@@ -108,8 +118,7 @@ class SuspectScanner:
             if self._is_suspect_match(match_status):
                 # Add the suspect to the report and update the found status
                 formatted_error_name = error_name.ljust(max_warn_length, ".")
-                lines.append(f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n")
-                lines.append("-----\n")
+                lines.extend((f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n", "-----\n"))
                 any_suspect_found = True
 
         return ReportFragment.from_lines(lines), any_suspect_found
@@ -156,14 +165,44 @@ class SuspectScanner:
 
     @staticmethod
     def _is_suspect_match(match_status: dict[str, bool]) -> bool:
-        """Determine if current error conditions constitute a suspect match."""
+        """
+        Determines whether a match is classified as a suspect based on the given match status criteria.
+
+        This function evaluates the provided match status dictionary to determine if specific conditions
+        indicate a suspect match. Depending on the presence of certain flags, it either confirms the
+        criteria are met or checks for alternative flags to ascertain the match status.
+
+        Args:
+            match_status (dict[str, bool]): A dictionary containing flags that represent different
+                match conditions. Expected keys include:
+                - "has_required_item": Indicates the presence of a required item.
+                - "error_req_found": Indicates an error condition related to required items.
+                - "error_opt_found": Indicates an error condition related to optional items.
+                - "stack_found": Indicates whether a stack-related condition was encountered.
+
+        Returns:
+            bool: True if the match is determined to be suspect based on the flags in match_status,
+            False otherwise.
+        """
         if match_status["has_required_item"]:
             return match_status["error_req_found"]
         return match_status["error_opt_found"] or match_status["stack_found"]
 
     @staticmethod
     def _format_suspect_message(error_name: str, error_severity: str, max_warn_length: int) -> str:
-        """Format a suspect message for the report."""
+        """
+        Formats a warning message for a suspected error condition. The function generates a formatted string
+        that includes the name of the error padded to a specified maximum warning length, along with its
+        severity level.
+
+        Args:
+            error_name (str): The name of the error being checked.
+            error_severity (str): The severity level of the error being reported.
+            max_warn_length (int): The maximum length to which the error name should be padded.
+
+        Returns:
+            str: A formatted string describing the suspected error with its severity.
+        """
         formatted_error_name = error_name.ljust(max_warn_length, ".")
         return f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n-----\n"
 

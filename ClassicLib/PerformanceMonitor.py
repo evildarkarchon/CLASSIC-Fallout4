@@ -199,7 +199,16 @@ def log_performance_summary() -> None:
 
 
 def reset_metrics() -> None:
-    """Clear all collected performance metrics."""
+    """
+    Resets the global performance metrics.
+
+    This function clears the global `_performance_metrics` variable and logs the
+    action. It is used to reset performance metrics, ensuring a clean state for
+    new metric collection.
+
+    Raises:
+        None
+    """
     global _performance_metrics
     _performance_metrics.clear()
     logger.debug("Performance metrics reset")
@@ -207,27 +216,68 @@ def reset_metrics() -> None:
 
 # Context manager for timing code blocks
 class TimedBlock:
-    """Context manager for timing code blocks."""
+    """
+    Context manager for measuring and logging execution time.
+
+    TimedBlock is a context manager that helps measure the duration of code
+    execution within a block. It logs the elapsed time upon completion or failure
+    based on the provided log level. This utility is particularly useful for
+    performance monitoring and debugging.
+
+    Attributes:
+        name (str): The name of the operation being timed.
+        log_level (str): The logging level to use for reporting the results.
+        start_time (float): The start time of the operation, initialized during
+            context entry.
+    """
 
     def __init__(self, name: str, log_level: str = "info"):
         """
-        Initialize timed block.
+        Represents an initialization for a logging system, setting basic properties
+        such as the logger name and the log level. This class handles essential
+        configuration that helps in monitoring and debugging the system.
 
         Args:
-            name: Name of the operation being timed
-            log_level: Logging level for results
+            name: The name identifier for the logger.
+            log_level: The log level to be used, defaulting to "info". Common
+                log levels include "debug", "info", "warn", "error", etc.
+
+        Attributes:
+            name: The name identifier of the logger instance.
+            log_level: The configured logging level for the logger.
+            start_time: A timestamp representing the starting point for logging
+                activities, initialized to 0 and expected to update elsewhere.
         """
         self.name = name
         self.log_level = log_level
         self.start_time: float = 0
 
     def __enter__(self) -> "TimedBlock":
-        """Start timing."""
+        """
+        Acts as a context manager for measuring the execution time of a block of code.
+
+        This method is invoked when entering the context of the `TimedBlock` instance using the `with` statement.
+        It initializes the start time of the block for time measurement.
+
+        Returns:
+            TimedBlock: The context manager instance itself which can be used within the scope of the `with` statement.
+        """
         self.start_time = time.perf_counter()
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Stop timing and log results."""
+        """
+        Context manager exit method that handles logging and performance metrics based
+        on the elapsed time. Logs the elapsed time of the operation and stores the
+        metric upon successful execution, or an error message if an exception is
+        raised.
+
+        Args:
+            exc_type (Any): Exception type that caused the context manager to exit.
+            exc_val (Any): Exception value provided during the context manager's exit.
+            exc_tb (Any): Traceback object related to the exception.
+
+        """
         elapsed = time.perf_counter() - self.start_time
 
         if exc_type is None:

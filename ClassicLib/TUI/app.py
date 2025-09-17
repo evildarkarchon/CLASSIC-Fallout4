@@ -7,7 +7,7 @@ from textual.binding import Binding, BindingType
 from textual.css.query import InvalidQueryFormat, NoMatches, WrongType
 from textual.widgets import Footer, Header
 
-from .screens.main_screen import MainScreen
+from ClassicLib.TUI.screens.main_screen import MainScreen
 
 
 class CLASSICTuiApp(App):
@@ -17,73 +17,73 @@ class CLASSICTuiApp(App):
     Screen {
         overflow: hidden;
     }
-    
+
     #main-container {
         padding: 0 1;
         height: 100%;
     }
-    
+
     .title {
         height: 1;
         margin: 0 0 1 0;
     }
-    
+
     .folder-selector-container {
         height: 3;
     }
-    
+
     .folder-input {
         width: 1fr;
         height: 3;
     }
-    
+
     .folder-section {
         height: auto;
     }
-    
+
     .folder-section Label {
         height: 1;
         margin: 0;
         padding: 0;
     }
-    
+
     .folder-section FolderSelector {
         height: 3;
         margin-bottom: 1;
     }
-    
+
     .error-label {
         display: none;
     }
-    
+
     .settings-section {
         height: 2;
         margin: 0;
     }
-    
+
     .scan-buttons {
         height: 3;
         margin: 0 0 1 0;
     }
-    
+
     #output {
         border: solid darkgreen;
         height: 1fr;
         min-height: 5;
     }
-    
+
     StatusBar {
         background: $panel;
         color: $text;
         height: 1;
         dock: bottom;
     }
-    
+
     StatusBar .status-key {
         color: $primary;
         text-style: bold;
     }
-    
+
     StatusBar .status-value {
         color: $text-muted;
     }
@@ -115,10 +115,19 @@ class CLASSICTuiApp(App):
     TITLE = "CLASSIC - Crash Log Auto Scanner & Setup Integrity Checker"
     SUB_TITLE = "Terminal User Interface"
 
-    def compose(self) -> ComposeResult:
-        """Create initial application layout."""
+    def compose(self) -> ComposeResult:  # noqa: PLR6301
+        """
+        Compose the interface layout by yielding visual components.
+
+        This method uses a generator to yield the main components of the user
+        interface layout, such as the header, footer, and status bar.
+
+        Yields:
+            ComposeResult: A generator yielding interface components like Header,
+            StatusBar, and Footer.
+        """
         yield Header()
-        from .widgets.status_bar import StatusBar
+        from ClassicLib.TUI.widgets.status_bar import StatusBar
 
         yield StatusBar()
         yield Footer()
@@ -129,7 +138,7 @@ class CLASSICTuiApp(App):
 
     def action_show_help(self) -> None:
         """Display help information."""
-        from .screens.help_screen import HelpScreen
+        from ClassicLib.TUI.screens.help_screen import HelpScreen
 
         self.push_screen(HelpScreen())
 
@@ -153,7 +162,7 @@ class CLASSICTuiApp(App):
 
     def action_clear_output(self) -> None:
         """Clear output viewer (Ctrl+L)."""
-        from .widgets.output_viewer import OutputViewer
+        from ClassicLib.TUI.widgets.output_viewer import OutputViewer
 
         if isinstance(self.screen, MainScreen):
             try:
@@ -164,13 +173,13 @@ class CLASSICTuiApp(App):
 
     def action_open_settings(self) -> None:
         """Open settings screen (Ctrl+O)."""
-        from .screens.settings_screen import SettingsScreen
+        from ClassicLib.TUI.screens.settings_screen import SettingsScreen
 
         self.push_screen(SettingsScreen())
 
     def action_search_output(self) -> None:
         """Search in output viewer (/)."""
-        from .widgets.output_viewer import OutputViewer
+        from ClassicLib.TUI.widgets.output_viewer import OutputViewer
 
         if isinstance(self.screen, MainScreen):
             try:

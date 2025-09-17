@@ -12,7 +12,19 @@ from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
 
 class FCXModeHandlerFragments:
-    """Fragment-based FCX mode handler for crash log analysis."""
+    """
+    Handles operations and checks related to the FCX mode for system setups.
+
+    This class manages FCX mode by providing file checking mechanisms specific to the FCX mode
+    configuration. Its functionality includes running the necessary checks, retrieving messages
+    related to FCX mode, and resetting the state for subsequent operations. It is designed to
+    ensure thread safety through the use of a shared lock mechanism for class-level attributes.
+
+    Attributes:
+        fcx_mode (bool | None): Indicates whether FCX mode is enabled. This attribute is initialized
+            during object construction and determines if FCX-related checks and operations should be
+            performed.
+    """
 
     # Class-level attributes shared across all instances
     _fcx_lock: ClassVar[threading.Lock] = threading.Lock()
@@ -27,10 +39,22 @@ class FCXModeHandlerFragments:
         Args:
             fcx_mode: Whether FCX mode is enabled
         """
+        self.game_files_check = None
+        self.main_files_check = None
         self.fcx_mode = fcx_mode
 
     def check_fcx_mode(self) -> None:
-        """Check FCX mode and run necessary file checks if enabled."""
+        """
+        Checks and updates the FCX mode status, ensuring checks are performed only once per session.
+
+        This method is responsible for verifying the FCX mode and performing validations by invoking
+        necessary external components or fallback mechanisms. The FCX mode dictates whether certain
+        checks for main and game files are executed. If the FCX mode is disabled, the checks are
+        bypassed, and default messages are assigned.
+
+        Raises:
+            ImportError: Raised when necessary external modules fail to import during execution.
+        """
         if self.fcx_mode:
             try:
                 from CLASSIC_ScanGame import game_combined_result as scan_game_files
@@ -60,7 +84,10 @@ class FCXModeHandlerFragments:
 
     @classmethod
     def reset_fcx_checks(cls) -> None:
-        """Reset FCX checks and results."""
+        """
+        Resets the FCX checks by updating related class-level indicators. This method ensures
+        thread-safe modifications to attributes by utilizing a lock mechanism.
+        """
         with cls._fcx_lock:
             cls._fcx_checks_run = False
             cls._main_files_result = ""
@@ -68,10 +95,15 @@ class FCXModeHandlerFragments:
 
     def get_fcx_messages(self) -> ReportFragment:
         """
-        Get FCX mode-related messages as a fragment.
+        Generates and returns FCX messages as a ReportFragment object.
+
+        Depending on the FCX mode status, this method generates appropriate messages
+        regarding FCX Mode being enabled or disabled. The messages include guidance
+        for enabling/disabling the mode and additional checks if necessary.
 
         Returns:
-            ReportFragment containing FCX mode messages and file check results.
+            ReportFragment: An object containing the generated messages as lines,
+            reflecting the current FCX mode status and associated checks.
         """
         lines = []
 

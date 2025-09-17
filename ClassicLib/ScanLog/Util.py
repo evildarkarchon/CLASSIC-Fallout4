@@ -1,3 +1,10 @@
+"""
+Utility module for managing SQLite database connections, file operations, and handling directory paths.
+
+This module provides a thread-safe SQLite connection pool, utilities for managing files and directories,
+and functions to validate and handle paths used for application configuration, especially related to crash
+logs and custom scan directories.
+"""
 import contextlib
 import shutil
 import sqlite3
@@ -15,18 +22,49 @@ CRASH_AUTOSCAN_PATTERN = "crash-*-AUTOSCAN.md"
 
 
 class SyncDatabasePool:
-    """Thread-safe connection pool for synchronous database operations."""
+    """
+    Manages SQLite database connections safely in a multithreaded environment.
+
+    This class ensures that SQLite connections are handled securely by using a
+    lock mechanism to manage access when performing operations from multiple
+    threads. Connections are stored and managed internally.
+
+    Attributes:
+        _connections (dict[Path, sqlite3.Connection]): A mapping of database file
+            paths to their corresponding SQLite connection objects.
+        _connection_lock (threading.Lock): A lock to ensure thread-safe access to
+            the connections dictionary.
+    """
 
     _instance = None
     _lock = threading.Lock()
 
     def __init__(self) -> None:
+        """
+        Manages SQLite database connections safely in a multithreaded environment.
+
+        This class ensures that SQLite connections are
+        handled securely by using a lock mechanism to
+        manage access when performing operations from
+        multiple threads. Connections are stored and
+        managed internally.
+
+        """
         self._connections: dict[Path, sqlite3.Connection] = {}
         self._connection_lock = threading.Lock()
 
     @classmethod
     def get_instance(cls) -> "SyncDatabasePool":
-        """Get the singleton instance of the database pool."""
+        """
+        Retrieves the singleton instance of the `SyncDatabasePool` class.
+
+        This method ensures that there is only one instance of the `SyncDatabasePool`
+        class by employing the singleton design pattern. It uses a thread-safe
+        double-checked locking mechanism to initialize the instance.
+
+        Returns:
+            SyncDatabasePool: The singleton instance of the class.
+        """
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -34,7 +72,20 @@ class SyncDatabasePool:
         return cls._instance
 
     def get_connection(self, db_path: Path) -> sqlite3.Connection:
-        """Get or create a connection for the given database."""
+        """
+        Creates or retrieves a sqlite3 connection for the specified database file. Ensures that a single
+        connection is reused for the same database path, and manages the connections in a thread-safe manner.
+        If the connection is not alive or does not exist, a new connection is created.
+
+        Args:
+            db_path (Path): Path to the SQLite database file.
+
+        Returns:
+            sqlite3.Connection: A SQLite database connection object.
+
+        Raises:
+            sqlite3.Error: If there is an issue connecting to the SQLite database file.
+        """
         with self._connection_lock:
             if db_path not in self._connections or not self._is_connection_alive(self._connections[db_path]):
                 try:
@@ -48,8 +99,17 @@ class SyncDatabasePool:
 
             return self._connections[db_path]
 
-    def _is_connection_alive(self, conn: sqlite3.Connection) -> bool:
-        """Check if a connection is still alive."""
+    @staticmethod
+    def _is_connection_alive(conn: sqlite3.Connection) -> bool:
+        """
+        Checks if a given SQLite connection is active and alive by executing a test query.
+
+        Args:
+            conn (sqlite3.Connection): The SQLite connection object to check.
+
+        Returns:
+            bool: True if the connection is alive, False otherwise.
+        """
         try:
             conn.execute("SELECT 1")
         except sqlite3.Error:
@@ -68,37 +128,29 @@ class SyncDatabasePool:
 
 def ensure_directory_exists(directory: Path) -> None:
     """
-    Ensures that a specified directory exists by creating it, including any necessary
-    parent directories.
+    Ensures that the specified directory exists by creating it if it does not already exist.
 
-    If the directory already exists, the function does nothing.
+    If necessary, this function will also create any intermediate directories in the path.
 
-    Parameters:
-        directory (Path): The path of the directory to ensure exists.
-
-    Returns:
-        None
+    Args:
+        directory: A Path object representing the directory to ensure exists.
     """
     directory.mkdir(parents=True, exist_ok=True)
 
 
 def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
     """
-    Moves files matching a given pattern from the source directory to the
-    target directory.
+    Moves files matching a given pattern from the source directory to the target directory.
 
-    This function iterates through all files in the source directory that
-    match the specified pattern, and moves each file to the target directory
-    if a file with the same name does not already exist in the target
-    directory.
+    This function searches for files in the specified source directory matching
+    the given pattern, and moves them to the target directory. If a file with
+    the same name already exists in the target directory, it will not be
+    overwritten.
 
-    Arguments:
-        source_dir (Path): The directory containing the files to be moved.
-        target_dir (Path): The directory to which the files will be moved.
-        pattern (str): A glob pattern to filter the files to be moved.
-
-    Returns:
-        None
+    Args:
+        source_dir (Path): Path to the source directory where files are located.
+        target_dir (Path): Path to the target directory where files will be moved.
+        pattern (str): Pattern to match files in the source directory.
     """
     for file in source_dir.glob(pattern):
         destination_file: Path = target_dir / file.name
@@ -108,24 +160,17 @@ def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
 
 def copy_files(source_dir: Path | None, target_dir: Path, pattern: str) -> None:
     """
-    Copies files from the source directory to the target directory based on a given pattern.
+    Copies files from a source directory to a target directory based on a specified pattern.
 
-    This function iterates through all files in the specified source
-    directory that match the given pattern and copies them to the target
-    directory. Files that already exist in the target directory are not
-    overwritten.
+    This function iterates through all files in the given source directory that match the
+    provided pattern. It then copies these files to the target directory if they do not
+    already exist in the target directory.
 
     Args:
-        source_dir (Path | None): The path to the source directory. If None or
-                                  the directory does not exist, the function
-                                  does nothing.
-        target_dir (Path): The path to the target directory where files will
-                           be copied.
-        pattern (str): A glob-style pattern used to match files in the source
-                       directory.
-
-    Returns:
-        None
+        source_dir: The directory from which files will be copied. If None or not a directory,
+            the function performs no operation.
+        target_dir: The directory to which files will be copied.
+        pattern: The pattern to match files in the source directory.
     """
     if source_dir and source_dir.is_dir():
         for file in source_dir.glob(pattern):

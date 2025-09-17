@@ -1,4 +1,10 @@
-"""Main MessageHandler class for unified message handling."""
+"""
+Module for handling message display and logging in both GUI and CLI environments.
+
+This module defines the MessageHandler class, which facilitates routing messages to appropriate
+outputs (e.g., GUI for graphical applications or CLI for command-line tools). It also supports
+logging and managing progress dialogs where a GUI framework like Qt is available.
+"""
 
 from __future__ import annotations
 
@@ -9,17 +15,32 @@ import threading
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, LiteralString
 
-from .enums import MessageTarget, MessageType
-from .models import Message
-from .progress_context import ProgressContext
-from .qt_compat import HAS_QT, QMessageBox, QObject, QProgressDialog, QThread, QWidget, Signal
+from ClassicLib.MessageHandler.enums import MessageTarget, MessageType
+from ClassicLib.MessageHandler.models import Message
+from ClassicLib.MessageHandler.progress_context import ProgressContext
+from ClassicLib.MessageHandler.qt_compat import HAS_QT, QMessageBox, QObject, QProgressDialog, QThread, QWidget, Signal
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
 class MessageHandler(QObject):
-    """Main message handler that routes messages to appropriate outputs."""
+    """
+    Handles message and progress operations for both GUI and command-line interfaces (CLI).
+
+    This class is responsible for managing messages including their logging, displaying, and formatting.
+    It supports integration with GUI environments through signals, allowing for thread-safe updates.
+    Progress dialogs and related GUI components are also managed, alongside CLI output where applicable.
+
+    Attributes:
+        parent_widget (QWidget | None): Reference to the parent widget, if operating in GUI mode.
+        is_gui_mode (bool): Specifies whether the handler operates in GUI mode. Set to True if the GUI
+            framework is available and enabled.
+        logger (logging.Logger): Logger instance for managing logs related to messaging operations.
+        main_thread (QThread | threading.Thread): Reference to the main thread for thread-safety
+            validation. Depending on the present framework, this is a QThread or threading.Thread
+            instance.
+    """
 
     # Qt signals for thread-safe GUI updates
     if HAS_QT:
@@ -30,16 +51,13 @@ class MessageHandler(QObject):
 
     def __init__(self, parent: QWidget | None = None, is_gui_mode: bool = False) -> None:
         """
-        Initializes a message handler object with optional GUI mode.
+        Initializes an instance of the class with parent widget, GUI mode flag, and sets up appropriate
+        logging, thread safety references, and signal connections if in GUI mode.
 
-        Used for handling messages and progress-related operations, with optional integration
-        into a GUI framework if available.
+        Args:
+            parent: The parent widget for this instance, expected to be of type QWidget or None.
+            is_gui_mode: A boolean flag indicating whether the GUI mode is enabled or not.
 
-        Parameters:
-            parent (QWidget | None, optional): Parent widget for the GUI, if applicable. Defaults
-                to None.
-            is_gui_mode (bool, optional): Determines whether the handler operates in GUI mode if
-                the GUI framework is available. Defaults to False.
         """
         if HAS_QT:
             super().__init__()
@@ -65,7 +83,17 @@ class MessageHandler(QObject):
         self._progress_dialog: QProgressDialog | None = None
 
     def _should_display(self, target: MessageTarget) -> bool:
-        """Check if message should be displayed based on target and mode."""
+        """
+        Determines whether a message should be displayed based on the provided message target.
+
+        Args:
+            target (MessageTarget): The target medium for the message (e.g., LOG_ONLY, GUI_ONLY,
+                CLI_ONLY, or ALL).
+
+        Returns:
+            bool: True if the message should be displayed for the specified target;
+                False otherwise.
+        """
         if target == MessageTarget.LOG_ONLY:
             return False
         if target == MessageTarget.GUI_ONLY:
@@ -77,26 +105,46 @@ class MessageHandler(QObject):
 
     @staticmethod
     def _strip_emoji(text: str) -> str:
-        """Strip emoji characters from text to avoid encoding issues in logs."""
+        """
+        Strips emojis from the given text.
+
+        This method removes all emojis and symbols within specified Unicode ranges from
+        the input text. Emojis and symbols are identified through a compiled regex pattern.
+
+        Args:
+            text (str): The input text string possibly containing emojis.
+
+        Returns:
+            str: A text string with all emojis removed.
+        """
         # Unicode ranges for emojis and symbols
         emoji_pattern = re.compile(
-            "["
-            "\U0001f600-\U0001f64f"  # emoticons
-            "\U0001f300-\U0001f5ff"  # symbols & pictographs
-            "\U0001f680-\U0001f6ff"  # transport & map symbols
-            "\U0001f1e0-\U0001f1ff"  # flags (iOS)
-            "\U00002702-\U000027b0"  # dingbats
-            "\U000024c2-\U0001f251"
-            "\U0001f900-\U0001f9ff"  # supplemental symbols
-            "\U00002600-\U000026ff"  # miscellaneous symbols
-            "\U00002700-\U000027bf"  # dingbats
-            "]+",
+            r"["
+            r"\U0001f600-\U0001f64f"  # emoticons
+            r"\U0001f300-\U0001f5ff"  # symbols & pictographs
+            r"\U0001f680-\U0001f6ff"  # transport & map symbols
+            r"\U0001f1e0-\U0001f1ff"  # flags (iOS)
+            r"\U00002702-\U000027b0"  # dingbats
+            r"\U000024c2-\U0001f251"
+            r"\U0001f900-\U0001f9ff"  # supplemental symbols
+            r"\U00002600-\U000026ff"  # miscellaneous symbols
+            r"\U00002700-\U000027bf"  # dingbats
+            r"]+",
             flags=re.UNICODE,
         )
         return emoji_pattern.sub("", text).strip()
 
     def _log_message(self, message: Message) -> None:
-        """Log message to file."""
+        """
+        Logs messages based on the provided message attributes. The function maps
+        specific message types to corresponding logging levels and ensures that log
+        content is stripped of emoji characters to avoid encoding issues, especially
+        on Windows consoles.
+
+        Args:
+            message (Message): The message object containing the content, type,
+                and additional details to be logged.
+        """
         level_map = {
             MessageType.DEBUG: logging.DEBUG,
             MessageType.INFO: logging.INFO,
@@ -116,7 +164,16 @@ class MessageHandler(QObject):
         self.logger.log(log_level, log_content)
 
     def _handle_gui_message(self, message: Message) -> None:
-        """Handle displaying message in GUI mode (runs in main thread)."""
+        """
+        Handles GUI messages using QMessageBox to display content and associated details
+        to the user. The function ensures proper message categorization based on
+        the type of message provided and only operates if the `HAS_QT` condition is met.
+
+        Args:
+            message (Message): The message object containing information such as content,
+                title, type, parent reference, and optional detailed text for display.
+
+        """
         if not HAS_QT:
             return
 
@@ -144,7 +201,22 @@ class MessageHandler(QObject):
             msg_box.exec()
 
     def _create_progress_dialog(self, description: str, total: int) -> None:
-        """Create progress dialog in main thread."""
+        """
+        Creates and displays a progress dialog with a cancel button.
+
+        This method initializes and shows a progress dialog, typically used to
+        indicate progress for a lengthy operation. If the operation's total
+        progress is set to zero, the dialog will be displayed in an indeterminate
+        state. The dialog can be cancelled by the user.
+
+        Args:
+            description (str): The description or label displayed in the progress
+                dialog to inform the user about the ongoing operation.
+            total (int): The total value representing the completion of the
+                operation. If set to 0, the dialog acts as an indeterminate
+                progress indicator.
+
+        """
         if not HAS_QT:
             return
 
@@ -157,21 +229,46 @@ class MessageHandler(QObject):
         self._progress_dialog.show()
 
     def _update_progress_dialog(self, value: int, description: str) -> None:
-        """Update progress dialog in main thread."""
+        """
+        Updates the progress dialog with the given value and description.
+
+        This method updates the progress dialog's current progress and label text if
+        the progress dialog is available.
+
+        Args:
+            value (int): The current progress value to be set in the progress dialog.
+            description (str): The label text describing the current progress.
+        """
         if self._progress_dialog:
             self._progress_dialog.setValue(value)
             if description:
                 self._progress_dialog.setLabelText(description)
 
     def _close_progress_dialog(self) -> None:
-        """Close progress dialog in main thread."""
+        """
+        Closes the progress dialog if it is currently open.
+
+        This method checks whether a progress dialog is active. If it is, the method
+        hides it and sets the internal reference to None, ensuring proper cleanup.
+
+        """
         if self._progress_dialog:
             self._progress_dialog.hide()
             self._progress_dialog = None
 
     @staticmethod
     def _handle_cli_message(message: Message) -> None:
-        """Handle displaying message in CLI mode."""
+        """
+        Handles command-line interface (CLI) messages by adding emoji prefixes based on message type
+        and formatting accordingly. Outputs the formatted message to either standard output (stdout)
+        or standard error (stderr) depending on the message type.
+
+        This method ensures that critical, warning, and error messages are directed to stderr for better
+        error handling, while informational and other types of messages are directed to stdout.
+
+        Args:
+            message (Message): The message object containing type, content, and optional details.
+        """
         # Add emoji prefixes for different message types
         prefix_map: dict[MessageType, str] = {
             MessageType.INFO: "",
@@ -190,7 +287,7 @@ class MessageHandler(QObject):
 
         # Use stderr for errors and warnings
         # Use sys.stderr instead of sys.__stderr__ for better pytest compatibility
-        if message.msg_type in (MessageType.ERROR, MessageType.WARNING, MessageType.CRITICAL):
+        if message.msg_type in {MessageType.ERROR, MessageType.WARNING, MessageType.CRITICAL}:
             try:
                 print(output, file=sys.stderr, flush=True)
             except OSError:
@@ -201,15 +298,15 @@ class MessageHandler(QObject):
 
     def show(self, message: Message) -> None:
         """
-        Displays a message either in a GUI or CLI interface, based on the mode and target. Ensures thread-safe
-        operation for GUI and directly handles CLI output. The function always logs the provided message regardless
-        of the display operation.
+        Logs and displays a message based on the current mode (GUI or CLI).
+
+        This method ensures the message is always logged and subsequently
+        evaluates whether it should be displayed. Depending on the mode
+        (GUI or CLI), it either emits a signal for a GUI update or handles
+        the message directly for CLI output.
 
         Args:
-            message (Message): The message object to be shown.
-
-        Returns:
-            None
+            message: The message to be logged and potentially displayed.
         """
         # Always log the message
         self._log_message(message)
@@ -227,126 +324,100 @@ class MessageHandler(QObject):
 
     def info(self, content: str, **kwargs: Any) -> None:
         """
-        Logs a message with an informational level.
+        Displays an informational message using the Message class.
 
-        This method prepares a message with the specified content and an informational
-        designation. It then displays the message using the `show` method.
+        This method creates an informational message with the given content
+        and additional keyword arguments and then displays it using the
+        `show` method.
 
-        Arguments:
-            content: The text content of the message.
-            **kwargs: Additional arguments to customize the message if needed.
-
-        Returns:
-            None
+        Args:
+            content (str): The content of the informational message.
+            **kwargs (Any): Additional optional arguments for the `Message`
+                class.
         """
         message = Message(content, MessageType.INFO, **kwargs)
         self.show(message)
 
     def warning(self, content: str, **kwargs: Any) -> None:
         """
-        Handle the creation and display of warning messages.
+        Logs a warning message with the specified content and additional keyword
+        arguments. The warning will be formatted into a Message object with warning
+        message type and displayed using the `show` method.
 
-        This method creates a warning message using the provided content and additional
-        keyword arguments, then displays the generated message.
-
-        Parameters:
-        content: str
-            The main text content of the warning message.
-        kwargs: Any
-            Additional keyword arguments that can be passed while creating the message.
-
-        Returns:
-        None
+        Args:
+            content (str): The warning message content to be logged.
+            **kwargs (Any): Additional keyword arguments for the message.
         """
         message = Message(content, MessageType.WARNING, **kwargs)
         self.show(message)
 
     def error(self, content: str, **kwargs: Any) -> None:
         """
-        Represents an action to log or display an error message with appropriate formatting
-        and additional information.
+        Logs an error message and displays it using the corresponding message type.
 
         Args:
-            content (str): The error message content to be displayed.
-            **kwargs (Any): Additional keyword arguments to pass while creating the
-                error message.
+            content (str): The text content of the error message to be logged.
+            **kwargs (Any): Additional keyword arguments to customize the message
+                creation or display.
 
-        Returns:
-            None
         """
         message = Message(content, MessageType.ERROR, **kwargs)
         self.show(message)
 
     def success(self, content: str, **kwargs: Any) -> None:
         """
-        Indicates a successful operation or result and displays the corresponding message.
+        Displays a successful status message.
 
-        Parameters
-        ----------
-        content: str
-            The textual content of the success message.
-        **kwargs: Any
-            Additional key-value arguments that may be used to construct or customize
-            the message.
-
-        Returns
-        -------
-        None
+        Args:
+            content (str): The content of the success message.
+            **kwargs (Any): Additional optional parameters for message customization.
         """
         message = Message(content, MessageType.SUCCESS, **kwargs)
         self.show(message)
 
     def debug(self, content: str, **kwargs: Any) -> None:
         """
-        Logs a debug message with provided content and additional parameters.
-
-        The method creates a debug message object and sends it to be displayed.
-        It allows for inclusion of additional contextual details using keyword arguments.
+        Logs a debug level message. The function creates a `Message` instance
+        with the provided content and message type, then displays it.
 
         Args:
-            content (str): The main content/message to be logged with DEBUG level.
-            **kwargs (Any): Additional keyword arguments containing contextual
-                information to attach to the message.
+            content (str): Content of the debug message.
+            **kwargs (Any): Additional arguments passed to the `Message` instance.
 
-        Returns:
-            None
         """
         message = Message(content, MessageType.DEBUG, **kwargs)
         self.show(message)
 
     def critical(self, content: str, **kwargs: Any) -> None:
         """
-        Logs a critical message by creating a Message object and utilizing the
-        show method. This method is intended for handling messages of the
-        critical severity level.
+        Logs a critical message.
+
+        This method creates a message object with the specified critical content
+        and passes it to the `show` method for display or further processing.
 
         Args:
-            content (str): The main content of the critical message.
-            **kwargs (Any): Additional keyword arguments for customizing
-                the message attributes or behavior.
-
-        Returns:
-            None
+            content: The message content to log as critical.
+            **kwargs: Additional keyword arguments to pass when creating the message.
         """
         message = Message(content, MessageType.CRITICAL, **kwargs)
         self.show(message)
 
     def progress_context(self, description: str, total: int | None = None) -> ProgressContext:
         """
-        Provides a context manager for progress tracking with a given description and an optional
-        total count. The progress context manager simplifies the tracking of progress over a set
-        of actions or items, especially when definite progress information is available.
+        Creates a ProgressContext for tracking progress.
 
-        Parameters:
-        description: str
-            The description of the progress to be tracked.
-        total: int | None, optional
-            The total count of items or actions for which progress will be tracked. If None, the
-            total remains unspecified.
+        This method initializes and returns a ProgressContext object, allowing
+        for tracking and displaying the progress of an operation. The progress
+        can be customized with a description and a specified total count.
+
+        Args:
+            description: A brief description of the progress being tracked.
+            total: An optional total value for the operation. If None, the
+                progress context will not enforce a maximum value.
 
         Returns:
-        ProgressContext
-            A context manager object that represents and manages the progress tracking state.
+            ProgressContext: An instance of the ProgressContext class to manage
+                progress tracking.
         """
         return ProgressContext(self, description, total)
 
@@ -358,18 +429,20 @@ _message_handler_lock = threading.Lock()
 
 def init_message_handler(parent: QWidget | None = None, is_gui_mode: bool = False) -> MessageHandler:
     """
-    Initialize the global message handler for managing message interactions. This
-    function creates a new instance of MessageHandler and assigns it to a global
-    variable for universal access.
+    Initializes and returns a global MessageHandler instance.
 
-    Parameters:
-        parent (QWidget | None): Parent widget for the MessageHandler instance. It
-            can be None if no parent is required.
-        is_gui_mode (bool): A flag indicating if the handler should operate in GUI
-            mode. If True, the handler facilitates GUI-based operations.
+    This function creates and sets a global MessageHandler instance. The instance
+    is initialized with the given parent widget and the GUI mode. Thread safety
+    is ensured via a lock mechanism.
+
+    Args:
+        parent (QWidget | None): The parent widget for the MessageHandler instance.
+            Use None if no parent widget is required.
+        is_gui_mode (bool): Flag to indicate if the MessageHandler should operate
+            in GUI mode or not.
 
     Returns:
-        MessageHandler: The initialized MessageHandler instance prepared for use.
+        MessageHandler: The initialized global MessageHandler instance.
     """
     global _message_handler  # noqa: PLW0603
     with _message_handler_lock:
@@ -379,18 +452,17 @@ def init_message_handler(parent: QWidget | None = None, is_gui_mode: bool = Fals
 
 def get_message_handler() -> MessageHandler:
     """
-    Fetches and returns the global message handler instance.
+    Retrieves the global message handler instance.
 
-    The function retrieves the currently initialized global message handler. If
-    the message handler has not been initialized by calling the
-    `init_message_handler()` function prior to this call, it raises an exception
-    to indicate that the handler is missing.
+    The function ensures thread-safe access to the global message handler.
+    If the message handler is not initialized, it raises a `RuntimeError`
+    to indicate that initialization must occur prior to usage.
 
     Returns:
-        MessageHandler: The initialized global message handler instance.
+        MessageHandler: The global message handler instance.
 
     Raises:
-        RuntimeError: If the global message handler has not been initialized.
+        RuntimeError: If the message handler has not been initialized.
     """
     with _message_handler_lock:
         if _message_handler is None:
@@ -403,76 +475,63 @@ def msg_info(content: str, **kwargs: Any) -> None:
     """
     Logs an informational message using the message handler.
 
-    This function utilizes the message handler to log an informational
-    message. The primary message content is specified through the `content`
-    parameter, and additional keyword arguments may be passed to provide
-    context or formatting for the message.
+    This function sends an informational message to a message handler for logging or
+    displaying. Additional keyword arguments can be passed to modify or enhance the
+    message behavior as required by the handler.
 
-    Parameters:
-    content: str
-        The main content of the informational message to log.
-    kwargs: Any
-        Optional keyword arguments to provide additional details or
-        formatting for the message.
-
-    Returns:
-    None
+    Args:
+        content: The message content to be logged as an informational message.
+        **kwargs: Additional keyword arguments to customize the message behavior.
     """
     get_message_handler().info(content, **kwargs)
 
 
 def msg_warning(content: str, **kwargs: Any) -> None:
     """
-    Log a warning message through the configured message handler.
+    Logs a warning message through the active message handler.
 
-    This function triggers the warning level logging behavior of the current
-    message handler, passing the provided content and optional keyword arguments.
+    This function utilizes the currently active message handler to log a
+    warning message specified by the `content` parameter. Additional
+    optional keyword arguments can be passed to the handler for custom
+    behavior or extensions.
 
-    Parameters:
-    content: str
-        The warning message to log.
-    **kwargs: Any
-        Additional keyword arguments passed to the message handler.
+    Args:
+        content (str): The message to log as a warning.
+        **kwargs (Any): Optional keyword arguments to customize the warning
+            message handling.
+
     """
     get_message_handler().warning(content, **kwargs)
 
 
 def msg_error(content: str, **kwargs: Any) -> None:
     """
-    Logs an error message through the message handler.
+    Logs an error message using the message handler.
 
-    This function allows the user to log an error message with optional
-    keyword arguments. The actual error handling mechanism is delegated to
-    the `get_message_handler` function's `error` method.
+    This function retrieves the current message handler and calls its
+    `error` method with the provided message content and additional
+    keyword arguments.
 
-    Parameters:
-        content: str
-            The content of the error message to be logged.
-        **kwargs: Any
-            Additional context or metadata to be passed to the message handler's
+    Args:
+        content (str): The error message to be logged.
+        **kwargs: Additional keyword arguments to pass to the message handler's
             `error` method.
-
-    Returns:
-        None
     """
     get_message_handler().error(content, **kwargs)
 
 
 def msg_success(content: str, **kwargs: Any) -> None:
     """
-    Provides a utility function to generate a success message. This function relies
-    on the message handler obtained from the `get_message_handler` method to
-    construct and process a success message with the specified content and any
-    additional optional keyword arguments.
+    Logs a success message by utilizing the message handler.
+
+    This function delegates the responsibility of logging a success message
+    to the appropriate message handler configured in the application.
 
     Args:
-        content: The content of the success message.
-        **kwargs: Additional key-value arguments to be forwarded to the success
-        handler. The exact usage of these arguments depends on the implementation
-        of the message handler.
+        content: The message content to be logged as a success.
+        **kwargs: Additional keyword arguments to customize the behavior
+            of the message handler.
 
-    Returns:
-        None
     """
     get_message_handler().success(content, **kwargs)
 
@@ -493,20 +552,11 @@ def msg_debug(content: str, **kwargs: Any) -> None:
 
 def msg_critical(content: str, **kwargs: Any) -> None:
     """
-    Logs a critical level message using the message handler.
+    Logs a critical message using the designated message handler.
 
-    A critical message denotes a serious issue that requires immediate attention.
-    The function uses the existing message handler to log the specified content
-    and any additional supported key-value data.
-
-    Parameters:
-        content: str
-            The critical message content to be logged.
-        **kwargs: Any
-            Additional parameters to be passed to the message handler.
-
-    Returns:
-        None
+    Args:
+        content (str): The critical message to log.
+        **kwargs (Any): Additional parameters to pass to the message handler.
     """
     get_message_handler().critical(content, **kwargs)
 
@@ -514,17 +564,20 @@ def msg_critical(content: str, **kwargs: Any) -> None:
 @contextmanager
 def msg_progress_context(description: str, total: int | None = None) -> Iterator[ProgressContext]:
     """
-    Helper function to manage a progress context for message handlers. This function acts as a
-    context manager to track progress during a task.
+    Provides a context manager for handling message progress updates.
 
-    Parameters:
-        description (str): A short description of the task being tracked.
-        total (int | None): The total amount of work to be completed. If None, the progress is
-            treated as indeterminate.
+    This function integrates with a messaging handler to allow progress updates
+    to be displayed while performing operations that need to signal their
+    progress to the user.
+
+    Args:
+        description (str): A description of the progress activity. This is typically displayed
+            to give context about the ongoing operation.
+        total (int | None, optional): The total number of steps in the progress activity.
+            If set to None, the total is treated as indefinite or unknown. Defaults to None.
 
     Yields:
-        Iterator[ProgressContext]: An iterator that provides the progress context object
-            encapsulating current state and methods for updating progress.
+        ProgressContext: The context object for updating progress during the operation.
     """
     handler = get_message_handler()
     with handler.progress_context(description, total) as progress:

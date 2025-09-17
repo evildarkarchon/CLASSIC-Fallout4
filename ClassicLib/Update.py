@@ -1,3 +1,13 @@
+"""
+Module for interacting with the GitHub API for release version parsing and
+retrieval.
+
+This module provides functions to fetch and parse release versions from GitHub
+repositories, including stable releases, prereleases, and detailed analysis of
+latest and top release details. It leverages `aiohttp` for asynchronous HTTP
+requests and `packaging.version` for version parsing.
+"""
+
 from typing import Any  # Added List and Dict for type hinting
 
 import aiohttp

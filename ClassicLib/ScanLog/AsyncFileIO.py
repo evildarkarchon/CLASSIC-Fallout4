@@ -21,22 +21,33 @@ except ImportError:
     import aiofiles
 
     async def write_file_async(file_path: Path, content: str) -> None:
+        """
+        Writes the provided content to a file asynchronously.
+
+        This function opens the specified file asynchronously in write mode,
+        writes the provided content to it, and ensures the operation is done
+        without blocking the main thread.
+
+        Args:
+            file_path (Path): The path to the file where the content should be written.
+            content (str): The content to write into the specified file.
+        """
         async with aiofiles.open(file_path, mode="w", encoding="utf-8", errors="ignore") as f:
             await f.write(content)
 
 
 async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str, bytes]:
     """
-    Optimized async loading of crash logs with batching and progress tracking.
-
-    This function loads crash logs concurrently in batches to avoid overwhelming
-    the file system while providing maximum performance improvement.
+    Asynchronously loads crash logs from provided file paths and converts them to a dictionary of
+    file names to their contents in bytes format. Attempts to use optimized external libraries for
+    loading when available, with a fallback to basic asynchronous file reading.
 
     Args:
-        crashlog_list: List of crash log file paths
+        crashlog_list (list[Path]): A list of file paths to crash logs that need to be loaded.
 
     Returns:
-        Dictionary mapping log names to their content as bytes
+        dict[str, bytes]: A dictionary mapping file names to their corresponding contents
+        encoded as UTF-8 bytes.
     """
     logger.debug(f"Starting async load of {len(crashlog_list)} crash logs")
 
@@ -88,6 +99,20 @@ async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str
 
 
 def time_async_operation(operation_name: str) -> Callable:
+    """
+    A decorator function for timing asynchronous operations and logging their duration.
+
+    This decorator records the time taken by an asynchronous function to execute and logs the
+    duration using the specified operation name. It is useful for monitoring the performance of
+    async routines.
+
+    Args:
+        operation_name: str. A string specifying the name of the operation being timed.
+
+    Returns:
+        Callable. A decorator function that wraps the target asynchronous function, logs
+        its execution time, and returns the result.
+    """
     def decorator(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
         async def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
             import time
@@ -105,23 +130,61 @@ def time_async_operation(operation_name: str) -> Callable:
 
 @time_async_operation("Crash log reformatting")
 async def timed_reformat_async(crashlog_list: list[Path], remove_list: tuple[str]) -> None:
-    """Timed version of async reformatting for performance monitoring."""
+    """
+    Asynchronously reformats crash logs and removes specified entries.
+
+    This function is a timed operation that utilizes the `time_async_operation`
+    decorator. It takes a list of crash log file paths and a list of entries to
+    remove, then processes the logs accordingly. The reformatting and removal are
+    handled by the `crashlogs_reformat_async` helper function.
+
+    Args:
+        crashlog_list (list[Path]): A list of Path objects representing the
+            locations of the crash log files to be processed.
+        remove_list (tuple[str]): A tuple of string entries specifying which parts
+            of the crash logs should be removed during reformatting.
+
+    """
     await crashlogs_reformat_async(crashlog_list, remove_list)
 
 
 @time_async_operation("Crash log loading")
 async def timed_load_async(crashlog_list: list[Path]) -> dict[str, bytes]:
-    """Timed version of async loading for performance monitoring."""
+    """
+    Asynchronously loads crash logs from the given list of file paths, timed with
+    a decorator for performance measurement.
+
+    This function utilizes an optimized crash log loading mechanism to read and
+    process crash logs asynchronously, returning a dictionary where keys are
+    file names and values are their corresponding file contents in bytes.
+
+    Args:
+        crashlog_list (list[Path]): A list of file paths pointing to crash log
+            files to be loaded asynchronously.
+
+    Returns:
+        dict[str, bytes]: A dictionary mapping file names (str) to file contents
+            (bytes) of the crash logs.
+
+    Raises:
+        Any exceptions raised during the file loading process are propagated by
+        this function.
+    """
     return await load_crash_logs_async_optimized(crashlog_list)
 
 
 async def write_report_async(crashlog_file: Path, autoscan_report: list[str]) -> None:
     """
-    Asynchronously write a crash log report to file.
+    Writes a report asynchronously by combining provided log contents into a formatted
+    output file and storing it on disk. The method generates the filename based on
+    the input crash log file and specifies the file content using the autoscan
+    report details.
 
     Args:
-        crashlog_file: Path to the crash log file
-        autoscan_report: Generated report lines
+        crashlog_file (Path): Path to the crash log file which is used to derive the
+            report's filename.
+        autoscan_report (list[str]): List of strings containing the autoscan report
+            content that will be written to the output.
     """
     autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
     autoscan_output: str = "".join(autoscan_report)
@@ -131,12 +194,21 @@ async def write_report_async(crashlog_file: Path, autoscan_report: list[str]) ->
 
 async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:
     """
-    Write multiple reports concurrently for maximum performance.
+    Writes a batch of reports asynchronously to the filesystem.
 
-    NOTE: Consider using FileIOCore.write_multiple_files() for new code.
+    This function receives a list of reports, where each report is a tuple
+    containing the path to the crashlog file, the autoscan report content,
+    and a boolean. It processes these reports asynchronously using
+    FileIOCore for efficient I/O operations. The processed reports are
+    written to new files named based on the original crashlog filenames.
 
     Args:
-        reports: List of (crashlog_file, autoscan_report, trigger_scan_failed) tuples
+        reports (list[tuple[Path, list[str], bool]]): A list of tuples, where
+            each tuple contains:
+            - crashlog_file (Path): The path to the original crashlog file.
+            - autoscan_report (list[str]): The content of the report as a list
+              of strings.
+            - a boolean value that is ignored in the processing.
     """
     # Use FileIOCore for better performance
     from ClassicLib.FileIOCore import FileIOCore
@@ -155,14 +227,17 @@ async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> No
 
 def run_performance_test(crashlog_list: list[Path], remove_list: tuple[str]) -> None:
     """
-    Run a performance comparison between sync and async file operations.
-
-    This function can be used to measure the actual performance improvement
-    on your specific crash log files.
+    Runs a performance test comparing synchronous and asynchronous reformatting
+    of crash log files. The method measures the time taken for both methods and
+    reports the performance comparison including speedup and improvement.
 
     Args:
-        crashlog_list: List of crash log file paths
-        remove_list: Tuple of strings for reformatting
+        crashlog_list (list[Path]): A list of paths to crash log files intended
+            for performance testing. A maximum of 10 files will be used to limit
+            test duration.
+        remove_list (tuple[str]): Tuple containing keys or elements to identify
+            and remove specific entries from the crash logs during reformatting.
+
     """
     import shutil
     import tempfile

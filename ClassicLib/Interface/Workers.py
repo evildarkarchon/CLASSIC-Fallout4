@@ -53,12 +53,19 @@ class CrashLogsScanWorker(QObject):
         finally:
             self.finished.emit()  # type: ignore
 
-    def _perform_crash_logs_scan(self) -> None:
+    @staticmethod
+    def _perform_crash_logs_scan() -> None:
         """
-        Executes the crash logs scan operation with proper async/Qt integration.
+        Performs a crash logs scan using non-blocking asynchronous operations.
 
-        Runs the async scan in a non-blocking way, allowing Qt signals to be
-        processed during the operation for real-time progress updates.
+        This method initializes the necessary scanning tool and sets up an asynchronous
+        event loop for execution, allowing periodic yielding to avoid blocking the main
+        thread. The function ensures that logs are scanned efficiently and any cross-thread
+        signals in the hosting framework are handled adequately. The event loop is carefully
+        managed, and resources are cleaned up after execution.
+
+        Raises:
+            Exception: Propagates exceptions from the main coroutine task if they occur.
         """
         logger.debug("Starting crash logs scan with non-blocking async")
 
@@ -82,6 +89,7 @@ class CrashLogsScanWorker(QObject):
             while not main_task.done():
                 # Run the event loop for a short time
                 # This allows async work to progress while yielding periodically
+                # noinspection PyTypeChecker
                 loop.call_soon(loop.stop)  # Schedule stop after one iteration
                 loop.run_forever()  # Run until stop is called
 

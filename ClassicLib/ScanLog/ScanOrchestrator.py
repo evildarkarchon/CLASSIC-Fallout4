@@ -20,7 +20,26 @@ if TYPE_CHECKING:
 
 
 class ScanOrchestrator:
-    """Sync adapter for OrchestratorCore - provides backwards compatibility."""
+    """Orchestrates scanning processes and provides an interface for various scanning-related operations.
+
+    This class acts as the orchestrator for handling scan processes. It relies on a core scanning module
+    to perform actual operations and exposes its attributes and functionalities for easier interaction.
+    It is typically used to manage crash logs, update scan-related statistics, and generate reports.
+
+    Attributes:
+        yamldata (ClassicScanLogsInfo): Configuration data for scan operations.
+        crashlogs (ThreadSafeLogCache): Thread-safe cache for managing crash logs.
+        plugin_analyzer: Interface for analyzing plugin data.
+        formid_analyzer: Interface for analyzing FormID data.
+        suspect_scanner: Scanner for identifying suspect elements in scan logs.
+        record_scanner: Scanner for analyzing and processing specific records.
+        settings_scanner: Scanner for reading and processing scan-related settings.
+        report_generator: Interface for generating scan result reports.
+        fcx_handler: Handler for managing operations in FCX mode.
+        game_root_name: Name of the root folder of the game being scanned.
+        last_formids (list): List of the most recent FormIDs processed.
+        last_plugins (dict): Dictionary of the most recent plugins processed.
+    """
 
     def __init__(
         self,

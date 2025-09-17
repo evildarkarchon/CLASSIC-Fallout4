@@ -2,7 +2,6 @@
 
 import platform
 import re
-import struct
 from importlib import util
 from pathlib import Path
 from typing import Any
@@ -22,8 +21,21 @@ VERSION_PATTERNS = [
 
 
 def is_valid_executable_path(path: Path | None) -> bool:
-    """Check if a path points to a valid executable file."""
-    return path is not None and path.exists() and path.is_file() and path.suffix.lower() in (".exe", ".app", "")
+    """
+    Checks if the provided path is valid as an executable file.
+
+    The function evaluates whether the given path corresponds to a valid
+    executable file. This includes checking for the existence of the path,
+    ensuring it is a file, and verifying that its extension matches known
+    executable file types.
+
+    Args:
+        path (Path | None): The file path to validate.
+
+    Returns:
+        bool: True if the path is valid as an executable, otherwise False.
+    """
+    return path is not None and path.exists() and path.is_file() and path.suffix.lower() in {".exe", ".app", ""}
 
 
 def extract_windows_version_info(win32api_module: Any, exe_path: Path) -> tuple[int, int]:
@@ -55,6 +67,7 @@ def create_version_from_info(ms: int, ls: int) -> Version:
     return Version(f"{ms >> 16}.{ms & 0xFFFF}.{ls >> 16}.{ls & 0xFFFF}")
 
 
+# noinspection PyUnusedImports
 def get_version_windows_api(game_exe_path: Path) -> Version:
     """
     Get version using Windows API (pywin32).
@@ -85,23 +98,54 @@ def get_version_windows_api(game_exe_path: Path) -> Version:
     return Constants.NULL_VERSION
 
 
-def get_version_from_pe_header(exe_path: Path) -> Version:
+def extract_version_from_string_table(string_table: Any) -> Version | None:
     """
-    Extract version from PE header with multiple fallback strategies.
+    Extract version from a PE string table.
 
     Args:
-        exe_path: Path to the executable
+        string_table: PE string table object
 
     Returns:
-        Version object or NULL_VERSION if all methods fail
+        Version object if found, None otherwise
     """
-    # Try pefile first if available
-    version = get_version_with_pefile(exe_path)
-    if version != Constants.NULL_VERSION:
-        return version
+    if not (hasattr(string_table, "entries") and string_table.entries):
+        return None
 
-    # Fallback to manual PE parsing
-    return get_version_fallback(exe_path)
+    file_version = string_table.entries.get(b"FileVersion")
+    if not file_version:
+        return None
+
+    # Convert bytes to string and clean up
+    version_str = file_version.decode("utf-8", errors="ignore").strip()
+    # Remove any null characters
+    version_str = version_str.replace("\x00", "")
+
+    try:
+        return Version(version_str)
+    except Exception:  # noqa: BLE001
+        logger.debug(f"Could not parse version string: {version_str}")
+        return None
+
+
+def extract_version_from_file_info(file_info: Any) -> Version | None:
+    """
+    Extract version from PE file info structure.
+
+    Args:
+        file_info: PE file info object
+
+    Returns:
+        Version object if found, None otherwise
+    """
+    if not (hasattr(file_info, "StringFileInfo") and file_info.StringFileInfo):
+        return None
+
+    for string_table in file_info.StringFileInfo:
+        version = extract_version_from_string_table(string_table)
+        if version is not None:
+            return version
+
+    return None
 
 
 def get_version_with_pefile(exe_path: Path) -> Version:
@@ -127,19 +171,10 @@ def get_version_with_pefile(exe_path: Path) -> Version:
         # Try to get version from VS_VERSIONINFO
         if hasattr(pe, "VS_VERSIONINFO") and pe.VS_VERSIONINFO:
             for file_info in pe.VS_VERSIONINFO:
-                if hasattr(file_info, "StringFileInfo") and file_info.StringFileInfo:
-                    for string_table in file_info.StringFileInfo:
-                        if hasattr(string_table, "entries") and string_table.entries:
-                            file_version = string_table.entries.get(b"FileVersion")
-                            if file_version:
-                                # Convert bytes to string and clean up
-                                version_str = file_version.decode("utf-8", errors="ignore").strip()
-                                # Remove any null characters
-                                version_str = version_str.replace("\x00", "")
-                                try:
-                                    return Version(version_str)
-                                except Exception:  # noqa: BLE001
-                                    logger.debug(f"Could not parse version string: {version_str}")
+                version = extract_version_from_file_info(file_info)
+                if version is not None:
+                    pe.close()
+                    return version
 
         pe.close()
 
@@ -180,10 +215,29 @@ def get_version_fallback(exe_path: Path) -> Version:
                     except Exception:  # noqa: BLE001
                         continue
 
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.warning(f"Failed to read executable for version detection: {e}")
 
     return Constants.NULL_VERSION
+
+
+def get_version_from_pe_header(exe_path: Path) -> Version:
+    """
+    Extract version from PE header with multiple fallback strategies.
+
+    Args:
+        exe_path: Path to the executable
+
+    Returns:
+        Version object or NULL_VERSION if all methods fail
+    """
+    # Try pefile first if available
+    version = get_version_with_pefile(exe_path)
+    if version != Constants.NULL_VERSION:
+        return version
+
+    # Fallback to manual PE parsing
+    return get_version_fallback(exe_path)
 
 
 def get_game_version(game_exe_path: Path) -> Version:

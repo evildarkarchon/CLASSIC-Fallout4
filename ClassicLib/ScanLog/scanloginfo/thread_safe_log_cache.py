@@ -13,18 +13,37 @@ from ClassicLib import msg_error
 
 
 class ThreadSafeLogCache:
+    """
+    Provides a thread-safe, in-memory log cache for managing log files.
+
+    This class is designed to handle log file data in memory efficiently,
+    supporting both asynchronous and parallel synchronous loading. The
+    primary goal is to offer a thread-safe alternative to database-based
+    log management systems like SQLite. The implementation uses a lock
+    to ensure thread-safe operations, making it suitable for concurrent
+    environments.
+
+    Attributes:
+        lock (RLock): A reentrant lock used to ensure thread safety during cache operations.
+        cache (dict[str, bytes]): A dictionary storing the cached log data. The keys are
+            log file names, and the values are their byte content.
+    """
     def __init__(self, logfiles: list[Path]) -> None:
         """
-        Initializes a thread-safe in-memory log cache using a dictionary protected by a lock.
-        This provides a thread-safe alternative to SQLite for caching log files.
+        Initializes the log loader and populates a cache with the log_content of the provided log files.
+
+        This class initializer attempts to load the log_content of log files either asynchronously
+        through the FileIOCore module for better performance when available, or by falling
+        back to parallel synchronous loading using ThreadPoolExecutor when async loading is
+        not possible. Both approaches handle errors during file reads and optionally log them.
 
         Args:
-            logfiles (list[Path]): A list of file paths representing the log files to be cached.
+            logfiles (list[Path]): A list of Path objects pointing to the log files to be loaded.
         """
         self.lock = threading.RLock()  # Reentrant lock allows nested acquisitions
         self.cache: dict[str, bytes] = {}
 
-        # Populate the cache with log content
+        # Populate the cache with log log_content
         # Try async loading first for better performance
         try:
             # Use FileIOCore for async loading
@@ -36,8 +55,8 @@ class ThreadSafeLogCache:
                 results = {}
                 for file in logfiles:
                     try:
-                        content = await io_core.read_bytes(file)
-                        results[file.name] = content
+                        log_content = await io_core.read_bytes(file)
+                        results[file.name] = log_content
                     except (OSError, ValueError, UnicodeDecodeError) as e:
                         msg_error(f"Error reading {file}: {e}")
                 return results
@@ -49,7 +68,22 @@ class ThreadSafeLogCache:
         except (ImportError, RuntimeError, OSError):
             # Fallback to parallel sync loading for better performance
             def load_file(file: Path) -> tuple[str, bytes | None]:
-                """Load a single file and return its name and content."""
+                """
+                Loads the log_content of a file and handles potential errors during the process.
+
+                This function attempts to read the bytes of the specified file and returns a
+                tuple containing the file's name and its log_content. If an error occurs while
+                reading the file, an error message is logged, and the log_content is returned as
+                None.
+
+                Args:
+                    file (Path): The file to read.
+
+                Returns:
+                    tuple[str, bytes | None]: A tuple where the first item is the file's name
+                    and the second item is the file's log_content as bytes, or None if reading the
+                    file failed.
+                """
                 try:
                     return file.name, file.read_bytes()
                 except OSError as e:
@@ -70,19 +104,18 @@ class ThreadSafeLogCache:
 
     def read_log(self, logname: str) -> list[str]:
         """
-        Reads log data for a specified log name from the cache.
+        Reads the log contents for a specific log file from the cache and returns it as a list of strings.
 
-        This method retrieves log data associated with the provided log name
-        from a cached data source and returns it as a list of decoded string
-        lines. If the log name does not exist in the cache, an empty list
-        is returned.
+        This method accesses the cache and retrieves the log information associated with the given logname.
+        If the logname is not found in the cache, an empty list is returned. The log data is decoded from
+        UTF-8 and split into individual lines.
 
-        Parameters:
-            logname (str): The name of the log to retrieve.
+        Args:
+            logname (str): The name of the log file to read.
 
         Returns:
-            list[str]: List of log lines as strings. Returns an empty list if
-            the log name is not found in the cache.
+            list[str]: A list of strings representing the lines of the log file.
+            Returns an empty list if the logname is not in the cache.
         """
         with self.lock:
             if logname not in self.cache:
@@ -93,29 +126,31 @@ class ThreadSafeLogCache:
 
     def get_log_names(self) -> list[str]:
         """
-        Retrieves the names of all logs currently stored in the cache.
+        Retrieves the list of log names from the cache.
 
-        This method provides a thread-safe way to access the keys representing
-        log names in a cached storage structure, ensuring that data integrity is
-        maintained during access.
+        This method accesses the cache in a thread-safe manner by using a lock,
+        returning a list of all keys that represent log names.
 
         Returns:
-            list[str]: A list containing the names of all logs in the cache.
+            list[str]: A list of log name strings present in the cache.
         """
         with self.lock:
             return list(self.cache.keys())
 
     def add_log(self, path: Path) -> bool:
         """
-        Adds a log file to the internal cache if it is not already present.
+        Adds a log entry to the cache from the specified file path.
 
-        Parameters:
-        path (Path): The path to the log file to be added.
+        This method reads the contents of a file at the given path and adds it to
+        an internal cache if it does not already exist. If the operation is
+        successful, it returns True. If an error occurs while reading the file, it
+        returns False.
+
+        Args:
+            path (Path): The file path from which log data is read and cached.
 
         Returns:
-        bool: True if the log file was successfully added to the cache or is
-        already present; False if an OSError occurred during reading.
-
+            bool: True if the log is added successfully; False otherwise.
         """
         with self.lock:
             try:
@@ -127,7 +162,11 @@ class ThreadSafeLogCache:
 
     def close(self) -> None:
         """
-        Clears the cache when no longer needed.
+        Clears the cache and releases any resources associated with the lock.
+
+        This method is thread-safe. It acquires a lock to ensure no other threads
+        are accessing or modifying the cache at the same moment. The cache is
+        cleared entirely when this method is invoked.
         """
         with self.lock:
             self.cache.clear()
@@ -135,23 +174,15 @@ class ThreadSafeLogCache:
     @classmethod
     def from_cache(cls, cache_dict: dict[str, bytes]) -> "ThreadSafeLogCache":
         """
-        Creates a new instance of the ThreadSafeLogCache class using an existing cache
-        dictionary. This method allows for generating an object without directly
-        loading files, by copying the provided cache dictionary into the instance.
-        Used primarily for scenarios where log files are already cached and need to
-        be encapsulated in a thread-safe structure.
+        Creates a ThreadSafeLogCache instance from an existing cache dictionary.
 
-        Parameters:
-            cache_dict (dict[str, bytes]): A dictionary representing cached log data,
-            where keys are strings identifying logs, and values are byte content of
-            the logs.
+        Args:
+            cache_dict (dict[str, bytes]): A dictionary containing log data where keys are
+                string identifiers, and values are log contents as bytes.
 
         Returns:
-            ThreadSafeLogCache: A new instance of the ThreadSafeLogCache initialized
-            with the contents of the provided cache.
-
-        Raises:
-            None
+            ThreadSafeLogCache: A new instance of ThreadSafeLogCache initialized with
+                the provided cache dictionary.
         """
         # Create instance without loading files
         instance = cls.__new__(cls)

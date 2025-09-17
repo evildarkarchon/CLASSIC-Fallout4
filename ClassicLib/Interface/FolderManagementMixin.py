@@ -24,7 +24,20 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 class FolderManagementMixin:
     """
-    Mixin class providing folder management functionality for the MainWindow.
+    Mixin providing folder management utilities.
+
+    This mixin is designed to handle folder-related operations such as selecting
+    folders, validating folder paths, and initializing folder paths from settings.
+    It also provides methods for opening specific system folders such as backup
+    and crash logs directories. These utilities are intended to interact with
+    application-wide settings and enhance folder management functionality within
+    the application.
+
+    Attributes:
+        scan_folder_edit (QLineEdit | None): Input field reference for the custom
+            scan folder path used in the user interface.
+        mods_folder_edit (QLineEdit | None): Input field reference for the mods
+            folder path used in the user interface.
     """
 
     if TYPE_CHECKING:
@@ -34,16 +47,12 @@ class FolderManagementMixin:
 
     def select_folder_scan(self) -> None:
         """
-        Prompts the user to select a folder for scanning and updates the scan folder
-        path in both the GUI and application settings.
+        Prompts the user to select a folder for custom scan functionality, validates the selected folder,
+        and updates the application settings accordingly. If the folder is invalid, a warning dialog is
+        shown, and the user can retry until a valid folder is chosen or the dialog is canceled.
 
-        Tracks and updates the path of a folder chosen by the user for custom
-        scans. If the user selects a valid folder, the GUI field associated with
-        scan folder input is updated, and the folder path is stored in the
-        application's settings configuration.
-
-        Returns:
-            None
+        Raises:
+            Warning: If the selected folder is not valid for a custom scan path.
         """
         while True:
             # noinspection PyTypeChecker
@@ -125,9 +134,6 @@ class FolderManagementMixin:
         The function opens a directory selection dialog to allow the user to select a folder
         for staging mods. If a valid folder is selected, it updates a text field in the UI with
         the selected folder path and writes the chosen path to a YAML configuration file.
-
-        Returns:
-            None
         """
         # noinspection PyTypeChecker
         folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
@@ -144,9 +150,6 @@ class FolderManagementMixin:
         This method retrieves the folder paths for "SCAN Custom Path" and "MODS Folder Path"
         from the application settings and, if applicable, populates the respective input fields
         with the retrieved values.
-
-        Returns:
-            None
         """
         scan_folder: str | None = classic_settings(str, "SCAN Custom Path")
         mods_folder: str | None = classic_settings(str, "MODS Folder Path")
@@ -162,9 +165,6 @@ class FolderManagementMixin:
 
         Displays a modal dialog where users can configure all application settings
         in a structured interface. Changes are saved when the user clicks OK.
-
-        Returns:
-            None
         """
         from ClassicLib.Interface.SettingsDialog import SettingsDialog
 
@@ -180,9 +180,6 @@ class FolderManagementMixin:
 
         This method is called after the settings dialog is accepted to apply
         any changes that need to take effect immediately in the current session.
-
-        Returns:
-            None
         """
         # Currently no immediate UI changes needed
         # This method is here for future use when settings might affect the UI

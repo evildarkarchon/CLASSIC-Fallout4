@@ -1,6 +1,11 @@
-# ================================================
-# CHECK BUFFOUT CONFIG SETTINGS
-# ================================================
+"""
+A module to check and validate settings for Crash Generator (Buffout4) configuration.
+
+This module contains the CrashgenChecker class, which is used to locate and verify
+the configuration files for Buffout4 and ensure that the settings are appropriate
+based on the installed plugins and given requirements. The class also handles the
+detection of installed plugins and evaluates the correctness of the configuration.
+"""
 from pathlib import Path
 from typing import Any, cast
 
@@ -12,9 +17,31 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 class CrashgenChecker:
-    """Checks and validates settings for Crash Generator (Buffout4) configuration."""
+    """
+    Handles checking and validating the installation of crash generation mods, their configurations,
+    and compatibility with installed plugins.
+
+    This class is designed to manage the setup and requirements for crash generation tools, ensuring
+    correct configuration files are used, detecting installed plugins, and checking for potential
+    conflicts. It provides functionality to validate mod settings and compatibility for proper behavior.
+
+    Attributes:
+        message_list (list[str]): List of messages for logging issues, warnings, or errors during the
+            validation process.
+        plugins_path (Path | None): Path to the plugins directory extracted from the settings.
+        crashgen_name (str): Name of the crash generator mod based on the settings or default value.
+        config_file (Path | None): Path to the configuration file being used by the crash generator mod.
+        installed_plugins (set[str]): Set of installed plugins (DLL files) detected in the plugins directory.
+    """
 
     def __init__(self) -> None:
+        """
+        Initializes the class and sets up initial attributes for managing message list and
+        plugin configurations.
+
+        Raises:
+            FileNotFoundError: If the configuration file is not found during initialization.
+        """
         self.message_list: list[str] = []
         self.plugins_path = self._get_plugins_path()
         self.crashgen_name = self._get_crashgen_name()
@@ -23,18 +50,48 @@ class CrashgenChecker:
 
     @staticmethod
     def _get_plugins_path() -> Path | None:
-        """Get plugins path from settings and ensure it's a Path object."""
+        """
+        Gets the path to the plugins directory if available.
+
+        This method retrieves the path to the plugins folder for a specific game configuration
+        based on the provided YAML settings and the VR version fetched from the global registry.
+        It returns the resolved path as a `Path` object or `None` if the path is unavailable.
+
+        Returns:
+            Path | None: The path to the plugins directory or `None` if unavailable.
+        """
         plugins_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins")
         return plugins_path
 
     @staticmethod
     def _get_crashgen_name() -> str:
-        """Get crash generator name from settings."""
+        """
+        Returns the crash generator name based on the game's YAML settings.
+
+        If a valid string value for `CRASHGEN_LogName` is provided in the game's YAML
+        settings, it will be returned. Otherwise, a default value of "Buffout4" is
+        returned.
+
+        Returns:
+            str: The crash generator name derived from the YAML settings or the
+            default "Buffout4" string.
+        """
         crashgen_name_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_LogName")
         return crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
 
     def _find_config_file(self) -> Path | None:
-        """Find and determine which config file to use."""
+        """
+        Finds the configuration file for the plugin based on the available file paths and
+        resolves potential conflicts, such as missing or duplicate configuration files.
+
+        If both configuration file versions are found, an error message is added to the
+        message list. If only one valid configuration file is found, returns that file's path.
+        If no configuration files are found, returns None.
+
+        Returns:
+            Path | None: The path to the configuration file, or None if no
+            valid configuration file is found.
+        """
         if not self.plugins_path:
             return None
 
@@ -64,7 +121,24 @@ class CrashgenChecker:
         return None
 
     def _detect_installed_plugins(self) -> set[str]:
-        """Check for installed mods by examining DLL files in the plugins directory."""
+        """
+        Detect installed plugins by scanning the specified plugins directory.
+
+        This method identifies the installed plugins by iterating through files in the plugins
+        directory specified by the `plugins_path` attribute. It collects the names of the files
+        in lowercase and returns them as a set of strings. If the directory does not exist or
+        cannot be accessed due to permissions or other errors, it handles these scenarios
+        gracefully by logging the error and showing an error message.
+
+        Returns:
+            set[str]: A set containing the lowercase names of the files in the plugins
+            directory.
+
+        Raises:
+            PermissionError: If the plugins directory cannot be accessed due to permissions.
+            OSError: If an operating system-related error occurs while accessing the
+            plugins directory.
+        """
         xse_files: set[str] = set()
         if self.plugins_path and self.plugins_path.exists():
             try:
@@ -92,7 +166,17 @@ class CrashgenChecker:
         return any(plugin in self.installed_plugins for plugin in plugin_names)
 
     def _get_settings_to_check(self) -> list[dict[str, Any]]:
-        """Define configuration settings to check with their requirements and desired states."""
+        """
+        Retrieves a list of configuration settings to check for compatibility and stability
+        based on the installed game, plugins, and specific mod configurations for Fallout 4.
+        The method conditionally evaluates the presence of various mods or plugins and returns
+        appropriate settings designed to prevent conflicts and ensure proper functionality.
+
+        Returns:
+            list[dict[str, Any]]: A list of dictionaries, each representing a setting to check.
+            Includes information about configuration sections, keys, conditions, desired values,
+            descriptions, and reasons for the suggested changes.
+        """
         if GlobalRegistry.get_game() != "Fallout4":
             return []
 
@@ -188,7 +272,19 @@ class CrashgenChecker:
         ]
 
     def _process_settings(self) -> None:
-        """Process each setting and make necessary adjustments."""
+        """
+        Processes and validates settings from a configuration file and applies corrections as needed.
+
+        This method checks the compatibility and correctness of specific settings within the
+        provided configuration file. It validates conditions and applies recommended configurations
+        to ensure system compatibility. Special cases, such as handling the Baka ScrapHeap Mod,
+        are also considered and handled uniquely. Messages about changes or configuration status
+        are accumulated to provide feedback.
+
+        Raises:
+            AssertionError: If `config_file` is not set before calling this method.
+
+        """
         assert self.config_file is not None, "Config file must be checked by the caller before processing settings."
         has_bakascrapheap: bool = "bakascrapheap.dll" in self.installed_plugins
 

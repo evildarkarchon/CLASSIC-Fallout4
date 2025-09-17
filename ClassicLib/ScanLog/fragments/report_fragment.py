@@ -13,9 +13,17 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ReportFragment:
     """
-    Immutable report fragment that can be composed with others.
+    Represents an immutable fragment of a report.
 
-    This replaces the mutable list approach with functional composition.
+    This class is designed to handle sections of a report in a structured way, ensuring immutability
+    and easy combinability. It allows for creating fragments from a series of strings, adding headers
+    to existing fragments, and combining multiple fragments. Additionally, it provides a mechanism
+    to convert the immutable fragments back to a mutable list, maintaining compatibility with legacy
+    code where necessary.
+
+    Attributes:
+        content (tuple[str, ...]): The immutable sequence of strings constituting the fragment's content.
+        has_content (bool): Indicates whether the fragment contains meaningful content.
     """
 
     content: tuple[str, ...]  # Immutable tuple instead of mutable list
@@ -23,17 +31,37 @@ class ReportFragment:
 
     @classmethod
     def empty(cls) -> ReportFragment:
-        """Create an empty fragment."""
+        """
+        Creates an empty instance of the `ReportFragment` class with predefined
+        default values.
+
+        Args:
+            cls (Type[ReportFragment]): The class itself, automatically passed by
+                Python when invoking a class method.
+
+        Returns:
+            ReportFragment: A new `ReportFragment` instance with `content` as an
+            empty tuple and `has_content` set to `False`.
+        """
         return cls(content=(), has_content=False)
 
     @classmethod
     def from_lines(cls, lines: list[str] | tuple[str, ...], check_content: bool = True) -> ReportFragment:
         """
-        Create a fragment from lines.
+        Creates a new instance of ReportFragment based on the given lines of content.
+
+        Lines can be provided as either a list or tuple of strings. This method also allows
+        an option to validate the existence of content within the lines. If `check_content`
+        is True, the method evaluates the content for presence before instantiating the class.
 
         Args:
-            lines: The content lines
-            check_content: If True, sets has_content based on whether lines exist
+            lines (list[str] | tuple[str, ...]): The lines of text to be used as content for
+                the ReportFragment instance. Can be provided as a list or tuple of strings.
+            check_content (bool, optional): A flag indicating whether to check if the content
+                is present. If False, the content presence check is skipped. Defaults to True.
+
+        Returns:
+            ReportFragment: An instance of ReportFragment initialized with the provided content.
         """
         content = tuple(lines) if isinstance(lines, list) else lines
         has_content = bool(content) if check_content else True
@@ -41,9 +69,20 @@ class ReportFragment:
 
     def with_header(self, header_lines: list[str] | tuple[str, ...]) -> ReportFragment:
         """
-        Add a header to this fragment (only if it has content).
+        Appends header lines to the content of the ReportFragment if it already contains content.
 
-        This replaces the retroactive header insertion pattern.
+        If the `ReportFragment` instance has content, this method prepends the provided header
+        lines to the current content and returns a new `ReportFragment` instance with the updated
+        content. Otherwise, it returns the current instance without any modifications.
+
+        Args:
+            header_lines (list[str] | tuple[str, ...]): A list or tuple of strings to prepend
+                as header lines to the current content.
+
+        Returns:
+            ReportFragment: A new `ReportFragment` instance with the header lines added to
+            the content if `has_content` is True. If `has_content` is False, the existing
+            instance is returned unmodified.
         """
         if not self.has_content:
             return self
@@ -52,12 +91,34 @@ class ReportFragment:
         return ReportFragment(content=header_tuple + self.content, has_content=True)
 
     def __add__(self, other: ReportFragment) -> ReportFragment:
-        """Combine two fragments."""
+        """
+        Adds two ReportFragment objects and returns a new ReportFragment object.
+
+        If both fragments being added have no content, an empty ReportFragment
+        object is returned. Otherwise, combines the content of both fragments and
+        determines if the resulting fragment contains content.
+
+        Args:
+            other (ReportFragment): Another ReportFragment object to add.
+
+        Returns:
+            ReportFragment: A new ReportFragment object resulting from the addition
+            of the two fragments.
+        """
         if not self.has_content and not other.has_content:
             return ReportFragment.empty()
 
         return ReportFragment(content=self.content + other.content, has_content=self.has_content or other.has_content)
 
     def to_list(self) -> list[str]:
-        """Convert to mutable list for backwards compatibility."""
+        """
+        Converts the content of the object into a list of strings.
+
+        This method takes the content attribute and converts it into a list of
+        individual strings. It is particularly useful for breaking down the content
+        into manageable parts if it is stored as a sequence.
+
+        Returns:
+            list[str]: A list containing each element of the content as a string.
+        """
         return list(self.content)

@@ -1,3 +1,25 @@
+"""
+Mixin class adding functionality to fetch logs from Pastebin.
+
+This module defines mixin functionality to support the integration of Pastebin log
+retrieval into a graphical user interface, including the setup of relevant user interface
+elements and asynchronous worker threads for fetching logs. The PastebinMixin class
+requires the mixing class to implement specific attributes for managing threads and UI
+components. The module relies on signals and slots for asynchronous operations, ensuring
+a non-blocking user interface during log fetch.
+
+Classes:
+    - PastebinMixin: Adds the Pastebin log-fetching capability to a GUI.
+
+Dependencies:
+    - re: Regular expression matching for URL validation.
+    - PySide6.QtCore.QThread: For managing threads.
+    - PySide6.QtWidgets: For GUI elements like labels, buttons, and layouts.
+    - ClassicLib.Interface.Pastebin.PastebinFetchWorker: Worker for fetching logs.
+    - ClassicLib.Interface.ThreadManager.ThreadType: Enum for different thread types.
+    - ClassicLib.Logger: For logging events.
+"""
+
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -86,9 +108,6 @@ class PastebinMixin:
 
         Raises:
             SignalErrors: Raised when the worker encounters an error during network operations or data processing.
-
-        Returns:
-            None
         """
         if self.pastebin_id_input is None:
             return  # Should not happen if UI is setup correctly

@@ -1,4 +1,12 @@
-"""Papyrus log monitoring handler for TUI."""
+"""
+Provides functionality to detect Unicode support, handle Papyrus statistics, and manage
+asynchronous monitoring tasks.
+
+This module includes methods for determining Unicode support in the current environment,
+parsing Papyrus tool output into structured statistics, and supporting callbacks for
+statistics and error data. Additionally, it provides a monitoring loop for tracking
+statistics updates asynchronously.
+"""
 
 import asyncio
 import contextlib
@@ -13,17 +21,35 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent))
 
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.PapyrusLog import papyrus_logging
-from .papyrus_stats import PapyrusStats
+from ClassicLib.TUI.handlers.papyrus.papyrus_stats import PapyrusStats
 
 # Module-level cache for Unicode detection result
 _UNICODE_SUPPORT_CACHE: bool | None = None
 
 
+# noinspection PyUnresolvedReferences
 def _detect_unicode_support_impl() -> bool:
-    """Detect if terminal supports Unicode (implementation).
+    """
+    Detects Unicode support in the current environment.
+
+    This function checks whether the current terminal or console environment
+    supports Unicode output. It tries to output a Unicode character, checks
+    environment variables such as `TERM` and `LANG` to determine terminal
+    capabilities, and handles platform-specific cases like Windows console hosts.
+    The function defaults to assuming the presence or absence of Unicode support
+    based on the best available heuristics.
 
     Returns:
-        True if Unicode is likely supported, False for ASCII fallback
+        bool: True if Unicode support is detected, False otherwise.
+
+    Raises:
+        UnicodeEncodeError: Raised if Unicode output cannot be encoded in the current
+            environment encoding.
+        AttributeError: Raised if required attributes are missing during encoding or
+            environment detection.
+        ImportError: Raised if platform-specific modules such as `ctypes` are
+            unavailable.
+        ValueError: Raised if invalid values are encountered during code page detection.
     """
     # Try to actually output a Unicode character to test support
     try:
@@ -82,10 +108,15 @@ def _detect_unicode_support_impl() -> bool:
 
 
 def _get_unicode_support_cached() -> bool:
-    """Get cached Unicode support detection result.
+    """
+    Determines if Unicode support is available, using a cached value for efficiency.
+
+    This function checks for Unicode support and caches the result globally to avoid
+    repeated checks. If the cached value is not yet initialized, it performs the
+    detection operation and stores the result.
 
     Returns:
-        Cached result of Unicode support detection
+        bool: True if Unicode support is available, False otherwise.
     """
     global _UNICODE_SUPPORT_CACHE  # noqa: PLW0603
     if _UNICODE_SUPPORT_CACHE is None:
@@ -94,7 +125,17 @@ def _get_unicode_support_cached() -> bool:
 
 
 class TuiPapyrusHandler:
-    """Handles Papyrus log monitoring for TUI."""
+    """
+    Formats the provided PapyrusStats object into a human-readable string.
+
+    Converts the given statistics data into a structured string suitable for
+    display or logging purposes. The output includes information such as the
+    timestamp, number of dumps, stacks, warnings, errors, and the dumps/stacks
+    ratio.
+
+    Returns:
+        str: A formatted string representation of the provided statistics.
+    """
 
     def __init__(
         self,
@@ -127,23 +168,46 @@ class TuiPapyrusHandler:
         self.use_unicode = use_unicode
 
     def set_stats_callback(self, callback: Callable[[PapyrusStats], None]) -> None:
-        """Set the stats callback function."""
+        """
+        Sets the statistic callback function to be invoked with updated statistics.
+
+        Args:
+            callback (Callable[[PapyrusStats], None]): A callback function that accepts
+                a PapyrusStats instance as its argument and performs desired actions
+                on the statistics data.
+        """
         self.stats_callback = callback
 
     def set_error_callback(self, callback: Callable[[str], None]) -> None:
-        """Set the error callback function."""
+        """
+        Sets a callback function to handle error messages.
+
+        The provided callback function will be invoked when an error occurs. It must
+        accept a single string parameter representing the error message and return no
+        value.
+
+        Args:
+            callback (Callable[[str], None]): A function that handles error messages.
+                The function should take a string as input and return nothing.
+        """
         self.error_callback = callback
 
     @staticmethod
     def _parse_papyrus_output(output: str, dumps_count: int) -> PapyrusStats:
-        """Parse papyrus_logging output into stats.
+        """
+        Parses the output of Papyrus and extracts statistical data such as the number of
+        dumps, stacks, warnings, errors, and ratio. If parsing fails for certain metrics,
+        default values are used or fallback values are applied.
 
         Args:
-            output: Raw output from papyrus_logging
-            dumps_count: Number of dumps from papyrus_logging
+            output (str): The raw output string from the Papyrus tool.
+            dumps_count (int): The default number of dumps to use if parsing the output
+                fails.
 
         Returns:
-            Parsed PapyrusStats object
+            PapyrusStats: An instance of PapyrusStats containing the parsed statistics,
+            including timestamp, dumps, stacks, warnings, errors, ratio, and the raw
+            output.
         """
         stats = PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0, raw_output=output)
 
@@ -171,7 +235,17 @@ class TuiPapyrusHandler:
         return stats
 
     async def _monitor_loop(self) -> None:
-        """Main monitoring loop that polls papyrus_logging."""
+        """
+        Performs asynchronous monitoring operations and maintains statistics updates based on
+        the output of the `papyrus_logging` function. The monitoring loop continues until the
+        stop event is triggered or cancellation is requested.
+
+        Args:
+            self: Instance of the class containing the monitoring logic.
+
+        Raises:
+            asyncio.CancelledError: Indicates that the monitoring loop was cancelled.
+        """
         try:
             # Initialize message handler for monitoring
             init_message_handler(parent=None, is_gui_mode=False)
@@ -210,10 +284,21 @@ class TuiPapyrusHandler:
             self.is_monitoring = False
 
     async def start_monitoring(self) -> bool:
-        """Start Papyrus log monitoring.
+        """
+        Starts the monitoring process asynchronously, ensuring only one monitoring instance runs at a
+        time. If monitoring is already active, it will notify via the error callback. On success, it
+        sets up the monitoring task and performs an initial check for stats retrieval. Handles various
+        exceptions that might occur during setup and appropriately notifies via the error callback.
 
         Returns:
-            True if monitoring started successfully, False otherwise
+            bool: True if monitoring starts successfully, False otherwise.
+
+        Raises:
+            OSError: If there is an operating system-related error.
+            ValueError: If an invalid value is encountered.
+            AttributeError: If accessing an undefined attribute.
+            RuntimeError: If a runtime error occurs.
+            asyncio.CancelledError: If the asyncio task is cancelled.
         """
         async with self._monitor_lock:
             if self.is_monitoring:
@@ -245,7 +330,19 @@ class TuiPapyrusHandler:
                 return True
 
     async def stop_monitoring(self) -> None:
-        """Stop Papyrus log monitoring with proper cleanup."""
+        """
+        Stops the ongoing monitoring process and cleans up associated resources.
+
+        This method ensures that the monitoring process is stopped gracefully. It signals the
+        monitoring loop to stop, clears the internal state related to monitoring, and handles
+        cancellation of the associated task. It provides timeout protection when waiting for
+        task cancellation to complete and ensures no exceptions from the cancelled task propagate.
+
+        Raises:
+            asyncio.TimeoutError: If the cancellation of the monitoring task exceeds the specified
+                timeout.
+            asyncio.CancelledError: If the task is cancelled during execution.
+        """
         async with self._monitor_lock:
             if not self.is_monitoring:
                 return
@@ -276,11 +373,29 @@ class TuiPapyrusHandler:
                         pass
 
     def is_monitoring_active(self) -> bool:
-        """Check if monitoring is currently active."""
+        """
+        Determines whether monitoring is currently active.
+
+        This method checks the status of monitoring by evaluating the
+        property `is_monitoring`.
+
+        Returns:
+            bool: True if monitoring is active, False otherwise.
+        """
         return self.is_monitoring
 
     def get_last_stats(self) -> PapyrusStats | None:
-        """Get the last recorded stats."""
+        """
+        Returns the last recorded statistics.
+
+        This method retrieves the last available instance of statistics if it exists.
+        If no statistics have been recorded, it returns None. Used to access the most
+        recent PapyrusStats object.
+
+        Returns:
+            PapyrusStats | None: The last recorded statistics if available, otherwise
+            None.
+        """
         return self.last_stats
 
     def format_stats(self, stats: PapyrusStats) -> str:

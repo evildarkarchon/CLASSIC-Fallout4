@@ -86,14 +86,10 @@ class AudioPlayer(QObject):
 
     def play_error_sound(self) -> None:
         """
-        Plays an error sound if the audio system is enabled and the error sound is loaded.
+        Plays an error sound if audio is enabled and the error sound is loaded.
 
-        This method checks whether audio playback is enabled and whether the error sound
-        resource has been successfully loaded. If both conditions are satisfied, it will trigger
-        the error sound to play.
-
-        Returns:
-            None
+        This method checks whether audio output is enabled and if the error sound resource is
+        properly loaded. If both conditions are met, the error sound is played.
         """
         if self.audio_enabled and self.error_sound.isLoaded():
             self.error_sound.play()

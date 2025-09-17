@@ -1,3 +1,19 @@
+"""
+Handles operations related to resolving and validating game installation paths, including system
+registry checks, user interactions, and configuration updates.
+
+The module ensures the correct game path is determined based on platform-specific logic, registry
+lookups, and user-provided input. Once validated, the paths are registered and stored in YAML
+settings.
+
+Functions:
+    _game_path_find_registry: Retrieves the game's installation path from the Windows registry
+    if available.
+    game_path_find: Coordinates the process of finding, validating, and configuring the game's
+    installation path using multiple strategies.
+    game_generate_paths: Configures game paths and files necessary for the current game version.
+"""
+
 import platform
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -30,6 +46,7 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
         A Path object representing the game's valid installation directory if found and validated,
         otherwise None.
     """
+    # noinspection PyCompatibility
     import winreg
 
     try:
@@ -190,7 +207,7 @@ def game_generate_paths() -> None:
         case "Fallout4" if not GlobalRegistry.get_vr():
             if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
                 raise ValueError("Unsupported or invalid game version")
-            if game_version in (OG_VERSION, NULL_VERSION):
+            if game_version in {OG_VERSION, NULL_VERSION}:
                 yaml_settings(
                     str,
                     YAML.Game_Local,

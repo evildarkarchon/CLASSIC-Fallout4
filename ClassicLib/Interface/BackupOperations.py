@@ -8,7 +8,7 @@ operations for game files.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -44,9 +44,6 @@ class BackupOperationsMixin:
         contain any files. If such conditions are met, corresponding restore buttons in
         the UI are enabled and visually updated with a specific stylesheet. The process
         is automated for the predefined categories.
-
-        Returns:
-            None
         """
         for category in ["XSE", "RESHADE", "VULKAN", "ENB"]:
             backup_path: Path = Path(f"CLASSIC Backup/Game Files/Backup {category}")

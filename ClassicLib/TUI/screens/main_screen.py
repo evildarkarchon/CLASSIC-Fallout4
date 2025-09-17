@@ -36,8 +36,41 @@ class MainScreen(Screen):
     staging_folder = reactive("")
     custom_folder = reactive("")
 
-    def compose(self) -> ComposeResult:
-        """Compose the main screen layout."""
+    def __init__(
+        self,
+        name: str | None = None,
+        widget_id: str | None = None,
+        classes: str | None = None,
+    ) -> None:
+        """
+        Initializes the class with name, id, and classes, while ensuring inherited
+        properties are initialized. The class is also responsible for managing
+        internal widget caching. The provided parameters are optional, allowing
+        flexibility in object creation.
+
+        Args:
+            name: An optional string representing the name of the object.
+            widget_id: An optional string representing the unique identifier for the object.
+            classes: An optional string representing the classes associated with the
+                object.
+        """
+        super().__init__(name, widget_id, classes)
+        self._widget_cache = {}
+
+    def compose(self) -> ComposeResult:  # noqa: PLR6301
+        """
+        Defines the `compose` method, which constructs the user interface layout for the application.
+        The layout consists of a vertical container for grouping the main options, sub-sections for folder
+        selections and scan buttons, as well as additional components like a settings section and an output viewer.
+
+        Yields:
+            ComposeResult: A composed result representing the layout of UI elements.
+
+        Raises:
+            RuntimeError: If an error occurs during settings retrieval related to runtime.
+            KeyError: If the configuration key "Update Check" is not found during settings retrieval.
+            ValueError: If the value retrieved for "Update Check" is not of the expected type.
+        """
         with Vertical(id="main-container"):
             yield Label("MAIN OPTIONS", classes="title")
 
@@ -66,7 +99,6 @@ class MainScreen(Screen):
     def on_mount(self) -> None:
         """Initialize screen on mount."""
         # Cache frequently accessed widgets for performance
-        self._widget_cache = {}
         self._cache_widgets()
 
         self._load_folder_paths()
@@ -151,7 +183,7 @@ class MainScreen(Screen):
     async def toggle_papyrus_monitor(self) -> None:
         """Toggle Papyrus monitoring."""
         # Import and push the Papyrus monitoring screen
-        from .papyrus_screen import PapyrusScreen
+        from ClassicLib.TUI.screens.papyrus_screen import PapyrusScreen
 
         # Detect Unicode support for the screen
         use_unicode = self._detect_unicode_support()
@@ -159,7 +191,8 @@ class MainScreen(Screen):
         # Push the Papyrus screen
         await self.app.push_screen(PapyrusScreen(use_unicode=use_unicode))
 
-    def _detect_unicode_support(self) -> bool:
+    @staticmethod
+    def _detect_unicode_support() -> bool:
         """Detect if terminal supports Unicode.
 
         Returns:
@@ -199,7 +232,8 @@ class MainScreen(Screen):
         # Default to ASCII for safety
         return False
 
-    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+    @staticmethod
+    def on_checkbox_changed(event: Checkbox.Changed) -> None:
         """Handle checkbox changes."""
         if event.checkbox.id == "update-check":
             yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Update Check", event.value)

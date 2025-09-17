@@ -5,8 +5,9 @@ This module provides a synchronous interface to the async-first YAML settings sy
 using AsyncBridge for efficient sync-to-async execution without event loop overhead.
 """
 
+import threading
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, ClassVar, TypeVar
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import AsyncBridge
@@ -19,12 +20,11 @@ from ClassicLib.AsyncYamlSettings.types import (
     YAMLValueOptional,
 )
 from ClassicLib.Constants import YAML
-from ClassicLib.Meta import SingletonMeta
 
 T = TypeVar("T")
 
 
-class YamlSettingsCache(metaclass=SingletonMeta):
+class YamlSettingsCache:
     """
     Synchronous wrapper for AsyncYamlSettingsCore.
 
@@ -33,11 +33,37 @@ class YamlSettingsCache(metaclass=SingletonMeta):
     sync-to-async execution.
     """
 
+    # Class-level storage for singleton instance
+    _instance: ClassVar["YamlSettingsCache | None"] = None
+    _lock: ClassVar[threading.Lock] = threading.Lock()
+
     def __init__(self) -> None:
         """Initialize the sync wrapper with async core and bridge."""
         self._bridge = AsyncBridge.get_instance()
         # Get the async core instance using the bridge
         self._async_core = self._bridge.run_async(get_async_yaml_core())
+
+    @classmethod
+    def get_instance(cls) -> "YamlSettingsCache":
+        """
+        Get or create the YamlSettingsCache singleton instance.
+
+        Returns:
+            YamlSettingsCache: The singleton instance
+        """
+        # Fast path - instance already exists
+        if cls._instance is not None:
+            return cls._instance
+
+        # Slow path - need to create new instance
+        with cls._lock:
+            # Double-check pattern
+            if cls._instance is not None:
+                return cls._instance
+
+            # Create new instance
+            cls._instance = cls()
+            return cls._instance
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """
@@ -90,13 +116,15 @@ class YamlSettingsCache(metaclass=SingletonMeta):
         Returns:
             dict: Mapping of YAML store to loaded data
         """
+
         # Load multiple stores - need to implement this differently
-        async def _load_stores():
+        async def _load_stores() -> dict[Any, Any]:
             results = {}
             for store in stores:
                 path = self._async_core.file_ops.get_path_for_store(store)
                 results[store] = await self._async_core.file_ops.load_yaml_file(path)
             return results
+
         return self._bridge.run_async(_load_stores())
 
     def batch_get_settings(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
@@ -114,7 +142,6 @@ class YamlSettingsCache(metaclass=SingletonMeta):
     def prefetch_all_settings(self) -> None:
         """Prefetch common settings into cache for better performance."""
         # Prefetch not implemented - just pass for now
-        pass
 
     def get_metrics(self) -> dict[str, int]:
         """
@@ -149,7 +176,7 @@ class YamlSettingsCache(metaclass=SingletonMeta):
 
 
 # Create singleton instance and register it
-yaml_cache = YamlSettingsCache()
+yaml_cache = YamlSettingsCache.get_instance()
 GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
 
 
@@ -183,17 +210,24 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
 
 def classic_settings[T](_type: type[T], setting: str) -> T | None:
     """
-    Fetches a specific setting from the CLASSIC settings file.
-
-    This function ensures that a settings file exists and retrieves
-    the requested setting from it.
+    Fetches a specific setting as a given type from the CLASSIC Settings YAML file.
+    If the settings file does not exist, it is created with default settings from
+    'CLASSIC Main.yaml' file. Ensures consistent file writing using FileIOCore library.
 
     Args:
-        _type: The expected type of the setting value
-        setting: The key of the setting to retrieve
+        _type (Type[T]): The expected type of the setting to be returned. It must
+            match the type of the requested setting for correct casting.
+        setting (str): The name or path of the specific setting to retrieve from
+            the CLASSIC Settings YAML file. This path should reference the location
+            within the YAML structure.
 
     Returns:
-        The value of the requested setting
+        T | None: The requested setting cast to the provided type if successful;
+        otherwise, returns None.
+
+    Raises:
+        ValueError: If the default settings extracted from 'CLASSIC Main.yaml' file
+        are not a valid string.
     """
     # Check if settings file exists, create if needed
     settings_path = Path("CLASSIC Settings.yaml")

@@ -1,7 +1,5 @@
 """String manipulation and text processing utilities."""
 
-from pathlib import Path
-
 
 def normalize_list(items: list[str]) -> list[str]:
     """
@@ -21,14 +19,19 @@ def normalize_list(items: list[str]) -> list[str]:
 
 def append_or_extend(value: str | int | float | list | tuple | set, destination: list[str]) -> None:
     """
-    Intelligently add value(s) to a destination list as strings.
+    Appends or extends a destination list with the string representation of a given value.
+
+    This function modifies the given destination list by either appending the string
+    representation of a single value or extending the list with the string
+    representation of all elements in a given iterable value.
 
     Args:
-        value: Single value or collection to add
-        destination: List to append/extend with string values
-
-    Returns:
-        None (modifies destination in place)
+        value: A value to be added to the destination list. It can be a single
+            string, integer, float, or an iterable (list, tuple, set) containing
+            such elements. If None is passed, the function does nothing.
+        destination: The list to which the string representation of the value is
+            appended or extended. Each value is converted into a string before
+            being added to the list.
     """
     if value is None:
         return

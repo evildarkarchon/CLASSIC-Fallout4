@@ -7,10 +7,22 @@ from pathlib import Path
 
 
 def _is_valid_executable_path(path: Path | None) -> bool:
-    """Check if a path points to a valid executable file."""
-    return path is not None and path.exists() and path.is_file() and path.suffix.lower() in (".exe", ".app", "")
+    """
+    Checks if the provided path points to a valid executable file.
+
+    This function validates whether the given path exists, is a file, and has a
+    recognized executable file extension (".exe", ".app", or no extension).
+
+    Args:
+        path: The path to validate as a potential executable.
+
+    Returns:
+        True if the path is a valid executable, otherwise False.
+    """
+    return path is not None and path.exists() and path.is_file() and path.suffix.lower() in {".exe", ".app", ""}
 
 
+# noinspection PyUnboundLocalVariable
 def validate_path(path: Path | str, check_write: bool = False, check_read: bool = True) -> tuple[bool, str]:
     """
     Validate that a path exists and is accessible with appropriate permissions.
@@ -23,6 +35,7 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
     Returns:
         Tuple of (is_valid, error_message). If valid, error_message is empty string.
     """
+    path_obj: Path
     try:
         path_obj = Path(path) if not isinstance(path, Path) else path
 
@@ -78,13 +91,18 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
 
 def remove_readonly(file_path: Path) -> None:
     """
-    Remove the read-only attribute from a file (Windows-specific).
+    Removes the read-only attribute from a file or directory at the given path. This operation is
+    specific to the Windows platform and will not perform any actions on other platforms. If any
+    error occurs, such as an `OSError` or `PermissionError`, a warning will be logged instead of
+    raising an exception.
 
     Args:
-        file_path: Path to the file
+        file_path (Path): The path to the file or directory for which the read-only attribute needs
+            to be removed.
 
-    Returns:
-        None
+    Raises:
+        OSError: If the file operation encounters a general operating system error.
+        PermissionError: If there is a permissions issue preventing the operation.
     """
     if sys.platform == "win32":
         try:
