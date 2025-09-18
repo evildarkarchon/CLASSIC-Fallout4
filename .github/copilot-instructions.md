@@ -449,6 +449,13 @@ from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment  # ✅ P
 - **Pytest**: With coverage reporting via `pytest --cov=. --cov-report=html`
 - **Type checking**: MyPy configuration in `pyproject.toml`
 
+## Code Complexity Standards
+
+- **Maximum branch limit**: Follow pylint standard of **12 branches per function/method**
+  - Complex functions with >12 branches should be refactored into smaller functions
+  - Use early returns, guard clauses, and decomposition to reduce complexity
+  - Consider using dispatch patterns (dict mapping, match statements) for multi-branch logic
+
 ## Common Anti-Patterns
 
 1. ❌ `print()` statements → ✅ `msg_info()`, `msg_warning()`, `msg_error()`

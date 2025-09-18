@@ -73,79 +73,95 @@ class SettingsScannerFragments:
         """
         lines = []
         separator = "\n\n-----\n"
-        success_prefix = "✔️ "
-        warning_prefix = "# ❌ CAUTION : "
-        fix_prefix = " FIX: "
-        crashgen_name = self.yamldata.crashgen_name
 
-        def add_success_message(message: str) -> None:
-            """Add a success message to the lines."""
-            lines.append(f"{success_prefix}{message}{separator}")
+        def add_success(message: str) -> None:
+            """Add a success message."""
+            lines.append(f"✔️ {message}{separator}")
 
-        def add_warning_message(warning: str, fix: str) -> None:
-            """Add a warning message with fix instructions to the lines."""
-            lines.extend([f"{warning_prefix}{warning} # \n", f"{fix_prefix}{fix}{separator}"])
+        def add_warning(warning: str, fix: str) -> None:
+            """Add a warning with fix instructions."""
+            lines.extend([f"# ❌ CAUTION : {warning} # \n", f" FIX: {fix}{separator}"])
 
-        # Check main MemoryManager setting
-        mem_manager_enabled = crashgen.get("MemoryManager", False)
-
+        # Check for old X-Cell version first
         if has_old_xcell:
-            add_warning_message(
+            add_warning(
                 "You have an old version of X-Cell installed, please update it to the latest version.",
                 "Download the latest version from here: https://www.nexusmods.com/fallout4/mods/84214?tab=files",
             )
 
-        # Handle main memory manager configuration
-        if mem_manager_enabled:
-            if has_xcell:
-                add_warning_message(
-                    "X-Cell is installed, but MemoryManager parameter is set to TRUE",
-                    f"Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.",
-                )
-            elif has_baka_scrapheap:
-                add_warning_message(
-                    f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
-                    f"Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}.",
-                )
-            else:
-                add_success_message(f"Memory Manager parameter is correctly configured in your {crashgen_name} settings!")
-        elif has_xcell:
-            if has_baka_scrapheap:
-                add_warning_message(
-                    "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell",
-                    "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.",
-                )
-            else:
-                add_success_message(
-                    f"Memory Manager parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
-                )
-        elif has_baka_scrapheap:
-            add_warning_message(
-                f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
-                f"Uninstall the Baka ScrapHeap Mod and open {crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.",
-            )
+        # Validate main memory manager configuration
+        mem_manager_enabled = crashgen.get("MemoryManager", False)
+        self._validate_memory_config(
+            mem_manager_enabled, has_xcell, has_baka_scrapheap,
+            self.yamldata.crashgen_name, add_success, add_warning
+        )
 
-        # Check additional memory settings for X-Cell compatibility
+        # Check X-Cell specific settings
         if has_xcell:
-            memory_settings = {
-                "HavokMemorySystem": "Havok Memory System",
-                "BSTextureStreamerLocalHeap": "BSTextureStreamerLocalHeap",
-                "ScaleformAllocator": "Scaleform Allocator",
-                "SmallBlockAllocator": "Small Block Allocator",
-            }
-
-            for setting_key, display_name in memory_settings.items():
-                if crashgen.get(setting_key):
-                    add_warning_message(
-                        f"X-Cell is installed, but {setting_key} parameter is set to TRUE",
-                        f"Open {crashgen_name}'s TOML file and change {setting_key} to FALSE, this prevents conflicts with X-Cell.",
-                    )
-                else:
-                    add_success_message(
-                        f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
-                    )
+            self._validate_xcell_settings(crashgen, self.yamldata.crashgen_name, add_success, add_warning)
 
         return ReportFragment.from_lines(lines)
+
+    def _validate_memory_config(
+        self, mem_enabled: bool, has_xcell: bool, has_baka: bool,
+        crashgen_name: str, add_success: callable, add_warning: callable
+    ) -> None:
+        """Validate memory manager configuration based on installed mods."""
+        # Create configuration tuple for cleaner logic
+        config = (mem_enabled, has_xcell, has_baka)
+
+        # Map configurations to their handlers
+        config_handlers = {
+            (True, True, False): lambda: add_warning(
+                "X-Cell is installed, but MemoryManager parameter is set to TRUE",
+                f"Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell."
+            ),
+            (True, False, True): lambda: add_warning(
+                f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
+                f"Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}."
+            ),
+            (True, False, False): lambda: add_success(
+                f"Memory Manager parameter is correctly configured in your {crashgen_name} settings!"
+            ),
+            (False, True, True): lambda: add_warning(
+                "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell",
+                "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell."
+            ),
+            (False, True, False): lambda: add_success(
+                f"Memory Manager parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
+            ),
+            (False, False, True): lambda: add_warning(
+                f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
+                f"Uninstall the Baka ScrapHeap Mod and open {crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance."
+            ),
+        }
+
+        # Execute the appropriate handler
+        handler = config_handlers.get(config)
+        if handler:
+            handler()
+
+    def _validate_xcell_settings(
+        self, crashgen: dict, crashgen_name: str, add_success: callable, add_warning: callable
+    ) -> None:
+        """Validate X-Cell specific memory settings."""
+        memory_settings = {
+            "HavokMemorySystem": "Havok Memory System",
+            "BSTextureStreamerLocalHeap": "BSTextureStreamerLocalHeap",
+            "ScaleformAllocator": "Scaleform Allocator",
+            "SmallBlockAllocator": "Small Block Allocator",
+        }
+
+        for setting_key, display_name in memory_settings.items():
+            if crashgen.get(setting_key):
+                add_warning(
+                    f"X-Cell is installed, but {setting_key} parameter is set to TRUE",
+                    f"Open {crashgen_name}'s TOML file and change {setting_key} to FALSE, this prevents conflicts with X-Cell."
+                )
+            else:
+                add_success(
+                    f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
+                )
 
     def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: "Version | None" = None) -> ReportFragment:
         """

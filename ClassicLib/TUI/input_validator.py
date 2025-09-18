@@ -84,6 +84,60 @@ class InputValidator:
                             cls.ALLOWED_BASE_DIRS.append(game_path)
 
     @classmethod
+    def _validate_empty_path(cls, path_str: str) -> tuple[bool, str, Path | None] | None:
+        """Check if path is empty (valid for optional fields)."""
+        if not path_str or not path_str.strip():
+            return True, "", None
+        return None
+
+    @classmethod
+    def _validate_path_length(cls, path_str: str) -> tuple[bool, str, Path | None] | None:
+        """Validate path length constraint."""
+        if len(path_str) > cls.MAX_PATH_LENGTH:
+            return False, f"Path exceeds maximum length ({cls.MAX_PATH_LENGTH} characters)", None
+        return None
+
+    @classmethod
+    def _resolve_path(cls, path_str: str) -> tuple[Path | None, str]:
+        """Safely resolve path to absolute form."""
+        try:
+            return Path(path_str).resolve(), ""
+        except (ValueError, OSError, RuntimeError) as e:
+            return None, f"Invalid path format: {e!s}"
+
+    @classmethod
+    def _is_path_allowed(cls, path_obj: Path) -> bool:
+        """Check if path is within allowed directories."""
+        # Check standard allowed directories
+        allowed_dirs = cls.ALLOWED_BASE_DIRS or []
+        for allowed_dir in allowed_dirs:
+            try:
+                path_obj.relative_to(allowed_dir)
+                return True
+            except ValueError:
+                continue
+
+        # Check game installation directories
+        path_str_lower = str(path_obj).lower()
+        game_indicators = ["steam", "epic", "gog", "bethesda", "fallout", "skyrim"]
+        return any(indicator in path_str_lower for indicator in game_indicators)
+
+    @classmethod
+    def _validate_existence(cls, path_obj: Path, must_exist: bool, must_be_dir: bool) -> tuple[bool, str]:
+        """Validate path existence and type requirements."""
+        if not must_exist:
+            return True, ""
+
+        if not path_obj.exists():
+            return False, "Path does not exist"
+
+        # Check directory/file type requirements
+        if must_be_dir:
+            return (True, "") if path_obj.is_dir() else (False, "Path is not a directory")
+        else:
+            return (True, "") if path_obj.is_file() else (False, "Path is not a file")
+
+    @classmethod
     def validate_path(cls, path_str: str, must_exist: bool = True, must_be_dir: bool = True) -> tuple[bool, str, Path | None]:
         """Validate and sanitize a file system path.
 
@@ -97,60 +151,31 @@ class InputValidator:
         """
         cls._init_allowed_dirs()
 
-        # Check for empty path
-        if not path_str or not path_str.strip():
-            return True, "", None  # Empty path is valid (optional field)
+        # Validation chain - early returns for failures
+        validations = [
+            cls._validate_empty_path(path_str),
+            cls._validate_path_length(path_str),
+        ]
 
-        # Check path length
-        if len(path_str) > cls.MAX_PATH_LENGTH:
-            return False, f"Path exceeds maximum length ({cls.MAX_PATH_LENGTH} characters)", None
+        for validation in validations:
+            if validation is not None:
+                return validation
 
-        try:
-            # Resolve to absolute path and handle path traversal
-            path_obj = Path(path_str).resolve()
+        # Resolve path
+        path_obj, error = cls._resolve_path(path_str)
+        if path_obj is None:
+            return False, error, None
 
-            # Check if path contains suspicious patterns
-            path_str_normalized = str(path_obj)
-            if ".." in path_str or "~" in path_str:
-                # These are resolved by resolve(), but flag them for logging
-                pass  # Path traversal attempt, but safely resolved
+        # Check permissions
+        if not cls._is_path_allowed(path_obj):
+            return False, "Path is outside allowed directories", None
 
-            # Check if path is within allowed directories
-            is_allowed = False
-            # Defensive check to ensure ALLOWED_BASE_DIRS is not None
-            allowed_dirs = cls.ALLOWED_BASE_DIRS or []
-            for allowed_dir in allowed_dirs:
-                try:
-                    # Check if path is relative to allowed directory
-                    path_obj.relative_to(allowed_dir)
-                    is_allowed = True
-                    break
-                except ValueError:
-                    continue
+        # Check existence and type
+        is_valid, error = cls._validate_existence(path_obj, must_exist, must_be_dir)
+        if not is_valid:
+            return False, error, None
 
-            if not is_allowed:
-                # Special case: Allow reading from game installation directories
-                game_indicators = ["steam", "epic", "gog", "bethesda", "fallout", "skyrim"]
-                if any(indicator in path_str_normalized.lower() for indicator in game_indicators):
-                    is_allowed = True
-
-            if not is_allowed:
-                return False, "Path is outside allowed directories", None
-
-            # Check existence if required
-            if must_exist:
-                if not path_obj.exists():
-                    return False, "Path does not exist", None
-
-                if must_be_dir and not path_obj.is_dir():
-                    return False, "Path is not a directory", None
-                if not must_be_dir and not path_obj.is_file():
-                    return False, "Path is not a file", None
-
-        except (ValueError, OSError, RuntimeError) as e:
-            return False, f"Invalid path format: {e!s}", None
-        else:
-            return True, "", path_obj
+        return True, "", path_obj
 
     @classmethod
     def sanitize_for_yaml(cls, value: str) -> str:

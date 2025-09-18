@@ -303,6 +303,174 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
     return None
 
 
+class VersionChecker:
+    """Helper class to encapsulate version checking logic."""
+
+    def __init__(self, quiet: bool, gui_request: bool):
+        self.quiet = quiet
+        self.gui_request = gui_request
+        self.repo_owner = "evildarkarchon"
+        self.repo_name = "CLASSIC-Fallout4"
+
+    def _log_if_not_quiet(self, message: str, log_func: Any = msg_info) -> None:
+        """Log message if not in quiet mode."""
+        if not self.quiet:
+            log_func(message)
+
+    def _check_update_enabled(self) -> bool:
+        """Check if update checking is enabled."""
+        if not (self.gui_request or classic_settings(bool, "Update Check")):
+            self._log_if_not_quiet(
+                "\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n" + "=" * 79
+            )
+            return False
+        return True
+
+    def _validate_update_source(self, update_source: str) -> bool:
+        """Validate the update source configuration."""
+        if update_source not in {"Both", "GitHub", "Nexus"}:
+            self._log_if_not_quiet(
+                "\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n\n" + "=" * 79
+            )
+            return False
+        return True
+
+    def _parse_local_version(self) -> Version | None:
+        """Parse the local version string."""
+        classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore
+        if not classic_local_str:
+            return None
+
+        parts: list[str] = classic_local_str.rsplit(maxsplit=1)
+        if not parts:
+            return None
+
+        parsed_version_str = parts[-1]
+        return try_parse_version(parsed_version_str) if parsed_version_str else None
+
+    def _determine_update_sources(self, update_source: str) -> tuple[bool, bool]:
+        """Determine which update sources to use."""
+        use_github = update_source in {"Both", "GitHub"}
+        use_nexus = update_source in {"Both", "Nexus"} and not yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease")
+        return use_github, use_nexus
+
+    async def _fetch_github_version(self, session: aiohttp.ClientSession) -> Version | None:
+        """Fetch the latest version from GitHub."""
+        logger.debug(f"Fetching GitHub release details for {self.repo_owner}/{self.repo_name}")
+        github_details = await get_latest_and_top_release_details(session, self.repo_owner, self.repo_name)
+
+        if not github_details:
+            return None
+
+        candidate_versions = []
+        for release_key in ["latest_endpoint_release", "top_of_list_release"]:
+            release_info = github_details.get(release_key)
+            if release_info and release_info.get("version") and not release_info.get("prerelease"):
+                candidate_versions.append(release_info["version"])
+
+        if candidate_versions:
+            version = max(candidate_versions)
+            logger.info(f"Determined latest stable GitHub version: {version}")
+            return version
+        return None
+
+    async def _fetch_nexus_version(self, session: aiohttp.ClientSession) -> Version | None:
+        """Fetch the latest version from Nexus."""
+        logger.debug("Fetching Nexus version")
+        version = await get_nexus_version(session)
+        if version:
+            logger.info(f"Determined Nexus version: {version}")
+        return version
+
+    def _check_source_failures(
+        self, use_github: bool, use_nexus: bool,
+        github_version: Version | None, nexus_version: Version | None
+    ) -> None:
+        """Check for source failures and raise if necessary."""
+        github_failed = use_github and github_version is None
+        nexus_failed = use_nexus and nexus_version is None
+
+        error_conditions = [
+            (use_github and not use_nexus and github_failed,
+             "Unable to fetch version information from GitHub (selected as only source)."),
+            (use_nexus and not use_github and nexus_failed,
+             "Unable to fetch version information from Nexus (selected as only source)."),
+            (use_github and use_nexus and github_failed and nexus_failed,
+             "Unable to fetch version information from both GitHub and Nexus."),
+        ]
+
+        for condition, message in error_conditions:
+            if condition:
+                raise UpdateCheckError(message)
+
+    def _handle_error(self, error: Exception) -> bool:
+        """Handle errors during update check."""
+        error_msg = str(error)
+
+        if isinstance(error, (aiohttp.ClientError, UpdateCheckError)):
+            logger.debug(f"Update check failed during version fetching: {error_msg}")
+        else:
+            logger.error(f"Unexpected error during update check: {error_msg}", exc_info=True)
+            error_msg = f"An unexpected error occurred: {error_msg}"
+
+        self._log_if_not_quiet(f"Update check failed: {error_msg}", msg_error)
+
+        # Get and display unable message if available
+        if not self.quiet and isinstance(error, (aiohttp.ClientError, UpdateCheckError)):
+            unable_msg = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{GlobalRegistry.get_game()}")  # type: ignore
+            if unable_msg:
+                msg_error(unable_msg)
+
+        if self.gui_request:
+            raise UpdateCheckError(error_msg) from error
+        return False
+
+    def _check_if_outdated(
+        self, version_local: Version | None,
+        github_version: Version | None, nexus_version: Version | None
+    ) -> bool:
+        """Check if the local version is outdated."""
+        if version_local is None:
+            logger.debug("Local version is unknown")
+            msg_warning("Local version is unknown. Assuming update is needed or there's an issue.")
+            return bool(github_version or nexus_version)
+
+        remote_versions = [
+            (github_version, "GitHub"),
+            (nexus_version, "Nexus")
+        ]
+
+        for remote_version, source in remote_versions:
+            if remote_version and version_local < remote_version:
+                logger.info(f"Local version {version_local} is older than {source} version {remote_version}.")
+                return True
+
+        return False
+
+    def _format_success_message(
+        self, version_local: Version | None,
+        use_github: bool, github_version: Version | None,
+        use_nexus: bool, nexus_version: Version | None
+    ) -> str:
+        """Format the success message showing version information."""
+        message_parts = [f"Your CLASSIC Version: {version_local or 'Unknown'}"]
+
+        source_info = [
+            (use_github, github_version, "GitHub"),
+            (use_nexus, nexus_version, "Nexus")
+        ]
+
+        for should_check, version, source in source_info:
+            if should_check:
+                if version:
+                    message_parts.append(f"Latest {source} Version: {version}")
+                else:
+                    message_parts.append(f"Latest {source} Version: Not found/checked")
+
+        message_parts.append("\n✔️ You have the latest version of CLASSIC!")
+        return "\n".join(message_parts)
+
+
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
     """
     Asynchronously checks if the currently installed version of CLASSIC Fallout 4 is the latest
@@ -324,154 +492,67 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             version details from GitHub and Nexus, or when an update is available in response
             to a GUI request.
     """
-
-    def _check_source_failures_and_raise(
-        use_github_flag: bool, use_nexus_flag: bool, github_fetch_failed: bool, nexus_fetch_failed: bool
-    ) -> None:
-        """Helper to raise UpdateCheckError if source fetching failed based on configuration."""
-        if use_github_flag and not use_nexus_flag and github_fetch_failed:
-            raise UpdateCheckError("Unable to fetch version information from GitHub (selected as only source).")
-        if use_nexus_flag and not use_github_flag and nexus_fetch_failed:
-            raise UpdateCheckError("Unable to fetch version information from Nexus (selected as only source).")
-        if use_github_flag and use_nexus_flag and github_fetch_failed and nexus_fetch_failed:
-            raise UpdateCheckError("Unable to fetch version information from both GitHub and Nexus.")
-
-    # Hardcoded repository for CLASSIC Fallout 4
-    repo_owner = "evildarkarchon"
-    repo_name = "CLASSIC-Fallout4"
+    checker = VersionChecker(quiet, gui_request)
 
     logger.debug("- - - INITIATED UPDATE CHECK")
-    if not (gui_request or classic_settings(bool, "Update Check")):
-        if not quiet:
-            msg_info(
-                "\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n==============================================================================="
-            )
-        return False  # False because it's not the "latest" if checks are off (unless for GUI)
 
-    update_source: str = classic_settings(str, "Update Source") or "Both"
-    if update_source not in {"Both", "GitHub", "Nexus"}:
-        if not quiet:
-            msg_info(
-                "\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n\n==============================================================================="
-            )
-        return False  # Invalid source, cannot determine if latest
+    # Early exit if update check is disabled
+    if not checker._check_update_enabled():
+        return False
 
-    classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore
+    # Validate update source configuration
+    update_source = classic_settings(str, "Update Source") or "Both"
+    if not checker._validate_update_source(update_source):
+        return False
 
-    # Parse local version string (e.g., "CLASSIC v7.30.3" -> "7.30.3")
-    parsed_local_version_str = None
-    if classic_local_str:
-        parts: list[str] = classic_local_str.rsplit(maxsplit=1)
-        if parts:
-            parsed_local_version_str = parts[-1]
+    # Parse local version
+    version_local = checker._parse_local_version()
 
-    version_local: Version | None = try_parse_version(parsed_local_version_str) if parsed_local_version_str else None
+    # Show checking message
+    checker._log_if_not_quiet(
+        "❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...\n"
+        "   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n"
+    )
 
-    if not quiet:
-        msg_info(
-            "❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...\n   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n"
-        )
+    # Determine which sources to check
+    use_github, use_nexus = checker._determine_update_sources(update_source)
 
-    use_github: bool = update_source in {"Both", "GitHub"}
-    use_nexus: bool = update_source in {"Both", "Nexus"} and not yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease")
-
-    version_github_to_compare: Version | None = None
-    version_nexus_to_compare: Version | None = None
+    # Fetch remote versions
+    version_github = None
+    version_nexus = None
 
     try:
-        # It's good practice to create the session once if making multiple requests
-        async with aiohttp.ClientSession() as session:  # Removed raise_for_status from here, handled in funcs
+        async with aiohttp.ClientSession() as session:
             if use_github:
-                logger.debug(f"Fetching GitHub release details for {repo_owner}/{repo_name}")
-                github_details: dict[str, Any] | None = await get_latest_and_top_release_details(session, repo_owner, repo_name)
-                if github_details:
-                    latest_ep_info: Any | None = github_details.get("latest_endpoint_release")
-                    top_list_info: Any | None = github_details.get("top_of_list_release")
-
-                    candidate_stable_versions: list[Version] = []
-                    if latest_ep_info and latest_ep_info.get("version") is not None and not latest_ep_info.get("prerelease"):
-                        candidate_stable_versions.append(latest_ep_info["version"])
-
-                    if top_list_info and top_list_info.get("version") is not None and not top_list_info.get("prerelease"):
-                        candidate_stable_versions.append(top_list_info["version"])
-
-                    if candidate_stable_versions:
-                        version_github_to_compare = max(candidate_stable_versions)
-                        logger.info(f"Determined latest stable GitHub version: {version_github_to_compare}")
+                version_github = await checker._fetch_github_version(session)
             if use_nexus:
-                logger.debug("Fetching Nexus version")
-                version_nexus_to_compare = await get_nexus_version(session)
-                if version_nexus_to_compare:
-                    logger.info(f"Determined Nexus version: {version_nexus_to_compare}")
+                version_nexus = await checker._fetch_nexus_version(session)
 
-            nexus_source_failed: bool = use_nexus and (version_nexus_to_compare is None)
-            github_source_failed: bool = use_github and (version_github_to_compare is None)
+            checker._check_source_failures(use_github, use_nexus, version_github, version_nexus)
 
-            _check_source_failures_and_raise(use_github, use_nexus, github_source_failed, nexus_source_failed)
-            # If 'Both' were chosen and one succeeded, we can proceed.
+    except Exception as e:
+        return checker._handle_error(e)
 
-    except (aiohttp.ClientError, UpdateCheckError) as err:  # Removed ValueError, OSError as ClientError covers network issues
-        logger.debug(f"Update check failed during version fetching: {err}")
-        if not quiet:
-            msg_error(f"Update check failed: {err}")
-            # Get the unable message from YAML
-            unable_msg: str | None = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{GlobalRegistry.get_game()}")  # type: ignore
-            if unable_msg:
-                msg_error(unable_msg)
-        if gui_request:
-            raise UpdateCheckError(str(err)) from err  # Pass the original error message
-        return False
-    except Exception as e:  # Catch any other unexpected error during setup or calls
-        logger.error(f"Unexpected error during update check: {e}", exc_info=True)
-        if not quiet:
-            msg_error(f"An unexpected error occurred during update check: {e}")
-        if gui_request:
-            raise UpdateCheckError(f"An unexpected error occurred: {e}") from e
-        return False
-
-    is_outdated = False
-    if version_local is None:
-        logger.debug("Local version is unknown")
-        msg_warning("Local version is unknown. Assuming update is needed or there's an issue.")
-        # Depending on desired behavior, this could be True (outdated) or False (cannot determine)
-        # For safety, if local version is unknown, and remote versions exist, consider it outdated.
-        if version_github_to_compare or version_nexus_to_compare:
-            is_outdated = True
-    else:
-        if version_github_to_compare and version_local < version_github_to_compare:
-            logger.info(f"Local version {version_local} is older than GitHub version {version_github_to_compare}.")
-            is_outdated = True
-
-        if not is_outdated and version_nexus_to_compare and version_local < version_nexus_to_compare:
-            logger.info(f"Local version {version_local} is older than Nexus version {version_nexus_to_compare}.")
-            is_outdated = True
+    # Check if outdated
+    is_outdated = checker._check_if_outdated(version_local, version_github, version_nexus)
 
     if is_outdated:
+        # Show update warning
         if not quiet:
-            # Assuming yaml_settings returns a string for the message
-            warning_msg: str = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"))  # type: ignore
+            warning_msg = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"))  # type: ignore
             msg_warning(warning_msg)
-        if gui_request:
-            # GUI catches this to indicate an update is available.
-            raise UpdateCheckError("A new version is available.")
-        return False  # Outdated
 
-    # If not outdated
+        if gui_request:
+            raise UpdateCheckError("A new version is available.")
+        return False
+
+    # Show success message
     if not quiet:
-        msg_success(
-            f"Your CLASSIC Version: {version_local or 'Unknown'}"
-            + (
-                f"\nLatest GitHub Version: {version_github_to_compare}"
-                if use_github and version_github_to_compare
-                else ("\nLatest GitHub Version: Not found/checked" if use_github else "")
-            )
-            + (
-                f"\nLatest Nexus Version: {version_nexus_to_compare}"
-                if use_nexus and version_nexus_to_compare
-                else ("\nLatest Nexus Version: Not found/checked" if use_nexus else "")
-            )
-            + "\n\n✔️ You have the latest version of CLASSIC!\n"
+        success_msg = checker._format_success_message(
+            version_local, use_github, version_github, use_nexus, version_nexus
         )
+        msg_success(success_msg)
+
     return True
 
 

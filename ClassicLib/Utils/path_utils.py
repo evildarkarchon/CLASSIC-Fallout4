@@ -22,7 +22,77 @@ def _is_valid_executable_path(path: Path | None) -> bool:
     return path is not None and path.exists() and path.is_file() and path.suffix.lower() in {".exe", ".app", ""}
 
 
-# noinspection PyUnboundLocalVariable
+def _check_drive_exists(path_obj: Path) -> tuple[bool, str]:
+    """
+    Check if the drive exists (Windows only).
+
+    Args:
+        path_obj: The path object to check.
+
+    Returns:
+        Tuple of (is_valid, error_message). If valid, error_message is empty string.
+    """
+    if sys.platform == "win32" or platform.system() == "Windows":
+        drive = path_obj.drive
+        if drive and not Path(drive + "/").exists():
+            return False, f"Drive {drive} does not exist"
+    return True, ""
+
+
+def _check_read_permissions(path_obj: Path) -> tuple[bool, str]:
+    """
+    Check read permissions for a path.
+
+    Args:
+        path_obj: The path object to check.
+
+    Returns:
+        Tuple of (is_valid, error_message). If valid, error_message is empty string.
+    """
+    try:
+        # For directories, check if we can list contents
+        if path_obj.is_dir():
+            list(path_obj.iterdir())
+        # For files, check if we can open for reading
+        else:
+            with path_obj.open("rb"):
+                pass
+    except PermissionError:
+        return False, f"No read permission for: {path_obj}"
+    except OSError as e:
+        return False, f"Cannot access {path_obj}: {e}"
+    return True, ""
+
+
+def _check_write_permissions(path_obj: Path) -> tuple[bool, str]:
+    """
+    Check write permissions for a path.
+
+    Args:
+        path_obj: The path object to check.
+
+    Returns:
+        Tuple of (is_valid, error_message). If valid, error_message is empty string.
+    """
+    try:
+        # For directories, check if we can create a temp file
+        if path_obj.is_dir():
+            test_file = path_obj / ".classic_test_write"
+            test_file.touch()
+            test_file.unlink()
+        # For files, check if parent directory is writable
+        else:
+            parent = path_obj.parent
+            test_file = parent / ".classic_test_write"
+            test_file.touch()
+            test_file.unlink()
+    except PermissionError:
+        return False, f"No write permission for: {path_obj}"
+    except OSError as e:
+        return False, f"Cannot write to {path_obj}: {e}"
+    return True, ""
+
+
 def validate_path(path: Path | str, check_write: bool = False, check_read: bool = True) -> tuple[bool, str]:
     """
     Validate that a path exists and is accessible with appropriate permissions.
@@ -35,15 +105,13 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
     Returns:
         Tuple of (is_valid, error_message). If valid, error_message is empty string.
     """
-    path_obj: Path
     try:
         path_obj = Path(path) if not isinstance(path, Path) else path
 
         # Check if the drive exists (Windows)
-        if sys.platform == "win32" or platform.system() == "Windows":
-            drive = path_obj.drive
-            if drive and not Path(drive + "/").exists():
-                return False, f"Drive {drive} does not exist"
+        is_valid, error_msg = _check_drive_exists(path_obj)
+        if not is_valid:
+            return False, error_msg
 
         # Check if path exists
         if not path_obj.exists():
@@ -51,37 +119,15 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
 
         # Check read permissions
         if check_read:
-            try:
-                # For directories, check if we can list contents
-                if path_obj.is_dir():
-                    list(path_obj.iterdir())
-                # For files, check if we can open for reading
-                else:
-                    with path_obj.open("rb"):
-                        pass
-            except PermissionError:
-                return False, f"No read permission for: {path_obj}"
-            except OSError as e:
-                return False, f"Cannot access {path_obj}: {e}"
+            is_valid, error_msg = _check_read_permissions(path_obj)
+            if not is_valid:
+                return False, error_msg
 
         # Check write permissions
         if check_write:
-            try:
-                # For directories, check if we can create a temp file
-                if path_obj.is_dir():
-                    test_file = path_obj / ".classic_test_write"
-                    test_file.touch()
-                    test_file.unlink()
-                # For files, check if parent directory is writable
-                else:
-                    parent = path_obj.parent
-                    test_file = parent / ".classic_test_write"
-                    test_file.touch()
-                    test_file.unlink()
-            except PermissionError:
-                return False, f"No write permission for: {path_obj}"
-            except OSError as e:
-                return False, f"Cannot write to {path_obj}: {e}"
+            is_valid, error_msg = _check_write_permissions(path_obj)
+            if not is_valid:
+                return False, error_msg
 
     except Exception as e:  # noqa: BLE001
         return False, f"Error validating path: {e}"
@@ -111,4 +157,5 @@ def remove_readonly(file_path: Path) -> None:
         except (OSError, PermissionError) as e:
             # Log error but don't raise - this is a best-effort operation
             from ClassicLib.Logger import logger
+
             logger.warning(f"Could not remove read-only attribute from {file_path}: {e}")

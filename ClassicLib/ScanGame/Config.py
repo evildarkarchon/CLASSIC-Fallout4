@@ -8,6 +8,7 @@ checks for similarity. It also defines a `ConfigFile` type for structured repres
 of configuration data.
 """
 
+import asyncio
 import io
 from collections.abc import ItemsView
 from pathlib import Path
@@ -81,6 +82,7 @@ class ConfigFileCache:
     duplicate_files: dict[str, list[Path]]
     _game_root_path: Path | None
     _duplicate_whitelist: list[str]
+    _hash_cache: dict[Path, str]  # Cache for file hashes to avoid recalculation
 
     # noinspection PyUnresolvedReferences
     def __init__(self) -> None:
@@ -121,6 +123,7 @@ class ConfigFileCache:
         self._config_file_cache = {}
         self.duplicate_files = {}
         self._duplicate_whitelist = ["F4EE"]
+        self._hash_cache = {}  # Initialize hash cache
 
         self._game_root_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
         if self._game_root_path is None:
@@ -141,12 +144,12 @@ class ConfigFileCache:
                     continue
 
                 file_path: Path = path / file
-                file_hash: str = calculate_file_hash(file_path)
+                file_hash: str = self._get_cached_hash(file_path)
 
                 # Check for duplicates already stored
                 if file_lower in self._config_files:
                     existing_file: Path = self._config_files[file_lower]
-                    existing_hash: str = calculate_file_hash(existing_file)
+                    existing_hash: str = self._get_cached_hash(existing_file)
 
                     if file_hash == existing_hash:  # Exact duplicate
                         self.duplicate_files.setdefault(file_lower, [existing_file]).append(file_path)
@@ -164,6 +167,29 @@ class ConfigFileCache:
                 else:
                     # Register new config file
                     self._config_files[file_lower] = file_path
+
+    def _get_cached_hash(self, file_path: Path) -> str:
+        """
+        Get file hash with caching to avoid expensive recalculation.
+
+        This method caches the hash of a file to prevent redundant calculations when
+        checking for duplicates. The cache persists for the lifetime of the
+        ConfigFileCache instance.
+
+        Args:
+            file_path: Path to the file to hash.
+
+        Returns:
+            str: The calculated or cached hash of the file.
+        """
+        # Check if we have a cached hash
+        if file_path in self._hash_cache:
+            return self._hash_cache[file_path]
+
+        # Calculate and cache the hash
+        file_hash = calculate_file_hash(file_path)
+        self._hash_cache[file_path] = file_hash
+        return file_hash
 
     def __contains__(self, file_name_lower: str) -> bool:
         """
@@ -242,6 +268,56 @@ class ConfigFileCache:
         }
         self._config_file_cache[file_name_lower] = config_entry
 
+    async def _load_config_async(self, file_name_lower: str) -> None:
+        """
+        Asynchronously loads and parses a configuration file with optimized I/O.
+
+        This method loads configuration files without blocking the event loop by
+        running file I/O, encoding detection, and parsing operations in executors.
+        The parsed configuration is cached for future use.
+
+        Args:
+            file_name_lower (str): The lowercase name of the configuration file to be
+                loaded. Must correspond to a key in the internal `_config_files`
+                mapping.
+
+        Raises:
+            FileNotFoundError: If the specified `file_name_lower` does not exist in
+                the `_config_files` mapping.
+        """
+        if file_name_lower not in self._config_files:
+            raise FileNotFoundError
+
+        if file_name_lower in self._config_file_cache:
+            # Delete the cache and reload the file
+            del self._config_file_cache[file_name_lower]
+
+        file_path: Path = self._config_files[file_name_lower]
+
+        # Read file in executor to avoid blocking
+        loop = asyncio.get_event_loop()
+        file_bytes = await loop.run_in_executor(None, file_path.read_bytes)
+
+        # Detect encoding in executor to avoid blocking
+        file_encoding = await loop.run_in_executor(None, lambda: chardet.detect(file_bytes)["encoding"] or "utf-8")
+
+        # Parse in executor as configparser is synchronous
+        def parse_config() -> tuple[iniparse.ConfigParser, str]:
+            file_text = file_bytes.decode(file_encoding)
+            config = iniparse.ConfigParser()
+            config.readfp(io.StringIO(file_text, newline=None))
+            return config, file_text
+
+        config, file_text = await loop.run_in_executor(None, parse_config)
+
+        config_entry: ConfigFile = {
+            "encoding": file_encoding,
+            "path": file_path,
+            "settings": config,
+            "text": file_text,
+        }
+        self._config_file_cache[file_name_lower] = config_entry
+
     def get[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str) -> T | None:
         """
         Retrieves a configuration value of the specified type from a configuration file. The method
@@ -298,6 +374,68 @@ class ConfigFileCache:
             raise NotImplementedError
         except ValueError as e:
             logger.debug(f"Value type error: {e}")
+            msg_error(f"Invalid value type in configuration: {e}")
+            return None
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            return None
+
+    async def get_async[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str) -> T | None:
+        """
+        Asynchronously retrieves a configuration value of the specified type from a configuration file.
+
+        This is the async version of the get method that doesn't block the event loop
+        when loading configuration files for the first time.
+
+        Args:
+            value_type: The expected data type of the configuration value. Must be one of: str, bool,
+                int, or float. Raises NotImplementedError for unsupported types.
+            file_name_lower: The file name of the configuration file, in lowercase. This is used to
+                identify the configuration file in the cache.
+            section: The section of the configuration file where the desired setting is located.
+            setting: The key of the desired configuration value within the specified section.
+
+        Returns:
+            The value of the requested configuration key, cast to the specified type. Returns None if the
+            configuration file is not found, the requested section or key does not exist, or the value
+            cannot be retrieved or cast to the specified type.
+        """
+        if value_type is not str and value_type is not bool and value_type is not int and value_type is not float:
+            raise NotImplementedError
+
+        if file_name_lower not in self._config_files:
+            return None
+
+        if file_name_lower not in self._config_file_cache:
+            try:
+                await self._load_config_async(file_name_lower)
+            except FileNotFoundError:
+                logger.debug(f"Config file not found: {file_name_lower}")
+                msg_error(f"Config file not found: {file_name_lower}")
+                return None
+
+        config: iniparse.ConfigParser = self._config_file_cache[file_name_lower]["settings"]
+
+        if not config.has_section(section):
+            logger.debug(f"Section '{section}' not found in '{self._config_files[file_name_lower]}'")
+            msg_error(f"Section '{section}' does not exist in config file")
+            return None
+
+        if not config.has_option(section, setting):
+            logger.debug(f"Key '{setting}' not found in section '{section}' of '{self._config_files[file_name_lower]}'")
+            msg_error(f"Setting '{setting}' not found in section '{section}'")
+            return None
+
+        try:
+            if value_type is str:
+                return config.get(section, setting)
+            if value_type is bool:
+                return config.getboolean(section, setting)  # type: ignore[no-any-return]
+            if value_type is int:
+                return config.getint(section, setting)  # type: ignore[no-any-return]
+            if value_type is float:
+                return config.getfloat(section, setting)  # type: ignore[no-any-return]
+        except ValueError as e:
+            logger.debug(f"ValueError while parsing configuration: {e}")
             msg_error(f"Invalid value type in configuration: {e}")
             return None
         except (configparser.NoSectionError, configparser.NoOptionError):

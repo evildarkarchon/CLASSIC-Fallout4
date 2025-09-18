@@ -112,10 +112,11 @@ ignore = [
 	"E722",    # Duplicate of B001 bare-except
 	"PLR0904", # too-many-public-methods
 	"PLR0911", # too-many-return-statements
-	"PLR0912", # too-many-branches
+	# "PLR0912", # too-many-branches
 	"PLR0913",
 	"PLR0914", # too-many-local-variables
 	"PLR0915", # too-many-statements
+	"PLR0917",
 	"TRY003",  # Allow custom exception messages
 	"TRY400",  # Use `logging.exception` instead of `logging.error`
 	"PLR2004", # Allow magic values in comparisons

@@ -17,8 +17,6 @@ from io import StringIO
 from pathlib import Path
 from typing import cast
 
-from ClassicLib.ScanGame.core.utils import MAX_CONCURRENT_SUBPROCESSES
-
 try:
     import aiofiles
 except ImportError:
@@ -228,6 +226,65 @@ class ScanGameCore:
         # Locks for thread-safe updates to shared collections
         issue_locks = {issue_type: asyncio.Lock() for issue_type in issue_lists}
 
+        async def process_file_by_type(
+            filename: str,
+            file_path: Path,
+            relative_path: Path,
+            file_ext: str,
+            context: dict,
+            file_tasks: list,
+            dds_files: list,
+            has_xse_files: bool,
+            has_previs_files: bool,
+            root: Path,
+            root_main: Path,
+        ) -> tuple[bool, bool]:
+            """
+            Process a single file based on its type and add appropriate tasks or issue tracking.
+
+            Returns:
+                tuple[bool, bool]: Updated has_xse_files and has_previs_files flags
+            """
+            filename_lower = filename.lower()
+
+            # Cleanup operations
+            if filename_lower.endswith(".txt") and any(name in filename_lower for name in filter_names):
+                file_tasks.append(self._move_file_async(context, file_path))
+                return has_xse_files, has_previs_files
+
+            # Analysis operations
+            if file_ext == ".dds":
+                dds_files.append((file_path, relative_path))
+                return has_xse_files, has_previs_files
+
+            if file_ext in {".tga", ".png"} and "BodySlide" not in file_path.parts:
+                async with issue_locks["tex_frmt"]:
+                    issue_lists["tex_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
+                return has_xse_files, has_previs_files
+
+            if file_ext in {".mp3", ".m4a"}:
+                async with issue_locks["snd_frmt"]:
+                    issue_lists["snd_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
+                return has_xse_files, has_previs_files
+
+            if (
+                not has_xse_files
+                and any(filename_lower == key.lower() for key in xse_scriptfiles)
+                and "workshop framework" not in str(root).lower()
+                and f"Scripts\\{filename}" in str(file_path)
+            ):
+                has_xse_files = True
+                async with issue_locks["xse_file"]:
+                    issue_lists["xse_file"].add(f"  - {root_main}\n")
+                return has_xse_files, has_previs_files
+
+            if not has_previs_files and filename_lower.endswith((".uvd", "_oc.nif")):
+                has_previs_files = True
+                async with issue_locks["previs"]:
+                    issue_lists["previs"].add(f"  - {root_main}\n")
+
+            return has_xse_files, has_previs_files
+
         async def process_directory(root: Path, dirs: list[str], files: list[str]) -> None:
             """
             Processes a directory with both files and subdirectories, performing cleanup and analysis operations
@@ -272,41 +329,24 @@ class ScanGameCore:
             dds_files = []
 
             for filename in files:
-                filename_lower = filename.lower()
                 file_path = root / filename
                 relative_path = file_path.relative_to(mod_path)
                 file_ext = file_path.suffix.lower()
 
-                # Cleanup operations
-                if filename_lower.endswith(".txt") and any(name in filename_lower for name in filter_names):
-                    file_tasks.append(self._move_file_async(context, file_path))
-
-                # Analysis operations
-                elif file_ext == ".dds":
-                    dds_files.append((file_path, relative_path))
-
-                elif file_ext in {".tga", ".png"} and "BodySlide" not in file_path.parts:
-                    async with issue_locks["tex_frmt"]:
-                        issue_lists["tex_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
-
-                elif file_ext in {".mp3", ".m4a"}:
-                    async with issue_locks["snd_frmt"]:
-                        issue_lists["snd_frmt"].add(f"  - {file_ext[1:].upper()} : {relative_path}\n")
-
-                elif (
-                    not has_xse_files
-                    and any(filename_lower == key.lower() for key in xse_scriptfiles)
-                    and "workshop framework" not in str(root).lower()
-                    and f"Scripts\\{filename}" in str(file_path)
-                ):
-                    has_xse_files = True
-                    async with issue_locks["xse_file"]:
-                        issue_lists["xse_file"].add(f"  - {root_main}\n")
-
-                elif not has_previs_files and filename_lower.endswith((".uvd", "_oc.nif")):
-                    has_previs_files = True
-                    async with issue_locks["previs"]:
-                        issue_lists["previs"].add(f"  - {root_main}\n")
+                # Process file and update flags
+                has_xse_files, has_previs_files = await process_file_by_type(
+                    filename,
+                    file_path,
+                    relative_path,
+                    file_ext,
+                    context,
+                    file_tasks,
+                    dds_files,
+                    has_xse_files,
+                    has_previs_files,
+                    root,
+                    root_main,
+                )
 
             # Process DDS files in batch
             if dds_files:
@@ -340,20 +380,55 @@ class ScanGameCore:
 
             def _walk() -> list[tuple[Path, list[str], list[str]]]:
                 """
-                Recursively traverses a directory tree starting from the specified path.
+                Optimized directory traversal using pathlib's rglob for better performance.
 
-                This function walks through a directory tree in bottom-up order, collecting
-                the path to each directory, its subdirectories, and its files.
+                This function walks through a directory tree more efficiently than os.walk,
+                collecting the path to each directory, its subdirectories, and its files.
 
                 Returns:
                     list[tuple[Path, list[str], list[str]]]: A list of tuples, where each tuple
                     contains a Path object for the directory, a list of its subdirectory names,
                     and a list of its file names.
                 """
-                result = []
-                for root, dirs, files in os.walk(path, topdown=False):
-                    result.append((Path(root), list(dirs), list(files)))
-                return result
+                from collections import defaultdict
+
+                # Use rglob to get all paths in one operation - much faster than os.walk
+                try:
+                    all_paths = list(path.rglob("*"))
+                except (OSError, PermissionError):
+                    # Fallback to empty if we can't access
+                    return []
+
+                # Group paths by parent directory for efficient processing
+                dir_structure = defaultdict(lambda: {"dirs": [], "files": []})
+
+                for p in all_paths:
+                    parent = p.parent
+                    try:
+                        if p.is_dir():
+                            dir_structure[parent]["dirs"].append(p.name)
+                        elif p.is_file():
+                            dir_structure[parent]["files"].append(p.name)
+                    except (OSError, PermissionError):
+                        # Skip inaccessible paths
+                        continue
+
+                # Add the root directory if it has files or subdirs
+                if path.is_dir():
+                    try:
+                        direct_children = list(path.iterdir())
+                        root_dirs = [p.name for p in direct_children if p.is_dir()]
+                        root_files = [p.name for p in direct_children if p.is_file()]
+                        if root_files or root_dirs:
+                            dir_structure[path] = {"dirs": root_dirs, "files": root_files}
+                    except (OSError, PermissionError):
+                        pass
+
+                # Convert to expected format, maintaining bottom-up order for compatibility
+                return [
+                    (parent, data["dirs"], data["files"])
+                    for parent, data in sorted(dir_structure.items(), key=lambda x: str(x[0]).count(os.sep), reverse=True)
+                ]
 
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(self.walk_executor, _walk)
@@ -417,8 +492,35 @@ class ScanGameCore:
             - Relies on external tools like BSArch.exe for parsing archive files and retrieving necessary
               metadata.
         """
-        message_list: list[str] = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
+        # Initialize the scan setup
+        scan_setup = await self._initialize_archived_scan()
+        if isinstance(scan_setup, str):  # Error message returned
+            return scan_setup
 
+        issue_lists, xse_acronym, xse_scriptfiles, mod_path, bsarch_path = scan_setup
+
+        msg_info("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES (ASYNC)...")
+
+        # Find and process BA2 files
+        ba2_files = await self._find_ba2_files(mod_path)
+        if not ba2_files:
+            return self._build_report(issue_lists, xse_acronym)
+
+        # Process all BA2 files concurrently
+        results = await self._process_ba2_files_concurrently(ba2_files, bsarch_path, xse_scriptfiles)
+
+        # Merge results into issue lists
+        ScanGameCore._merge_scan_results(results, issue_lists)
+
+        return self._build_report(issue_lists, xse_acronym)
+
+    async def _initialize_archived_scan(self) -> tuple[dict[str, set[str]], str, dict[str, str], Path, Path] | str:
+        """
+        Initialize the archived scan with validation and setup.
+
+        Returns:
+            Either a tuple of initialized components or an error message string.
+        """
         # Initialize sets for collecting different issue types
         issue_lists: dict[str, set[str]] = {
             "ba2_frmt": set(),
@@ -436,15 +538,41 @@ class ScanGameCore:
         # Setup paths
         bsarch_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Data/BSArch.exe"
 
-        # Validate paths
+        # Validate requirements
+        validation_error = self._validate_archived_scan_requirements(mod_path, bsarch_path)
+        if validation_error:
+            return validation_error
+
+        # At this point, mod_path is guaranteed to be not None due to validation
+        assert mod_path is not None, "mod_path should not be None after validation"
+        return issue_lists, xse_acronym, xse_scriptfiles, mod_path, bsarch_path
+
+    @staticmethod
+    def _validate_archived_scan_requirements(mod_path: Path | None, bsarch_path: Path) -> str | None:
+        """
+        Validate all requirements for archived scan.
+
+        Returns:
+            Error message if validation fails, None if all requirements are satisfied.
+        """
         if not mod_path:
             return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
         if not mod_path.exists():
             return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
         if not bsarch_path.exists():
             return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_BSArch_Missing"))
+        return None
 
-        msg_info("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES (ASYNC)...")
+    async def _find_ba2_files(self, mod_path: Path) -> list[tuple[Path, str]]:
+        """
+        Find all BA2 files in the mod directory.
+
+        Args:
+            mod_path: The mod directory path to search.
+
+        Returns:
+            List of tuples containing BA2 file path and filename.
+        """
 
         # Async directory walking for BA2 files
         # noinspection PyUnresolvedReferences,PyTypeChecker
@@ -466,12 +594,32 @@ class ScanGameCore:
             """
 
             def _find() -> list[tuple[Path, str]]:
+                """
+                Optimized BA2 file finding using pathlib.rglob().
+
+                Returns:
+                    list[tuple[Path, str]]: List of BA2 file paths and filenames.
+                """
                 result = []
-                for root, _, files in os.walk(path, topdown=False):
-                    for filename in files:
-                        filename_lower: str = filename.lower()
-                        if filename_lower.endswith(".ba2") and filename_lower != "prp - main.ba2":
-                            result.append((Path(root) / filename, filename))
+                try:
+                    # Use rglob to find all .ba2 files directly - much faster
+                    for ba2_path in path.rglob("*.ba2"):
+                        filename = ba2_path.name
+                        filename_lower = filename.lower()
+                        if filename_lower != "prp - main.ba2":
+                            result.append((ba2_path, filename))
+
+                    # Also check for uppercase extension on case-sensitive systems
+                    for ba2_path in path.rglob("*.BA2"):
+                        filename = ba2_path.name
+                        filename_lower = filename.lower()
+                        if filename_lower != "prp - main.ba2" and (ba2_path, filename) not in result:
+                            result.append((ba2_path, filename))
+
+                except (OSError, PermissionError):
+                    # Return empty list if we can't access the directory
+                    pass
+
                 return result
 
             loop = asyncio.get_event_loop()
@@ -479,10 +627,25 @@ class ScanGameCore:
 
         # Collect all BA2 files
         try:
-            ba2_files = await find_ba2_files(mod_path)
+            return await find_ba2_files(mod_path)
         except OSError as e:
             msg_error(f"Error scanning for BA2 files: {e}")
-            return "Error: Could not scan for BA2 files"
+            return []
+
+    async def _process_ba2_files_concurrently(
+        self, ba2_files: list[tuple[Path, str]], bsarch_path: Path, xse_scriptfiles: dict[str, str]
+    ) -> list:
+        """
+        Process all BA2 files concurrently using the process_single_ba2 function.
+
+        Args:
+            ba2_files: List of BA2 file tuples (path, filename).
+            bsarch_path: Path to BSArch executable.
+            xse_scriptfiles: Dictionary of XSE script files.
+
+        Returns:
+            List of processing results.
+        """
 
         # Process BA2 files concurrently with improved batching
         async def process_single_ba2(file_path: Path, filename: str) -> dict[str, set[str]]:
@@ -513,148 +676,47 @@ class ScanGameCore:
             }
 
             # Read BA2 header
-            try:
-                if aiofiles:
-                    async with aiofiles.open(file_path, "rb") as f:
-                        header: bytes = await f.read(12)
-                else:
-                    # Fallback to sync read if aiofiles not available
-                    with file_path.open("rb") as f:
-                        header: bytes = f.read(12)
-            except OSError:
-                msg_warning(f"Failed to read file: {filename}")
+            header = await ScanGameCore._read_ba2_header(file_path, filename)
+            if header is None:
                 return local_issues
 
-            # Check BA2 format
-            if header[:4] != b"BTDX" or header[8:] not in {b"DX10", b"GNRL"}:
-                local_issues["ba2_frmt"].add(f"  - {filename} : {header!s}\n")
+            # Validate BA2 format
+            if not self._validate_ba2_header(header, filename, local_issues):
                 return local_issues
 
             async with self.process_semaphore:  # Limit concurrent subprocesses
                 if header[8:] == b"DX10":
                     # Process texture-format BA2
-                    try:
-                        # noinspection PyTypeChecker
-                        proc = await asyncio.create_subprocess_exec(
-                            str(bsarch_path),
-                            str(file_path),
-                            "-dump",
-                            stdout=asyncio.subprocess.PIPE,
-                            stderr=asyncio.subprocess.PIPE,
-                            limit=1024 * 1024,  # 1MB buffer limit to prevent memory issues
-                        )
-
-                        stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=30)
-                        stdout = stdout_bytes.decode("utf-8", errors="replace") if stdout_bytes else ""
-                        stderr = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
-
-                        if proc.returncode != 0:
-                            msg_error(f"BSArch command failed for {filename}:\n{stderr}")
-                            return local_issues
-
-                        output_split: list[str] = stdout.split("\n\n")
-                        if output_split[-1].startswith("Error:"):
-                            msg_error(f"BSArch error for {filename}:\n{output_split[-1]}\n\n{stderr}")
-                            return local_issues
-
-                        # Process texture information
-                        for file_block in output_split[4:]:
-                            if not file_block:
-                                continue
-
-                            block_split: list[str] = file_block.split("\n", 3)
-
-                            # Check texture format
-                            if "Ext: dds" not in block_split[1]:
-                                local_issues["tex_frmt"].add(
-                                    f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n"
-                                )
-                                continue
-
-                            # Check texture dimensions
-                            _, width, _, height, _ = block_split[2].split(maxsplit=4)
-                            if (width.isdecimal() and int(width) % 2 != 0) or (height.isdecimal() and int(height) % 2 != 0):
-                                local_issues["tex_dims"].add(f"  - {width}x{height} : {filename} > {block_split[0]}")
-
-                    except TimeoutError:
-                        msg_error(f"BSArch command timed out processing {filename}")
-                    except (OSError, ValueError, subprocess.SubprocessError) as e:
-                        msg_error(f"Error processing {filename}: {e}")
-
+                    texture_issues = await self._process_texture_ba2(file_path, filename, bsarch_path)
+                    local_issues.update(texture_issues)
                 else:
                     # Process general-format BA2
-                    try:
-                        proc = await asyncio.create_subprocess_exec(
-                            str(bsarch_path),
-                            str(file_path),
-                            "-list",
-                            stdout=asyncio.subprocess.PIPE,
-                            stderr=asyncio.subprocess.PIPE,
-                            limit=1024 * 1024,  # 1MB buffer limit to prevent memory issues
-                        )
-
-                        stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=30)
-                        stdout = stdout_bytes.decode("utf-8", errors="replace") if stdout_bytes else ""
-                        stderr = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
-
-                        if proc.returncode != 0:
-                            msg_error(f"BSArch command failed for {filename}:\n{stderr}")
-                            return local_issues
-
-                        # Process file list
-                        output_split = stdout.lower().split("\n")
-                        has_previs_files = has_anim_data = has_xse_files = False
-
-                        for file in output_split[15:]:
-                            # Check sound formats
-                            if file.endswith((".mp3", ".m4a")):
-                                local_issues["snd_frmt"].add(f"  - {file[-3:].upper()} : {filename} > {file}\n")
-
-                            # Check animation data
-                            elif not has_anim_data and "animationfiledata" in file:
-                                has_anim_data = True
-                                local_issues["animdata"].add(f"  - {filename}\n")
-
-                            # Check XSE files
-                            elif (
-                                not has_xse_files
-                                and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
-                                and "workshop framework" not in str(file_path.parent).lower()
-                            ):
-                                has_xse_files = True
-                                local_issues["xse_file"].add(f"  - {filename}\n")
-
-                            # Check previs files
-                            elif not has_previs_files and file.endswith((".uvd", "_oc.nif")):
-                                has_previs_files = True
-                                local_issues["previs"].add(f"  - {filename}\n")
-
-                    except TimeoutError:
-                        msg_error(f"BSArch command timed out processing {filename}")
-                    except (OSError, ValueError, subprocess.SubprocessError) as e:
-                        msg_error(f"Error processing {filename}: {e}")
+                    general_issues = await self._process_general_ba2(file_path, filename, bsarch_path, xse_scriptfiles)
+                    local_issues.update(general_issues)
 
             return local_issues
 
-        # Process BA2 files in optimized batches for better concurrency control
-        msg_info(f"Processing {len(ba2_files)} BA2 files with optimized batching...")
+        # Process BA2 files with improved concurrency control
+        msg_info(f"Processing {len(ba2_files)} BA2 files with dynamic batching...")
 
-        # Calculate optimal batch size based on system resources
-        batch_size = min(MAX_CONCURRENT_SUBPROCESSES * 2, len(ba2_files))
-        results = []
+        # Create all tasks upfront - let the semaphore handle concurrency naturally
+        # The semaphore in process_single_ba2 already limits concurrent subprocesses,
+        # so we don't need artificial batching or delays
+        all_tasks = list(starmap(process_single_ba2, ba2_files))
 
-        # Process in controlled batches to avoid overwhelming the system
-        for i in range(0, len(ba2_files), batch_size):
-            batch = ba2_files[i : i + batch_size]
-            batch_tasks = list(starmap(process_single_ba2, batch))
-            batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
-            results.extend(batch_results)
+        # Process all tasks with natural backpressure from the semaphore
+        # This is more efficient than artificial batching with delays
+        return await asyncio.gather(*all_tasks, return_exceptions=True)
 
-            # Small delay between batches to prevent system overload
-            if i + batch_size < len(ba2_files):
-                await asyncio.sleep(0.1)
+    @staticmethod
+    def _merge_scan_results(results: list, issue_lists: dict[str, set[str]]) -> None:
+        """
+        Merge the scan results from multiple BA2 files into the main issue lists.
 
-        # Merge results from all tasks
+        Args:
+            results: List of scan results from BA2 processing.
+            issue_lists: Main issue lists to merge results into.
+        """
         for result in results:
             if isinstance(result, Exception):
                 msg_error(f"Task failed with exception: {result}")
@@ -662,6 +724,19 @@ class ScanGameCore:
             if isinstance(result, dict):
                 for issue_type, items in result.items():
                     issue_lists[issue_type].update(items)
+
+    def _build_report(self, issue_lists: dict[str, set[str]], xse_acronym: str) -> str:
+        """
+        Build the final scan report from collected issues.
+
+        Args:
+            issue_lists: Dictionary of issue sets by type.
+            xse_acronym: XSE acronym for getting issue messages.
+
+        Returns:
+            The formatted scan report as a string.
+        """
+        message_list: list[str] = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
 
         # Build the report using StringIO for efficiency
         output = StringIO()
@@ -763,7 +838,8 @@ class ScanGameCore:
             async with context["issue_locks"]["cleanup"]:
                 context["issue_lists"]["cleanup"].add(f"  - {relative_path}\n")
 
-    def _read_dds_header_mmap(self, file_path: Path) -> tuple[int, int] | None:
+    @staticmethod
+    def _read_dds_header_mmap(file_path: Path) -> tuple[int, int] | None:
         """Reads a DDS file header using memory mapping.
 
         This method checks if the file is a valid DDS file and extracts its width
@@ -801,9 +877,8 @@ class ScanGameCore:
         Checks a batch of DDS files asynchronously to validate their dimensions and adds issues
         to provided lists if any discrepancies are found.
 
-        This function processes DDS files in batches, reads their headers using memory mapping
-        for efficiency, and verifies if their dimensions meet specific criteria (e.g., both width
-        and height should be even). Results are added to issue lists under controlled concurrency.
+        Optimized version that processes DDS headers in chunks for better performance,
+        reducing async overhead and improving memory efficiency.
 
         Args:
             dds_files (list[tuple[Path, Path]]): A list of tuples where each tuple contains the
@@ -816,18 +891,252 @@ class ScanGameCore:
         """
         loop = asyncio.get_event_loop()
 
-        # Process in batches using thread pool with memory mapping
-        futures = []
-        for file_path, relative_path in dds_files:
-            future = loop.run_in_executor(self.header_executor, self._read_dds_header_mmap, file_path)
-            futures.append((future, relative_path))
+        # Process in chunks to balance memory usage and performance
+        chunk_size = 100  # Process 100 DDS files at a time for better efficiency
 
-        # Gather results with semaphore for controlled concurrency
-        for future, relative_path in futures:
+        for chunk_start in range(0, len(dds_files), chunk_size):
+            chunk = dds_files[chunk_start : chunk_start + chunk_size]
+
+            # Create batch processing function for better efficiency
+            def process_chunk(chunk_data: list[tuple[Path, Path]]) -> list[tuple[Path, int, int]]:
+                """
+                Process a chunk of DDS files in one executor call.
+
+                Args:
+                    chunk_data: List of tuples containing DDS file path and relative path.
+
+                Returns:
+                    list[tuple[Path, int, int]]: List of tuples with relative path, width, and height
+                    for files with invalid dimensions.
+                """
+                results = []
+                for file_path, relative_path in chunk_data:
+                    header = self._read_dds_header_mmap(file_path)
+                    if header:
+                        width, height = header
+                        if width % 2 != 0 or height % 2 != 0:
+                            results.append((relative_path, width, height))
+                return results
+
+            # Process entire chunk in one executor call with semaphore
             async with self.dds_read_semaphore:
-                result = await future
-                if result:
-                    width, height = result
-                    if width % 2 != 0 or height % 2 != 0:
-                        async with issue_locks["tex_dims"]:
-                            issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})\n")
+                chunk_results = await loop.run_in_executor(self.header_executor, process_chunk, chunk)
+
+            # Update issue lists for the chunk
+            if chunk_results:
+                async with issue_locks["tex_dims"]:
+                    for relative_path, width, height in chunk_results:
+                        issue_lists["tex_dims"].add(f"  - {relative_path} ({width}x{height})\n")
+
+    @staticmethod
+    async def _read_ba2_header(file_path: Path, filename: str) -> bytes | None:
+        """
+        Reads the BA2 file header.
+
+        Args:
+            file_path (Path): The path to the BA2 file.
+            filename (str): The name of the BA2 file for error reporting.
+
+        Returns:
+            bytes | None: The 12-byte header if successful, None if failed.
+        """
+        try:
+            if aiofiles:
+                async with aiofiles.open(file_path, "rb") as f:
+                    return await f.read(12)
+            else:
+                # Fallback to sync read if aiofiles not available
+                with file_path.open("rb") as f:
+                    return f.read(12)
+        except OSError:
+            msg_warning(f"Failed to read file: {filename}")
+            return None
+
+    @staticmethod
+    def _validate_ba2_header(header: bytes, filename: str, local_issues: dict[str, set[str]]) -> bool:
+        """
+        Validates BA2 file header format.
+
+        Args:
+            header (bytes): The BA2 file header.
+            filename (str): The name of the BA2 file.
+            local_issues (dict): Dictionary to store format issues.
+
+        Returns:
+            bool: True if header is valid, False otherwise.
+        """
+        if header[:4] != b"BTDX" or header[8:] not in {b"DX10", b"GNRL"}:
+            local_issues["ba2_frmt"].add(f"  - {filename} : {header!s}\n")
+            return False
+        return True
+
+    async def _process_texture_ba2(self, file_path: Path, filename: str, bsarch_path: Path) -> dict[str, set[str]]:
+        """
+        Processes a texture-format BA2 file (DX10).
+
+        Args:
+            file_path (Path): The path to the BA2 file.
+            filename (str): The name of the BA2 file.
+            bsarch_path (Path): Path to BSArch executable.
+
+        Returns:
+            dict[str, set[str]]: Dictionary of detected issues.
+        """
+        local_issues: dict[str, set[str]] = {"tex_dims": set(), "tex_frmt": set()}
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                str(bsarch_path),
+                str(file_path),
+                "-dump",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                limit=1024 * 1024,  # 1MB buffer limit to prevent memory issues
+            )
+
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=30)
+            stdout = stdout_bytes.decode("utf-8", errors="replace") if stdout_bytes else ""
+            stderr = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
+
+            if proc.returncode != 0:
+                msg_error(f"BSArch command failed for {filename}:\n{stderr}")
+                return local_issues
+
+            output_split: list[str] = stdout.split("\n\n")
+            if output_split[-1].startswith("Error:"):
+                msg_error(f"BSArch error for {filename}:\n{output_split[-1]}\n\n{stderr}")
+                return local_issues
+
+            # Process texture information
+            for file_block in output_split[4:]:
+                if not file_block:
+                    continue
+
+                self._process_texture_block(file_block, filename, local_issues)
+
+        except TimeoutError:
+            msg_error(f"BSArch command timed out processing {filename}")
+        except (OSError, ValueError, subprocess.SubprocessError) as e:
+            msg_error(f"Error processing {filename}: {e}")
+
+        return local_issues
+
+    @staticmethod
+    def _process_texture_block(file_block: str, filename: str, local_issues: dict[str, set[str]]) -> None:
+        """
+        Processes a single texture block from BSArch output.
+
+        Args:
+            file_block (str): The texture block data.
+            filename (str): The name of the BA2 file.
+            local_issues (dict): Dictionary to store detected issues.
+        """
+        block_split: list[str] = file_block.split("\n", 3)
+
+        # Check texture format
+        if "Ext: dds" not in block_split[1]:
+            local_issues["tex_frmt"].add(f"  - {block_split[0].rsplit('.', 1)[-1].upper()} : {filename} > {block_split[0]}\n")
+            return
+
+        # Check texture dimensions
+        try:
+            _, width, _, height, _ = block_split[2].split(maxsplit=4)
+            if (width.isdecimal() and int(width) % 2 != 0) or (height.isdecimal() and int(height) % 2 != 0):
+                local_issues["tex_dims"].add(f"  - {width}x{height} : {filename} > {block_split[0]}")
+        except (ValueError, IndexError):
+            # Skip if we can't parse dimensions
+            pass
+
+    async def _process_general_ba2(
+        self, file_path: Path, filename: str, bsarch_path: Path, xse_scriptfiles: dict[str, str]
+    ) -> dict[str, set[str]]:
+        """
+        Processes a general-format BA2 file (GNRL).
+
+        Args:
+            file_path (Path): The path to the BA2 file.
+            filename (str): The name of the BA2 file.
+            bsarch_path (Path): Path to BSArch executable.
+            xse_scriptfiles (dict): Dictionary of XSE script files.
+
+        Returns:
+            dict[str, set[str]]: Dictionary of detected issues.
+        """
+        local_issues: dict[str, set[str]] = {
+            "animdata": set(),
+            "snd_frmt": set(),
+            "xse_file": set(),
+            "previs": set(),
+        }
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                str(bsarch_path),
+                str(file_path),
+                "-list",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                limit=1024 * 1024,  # 1MB buffer limit to prevent memory issues
+            )
+
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=30)
+            stdout = stdout_bytes.decode("utf-8", errors="replace") if stdout_bytes else ""
+            stderr = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
+
+            if proc.returncode != 0:
+                msg_error(f"BSArch command failed for {filename}:\n{stderr}")
+                return local_issues
+
+            # Process file list
+            output_split = stdout.lower().split("\n")
+            self._analyze_general_files(output_split[15:], filename, file_path, xse_scriptfiles, local_issues)
+
+        except TimeoutError:
+            msg_error(f"BSArch command timed out processing {filename}")
+        except (OSError, ValueError, subprocess.SubprocessError) as e:
+            msg_error(f"Error processing {filename}: {e}")
+
+        return local_issues
+
+    @staticmethod
+    def _analyze_general_files(
+        files: list[str], filename: str, file_path: Path, xse_scriptfiles: dict[str, str], local_issues: dict[str, set[str]]
+    ) -> None:
+        """
+        Analyzes files in a general-format BA2 for various issues.
+
+        Args:
+            files (list[str]): List of files in the BA2.
+            filename (str): The name of the BA2 file.
+            file_path (Path): The path to the BA2 file.
+            xse_scriptfiles (dict): Dictionary of XSE script files.
+            local_issues (dict): Dictionary to store detected issues.
+        """
+        has_previs_files = has_anim_data = has_xse_files = False
+
+        for file in files:
+            # Check sound formats
+            if file.endswith((".mp3", ".m4a")):
+                local_issues["snd_frmt"].add(f"  - {file[-3:].upper()} : {filename} > {file}\n")
+                continue
+
+            # Check animation data
+            if not has_anim_data and "animationfiledata" in file:
+                has_anim_data = True
+                local_issues["animdata"].add(f"  - {filename}\n")
+                continue
+
+            # Check XSE files
+            if (
+                not has_xse_files
+                and any(f"scripts\\{key.lower()}" in file for key in xse_scriptfiles)
+                and "workshop framework" not in str(file_path.parent).lower()
+            ):
+                has_xse_files = True
+                local_issues["xse_file"].add(f"  - {filename}\n")
+                continue
+
+            # Check previs files
+            if not has_previs_files and file.endswith((".uvd", "_oc.nif")):
+                has_previs_files = True
+                local_issues["previs"].add(f"  - {filename}\n")

@@ -16,7 +16,7 @@ from ClassicLib.FileIOCore import FileIOCore
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
 from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
-from ClassicLib.ScanGame.ScanModInis import scan_mod_inis
+from ClassicLib.ScanGame.ScanModInis import scan_mod_inis_async
 from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
 from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -270,17 +270,15 @@ class GameIntegrityOrchestratorCore:
     @staticmethod
     async def _run_mod_inis_scan_async() -> str:
         """
-        Executes the `scan_mod_inis` function asynchronously in a separate thread.
+        Executes the `scan_mod_inis_async` function directly.
 
-        This static method utilizes an event loop to schedule the execution of the
-        `scan_mod_inis` function in an executor, operating in a non-blocking manner.
-        It returns the result of the function execution.
+        This static method directly awaits the async scan_mod_inis_async function,
+        which uses async I/O operations for better performance and non-blocking behavior.
 
         Returns:
-            str: The result of the `scan_mod_inis` function.
+            str: The result of the `scan_mod_inis_async` function.
         """
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, scan_mod_inis)
+        return await scan_mod_inis_async()
 
 
 # Global singleton instance

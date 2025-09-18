@@ -38,15 +38,15 @@ VSYNC_SETTINGS: list[tuple[str, str, str]] = [
 ]
 
 
-def scan_mod_inis() -> str:
+async def scan_mod_inis_async() -> str:
     """
-    Check INI files for mods and perform necessary fixes or notify about potential issues.
+    Asynchronously check INI files for mods and perform necessary fixes or notify about potential issues.
 
-    This function analyzes INI configuration files associated with a game, looking for specific settings or
+    This async function analyzes INI configuration files associated with a game, looking for specific settings or
     conditions that can potentially impact game performance, startup time, or user settings. If specific
     conditions or discrepancies are found, it performs updates to the INI files, logs the changes, and collects
     notices for the user. The function also identifies duplicate INI files and verifies the presence of VSync
-    settings across several configuration files.
+    settings across several configuration files. Uses async I/O operations to avoid blocking the event loop.
 
     Returns:
         str: A concatenated string of messages highlighting changes, issues, or notices for the user regarding
@@ -60,13 +60,13 @@ def scan_mod_inis() -> str:
     #     pass
 
     # Check for console command settings that might slow down startup
-    check_starting_console_command(config_files, message_list)
+    await check_starting_console_command_async(config_files, message_list)
 
     # Check for VSync settings in various files
-    vsync_list: list[str] = check_vsync_settings(config_files)
+    vsync_list: list[str] = await check_vsync_settings_async(config_files)
 
     # Apply fixes to various INI files
-    apply_all_ini_fixes(config_files, message_list)
+    await apply_all_ini_fixes_async(config_files, message_list)
 
     # Report VSync settings if found
     if vsync_list:
@@ -81,7 +81,32 @@ def scan_mod_inis() -> str:
     return "".join(message_list)
 
 
+def scan_mod_inis() -> str:
+    """
+    Synchronous wrapper for scan_mod_inis_async for backward compatibility.
+
+    This wrapper uses AsyncBridge to run the async function in a sync context,
+    maintaining compatibility with existing code that expects a synchronous interface.
+
+    Returns:
+        str: A concatenated string of messages highlighting changes, issues, or notices for the user regarding
+        the analyzed INI files.
+    """
+    from ClassicLib.AsyncBridge import AsyncBridge
+
+    bridge = AsyncBridge.get_instance()
+    return bridge.run_async(scan_mod_inis_async())
+
+
 def check_starting_console_command(config_files: ConfigFileCache, message_list: list[str]) -> None:
+    """Sync wrapper for backward compatibility."""
+    from ClassicLib.AsyncBridge import AsyncBridge
+
+    bridge = AsyncBridge.get_instance()
+    return bridge.run_async(check_starting_console_command_async(config_files, message_list))
+
+
+async def check_starting_console_command_async(config_files: ConfigFileCache, message_list: list[str]) -> None:
     """
     Checks for the presence of a specific console command setting in configuration files
     matching the current game's name, and updates the message list with relevant notices.
@@ -103,6 +128,14 @@ def check_starting_console_command(config_files: ConfigFileCache, message_list: 
 
 
 def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
+    """Sync wrapper for backward compatibility."""
+    from ClassicLib.AsyncBridge import AsyncBridge
+
+    bridge = AsyncBridge.get_instance()
+    return bridge.run_async(check_vsync_settings_async(config_files))
+
+
+async def check_vsync_settings_async(config_files: ConfigFileCache) -> list[str]:
     """
     Checks the VSync settings in the given configuration files.
 
@@ -122,17 +155,33 @@ def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
 
     # Check standard VSync settings
     for file_name, section, setting in VSYNC_SETTINGS:
-        if config_files.get(bool, file_name, section, setting):
+        if await config_files.get_async(bool, file_name, section, setting):
             vsync_list.append(f"{config_files[file_name]} | SETTING: {setting}\n")
 
     # Check highfpsphysicsfix.ini separately
-    if "highfpsphysicsfix.ini" in config_files and config_files.get(bool, "highfpsphysicsfix.ini", "Main", "EnableVSync"):
+    if "highfpsphysicsfix.ini" in config_files and await config_files.get_async(bool, "highfpsphysicsfix.ini", "Main", "EnableVSync"):
         vsync_list.append(f"{config_files['highfpsphysicsfix.ini']} | SETTING: EnableVSync\n")
 
     return vsync_list
 
 
-def apply_ini_fix(  # noqa: PLR0917
+def apply_ini_fix(
+    config_files: ConfigFileCache,
+    file_name_lower: str,
+    section: str,
+    setting: str,
+    value: Any,
+    fix_name: str,
+    message_list: list[str],
+) -> None:
+    """Sync wrapper for backward compatibility."""
+    from ClassicLib.AsyncBridge import AsyncBridge
+
+    bridge = AsyncBridge.get_instance()
+    return bridge.run_async(apply_ini_fix_async(config_files, file_name_lower, section, setting, value, fix_name, message_list))
+
+
+async def apply_ini_fix_async(  # noqa: PLR0917
     config_files: ConfigFileCache,
     file_name: str,
     section: str,
@@ -163,6 +212,14 @@ def apply_ini_fix(  # noqa: PLR0917
 
 
 def apply_all_ini_fixes(config_files: ConfigFileCache, message_list: list[str]) -> None:
+    """Sync wrapper for backward compatibility."""
+    from ClassicLib.AsyncBridge import AsyncBridge
+
+    bridge = AsyncBridge.get_instance()
+    return bridge.run_async(apply_all_ini_fixes_async(config_files, message_list))
+
+
+async def apply_all_ini_fixes_async(config_files: ConfigFileCache, message_list: list[str]) -> None:
     """
     Applies a set of fixes to specific `.ini` configuration files to address common
     issues or enforce desired settings. The function checks the state of several
@@ -188,12 +245,12 @@ def apply_all_ini_fixes(config_files: ConfigFileCache, message_list: list[str]) 
     # Fix F4EE settings if present
     if "f4ee.ini" in config_files:
         # Fix head parts unlock setting
-        if config_files.get(int, "f4ee.ini", "CharGen", "bUnlockHeadParts") == 0:
-            apply_ini_fix(config_files, "f4ee.ini", "CharGen", "bUnlockHeadParts", 1, "INI HEAD PARTS UNLOCK", message_list)
+        if await config_files.get_async(int, "f4ee.ini", "CharGen", "bUnlockHeadParts") == 0:
+            await apply_ini_fix_async(config_files, "f4ee.ini", "CharGen", "bUnlockHeadParts", 1, "INI HEAD PARTS UNLOCK", message_list)
 
         # Fix face tints unlock setting
-        if config_files.get(int, "f4ee.ini", "CharGen", "bUnlockTints") == 0:
-            apply_ini_fix(config_files, "f4ee.ini", "CharGen", "bUnlockTints", 1, "INI FACE TINTS UNLOCK", message_list)
+        if await config_files.get_async(int, "f4ee.ini", "CharGen", "bUnlockTints") == 0:
+            await apply_ini_fix_async(config_files, "f4ee.ini", "CharGen", "bUnlockTints", 1, "INI FACE TINTS UNLOCK", message_list)
 
     # Fix highfpsphysicsfix.ini loading screen FPS if present
     if (

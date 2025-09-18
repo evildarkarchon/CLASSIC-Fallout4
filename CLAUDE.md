@@ -583,6 +583,72 @@ def test_with_test_enum():
 - Use descriptive file names that match the primary class name
 - Helper functions should remain with their primary usage context
 
+### Code Complexity Limits
+
+- **Maximum branch limit of 12** - Functions must not exceed 12 branches (following pylint standards)
+- When functions approach this limit, consider refactoring into smaller, focused functions
+- Complex logic should be broken down into helper methods or separate utility functions
+
+#### Complexity Reduction Strategies
+
+**Dict Mapping Pattern** - Replace long if-elif chains with dictionary lookups:
+```python
+# Instead of multiple if-elif branches
+def process_command(cmd):
+    if cmd == "start":
+        return start_process()
+    elif cmd == "stop":
+        return stop_process()
+    elif cmd == "restart":
+        return restart_process()
+    # ... many more branches
+
+# Use dict mapping
+def process_command(cmd):
+    commands = {
+        "start": start_process,
+        "stop": stop_process,
+        "restart": restart_process,
+    }
+    handler = commands.get(cmd)
+    if handler:
+        return handler()
+    raise ValueError(f"Unknown command: {cmd}")
+```
+
+**Match Statements (Python 3.10+)** - Use pattern matching for complex conditionals:
+```python
+# Instead of nested if-elif
+def handle_response(response):
+    match response:
+        case {"status": "success", "data": data}:
+            return process_data(data)
+        case {"status": "error", "code": code} if code >= 500:
+            return handle_server_error(code)
+        case {"status": "error", "code": code}:
+            return handle_client_error(code)
+        case _:
+            return handle_unknown_response(response)
+```
+
+**Extract Method Pattern** - Move complex conditions into well-named helper functions:
+```python
+# Instead of complex inline conditions
+if (user.is_active and user.has_permission("edit") and
+    not user.is_banned and user.email_verified):
+    # ...
+
+# Extract to descriptive method
+def can_edit_content(user):
+    return (user.is_active and
+            user.has_permission("edit") and
+            not user.is_banned and
+            user.email_verified)
+
+if can_edit_content(user):
+    # ...
+```
+
 ### Type Annotations (Python 3.12+)
 
 - All functions must have complete type annotations including return types

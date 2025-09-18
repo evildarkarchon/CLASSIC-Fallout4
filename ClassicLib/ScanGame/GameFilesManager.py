@@ -96,10 +96,11 @@ class GameFilesManagerCore:
 
             # Validate game path
             _validate_game_path(game_path)
+            assert game_path is not None  # Type narrowing for Pylance
 
             # Set up backup path
             backup_path: Path = Path(f"{BACKUP_DIR}/{classic_list}")
-            await self._ensure_directory_exists_async(backup_path)
+            self._ensure_directory_exists_async(backup_path)
 
             # Extract list name for display purposes
             list_name: str = classic_list.split(maxsplit=1)[-1]
@@ -121,7 +122,7 @@ class GameFilesManagerCore:
 
     # noinspection PyUnresolvedReferences,PyTypeChecker
     @staticmethod
-    async def _ensure_directory_exists_async(path: Path) -> None:
+    def _ensure_directory_exists_async(path: Path) -> None:  # no longer async because mkdir is very fast
         """
         Ensures that the specified directory exists asynchronously. If the directory does not
         exist, it will be created along with any necessary parent directories.
@@ -129,8 +130,11 @@ class GameFilesManagerCore:
         Args:
             path (Path): The path of the directory to check or create.
         """
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, lambda: path.mkdir(parents=True, exist_ok=True))
+        # Path.mkdir() is a fast filesystem operation - creating directories is near-instantaneous
+        # on modern filesystems (typically < 1ms). The overhead of using run_in_executor
+        # (thread pool scheduling, context switching) is 5-10ms, which is significantly
+        # MORE than the actual operation time. Running directly saves ~5-10ms per call.
+        path.mkdir(parents=True, exist_ok=True)
 
     async def _backup_files_async(self, game_path: Path, backup_path: Path, manage_list: list[str], list_name: str) -> None:
         """
