@@ -14,41 +14,42 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a Python desktop a
 ### Development
 ```bash
 # Install dependencies
-poetry install
+uv sync                                      # Install all dependencies
+uv sync --all-extras                        # Install with all optional features (TUI, CLI, Windows)
 
 # Run the application
-poetry run python CLASSIC_Interface.py          # GUI mode
-poetry run python CLASSIC_TUI.py                # TUI mode (Terminal UI)
-poetry run python CLASSIC_ScanLogs.py           # CLI mode
+uv run python CLASSIC_Interface.py          # GUI mode
+uv run python CLASSIC_TUI.py                # TUI mode (Terminal UI)
+uv run python CLASSIC_ScanLogs.py           # CLI mode
 
 # Run tests (use terminal, VS Code test tool has freezing issues)
-poetry run python -m pytest tests/ -n 4 -v              # All tests with verbose output
-poetry run python -m pytest tests/ -n 4 -q              # Quick run with summary only
-poetry run python -m pytest tests/test_crash_log_processing.py -n 4 -v  # Specific test file
+uv run pytest tests/ -n 4 -v              # All tests with verbose output
+uv run pytest tests/ -n 4 -q              # Quick run with summary only
+uv run pytest tests/test_crash_log_processing.py -n 4 -v  # Specific test file
 
 # Performance-optimized test execution
-poetry run python -m pytest -n auto                # Parallel execution (auto-detect CPU cores)
-poetry run python -m pytest -n 4                   # Parallel execution with 4 workers
-poetry run python -m pytest -n 4 -m "unit and not slow" --maxfail=3     # Quick feedback (unit tests only)
-poetry run python -m pytest -n 4 -m "integration and not slow"          # Integration tests
-poetry run python -m pytest -n 4 -m "not performance"   # All tests except performance regression tests
-poetry run python -m pytest -n 4 -m "performance"       # Performance regression tests only
-poetry run python -m pytest -n 4 -m "gui"               # GUI-dependent tests only
-poetry run python -m pytest -n 4 -m "async_test"        # Async pattern tests only
+uv run pytest -n auto                # Parallel execution (auto-detect CPU cores)
+uv run pytest -n 4                   # Parallel execution with 4 workers
+uv run pytest -n 4 -m "unit and not slow" --maxfail=3     # Quick feedback (unit tests only)
+uv run pytest -n 4 -m "integration and not slow"          # Integration tests
+uv run pytest -n 4 -m "not performance"   # All tests except performance regression tests
+uv run pytest -n 4 -m "performance"       # Performance regression tests only
+uv run pytest -n 4 -m "gui"               # GUI-dependent tests only
+uv run pytest -n 4 -m "async_test"        # Async pattern tests only
 
 # Build executable (Windows)
-poetry run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
+uv run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
 ```
 
 ### Linting and Type Checking
 ```bash
 # Run Ruff linter
-poetry run ruff check .
-poetry run ruff format .
+uv run ruff check .
+uv run ruff format .
 
 # Type checking
-poetry run mypy .
-poetry run pyright
+uv run mypy .
+uv run pyright
 ```
 
 ## Architecture Overview
@@ -388,16 +389,16 @@ def test_dialog_workflow():
 **Running Tests by Marker**:
 ```bash
 # Run only unit tests
-poetry run pytest -m "unit" -n auto
+uv run pytest -m "unit" -n auto
 
 # Run integration tests
-poetry run pytest -m "integration" -v
+uv run pytest -m "integration" -v
 
 # Skip slow tests for quick feedback
-poetry run pytest -m "not slow" -n auto
+uv run pytest -m "not slow" -n auto
 
 # Run unit tests excluding slow ones
-poetry run pytest -m "unit and not slow" -n 4
+uv run pytest -m "unit and not slow" -n 4
 ```
 
 ### Test-Driven Development (TDD) Method
@@ -799,6 +800,7 @@ All refactored modules maintain backward compatibility through re-exports:
 8. Run linter and type checker before committing
 9. Use terminal for running tests (VS Code test tool has freezing issues)
 10. **When API changes occur:** Update tests to use the new API, NEVER add backward compatibility to production code just to fix tests
+11. **Package Manager:** uv is now used instead of poetry for much faster dependency resolution and installation
 
 ## Pre-commit Hooks
 
@@ -807,10 +809,10 @@ The project uses pre-commit hooks to ensure code quality and test isolation:
 ### Installation
 ```bash
 # Install pre-commit (already in dev dependencies)
-poetry install
+uv sync
 
 # Install the git hooks
-poetry run pre-commit install
+uv run pre-commit install
 ```
 
 ### Available Hooks
@@ -821,13 +823,13 @@ poetry run pre-commit install
 ### Running Manually
 ```bash
 # Run on all files
-poetry run pre-commit run --all-files
+uv run pre-commit run --all-files
 
 # Run on staged files
-poetry run pre-commit run
+uv run pre-commit run
 
 # Run specific hook
-poetry run pre-commit run check-test-isolation
+uv run pre-commit run check-test-isolation
 ```
 
 ## Common Anti-Patterns to Avoid

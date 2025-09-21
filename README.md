@@ -20,7 +20,7 @@ CLASSIC is also on Nexus Mods: [https://www.nexusmods.com/fallout4/mods/56255](h
 - [Buffout 4 NG](https://www.nexusmods.com/fallout4/mods/64880?tab=files) (OG/NG/VR) or [Buffout 4](https://www.nexusmods.com/fallout4/mods/47359) (OG)
 - [BSArch](https://www.nexusmods.com/newvegas/mods/64745?tab=files) (for scanning mod files)
 
-### SKYRIM
+### SKYRIM (Work in Progress)
 
 - [Skyrim Script Extender](https://www.nexusmods.com/skyrimspecialedition/mods/30379?tab=files)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444?tab=files)
@@ -30,9 +30,26 @@ CLASSIC is also on Nexus Mods: [https://www.nexusmods.com/fallout4/mods/56255](h
 Note that for both Fallout 4 and Skyrim, you should also install the [Microsoft Visual C++ Redistributable All-In-One](https://github.com/abbodi1406/vcredist) package and the [DirectX Redist (June 2010)](https://www.microsoft.com/en-us/download/details.aspx?id=8109) package. These packages contain important files
 and components required for many games / certain mods and can also prevent some forms of crashes.
 
-## QUICK START WITH UVX
+## INSTALLATION
 
-The easiest way to run CLASSIC is using [uvx](https://docs.astral.sh/uv/), which allows you to run Python applications directly from GitHub without a full installation. This requires Python 3.12 or newer.
+### Option 1: Download Pre-built Release (Easiest - Recommended)
+
+The simplest way to use CLASSIC is to download the pre-built release from the [Releases page](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases):
+
+1. Go to the [Latest Release](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest)
+2. Download the `.7z` archive from the Assets section (e.g., `CLASSIC-v8.0.0.7z`)
+3. Extract the archive to your desired location using [7-Zip](https://www.7-zip.org/) or similar
+4. Run `CLASSIC.exe` from the extracted folder
+
+**What's included:**
+- `CLASSIC.exe` - Main executable
+- `CLASSIC Data/` - Configuration files and databases
+- All required dependencies bundled
+- No Python installation needed
+
+### Option 2: Run with uvx (Alternative Method)
+
+If you prefer to run the latest development version or have trouble with the release archive, you can use [uvx](https://docs.astral.sh/uv/) to run CLASSIC directly from GitHub. This requires Python 3.12 or newer.
 
 ### Install uv (One-time Setup)
 
@@ -78,13 +95,13 @@ The TUI mode requires the Textual library. You have two options:
 
 **Option 1: Install with extras (if supported by your uvx version):**
 ```bash
-uvx --from github:evildarkarchon/CLASSIC-Fallout4 --with 'classic-fallout4[tui]' classic-tui
+uvx --from github:evildarkarchon/CLASSIC-Fallout4 --with 'classic[tui]' classic-tui
 ```
 
 **Option 2: Persistent installation:**
 ```bash
 # Install CLASSIC persistently
-uvx install --from github:evildarkarchon/CLASSIC-Fallout4 classic-fallout4
+uvx install --from github:evildarkarchon/CLASSIC-Fallout4 classic
 
 # Add Textual support
 uv pip install textual
@@ -100,7 +117,7 @@ classic-tui
 uvx --from github:evildarkarchon/CLASSIC-Fallout4@v7.35.0 classic
 
 # Run from a specific branch
-uvx --from github:evildarkarchon/CLASSIC-Fallout4@main classic
+uvx --from github:evildarkarchon/CLASSIC-Fallout4@got-caps classic
 
 # Run from a development branch
 uvx --from github:evildarkarchon/CLASSIC-Fallout4@uv-rays classic
@@ -131,19 +148,20 @@ classic-scan  # Game integrity checker
 classic-tui   # TUI (if Textual is installed)
 ```
 
-### Notes
+### uvx Notes
 
 - **First Run**: The first time you run CLASSIC with uvx, it will download dependencies (including PySide6 for the GUI). This may take a minute or two.
 - **Cached Environment**: Subsequent runs will be much faster as uvx caches the environment.
 - **GUI Requirements**: The GUI mode requires a display. Use CLI mode for headless/server environments.
 - **Windows Users**: If you encounter permission issues, run PowerShell as Administrator.
 - **Updates**: uvx always runs the latest version from GitHub unless you specify a version tag.
+- **Data Files**: uvx automatically handles the CLASSIC Data folder and configuration files.
 
 ## Contributing
 
 ### Dev Environment Setup
 
-The project uses [Python 3.12](https://www.python.org/downloads/) and dependencies are managed with [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer).
+The project uses [Python 3.12+](https://www.python.org/downloads/) and dependencies are managed with [uv](https://docs.astral.sh/uv/), a fast Rust-based Python package manager that's 10-100x faster than traditional tools.
 
 Our primary IDE is [Visual Studio Code](https://code.visualstudio.com/).
 `.vscode/` contains config files to aid in working on the project, including extension recommendations.
@@ -151,46 +169,92 @@ In the Extensions sidebar (Ctrl+Shift+X), search for `@recommended` and you'll s
 
 You can run CLASSIC or build the exe from the VS Code GUI in the Run and Debug sidebar (Ctrl+Shift+D).
 
-To install Poetry using PowerShell:
+### Installing uv
 
+**Windows (PowerShell):**
 ```powershell
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-To have Poetry create a Python virtual environment, create a `poetry.toml` file in the root folder next to `pyproject.toml`:
-
-```toml
-[virtualenvs]
-create = true
-in-project = true
+**macOS/Linux:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Then to set up the venv and install dependencies, in the project folder run:
+### Setting Up the Development Environment
 
-```powershell
-# Install with all optional dependencies for development
-poetry install -E all
+Clone the repository and install dependencies:
 
-# Or install individual extras as needed:
-# poetry install -E tui      # For TUI development
-# poetry install -E cli      # For CLI progress features
-# poetry install -E windows  # For Windows-specific features
+```bash
+# Clone the repository
+git clone https://github.com/evildarkarchon/CLASSIC-Fallout4.git
+cd CLASSIC-Fallout4
+
+# Install all dependencies (creates .venv automatically)
+uv sync --all-extras
+
+# Or install specific extras as needed:
+# uv sync --extra tui      # For TUI development
+# uv sync --extra cli      # For CLI progress features
+# uv sync --extra windows  # For Windows-specific features
 ```
 
-**Note**: For development, it's recommended to use `poetry install -E all` to ensure you have all optional dependencies (Textual for TUI, tqdm for CLI progress bars, pywin32 for Windows features) available for testing all interfaces.
+**Note**: For development, it's recommended to use `uv sync --all-extras` to ensure you have all optional dependencies (Textual for TUI, tqdm for CLI progress bars, pywin32 for Windows features) available for testing all interfaces.
 
-To verify VS Code is using this venv: press `F1` and search `>python.setInterpreter`.
+To verify VS Code is using this venv: press `F1` and search `>python.setInterpreter`, then select `.venv/Scripts/python.exe` (Windows) or `.venv/bin/python` (Unix).
 
-Updating dependency versions in `pyproject.toml` is handled by [poetry-plugin-up](https://github.com/MousaZeidBaker/poetry-plugin-up):
+### Running the Application
 
-```powershell
-poetry up --latest
+```bash
+# Run GUI mode
+uv run python CLASSIC_Interface.py
+
+# Run TUI mode
+uv run python CLASSIC_TUI.py
+
+# Run CLI mode
+uv run python CLASSIC_ScanLogs.py
+
+# Run tests
+uv run pytest -n auto
 ```
+
+### Managing Dependencies
+
+```bash
+# Add a new dependency
+uv add requests
+
+# Add a development dependency
+uv add --dev pytest
+
+# Update all dependencies to latest versions
+uv lock --upgrade
+
+# Update specific package
+uv lock --upgrade-package pyside6
+```
+
+### Migration from Poetry
+
+If you have an existing Poetry environment, you can migrate using the provided script:
+
+```bash
+python migrate_to_uv.py
+```
+
+This will backup your Poetry environment and set up uv automatically.
+
+### Building Executables
 
 CLASSIC's exe is built using PyInstaller. You can do so with VS Code (Ctrl+Shift+D) or via command.
 To enable compression of the exe, download [UPX](https://upx.github.io/).
 Add the folder it's extracted in to your PATH *or* specify the location in the command or `.vscode/launch.json`
 
-```powershell
-pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\CLASSIC.spec
+```bash
+# Build the executable
+uv run pyinstaller --clean .\CLASSIC.spec
+
+# With UPX compression (smaller file size)
+uv run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\CLASSIC.spec
 ```

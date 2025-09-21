@@ -2,11 +2,12 @@
 Resource loader for accessing bundled data files and managing persistent cache.
 
 This module provides utilities to access data files that are bundled with
-the package, whether running from source or as an installed package.
-It also manages persistent caching for uvx compatibility.
+the package, whether running from source, as an installed package, or as a
+PyInstaller frozen executable. It also manages persistent caching for uvx compatibility.
 """
 
 import os
+import sys
 from pathlib import Path
 
 from ClassicLib import GlobalRegistry
@@ -15,6 +16,32 @@ from ClassicLib.Logger import logger
 
 class ResourceLoader:
     """Handles loading of bundled resource files."""
+
+    @staticmethod
+    def _check_frozen_state() -> Path | None:
+        """Check if running as PyInstaller frozen executable and return data directory.
+
+        When running as a frozen executable, PyInstaller extracts bundled data files
+        to a temporary directory accessible via sys._MEIPASS. This method checks for
+        that condition and returns the path to the bundled CLASSIC Data directory.
+
+        Returns:
+            Path to CLASSIC Data in frozen bundle, or None if not frozen
+        """
+        # Check if we're running as a PyInstaller frozen executable
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            # PyInstaller extracts data files to sys._MEIPASS
+            bundle_dir = Path(sys._MEIPASS)
+            data_dir = bundle_dir / "CLASSIC Data"
+
+            if data_dir.exists():
+                logger.debug(f"Running as frozen executable, using bundled CLASSIC Data: {data_dir}")
+                return data_dir
+            else:
+                # Log warning but continue to other strategies
+                logger.warning(f"Frozen executable detected but CLASSIC Data not found in bundle: {bundle_dir}")
+
+        return None
 
     @staticmethod
     def _check_local_dir() -> Path | None:
@@ -59,7 +86,7 @@ class ResourceLoader:
 
         try:
             # Try both naming conventions
-            for package_name in ["classic-fallout4", "classic_fallout4"]:
+            for package_name in ["classic-fallout4", "classic_fallout4", "classic"]:
                 try:
                     dist = pkg_resources.get_distribution(package_name)
                     if dist.location is not None:
@@ -163,7 +190,9 @@ class ResourceLoader:
             Path to the CLASSIC Data directory
         """
         # Try each strategy in order
+        # PyInstaller frozen state is checked first for fastest resolution
         strategies = [
+            ResourceLoader._check_frozen_state,  # Check PyInstaller bundle first
             ResourceLoader._check_local_dir,
             ResourceLoader._check_package_installation,
             ResourceLoader._check_source_installation,
@@ -426,6 +455,11 @@ def get_resource_path(relative_path: str) -> Path:
     """
     Get the full path to a resource file.
 
+    This function handles path resolution for both frozen (PyInstaller) and
+    non-frozen execution contexts. In frozen mode, it accesses files from
+    the temporary extraction directory. In development mode, it uses the
+    source directory structure.
+
     Args:
         relative_path: Path relative to CLASSIC Data directory
 
@@ -434,3 +468,16 @@ def get_resource_path(relative_path: str) -> Path:
     """
     data_dir = ResourceLoader.get_data_directory()
     return data_dir / relative_path
+
+
+def is_frozen() -> bool:
+    """
+    Check if the application is running as a frozen executable.
+
+    This is useful for conditional logic that needs to behave differently
+    in development vs. production (frozen) environments.
+
+    Returns:
+        True if running as PyInstaller frozen executable, False otherwise
+    """
+    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')

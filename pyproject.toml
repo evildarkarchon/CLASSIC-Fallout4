@@ -1,101 +1,86 @@
 [project]
 name = "classic"
 version = "8.0.0"
-requires-python = ">=3.12,<3.14"
-
-[tool.poetry]
-name = "classic"
-version = "7.35.0"
 description = "Crash Log Auto-Scanner for Buffout 4."
-authors = ["Poet", "evildarkarchon", "wxMichael"]
+authors = [
+    { name = "Poet" },
+    { name = "evildarkarchon" },
+    { name = "wxMichael" }
+]
 readme = "README.md"
-package-mode = true
-packages = [
-    { include = "classic", from = "src" },
-    { include = "ClassicLib" },
-    { include = "CLASSIC_Interface.py" },
-    { include = "CLASSIC_TUI.py" },
-    { include = "CLASSIC_ScanLogs.py" },
-    { include = "CLASSIC_ScanGame.py" }
+license = { file = "LICENSE.md" }
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "beautifulsoup4>=4.12.3",
+    "requests>=2.32.3",
+    "ruamel-yaml>=0.18.6",
+    "tomlkit>=0.13.2",
+    "urllib3>=2.2.3",
+    "chardet>=5.2.0",
+    "aiohttp>=3.10.10",
+    "regex>=2024.9.11",
+    "iniparse>=0.5",
+    "typed-argument-parser>=1.10.1",
+    "packaging>=25.0",
+    "aiofiles>=24.1.0",
+    "pytest>=8.4.0",
+    "aiosqlite>=0.21.0",
+    "pefile<2024.8.26",
+    "pyside6>=6.8.0",
+    "appdirs>=1.4.4",
+    "setuptools>=80.9.0",
+    "markdown2>=2.5.4",
+    "qasync>=0.28.0",
 ]
-include = [
-    "CLASSIC Data/**/*.yaml",
-    "CLASSIC Data/**/*.yml",
-    "CLASSIC Data/**/*.db",
-    "CLASSIC Data/**/*.txt",
-    "CLASSIC Data/**/*.md",
-    "docs/*.md",
-    "LICENSE.md",
+
+[project.optional-dependencies]
+tui = ["textual>=5.3.0"]
+cli = ["tqdm>=4.67.1"]
+windows = ["pywin32>=310; sys_platform == 'win32'"]
+full = ["textual>=5.3.0", "tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
+all = ["textual>=5.3.0", "tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
+
+[project.scripts]
+classic = "classic.gui:main"
+classic-gui = "classic.gui:main"
+classic-cli = "classic.cli:main"
+classic-tui = "classic.tui:main"
+classic-scan = "classic.scan:main"
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.12.0",
+    "ruff>=0.11.0",
+    "types-beautifulsoup4>=4.12.0.20240907",
+    "types-regex>=2024.11.6.20250403",
+    "types-requests>=2.32.0.20241016",
+    "pyinstaller>=6.11.0",
+    "pytest>=8.3.3",
+    "pytest-cov>=5.0.0",
+    "pytest-asyncio>=0.24.0",
+    "anyio>=4.6.2.post1",
+    "pyinstaller-hooks-contrib>=2025.0",
+    "pytest-qt>=4.4.0",
+    "psutil>=7.0.0",
+    "pytest-xdist>=3.8.0",
+    "pytest-textual-snapshot>=1.1.0",
+    "pytest-timeout>=2.4",
+    "textual-dev>=1.7.0",
+    "pre-commit>=4.3.0",
+    "pylint>=3.3.8",
+    "pyright>=1.1.405",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.12,<3.14"
-beautifulsoup4 = ">=4.12.3"
-requests = ">=2.32.3"
-ruamel-yaml = ">=0.18.6"
-tomlkit = ">=0.13.2"
-urllib3 = ">=2.2.3"
-chardet = ">=5.2.0"
-aiohttp = ">=3.10.10"
-regex = ">=2024.9.11"
-iniparse = ">=0.5"
-typed-argument-parser = ">=1.10.1"
-packaging = ">=25.0"
-aiofiles = ">=24.1.0"
-pytest = ">=8.4.0"
-aiosqlite = ">=0.21.0"
-pefile = "<2024.8.26"
-pyside6 = ">=6.8.0"  # GUI framework - required for primary interface
-textual = { version = ">=5.3.0", optional = true }  # Optional TUI mode
-tqdm = { version = ">=4.67.1", optional = true }    # Optional CLI progress
-pywin32 = { version = ">=310", optional = true, markers = "sys_platform == 'win32'" }
-appdirs = ">=1.4.4"
-setuptools = ">=80.9.0"
-markdown2 = "^2.5.4"
+# Package configuration for uv
+package = true
+managed = true
 
-[tool.poetry.scripts]
-classic = "classic.gui:main"        # Primary GUI entry point
-classic-gui = "classic.gui:main"    # Explicit GUI alias
-classic-cli = "classic.cli:main"    # Command-line interface
-classic-tui = "classic.tui:main"    # Terminal UI
-classic-scan = "classic.scan:main"  # Direct scanner access
-
-[tool.poetry.extras]
-tui = ["textual"]       # Terminal UI mode
-cli = ["tqdm"]          # CLI with progress bars
-windows = ["pywin32"]   # Windows-specific features
-full = ["textual", "tqdm", "pywin32"]  # All optional features
-all = ["textual", "tqdm", "pywin32"]   # Alias for full
-
-
-[tool.poetry.group.dev.dependencies]
-mypy = ">=1.12.0"
-ruff = ">=0.11.0"
-types-beautifulsoup4 = ">=4.12.0.20240907"
-types-regex = ">=2024.11.6.20250403"
-types-requests = ">=2.32.0.20241016"
-pyinstaller = ">=6.11.0"
-pytest = ">=8.3.3"
-pytest-cov = ">=5.0.0"
-pytest-asyncio = ">=0.24.0"
-anyio = ">=4.6.2.post1"
-pyinstaller-hooks-contrib = ">=2025.0"
-pytest-qt = ">=4.4.0"
-psutil = ">=7.0.0"
-pytest-xdist = ">=3.8.0"
-pytest-textual-snapshot = ">=1.1.0"
-pytest-timeout = ">=2.4"
-textual-dev = ">=1.7.0"
-pre-commit = ">=4.3.0"
-pylint = "^3.3.8"
-
-
-[tool.poetry.requires-plugins]
-poetry-plugin-up = ">=0.9.0"
+[tool.uv.sources]
+classic = { path = ".", editable = true }
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=69.5.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [tool.mypy]
 enable_incomplete_feature = ["NewGenericSyntax"]

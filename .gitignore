@@ -25,7 +25,6 @@ lcov.info
 *.exe
 *.onefile-build/
 *.pdb
-*.spec
 build/
 dist/
 _internal/

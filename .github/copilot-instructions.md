@@ -8,9 +8,10 @@ CLASSIC is a crash log analyzer for Fallout 4 and Skyrim that processes Buffout 
 
 ```bash
 # Environment setup
-poetry install                          # Install all dependencies
-poetry install --with gui              # Include PySide6 for GUI development
-poetry install --with windows          # Include Windows-specific dependencies
+uv sync                              # Install all dependencies
+uv sync --extra gui                 # Include PySide6 for GUI development
+uv sync --extra windows             # Include Windows-specific dependencies
+uv sync --all-extras               # Install all optional features
 
 # Running the application
 python CLASSIC_Interface.py            # GUI mode
@@ -26,7 +27,7 @@ python -m pytest -m "unit and not slow" --maxfail=3  # Quick feedback
 # Code quality
 ruff check .                           # Lint check
 ruff format .                          # Format code
-poetry up --latest                     # Update dependencies
+uv lock --upgrade                     # Update dependencies
 ```
 
 ## Architecture: Async-First Orchestrator Pattern
@@ -286,9 +287,9 @@ tests/settings/      # YAML and settings management
 ## Development Workflows
 
 ### Environment Setup
-- **Python 3.12+** with Poetry dependency management
+- **Python 3.12+** with uv package manager (faster than Poetry)
 - **VS Code** with extensions from `.vscode/` recommendations
-- **Commands**: `poetry install`, `poetry up --latest`, `ruff check .`, `ruff format .`
+- **Commands**: `uv sync`, `uv lock --upgrade`, `ruff check .`, `ruff format .`
 
 ### Build Process
 - **PyInstaller** builds via VS Code (Ctrl+Shift+D) or `pyinstaller CLASSIC.spec`
@@ -303,8 +304,8 @@ Available VS Code tasks:
 
 ### Code Quality Enforcement
 - **Pre-commit hooks**: Automatically check test isolation, YAML usage, and code quality
-- **Installation**: `poetry run pre-commit install`
-- **Manual run**: `poetry run pre-commit run --all-files`
+- **Installation**: `uv run pre-commit install`
+- **Manual run**: `uv run pre-commit run --all-files`
 - **Test isolation**: Prevents production YAML/path usage in tests
 
 #### Available Hooks
@@ -315,13 +316,13 @@ Available VS Code tasks:
 #### Running Pre-commit Manually
 ```bash
 # Run on all files
-poetry run pre-commit run --all-files
+uv run pre-commit run --all-files
 
 # Run on staged files
-poetry run pre-commit run
+uv run pre-commit run
 
 # Run specific hook
-poetry run pre-commit run check-test-isolation
+uv run pre-commit run check-test-isolation
 ```
 
 ## Key Integration Points
