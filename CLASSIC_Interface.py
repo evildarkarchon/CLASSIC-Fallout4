@@ -158,9 +158,9 @@ class MainWindow(
         self.initialize_folder_paths()
         # noinspection PyTypeChecker
         init_message_handler(parent=self, is_gui_mode=True)
-        # Run initial setup using SetupCoordinator
-        setup_coordinator = SetupCoordinator()
-        setup_coordinator.run_initial_setup()
+        # Initial setup should be handled by the entry point, not here
+        # setup_coordinator = SetupCoordinator()
+        # setup_coordinator.run_initial_setup()
         if classic_settings(bool, "Update Check"):
             QTimer.singleShot(0, self.update_popup)
         self.update_check_timer = QTimer()

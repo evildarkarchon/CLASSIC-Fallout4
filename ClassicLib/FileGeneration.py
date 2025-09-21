@@ -87,7 +87,7 @@ class FileGenerator:
         ignore_path = Path("CLASSIC Ignore.yaml")
         io_core = FileIOCore()
 
-        if not await io_core.file_exists(ignore_path):
+        if not io_core.file_exists(ignore_path):
             default_ignorefile = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
             if not isinstance(default_ignorefile, str):
                 raise TypeError("Default ignore file content must be a string")
@@ -111,7 +111,7 @@ class FileGenerator:
         local_path = Path(f"CLASSIC Data/CLASSIC {GlobalRegistry.get_game()} Local.yaml")
         io_core = FileIOCore()
 
-        if not await io_core.file_exists(local_path):
+        if not io_core.file_exists(local_path):
             default_yaml = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.default_localyaml")
             if not isinstance(default_yaml, str):
                 raise TypeError("Default local YAML content must be a string")

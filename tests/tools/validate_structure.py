@@ -195,43 +195,43 @@ def validate_test_suite(test_dir: Path, verbose: bool = False) -> ValidationResu
     )
 
 
-def print_validation_report(result: ValidationResult, test_dir: Path) -> None:
-    """Print a detailed validation report."""
+def _print_header() -> None:
+    """Print report header."""
     print(f"\n{'='*60}")
     print("TEST SUITE STRUCTURE VALIDATION REPORT")
     print(f"{'='*60}")
 
+
+def _print_overview(result: ValidationResult) -> None:
+    """Print overview section."""
     print(f"📊 Overview:")
     print(f"   Total test files: {result.total_files}")
     print(f"   Compliant files: {result.compliant_files}")
     print(f"   Non-compliant files: {result.total_files - result.compliant_files}")
     print(f"   Compliance rate: {result.compliance_percentage:.1f}%")
 
-    if result.oversized_files:
-        print(f"\n❌ Files exceeding 300 lines ({len(result.oversized_files)}):")
-        for file_path, line_count in result.oversized_files:
-            rel_path = file_path.relative_to(test_dir)
-            print(f"   • {rel_path} ({line_count} lines)")
 
-    if result.mixed_type_files:
-        print(f"\n🔀 Files with mixed test types ({len(result.mixed_type_files)}):")
-        for file_path, test_types in result.mixed_type_files:
-            rel_path = file_path.relative_to(test_dir)
-            print(f"   • {rel_path} (contains: {', '.join(test_types)})")
+def _print_violation_section(items: list, title: str, icon: str, test_dir: Path,
+                            format_func=None) -> None:
+    """Print a violation section."""
+    if items:
+        print(f"\n{icon} {title} ({len(items)}):")
+        for item in items:
+            if format_func:
+                format_func(item, test_dir)
+            else:
+                file_path, detail = item
+                rel_path = file_path.relative_to(test_dir)
+                if isinstance(detail, list):
+                    print(f"   • {rel_path} (contains: {', '.join(detail)})")
+                elif isinstance(detail, int):
+                    print(f"   • {rel_path} ({detail} lines)")
+                else:
+                    print(f"   • {rel_path} - {detail}")
 
-    if result.badly_named_files:
-        print(f"\n📛 Files with naming violations ({len(result.badly_named_files)}):")
-        for file_path, reason in result.badly_named_files:
-            rel_path = file_path.relative_to(test_dir)
-            print(f"   • {rel_path} - {reason}")
 
-    if result.misplaced_files:
-        print(f"\n📂 Misplaced files ({len(result.misplaced_files)}):")
-        for file_path, reason in result.misplaced_files:
-            rel_path = file_path.relative_to(test_dir)
-            print(f"   • {rel_path} - {reason}")
-
-    # Priority recommendations
+def _print_priority_actions(result: ValidationResult, test_dir: Path) -> None:
+    """Print priority actions section."""
     print(f"\n🎯 Priority Actions:")
 
     if result.oversized_files:
@@ -247,13 +247,35 @@ def print_validation_report(result: ValidationResult, test_dir: Path) -> None:
             rel_path = file_path.relative_to(test_dir)
             print(f"      • {rel_path}")
 
-    # Success message
-    if result.compliance_percentage == 100:
+
+def _print_success_message(compliance_percentage: float) -> None:
+    """Print success/progress message."""
+    if compliance_percentage == 100:
         print(f"\n🎉 Congratulations! All test files are compliant with the organization rules.")
-    elif result.compliance_percentage >= 80:
-        print(f"\n✨ Good progress! You're {result.compliance_percentage:.1f}% compliant.")
+    elif compliance_percentage >= 80:
+        print(f"\n✨ Good progress! You're {compliance_percentage:.1f}% compliant.")
     else:
-        print(f"\n🚧 Keep going! {result.compliance_percentage:.1f}% compliance - focus on the priority actions above.")
+        print(f"\n🚧 Keep going! {compliance_percentage:.1f}% compliance - focus on the priority actions above.")
+
+
+def print_validation_report(result: ValidationResult, test_dir: Path) -> None:
+    """Print a detailed validation report."""
+    _print_header()
+    _print_overview(result)
+
+    # Print violation sections
+    violations = [
+        (result.oversized_files, "Files exceeding 300 lines", "❌"),
+        (result.mixed_type_files, "Files with mixed test types", "🔀"),
+        (result.badly_named_files, "Files with naming violations", "📛"),
+        (result.misplaced_files, "Misplaced files", "📂")
+    ]
+
+    for items, title, icon in violations:
+        _print_violation_section(items, title, icon, test_dir)
+
+    _print_priority_actions(result, test_dir)
+    _print_success_message(result.compliance_percentage)
 
 
 def suggest_fixes(result: ValidationResult, test_dir: Path) -> None:

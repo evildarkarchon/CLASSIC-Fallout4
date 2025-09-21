@@ -21,70 +21,54 @@ def analyze_file(file_path: Path) -> List[Tuple[int, str]]:
     return calls
 
 
-def main():
-    """Main analysis function."""
-    print("=" * 80)
-    print("asyncio.run() Usage Analysis")
-    print("=" * 80)
+def scan_directory(directory: str, exclude_files: List[str] = None) -> List[Path]:
+    """Scan directory for files containing asyncio.run()."""
+    exclude_files = exclude_files or []
+    matching_files = []
 
-    production_files = []
-    test_files = []
-
-    # Find all Python files
-    for file in Path('ClassicLib').rglob('*.py'):
-        content = file.read_text(encoding='utf-8')
-        if 'asyncio.run(' in content:
-            production_files.append(file)
-
-    for file in Path('tests').rglob('*.py'):
-        if file.name == 'README_async.md':
+    for file in Path(directory).rglob('*.py'):
+        if file.name in exclude_files:
             continue
         content = file.read_text(encoding='utf-8')
         if 'asyncio.run(' in content:
-            test_files.append(file)
+            matching_files.append(file)
 
-    print(f"\nFound asyncio.run() in {len(production_files)} production files")
-    print(f"Found asyncio.run() in {len(test_files)} test files")
+    return matching_files
 
+
+def print_file_analysis(files: List[Path], section_name: str) -> None:
+    """Print analysis for a group of files."""
     print("\n" + "=" * 80)
-    print("PRODUCTION CODE")
+    print(section_name)
     print("=" * 80)
 
-    for file_path in production_files:
+    for file_path in files:
         calls = analyze_file(file_path)
-        if calls:
-            print(f"\n{file_path}:")
-            for line_num, line in calls:
-                # Extract just the asyncio.run call
-                match = re.search(r'(.*asyncio\.run\([^)]+\))', line)
-                if match:
-                    print(f"  Line {line_num}: {match.group(1)[:100]}")
+        if not calls:
+            continue
 
-    print("\n" + "=" * 80)
-    print("TEST CODE")
-    print("=" * 80)
+        print(f"\n{file_path}:")
+        for line_num, line in calls:
+            # Extract just the asyncio.run call
+            match = re.search(r'(.*asyncio\.run\([^)]+\))', line)
+            if match:
+                print(f"  Line {line_num}: {match.group(1)[:100]}")
 
-    for file_path in test_files:
-        calls = analyze_file(file_path)
-        if calls:
-            print(f"\n{file_path}:")
-            for line_num, line in calls:
-                # Extract just the asyncio.run call
-                match = re.search(r'(.*asyncio\.run\([^)]+\))', line)
-                if match:
-                    print(f"  Line {line_num}: {match.group(1)[:100]}")
 
+def print_summary(file_groups: dict) -> None:
+    """Print summary of files needing migration."""
     print("\n" + "=" * 80)
     print("SUMMARY")
     print("=" * 80)
-    print("\nProduction files that need migration:")
-    for f in production_files:
-        print(f"  - {f}")
 
-    print("\nTest files that need migration:")
-    for f in test_files:
-        print(f"  - {f}")
+    for category, files in file_groups.items():
+        print(f"\n{category} files that need migration:")
+        for f in files:
+            print(f"  - {f}")
 
+
+def print_recommendations() -> None:
+    """Print migration recommendations."""
     print("\n" + "=" * 80)
     print("RECOMMENDATION")
     print("=" * 80)
@@ -94,6 +78,31 @@ def main():
     print("3. Better test isolation")
     print("4. Consistent async patterns across the codebase")
     print("\nUse: AsyncBridge.get_instance().run_async() instead of asyncio.run()")
+
+
+def main():
+    """Main analysis function."""
+    print("=" * 80)
+    print("asyncio.run() Usage Analysis")
+    print("=" * 80)
+
+    # Scan directories for asyncio.run() usage
+    file_groups = {
+        "Production": scan_directory('ClassicLib'),
+        "Test": scan_directory('tests', exclude_files=['README_async.md'])
+    }
+
+    # Print counts
+    for category, files in file_groups.items():
+        print(f"\nFound asyncio.run() in {len(files)} {category.lower()} files")
+
+    # Analyze each group
+    for category, files in file_groups.items():
+        print_file_analysis(files, f"{category.upper()} CODE")
+
+    # Print summary and recommendations
+    print_summary(file_groups)
+    print_recommendations()
 
 
 if __name__ == '__main__':

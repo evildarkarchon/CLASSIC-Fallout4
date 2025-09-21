@@ -128,6 +128,53 @@ def ensure_qt_cleanup():
     return '\n'.join(lines)
 
 
+def _find_fixture_end(lines: list[str], start_index: int, indent: int) -> int:
+    """Find the end index of a fixture function."""
+    end_j = start_index + 1
+    while end_j < len(lines):
+        check_line = lines[end_j]
+        if check_line and not check_line[0].isspace():
+            break
+        if check_line.strip() and not check_line[:indent].isspace():
+            break
+        end_j += 1
+    return end_j
+
+
+def _should_skip_fixture(lines: list[str], i: int, standardized: set[str]) -> int:
+    """Check if a fixture should be skipped and return lines to skip."""
+    if '@pytest.fixture' not in lines[i]:
+        return 0
+
+    # Look for the function definition
+    for j in range(1, min(5, len(lines) - i)):
+        next_line = lines[i + j]
+        if match := re.match(r'def\s+(\w+)\(', next_line):
+            fixture_name = match.group(1)
+            if fixture_name in standardized:
+                # Find end of fixture function
+                indent = len(next_line) - len(next_line.lstrip())
+                end_j = _find_fixture_end(lines, j, indent)
+                print(f"  Removed shadowing fixture: {fixture_name}")
+                return end_j - 1
+    return -1  # Signal to keep the line
+
+
+def _clean_blank_lines(lines: list[str]) -> list[str]:
+    """Clean up excessive blank lines."""
+    cleaned = []
+    blank_count = 0
+    for line in lines:
+        if not line.strip():
+            blank_count += 1
+            if blank_count <= 2:
+                cleaned.append(line)
+        else:
+            blank_count = 0
+            cleaned.append(line)
+    return cleaned
+
+
 def remove_all_shadowing_fixtures(content: str) -> str:
     """Remove ALL shadowing fixture definitions."""
     standardized = {
@@ -148,45 +195,16 @@ def remove_all_shadowing_fixtures(content: str) -> str:
             skip_lines -= 1
             continue
 
-        # Check for fixture decorator
-        if '@pytest.fixture' in line:
-            # Look for the function definition
-            for j in range(1, min(5, len(lines) - i)):
-                next_line = lines[i + j]
-                if match := re.match(r'def\s+(\w+)\(', next_line):
-                    fixture_name = match.group(1)
-                    if fixture_name in standardized:
-                        # Find end of fixture function
-                        indent = len(next_line) - len(next_line.lstrip())
-                        end_j = j + 1
-                        while i + end_j < len(lines):
-                            check_line = lines[i + end_j]
-                            if check_line and not check_line[0].isspace():
-                                break
-                            if check_line.strip() and not check_line[:indent].isspace():
-                                break
-                            end_j += 1
-
-                        skip_lines = end_j - 1
-                        print(f"  Removed shadowing fixture: {fixture_name}")
-                        break
-            else:
-                result.append(line)
+        skip_count = _should_skip_fixture(lines, i, standardized)
+        if skip_count > 0:
+            skip_lines = skip_count
+        elif skip_count == -1:
+            result.append(line)
         else:
             result.append(line)
 
     # Clean up extra blank lines
-    cleaned = []
-    blank_count = 0
-    for line in result:
-        if not line.strip():
-            blank_count += 1
-            if blank_count <= 2:
-                cleaned.append(line)
-        else:
-            blank_count = 0
-            cleaned.append(line)
-
+    cleaned = _clean_blank_lines(result)
     return '\n'.join(cleaned)
 
 

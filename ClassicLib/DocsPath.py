@@ -94,6 +94,11 @@ class DocumentsPathManager:
         """
         yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}", value)
 
+        # If this is a docs path update, also save to cache for uvx compatibility
+        if setting_name == "Root_Folder_Docs":
+            from ClassicLib.ResourceLoader import ResourceLoader
+            ResourceLoader.save_path_to_cache(Path(value), "DocsPath")
+
     def find_docs_path(self) -> None:
         """
         Validates and determines the path used for documentation files in the system,
@@ -113,7 +118,16 @@ class DocumentsPathManager:
         """
         logger.debug("- - - INITIATED DOCS PATH CHECK")
 
+        from ClassicLib.ResourceLoader import ResourceLoader
         from ClassicLib.Util import validate_path
+
+        # First, check if we have a cached docs path (for uvx compatibility)
+        cached_path = ResourceLoader.get_cached_docs_path()
+        if cached_path and cached_path.is_dir():
+            logger.debug(f"Using cached docs path: {cached_path}")
+            # Save to Local.yaml for consistency
+            self._update_game_setting("Root_Folder_Docs", str(cached_path))
+            return
 
         # First check if INI Folder Path is set in CLASSIC Settings.yaml
         ini_folder_path: str | None = classic_settings(str, "INI Folder Path")

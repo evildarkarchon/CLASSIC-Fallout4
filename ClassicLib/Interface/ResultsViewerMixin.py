@@ -24,14 +24,16 @@ from PySide6.QtWidgets import (
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
+
+# Import the widget classes from ResultsViewerWidgets
+from ClassicLib.Interface.ResultsViewerWidgets import (
+    MarkdownViewer,
+    ReportListWidget,
+    ReportMetadataWidget,
+)
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
-
-if TYPE_CHECKING:
-    from ClassicLib.Interface.Widgets.markdown_viewer import MarkdownViewer
-    from ClassicLib.Interface.Widgets.report_list import ReportListWidget
-    from ClassicLib.Interface.Widgets.report_metadata import ReportMetadataWidget
 
 
 class ResultsViewerMixin:
@@ -140,7 +142,7 @@ class ResultsViewerMixin:
         Returns:
             QWidget: The constructed reports panel containing the reports list and button bar.
         """
-        from ClassicLib.Interface.Widgets.report_list import ReportListWidget
+        from ClassicLib.Interface.ResultsViewerWidgets import ReportListWidget
 
         panel = QWidget()
         layout = QVBoxLayout(panel)
@@ -148,8 +150,13 @@ class ResultsViewerMixin:
         layout.setSpacing(5)
 
         # Create reports list widget
-        self.results_list = ReportListWidget()
-        self.results_list.itemSelectionChanged.connect(self._on_report_selected)
+        try:
+            self.results_list = ReportListWidget()
+            self.results_list.itemSelectionChanged.connect(self._on_report_selected)
+            logger.info("ReportListWidget created successfully")
+        except Exception as e:
+            logger.error(f"Failed to create ReportListWidget: {e}", exc_info=True)
+            raise
         self.results_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.results_list.customContextMenuRequested.connect(self._show_context_menu)
 
@@ -202,8 +209,7 @@ class ResultsViewerMixin:
             QWidget: A fully constructed viewer panel containing the components
             described above.
         """
-        from Classiclib.Interface.Widgets.markdown_viewer import MarkdownViewer
-        from ClassicLib.Interface.Widgets.report_metadata import ReportMetadataWidget
+        from ClassicLib.Interface.ResultsViewerWidgets import MarkdownViewer, ReportMetadataWidget
 
         panel = QWidget()
         layout = QVBoxLayout(panel)
@@ -215,8 +221,14 @@ class ResultsViewerMixin:
         layout.addWidget(self.metadata_widget)
 
         # Create markdown viewer
-        self.markdown_viewer = MarkdownViewer()
-        layout.addWidget(self.markdown_viewer)
+        try:
+            self.markdown_viewer = MarkdownViewer()
+            # Don't set any initial content - let refresh_reports_list handle it
+            layout.addWidget(self.markdown_viewer)
+            logger.info("MarkdownViewer created successfully")
+        except Exception as e:
+            logger.error(f"Failed to create MarkdownViewer: {e}", exc_info=True)
+            raise
 
         # Create viewer toolbar
         toolbar = QWidget()
@@ -333,6 +345,15 @@ class ResultsViewerMixin:
             self.markdown_viewer.setMarkdown(
                 "# No Reports Found\n\nNo scan reports are available. Run a crash log scan to generate reports."
             )
+        else:
+            # Reports found - clear any error state and show instructions
+            self.markdown_viewer.clear()
+            self.markdown_viewer.setMarkdown(
+                "# Reports Available\n\nSelect a report from the list to view its contents."
+            )
+            # Auto-select the first report for better UX
+            if self.results_list.count() > 0:
+                self.results_list.setCurrentRow(0)
 
         logger.info(f"Refreshed reports list: {len(reports)} reports found")
 
@@ -348,9 +369,13 @@ class ResultsViewerMixin:
         Returns:
             bool: True if the report is loaded successfully; False otherwise.
         """
+        logger.info(f"Loading report: {report_path}")
+        # msg_info removed - not needed for every report load
+
         try:
             if not report_path.exists():
                 msg_error(f"Report file not found: {report_path.name}")
+                logger.error(f"Report file not found: {report_path}")
                 return False
 
             # Read report content
@@ -372,8 +397,16 @@ class ResultsViewerMixin:
 
         except Exception as e:  # noqa: BLE001
             msg_error(f"Failed to load report: {e}")
-            logger.error(f"Error loading report {report_path}: {e}")
-            return False
+            logger.error(f"Error loading report {report_path}: {e}", exc_info=True)
+            # If markdown fails, try displaying as plain text
+            try:
+                content = report_path.read_text(encoding="utf-8", errors="ignore")
+                self.markdown_viewer.setPlainText(content)
+                msg_warning("Displayed report as plain text due to markdown error")
+                return True
+            except Exception as fallback_e:  # noqa: BLE001
+                logger.error(f"Fallback plain text also failed: {fallback_e}")
+                return False
         else:
             return True
 
@@ -381,14 +414,22 @@ class ResultsViewerMixin:
         """Handle report selection from the list."""
         selected_items = self.results_list.selectedItems()
         if not selected_items:
+            logger.debug("No items selected")
             return
 
         # Get the report path from the selected item
         item = selected_items[0]
+        item_text = item.text()
+        logger.debug(f"Selected item text: {item_text}")
+
         report_path = self.results_list.get_report_path(item)
+        logger.debug(f"Report path from list: {report_path}")
 
         if report_path:
             self.load_report(report_path)
+        else:
+            msg_error(f"No report path found for: {item_text}")
+            logger.error(f"No report path found for selected item: {item_text}")
 
     def _delete_selected_report(self) -> None:
         """Delete the currently selected report with confirmation."""

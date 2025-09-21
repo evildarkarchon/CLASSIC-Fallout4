@@ -40,6 +40,8 @@ class YAML(Enum):
     """CLASSIC Data/CLASSIC Fallout4 Local.yaml"""
     TEST = auto()
     """tests/test_settings.yaml"""
+    Cache = auto()
+    """User config dir/CLASSIC-Fallout4/cache.yaml - Persistent cache for uvx compatibility"""
 
 
 """class GameVars(TypedDict):

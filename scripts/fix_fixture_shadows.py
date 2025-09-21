@@ -34,53 +34,49 @@ def find_shadowing_fixtures(content: str) -> Set[str]:
     return shadowing
 
 
-def remove_shadowing_fixtures(content: str, fixtures_to_remove: Set[str]) -> str:
-    """Remove fixture definitions that shadow standardized ones."""
-    if not fixtures_to_remove:
-        return content
+def check_fixture_to_remove(lines: list[str], index: int, fixtures_to_remove: Set[str]) -> tuple[bool, str | None, int]:
+    """Check if current fixture should be removed.
 
-    lines = content.split('\n')
-    result = []
-    skip_until_next_def = False
-    in_fixture_def = False
-    current_fixture = None
-    indent_level = 0
+    Returns:
+        Tuple of (should_remove, fixture_name, indent_level)
+    """
+    if '@pytest.fixture' not in lines[index]:
+        return False, None, 0
 
-    for i, line in enumerate(lines):
-        # Check if this is a fixture decorator
-        if '@pytest.fixture' in line:
-            # Check next lines to find the fixture name
-            for j in range(i + 1, min(i + 5, len(lines))):
-                if match := re.match(r'def\s+(\w+)\(', lines[j]):
-                    fixture_name = match.group(1)
-                    if fixture_name in fixtures_to_remove:
-                        skip_until_next_def = True
-                        current_fixture = fixture_name
-                        # Find the indentation level of the def line
-                        indent_level = len(lines[j]) - len(lines[j].lstrip())
-                        print(f"  Removing shadowing fixture: {fixture_name}")
-                    break
+    # Check next lines to find the fixture name
+    for j in range(index + 1, min(index + 5, len(lines))):
+        if match := re.match(r'def\s+(\w+)\(', lines[j]):
+            fixture_name = match.group(1)
+            if fixture_name in fixtures_to_remove:
+                indent_level = len(lines[j]) - len(lines[j].lstrip())
+                print(f"  Removing shadowing fixture: {fixture_name}")
+                return True, fixture_name, indent_level
+            break
 
-        # Skip lines that are part of the fixture to remove
-        if skip_until_next_def:
-            # Check if we've reached the next function/class definition at the same or lower indent level
-            if line and not line[0].isspace():  # Top-level definition
-                skip_until_next_def = False
-                current_fixture = None
-                result.append(line)
-            elif line.strip().startswith(('def ', 'class ', '@')) and line[:indent_level].isspace() and line[indent_level] not in ' \t':
-                # Next definition at same indent level
-                skip_until_next_def = False
-                current_fixture = None
-                result.append(line)
-            # else: skip the line (it's part of the fixture being removed)
-        else:
-            result.append(line)
+    return False, None, 0
 
-    # Clean up excess blank lines
+
+def is_next_definition(line: str, indent_level: int) -> bool:
+    """Check if line is the next function/class definition."""
+    # Top-level definition
+    if line and not line[0].isspace():
+        return True
+
+    # Definition at same indent level
+    if line.strip().startswith(('def ', 'class ', '@')):
+        if line[:indent_level].isspace() and indent_level < len(line):
+            if line[indent_level] not in ' \t':
+                return True
+
+    return False
+
+
+def clean_blank_lines(lines: list[str]) -> list[str]:
+    """Clean up excess blank lines."""
     cleaned = []
     blank_count = 0
-    for line in result:
+
+    for line in lines:
         if not line.strip():
             blank_count += 1
             if blank_count <= 2:
@@ -89,6 +85,44 @@ def remove_shadowing_fixtures(content: str, fixtures_to_remove: Set[str]) -> str
             blank_count = 0
             cleaned.append(line)
 
+    return cleaned
+
+
+def remove_shadowing_fixtures(content: str, fixtures_to_remove: Set[str]) -> str:
+    """Remove fixture definitions that shadow standardized ones."""
+    if not fixtures_to_remove:
+        return content
+
+    lines = content.split('\n')
+    result = []
+    skip_state = {
+        'active': False,
+        'fixture': None,
+        'indent': 0
+    }
+
+    for i, line in enumerate(lines):
+        # Check if this is a fixture to remove
+        should_remove, fixture_name, indent_level = check_fixture_to_remove(lines, i, fixtures_to_remove)
+
+        if should_remove:
+            skip_state['active'] = True
+            skip_state['fixture'] = fixture_name
+            skip_state['indent'] = indent_level
+            continue
+
+        # Handle skipping logic
+        if skip_state['active']:
+            if is_next_definition(line, skip_state['indent']):
+                skip_state['active'] = False
+                skip_state['fixture'] = None
+                result.append(line)
+            # else: skip the line (it's part of the fixture being removed)
+        else:
+            result.append(line)
+
+    # Clean up excess blank lines
+    cleaned = clean_blank_lines(result)
     return '\n'.join(cleaned)
 
 

@@ -285,12 +285,6 @@ These guides are essential for writing reliable, isolated tests, especially when
 
 For comprehensive test organization details, see: [Test Structure Guide](docs/TEST_STRUCTURE.md)
 
-#### File Size Limits
-- **500-line soft limit** - Files approaching this should be considered for refactoring
-- **600-line hard limit** - Files must not exceed this size
-- When files grow too large, split them into logical components
-- Exception allowed only when tests are tightly coupled and splitting would harm maintainability
-
 #### New Test Placement (Domain-Driven Structure)
 - **NO tests in root `tests/` directory** - All tests must be in domain-specific subdirectories
 - Tests are organized by functionality and domain areas rather than by source file
@@ -562,11 +556,6 @@ def test_with_test_enum():
 ## Code Quality Standards
 
 ### Python File Organization
-
-#### File Size Limits
-- **500-line soft limit** - Files approaching this should be considered for refactoring
-- **600-line hard limit** - Files must not exceed this size
-- When files grow too large, split them into logical components
 
 #### Class Organization
 - **One class per file** - Each file should contain a single primary class

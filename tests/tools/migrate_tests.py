@@ -160,18 +160,90 @@ This file contains {test_type} tests that {'test individual functions with mocke
     return ''.join(content_parts)
 
 
+def _print_migration_header(file_path: Path) -> None:
+    """Print migration header."""
+    try:
+        relative_path = file_path.relative_to(Path.cwd())
+        print(f"\n🔄 Migrating {relative_path}")
+    except ValueError:
+        print(f"\n🔄 Migrating {file_path}")
+
+
+def _handle_performance_file() -> dict[str, Path]:
+    """Handle performance file migration."""
+    print(f"   ⚡ Performance file detected - requires manual functional scope splitting")
+    print(f"   📋 Suggested approach:")
+    print(f"      • Split by functional areas (comparisons, baselines, benchmarks)")
+    print(f"      • Group related performance tests together")
+    print(f"      • Consider: test_<component>_performance_<scope>.py naming")
+    print(f"   ❌ Automatic migration not recommended for performance files")
+    return {}
+
+
+def _get_component_name(file_path: Path) -> str:
+    """Extract component name from file path."""
+    base_name = file_path.stem
+    if base_name.startswith('test_'):
+        return base_name[5:]  # Remove 'test_' prefix
+    return base_name
+
+
+def _create_test_file(file_path: Path, test_type: str, tests: list[TestInfo],
+                     imports: list[str], constants: list[str], original_content: str,
+                     dry_run: bool) -> Path | None:
+    """Create a single test file for a specific test type."""
+    component_name = _get_component_name(file_path)
+    new_filename = f"test_{component_name}_{test_type}.py"
+    new_file_path = file_path.parent / new_filename
+
+    print(f"   📝 Creating {new_filename} with {len(tests)} tests")
+
+    # Extract the test code for this type
+    test_names = {test.name for test in tests}
+    extractor = TestExtractor(test_names)
+
+    tree = ast.parse(original_content)
+    extractor.visit(tree)
+
+    # Create file content
+    content = create_file_content(
+        tests, test_type, file_path, imports, constants, extractor.extracted_nodes
+    )
+
+    if not dry_run:
+        new_file_path.write_text(content, encoding='utf-8')
+        return new_file_path
+    return None
+
+
+def _handle_post_migration(file_path: Path, original_content: str, created_files: dict[str, Path],
+                         create_backup: bool, dry_run: bool, test_groups: dict[str, list]) -> None:
+    """Handle post-migration tasks."""
+    if not dry_run and created_files:
+        if create_backup:
+            backup_path = file_path.with_suffix('.py.backup')
+            backup_path.write_text(original_content, encoding='utf-8')
+            print(f"   💾 Backup created: {backup_path.name}")
+
+        # Remove original file
+        file_path.unlink()
+        print(f"   🗑️  Removed original file")
+
+    if dry_run:
+        print("   🔍 DRY RUN - No files were actually created")
+        component_name = _get_component_name(file_path)
+        for test_type in test_groups.keys():
+            new_filename = f"test_{component_name}_{test_type}.py"
+            print(f"   📝 Would create: {new_filename}")
+
+
 def migrate_test_file(
     file_path: Path,
     dry_run: bool = False,
     create_backup: bool = True
 ) -> dict[str, Path]:
     """Migrate a test file by splitting it into separate files by test type."""
-
-    try:
-        relative_path = file_path.relative_to(Path.cwd())
-        print(f"\n🔄 Migrating {relative_path}")
-    except ValueError:
-        print(f"\n🔄 Migrating {file_path}")
+    _print_migration_header(file_path)
 
     # Analyze the file first
     analysis = analyze_file(file_path)
@@ -182,13 +254,7 @@ def migrate_test_file(
 
     # Handle performance files specially
     if analysis.is_performance_file:
-        print(f"   ⚡ Performance file detected - requires manual functional scope splitting")
-        print(f"   📋 Suggested approach:")
-        print(f"      • Split by functional areas (comparisons, baselines, benchmarks)")
-        print(f"      • Group related performance tests together")
-        print(f"      • Consider: test_<component>_performance_<scope>.py naming")
-        print(f"   ❌ Automatic migration not recommended for performance files")
-        return {}
+        return _handle_performance_file()
 
     # Read original content
     original_content = file_path.read_text(encoding='utf-8')
@@ -212,59 +278,15 @@ def migrate_test_file(
 
     # Create new files for each test type
     for test_type, tests in test_groups.items():
-        if not tests:
-            continue
+        if tests:
+            new_file = _create_test_file(
+                file_path, test_type, tests, imports, constants, original_content, dry_run
+            )
+            if new_file:
+                created_files[test_type] = new_file
 
-        # Create new filename
-        base_name = file_path.stem
-        if base_name.startswith('test_'):
-            component_name = base_name[5:]  # Remove 'test_' prefix
-        else:
-            component_name = base_name
-
-        new_filename = f"test_{component_name}_{test_type}.py"
-        new_file_path = file_path.parent / new_filename
-
-        print(f"   📝 Creating {new_filename} with {len(tests)} tests")
-
-        # Extract the test code for this type
-        test_names = {test.name for test in tests}
-        extractor = TestExtractor(test_names)
-
-        tree = ast.parse(original_content)
-        extractor.visit(tree)
-
-        # Create file content
-        content = create_file_content(
-            tests, test_type, file_path, imports, constants, extractor.extracted_nodes
-        )
-
-        if not dry_run:
-            # Write the new file
-            new_file_path.write_text(content, encoding='utf-8')
-            created_files[test_type] = new_file_path
-
-    # Create backup and remove original file
-    if not dry_run and created_files:
-        if create_backup:
-            backup_path = file_path.with_suffix('.py.backup')
-            backup_path.write_text(original_content, encoding='utf-8')
-            print(f"   💾 Backup created: {backup_path.name}")
-
-        # Remove original file
-        file_path.unlink()
-        print(f"   🗑️  Removed original file")
-
-    if dry_run:
-        print("   🔍 DRY RUN - No files were actually created")
-        for test_type in test_groups.keys():
-            base_name = file_path.stem
-            if base_name.startswith('test_'):
-                component_name = base_name[5:]
-            else:
-                component_name = base_name
-            new_filename = f"test_{component_name}_{test_type}.py"
-            print(f"   📝 Would create: {new_filename}")
+    # Handle post-migration tasks
+    _handle_post_migration(file_path, original_content, created_files, create_backup, dry_run, test_groups)
 
     return created_files
 

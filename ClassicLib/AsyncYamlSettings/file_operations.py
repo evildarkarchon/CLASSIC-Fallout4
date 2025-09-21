@@ -1,16 +1,16 @@
 """File operations for AsyncYamlSettings."""
 
-import asyncio
 from io import StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import ruamel.yaml
 
-from ClassicLib import GlobalRegistry, MessageTarget, msg_error
+from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.FileIOCore import FileIOCore
 from ClassicLib.Logger import logger
+from ClassicLib.ResourceLoader import ResourceLoader
 
 
 # TODO: Make Static YAML Stores read-only in the future
@@ -19,11 +19,10 @@ class YamlFileOperations:
     """Handles YAML file I/O operations."""
 
     # Static YAML stores that don't change based on game selection
-    STATIC_YAML_STORES = {
+    # These are read-only database files that ship with the application
+    STATIC_YAML_STORES: ClassVar[set[YAML]] = {
         YAML.Main,
-        YAML.Settings,
-        YAML.Ignore,
-        YAML.TEST,
+        YAML.Game,  # Game database files are static
     }
 
     def __init__(self, io_core: FileIOCore | None = None) -> None:
@@ -32,7 +31,10 @@ class YamlFileOperations:
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """Get the file path for a specific YAML store."""
-        base_path: Path = Path(GlobalRegistry.get_local_dir(as_string=False)) / "CLASSIC Data"
+        # Use ResourceLoader to get the data directory
+        # This handles both development and installed package scenarios
+        base_path: Path = ResourceLoader.get_data_directory()
+
         match yaml_store:
             case YAML.Settings:
                 return base_path / "CLASSIC Settings.yaml"
@@ -49,6 +51,18 @@ class YamlFileOperations:
             case YAML.TEST:
                 # Test store for unit tests
                 return Path(GlobalRegistry.get_local_dir()) / "tests" / "test_settings.yaml"
+            case YAML.Cache:
+                # User-specific persistent cache for uvx compatibility
+                # This uses the user's config directory which persists across uvx invocations
+                try:
+                    import appdirs
+                    cache_dir = Path(appdirs.user_config_dir("CLASSIC-Fallout4", "CLASSIC"))
+                    cache_dir.mkdir(parents=True, exist_ok=True)
+                    return cache_dir / "cache.yaml"
+                except ImportError:
+                    # Fallback to local data directory if appdirs not available
+                    logger.warning("appdirs not available, using local cache")
+                    return base_path / "cache.yaml"
             case _:
                 raise ValueError(f"Unknown YAML store: {yaml_store}")
 

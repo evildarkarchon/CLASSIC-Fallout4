@@ -105,67 +105,76 @@ class TestCategorizer(ast.NodeVisitor):
         """Handle async test functions."""
         self.visit_FunctionDef(node)
 
-    def _categorize_test(self, analyzer: 'TestBodyAnalyzer', fixtures: list[str]) -> tuple[str, list[str]]:
-        """Categorize a test based on its characteristics."""
-        reasons = []
-
-        # Performance test detection (highest priority)
+    def _check_performance_test(self, analyzer: 'TestBodyAnalyzer', reasons: list[str]) -> bool:
+        """Check if this is a performance test."""
         if analyzer.is_performance_test or self.is_performance_file:
             if analyzer.performance_indicators:
                 reasons.extend(analyzer.performance_indicators)
             if self.is_performance_file:
                 reasons.append("File identified as performance test file")
+            return True
+        return False
+
+    def _calculate_unit_indicators(self, analyzer: 'TestBodyAnalyzer', reasons: list[str]) -> int:
+        """Calculate unit test indicators."""
+        indicators = 0
+        if analyzer.has_mocks:
+            indicators += 2
+            reasons.append("Uses mocks")
+        if not analyzer.has_file_io:
+            indicators += 1
+            reasons.append("No file I/O detected")
+        if not analyzer.has_database_calls:
+            indicators += 1
+            reasons.append("No database calls")
+        if analyzer.is_simple_logic:
+            indicators += 1
+            reasons.append("Simple logic testing")
+        return indicators
+
+    def _calculate_integration_indicators(self, analyzer: 'TestBodyAnalyzer', fixtures: list[str], reasons: list[str]) -> int:
+        """Calculate integration test indicators."""
+        indicators = 0
+        if analyzer.has_file_io and not analyzer.has_entry_points:
+            indicators += 2
+            reasons.append("Has file I/O operations")
+        if analyzer.has_database_calls:
+            indicators += 2
+            reasons.append("Has database interactions")
+        if analyzer.has_multiple_components:
+            indicators += 1
+            reasons.append("Tests multiple components")
+        if "tmp_path" in fixtures:
+            indicators += 1
+            reasons.append("Uses temporary file fixtures")
+        return indicators
+
+    def _calculate_e2e_indicators(self, analyzer: 'TestBodyAnalyzer', reasons: list[str]) -> int:
+        """Calculate E2E test indicators."""
+        indicators = 0
+        if analyzer.has_entry_points:
+            indicators += 3
+            reasons.append("Tests application entry points")
+        if analyzer.has_complete_workflows:
+            indicators += 2
+            reasons.append("Tests complete workflows")
+        if analyzer.has_gui_interactions:
+            indicators += 2
+            reasons.append("Has GUI interactions")
+        return indicators
+
+    def _categorize_test(self, analyzer: 'TestBodyAnalyzer', fixtures: list[str]) -> tuple[str, list[str]]:
+        """Categorize a test based on its characteristics."""
+        reasons = []
+
+        # Performance test detection (highest priority)
+        if self._check_performance_test(analyzer, reasons):
             return "performance", reasons
 
-        # Unit test indicators
-        unit_indicators = 0
-        if analyzer.has_mocks:
-            unit_indicators += 2
-            reasons.append("Uses mocks")
-
-        if not analyzer.has_file_io:
-            unit_indicators += 1
-            reasons.append("No file I/O detected")
-
-        if not analyzer.has_database_calls:
-            unit_indicators += 1
-            reasons.append("No database calls")
-
-        if analyzer.is_simple_logic:
-            unit_indicators += 1
-            reasons.append("Simple logic testing")
-
-        # Integration test indicators
-        integration_indicators = 0
-        if analyzer.has_file_io and not analyzer.has_entry_points:
-            integration_indicators += 2
-            reasons.append("Has file I/O operations")
-
-        if analyzer.has_database_calls:
-            integration_indicators += 2
-            reasons.append("Has database interactions")
-
-        if analyzer.has_multiple_components:
-            integration_indicators += 1
-            reasons.append("Tests multiple components")
-
-        if "tmp_path" in fixtures:
-            integration_indicators += 1
-            reasons.append("Uses temporary file fixtures")
-
-        # E2E test indicators
-        e2e_indicators = 0
-        if analyzer.has_entry_points:
-            e2e_indicators += 3
-            reasons.append("Tests application entry points")
-
-        if analyzer.has_complete_workflows:
-            e2e_indicators += 2
-            reasons.append("Tests complete workflows")
-
-        if analyzer.has_gui_interactions:
-            e2e_indicators += 2
-            reasons.append("Has GUI interactions")
+        # Calculate indicators
+        unit_indicators = self._calculate_unit_indicators(analyzer, reasons)
+        integration_indicators = self._calculate_integration_indicators(analyzer, fixtures, reasons)
+        e2e_indicators = self._calculate_e2e_indicators(analyzer, reasons)
 
         # Determine category based on strongest indicators
         if e2e_indicators >= 2:
@@ -195,9 +204,8 @@ class TestBodyAnalyzer(ast.NodeVisitor):
         self.function_calls = []
         self.attributes_accessed = []
 
-    def visit_Call(self, node: ast.Call) -> Any:
-        """Analyze function calls for patterns."""
-        # Get the function name
+    def _extract_func_name(self, node: ast.Call) -> str:
+        """Extract function name from call node."""
         func_name = ""
         if isinstance(node.func, ast.Name):
             func_name = node.func.id
@@ -206,70 +214,92 @@ class TestBodyAnalyzer(ast.NodeVisitor):
             if isinstance(node.func.value, ast.Name):
                 full_name = f"{node.func.value.id}.{func_name}"
                 self.function_calls.append(full_name)
+        return func_name
 
-        self.function_calls.append(func_name)
-
-        # Mock detection
-        if any(mock_term in func_name.lower() for mock_term in ['mock', 'patch', 'magicmock']):
+    def _check_mock_usage(self, func_name: str) -> None:
+        """Check for mock usage patterns."""
+        mock_terms = ['mock', 'patch', 'magicmock']
+        if any(term in func_name.lower() for term in mock_terms):
             self.has_mocks = True
 
-        # File I/O detection - be more specific about actual file operations
+    def _check_file_io(self, node: ast.Call, func_name: str) -> None:
+        """Check for file I/O operations."""
         file_io_patterns = [
             'open(', 'read_text', 'write_text', 'read_bytes', 'write_bytes',
             'Path(', '.read()', '.write()', 'file.', 'save_to_file', 'load_from_file'
         ]
+        mock_terms = ['mock', 'patch']
         if any(io_pattern in str(node) for io_pattern in file_io_patterns):
-            if not any(mock_term in func_name.lower() for mock_term in ['mock', 'patch']):
+            if not any(term in func_name.lower() for term in mock_terms):
                 self.has_file_io = True
 
-        # Database detection
-        if any(db_term in func_name.lower() for db_term in ['database', 'sql', 'query', 'execute', 'fetch']):
+    def _check_database_calls(self, func_name: str) -> None:
+        """Check for database operations."""
+        db_terms = ['database', 'sql', 'query', 'execute', 'fetch']
+        if any(term in func_name.lower() for term in db_terms):
             self.has_database_calls = True
 
-        # GUI detection
-        if any(gui_term in func_name.lower() for gui_term in ['show', 'click', 'press', 'dialog', 'widget']):
+    def _check_gui_interactions(self, func_name: str) -> None:
+        """Check for GUI interactions."""
+        gui_terms = ['show', 'click', 'press', 'dialog', 'widget']
+        if any(term in func_name.lower() for term in gui_terms):
             self.has_gui_interactions = True
 
-        # Entry point detection - be more specific to avoid false positives
-        # Look for actual application entry points, not just any 'run' method
+    def _check_entry_points(self, node: ast.Call, func_name: str) -> None:
+        """Check for application entry points."""
         entry_patterns = [
             'app.run', 'application.run', 'main(', '__main__',
             'scanner.process_crashlog', 'scanner.scan', 'app.start'
         ]
+        entry_functions = ['main', 'start_application', 'run_app']
+
         if any(entry in str(node) for entry in entry_patterns):
             self.has_entry_points = True
-        # Also check for specific entry point function names (but not run_async)
-        elif func_name in ['main', 'start_application', 'run_app'] and 'run_async' not in func_name:
+        elif func_name in entry_functions and 'run_async' not in func_name:
             self.has_entry_points = True
 
-        # Performance test detection - be more specific to avoid false positives
-        # Look for actual performance measurement patterns, not just any 'time' reference
-        performance_patterns = [
-            'perf_counter', 'benchmark', 'measure_time', 'measure_performance',
-            'performance_test', 'baseline', 'memory_info', 'scalability_test',
-            'throughput', 'latency', 'cpu_usage', 'memory_usage', 'profile', 'metric'
-        ]
+    def _check_performance_patterns(self, node: ast.Call, func_name: str) -> None:
+        """Check for performance test patterns."""
+        # Pattern dictionaries for different performance checks
+        performance_patterns = {
+            'function': ['perf_counter', 'benchmark', 'measure_time', 'measure_performance',
+                        'performance_test', 'baseline', 'memory_info', 'scalability_test',
+                        'throughput', 'latency', 'cpu_usage', 'memory_usage', 'profile', 'metric'],
+            'timing': ['time.perf_counter', 'time.process_time', 'time.monotonic', 'timeit.'],
+            'memory': ['memory_info', 'memory_usage', 'psutil', 'resource.getrusage']
+        }
 
-        # Check for specific performance measurement calls
-        if any(perf in func_name.lower() for perf in performance_patterns):
+        # Check function name patterns
+        if any(perf in func_name.lower() for perf in performance_patterns['function']):
             self.is_performance_test = True
             self.performance_indicators.append(f"Performance function: {func_name}")
-        # Also check for time.perf_counter specifically (not just any time call)
         elif 'perf_counter' in func_name or 'process_time' in func_name:
             self.is_performance_test = True
             self.performance_indicators.append(f"Timing measurement: {func_name}")
 
-        # Check for specific timing measurement calls (not just any time reference)
-        timing_calls = ['time.perf_counter', 'time.process_time', 'time.monotonic', 'timeit.']
-        if any(timing in str(node) for timing in timing_calls):
+        # Check timing calls
+        if any(timing in str(node) for timing in performance_patterns['timing']):
             self.is_performance_test = True
             self.performance_indicators.append(f"Timing measurement: {func_name}")
 
-        # Check for memory monitoring
-        memory_calls = ['memory_info', 'memory_usage', 'psutil', 'resource.getrusage']
-        if any(mem in func_name for mem in memory_calls):
+        # Check memory monitoring
+        if any(mem in func_name for mem in performance_patterns['memory']):
             self.is_performance_test = True
             self.performance_indicators.append(f"Memory monitoring: {func_name}")
+
+    def visit_Call(self, node: ast.Call) -> Any:
+        """Analyze function calls for patterns."""
+        # Extract function name
+        func_name = self._extract_func_name(node)
+        self.function_calls.append(func_name)
+
+        # Check various patterns
+        self._check_mock_usage(func_name)
+        self._check_file_io(node, func_name)
+        self._check_database_calls(func_name)
+        self._check_gui_interactions(func_name)
+        self._check_entry_points(node, func_name)
+        self._check_performance_patterns(node, func_name)
 
         # Complexity indicators
         if len(self.function_calls) > 10:
@@ -412,8 +442,18 @@ def analyze_file(file_path: Path) -> FileAnalysis:
         )
 
 
-def print_analysis(analysis: FileAnalysis) -> None:
-    """Print a detailed analysis report."""
+def _print_test_section(tests: list[TestInfo], title: str, icon: str) -> None:
+    """Print a section of tests with their details."""
+    if tests:
+        print(f"\n{icon} {title} ({len(tests)}):")
+        for test in tests:
+            print(f"   • {test.name} (line {test.line_number})")
+            for reason in test.reasons:
+                print(f"     - {reason}")
+
+
+def _print_file_header(analysis: FileAnalysis) -> None:
+    """Print the file header section."""
     print(f"\n{'='*60}")
     try:
         relative_path = analysis.file_path.relative_to(Path.cwd())
@@ -424,49 +464,17 @@ def print_analysis(analysis: FileAnalysis) -> None:
     print(f"Total lines: {analysis.total_lines}")
     print(f"Total tests: {analysis.total_tests}")
 
-    if analysis.violations:
+
+def _print_violations(violations: list[str]) -> None:
+    """Print violations if any."""
+    if violations:
         print(f"\n⚠️  VIOLATIONS:")
-        for violation in analysis.violations:
+        for violation in violations:
             print(f"   • {violation}")
 
-    if analysis.unit_tests:
-        print(f"\n✅ Unit tests ({len(analysis.unit_tests)}):")
-        for test in analysis.unit_tests:
-            print(f"   • {test.name} (line {test.line_number})")
-            for reason in test.reasons:
-                print(f"     - {reason}")
 
-    if analysis.integration_tests:
-        print(f"\n🔗 Integration tests ({len(analysis.integration_tests)}):")
-        for test in analysis.integration_tests:
-            print(f"   • {test.name} (line {test.line_number})")
-            for reason in test.reasons:
-                print(f"     - {reason}")
-
-    if analysis.e2e_tests:
-        print(f"\n🔄 E2E tests ({len(analysis.e2e_tests)}):")
-        for test in analysis.e2e_tests:
-            print(f"   • {test.name} (line {test.line_number})")
-            for reason in test.reasons:
-                print(f"     - {reason}")
-
-    if analysis.performance_tests:
-        print(f"\n⚡ Performance tests ({len(analysis.performance_tests)}):")
-        for test in analysis.performance_tests:
-            print(f"   • {test.name} (line {test.line_number})")
-            for reason in test.reasons:
-                print(f"     - {reason}")
-
-    if analysis.unknown_tests:
-        print(f"\n❓ Unknown tests ({len(analysis.unknown_tests)}):")
-        for test in analysis.unknown_tests:
-            print(f"   • {test.name} (line {test.line_number})")
-            for reason in test.reasons:
-                print(f"     - {reason}")
-
-    if analysis.fixtures_used:
-        print(f"\n📦 Fixtures used: {', '.join(sorted(analysis.fixtures_used))}")
-
+def _print_recommendations(analysis: FileAnalysis) -> None:
+    """Print recommendations based on analysis."""
     if analysis.is_performance_file:
         print(f"\n⚡ Performance file detected!")
         if analysis.needs_split:
@@ -478,6 +486,29 @@ def print_analysis(analysis: FileAnalysis) -> None:
         print(f"\n📊 Recommended action: {'SPLIT' if analysis.needs_split else 'OK'}")
         if analysis.needs_split:
             print("   This file should be split to follow test organization rules.")
+
+
+def print_analysis(analysis: FileAnalysis) -> None:
+    """Print a detailed analysis report."""
+    _print_file_header(analysis)
+    _print_violations(analysis.violations)
+
+    # Print test sections
+    test_sections = [
+        (analysis.unit_tests, "Unit tests", "✅"),
+        (analysis.integration_tests, "Integration tests", "🔗"),
+        (analysis.e2e_tests, "E2E tests", "🔄"),
+        (analysis.performance_tests, "Performance tests", "⚡"),
+        (analysis.unknown_tests, "Unknown tests", "❓")
+    ]
+
+    for tests, title, icon in test_sections:
+        _print_test_section(tests, title, icon)
+
+    if analysis.fixtures_used:
+        print(f"\n📦 Fixtures used: {', '.join(sorted(analysis.fixtures_used))}")
+
+    _print_recommendations(analysis)
 
 
 def main():

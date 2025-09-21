@@ -72,7 +72,10 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
         game_path = Path(path) if path else None
 
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
-        yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
+        from ClassicLib.ResourceLoader import ResourceLoader
+
+        # Save to all cache locations for uvx compatibility
+        ResourceLoader.save_path_to_cache(game_path, "GamePath")
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
         return game_path
     return None
@@ -159,8 +162,11 @@ class GamePathFinder:
         return True
 
     def _save_game_path(self, game_path: Path) -> None:
-        """Save the validated game path to settings."""
-        yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(game_path))
+        """Save the validated game path to settings and cache."""
+        from ClassicLib.ResourceLoader import ResourceLoader
+
+        # Save to all cache locations (cache.yaml, Local.yaml, and suggest env var)
+        ResourceLoader.save_path_to_cache(game_path, "GamePath")
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
 
     def _get_path_from_user_gui(self) -> Path:
@@ -193,6 +199,17 @@ class GamePathFinder:
 
     def find_game_path(self) -> None:
         """Main method to find and configure the game path."""
+        # First, check if we have a cached path (for uvx compatibility)
+        from ClassicLib.ResourceLoader import ResourceLoader
+
+        cached_path = ResourceLoader.get_cached_game_path()
+        if cached_path and cached_path.joinpath(self.exe_name).is_file():
+            logger.debug(f"Using cached game path: {cached_path}")
+            GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, cached_path)
+            # Still save to Local.yaml for consistency
+            yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(cached_path))
+            return
+
         # Try registry first on Windows
         if platform.system() == "Windows":
             game_path = _game_path_find_registry(self.exe_name)

@@ -229,8 +229,7 @@ These guides are essential for writing reliable, isolated tests, especially when
 
 ### Test Organization Rules
 ```python
-# NEW: File size limits and organization requirements
-# - Maximum 300 lines per test file
+# Test organization requirements
 # - NO tests in root tests/ directory - must be in subdirectories
 # - Use descriptive names: test_<component>_<aspect>.py
 
@@ -446,15 +445,141 @@ from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment  # ✅ P
 ## Code Quality Tools
 
 - **Ruff**: Configured in `pyproject.toml` for linting/formatting
+- **Pylint**: Used for additional code quality checks including complexity analysis
 - **Pytest**: With coverage reporting via `pytest --cov=. --cov-report=html`
 - **Type checking**: MyPy configuration in `pyproject.toml`
 
 ## Code Complexity Standards
 
-- **Maximum branch limit**: Follow pylint standard of **12 branches per function/method**
-  - Complex functions with >12 branches should be refactored into smaller functions
-  - Use early returns, guard clauses, and decomposition to reduce complexity
-  - Consider using dispatch patterns (dict mapping, match statements) for multi-branch logic
+### Branch Complexity (PLR0912)
+
+**CRITICAL**: Functions must comply with pylint's PLR0912 rule - **maximum 12 branches per function/method**.
+
+#### What Counts as a Branch
+- `if`, `elif`, `else` statements
+- `for`, `while` loops
+- `try`, `except`, `finally` blocks
+- `with` statements
+- `match`/`case` statements (Python 3.10+)
+- Ternary operators (`x if condition else y`)
+- Boolean operators in complex conditions (`and`, `or`)
+
+#### Refactoring Strategies
+
+**1. Extract Functions**
+```python
+# ❌ Too many branches (>12)
+def process_data(data):
+    if data.type == "A":
+        if data.valid:
+            if data.processed:
+                # ... many more conditions
+                pass
+
+# ✅ Refactored with extraction
+def process_data(data):
+    if data.type == "A":
+        return process_type_a(data)
+    elif data.type == "B":
+        return process_type_b(data)
+
+def process_type_a(data):
+    if not data.valid:
+        return handle_invalid(data)
+    return handle_valid_a(data)
+```
+
+**2. Use Dispatch Patterns**
+```python
+# ❌ Many if/elif branches
+def handle_command(command):
+    if command == "start":
+        # logic
+    elif command == "stop":
+        # logic
+    # ... 10+ more elif statements
+
+# ✅ Dictionary dispatch
+def handle_command(command):
+    handlers = {
+        "start": handle_start,
+        "stop": handle_stop,
+        "restart": handle_restart,
+        # ...
+    }
+    handler = handlers.get(command, handle_unknown)
+    return handler()
+```
+
+**3. Early Returns and Guard Clauses**
+```python
+# ❌ Nested conditions
+def validate_user(user):
+    if user:
+        if user.active:
+            if user.verified:
+                if user.permissions:
+                    # actual logic
+                    pass
+
+# ✅ Guard clauses
+def validate_user(user):
+    if not user:
+        return False
+    if not user.active:
+        return False
+    if not user.verified:
+        return False
+    if not user.permissions:
+        return False
+
+    # actual logic
+    return True
+```
+
+**4. State Machines for Complex Logic**
+```python
+# ✅ State machine pattern for complex workflows
+class DocumentProcessor:
+    def process(self, document):
+        state_handlers = {
+            "draft": self._handle_draft,
+            "review": self._handle_review,
+            "approved": self._handle_approved,
+        }
+        return state_handlers[document.state](document)
+```
+
+#### Checking Compliance
+
+```bash
+# Check for PLR0912 violations
+pylint --disable=all --enable=PLR0912 ClassicLib/
+
+# Or check all pylint rules
+pylint ClassicLib/
+```
+
+#### When Complexity is Unavoidable
+
+In rare cases where high complexity is unavoidable:
+1. **Document thoroughly** - Explain why the complexity is necessary
+2. **Add comprehensive tests** - Test all branches
+3. **Consider splitting the module** - Break into smaller, focused modules
+4. **Use type hints extensively** - Help readers understand the flow
+
+```python
+def complex_parser(data: ComplexDataType) -> ParseResult:
+    """
+    Parse complex data format with multiple variants.
+
+    High complexity is unavoidable due to the need to handle
+    15+ different data format variations in a single pass.
+    Each branch handles a specific format case.
+    """
+    # pylint: disable=too-many-branches
+    # Complexity justified by format requirements
+```
 
 ## Common Anti-Patterns
 
@@ -468,10 +593,10 @@ from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment  # ✅ P
 8. ❌ Mutable lists in reports → ✅ Use `ReportFragment` composition
 9. ❌ Production YAML in tests → ✅ Use `YAML.TEST` or mock `yaml_settings()`
 10. ❌ Creating event loops manually → ✅ Use `AsyncBridge` for persistent loops
-11. ❌ Large files (>500 lines) → ✅ Split into logical components with subdirectories
-12. ❌ Multiple classes per file → ✅ One primary class per file
-13. ❌ Tests in root tests/ → ✅ Organize in subdirectories by functionality
-14. ❌ Adding backward compatibility for tests → ✅ Update tests to match the new API
+11. ❌ Multiple classes per file → ✅ One primary class per file
+12. ❌ Tests in root tests/ → ✅ Organize in subdirectories by functionality
+13. ❌ Adding backward compatibility for tests → ✅ Update tests to match the new API
+14. ❌ Functions with >12 branches (PLR0912) → ✅ Refactor using extraction, dispatch patterns, or guard clauses
 
 ## Key Architecture Files
 

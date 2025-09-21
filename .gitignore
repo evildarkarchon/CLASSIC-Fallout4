@@ -83,3 +83,4 @@ ruff_output.json
 *.backup
 coverage_output.txt
 coverage.json
+too-many-branches.txt

@@ -23,6 +23,45 @@ def find_asyncio_run_calls(content: str) -> List[Tuple[int, str]]:
     return calls
 
 
+def _find_import_position(lines: List[str]) -> int:
+    """Find the position where imports should be added."""
+    import_insert_index = 0
+    for i, line in enumerate(lines):
+        if line.strip() and not line.startswith('#'):
+            if line.startswith('import') or line.startswith('from'):
+                import_insert_index = i + 1
+            else:
+                break
+    return import_insert_index
+
+
+def _add_import_if_needed(result: List[str], lines: List[str], i: int,
+                         has_import: bool, import_added: bool, import_index: int) -> bool:
+    """Add AsyncBridge import if needed."""
+    if not import_added and not has_import and i == import_index:
+        if lines[i-1].strip():  # If previous line has content
+            result.append("")  # Add blank line
+        result.append("from ClassicLib.AsyncBridge import AsyncBridge")
+        result.append("")
+        return True
+    return False
+
+
+def _create_bridge_replacement(line: str, async_call: str, indent: int) -> List[str]:
+    """Create the bridge replacement lines."""
+    replacement = []
+    replacement.append(f"{' ' * indent}bridge = AsyncBridge.get_instance()")
+
+    # Check if this is an assignment
+    if '=' in line.split('asyncio.run(')[0]:
+        assignment_part = line.split('asyncio.run(')[0]
+        replacement.append(f"{' ' * indent}{assignment_part.strip()}bridge.run_async({async_call})")
+    else:
+        replacement.append(f"{' ' * indent}bridge.run_async({async_call})")
+
+    return replacement
+
+
 def replace_asyncio_run(content: str) -> Tuple[str, int]:
     """Replace asyncio.run() calls with AsyncBridge."""
     lines = content.split('\n')
@@ -34,22 +73,13 @@ def replace_asyncio_run(content: str) -> Tuple[str, int]:
     has_asyncbridge_import = any('AsyncBridge' in line for line in lines)
 
     # Find where to add import if needed
-    import_insert_index = 0
-    for i, line in enumerate(lines):
-        if line.strip() and not line.startswith('#'):
-            if line.startswith('import') or line.startswith('from'):
-                import_insert_index = i + 1
-            else:
-                break
+    import_insert_index = _find_import_position(lines)
 
     for i, line in enumerate(lines):
         # Add AsyncBridge import after other imports if not present
-        if not import_added and not has_asyncbridge_import and i == import_insert_index:
-            if lines[i-1].strip():  # If previous line has content
-                result.append("")  # Add blank line
-            result.append("from ClassicLib.AsyncBridge import AsyncBridge")
-            result.append("")
-            import_added = True
+        import_added = _add_import_if_needed(
+            result, lines, i, has_asyncbridge_import, import_added, import_insert_index
+        ) or import_added
 
         # Replace asyncio.run() calls
         if 'asyncio.run(' in line:
@@ -59,28 +89,10 @@ def replace_asyncio_run(content: str) -> Tuple[str, int]:
                 async_call = match.group(1)
                 indent = len(line) - len(line.lstrip())
 
-                # Check if this is an assignment
-                if '=' in line.split('asyncio.run(')[0]:
-                    # Extract the assignment part
-                    assignment_part = line.split('asyncio.run(')[0]
-                    # Create the replacement
-                    if not has_asyncbridge_import and not import_added:
-                        # Will need the import
-                        new_line = f"{' ' * indent}bridge = AsyncBridge.get_instance()"
-                        result.append(new_line)
-                        new_line = f"{' ' * indent}{assignment_part.strip()}bridge.run_async({async_call})"
-                    else:
-                        # Check if bridge variable exists in scope
-                        new_line = f"{' ' * indent}bridge = AsyncBridge.get_instance()"
-                        result.append(new_line)
-                        new_line = f"{' ' * indent}{assignment_part.strip()}bridge.run_async({async_call})"
-                else:
-                    # No assignment, just a call
-                    new_line = f"{' ' * indent}bridge = AsyncBridge.get_instance()"
-                    result.append(new_line)
-                    new_line = f"{' ' * indent}bridge.run_async({async_call})"
+                # Create replacement lines
+                replacement_lines = _create_bridge_replacement(line, async_call, indent)
+                result.extend(replacement_lines)
 
-                result.append(new_line)
                 replacements += 1
                 print(f"    Replaced: asyncio.run({async_call[:50]}...)")
             else:
@@ -135,90 +147,93 @@ def analyze_usage(file_path: Path) -> None:
             print(f"    Line {line_num + 1}: {line.strip()[:80]}...")
 
 
+def _process_files(files: List[str], label: str, action: str = "analyze") -> int:
+    """Process a list of files for analysis or migration."""
+    count = 0
+    for file_path in files:
+        path = Path(file_path)
+        if path.exists():
+            if action == "analyze":
+                analyze_usage(path)
+            elif action == "migrate":
+                if fix_file(path):
+                    count += 1
+    return count
+
+
+def _find_remaining_calls(directory: str) -> List[Path]:
+    """Find files that still contain asyncio.run() calls."""
+    remaining = []
+    for file in Path(directory).rglob('*.py'):
+        content = file.read_text(encoding='utf-8')
+        if 'asyncio.run(' in content:
+            remaining.append(file)
+    return remaining
+
+
+def _print_header(title: str, separator_char: str = "=") -> None:
+    """Print a formatted header."""
+    separator = separator_char * 80
+    print(f"\n{separator}")
+    print(title)
+    print(separator)
+
+
+def _print_step(step_num: int, title: str) -> None:
+    """Print a step header."""
+    print(f"\n\nSTEP {step_num}: {title}")
+    print("-" * 40)
+
+
 def main():
     """Main function to migrate all asyncio.run() calls."""
-    print("=" * 80)
-    print("AsyncBridge Migration Tool")
-    print("=" * 80)
+    _print_header("AsyncBridge Migration Tool")
     print("\nThis tool will replace asyncio.run() with AsyncBridge.get_instance().run_async()")
     print("AsyncBridge provides thread-safe async execution with persistent event loops.\n")
 
     # Files to migrate
-    production_files = [
-        'ClassicLib/ScanLog/AsyncIntegration.py',
-        'ClassicLib/ScanLog/AsyncFileIO.py',
-        'ClassicLib/Interface/Workers.py',
-    ]
+    file_groups = {
+        "production": [
+            'ClassicLib/ScanLog/AsyncIntegration.py',
+            'ClassicLib/ScanLog/AsyncFileIO.py',
+            'ClassicLib/Interface/Workers.py',
+        ],
+        "test": [
+            'tests/core/test_crash_log_processing_integration.py',
+            'tests/core/test_crash_log_processing_unit.py',
+            'tests/performance/test_async_performance_error_handling.py',
+            'tests/performance/test_async_performance_memory.py',
+        ]
+    }
 
-    test_files = [
-        'tests/core/test_crash_log_processing_integration.py',
-        'tests/core/test_crash_log_processing_unit.py',
-        'tests/performance/test_async_performance_error_handling.py',
-        'tests/performance/test_async_performance_memory.py',
-    ]
+    # Analysis phase
+    _print_step(1, "Analyzing Production Code")
+    _process_files(file_groups["production"], "production", action="analyze")
 
-    print("STEP 1: Analyzing Production Code")
-    print("-" * 40)
-    for file_path in production_files:
-        path = Path(file_path)
-        if path.exists():
-            analyze_usage(path)
-
-    print("\n\nSTEP 2: Analyzing Test Code")
-    print("-" * 40)
-    for file_path in test_files:
-        path = Path(file_path)
-        if path.exists():
-            analyze_usage(path)
+    _print_step(2, "Analyzing Test Code")
+    _process_files(file_groups["test"], "test", action="analyze")
 
     # Ask for confirmation
-    print("\n" + "=" * 80)
+    _print_header("", "=")
     response = input("\nProceed with migration? (yes/no): ")
     if response.lower() != 'yes':
         print("Migration cancelled.")
         return
 
-    # Perform migration
-    print("\n\nSTEP 3: Migrating Production Code")
-    print("-" * 40)
-    prod_count = 0
-    for file_path in production_files:
-        path = Path(file_path)
-        if path.exists():
-            if fix_file(path):
-                prod_count += 1
-
+    # Migration phase
+    _print_step(3, "Migrating Production Code")
+    prod_count = _process_files(file_groups["production"], "production", action="migrate")
     print(f"\n✅ Migrated {prod_count} production files")
 
-    print("\n\nSTEP 4: Migrating Test Code")
-    print("-" * 40)
-    test_count = 0
-    for file_path in test_files:
-        path = Path(file_path)
-        if path.exists():
-            if fix_file(path):
-                test_count += 1
-
+    _print_step(4, "Migrating Test Code")
+    test_count = _process_files(file_groups["test"], "test", action="migrate")
     print(f"\n✅ Migrated {test_count} test files")
 
-    # Final check for any remaining asyncio.run calls
-    print("\n\nSTEP 5: Final Verification")
-    print("-" * 40)
+    # Verification phase
+    _print_step(5, "Final Verification")
 
-    remaining_prod = []
-    remaining_test = []
-
-    # Check production code
-    for file in Path('ClassicLib').rglob('*.py'):
-        content = file.read_text(encoding='utf-8')
-        if 'asyncio.run(' in content:
-            remaining_prod.append(file)
-
-    # Check test code
-    for file in Path('tests').rglob('*.py'):
-        content = file.read_text(encoding='utf-8')
-        if 'asyncio.run(' in content:
-            remaining_test.append(file)
+    remaining_prod = _find_remaining_calls('ClassicLib')
+    remaining_test = _find_remaining_calls('tests')
 
     if remaining_prod or remaining_test:
         print("⚠️  Warning: Some files still contain asyncio.run() calls:")
@@ -230,9 +245,7 @@ def main():
     else:
         print("✅ All asyncio.run() calls have been successfully migrated!")
 
-    print("\n" + "=" * 80)
-    print("Migration Complete!")
-    print("=" * 80)
+    _print_header("Migration Complete!")
     print("\nNext steps:")
     print("1. Review the changes using: git diff")
     print("2. Run tests to ensure everything works: poetry run pytest tests/")

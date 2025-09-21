@@ -157,7 +157,8 @@ def main() -> None:
     # Initialize application using SetupCoordinator
     coordinator = SetupCoordinator()
     coordinator.initialize_application(is_gui=False)
-    coordinator.run_initial_setup()
+    # Note: run_initial_setup() removed - not needed for normal operation
+    # Files are generated on-demand when needed, not at every startup
 
     if TEST_MODE:
         write_combined_results()

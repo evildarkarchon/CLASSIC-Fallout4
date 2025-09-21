@@ -1,15 +1,32 @@
 [project]
-name = "classic-fallout4"
-version = "7.35.0"
+name = "classic"
+version = "8.0.0"
 requires-python = ">=3.12,<3.14"
 
 [tool.poetry]
-name = "classic-fallout4"
+name = "classic"
 version = "7.35.0"
 description = "Crash Log Auto-Scanner for Buffout 4."
 authors = ["Poet", "evildarkarchon", "wxMichael"]
 readme = "README.md"
-package-mode = false
+package-mode = true
+packages = [
+    { include = "classic", from = "src" },
+    { include = "ClassicLib" },
+    { include = "CLASSIC_Interface.py" },
+    { include = "CLASSIC_TUI.py" },
+    { include = "CLASSIC_ScanLogs.py" },
+    { include = "CLASSIC_ScanGame.py" }
+]
+include = [
+    "CLASSIC Data/**/*.yaml",
+    "CLASSIC Data/**/*.yml",
+    "CLASSIC Data/**/*.db",
+    "CLASSIC Data/**/*.txt",
+    "CLASSIC Data/**/*.md",
+    "docs/*.md",
+    "LICENSE.md",
+]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.14"
@@ -28,13 +45,28 @@ aiofiles = ">=24.1.0"
 pytest = ">=8.4.0"
 aiosqlite = ">=0.21.0"
 pefile = "<2024.8.26"
-textual = ">=5.3.0"
+pyside6 = ">=6.8.0"  # GUI framework - required for primary interface
+textual = { version = ">=5.3.0", optional = true }  # Optional TUI mode
+tqdm = { version = ">=4.67.1", optional = true }    # Optional CLI progress
+pywin32 = { version = ">=310", optional = true, markers = "sys_platform == 'win32'" }
+appdirs = ">=1.4.4"
+setuptools = ">=80.9.0"
+markdown2 = "^2.5.4"
 
-[tool.poetry.group.gui.dependencies]
-pyside6 = ">=6.8.0"
+[tool.poetry.scripts]
+classic = "classic.gui:main"        # Primary GUI entry point
+classic-gui = "classic.gui:main"    # Explicit GUI alias
+classic-cli = "classic.cli:main"    # Command-line interface
+classic-tui = "classic.tui:main"    # Terminal UI
+classic-scan = "classic.scan:main"  # Direct scanner access
 
-[tool.poetry.group.cli.dependencies]
-tqdm = ">=4.67.1"
+[tool.poetry.extras]
+tui = ["textual"]       # Terminal UI mode
+cli = ["tqdm"]          # CLI with progress bars
+windows = ["pywin32"]   # Windows-specific features
+full = ["textual", "tqdm", "pywin32"]  # All optional features
+all = ["textual", "tqdm", "pywin32"]   # Alias for full
+
 
 [tool.poetry.group.dev.dependencies]
 mypy = ">=1.12.0"
@@ -55,12 +87,8 @@ pytest-textual-snapshot = ">=1.1.0"
 pytest-timeout = ">=2.4"
 textual-dev = ">=1.7.0"
 pre-commit = ">=4.3.0"
+pylint = "^3.3.8"
 
-[tool.poetry.group.windows]
-optional = true
-
-[tool.poetry.group.windows.dependencies]
-pywin32 = ">=310"
 
 [tool.poetry.requires-plugins]
 poetry-plugin-up = ">=0.9.0"
@@ -238,7 +266,7 @@ exclude_lines = [
 
 [tool.coverage.html]
 directory = "htmlcov"
-title = "CLASSIC-Fallout4 Test Coverage Report"
+title = "CLASSIC Test Coverage Report"
 
 [tool.coverage.xml]
 output = "coverage.xml"

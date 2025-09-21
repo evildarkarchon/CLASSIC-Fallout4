@@ -38,40 +38,67 @@ class TestIsolationChecker:
         - Comparisons with YAML.TEST
         - Assertions checking mock call arguments
         """
-        # Check if it's in an assertion about mock calls
-        if any(pattern in line for pattern in ["assert_called_once_with", "assert_called_with", "assert_any_call", "assert_has_calls"]):
+        # Check various safe patterns
+        if self._is_mock_assertion(line):
             return True
 
-        # Check if it's in an assertion or comparison (likely checking mock args)
+        if self._is_assertion_or_comparison(line):
+            return True
+
+        if self._is_test_yaml_comparison(line):
+            return True
+
+        if self._is_string_literal_or_comment(line):
+            return True
+
+        if self._has_mock_context(prev_lines):
+            return True
+
+        if self._is_yaml_infrastructure_test(line, prev_lines):
+            return True
+
+        return False
+
+    def _is_mock_assertion(self, line: str) -> bool:
+        """Check if line contains mock assertion patterns."""
+        mock_assertions = [
+            "assert_called_once_with", "assert_called_with",
+            "assert_any_call", "assert_has_calls"
+        ]
+        return any(pattern in line for pattern in mock_assertions)
+
+    def _is_assertion_or_comparison(self, line: str) -> bool:
+        """Check if line is an assertion or comparison."""
         if line.strip().startswith("assert "):
             return True
-        if any(op in line for op in self.COMPARISON_OPERATORS):
-            # Likely a comparison, not actual usage
-            return True
+        return any(op in line for op in self.COMPARISON_OPERATORS)
 
-        # Check if it's a comparison with YAML.TEST
-        if "YAML.TEST" in line:
-            return True
+    def _is_test_yaml_comparison(self, line: str) -> bool:
+        """Check if line contains YAML.TEST comparison."""
+        return "YAML.TEST" in line
 
-        # Check if it's in a string literal or comment
-        if re.search(r'["\'].*YAML\.(Main|Settings|Game_Local).*["\']', line):
-            return True
+    def _is_string_literal_or_comment(self, line: str) -> bool:
+        """Check if YAML reference is in string literal or comment."""
         if line.strip().startswith("#"):
             return True
+        return bool(re.search(r'["\'].*YAML\.(Main|Settings|Game_Local).*["\']', line))
 
-        # Check previous lines for mock/patch context
+    def _has_mock_context(self, prev_lines: list[str]) -> bool:
+        """Check if previous lines contain mock/patch context."""
         for prev_line in prev_lines[-3:]:  # Check last 3 lines
             if any(pattern in prev_line for pattern in self.MOCK_PATTERNS):
                 return True
+        return False
 
-        # Check if we're in a function that's testing the YAML infrastructure itself
-        # These tests need to use the actual enum values to test the mapping functionality
-        if "test_yaml" in line or "YamlSettingsCache" in line:
-            # If it's in a with patch context, it's mocked
-            for prev_line in prev_lines[-10:]:
-                if "with patch" in prev_line:
-                    return True
+    def _is_yaml_infrastructure_test(self, line: str, prev_lines: list[str]) -> bool:
+        """Check if testing YAML infrastructure itself (needs real enum values)."""
+        if "test_yaml" not in line and "YamlSettingsCache" not in line:
+            return False
 
+        # If it's in a with patch context, it's mocked
+        for prev_line in prev_lines[-10:]:
+            if "with patch" in prev_line:
+                return True
         return False
 
     def _is_safe_path_usage(self, line: str, prev_lines: list[str]) -> bool:
@@ -122,56 +149,95 @@ class TestIsolationChecker:
         - Writing to files within tempfile.TemporaryDirectory() context
         """
         # Extract the variable being written to
-        match = re.search(r"(\w+)\.write_(text|bytes)\(", line)
-        if not match:
+        var_name = self._extract_write_variable(line)
+        if not var_name:
             return False
 
-        var_name = match.group(1)
-
-        # Track variable origins - build a chain of assignments
-        derived_from = {var_name}
-
-        # Look backwards for where this variable was defined and track derivations
-        # Increase range to 50 lines to catch more complex variable chains
-        for i in range(max(0, line_num - 50), line_num):
-            if i >= len(file_lines):
-                continue
-            check_line = file_lines[i]
-
-            # Check if any tracked variable is assigned from another variable
-            for tracked_var in derived_from:
-                # Pattern: tracked_var = something / "path"
-                if re.search(rf"{tracked_var}\s*=\s*(\w+)\s*/", check_line):
-                    match = re.search(rf"{tracked_var}\s*=\s*(\w+)\s*/", check_line)
-                    if match:
-                        derived_from.add(match.group(1))
-
-                # Pattern: tracked_var = Path(...)
-                if re.search(rf"{tracked_var}\s*=\s*Path\(", check_line):
-                    # Check if it's Path("CLASSIC Ignore.yaml") - special case
-                    if 'Path("CLASSIC Ignore.yaml")' in check_line:
-                        return True
-
-            # Check if any tracked variable comes from tmp_path
-            for tracked_var in derived_from:
-                if tracked_var in check_line and any(
-                    pattern in check_line for pattern in ["tmp_path /", "tmp_path/", "self.tmp_path", "tmp_path\\"]
-                ):
-                    return True
+        # Track variable origins and check if derived from tmp_path
+        if self._is_variable_from_tmp_path(var_name, file_lines, line_num):
+            return True
 
         # Check if we're within a tempfile.TemporaryDirectory() context
         if self._is_in_tempfile_context(file_lines, line_num):
             return True
 
-        # Check if we're in a test function with tmp_path fixture
-        if self._has_tmp_path_fixture(file_lines, line_num):
-            # If the test has tmp_path fixture and uses self.tmp_path, it's safe
-            for i in range(max(0, line_num - 30), line_num):
-                if i >= len(file_lines):
-                    continue
-                if "self.tmp_path" in file_lines[i]:
-                    return True
+        # Check if we're in a test function with tmp_path fixture and using self.tmp_path
+        if self._is_using_fixture_tmp_path(file_lines, line_num):
+            return True
 
+        return False
+
+    def _extract_write_variable(self, line: str) -> str | None:
+        """Extract the variable name from a write operation."""
+        match = re.search(r"(\w+)\.write_(text|bytes)\(", line)
+        return match.group(1) if match else None
+
+    def _is_variable_from_tmp_path(self, var_name: str, file_lines: list[str], line_num: int) -> bool:
+        """
+        Check if a variable is derived from tmp_path by tracking assignments.
+
+        This method traces variable assignments backwards to determine if the variable
+        originates from tmp_path or a related safe source.
+        """
+        # Track variable origins - build a chain of assignments
+        derived_from = {var_name}
+
+        # Look backwards for where this variable was defined and track derivations
+        for i in range(max(0, line_num - 50), line_num):
+            if i >= len(file_lines):
+                continue
+            check_line = file_lines[i]
+
+            # Expand tracked variables with new derivations
+            new_derivations = self._find_variable_derivations(derived_from, check_line)
+            derived_from.update(new_derivations)
+
+            # Check for special cases
+            if self._has_special_path_case(derived_from, check_line):
+                return True
+
+            # Check if any tracked variable comes from tmp_path
+            if self._has_tmp_path_origin(derived_from, check_line):
+                return True
+
+        return False
+
+    def _find_variable_derivations(self, tracked_vars: set[str], line: str) -> set[str]:
+        """Find new variable derivations from a line of code."""
+        new_vars = set()
+        for tracked_var in tracked_vars:
+            # Pattern: tracked_var = something / "path"
+            match = re.search(rf"{tracked_var}\s*=\s*(\w+)\s*/", line)
+            if match:
+                new_vars.add(match.group(1))
+        return new_vars
+
+    def _has_special_path_case(self, tracked_vars: set[str], line: str) -> bool:
+        """Check for special path cases like Path("CLASSIC Ignore.yaml")."""
+        for tracked_var in tracked_vars:
+            if re.search(rf"{tracked_var}\s*=\s*Path\(", line):
+                # Check if it's Path("CLASSIC Ignore.yaml") - special case
+                if 'Path("CLASSIC Ignore.yaml")' in line:
+                    return True
+        return False
+
+    def _has_tmp_path_origin(self, tracked_vars: set[str], line: str) -> bool:
+        """Check if any tracked variable comes from tmp_path."""
+        tmp_path_patterns = ["tmp_path /", "tmp_path/", "self.tmp_path", "tmp_path\\"]
+        for tracked_var in tracked_vars:
+            if tracked_var in line and any(pattern in line for pattern in tmp_path_patterns):
+                return True
+        return False
+
+    def _is_using_fixture_tmp_path(self, file_lines: list[str], line_num: int) -> bool:
+        """Check if the test has tmp_path fixture and uses self.tmp_path."""
+        if not self._has_tmp_path_fixture(file_lines, line_num):
+            return False
+
+        # If the test has tmp_path fixture, check if self.tmp_path is used
+        for i in range(max(0, line_num - 30), line_num):
+            if i < len(file_lines) and "self.tmp_path" in file_lines[i]:
+                return True
         return False
 
     def _is_in_tempfile_context(self, lines: list[str], line_num: int) -> bool:
@@ -219,33 +285,62 @@ class TestIsolationChecker:
         # Look backwards for any function definition (test function or fixture)
         for i in range(line_num - 1, max(0, line_num - 100), -1):
             line = lines[i].strip()
-            # Check for test functions or any function that might be a fixture
+
+            # Check for function definitions
             if line.startswith("def "):
-                # Check if it's a fixture by looking for @pytest.fixture decorator
-                is_fixture = False
-                for j in range(max(0, i - 5), i):
-                    if "@pytest.fixture" in lines[j]:
-                        is_fixture = True
-                        break
+                if self._function_has_tmp_path(lines, i):
+                    return True
 
-                # If it's a test function or a fixture or any method, check for tmp_path
-                if line.startswith("def test_") or is_fixture or line.startswith("def "):
-                    # Check this line and potentially the next few for parameters
-                    full_def = line
-                    # Handle multi-line function definitions
-                    j = i
-                    while j < len(lines) - 1 and not full_def.rstrip().endswith(":"):
-                        j += 1
-                        full_def += " " + lines[j].strip()
-                    if "tmp_path" in full_def or "temp_path" in full_def:
-                        return True
-
+            # Check for test class definitions
             if line.startswith("class ") and "Test" in line:
-                # Check if class has setup method with tmp_path
-                for j in range(i, min(i + 20, len(lines))):
-                    if "def setup" in lines[j] and "tmp_path" in lines[j]:
-                        return True
+                if self._class_has_tmp_path_setup(lines, i):
+                    return True
                 break
+
+        return False
+
+    def _function_has_tmp_path(self, lines: list[str], func_line_idx: int) -> bool:
+        """Check if a function definition includes tmp_path fixture."""
+        line = lines[func_line_idx].strip()
+
+        # Check if it's a fixture or test function
+        is_fixture = self._is_pytest_fixture(lines, func_line_idx)
+        is_test_or_method = (
+            line.startswith("def test_") or
+            is_fixture or
+            line.startswith("def ")
+        )
+
+        if not is_test_or_method:
+            return False
+
+        # Get complete function definition (handle multi-line)
+        full_def = self._get_full_function_def(lines, func_line_idx)
+        return "tmp_path" in full_def or "temp_path" in full_def
+
+    def _is_pytest_fixture(self, lines: list[str], func_line_idx: int) -> bool:
+        """Check if function has @pytest.fixture decorator."""
+        for j in range(max(0, func_line_idx - 5), func_line_idx):
+            if "@pytest.fixture" in lines[j]:
+                return True
+        return False
+
+    def _get_full_function_def(self, lines: list[str], start_idx: int) -> str:
+        """Get complete function definition, handling multi-line definitions."""
+        full_def = lines[start_idx].strip()
+        j = start_idx
+
+        while j < len(lines) - 1 and not full_def.rstrip().endswith(":"):
+            j += 1
+            full_def += " " + lines[j].strip()
+
+        return full_def
+
+    def _class_has_tmp_path_setup(self, lines: list[str], class_line_idx: int) -> bool:
+        """Check if test class has setup method with tmp_path."""
+        for j in range(class_line_idx, min(class_line_idx + 20, len(lines))):
+            if "def setup" in lines[j] and "tmp_path" in lines[j]:
+                return True
         return False
 
     def check_file(self, filepath: Path) -> bool:
@@ -257,11 +352,8 @@ class TestIsolationChecker:
         if not filepath.name.startswith("test_"):
             return False
 
-        try:
-            content = filepath.read_text(encoding="utf-8")
-            lines = content.splitlines()
-        except Exception as e:
-            print(f"Error reading {filepath}: {e}")
+        lines = self._read_file_lines(filepath)
+        if lines is None:
             return False
 
         file_has_violations = False
@@ -274,45 +366,107 @@ class TestIsolationChecker:
             # Get previous lines for context
             prev_lines = lines[max(0, line_num - 4) : line_num - 1]
 
-            # Check for YAML.Main/Settings/Game_Local usage
-            if re.search(r"YAML\.(Main|Settings|Game_Local)", line):
-                if not self._is_safe_yaml_usage(line, prev_lines):
-                    self.violations.append((filepath, line_num, line.strip(), "Using production YAML store - use YAML.TEST or mock"))
-                    file_has_violations = True
-                    if self.verbose:
-                        print(f"{filepath}:{line_num}: Production YAML usage")
-                        print(f"  > {line.strip()}")
+            # Check each violation type
+            if self._check_yaml_violation(filepath, line_num, line, prev_lines):
+                file_has_violations = True
 
-            # Check for "CLASSIC Data" or "Crash Logs" paths
-            if re.search(r'["\'](CLASSIC Data|Crash Logs)["\']', line):
-                if not self._is_safe_path_usage(line, prev_lines):
-                    self.violations.append((filepath, line_num, line.strip(), "Using production path - ensure it's under tmp_path"))
-                    file_has_violations = True
-                    if self.verbose:
-                        print(f"{filepath}:{line_num}: Production path usage")
-                        print(f"  > {line.strip()}")
+            if self._check_path_violation(filepath, line_num, line, prev_lines):
+                file_has_violations = True
 
-            # Check for write operations
-            if ".write_text(" in line or ".write_bytes(" in line:
-                # Only check if NOT in a test with tmp_path fixture
-                if not self._has_tmp_path_fixture(lines, line_num):
-                    if not self._is_safe_write_operation(line, lines, line_num):
-                        self.violations.append((filepath, line_num, line.strip(), "Writing files without tmp_path fixture"))
-                        file_has_violations = True
-                        if self.verbose:
-                            print(f"{filepath}:{line_num}: File write without tmp_path")
-                            print(f"  > {line.strip()}")
+            if self._check_write_violation(filepath, line_num, line, lines):
+                file_has_violations = True
 
-            # Check for os.chdir without monkeypatch
-            if "os.chdir(" in line:
-                if not any(pattern in line for pattern in self.SAFE_TEST_PATTERNS):
-                    # Check previous lines for monkeypatch context
-                    has_monkeypatch = any("monkeypatch" in prev for prev in prev_lines[-3:])
-                    if not has_monkeypatch:
-                        self.violations.append((filepath, line_num, line.strip(), "Using os.chdir without monkeypatch.chdir"))
-                        file_has_violations = True
+            if self._check_chdir_violation(filepath, line_num, line, prev_lines):
+                file_has_violations = True
 
         return file_has_violations
+
+    def _read_file_lines(self, filepath: Path) -> list[str] | None:
+        """Read and return file lines, or None on error."""
+        try:
+            content = filepath.read_text(encoding="utf-8")
+            return content.splitlines()
+        except Exception as e:
+            print(f"Error reading {filepath}: {e}")
+            return None
+
+    def _check_yaml_violation(self, filepath: Path, line_num: int, line: str, prev_lines: list[str]) -> bool:
+        """Check for YAML.Main/Settings/Game_Local usage violations."""
+        if not re.search(r"YAML\.(Main|Settings|Game_Local)", line):
+            return False
+
+        if self._is_safe_yaml_usage(line, prev_lines):
+            return False
+
+        self._add_violation(
+            filepath, line_num, line,
+            "Using production YAML store - use YAML.TEST or mock",
+            "Production YAML usage"
+        )
+        return True
+
+    def _check_path_violation(self, filepath: Path, line_num: int, line: str, prev_lines: list[str]) -> bool:
+        """Check for "CLASSIC Data" or "Crash Logs" path violations."""
+        if not re.search(r'["\'](CLASSIC Data|Crash Logs)["\']', line):
+            return False
+
+        if self._is_safe_path_usage(line, prev_lines):
+            return False
+
+        self._add_violation(
+            filepath, line_num, line,
+            "Using production path - ensure it's under tmp_path",
+            "Production path usage"
+        )
+        return True
+
+    def _check_write_violation(self, filepath: Path, line_num: int, line: str, lines: list[str]) -> bool:
+        """Check for file write operation violations."""
+        if ".write_text(" not in line and ".write_bytes(" not in line:
+            return False
+
+        # Only check if NOT in a test with tmp_path fixture
+        if self._has_tmp_path_fixture(lines, line_num):
+            return False
+
+        if self._is_safe_write_operation(line, lines, line_num):
+            return False
+
+        self._add_violation(
+            filepath, line_num, line,
+            "Writing files without tmp_path fixture",
+            "File write without tmp_path"
+        )
+        return True
+
+    def _check_chdir_violation(self, filepath: Path, line_num: int, line: str, prev_lines: list[str]) -> bool:
+        """Check for os.chdir usage without monkeypatch."""
+        if "os.chdir(" not in line:
+            return False
+
+        # Check if it's safe (has monkeypatch)
+        if any(pattern in line for pattern in self.SAFE_TEST_PATTERNS):
+            return False
+
+        # Check previous lines for monkeypatch context
+        has_monkeypatch = any("monkeypatch" in prev for prev in prev_lines[-3:])
+        if has_monkeypatch:
+            return False
+
+        self._add_violation(
+            filepath, line_num, line,
+            "Using os.chdir without monkeypatch.chdir",
+            "os.chdir without monkeypatch"
+        )
+        return True
+
+    def _add_violation(self, filepath: Path, line_num: int, line: str,
+                       violation_msg: str, verbose_type: str) -> None:
+        """Add a violation to the list and optionally print verbose output."""
+        self.violations.append((filepath, line_num, line.strip(), violation_msg))
+        if self.verbose:
+            print(f"{filepath}:{line_num}: {verbose_type}")
+            print(f"  > {line.strip()}")
 
     def check_directory(self, directory: Path) -> int:
         """

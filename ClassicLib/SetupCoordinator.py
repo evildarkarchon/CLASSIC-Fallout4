@@ -21,6 +21,7 @@ from ClassicLib.GameIntegrity import GameIntegrityChecker
 from ClassicLib.GamePath import game_generate_paths, game_path_find
 from ClassicLib.Logger import logger
 from ClassicLib.PathValidator import PathValidator
+from ClassicLib.ResourceLoader import ResourceLoader
 from ClassicLib.Util import configure_logging
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
 
@@ -143,6 +144,9 @@ class SetupCoordinator:
         # Get and configure YAML cache (already registered as singleton)
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, is_gui)
 
+        # Ensure data files exist (extracts bundled resources if needed)
+        ResourceLoader.ensure_data_files_exist()
+
         # Prefetch all common settings at startup for better performance
         # This loads Main, Settings, and Game YAML files concurrently
         yaml_cache.prefetch_all_settings()
@@ -165,11 +169,12 @@ class SetupCoordinator:
 
         GlobalRegistry.register(GlobalRegistry.Keys.IS_PRERELEASE, is_prerelease)
 
-        # Set local directory
-        if getattr(sys, "frozen", False):
-            GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(sys.executable).parent)
-        else:
-            GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(__file__).parent.parent)
+        # Set local directory only if not already set by entry point
+        if not GlobalRegistry.is_registered(GlobalRegistry.Keys.LOCAL_DIR):
+            if getattr(sys, "frozen", False):
+                GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(sys.executable).parent)
+            else:
+                GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(__file__).parent.parent)
 
         # Validate settings paths after initialization
         self.path_validator.validate_all_settings_paths()
