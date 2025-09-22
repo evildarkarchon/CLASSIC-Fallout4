@@ -7,7 +7,19 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from ClassicLib import init_message_handler
 from ClassicLib.DocsPath import DocumentsPathManager
+
+
+@pytest.fixture(autouse=True)
+def init_message_handler_fixture():
+    """Initialize MessageHandler for all tests in this module."""
+    # Initialize the MessageHandler to prevent RuntimeError
+    handler = init_message_handler(parent=None, is_gui_mode=False)
+    yield
+    # Clean up the global message handler after tests
+    import ClassicLib.MessageHandler
+    ClassicLib.MessageHandler._message_handler = None
 
 
 class TestPathDetection:
@@ -22,13 +34,18 @@ class TestPathDetection:
         # Mock classic_settings to return a custom folder path
         mock_classic_settings.return_value = "C:/Custom/Documents/Folder"
 
-        with patch("ClassicLib.Util.validate_path", return_value=(True, "")):  # noqa: SIM117
-            with patch("pathlib.Path.is_dir", return_value=True):
-                with patch.object(manager, "_update_game_setting") as mock_update:
-                    manager.find_docs_path()
+        # Patch ResourceLoader at source since DocsPath imports it locally
+        with patch("ClassicLib.ResourceLoader.ResourceLoader") as mock_resource_loader:
+            mock_resource_loader.get_cached_docs_path.return_value = None  # No cached path
+            mock_resource_loader.save_path_to_cache.return_value = None
 
-                    # Verify that it updates the setting with the custom path
-                    mock_update.assert_called_once_with("Root_Folder_Docs", "C:/Custom/Documents/Folder")
+            with patch("ClassicLib.Util.validate_path", return_value=(True, "")):  # noqa: SIM117
+                with patch("pathlib.Path.is_dir", return_value=True):
+                    with patch.object(manager, "_update_game_setting") as mock_update:
+                        manager.find_docs_path()
+
+                        # Verify that it updates the setting with the custom path
+                        mock_update.assert_called_once_with("Root_Folder_Docs", "C:/Custom/Documents/Folder")
 
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("ClassicLib.DocsPath.classic_settings")
@@ -45,13 +62,18 @@ class TestPathDetection:
         # Mock no ini_folder setting and no existing docs path
         mock_classic_settings.return_value = None
 
-        with patch("ClassicLib.DocsPath.yaml_settings", return_value=None):  # noqa: SIM117
-            with patch.object(manager, "_find_windows_docs_path") as mock_windows:
-                with patch.object(manager, "_get_manual_docs_path") as mock_manual:  # noqa: F841
-                    manager.find_docs_path()
+        # Patch ResourceLoader at source since DocsPath imports it locally
+        with patch("ClassicLib.ResourceLoader.ResourceLoader") as mock_resource_loader:
+            mock_resource_loader.get_cached_docs_path.return_value = None
+            mock_resource_loader.save_path_to_cache.return_value = None
 
-                    # Should call Windows detection method
-                    mock_windows.assert_called_once()
+            with patch("ClassicLib.DocsPath.yaml_settings", return_value=None):  # noqa: SIM117
+                with patch.object(manager, "_find_windows_docs_path") as mock_windows:
+                    with patch.object(manager, "_get_manual_docs_path") as mock_manual:  # noqa: F841
+                        manager.find_docs_path()
+
+                        # Should call Windows detection method
+                        mock_windows.assert_called_once()
 
     @patch("ClassicLib.DocsPath.msg_info")
     @patch("ClassicLib.DocsPath.classic_settings")
@@ -68,13 +90,18 @@ class TestPathDetection:
         # Mock no ini_folder setting and no existing docs path
         mock_classic_settings.return_value = None
 
-        with patch("ClassicLib.DocsPath.yaml_settings", return_value=None):  # noqa: SIM117
-            with patch.object(manager, "_find_linux_docs_path") as mock_linux:
-                with patch.object(manager, "_get_manual_docs_path") as mock_manual:  # noqa: F841
-                    manager.find_docs_path()
+        # Patch ResourceLoader at source since DocsPath imports it locally
+        with patch("ClassicLib.ResourceLoader.ResourceLoader") as mock_resource_loader:
+            mock_resource_loader.get_cached_docs_path.return_value = None
+            mock_resource_loader.save_path_to_cache.return_value = None
 
-                    # Should call Linux detection method
-                    mock_linux.assert_called_once()
+            with patch("ClassicLib.DocsPath.yaml_settings", return_value=None):  # noqa: SIM117
+                with patch.object(manager, "_find_linux_docs_path") as mock_linux:
+                    with patch.object(manager, "_get_manual_docs_path") as mock_manual:  # noqa: F841
+                        manager.find_docs_path()
+
+                        # Should call Linux detection method
+                        mock_linux.assert_called_once()
 
     @patch("ClassicLib.DocsPath.classic_settings", return_value=None)
     @patch("ClassicLib.DocsPath.yaml_settings", return_value=None)
@@ -92,14 +119,19 @@ class TestPathDetection:
         """Test find_docs_path falls back to manual input when detection fails."""
         manager = DocumentsPathManager(is_gui_mode=False)
 
-        with patch("pathlib.Path.is_dir", return_value=True):  # noqa: SIM117
-            with patch.object(manager, "_update_game_setting") as mock_update:  # noqa: F841
-                with patch.object(manager, "_find_windows_docs_path"):
-                    manager.find_docs_path()
+        # Patch ResourceLoader at source since DocsPath imports it locally
+        with patch("ClassicLib.ResourceLoader.ResourceLoader") as mock_resource_loader:
+            mock_resource_loader.get_cached_docs_path.return_value = None
+            mock_resource_loader.save_path_to_cache.return_value = None
 
-                    # Since _find_windows_docs_path doesn't set a valid path,
-                    # it should call manual input method
-                    mock_input.assert_called()
+            with patch("pathlib.Path.is_dir", return_value=True):  # noqa: SIM117
+                with patch.object(manager, "_update_game_setting") as mock_update:  # noqa: F841
+                    with patch.object(manager, "_find_windows_docs_path"):
+                        manager.find_docs_path()
+
+                        # Since _find_windows_docs_path doesn't set a valid path,
+                        # it should call manual input method
+                        assert mock_input.called
 
     @patch("winreg.OpenKey")
     @patch("winreg.QueryValueEx")

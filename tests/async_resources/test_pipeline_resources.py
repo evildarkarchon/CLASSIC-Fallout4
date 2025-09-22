@@ -126,11 +126,16 @@ class TestAsyncPipelineResourceManagement:
         mock_yamldata = MagicMock()
         mock_crashlogs = MagicMock(spec=ThreadSafeLogCache)
 
-        with patch("ClassicLib.ScanLog.OrchestratorCore.AsyncDatabasePool") as mock_pool_class:
+        # Patch DatabasePoolManager instead of AsyncDatabasePool directly
+        with patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager") as mock_pool_manager_class:
+            mock_pool_manager = MagicMock()
             mock_pool = AsyncMock()
             mock_pool.initialize = AsyncMock()
             mock_pool.close = AsyncMock()
-            mock_pool_class.return_value = mock_pool
+
+            # Configure the mock pool manager to return our mock pool
+            mock_pool_manager.get_pool = AsyncMock(return_value=mock_pool)
+            mock_pool_manager_class.return_value = mock_pool_manager
 
             async with OrchestratorCore(
                 yamldata=mock_yamldata,
@@ -141,5 +146,7 @@ class TestAsyncPipelineResourceManagement:
             ) as orchestrator:
                 # Verify orchestrator is ready for concurrent operations
                 assert orchestrator is not None
-                # Database pool should be initialized
-                mock_pool.initialize.assert_called_once()
+                # Verify that get_pool was called (new pattern)
+                mock_pool_manager.get_pool.assert_called_once()
+                # The pool should be set on the orchestrator
+                assert orchestrator._db_pool is mock_pool

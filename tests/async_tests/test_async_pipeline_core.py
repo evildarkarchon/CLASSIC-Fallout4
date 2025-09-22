@@ -4,6 +4,15 @@ Core tests for the async crash log processing pipeline.
 This module contains tests for the main AsyncCrashLogPipeline class
 and its initialization, processing, and monitoring functionality.
 """
+
+# IMPORTANT: Async Test Pattern Documentation
+# ============================================
+# This test file follows correct AsyncBridge patterns:
+# 1. For sync wrappers using AsyncBridge: Mock bridge.run_async(), not the async function
+# 2. For pure async tests: Use @pytest.mark.asyncio and real async/await
+# 3. Never use AsyncMock for methods called through AsyncBridge
+# 4. See docs/async_test_patterns_guide.md for comprehensive patterns
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
 from pathlib import Path
@@ -108,6 +117,7 @@ class TestAsyncPipeline:
         assert pipeline.formid_db_exists is False
         assert isinstance(pipeline.performance_stats, dict)
 
+    @pytest.mark.asyncio
     async def test_async_pipeline_process_crash_logs(self, crash_log_files: list[Path], mock_yamldata: MagicMock, message_handler) -> None:
         """Test the full async pipeline processing."""
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
@@ -156,6 +166,7 @@ class TestAsyncPipeline:
             mock_load.assert_called_once_with(crash_log_files)
             mock_write.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_async_performance_monitor(self) -> None:
         """Test the AsyncPerformanceMonitor comparison functionality."""
         async_stats: dict[str, float] = {

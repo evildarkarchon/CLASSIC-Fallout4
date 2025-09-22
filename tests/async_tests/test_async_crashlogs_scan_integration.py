@@ -5,6 +5,15 @@ This module tests the integration of async components with actual file I/O,
 real async operations, and interaction between components.
 """
 
+# IMPORTANT: Async Test Pattern Documentation
+# ============================================
+# This test file follows correct AsyncBridge patterns:
+# 1. For sync wrappers using AsyncBridge: Mock bridge.run_async(), not the async function
+# 2. For pure async tests: Use @pytest.mark.asyncio and real async/await
+# 3. Never use AsyncMock for methods called through AsyncBridge
+# 4. See docs/async_test_patterns_guide.md for comprehensive patterns
+
+
 import asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -61,9 +70,9 @@ class TestAsyncIntegrationWithRealComponents:
         with patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_get_files") as mock_get_files, \
              patch("ClassicLib.ScanLog.AsyncIntegration.msg_info") as mock_msg_info, \
              patch("ClassicLib.ScanLog.AsyncIntegration.msg_progress_context") as mock_progress, \
-             patch("ClassicLib.ScanLog.AsyncIntegration.yaml_cache") as mock_yaml_cache, \
+             patch("ClassicLib.YamlSettingsCache.yaml_cache") as mock_yaml_cache, \
              patch("ClassicLib.ScanLog.AsyncIntegration.ClassicScanLogsInfo") as mock_info, \
-             patch("ClassicLib.ScanLog.AsyncIntegration.DB_PATHS", []):
+             patch("ClassicLib.Constants.DB_PATHS", []):
 
             # Configure yaml cache
             mock_yaml_cache.batch_get_settings.return_value = [
@@ -74,9 +83,10 @@ class TestAsyncIntegrationWithRealComponents:
             ]
 
             # Configure progress context
+            # CRITICAL: __exit__ must return False to not suppress exceptions
             mock_progress_instance = MagicMock()
             mock_progress_instance.__enter__ = MagicMock(return_value=mock_progress_instance)
-            mock_progress_instance.__exit__ = MagicMock()
+            mock_progress_instance.__exit__ = MagicMock(return_value=False)  # Don't suppress exceptions
             mock_progress_instance.update = MagicMock()
             mock_progress.return_value = mock_progress_instance
 
@@ -102,6 +112,7 @@ class TestAsyncIntegrationWithRealComponents:
              patch("ClassicLib.ScanLog.AsyncIntegration.OrchestratorCore") as mock_orchestrator:
 
             # Configure async operations to actually do work
+            # Use side_effect for async functions to avoid unawaited coroutine warnings
             async def real_reformat(logs, remove_list):
                 """Simulate real async reformatting."""
                 await asyncio.sleep(0.01)  # Simulate I/O
@@ -115,6 +126,7 @@ class TestAsyncIntegrationWithRealComponents:
                     cache[log.name] = content.splitlines()
                 return cache
 
+            # Correct pattern: use side_effect with async functions
             mock_reformat.side_effect = real_reformat
             mock_load.side_effect = real_load
 
@@ -133,8 +145,15 @@ class TestAsyncIntegrationWithRealComponents:
             mock_orchestrator_instance.process_crash_logs_batch_async.side_effect = real_process
             mock_orchestrator_instance.write_reports_batch = AsyncMock()
 
-            mock_orchestrator.return_value.__aenter__ = AsyncMock(return_value=mock_orchestrator_instance)
-            mock_orchestrator.return_value.__aexit__ = AsyncMock()
+            # Proper async context manager pattern - assign functions, don't call them
+            async def orchestrator_aenter(self):
+                return mock_orchestrator_instance
+
+            async def orchestrator_aexit(self, exc_type, exc_val, exc_tb):
+                return None
+
+            mock_orchestrator.return_value.__aenter__ = orchestrator_aenter
+            mock_orchestrator.return_value.__aexit__ = orchestrator_aexit
             mock_orchestrator.write_reports_batch = mock_orchestrator_instance.write_reports_batch
 
             # Run the integration
@@ -174,8 +193,17 @@ class TestAsyncIntegrationWithRealComponents:
              patch("ClassicLib.ScanLog.AsyncIntegration.OrchestratorCore") as mock_orchestrator:
 
             # Configure operations to log their execution
-            mock_reformat.side_effect = lambda *args: log_operation("reformat", 0.02)
-            mock_load.side_effect = lambda *args: log_operation("load", 0.02)
+            # CRITICAL: Use async function for side_effect, not lambda returning coroutine
+            async def reformat_with_log(*args):
+                return await log_operation("reformat", 0.02)
+
+            async def load_with_log(*args):
+                await log_operation("load", 0.02)
+                # Return proper dictionary for cache
+                return {"log1": ["data1"], "log2": ["data2"]}
+
+            mock_reformat.side_effect = reformat_with_log
+            mock_load.side_effect = load_with_log
 
             # Configure orchestrator
             mock_orchestrator_instance = AsyncMock()
@@ -191,8 +219,15 @@ class TestAsyncIntegrationWithRealComponents:
 
             mock_orchestrator_instance.write_reports_batch = write_with_log
 
-            mock_orchestrator.return_value.__aenter__ = AsyncMock(return_value=mock_orchestrator_instance)
-            mock_orchestrator.return_value.__aexit__ = AsyncMock()
+            # Proper async context manager pattern
+            async def orchestrator_aenter(self):
+                return mock_orchestrator_instance
+
+            async def orchestrator_aexit(self, exc_type, exc_val, exc_tb):
+                return None
+
+            mock_orchestrator.return_value.__aenter__ = orchestrator_aenter
+            mock_orchestrator.return_value.__aexit__ = orchestrator_aexit
             mock_orchestrator.write_reports_batch = mock_orchestrator_instance.write_reports_batch
 
             # Run and check operation order
@@ -227,6 +262,7 @@ class TestAsyncBridgeIntegration:
 
         with patch("ClassicLib.ScanLog.AsyncIntegration.async_crashlogs_scan") as mock_scan:
             # Create a real coroutine that does some work
+            @pytest.mark.asyncio
             async def test_coro():
                 await asyncio.sleep(0.01)
                 return "completed"
@@ -244,12 +280,13 @@ class TestAsyncBridgeIntegration:
     def test_bridge_error_propagation(self):
         """Test that errors in async code are properly propagated through the bridge."""
         with patch("ClassicLib.ScanLog.AsyncIntegration.async_crashlogs_scan") as mock_scan:
-            # Create a coroutine that raises an exception
+            # Create an async function that raises an exception
             async def failing_coro():
                 await asyncio.sleep(0.01)
                 raise ValueError("Test error in async code")
 
-            mock_scan.return_value = failing_coro()
+            # Use side_effect for async functions
+            mock_scan.side_effect = failing_coro
 
             # Verify exception is propagated through bridge
             with pytest.raises(ValueError, match="Test error in async code"):
@@ -294,6 +331,40 @@ class TestAsyncBridgeIntegration:
 class TestAsyncIntegrationErrorHandling:
     """Test error handling in async integration."""
 
+    @pytest.fixture
+    def mock_minimal_dependencies(self):
+        """Mock only the minimal required dependencies for integration tests."""
+        with patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_get_files") as mock_get_files, \
+             patch("ClassicLib.ScanLog.AsyncIntegration.msg_info") as mock_msg_info, \
+             patch("ClassicLib.ScanLog.AsyncIntegration.msg_progress_context") as mock_progress, \
+             patch("ClassicLib.YamlSettingsCache.yaml_cache") as mock_yaml_cache, \
+             patch("ClassicLib.ScanLog.AsyncIntegration.ClassicScanLogsInfo") as mock_info, \
+             patch("ClassicLib.Constants.DB_PATHS", []):
+
+            # Configure yaml cache
+            mock_yaml_cache.batch_get_settings.return_value = [
+                (),     # remove_list
+                False,  # fcx_mode
+                False,  # show_formid_values
+                False   # move_unsolved_logs
+            ]
+
+            # Configure progress context
+            # CRITICAL: __exit__ must return False to not suppress exceptions
+            mock_progress_instance = MagicMock()
+            mock_progress_instance.__enter__ = MagicMock(return_value=mock_progress_instance)
+            mock_progress_instance.__exit__ = MagicMock(return_value=False)  # Don't suppress exceptions
+            mock_progress_instance.update = MagicMock()
+            mock_progress.return_value = mock_progress_instance
+
+            yield {
+                "get_files": mock_get_files,
+                "msg_info": mock_msg_info,
+                "progress": mock_progress_instance,
+                "yaml_cache": mock_yaml_cache,
+                "info": mock_info
+            }
+
     @pytest.mark.asyncio
     async def test_handles_reformat_errors_gracefully(self, mock_minimal_dependencies):
         """Test graceful handling of errors during reformatting."""
@@ -309,12 +380,24 @@ class TestAsyncIntegrationErrorHandling:
             mock_reformat.side_effect = asyncio.TimeoutError("Reformat timeout")
 
             # Configure other mocks minimally
-            mock_load.return_value = {}
+            # Use side_effect for async functions
+            async def empty_load(*args):
+                return {}
+            mock_load.side_effect = empty_load
+
             mock_orchestrator_instance = AsyncMock()
             mock_orchestrator_instance.process_crash_logs_batch_async = AsyncMock(return_value=[])
             mock_orchestrator_instance.write_reports_batch = AsyncMock()
-            mock_orchestrator.return_value.__aenter__ = AsyncMock(return_value=mock_orchestrator_instance)
-            mock_orchestrator.return_value.__aexit__ = AsyncMock()
+
+            # Proper async context manager pattern
+            async def orchestrator_aenter(self):
+                return mock_orchestrator_instance
+
+            async def orchestrator_aexit(self, exc_type, exc_val, exc_tb):
+                return None
+
+            mock_orchestrator.return_value.__aenter__ = orchestrator_aenter
+            mock_orchestrator.return_value.__aexit__ = orchestrator_aexit
 
             # Should raise the timeout error
             with pytest.raises(asyncio.TimeoutError):
@@ -330,15 +413,28 @@ class TestAsyncIntegrationErrorHandling:
              patch("ClassicLib.ScanLog.AsyncIntegration.ThreadSafeLogCache"), \
              patch("ClassicLib.ScanLog.AsyncIntegration.OrchestratorCore") as mock_orchestrator:
 
-            mock_reformat.return_value = None
-            mock_load.return_value = {"test": ["line1"]}
+            # Use side_effect for async functions
+            async def mock_reformat_async(*args):
+                return None
+            mock_reformat.side_effect = mock_reformat_async
+
+            async def mock_load_async(*args):
+                return {"test": ["line1"]}
+            mock_load.side_effect = mock_load_async
 
             # Make orchestrator raise an error during processing
             mock_orchestrator_instance = AsyncMock()
             mock_orchestrator_instance.process_crash_logs_batch_async.side_effect = RuntimeError("Processing failed")
 
-            mock_orchestrator.return_value.__aenter__ = AsyncMock(return_value=mock_orchestrator_instance)
-            mock_orchestrator.return_value.__aexit__ = AsyncMock()
+            # Proper async context manager pattern
+            async def orchestrator_aenter(self):
+                return mock_orchestrator_instance
+
+            async def orchestrator_aexit(self, exc_type, exc_val, exc_tb):
+                return None
+
+            mock_orchestrator.return_value.__aenter__ = orchestrator_aenter
+            mock_orchestrator.return_value.__aexit__ = orchestrator_aexit
 
             # Should propagate the error
             with pytest.raises(RuntimeError, match="Processing failed"):
@@ -356,19 +452,30 @@ class TestAsyncIntegrationErrorHandling:
              patch("ClassicLib.ScanLog.AsyncIntegration.ThreadSafeLogCache"), \
              patch("ClassicLib.ScanLog.AsyncIntegration.OrchestratorCore") as mock_orchestrator:
 
-            mock_reformat.return_value = None
-            mock_load.return_value = {"test": ["line1"]}
+            # Use side_effect for async functions
+            async def mock_reformat_async(*args):
+                return None
+            mock_reformat.side_effect = mock_reformat_async
+
+            async def mock_load_async(*args):
+                return {"test": ["line1"]}
+            mock_load.side_effect = mock_load_async
 
             # Configure orchestrator with cleanup tracking
             mock_orchestrator_instance = AsyncMock()
             mock_orchestrator_instance.process_crash_logs_batch_async.side_effect = RuntimeError("Test error")
 
-            async def track_cleanup(*args):
+            # Proper async context manager with cleanup tracking
+            async def orchestrator_aenter(self):
+                return mock_orchestrator_instance
+
+            async def orchestrator_aexit(self, exc_type, exc_val, exc_tb):
                 nonlocal cleanup_called
                 cleanup_called = True
+                return None  # Don't suppress the exception
 
-            mock_orchestrator.return_value.__aenter__ = AsyncMock(return_value=mock_orchestrator_instance)
-            mock_orchestrator.return_value.__aexit__ = AsyncMock(side_effect=track_cleanup)
+            mock_orchestrator.return_value.__aenter__ = orchestrator_aenter
+            mock_orchestrator.return_value.__aexit__ = orchestrator_aexit
 
             # Run and expect error
             with pytest.raises(RuntimeError):

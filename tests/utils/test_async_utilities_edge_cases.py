@@ -184,10 +184,8 @@ class TestAsyncRetryEdgeCases:
             call_count += 1
             return "should not run"
 
-        # With 0 attempts, the last_error is None initially
-        # The loop won't run, so it raises the last_error which is None
-        # This will cause an error when trying to raise None
-        with pytest.raises((TypeError, AttributeError)):
+        # With 0 attempts, the decorator raises a RuntimeError with a message
+        with pytest.raises(RuntimeError, match="failed after 0 attempts with no captured exception"):
             await never_runs()
 
         assert call_count == 0  # Function never called
@@ -313,7 +311,9 @@ class TestRunWithTimeoutEdgeCases:
     async def test_with_none_coroutine(self):
         """Should handle None as coroutine."""
         with pytest.raises((TypeError, AttributeError)):
-            await run_with_timeout(None, timeout=1.0)
+            # run_with_timeout doesn't take 'timeout' kwarg, it's positional
+            wrapper = run_with_timeout(None, 1.0)
+            await wrapper()
 
     @pytest.mark.asyncio
     async def test_with_sync_function(self):
@@ -323,7 +323,8 @@ class TestRunWithTimeoutEdgeCases:
 
         # Should raise or handle gracefully
         with pytest.raises((TypeError, RuntimeError)):
-            await run_with_timeout(sync_func, timeout=1.0)
+            wrapper = run_with_timeout(sync_func, 1.0)
+            await wrapper()
 
     @pytest.mark.asyncio
     async def test_with_already_completed_coroutine(self):
@@ -333,12 +334,14 @@ class TestRunWithTimeoutEdgeCases:
 
         coro_instance = coro()
         # First await works
-        result1 = await run_with_timeout(coro_instance, timeout=1.0)
+        wrapper1 = run_with_timeout(coro_instance, 1.0)
+        result1 = await wrapper1()
         assert result1 == "result"
 
         # Second await on same instance should fail
         with pytest.raises(RuntimeError):
-            await run_with_timeout(coro_instance, timeout=1.0)
+            wrapper2 = run_with_timeout(coro_instance, 1.0)
+            await wrapper2()
 
     @pytest.mark.asyncio
     async def test_default_value_types(self):
@@ -346,12 +349,21 @@ class TestRunWithTimeoutEdgeCases:
         async def slow():
             await asyncio.sleep(1.0)
 
-        # Test different default types
-        assert await run_with_timeout(slow(), 0.01, default=None) is None
-        assert await run_with_timeout(slow(), 0.01, default=42) == 42
-        assert await run_with_timeout(slow(), 0.01, default="timeout") == "timeout"
-        assert await run_with_timeout(slow(), 0.01, default=[]) == []
-        assert await run_with_timeout(slow(), 0.01, default={}) == {}
+        # Test different default types - run_with_timeout returns a wrapper
+        wrapper1 = run_with_timeout(slow(), 0.01, default=None)
+        assert await wrapper1() is None
+
+        wrapper2 = run_with_timeout(slow(), 0.01, default=42)
+        assert await wrapper2() == 42
+
+        wrapper3 = run_with_timeout(slow(), 0.01, default="timeout")
+        assert await wrapper3() == "timeout"
+
+        wrapper4 = run_with_timeout(slow(), 0.01, default=[])
+        assert await wrapper4() == []
+
+        wrapper5 = run_with_timeout(slow(), 0.01, default={})
+        assert await wrapper5() == {}
 
 
 class TestAsyncMapEdgeCases:

@@ -5,6 +5,15 @@ This module focuses on stress testing, performance benchmarks,
 and edge cases for async crash log scanning integration.
 """
 
+# IMPORTANT: Async Test Pattern Documentation
+# ============================================
+# This test file follows correct AsyncBridge patterns:
+# 1. For sync wrappers using AsyncBridge: Mock bridge.run_async(), not the async function
+# 2. For pure async tests: Use @pytest.mark.asyncio and real async/await
+# 3. Never use AsyncMock for methods called through AsyncBridge
+# 4. See docs/async_test_patterns_guide.md for comprehensive patterns
+
+
 import asyncio
 import sys
 import time
@@ -26,11 +35,11 @@ class TestAsyncIntegrationStressTesting:
     def mock_base_dependencies(self):
         """Base mock setup for stress testing."""
         with patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_get_files") as mock_get_files, \
-             patch("ClassicLib.ScanLog.AsyncIntegration.yaml_cache") as mock_yaml_cache, \
+             patch("ClassicLib.YamlSettingsCache.yaml_cache") as mock_yaml_cache, \
              patch("ClassicLib.ScanLog.AsyncIntegration.msg_info") as mock_msg_info, \
              patch("ClassicLib.ScanLog.AsyncIntegration.msg_progress_context") as mock_progress_ctx, \
              patch("ClassicLib.ScanLog.AsyncIntegration.ClassicScanLogsInfo") as mock_info, \
-             patch("ClassicLib.ScanLog.AsyncIntegration.DB_PATHS", []):
+             patch("ClassicLib.Constants.DB_PATHS", []):
 
             # Configure basic mocks
             mock_yaml_cache.batch_get_settings.return_value = [(), False, False, False]
@@ -321,6 +330,7 @@ class TestAsyncBridgeStressTesting:
 
         # Run many operations to test resource cleanup
         for i in range(100):
+            @pytest.mark.asyncio
             async def test_coro():
                 await asyncio.sleep(0.001)
                 return f"Operation {i}"
@@ -350,7 +360,7 @@ class TestAsyncIntegrationEdgeCases:
         mock_logs = [Path(f"log_{i:05d}.txt") for i in range(large_count)]
 
         with patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_get_files", return_value=mock_logs), \
-             patch("ClassicLib.ScanLog.AsyncIntegration.yaml_cache") as mock_yaml_cache, \
+             patch("ClassicLib.YamlSettingsCache.yaml_cache") as mock_yaml_cache, \
              patch("ClassicLib.ScanLog.AsyncIntegration.msg_info"), \
              patch("ClassicLib.ScanLog.AsyncIntegration.msg_progress_context") as mock_progress_ctx, \
              patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_reformat_async") as mock_reformat, \
@@ -358,7 +368,7 @@ class TestAsyncIntegrationEdgeCases:
              patch("ClassicLib.ScanLog.AsyncIntegration.ThreadSafeLogCache") as mock_cache, \
              patch("ClassicLib.ScanLog.AsyncIntegration.OrchestratorCore") as mock_orchestrator, \
              patch("ClassicLib.ScanLog.AsyncIntegration.ClassicScanLogsInfo"), \
-             patch("ClassicLib.ScanLog.AsyncIntegration.DB_PATHS", []):
+             patch("ClassicLib.Constants.DB_PATHS", []):
 
             mock_yaml_cache.batch_get_settings.return_value = [(), False, False, False]
 
@@ -408,7 +418,7 @@ class TestAsyncIntegrationEdgeCases:
         ]
 
         with patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_get_files", return_value=special_paths), \
-             patch("ClassicLib.ScanLog.AsyncIntegration.yaml_cache") as mock_yaml_cache, \
+             patch("ClassicLib.YamlSettingsCache.yaml_cache") as mock_yaml_cache, \
              patch("ClassicLib.ScanLog.AsyncIntegration.msg_info"), \
              patch("ClassicLib.ScanLog.AsyncIntegration.msg_progress_context") as mock_progress_ctx, \
              patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_reformat_async") as mock_reformat, \
@@ -416,7 +426,7 @@ class TestAsyncIntegrationEdgeCases:
              patch("ClassicLib.ScanLog.AsyncIntegration.ThreadSafeLogCache") as mock_cache, \
              patch("ClassicLib.ScanLog.AsyncIntegration.OrchestratorCore") as mock_orchestrator, \
              patch("ClassicLib.ScanLog.AsyncIntegration.ClassicScanLogsInfo"), \
-             patch("ClassicLib.ScanLog.AsyncIntegration.DB_PATHS", []):
+             patch("ClassicLib.Constants.DB_PATHS", []):
 
             mock_yaml_cache.batch_get_settings.return_value = [(), False, False, False]
 

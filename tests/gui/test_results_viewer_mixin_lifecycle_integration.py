@@ -31,6 +31,8 @@ def integrated_viewer(tmp_path, init_message_handler_fixture, qt_application):
 
             # Mock GUI components that we can't create without full Qt app
             self.results_list = MagicMock()
+            # Mock count() to return an integer, not a MagicMock
+            self.results_list.count.return_value = 0
             self.results_list.selectedItems.return_value = []
             self.results_list.get_report_path = MagicMock()
             self.results_list.clear = MagicMock()

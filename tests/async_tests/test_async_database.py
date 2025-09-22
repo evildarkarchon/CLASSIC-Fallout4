@@ -8,10 +8,19 @@ IMPORTANT: These tests use the DatabasePoolManager singleton pattern.
 The clean_database_pool_manager fixture ensures proper test isolation.
 Mock fixtures are used to avoid actual database operations in unit tests.
 """
+
+# IMPORTANT: Async Test Pattern Documentation
+# ============================================
+# This test file follows correct AsyncBridge patterns:
+# 1. For sync wrappers using AsyncBridge: Mock bridge.run_async(), not the async function
+# 2. For pure async tests: Use @pytest.mark.asyncio and real async/await
+# 3. Never use AsyncMock for methods called through AsyncBridge
+# 4. See docs/async_test_patterns_guide.md for comprehensive patterns
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -38,6 +47,7 @@ class TestAsyncDatabasePool:
         assert hasattr(pool, 'connections')
         assert hasattr(pool, 'query_cache')
 
+    @pytest.mark.asyncio
     async def test_database_pool_initialization(self) -> None:
         """Test database pool initialization with proper cleanup.
 
@@ -81,6 +91,7 @@ class TestAsyncDatabasePool:
                 # Verify pool connections were cleared
                 assert len(pool.connections) == 0
 
+    @pytest.mark.asyncio
     async def test_database_pool_multiple_databases(self) -> None:
         """Test pool with multiple database connections.
 
@@ -124,6 +135,7 @@ class TestAsyncDatabasePool:
                 for mock_conn in mock_connections.values():
                     assert mock_conn.close.called
 
+    @pytest.mark.asyncio
     async def test_database_pool_query_caching(self) -> None:
         """Test query result caching in database pool."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -179,6 +191,7 @@ class TestAsyncDatabasePool:
 
                 await pool.close()
 
+    @pytest.mark.asyncio
     async def test_database_pool_error_handling(self) -> None:
         """Test error handling in database pool operations."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -205,6 +218,7 @@ class TestAsyncDatabasePool:
                 # Connection might not be in pool due to error
                 assert len(pool.connections) == 0 or db_path not in pool.connections
 
+    @pytest.mark.asyncio
     async def test_database_pool_concurrent_queries(self) -> None:
         """Test concurrent query execution in database pool."""
         import asyncio
@@ -255,6 +269,7 @@ class TestAsyncDatabasePool:
 
                 await pool.close()
 
+    @pytest.mark.asyncio
     async def test_database_pool_empty_db_paths(self) -> None:
         """Test database pool with no databases configured."""
         with patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", []):

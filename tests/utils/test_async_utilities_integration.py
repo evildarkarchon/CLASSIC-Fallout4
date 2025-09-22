@@ -105,15 +105,18 @@ class TestAsyncUtilitiesIntegration:
         loader = AsyncLazyLoader(slow_loader)
 
         # First load with timeout should fail
-        result = await run_with_timeout(loader.get(), timeout=0.05, default="timeout")
+        wrapper1 = run_with_timeout(loader.get(), 0.05, default="timeout")
+        result = await wrapper1()
         assert result == "timeout"
 
         # Second attempt with longer timeout should succeed
-        result = await run_with_timeout(loader.get(), timeout=0.2, default="timeout")
+        wrapper2 = run_with_timeout(loader.get(), 0.2, default="timeout")
+        result = await wrapper2()
         assert result == "slow_data"
 
         # Subsequent access should be instant (cached)
-        result = await run_with_timeout(loader.get(), timeout=0.01, default="timeout")
+        wrapper3 = run_with_timeout(loader.get(), 0.01, default="timeout")
+        result = await wrapper3()
         assert result == "slow_data"
 
     @pytest.mark.asyncio

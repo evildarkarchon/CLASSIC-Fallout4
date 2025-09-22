@@ -220,6 +220,46 @@ with patch("module.AsyncBridge") as mock_bridge_class:
 mock_instance.async_method = AsyncMock()  # This causes RuntimeWarning!
 ```
 
+**Critical Async Testing Patterns** (learned from test suite overhaul):
+```python
+# ✅ CORRECT: For async functions, use side_effect with async functions
+async def mock_async_func(*args):
+    return {"result": "data"}
+mock.side_effect = mock_async_func
+
+# ❌ WRONG: Don't use return_value with coroutines
+mock.return_value = mock_async_func()  # Creates unawaited coroutine!
+
+# ✅ CORRECT: Context managers need real async functions for __aenter__ and __aexit__
+async def async_enter(self):
+    return mock_instance
+
+async def async_exit(self, exc_type, exc_val, exc_tb):
+    # Cleanup logic here
+    return False  # Don't suppress exceptions
+
+mock_cm.__aenter__ = async_enter
+mock_cm.__aexit__ = async_exit
+
+# ❌ WRONG: Don't use AsyncMock for context manager methods
+mock_cm.__aenter__ = AsyncMock(return_value=mock_instance)  # Can cause issues!
+```
+
+**Production Code Best Practices**:
+- Initialize variables outside try blocks to handle early exits gracefully
+- Example: `scan_failed_list = []` before `async with` blocks prevents UnboundLocalError on cancellation
+
+**Patch Location Patterns**:
+```python
+# ✅ CORRECT: Patch at the source when imports happen inside functions
+with patch("ClassicLib.YamlSettingsCache.yaml_cache") as mock_cache:
+    # AsyncIntegration imports yaml_cache inside async_crashlogs_scan()
+    mock_cache.batch_get_settings.return_value = [...]
+
+# ❌ WRONG: Don't patch where it's used if it's imported from elsewhere
+with patch("ClassicLib.ScanLog.AsyncIntegration.yaml_cache"):  # AttributeError!
+```
+
 ### Testing GlobalRegistry and Singletons
 
 **CRITICAL**: GlobalRegistry manages singleton instances that persist across tests, causing test pollution and race conditions in parallel execution.

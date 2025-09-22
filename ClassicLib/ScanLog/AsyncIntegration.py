@@ -94,6 +94,9 @@ async def async_crashlogs_scan() -> None:
     # Replace the synchronous cache with our async-loaded cache
     crashlogs.cache = {name: "\n".join(lines).encode("utf-8") for name, lines in crash_log_cache.items()}
 
+    # Initialize scan_failed_list early to avoid UnboundLocalError if cancelled
+    scan_failed_list = []
+
     # Process crash logs with async orchestrator
     async with OrchestratorCore(yamldata, crashlogs, fcx_mode, show_formid_values, formid_db_exists) as orchestrator:
         # Process in batches with progress tracking
@@ -107,7 +110,7 @@ async def async_crashlogs_scan() -> None:
 
             # Prepare reports for batch writing
             reports_to_write = []
-            scan_failed_list = []
+            # scan_failed_list already initialized above for proper error handling
 
             for crashlog_file, autoscan_report, trigger_scan_failed, _stats in results:
                 reports_to_write.append((crashlog_file, autoscan_report, trigger_scan_failed))
@@ -159,4 +162,4 @@ def run_async_scan() -> None:
     bridge.run_async(async_crashlogs_scan())
 
 
-__all__ = ['async_crashlogs_scan']
+__all__ = ['async_crashlogs_scan', 'run_async_scan']

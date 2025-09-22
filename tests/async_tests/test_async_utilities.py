@@ -4,11 +4,20 @@ Tests for async utility functions used in the pipeline.
 This module contains tests for various async utility functions
 that support the crash log processing pipeline.
 """
+
+# IMPORTANT: Async Test Pattern Documentation
+# ============================================
+# This test file follows correct AsyncBridge patterns:
+# 1. For sync wrappers using AsyncBridge: Mock bridge.run_async(), not the async function
+# 2. For pure async tests: Use @pytest.mark.asyncio and real async/await
+# 3. Never use AsyncMock for methods called through AsyncBridge
+# 4. See docs/async_test_patterns_guide.md for comprehensive patterns
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
 import time
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -68,6 +77,7 @@ class TestAsyncUtilityFunctions:
             assert any("Fallout 4" in line for line in lines)
             assert any("EXCEPTION_ACCESS_VIOLATION" in line for line in lines)
 
+    @pytest.mark.asyncio
     async def test_load_crash_logs_empty_list(self) -> None:
         """Test loading with empty file list."""
         result: dict[str, list[str]] = await load_crash_logs_async([])
@@ -75,6 +85,7 @@ class TestAsyncUtilityFunctions:
         assert isinstance(result, dict)
         assert len(result) == 0
 
+    @pytest.mark.asyncio
     async def test_load_crash_logs_mixed_encoding(self, tmp_path: Path) -> None:
         """Test loading files with different encodings."""
         # Create files with different encodings
@@ -92,6 +103,7 @@ class TestAsyncUtilityFunctions:
         assert "utf8.log" in result
         assert "ascii.log" in result
 
+    @pytest.mark.asyncio
     async def test_crashlogs_reformat_async(self, sample_crash_logs: list[Path]) -> None:
         """Test async crash log reformatting."""
         remove_list = ("test_remove",)
@@ -105,6 +117,7 @@ class TestAsyncUtilityFunctions:
             # Verify each log was processed
             assert mock_process.call_count == 3
 
+    @pytest.mark.asyncio
     async def test_crashlogs_reformat_with_exclusions(self, tmp_path: Path) -> None:
         """Test crash log reformatting with exclusion list."""
         # Create logs with different patterns
@@ -129,6 +142,7 @@ class TestAsyncUtilityFunctions:
             # The actual removal logic depends on implementation
             assert mock_process.call_count >= 1
 
+    @pytest.mark.asyncio
     async def test_concurrent_operations_performance(self, sample_crash_logs: list[Path]) -> None:
         """Test performance of concurrent async operations."""
         # Test sequential processing
@@ -160,6 +174,7 @@ class TestAsyncUtilityFunctions:
         print(f"\nSequential time: {sequential_time:.4f}s")
         print(f"Concurrent time: {concurrent_time:.4f}s")
 
+    @pytest.mark.asyncio
     async def test_error_handling_in_async_operations(self, tmp_path: Path) -> None:
         """Test error handling in async operations."""
         valid_file = tmp_path / "valid.log"
@@ -178,6 +193,7 @@ class TestAsyncUtilityFunctions:
             # If exception is raised, it should be handled appropriately
             pass
 
+    @pytest.mark.asyncio
     async def test_async_operations_with_large_dataset(self, tmp_path: Path) -> None:
         """Test async operations with larger number of files."""
         # Create 50 small log files
@@ -197,6 +213,7 @@ class TestAsyncUtilityFunctions:
         # Should complete in reasonable time
         assert elapsed < 10.0  # 50 files should load in under 10 seconds
 
+    @pytest.mark.asyncio
     async def test_async_memory_efficiency(self, tmp_path: Path) -> None:
         """Test memory efficiency of async operations."""
         # Create a few large files

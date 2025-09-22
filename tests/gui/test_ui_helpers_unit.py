@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ClassicLib import init_message_handler
 from ClassicLib.Interface.UIHelpers import (
     BOTTOM_BUTTON_STYLE,
     CHECKBOX_STYLE,
@@ -35,6 +36,17 @@ from ClassicLib.Interface.UIHelpers import (
     setup_folder_section,
     supports_add_layout,
 )
+
+
+@pytest.fixture(autouse=True)
+def init_message_handler_fixture():
+    """Initialize MessageHandler for all tests in this module."""
+    # Initialize the MessageHandler to prevent RuntimeError
+    handler = init_message_handler(parent=None, is_gui_mode=False)
+    yield
+    # Clean up the global message handler after tests
+    import ClassicLib.MessageHandler
+    ClassicLib.MessageHandler._message_handler = None
 
 
 @pytest.mark.unit
@@ -255,7 +267,7 @@ class TestSetupFolderSection:
         callback = Mock()
 
         with patch("ClassicLib.Interface.UIHelpers.isinstance", return_value=False), \
-             patch("ClassicLib.MessageHandler.msg_warning") as mock_warning:
+             patch("ClassicLib.Interface.UIHelpers.msg_warning") as mock_warning:
 
             result = setup_folder_section(
                 mock_layout, "Test:", "test", callback
@@ -369,10 +381,8 @@ class TestCreateButton:
         """Test creating a regular button."""
         callback = Mock()
 
-        # Create a mock self object
-        mock_self = Mock()
-
-        button = _create_button(mock_self, "Regular", "Regular tooltip", callback)
+        # _create_button in UIHelpers doesn't take self
+        button = _create_button("Regular", "Regular tooltip", callback)
 
         assert isinstance(button, QPushButton)
         assert button.text() == "Regular"
@@ -386,7 +396,6 @@ class TestCreateButton:
     def test_create_button_toggle(self, qt_application):
         """Test creating a toggle button."""
         callback = Mock()
-        mock_self = Mock()
 
         # Mock a checkable button
         with patch("ClassicLib.Interface.UIHelpers.QPushButton") as mock_button_class:
@@ -394,7 +403,8 @@ class TestCreateButton:
             mock_button.isCheckable.return_value = True
             mock_button_class.return_value = mock_button
 
-            button = _create_button(mock_self, "Toggle", "Toggle tooltip", callback)
+            # _create_button in UIHelpers doesn't take self
+            button = _create_button("Toggle", "Toggle tooltip", callback)
 
             # Verify toggled signal was connected (not clicked)
             mock_button.toggled.connect.assert_called_once_with(callback)

@@ -4,6 +4,15 @@ E2E tests for async_orchestrator - e2e logic testing.
 This file contains e2e tests that test complete workflows from entry to output.
 """
 
+# IMPORTANT: Async Test Pattern Documentation
+# ============================================
+# This test file follows correct AsyncBridge patterns:
+# 1. For sync wrappers using AsyncBridge: Mock bridge.run_async(), not the async function
+# 2. For pure async tests: Use @pytest.mark.asyncio and real async/await
+# 3. Never use AsyncMock for methods called through AsyncBridge
+# 4. See docs/async_test_patterns_guide.md for comprehensive patterns
+
+
 from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING

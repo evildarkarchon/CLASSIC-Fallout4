@@ -26,14 +26,14 @@ class TestSyncWrapperCompatibility:
 
     def test_singleton_behavior(self, message_handler, async_bridge):
         """Test that YamlSettingsCache maintains singleton pattern."""
-        cache1 = YamlSettingsCache()
-        cache2 = YamlSettingsCache()
+        cache1 = YamlSettingsCache.get_instance()
+        cache2 = YamlSettingsCache.get_instance()
         assert cache1 is cache2
         assert cache1 is yaml_cache
 
     def test_sync_wrapper_delegates_to_async_core(self, temp_yaml_file, message_handler, async_bridge):
         """Test that sync wrapper correctly delegates to async core."""
-        cache = YamlSettingsCache()
+        cache = YamlSettingsCache.get_instance()
         assert hasattr(cache, '_async_core')
         assert hasattr(cache, '_bridge')
         from ClassicLib.AsyncBridge import AsyncBridge
@@ -43,7 +43,7 @@ class TestSyncWrapperCompatibility:
 
     def test_cache_property_forwarding(self, message_handler, async_bridge):
         """Test that cache properties forward to async core."""
-        cache = YamlSettingsCache()
+        cache = YamlSettingsCache.get_instance()
         assert hasattr(cache._async_core, 'cache')
         assert hasattr(cache._async_core.cache, 'cache')
         assert hasattr(cache._async_core.cache, 'settings_cache')
@@ -97,7 +97,7 @@ class TestBatchOperations:
 
     def test_batch_get_settings_sync(self, temp_yaml_file, monkeypatch, message_handler, async_bridge):
         """Test batch_get_settings through sync wrapper."""
-        cache = YamlSettingsCache()
+        cache = YamlSettingsCache.get_instance()
 
         def mock_get_path(store):
             return temp_yaml_file

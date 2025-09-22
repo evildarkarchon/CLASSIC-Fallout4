@@ -419,11 +419,12 @@ class TestEdgeCasePerformance:
             await asyncio.sleep(10)
 
         async with AsyncTimer() as timer:
-            result = await run_with_timeout(
+            wrapper = run_with_timeout(
                 never_completes(),
-                timeout=0.001,
+                0.001,
                 default="timeout"
             )
+            result = await wrapper()
 
         assert result == "timeout"
         assert timer.elapsed < 0.1  # Should timeout quickly

@@ -239,7 +239,9 @@ class TestRunWithTimeout:
             await asyncio.sleep(0.2)
             return "completed"
 
-        result = await run_with_timeout(slow_coro(), 0.05, default="timeout")
+        # run_with_timeout returns a coroutine function that needs to be awaited
+        timeout_func = run_with_timeout(slow_coro(), 0.05, default="timeout")
+        result = await timeout_func()
         assert result == "timeout"
 
     @pytest.mark.asyncio
@@ -249,12 +251,14 @@ class TestRunWithTimeout:
         async def coro_func():
             return "from_func"
 
-        # Test with coroutine function
-        result = await run_with_timeout(coro_func, 0.1, default="timeout")
+        # Test with coroutine function - returns a wrapper that needs to be awaited
+        timeout_func = run_with_timeout(coro_func, 0.1, default="timeout")
+        result = await timeout_func()
         assert result == "from_func"
 
-        # Test with coroutine
-        result = await run_with_timeout(coro_func(), 0.1, default="timeout")
+        # Test with coroutine - returns a wrapper that needs to be awaited
+        timeout_func = run_with_timeout(coro_func(), 0.1, default="timeout")
+        result = await timeout_func()
         assert result == "from_func"
 
     @pytest.mark.asyncio
@@ -264,7 +268,9 @@ class TestRunWithTimeout:
         async def timeout_func():
             await asyncio.sleep(0.2)
 
-        result = await run_with_timeout(timeout_func(), 0.05)
+        # run_with_timeout returns a coroutine function that needs to be awaited
+        wrapper = run_with_timeout(timeout_func(), 0.05)
+        result = await wrapper()
         assert result is None
 
 

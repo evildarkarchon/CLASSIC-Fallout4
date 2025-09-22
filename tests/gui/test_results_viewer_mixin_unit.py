@@ -63,6 +63,8 @@ def viewer_mixin(mock_qt_components, init_message_handler_fixture):
             # Mock required attributes
             self.results_tab = MagicMock(spec=QWidget)
             self.results_list = MagicMock()
+            # Mock count() to return an integer, not a MagicMock
+            self.results_list.count.return_value = 0
             self.markdown_viewer = MagicMock()
             self.metadata_widget = MagicMock()
 

@@ -31,6 +31,7 @@ dependencies = [
     "setuptools>=80.9.0",
     "markdown2>=2.5.4",
     "qasync>=0.28.0",
+    "maturin>=1.9.4,<2.0",
 ]
 
 [project.optional-dependencies]

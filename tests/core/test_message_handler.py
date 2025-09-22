@@ -207,20 +207,23 @@ class TestGlobalFunctions:
         """Test progress context manager."""
         init_message_handler(parent=None, is_gui_mode=False)
 
-        old_stdout: TextIO | Any = sys.stdout
-        try:
-            sys.stdout = StringIO()
+        # Mock the classic_settings to ensure CLI progress is not disabled
+        with patch("ClassicLib.YamlSettingsCache.classic_settings") as mock_settings:
+            mock_settings.return_value = False  # Disable CLI Progress = False
 
-            with msg_progress_context("Test Progress", 10) as progress:
-                for _i in range(5):
-                    progress.update(1)
+            old_stdout: TextIO | Any = sys.stdout
+            try:
+                sys.stdout = StringIO()
 
-            # After context exits, should have newline
-            output: str = sys.stdout.getvalue()
-            assert "Test Progress" in output
+                with msg_progress_context("Test Progress", 10) as progress:
+                    for _i in range(5):
+                        progress.update(1)
 
-        finally:
-            sys.stdout = old_stdout
+                # After context exits, should have newline
+                output: str = sys.stdout.getvalue()
+                assert "Test Progress" in output
+            finally:
+                sys.stdout = old_stdout
 
 
 class TestThreadSafety:

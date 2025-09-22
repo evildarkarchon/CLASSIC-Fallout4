@@ -50,7 +50,7 @@ class TestBatchOperations:
 
     def test_batch_operations_multiple_stores(self, tmp_path, monkeypatch, message_handler, async_bridge):
         """Test batch operations with multiple stores through sync wrapper."""
-        cache = YamlSettingsCache()
+        cache = YamlSettingsCache.get_instance()
         files = {}
         for store in [YAML.Settings, YAML.Ignore]:
             yaml_file = tmp_path / f'{store.name}.yaml'

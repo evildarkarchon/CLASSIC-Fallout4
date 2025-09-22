@@ -58,26 +58,36 @@ class TestAsyncFileReading:
 
     @pytest.mark.asyncio
     async def test_file_exists(self, io_core: FileIOCore, temp_file: Path):
-        """Test file existence check."""
-        # Test existing file
-        assert await io_core.file_exists(temp_file) is True
+        """Test file existence check.
+
+        Note: file_exists is now a synchronous method that returns bool directly,
+        not a coroutine. This was optimized for performance since Path.exists()
+        is a fast non-blocking operation.
+        """
+        # Test existing file - no await needed
+        assert io_core.file_exists(temp_file) is True
 
         # Delete and test non-existing
         temp_file.unlink()
-        assert await io_core.file_exists(temp_file) is False
+        assert io_core.file_exists(temp_file) is False
 
     @pytest.mark.asyncio
     async def test_get_file_size(self, io_core: FileIOCore, temp_file: Path):
-        """Test getting file size."""
-        # Test existing file
-        size = await io_core.get_file_size(temp_file)
+        """Test getting file size.
+
+        Note: get_file_size is now a synchronous method that returns int directly,
+        not a coroutine. This was optimized for performance since Path.stat()
+        is a fast non-blocking operation.
+        """
+        # Test existing file - no await needed
+        size = io_core.get_file_size(temp_file)
         # Use stat to get actual file size (handles line endings correctly)
         expected_size = temp_file.stat().st_size
         assert size == expected_size
 
         # Test non-existing file
         temp_file.unlink()
-        size = await io_core.get_file_size(temp_file)
+        size = io_core.get_file_size(temp_file)
         assert size == -1
 
 

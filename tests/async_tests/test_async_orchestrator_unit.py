@@ -8,9 +8,18 @@ The clean_database_pool_manager fixture ensures proper test isolation.
 Mock fixtures are used to avoid actual database connections during unit tests.
 """
 
+# IMPORTANT: Async Test Pattern Documentation
+# ============================================
+# This test file follows correct AsyncBridge patterns:
+# 1. For sync wrappers using AsyncBridge: Mock bridge.run_async(), not the async function
+# 2. For pure async tests: Use @pytest.mark.asyncio and real async/await
+# 3. Never use AsyncMock for methods called through AsyncBridge
+# 4. See docs/async_test_patterns_guide.md for comprehensive patterns
+
+
 from pathlib import Path
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, MagicMock, patch
 import pytest
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
@@ -37,6 +46,7 @@ class TestOrchestratorCore:
             # The mock_database_pool_manager ensures the pool is properly mocked
             assert orchestrator._db_pool is not None
 
+    @pytest.mark.asyncio
     async def test_orchestrator_initialization_without_db(self, mock_yamldata: MagicMock, mock_database_pool_manager) -> None:
         """Test orchestrator initialization without FormID database.
 
@@ -54,6 +64,7 @@ class TestOrchestratorCore:
             # Pool is still created but won't be used for FormID lookups
             assert orchestrator._db_pool is not None
 
+    @pytest.mark.asyncio
     async def test_orchestrator_with_multiple_analyzers(self, mock_yamldata: MagicMock, mock_database_pool_manager) -> None:
         """Test orchestrator with multiple analyzer components enabled.
 
