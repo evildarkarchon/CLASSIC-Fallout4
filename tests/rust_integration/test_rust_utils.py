@@ -5,22 +5,19 @@ These tests verify that the Rust extensions work correctly when called from Pyth
 ensuring proper type conversions, error handling, and performance characteristics.
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import time
-from typing import List, Optional
-import sys
+
+import pytest
 
 # Skip these tests if Rust extensions are not available
 pytest.importorskip("classic_core", reason="Rust extensions not available")
 
 import classic_core
 from classic_core.utils import (
-    PathHandler,
-    StringProcessor,
     LogProcessor,
+    PathHandler,
     RustPerformanceMonitor,
+    StringProcessor,
 )
 
 
