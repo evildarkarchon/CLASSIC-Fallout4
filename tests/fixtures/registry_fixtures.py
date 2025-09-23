@@ -19,7 +19,6 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.MessageHandler import MessageHandler, init_message_handler
 from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
-
 # Thread-local storage for singleton state tracking
 _handler_lock = threading.Lock()
 _handler_states = threading.local()
@@ -81,7 +80,7 @@ def message_handler(init_message_handler_fixture) -> Generator[MessageHandler, N
 
     This is the preferred fixture name for new tests.
     """
-    yield init_message_handler_fixture
+    return init_message_handler_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -361,7 +360,7 @@ def setup_global_registry_session() -> Generator[None, None, None]:
 
         # Set function entries (mock implementations)
         def mock_open_file(path: Path | str, encoding: str = "utf-8", errors: str = "ignore"):
-            return open(path, encoding=encoding, errors=errors)
+            return Path(path).open(encoding=encoding, errors=errors)
 
         GlobalRegistry.register(GlobalRegistry.Keys.OPEN_FILE_FUNC, mock_open_file)
 
@@ -395,7 +394,7 @@ def setup_global_registry() -> Generator[None, None, None]:
             yaml_cache = YamlSettingsCache()
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
 
-    yield
+    return
 
 
 # Autouse fixture to ensure GlobalRegistry is always initialized for tests
@@ -404,7 +403,6 @@ def _ensure_global_registry(setup_global_registry_session):
     """Ensure GlobalRegistry is initialized for all tests."""
     # This fixture is automatically used by all tests
     # It depends on setup_global_registry_session to do the actual work
-    pass
 
 
 # ============================================================================
@@ -431,8 +429,8 @@ def clean_yaml_cache_singleton() -> Generator[Any, None, None]:
             from ClassicLib.YamlSettingsCache import yaml_settings
             result = yaml_settings(str, YAML.TEST, "test.key")
     """
-    from ClassicLib.YamlSettingsCache import YamlSettingsCache
     import ClassicLib.YamlSettingsCache
+    from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
     with _yaml_cache_lock:
         # Store the original singleton instance if it exists
@@ -500,8 +498,9 @@ def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
             from ClassicLib.YamlSettingsCache import yaml_settings
             result = yaml_settings(str, YAML.TEST, "test.key")
     """
-    import ClassicLib.YamlSettingsCache
     from unittest.mock import MagicMock, patch
+
+    import ClassicLib.YamlSettingsCache
 
     # Save the original yaml_cache if it exists
     original_cache = getattr(ClassicLib.YamlSettingsCache, 'yaml_cache', None)
@@ -540,7 +539,7 @@ def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
                 'Game_Info.CRASHGEN_LogName': 'Buffout 4',
                 'Game_Info.XSE_Acronym': 'F4SE',
             }
-            return defaults.get(key_path, None)
+            return defaults.get(key_path)
 
         test_cache.async_yaml_settings = MagicMock(side_effect=async_yaml_settings_side_effect)
 

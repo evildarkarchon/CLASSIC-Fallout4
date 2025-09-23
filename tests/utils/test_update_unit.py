@@ -5,12 +5,11 @@ This module tests version parsing, GitHub API interactions, and network
 operations for update checking functionality.
 """
 
-import json
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
-from packaging.version import InvalidVersion, Version
+from packaging.version import Version
 
 from ClassicLib.Update import (
     get_github_latest_prerelease_version_from_list,

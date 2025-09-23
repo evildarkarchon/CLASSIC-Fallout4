@@ -9,7 +9,6 @@ into a single async-first design.
 import asyncio
 from collections import Counter
 from functools import lru_cache
-from itertools import starmap
 from typing import TYPE_CHECKING, Any
 
 import regex as re

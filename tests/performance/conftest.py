@@ -7,7 +7,6 @@ by using test data instead of production directories.
 
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import pytest
 

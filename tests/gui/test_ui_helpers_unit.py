@@ -5,8 +5,7 @@ This module tests UI helper functions and style constants for the CLASSIC interf
 including widget creation, styling, and configuration.
 """
 
-from collections.abc import Callable
-from unittest.mock import ANY, MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pytest
 from PySide6.QtCore import Qt, QUrl

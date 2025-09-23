@@ -4,12 +4,10 @@ E2E tests for main_screen - e2e logic testing.
 This file contains e2e tests that test complete workflows from entry to output.
 """
 
-from unittest.mock import Mock, patch
 import pytest
-from textual.widgets import Input
+
 from ClassicLib.TUI.app import CLASSICTuiApp
 from ClassicLib.TUI.screens.main_screen import MainScreen
-from ClassicLib.TUI.widgets.output_viewer import OutputViewer
 
 pytestmark = pytest.mark.e2e
 

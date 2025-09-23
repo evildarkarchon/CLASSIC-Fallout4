@@ -5,8 +5,7 @@ This module tests GitHub API interactions, error handling, and complex
 network scenarios for the Update module's network functionality.
 """
 
-import json
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest

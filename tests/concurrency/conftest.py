@@ -3,6 +3,7 @@ Shared fixtures for concurrency and thread safety tests.
 """
 
 from pathlib import Path
+
 import pytest
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication

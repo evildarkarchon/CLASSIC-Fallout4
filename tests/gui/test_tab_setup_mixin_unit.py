@@ -4,22 +4,14 @@
 Tests tab setup functionality in isolation with mocked Qt components.
 """
 
-import pytest
-
-import builtins
-from functools import partial
-from typing import Callable
 from unittest import mock
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from tests.gui.qt_mock_helpers import (
-    create_layout_mock_factory,
-    create_mock_layout_with_union_support,
-)
 
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
 from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noqa: F401
+
 
 # Create mock Qt classes for testing to avoid importing real Qt
 # These are only used for spec= parameters and isinstance checks

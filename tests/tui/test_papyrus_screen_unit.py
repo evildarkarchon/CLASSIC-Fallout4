@@ -6,10 +6,11 @@ This file contains unit tests that test individual functions with mocked depende
 
 from datetime import datetime
 from unittest.mock import patch
+
 import pytest
+
 from ClassicLib.TUI.app import CLASSICTuiApp
 from ClassicLib.TUI.handlers.papyrus_handler import PapyrusStats
-from ClassicLib.TUI.screens.main_screen import MainScreen
 from ClassicLib.TUI.screens.papyrus_screen import PapyrusScreen
 
 pytestmark = pytest.mark.unit

@@ -14,16 +14,12 @@ Test Categories:
 5. Edge Cases - Stress testing and error scenarios
 """
 
-import asyncio
-import concurrent.futures
 import gc
 import threading
 import time
-import uuid
 import weakref
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -33,7 +29,6 @@ from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import (
     YamlSettingsCache,
-    classic_settings,
     yaml_cache,
     yaml_settings,
 )
@@ -413,7 +408,7 @@ class TestBackwardCompatibility:
 
         import ruamel.yaml
         yaml_obj = ruamel.yaml.YAML()
-        with open(test_file, 'w') as f:
+        with Path(test_file).open('w') as f:
             yaml_obj.dump(test_data, f)
 
         # Mock yaml_cache which is used by yaml_settings function
@@ -440,7 +435,6 @@ class TestBackwardCompatibility:
         other components to access.
         """
         # Import should trigger registration
-        from ClassicLib.YamlSettingsCache import yaml_cache
 
         # Verify registration in GlobalRegistry
         assert GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE)
@@ -462,7 +456,6 @@ class TestBackwardCompatibility:
 
         # This simulates how existing tests use mocks
         # Note: yaml_settings is a module-level function, not a class method
-        from ClassicLib.YamlSettingsCache import yaml_settings as yaml_func
 
         # The mock should intercept calls when patched properly
         # The mock_yaml_settings fixture patches the module function
@@ -630,7 +623,6 @@ class TestEdgeCases:
         # This test would verify process isolation, but has pickling issues on Windows
         # In real pytest-xdist usage, each worker imports the module independently
         # and gets its own singleton instance, which is the correct behavior
-        pass
 
 
 class TestRegressionScenarios:

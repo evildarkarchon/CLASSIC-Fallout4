@@ -6,13 +6,11 @@ focusing on network operations, version parsing, GitHub API interactions,
 Nexus scraping, and update checking logic with proper mocking.
 """
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
 import pytest
-from bs4 import BeautifulSoup
-from packaging.version import InvalidVersion, Version
+from packaging.version import Version
 
 from ClassicLib.Update import (
     UpdateCheckError,
@@ -798,7 +796,7 @@ class TestUpdateChecking:
              patch("ClassicLib.Update.logger") as mock_logger:
 
             # Don't mock the message functions since MessageHandler is initialized
-            from ClassicLib import msg_info, msg_warning, msg_success, msg_error
+            from ClassicLib import msg_error, msg_info, msg_success, msg_warning
 
             yield {
                 "yaml_settings": mock_yaml_settings,
@@ -952,7 +950,7 @@ class TestUpdateChecking:
         mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
             "CLASSIC_Info.version": "CLASSIC v7.30.0",
             "CLASSIC_Info.is_prerelease": False,
-            f"CLASSIC_Interface.update_warning_fallout4": "Update warning message"
+            "CLASSIC_Interface.update_warning_fallout4": "Update warning message"
         }.get(key, default)
 
         # Mock registry
@@ -1035,7 +1033,7 @@ class TestUpdateChecking:
         mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
             "CLASSIC_Info.version": "CLASSIC v7.30.1",
             "CLASSIC_Info.is_prerelease": False,
-            f"CLASSIC_Interface.update_unable_fallout4": "Unable to check updates"
+            "CLASSIC_Interface.update_unable_fallout4": "Unable to check updates"
         }.get(key, default)
 
         # Mock registry

@@ -7,7 +7,6 @@ both real PySide6 imports and fallback dummy classes when Qt is not available.
 
 import sys
 from unittest.mock import MagicMock, Mock, patch
-from types import ModuleType
 
 import pytest
 
@@ -232,9 +231,7 @@ class TestQtCompatibility:
 
     def test_dummy_classes_handle_arbitrary_args(self):
         """Test that dummy classes handle arbitrary arguments gracefully."""
-        from ClassicLib.MessageHandler.qt_compat import (
-            HAS_QT, QMessageBox, QProgressDialog, Signal
-        )
+        from ClassicLib.MessageHandler.qt_compat import HAS_QT, QMessageBox, QProgressDialog, Signal
 
         if HAS_QT:
             # Real Qt classes have strict argument requirements
@@ -274,9 +271,7 @@ class TestQtCompatibility:
 
     def test_compatibility_layer_isolation(self):
         """Test that dummy classes don't interfere with each other."""
-        from ClassicLib.MessageHandler.qt_compat import (
-            HAS_QT, QObject, QWidget, QThread, QMessageBox, QProgressDialog, Signal
-        )
+        from ClassicLib.MessageHandler.qt_compat import HAS_QT, QMessageBox, QObject, QWidget
 
         # Skip this test if real Qt is available to prevent dialog display
         if HAS_QT:
@@ -310,7 +305,7 @@ class TestQtCompatibility:
     def test_thread_safety_of_dummy_classes(self):
         """Test that dummy classes can be used safely in concurrent contexts."""
         import threading
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock
 
         results = []
         errors = []

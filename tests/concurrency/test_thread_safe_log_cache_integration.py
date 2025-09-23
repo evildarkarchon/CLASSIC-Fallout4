@@ -4,13 +4,10 @@ Integration tests for thread_safe_log_cache - integration logic testing.
 This file contains integration tests that test interactions between components.
 """
 
-import concurrent.futures
-import random
-import threading
-import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+
 import pytest
+
 from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 
 pytestmark = pytest.mark.integration

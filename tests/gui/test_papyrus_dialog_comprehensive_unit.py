@@ -914,7 +914,7 @@ class TestDialogAccessibilityAndUsability:
             "12:30:45"
         ]
 
-        for test_time, expected in zip(test_times, expected_formats):
+        for test_time, expected in zip(test_times, expected_formats, strict=False):
             stats = PapyrusStats(
                 timestamp=test_time,
                 dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0

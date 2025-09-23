@@ -9,17 +9,14 @@ import asyncio
 import json
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
 from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline
 from ClassicLib.ScanLog.pipeline.async_performance_monitor import AsyncPerformanceMonitor
-from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
-
-if TYPE_CHECKING:
-    from collections.abc import Coroutine
 
 pytestmark = pytest.mark.performance
 

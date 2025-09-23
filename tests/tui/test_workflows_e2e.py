@@ -6,11 +6,11 @@ This file contains e2e tests that test complete workflows from entry to output.
 
 import asyncio
 from unittest.mock import Mock, patch
+
 import pytest
-from textual.widgets import Input
+
 from ClassicLib.TUI.app import CLASSICTuiApp
 from ClassicLib.TUI.screens.main_screen import MainScreen
-from ClassicLib.TUI.widgets.confirmation_dialog import ConfirmationDialog
 from ClassicLib.TUI.widgets.output_viewer import OutputViewer
 from ClassicLib.TUI.widgets.status_bar import StatusBar
 

@@ -178,7 +178,7 @@ class TestConcurrentOperations:
             # Wait for all tasks with timeout
             try:
                 await asyncio.wait_for(asyncio.gather(*tasks), timeout=2.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass  # Tasks may timeout in test environment
 
             # Verify output integrity

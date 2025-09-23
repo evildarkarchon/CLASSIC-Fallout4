@@ -22,9 +22,9 @@ from .fragments import (
 )
 
 __all__ = [
-    "ReportFragment",
-    "ReportComposer",
     "FragmentCollector",
+    "ReportComposer",
+    "ReportFragment",
     "ReportGeneratorFunctional",
     "detect_mods_single_fragment",
     "generate_mod_check_header_fragment",

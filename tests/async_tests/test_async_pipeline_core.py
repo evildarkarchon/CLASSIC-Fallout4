@@ -14,17 +14,13 @@ and its initialization, processing, and monitoring functionality.
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
-import asyncio
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
-
-if TYPE_CHECKING:
-    from collections import Counter
 
 
 @pytest.fixture

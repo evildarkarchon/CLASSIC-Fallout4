@@ -150,6 +150,7 @@ class AsyncBridge:
         self.ensure_loop()
 
         # Submit the coroutine to the loop
+        assert self._loop is not None, "Event loop should be available after ensure_loop()"
         future = asyncio.run_coroutine_threadsafe(coro, self._loop)
 
         # Wait for and return the result
@@ -177,6 +178,7 @@ class AsyncBridge:
             return await asyncio.wait_for(coro, timeout)
 
         # Submit and wait
+        assert self._loop is not None, "Event loop should be available after ensure_loop()"
         future = asyncio.run_coroutine_threadsafe(with_timeout(), self._loop)
         return future.result()
 

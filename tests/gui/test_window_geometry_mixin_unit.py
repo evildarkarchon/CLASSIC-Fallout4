@@ -6,7 +6,6 @@ including save/restore functionality, minimum size calculations, and
 window state handling with properly mocked Qt components.
 """
 
-from pathlib import Path
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
@@ -125,7 +124,7 @@ class TestWindowGeometryMixin:
 
     This test class now uses the module-level fixtures defined above.
     """
-    pass  # The fixtures are now module-level, so this can be empty
+    # The fixtures are now module-level, so this can be empty
 
 
 class TestWindowGeometryInitialization:
@@ -405,9 +404,9 @@ class TestTabGeometryRestoring:
                 key = args[2]
                 if "width" in key:
                     return 900
-                elif "height" in key:
+                if "height" in key:
                     return 700
-                elif "maximized" in key:
+                if "maximized" in key:
                     return False
                 return None
 
@@ -445,9 +444,9 @@ class TestTabGeometryRestoring:
                 key = args[2]
                 if "width" in key:
                     return 200  # Smaller than minimum
-                elif "height" in key:
+                if "height" in key:
                     return 100  # Smaller than minimum
-                elif "maximized" in key:
+                if "maximized" in key:
                     return False
                 return None
 
@@ -473,9 +472,9 @@ class TestTabGeometryRestoring:
                 key = args[2]
                 if "width" in key:
                     return 800
-                elif "height" in key:
+                if "height" in key:
                     return 600
-                elif "maximized" in key:
+                if "maximized" in key:
                     return True  # Was maximized
                 return None
 
@@ -518,9 +517,9 @@ class TestTabGeometryRestoring:
                 key = args[2]
                 if "width" in key:
                     return 700
-                elif "height" in key:
+                if "height" in key:
                     return 500
-                elif "maximized" in key:
+                if "maximized" in key:
                     return False  # Should not be maximized
                 return None
 
@@ -568,7 +567,7 @@ class TestMinimumSizeCalculation:
             3: (750, 450),  # Results tab
         }
 
-        assert WindowGeometryMixin.DEFAULT_MIN_SIZES == expected_defaults
+        assert expected_defaults == WindowGeometryMixin.DEFAULT_MIN_SIZES
 
     def test_tab_names_constant(self):
         """Test that TAB_NAMES constant is properly defined."""
@@ -579,7 +578,7 @@ class TestMinimumSizeCalculation:
             3: "results_tab"
         }
 
-        assert WindowGeometryMixin.TAB_NAMES == expected_names
+        assert expected_names == WindowGeometryMixin.TAB_NAMES
 
 
 class TestCurrentTabGeometrySaving:
@@ -774,9 +773,9 @@ class TestWindowGeometryIntegration:
                     key = args[2]
                     if "width" in key:
                         return width
-                    elif "height" in key:
+                    if "height" in key:
                         return height
-                    elif "maximized" in key:
+                    if "maximized" in key:
                         return False
                     return None
 

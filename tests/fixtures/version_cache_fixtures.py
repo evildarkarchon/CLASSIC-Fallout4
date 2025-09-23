@@ -40,7 +40,6 @@ def verify_version_cache_empty():
     assert cache_info.misses == 0, f"Version cache not empty: {cache_info.misses} misses"
     assert cache_info.currsize == 0, f"Version cache not empty: size {cache_info.currsize}"
 
-    yield
 
 
 @pytest.fixture
@@ -53,18 +52,18 @@ def mock_version_parsing():
     actually parsing version strings.
     """
     from unittest.mock import patch
+
     from packaging.version import Version
 
     def mock_crashgen_version(input_string: str) -> Version:
         """Mock version parser that returns predictable versions."""
         if "1.10.163" in input_string:
             return Version("1.10.163.0")
-        elif "1.28.6" in input_string:
+        if "1.28.6" in input_string:
             return Version("1.28.6")
-        elif "1.2.72" in input_string:
+        if "1.2.72" in input_string:
             return Version("1.2.72")
-        else:
-            return Version("0.0.0")
+        return Version("0.0.0")
 
     with patch('ClassicLib.Utils.version_utils.crashgen_version_gen', side_effect=mock_crashgen_version):
         yield mock_crashgen_version
@@ -92,7 +91,7 @@ def track_version_cache_usage():
     # Clear cache to start fresh
     crashgen_version_gen.cache_clear()
 
-    yield get_cache_stats
+    return get_cache_stats
 
 
 @pytest.fixture

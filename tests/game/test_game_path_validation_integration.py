@@ -6,7 +6,9 @@ This file contains integration tests that test interactions between components.
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 import pytest
+
 from ClassicLib import GlobalRegistry
 from ClassicLib.GamePath import game_path_find
 
@@ -138,8 +140,7 @@ class TestManualPathInput:
                                                     joinpath_side_effect.call_count += 1
                                                     if joinpath_side_effect.call_count == 1:
                                                         return exe_path_mock1
-                                                    else:
-                                                        return exe_path_mock2
+                                                    return exe_path_mock2
                                                 return MagicMock()
 
                                             mock_join.side_effect = joinpath_side_effect

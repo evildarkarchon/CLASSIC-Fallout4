@@ -13,9 +13,9 @@ from .report_fragment import ReportFragment
 from .report_generator_functional import ReportGeneratorFunctional
 
 __all__ = [
-    "ReportFragment",
-    "ReportComposer",
     "FragmentCollector",
+    "ReportComposer",
+    "ReportFragment",
     "ReportGeneratorFunctional",
     "detect_mods_single_fragment",
     "generate_mod_check_header_fragment",

@@ -8,14 +8,11 @@ including single file processing and batch operations.
 import asyncio
 import time
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from ClassicLib.ScanLog.AsyncFileIO import load_crash_logs_async_optimized
-from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline
-from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
 
 pytestmark = pytest.mark.performance
 
@@ -140,7 +137,7 @@ class TestAsyncPerformanceFileIO:
             avg_time = sum(single_file_times) / len(single_file_times)
             max_time = max(single_file_times)
 
-            print(f"Single file I/O performance:")
+            print("Single file I/O performance:")
             print(f"  Average time: {avg_time:.4f}s")
             print(f"  Maximum time: {max_time:.4f}s")
             print(f"  Files processed: {len(single_file_times)}")
@@ -198,7 +195,7 @@ class TestAsyncPerformanceFileIO:
 
         # Performance analysis
         if batch_performance:
-            print(f"\nBatch I/O performance summary:")
+            print("\nBatch I/O performance summary:")
             for size, time_taken in batch_performance.items():
                 throughput = size / time_taken if time_taken > 0 else 0
                 print(f"  {size} files: {time_taken:.4f}s ({throughput:.2f} files/sec)")

@@ -2,7 +2,6 @@
 
 from typing import Any, get_origin
 
-from ClassicLib import msg_error
 from ClassicLib.Constants import SETTINGS_IGNORE_NONE
 from ClassicLib.Logger import logger
 
@@ -51,10 +50,9 @@ def validate_setting_value(value: Any, expected_type: type) -> bool:
         # For generic types, check against the origin (e.g., list for list[str])
         if isinstance(value, origin_type):
             return True
-    else:
-        # Direct type match for non-generic types
-        if isinstance(value, expected_type):
-            return True
+    # Direct type match for non-generic types
+    elif isinstance(value, expected_type):
+        return True
 
     # Special case for Path
     if expected_type.__name__ == "Path":

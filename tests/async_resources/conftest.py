@@ -1,6 +1,5 @@
 """Shared fixtures and utilities for async resource management tests."""
 
-import pytest
 
 from tests.async_tests.test_async_utils import (
     AsyncResourceTracker,
@@ -22,10 +21,10 @@ class ContextTestError(Exception):
 # Export utilities for use in test files
 __all__ = [
     "AsyncResourceTracker",
+    "ContextTestError",
+    "SimulatedConnectionError",
     "async_test_context",
     "ensure_event_loop_cleanup",
     "safe_async_cleanup",
     "track_async_resources",
-    "SimulatedConnectionError",
-    "ContextTestError",
 ]

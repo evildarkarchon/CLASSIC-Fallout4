@@ -20,7 +20,7 @@ class ProgressBar(Static):
         show_percentage: bool = True,
         show_eta: bool = False,
         *args,
-        **kwargs,  # noqa: ANN002, ANN003
+        **kwargs,  # noqa: ANN003
     ) -> None:
         super().__init__(*args, **kwargs)
         self.label = label

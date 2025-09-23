@@ -9,14 +9,12 @@ Usage:
     python scripts/migrate_test_fixtures.py [--dry-run] [--verbose]
 """
 
-import re
-import sys
-from pathlib import Path
-from typing import List, Tuple, Optional
 import argparse
+import re
+from pathlib import Path
 
 
-def find_test_files(base_dir: Path) -> List[Path]:
+def find_test_files(base_dir: Path) -> list[Path]:
     """Find all Python test files in the tests directory."""
     tests_dir = base_dir / "tests"
     return list(tests_dir.rglob("test_*.py")) + list(tests_dir.rglob("conftest.py"))

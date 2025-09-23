@@ -2,7 +2,6 @@
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001
 
 import asyncio
-from unittest.mock import AsyncMock
 
 import pytest
 

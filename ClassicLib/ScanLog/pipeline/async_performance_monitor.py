@@ -124,7 +124,7 @@ class AsyncPerformanceMonitor:
         logger.info("=================================")
 
 
-async def benchmark_async_pipeline(  # noqa: PLR0917
+async def benchmark_async_pipeline(
     crashlog_list: list["Path"],
     remove_list: tuple[str],
     yamldata: "ClassicScanLogsInfo",

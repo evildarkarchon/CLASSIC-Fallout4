@@ -4,15 +4,13 @@ Tests the core report scanning, loading, and management functionality
 in isolation with mocked Qt components.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import QFileSystemWatcher, Qt, QTimer, Signal
-from PySide6.QtWidgets import QMessageBox, QWidget
+from PySide6.QtCore import QFileSystemWatcher, QTimer, Signal
+from PySide6.QtWidgets import QWidget
 
-from ClassicLib import MessageHandler
 from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
 from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noqa: F401
 

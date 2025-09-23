@@ -9,11 +9,25 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a Python desktop a
 - **TUI**: Textual-based terminal user interface (rich terminal UI)
 - **CLI**: Command-line interface for automation
 
-## Essential Commands
+## Installation & Distribution
 
-### Development
+### ⚠️ IMPORTANT: Installation Methods
+**DO NOT install this package directly using `pip install`**. This project is not published to PyPI and is not intended for pip installation.
+
+**Supported installation/distribution methods:**
+1. **PyInstaller executables** - For end users (zero dependencies)
+2. **uvx from GitHub** - For developers and power users:
+   ```bash
+   uvx --from github:evildarkarchon/CLASSIC-Fallout4 classic
+   ```
+
+### Development Setup
 ```bash
-# Install dependencies
+# Clone the repository
+git clone https://github.com/evildarkarchon/CLASSIC-Fallout4.git
+cd CLASSIC-Fallout4
+
+# Install dependencies using uv
 uv sync                                      # Install all dependencies
 uv sync --all-extras                        # Install with all optional features (TUI, CLI, Windows)
 
@@ -39,6 +53,10 @@ uv run pytest -n 4 -m "async_test"        # Async pattern tests only
 
 # Build executable (Windows)
 uv run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
+
+# Build Rust extensions (for development)
+maturin develop                            # Debug build
+maturin develop --release                  # Release build
 ```
 
 ### Linting and Type Checking
@@ -53,6 +71,13 @@ uv run pyright
 ```
 
 ## Architecture Overview
+
+### Hybrid Python-Rust Architecture
+The project uses **maturin** as the build backend for seamless Python-Rust integration:
+- **Python code** in `src/classic/` and `ClassicLib/` handles UI and high-level logic
+- **Rust extensions** in `classic-rust/src/` provide high-performance operations
+- **classic_core** module exposes Rust functions with sync APIs (async internally)
+- Rust components are optional - Python fallbacks exist for all functionality
 
 ### Entry Points
 - `CLASSIC_Interface.py` - PySide6 GUI application (main entry point)

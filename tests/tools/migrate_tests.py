@@ -171,12 +171,12 @@ def _print_migration_header(file_path: Path) -> None:
 
 def _handle_performance_file() -> dict[str, Path]:
     """Handle performance file migration."""
-    print(f"   ⚡ Performance file detected - requires manual functional scope splitting")
-    print(f"   📋 Suggested approach:")
-    print(f"      • Split by functional areas (comparisons, baselines, benchmarks)")
-    print(f"      • Group related performance tests together")
-    print(f"      • Consider: test_<component>_performance_<scope>.py naming")
-    print(f"   ❌ Automatic migration not recommended for performance files")
+    print("   ⚡ Performance file detected - requires manual functional scope splitting")
+    print("   📋 Suggested approach:")
+    print("      • Split by functional areas (comparisons, baselines, benchmarks)")
+    print("      • Group related performance tests together")
+    print("      • Consider: test_<component>_performance_<scope>.py naming")
+    print("   ❌ Automatic migration not recommended for performance files")
     return {}
 
 
@@ -227,12 +227,12 @@ def _handle_post_migration(file_path: Path, original_content: str, created_files
 
         # Remove original file
         file_path.unlink()
-        print(f"   🗑️  Removed original file")
+        print("   🗑️  Removed original file")
 
     if dry_run:
         print("   🔍 DRY RUN - No files were actually created")
         component_name = _get_component_name(file_path)
-        for test_type in test_groups.keys():
+        for test_type in test_groups:
             new_filename = f"test_{component_name}_{test_type}.py"
             print(f"   📝 Would create: {new_filename}")
 
@@ -330,7 +330,7 @@ def main():
         print(f"Error: {file_path} is not a test file")
         sys.exit(1)
 
-    print(f"Test Migration Assistant")
+    print("Test Migration Assistant")
     print(f"{'='*50}")
 
     created_files = migrate_test_file(
@@ -340,7 +340,7 @@ def main():
     )
 
     if created_files and not args.dry_run:
-        print(f"\n✅ Migration completed!")
+        print("\n✅ Migration completed!")
         print(f"Created {len(created_files)} new test files:")
         for test_type, path in created_files.items():
             print(f"   • {path.name} ({test_type} tests)")
@@ -348,13 +348,13 @@ def main():
         # Check for import dependencies
         update_imports_in_other_files(file_path, created_files)
 
-        print(f"\n📋 Next steps:")
+        print("\n📋 Next steps:")
         print(f"   1. Run tests to ensure nothing broke: pytest {' '.join(str(p) for p in created_files.values())}")
-        print(f"   2. Update any import statements in other files if needed")
-        print(f"   3. Review the split and adjust test markers if necessary")
+        print("   2. Update any import statements in other files if needed")
+        print("   3. Review the split and adjust test markers if necessary")
 
     elif args.dry_run:
-        print(f"\n🔍 Dry run completed - no files were modified")
+        print("\n🔍 Dry run completed - no files were modified")
 
 
 if __name__ == "__main__":

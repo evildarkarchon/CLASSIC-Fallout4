@@ -6,18 +6,17 @@ Utils module components.
 
 # Re-export everything from the refactored module for backwards compatibility
 from ClassicLib.Utils import (
-    # String utilities
-    append_or_extend,
-    calculate_similarity,
-    normalize_list,
-    # Path utilities
-    remove_readonly,
-    validate_path,
-    # File utilities
-    calculate_file_hash,
-    open_file_with_encoding,
     # Version utilities
     VERSION_PATTERNS,
+    # String utilities
+    append_or_extend,
+    # Web utilities
+    async_pastebin_fetch,
+    # File utilities
+    calculate_file_hash,
+    calculate_similarity,
+    # Logging utilities
+    configure_logging,
     crashgen_version_gen,
     create_version_from_info,
     extract_windows_version_info,
@@ -27,11 +26,12 @@ from ClassicLib.Utils import (
     get_version_windows_api,
     get_version_with_pefile,
     is_valid_executable_path,
-    # Logging utilities
-    configure_logging,
-    # Web utilities
-    async_pastebin_fetch,
+    normalize_list,
+    open_file_with_encoding,
     pastebin_fetch,
+    # Path utilities
+    remove_readonly,
+    validate_path,
 )
 
 # Create aliases for compatibility

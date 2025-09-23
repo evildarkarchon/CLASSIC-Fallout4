@@ -46,8 +46,20 @@ FormID_List*
 .pytest_cache/
 *.bak
 *.dat
-*.dll
 *.old
+
+# Rust Build Artifacts (but NOT the committed extensions!)
+target/
+Cargo.lock
+temp_rust_build/
+# Don't ignore rust_extensions - these are committed for uvx!
+# rust_extensions/  <-- DON'T ADD THIS
+# But do ignore build artifacts in other locations
+classic-rust/target/
+*.whl
+# Keep specific DLLs in rust_extensions/
+*.dll
+!rust_extensions/*.dll
 *.pyproj
 *.sqbpro
 *.sqdbpro
@@ -84,3 +96,16 @@ coverage_output.txt
 coverage.json
 too-many-branches.txt
 test-results.txt
+
+# Rust
+target/
+Cargo.lock
+# Maturin build artifacts
+*.so
+*.pyd
+*.dll
+# Rust workspace
+.cargo/
+# Rust debugging
+*.pdb
+*.dSYM/

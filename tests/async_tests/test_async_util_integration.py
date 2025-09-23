@@ -7,8 +7,15 @@ This file contains integration tests that test interactions between components.
 import asyncio
 import tempfile
 from pathlib import Path
+
 import pytest
-from ClassicLib.AsyncUtil import detect_encoding_async, get_encoding_detection_available, open_file_with_encoding_async, read_file_with_encoding_async, read_lines_with_encoding_async
+
+from ClassicLib.AsyncUtil import (
+    detect_encoding_async,
+    open_file_with_encoding_async,
+    read_file_with_encoding_async,
+    read_lines_with_encoding_async,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -20,7 +27,6 @@ class TestAsyncEncodingDetection:
     @pytest.mark.asyncio
     async def test_detect_encoding_utf8(self) -> None:
         """Test detection of UTF-8 encoded files."""
-        import aiofiles
         with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.txt') as f:
             test_path = Path(f.name)
             f.write(b'\xef\xbb\xbf')
@@ -34,7 +40,6 @@ class TestAsyncEncodingDetection:
     @pytest.mark.asyncio
     async def test_detect_encoding_latin1(self) -> None:
         """Test detection of Latin-1 encoded files."""
-        import aiofiles
         with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.txt') as f:
             test_path = Path(f.name)
             f.write('Héllö Wörld! àèìòù'.encode('latin-1'))
@@ -47,7 +52,6 @@ class TestAsyncEncodingDetection:
     @pytest.mark.asyncio
     async def test_detect_encoding_with_small_sample(self) -> None:
         """Test encoding detection with custom sample size."""
-        import aiofiles
         with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.txt') as f:
             test_path = Path(f.name)
             content = ('A' * 1000 + '世界' + 'B' * 1000).encode('utf-8')
@@ -61,7 +65,6 @@ class TestAsyncEncodingDetection:
     @pytest.mark.asyncio
     async def test_open_file_with_encoding_async(self) -> None:
         """Test opening file with automatic encoding detection."""
-        import aiofiles
         with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', delete=False, suffix='.txt') as f:
             test_path = Path(f.name)
             f.write('Hello\n世界\n🌍')
@@ -77,7 +80,6 @@ class TestAsyncEncodingDetection:
     @pytest.mark.asyncio
     async def test_read_file_with_encoding_async(self) -> None:
         """Test reading entire file with automatic encoding detection."""
-        import aiofiles
         with tempfile.NamedTemporaryFile(mode='w', encoding='utf-16', delete=False, suffix='.txt') as f:
             test_path = Path(f.name)
             f.write('UTF-16 encoded content: 世界')
@@ -91,7 +93,6 @@ class TestAsyncEncodingDetection:
     @pytest.mark.asyncio
     async def test_read_lines_with_encoding_async(self) -> None:
         """Test reading file lines with automatic encoding detection."""
-        import aiofiles
         with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', delete=False, suffix='.txt') as f:
             test_path = Path(f.name)
             f.write('Line 1\nLine 2 with 世界\nLine 3')

@@ -181,7 +181,7 @@ def apply_ini_fix(
     return bridge.run_async(apply_ini_fix_async(config_files, file_name_lower, section, setting, value, fix_name, message_list))
 
 
-async def apply_ini_fix_async(  # noqa: PLR0917
+async def apply_ini_fix_async(
     config_files: ConfigFileCache,
     file_name: str,
     section: str,

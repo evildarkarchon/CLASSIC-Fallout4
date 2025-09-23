@@ -5,6 +5,7 @@ This file contains e2e tests that test complete workflows from entry to output.
 """
 
 import pytest
+
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.SettingsDialog import SettingsDialog
 from ClassicLib.YamlSettingsCache import yaml_settings

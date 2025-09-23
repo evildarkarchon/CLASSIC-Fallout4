@@ -10,7 +10,6 @@ import ruamel.yaml
 from ClassicLib.AsyncYamlSettings.core import (
     AsyncYamlSettingsCore,
     classic_settings_async,
-    get_async_yaml_core,
     yaml_settings_async,
 )
 from ClassicLib.Constants import YAML
@@ -24,7 +23,7 @@ def temp_yaml_file(tmp_path):
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(offset=2)
-    with open(yaml_file, "w") as f:
+    with Path(yaml_file).open("w") as f:
         yaml.dump(data, f)
 
     return yaml_file

@@ -179,12 +179,11 @@ class TestCategorizer(ast.NodeVisitor):
         # Determine category based on strongest indicators
         if e2e_indicators >= 2:
             return "e2e", reasons
-        elif integration_indicators >= 2:
+        if integration_indicators >= 2:
             return "integration", reasons
-        elif unit_indicators >= 2:
+        if unit_indicators >= 2:
             return "unit", reasons
-        else:
-            return "unknown", reasons or ["Could not determine test type"]
+        return "unknown", reasons or ["Could not determine test type"]
 
 
 class TestBodyAnalyzer(ast.NodeVisitor):
@@ -253,9 +252,7 @@ class TestBodyAnalyzer(ast.NodeVisitor):
         ]
         entry_functions = ['main', 'start_application', 'run_app']
 
-        if any(entry in str(node) for entry in entry_patterns):
-            self.has_entry_points = True
-        elif func_name in entry_functions and 'run_async' not in func_name:
+        if any(entry in str(node) for entry in entry_patterns) or (func_name in entry_functions and 'run_async' not in func_name):
             self.has_entry_points = True
 
     def _check_performance_patterns(self, node: ast.Call, func_name: str) -> None:
@@ -468,7 +465,7 @@ def _print_file_header(analysis: FileAnalysis) -> None:
 def _print_violations(violations: list[str]) -> None:
     """Print violations if any."""
     if violations:
-        print(f"\n⚠️  VIOLATIONS:")
+        print("\n⚠️  VIOLATIONS:")
         for violation in violations:
             print(f"   • {violation}")
 
@@ -476,12 +473,12 @@ def _print_violations(violations: list[str]) -> None:
 def _print_recommendations(analysis: FileAnalysis) -> None:
     """Print recommendations based on analysis."""
     if analysis.is_performance_file:
-        print(f"\n⚡ Performance file detected!")
+        print("\n⚡ Performance file detected!")
         if analysis.needs_split:
-            print(f"📊 Recommended action: SPLIT BY FUNCTIONAL SCOPE")
+            print("📊 Recommended action: SPLIT BY FUNCTIONAL SCOPE")
             print("   Performance files should be split by functional areas (comparisons, baselines, etc.)")
         else:
-            print(f"📊 Recommended action: OK (Performance file under 300 lines)")
+            print("📊 Recommended action: OK (Performance file under 300 lines)")
     else:
         print(f"\n📊 Recommended action: {'SPLIT' if analysis.needs_split else 'OK'}")
         if analysis.needs_split:

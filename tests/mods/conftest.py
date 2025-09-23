@@ -2,7 +2,6 @@
 Shared fixtures for mod detection and analysis tests.
 """
 
-from typing import Any
 
 import pytest
 

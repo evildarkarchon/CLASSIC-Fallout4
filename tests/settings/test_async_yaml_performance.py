@@ -29,7 +29,7 @@ def temp_yaml_file(tmp_path):
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(offset=2)
-    with open(yaml_file, "w") as f:
+    with Path(yaml_file).open("w") as f:
         yaml.dump(data, f)
 
     return yaml_file
@@ -54,7 +54,7 @@ class TestPerformance:
             }
             yaml = ruamel.yaml.YAML()
             # Synchronous write for test setup is acceptable
-            with open(yaml_file, "w") as f:
+            with Path(yaml_file).open("w") as f:
                 yaml.dump(data, f)
             files.append(yaml_file)
 

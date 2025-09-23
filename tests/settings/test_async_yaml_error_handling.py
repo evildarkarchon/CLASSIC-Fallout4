@@ -52,7 +52,7 @@ class TestAsyncYamlErrorHandling:
         main_file = tmp_path / "CLASSIC Main.yaml"
         main_data = {"CLASSIC_Info": {"default_settings": "CLASSIC_Settings:\n  Managed Game: Fallout 4\n"}}
         yaml = ruamel.yaml.YAML()
-        with open(main_file, "w") as f:
+        with Path(main_file).open("w") as f:
             yaml.dump(main_data, f)
 
         # Note: The current API doesn't have _load_yaml_file method

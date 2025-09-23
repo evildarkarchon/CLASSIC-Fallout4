@@ -12,13 +12,59 @@ where uv >nul 2>1
 if %errorlevel% equ 0 (
     set PYTHON_CMD=uv run python
     set PYINSTALLER_CMD=uv run pyinstaller
+    set MATURIN_CMD=uv run maturin
     echo Using uv environment
 ) else (
     REM Fallback to system Python if uv not found
     set PYTHON_CMD=python
     set PYINSTALLER_CMD=pyinstaller
+    set MATURIN_CMD=maturin
     echo Using system Python - Note: uv is recommended for this project
     echo Install uv from: https://github.com/astral-sh/uv
+)
+
+REM Build Rust extensions first (if source available)
+if exist classic-rust (
+    echo ============================================================
+    echo Building Rust extensions...
+    echo ============================================================
+
+    REM Build the Rust extension
+    echo Building release build with maturin...
+    %MATURIN_CMD% build --release --out dist-rust
+    if %errorlevel% neq 0 (
+        echo WARNING: Rust extension build failed!
+        echo Continuing without Rust optimizations...
+    ) else (
+        REM Extract the built extension from wheel
+        echo Extracting Rust extension from wheel...
+        if not exist rust_extensions mkdir rust_extensions
+
+        REM Use Python to extract the .pyd file from the wheel
+        %PYTHON_CMD% -c "import zipfile, glob, shutil; wheel = glob.glob('dist-rust/*.whl')[0]; z = zipfile.ZipFile(wheel); [z.extract(f, 'temp_extract') for f in z.namelist() if f.endswith('.pyd')]; [shutil.copy2(f'temp_extract/{f}', 'rust_extensions/') for f in z.namelist() if f.endswith('.pyd')]"
+
+        REM Clean up
+        if exist temp_extract rmdir /s /q temp_extract
+
+        REM Create manifest file
+        echo Rust extensions built on %date% %time% > rust_extensions\MANIFEST.txt
+        echo. >> rust_extensions\MANIFEST.txt
+        dir /b rust_extensions\*.pyd >> rust_extensions\MANIFEST.txt
+
+        echo Rust extensions ready in rust_extensions/
+    )
+    echo.
+) else (
+    echo ============================================================
+    echo Rust source not found - checking for pre-built extensions...
+    echo ============================================================
+    if exist rust_extensions (
+        echo Found pre-built Rust extensions in rust_extensions/
+        dir /b rust_extensions\*.pyd 2>nul
+    ) else (
+        echo No Rust extensions available - using pure Python
+    )
+    echo.
 )
 
 REM Clean previous builds

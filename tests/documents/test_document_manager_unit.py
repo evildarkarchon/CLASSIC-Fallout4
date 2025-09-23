@@ -4,9 +4,10 @@ Unit tests for document_manager - unit logic testing.
 This file contains unit tests that test individual functions with mocked dependencies.
 """
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 import pytest
+
 from ClassicLib import GlobalRegistry
 from ClassicLib.DocsPath import DocumentsPathManager
 

@@ -4,18 +4,15 @@ Tests complete report workflows including creation, loading, modification,
 and deletion with real file operations.
 """
 
-import time
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import QFileSystemWatcher, Qt, QTimer
+from PySide6.QtCore import QFileSystemWatcher, QTimer
 from PySide6.QtWidgets import QMessageBox
 
-from ClassicLib import GlobalRegistry, MessageHandler
+from ClassicLib import GlobalRegistry
 from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
-from ClassicLib.MessageHandler import init_message_handler
-from tests.fixtures.qt_fixtures import qt_application
 
 
 @pytest.fixture

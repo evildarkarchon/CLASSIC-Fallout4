@@ -8,13 +8,10 @@ with other components and advanced async scenarios.
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841
 import asyncio
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, patch
 
 import pytest
-import ruamel.yaml
 
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore, yaml_settings_async
+from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
 from ClassicLib.Constants import YAML
 
 
@@ -103,10 +100,9 @@ class TestAsyncYamlIntegration:
         def mock_get_path(store):
             if store == YAML.Settings:
                 return create_yaml_files / "CLASSIC Settings.yaml"
-            elif store == YAML.Game_Local:
+            if store == YAML.Game_Local:
                 return create_yaml_files / "CLASSIC Fallout4 Local.yaml"
-            else:
-                return create_yaml_files / "nonexistent.yaml"
+            return create_yaml_files / "nonexistent.yaml"
 
         async_yaml_core.file_ops.get_path_for_store = mock_get_path
 
@@ -180,7 +176,7 @@ class TestAsyncYamlIntegration:
         def mock_get_path(store):
             if store == YAML.Settings:
                 return create_yaml_files / "CLASSIC Settings.yaml"
-            elif store == YAML.Game_Local:
+            if store == YAML.Game_Local:
                 return create_yaml_files / "CLASSIC Fallout4 Local.yaml"
             return create_yaml_files / "nonexistent.yaml"
 

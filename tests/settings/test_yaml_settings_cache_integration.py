@@ -6,10 +6,10 @@ This file contains integration tests that test interactions between components.
 
 import asyncio
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+
 import pytest
 import ruamel.yaml
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
+
 from ClassicLib.Constants import YAML
 
 # Note: MessageHandler initialization is now handled by standardized
@@ -31,7 +31,7 @@ class TestAsyncYamlEdgeCases:
         created_files = {}
         for filename, data in files_data.items():
             file_path = tmp_path / filename
-            with open(file_path, 'w') as f:
+            with Path(file_path).open('w') as f:
                 yaml.dump(data, f)
             created_files[filename] = file_path
         tasks = [async_yaml_core.file_ops.load_yaml_file(path) for path in created_files.values()]
@@ -46,7 +46,7 @@ class TestAsyncYamlEdgeCases:
         test_file = tmp_path / 'concurrent.yaml'
         initial_data = {'counter': 0, 'values': {}}
         yaml = ruamel.yaml.YAML()
-        with open(test_file, 'w') as f:
+        with Path(test_file).open('w') as f:
             yaml.dump(initial_data, f)
 
         def mock_get_path(store):

@@ -4,12 +4,11 @@ Unit tests for yaml_settings_cache - unit logic testing.
 This file contains unit tests that test individual functions with mocked dependencies.
 """
 
-import asyncio
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+
 import pytest
 import ruamel.yaml
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
+
 from ClassicLib.Constants import YAML
 
 # Note: MessageHandler initialization is now handled by standardized
@@ -45,7 +44,7 @@ class TestAsyncYamlEdgeCases:
         deep_data = {'level1': {'level2': {'level3': {'level4': {'level5': {'level6': {'target': 'found', 'list': [{'item': 1}, {'item': 2}]}}}}}}}
         test_file = tmp_path / 'deep.yaml'
         yaml = ruamel.yaml.YAML()
-        with open(test_file, 'w') as f:
+        with Path(test_file).open('w') as f:
             yaml.dump(deep_data, f)
 
         def mock_get_path(store):
@@ -80,7 +79,7 @@ class TestAsyncYamlEdgeCases:
         test_file = tmp_path / 'cache_test.yaml'
         data = {'settings': {'value1': 'test', 'value2': 42}}
         yaml = ruamel.yaml.YAML()
-        with open(test_file, 'w') as f:
+        with Path(test_file).open('w') as f:
             yaml.dump(data, f)
 
         def mock_get_path(store):

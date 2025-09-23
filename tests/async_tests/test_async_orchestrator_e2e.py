@@ -15,9 +15,10 @@ This file contains e2e tests that test complete workflows from entry to output.
 
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
+
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 

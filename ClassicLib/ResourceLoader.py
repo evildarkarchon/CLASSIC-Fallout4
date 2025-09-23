@@ -4,6 +4,8 @@ Resource loader for accessing bundled data files and managing persistent cache.
 This module provides utilities to access data files that are bundled with
 the package, whether running from source, as an installed package, or as a
 PyInstaller frozen executable. It also manages persistent caching for uvx compatibility.
+
+It also provides integration with Rust extensions through the rust_loader module.
 """
 
 import os
@@ -37,9 +39,8 @@ class ResourceLoader:
             if data_dir.exists():
                 logger.debug(f"Running as frozen executable, using bundled CLASSIC Data: {data_dir}")
                 return data_dir
-            else:
-                # Log warning but continue to other strategies
-                logger.warning(f"Frozen executable detected but CLASSIC Data not found in bundle: {bundle_dir}")
+            # Log warning but continue to other strategies
+            logger.warning(f"Frozen executable detected but CLASSIC Data not found in bundle: {bundle_dir}")
 
         return None
 
@@ -448,6 +449,58 @@ class ResourceLoader:
             env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_DOCS"
 
         msg_info(f"💡 For faster startup (especially with uvx), set environment variable:\n   {env_var}={path}")
+
+    @staticmethod
+    def load_rust_extension() -> bool:
+        """
+        Load Rust extensions for performance optimization.
+
+        This integrates with the rust_loader module to provide access to
+        high-performance Rust implementations of critical functionality.
+
+        Returns:
+            True if Rust extensions loaded successfully, False otherwise
+        """
+        try:
+            from ClassicLib.rust_loader import is_rust_available, load_rust_extensions
+
+            if is_rust_available():
+                logger.debug("Rust extensions already loaded")
+                return True
+
+            success = load_rust_extensions()
+            if success:
+                logger.info("Rust extensions loaded successfully for performance optimization")
+            else:
+                logger.info("Rust extensions not available - using pure Python implementation")
+
+            return success
+        except ImportError as e:
+            logger.debug(f"Could not import rust_loader: {e}")
+            return False
+        except Exception as e:
+            logger.warning(f"Error loading Rust extensions: {e}")
+            return False
+
+    @staticmethod
+    def get_rust_extension_info() -> dict:
+        """
+        Get information about Rust extension loading status.
+
+        Returns:
+            Dictionary with Rust extension loading information
+        """
+        try:
+            from ClassicLib.rust_loader import get_rust_info
+            return get_rust_info()
+        except ImportError:
+            return {
+                "loaded": False,
+                "path": None,
+                "search_paths": [],
+                "in_pyinstaller": getattr(sys, 'frozen', False),
+                "error": "rust_loader module not available"
+            }
 
 
 # Convenience function

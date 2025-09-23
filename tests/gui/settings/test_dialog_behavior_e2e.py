@@ -8,6 +8,7 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QDialog, QDialogButtonBox
+
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import yaml_settings
 

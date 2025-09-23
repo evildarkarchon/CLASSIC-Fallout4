@@ -21,9 +21,9 @@ from .pipeline import (
 
 __all__ = [
     "AsyncCrashLogPipeline",
-    "run_async_crash_log_scan",
     "AsyncPerformanceMonitor",
     "benchmark_async_pipeline",
+    "run_async_crash_log_scan",
 ]
 
 

@@ -6,7 +6,9 @@ This file contains integration tests that test interactions between components.
 
 from pathlib import Path
 from unittest.mock import MagicMock
+
 import pytest
+
 from ClassicLib import GlobalRegistry
 
 pytestmark = pytest.mark.integration

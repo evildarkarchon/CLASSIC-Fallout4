@@ -18,7 +18,6 @@ import asyncio
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from unittest.mock import MagicMock, MagicMock, patch
 
 import pytest
 
@@ -168,7 +167,6 @@ class TestAsyncBridgeStress:
         """Test that AsyncBridge doesn't leak memory under stress."""
         bridge = AsyncBridge.get_instance()
         import gc
-        import sys
 
         async def memory_intensive_task(size_mb):
             """Create and discard large data."""
@@ -233,7 +231,7 @@ class TestAsyncBridgeStress:
             """Wrap slow task with timeout."""
             try:
                 return await asyncio.wait_for(slow_task(), timeout=0.1)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return "Timed out"
 
         result = bridge.run_async(timeout_wrapper())
@@ -330,8 +328,7 @@ class TestAsyncBridgeStress:
                 await asyncio.sleep(0.001)
                 if exc_type == KeyError:
                     raise exc_type(exc_msg)
-                else:
-                    raise exc_type(exc_msg)
+                raise exc_type(exc_msg)
 
             # Verify correct exception type is raised
             with pytest.raises(exc_type) as exc_info:
@@ -360,7 +357,6 @@ class TestAsyncBridgeEdgeCases:
 
         async def empty():
             """Empty async function."""
-            pass
 
         result = bridge.run_async(empty())
         assert result is None

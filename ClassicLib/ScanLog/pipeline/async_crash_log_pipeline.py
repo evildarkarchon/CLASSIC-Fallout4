@@ -185,7 +185,7 @@ class AsyncCrashLogPipeline:
         return all_results, self.performance_stats
 
 
-async def run_async_crash_log_scan(  # noqa: PLR0917
+async def run_async_crash_log_scan(
     crashlog_list: list[Path],
     remove_list: tuple[str],
     yamldata: "ClassicScanLogsInfo",

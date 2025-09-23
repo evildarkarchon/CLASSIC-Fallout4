@@ -6,7 +6,6 @@ This file contains unit tests that test individual functions with mocked depende
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtTest import QTest
 
 pytestmark = pytest.mark.unit
 

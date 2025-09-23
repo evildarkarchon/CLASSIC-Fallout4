@@ -5,11 +5,9 @@ These classes provide drop-in replacements for existing Python implementations,
 maintaining full API compatibility while leveraging Rust performance.
 """
 
-from pathlib import Path
-from typing import Optional, List, Tuple, Dict, Any
 import asyncio
-import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path for AsyncBridge import
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -102,7 +100,7 @@ class FormIDAnalyzer:
         """Initialize the Rust FormIDAnalyzer."""
         self._rust_analyzer = _rust.scanlog.FormIDAnalyzer()
 
-    def parse_formid(self, formid: str) -> Optional[int]:
+    def parse_formid(self, formid: str) -> int | None:
         """
         Parse and validate a FormID string.
 
@@ -115,8 +113,8 @@ class FormIDAnalyzer:
         return self._rust_analyzer.parse_formid(formid)
 
     def analyze_batch(
-        self, formids: List[str], plugins: Dict[str, str]
-    ) -> List[Tuple[str, Optional[str]]]:
+        self, formids: list[str], plugins: dict[str, str]
+    ) -> list[tuple[str, str | None]]:
         """
         Batch analyze FormIDs with plugin resolution.
 
@@ -133,7 +131,7 @@ class FormIDAnalyzer:
         """Clear all internal caches."""
         self._rust_analyzer.clear_cache()
 
-    def cache_stats(self) -> Tuple[int, int]:
+    def cache_stats(self) -> tuple[int, int]:
         """Get cache statistics."""
         return self._rust_analyzer.cache_stats()
 
@@ -149,7 +147,7 @@ class LogParser:
         """Initialize the Rust LogParser."""
         self._rust_parser = _rust.scanlog.LogParser()
 
-    def parse_segments(self, lines: List[str]) -> List[List[str]]:
+    def parse_segments(self, lines: list[str]) -> list[list[str]]:
         """
         Parse log into segments.
 
@@ -161,7 +159,7 @@ class LogParser:
         """
         return self._rust_parser.parse_segments(lines)
 
-    def find_patterns(self, lines: List[str]) -> List[Tuple[int, str, str]]:
+    def find_patterns(self, lines: list[str]) -> list[tuple[int, str, str]]:
         """
         Find all pattern matches in log lines.
 
@@ -174,8 +172,8 @@ class LogParser:
         return self._rust_parser.find_patterns(lines)
 
     def extract_section(
-        self, lines: List[str], start_marker: str, end_marker: str
-    ) -> Optional[List[str]]:
+        self, lines: list[str], start_marker: str, end_marker: str
+    ) -> list[str] | None:
         """
         Extract a specific section from log.
 
@@ -197,7 +195,7 @@ class PatternMatcher:
     Uses Aho-Corasick algorithm for efficient multi-pattern matching.
     """
 
-    def __init__(self, patterns: List[str]):
+    def __init__(self, patterns: list[str]):
         """
         Initialize the Rust PatternMatcher.
 
@@ -206,7 +204,7 @@ class PatternMatcher:
         """
         self._rust_matcher = _rust.scanlog.PatternMatcher(patterns)
 
-    def find_all(self, text: str) -> List[Tuple[int, str]]:
+    def find_all(self, text: str) -> list[tuple[int, str]]:
         """
         Find all pattern matches in text.
 
@@ -230,7 +228,7 @@ class PatternMatcher:
         """
         return self._rust_matcher.has_match(text)
 
-    def find_first(self, text: str) -> Optional[Tuple[int, str]]:
+    def find_first(self, text: str) -> tuple[int, str] | None:
         """
         Find first pattern match.
 
@@ -282,8 +280,8 @@ class DatabasePool:
         await self._rust_pool.get_connection(str(db_path))
 
     async def batch_lookup(
-        self, db_path: Path, table: str, keys: List[str]
-    ) -> List[Optional[str]]:
+        self, db_path: Path, table: str, keys: list[str]
+    ) -> list[str | None]:
         """
         Execute batch lookup queries.
 
@@ -298,8 +296,8 @@ class DatabasePool:
         return await self._rust_pool.batch_lookup(str(db_path), table, keys)
 
     def batch_lookup_sync(
-        self, db_path: Path, table: str, keys: List[str]
-    ) -> List[Optional[str]]:
+        self, db_path: Path, table: str, keys: list[str]
+    ) -> list[str | None]:
         """
         Synchronous wrapper for batch_lookup.
 
@@ -317,7 +315,7 @@ class DatabasePool:
         """Clear query cache."""
         self._rust_pool.clear_cache()
 
-    def get_stats(self) -> Tuple[int, int]:
+    def get_stats(self) -> tuple[int, int]:
         """Get pool statistics (connections, cached_queries)."""
         return self._rust_pool.get_stats()
 
@@ -349,7 +347,7 @@ class StringProcessor:
         """
         return self._rust_processor.intern(s)
 
-    def process_batch(self, strings: List[str], operation: str) -> List[str]:
+    def process_batch(self, strings: list[str], operation: str) -> list[str]:
         """
         Process multiple strings in parallel.
 
@@ -362,7 +360,7 @@ class StringProcessor:
         """
         return self._rust_processor.process_batch(strings, operation)
 
-    def common_prefix(self, strings: List[str]) -> str:
+    def common_prefix(self, strings: list[str]) -> str:
         """
         Find common prefix of multiple strings.
 
@@ -374,7 +372,7 @@ class StringProcessor:
         """
         return self._rust_processor.common_prefix(strings)
 
-    def split_lines(self, text: str) -> List[str]:
+    def split_lines(self, text: str) -> list[str]:
         """
         Split text into lines efficiently.
 
@@ -386,7 +384,7 @@ class StringProcessor:
         """
         return self._rust_processor.split_lines(text)
 
-    def join_lines(self, lines: List[str], separator: str = "\n") -> str:
+    def join_lines(self, lines: list[str], separator: str = "\n") -> str:
         """
         Join lines with a separator.
 

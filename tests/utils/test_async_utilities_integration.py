@@ -4,7 +4,6 @@ Tests async utilities working together and with real I/O operations.
 """
 
 import asyncio
-import time
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +45,7 @@ class TestAsyncUtilitiesIntegration:
 
             failure_count[file_path] += 1
             if failure_count[file_path] < 2:
-                raise IOError(f"Temporary read error for {file_path.name}")
+                raise OSError(f"Temporary read error for {file_path.name}")
 
             content = file_path.read_text()
             return f"processed_{content}"
@@ -190,7 +189,7 @@ class TestAsyncUtilitiesIntegration:
             if item == 3:
                 # Will always fail after retries
                 raise ValueError(f"Item {item} is invalid")
-            elif item == 5:
+            if item == 5:
                 # Will succeed on retry
                 if item not in processed_items:
                     processed_items.append(item)

@@ -7,16 +7,13 @@ asynchronous processing patterns using real crash log data.
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
 import time
+from itertools import starmap
 from pathlib import Path
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
 
 from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
-
-if TYPE_CHECKING:
-    from collections.abc import Coroutine
 
 pytestmark = pytest.mark.performance
 
@@ -99,7 +96,7 @@ class TestRealWorldSyncAsyncComparison:
             return len([l for l in lines if "Form ID:" in l or "EXCEPTION_" in l])
 
         conc_start = time.perf_counter()
-        tasks = [process_log(name, lines) for name, lines in async_data.items()]
+        tasks = list(starmap(process_log, async_data.items()))
         conc_results = await asyncio.gather(*tasks)
         conc_time = time.perf_counter() - conc_start
 

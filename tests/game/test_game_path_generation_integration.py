@@ -6,9 +6,11 @@ This file contains integration tests that test interactions between components.
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 import pytest
 from packaging.version import Version
-from ClassicLib import Constants, GlobalRegistry
+
+from ClassicLib import GlobalRegistry
 from ClassicLib.GamePath import game_generate_paths
 
 pytestmark = pytest.mark.integration

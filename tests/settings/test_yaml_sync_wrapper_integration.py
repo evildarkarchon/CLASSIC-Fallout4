@@ -4,14 +4,11 @@ Integration tests for yaml_sync_wrapper - integration logic testing.
 This file contains integration tests that test interactions between components.
 """
 
-from pathlib import Path
-from typing import cast
-from unittest.mock import patch
 import pytest
 import ruamel.yaml
-from ClassicLib.Constants import YAML
 
-from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_cache, yaml_settings
+from ClassicLib.Constants import YAML
+from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_cache
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:
@@ -63,7 +60,7 @@ class TestBatchOperations:
         def mock_get_path(store):
             return files.get(store, tmp_path / 'nonexistent.yaml')
         monkeypatch.setattr(cache._async_core.file_ops, 'get_path_for_store', mock_get_path)
-        requests = [(dict, YAML.Settings, f'Settings_data'), (dict, YAML.Ignore, f'Ignore_data')]
+        requests = [(dict, YAML.Settings, 'Settings_data'), (dict, YAML.Ignore, 'Ignore_data')]
         results = cache.batch_get_settings(requests)
         assert len(results) == 2
         assert results[0]['key'] == 'value_Settings'

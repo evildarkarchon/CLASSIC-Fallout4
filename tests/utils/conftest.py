@@ -4,8 +4,9 @@ Shared fixtures for utility function tests.
 This module provides common fixtures used across the utils test suite.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture

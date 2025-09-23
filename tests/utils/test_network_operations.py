@@ -22,7 +22,6 @@ class TestPastebinOperations:
     @pytest.fixture(autouse=True)
     def setup_message_handler(self, init_message_handler_fixture):
         """Ensure MessageHandler is initialized for all tests."""
-        pass
 
     @patch("requests.get")
     def test_pastebin_fetch_success(self, mock_get: MagicMock, tmp_path: Path, monkeypatch) -> None:

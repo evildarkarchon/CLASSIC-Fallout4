@@ -9,7 +9,6 @@ Fix remaining test issues after migration.
 
 import re
 from pathlib import Path
-from typing import Set, List, Tuple
 
 
 def needs_async_bridge(content: str) -> bool:

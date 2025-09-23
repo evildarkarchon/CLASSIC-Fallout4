@@ -6,10 +6,9 @@ This file contains integration tests that test interactions between components.
 
 import asyncio
 from pathlib import Path
+
 import pytest
 import ruamel.yaml
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
-from ClassicLib.Constants import YAML
 
 pytestmark = pytest.mark.integration
 
@@ -26,7 +25,7 @@ class TestAsyncYamlBatchOperations:
             yaml_file = tmp_path / f'test_{i}.yaml'
             data = {'index': i, 'value': f'test_{i}'}
             yaml = ruamel.yaml.YAML()
-            with open(yaml_file, 'w') as f:
+            with Path(yaml_file).open('w') as f:
                 yaml.dump(data, f)
             files.append(yaml_file)
         tasks = [async_yaml_core.file_ops.load_yaml_file(f) for f in files]

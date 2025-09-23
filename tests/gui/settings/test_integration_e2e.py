@@ -4,15 +4,11 @@ E2E tests for integration - e2e logic testing.
 This file contains e2e tests that test complete workflows from entry to output.
 """
 
-from unittest.mock import patch, MagicMock
 import pytest
-from PySide6.QtWidgets import QDialog, QWidget
+
 from ClassicLib.Constants import YAML
-from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
 from ClassicLib.Interface.SettingsDialog import SettingsDialog
 from ClassicLib.YamlSettingsCache import yaml_settings
-from ClassicLib.MessageHandler import init_message_handler
-import ClassicLib.MessageHandler
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:

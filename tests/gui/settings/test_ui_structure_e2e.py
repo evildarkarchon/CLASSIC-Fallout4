@@ -5,8 +5,7 @@ This file contains e2e tests that test complete workflows from entry to output.
 """
 
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialogButtonBox
+
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.SettingsDialog import SettingsDialog
 

@@ -1,16 +1,13 @@
 """Tests for AsyncYamlSettingsCore basic functionality."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, F841
 
-import asyncio
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 import ruamel.yaml
 
 from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
 from ClassicLib.Constants import YAML
-from ClassicLib.MessageHandler import init_message_handler
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:
@@ -37,7 +34,7 @@ def temp_yaml_file(tmp_path):
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(offset=2)
-    with open(yaml_file, "w") as f:
+    with Path(yaml_file).open("w") as f:
         yaml.dump(data, f)
 
     return yaml_file
@@ -144,7 +141,6 @@ class TestAsyncYamlSettingsCore:
 
         # prefetch_all_settings doesn't exist, this test needs updating
         # For now, just test the context manager works
-        pass
 
         # Context manager test - core doesn't have __aenter__/__aexit__
         # This test should be removed or rewritten

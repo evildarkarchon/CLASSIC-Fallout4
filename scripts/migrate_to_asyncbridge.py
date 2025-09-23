@@ -8,10 +8,9 @@ which is essential for the project's architecture and prevents test pollution.
 
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 
-def find_asyncio_run_calls(content: str) -> List[Tuple[int, str]]:
+def find_asyncio_run_calls(content: str) -> list[tuple[int, str]]:
     """Find all asyncio.run() calls in the content."""
     lines = content.split('\n')
     calls = []
@@ -23,7 +22,7 @@ def find_asyncio_run_calls(content: str) -> List[Tuple[int, str]]:
     return calls
 
 
-def _find_import_position(lines: List[str]) -> int:
+def _find_import_position(lines: list[str]) -> int:
     """Find the position where imports should be added."""
     import_insert_index = 0
     for i, line in enumerate(lines):
@@ -35,7 +34,7 @@ def _find_import_position(lines: List[str]) -> int:
     return import_insert_index
 
 
-def _add_import_if_needed(result: List[str], lines: List[str], i: int,
+def _add_import_if_needed(result: list[str], lines: list[str], i: int,
                          has_import: bool, import_added: bool, import_index: int) -> bool:
     """Add AsyncBridge import if needed."""
     if not import_added and not has_import and i == import_index:
@@ -47,14 +46,14 @@ def _add_import_if_needed(result: List[str], lines: List[str], i: int,
     return False
 
 
-def _create_bridge_replacement(line: str, async_call: str, indent: int) -> List[str]:
+def _create_bridge_replacement(line: str, async_call: str, indent: int) -> list[str]:
     """Create the bridge replacement lines."""
     replacement = []
     replacement.append(f"{' ' * indent}bridge = AsyncBridge.get_instance()")
 
     # Check if this is an assignment
-    if '=' in line.split('asyncio.run(')[0]:
-        assignment_part = line.split('asyncio.run(')[0]
+    if '=' in line.split('asyncio.run(', maxsplit=1)[0]:
+        assignment_part = line.split('asyncio.run(', maxsplit=1)[0]
         replacement.append(f"{' ' * indent}{assignment_part.strip()}bridge.run_async({async_call})")
     else:
         replacement.append(f"{' ' * indent}bridge.run_async({async_call})")
@@ -62,7 +61,7 @@ def _create_bridge_replacement(line: str, async_call: str, indent: int) -> List[
     return replacement
 
 
-def replace_asyncio_run(content: str) -> Tuple[str, int]:
+def replace_asyncio_run(content: str) -> tuple[str, int]:
     """Replace asyncio.run() calls with AsyncBridge."""
     lines = content.split('\n')
     result = []
@@ -98,7 +97,7 @@ def replace_asyncio_run(content: str) -> Tuple[str, int]:
             else:
                 # Multi-line asyncio.run call - needs manual review
                 result.append(line)
-                print(f"    ⚠️  Multi-line asyncio.run() detected - needs manual review")
+                print("    ⚠️  Multi-line asyncio.run() detected - needs manual review")
         else:
             result.append(line)
 
@@ -147,7 +146,7 @@ def analyze_usage(file_path: Path) -> None:
             print(f"    Line {line_num + 1}: {line.strip()[:80]}...")
 
 
-def _process_files(files: List[str], label: str, action: str = "analyze") -> int:
+def _process_files(files: list[str], label: str, action: str = "analyze") -> int:
     """Process a list of files for analysis or migration."""
     count = 0
     for file_path in files:
@@ -161,7 +160,7 @@ def _process_files(files: List[str], label: str, action: str = "analyze") -> int
     return count
 
 
-def _find_remaining_calls(directory: str) -> List[Path]:
+def _find_remaining_calls(directory: str) -> list[Path]:
     """Find files that still contain asyncio.run() calls."""
     remaining = []
     for file in Path(directory).rglob('*.py'):

@@ -5,16 +5,12 @@ This module establishes baseline performance metrics specifically for memory con
 including sync vs async memory patterns and resource usage monitoring.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
-import asyncio
 import gc
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from ClassicLib.AsyncBridge import AsyncBridge
-
 from ClassicLib.ScanLog.AsyncFileIO import load_crash_logs_async_optimized
 
 pytestmark = pytest.mark.performance

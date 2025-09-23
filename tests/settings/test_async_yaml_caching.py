@@ -3,7 +3,6 @@
 
 import time
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 import ruamel.yaml
@@ -28,7 +27,7 @@ def temp_yaml_file(tmp_path):
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(offset=2)
-    with open(yaml_file, "w") as f:
+    with Path(yaml_file).open("w") as f:
         yaml.dump(data, f)
 
     return yaml_file
@@ -49,7 +48,7 @@ class TestAsyncYamlCaching:
 
         # Modify the file - using async I/O
         yaml = ruamel.yaml.YAML()
-        async with aiofiles.open(temp_yaml_file, mode='r') as f:
+        async with aiofiles.open(temp_yaml_file) as f:
             content = await f.read()
             data = yaml.load(content)
         data["test_settings"]["string_value"] = "modified"

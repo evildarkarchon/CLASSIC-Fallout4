@@ -8,10 +8,9 @@ from tests/fixtures/registry_fixtures.py
 
 import re
 from pathlib import Path
-from typing import Set
 
 
-def find_shadowing_fixtures(content: str) -> Set[str]:
+def find_shadowing_fixtures(content: str) -> set[str]:
     """Find fixture definitions that shadow standardized fixtures."""
     standardized_fixtures = {
         'init_message_handler_fixture',
@@ -34,7 +33,7 @@ def find_shadowing_fixtures(content: str) -> Set[str]:
     return shadowing
 
 
-def check_fixture_to_remove(lines: list[str], index: int, fixtures_to_remove: Set[str]) -> tuple[bool, str | None, int]:
+def check_fixture_to_remove(lines: list[str], index: int, fixtures_to_remove: set[str]) -> tuple[bool, str | None, int]:
     """Check if current fixture should be removed.
 
     Returns:
@@ -88,7 +87,7 @@ def clean_blank_lines(lines: list[str]) -> list[str]:
     return cleaned
 
 
-def remove_shadowing_fixtures(content: str, fixtures_to_remove: Set[str]) -> str:
+def remove_shadowing_fixtures(content: str, fixtures_to_remove: set[str]) -> str:
     """Remove fixture definitions that shadow standardized ones."""
     if not fixtures_to_remove:
         return content

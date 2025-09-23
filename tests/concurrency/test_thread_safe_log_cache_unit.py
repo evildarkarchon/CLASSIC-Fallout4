@@ -5,13 +5,14 @@ This file contains unit tests that test individual functions with mocked depende
 """
 
 import concurrent.futures
-from concurrent.futures import Future
 import random
 import threading
 import time
+from concurrent.futures import Future
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+
 import pytest
+
 from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 
 pytestmark = pytest.mark.unit

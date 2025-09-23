@@ -1,10 +1,7 @@
 """Tests for basic GlobalRegistry operations."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
-from pathlib import Path
-from typing import Any
 
-import pytest
 
 from ClassicLib import GlobalRegistry
 

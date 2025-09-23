@@ -5,8 +5,8 @@ This file contains unit tests that test individual functions with mocked depende
 """
 
 import pytest
+
 from ClassicLib.Constants import YAML
-from ClassicLib.Interface.SettingsDialog import SettingsDialog
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 pytestmark = pytest.mark.unit

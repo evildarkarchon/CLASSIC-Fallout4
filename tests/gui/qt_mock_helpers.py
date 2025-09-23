@@ -1,7 +1,8 @@
 """Helper functions for properly mocking Qt classes in tests."""
 
-from unittest.mock import MagicMock, Mock
-from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget
+from unittest.mock import MagicMock
+
+from PySide6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
 
 def create_layout_mock_factory(base_class):

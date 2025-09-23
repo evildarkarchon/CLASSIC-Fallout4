@@ -7,7 +7,6 @@ Replaces usefixtures decorators with proper fixture parameters.
 
 import re
 from pathlib import Path
-from typing import Set
 
 
 def fix_usefixtures_decorators(content: str) -> str:
@@ -25,7 +24,7 @@ def fix_usefixtures_decorators(content: str) -> str:
         if '@pytest.mark.usefixtures' in line and 'init_message_handler_fixture' in line:
             # Skip this line - we'll handle fixtures through parameters
             skip_next = False
-            print(f"  Removed @pytest.mark.usefixtures decorator")
+            print("  Removed @pytest.mark.usefixtures decorator")
             continue
 
         result.append(line)

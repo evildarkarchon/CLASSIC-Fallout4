@@ -1,19 +1,16 @@
 """Core AsyncYamlSettings implementation."""
 
 import asyncio
-from functools import reduce
+from itertools import starmap
 from pathlib import Path
-from typing import Any, ClassVar, cast
+from typing import Any, cast
 
-from ClassicLib import GlobalRegistry, MessageTarget, msg_error
-from ClassicLib.Constants import SETTINGS_IGNORE_NONE, YAML
-from ClassicLib.FileIOCore import FileIOCore
-from ClassicLib.Logger import logger
+from ClassicLib.Constants import YAML
 
 from .cache import YamlCache
 from .file_operations import YamlFileOperations
-from .types import T, YAMLValue, YAMLValueOptional
-from .validators import coerce_setting_value, validate_setting_value, validate_settings_structure
+from .types import T
+from .validators import validate_setting_value
 
 
 class AsyncYamlSettingsCore:
@@ -64,7 +61,7 @@ class AsyncYamlSettingsCore:
             if value is None:
                 cache_key = (variable_type, yaml_store, key)
                 if cache_key in self.cache.settings_cache:
-                    return cast(T, self.cache.settings_cache[cache_key])
+                    return cast("T", self.cache.settings_cache[cache_key])
 
             # Load the YAML file
             data = await self.file_ops.load_yaml_file(file_path)
@@ -88,25 +85,24 @@ class AsyncYamlSettingsCore:
                 # Cache the result
                 cache_key = (variable_type, yaml_store, key)
                 self.cache.settings_cache[cache_key] = current
-                return cast(T, current)
-            else:
-                # Write operation
-                # Navigate to the parent of the target key
-                for k in keys[:-1]:
-                    if k not in current:
-                        current[k] = {}
-                    current = current[k]
+                return cast("T", current)
+            # Write operation
+            # Navigate to the parent of the target key
+            for k in keys[:-1]:
+                if k not in current:
+                    current[k] = {}
+                current = current[k]
 
-                # Set the value
-                current[keys[-1]] = value
+            # Set the value
+            current[keys[-1]] = value
 
-                # Save the file
-                await self.file_ops.save_yaml_file(file_path, data)
+            # Save the file
+            await self.file_ops.save_yaml_file(file_path, data)
 
-                # Update cache
-                cache_key = (variable_type, yaml_store, key)
-                self.cache.settings_cache[cache_key] = value
-                return value
+            # Update cache
+            cache_key = (variable_type, yaml_store, key)
+            self.cache.settings_cache[cache_key] = value
+            return value
 
     async def batch_get_settings(
         self, requests: list[tuple[type, YAML, str]]
@@ -120,10 +116,7 @@ class AsyncYamlSettingsCore:
         Returns:
             List of values corresponding to each request
         """
-        tasks = [
-            self.async_yaml_settings(var_type, store, key)
-            for var_type, store, key in requests
-        ]
+        tasks = list(starmap(self.async_yaml_settings, requests))
         return await asyncio.gather(*tasks)
 
     async def batch_set_settings(
@@ -138,10 +131,7 @@ class AsyncYamlSettingsCore:
         Returns:
             List of values that were set
         """
-        tasks = [
-            self.async_yaml_settings(var_type, store, key, value)
-            for var_type, store, key, value in updates
-        ]
+        tasks = list(starmap(self.async_yaml_settings, updates))
         return await asyncio.gather(*tasks)
 
     async def clear_cache(self, yaml_store: YAML | None = None) -> None:

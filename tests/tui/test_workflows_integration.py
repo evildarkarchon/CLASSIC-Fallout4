@@ -4,15 +4,13 @@ Integration tests for workflows - integration logic testing.
 This file contains integration tests that test interactions between components.
 """
 
-import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
 import pytest
-from textual.widgets import Input
+
 from ClassicLib.TUI.app import CLASSICTuiApp
 from ClassicLib.TUI.screens.main_screen import MainScreen
-from ClassicLib.TUI.widgets.confirmation_dialog import ConfirmationDialog
 from ClassicLib.TUI.widgets.output_viewer import OutputViewer
-from ClassicLib.TUI.widgets.status_bar import StatusBar
 
 pytestmark = pytest.mark.integration
 
@@ -37,7 +35,7 @@ class TestErrorRecoveryWorkflow:
                 result = await main_screen.perform_crash_scan()
                 await pilot.pause()
                 assert result is None or result is False
-                error_found = any(('error' in line.lower() for line in output_viewer._output_buffer))
+                error_found = any('error' in line.lower() for line in output_viewer._output_buffer)
                 assert error_found
                 output_viewer.clear()
                 assert len(output_viewer._output_buffer) == 0

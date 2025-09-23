@@ -4,11 +4,11 @@ E2E tests for papyrus_screen - e2e logic testing.
 This file contains e2e tests that test complete workflows from entry to output.
 """
 
-from datetime import datetime
 from unittest.mock import patch
+
 import pytest
+
 from ClassicLib.TUI.app import CLASSICTuiApp
-from ClassicLib.TUI.handlers.papyrus_handler import PapyrusStats
 from ClassicLib.TUI.screens.main_screen import MainScreen
 from ClassicLib.TUI.screens.papyrus_screen import PapyrusScreen
 

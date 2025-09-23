@@ -134,8 +134,7 @@ class InputValidator:
         # Check directory/file type requirements
         if must_be_dir:
             return (True, "") if path_obj.is_dir() else (False, "Path is not a directory")
-        else:
-            return (True, "") if path_obj.is_file() else (False, "Path is not a file")
+        return (True, "") if path_obj.is_file() else (False, "Path is not a file")
 
     @classmethod
     def validate_path(cls, path_str: str, must_exist: bool = True, must_be_dir: bool = True) -> tuple[bool, str, Path | None]:

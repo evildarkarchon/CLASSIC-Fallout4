@@ -141,7 +141,7 @@ def _check_address_library(adlib_file: Path | None, game_name: str, messages: li
         messages.append(f"❌ Value for Address Library is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
 
 
-def _check_xse_installation(  # noqa: PLR0917
+def _check_xse_installation(
     log_file: str | None, acronym: str, full_name: str, latest_version: str, error_patterns: list[str], messages: list[str]
 ) -> None:
     """

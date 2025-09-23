@@ -85,7 +85,7 @@ class TestEncodingSupport:
             test_path = Path(f.name)
             # Write UTF-8 BOM followed by content
             f.write(b"\xef\xbb\xbf")  # UTF-8 BOM
-            f.write("UTF-8 with BOM: Hello 世界".encode("utf-8"))
+            f.write("UTF-8 with BOM: Hello 世界".encode())
 
         try:
             content = await io_core.read_file(test_path)

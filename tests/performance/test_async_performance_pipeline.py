@@ -5,10 +5,8 @@ This module establishes baseline performance metrics specifically for pipeline p
 including scalability testing and throughput measurements.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
-import asyncio
 import time
 from pathlib import Path
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

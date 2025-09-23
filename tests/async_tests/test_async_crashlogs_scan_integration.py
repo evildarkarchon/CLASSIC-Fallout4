@@ -377,7 +377,7 @@ class TestAsyncIntegrationErrorHandling:
              patch("ClassicLib.ScanLog.AsyncIntegration.logger") as mock_logger:
 
             # Make reformat raise an error
-            mock_reformat.side_effect = asyncio.TimeoutError("Reformat timeout")
+            mock_reformat.side_effect = TimeoutError("Reformat timeout")
 
             # Configure other mocks minimally
             # Use side_effect for async functions
@@ -472,7 +472,6 @@ class TestAsyncIntegrationErrorHandling:
             async def orchestrator_aexit(self, exc_type, exc_val, exc_tb):
                 nonlocal cleanup_called
                 cleanup_called = True
-                return None  # Don't suppress the exception
 
             mock_orchestrator.return_value.__aenter__ = orchestrator_aenter
             mock_orchestrator.return_value.__aexit__ = orchestrator_aexit

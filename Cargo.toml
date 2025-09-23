@@ -1,0 +1,75 @@
+[package]
+name = "classic-core"
+version = "8.0.0"
+edition = "2021"
+authors = ["CLASSIC Development Team"]
+description = "High-performance Rust core for CLASSIC Fallout 4 crash log analyzer"
+license = "MIT"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_core"
+# Path to the Rust source code
+path = "classic-rust/src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+# PyO3 for Python bindings - using abi3-py312 for Python 3.12+ compatibility
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py312"] }
+
+# Async runtime (used internally in Rust, not exposed to Python)
+tokio = { version = "1.41", features = ["full"] }
+futures = "0.3"  # For async utilities
+
+# Performance-critical parsing and pattern matching
+regex = "1.11"
+memchr = "2.7"
+aho-corasick = "1.1"  # Efficient multi-pattern string matching
+
+# Parallel processing
+rayon = "1.10"
+crossbeam = "0.8"
+
+# Database operations
+rusqlite = { version = "0.32", features = ["bundled", "backup"] }
+
+# File I/O and encoding
+encoding_rs = "0.8"
+memmap2 = "0.9"  # Memory-mapped files
+
+# Error handling
+anyhow = "1.0"
+thiserror = "2.0"
+
+# Performance and caching
+once_cell = "1.20"
+dashmap = "6.1"
+lru = "0.12"
+
+# String optimization
+string_cache = "0.8"
+smartstring = "1.0"  # Small string optimization
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# Serialization (for config)
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+criterion = "0.5"  # Benchmarking
+proptest = "1.5"   # Property-based testing
+rstest = "0.23"    # Parameterized testing
+
+[profile.release]
+# Optimize for performance
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = false  # Keep symbols for debugging
+debug = 1      # Include debug info
+
+[profile.bench]
+inherits = "release"

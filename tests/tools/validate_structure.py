@@ -16,7 +16,6 @@ import argparse
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from analyze_tests import analyze_file
 
@@ -204,7 +203,7 @@ def _print_header() -> None:
 
 def _print_overview(result: ValidationResult) -> None:
     """Print overview section."""
-    print(f"📊 Overview:")
+    print("📊 Overview:")
     print(f"   Total test files: {result.total_files}")
     print(f"   Compliant files: {result.compliant_files}")
     print(f"   Non-compliant files: {result.total_files - result.compliant_files}")
@@ -232,17 +231,17 @@ def _print_violation_section(items: list, title: str, icon: str, test_dir: Path,
 
 def _print_priority_actions(result: ValidationResult, test_dir: Path) -> None:
     """Print priority actions section."""
-    print(f"\n🎯 Priority Actions:")
+    print("\n🎯 Priority Actions:")
 
     if result.oversized_files:
         largest_files = sorted(result.oversized_files, key=lambda x: x[1], reverse=True)[:3]
-        print(f"   1. Split largest files first:")
+        print("   1. Split largest files first:")
         for file_path, line_count in largest_files:
             rel_path = file_path.relative_to(test_dir)
             print(f"      • {rel_path} ({line_count} lines)")
 
     if result.mixed_type_files:
-        print(f"   2. Separate mixed test types:")
+        print("   2. Separate mixed test types:")
         for file_path, test_types in result.mixed_type_files[:3]:
             rel_path = file_path.relative_to(test_dir)
             print(f"      • {rel_path}")
@@ -251,7 +250,7 @@ def _print_priority_actions(result: ValidationResult, test_dir: Path) -> None:
 def _print_success_message(compliance_percentage: float) -> None:
     """Print success/progress message."""
     if compliance_percentage == 100:
-        print(f"\n🎉 Congratulations! All test files are compliant with the organization rules.")
+        print("\n🎉 Congratulations! All test files are compliant with the organization rules.")
     elif compliance_percentage >= 80:
         print(f"\n✨ Good progress! You're {compliance_percentage:.1f}% compliant.")
     else:
@@ -283,16 +282,16 @@ def suggest_fixes(result: ValidationResult, test_dir: Path) -> None:
     if not result.violations:
         return
 
-    print(f"\n🔧 Suggested fixes:")
+    print("\n🔧 Suggested fixes:")
 
     for file_path, line_count in result.oversized_files[:3]:
         rel_path = file_path.relative_to(test_dir)
-        print(f"   Split oversized file:")
+        print("   Split oversized file:")
         print(f"   python tests/tools/migrate_tests.py {rel_path}")
 
     for file_path, test_types in result.mixed_type_files[:3]:
         rel_path = file_path.relative_to(test_dir)
-        print(f"   Split mixed types:")
+        print("   Split mixed types:")
         print(f"   python tests/tools/migrate_tests.py {rel_path}")
 
 

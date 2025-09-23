@@ -4,16 +4,13 @@
 Tests the results viewer functionality in isolation with mocked Qt components.
 """
 
-import pytest
-
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import QFileSystemWatcher, Qt, QTimer, Signal
+from PySide6.QtCore import QFileSystemWatcher, QTimer, Signal
 from PySide6.QtWidgets import QMessageBox, QWidget
 
-from ClassicLib import MessageHandler
 from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
 from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noqa: F401
 
@@ -381,7 +378,7 @@ class TestReportManagement:
         report_path = tmp_path / "test-AUTOSCAN.md"
         viewer_mixin.current_report_path = report_path
 
-        with patch.object(Path, "read_text", side_effect=IOError("Read error")), \
+        with patch.object(Path, "read_text", side_effect=OSError("Read error")), \
              patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error:
 
             viewer_mixin._copy_report()
@@ -472,8 +469,7 @@ class TestAutoRefresh:
             def side_effect(*args, **kwargs):
                 if mock_settings.call_count == 1:
                     return True
-                else:
-                    return 5000  # Default value from the function call
+                return 5000  # Default value from the function call
 
             mock_settings.side_effect = side_effect
 

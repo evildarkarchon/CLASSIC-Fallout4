@@ -7,7 +7,6 @@ batch processing, and report writing, along with coordination of async database
 lookups and other operations.
 """
 
-import asyncio
 import time
 from typing import TYPE_CHECKING
 

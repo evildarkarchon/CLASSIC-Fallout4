@@ -15,15 +15,14 @@ and edge cases for async crash log scanning integration.
 
 
 import asyncio
-import sys
 import time
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncIntegration import async_crashlogs_scan, run_async_scan
+from ClassicLib.ScanLog.AsyncIntegration import async_crashlogs_scan
 
 
 @pytest.mark.slow
@@ -115,7 +114,6 @@ class TestAsyncIntegrationStressTesting:
             # Configure operations with known delays
             async def timed_reformat(*args):
                 await asyncio.sleep(0.1)  # 100ms delay
-                return None
 
             async def timed_load(*args):
                 await asyncio.sleep(0.05)  # 50ms delay
@@ -170,7 +168,6 @@ class TestAsyncIntegrationStressTesting:
             async def track_reformat(logs, remove_list):
                 call_order.append(f"reformat_{id(logs)}")
                 await asyncio.sleep(0.01)  # Small delay
-                return None
 
             async def track_load(logs):
                 call_order.append(f"load_{id(logs)}")
@@ -225,9 +222,10 @@ class TestAsyncBridgeStressTesting:
         Args:
             async_bridge: Properly isolated AsyncBridge instance from fixture
         """
-        from ClassicLib.AsyncBridge import AsyncBridge
         import threading
-        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
+        from concurrent.futures import TimeoutError as FutureTimeoutError
+
+        from ClassicLib.AsyncBridge import AsyncBridge
 
         # Track results and errors from different threads
         results = []
@@ -306,7 +304,7 @@ class TestAsyncBridgeStressTesting:
         exceptions_to_test = [
             ValueError("Test ValueError"),
             RuntimeError("Test RuntimeError"),
-            asyncio.TimeoutError("Test TimeoutError"),
+            TimeoutError("Test TimeoutError"),
             MemoryError("Test MemoryError"),
             KeyError("Test KeyError")
         ]
@@ -440,7 +438,7 @@ class TestAsyncIntegrationEdgeCases:
             mock_reformat.return_value = None
             # Include unicode content in cache
             mock_load.return_value = {
-                str(path): [f"Content with unicode: αβγ 中文 émoji🚀"]
+                str(path): ["Content with unicode: αβγ 中文 émoji🚀"]
                 for path in special_paths
             }
 
@@ -468,7 +466,7 @@ class TestAsyncIntegrationEdgeCases:
             # Verify unicode content was properly encoded to bytes
             expected_cache = {}
             for path in special_paths:
-                content = f"Content with unicode: αβγ 中文 émoji🚀"
+                content = "Content with unicode: αβγ 中文 émoji🚀"
                 expected_cache[str(path)] = content.encode("utf-8")
 
             assert cache_instance.cache == expected_cache

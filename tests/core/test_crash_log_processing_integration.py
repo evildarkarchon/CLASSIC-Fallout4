@@ -5,9 +5,11 @@ This file contains integration tests that test interactions between components.
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 from unittest.mock import patch
+
 import pytest
+
 from CLASSIC_ScanLogs import ClassicScanLogs
 from ClassicLib import GlobalRegistry
 

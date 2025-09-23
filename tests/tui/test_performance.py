@@ -4,9 +4,8 @@
 import asyncio
 import sys
 import threading
-import tracemalloc
 import time
-from os import environ
+import tracemalloc
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

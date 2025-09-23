@@ -21,9 +21,9 @@ from .papyrus.tui_papyrus_handler import (
 )
 
 __all__ = [
+    "_UNICODE_SUPPORT_CACHE",
     "PapyrusStats",
     "TuiPapyrusHandler",
-    "_UNICODE_SUPPORT_CACHE",
     "_detect_unicode_support_impl",
     "_get_unicode_support_cached",
 ]

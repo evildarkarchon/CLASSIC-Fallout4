@@ -129,7 +129,6 @@ class TestOrchestratorPerformance:
 
             async def close(self):
                 """Mock close method."""
-                pass
 
         with patch("ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool", MockAsyncDatabasePool):
             # Clear any existing pool
@@ -205,7 +204,7 @@ class TestOrchestratorPerformance:
     @pytest.mark.performance
     def test_regex_pattern_caching(self):
         """Verify regex patterns are cached at module level."""
-        from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore, _PATTERN_CACHE
+        from ClassicLib.ScanLog.FormIDAnalyzerCore import _PATTERN_CACHE, FormIDAnalyzerCore
 
         # Create an instance to ensure pattern gets cached
         mock_yamldata = MagicMock()

@@ -7,8 +7,6 @@ This file contains unit tests that test individual functions with mocked depende
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialogButtonBox
-from ClassicLib.Constants import YAML
-from ClassicLib.Interface.SettingsDialog import SettingsDialog
 
 pytestmark = pytest.mark.unit
 

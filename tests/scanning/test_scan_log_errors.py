@@ -7,7 +7,6 @@ error detection, and handling of unreadable files.
 
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import sys
-from collections.abc import Generator
 from contextlib import nullcontext
 from unittest.mock import patch
 

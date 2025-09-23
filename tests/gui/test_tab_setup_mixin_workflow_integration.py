@@ -4,15 +4,12 @@ Tests end-to-end workflows and complex interactions between components
 in the TabSetupMixin implementation.
 """
 
-import pytest
-from unittest.mock import MagicMock, Mock, call, patch
-from functools import partial
+from unittest.mock import MagicMock, patch
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QWidget
+import pytest
+from PySide6.QtWidgets import QWidget
 
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
-from tests.fixtures.qt_fixtures import qt_application, qt_parent_widget
 from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noqa: F401
 
 
@@ -514,9 +511,8 @@ class TestErrorRecoveryWorkflow:
                 if len(setup_stages) == 0:
                     setup_stages.append("folder_1_failed")
                     return None  # Failure
-                else:
-                    setup_stages.append("folder_2_success")
-                    return MagicMock()  # Success
+                setup_stages.append("folder_2_success")
+                return MagicMock()  # Success
 
             mock_folder.side_effect = folder_setup
             mock_vbox.return_value = MagicMock()

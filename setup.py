@@ -1,7 +1,7 @@
 """Setup.py for compatibility with setuptools and uv."""
 
-from setuptools import setup, find_packages
-import os
+
+from setuptools import find_packages, setup
 
 # Find all packages in src and root
 packages = find_packages(where="src") + find_packages(where=".", include=["ClassicLib", "ClassicLib.*"])

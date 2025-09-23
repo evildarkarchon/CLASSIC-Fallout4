@@ -7,15 +7,13 @@ and ConfigFileCache async methods that were optimized for performance.
 
 import asyncio
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from ClassicLib.ScanGame.Config import ConfigFileCache
 from ClassicLib.ScanGame.ScanModInis import (
-    apply_all_ini_fixes_async,
     apply_ini_fix_async,
-    check_starting_console_command_async,
     check_vsync_settings_async,
     scan_mod_inis,
     scan_mod_inis_async,

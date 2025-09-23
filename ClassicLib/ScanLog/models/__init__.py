@@ -12,8 +12,8 @@ from .scan_statistics import ScanStatistics
 
 __all__ = [
     "ScanConfig",
-    "ScanStatistics",
-    "ScanResult",
     "ScanConfigDict",
+    "ScanResult",
     "ScanResultDict",
+    "ScanStatistics",
 ]

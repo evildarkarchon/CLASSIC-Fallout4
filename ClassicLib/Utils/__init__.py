@@ -5,13 +5,15 @@ All functions are re-exported from their new locations.
 """
 
 # String utilities
-from .string_utils import append_or_extend, normalize_list
+# File utilities
+from .file_utils import calculate_file_hash, calculate_similarity, open_file_with_encoding
+
+# Logging utilities
+from .logging_utils import configure_logging
 
 # Path utilities
 from .path_utils import remove_readonly, validate_path
-
-# File utilities
-from .file_utils import calculate_file_hash, calculate_similarity, open_file_with_encoding
+from .string_utils import append_or_extend, normalize_list
 
 # Version utilities
 from .version_utils import (
@@ -26,9 +28,6 @@ from .version_utils import (
     get_version_with_pefile,
     is_valid_executable_path,
 )
-
-# Logging utilities
-from .logging_utils import configure_logging
 
 # Web utilities
 from .web_utils import async_pastebin_fetch, pastebin_fetch

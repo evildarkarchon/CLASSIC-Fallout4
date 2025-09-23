@@ -18,6 +18,34 @@ datas = []
 binaries = []
 hiddenimports = []
 
+# Bundle Rust extensions (NO pip installation required!)
+# These are built locally and committed to the repo
+rust_extensions_dir = PROJECT_ROOT / "rust_extensions"
+if rust_extensions_dir.exists():
+    print(f"Bundling Rust extensions from {rust_extensions_dir}")
+    # Add all .pyd and .dll files from rust_extensions to _internal
+    for ext_file in rust_extensions_dir.glob("*.pyd"):
+        binaries.append((str(ext_file), "_internal/rust_extensions"))
+        print(f"  - Adding extension: {ext_file.name}")
+
+    for dll_file in rust_extensions_dir.glob("*.dll"):
+        # Skip Python DLLs as they're provided by the Python runtime
+        if "python" not in dll_file.name.lower():
+            binaries.append((str(dll_file), "_internal/rust_extensions"))
+            print(f"  - Adding dependency: {dll_file.name}")
+
+    # Also add the manifest file for debugging
+    manifest_file = rust_extensions_dir / "MANIFEST.txt"
+    if manifest_file.exists():
+        datas.append((str(manifest_file), "_internal/rust_extensions"))
+else:
+    print(f"WARNING: Rust extensions not found at {rust_extensions_dir}")
+    print("The executable will work but without Rust performance optimizations!")
+    print("Run build_rust_local.bat first to build the extensions.")
+
+# Add the rust_loader module to hidden imports
+hiddenimports.append("ClassicLib.rust_loader")
+
 # Collect PySide6 dependencies
 pyside6_datas, pyside6_binaries, pyside6_hiddenimports = collect_all('PySide6')
 datas += pyside6_datas

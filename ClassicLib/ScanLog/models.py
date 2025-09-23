@@ -16,10 +16,10 @@ from .models import ScanConfig, ScanConfigDict, ScanResult, ScanResultDict, Scan
 
 __all__ = [
     "ScanConfig",
-    "ScanStatistics",
-    "ScanResult",
     "ScanConfigDict",
+    "ScanResult",
     "ScanResultDict",
+    "ScanStatistics",
 ]
 
 

@@ -14,7 +14,9 @@ This file contains unit tests that test individual functions with mocked depende
 
 
 from pathlib import Path
+
 import pytest
+
 from ClassicLib.ScanLog.AsyncFileIO import load_crash_logs_async_optimized, write_reports_batch
 
 pytestmark = pytest.mark.unit

@@ -15,8 +15,8 @@ import warnings
 from .scanloginfo import ClassicScanLogsInfo, ThreadSafeLogCache
 
 __all__ = [
-    "ThreadSafeLogCache",
     "ClassicScanLogsInfo",
+    "ThreadSafeLogCache",
 ]
 
 

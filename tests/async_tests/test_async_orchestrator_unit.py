@@ -17,13 +17,12 @@ Mock fixtures are used to avoid actual database connections during unit tests.
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
 
-from pathlib import Path
-from typing import TYPE_CHECKING
-from unittest.mock import MagicMock, MagicMock, patch
+from unittest.mock import MagicMock
+
 import pytest
+
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
-from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
 
 pytestmark = pytest.mark.unit
 

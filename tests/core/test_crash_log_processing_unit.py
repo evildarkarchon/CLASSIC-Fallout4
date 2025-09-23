@@ -5,9 +5,11 @@ This file contains unit tests that test individual functions with mocked depende
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 from unittest.mock import patch
+
 import pytest
+
 from CLASSIC_ScanLogs import ClassicScanLogs
 from ClassicLib import GlobalRegistry
 

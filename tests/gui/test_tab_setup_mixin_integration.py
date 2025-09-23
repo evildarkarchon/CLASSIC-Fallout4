@@ -4,16 +4,11 @@
 Tests TabSetupMixin with minimal mocking to verify component interactions.
 """
 
-import pytest
-
-from functools import partial
 from unittest import mock
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QApplication,
     QButtonGroup,
     QHBoxLayout,
     QPushButton,
@@ -21,20 +16,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib import MessageHandler
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
-from ClassicLib.MessageHandler import init_message_handler
-from tests.fixtures.qt_fixtures import qt_application
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:
 # - message_handler: For non-GUI tests
 # - gui_message_handler: For GUI tests (from qt_fixtures.py)
 # - Automatic cleanup via ensure_message_handler_cleanup
-
 from tests.gui.qt_mock_helpers import (
-    create_layout_mock_factory,
-    create_mock_layout_with_union_support,
     create_qt_widget_mock,
 )
 
@@ -269,7 +258,7 @@ class TestArticlesTabIntegration:
             grid_positions = {}
 
             def track_grid_add(widget, row, col):
-                grid_positions[(row, col)] = widget
+                grid_positions[row, col] = widget
 
             mock_grid.addWidget.side_effect = track_grid_add
             mock_button_class.return_value = MagicMock(spec=QPushButton)

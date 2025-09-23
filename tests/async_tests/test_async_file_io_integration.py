@@ -5,7 +5,9 @@ This file contains integration tests that test interactions between components.
 """
 
 from pathlib import Path
+
 import pytest
+
 from ClassicLib.ScanLog.AsyncFileIO import load_crash_logs_async_optimized, write_reports_batch
 
 pytestmark = pytest.mark.integration

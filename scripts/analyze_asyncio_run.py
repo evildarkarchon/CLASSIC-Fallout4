@@ -5,10 +5,9 @@ Analyze asyncio.run() usage in the codebase without making changes.
 
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 
-def analyze_file(file_path: Path) -> List[Tuple[int, str]]:
+def analyze_file(file_path: Path) -> list[tuple[int, str]]:
     """Analyze a file for asyncio.run() usage."""
     content = file_path.read_text(encoding='utf-8')
     lines = content.split('\n')
@@ -21,7 +20,7 @@ def analyze_file(file_path: Path) -> List[Tuple[int, str]]:
     return calls
 
 
-def scan_directory(directory: str, exclude_files: List[str] = None) -> List[Path]:
+def scan_directory(directory: str, exclude_files: list[str] = None) -> list[Path]:
     """Scan directory for files containing asyncio.run()."""
     exclude_files = exclude_files or []
     matching_files = []
@@ -36,7 +35,7 @@ def scan_directory(directory: str, exclude_files: List[str] = None) -> List[Path
     return matching_files
 
 
-def print_file_analysis(files: List[Path], section_name: str) -> None:
+def print_file_analysis(files: list[Path], section_name: str) -> None:
     """Print analysis for a group of files."""
     print("\n" + "=" * 80)
     print(section_name)

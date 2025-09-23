@@ -80,8 +80,23 @@ managed = true
 classic = { path = ".", editable = true }
 
 [build-system]
-requires = ["setuptools>=69.5.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+# Tell maturin this is a mixed Python/Rust project
+python-source = "src"
+# Module name for the Rust extension
+module-name = "classic_core"
+# Strip symbols for smaller binary size (optional)
+strip = false
+# Build with abi3 for compatibility
+features = ["pyo3/abi3-py312"]
+# Include data files in the wheel
+include = [
+    { path = "CLASSIC Data/**/*", format = "sdist" },
+    { path = "ClassicLib/**/*.py", format = "sdist" },
+]
 
 [tool.mypy]
 enable_incomplete_feature = ["NewGenericSyntax"]

@@ -273,27 +273,27 @@ async def async_map_smart(
             async with semaphore:
                 if asyncio.iscoroutinefunction(func):
                     return await func(item)
-                elif use_executor == "never":
+                if use_executor == "never":
                     # Direct execution for fast operations
                     return func(item)
-                elif use_executor == "auto":
+                if use_executor == "auto":
                     # Smart detection
                     return await smart_run_in_executor(func, item)
-                else:  # "always"
-                    # Legacy behavior - always use executor
-                    loop = asyncio.get_event_loop()
-                    return await loop.run_in_executor(None, func, item)
+                # "always"
+                # Legacy behavior - always use executor
+                loop = asyncio.get_event_loop()
+                return await loop.run_in_executor(None, func, item)
     else:
         async def bounded_func(item: T) -> Any:
             if asyncio.iscoroutinefunction(func):
                 return await func(item)
-            elif use_executor == "never":
+            if use_executor == "never":
                 return func(item)
-            elif use_executor == "auto":
+            if use_executor == "auto":
                 return await smart_run_in_executor(func, item)
-            else:  # "always"
-                loop = asyncio.get_event_loop()
-                return await loop.run_in_executor(None, func, item)
+            # "always"
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, func, item)
 
     tasks = [bounded_func(item) for item in items]
     return await asyncio.gather(*tasks)

@@ -67,7 +67,7 @@ class TestButtonInteraction:
 
     def test_check_now_button_click(self, settings_dialog, app):
         """Test that Check Now button can be clicked."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
         button = settings_dialog.check_now_button
 
         # The button should exist and be clickable
@@ -90,8 +90,8 @@ class TestWidgetFocus:
 
     def test_focus_traversal(self, settings_dialog, app):
         """Test that widgets can receive focus."""
-        from PySide6.QtWidgets import QApplication
         from PySide6.QtTest import QTest
+        from PySide6.QtWidgets import QApplication
 
         settings_dialog.show()
         QApplication.processEvents()  # Ensure the dialog is fully shown

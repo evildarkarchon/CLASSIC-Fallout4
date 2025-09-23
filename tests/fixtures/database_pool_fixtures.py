@@ -7,7 +7,7 @@ test execution with pytest-xdist.
 """
 
 import asyncio
-from typing import Generator
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -138,7 +138,6 @@ def database_pool_test_isolation_check():
     # At session start, singleton should be clean
     assert DatabasePoolManager._instance is None, "DatabasePoolManager singleton not clean at session start"
 
-    yield
 
     # Note: We don't check at session end because the last test's state might persist
     # The important part is that each test starts with a clean slate
@@ -155,6 +154,5 @@ def verify_database_pool_isolation():
     assert DatabasePoolManager._instance is None, "DatabasePoolManager not properly isolated"
     assert not hasattr(DatabasePoolManager, '_lock') or DatabasePoolManager._lock is None
 
-    yield
 
     # The autouse fixture will handle cleanup

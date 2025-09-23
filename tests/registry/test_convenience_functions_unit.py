@@ -6,7 +6,9 @@ This file contains unit tests that test individual functions with mocked depende
 
 from pathlib import Path
 from unittest.mock import MagicMock
+
 import pytest
+
 from ClassicLib import GlobalRegistry
 
 pytestmark = pytest.mark.unit
@@ -80,8 +82,7 @@ class TestConvenienceFunctions:
         """Test get_local_dir returns current directory when not set."""
         result = GlobalRegistry.get_local_dir()
         assert isinstance(result, Path)
-        import os
-        assert result == Path(os.getcwd())
+        assert result == Path(Path.cwd())
 
     def test_convenience_function_get_local_dir_registered(self, tmp_path: Path) -> None:
         """Test get_local_dir returns registered path."""

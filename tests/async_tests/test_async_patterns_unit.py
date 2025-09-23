@@ -15,7 +15,8 @@ This file contains unit tests that test individual functions with mocked depende
 
 import asyncio
 from contextlib import asynccontextmanager
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
+
 import pytest
 
 pytestmark = pytest.mark.unit

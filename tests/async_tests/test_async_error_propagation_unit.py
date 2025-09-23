@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncIntegration import async_crashlogs_scan, run_async_scan
+from ClassicLib.ScanLog.AsyncIntegration import async_crashlogs_scan
 
 
 @pytest.mark.unit
@@ -63,7 +63,7 @@ class TestAsyncErrorPropagation:
         """Test error propagation when async reformatting fails."""
         mock_base_dependencies["get_files"].return_value = [Path("test.log")]
 
-        reformat_error = asyncio.TimeoutError("Reformat operation timed out")
+        reformat_error = TimeoutError("Reformat operation timed out")
 
         with patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_reformat_async") as mock_reformat:
             mock_reformat.side_effect = reformat_error
@@ -253,7 +253,7 @@ class TestAsyncErrorPropagation:
         """Test handling of asyncio.TimeoutError in various components."""
         mock_base_dependencies["get_files"].return_value = [Path("test.log")]
 
-        timeout_error = asyncio.TimeoutError("Operation timed out")
+        timeout_error = TimeoutError("Operation timed out")
 
         with patch("ClassicLib.ScanLog.AsyncIntegration.crashlogs_reformat_async") as mock_reformat, \
              patch("ClassicLib.ScanLog.AsyncIntegration.load_crash_logs_async") as mock_load, \
@@ -338,7 +338,6 @@ class TestAsyncErrorPropagation:
             async def track_exit(self, exc_type, exc_val, exc_tb):
                 nonlocal exit_called
                 exit_called = True
-                return None
 
             mock_orchestrator.return_value.__aenter__ = track_enter
             mock_orchestrator.return_value.__aexit__ = track_exit

@@ -162,7 +162,6 @@ class OrchestratorCore:
         """
         # Database pool is now managed by the singleton and not closed here
         # This allows reuse across multiple batch processing operations
-        pass
 
     async def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
         """
@@ -235,7 +234,7 @@ class OrchestratorCore:
 
         return crashlog_file, autoscan_report, trigger_scan_failed, local_stats
 
-    async def _process_log_sections_async(  # noqa: PLR0917
+    async def _process_log_sections_async(
         self,
         crashlog_gameversion: str,
         crashlog_crashgen: str,
@@ -614,8 +613,9 @@ class OrchestratorCore:
             - Boolean indicating if plugins were loaded
             - Report fragment with loading status
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
         import aiofiles
+
+        from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
         lines = []
         loadorder_origin = "LO"  # Origin marker for plugins from loadorder.txt

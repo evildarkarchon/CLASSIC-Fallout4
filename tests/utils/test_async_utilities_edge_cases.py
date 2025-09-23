@@ -5,10 +5,7 @@ covered in the main unit and integration tests.
 """
 
 import asyncio
-import sys
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -524,7 +521,7 @@ class TestThrottleEdgeCases:
     @pytest.fixture(autouse=True)
     async def cleanup_throttlers(self):
         """Clean up throttlers before and after each test."""
-        from ClassicLib.AsyncUtilities import reset_throttlers, _throttler_registry
+        from ClassicLib.AsyncUtilities import _throttler_registry, reset_throttlers
         reset_throttlers()
         yield
         # Clean up any background tasks
@@ -570,11 +567,11 @@ class TestThrottleEdgeCases:
 
         # Should have created a throttler in the registry
         assert (2, 0.1) in _throttler_registry
-        throttler = _throttler_registry[(2, 0.1)]
+        throttler = _throttler_registry[2, 0.1]
 
         # Subsequent calls should reuse the same throttler
         await throttle(2, 0.1)
-        assert _throttler_registry[(2, 0.1)] is throttler
+        assert _throttler_registry[2, 0.1] is throttler
 
 
 class TestRunInExecutorEdgeCases:
@@ -641,7 +638,7 @@ class TestAsyncLazyLoaderEdgeCases:
     async def test_loader_raises_exception(self):
         """Should propagate exceptions from loader."""
         async def failing_loader():
-            raise IOError("Cannot load data")
+            raise OSError("Cannot load data")
 
         loader = AsyncLazyLoader(failing_loader)
 

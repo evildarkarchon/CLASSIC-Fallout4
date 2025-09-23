@@ -8,6 +8,7 @@ IMPORTANT: The crashgen_version_gen function uses @lru_cache for performance.
 The clean_version_caches autouse fixture ensures cache is cleared between tests.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841
+import math
 from pathlib import Path
 
 import pytest
@@ -126,7 +127,7 @@ class TestStringUtilities:
 
         append_or_extend("string", destination)
         append_or_extend(42, destination)
-        append_or_extend(3.14, destination)
+        append_or_extend(math.pi, destination)
 
         assert destination == ["string", "42", "3.14"]
 

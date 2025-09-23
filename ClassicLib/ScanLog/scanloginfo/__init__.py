@@ -9,6 +9,6 @@ from .classic_scan_logs_info import ClassicScanLogsInfo
 from .thread_safe_log_cache import ThreadSafeLogCache
 
 __all__ = [
-    "ThreadSafeLogCache",
     "ClassicScanLogsInfo",
+    "ThreadSafeLogCache",
 ]

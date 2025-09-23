@@ -7,14 +7,11 @@ BSArch subprocess handling, and concurrent archive processing.
 
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import aiofiles
 import pytest
 
-import ClassicLib.MessageHandler
-from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 
 # Note: MessageHandler initialization is now handled by standardized

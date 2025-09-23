@@ -6,9 +6,10 @@ This file contains unit tests that test individual functions with mocked depende
 
 import asyncio
 from pathlib import Path
+
 import pytest
 import ruamel.yaml
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
+
 from ClassicLib.Constants import YAML
 
 pytestmark = pytest.mark.unit
@@ -37,7 +38,7 @@ class TestAsyncYamlBatchOperations:
             yaml_file = tmp_path / f'{store.name}.yaml'
             data = {f'{store.name}_data': {'key': f'value_{store.name}'}}
             yaml = ruamel.yaml.YAML()
-            with open(yaml_file, 'w') as f:
+            with Path(yaml_file).open('w') as f:
                 yaml.dump(data, f)
             files[store] = yaml_file
 

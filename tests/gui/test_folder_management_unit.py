@@ -7,7 +7,7 @@ functionality with properly mocked Qt dialogs and file operations.
 
 import subprocess
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, Mock, call, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 from PySide6.QtCore import QUrl

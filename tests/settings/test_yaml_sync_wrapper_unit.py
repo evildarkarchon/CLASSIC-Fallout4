@@ -5,12 +5,12 @@ This file contains unit tests that test individual functions with mocked depende
 """
 
 from pathlib import Path
-from typing import cast
 from unittest.mock import patch
+
 import pytest
 import ruamel.yaml
-from ClassicLib.Constants import YAML
 
+from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_cache, yaml_settings
 
 # Note: MessageHandler initialization is now handled by standardized

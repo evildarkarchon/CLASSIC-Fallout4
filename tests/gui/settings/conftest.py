@@ -7,10 +7,10 @@ Due to concurrent file access on the test YAML file, these tests should be run:
 - Or with --dist=loadfile when using pytest-xdist to keep all tests on same worker
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 from PySide6.QtWidgets import QWidget
-
-from unittest.mock import patch, MagicMock
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.SettingsDialog import SettingsDialog
@@ -45,7 +45,6 @@ def settings_dialog(app):
     dialog.close()
 
     # Clean up message handler
-    import ClassicLib.MessageHandler
 
 @pytest.fixture
 def reset_settings():

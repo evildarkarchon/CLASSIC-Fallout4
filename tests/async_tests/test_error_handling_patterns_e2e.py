@@ -15,12 +15,10 @@ This file contains e2e tests that test complete workflows from entry to output.
 
 import asyncio
 import logging
-from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
-from unittest.mock import MagicMock
+
 import pytest
 
 pytestmark = pytest.mark.e2e
@@ -87,7 +85,7 @@ class TestRetryPatterns:
             for attempt in range(max_attempts):
                 try:
                     return await func()
-                except exceptions as e:
+                except exceptions:
                     if attempt < max_attempts - 1:
                         await asyncio.sleep(delay)
                     else:

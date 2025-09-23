@@ -4,8 +4,9 @@ Tests error conditions, edge cases, and defensive programming patterns
 in the TabSetupMixin implementation.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, Mock, patch, PropertyMock
 
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
 from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noqa: F401

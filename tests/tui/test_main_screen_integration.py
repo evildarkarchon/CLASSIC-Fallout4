@@ -5,8 +5,9 @@ This file contains integration tests that test interactions between components.
 """
 
 from unittest.mock import Mock, patch
+
 import pytest
-from textual.widgets import Input
+
 from ClassicLib.TUI.app import CLASSICTuiApp
 from ClassicLib.TUI.screens.main_screen import MainScreen
 from ClassicLib.TUI.widgets.output_viewer import OutputViewer

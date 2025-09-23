@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ClassicLib import init_message_handler
 from tests.async_resources.conftest import ContextTestError
 
 # Note: MessageHandler initialization is now handled by standardized

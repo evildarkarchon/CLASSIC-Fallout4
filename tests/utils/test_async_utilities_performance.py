@@ -5,7 +5,6 @@ Tests performance characteristics and behavior under stress conditions.
 
 import asyncio
 import gc
-import sys
 import time
 from typing import Any
 
@@ -238,7 +237,7 @@ class TestStressConditions:
     @pytest.mark.asyncio
     async def test_throttle_under_burst_load(self):
         """Test throttle behavior under burst load."""
-        from ClassicLib.AsyncUtilities import reset_throttlers, _throttler_registry
+        from ClassicLib.AsyncUtilities import _throttler_registry, reset_throttlers
 
         # Reset state before test
         reset_throttlers()

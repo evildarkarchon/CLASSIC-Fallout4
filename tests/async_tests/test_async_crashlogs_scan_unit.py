@@ -70,7 +70,6 @@ class TestAsyncCrashLogsScan:
             async def mock_reformat_coro(*args):
                 """Mock coroutine for reformat operation."""
                 await asyncio.sleep(0)  # Simulate async work
-                return None
 
             async def mock_load_coro(*args):
                 """Mock coroutine for load operation."""
@@ -94,7 +93,7 @@ class TestAsyncCrashLogsScan:
 
             async def write_batch_coro(*args):
                 """Mock coroutine for batch writing."""
-                return None
+                return
 
             # Use side_effect for async methods to avoid unawaited coroutine warnings
             mock_orchestrator_instance.process_crash_logs_batch_async = MagicMock(
@@ -112,7 +111,7 @@ class TestAsyncCrashLogsScan:
 
             async def orchestrator_aexit(self, exc_type, exc_val, exc_tb):
                 """Async exit for orchestrator context manager."""
-                return None
+                return
 
             mock_orchestrator_context = MagicMock()
             # Assign the async functions directly - don't call them!
@@ -223,7 +222,7 @@ class TestAsyncCrashLogsScan:
         # Configure empty results for async operations
         async def empty_reformat(*args):
             """Mock coroutine for empty reformat."""
-            return None
+            return
 
         async def empty_load(*args):
             """Mock coroutine for empty load."""
@@ -273,7 +272,7 @@ class TestRunAsyncScan:
             # We create a real coroutine here, but AsyncBridge will handle it
             async def scan_coro():
                 """Mock coroutine for async_crashlogs_scan."""
-                return None
+                return
 
             mock_async_scan.return_value = scan_coro()
 

@@ -5,7 +5,7 @@ from typing import TypeVar
 # YAML type definitions
 type YAMLLiteral = str | int | bool
 type YAMLSequence = list[str]
-type YAMLMapping = dict[str, "YAMLValue"]
+type YAMLMapping = dict[str, YAMLValue]
 type YAMLValue = YAMLMapping | YAMLSequence | YAMLLiteral
 type YAMLValueOptional = YAMLValue | None
 
@@ -13,10 +13,10 @@ type YAMLValueOptional = YAMLValue | None
 T = TypeVar("T")
 
 __all__ = [
+    "T",
     "YAMLLiteral",
-    "YAMLSequence",
     "YAMLMapping",
+    "YAMLSequence",
     "YAMLValue",
     "YAMLValueOptional",
-    "T",
 ]

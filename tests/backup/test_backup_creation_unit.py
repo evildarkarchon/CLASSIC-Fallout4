@@ -6,7 +6,9 @@ This file contains unit tests that test individual functions with mocked depende
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 import pytest
+
 from ClassicLib.BackupManager import BackupManager
 
 pytestmark = pytest.mark.unit

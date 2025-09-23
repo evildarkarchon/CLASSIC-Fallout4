@@ -6,8 +6,9 @@ This file contains unit tests that test individual functions with mocked depende
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 import pytest
-from packaging.version import Version
+
 from ClassicLib import Constants, GlobalRegistry
 from ClassicLib.GamePath import game_generate_paths
 

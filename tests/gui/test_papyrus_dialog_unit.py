@@ -6,15 +6,12 @@ components, including UI updates, statistics handling, and dialog operations.
 """
 
 from datetime import datetime
-from unittest.mock import MagicMock, Mock, patch
-from unittest.mock import create_autospec
+from unittest.mock import Mock, patch
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent, QFont
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
-    QDialog,
-    QHBoxLayout,
     QLabel,
     QPushButton,
     QVBoxLayout,

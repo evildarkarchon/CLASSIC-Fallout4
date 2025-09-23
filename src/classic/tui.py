@@ -17,7 +17,6 @@ if (project_root / "CLASSIC Data").exists():
 else:
     # Installed package mode - let SetupCoordinator handle it
     # or try current working directory
-    import os
     cwd = Path.cwd()
     if (cwd / "CLASSIC Data").exists():
         GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, cwd)
