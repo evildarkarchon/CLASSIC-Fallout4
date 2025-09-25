@@ -1,7 +1,7 @@
 //! CLASSIC Core - High-performance Rust extensions for CLASSIC Fallout 4
 //!
 //! This module provides optimized utilities and processing capabilities for the CLASSIC
-//! crash log analyzer, implementing Phase 1.2 of the Rust migration plan.
+//! crash log analyzer, implementing Phase 1.2 and Phase 2 of the Rust migration plan.
 
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
@@ -9,7 +9,11 @@ use std::sync::Arc;
 use once_cell::sync::Lazy;
 
 // Module declarations
+pub mod database;
+pub mod file_io;
+pub mod scanlog;
 pub mod utils;
+pub mod yaml;
 
 // Re-export key types for convenience
 pub use utils::{
@@ -151,10 +155,27 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add functions
     m.add_function(wrap_pyfunction!(count_patterns_in_file, m)?)?;
 
-    // Register utils submodule
+    // Register submodules
     let utils_module = PyModule::new_bound(m.py(), "utils")?;
     utils::register_module(&utils_module)?;
     m.add_submodule(&utils_module)?;
+
+    let scanlog_module = PyModule::new_bound(m.py(), "scanlog")?;
+    scanlog::register_module(&scanlog_module)?;
+    m.add_submodule(&scanlog_module)?;
+
+    let database_module = PyModule::new_bound(m.py(), "database")?;
+    database::register_module(&database_module)?;
+    m.add_submodule(&database_module)?;
+
+    let file_io_module = PyModule::new_bound(m.py(), "file_io")?;
+    file_io::register_module(&file_io_module)?;
+    m.add_submodule(&file_io_module)?;
+
+    // Temporarily disabled to debug import freeze
+    // let yaml_module = PyModule::new_bound(m.py(), "yaml")?;
+    // yaml::init_module(&yaml_module)?;
+    // m.add_submodule(&yaml_module)?;
 
     // Add version
     m.add("__version__", "8.0.0")?;

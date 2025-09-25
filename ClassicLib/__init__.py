@@ -1,14 +1,12 @@
-"""ClassicLib - Core library for CLASSIC crash log analyzer.
+"""
+ClassicLib - Core library for CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker).
 
-This module provides async-first core functionality for crash log analysis,
-including file I/O, performance monitoring, and setup coordination.
-GUI-specific components are available in ClassicLib.Interface when PySide6 is installed.
+This module provides the main components for log analysis, file I/O, settings management,
+and various utility functions for the CLASSIC application.
 """
 
-# Core async infrastructure
+# Core components
 from ClassicLib.AsyncBridge import AsyncBridge
-
-# Core constants
 from ClassicLib.Constants import (
     DB_PATHS,
     F4SE_VERSIONS,
@@ -23,11 +21,7 @@ from ClassicLib.Constants import (
     YAML,
     GameID,
 )
-
-# File I/O operations
 from ClassicLib.FileIOCore import FileIOCore, read_file_sync, write_file_sync
-
-# Global registry system
 from ClassicLib.GlobalRegistry import (
     Keys,
     get,
@@ -41,11 +35,7 @@ from ClassicLib.GlobalRegistry import (
     is_registered,
     register,
 )
-
-# Logging system
 from ClassicLib.Logger import logger
-
-# Message handling system
 from ClassicLib.MessageHandler import (
     Message,
     MessageHandler,
@@ -62,21 +52,18 @@ from ClassicLib.MessageHandler import (
     msg_success,
     msg_warning,
 )
-
-# Performance monitoring
 from ClassicLib.PerformanceMonitor import TimedBlock, async_timed_operation, timed_operation
 
-# Update management
-from ClassicLib.Update import (
-    UpdateCheckError,
-    get_github_latest_stable_version_from_endpoint,
-    get_latest_and_top_release_details,
-    get_nexus_version,
-    is_latest_version,
-    try_parse_version,
-)
+# NOTE: Update module is temporarily excluded due to external dependency issues
+# from ClassicLib.Update import (
+#     UpdateCheckError,
+#     get_github_latest_stable_version_from_endpoint,
+#     get_latest_and_top_release_details,
+#     get_nexus_version,
+#     is_latest_version,
+#     try_parse_version,
+# )
 
-# Utility functions
 from ClassicLib.Util import (
     append_or_extend,
     calculate_file_hash,
@@ -90,38 +77,16 @@ from ClassicLib.Util import (
     pastebin_fetch_async,
     remove_readonly,
 )
-
-# XSE validation
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
-
-# YAML settings management
 from ClassicLib.YamlSettingsCache import (
-    YAMLLiteral,
-    YAMLMapping,
-    YAMLSequence,
     YamlSettingsCache,
-    YAMLValue,
-    YAMLValueOptional,
     classic_settings,
     yaml_cache,
     yaml_settings,
 )
 
-# Import core setup and coordination modules
-try:
-    from ClassicLib.BackupManager import BackupManager
-    from ClassicLib.DocumentsChecker import DocumentsChecker
-    from ClassicLib.FileGeneration import FileGeneration
-    from ClassicLib.GameIntegrity import GameIntegrity
-    from ClassicLib.PathValidator import PathValidator
-    from ClassicLib.SetupCoordinator import SetupCoordinator
-
-    _HAS_CORE_MODULES = True
-except ImportError:
-    _HAS_CORE_MODULES = False
-
 __all__ = [
-    # Async infrastructure
+    # AsyncBridge
     "AsyncBridge",
     # Constants
     "DB_PATHS",
@@ -136,11 +101,11 @@ __all__ = [
     "SETTINGS_IGNORE_NONE",
     "VR_VERSION",
     "YAML",
-    # File I/O
+    # FileIOCore
     "FileIOCore",
     "read_file_sync",
     "write_file_sync",
-    # Global registry functions
+    # GlobalRegistry
     "Keys",
     "get",
     "get_game",
@@ -152,9 +117,9 @@ __all__ = [
     "is_gui_mode",
     "is_registered",
     "register",
-    # Logging
+    # Logger
     "logger",
-    # Message handling
+    # MessageHandler
     "Message",
     "MessageHandler",
     "MessageTarget",
@@ -169,18 +134,11 @@ __all__ = [
     "msg_progress_context",
     "msg_success",
     "msg_warning",
-    # Performance monitoring
+    # PerformanceMonitor
     "TimedBlock",
     "async_timed_operation",
     "timed_operation",
-    # Update functions
-    "UpdateCheckError",
-    "get_github_latest_stable_version_from_endpoint",
-    "get_latest_and_top_release_details",
-    "get_nexus_version",
-    "is_latest_version",
-    "try_parse_version",
-    # Utility functions
+    # Util
     "append_or_extend",
     "calculate_file_hash",
     "calculate_similarity",
@@ -192,28 +150,12 @@ __all__ = [
     "pastebin_fetch",
     "pastebin_fetch_async",
     "remove_readonly",
-    # XSE validation
+    # XseCheck
     "xse_check_hashes",
     "xse_check_integrity",
-    # YAML settings
-    "YAMLLiteral",
-    "YAMLMapping",
-    "YAMLSequence",
-    "YAMLValue",
-    "YAMLValueOptional",
+    # YamlSettingsCache
     "YamlSettingsCache",
     "classic_settings",
     "yaml_cache",
     "yaml_settings",
 ]
-
-# Add core setup modules if available
-if _HAS_CORE_MODULES:
-    __all__.extend([
-        "BackupManager",
-        "DocumentsChecker",
-        "FileGeneration",
-        "GameIntegrity",
-        "PathValidator",
-        "SetupCoordinator",
-    ])

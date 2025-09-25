@@ -23,6 +23,9 @@ from tests.fixtures.qt_fixtures import *  # noqa: F403
 from tests.fixtures.registry_fixtures import *  # noqa: F403
 from tests.fixtures.version_cache_fixtures import *  # noqa: F403
 
+# Import stress test fixtures
+from tests.stress.stress_test_fixtures import *  # noqa: F403
+
 
 def pytest_configure(config):
     """Register custom markers for test types."""
@@ -70,6 +73,28 @@ def pytest_configure(config):
         "database: Tests that interact with databases"
     )
 
+    # Stress testing markers
+    config.addinivalue_line(
+        "markers",
+        "stress: Comprehensive stress tests for production validation"
+    )
+    config.addinivalue_line(
+        "markers",
+        "memory: Memory usage, leak detection, and pressure tests"
+    )
+    config.addinivalue_line(
+        "markers",
+        "concurrency: Thread safety and race condition tests"
+    )
+    config.addinivalue_line(
+        "markers",
+        "error_recovery: Error handling and recovery tests"
+    )
+    config.addinivalue_line(
+        "markers",
+        "data_volume: Large dataset and scalability tests"
+    )
+
 
 # Test collection configuration
 def pytest_collection_modifyitems(config, items):
@@ -90,6 +115,20 @@ def pytest_collection_modifyitems(config, items):
         # Auto-mark performance tests
         if "performance" in item.nodeid.lower() or "benchmark" in item.nodeid.lower():
             item.add_marker(pytest.mark.performance)
+
+        # Auto-mark stress tests
+        if "stress" in item.nodeid.lower():
+            item.add_marker(pytest.mark.stress)
+
+            # Auto-mark specific stress test types
+            if "memory" in item.nodeid.lower():
+                item.add_marker(pytest.mark.memory)
+            if "concurrency" in item.nodeid.lower():
+                item.add_marker(pytest.mark.concurrency)
+            if "error_recovery" in item.nodeid.lower():
+                item.add_marker(pytest.mark.error_recovery)
+            if "data_volume" in item.nodeid.lower():
+                item.add_marker(pytest.mark.data_volume)
 
 
 # Pytest configuration options

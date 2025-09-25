@@ -17,7 +17,9 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, cast
 
-from ClassicLib import Constants, GlobalRegistry, msg_warning
+from ClassicLib.Constants import YAML, GameID
+from ClassicLib.GlobalRegistry import get_game, get_game_path_gui, get_vr
+from ClassicLib.MessageHandler import msg_warning
 from ClassicLib.FileIOCore import read_bytes_sync, read_lines_sync
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import yaml_settings
@@ -57,11 +59,11 @@ def xse_check_integrity() -> str:
     messages: list[str] = []
 
     # Load configuration settings
-    game_vr: str = GlobalRegistry.get_vr()
-    game_name: str = GlobalRegistry.get_game()
+    game_vr: str = get_vr()
+    game_name: str = get_game()
 
     # Get error patterns to search for in logs
-    error_patterns: list[str] | None = yaml_settings(list[str], Constants.YAML.Main, "catch_log_errors")
+    error_patterns: list[str] | None = yaml_settings(list[str], YAML.Main, "catch_log_errors")
     if not isinstance(error_patterns, list):
         raise TypeError("Error patterns setting must be a list")
 
@@ -99,11 +101,11 @@ def _load_xse_config(game_vr: str) -> dict:
             - log_file (str | None): The path to the XSE log file.
             - adlib_file (Path | None): A `Path` object representing the game's address library file, or None if not found.
     """
-    xse_acronym: str | None = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
-    xse_full_name: str | None = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_FullName")
-    xse_latest_version: str | None = yaml_settings(str, Constants.YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
-    xse_log_file: str | None = yaml_settings(str, Constants.YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
-    adlib_file_str: str | None = yaml_settings(str, Constants.YAML.Game_Local, f"Game{game_vr}_Info.Game_File_AddressLib")
+    xse_acronym: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
+    xse_full_name: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_FullName")
+    xse_latest_version: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
+    xse_log_file: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
+    adlib_file_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_File_AddressLib")
 
     adlib_file: Path | None = Path(adlib_file_str) if adlib_file_str else None
 
@@ -133,7 +135,7 @@ def _check_address_library(adlib_file: Path | None, game_name: str, messages: li
         if Path(adlib_file).exists():
             messages.append("✔️ REQUIRED: *Address Library* for Script Extender is installed! \n-----\n")
         else:
-            warn_adlib: str | None = yaml_settings(str, Constants.YAML.Game, "Warnings_MODS.Warn_ADLIB_Missing")
+            warn_adlib: str | None = yaml_settings(str, YAML.Game, "Warnings_MODS.Warn_ADLIB_Missing")
             if not isinstance(warn_adlib, str):
                 raise TypeError("Address library warning message must be a string")
             messages.append(warn_adlib)
@@ -191,7 +193,7 @@ def _check_xse_installation(
     if str(latest_version) in log_contents[0]:
         messages.append(f"✔️ You have the latest version of *{full_name}*! \n-----\n")
     else:
-        warn_outdated: str | None = yaml_settings(str, Constants.YAML.Game, "Warnings_XSE.Warn_Outdated")
+        warn_outdated: str | None = yaml_settings(str, YAML.Game, "Warnings_XSE.Warn_Outdated")
         if not isinstance(warn_outdated, str):
             raise TypeError("XSE outdated warning message must be a string")
         messages.append(warn_outdated)
@@ -249,7 +251,7 @@ def _get_expected_script_hashes() -> dict[str, str]:
         TypeError: If the expected script hashes configuration is not a dictionary
                    and the error has not already been raised previously.
     """
-    xse_hashedscripts = yaml_settings(dict[str, str], Constants.YAML.Game, "Game_Info.XSE_HashedScripts")
+    xse_hashedscripts = yaml_settings(dict[str, str], YAML.Game, "Game_Info.XSE_HashedScripts")
     if not isinstance(xse_hashedscripts, dict):
         if not Tokens.XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED:
             Tokens.XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED = True
@@ -278,7 +280,7 @@ def _get_scripts_folder_path() -> str:
         str: The path of the game's scripts folder.
     """
     game_folder_scripts: str | None = yaml_settings(
-        str, Constants.YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts"
+        str, YAML.Game_Local, f"Game{get_vr()}_Info.Game_Folder_Scripts"
     )
     if game_folder_scripts is None:
         raise ValueError("Game scripts folder path cannot be None")
@@ -360,13 +362,13 @@ def _generate_result_message(expected_hashes: dict[str, str], actual_hashes: dic
 
     # Add warning messages from configuration if needed
     if has_missing_scripts:
-        warn_missing: str | None = yaml_settings(str, Constants.YAML.Game, "Warnings_XSE.Warn_Missing")
+        warn_missing: str | None = yaml_settings(str, YAML.Game, "Warnings_XSE.Warn_Missing")
         if not isinstance(warn_missing, str):
             raise TypeError("Missing scripts warning message must be a string")
         message_list.append(warn_missing)
 
     if has_mismatched_scripts:
-        warn_mismatch: str | None = yaml_settings(str, Constants.YAML.Game, "Warnings_XSE.Warn_Mismatch")
+        warn_mismatch: str | None = yaml_settings(str, YAML.Game, "Warnings_XSE.Warn_Mismatch")
         if not isinstance(warn_mismatch, str):
             raise TypeError("Mismatched scripts warning message must be a string")
         message_list.append(warn_mismatch)

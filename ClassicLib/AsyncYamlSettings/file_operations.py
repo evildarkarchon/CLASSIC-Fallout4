@@ -2,7 +2,7 @@
 
 from io import StringIO
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Optional
 
 import ruamel.yaml
 
@@ -28,6 +28,16 @@ class YamlFileOperations:
     def __init__(self, io_core: FileIOCore | None = None) -> None:
         """Initialize with FileIOCore instance."""
         self.io_core = io_core or FileIOCore()
+
+        # Try to get Rust YAML operations if available
+        self.rust_yaml: Optional[Any] = None
+        try:
+            from ClassicLib.integration.factory import get_yaml_operations
+            self.rust_yaml = get_yaml_operations()
+            if self.rust_yaml:
+                logger.debug("YamlFileOperations: Using Rust acceleration for YAML parsing")
+        except ImportError:
+            logger.debug("YamlFileOperations: Rust YAML operations not available")
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """Get the file path for a specific YAML store."""
@@ -76,6 +86,15 @@ class YamlFileOperations:
         Returns:
             Parsed YAML data
         """
+        # Try Rust acceleration first
+        if self.rust_yaml:
+            try:
+                result = self.rust_yaml.parse_yaml(content)
+                return result if isinstance(result, dict) else {}
+            except Exception as e:
+                logger.debug(f"Rust YAML parsing failed, falling back to Python: {e}")
+
+        # Fallback to Python implementation
         yaml = ruamel.yaml.YAML()
         yaml.preserve_quotes = True
         yaml.width = 120
@@ -98,6 +117,14 @@ class YamlFileOperations:
         Returns:
             YAML string
         """
+        # Try Rust acceleration first
+        if self.rust_yaml:
+            try:
+                return self.rust_yaml.dump_yaml(data)
+            except Exception as e:
+                logger.debug(f"Rust YAML dumping failed, falling back to Python: {e}")
+
+        # Fallback to Python implementation
         yaml = ruamel.yaml.YAML()
         yaml.preserve_quotes = True
         yaml.width = 120
@@ -122,6 +149,15 @@ class YamlFileOperations:
             Parsed YAML data
         """
         try:
+            # Try Rust acceleration first (includes caching)
+            if self.rust_yaml:
+                try:
+                    result = self.rust_yaml.load_yaml_file(str(file_path))
+                    return result if isinstance(result, dict) else {}
+                except Exception as e:
+                    logger.debug(f"Rust YAML file loading failed, falling back to Python: {e}")
+
+            # Fallback to Python implementation
             # Use FileIOCore for async file reading
             content = await self.io_core.read_file(file_path)
 
@@ -150,6 +186,15 @@ class YamlFileOperations:
             True if successful, False otherwise
         """
         try:
+            # Try Rust acceleration first (includes atomic write)
+            if self.rust_yaml:
+                try:
+                    self.rust_yaml.save_yaml_file(str(file_path), data)
+                    return True
+                except Exception as e:
+                    logger.debug(f"Rust YAML file saving failed, falling back to Python: {e}")
+
+            # Fallback to Python implementation
             # Ensure parent directory exists
             file_path.parent.mkdir(parents=True, exist_ok=True)
 

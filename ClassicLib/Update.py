@@ -14,7 +14,9 @@ import aiohttp
 from bs4 import BeautifulSoup, Tag
 from packaging.version import InvalidVersion, Version
 
-from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success, msg_warning
+# Fixed circular import - import functions directly from modules
+from ClassicLib.GlobalRegistry import get_game  # Import just the function we need
+from ClassicLib.MessageHandler import msg_error, msg_info, msg_success, msg_warning
 from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
@@ -417,7 +419,7 @@ class VersionChecker:
 
         # Get and display unable message if available
         if not self.quiet and isinstance(error, (aiohttp.ClientError, UpdateCheckError)):
-            unable_msg = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{GlobalRegistry.get_game()}")  # type: ignore
+            unable_msg = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{get_game()}")  # type: ignore
             if unable_msg:
                 msg_error(unable_msg)
 
@@ -539,7 +541,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     if is_outdated:
         # Show update warning
         if not quiet:
-            warning_msg = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{GlobalRegistry.get_game()}"))  # type: ignore
+            warning_msg = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{get_game()}"))  # type: ignore
             msg_warning(warning_msg)
 
         if gui_request:

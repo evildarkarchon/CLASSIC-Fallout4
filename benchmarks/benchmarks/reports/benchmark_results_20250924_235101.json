@@ -1,0 +1,1495 @@
+{
+  "metadata": {
+    "start_time": "2025-09-24T23:51:01.519387",
+    "benchmark_types": [
+      "micro"
+    ],
+    "test_sizes": [
+      "minimal"
+    ],
+    "iterations": 1,
+    "memory_profiling": false,
+    "parallel_execution": false,
+    "rust_status": {
+      "available": {
+        "parser": true,
+        "formid_analyzer": true,
+        "plugin_analyzer": true,
+        "record_scanner": true,
+        "report_generation": true,
+        "database": true,
+        "database_pool": true,
+        "file_io": true,
+        "file_io_core": true,
+        "mod_detector": true
+      },
+      "initialized": {},
+      "failed": {},
+      "performance_gains": {
+        "parser": "150x",
+        "formid_analyzer": "50x",
+        "plugin_analyzer": "30x",
+        "record_scanner": "40x",
+        "report_generation": "75x",
+        "database": "N/A",
+        "database_pool": "25x",
+        "file_io": "N/A",
+        "file_io_core": "10-20x file ops, 30-40x DDS",
+        "mod_detector": "35x"
+      },
+      "active_count": 10,
+      "total_count": 10,
+      "percentage": 100.0,
+      "acceleration_active": true,
+      "acceleration_level": "FULLY ACCELERATED",
+      "version": "8.0.0",
+      "disabled": false
+    }
+  },
+  "micro_benchmarks": {
+    "parser": {
+      "minimal": {
+        "python": {
+          "component_name": "parser",
+          "implementation": "python",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 0.0015043001621961594,
+            "max_time": 0.0015043001621961594,
+            "mean_time": 0.0015043001621961594,
+            "median_time": 0.0015043001621961594,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              0.0015043001621961594,
+              0.0015043001621961594
+            ],
+            "execution_times": [
+              0.0015043001621961594
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 664.7609467382355,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.530347",
+            "test_iterations": 1
+          }
+        },
+        "rust": {
+          "component_name": "parser",
+          "implementation": "rust",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 0.0016079000197350979,
+            "max_time": 0.0016079000197350979,
+            "mean_time": 0.0016079000197350979,
+            "median_time": 0.0016079000197350979,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              0.0016079000197350979,
+              0.0016079000197350979
+            ],
+            "execution_times": [
+              0.0016079000197350979
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 621.9292168208011,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.519842",
+            "test_iterations": 1
+          }
+        }
+      }
+    },
+    "formid_analyzer": {
+      "minimal": {
+        "python": {
+          "component_name": "formid_analyzer",
+          "implementation": "python",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 3.400002606213093e-05,
+            "max_time": 3.400002606213093e-05,
+            "mean_time": 3.400002606213093e-05,
+            "median_time": 3.400002606213093e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              3.400002606213093e-05,
+              3.400002606213093e-05
+            ],
+            "execution_times": [
+              3.400002606213093e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 29411.742160803675,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.541317",
+            "test_iterations": 1
+          }
+        },
+        "rust": {
+          "component_name": "formid_analyzer",
+          "implementation": "rust",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 2.8399983420968056e-05,
+            "max_time": 2.8399983420968056e-05,
+            "mean_time": 2.8399983420968056e-05,
+            "median_time": 2.8399983420968056e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              2.8399983420968056e-05,
+              2.8399983420968056e-05
+            ],
+            "execution_times": [
+              2.8399983420968056e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 35211.28816088279,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.537207",
+            "test_iterations": 1
+          }
+        }
+      }
+    },
+    "plugin_analyzer": {
+      "minimal": {
+        "python": {
+          "component_name": "plugin_analyzer",
+          "implementation": "python",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 4.640012048184872e-05,
+            "max_time": 4.640012048184872e-05,
+            "mean_time": 4.640012048184872e-05,
+            "median_time": 4.640012048184872e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              4.640012048184872e-05,
+              4.640012048184872e-05
+            ],
+            "execution_times": [
+              4.640012048184872e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 21551.668177051186,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.551916",
+            "test_iterations": 1
+          }
+        },
+        "rust": {
+          "component_name": "plugin_analyzer",
+          "implementation": "rust",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 0.00019109994173049927,
+            "max_time": 0.00019109994173049927,
+            "mean_time": 0.00019109994173049927,
+            "median_time": 0.00019109994173049927,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              0.00019109994173049927,
+              0.00019109994173049927
+            ],
+            "execution_times": [
+              0.00019109994173049927
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 5232.863971304924,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.545951",
+            "test_iterations": 1
+          }
+        }
+      }
+    },
+    "record_scanner": {
+      "minimal": {
+        "python": {
+          "component_name": "record_scanner",
+          "implementation": "python",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 1.5200115740299225e-05,
+            "max_time": 1.5200115740299225e-05,
+            "mean_time": 1.5200115740299225e-05,
+            "median_time": 1.5200115740299225e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              1.5200115740299225e-05,
+              1.5200115740299225e-05
+            ],
+            "execution_times": [
+              1.5200115740299225e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 65788.97273451382,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.561087",
+            "test_iterations": 1
+          }
+        },
+        "rust": {
+          "component_name": "record_scanner",
+          "implementation": "rust",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 0.00013109995052218437,
+            "max_time": 0.00013109995052218437,
+            "mean_time": 0.00013109995052218437,
+            "median_time": 0.00013109995052218437,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              0.00013109995052218437,
+              0.00013109995052218437
+            ],
+            "execution_times": [
+              0.00013109995052218437
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 7627.767943594935,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.556523",
+            "test_iterations": 1
+          }
+        }
+      }
+    },
+    "report_generation": {
+      "minimal": {
+        "python": {
+          "component_name": "report_generation",
+          "implementation": "python",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 3.160000778734684e-05,
+            "max_time": 3.160000778734684e-05,
+            "mean_time": 3.160000778734684e-05,
+            "median_time": 3.160000778734684e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              3.160000778734684e-05,
+              3.160000778734684e-05
+            ],
+            "execution_times": [
+              3.160000778734684e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 31645.561821678297,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.569533",
+            "test_iterations": 1
+          }
+        },
+        "rust": {
+          "component_name": "report_generation",
+          "implementation": "rust",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 0.0001354999840259552,
+            "max_time": 0.0001354999840259552,
+            "mean_time": 0.0001354999840259552,
+            "median_time": 0.0001354999840259552,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              0.0001354999840259552,
+              0.0001354999840259552
+            ],
+            "execution_times": [
+              0.0001354999840259552
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 7380.0746707722765,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.565074",
+            "test_iterations": 1
+          }
+        }
+      }
+    },
+    "database_pool": {
+      "minimal": {
+        "python": {
+          "component_name": "database_pool",
+          "implementation": "python",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 2.9800226911902428e-05,
+            "max_time": 2.9800226911902428e-05,
+            "mean_time": 2.9800226911902428e-05,
+            "median_time": 2.9800226911902428e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              2.9800226911902428e-05,
+              2.9800226911902428e-05
+            ],
+            "execution_times": [
+              2.9800226911902428e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 33556.791461899666,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.577618",
+            "test_iterations": 1
+          }
+        },
+        "rust": {
+          "component_name": "database_pool",
+          "implementation": "rust",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 3.109988756477833e-05,
+            "max_time": 3.109988756477833e-05,
+            "mean_time": 3.109988756477833e-05,
+            "median_time": 3.109988756477833e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              3.109988756477833e-05,
+              3.109988756477833e-05
+            ],
+            "execution_times": [
+              3.109988756477833e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 32154.4570833926,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.573758",
+            "test_iterations": 1
+          }
+        }
+      }
+    },
+    "file_io_core": {
+      "minimal": {
+        "python": {
+          "component_name": "file_io_core",
+          "implementation": "python",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 3.96000687032938e-05,
+            "max_time": 3.96000687032938e-05,
+            "mean_time": 3.96000687032938e-05,
+            "median_time": 3.96000687032938e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              3.96000687032938e-05,
+              3.96000687032938e-05
+            ],
+            "execution_times": [
+              3.96000687032938e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 25252.481441195665,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.585457",
+            "test_iterations": 1
+          }
+        },
+        "rust": {
+          "component_name": "file_io_core",
+          "implementation": "rust",
+          "test_size": "minimal",
+          "timing": {
+            "min_time": 3.350013867020607e-05,
+            "max_time": 3.350013867020607e-05,
+            "mean_time": 3.350013867020607e-05,
+            "median_time": 3.350013867020607e-05,
+            "std_dev": 0.0,
+            "confidence_interval_95": [
+              3.350013867020607e-05,
+              3.350013867020607e-05
+            ],
+            "execution_times": [
+              3.350013867020607e-05
+            ]
+          },
+          "memory": {
+            "peak_memory": 0,
+            "memory_increase": 0,
+            "allocations": 0
+          },
+          "performance": {
+            "throughput": 29850.622704716367,
+            "cache_hit_rate": 0.0,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          "quality": {
+            "errors": 0,
+            "warnings": 0,
+            "success_rate": 100.0
+          },
+          "metadata": {
+            "timestamp": "2025-09-24T23:51:01.581592",
+            "test_iterations": 1
+          }
+        }
+      }
+    }
+  },
+  "macro_benchmarks": {},
+  "memory_analysis": {},
+  "comparisons": [
+    {
+      "component_name": "parser",
+      "test_size": "minimal",
+      "comparison": {
+        "speedup_factor": 0.9355682217380614,
+        "memory_efficiency": 0.0,
+        "throughput_improvement": -6.4431778261938595
+      },
+      "target_analysis": {
+        "target_speedup": 150.0,
+        "target_achieved": false,
+        "target_percentage": 0.6237121478253743
+      },
+      "statistical": {
+        "performance_significant": true,
+        "confidence_level": 0.95
+      },
+      "rust_metrics": {
+        "component_name": "parser",
+        "implementation": "rust",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 0.0016079000197350979,
+          "max_time": 0.0016079000197350979,
+          "mean_time": 0.0016079000197350979,
+          "median_time": 0.0016079000197350979,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            0.0016079000197350979,
+            0.0016079000197350979
+          ],
+          "execution_times": [
+            0.0016079000197350979
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 621.9292168208011,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.519842",
+          "test_iterations": 1
+        }
+      },
+      "python_metrics": {
+        "component_name": "parser",
+        "implementation": "python",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 0.0015043001621961594,
+          "max_time": 0.0015043001621961594,
+          "mean_time": 0.0015043001621961594,
+          "median_time": 0.0015043001621961594,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            0.0015043001621961594,
+            0.0015043001621961594
+          ],
+          "execution_times": [
+            0.0015043001621961594
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 664.7609467382355,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.530347",
+          "test_iterations": 1
+        }
+      },
+      "recommendations": [
+        "Performance below target (0.6% achieved). Consider algorithm optimizations or parallel processing.",
+        "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+      ]
+    },
+    {
+      "component_name": "formid_analyzer",
+      "test_size": "minimal",
+      "comparison": {
+        "speedup_factor": 1.197184715151217,
+        "memory_efficiency": 0.0,
+        "throughput_improvement": 19.718471515121706
+      },
+      "target_analysis": {
+        "target_speedup": 50.0,
+        "target_achieved": false,
+        "target_percentage": 2.394369430302434
+      },
+      "statistical": {
+        "performance_significant": true,
+        "confidence_level": 0.95
+      },
+      "rust_metrics": {
+        "component_name": "formid_analyzer",
+        "implementation": "rust",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 2.8399983420968056e-05,
+          "max_time": 2.8399983420968056e-05,
+          "mean_time": 2.8399983420968056e-05,
+          "median_time": 2.8399983420968056e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            2.8399983420968056e-05,
+            2.8399983420968056e-05
+          ],
+          "execution_times": [
+            2.8399983420968056e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 35211.28816088279,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.537207",
+          "test_iterations": 1
+        }
+      },
+      "python_metrics": {
+        "component_name": "formid_analyzer",
+        "implementation": "python",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 3.400002606213093e-05,
+          "max_time": 3.400002606213093e-05,
+          "mean_time": 3.400002606213093e-05,
+          "median_time": 3.400002606213093e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            3.400002606213093e-05,
+            3.400002606213093e-05
+          ],
+          "execution_times": [
+            3.400002606213093e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 29411.742160803675,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.541317",
+          "test_iterations": 1
+        }
+      },
+      "recommendations": [
+        "Performance below target (2.4% achieved). Consider algorithm optimizations or parallel processing.",
+        "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+      ]
+    },
+    {
+      "component_name": "plugin_analyzer",
+      "test_size": "minimal",
+      "comparison": {
+        "speedup_factor": 0.24280551873367381,
+        "memory_efficiency": 0.0,
+        "throughput_improvement": -75.71944812663261
+      },
+      "target_analysis": {
+        "target_speedup": 30.0,
+        "target_achieved": false,
+        "target_percentage": 0.8093517291122461
+      },
+      "statistical": {
+        "performance_significant": true,
+        "confidence_level": 0.95
+      },
+      "rust_metrics": {
+        "component_name": "plugin_analyzer",
+        "implementation": "rust",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 0.00019109994173049927,
+          "max_time": 0.00019109994173049927,
+          "mean_time": 0.00019109994173049927,
+          "median_time": 0.00019109994173049927,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            0.00019109994173049927,
+            0.00019109994173049927
+          ],
+          "execution_times": [
+            0.00019109994173049927
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 5232.863971304924,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.545951",
+          "test_iterations": 1
+        }
+      },
+      "python_metrics": {
+        "component_name": "plugin_analyzer",
+        "implementation": "python",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 4.640012048184872e-05,
+          "max_time": 4.640012048184872e-05,
+          "mean_time": 4.640012048184872e-05,
+          "median_time": 4.640012048184872e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            4.640012048184872e-05,
+            4.640012048184872e-05
+          ],
+          "execution_times": [
+            4.640012048184872e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 21551.668177051186,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.551916",
+          "test_iterations": 1
+        }
+      },
+      "recommendations": [
+        "Performance below target (0.8% achieved). Consider algorithm optimizations or parallel processing.",
+        "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+      ]
+    },
+    {
+      "component_name": "record_scanner",
+      "test_size": "minimal",
+      "comparison": {
+        "speedup_factor": 0.11594295558278722,
+        "memory_efficiency": 0.0,
+        "throughput_improvement": -88.40570444172128
+      },
+      "target_analysis": {
+        "target_speedup": 40.0,
+        "target_achieved": false,
+        "target_percentage": 0.28985738895696805
+      },
+      "statistical": {
+        "performance_significant": true,
+        "confidence_level": 0.95
+      },
+      "rust_metrics": {
+        "component_name": "record_scanner",
+        "implementation": "rust",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 0.00013109995052218437,
+          "max_time": 0.00013109995052218437,
+          "mean_time": 0.00013109995052218437,
+          "median_time": 0.00013109995052218437,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            0.00013109995052218437,
+            0.00013109995052218437
+          ],
+          "execution_times": [
+            0.00013109995052218437
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 7627.767943594935,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.556523",
+          "test_iterations": 1
+        }
+      },
+      "python_metrics": {
+        "component_name": "record_scanner",
+        "implementation": "python",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 1.5200115740299225e-05,
+          "max_time": 1.5200115740299225e-05,
+          "mean_time": 1.5200115740299225e-05,
+          "median_time": 1.5200115740299225e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            1.5200115740299225e-05,
+            1.5200115740299225e-05
+          ],
+          "execution_times": [
+            1.5200115740299225e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 65788.97273451382,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.561087",
+          "test_iterations": 1
+        }
+      },
+      "recommendations": [
+        "Performance below target (0.3% achieved). Consider algorithm optimizations or parallel processing.",
+        "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+      ]
+    },
+    {
+      "component_name": "report_generation",
+      "test_size": "minimal",
+      "comparison": {
+        "speedup_factor": 0.2332104170676051,
+        "memory_efficiency": 0.0,
+        "throughput_improvement": -76.6789582932395
+      },
+      "target_analysis": {
+        "target_speedup": 75.0,
+        "target_achieved": false,
+        "target_percentage": 0.3109472227568068
+      },
+      "statistical": {
+        "performance_significant": true,
+        "confidence_level": 0.95
+      },
+      "rust_metrics": {
+        "component_name": "report_generation",
+        "implementation": "rust",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 0.0001354999840259552,
+          "max_time": 0.0001354999840259552,
+          "mean_time": 0.0001354999840259552,
+          "median_time": 0.0001354999840259552,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            0.0001354999840259552,
+            0.0001354999840259552
+          ],
+          "execution_times": [
+            0.0001354999840259552
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 7380.0746707722765,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.565074",
+          "test_iterations": 1
+        }
+      },
+      "python_metrics": {
+        "component_name": "report_generation",
+        "implementation": "python",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 3.160000778734684e-05,
+          "max_time": 3.160000778734684e-05,
+          "mean_time": 3.160000778734684e-05,
+          "median_time": 3.160000778734684e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            3.160000778734684e-05,
+            3.160000778734684e-05
+          ],
+          "execution_times": [
+            3.160000778734684e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 31645.561821678297,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.569533",
+          "test_iterations": 1
+        }
+      },
+      "recommendations": [
+        "Performance below target (0.3% achieved). Consider algorithm optimizations or parallel processing.",
+        "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+      ]
+    },
+    {
+      "component_name": "database_pool",
+      "test_size": "minimal",
+      "comparison": {
+        "speedup_factor": 0.9582101173141279,
+        "memory_efficiency": 0.0,
+        "throughput_improvement": -4.1789882685872195
+      },
+      "target_analysis": {
+        "target_speedup": 25.0,
+        "target_achieved": false,
+        "target_percentage": 3.8328404692565115
+      },
+      "statistical": {
+        "performance_significant": true,
+        "confidence_level": 0.95
+      },
+      "rust_metrics": {
+        "component_name": "database_pool",
+        "implementation": "rust",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 3.109988756477833e-05,
+          "max_time": 3.109988756477833e-05,
+          "mean_time": 3.109988756477833e-05,
+          "median_time": 3.109988756477833e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            3.109988756477833e-05,
+            3.109988756477833e-05
+          ],
+          "execution_times": [
+            3.109988756477833e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 32154.4570833926,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.573758",
+          "test_iterations": 1
+        }
+      },
+      "python_metrics": {
+        "component_name": "database_pool",
+        "implementation": "python",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 2.9800226911902428e-05,
+          "max_time": 2.9800226911902428e-05,
+          "mean_time": 2.9800226911902428e-05,
+          "median_time": 2.9800226911902428e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            2.9800226911902428e-05,
+            2.9800226911902428e-05
+          ],
+          "execution_times": [
+            2.9800226911902428e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 33556.791461899666,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.577618",
+          "test_iterations": 1
+        }
+      },
+      "recommendations": [
+        "Performance below target (3.8% achieved). Consider algorithm optimizations or parallel processing.",
+        "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+      ]
+    },
+    {
+      "component_name": "file_io_core",
+      "test_size": "minimal",
+      "comparison": {
+        "speedup_factor": 1.1820867099428698,
+        "memory_efficiency": 0.0,
+        "throughput_improvement": 18.208670994286997
+      },
+      "target_analysis": {
+        "target_speedup": 15.0,
+        "target_achieved": false,
+        "target_percentage": 7.880578066285798
+      },
+      "statistical": {
+        "performance_significant": true,
+        "confidence_level": 0.95
+      },
+      "rust_metrics": {
+        "component_name": "file_io_core",
+        "implementation": "rust",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 3.350013867020607e-05,
+          "max_time": 3.350013867020607e-05,
+          "mean_time": 3.350013867020607e-05,
+          "median_time": 3.350013867020607e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            3.350013867020607e-05,
+            3.350013867020607e-05
+          ],
+          "execution_times": [
+            3.350013867020607e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 29850.622704716367,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.581592",
+          "test_iterations": 1
+        }
+      },
+      "python_metrics": {
+        "component_name": "file_io_core",
+        "implementation": "python",
+        "test_size": "minimal",
+        "timing": {
+          "min_time": 3.96000687032938e-05,
+          "max_time": 3.96000687032938e-05,
+          "mean_time": 3.96000687032938e-05,
+          "median_time": 3.96000687032938e-05,
+          "std_dev": 0.0,
+          "confidence_interval_95": [
+            3.96000687032938e-05,
+            3.96000687032938e-05
+          ],
+          "execution_times": [
+            3.96000687032938e-05
+          ]
+        },
+        "memory": {
+          "peak_memory": 0,
+          "memory_increase": 0,
+          "allocations": 0
+        },
+        "performance": {
+          "throughput": 25252.481441195665,
+          "cache_hit_rate": 0.0,
+          "cache_hits": 0,
+          "cache_misses": 0
+        },
+        "quality": {
+          "errors": 0,
+          "warnings": 0,
+          "success_rate": 100.0
+        },
+        "metadata": {
+          "timestamp": "2025-09-24T23:51:01.585457",
+          "test_iterations": 1
+        }
+      },
+      "recommendations": [
+        "Performance below target (7.9% achieved). Consider algorithm optimizations or parallel processing.",
+        "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+      ]
+    }
+  ],
+  "summary": {
+    "overall_assessment": {
+      "status": "NEEDS_IMPROVEMENT",
+      "message": "Significant optimization required across multiple components.",
+      "targets_achieved": 0,
+      "total_comparisons": 7,
+      "target_achievement_rate": 0.0,
+      "average_speedup": 0.6950012365043345
+    },
+    "component_summary": {
+      "parser": {
+        "avg_speedup": 0.9355682217380614,
+        "target_achievement_rate": 0,
+        "performance_consistency": 1.0
+      },
+      "formid_analyzer": {
+        "avg_speedup": 1.197184715151217,
+        "target_achievement_rate": 0,
+        "performance_consistency": 1.0
+      },
+      "plugin_analyzer": {
+        "avg_speedup": 0.24280551873367381,
+        "target_achievement_rate": 0,
+        "performance_consistency": 1.0
+      },
+      "record_scanner": {
+        "avg_speedup": 0.11594295558278722,
+        "target_achievement_rate": 0,
+        "performance_consistency": 1.0
+      },
+      "report_generation": {
+        "avg_speedup": 0.2332104170676051,
+        "target_achievement_rate": 0,
+        "performance_consistency": 1.0
+      },
+      "database_pool": {
+        "avg_speedup": 0.9582101173141279,
+        "target_achievement_rate": 0,
+        "performance_consistency": 1.0
+      },
+      "file_io_core": {
+        "avg_speedup": 1.1820867099428698,
+        "target_achievement_rate": 0,
+        "performance_consistency": 1.0
+      }
+    },
+    "optimization_priorities": [
+      {
+        "component": "parser",
+        "priority": "HIGH",
+        "current_speedup": 0.9355682217380614,
+        "target_achievement": 0,
+        "recommendations": [
+          "Performance below target (0.6% achieved). Consider algorithm optimizations or parallel processing.",
+          "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+        ]
+      },
+      {
+        "component": "formid_analyzer",
+        "priority": "HIGH",
+        "current_speedup": 1.197184715151217,
+        "target_achievement": 0,
+        "recommendations": [
+          "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies.",
+          "Performance below target (2.4% achieved). Consider algorithm optimizations or parallel processing."
+        ]
+      },
+      {
+        "component": "plugin_analyzer",
+        "priority": "HIGH",
+        "current_speedup": 0.24280551873367381,
+        "target_achievement": 0,
+        "recommendations": [
+          "Performance below target (0.8% achieved). Consider algorithm optimizations or parallel processing.",
+          "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+        ]
+      },
+      {
+        "component": "record_scanner",
+        "priority": "HIGH",
+        "current_speedup": 0.11594295558278722,
+        "target_achievement": 0,
+        "recommendations": [
+          "Performance below target (0.3% achieved). Consider algorithm optimizations or parallel processing.",
+          "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+        ]
+      },
+      {
+        "component": "report_generation",
+        "priority": "HIGH",
+        "current_speedup": 0.2332104170676051,
+        "target_achievement": 0,
+        "recommendations": [
+          "Performance below target (0.3% achieved). Consider algorithm optimizations or parallel processing.",
+          "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+        ]
+      },
+      {
+        "component": "database_pool",
+        "priority": "HIGH",
+        "current_speedup": 0.9582101173141279,
+        "target_achievement": 0,
+        "recommendations": [
+          "Performance below target (3.8% achieved). Consider algorithm optimizations or parallel processing.",
+          "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+        ]
+      },
+      {
+        "component": "file_io_core",
+        "priority": "HIGH",
+        "current_speedup": 1.1820867099428698,
+        "target_achievement": 0,
+        "recommendations": [
+          "Performance below target (7.9% achieved). Consider algorithm optimizations or parallel processing.",
+          "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+        ]
+      }
+    ],
+    "memory_analysis": {
+      "components_with_issues": 0,
+      "memory_issues": [],
+      "overall_memory_efficiency": 1.0
+    },
+    "recommendations": {
+      "immediate_actions": [
+        {
+          "component": "parser",
+          "priority": "HIGH",
+          "current_speedup": 0.9355682217380614,
+          "target_achievement": 0,
+          "recommendations": [
+            "Performance below target (0.6% achieved). Consider algorithm optimizations or parallel processing.",
+            "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+          ]
+        },
+        {
+          "component": "formid_analyzer",
+          "priority": "HIGH",
+          "current_speedup": 1.197184715151217,
+          "target_achievement": 0,
+          "recommendations": [
+            "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies.",
+            "Performance below target (2.4% achieved). Consider algorithm optimizations or parallel processing."
+          ]
+        },
+        {
+          "component": "plugin_analyzer",
+          "priority": "HIGH",
+          "current_speedup": 0.24280551873367381,
+          "target_achievement": 0,
+          "recommendations": [
+            "Performance below target (0.8% achieved). Consider algorithm optimizations or parallel processing.",
+            "Low cache hit rate (0.0%). Consider increasing cache sizes or improving cache strategies."
+          ]
+        }
+      ],
+      "medium_term_optimizations": [],
+      "memory_optimizations": []
+    },
+    "rust_acceleration_status": {
+      "components_active": 10,
+      "components_total": 10,
+      "acceleration_percentage": 100.0,
+      "missing_components": []
+    }
+  }
+}

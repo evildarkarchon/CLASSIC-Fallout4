@@ -6,7 +6,7 @@ use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashMap;
-use anyhow::Result;
+// use anyhow::Result; // Currently unused
 
 /// Precompiled FormID regex pattern
 static FORMID_PATTERN: Lazy<Regex> = Lazy::new(|| {

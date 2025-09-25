@@ -122,6 +122,10 @@ class OrchestratorCore:
         self._last_formids: list[str] = []
         self._last_plugins: dict[str, str] = {}
 
+        # Log acceleration status
+        if RUST_INTEGRATION_AVAILABLE:
+            self._log_acceleration_status()
+
     async def __aenter__(self) -> "OrchestratorCore":
         """
         Handles asynchronous context manager entry for initializing resources required
@@ -614,7 +618,6 @@ class OrchestratorCore:
             - Report fragment with loading status
         """
         import aiofiles
-
         from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
         lines = []
@@ -629,10 +632,30 @@ class OrchestratorCore:
         loadorder_plugins: dict[str, str] = {}
 
         try:
-            # Use async file reading to avoid blocking the event loop
-            async with aiofiles.open(loadorder_path, encoding="utf-8", errors="ignore") as loadorder_file:
-                content = await loadorder_file.read()
-                loadorder_data = content.splitlines()
+            # Try Rust-accelerated file I/O first
+            if RUST_INTEGRATION_AVAILABLE:
+                try:
+                    rust_file_io = get_file_io()
+                    if rust_file_io and hasattr(rust_file_io, 'read_file_async'):
+                        content = await rust_file_io.read_file_async(loadorder_path)
+                        loadorder_data = content.splitlines()
+                        logging.getLogger(__name__).debug("🚀 Used Rust-accelerated file I/O for loadorder.txt")
+                    else:
+                        # Fall back to Python async file reading
+                        async with aiofiles.open(loadorder_path, encoding="utf-8", errors="ignore") as loadorder_file:
+                            content = await loadorder_file.read()
+                            loadorder_data = content.splitlines()
+                except Exception as e:
+                    logging.getLogger(__name__).debug(f"Rust file I/O failed, using Python: {e}")
+                    # Fall back to Python async file reading
+                    async with aiofiles.open(loadorder_path, encoding="utf-8", errors="ignore") as loadorder_file:
+                        content = await loadorder_file.read()
+                        loadorder_data = content.splitlines()
+            else:
+                # Use standard Python async file reading
+                async with aiofiles.open(loadorder_path, encoding="utf-8", errors="ignore") as loadorder_file:
+                    content = await loadorder_file.read()
+                    loadorder_data = content.splitlines()
 
             # Skip the header line (first line) of the loadorder.txt file
             if len(loadorder_data) > 1:

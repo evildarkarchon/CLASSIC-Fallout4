@@ -4,7 +4,7 @@ from typing import Literal
 
 from packaging.version import Version
 
-from ClassicLib import GlobalRegistry
+# Removed to fix circular import - GlobalRegistry will be imported when needed
 
 NULL_VERSION: Version = Version("0.0.0.0")
 OG_VERSION: Version = Version("1.10.163.0")
@@ -63,7 +63,25 @@ SETTINGS_IGNORE_NONE = {
 }
 
 # Define paths for both Main and Local databases
-DB_PATHS = (
-    Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Main.db"),
-    Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Local.db"),
-)
+# Changed to a function to avoid circular import at module level
+def get_db_paths():
+    """Get database paths based on current game. Import GlobalRegistry lazily."""
+    from ClassicLib import GlobalRegistry
+    return (
+        Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Main.db"),
+        Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Local.db"),
+    )
+
+# For backward compatibility, create a property-like object
+class _DBPaths:
+    """Backward compatible DB_PATHS that lazily gets the paths."""
+    def __getitem__(self, index):
+        return get_db_paths()[index]
+
+    def __iter__(self):
+        return iter(get_db_paths())
+
+    def __len__(self):
+        return 2
+
+DB_PATHS = _DBPaths()

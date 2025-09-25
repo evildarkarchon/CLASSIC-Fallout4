@@ -108,32 +108,60 @@ class PluginAnalyzer:
 
         return loadorder_plugins, plugins_loaded, ReportFragment.from_lines(lines)
 
+    def check_plugin_limit(
+        self, segment_plugins: list[str], game_version: Version | None = None, version_current: Version | None = None
+    ) -> tuple[bool, bool]:
+        """
+        Check for plugin limit markers in the segment plugins.
+
+        This is a separate concern from parsing the load order itself.
+        Returns (plugin_limit_triggered, limit_check_disabled)
+        """
+        if not game_version or not version_current:
+            return False, False
+
+        plugin_limit_marker = "[FF]"
+        plugin_limit_triggered = False
+        limit_check_disabled = False
+
+        # Determine game version characteristics
+        is_original_game = game_version in {self.yamldata.game_version, self.yamldata.game_version_vr}
+        is_new_game_crashgen_pre_137 = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
+
+        # Check for plugin limit markers
+        for entry in segment_plugins:
+            if plugin_limit_marker in entry:
+                if is_original_game:
+                    plugin_limit_triggered = True
+                elif is_new_game_crashgen_pre_137:
+                    limit_check_disabled = True
+                break  # No need to check further once found
+
+        return plugin_limit_triggered, limit_check_disabled
+
     def loadorder_scan_log(
-        self, segment_plugins: list[str], game_version: Version, version_current: Version
+        self, segment_plugins: list[str], game_version: Version | None = None, version_current: Version | None = None
     ) -> tuple[dict[str, str], bool, bool]:
         """
         Scans and processes the plugin load order from the provided segment plugins.
 
         This function analyzes a list of segment plugins to extract their details and
-        builds a mapping of plugin names to their identifiers or classification. It
-        also identifies if a plugin limit was triggered based on certain marker patterns
-        and evaluates version-related conditions regarding the game's behavior with
-        specific plugin configurations.
+        builds a mapping of plugin names to their identifiers or classification.
+
+        Note: The core load order parsing is universal across all Bethesda games.
+        The game_version and version_current parameters are optional and only used
+        for plugin limit detection (backward compatibility).
 
         Arguments:
-            segment_plugins: A list of strings representing the loaded plugins, where
-                each string includes plugin identifiers or related markers.
-            game_version: The current detected version of the game.
-            version_current: The current software version of the application or handler.
+            segment_plugins: A list of strings representing the loaded plugins.
+            game_version: Optional game version for plugin limit detection.
+            version_current: Optional crashgen version for plugin limit detection.
 
         Returns:
             A tuple containing:
-                - A dictionary mapping plugin names to their corresponding identifiers
-                  or classifications.
-                - A boolean flag indicating if a plugin limit marker was detected
-                  and triggered specific processing logic.
-                - A boolean flag indicating if specific plugin limit-related checks
-                  were disabled under the given conditions.
+                - A dictionary mapping plugin names to their hex indices or status.
+                - A boolean flag for plugin limit triggered (requires version params).
+                - A boolean flag for limit check disabled (requires version params).
         """
         # Early return for empty input
         if not segment_plugins:
@@ -142,26 +170,20 @@ class PluginAnalyzer:
         # Constants for plugin status
         plugin_status_dll = "DLL"
         plugin_status_unknown = "???"
-        plugin_limit_marker = "[FF]"
 
-        # Determine game version characteristics
-        is_original_game = game_version in {self.yamldata.game_version, self.yamldata.game_version_vr}
-        is_new_game_crashgen_pre_137 = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
-
-        # Initialize return values
+        # Initialize plugin map
         plugin_map: dict = {}
+
+        # Check plugin limits separately if version info provided
         plugin_limit_triggered = False
         limit_check_disabled = False
+        if game_version and version_current:
+            plugin_limit_triggered, limit_check_disabled = self.check_plugin_limit(
+                segment_plugins, game_version, version_current
+            )
 
-        # Process each plugin entry
+        # Process each plugin entry (universal parsing logic)
         for entry in segment_plugins:
-            # Check for plugin limit markers
-            if plugin_limit_marker in entry:
-                if is_original_game:
-                    plugin_limit_triggered = True
-                elif is_new_game_crashgen_pre_137:
-                    limit_check_disabled = True
-
             # Extract plugin information using regex
             plugin_match: re.Match[str] | None = self.pluginsearch.match(entry, concurrent=True)
             if plugin_match is None:

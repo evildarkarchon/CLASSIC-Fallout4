@@ -9,7 +9,8 @@ import threading
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 
-from ClassicLib import GlobalRegistry
+# Fixed circular import - import directly from module
+from ClassicLib.GlobalRegistry import Keys, register
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.AsyncYamlSettings.core import get_async_yaml_core
 from ClassicLib.AsyncYamlSettings.types import (
@@ -175,9 +176,33 @@ class YamlSettingsCache:
         return self._async_core.cache.file_mod_times
 
 
-# Create singleton instance and register it
-yaml_cache = YamlSettingsCache.get_instance()
-GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
+# Lazy initialization - don't create at module load time
+_yaml_cache = None
+
+
+def _get_yaml_cache():
+    """Get or create the yaml cache singleton with lazy initialization."""
+    global _yaml_cache
+    if _yaml_cache is None:
+        _yaml_cache = YamlSettingsCache.get_instance()
+        register(Keys.YAML_CACHE, _yaml_cache)
+    return _yaml_cache
+
+
+# For backward compatibility - create a callable that returns the singleton
+class _YamlCacheProxy:
+    """Proxy object that lazily initializes the yaml cache on first access."""
+
+    def __getattr__(self, name):
+        """Forward all attribute access to the real yaml cache."""
+        return getattr(_get_yaml_cache(), name)
+
+    def __call__(self):
+        """Allow the proxy to be called like a function for compatibility."""
+        return _get_yaml_cache()
+
+# Create module-level instance that acts like the original yaml_cache
+yaml_cache = _YamlCacheProxy()
 
 
 # ==========================================
@@ -201,7 +226,8 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
     Returns:
         The setting value, properly typed
     """
-    setting = yaml_cache.async_yaml_settings(_type, yaml_store, key_path, new_value)
+    cache = _get_yaml_cache()
+    setting = cache.async_yaml_settings(_type, yaml_store, key_path, new_value)
 
     if _type is Path:
         return Path(setting) if setting and isinstance(setting, str) else None  # type: ignore[return-value]

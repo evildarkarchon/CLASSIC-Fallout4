@@ -65,7 +65,9 @@ impl PatternMatcher {
 
     /// Replace all matches with a replacement string
     pub fn replace_all(&self, text: &str, replacement: &str) -> String {
-        self.matcher.replace_all(text, replacement)
+        // Create a vec with the same replacement for each pattern
+        let replacements: Vec<&str> = vec![replacement; self.patterns.len()];
+        self.matcher.replace_all(text, &replacements)
     }
 
     /// Get pattern statistics

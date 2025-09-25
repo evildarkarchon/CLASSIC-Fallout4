@@ -27,13 +27,15 @@ if (-not (Get-Command maturin -ErrorAction SilentlyContinue)) {
     if (Get-Command uv -ErrorAction SilentlyContinue) {
         $MaturinCmd = "uv run maturin"
         Write-Host "Using uv run maturin" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "ERROR: maturin not found. Please install it first:" -ForegroundColor Red
         Write-Host "  pip install maturin" -ForegroundColor Red
         Write-Host "  or: uv tool install maturin" -ForegroundColor Red
         exit 1
     }
-} else {
+}
+else {
     $MaturinCmd = "maturin"
     Write-Host "Using system maturin" -ForegroundColor Green
 }
@@ -71,7 +73,8 @@ if ($Clean) {
     Get-ChildItem -Path $RustExtensionsDir -Filter "*.so" | Remove-Item -Force
     Get-ChildItem -Path $RustExtensionsDir -Filter "*.dll" | Remove-Item -Force
     Get-ChildItem -Path $TempBuildDir | Remove-Item -Force -Recurse
-} else {
+}
+else {
     Write-Host ""
     Write-Host "[3/8] Skipping clean (use -Clean to force)" -ForegroundColor Gray
 }
@@ -86,7 +89,8 @@ Set-Location $ProjectRoot
 if ($Debug) {
     $BuildCmd = "$MaturinCmd build --out `"$TempBuildDir`""
     Write-Host "  Building in DEBUG mode" -ForegroundColor Yellow
-} else {
+}
+else {
     $BuildCmd = "$MaturinCmd build --release --out `"$TempBuildDir`""
     Write-Host "  Building in RELEASE mode" -ForegroundColor Green
 }
@@ -204,8 +208,11 @@ except ImportError as e:
 $TestResult = $TestScript | python - 2>&1
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✓ Extension validated successfully!" -ForegroundColor Green
-} else {
+    Write-Host "  $TestResult" -ForegroundColor Gray
+}
+else {
     Write-Host "⚠ Warning: Could not validate extension loading." -ForegroundColor Yellow
+    Write-Host "  Error: $TestResult" -ForegroundColor Red
     Write-Host "  This might be normal if the extension has specific dependencies." -ForegroundColor Gray
 }
 

@@ -74,9 +74,30 @@ if RUST_AVAILABLE:
         StringProcessor,
     )
 
+    # Export database module directly
+    try:
+        from . import database
+    except ImportError:
+        # Try from _rust if available
+        if hasattr(_rust, 'database'):
+            database = _rust.database
+        else:
+            database = None
+
+    # Export the database pool wrapper
+    from .database_pool import (
+        RustAsyncDatabasePool,
+        DatabasePoolManager,
+        AsyncDatabasePool,  # Backward compatibility alias
+    )
+
 __all__ = [
     "RUST_AVAILABLE",
+    "database",
     "DatabasePool",
+    "RustAsyncDatabasePool",
+    "DatabasePoolManager",
+    "AsyncDatabasePool",
     "FileIOCore",
     "FormIDAnalyzer",
     "LogParser",
