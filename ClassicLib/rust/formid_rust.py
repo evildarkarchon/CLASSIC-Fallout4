@@ -34,8 +34,11 @@ class RustFormIDAnalyzer:
     def __init__(self, yamldata: ClassicScanLogsInfo, show_formid_values: bool, formid_db_exists: bool):
         """Initialize the analyzer, using Rust implementation when available."""
         self._rust_analyzer = None
+        self._rust_core_analyzer = None
         self._use_rust = False
+        self._use_rust_core = False
         self._python_analyzer = None
+        self._plugin_cache_key = None
 
         # Store configuration
         self.yamldata = yamldata
@@ -44,19 +47,29 @@ class RustFormIDAnalyzer:
 
         try:
             import classic_core
-            if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "FormIDAnalyzer"):
-                # The simple FormIDAnalyzer doesn't need yamldata
+            # Try to use FormIDAnalyzerCore (optimized version) first
+            if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "FormIDAnalyzerCore"):
+                FormIDAnalyzerCore = classic_core.scanlog.FormIDAnalyzerCore
+                self._rust_core_analyzer = FormIDAnalyzerCore(
+                    yamldata,
+                    show_formid_values,
+                    formid_db_exists
+                )
+                self._use_rust_core = True
+                logger.debug("🚀 RustFormIDAnalyzer: Using RUST FormIDAnalyzerCore (zero-copy optimizations)")
+            elif hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "FormIDAnalyzer"):
+                # Fallback to simple FormIDAnalyzer
                 RustFormIDAnalyzerImpl = classic_core.scanlog.FormIDAnalyzer
                 self._rust_analyzer = RustFormIDAnalyzerImpl()
                 self._use_rust = True
-                logger.debug("🚀 RustFormIDAnalyzer: Using RUST implementation (50x faster)")
+                logger.debug("🚀 RustFormIDAnalyzer: Using RUST FormIDAnalyzer (50x faster)")
             else:
                 logger.debug("⚠️  RustFormIDAnalyzer: FormIDAnalyzer not found in classic_core")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Rust FormIDAnalyzer: {e}")
 
         # Only create Python analyzer if Rust truly unavailable
-        if not self._use_rust:
+        if not self._use_rust and not self._use_rust_core:
             logger.debug("⚠️  RustFormIDAnalyzer: Falling back to Python implementation")
             from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
             self._python_analyzer = FormIDAnalyzer(yamldata, show_formid_values, formid_db_exists)
@@ -71,9 +84,20 @@ class RustFormIDAnalyzer:
         Returns:
             List of extracted FormID strings
         """
-        if self._use_rust and self._rust_analyzer:
+        if self._use_rust_core and self._rust_core_analyzer:
             try:
-                # Use Rust batch extraction
+                # Use zero-copy method if available
+                if hasattr(self._rust_core_analyzer, "extract_formids_nocopy"):
+                    # Pass Python list directly for zero-copy operation
+                    return self._rust_core_analyzer.extract_formids_nocopy(segment_callstack)
+                else:
+                    # Fallback to standard method
+                    return self._rust_core_analyzer.extract_formids(segment_callstack)
+            except Exception as e:
+                logger.warning(f"Rust FormIDAnalyzerCore extraction failed: {e}")
+        elif self._use_rust and self._rust_analyzer:
+            try:
+                # Use simple Rust analyzer
                 import classic_core
                 if hasattr(classic_core.scanlog, "extract_formids_batch"):
                     extract_formids_batch = classic_core.scanlog.extract_formids_batch
@@ -103,11 +127,40 @@ class RustFormIDAnalyzer:
             plugins: Dictionary mapping plugin indices to names
             report: Report object to update with matches
         """
+        if self._use_rust_core and self._rust_core_analyzer:
+            try:
+                # Cache plugins once per session for efficiency
+                import hashlib
+                cache_key = hashlib.md5(str(sorted(plugins.items())).encode()).hexdigest()
+
+                if cache_key != self._plugin_cache_key:
+                    # Cache the plugins on Rust side
+                    if hasattr(self._rust_core_analyzer, "cache_plugins"):
+                        self._rust_core_analyzer.cache_plugins(cache_key, plugins)
+                        self._plugin_cache_key = cache_key
+                        logger.debug("🚀 Cached plugin mappings in Rust (avoids repeated conversions)")
+
+                # Use optimized formid_match if available
+                if hasattr(self._rust_core_analyzer, "process_formids_cached"):
+                    # Use cached version - returns a list of formatted strings
+                    result_lines = self._rust_core_analyzer.process_formids_cached(formids, cache_key)
+                    # Create ReportFragment from the result lines
+                    if result_lines:
+                        from ClassicLib.Report.ReportFragment import ReportFragment
+                        fragment = ReportFragment.from_lines(result_lines)
+                        report.add_fragment(fragment)
+                    return
+                else:
+                    # Use regular formid_match
+                    self._rust_core_analyzer.formid_match(formids, plugins, report)
+                    return
+            except Exception as e:
+                logger.warning(f"Rust formid_match failed: {e}, using Python fallback")
+
         if self._python_analyzer:
             self._python_analyzer.formid_match(formids, plugins, report)
         else:
             # Create Python analyzer on demand for formid_match
-            # (Rust version doesn't implement this method yet)
             from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
             analyzer = FormIDAnalyzer(self.yamldata, self.show_formid_values, self.formid_db_exists)
             analyzer.formid_match(formids, plugins, report)

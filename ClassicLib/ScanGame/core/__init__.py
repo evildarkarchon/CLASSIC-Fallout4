@@ -15,12 +15,27 @@ from .utils import (
 )
 from .validators import ScanValidators
 
+# Optional enhanced DDS analyzer
+try:
+    from .dds_analyzer import EnhancedDDSAnalyzer, DDSInfo, analyze_dds
+    HAS_DDS_ANALYZER = True
+except ImportError:
+    HAS_DDS_ANALYZER = False
+    EnhancedDDSAnalyzer = None
+    DDSInfo = None
+    analyze_dds = None
+
 __all__ = [
     # Processors
     "DDSProcessor",
     "FileOperations",
     "LogProcessor",
     "ScanValidators",
+    # Enhanced DDS (optional)
+    "EnhancedDDSAnalyzer",
+    "DDSInfo",
+    "analyze_dds",
+    "HAS_DDS_ANALYZER",
     # Utils
     "ASYNC_ENCODING_AVAILABLE",
     "read_lines_with_encoding_async",

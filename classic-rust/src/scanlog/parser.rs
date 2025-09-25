@@ -316,6 +316,52 @@ impl LogParser {
             .collect()
     }
 
+    /// Optimized batch operation: complete log analysis in single FFI call
+    /// This reduces FFI overhead from 7+ calls to just 1 per log
+    #[pyo3(name = "parse_complete")]
+    pub fn parse_complete(
+        &self,
+        lines: Vec<String>,
+        segment_boundaries: Vec<(String, String)>,
+        _xse_acronym: String,
+    ) -> PyResult<(String, String, String, Vec<Vec<String>>)> {
+        // Parse header info in single pass (first 50 lines typically contain all metadata)
+        let mut game_version = "UNKNOWN".to_string();
+        let mut crashgen_version = "UNKNOWN".to_string();
+        let mut main_error = "UNKNOWN".to_string();
+
+        // Single pass for all header info
+        for line in lines.iter().take(50) {
+            // Game version detection
+            if line.starts_with("Fallout 4 v") || line.starts_with("Skyrim Special Edition v")
+                || line.starts_with("Skyrim SE v") || line.starts_with("Skyrim VR v") {
+                game_version = line.trim().to_string();
+            }
+
+            // Crash generator detection
+            if line.contains("Crash Log") || line.contains("Buffout")
+                || line.contains("Crashgen") || line.contains("Trainwreck") {
+                crashgen_version = line.trim().to_string();
+            }
+
+            // Main error detection
+            if line.starts_with("Unhandled exception") || line.contains("EXCEPTION_") {
+                main_error = line.replace('|', "\n").trim().to_string();
+            }
+        }
+
+        // Extract all segments in parallel using provided boundaries
+        let segments: Vec<Vec<String>> = segment_boundaries
+            .par_iter()
+            .map(|(start, end)| {
+                self.extract_section(lines.clone(), start.clone(), end.clone())
+                    .unwrap_or_default()
+            })
+            .collect();
+
+        Ok((game_version, crashgen_version, main_error, segments))
+    }
+
     /// Count lines in each segment for analysis
     #[pyo3(name = "get_segment_sizes")]
     pub fn get_segment_sizes(&self, lines: Vec<String>) -> HashMap<String, usize> {

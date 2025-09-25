@@ -20,7 +20,7 @@ import pytest
 pytest.importorskip("classic_core", reason="Rust extensions not available")
 
 import classic_core
-from tests.stress.stress_test_fixtures import (
+from .stress_test_fixtures import (
     ConcurrencyTestHelper,
     MemoryTracker,
     PerformanceProfiler
@@ -53,7 +53,8 @@ class TestThreadSafetyValidation:
         Multiple threads simultaneously use the same StringProcessor
         instance to ensure thread-safe operations and consistent results.
         """
-        processor = classic_core.utils.StringProcessor()
+        from classic_core.utils import StringProcessor
+        processor = StringProcessor()
 
         def concurrent_string_operation(thread_id: int, iteration: int, shared_data: list):
             """Worker function for concurrent string processing."""
@@ -107,7 +108,8 @@ class TestThreadSafetyValidation:
         Multiple threads perform pattern matching operations on the same
         processor to ensure internal state management is thread-safe.
         """
-        processor = classic_core.utils.LogProcessor()
+        from classic_core.utils import LogProcessor
+        processor = LogProcessor()
         patterns = ["ERROR", "WARNING", "INFO", "FormID", "Plugin"]
 
         # Initialize pattern matcher once
@@ -547,7 +549,8 @@ class TestHighContentionScenarios:
         Creates maximum concurrent load on Rust components to test
         stability and performance under extreme stress conditions.
         """
-        processor = classic_core.utils.LogProcessor()
+        from classic_core.utils import LogProcessor
+        processor = LogProcessor()
 
         # Generate challenging test data
         large_log_content = stress_data_generator.generate_large_crash_log(
@@ -642,7 +645,8 @@ class TestHighContentionScenarios:
                                for i in range(100)]  # ~100KB per thread
 
                 # Process with Rust components (internal memory allocation)
-                processor = classic_core.utils.StringProcessor()
+                from classic_core.utils import StringProcessor
+                processor = StringProcessor()
                 processed = processor.process_batch(large_strings, "upper")
 
                 # Track allocation success

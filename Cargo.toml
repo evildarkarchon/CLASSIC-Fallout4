@@ -36,6 +36,7 @@ rusqlite = { version = "0.32", features = ["bundled", "backup"] }
 encoding_rs = "0.8"
 memmap2 = "0.9"  # Memory-mapped files
 walkdir = "2.5"  # Efficient directory traversal
+ddsfile = "0.5"  # DDS texture file parsing
 
 # Error handling
 anyhow = "1.0"

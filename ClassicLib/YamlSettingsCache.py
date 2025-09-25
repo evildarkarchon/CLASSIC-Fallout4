@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 
 # Fixed circular import - import directly from module
-from ClassicLib.GlobalRegistry import Keys, register
+from ClassicLib.GlobalRegistry import Keys, register, is_registered
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.AsyncYamlSettings.core import get_async_yaml_core
 from ClassicLib.AsyncYamlSettings.types import (
@@ -193,9 +193,20 @@ def _get_yaml_cache():
 class _YamlCacheProxy:
     """Proxy object that lazily initializes the yaml cache on first access."""
 
+    def __init__(self):
+        """Register placeholder to prevent ClassicScanLogsInfo initialization errors."""
+        # Register a placeholder immediately so is_registered() returns True
+        # but don't actually create the singleton until first access
+        if not is_registered(Keys.YAML_CACHE):
+            register(Keys.YAML_CACHE, self)
+
     def __getattr__(self, name):
         """Forward all attribute access to the real yaml cache."""
-        return getattr(_get_yaml_cache(), name)
+        # On first attribute access, create real cache and re-register it
+        real_cache = _get_yaml_cache()
+        # Re-register with the actual cache instance
+        register(Keys.YAML_CACHE, real_cache)
+        return getattr(real_cache, name)
 
     def __call__(self):
         """Allow the proxy to be called like a function for compatibility."""

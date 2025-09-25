@@ -22,7 +22,7 @@ import pytest
 pytest.importorskip("classic_core", reason="Rust extensions not available")
 
 import classic_core
-from tests.stress.stress_test_fixtures import (
+from .stress_test_fixtures import (
     ConcurrencyTestHelper,
     MemoryTracker,
     PerformanceProfiler,

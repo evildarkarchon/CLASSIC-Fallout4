@@ -23,11 +23,17 @@ from ClassicLib.integration.status import is_rust_accelerated
 # Try to import Rust wrapper classes for type checking
 try:
     from ClassicLib.rust.database_rust import RustAsyncDatabasePool, DatabasePoolManager
-    from classic_core.database import RustDatabasePool
-    RUST_CORE_AVAILABLE = True
+    RUST_WRAPPER_AVAILABLE = True
 except ImportError:
     RustAsyncDatabasePool = None
     DatabasePoolManager = None
+    RUST_WRAPPER_AVAILABLE = False
+
+# Try to import the Rust core module
+try:
+    from classic_core.database import RustDatabasePool
+    RUST_CORE_AVAILABLE = True
+except ImportError:
     RustDatabasePool = None
     RUST_CORE_AVAILABLE = False
 
@@ -346,24 +352,31 @@ class TestRustAsyncDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("classic_core.database_pool.DB_PATHS", [db_path]):
-            pool = RustAsyncDatabasePool()
-            await pool.initialize()
+        pool = get_database_pool()
+        if hasattr(pool, 'initialize'):
+            if RUST_WRAPPER_AVAILABLE and isinstance(pool, RustAsyncDatabasePool):
+                await pool.initialize([str(db_path)])
+            else:
+                with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
+                    await pool.initialize()
 
-            with patch("classic_core.database_pool.GlobalRegistry.get_game", return_value="Fallout4"):
-                result = await pool.get_entry("00023456", "DLCCoast.esm")
-                assert result == "Fog Condenser"
+        with patch("ClassicLib.registry.GlobalRegistry.get_game", return_value="Fallout4"):
+            result = await pool.get_entry("00023456", "DLCCoast.esm")
+            assert result == "Fog Condenser"
 
-                # Non-existent entry
-                result = await pool.get_entry("99999999", "NonExistent.esp")
-                assert result is None
+            # Non-existent entry
+            result = await pool.get_entry("99999999", "NonExistent.esp")
+            assert result is None
 
     async def test_async_batch_lookup(self, tmp_path):
         """Test async batch entry lookup."""
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("classic_core.database_pool.DB_PATHS", [db_path]):
+        if not RUST_WRAPPER_AVAILABLE:
+            pytest.skip("RustAsyncDatabasePool not available")
+
+        with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
@@ -408,7 +421,10 @@ class TestRustAsyncDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("classic_core.database_pool.DB_PATHS", [db_path]):
+        if not RUST_WRAPPER_AVAILABLE:
+            pytest.skip("RustAsyncDatabasePool not available")
+
+        with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
@@ -441,7 +457,10 @@ class TestRustAsyncDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("classic_core.database_pool.DB_PATHS", [db_path]):
+        if not RUST_WRAPPER_AVAILABLE:
+            pytest.skip("RustAsyncDatabasePool not available")
+
+        with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
@@ -514,7 +533,10 @@ class TestDatabasePoolPerformance:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("classic_core.database_pool.DB_PATHS", [db_path]):
+        if not RUST_WRAPPER_AVAILABLE:
+            pytest.skip("RustAsyncDatabasePool not available")
+
+        with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
