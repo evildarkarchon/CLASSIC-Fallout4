@@ -3,12 +3,11 @@
 
 from setuptools import find_packages, setup
 
-# Find all packages in src and root
-packages = find_packages(where="src") + find_packages(where=".", include=["ClassicLib", "ClassicLib.*"])
+# Find all packages in root (no src directory)
+packages = find_packages(where=".", include=["ClassicLib", "ClassicLib.*"])
 
-# Define package directories
+# Define package directories (no src/classic)
 package_dir = {
-    "classic": "src/classic",
     "ClassicLib": "ClassicLib",
 }
 
@@ -23,14 +22,14 @@ package_data = {
     ],
 }
 
-# Entry points matching the pyproject.toml scripts
+# Entry points matching the pyproject.toml scripts (using root modules)
 entry_points = {
     "console_scripts": [
-        "classic=classic.gui:main",
-        "classic-gui=classic.gui:main",
-        "classic-cli=classic.cli:main",
-        "classic-tui=classic.tui:main",
-        "classic-scan=classic.scan:main",
+        "classic=CLASSIC_Interface:main",
+        "classic-gui=CLASSIC_Interface:main",
+        "classic-cli=CLASSIC_ScanLogs:main",
+        "classic-tui=CLASSIC_TUI:main",
+        "classic-scan=CLASSIC_ScanGame:main",
     ],
 }
 

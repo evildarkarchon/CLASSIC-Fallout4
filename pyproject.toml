@@ -42,11 +42,12 @@ full = ["textual>=5.3.0", "tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'
 all = ["textual>=5.3.0", "tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
 
 [project.scripts]
-classic = "classic.gui:main"
-classic-gui = "classic.gui:main"
-classic-cli = "classic.cli:main"
-classic-tui = "classic.tui:main"
-classic-scan = "classic.scan:main"
+# Entry points are in the root directory, not in src/
+classic = "CLASSIC_Interface:main"
+classic-gui = "CLASSIC_Interface:main"
+classic-cli = "CLASSIC_ScanLogs:main"
+classic-tui = "CLASSIC_TUI:main"
+classic-scan = "CLASSIC_ScanGame:main"
 
 [tool.uv]
 dev-dependencies = [
@@ -67,7 +68,6 @@ dev-dependencies = [
     "pytest-textual-snapshot>=1.1.0",
     "pytest-timeout>=2.4",
     "textual-dev>=1.7.0",
-    "pre-commit>=4.3.0",
     "pylint>=3.3.8",
     "pyright>=1.1.405",
 ]
@@ -85,7 +85,8 @@ build-backend = "maturin"
 
 [tool.maturin]
 # Tell maturin this is a mixed Python/Rust project
-python-source = "src"
+# Use project root (.) instead of src/ to find Python modules
+python-source = "."
 # Module name for the Rust extension
 module-name = "classic_core"
 # Strip symbols for smaller binary size (optional)
