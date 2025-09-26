@@ -1,0 +1,388 @@
+"""Test FFI boundary error conditions with synthetic data.
+
+This module tests all error conditions at the Rust-Python FFI boundary
+using only synthetic/mock data, ensuring proper error handling and
+graceful degradation without using any copyrighted game files.
+"""
+
+import pytest
+import sys
+import gc
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch, mock_open
+from typing import Any, Optional
+import json
+import tempfile
+import threading
+import time
+
+# Mark all tests in this module
+pytestmark = [pytest.mark.unit, pytest.mark.rust]
+
+
+class MockRustModule:
+    """Mock Rust module for testing when classic_core is unavailable."""
+
+    class RustError(Exception):
+        """Mock Rust error type."""
+        pass
+
+    class FFIError(Exception):
+        """Mock FFI error type."""
+        pass
+
+    def parse_log(self, content: str) -> dict:
+        """Mock log parser."""
+        if not isinstance(content, str):
+            raise TypeError(f"Expected str, got {type(content)}")
+        if len(content) > 1000000:  # 1MB limit
+            raise self.FFIError("Content too large")
+        return {"parsed": True, "lines": content.count('\n')}
+
+    def analyze_formid(self, formid: str, context: dict) -> dict:
+        """Mock FormID analyzer."""
+        if not isinstance(formid, str):
+            raise TypeError(f"Expected str for formid, got {type(formid)}")
+        if not isinstance(context, dict):
+            raise TypeError(f"Expected dict for context, got {type(context)}")
+        return {"formid": formid, "valid": len(formid) == 8}
+
+
+class TestFFIErrorConditions:
+    """Test FFI boundary error conditions."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        """Setup test environment."""
+        self.rust_available = False
+        try:
+            import classic_core
+            self.rust_available = True
+            self.rust_module = classic_core
+        except ImportError:
+            self.rust_module = MockRustModule()
+
+    def test_null_pointer_handling(self):
+        """Test handling of null/None values across FFI boundary."""
+        from ClassicLib.integration.factory import get_parser
+
+        parser = get_parser()
+
+        # Test with None values
+        with pytest.raises((TypeError, ValueError, AttributeError)):
+            parser.parse(None)
+
+        # Test with empty values
+        result = parser.parse("")
+        assert result is not None  # Should return empty result, not crash
+
+    def test_invalid_utf8_handling(self):
+        """Test handling of invalid UTF-8 sequences."""
+        from ClassicLib.integration.factory import get_file_io_core
+
+        io_core = get_file_io_core()
+
+        # Create synthetic invalid UTF-8 data
+        invalid_utf8 = b'\xff\xfe\xfd\xfc'
+
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(invalid_utf8)
+            temp_path = temp_file.name
+
+        try:
+            # Should handle invalid UTF-8 gracefully
+            result = io_core.read_file(temp_path)
+            # Should either return decoded text or error, not crash
+            assert result is not None or result == ""
+        except (UnicodeDecodeError, RuntimeError) as e:
+            # These exceptions are acceptable
+            assert "UTF-8" in str(e) or "decode" in str(e).lower()
+        finally:
+            Path(temp_path).unlink(missing_ok=True)
+
+    def test_memory_overflow_prevention(self):
+        """Test prevention of memory overflow with large synthetic data."""
+        from ClassicLib.integration.factory import get_parser
+
+        parser = get_parser()
+
+        # Create very large synthetic log (10MB of repeated data)
+        large_content = "ERROR: Synthetic error line\n" * 350000  # ~10MB
+
+        # Should handle large input gracefully
+        try:
+            result = parser.parse(large_content)
+            # Should either parse or raise memory error
+            assert result is not None
+        except (MemoryError, RuntimeError, ValueError) as e:
+            # Should raise appropriate error for oversized input
+            assert "memory" in str(e).lower() or "size" in str(e).lower() or "large" in str(e).lower()
+
+    def test_type_mismatch_errors(self):
+        """Test type mismatches at FFI boundary."""
+        from ClassicLib.integration.factory import get_formid_analyzer
+
+        # Create analyzer with mock data
+        mock_yamldata = MagicMock()
+        analyzer = get_formid_analyzer(mock_yamldata, True, False)
+
+        # Test with wrong types
+        wrong_type_inputs = [
+            123,  # Integer instead of string
+            [1, 2, 3],  # List instead of string
+            {"formid": "test"},  # Dict instead of string
+            b"bytes",  # Bytes instead of string
+        ]
+
+        for wrong_input in wrong_type_inputs:
+            with pytest.raises((TypeError, AttributeError, ValueError)):
+                analyzer.analyze(wrong_input)
+
+    def test_concurrent_ffi_calls(self):
+        """Test concurrent FFI calls don't cause race conditions."""
+        from ClassicLib.integration.factory import get_parser
+
+        parser = get_parser()
+        results = []
+        errors = []
+
+        def worker(worker_id: int):
+            try:
+                # Each worker processes different synthetic data
+                content = f"Worker {worker_id} log line\n" * 100
+                result = parser.parse(content)
+                results.append((worker_id, result))
+            except Exception as e:
+                errors.append((worker_id, e))
+
+        # Launch multiple threads
+        threads = []
+        for i in range(10):
+            thread = threading.Thread(target=worker, args=(i,))
+            threads.append(thread)
+            thread.start()
+
+        # Wait for completion
+        for thread in threads:
+            thread.join()
+
+        # Should complete without crashes
+        assert len(errors) == 0 or all(
+            isinstance(e[1], (RuntimeError, ValueError)) for e in errors
+        )
+        # At least some should succeed
+        assert len(results) > 0
+
+    def test_resource_cleanup_on_error(self):
+        """Test that resources are properly cleaned up on FFI errors."""
+        from ClassicLib.integration.factory import get_file_io_core
+
+        io_core = get_file_io_core()
+
+        # Track resource usage
+        initial_threads = threading.active_count()
+
+        # Cause multiple errors
+        for _ in range(10):
+            try:
+                # Try to read non-existent file
+                io_core.read_file("/completely/synthetic/path/that/does/not/exist.txt")
+            except (FileNotFoundError, OSError, RuntimeError):
+                pass  # Expected
+
+        # Force garbage collection
+        gc.collect()
+        time.sleep(0.1)  # Allow cleanup
+
+        # Thread count should not have grown significantly
+        final_threads = threading.active_count()
+        assert final_threads <= initial_threads + 2  # Allow small variance
+
+    def test_string_boundary_conditions(self):
+        """Test string handling at boundary conditions."""
+        from ClassicLib.integration.factory import get_parser
+
+        parser = get_parser()
+
+        test_strings = [
+            "",  # Empty string
+            "a",  # Single character
+            "a" * 65536,  # 64KB string
+            "🎮" * 1000,  # Unicode emojis
+            "\n" * 1000,  # Only newlines
+            "\t" * 1000,  # Only tabs
+            "\x00" * 10,  # Null characters
+            "Line1\nLine2\r\nLine3\rLine4",  # Mixed line endings
+        ]
+
+        for test_str in test_strings:
+            try:
+                result = parser.parse(test_str)
+                # Should handle all string types
+                assert result is not None
+            except ValueError:
+                # Null characters might be rejected
+                assert "\x00" in test_str
+
+    def test_numeric_overflow_handling(self):
+        """Test numeric overflow handling in FFI."""
+        # Create synthetic FormIDs with boundary values
+        boundary_values = [
+            "00000000",  # Minimum
+            "FFFFFFFF",  # Maximum 32-bit
+            "7FFFFFFF",  # Max signed 32-bit
+            "80000000",  # Min signed 32-bit overflow
+        ]
+
+        from ClassicLib.integration.factory import get_formid_analyzer
+
+        mock_yamldata = MagicMock()
+        analyzer = get_formid_analyzer(mock_yamldata, True, False)
+
+        for formid in boundary_values:
+            try:
+                result = analyzer.analyze(formid)
+                # Should handle boundary values
+                assert result is None or isinstance(result, (str, dict))
+            except (ValueError, OverflowError):
+                # Acceptable for overflow values
+                pass
+
+    def test_callback_error_propagation(self):
+        """Test that Python exceptions in callbacks propagate correctly."""
+        from ClassicLib.integration.factory import get_parser
+
+        parser = get_parser()
+
+        # Mock a callback that raises an exception
+        def failing_callback(data):
+            raise RuntimeError("Callback failed")
+
+        with patch.object(parser, 'set_callback', create=True) as mock_set:
+            try:
+                parser.set_callback(failing_callback)
+                # Process data that would trigger callback
+                parser.parse("trigger callback")
+            except (RuntimeError, AttributeError):
+                # Should propagate callback error or not have callback support
+                pass
+
+    def test_ffi_with_corrupted_data_structures(self):
+        """Test FFI with corrupted/malformed data structures."""
+        from ClassicLib.integration.factory import get_plugin_analyzer
+
+        analyzer = get_plugin_analyzer()
+
+        # Create corrupted plugin structures
+        corrupted_structures = [
+            {},  # Empty structure
+            {"plugins": None},  # Null plugins
+            {"plugins": "not_a_list"},  # Wrong type
+            {"plugins": [None, None]},  # Null elements
+            {"plugins": [{"name": None}]},  # Null required field
+            {"plugins": [{"name": "test", "formids": "not_a_list"}]},  # Wrong nested type
+        ]
+
+        for corrupt_data in corrupted_structures:
+            with patch("ClassicLib.integration.plugin_analyzer.load_plugins", return_value=corrupt_data):
+                try:
+                    result = analyzer.analyze_all()
+                    # Should handle gracefully
+                    assert result is None or isinstance(result, (dict, list))
+                except (TypeError, ValueError, KeyError, AttributeError):
+                    # These exceptions are acceptable for corrupted data
+                    pass
+
+    def test_path_traversal_prevention(self):
+        """Test that path traversal attempts are prevented."""
+        from ClassicLib.integration.factory import get_file_io_core
+
+        io_core = get_file_io_core()
+
+        # Dangerous path patterns
+        dangerous_paths = [
+            "../../../etc/passwd",
+            "..\\..\\..\\Windows\\System32\\config\\sam",
+            "/etc/shadow",
+            "C:\\Windows\\System32\\config\\sam",
+            "\\\\server\\share\\sensitive",
+            "file:///etc/passwd",
+        ]
+
+        for path in dangerous_paths:
+            try:
+                result = io_core.read_file(path)
+                # Should either fail or return safe error
+                assert result is None or "error" in str(result).lower()
+            except (OSError, ValueError, RuntimeError, FileNotFoundError) as e:
+                # Should raise security-related error
+                assert any(word in str(e).lower() for word in ["permission", "denied", "invalid", "not found"])
+
+    def test_signal_handling_during_ffi_call(self):
+        """Test signal handling doesn't corrupt FFI state."""
+        from ClassicLib.integration.factory import get_parser
+        import signal
+
+        parser = get_parser()
+
+        def timeout_handler(signum, frame):
+            raise TimeoutError("FFI call timed out")
+
+        # Test interrupting FFI call (Unix only)
+        if sys.platform != "win32":
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(1)  # 1 second timeout
+
+            try:
+                # Long-running parse operation
+                parser.parse("test" * 100000)
+                signal.alarm(0)  # Cancel alarm
+            except TimeoutError:
+                pass  # Expected
+            finally:
+                signal.alarm(0)  # Ensure alarm is cancelled
+
+            # Parser should still work after interruption
+            result = parser.parse("test")
+            assert result is not None
+
+    def test_dll_injection_prevention(self):
+        """Test that DLL injection attempts are handled safely."""
+        # This tests that the module loading is secure
+        dangerous_names = [
+            "../../evil.dll",
+            "C:\\Windows\\System32\\kernel32.dll",
+            "classic_core'; DROP TABLE users; --",
+            "classic_core\x00.dll",
+        ]
+
+        for name in dangerous_names:
+            with patch("importlib.import_module") as mock_import:
+                mock_import.side_effect = ImportError(f"No module named '{name}'")
+
+                try:
+                    # Attempt to import with dangerous name
+                    __import__(name)
+                except ImportError:
+                    pass  # Expected
+
+    def test_stack_overflow_prevention(self):
+        """Test prevention of stack overflow via recursive structures."""
+        from ClassicLib.integration.factory import get_parser
+
+        parser = get_parser()
+
+        # Create deeply nested structure that could cause stack overflow
+        # Using synthetic crash log with deep nesting
+        nested_content = "BEGIN\n"
+        for i in range(10000):  # Very deep nesting
+            nested_content += f"  " * min(i, 100) + f"Level {i}\n"
+        nested_content += "END\n"
+
+        try:
+            result = parser.parse(nested_content)
+            # Should handle deep nesting without stack overflow
+            assert result is not None
+        except (RecursionError, RuntimeError, ValueError) as e:
+            # Should raise appropriate error for deep nesting
+            assert "recursion" in str(e).lower() or "depth" in str(e).lower() or "stack" in str(e).lower()

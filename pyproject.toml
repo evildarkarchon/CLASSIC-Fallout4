@@ -49,8 +49,8 @@ classic-cli = "CLASSIC_ScanLogs:main"
 classic-tui = "CLASSIC_TUI:main"
 classic-scan = "CLASSIC_ScanGame:main"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "mypy>=1.12.0",
     "ruff>=0.11.0",
     "types-beautifulsoup4>=4.12.0.20240907",
@@ -70,8 +70,10 @@ dev-dependencies = [
     "textual-dev>=1.7.0",
     "pylint>=3.3.8",
     "pyright>=1.1.405",
+    "hypothesis>=6.140.2",
 ]
 
+[tool.uv]
 # Package configuration for uv
 package = true
 managed = true

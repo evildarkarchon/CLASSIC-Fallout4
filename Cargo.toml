@@ -63,6 +63,7 @@ serde_json = "1.0"
 serde_yaml = "0.9"  # High-performance YAML parsing and writing
 
 [dev-dependencies]
+cargo-tarpaulin = "0.32.8"
 criterion = "0.5"  # Benchmarking
 proptest = "1.5"   # Property-based testing
 rstest = "0.23"    # Parameterized testing
