@@ -313,6 +313,12 @@ class OrchestratorCore:
             segment_plugins, segment_callstack, game_version, version_current
         )
 
+        # Add F4SE DLL plugins to crashlog_plugins dict for important mod detection
+        # Important mods like HighFPSPhysicsFix are DLL files, not ESP/ESM files
+        for dll_name in xsemodules:
+            if dll_name not in crashlog_plugins:
+                crashlog_plugins[dll_name] = "DLL"  # DLL plugins get "DLL" as load order ID
+
         # Store for async FormID processing
         async with self._state_lock:
             self._last_plugins = crashlog_plugins.copy()
