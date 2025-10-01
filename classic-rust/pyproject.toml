@@ -38,8 +38,7 @@ dev = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-python-source = "python"
-module-name = "classic_core._rust"
+module-name = "classic_core"
 strip = false
 
 [tool.pytest.ini_options]

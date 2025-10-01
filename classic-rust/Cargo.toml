@@ -9,7 +9,7 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 [lib]
 name = "classic_core"
 # Path to the Rust source code
-path = "classic-rust/src/lib.rs"
+path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
