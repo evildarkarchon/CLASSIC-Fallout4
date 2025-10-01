@@ -16,9 +16,8 @@ from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_progress_context
 from ClassicLib.ScanLog.AsyncFileIO import write_reports_batch
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
-from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
+# ThreadSafeLogCache and load_crash_logs_async removed - using direct file I/O for better performance
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
@@ -103,16 +102,10 @@ class AsyncCrashLogPipeline:
         self.performance_stats["reformat_time"] = time.perf_counter() - reformat_start
         logger.debug(f"Async reformatting completed in {self.performance_stats['reformat_time']:.3f}s")
 
-        # Step 2: Async log loading
-        load_start = time.perf_counter()
-        log_cache_data = await load_crash_logs_async(crashlog_list)
-
-        # Convert to ThreadSafeLogCache format
-        cache_dict = {name: "\n".join(lines).encode("utf-8") for name, lines in log_cache_data.items()}
-        crashlogs = ThreadSafeLogCache.from_cache(cache_dict)
-
-        self.performance_stats["load_time"] = time.perf_counter() - load_start
-        logger.debug(f"Async log loading completed in {self.performance_stats['load_time']:.3f}s")
+        # Step 2: Skip loading - using direct file I/O for better performance
+        # Performance analysis showed that reading files directly is faster than
+        # caching for small crash log files (typically <100KB)
+        logger.debug("Using direct file I/O instead of cache (better performance for small files)")
 
         # Step 3: Async database processing with orchestrator
         process_start = time.perf_counter()
@@ -120,9 +113,9 @@ class AsyncCrashLogPipeline:
         # Process logs with progress tracking
         total_logs = len(crashlog_list)
         with msg_progress_context("Processing Crash Logs", total_logs) as progress:
+            # OrchestratorCore now reads files directly - no cache needed
             async with OrchestratorCore(
                 self.yamldata,
-                crashlogs,
                 self.fcx_mode,
                 self.show_formid_values,
                 self.formid_db_exists,

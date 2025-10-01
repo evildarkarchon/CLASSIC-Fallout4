@@ -86,7 +86,7 @@ mod integration_tests {
     fn test_rust_file_io_core_creation() {
         pyo3::prepare_freethreaded_python();
 
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let io_core = RustFileIOCore::new(
                 "utf-8".to_string(),
                 "ignore".to_string(),
@@ -115,7 +115,7 @@ mod integration_tests {
     fn test_file_operations() {
         pyo3::prepare_freethreaded_python();
 
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let io_core = RustFileIOCore::new(
                 "utf-8".to_string(),
                 "ignore".to_string(),
@@ -157,7 +157,7 @@ mod integration_tests {
     fn test_dds_operations() {
         pyo3::prepare_freethreaded_python();
 
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let io_core = RustFileIOCore::new(
                 "utf-8".to_string(),
                 "ignore".to_string(),
@@ -208,7 +208,7 @@ mod integration_tests {
     fn test_directory_traversal() {
         pyo3::prepare_freethreaded_python();
 
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let io_core = RustFileIOCore::new(
                 "utf-8".to_string(),
                 "ignore".to_string(),

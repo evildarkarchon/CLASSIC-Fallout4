@@ -65,8 +65,8 @@ impl RustYamlOperations {
 
     /// Parse YAML content from a string
     #[pyo3(signature = (content))]
-    fn parse_yaml(&self, content: &str) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
+    fn parse_yaml(&self, content: &str) -> PyResult<Py<PyAny>> {
+        Python::attach(|py| {
             let value: Value = serde_yaml::from_str(content)
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
                     format!("Failed to parse YAML: {}", e)
@@ -78,8 +78,8 @@ impl RustYamlOperations {
 
     /// Convert data to YAML string with format preservation
     #[pyo3(signature = (data))]
-    fn dump_yaml(&self, data: PyObject) -> PyResult<String> {
-        Python::with_gil(|py| {
+    fn dump_yaml(&self, data: Py<PyAny>) -> PyResult<String> {
+        Python::attach(|py| {
             let value = self.python_to_value(py, data)?;
 
             // Serialize with custom formatting
@@ -93,7 +93,7 @@ impl RustYamlOperations {
 
     /// Load YAML file with caching
     #[pyo3(signature = (path))]
-    fn load_yaml_file(&self, path: &str) -> PyResult<PyObject> {
+    fn load_yaml_file(&self, path: &str) -> PyResult<Py<PyAny>> {
         let file_path = PathBuf::from(path);
 
         // Check cache first
@@ -104,7 +104,7 @@ impl RustYamlOperations {
                     if let Ok(modified) = metadata.modified() {
                         if modified <= cached.modified {
                             // Cache is still valid
-                            return Python::with_gil(|py| {
+                            return Python::attach(|py| {
                                 self.value_to_python(py, &cached.data)
                             });
                         }
@@ -140,13 +140,13 @@ impl RustYamlOperations {
             }
         }
 
-        Python::with_gil(|py| self.value_to_python(py, &value))
+        Python::attach(|py| self.value_to_python(py, &value))
     }
 
     /// Save data to YAML file with atomic write
     #[pyo3(signature = (path, data))]
-    fn save_yaml_file(&self, path: &str, data: PyObject) -> PyResult<()> {
-        Python::with_gil(|py| {
+    fn save_yaml_file(&self, path: &str, data: Py<PyAny>) -> PyResult<()> {
+        Python::attach(|py| {
             let value = self.python_to_value(py, data)?;
             let yaml_str = self.serialize_with_format(&value)
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
@@ -179,8 +179,8 @@ impl RustYamlOperations {
 
     /// Get a setting value by key path (dot notation)
     #[pyo3(signature = (data, key_path))]
-    fn get_setting(&self, data: PyObject, key_path: &str) -> PyResult<Option<PyObject>> {
-        Python::with_gil(|py| {
+    fn get_setting(&self, data: Py<PyAny>, key_path: &str) -> PyResult<Option<Py<PyAny>>> {
+        Python::attach(|py| {
             let value = self.python_to_value(py, data)?;
 
             // Navigate through the key path
@@ -206,8 +206,8 @@ impl RustYamlOperations {
 
     /// Set a setting value by key path (dot notation)
     #[pyo3(signature = (data, key_path, value))]
-    fn set_setting(&self, data: PyObject, key_path: &str, value: PyObject) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
+    fn set_setting(&self, data: Py<PyAny>, key_path: &str, value: Py<PyAny>) -> PyResult<Py<PyAny>> {
+        Python::attach(|py| {
             let mut root_value = self.python_to_value(py, data)?;
             let new_value = self.python_to_value(py, value)?;
 
@@ -262,30 +262,30 @@ impl RustYamlOperations {
 
 impl RustYamlOperations {
     /// Convert serde_yaml::Value to Python object
-    fn value_to_python(&self, py: Python, value: &Value) -> PyResult<PyObject> {
+    fn value_to_python(&self, py: Python, value: &Value) -> PyResult<Py<PyAny>> {
         match value {
             Value::Null => Ok(py.None()),
-            Value::Bool(b) => Ok(b.into_py(py)),
+            Value::Bool(b) => Ok((*b).into_pyobject(py)?.as_any().clone().unbind()),
             Value::Number(n) => {
                 if let Some(i) = n.as_i64() {
-                    Ok(i.into_py(py))
+                    Ok(i.into_pyobject(py)?.as_any().clone().unbind())
                 } else if let Some(f) = n.as_f64() {
-                    Ok(f.into_py(py))
+                    Ok(f.into_pyobject(py)?.as_any().clone().unbind())
                 } else {
-                    Ok(n.as_u64().unwrap().into_py(py))
+                    Ok(n.as_u64().unwrap().into_pyobject(py)?.as_any().clone().unbind())
                 }
             }
-            Value::String(s) => Ok(s.into_py(py)),
+            Value::String(s) => Ok(s.as_str().into_pyobject(py)?.as_any().clone().unbind()),
             Value::Sequence(seq) => {
                 let mut items = Vec::new();
                 for item in seq {
                     items.push(self.value_to_python(py, item)?);
                 }
-                let list = pyo3::types::PyList::new_bound(py, items);
-                Ok(list.into())
+                let list = pyo3::types::PyList::new(py, items)?;
+                Ok(list.unbind().into())
             }
             Value::Mapping(map) => {
-                let dict = pyo3::types::PyDict::new_bound(py);
+                let dict = pyo3::types::PyDict::new(py);
                 for (k, v) in map {
                     if let Value::String(key_str) = k {
                         dict.set_item(key_str, self.value_to_python(py, v)?)?;
@@ -295,7 +295,7 @@ impl RustYamlOperations {
                         dict.set_item(key_obj, self.value_to_python(py, v)?)?;
                     }
                 }
-                Ok(dict.into())
+                Ok(dict.unbind().into())
             }
             Value::Tagged(tagged) => {
                 // Handle YAML tags if needed
@@ -305,7 +305,7 @@ impl RustYamlOperations {
     }
 
     /// Convert Python object to serde_yaml::Value
-    fn python_to_value(&self, py: Python, obj: PyObject) -> PyResult<Value> {
+    fn python_to_value(&self, py: Python, obj: Py<PyAny>) -> PyResult<Value> {
         let bound_obj = obj.bind(py);
 
         if bound_obj.is_none() {

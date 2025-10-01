@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Union
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
 from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan as _crashlogs_scan
 from ClassicLib.SetupCoordinator import SetupCoordinator
@@ -60,7 +60,8 @@ class ClassicScanLogs:
         self.formid_db_exists: bool = self._executor.config.formid_db_exists
         self.move_unsolved_logs: bool | None = self._executor.config.move_unsolved_logs
         self.scan_start_time: float = self._executor.statistics.scan_start_time
-        self.crashlogs: ThreadSafeLogCache = self._executor.crashlogs
+        # Note: crashlogs (ThreadSafeLogCache) was removed for performance reasons
+        # Crash logs are now read directly from files when needed
 
         # Provide access to statistics through Counter interface
         self.crashlog_stats = self._executor.statistics.to_counter()

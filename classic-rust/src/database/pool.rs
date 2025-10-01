@@ -18,15 +18,11 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 use std::collections::HashMap;
-use tokio::runtime::Runtime;
-use once_cell::sync::Lazy;
 use anyhow::{Result, Context};
 use log::{debug, error, warn, info};
 
-/// Global tokio runtime for async operations
-static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Runtime::new().expect("Failed to create Tokio runtime")
-});
+// Use the global runtime from lib.rs (ONE RUNTIME RULE)
+use crate::get_runtime;
 
 /// Cache entry with TTL support
 #[derive(Clone, Debug)]
@@ -55,15 +51,17 @@ struct ConnectionWrapper {
 
 impl ConnectionWrapper {
     fn new(path: &Path) -> Result<Self> {
-        let conn = Connection::open(path)
-            .with_context(|| format!("Failed to open database: {:?}", path))?;
+        // Open database in read-only mode with SQLITE_OPEN_READ_ONLY flag
+        let conn = Connection::open_with_flags(
+            path,
+            rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY
+        ).with_context(|| format!("Failed to open database: {:?}", path))?;
 
-        // Set pragmas for performance
-        conn.pragma_update(None, "journal_mode", "WAL")?;
-        conn.pragma_update(None, "synchronous", "NORMAL")?;
-        conn.pragma_update(None, "cache_size", 10000)?;
-        conn.pragma_update(None, "temp_store", "MEMORY")?;
-        conn.pragma_update(None, "mmap_size", 30000000)?;
+        // Read-only optimizations (non-modifying PRAGMAs)
+        // These queries don't modify the database file
+        conn.pragma_update(None, "cache_size", 10000)?;  // Memory cache only
+        conn.pragma_update(None, "temp_store", "MEMORY")?;  // Temp data in memory
+        conn.pragma_update(None, "mmap_size", 30000000)?;  // Memory-mapped I/O
 
         Ok(Self { conn })
     }
@@ -123,7 +121,7 @@ impl RustDatabasePool {
         let stats = self.stats.clone();
         let db_paths_storage = self.db_paths.clone();
 
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             let mut valid_paths = Vec::new();
 
             for db_path in db_paths {
@@ -209,7 +207,7 @@ impl RustDatabasePool {
         let query_cache = self.query_cache.clone();
         let cache_ttl = *self.cache_ttl.read().unwrap();
 
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             // IMPORTANT: Use COLLATE nocase for case-insensitive matching
             let query = format!(
                 "SELECT entry FROM {} WHERE formid=? AND plugin=? COLLATE nocase",
@@ -281,7 +279,7 @@ impl RustDatabasePool {
         let cache_ttl = *self.cache_ttl.read().unwrap();
         let stats = self.stats.clone();
 
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             let mut results: HashMap<String, String> = HashMap::new();
             let mut uncached_pairs: Vec<(String, String)> = Vec::new();
 
@@ -503,7 +501,7 @@ impl RustDatabasePool {
         let connections = self.connections.clone();
         let stats = self.stats.clone();
 
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             // Clear all connections
             connections.clear();
 
@@ -524,7 +522,7 @@ impl RustDatabasePool {
     pub fn py_optimize(&self, _py: Python<'_>) -> PyResult<()> {
         let connections = self.connections.clone();
 
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             for entry in connections.iter() {
                 let conn_arc = entry.value().clone();
 

@@ -71,24 +71,24 @@ class TestCrashLogProcessingUnit:
                 from unittest.mock import MagicMock
                 mock_cache = MagicMock()
                 GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, mock_cache)
-            # Add ThreadSafeLogCache mock
-            with patch('ClassicLib.ScanLog.ThreadSafeLogCache'):
-                try:
-                    scanner: ClassicScanLogs = ClassicScanLogs()
-                    from ClassicLib.AsyncBridge import AsyncBridge
-                    from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+            # Note: ThreadSafeLogCache was removed for performance reasons
+            # OrchestratorCore no longer requires crashlogs parameter
+            try:
+                scanner: ClassicScanLogs = ClassicScanLogs()
+                from ClassicLib.AsyncBridge import AsyncBridge
+                from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
-                    async def process_with_orchestrator():
-                        async with OrchestratorCore(scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
-                            return await scanner.process_crashlog_async(crash_file, orchestrator)
+                async def process_with_orchestrator():
+                    async with OrchestratorCore(scanner.yamldata, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
+                        return await scanner.process_crashlog_async(crash_file, orchestrator)
 
-                    bridge = AsyncBridge.get_instance()
-                    result: tuple[Path, list[str], bool, Any] = bridge.run_async(process_with_orchestrator())
-                    assert result is not None
-                    assert len(result) == 4
-                    assert result[0] == crash_file
-                    assert isinstance(result[1], list)
-                    assert isinstance(result[2], bool)
-                finally:
-                    if original_game is not None:
-                        GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
+                bridge = AsyncBridge.get_instance()
+                result: tuple[Path, list[str], bool, Any] = bridge.run_async(process_with_orchestrator())
+                assert result is not None
+                assert len(result) == 4
+                assert result[0] == crash_file
+                assert isinstance(result[1], list)
+                assert isinstance(result[2], bool)
+            finally:
+                if original_game is not None:
+                    GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)

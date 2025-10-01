@@ -15,8 +15,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
 use tokio::sync::{RwLock, Semaphore};
-use tokio::runtime::Runtime;
-use once_cell::sync::Lazy;
 use lru::LruCache;
 use anyhow::{Result, Context};
 use std::num::NonZeroUsize;
@@ -30,14 +28,8 @@ use std::io::Read;
 use super::encoding::EncodingDetector;
 use super::dds::DDSHeader;
 
-/// Global tokio runtime for async operations (native async solution pattern)
-static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(4)
-        .enable_all()
-        .build()
-        .expect("Failed to create Tokio runtime")
-});
+// Use the global runtime from lib.rs (ONE RUNTIME RULE)
+use crate::get_runtime;
 
 /// High-performance file I/O core with caching and encoding detection
 #[pyclass]
@@ -88,7 +80,7 @@ impl RustFileIOCore {
         let encoding_detector = self.encoding_detector.clone();
         let cache = self.read_cache.clone();
 
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             let path = PathBuf::from(path);
 
             // Check cache first (need write lock for LRU get which updates access order)
@@ -116,7 +108,7 @@ impl RustFileIOCore {
     /// Write a file (sync wrapper for async implementation)
     #[pyo3(name = "write_file")]
     pub fn py_write_file(&self, _py: Python<'_>, path: String, content: String) -> PyResult<()> {
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             fs::write(&path, content.as_bytes()).await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
             Ok(())
@@ -133,7 +125,7 @@ impl RustFileIOCore {
     /// Read file as bytes
     #[pyo3(name = "read_bytes")]
     pub fn py_read_bytes(&self, _py: Python<'_>, path: String) -> PyResult<Vec<u8>> {
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             let path = PathBuf::from(path);
             fs::read(&path).await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
@@ -153,7 +145,7 @@ impl RustFileIOCore {
     /// Write bytes to file
     #[pyo3(name = "write_bytes")]
     pub fn py_write_bytes(&self, _py: Python<'_>, path: String, content: Vec<u8>) -> PyResult<()> {
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             let path = PathBuf::from(path);
             // Ensure parent directory exists
             if let Some(parent) = path.parent() {
@@ -168,7 +160,7 @@ impl RustFileIOCore {
     /// Append content to file
     #[pyo3(name = "append_file")]
     pub fn py_append_file(&self, _py: Python<'_>, path: String, content: String) -> PyResult<()> {
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             use tokio::fs::OpenOptions;
             use tokio::io::AsyncWriteExt;
 
@@ -200,7 +192,7 @@ impl RustFileIOCore {
         let path_cache = self.path_cache.clone();
         let metadata_cache = self.metadata_cache.clone();
 
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             let mut read_guard = read_cache.write().await;
             read_guard.clear();
             let mut dds_guard = dds_cache.write().await;
@@ -254,7 +246,7 @@ impl RustFileIOCore {
             .collect();
 
         // Convert to Python dict
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         for (path, dims) in results {
             if let Some((width, height)) = dims {
                 dict.set_item(path, (width, height))?;
@@ -263,7 +255,7 @@ impl RustFileIOCore {
             }
         }
 
-        Ok(dict.into())
+        Ok(dict.unbind())
     }
 }
 
@@ -355,8 +347,8 @@ impl RustFileIOCore {
         };
 
         // Convert to Python list
-        let list = PyList::new_bound(py, files);
-        Ok(list.into())
+        let list = PyList::new(py, files)?;
+        Ok(list.unbind())
     }
 
     /// Batch file reading with concurrency control
@@ -369,7 +361,7 @@ impl RustFileIOCore {
         let io_semaphore = self.io_semaphore.clone();
         let read_cache = self.read_cache.clone();
 
-        let results = RUNTIME.block_on(async move {
+        let results = get_runtime().block_on(async move {
             let mut tasks = Vec::new();
 
             for path in paths {
@@ -408,7 +400,7 @@ impl RustFileIOCore {
         });
 
         // Convert to Python dict
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         for result in results {
             match result {
                 Ok((path, Ok(content))) => {
@@ -424,7 +416,7 @@ impl RustFileIOCore {
             }
         }
 
-        Ok(dict.into())
+        Ok(dict.unbind())
     }
 
     /// Write multiple files with concurrency control
@@ -435,7 +427,7 @@ impl RustFileIOCore {
     ) -> PyResult<()> {
         let io_semaphore = self.io_semaphore.clone();
 
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             let mut tasks = Vec::new();
 
             for (path, content) in files {

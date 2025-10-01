@@ -178,3 +178,92 @@ class SetupCoordinator:
 
         # Validate settings paths after initialization
         self.path_validator.validate_all_settings_paths()
+
+        # Log Rust acceleration status
+        self._log_rust_acceleration_status()
+
+    def _log_rust_acceleration_status(self) -> None:
+        """
+        Log the Rust acceleration status at application startup.
+
+        This method checks which components are using Rust acceleration and logs
+        a summary to help with debugging and performance monitoring.
+
+        For CLI mode, prints to console and logs.
+        For GUI mode, shows a toast notification via MessageHandler.
+        """
+        try:
+            from ClassicLib.integration.status import get_rust_component_status
+
+            status = get_rust_component_status()
+            is_gui = GlobalRegistry.is_gui_mode()
+
+            # Build status message
+            if status["disabled"]:
+                status_msg = "⚠️  Rust acceleration disabled (CLASSIC_DISABLE_RUST is set)"
+                self._display_status_message(status_msg, "WARNING", is_gui)
+                logger.warning("   To enable: unset CLASSIC_DISABLE_RUST environment variable")
+                return
+
+            # Display status based on acceleration level
+            if status["active_count"] > 0:
+                # Show acceleration status with component count
+                status_msg = f"🚀 Rust Acceleration: {status['active_count']}/{status['total_count']} components active ({status['percentage']:.0f}%)"
+                self._display_status_message(status_msg, "INFO", is_gui)
+
+                logger.info(f"Rust Acceleration Status: {status['acceleration_level']}")
+                logger.info(f"   Active Components: {status['active_count']}/{status['total_count']} ({status['percentage']:.1f}%)")
+
+                # Log detailed component info at debug level
+                if status["performance_gains"]:
+                    logger.debug("   Active Rust Components:")
+                    for component, speedup in status["performance_gains"].items():
+                        logger.debug(f"      ✅ {component}: {speedup}")
+            else:
+                # No acceleration - provide installation instructions
+                status_msg = "⚠️  No Rust acceleration - using Python fallback (slower performance)"
+                self._display_status_message(status_msg, "WARNING", is_gui)
+
+                logger.warning("   To enable: Build and install the Rust extension:")
+                logger.warning("      cd classic-rust")
+                logger.warning("      maturin build --release --out dist")
+                logger.warning("      uv pip install dist/classic-*.whl --force-reinstall")
+
+            # Log version info
+            if status.get("version"):
+                logger.debug(f"   Rust Extension Version: {status['version']}")
+
+        except ImportError:
+            # Rust integration module not available - this is expected in pure Python mode
+            status_msg = "Using Python implementation (Rust extension not installed)"
+            is_gui = GlobalRegistry.is_gui_mode()
+            self._display_status_message(status_msg, "INFO", is_gui)
+            logger.debug("Rust integration module not available - using pure Python implementation")
+        except Exception as e:
+            # Log but don't fail - Rust acceleration is optional
+            logger.debug(f"Error checking Rust acceleration status: {e}")
+            if not GlobalRegistry.is_gui_mode():
+                print(f"Note: Could not determine Rust acceleration status ({e})")
+
+    def _display_status_message(self, message: str, level: str, is_gui: bool) -> None:
+        """
+        Display status message appropriately for CLI or GUI mode.
+
+        Args:
+            message: The message to display
+            level: Message level ("INFO", "WARNING", "ERROR")
+            is_gui: Whether running in GUI mode
+        """
+        # Always print for CLI visibility
+        if not is_gui:
+            print(message)
+
+        # Use MessageHandler for both modes (GUI will show toast, CLI will print)
+        if level == "INFO":
+            msg_info(message)
+        elif level == "WARNING":
+            from ClassicLib import msg_warning
+            msg_warning(message)
+        elif level == "ERROR":
+            from ClassicLib import msg_error
+            msg_error(message)

@@ -75,14 +75,14 @@ impl RecordScanner {
         );
 
         // Generate report fragment
-        let report_fragment_module = py.import_bound("ClassicLib.ScanLog.ReportFragment")?;
+        let report_fragment_module = py.import("ClassicLib.ScanLog.ReportFragment")?;
         let report_fragment_class = report_fragment_module.getattr("ReportFragment")?;
 
         let fragment = if !records_matches.is_empty() {
             self.generate_found_records_fragment(py, &records_matches, &report_fragment_class)?
         } else {
             let lines = vec!["* COULDN'T FIND ANY NAMED RECORDS *\n\n"];
-            let py_lines = PyList::new_bound(py, lines);
+            let py_lines = PyList::new(py, lines)?;
             report_fragment_class
                 .call_method1("from_lines", (py_lines,))?
                 .unbind()
@@ -210,7 +210,7 @@ impl RecordScanner {
             "Named records should give extra info on involved game objects, record types or mod files.\n\n".to_string(),
         ]);
 
-        let py_lines = PyList::new_bound(py, lines);
+        let py_lines = PyList::new(py, lines)?;
         Ok(report_fragment_class
             .call_method1("from_lines", (py_lines,))?
             .unbind())

@@ -50,12 +50,13 @@ class TestAsyncPipelineResourceManagement:
 
         Uses mock_database_pool_manager fixture to ensure proper singleton isolation.
         Tests that resources are cleaned up even when exceptions occur.
+
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        OrchestratorCore no longer requires crashlogs parameter and reads files directly.
         """
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-        from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 
         mock_yamldata = MagicMock()
-        mock_crashlogs = MagicMock(spec=ThreadSafeLogCache)
 
         def _raise_test_exception():
             """Helper function to raise a test exception during context operations."""
@@ -64,7 +65,6 @@ class TestAsyncPipelineResourceManagement:
         # Test normal flow - the mock_database_pool_manager fixture provides the mocked pool
         async with OrchestratorCore(
             yamldata=mock_yamldata,
-            crashlogs=mock_crashlogs,
             fcx_mode=False,
             show_formid_values=True,
             formid_db_exists=True,
@@ -76,7 +76,6 @@ class TestAsyncPipelineResourceManagement:
         # Create a new orchestrator that will fail during usage
         orchestrator = OrchestratorCore(
             yamldata=mock_yamldata,
-            crashlogs=mock_crashlogs,
             fcx_mode=False,
             show_formid_values=True,
             formid_db_exists=True,
@@ -118,12 +117,14 @@ class TestAsyncPipelineResourceManagement:
         assert pipeline.show_formid_values is True
 
     async def test_orchestrator_concurrent_processing(self, message_handler):
-        """Test that orchestrator can handle concurrent processing."""
+        """Test that orchestrator can handle concurrent processing.
+
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        OrchestratorCore no longer requires crashlogs parameter and reads files directly.
+        """
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-        from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 
         mock_yamldata = MagicMock()
-        mock_crashlogs = MagicMock(spec=ThreadSafeLogCache)
 
         # Patch DatabasePoolManager instead of AsyncDatabasePool directly
         with patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager") as mock_pool_manager_class:
@@ -138,14 +139,12 @@ class TestAsyncPipelineResourceManagement:
 
             async with OrchestratorCore(
                 yamldata=mock_yamldata,
-                crashlogs=mock_crashlogs,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,
             ) as orchestrator:
                 # Verify orchestrator is ready for concurrent operations
                 assert orchestrator is not None
-                # Verify that get_pool was called (new pattern)
-                mock_pool_manager.get_pool.assert_called_once()
-                # The pool should be set on the orchestrator
-                assert orchestrator._db_pool is mock_pool
+                # When formid_db_exists is False, pool is not initialized (lazy init)
+                # So get_pool should not be called
+                assert orchestrator._db_pool is None

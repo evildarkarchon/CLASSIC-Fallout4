@@ -147,8 +147,7 @@ class TestOrchestratorPerformance:
 
             # This test would require:
             # - YAML configuration loaded
-            # - ThreadSafeLogCache initialized
-            # - FormID database setup
+            # - FormID database setup (ThreadSafeLogCache was removed)
             # - All analyzers properly configured
 
             # When properly initialized, this would test:

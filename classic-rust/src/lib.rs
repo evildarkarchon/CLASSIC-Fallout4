@@ -5,7 +5,6 @@
 
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
-use std::sync::Arc;
 use once_cell::sync::Lazy;
 
 // Module declarations
@@ -21,32 +20,44 @@ pub use utils::{
     PathHandler, StringProcessor, LogProcessor, RustPerformanceMonitor
 };
 
-// Shared tokio runtime for all async operations
-static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Runtime::new().expect("Failed to create Tokio runtime")
+/// Shared tokio runtime for all async operations (ONE RUNTIME RULE)
+///
+/// This is the ONLY runtime that should exist in the entire application.
+/// All submodules MUST use this runtime via crate::get_runtime() to avoid deadlocks.
+pub(crate) static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
+    let worker_threads = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4);
+
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(worker_threads)
+        .enable_all()
+        .build()
+        .expect("Failed to create Tokio runtime")
 });
+
+/// Get a reference to the global runtime
+///
+/// Use this function in submodules instead of creating new runtimes.
+pub(crate) fn get_runtime() -> &'static Runtime {
+    &RUNTIME
+}
 
 /// High-performance file reader using async I/O internally
 #[pyclass]
-struct FileReader {
-    runtime: Arc<Runtime>,
-}
+struct FileReader;
 
 #[pymethods]
 impl FileReader {
     #[new]
-    fn new() -> PyResult<Self> {
-        Ok(Self {
-            runtime: Arc::new(Runtime::new().map_err(|e| {
-                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
-            })?),
-        })
+    fn new() -> Self {
+        Self
     }
 
     /// Read a file synchronously (but uses async I/O internally)
     fn read_file(&self, path: String) -> PyResult<String> {
-        // Block on async operation internally
-        self.runtime.block_on(async move {
+        // Use global runtime for async operation
+        RUNTIME.block_on(async move {
             tokio::fs::read_to_string(path).await
         })
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
@@ -54,8 +65,8 @@ impl FileReader {
 
     /// Read multiple files in parallel (exposed as sync to Python)
     fn read_files_batch(&self, paths: Vec<String>) -> PyResult<Vec<Option<String>>> {
-        // Use async internally for parallel I/O
-        let results = self.runtime.block_on(async move {
+        // Use global runtime for parallel I/O
+        let results = RUNTIME.block_on(async move {
             let tasks: Vec<_> = paths
                 .into_iter()
                 .map(|path| {
@@ -156,19 +167,19 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(count_patterns_in_file, m)?)?;
 
     // Register submodules
-    let utils_module = PyModule::new_bound(m.py(), "utils")?;
+    let utils_module = PyModule::new(m.py(), "utils")?;
     utils::register_module(&utils_module)?;
     m.add_submodule(&utils_module)?;
 
-    let scanlog_module = PyModule::new_bound(m.py(), "scanlog")?;
+    let scanlog_module = PyModule::new(m.py(), "scanlog")?;
     scanlog::register_module(&scanlog_module)?;
     m.add_submodule(&scanlog_module)?;
 
-    let database_module = PyModule::new_bound(m.py(), "database")?;
+    let database_module = PyModule::new(m.py(), "database")?;
     database::register_module(&database_module)?;
     m.add_submodule(&database_module)?;
 
-    let file_io_module = PyModule::new_bound(m.py(), "file_io")?;
+    let file_io_module = PyModule::new(m.py(), "file_io")?;
     file_io::register_module(&file_io_module)?;
     m.add_submodule(&file_io_module)?;
 
@@ -178,7 +189,7 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // m.add_submodule(&yaml_module)?;
 
     // Add version
-    m.add("__version__", "8.0.0")?;
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     Ok(())
 }

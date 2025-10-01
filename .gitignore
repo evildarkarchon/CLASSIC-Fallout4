@@ -110,3 +110,8 @@ Cargo.lock
 *.pdb
 *.dSYM/
 nul
+rust_build_check.txt
+rust_rebuild_output.txt
+rust_test_output.txt
+test_results_threadsafecache_removal.txt
+test_results.txt

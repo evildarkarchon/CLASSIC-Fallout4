@@ -270,14 +270,15 @@ class RustAcceleratedReportGenerator:
     Provides efficient string building and pooling when using Rust implementation.
     """
 
-    def __init__(self):
+    def __init__(self, yamldata=None):
         """Initialize the report generator."""
         self._use_rust = RUST_AVAILABLE
+        self.yamldata = yamldata
 
         if self._use_rust:
             self._generator = RustReportGenerator()
         else:
-            self._generator = PyReportGenerator()
+            self._generator = PyReportGenerator(yamldata)
 
     def generate_header(self, crashlog_filename: str, version: str = "") -> RustAcceleratedReportFragment:
         """Generate a report header."""
@@ -295,21 +296,35 @@ class RustAcceleratedReportGenerator:
         self,
         main_error: str,
         crashgen_version: str,
-        crashgen_name: str,
-        is_latest: bool,
-        warn_outdated: str,
+        version_current,
+        version_latest,
+        version_latest_vr,
     ) -> RustAcceleratedReportFragment:
         """Generate an error section."""
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = self._use_rust
 
         if self._use_rust:
+            # Rust implementation expects different signature - convert parameters
+            from ClassicLib import GlobalRegistry
+            crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
+            game_is_vr = GlobalRegistry.get_vr() == "VR"
+
+            # Check if version is latest
+            is_latest = not (
+                (version_current < version_latest_vr and version_current != version_latest) or
+                (not game_is_vr and version_current < version_latest)
+            )
+
+            warn_outdated = f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***"
+
             result._fragment = self._generator.generate_error_section(
                 main_error, crashgen_version, crashgen_name, is_latest, warn_outdated
             )
         else:
+            # Python implementation uses the original signature
             result._fragment = self._generator.generate_error_section(
-                main_error, crashgen_version, crashgen_name, is_latest, warn_outdated
+                main_error, crashgen_version, version_current, version_latest, version_latest_vr
             )
 
         return result

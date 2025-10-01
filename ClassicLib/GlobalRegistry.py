@@ -196,9 +196,15 @@ def get_game() -> str:
         str: The name of the game. Defaults to "Fallout4" if no game is registered or if the registered game name is
         an empty string.
     """
-    if not is_registered(Keys.GAME) or (is_registered(Keys.GAME) and not Keys.GAME):
+    if not is_registered(Keys.GAME):
         return "Fallout4"
-    return get(Keys.GAME)
+    
+    game_value = get(Keys.GAME)
+    # Return default if value is empty/None
+    if not game_value:
+        return "Fallout4"
+    
+    return game_value
 
 
 def get_local_dir(as_string: bool = False) -> Path | str:

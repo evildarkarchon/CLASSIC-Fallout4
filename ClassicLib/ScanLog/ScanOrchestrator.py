@@ -16,7 +16,7 @@ from ClassicLib.AsyncBridge import run_async
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
+    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 
 class ScanOrchestrator:
@@ -26,9 +26,10 @@ class ScanOrchestrator:
     to perform actual operations and exposes its attributes and functionalities for easier interaction.
     It is typically used to manage crash logs, update scan-related statistics, and generate reports.
 
+    NOTE: This is a deprecated sync adapter. New code should use OrchestratorCore directly for async operations.
+
     Attributes:
         yamldata (ClassicScanLogsInfo): Configuration data for scan operations.
-        crashlogs (ThreadSafeLogCache): Thread-safe cache for managing crash logs.
         plugin_analyzer: Interface for analyzing plugin data.
         formid_analyzer: Interface for analyzing FormID data.
         suspect_scanner: Scanner for identifying suspect elements in scan logs.
@@ -44,7 +45,6 @@ class ScanOrchestrator:
     def __init__(
         self,
         yamldata: "ClassicScanLogsInfo",
-        crashlogs: "ThreadSafeLogCache",
         fcx_mode: bool | None,
         show_formid_values: bool | None,
         formid_db_exists: bool,
@@ -54,17 +54,15 @@ class ScanOrchestrator:
 
         Args:
             yamldata: Configuration data
-            crashlogs: Thread-safe log cache
             fcx_mode: Whether FCX mode is enabled
             show_formid_values: Whether to show FormID values
             formid_db_exists: Whether FormID database exists
         """
-        # Create core orchestrator
-        self._core = OrchestratorCore(yamldata, crashlogs, fcx_mode, show_formid_values, formid_db_exists)
+        # Create core orchestrator (no longer takes crashlogs parameter)
+        self._core = OrchestratorCore(yamldata, fcx_mode, show_formid_values, formid_db_exists)
 
         # Expose core attributes for backwards compatibility
         self.yamldata = self._core.yamldata
-        self.crashlogs = self._core.crashlogs
         self.plugin_analyzer = self._core.plugin_analyzer
         self.formid_analyzer = self._core.formid_analyzer
         self.suspect_scanner = self._core.suspect_scanner

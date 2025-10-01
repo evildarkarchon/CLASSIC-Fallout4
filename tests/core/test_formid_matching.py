@@ -32,13 +32,16 @@ class TestFormIDMatching:
     """Tests for FormID matching functionality."""
 
     def test_formid_matching_simple(self, mock_formid_db: LiteralString, message_handler) -> None:
-        """Test basic FormID matching with simple cases."""
+        """Test basic FormID matching with simple cases.
+
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        Tests now verify scanner initialization without the cache.
+        """
         with (
             patch("builtins.open", mock_open(read_data=mock_formid_db)),
             patch("os.path.isfile", return_value=True),
             patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
-            patch("ClassicLib.ScanLog.ThreadSafeLogCache"),
             patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=False),
         ):
             # Setup GlobalRegistry
@@ -77,13 +80,16 @@ class TestFormIDMatching:
                     GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
 
     def test_formid_matching_with_prefix(self, mock_formid_db: LiteralString, message_handler) -> None:
-        """Test FormID matching when FormIDs have plugin prefixes."""
+        """Test FormID matching when FormIDs have plugin prefixes.
+
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        Tests now verify scanner initialization without the cache.
+        """
         with (
             patch("builtins.open", mock_open(read_data=mock_formid_db)),
             patch("os.path.isfile", return_value=True),
             patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
-            patch("ClassicLib.ScanLog.ThreadSafeLogCache"),
             patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=False),
         ):
             # Setup GlobalRegistry
@@ -121,13 +127,16 @@ class TestFormIDMatching:
                     GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
 
     def test_formid_matching_not_found(self, mock_formid_db: LiteralString, message_handler) -> None:
-        """Test FormID matching when the FormID is not in the database."""
+        """Test FormID matching when the FormID is not in the database.
+
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        Tests now verify scanner initialization without the cache.
+        """
         with (
             patch("builtins.open", mock_open(read_data=mock_formid_db)),
             patch("os.path.isfile", return_value=True),
             patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
-            patch("ClassicLib.ScanLog.ThreadSafeLogCache"),
             patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=False),
         ):
             # Setup GlobalRegistry
@@ -165,12 +174,15 @@ class TestFormIDMatching:
                     GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
 
     def test_formid_database_not_found(self, message_handler) -> None:
-        """Test behavior when FormID database does not exist."""
+        """Test behavior when FormID database does not exist.
+
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        Tests now verify scanner initialization without the cache.
+        """
         with (
             patch("os.path.isfile", return_value=False),
             patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
-            patch("ClassicLib.ScanLog.ThreadSafeLogCache"),
             patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=False),
         ):
             # Setup GlobalRegistry
@@ -208,13 +220,16 @@ class TestFormIDMatching:
                     GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
 
     def test_multiple_formid_matching(self, mock_formid_db: LiteralString, message_handler) -> None:
-        """Test matching multiple FormIDs at once."""
+        """Test matching multiple FormIDs at once.
+
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        Tests now verify scanner initialization without the cache.
+        """
         with (
             patch("builtins.open", mock_open(read_data=mock_formid_db)),
             patch("os.path.isfile", return_value=True),
             patch("ClassicLib.ScanLog.Util.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.ScanLog.Util.crashlogs_reformat"),
-            patch("ClassicLib.ScanLog.ThreadSafeLogCache"),
             patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=False),
         ):
             # Setup GlobalRegistry

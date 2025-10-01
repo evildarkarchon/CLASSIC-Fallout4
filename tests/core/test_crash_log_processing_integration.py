@@ -66,28 +66,28 @@ class TestCrashLogProcessingIntegration:
                 from unittest.mock import MagicMock
                 mock_cache = MagicMock()
                 GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, mock_cache)
-            # Add ThreadSafeLogCache mock
-            with patch('ClassicLib.ScanLog.ThreadSafeLogCache'):
-                try:
-                    scanner: ClassicScanLogs = ClassicScanLogs()
-                    # The scanner's crashlog_list should use our mocked files
-                    scanner.crashlog_list = crash_log_files
-                    results: list[Any] = []
-                    for crash_file in scanner.crashlog_list:
-                        from ClassicLib.AsyncBridge import AsyncBridge
-                        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+            # Note: ThreadSafeLogCache was removed for performance reasons
+            # OrchestratorCore no longer requires crashlogs parameter
+            try:
+                scanner: ClassicScanLogs = ClassicScanLogs()
+                # The scanner's crashlog_list should use our mocked files
+                scanner.crashlog_list = crash_log_files
+                results: list[Any] = []
+                for crash_file in scanner.crashlog_list:
+                    from ClassicLib.AsyncBridge import AsyncBridge
+                    from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
-                        async def process_with_orchestrator():
-                            async with OrchestratorCore(scanner.yamldata, scanner.crashlogs, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
-                                return await scanner.process_crashlog_async(crash_file, orchestrator)
+                    async def process_with_orchestrator():
+                        async with OrchestratorCore(scanner.yamldata, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
+                            return await scanner.process_crashlog_async(crash_file, orchestrator)
 
-                        bridge = AsyncBridge.get_instance()
-                        crashlog_file, autoscan_report, trigger_scan_failed, local_stats = bridge.run_async(process_with_orchestrator())
-                        results.append(autoscan_report)
-                    assert scanner.crashlog_list is not None
-                    assert len(scanner.crashlog_list) == 3
-                    assert len(results) == 3
-                    # Note: mock_get_files is not called because we manually set crashlog_list
-                finally:
-                    if original_game is not None:
-                        GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)
+                    bridge = AsyncBridge.get_instance()
+                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = bridge.run_async(process_with_orchestrator())
+                    results.append(autoscan_report)
+                assert scanner.crashlog_list is not None
+                assert len(scanner.crashlog_list) == 3
+                assert len(results) == 3
+                # Note: mock_get_files is not called because we manually set crashlog_list
+            finally:
+                if original_game is not None:
+                    GlobalRegistry.register(GlobalRegistry.Keys.GAME, original_game)

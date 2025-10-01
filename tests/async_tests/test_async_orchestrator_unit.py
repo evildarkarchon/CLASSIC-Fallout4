@@ -22,7 +22,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.ScanLogInfo import ThreadSafeLogCache
 
 pytestmark = pytest.mark.unit
 
@@ -36,11 +35,12 @@ class TestOrchestratorCore:
 
         Uses mock_database_pool_manager fixture to ensure singleton isolation.
         The fixture mocks DatabasePoolManager to prevent actual database connections.
-        """
-        crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
 
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        OrchestratorCore no longer requires crashlogs parameter and reads files directly.
+        """
         # OrchestratorCore now uses DatabasePoolManager singleton internally
-        async with OrchestratorCore(yamldata=mock_yamldata, crashlogs=crashlogs, fcx_mode=False, show_formid_values=True, formid_db_exists=True) as orchestrator:
+        async with OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True) as orchestrator:
             assert orchestrator is not None
             # The mock_database_pool_manager ensures the pool is properly mocked
             assert orchestrator._db_pool is not None
@@ -51,17 +51,18 @@ class TestOrchestratorCore:
 
         Uses mock_database_pool_manager fixture for singleton isolation.
         Tests that orchestrator works correctly when FormID database is not available.
-        """
-        crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
 
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        OrchestratorCore no longer requires crashlogs parameter and reads files directly.
+        """
         # Test with FormID database disabled
-        async with OrchestratorCore(yamldata=mock_yamldata, crashlogs=crashlogs, fcx_mode=True, show_formid_values=False, formid_db_exists=False) as orchestrator:
+        async with OrchestratorCore(yamldata=mock_yamldata, fcx_mode=True, show_formid_values=False, formid_db_exists=False) as orchestrator:
             assert orchestrator is not None
             assert orchestrator.fcx_handler is not None  # FCX handler created with fcx_mode=True
             assert orchestrator.show_formid_values is False
             assert orchestrator.formid_db_exists is False
-            # Pool is still created but won't be used for FormID lookups
-            assert orchestrator._db_pool is not None
+            # Pool is None when database doesn't exist (lazy initialization)
+            assert orchestrator._db_pool is None
 
     @pytest.mark.asyncio
     async def test_orchestrator_with_multiple_analyzers(self, mock_yamldata: MagicMock, mock_database_pool_manager) -> None:
@@ -69,14 +70,16 @@ class TestOrchestratorCore:
 
         Uses mock_database_pool_manager to ensure proper singleton isolation.
         Verifies all analyzer components are initialized correctly.
+
+        Note: ThreadSafeLogCache was removed for performance reasons.
+        OrchestratorCore no longer requires crashlogs parameter and reads files directly.
         """
-        crashlogs: MagicMock = MagicMock(spec=ThreadSafeLogCache)
         mock_yamldata.formid_analyzer_enabled = True
         mock_yamldata.record_scanner_enabled = True
         mock_yamldata.plugin_analyzer_enabled = True
 
         # Test with all analyzers enabled
-        async with OrchestratorCore(yamldata=mock_yamldata, crashlogs=crashlogs, fcx_mode=False, show_formid_values=True, formid_db_exists=True) as orchestrator:
+        async with OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True) as orchestrator:
             assert orchestrator.formid_analyzer is not None
             assert orchestrator.record_scanner is not None
             assert orchestrator.plugin_analyzer is not None

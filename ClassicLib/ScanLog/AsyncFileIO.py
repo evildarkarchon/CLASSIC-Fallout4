@@ -88,7 +88,7 @@ async def load_crash_logs_async_optimized(crashlog_list: list[Path]) -> dict[str
                 name, lines = result
                 cache_dict[name] = lines
 
-    # Convert to bytes format to match ThreadSafeLogCache expectations
+    # Convert to bytes format for consistency with async operations
     # Strip any trailing newlines from lines before joining to avoid double newlines
     bytes_cache: dict[str, bytes] = {
         name: "\n".join(line.rstrip("\n\r") for line in lines).encode("utf-8") for name, lines in cache_dict.items()

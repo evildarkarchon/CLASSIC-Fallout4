@@ -10,16 +10,13 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashMap;
 use rayon::prelude::*;
-use tokio::runtime::Runtime;
 use std::sync::Arc;
 use rusqlite::{Connection, params};
 use lru::LruCache;
 use std::sync::Mutex;
 
-/// Global tokio runtime for async operations
-static ASYNC_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Runtime::new().expect("Failed to create Tokio runtime")
-});
+// Use the global runtime from lib.rs (ONE RUNTIME RULE)
+use crate::get_runtime;
 
 /// Precompiled FormID pattern - exact match to Python's pattern
 /// Pattern: r"^\s*Form ID:\s*0x([0-9A-F]{8})" with case-insensitive flag
@@ -170,12 +167,12 @@ impl FormIDAnalyzerCore {
         crashlog_plugins: &Bound<'_, PyDict>
     ) -> PyResult<Py<PyAny>> {
         // Import ReportFragment from Python
-        let report_fragment_module = py.import_bound("ClassicLib.ScanLog.ReportFragment")?;
+        let report_fragment_module = py.import("ClassicLib.ScanLog.ReportFragment")?;
         let report_fragment_class = report_fragment_module.getattr("ReportFragment")?;
 
         if formids_matches.is_empty() {
             let lines = vec!["* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n"];
-            let py_lines = PyList::new_bound(py, lines);
+            let py_lines = PyList::new(py, lines)?;
             return Ok(report_fragment_class
                 .call_method1("from_lines", (py_lines,))?
                 .unbind());
@@ -243,7 +240,7 @@ impl FormIDAnalyzerCore {
             "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n".to_string(),
         ]);
 
-        let py_lines = PyList::new_bound(py, lines);
+        let py_lines = PyList::new(py, lines)?;
         Ok(report_fragment_class
             .call_method1("from_lines", (py_lines,))?
             .unbind())
@@ -321,7 +318,7 @@ impl FormIDAnalyzerCore {
             }
         }
 
-        Ok(PyList::new_bound(py, formids_matches).unbind())
+        Ok(PyList::new(py, formids_matches)?.unbind())
     }
 
     /// Cache plugin mappings once to avoid repeated PyDict conversions
@@ -395,7 +392,7 @@ impl FormIDAnalyzerCore {
         results.push("You can search any listed Form IDs in xEdit to see if they lead to relevant records.\n".to_string());
 
         // Return results as a Python list for ReportFragment creation
-        Ok(PyList::new_bound(py, results).unbind().into())
+        Ok(PyList::new(py, results)?.unbind().into())
     }
 
     /// Enhanced formid_match with batch database operations
@@ -406,12 +403,12 @@ impl FormIDAnalyzerCore {
         crashlog_plugins: &Bound<'_, PyDict>
     ) -> PyResult<Py<PyAny>> {
         // Import ReportFragment from Python
-        let report_fragment_module = py.import_bound("ClassicLib.ScanLog.ReportFragment")?;
+        let report_fragment_module = py.import("ClassicLib.ScanLog.ReportFragment")?;
         let report_fragment_class = report_fragment_module.getattr("ReportFragment")?;
 
         if formids_matches.is_empty() {
             let lines = vec!["* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n"];
-            let py_lines = PyList::new_bound(py, lines);
+            let py_lines = PyList::new(py, lines)?;
             return Ok(report_fragment_class
                 .call_method1("from_lines", (py_lines,))?
                 .unbind());
@@ -469,7 +466,7 @@ impl FormIDAnalyzerCore {
                 .collect();
 
             let database_clone = self.database.clone();
-            let batch_results = ASYNC_RUNTIME.block_on(async move {
+            let batch_results = get_runtime().block_on(async move {
                 tokio::task::spawn_blocking(move || {
                     if let Ok(db) = database_clone.lock() {
                         db.batch_lookup(&lookup_pairs)
@@ -501,7 +498,7 @@ impl FormIDAnalyzerCore {
             "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n".to_string(),
         ]);
 
-        let py_lines = PyList::new_bound(py, lines);
+        let py_lines = PyList::new(py, lines)?;
         Ok(report_fragment_class
             .call_method1("from_lines", (py_lines,))?
             .unbind())

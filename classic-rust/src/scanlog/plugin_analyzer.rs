@@ -129,7 +129,7 @@ impl PluginAnalyzer {
             "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n".to_string(),
         ];
 
-        let loadorder_plugins = PyDict::new_bound(py);
+        let loadorder_plugins = PyDict::new(py);
         let loadorder_path = Path::new("loadorder.txt");
 
         if loadorder_path.exists() {

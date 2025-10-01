@@ -6,6 +6,7 @@ using immutable fragments throughout instead of mutable lists.
 """
 
 import asyncio
+import logging
 from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -14,6 +15,8 @@ from packaging.version import Version
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
+from ClassicLib.integration.factory import get_file_io
+from ClassicLib.integration.status import RUST_AVAILABLE, is_rust_accelerated
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager, write_file_async
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
@@ -31,7 +34,7 @@ from ClassicLib.Util import crashgen_version_gen
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
+    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 
 class OrchestratorCore:
@@ -41,13 +44,11 @@ class OrchestratorCore:
     This class serves as the primary core for handling crash log processing,
     analysis, and report generation using various modules. It incorporates both
     synchronous and asynchronous methods to provide comprehensive functionality.
-    It is designed for working with specific YAML configuration data and
-    thread-safe log operations.
+    It is designed for working with specific YAML configuration data.
 
     Attributes:
         yamldata (ClassicScanLogsInfo): Configuration data for the crash log
             processing and analysis.
-        crashlogs (ThreadSafeLogCache): Thread-safe cache for managing crash logs.
         show_formid_values (bool | None): Specifies whether to display FormID
             values in reports.
         formid_db_exists (bool): Indicates whether the FormID database is available.
@@ -71,7 +72,6 @@ class OrchestratorCore:
     def __init__(
         self,
         yamldata: "ClassicScanLogsInfo",
-        crashlogs: "ThreadSafeLogCache",
         fcx_mode: bool | None,
         show_formid_values: bool | None,
         formid_db_exists: bool,
@@ -87,8 +87,6 @@ class OrchestratorCore:
         Args:
             yamldata: ClassicScanLogsInfo object containing YAML data and related
                 configurations.
-            crashlogs: ThreadSafeLogCache instance used for handling thread-safe
-                logging of crash data.
             fcx_mode: Optional boolean flag indicating if the FCX mode functionality
                 should be enabled.
             show_formid_values: Optional boolean flag to control whether FormID values
@@ -97,7 +95,6 @@ class OrchestratorCore:
                 available.
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
-        self.crashlogs: ThreadSafeLogCache = crashlogs
         self.show_formid_values = show_formid_values
         self.formid_db_exists = formid_db_exists
 
@@ -122,18 +119,14 @@ class OrchestratorCore:
         self._last_formids: list[str] = []
         self._last_plugins: dict[str, str] = {}
 
-        # Log acceleration status
-        if RUST_INTEGRATION_AVAILABLE:
-            self._log_acceleration_status()
-
     async def __aenter__(self) -> "OrchestratorCore":
         """
         Handles asynchronous context manager entry for initializing resources required
         for orchestrator operations. These resources include an asyncio lock, a database
         pool, and a FormID analyzer.
 
-        Uses the singleton DatabasePoolManager to reuse database connections across
-        multiple orchestrator instances for better performance.
+        Uses lazy initialization for the database pool - only initializes if FormID
+        database exists. This avoids initialization delays when database is not available.
 
         Returns:
             OrchestratorCore: The initialized orchestrator core instance.
@@ -142,11 +135,14 @@ class OrchestratorCore:
         # Initialize asyncio.Lock
         self._state_lock = asyncio.Lock()
 
-        # Use singleton database pool manager for better performance
-        pool_manager = DatabasePoolManager()
-        self._db_pool = await pool_manager.get_pool()
+        # Lazy database pool initialization - only if database exists
+        if self.formid_db_exists:
+            pool_manager = DatabasePoolManager()
+            self._db_pool = await pool_manager.get_pool()
+        else:
+            self._db_pool = None
 
-        # Create async FormID analyzer
+        # Create async FormID analyzer (handles None db_pool gracefully)
         self._async_formid_analyzer = FormIDAnalyzerCore(
             self.yamldata, self.show_formid_values or False, self.formid_db_exists, self._db_pool
         )
@@ -171,6 +167,10 @@ class OrchestratorCore:
         """
         Fragment-based async implementation for processing a crash log file.
 
+        Uses direct file I/O with Python's native Path.read_text() for optimal
+        performance on small crash log files (typically <100KB). Performance analysis
+        shows this is faster than async file I/O for small files due to lower overhead.
+
         Args:
             crashlog_file: Path to the crash log file to be processed
 
@@ -184,8 +184,10 @@ class OrchestratorCore:
         trigger_scan_failed = False
         local_stats: Counter[str] = Counter(scanned=1, incomplete=0, failed=0)
 
-        # Read crash data
-        crash_data: list[str] = self.crashlogs.read_log(crashlog_file.name)
+        # Read crash data directly from file using native Python I/O
+        # This is faster than async I/O for small files due to lower overhead
+        content = crashlog_file.read_text(encoding='utf-8', errors='ignore')
+        crash_data: list[str] = content.splitlines()
 
         # Create report composer
         composer = ReportComposer()
@@ -633,7 +635,7 @@ class OrchestratorCore:
 
         try:
             # Try Rust-accelerated file I/O first
-            if RUST_INTEGRATION_AVAILABLE:
+            if is_rust_accelerated("file_io_core"):
                 try:
                     rust_file_io = get_file_io()
                     if rust_file_io and hasattr(rust_file_io, 'read_file_async'):

@@ -1,5 +1,5 @@
 """
-Scan log information and caching components.
+Scan log information components.
 
 This module maintains backward compatibility by re-exporting components
 from the refactored scanloginfo submodule.
@@ -12,11 +12,10 @@ from __future__ import annotations
 import warnings
 
 # Re-export everything from the scanloginfo module for backward compatibility
-from .scanloginfo import ClassicScanLogsInfo, ThreadSafeLogCache
+from .scanloginfo import ClassicScanLogsInfo
 
 __all__ = [
     "ClassicScanLogsInfo",
-    "ThreadSafeLogCache",
 ]
 
 

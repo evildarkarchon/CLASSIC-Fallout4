@@ -130,7 +130,7 @@ fn test_batch_lookup() {
 
     let pool = RustDatabasePool::new(None, None, Some("Fallout4".to_string()));
 
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         pool.py_initialize(py, vec![db_path.to_string_lossy().to_string()]).unwrap();
 
         // Test the new batch_lookup method
@@ -170,7 +170,7 @@ fn test_batch_entries_legacy() {
 
     let pool = RustDatabasePool::new(None, None, Some("Fallout4".to_string()));
 
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         pool.py_initialize(py, vec![db_path.to_string_lossy().to_string()]).unwrap();
 
         // Create Python list of tuples
@@ -205,7 +205,7 @@ fn test_cache_operations() {
 
     let pool = RustDatabasePool::new(None, Some(1), Some("Fallout4".to_string())); // 1 second TTL
 
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         let temp_dir = TempDir::new().unwrap();
         let db_path = temp_dir.path().join("test.db");
 
@@ -264,7 +264,7 @@ fn test_multiple_databases() {
 
     let pool = RustDatabasePool::new(None, None, Some("Fallout4".to_string()));
 
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         pool.py_initialize(py, vec![
             db1_path.to_string_lossy().to_string(),
             db2_path.to_string_lossy().to_string(),
@@ -294,7 +294,7 @@ fn test_optimization() {
 
     let pool = RustDatabasePool::new(None, None, Some("Fallout4".to_string()));
 
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         pool.py_initialize(py, vec![db_path.to_string_lossy().to_string()]).unwrap();
 
         // Should not panic
@@ -316,7 +316,7 @@ fn test_concurrent_access() {
 
     let pool = Arc::new(RustDatabasePool::new(None, None, Some("Fallout4".to_string())));
 
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         pool.py_initialize(py, vec![db_path.to_string_lossy().to_string()]).unwrap();
     });
 
@@ -325,7 +325,7 @@ fn test_concurrent_access() {
         .map(|i| {
             let pool_clone = Arc::clone(&pool);
             thread::spawn(move || {
-                Python::with_gil(|py| {
+                Python::attach(|py| {
                     for _ in 0..10 {
                         let formid = format!("{:08}", 12345 + i);
                         let _ = pool_clone.py_get_entry(
@@ -344,7 +344,7 @@ fn test_concurrent_access() {
         handle.join().unwrap();
     }
 
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         let stats = pool.py_get_stats().unwrap();
         assert!(stats.get("total_queries").copied().unwrap_or(0) >= 100);
     });

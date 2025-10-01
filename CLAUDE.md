@@ -46,23 +46,21 @@ uv run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
 ### Rust Extension Development
 ```bash
 # Method 1: Build wheel (MOST RELIABLE - RECOMMENDED)
-cd classic-rust
-maturin build --release --out dist
-uv pip install dist/classic-*.whl --force-reinstall
+# Note: Build from project root where Cargo.toml is located
+maturin build --release --out classic-rust/dist
+uv pip install classic-rust/dist/classic-*.whl --force-reinstall
 
 # Method 2: Editable install (DEVELOPMENT)
-cd classic-rust
 rm .venv/Lib/site-packages/classic_core.pyd  # Remove old FIRST
 uv pip install -e . --force-reinstall
 
 # Verify Rust acceleration is working
-python -c "import classic_core; print(f'Rust version: {classic_core.__version__}')"
-python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
+uv run python -c "import classic_core; print(f'Rust version: {classic_core.__version__}')"
+uv run python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
 
 # Build Rust without installing (for testing)
-cd classic-rust
 cargo build --release
-cargo test
+cargo test --all-features
 ```
 
 ## Architecture
@@ -70,7 +68,7 @@ cargo test
 ### Hybrid Python-Rust Architecture
 - **Python**: UI, high-level logic, and coordination in `src/classic/` and `ClassicLib/`
 - **Rust**: CPU-intensive operations in `classic-rust/src/` with 10-150x performance gains
-- **Integration**: PyO3 bindings with native async solution (no PyO3-asyncio dependency)
+- **Integration**: PyO3 0.26.0 bindings with native async solution (no PyO3-asyncio dependency)
 - **Fallback**: Full Python implementations ensure compatibility when Rust unavailable
 - **Transparent**: Automatic acceleration - no API changes required
 
@@ -170,6 +168,10 @@ fn process_data(data: String) -> PyResult<String> {
 3. **Always clear singletons** between tests (GlobalRegistry, MessageHandler)
 4. **Use proper async mocking** to avoid unawaited coroutine warnings
 5. **Test Rust integration** with `@pytest.mark.rust` for components that use acceleration
+6. **Tests are exempt from API stability** - Always use current APIs, never deprecated ones
+   - No tests for deprecated APIs
+   - Update existing tests to use current APIs
+   - Remove redundant tests if equivalent test exists with current API
 
 ### Test-Driven Development
 Follow Red-Green-Refactor cycle:
@@ -306,7 +308,7 @@ uv run pre-commit run --all-files           # Run manually
 - **Python 3.12+ required**
 - **uv** package manager (faster than poetry)
 - **Terminal for tests** (VS Code test tool freezes)
-- **API compatibility priority** with deprecation warnings
+- **API compatibility priority** with deprecation warnings (production code only - tests always use current APIs)
 - **Rust acceleration** automatic and transparent (10-150x speedups)
 - **Native async solution** - no PyO3-asyncio dependency
 - **No proactive doc creation** unless requested
@@ -319,6 +321,11 @@ For comprehensive Rust documentation, see:
 - **[Troubleshooting Guide](docs/troubleshooting_rust.md)** - Debug Rust issues
 - **[Development Guide](docs/development_with_rust.md)** - Develop with Rust components
 - **[Migration Plan](RUST_MIGRATION_PLAN.md)** - Complete migration strategy
+
+### PyO3 0.26.0 Documentation (Current)
+- **[PyO3 0.26.0 Migration Guide](docs/pyo3_0.26_migration_guide.md)** - Detailed migration from 0.22 to 0.26.0
+- **[PyO3 Quick Reference](docs/pyo3_quick_reference.md)** - Quick reference for common patterns
+- **[Official PyO3 Docs](https://pyo3.rs/v0.26.0/)** - Official PyO3 documentation
 
 ## Memories
 - Output test results to file to avoid truncation

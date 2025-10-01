@@ -17,7 +17,7 @@ from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo, ThreadSafeLogCache
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
@@ -33,8 +33,8 @@ class ScanLogsExecutor:
     def __init__(self, config: ScanConfig | None = None) -> None:
         """
         Initializes the crash log scan process by setting up configuration, retrieving crash log files,
-        and applying settings for crash log reformatting. It also initializes various components such
-        as a thread-safe log cache, database availability, and statistics tracking.
+        and applying settings for crash log reformatting. It also initializes database availability
+        and statistics tracking.
 
         Args:
             config (ScanConfig | None): Optional ScanConfig object containing scan-specific settings.
@@ -68,9 +68,6 @@ class ScanLogsExecutor:
         self.statistics = ScanStatistics()
         self.statistics.total_files = len(self.crashlog_list)
 
-        # Initialize thread-safe log cache
-        self.crashlogs = ThreadSafeLogCache(self.crashlog_list)
-
         logger.debug(f"Initiated crash log scan for {len(self.crashlog_list)} files")
 
     @staticmethod
@@ -102,6 +99,10 @@ class ScanLogsExecutor:
         statistics and progress tracking during execution. It also generates reports
         for each processed crash log and handles errors that occur during the process.
 
+        Crash logs are now read directly from disk using native Python I/O for optimal
+        performance on small files (performance analysis showed this is faster than
+        caching or async I/O due to lower overhead).
+
         Returns:
             ScanResult: An object containing results of the scan, including processed
                 logs, failed logs, error messages, and scan duration.
@@ -121,8 +122,9 @@ class ScanLogsExecutor:
         msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
 
         # Create async orchestrator with context manager for proper resource management
+        # No longer passing crashlogs cache - files are read directly during processing
         async with OrchestratorCore(
-            self.yamldata, self.crashlogs, self.config.fcx_mode, self.config.show_formid_values, self.config.formid_db_exists
+            self.yamldata, self.config.fcx_mode, self.config.show_formid_values, self.config.formid_db_exists
         ) as orchestrator:
             # Run FCX checks if enabled
             if self.config.fcx_mode:

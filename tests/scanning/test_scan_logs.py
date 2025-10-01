@@ -144,11 +144,14 @@ def mock_crash_data() -> list[str]:
 
 @pytest.fixture
 def mock_scanner(setup_global_registry: Generator, mock_yaml_settings: Generator, init_message_handler_fixture: Any) -> Generator[ClassicScanLogs, None, None]:  # noqa: ARG001
-    """Create a mock ClassicScanLogs instance with basic functionality."""
+    """Create a mock ClassicScanLogs instance with basic functionality.
+
+    Note: ThreadSafeLogCache was removed for performance reasons.
+    Scanner now reads crash logs directly from files when needed.
+    """
     with (
         patch("ClassicLib.ScanLog.crashlogs_get_files", return_value=[Path("crash-test.log")]),
         patch("ClassicLib.ScanLog.crashlogs_reformat"),
-        patch("ClassicLib.ScanLog.ThreadSafeLogCache"),
     ):
         scanner = ClassicScanLogs()
         scanner.yamldata.crashgen_name = "Buffout 4"
@@ -194,8 +197,8 @@ class TestClassicScanLogs:
 
         # Since orchestrator is created during async execution, we'll test the basic structure
         # Record scanning is now done through the OrchestratorCore during process_crashlog_async
+        # Note: crashlogs attribute was removed with ThreadSafeLogCache
         assert hasattr(mock_scanner, "crashlog_list")
-        assert hasattr(mock_scanner, "crashlogs")
         assert hasattr(mock_scanner, "yamldata")
 
         # Verify the scanner is properly initialized for record scanning

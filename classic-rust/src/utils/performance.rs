@@ -171,11 +171,11 @@ impl RustPerformanceMonitor {
     /// Start timing an operation
     #[pyo3(signature = (operation))]
     pub fn start_timer(&self, py: Python, operation: String) -> PyResult<Py<PyAny>> {
-        let timer_dict = PyDict::new_bound(py);
+        let timer_dict = PyDict::new(py);
         timer_dict.set_item("operation", operation.clone())?;
         timer_dict.set_item("start", Instant::now().elapsed().as_secs_f64())?;
 
-        Ok(timer_dict.into())
+        Ok(timer_dict.unbind().into())
     }
 
     /// Stop timing an operation
@@ -202,12 +202,12 @@ impl RustPerformanceMonitor {
 
     /// Get performance statistics for all operations
     pub fn get_all_stats(&self, py: Python) -> PyResult<Py<PyDict>> {
-        let stats_dict = PyDict::new_bound(py);
+        let stats_dict = PyDict::new(py);
 
         for entry in METRICS.timings.iter() {
             let operation = entry.key();
             if let Some(stats) = METRICS.get_stats(operation) {
-                let op_dict = PyDict::new_bound(py);
+                let op_dict = PyDict::new(py);
                 op_dict.set_item("count", stats.count)?;
                 op_dict.set_item("total_ms", stats.total.as_millis() as u64)?;
                 op_dict.set_item("avg_ms", stats.average.as_millis() as u64)?;
@@ -225,14 +225,14 @@ impl RustPerformanceMonitor {
             }
         }
 
-        Ok(stats_dict.into())
+        Ok(stats_dict.unbind())
     }
 
     /// Get statistics for a specific operation
     pub fn get_operation_stats(&self, py: Python, operation: String) -> PyResult<Option<Py<PyDict>>> {
         match METRICS.get_stats(&operation) {
             Some(stats) => {
-                let op_dict = PyDict::new_bound(py);
+                let op_dict = PyDict::new(py);
                 op_dict.set_item("count", stats.count)?;
                 op_dict.set_item("total_ms", stats.total.as_millis() as u64)?;
                 op_dict.set_item("avg_ms", stats.average.as_millis() as u64)?;
@@ -245,7 +245,7 @@ impl RustPerformanceMonitor {
                     op_dict.set_item("throughput_bytes_per_sec", throughput)?;
                 }
 
-                Ok(Some(op_dict.into()))
+                Ok(Some(op_dict.unbind()))
             }
             None => Ok(None),
         }

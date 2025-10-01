@@ -20,7 +20,7 @@ use std::collections::HashMap;
 static COMMON_PATTERNS: Lazy<HashMap<&'static str, Regex>> = Lazy::new(|| {
     let mut patterns = HashMap::new();
     patterns.insert("error", Regex::new(r"(?i)\b(error|exception|crash|fault|violation)\b").unwrap());
-    patterns.insert("formid", Regex::new(r"(?i)\b(?:form\s*id|formid)[:\s]+([0-9a-f]{8})\b").unwrap());
+    patterns.insert("formid", Regex::new(r"(?i)\b(?:form\s*id|formid)[:\s]+(?:0x)?([0-9a-f]{8})\b").unwrap());
     patterns.insert("plugin", Regex::new(r"(?i)\[([0-9a-f]{2})\]\s+(.+\.es[lmp])").unwrap());
     patterns.insert("address", Regex::new(r"0x[0-9A-Fa-f]{8,16}").unwrap());
     patterns.insert("module", Regex::new(r"(\w+\.dll)\s+v?([0-9.]+)?").unwrap());
@@ -389,7 +389,7 @@ impl LogParser {
         lines.par_iter()
             .flat_map(|line| {
                 formid_pattern.captures_iter(line)
-                    .map(|cap| cap[0].to_string())
+                    .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
                     .collect::<Vec<_>>()
             })
             .collect()

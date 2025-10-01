@@ -107,7 +107,7 @@ class ClassicScanLogsInfo:
                 (list[str], YAML.Main, "catch_log_records"),
                 (str, YAML.Main, "CLASSIC_Info.version"),
                 (str, YAML.Main, "CLASSIC_Info.version_date"),
-                (str, YAML.Game, "Game_Info.CRASHGEN_LogName"),
+                (str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_LogName"),
                 (str, YAML.Game, "Game_Info.CRASHGEN_LatestVer"),
                 (str, YAML.Game, "GameVR_Info.CRASHGEN_LatestVer"),
                 (list[str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_Ignore"),
