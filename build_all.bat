@@ -38,29 +38,29 @@ if exist classic-rust (
     ) else (
         REM Extract the built extension from wheel
         echo Extracting Rust extension from wheel...
-        if not exist rust_extensions mkdir rust_extensions
+        if not exist classic_core mkdir classic_core
 
         REM Use Python to extract the .pyd file from the wheel
-        %PYTHON_CMD% -c "import zipfile, glob, shutil; wheel = glob.glob('dist-rust/*.whl')[0]; z = zipfile.ZipFile(wheel); [z.extract(f, 'temp_extract') for f in z.namelist() if f.endswith('.pyd')]; [shutil.copy2(f'temp_extract/{f}', 'rust_extensions/') for f in z.namelist() if f.endswith('.pyd')]"
+        %PYTHON_CMD% -c "import zipfile, glob, shutil; wheel = glob.glob('dist-rust/*.whl')[0]; z = zipfile.ZipFile(wheel); [z.extract(f, 'temp_extract') for f in z.namelist() if f.endswith('.pyd')]; [shutil.copy2(f'temp_extract/{f}', 'classic_core/') for f in z.namelist() if f.endswith('.pyd')]"
 
         REM Clean up
         if exist temp_extract rmdir /s /q temp_extract
 
         REM Create manifest file
-        echo Rust extensions built on %date% %time% > rust_extensions\MANIFEST.txt
-        echo. >> rust_extensions\MANIFEST.txt
-        dir /b rust_extensions\*.pyd >> rust_extensions\MANIFEST.txt
+        echo Rust extensions built on %date% %time% > classic_core\MANIFEST.txt
+        echo. >> classic_core\MANIFEST.txt
+        dir /b classic_core\*.pyd >> classic_core\MANIFEST.txt
 
-        echo Rust extensions ready in rust_extensions/
+        echo Rust extensions ready in classic_core/
     )
     echo.
 ) else (
     echo ============================================================
     echo Rust source not found - checking for pre-built extensions...
     echo ============================================================
-    if exist rust_extensions (
-        echo Found pre-built Rust extensions in rust_extensions/
-        dir /b rust_extensions\*.pyd 2>nul
+    if exist classic_core (
+        echo Found pre-built Rust extensions in classic_core/
+        dir /b classic_core\*.pyd 2>nul
     ) else (
         echo No Rust extensions available - using pure Python
     )

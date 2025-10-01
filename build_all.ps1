@@ -4,7 +4,7 @@
 param(
     [switch]$SkipTest = $false,
     [switch]$BuildTest = $false,
-    [switch]$Clean = $true,
+    [switch]$NoClean = $false,
     [string]$UpxDir = "",
     [switch]$NoUpx = $false
 )
@@ -20,7 +20,8 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
     $PyInstallerCmd = "uv run pyinstaller"
     $MaturinCmd = "uv run maturin"
     Write-Host "Using uv environment" -ForegroundColor Green
-} else {
+}
+else {
     $PythonCmd = "python"
     $PyInstallerCmd = "pyinstaller"
     $MaturinCmd = "maturin"
@@ -36,13 +37,13 @@ if (Test-Path "classic-rust") {
 
     # Build the Rust extension
     Write-Host "Building release build with maturin..." -ForegroundColor Yellow
-    $buildResult = Invoke-Expression "$MaturinCmd build --release --out dist-rust 2>&1"
+    Invoke-Expression "$MaturinCmd build --release --out dist-rust 2>&1" | Out-Null
 
     if ($LASTEXITCODE -eq 0) {
         # Extract the built extension from wheel
         Write-Host "Extracting Rust extension from wheel..." -ForegroundColor Yellow
-        if (-not (Test-Path "rust_extensions")) {
-            New-Item -ItemType Directory -Path "rust_extensions" | Out-Null
+        if (-not (Test-Path "classic_core")) {
+            New-Item -ItemType Directory -Path "classic_core" | Out-Null
         }
 
         # Use Python to extract the .pyd file from the wheel
@@ -57,10 +58,10 @@ if wheels:
     wheel = wheels[0]
     with zipfile.ZipFile(wheel) as z:
         for name in z.namelist():
-            if name.endswith('.pyd'):
+            if name.endswith('.pyd') and 'classic_core' in name:
                 z.extract(name, 'temp_extract')
                 base_name = os.path.basename(name)
-                shutil.copy2(f'temp_extract/{name}', f'rust_extensions/{base_name}')
+                shutil.copy2(f'temp_extract/{name}', f'classic_core/{base_name}')
                 print(f'Extracted: {base_name}')
 "@
         $extractScript | & $PythonCmd -
@@ -75,34 +76,37 @@ if wheels:
 Rust extensions built on $(Get-Date)
 
 Extensions:
-$(Get-ChildItem -Path "rust_extensions" -Filter "*.pyd" | ForEach-Object { $_.Name })
+$(Get-ChildItem -Path "classic_core" -Filter "*.pyd" | ForEach-Object { $_.Name })
 "@
-        Set-Content -Path "rust_extensions\MANIFEST.txt" -Value $manifestContent
+        Set-Content -Path "classic_core\MANIFEST.txt" -Value $manifestContent
 
-        Write-Host "Rust extensions ready in rust_extensions/" -ForegroundColor Green
-    } else {
+        Write-Host "Rust extensions ready in classic_core/" -ForegroundColor Green
+    }
+    else {
         Write-Host "WARNING: Rust extension build failed!" -ForegroundColor Red
         Write-Host "Continuing without Rust optimizations..." -ForegroundColor Yellow
     }
     Write-Host ""
-} else {
+}
+else {
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host "Rust source not found - checking for pre-built extensions..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
 
-    if (Test-Path "rust_extensions") {
-        Write-Host "Found pre-built Rust extensions in rust_extensions/" -ForegroundColor Green
-        Get-ChildItem -Path "rust_extensions" -Filter "*.pyd" | ForEach-Object {
+    if (Test-Path "classic_core") {
+        Write-Host "Found pre-built Rust extensions in classic_core/" -ForegroundColor Green
+        Get-ChildItem -Path "classic_core" -Filter "*.pyd" | ForEach-Object {
             Write-Host "  - $($_.Name)" -ForegroundColor White
         }
-    } else {
+    }
+    else {
         Write-Host "No Rust extensions available - using pure Python" -ForegroundColor Yellow
     }
     Write-Host ""
 }
 
 # Clean previous builds if requested
-if ($Clean) {
+if (-not $NoClean) {
     Write-Host "Cleaning previous builds..." -ForegroundColor Yellow
     if (Test-Path "dist") { Remove-Item -Path "dist" -Recurse -Force }
     if (Test-Path "build") { Remove-Item -Path "build" -Recurse -Force }
@@ -112,8 +116,11 @@ if ($Clean) {
 # Test resource loading in development mode
 if (-not $SkipTest) {
     Write-Host "Testing resource loading..." -ForegroundColor Yellow
-    $testResult = Invoke-Expression "$PythonCmd test_resource_loading.py"
-    if ($LASTEXITCODE -ne 0) {
+    Invoke-Expression "$PythonCmd test_resource_loading.py" | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Resource loading test passed!" -ForegroundColor Green
+    }
+    else {
         Write-Host "ERROR: Resource loading test failed!" -ForegroundColor Red
         Write-Host "Please fix the issues before building." -ForegroundColor Red
         exit 1
@@ -125,7 +132,8 @@ if (-not $SkipTest) {
 $PyInstallerArgs = @("--clean")
 if ($NoUpx) {
     Write-Host "Building without UPX compression" -ForegroundColor Yellow
-} elseif ($UpxDir) {
+}
+elseif ($UpxDir) {
     $PyInstallerArgs += "--upx-dir", $UpxDir
     Write-Host "Using UPX from: $UpxDir" -ForegroundColor Green
 }
@@ -141,9 +149,8 @@ function Build-Spec {
     Write-Host "Building $Description..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
 
-    $args = $PyInstallerArgs + $SpecFile
-    $result = Invoke-Expression "$PyInstallerCmd $($args -join ' ')"
-
+    $buildArgs = $PyInstallerArgs + $SpecFile
+    Invoke-Expression "$PyInstallerCmd $($buildArgs -join ' ')"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: $Description build failed!" -ForegroundColor Red
         exit 1
@@ -171,7 +178,8 @@ Write-Host "============================================================" -Foreg
 
 if (Test-Path "dist\CLASSIC-Test.exe") {
     & "dist\CLASSIC-Test.exe"
-} else {
+}
+else {
     Write-Host "Test executable not built. Use -BuildTest to include it." -ForegroundColor Yellow
 }
 
@@ -183,14 +191,14 @@ Write-Host ""
 
 # List built executables with sizes
 $executables = @(
-    @{Path = "dist\CLASSIC\CLASSIC.exe"; Type = "GUI (Folder)"},
-    @{Path = "dist\CLASSIC-GUI-OneFile.exe"; Type = "GUI (Single File)"},
-    @{Path = "dist\CLASSIC-CLI.exe"; Type = "CLI (Single)"},
-    @{Path = "dist\CLASSIC-TUI.exe"; Type = "TUI (Single)"}
+    @{Path = "dist\CLASSIC\CLASSIC.exe"; Type = "GUI (Folder)" },
+    @{Path = "dist\CLASSIC-GUI-OneFile.exe"; Type = "GUI (Single File)" },
+    @{Path = "dist\CLASSIC-CLI.exe"; Type = "CLI (Single)" },
+    @{Path = "dist\CLASSIC-TUI.exe"; Type = "TUI (Single)" }
 )
 
 if ($BuildTest) {
-    $executables += @{Path = "dist\CLASSIC-Test.exe"; Type = "Test (Debug)"}
+    $executables += @{Path = "dist\CLASSIC-Test.exe"; Type = "Test (Debug)" }
 }
 
 foreach ($exe in $executables) {
@@ -198,7 +206,8 @@ foreach ($exe in $executables) {
         $file = Get-Item $exe.Path
         $sizeMB = [math]::Round($file.Length / 1MB, 2)
         Write-Host ("{0,-20} {1,10} MB - {2}" -f $exe.Type, $sizeMB, $file.Name) -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host ("{0,-20} Not found!" -f $exe.Type) -ForegroundColor Red
     }
 }
@@ -217,4 +226,5 @@ if ($BuildTest) {
 }
 
 Write-Host ""
+Write-Host "Build script completed!" -ForegroundColor Green
 Write-Host "Build script completed!" -ForegroundColor Green

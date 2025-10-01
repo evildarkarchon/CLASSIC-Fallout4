@@ -18,8 +18,8 @@ echo ========================================
 echo.
 
 :: Check if Rust extensions exist
-if not exist "%PROJECT_ROOT%\rust_extensions\*.pyd" (
-    echo WARNING: No Rust extensions found in rust_extensions\
+if not exist "%PROJECT_ROOT%\classic_core\*.pyd" (
+    echo WARNING: No Rust extensions found in classic_core\
     echo.
     echo You should run build_rust_local.bat first to build the extensions.
     echo Continuing without Rust optimizations...
@@ -77,9 +77,9 @@ if exist "%PROJECT_ROOT%\dist\CLASSIC\CLASSIC.exe" (
     echo.
 
     :: Check if Rust extensions were bundled
-    if exist "%PROJECT_ROOT%\dist\CLASSIC\_internal\rust_extensions\*.pyd" (
+    if exist "%PROJECT_ROOT%\dist\CLASSIC\_internal\classic_core\*.pyd" (
         echo Rust extensions successfully bundled:
-        dir /b "%PROJECT_ROOT%\dist\CLASSIC\_internal\rust_extensions\*.pyd"
+        dir /b "%PROJECT_ROOT%\dist\CLASSIC\_internal\classic_core\*.pyd"
     ) else (
         echo Note: No Rust extensions were bundled. The app will use Python fallbacks.
     )

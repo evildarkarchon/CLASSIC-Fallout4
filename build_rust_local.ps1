@@ -48,7 +48,7 @@ if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
 
 # Set up directories
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RustExtensionsDir = Join-Path $ProjectRoot "rust_extensions"
+$RustExtensionsDir = Join-Path $ProjectRoot "classic_core"
 $TempBuildDir = Join-Path $ProjectRoot "temp_rust_build"
 
 Write-Host ""
@@ -132,7 +132,7 @@ $PydFiles = Get-ChildItem -Path $ExtractDir -Filter "*.pyd" -Recurse
 foreach ($PydFile in $PydFiles) {
     Write-Host "  Found extension: $($PydFile.Name)" -ForegroundColor Green
 
-    # Copy to rust_extensions for PyInstaller
+    # Copy to classic_core for PyInstaller
     Copy-Item -Path $PydFile.FullName -Destination $RustExtensionsDir -Force
 
     # Copy to Python package location
@@ -174,7 +174,7 @@ $(Get-ChildItem -Path $RustExtensionsDir -Filter "*.pyd" | ForEach-Object { "  -
 $(Get-ChildItem -Path $RustExtensionsDir -Filter "*.dll" | Where-Object { $_.Name -notmatch "python" } | ForEach-Object { "  - $($_.Name)" })
 
 Locations:
-  - rust_extensions\  (for PyInstaller bundling)
+  - classic_core\  (for PyInstaller bundling)
   - classic-rust\python\classic_core\  (for development)
   - ClassicLib\rust_ext\  (for backward compatibility)
 
@@ -195,9 +195,9 @@ Write-Host "Testing if extension can be loaded..." -ForegroundColor Yellow
 
 $TestScript = @"
 import sys
-sys.path.insert(0, 'rust_extensions')
+sys.path.insert(0, 'classic_core')
 try:
-    from classic_core import _rust
+    import classic_core
     print('SUCCESS: Extension loads correctly!')
     exit(0)
 except ImportError as e:
@@ -233,7 +233,7 @@ Write-Host "  - uvx (from GitHub repo)" -ForegroundColor White
 Write-Host "  - Local development (direct import)" -ForegroundColor White
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
-Write-Host "  1. Commit the rust_extensions directory to git" -ForegroundColor White
+Write-Host "  1. Commit the classic_core directory to git" -ForegroundColor White
 Write-Host "  2. Run build_all.ps1 to create executables" -ForegroundColor White
 Write-Host "  3. Test with example_rust_usage.py" -ForegroundColor White
 Write-Host ""

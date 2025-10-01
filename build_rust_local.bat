@@ -29,7 +29,7 @@ if %ERRORLEVEL% NEQ 0 (
 :: Set up directories
 set PROJECT_ROOT=%~dp0
 set PROJECT_ROOT=%PROJECT_ROOT:~0,-1%
-set RUST_EXTENSIONS_DIR=%PROJECT_ROOT%\rust_extensions
+set RUST_EXTENSIONS_DIR=%PROJECT_ROOT%\classic_core
 set TEMP_BUILD_DIR=%PROJECT_ROOT%\temp_rust_build
 
 echo.
@@ -131,7 +131,7 @@ dir /b "%RUST_EXTENSIONS_DIR%\*.pyd" >> "%MANIFEST_FILE%" 2>nul
 dir /b "%RUST_EXTENSIONS_DIR%\*.dll" >> "%MANIFEST_FILE%" 2>nul
 echo. >> "%MANIFEST_FILE%"
 echo Locations: >> "%MANIFEST_FILE%"
-echo - rust_extensions\  (for PyInstaller bundling) >> "%MANIFEST_FILE%"
+echo - classic_core\  (for PyInstaller bundling) >> "%MANIFEST_FILE%"
 echo - classic-rust\python\classic_core\  (for development) >> "%MANIFEST_FILE%"
 echo - ClassicLib\rust_ext\  (for backward compatibility) >> "%MANIFEST_FILE%"
 
@@ -157,7 +157,7 @@ echo   - uvx (from GitHub repo)
 echo   - Local development (direct import)
 echo.
 echo Next steps:
-echo   1. Commit the rust_extensions directory to git
+echo   1. Commit the classic_core directory to git
 echo   2. Run build_pyinstaller.bat to create the executable
 echo   3. Test with test_rust_loading.py
 echo.
