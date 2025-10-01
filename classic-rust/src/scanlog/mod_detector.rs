@@ -171,12 +171,12 @@ pub fn detect_mods_double(
 
 /// Detect important mods and check GPU compatibility
 #[pyfunction]
-#[pyo3(signature = (yaml_dict, crashlog_plugins, gpu_rival=None))]
 pub fn detect_mods_important(
     _py: Python<'_>,
     yaml_dict: HashMap<String, String>,
     crashlog_plugins: HashMap<String, String>,
     gpu_rival: Option<&str>,
+    xse_modules: HashSet<String>,
 ) -> PyResult<Vec<String>> {
     let mut lines = vec![
         "### Checking for Important Mods\n\n".to_string(),
@@ -187,7 +187,16 @@ pub fn detect_mods_important(
         .keys()
         .map(|k| k.to_lowercase())
         .collect();
-    let all_plugins_text = plugin_names_lower.join(" ");
+
+    // Add XSE module names (DLL files) to the search space
+    let module_names_lower: Vec<String> = xse_modules
+        .iter()
+        .map(|m| m.to_lowercase())
+        .collect();
+
+    let mut all_names = plugin_names_lower;
+    all_names.extend(module_names_lower);
+    let all_plugins_text = all_names.join(" ");
 
     // Build patterns for all mod IDs
     let mut mod_patterns: HashMap<String, Regex> = HashMap::new();

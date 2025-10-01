@@ -313,12 +313,6 @@ class OrchestratorCore:
             segment_plugins, segment_callstack, game_version, version_current
         )
 
-        # Add F4SE DLL plugins to crashlog_plugins dict for important mod detection
-        # Important mods like HighFPSPhysicsFix are DLL files, not ESP/ESM files
-        for dll_name in xsemodules:
-            if dll_name not in crashlog_plugins:
-                crashlog_plugins[dll_name] = "DLL"  # DLL plugins get "DLL" as load order ID
-
         # Store for async FormID processing
         async with self._state_lock:
             self._last_plugins = crashlog_plugins.copy()
@@ -337,7 +331,7 @@ class OrchestratorCore:
 
         # Run mod detection with async FormID analysis if available
         mod_detection_fragments = await self._run_mod_detection_async(
-            crashlog_plugins, segment_callstack, trigger_plugins_loaded, crashlog_gpu_rival
+            crashlog_plugins, segment_callstack, trigger_plugins_loaded, crashlog_gpu_rival, xsemodules
         )
         composer.add(mod_detection_fragments)
 
@@ -353,6 +347,7 @@ class OrchestratorCore:
         segment_callstack: list[str],
         trigger_plugins_loaded: bool,
         crashlog_gpu_rival: Literal["nvidia", "amd"] | None,
+        xse_modules: set[str],
     ) -> ReportFragment:
         """
         Runs asynchronous mod detection based on the crash log, plugins, and other provided
@@ -360,7 +355,7 @@ class OrchestratorCore:
         that may cause crashes or are otherwise significant for diagnosing issues.
 
         Args:
-            crashlog_plugins (dict[str, str]): Dictionary of loaded plugins from the crash log,
+            crashlog_plugins (dict[str, str]): Dictionary of loaded ESP/ESM plugins from the crash log,
                 where keys represent plugin names and values provide relevant metadata.
             segment_callstack (list[str]): List of strings representing the call stack segments
                 from the crash log, used for cross-referencing plugins.
@@ -368,6 +363,7 @@ class OrchestratorCore:
                 analyzed for mod detection.
             crashlog_gpu_rival (Literal["nvidia", "amd"] | None): Specifies the GPU type to refine mod
                 detection for GPU-specific conflicts, or None if not applicable.
+            xse_modules (set[str]): Set of XSE module names (DLL files) from F4SE PLUGINS section.
 
         Returns:
             ReportFragment: A composed report fragment summarizing findings from the asynchronous
@@ -400,10 +396,14 @@ class OrchestratorCore:
             # Check FOLON-specific mods if Fallout: London is loaded
             is_folon_loaded = any("londonworldspace.esm" in plugin_name.lower() for plugin_name in crashlog_plugins)
             if is_folon_loaded and self.yamldata.game_mods_core_folon:
-                important_fragment = detect_mods_important(self.yamldata.game_mods_core_folon, crashlog_plugins, crashlog_gpu_rival)
+                important_fragment = detect_mods_important(
+                    self.yamldata.game_mods_core_folon, crashlog_plugins, crashlog_gpu_rival, xse_modules
+                )
             else:
                 # Check for important core mods with GPU considerations
-                important_fragment = detect_mods_important(self.yamldata.game_mods_core, crashlog_plugins, crashlog_gpu_rival)
+                important_fragment = detect_mods_important(
+                    self.yamldata.game_mods_core, crashlog_plugins, crashlog_gpu_rival, xse_modules
+                )
             composer.add(important_fragment)
 
             # Check for OPC2 mods with conditional header

@@ -217,7 +217,7 @@ class TestDetectMods:
         crashlog_plugins = {"plugin_with_mod1.esp": "00", "unrelated_plugin.esp": "01"}
 
         # Test with installed mod and no GPU rivalry
-        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None)
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None, set())
 
         # The mod is found and a confirmation message is added to the report
         assert result.has_content
@@ -232,7 +232,7 @@ class TestDetectMods:
 
         # Test with GPU rivalry (AMD user with NVIDIA mod)
         # The message from detect_mods_important will include "AMD" if the warning contains "amd"
-        result = detect_mods_important(yaml_dict, crashlog_plugins, "amd")
+        result = detect_mods_important(yaml_dict, crashlog_plugins, "amd", set())
 
         # Warning about incompatible GPU should be in the report
         assert result.has_content
@@ -246,7 +246,7 @@ class TestDetectMods:
 
         # Test with missing important mod that matches GPU type (AMD)
         # This should only generate a warning if the warning message doesn't contain "amd"
-        result = detect_mods_important(yaml_dict, crashlog_plugins, "amd")
+        result = detect_mods_important(yaml_dict, crashlog_plugins, "amd", set())
 
         # With the new fragment implementation, missing mods might not generate content
         # Check if any content was generated

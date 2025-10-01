@@ -126,7 +126,7 @@ class TestFragmentMigration:
             "ProblematicMod | Important Mod": "This is an important mod for stability",
         }
 
-        result = detect_mods_important(yaml_important, sample_plugins, gpu_rival=None)
+        result = detect_mods_important(yaml_important, sample_plugins, gpu_rival=None, xse_modules=set())
 
         assert isinstance(result, ReportFragment)
         # Important mods can return content even when empty

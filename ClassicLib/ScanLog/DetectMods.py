@@ -187,19 +187,23 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 
 def detect_mods_important(
-    yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: Literal["nvidia", "amd"] | None
+    yaml_dict: dict[str, str],
+    crashlog_plugins: dict[str, str],
+    gpu_rival: Literal["nvidia", "amd"] | None,
+    xse_modules: set[str],
 ) -> ReportFragment:
     """
     Detects and evaluates important mods based on provided information.
 
     This function processes a dictionary of mods and their warnings, compares them
-    against available plugins, and returns a fragment indicating whether mods are
-    installed and compatible with the specified GPU.
+    against available plugins (ESP/ESM) and XSE modules (DLL), and returns a fragment
+    indicating whether mods are installed and compatible with the specified GPU.
 
     Args:
         yaml_dict: Dictionary where keys represent mod names and values contain warnings.
-        crashlog_plugins: Dictionary of plugins present in the crash log.
+        crashlog_plugins: Dictionary of ESP/ESM plugins present in the crash log.
         gpu_rival: Optional GPU type for compatibility checks.
+        xse_modules: Set of XSE module names (DLL files) from F4SE PLUGINS section.
 
     Returns:
         ReportFragment containing important mod status.
@@ -210,7 +214,10 @@ def detect_mods_important(
 
     # Convert plugin names to lowercase once
     plugin_names_lower = list(_convert_to_lowercase(crashlog_plugins).keys())
-    all_plugins_text = " ".join(plugin_names_lower)
+
+    # Add XSE module names (DLL files) to the search space
+    module_names_lower = [name.lower() for name in xse_modules]
+    all_plugins_text = " ".join(plugin_names_lower + module_names_lower)
 
     # Build patterns for all mod IDs
     mod_patterns: dict[str, re.Pattern[str]] = {}

@@ -95,7 +95,7 @@ def test_detect_mods_important_performance():
 
     # Test with NVIDIA GPU
     start_time = time.perf_counter()
-    result = detect_mods_important(yaml_dict, crashlog_plugins, "nvidia")
+    result = detect_mods_important(yaml_dict, crashlog_plugins, "nvidia", set())
     elapsed_time = time.perf_counter() - start_time
 
     # Performance assertion: should complete in under 30ms
