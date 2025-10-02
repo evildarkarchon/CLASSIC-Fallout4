@@ -240,20 +240,11 @@ class RustAcceleration:
 
     def _log_status(self) -> None:
         """Log current acceleration status."""
-        # Check if debug messages are enabled
-        try:
-            from ClassicLib.YamlSettingsCache import classic_settings
-            debug_enabled = classic_settings(bool, "Debug Messages")
-            if not debug_enabled:
-                return
-        except Exception:
-            # If we can't check the setting, default to not showing
-            return
-
         status = get_rust_component_status()
         active = status['active_count']
         total = status['total_count']
 
+        # Always log to file
         if active == total:
             logger.info(f"✅ All {total} Rust components ACTIVE - Maximum acceleration enabled")
         elif active > 0:
