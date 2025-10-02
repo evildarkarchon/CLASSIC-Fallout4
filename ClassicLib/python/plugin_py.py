@@ -6,15 +6,16 @@ operations when Rust acceleration is not available. It handles loading plugins,
 matching them in call stacks, and filtering operations.
 """
 
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
-from collections import Counter
 import re
+from collections import Counter
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from packaging.version import Version
+
     from ClassicLib.ScanLog.ReportFragment import ReportFragment
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-    from packaging.version import Version
 
 
 class PythonPluginAnalyzer:

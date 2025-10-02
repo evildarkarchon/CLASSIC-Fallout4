@@ -44,10 +44,12 @@ pub struct RustFileIOCore {
     io_semaphore: Arc<Semaphore>,                              // Limit concurrent I/O operations
     // Configuration
     default_encoding: String,
+    #[allow(dead_code)] // Reserved for future error handling modes
     default_errors: String,
 }
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)] // Reserved for future metadata operations
 struct FileMetadata {
     size: u64,
     is_file: bool,

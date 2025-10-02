@@ -34,7 +34,7 @@ pub struct PluginAnalyzer {
     game_version: String,
     game_version_vr: String,
     game_version_new: String,
-    // Cache for case conversions
+    #[allow(dead_code)] // Reserved for future case-insensitive matching optimization
     case_cache: Arc<DashMap<String, String>>,
 }
 

@@ -183,10 +183,10 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     file_io::register_module(&file_io_module)?;
     m.add_submodule(&file_io_module)?;
 
-    // Temporarily disabled to debug import freeze
-    // let yaml_module = PyModule::new_bound(m.py(), "yaml")?;
-    // yaml::init_module(&yaml_module)?;
-    // m.add_submodule(&yaml_module)?;
+    // YAML module - Fixed to comply with ONE RUNTIME RULE (removed Python::attach calls)
+    let yaml_module = PyModule::new(m.py(), "yaml")?;
+    yaml::init_module(&yaml_module)?;
+    m.add_submodule(&yaml_module)?;
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

@@ -46,29 +46,29 @@ if (Test-Path "classic-rust") {
             New-Item -ItemType Directory -Path "classic_core" | Out-Null
         }
 
-        # Use Python to extract the .pyd file from the wheel
-        $extractScript = @"
-import zipfile
-import glob
-import shutil
-import os
+        # Extract .pyd file from wheel using native PowerShell
+        $wheel = Get-ChildItem -Path "dist-rust\*.whl" | Select-Object -First 1
+        if ($wheel) {
+            $tempDir = "temp_extract"
 
-wheels = glob.glob('dist-rust/*.whl')
-if wheels:
-    wheel = wheels[0]
-    with zipfile.ZipFile(wheel) as z:
-        for name in z.namelist():
-            if name.endswith('.pyd') and 'classic_core' in name:
-                z.extract(name, 'temp_extract')
-                base_name = os.path.basename(name)
-                shutil.copy2(f'temp_extract/{name}', f'classic_core/{base_name}')
-                print(f'Extracted: {base_name}')
-"@
-        $extractScript | & $PythonCmd -
+            # Extract wheel (it's just a zip file)
+            Expand-Archive -Path $wheel.FullName -DestinationPath $tempDir -Force
 
-        # Clean up
-        if (Test-Path "temp_extract") {
-            Remove-Item -Path "temp_extract" -Recurse -Force
+            # Find and copy the .pyd file
+            $pydFile = Get-ChildItem -Path $tempDir -Filter "classic_core*.pyd" -Recurse | Select-Object -First 1
+            if ($pydFile) {
+                Copy-Item -Path $pydFile.FullName -Destination "classic_core\$($pydFile.Name)" -Force
+                Write-Host "Extracted: $($pydFile.Name)" -ForegroundColor Green
+            }
+            else {
+                Write-Host "WARNING: No .pyd file found in wheel!" -ForegroundColor Red
+            }
+
+            # Clean up temp directory
+            Remove-Item -Path $tempDir -Recurse -Force
+        }
+        else {
+            Write-Host "WARNING: No wheel file found in dist-rust!" -ForegroundColor Red
         }
 
         # Create manifest file

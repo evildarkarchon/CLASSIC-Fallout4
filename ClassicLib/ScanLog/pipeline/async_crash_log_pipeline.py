@@ -17,6 +17,7 @@ from ClassicLib.MessageHandler import msg_progress_context
 from ClassicLib.ScanLog.AsyncFileIO import write_reports_batch
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+
 # ThreadSafeLogCache and load_crash_logs_async removed - using direct file I/O for better performance
 
 if TYPE_CHECKING:

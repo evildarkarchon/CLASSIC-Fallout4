@@ -18,33 +18,39 @@ datas = []
 binaries = []
 hiddenimports = []
 
-# Bundle Rust extensions (NO pip installation required!)
-# These are built locally and committed to the repo
-rust_extensions_dir = PROJECT_ROOT / "rust_extensions"
-if rust_extensions_dir.exists():
-    print(f"Bundling Rust extensions from {rust_extensions_dir}")
-    # Add all .pyd and .dll files from rust_extensions to _internal
-    for ext_file in rust_extensions_dir.glob("*.pyd"):
-        binaries.append((str(ext_file), "_internal/rust_extensions"))
-        print(f"  - Adding extension: {ext_file.name}")
+# Bundle Rust extensions from site-packages
+# Rust modules are installed via maturin build + pip install
+import site
+site_packages = Path(site.getsitepackages()[0])
+rust_package_dir = site_packages / "classic_core"
 
-    for dll_file in rust_extensions_dir.glob("*.dll"):
-        # Skip Python DLLs as they're provided by the Python runtime
-        if "python" not in dll_file.name.lower():
-            binaries.append((str(dll_file), "_internal/rust_extensions"))
-            print(f"  - Adding dependency: {dll_file.name}")
+if rust_package_dir.exists():
+    print(f"Bundling Rust extensions from {rust_package_dir}")
+    # Add the entire classic_core package
+    for pyd_file in rust_package_dir.glob("*.pyd"):
+        binaries.append((str(pyd_file), "classic_core"))
+        print(f"  - Adding extension: {pyd_file.name}")
 
-    # Also add the manifest file for debugging
-    manifest_file = rust_extensions_dir / "MANIFEST.txt"
-    if manifest_file.exists():
-        datas.append((str(manifest_file), "_internal/rust_extensions"))
+    # Add __init__.py
+    init_file = rust_package_dir / "__init__.py"
+    if init_file.exists():
+        datas.append((str(init_file), "classic_core"))
 else:
-    print(f"WARNING: Rust extensions not found at {rust_extensions_dir}")
+    print(f"WARNING: Rust extensions not found at {rust_package_dir}")
     print("The executable will work but without Rust performance optimizations!")
-    print("Run build_rust_local.bat first to build the extensions.")
+    print("Run: maturin build --release --out classic-rust/dist")
+    print("Then: uv pip install classic-rust/dist/classic-*.whl --force-reinstall")
 
-# Add the rust_loader module to hidden imports
-hiddenimports.append("ClassicLib.rust_loader")
+# Add Rust integration modules to hidden imports
+hiddenimports.extend([
+    "ClassicLib.rust_loader",
+    "ClassicLib.integration",
+    "ClassicLib.integration.factory",
+    "ClassicLib.integration.config",
+    "ClassicLib.integration.status",
+    "ClassicLib.integration.detector",
+    "classic_core",
+])
 
 # Collect PySide6 dependencies
 pyside6_datas, pyside6_binaries, pyside6_hiddenimports = collect_all('PySide6')

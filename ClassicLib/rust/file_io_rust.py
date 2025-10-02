@@ -302,7 +302,7 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 result = self._rust_core.read_dds_header(str(path))
-                return result if result else None
+                return result or None
             except Exception as e:
                 logger.debug(f"Rust read_dds_header failed: {e}")
                 return None
@@ -373,7 +373,6 @@ class RustFileIOCore:
 
         # Python fallback
         import re
-        from pathlib import Path
 
         path = self._ensure_path(path)
         pattern_re = re.compile(pattern) if pattern else None

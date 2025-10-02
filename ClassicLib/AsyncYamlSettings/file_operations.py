@@ -2,7 +2,7 @@
 
 from io import StringIO
 from pathlib import Path
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 import ruamel.yaml
 
@@ -29,15 +29,51 @@ class YamlFileOperations:
         """Initialize with FileIOCore instance."""
         self.io_core = io_core or FileIOCore()
 
-        # Try to get Rust YAML operations if available
-        self.rust_yaml: Optional[Any] = None
+        # Try to get Rust YAML operations for static database files only
+        # User-editable files will use Python to preserve comments
+        self.rust_yaml: Any | None = None
         try:
             from ClassicLib.integration.factory import get_yaml_operations
             self.rust_yaml = get_yaml_operations()
             if self.rust_yaml:
-                logger.debug("YamlFileOperations: Using Rust acceleration for YAML parsing")
+                logger.debug("YamlFileOperations: Rust available for static database files (user files use Python for comment preservation)")
         except ImportError:
-            logger.debug("YamlFileOperations: Rust YAML operations not available")
+            logger.debug("YamlFileOperations: Rust YAML operations not available, using Python for all files")
+
+    def _should_use_rust_for_file(self, file_path: Path) -> bool:
+        """
+        Determine if a file should use Rust acceleration.
+
+        Static/read-only database files (STATIC_YAML_STORES) can use Rust for maximum performance.
+        User-editable files must use Python to preserve comments.
+
+        Args:
+            file_path: Path to the YAML file
+
+        Returns:
+            True if Rust acceleration should be used, False otherwise
+        """
+        # Check if this file path corresponds to a static YAML store
+        # Static stores are read-only and don't need comment preservation
+        for store in self.STATIC_YAML_STORES:
+            try:
+                store_path = self.get_path_for_store(store)
+                # Exact path match
+                if file_path == store_path:
+                    return True
+                # Exact filename match
+                if file_path.name == store_path.name:
+                    return True
+                # Check if the resolved paths match (handles relative vs absolute)
+                if file_path.resolve() == store_path.resolve():
+                    return True
+            except (ValueError, Exception):
+                # If we can't determine the path for this store, skip it
+                continue
+
+        # For all user-editable files (Settings, Ignore, Game_Local, Cache),
+        # use Python to preserve comments
+        return False
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """Get the file path for a specific YAML store."""
@@ -76,25 +112,29 @@ class YamlFileOperations:
             case _:
                 raise ValueError(f"Unknown YAML store: {yaml_store}")
 
-    async def parse_yaml_content(self, content: str) -> dict[str, Any]:
+    async def parse_yaml_content(self, content: str, preserve_comments: bool = True) -> dict[str, Any]:
         """
         Parse YAML content from string.
 
+        Uses Python (ruamel.yaml) when preserve_comments=True to maintain comment information.
+        Can use Rust acceleration when preserve_comments=False for read-only files.
+
         Args:
             content: YAML string content
+            preserve_comments: Whether to preserve comments (use Python) or allow Rust acceleration
 
         Returns:
-            Parsed YAML data
+            Parsed YAML data (ruamel.yaml.CommentedMap if preserve_comments=True)
         """
-        # Try Rust acceleration first
-        if self.rust_yaml:
+        # Use Rust acceleration for read-only files
+        if not preserve_comments and self.rust_yaml:
             try:
                 result = self.rust_yaml.parse_yaml(content)
                 return result if isinstance(result, dict) else {}
             except Exception as e:
                 logger.debug(f"Rust YAML parsing failed, falling back to Python: {e}")
 
-        # Fallback to Python implementation
+        # Use Python implementation to preserve comments
         yaml = ruamel.yaml.YAML()
         yaml.preserve_quotes = True
         yaml.width = 120
@@ -111,20 +151,16 @@ class YamlFileOperations:
         """
         Convert data to YAML string.
 
+        Always uses Python (ruamel.yaml) to preserve comments from CommentedMap objects.
+        If data is a ruamel.yaml.CommentedMap (from parse_yaml_content), comments will be preserved.
+
         Args:
-            data: Data to serialize
+            data: Data to serialize (preferably a ruamel.yaml.CommentedMap)
 
         Returns:
-            YAML string
+            YAML string with preserved comments
         """
-        # Try Rust acceleration first
-        if self.rust_yaml:
-            try:
-                return self.rust_yaml.dump_yaml(data)
-            except Exception as e:
-                logger.debug(f"Rust YAML dumping failed, falling back to Python: {e}")
-
-        # Fallback to Python implementation
+        # Always use Python implementation to preserve comments from CommentedMap
         yaml = ruamel.yaml.YAML()
         yaml.preserve_quotes = True
         yaml.width = 120
@@ -142,6 +178,9 @@ class YamlFileOperations:
         """
         Load and parse a YAML file.
 
+        Uses Rust acceleration for static/read-only files (Main, Game databases).
+        Uses Python (ruamel.yaml) for user-editable files to preserve comments.
+
         Args:
             file_path: Path to YAML file
 
@@ -149,23 +188,28 @@ class YamlFileOperations:
             Parsed YAML data
         """
         try:
-            # Try Rust acceleration first (includes caching)
-            if self.rust_yaml:
+            # Determine if this is a static (read-only) file that can use Rust acceleration
+            use_rust = self._should_use_rust_for_file(file_path)
+
+            if use_rust and self.rust_yaml:
                 try:
                     result = self.rust_yaml.load_yaml_file(str(file_path))
+                    logger.debug(f"Loaded {file_path.name} with Rust acceleration")
                     return result if isinstance(result, dict) else {}
                 except Exception as e:
-                    logger.debug(f"Rust YAML file loading failed, falling back to Python: {e}")
+                    logger.debug(f"Rust YAML loading failed for {file_path.name}, falling back to Python: {e}")
 
-            # Fallback to Python implementation
-            # Use FileIOCore for async file reading
+            # Use Python implementation (preserves comments for user-editable files)
             content = await self.io_core.read_file(file_path)
 
             if not content:
                 logger.warning(f"Empty YAML file: {file_path}")
                 return {}
 
-            return await self.parse_yaml_content(content)
+            # Only preserve comments for user-editable files (use_rust=False)
+            preserve_comments = not use_rust
+            logger.debug(f"Loaded {file_path.name} with Python (preserve_comments={preserve_comments})")
+            return await self.parse_yaml_content(content, preserve_comments=preserve_comments)
 
         except FileNotFoundError:
             logger.debug(f"YAML file not found: {file_path}")
@@ -178,6 +222,9 @@ class YamlFileOperations:
         """
         Save data to a YAML file.
 
+        Note: Always uses Python (ruamel.yaml) to preserve comments and formatting.
+        Rust acceleration is not used for writing because yaml-rust2 strips comments.
+
         Args:
             file_path: Path to save to
             data: Data to save
@@ -186,19 +233,11 @@ class YamlFileOperations:
             True if successful, False otherwise
         """
         try:
-            # Try Rust acceleration first (includes atomic write)
-            if self.rust_yaml:
-                try:
-                    self.rust_yaml.save_yaml_file(str(file_path), data)
-                    return True
-                except Exception as e:
-                    logger.debug(f"Rust YAML file saving failed, falling back to Python: {e}")
-
-            # Fallback to Python implementation
+            # Always use Python implementation for writing to preserve comments
             # Ensure parent directory exists
             file_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # Convert to YAML string
+            # Convert to YAML string (ruamel.yaml preserves comments and formatting)
             content = await self.dump_yaml_content(data)
 
             # Use FileIOCore for async file writing

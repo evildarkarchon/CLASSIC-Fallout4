@@ -17,11 +17,11 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, cast
 
-from ClassicLib.Constants import YAML, GameID
-from ClassicLib.GlobalRegistry import get_game, get_game_path_gui, get_vr
-from ClassicLib.MessageHandler import msg_warning
+from ClassicLib.Constants import YAML
 from ClassicLib.FileIOCore import read_bytes_sync, read_lines_sync
+from ClassicLib.GlobalRegistry import get_game, get_vr
 from ClassicLib.Logger import logger
+from ClassicLib.MessageHandler import msg_warning
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 

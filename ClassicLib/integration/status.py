@@ -13,15 +13,14 @@ from typing import Any
 __all__ = [
     "RUST_AVAILABLE",
     "RUST_STATUS",
+    "get_performance_multiplier",
     "get_rust_component_status",
     "is_rust_accelerated",
-    "get_performance_multiplier",
-    "update_status",
     "print_rust_status",
+    "update_status",
 ]
 
 from .config import (
-    ALL_COMPONENTS,
     COMPONENT_CATEGORIES,
     PERFORMANCE_MULTIPLIERS,
     PERFORMANCE_THRESHOLD_EXCELLENT,
@@ -168,8 +167,19 @@ def update_status(component: str, status: str, reason: str | None = None) -> Non
 
 
 def print_rust_status() -> None:
-    _ensure_initialized()
     """Print comprehensive status of Rust module availability."""
+    _ensure_initialized()
+
+    # Check if debug messages are enabled
+    try:
+        from ClassicLib.YamlSettingsCache import classic_settings
+        debug_enabled = classic_settings(bool, "Debug Messages")
+        if not debug_enabled:
+            return
+    except Exception:
+        # If we can't check the setting, default to not showing
+        return
+
     status = get_rust_component_status()
 
     print("\n" + "=" * 60)

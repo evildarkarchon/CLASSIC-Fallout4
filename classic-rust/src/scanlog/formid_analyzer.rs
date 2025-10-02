@@ -89,7 +89,7 @@ pub struct FormIDAnalyzerCore {
     pattern_cache: Arc<DashMap<String, Regex>>,
     // Database for FormID lookups
     database: Arc<Mutex<FormIDDatabase>>,
-    // Database path if available
+    #[allow(dead_code)] // Reserved for future database integration
     db_path: Option<String>,
 }
 

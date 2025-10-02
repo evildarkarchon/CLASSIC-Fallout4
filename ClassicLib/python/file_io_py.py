@@ -20,8 +20,8 @@ except ImportError:
     aiofiles = None  # type: ignore[assignment]
     AIOFILES_AVAILABLE = False
 
-from itertools import starmap
 import logging
+from itertools import starmap
 
 logger = logging.getLogger(__name__)
 

@@ -4,11 +4,10 @@ import asyncio
 import mmap
 import struct
 from pathlib import Path
-from typing import Optional
 
 # Try to import enhanced analyzer for advanced features
 try:
-    from .dds_analyzer import EnhancedDDSAnalyzer, DDSInfo, analyze_dds
+    from .dds_analyzer import DDSInfo, EnhancedDDSAnalyzer, analyze_dds
     HAS_ANALYZER = True
 except ImportError:
     HAS_ANALYZER = False
@@ -27,7 +26,7 @@ class DDSProcessor:
         """
         self.dds_read_semaphore = dds_read_semaphore
         self.use_enhanced = use_enhanced and HAS_ANALYZER
-        self.analyzer: Optional[EnhancedDDSAnalyzer] = None
+        self.analyzer: EnhancedDDSAnalyzer | None = None
         if self.use_enhanced:
             self.analyzer = EnhancedDDSAnalyzer()
 

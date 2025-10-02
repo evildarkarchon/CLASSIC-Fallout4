@@ -90,9 +90,8 @@ class RustFormIDAnalyzer:
                 if hasattr(self._rust_core_analyzer, "extract_formids_nocopy"):
                     # Pass Python list directly for zero-copy operation
                     return self._rust_core_analyzer.extract_formids_nocopy(segment_callstack)
-                else:
-                    # Fallback to standard method
-                    return self._rust_core_analyzer.extract_formids(segment_callstack)
+                # Fallback to standard method
+                return self._rust_core_analyzer.extract_formids(segment_callstack)
             except Exception as e:
                 logger.warning(f"Rust FormIDAnalyzerCore extraction failed: {e}")
         elif self._use_rust and self._rust_analyzer:
@@ -104,9 +103,8 @@ class RustFormIDAnalyzer:
                     formids = extract_formids_batch([segment_callstack])
                     # extract_formids_batch returns a list of lists, get the first one
                     return formids[0] if formids else []
-                else:
-                    # Try direct method if available
-                    return self._rust_analyzer.extract_formids(segment_callstack)
+                # Try direct method if available
+                return self._rust_analyzer.extract_formids(segment_callstack)
             except Exception as e:
                 logger.warning(f"Rust FormID extraction failed: {e}")
 
@@ -150,10 +148,9 @@ class RustFormIDAnalyzer:
                         fragment = ReportFragment.from_lines(result_lines)
                         report.add_fragment(fragment)
                     return
-                else:
-                    # Use regular formid_match
-                    self._rust_core_analyzer.formid_match(formids, plugins, report)
-                    return
+                # Use regular formid_match
+                self._rust_core_analyzer.formid_match(formids, plugins, report)
+                return
             except Exception as e:
                 logger.warning(f"Rust formid_match failed: {e}, using Python fallback")
 

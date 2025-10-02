@@ -11,10 +11,7 @@ components, implementing Phase 5 of the Rust migration plan. It offers:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
+from typing import Any
 
 # Try to import Rust implementation
 try:
@@ -30,12 +27,12 @@ try:
         RUST_AVAILABLE = True
     else:
         RUST_AVAILABLE = False
-except (ImportError, AttributeError) as e:
+except (ImportError, AttributeError):
     RUST_AVAILABLE = False
 
 # Import Python fallback
-from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment as PyReportFragment
 from ClassicLib.ScanLog.fragments.report_composer import ReportComposer as PyReportComposer
+from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment as PyReportFragment
 from ClassicLib.ScanLog.fragments.report_generator_functional import ReportGeneratorFunctional as PyReportGenerator
 
 
@@ -65,12 +62,11 @@ class RustAcceleratedReportFragment:
             else:
                 lines_list = list(lines) if isinstance(lines, tuple) else lines
                 self._fragment = RustReportFragment(lines_list, check_content, use_pool=True)
+        # Fall back to Python implementation
+        elif lines is None:
+            self._fragment = PyReportFragment.empty()
         else:
-            # Fall back to Python implementation
-            if lines is None:
-                self._fragment = PyReportFragment.empty()
-            else:
-                self._fragment = PyReportFragment.from_lines(lines, check_content)
+            self._fragment = PyReportFragment.from_lines(lines, check_content)
 
     @classmethod
     def empty(cls) -> RustAcceleratedReportFragment:
@@ -203,19 +199,17 @@ class RustAcceleratedReportComposer:
             else:
                 # Assume it's a Rust fragment
                 self._composer.add(fragment)
+        # Python composer
+        elif isinstance(fragment, RustAcceleratedReportFragment):
+            self._composer.add(fragment._fragment)
+        elif isinstance(fragment, PyReportFragment):
+            self._composer.add(fragment)
+        # Try to convert
+        elif hasattr(fragment, "to_list"):
+            py_frag = PyReportFragment.from_lines(fragment.to_list())
+            self._composer.add(py_frag)
         else:
-            # Python composer
-            if isinstance(fragment, RustAcceleratedReportFragment):
-                self._composer.add(fragment._fragment)
-            elif isinstance(fragment, PyReportFragment):
-                self._composer.add(fragment)
-            else:
-                # Try to convert
-                if hasattr(fragment, "to_list"):
-                    py_frag = PyReportFragment.from_lines(fragment.to_list())
-                    self._composer.add(py_frag)
-                else:
-                    self._composer.add(fragment)
+            self._composer.add(fragment)
 
         return self
 
@@ -444,13 +438,13 @@ else:
 
 
 __all__ = [
-    "ReportFragment",
-    "ReportComposer",
-    "ReportGenerator",
-    "ParallelReportProcessor",
-    "StringPool",
-    "RustAcceleratedReportFragment",
-    "RustAcceleratedReportComposer",
-    "RustAcceleratedReportGenerator",
     "RUST_AVAILABLE",
+    "ParallelReportProcessor",
+    "ReportComposer",
+    "ReportFragment",
+    "ReportGenerator",
+    "RustAcceleratedReportComposer",
+    "RustAcceleratedReportFragment",
+    "RustAcceleratedReportGenerator",
+    "StringPool",
 ]

@@ -1,9 +1,32 @@
 //! Tests for the file I/O module
 
 use classic_core::file_io::{RustFileIOCore, DDSHeader, EncodingDetector};
+use ddsfile::Dds;
 use std::fs;
-use std::path::PathBuf;
+use std::io::Cursor;
 use tempfile::TempDir;
+
+/// Helper to create a valid DDS file with specified dimensions
+fn create_dds_bytes(width: u32, height: u32) -> Vec<u8> {
+    // Create minimal valid DDS using ddsfile crate
+    let data = vec![0u8; (width * height / 2) as usize]; // DXT1 is 0.5 bytes per pixel
+
+    let params = ddsfile::NewD3dParams {
+        height,
+        width,
+        depth: None,
+        format: ddsfile::D3DFormat::DXT1,
+        mipmap_levels: None,
+        caps2: None,
+    };
+
+    let mut dds = Dds::new_d3d(params).unwrap();
+    dds.data = data;
+
+    let mut cursor = Cursor::new(Vec::new());
+    dds.write(&mut cursor).unwrap();
+    cursor.into_inner()
+}
 
 #[test]
 fn test_encoding_detection() {
@@ -27,53 +50,37 @@ fn test_encoding_detection() {
 
 #[test]
 fn test_dds_header_parsing() {
-    // Create a valid DDS header
-    let mut header = vec![0u8; 128];
+    // Create a valid DDS file with proper header
+    let dds_bytes = create_dds_bytes(2048, 1024);
 
-    // Magic number "DDS "
-    header[0..4].copy_from_slice(b"DDS ");
-
-    // Header size (124)
-    header[4..8].copy_from_slice(&124u32.to_le_bytes());
-
-    // Height (1024)
-    header[12..16].copy_from_slice(&1024u32.to_le_bytes());
-
-    // Width (2048)
-    header[16..20].copy_from_slice(&2048u32.to_le_bytes());
-
-    let parsed = DDSHeader::from_bytes(&header).unwrap().unwrap();
+    let result = DDSHeader::from_bytes(&dds_bytes).unwrap();
+    assert!(result.is_some(), "Should parse valid DDS header");
+    let parsed = result.unwrap();
     assert_eq!(parsed.width, 2048);
     assert_eq!(parsed.height, 1024);
-    assert!(parsed.has_valid_dimensions());
+    assert!(parsed.has_valid_bc_dimensions());
     assert!(parsed.is_reasonable_size());
 }
 
 #[test]
 fn test_dds_invalid_dimensions() {
-    let mut header = vec![0u8; 128];
-    header[0..4].copy_from_slice(b"DDS ");
-    header[4..8].copy_from_slice(&124u32.to_le_bytes());
+    // Create DDS with odd dimensions (not multiple of 4)
+    let dds_bytes = create_dds_bytes(1023, 2047);
 
-    // Odd dimensions (not power of 2 compatible)
-    header[12..16].copy_from_slice(&1023u32.to_le_bytes());
-    header[16..20].copy_from_slice(&2047u32.to_le_bytes());
-
-    let parsed = DDSHeader::from_bytes(&header).unwrap().unwrap();
-    assert!(!parsed.has_valid_dimensions());
+    let result = DDSHeader::from_bytes(&dds_bytes).unwrap();
+    assert!(result.is_some(), "Should parse DDS header even with invalid BC dimensions");
+    let parsed = result.unwrap();
+    assert!(!parsed.has_valid_bc_dimensions());
 }
 
 #[test]
 fn test_dds_unreasonable_size() {
-    let mut header = vec![0u8; 128];
-    header[0..4].copy_from_slice(b"DDS ");
-    header[4..8].copy_from_slice(&124u32.to_le_bytes());
+    // Create DDS with too-large dimensions (exceeds 16384 limit)
+    let dds_bytes = create_dds_bytes(20000, 20000);
 
-    // Too large dimensions
-    header[12..16].copy_from_slice(&20000u32.to_le_bytes());
-    header[16..20].copy_from_slice(&20000u32.to_le_bytes());
-
-    let parsed = DDSHeader::from_bytes(&header).unwrap().unwrap();
+    let result = DDSHeader::from_bytes(&dds_bytes).unwrap();
+    assert!(result.is_some(), "Should parse DDS header even with unreasonable size");
+    let parsed = result.unwrap();
     assert!(!parsed.is_reasonable_size());
 }
 
@@ -84,12 +91,12 @@ mod integration_tests {
 
     #[test]
     fn test_rust_file_io_core_creation() {
-        pyo3::prepare_freethreaded_python();
+        pyo3::Python::initialize();
 
         Python::attach(|py| {
             let io_core = RustFileIOCore::new(
-                "utf-8".to_string(),
-                "ignore".to_string(),
+                "utf-8",
+                "ignore",
                 100,
                 50,
             ).unwrap();
@@ -113,12 +120,12 @@ mod integration_tests {
 
     #[test]
     fn test_file_operations() {
-        pyo3::prepare_freethreaded_python();
+        pyo3::Python::initialize();
 
         Python::attach(|py| {
             let io_core = RustFileIOCore::new(
-                "utf-8".to_string(),
-                "ignore".to_string(),
+                "utf-8",
+                "ignore",
                 100,
                 50,
             ).unwrap();
@@ -155,12 +162,12 @@ mod integration_tests {
 
     #[test]
     fn test_dds_operations() {
-        pyo3::prepare_freethreaded_python();
+        pyo3::Python::initialize();
 
         Python::attach(|py| {
             let io_core = RustFileIOCore::new(
-                "utf-8".to_string(),
-                "ignore".to_string(),
+                "utf-8",
+                "ignore",
                 100,
                 50,
             ).unwrap();
@@ -168,31 +175,26 @@ mod integration_tests {
             let temp_dir = TempDir::new().unwrap();
             let dds_file = temp_dir.path().join("test.dds");
 
-            // Create a valid DDS file
-            let mut header = vec![0u8; 128];
-            header[0..4].copy_from_slice(b"DDS ");
-            header[4..8].copy_from_slice(&124u32.to_le_bytes());
-            header[12..16].copy_from_slice(&1024u32.to_le_bytes());
-            header[16..20].copy_from_slice(&2048u32.to_le_bytes());
-
-            fs::write(&dds_file, &header).unwrap();
+            // Create a valid DDS file using helper
+            let dds_bytes = create_dds_bytes(2048, 1024);
+            fs::write(&dds_file, &dds_bytes).unwrap();
 
             // Test DDS header reading
-            let dimensions = io_core.py_read_dds_header(py, dds_file.to_string_lossy().to_string()).unwrap();
+            let dimensions = io_core.read_dds_header(py, dds_file.to_string_lossy().to_string()).unwrap();
             assert_eq!(dimensions, Some((2048, 1024)));
 
             // Test batch DDS processing
             let mut dds_files = vec![];
             for i in 0..3 {
                 let path = temp_dir.path().join(format!("texture_{}.dds", i));
-                let mut h = header.clone();
-                h[12..16].copy_from_slice(&((i + 1) * 256u32).to_le_bytes());
-                h[16..20].copy_from_slice(&((i + 1) * 512u32).to_le_bytes());
-                fs::write(&path, &h).unwrap();
+                let width = (i + 1) * 512;
+                let height = (i + 1) * 256;
+                let bytes = create_dds_bytes(width, height);
+                fs::write(&path, &bytes).unwrap();
                 dds_files.push(path.to_string_lossy().to_string());
             }
 
-            let results = io_core.py_read_dds_headers_batch(py, dds_files.clone()).unwrap();
+            let results = io_core.read_dds_headers_batch(py, dds_files.clone()).unwrap();
             let dict = results.bind(py);
 
             for (i, path) in dds_files.iter().enumerate() {
@@ -206,12 +208,12 @@ mod integration_tests {
 
     #[test]
     fn test_directory_traversal() {
-        pyo3::prepare_freethreaded_python();
+        pyo3::Python::initialize();
 
         Python::attach(|py| {
             let io_core = RustFileIOCore::new(
-                "utf-8".to_string(),
-                "ignore".to_string(),
+                "utf-8",
+                "ignore",
                 100,
                 50,
             ).unwrap();
@@ -237,7 +239,7 @@ mod integration_tests {
             ).unwrap();
 
             let files = all_files.bind(py);
-            assert_eq!(files.len().unwrap(), 5);
+            assert_eq!(files.len(), 5);
 
             // Walk with pattern (only .txt files)
             let txt_files = io_core.py_walk_directory(
@@ -248,7 +250,7 @@ mod integration_tests {
             ).unwrap();
 
             let txt_list = txt_files.bind(py);
-            assert_eq!(txt_list.len().unwrap(), 3);
+            assert_eq!(txt_list.len(), 3);
 
             // Walk with max depth
             let shallow_files = io_core.py_walk_directory(
@@ -260,7 +262,7 @@ mod integration_tests {
 
             let shallow_list = shallow_files.bind(py);
             // Should not include nested/file5.txt
-            assert!(shallow_list.len().unwrap() < 5);
+            assert!(shallow_list.len() < 5);
         });
     }
 }

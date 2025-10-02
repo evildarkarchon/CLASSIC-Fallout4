@@ -10,7 +10,8 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 name = "classic_core"
 # Path to the Rust source code
 path = "src/lib.rs"
-crate-type = ["cdylib"]
+# cdylib for Python extension, rlib for Rust tests
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # PyO3 for Python bindings - using abi3-py312 for Python 3.12+ compatibility
@@ -18,25 +19,25 @@ pyo3 = { version = "0.26.0", features = ["extension-module", "abi3-py312"] }
 
 # Async runtime (used internally in Rust, not exposed to Python)
 tokio = { version = "1.41", features = ["full"] }
-futures = "0.3"  # For async utilities
+futures = "0.3"                                   # For async utilities
 
 # Performance-critical parsing and pattern matching
 regex = "1.11"
 memchr = "2.7"
-aho-corasick = "1.1"  # Efficient multi-pattern string matching
+aho-corasick = "1.1" # Efficient multi-pattern string matching
 
 # Parallel processing
 rayon = "1.10"
 crossbeam = "0.8"
 
 # Database operations
-rusqlite = { version = "0.32", features = ["bundled", "backup"] }
+rusqlite = { version = "0.37.0", features = ["bundled", "backup"] }
 
 # File I/O and encoding
 encoding_rs = "0.8"
-memmap2 = "0.9"  # Memory-mapped files
-walkdir = "2.5"  # Efficient directory traversal
-ddsfile = "0.5"  # DDS texture file parsing
+memmap2 = "0.9"     # Memory-mapped files
+walkdir = "2.5"     # Efficient directory traversal
+ddsfile = "0.5"     # DDS texture file parsing
 
 # Error handling
 anyhow = "1.0"
@@ -45,13 +46,13 @@ thiserror = "2.0"
 # Performance and caching
 once_cell = "1.20"
 dashmap = "6.1"
-lru = "0.12"
-linked-hash-map = "0.5"  # For preserving insertion order like Python's dict
-parking_lot = "0.12"  # Fast RwLock implementation
+lru = "0.16.1"
+linked-hash-map = "0.5" # For preserving insertion order like Python's dict
+parking_lot = "0.12"    # Fast RwLock implementation
 
 # String optimization
-string_cache = "0.8"
-smartstring = "1.0"  # Small string optimization
+string_cache = "0.9.0"
+smartstring = "1.0"    # Small string optimization
 
 # Logging
 log = "0.4"
@@ -60,22 +61,25 @@ env_logger = "0.11"
 # Serialization (for config and YAML)
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_yaml = "0.9"  # High-performance YAML parsing and writing
+yaml-rust2 = "0.10.4"  # Pure Rust YAML 1.2 parser (replaces deprecated serde_yaml)
 
 [dev-dependencies]
 cargo-tarpaulin = "0.32.8"
-criterion = "0.5"  # Benchmarking
-proptest = "1.5"   # Property-based testing
-rstest = "0.23"    # Parameterized testing
-tempfile = "3.10"  # Temporary directories for tests
+criterion = "0.7.0"        # Benchmarking
+proptest = "1.5"           # Property-based testing
+rstest = "0.26.1"          # Parameterized testing
+tempfile = "3.10"          # Temporary directories for tests
 
 [profile.release]
 # Optimize for performance
 opt-level = 3
 lto = true
 codegen-units = 1
-strip = false  # Keep symbols for debugging
-debug = 1      # Include debug info
+strip = false     # Keep symbols for debugging
+debug = 1         # Include debug info
 
 [profile.bench]
 inherits = "release"
+
+[lints.rust]
+deprecated = "deny"

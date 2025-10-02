@@ -15,10 +15,6 @@ Performance improvements with Rust:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -161,12 +157,12 @@ class RustLogParser:
             if line.startswith(start_marker):
                 in_section = True
                 continue
-            elif line.startswith(end_marker):
+            if line.startswith(end_marker):
                 break
-            elif in_section:
+            if in_section:
                 section.append(line)
 
-        return section if section else None
+        return section or None
 
     def _parse_crash_header(self, crash_data: list[str], crashgen_name: str, game_root_name: str) -> tuple[str, str, str]:
         """Extract metadata from crash header (Python implementation)."""

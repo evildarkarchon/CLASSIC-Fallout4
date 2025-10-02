@@ -78,10 +78,9 @@ class RustRecordScanner:
         # Use Python fallback
         if self._python_scanner:
             return self._python_scanner.scan_named_records(segment_callstack)
-        else:
-            from ClassicLib.ScanLog.RecordScanner import RecordScanner
-            scanner = RecordScanner(self.yamldata)
-            return scanner.scan_named_records(segment_callstack)
+        from ClassicLib.ScanLog.RecordScanner import RecordScanner
+        scanner = RecordScanner(self.yamldata)
+        return scanner.scan_named_records(segment_callstack)
 
     def scan_for_pattern(self, lines: list[str], pattern: str) -> list[str]:
         """

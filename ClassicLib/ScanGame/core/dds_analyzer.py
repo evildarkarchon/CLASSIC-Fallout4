@@ -12,10 +12,6 @@ import struct
 from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
-
-if TYPE_CHECKING:
-    from typing import BinaryIO
 
 # Try to import optional DDS libraries
 try:
@@ -144,7 +140,7 @@ class EnhancedDDSAnalyzer:
     def _analyze_manual(self, file_path: Path) -> DDSInfo | None:
         """Manual DDS header parsing without external libraries."""
         try:
-            with open(file_path, "rb") as f:
+            with Path(file_path).open("rb") as f:
                 # Check magic number
                 magic = f.read(4)
                 if magic != b"DDS ":
@@ -231,7 +227,7 @@ class EnhancedDDSAnalyzer:
 
         try:
             dds = DdsFormat.Data()
-            with open(file_path, "rb") as stream:
+            with Path(file_path).open("rb") as stream:
                 dds.read(stream)
 
             # Extract detailed information from PyFFI
@@ -261,7 +257,7 @@ class EnhancedDDSAnalyzer:
             if fourcc in self.BC_FORMATS:
                 return self.BC_FORMATS[fourcc]
             return f"FourCC: {fourcc.decode('ascii', errors='replace')}"
-        elif pf.flags & 0x40:  # RGB
+        if pf.flags & 0x40:  # RGB
             return f"RGB{pf.rgb_bit_count}"
         return "Unknown"
 
@@ -301,7 +297,7 @@ class EnhancedDDSAnalyzer:
             issues.append(f"BC compressed format requires dimensions multiple of 4 (got {info.width}x{info.height})")
 
         if info.width > 8192 or info.height > 8192:
-            issues.append(f"Exceeds recommended maximum dimensions (8192x8192)")
+            issues.append("Exceeds recommended maximum dimensions (8192x8192)")
 
         # Game-specific checks
         if game == "Fallout4":

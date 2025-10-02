@@ -63,24 +63,30 @@ def mock_crash_log_line(draw):
 @composite
 def mock_game_file_structure(draw):
     """Generate mock game file structure without using real game data."""
+    # Generate base structure
+    data_dict = {
+        "Fallout4.esm": draw(st.integers(min_value=1000000, max_value=100000000)),
+        "DLCRobot.esm": draw(st.integers(min_value=1000000, max_value=50000000)),
+    }
+    # Add random plugins
+    for _ in range(draw(st.integers(min_value=0, max_value=5))):
+        data_dict[draw(mock_plugin_name())] = draw(st.integers(min_value=1000, max_value=10000000))
+
+    # Generate mods structure
+    mods_dict = {}
+    for i in range(draw(st.integers(min_value=0, max_value=3))):
+        mods_dict[f"Mod_{i}"] = {
+            "main.ba2": draw(st.integers(min_value=100000, max_value=10000000)),
+            "textures.ba2": draw(st.integers(min_value=100000, max_value=50000000))
+        }
+
     return {
-        "Data": {
-            "Fallout4.esm": draw(st.integers(min_value=1000000, max_value=100000000)),
-            "DLCRobot.esm": draw(st.integers(min_value=1000000, max_value=50000000)),
-            draw(mock_plugin_name()): draw(st.integers(min_value=1000, max_value=10000000))
-            for _ in range(draw(st.integers(min_value=0, max_value=5)))
-        },
+        "Data": data_dict,
         "F4SE": {
             "f4se_loader.exe": draw(st.integers(min_value=50000, max_value=500000)),
             "f4se_1_10_163.dll": draw(st.integers(min_value=100000, max_value=1000000))
         },
-        "Mods": {
-            f"Mod_{i}": {
-                "main.ba2": draw(st.integers(min_value=100000, max_value=10000000)),
-                "textures.ba2": draw(st.integers(min_value=100000, max_value=50000000))
-            }
-            for i in range(draw(st.integers(min_value=0, max_value=3)))
-        }
+        "Mods": mods_dict
     }
 
 

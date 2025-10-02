@@ -18,28 +18,26 @@ This is the primary interface for Phase 6: Integration & Optimization.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ClassicLib.integration.factory import (
-    get_database_pool,
     get_file_io,
     get_formid_analyzer,
     get_parser,
     get_plugin_analyzer,
     get_record_scanner,
 )
+
+# Import the module-level status dicts
 from ClassicLib.integration.status import (
+    RUST_AVAILABLE,
     get_rust_component_status,
     is_rust_accelerated,
 )
-# Import the module-level status dicts
-from ClassicLib.integration.status import RUST_AVAILABLE, RUST_STATUS
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +74,7 @@ class ComponentMetrics:
     errors: int = 0
     cache_hits: int = 0
     cache_misses: int = 0
-    last_error: Optional[str] = None
+    last_error: str | None = None
 
     @property
     def avg_time(self) -> float:
@@ -118,7 +116,7 @@ class WorkloadCharacteristics:
     report_fragments: int = 0
     is_batch_operation: bool = False
     is_memory_constrained: bool = False
-    extended_metrics: Dict[str, Any] = field(default_factory=dict)  # Phase 6 addition
+    extended_metrics: dict[str, Any] = field(default_factory=dict)  # Phase 6 addition
 
     def determine_optimization_level(self) -> OptimizationLevel:
         """
@@ -212,7 +210,7 @@ class RustAcceleration:
     - Dynamic workload adaptation
     """
 
-    _instance: Optional[RustAcceleration] = None
+    _instance: RustAcceleration | None = None
 
     def __new__(cls) -> RustAcceleration:
         """Ensure singleton instance."""
@@ -227,9 +225,9 @@ class RustAcceleration:
 
         self._initialized = True
         self.optimization_level = OptimizationLevel.BALANCED
-        self.metrics: Dict[ComponentType, ComponentMetrics] = {}
+        self.metrics: dict[ComponentType, ComponentMetrics] = {}
         self.workload = WorkloadCharacteristics()
-        self._components_cache: Dict[str, Any] = {}
+        self._components_cache: dict[str, Any] = {}
         self._start_time = time.time()
 
         # Initialize metrics for all components
@@ -242,6 +240,16 @@ class RustAcceleration:
 
     def _log_status(self) -> None:
         """Log current acceleration status."""
+        # Check if debug messages are enabled
+        try:
+            from ClassicLib.YamlSettingsCache import classic_settings
+            debug_enabled = classic_settings(bool, "Debug Messages")
+            if not debug_enabled:
+                return
+        except Exception:
+            # If we can't check the setting, default to not showing
+            return
+
         status = get_rust_component_status()
         active = status['active_count']
         total = status['total_count']
@@ -314,10 +322,10 @@ class RustAcceleration:
 
     def update_workload_characteristics(
         self,
-        file_count: Optional[int] = None,
-        formid_count: Optional[int] = None,
-        plugin_count: Optional[int] = None,
-        is_batch: Optional[bool] = None,
+        file_count: int | None = None,
+        formid_count: int | None = None,
+        plugin_count: int | None = None,
+        is_batch: bool | None = None,
         **kwargs  # Accept additional metrics from Phase 6 integration
     ) -> None:
         """
@@ -452,7 +460,7 @@ class RustAcceleration:
         logger.debug("  - Standard cache sizes")
         logger.debug("  - Selective parallelism")
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """
         Generate a comprehensive performance report.
 
@@ -531,7 +539,7 @@ class RustAcceleration:
 
         print("\n" + "=" * 60)
 
-    def health_check(self) -> Tuple[bool, List[str]]:
+    def health_check(self) -> tuple[bool, list[str]]:
         """
         Perform health check on all Rust components.
 

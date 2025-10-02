@@ -7,15 +7,15 @@ compatibility with the FormIDAnalyzer API.
 """
 
 import asyncio
+import re
 from collections import Counter
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any
-import re
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
     from ClassicLib.ScanLog.ReportFragment import ReportFragment
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-    from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
 
 # Module-level regex pattern cache to avoid recompilation
 _PATTERN_CACHE: dict[str, re.Pattern[str]] = {}

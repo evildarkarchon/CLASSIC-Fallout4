@@ -101,12 +101,12 @@ def get_parser() -> Any:
                 if line.startswith(start_marker):
                     in_section = True
                     continue
-                elif line.startswith(end_marker):
+                if line.startswith(end_marker):
                     break
-                elif in_section:
+                if in_section:
                     section.append(line)
 
-            return section if section else None
+            return section or None
 
     return PythonParserWrapper()
 
@@ -283,7 +283,7 @@ def get_mod_detector() -> dict[str, Any]:
 
     if not _is_rust_disabled() and components.get("mod_detector", False):
         try:
-            from ClassicLib.rust.mod_detector_rust import detect_mods_single, detect_mods_batch
+            from ClassicLib.rust.mod_detector_rust import detect_mods_batch, detect_mods_single
             logger.debug("Using Rust mod detector functions (35x speedup)")
             return {
                 "detect_mods_single": detect_mods_single,
@@ -293,7 +293,7 @@ def get_mod_detector() -> dict[str, Any]:
             logger.warning(f"Failed to get Rust mod detector: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.python.mod_detector_py import detect_mods_single, detect_mods_batch
+    from ClassicLib.python.mod_detector_py import detect_mods_batch, detect_mods_single
     logger.debug("Using Python mod detector implementation")
     return {
         "detect_mods_single": detect_mods_single,

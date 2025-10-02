@@ -12,8 +12,14 @@ import threading
 import time
 import weakref
 import sys
-import resource
 from pathlib import Path
+
+# resource module is Unix-only
+try:
+    import resource
+    RESOURCE_AVAILABLE = True
+except ImportError:
+    RESOURCE_AVAILABLE = False
 from typing import List, Any, Optional
 from unittest.mock import MagicMock, patch
 import tracemalloc

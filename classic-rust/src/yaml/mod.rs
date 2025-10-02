@@ -3,17 +3,24 @@
 //! This module provides Rust-accelerated YAML parsing and writing operations,
 //! offering 15-30x performance improvements over Python's ruamel.yaml while
 //! maintaining full API compatibility and format preservation.
+//!
+//! ## ONE RUNTIME RULE Compliance
+//! This module uses crate::get_runtime() for all async operations to comply with
+//! the ONE RUNTIME RULE (see lib.rs for details).
 
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use pyo3::prelude::*;
-use serde_yaml::{Mapping, Value};
+use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::SystemTime;
 
 /// Global YAML cache for frequently accessed files
+///
+/// NOTE: This is lazily initialized on first use to avoid deadlocks during module import.
+/// The cache is thread-safe and uses DashMap for concurrent access.
 static YAML_CACHE: Lazy<DashMap<PathBuf, CachedYaml>> = Lazy::new(DashMap::new);
 
 /// Format configuration matching ruamel.yaml defaults
@@ -41,7 +48,7 @@ impl Default for YamlFormatConfig {
 /// Cached YAML document with metadata
 #[derive(Clone)]
 struct CachedYaml {
-    data: Arc<Value>,
+    data: Arc<Yaml>,
     modified: SystemTime,
     raw_content: Option<String>,
 }
@@ -49,6 +56,7 @@ struct CachedYaml {
 /// Main YAML operations handler
 #[pyclass]
 pub struct RustYamlOperations {
+    #[allow(dead_code)] // Reserved for future format preservation features
     format_config: YamlFormatConfig,
     cache_enabled: bool,
 }
@@ -65,35 +73,43 @@ impl RustYamlOperations {
 
     /// Parse YAML content from a string
     #[pyo3(signature = (content))]
-    fn parse_yaml(&self, content: &str) -> PyResult<Py<PyAny>> {
-        Python::attach(|py| {
-            let value: Value = serde_yaml::from_str(content)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("Failed to parse YAML: {}", e)
-                ))?;
+    fn parse_yaml(&self, py: Python<'_>, content: &str) -> PyResult<Py<PyAny>> {
+        // Load YAML documents
+        let docs = YamlLoader::load_from_str(content)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                format!("Failed to parse YAML: {}", e)
+            ))?;
 
-            self.value_to_python(py, &value)
-        })
+        // Get first document (most common case)
+        // TODO: Handle multi-document YAML if needed
+        let yaml = docs.first()
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                "Empty YAML document"
+            ))?;
+
+        self.yaml_to_python(py, yaml)
     }
 
     /// Convert data to YAML string with format preservation
     #[pyo3(signature = (data))]
-    fn dump_yaml(&self, data: Py<PyAny>) -> PyResult<String> {
-        Python::attach(|py| {
-            let value = self.python_to_value(py, data)?;
+    fn dump_yaml(&self, py: Python<'_>, data: Py<PyAny>) -> PyResult<String> {
+        let yaml = self.python_to_yaml(py, data)?;
 
-            // Serialize with custom formatting
-            let yaml_str = self.serialize_with_format(&value)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("Failed to serialize YAML: {}", e)
-                ))?;
-            Ok(yaml_str)
-        })
+        // Serialize with saphyr
+        let mut out_str = String::new();
+        let mut emitter = YamlEmitter::new(&mut out_str);
+
+        emitter.dump(&yaml)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                format!("Failed to serialize YAML: {}", e)
+            ))?;
+
+        Ok(out_str)
     }
 
     /// Load YAML file with caching
     #[pyo3(signature = (path))]
-    fn load_yaml_file(&self, path: &str) -> PyResult<Py<PyAny>> {
+    fn load_yaml_file(&self, py: Python<'_>, path: &str) -> PyResult<Py<PyAny>> {
         let file_path = PathBuf::from(path);
 
         // Check cache first
@@ -104,9 +120,7 @@ impl RustYamlOperations {
                     if let Ok(modified) = metadata.modified() {
                         if modified <= cached.modified {
                             // Cache is still valid
-                            return Python::attach(|py| {
-                                self.value_to_python(py, &cached.data)
-                            });
+                            return self.yaml_to_python(py, &cached.data);
                         }
                     }
                 }
@@ -119,9 +133,15 @@ impl RustYamlOperations {
                 format!("Failed to read file {}: {}", path, e)
             ))?;
 
-        let value: Value = serde_yaml::from_str(&content)
+        // Parse with saphyr
+        let docs = YamlLoader::load_from_str(&content)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
                 format!("Failed to parse YAML from {}: {}", path, e)
+            ))?;
+
+        let yaml = docs.first()
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                format!("Empty YAML document in {}", path)
             ))?;
 
         // Update cache
@@ -131,7 +151,7 @@ impl RustYamlOperations {
                     YAML_CACHE.insert(
                         file_path.clone(),
                         CachedYaml {
-                            data: Arc::new(value.clone()),
+                            data: Arc::new(yaml.clone()),
                             modified,
                             raw_content: Some(content),
                         },
@@ -140,105 +160,113 @@ impl RustYamlOperations {
             }
         }
 
-        Python::attach(|py| self.value_to_python(py, &value))
+        self.yaml_to_python(py, yaml)
     }
 
     /// Save data to YAML file with atomic write
     #[pyo3(signature = (path, data))]
-    fn save_yaml_file(&self, path: &str, data: Py<PyAny>) -> PyResult<()> {
-        Python::attach(|py| {
-            let value = self.python_to_value(py, data)?;
-            let yaml_str = self.serialize_with_format(&value)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("Failed to serialize YAML: {}", e)
-                ))?;
+    fn save_yaml_file(&self, py: Python<'_>, path: &str, data: Py<PyAny>) -> PyResult<()> {
+        let yaml = self.python_to_yaml(py, data)?;
 
-            let file_path = PathBuf::from(path);
-            let temp_path = file_path.with_extension("yaml.tmp");
+        // Serialize
+        let mut yaml_str = String::new();
+        let mut emitter = YamlEmitter::new(&mut yaml_str);
+        emitter.dump(&yaml)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                format!("Failed to serialize YAML: {}", e)
+            ))?;
 
-            // Write to temp file first (atomic write pattern)
-            std::fs::write(&temp_path, yaml_str.as_bytes())
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                    format!("Failed to write temp file: {}", e)
-                ))?;
+        let file_path = PathBuf::from(path);
+        let temp_path = file_path.with_extension("yaml.tmp");
 
-            // Rename temp file to target (atomic on most filesystems)
-            std::fs::rename(&temp_path, &file_path)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                    format!("Failed to rename file: {}", e)
-                ))?;
+        // Write to temp file first (atomic write pattern)
+        std::fs::write(&temp_path, yaml_str.as_bytes())
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
+                format!("Failed to write temp file: {}", e)
+            ))?;
 
-            // Invalidate cache
-            if self.cache_enabled {
-                YAML_CACHE.remove(&file_path);
-            }
+        // Rename temp file to target (atomic on most filesystems)
+        std::fs::rename(&temp_path, &file_path)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
+                format!("Failed to rename file: {}", e)
+            ))?;
 
-            Ok(())
-        })
+        // Invalidate cache
+        if self.cache_enabled {
+            YAML_CACHE.remove(&file_path);
+        }
+
+        Ok(())
     }
 
     /// Get a setting value by key path (dot notation)
     #[pyo3(signature = (data, key_path))]
-    fn get_setting(&self, data: Py<PyAny>, key_path: &str) -> PyResult<Option<Py<PyAny>>> {
-        Python::attach(|py| {
-            let value = self.python_to_value(py, data)?;
+    fn get_setting(&self, py: Python<'_>, data: Py<PyAny>, key_path: &str) -> PyResult<Option<Py<PyAny>>> {
+        let yaml = self.python_to_yaml(py, data)?;
 
-            // Navigate through the key path
-            let keys: Vec<&str> = key_path.split('.').collect();
-            let mut current = &value;
+        // Navigate through the key path
+        let keys: Vec<&str> = key_path.split('.').collect();
+        let mut current = &yaml;
 
-            for key in keys {
-                match current {
-                    Value::Mapping(map) => {
-                        if let Some(next_value) = map.get(&Value::String(key.to_string())) {
-                            current = next_value;
-                        } else {
-                            return Ok(None);
-                        }
+        for key in keys {
+            match current {
+                Yaml::Hash(hash) => {
+                    // Try to find by string key
+                    let key_yaml = Yaml::String(key.to_string());
+                    if let Some(next_value) = hash.get(&key_yaml) {
+                        current = next_value;
+                    } else {
+                        return Ok(None);
                     }
-                    _ => return Ok(None),
                 }
+                _ => return Ok(None),
             }
+        }
 
-            Ok(Some(self.value_to_python(py, current)?))
-        })
+        Ok(Some(self.yaml_to_python(py, current)?))
     }
 
     /// Set a setting value by key path (dot notation)
     #[pyo3(signature = (data, key_path, value))]
-    fn set_setting(&self, data: Py<PyAny>, key_path: &str, value: Py<PyAny>) -> PyResult<Py<PyAny>> {
-        Python::attach(|py| {
-            let mut root_value = self.python_to_value(py, data)?;
-            let new_value = self.python_to_value(py, value)?;
+    fn set_setting(&self, py: Python<'_>, data: Py<PyAny>, key_path: &str, value: Py<PyAny>) -> PyResult<Py<PyAny>> {
+        // Check for empty key path
+        if key_path.trim().is_empty() {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty key path"));
+        }
 
-            // Navigate and create path if necessary
-            let keys: Vec<&str> = key_path.split('.').collect();
-            let last_key = keys.last()
-                .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty key path"))?;
+        let mut root_yaml = self.python_to_yaml(py, data)?;
+        let new_value = self.python_to_yaml(py, value)?;
 
-            // Get or create nested mappings
-            let mut current = &mut root_value;
-            for key in &keys[..keys.len() - 1] {
-                let key_value = Value::String(key.to_string());
+        // Navigate and create path if necessary
+        let keys: Vec<&str> = key_path.split('.').collect();
+        let last_key = keys.last()
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty key path"))?;
 
-                // Ensure current is a mapping
-                if !current.is_mapping() {
-                    *current = Value::Mapping(Mapping::new());
-                }
-
-                if let Value::Mapping(map) = current {
-                    current = map.entry(key_value)
-                        .or_insert(Value::Mapping(Mapping::new()));
-                }
+        // Helper function to ensure we have a mutable hash
+        fn ensure_hash(yaml: &mut Yaml) -> &mut yaml_rust2::yaml::Hash {
+            if !matches!(yaml, Yaml::Hash(_)) {
+                *yaml = Yaml::Hash(yaml_rust2::yaml::Hash::new());
             }
-
-            // Set the final value
-            if let Value::Mapping(map) = current {
-                map.insert(Value::String(last_key.to_string()), new_value);
+            match yaml {
+                Yaml::Hash(h) => h,
+                _ => unreachable!(),
             }
+        }
 
-            self.value_to_python(py, &root_value)
-        })
+        // Navigate to parent of last key
+        let mut current = &mut root_yaml;
+        for key in &keys[..keys.len() - 1] {
+            let key_yaml = Yaml::String(key.to_string());
+            let hash = ensure_hash(current);
+            current = hash.entry(key_yaml)
+                .or_insert(Yaml::Hash(yaml_rust2::yaml::Hash::new()));
+        }
+
+        // Set the final value
+        let hash = ensure_hash(current);
+        hash.insert(Yaml::String(last_key.to_string()), new_value);
+
+        self.yaml_to_python(py, &root_yaml)
     }
 
     /// Clear the YAML cache
@@ -261,109 +289,108 @@ impl RustYamlOperations {
 }
 
 impl RustYamlOperations {
-    /// Convert serde_yaml::Value to Python object
-    fn value_to_python(&self, py: Python, value: &Value) -> PyResult<Py<PyAny>> {
-        match value {
-            Value::Null => Ok(py.None()),
-            Value::Bool(b) => Ok((*b).into_pyobject(py)?.as_any().clone().unbind()),
-            Value::Number(n) => {
-                if let Some(i) = n.as_i64() {
-                    Ok(i.into_pyobject(py)?.as_any().clone().unbind())
-                } else if let Some(f) = n.as_f64() {
-                    Ok(f.into_pyobject(py)?.as_any().clone().unbind())
-                } else {
-                    Ok(n.as_u64().unwrap().into_pyobject(py)?.as_any().clone().unbind())
-                }
+    /// Convert saphyr Yaml to Python object
+    fn yaml_to_python(&self, py: Python, yaml: &Yaml) -> PyResult<Py<PyAny>> {
+        match yaml {
+            Yaml::Null => Ok(py.None()),
+
+            Yaml::Boolean(b) => Ok((*b).into_pyobject(py)?.as_any().clone().unbind()),
+
+            Yaml::Integer(i) => Ok((*i).into_pyobject(py)?.as_any().clone().unbind()),
+
+            Yaml::Real(s) => {
+                // Parse string to f64
+                let f = s.parse::<f64>()
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                        format!("Invalid float: {}", e)
+                    ))?;
+                Ok(f.into_pyobject(py)?.as_any().clone().unbind())
             }
-            Value::String(s) => Ok(s.as_str().into_pyobject(py)?.as_any().clone().unbind()),
-            Value::Sequence(seq) => {
+
+            Yaml::String(s) => Ok(s.as_str().into_pyobject(py)?.as_any().clone().unbind()),
+
+            Yaml::Array(arr) => {
                 let mut items = Vec::new();
-                for item in seq {
-                    items.push(self.value_to_python(py, item)?);
+                for item in arr {
+                    items.push(self.yaml_to_python(py, item)?);
                 }
                 let list = pyo3::types::PyList::new(py, items)?;
                 Ok(list.unbind().into())
             }
-            Value::Mapping(map) => {
+
+            Yaml::Hash(hash) => {
                 let dict = pyo3::types::PyDict::new(py);
-                for (k, v) in map {
-                    if let Value::String(key_str) = k {
-                        dict.set_item(key_str, self.value_to_python(py, v)?)?;
-                    } else {
-                        // Handle non-string keys
-                        let key_obj = self.value_to_python(py, k)?;
-                        dict.set_item(key_obj, self.value_to_python(py, v)?)?;
-                    }
+                for (k, v) in hash {
+                    // Convert key (usually string, but can be any YAML type)
+                    let key_obj = self.yaml_to_python(py, k)?;
+                    let val_obj = self.yaml_to_python(py, v)?;
+                    dict.set_item(key_obj, val_obj)?;
                 }
                 Ok(dict.unbind().into())
             }
-            Value::Tagged(tagged) => {
-                // Handle YAML tags if needed
-                self.value_to_python(py, &tagged.value)
+
+            Yaml::Alias(_) => {
+                // Aliases should be resolved during parsing
+                // If we see one here, it's an error
+                Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    "Unresolved YAML alias"
+                ))
+            }
+
+            Yaml::BadValue => {
+                Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    "Invalid YAML value"
+                ))
             }
         }
     }
 
-    /// Convert Python object to serde_yaml::Value
-    fn python_to_value(&self, py: Python, obj: Py<PyAny>) -> PyResult<Value> {
+    /// Convert Python object to saphyr Yaml
+    fn python_to_yaml(&self, py: Python, obj: Py<PyAny>) -> PyResult<Yaml> {
         let bound_obj = obj.bind(py);
 
         if bound_obj.is_none() {
-            return Ok(Value::Null);
+            return Ok(Yaml::Null);
         }
 
         if let Ok(b) = bound_obj.extract::<bool>() {
-            return Ok(Value::Bool(b));
+            return Ok(Yaml::Boolean(b));
         }
 
         if let Ok(i) = bound_obj.extract::<i64>() {
-            return Ok(Value::Number(i.into()));
+            return Ok(Yaml::Integer(i));
         }
 
         if let Ok(f) = bound_obj.extract::<f64>() {
-            return Ok(Value::Number(serde_yaml::Number::from(f)));
+            // Store as Real (string representation)
+            return Ok(Yaml::Real(f.to_string()));
         }
 
         if let Ok(s) = bound_obj.extract::<String>() {
-            return Ok(Value::String(s));
+            return Ok(Yaml::String(s));
         }
 
         if let Ok(list) = bound_obj.downcast::<pyo3::types::PyList>() {
-            let mut seq = Vec::new();
+            let mut arr = Vec::new();
             for item in list.iter() {
-                seq.push(self.python_to_value(py, item.unbind())?);
+                arr.push(self.python_to_yaml(py, item.unbind())?);
             }
-            return Ok(Value::Sequence(seq));
+            return Ok(Yaml::Array(arr));
         }
 
         if let Ok(dict) = bound_obj.downcast::<pyo3::types::PyDict>() {
-            let mut map = Mapping::new();
+            let mut hash = yaml_rust2::yaml::Hash::new();
             for (k, v) in dict.iter() {
-                let key = if let Ok(s) = k.extract::<String>() {
-                    Value::String(s)
-                } else {
-                    self.python_to_value(py, k.unbind())?
-                };
-                let value = self.python_to_value(py, v.unbind())?;
-                map.insert(key, value);
+                let key = self.python_to_yaml(py, k.unbind())?;
+                let value = self.python_to_yaml(py, v.unbind())?;
+                hash.insert(key, value);
             }
-            return Ok(Value::Mapping(map));
+            return Ok(Yaml::Hash(hash));
         }
 
         Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
             format!("Cannot convert Python type to YAML: {:?}", bound_obj.get_type())
         ))
-    }
-
-    /// Serialize with format preservation
-    fn serialize_with_format(&self, value: &Value) -> Result<String, serde_yaml::Error> {
-        let yaml_str = serde_yaml::to_string(value)?;
-
-        // Apply formatting rules if needed
-        // Note: Full format preservation would require custom serializer
-        // For now, we rely on serde_yaml's default formatting
-
-        Ok(yaml_str)
     }
 }
 

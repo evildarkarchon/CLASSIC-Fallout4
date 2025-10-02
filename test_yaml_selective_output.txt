@@ -1,0 +1,14 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\evild\PycharmProjects\CLASSIC-Fallout4\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+PySide6 6.9.2 -- Qt runtime 6.9.2 -- Qt compiled 6.9.2
+rootdir: C:\Users\evild\PycharmProjects\CLASSIC-Fallout4
+configfile: pytest.ini
+plugins: anyio-4.10.0, hypothesis-6.140.2, asyncio-1.2.0, cov-7.0.0, qt-4.5.0, textual-snapshot-1.1.0, timeout-2.4.0, xdist-3.8.0, syrupy-4.8.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... ERROR: file or directory not found: tests/settings/test_yaml_file_operations.py::test_rust_acceleration_selective
+
+collected 0 items
+
+============================ no tests ran in 0.14s ============================

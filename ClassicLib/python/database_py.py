@@ -7,10 +7,9 @@ It provides a simple async database pool for FormID lookups.
 """
 
 import asyncio
+import logging
 import sqlite3
 from pathlib import Path
-from typing import Any, Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +106,7 @@ class PythonDatabasePool:
             conn = await asyncio.to_thread(self._create_connection)
             if conn:
                 return conn
-            else:
-                raise RuntimeError("Failed to create database connection")
+            raise RuntimeError("Failed to create database connection")
 
     async def _return_connection(self, conn: sqlite3.Connection) -> None:
         """

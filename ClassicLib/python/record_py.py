@@ -7,7 +7,7 @@ records in crash logs, matching against known types, and filtering operations.
 """
 
 from collections import Counter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ReportFragment import ReportFragment

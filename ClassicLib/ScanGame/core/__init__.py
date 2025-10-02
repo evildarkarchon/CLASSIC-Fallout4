@@ -17,7 +17,7 @@ from .validators import ScanValidators
 
 # Optional enhanced DDS analyzer
 try:
-    from .dds_analyzer import EnhancedDDSAnalyzer, DDSInfo, analyze_dds
+    from .dds_analyzer import DDSInfo, EnhancedDDSAnalyzer, analyze_dds
     HAS_DDS_ANALYZER = True
 except ImportError:
     HAS_DDS_ANALYZER = False

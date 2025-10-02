@@ -6,7 +6,6 @@ mod tests {
 
     mod path_tests {
         use super::*;
-        use std::path::PathBuf;
 
         #[test]
         fn test_path_normalization() {
@@ -138,7 +137,6 @@ mod tests {
     }
 
     mod performance_tests {
-        use super::*;
         use super::performance::{Timer, RustPerformanceMonitor};
         use std::thread;
         use std::time::Duration;
@@ -174,7 +172,11 @@ mod tests {
         #[test]
         fn test_log_processor_creation() {
             let processor = LogProcessor::new();
-            assert_eq!(processor.cache_stats(), (0, 0));
+            // Cache stats: (local_cache, global_pattern_cache)
+            // Local cache should be empty for new processor
+            // Global cache may have entries from other tests
+            let (local, _global) = processor.cache_stats();
+            assert_eq!(local, 0, "New LogProcessor should have empty local cache");
         }
 
         #[test]

@@ -83,8 +83,8 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: Structured report fragment with error and version info.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
         from ClassicLib import GlobalRegistry
+        from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
         crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
         lines = [

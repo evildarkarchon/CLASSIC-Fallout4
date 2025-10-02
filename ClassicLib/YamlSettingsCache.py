@@ -9,8 +9,6 @@ import threading
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 
-# Fixed circular import - import directly from module
-from ClassicLib.GlobalRegistry import Keys, register, is_registered
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.AsyncYamlSettings.core import get_async_yaml_core
 from ClassicLib.AsyncYamlSettings.types import (
@@ -21,6 +19,9 @@ from ClassicLib.AsyncYamlSettings.types import (
     YAMLValueOptional,
 )
 from ClassicLib.Constants import YAML
+
+# Fixed circular import - import directly from module
+from ClassicLib.GlobalRegistry import Keys, is_registered, register
 
 T = TypeVar("T")
 

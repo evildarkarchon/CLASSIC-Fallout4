@@ -88,6 +88,16 @@ def detect_rust_components() -> dict[str, bool]:
                 components["file_io_core"] = True
                 logger.debug("FileIOCore component available")
 
+        # Check YAML module components
+        if hasattr(classic_core, "yaml"):
+            components["yaml"] = True
+            logger.debug("yaml module detected")
+
+            # RustYamlOperations
+            if hasattr(classic_core.yaml, "RustYamlOperations"):
+                components["yaml_operations"] = True
+                logger.debug("RustYamlOperations component available")
+
     except ImportError as e:
         logger.warning(f"classic_core module not available: {e}")
     except Exception as e:
@@ -136,4 +146,6 @@ def _get_empty_component_dict() -> dict[str, bool]:
         "file_io": False,
         "file_io_core": False,
         "mod_detector": False,
+        "yaml": False,
+        "yaml_operations": False,
     }

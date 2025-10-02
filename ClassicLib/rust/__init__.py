@@ -24,33 +24,28 @@ logger = logging.getLogger(__name__)
 
 # Import all Rust wrapper components
 try:
-    from ClassicLib.rust.parser_rust import RustLogParser
-    from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
-    from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
-    from ClassicLib.rust.record_rust import RustRecordScanner
-    from ClassicLib.rust.file_io_rust import RustFileIOCore, get_rust_file_io, create_file_io_sync
     from ClassicLib.rust.database_rust import (
-        RustAsyncDatabasePool,
         AsyncDatabasePool,
         DatabasePoolManager,
-        get_database_pool_implementation
+        RustAsyncDatabasePool,
+        get_database_pool_implementation,
     )
-    from ClassicLib.rust.mod_detector_rust import (
-        detect_mods_single,
-        detect_mods_batch,
-        analyze_mod_conflicts,
-        get_mod_detector_status
-    )
+    from ClassicLib.rust.file_io_rust import RustFileIOCore, create_file_io_sync, get_rust_file_io
+    from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
+    from ClassicLib.rust.mod_detector_rust import analyze_mod_conflicts, detect_mods_batch, detect_mods_single, get_mod_detector_status
+    from ClassicLib.rust.parser_rust import RustLogParser
+    from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+    from ClassicLib.rust.record_rust import RustRecordScanner
+    from ClassicLib.rust.report_rust import RUST_AVAILABLE as REPORT_RUST_AVAILABLE
     from ClassicLib.rust.report_rust import (
-        RustAcceleratedReportFragment,
-        RustAcceleratedReportComposer,
-        RustAcceleratedReportGenerator,
         ParallelReportProcessor,
-        ReportFragment,
         ReportComposer,
+        ReportFragment,
         ReportGenerator,
+        RustAcceleratedReportComposer,
+        RustAcceleratedReportFragment,
+        RustAcceleratedReportGenerator,
         StringPool,
-        RUST_AVAILABLE as REPORT_RUST_AVAILABLE
     )
 
     RUST_MODULES_AVAILABLE = True

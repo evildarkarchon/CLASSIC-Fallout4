@@ -203,6 +203,10 @@ See `docs/` for detailed guides on:
 4. **Async-first** - Use AsyncBridge for sync contexts
 5. **Batch operations** - Load multiple YAML settings together
 6. **Test markers** - All tests must have appropriate markers
+7. **Deprecated APIs = ERRORS** - Treat all deprecated warnings as compilation errors
+   - Python: Never use deprecated APIs, update immediately
+   - Rust: Never use deprecated PyO3/crate APIs, fix warnings immediately
+   - Zero tolerance for deprecation warnings in CI/CD
 
 ### Common Anti-Patterns to Avoid
 - ❌ `asyncio.run()` in sync → ✅ `AsyncBridge.run_async()`
@@ -211,6 +215,9 @@ See `docs/` for detailed guides on:
 - ❌ Direct print → ✅ MessageHandler
 - ❌ Missing type hints → ✅ Complete annotations
 - ❌ Manual event loops → ✅ AsyncBridge
+- ❌ Deprecated APIs (Python/Rust) → ✅ Use current APIs immediately
+- ❌ `prepare_freethreaded_python()` → ✅ `Python::initialize()`
+- ❌ `Python::with_gil()` → ✅ `Python::attach()`
 
 ## File Structure
 
@@ -321,6 +328,20 @@ For comprehensive Rust documentation, see:
 - **[Troubleshooting Guide](docs/troubleshooting_rust.md)** - Debug Rust issues
 - **[Development Guide](docs/development_with_rust.md)** - Develop with Rust components
 - **[Migration Plan](RUST_MIGRATION_PLAN.md)** - Complete migration strategy
+- **[yaml-rust2 Migration Plan](docs/yaml_rust2_migration_plan.md)** - YAML library migration (completed 2025-10-02)
+
+### YAML Operations (yaml-rust2)
+- **Library**: yaml-rust2 v0.10.4 (YAML 1.2 compliant, pure Rust, owned types)
+- **Previous**: serde_yaml (deprecated), saphyr (lifetime complexity)
+- **Migration**: Completed 2025-10-02
+- **Import**: `from classic_core import yaml; ops = yaml.RustYamlOperations()` (standard PyO3 pattern for all classic_core submodules)
+- **Features**:
+  - Multi-document support
+  - Anchor/alias resolution
+  - Insertion order preservation (LinkedHashMap)
+  - Pure Rust safety (no unsafe FFI)
+  - PyO3-friendly (no lifetime parameters)
+  - 15-30x performance vs ruamel.yaml
 
 ### PyO3 0.26.0 Documentation (Current)
 - **[PyO3 0.26.0 Migration Guide](docs/pyo3_0.26_migration_guide.md)** - Detailed migration from 0.22 to 0.26.0
@@ -331,3 +352,4 @@ For comprehensive Rust documentation, see:
 - Output test results to file to avoid truncation
 - Use Mixins with TYPE_CHECKING for MainWindow extensions
 - Maintain API compatibility with deprecation warnings
+- **classic_core import pattern**: Always use `from classic_core import <module>` NOT `from classic_core.<module> import <class>` (applies to all submodules: yaml, database, file_io, scanlog, utils, etc. - this is a PyO3 packaging pattern)

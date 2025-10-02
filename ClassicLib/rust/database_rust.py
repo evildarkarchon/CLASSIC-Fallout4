@@ -9,9 +9,7 @@ while leveraging Rust's performance benefits.
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
-from typing import Any, ClassVar, Optional
-from collections.abc import Sequence
+from typing import Any, ClassVar
 
 try:
     from classic_core.database import RustDatabasePool
@@ -224,7 +222,7 @@ class RustAsyncDatabasePool:
             for (formid, plugin) in formid_plugin_pairs:
                 key = f"{formid}:{plugin}"
                 if key in rust_results:
-                    results[(formid, plugin)] = rust_results[key]
+                    results[formid, plugin] = rust_results[key]
 
             return results
 
@@ -312,13 +310,12 @@ def get_database_pool_implementation() -> type:
     """
     if RUST_AVAILABLE:
         return RustAsyncDatabasePool
-    else:
-        # Fall back to Python implementation if available
-        try:
-            from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool as PythonAsyncDatabasePool
-            return PythonAsyncDatabasePool
-        except ImportError:
-            raise ImportError(
-                "Neither Rust nor Python database pool implementation available. "
-                "Please rebuild with maturin or check your installation."
-            )
+    # Fall back to Python implementation if available
+    try:
+        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool as PythonAsyncDatabasePool
+        return PythonAsyncDatabasePool
+    except ImportError:
+        raise ImportError(
+            "Neither Rust nor Python database pool implementation available. "
+            "Please rebuild with maturin or check your installation."
+        )

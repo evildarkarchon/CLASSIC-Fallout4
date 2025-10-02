@@ -74,6 +74,7 @@ pub struct RustDatabasePool {
     connections: Arc<DashMap<PathBuf, Arc<Mutex<ConnectionWrapper>>>>,
     query_cache: Arc<DashMap<String, CacheEntry>>,
     cache_ttl: Arc<RwLock<Duration>>,
+    #[allow(dead_code)] // Reserved for future connection pooling implementation
     max_connections: usize,
     stats: Arc<RwLock<PoolStatistics>>,
     game_table: Arc<RwLock<String>>,  // Dynamic table name support

@@ -48,11 +48,15 @@ impl PathHandler {
         // Check cache first
         if let Some(entry) = self.path_cache.get(&path) {
             if entry.timestamp.elapsed() < self.cache_ttl {
+                // Clone the value we need before dropping the guard
+                let result = entry.value.to_string_lossy().to_string();
+                let mut updated_entry = entry.clone();
+                updated_entry.hit_count += 1;
+                // Drop the guard before inserting
+                drop(entry);
                 // Update hit count
-                let mut entry = entry.clone();
-                entry.hit_count += 1;
-                self.path_cache.insert(path.clone(), entry.clone());
-                return Ok(entry.value.to_string_lossy().to_string());
+                self.path_cache.insert(path.clone(), updated_entry);
+                return Ok(result);
             }
         }
 

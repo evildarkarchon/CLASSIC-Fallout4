@@ -115,3 +115,12 @@ rust_rebuild_output.txt
 rust_test_output.txt
 test_results_threadsafecache_removal.txt
 test_results.txt
+test_summary.txt
+test_parser_parallel.txt
+test_parser_output.txt
+full_test_output.txt
+test_patterns_output.txt
+test_patterns_bench_output.txt
+check_yaml_rust2.txt
+check_output.txt
+build_output.txt

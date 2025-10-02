@@ -1,2 +1,0 @@
-💥 maturin failed
-  Caused by: Can't find C:\Users\evild\PycharmProjects\CLASSIC-Fallout4\classic-rust\Cargo.toml (in C:\Users\evild\PycharmProjects\CLASSIC-Fallout4\classic-rust)

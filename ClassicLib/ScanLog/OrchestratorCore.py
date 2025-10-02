@@ -16,7 +16,7 @@ from packaging.version import Version
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.integration.factory import get_file_io
-from ClassicLib.integration.status import RUST_AVAILABLE, is_rust_accelerated
+from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager, write_file_async
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
@@ -626,6 +626,7 @@ class OrchestratorCore:
             - Report fragment with loading status
         """
         import aiofiles
+
         from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
         lines = []

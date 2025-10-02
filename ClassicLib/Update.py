@@ -14,11 +14,12 @@ import aiohttp
 from bs4 import BeautifulSoup, Tag
 from packaging.version import InvalidVersion, Version
 
+from ClassicLib.Constants import NULL_VERSION, YAML
+
 # Fixed circular import - import functions directly from modules
 from ClassicLib.GlobalRegistry import get_game  # Import just the function we need
-from ClassicLib.MessageHandler import msg_error, msg_info, msg_success, msg_warning
-from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.Logger import logger
+from ClassicLib.MessageHandler import msg_error, msg_info, msg_success, msg_warning
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 

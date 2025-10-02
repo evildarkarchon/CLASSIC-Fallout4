@@ -1,11 +1,19 @@
 //! Tests for the Rust database pool implementation
 
 use classic_core::database::pool::RustDatabasePool;
-use std::collections::HashMap;
+use pyo3::Python;
 use std::path::PathBuf;
-use std::fs;
 use tempfile::TempDir;
 use rusqlite::Connection;
+
+/// Initialize Python interpreter for tests
+fn init_python() {
+    use std::sync::Once;
+    static INIT: Once = Once::new();
+    INIT.call_once(|| {
+        Python::initialize();
+    });
+}
 
 /// Create a test database with sample data
 fn create_test_database(path: &PathBuf, table_name: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -63,6 +71,8 @@ fn test_pool_creation() {
 
 #[test]
 fn test_database_initialization() {
+    init_python();
+
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("test.db");
 
@@ -70,20 +80,19 @@ fn test_database_initialization() {
     create_test_database(&db_path, "Fallout4").unwrap();
 
     let pool = RustDatabasePool::new(None, None, Some("Fallout4".to_string()));
-    pool.py_initialize(
-        pyo3::Python::acquire_gil().python(),
-        vec![db_path.to_string_lossy().to_string()]
-    ).unwrap();
 
-    let stats = pool.py_get_stats().unwrap();
-    assert_eq!(stats.get("total_connections"), Some(&1));
-    assert_eq!(stats.get("active_connections"), Some(&1));
+    Python::attach(|py| {
+        pool.py_initialize(py, vec![db_path.to_string_lossy().to_string()]).unwrap();
+
+        let stats = pool.py_get_stats().unwrap();
+        assert_eq!(stats.get("total_connections"), Some(&1));
+        assert_eq!(stats.get("active_connections"), Some(&1));
+    });
 }
 
 #[test]
 fn test_single_entry_lookup() {
-    pyo3::prepare_freethreaded_python();
-
+    init_python();
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("test.db");
 
@@ -91,36 +100,36 @@ fn test_single_entry_lookup() {
     create_test_database(&db_path, "Fallout4").unwrap();
 
     let pool = RustDatabasePool::new(None, None, Some("Fallout4".to_string()));
-    let py = pyo3::Python::acquire_gil().python();
 
-    pool.py_initialize(py, vec![db_path.to_string_lossy().to_string()]).unwrap();
+    Python::attach(|py| {
+        pool.py_initialize(py, vec![db_path.to_string_lossy().to_string()]).unwrap();
 
-    // Test successful lookup
-    let result = pool.py_get_entry(py, "00012345".to_string(), "Fallout4.esm".to_string(), Some("Fallout4".to_string())).unwrap();
-    assert_eq!(result, Some("TestEntry1".to_string()));
+        // Test successful lookup
+        let result = pool.py_get_entry(py, "00012345".to_string(), "Fallout4.esm".to_string(), Some("Fallout4".to_string())).unwrap();
+        assert_eq!(result, Some("TestEntry1".to_string()));
 
-    // Test cache hit
-    let stats_before = pool.py_get_stats().unwrap();
-    let cache_hits_before = stats_before.get("cache_hits").copied().unwrap_or(0);
+        // Test cache hit
+        let stats_before = pool.py_get_stats().unwrap();
+        let cache_hits_before = stats_before.get("cache_hits").copied().unwrap_or(0);
 
-    let result = pool.py_get_entry(py, "00012345".to_string(), "Fallout4.esm".to_string(), Some("Fallout4".to_string())).unwrap();
-    assert_eq!(result, Some("TestEntry1".to_string()));
+        let result = pool.py_get_entry(py, "00012345".to_string(), "Fallout4.esm".to_string(), Some("Fallout4".to_string())).unwrap();
+        assert_eq!(result, Some("TestEntry1".to_string()));
 
-    let stats_after = pool.py_get_stats().unwrap();
-    let cache_hits_after = stats_after.get("cache_hits").copied().unwrap_or(0);
-    assert_eq!(cache_hits_after, cache_hits_before + 1);
+        let stats_after = pool.py_get_stats().unwrap();
+        let cache_hits_after = stats_after.get("cache_hits").copied().unwrap_or(0);
+        assert_eq!(cache_hits_after, cache_hits_before + 1);
 
-    // Test non-existent entry
-    let result = pool.py_get_entry(py, "99999999".to_string(), "NonExistent.esp".to_string(), Some("Fallout4".to_string())).unwrap();
-    assert_eq!(result, None);
+        // Test non-existent entry
+        let result = pool.py_get_entry(py, "99999999".to_string(), "NonExistent.esp".to_string(), Some("Fallout4".to_string())).unwrap();
+        assert_eq!(result, None);
+    });
 }
 
 #[test]
 fn test_batch_lookup() {
+    init_python();
     use pyo3::types::PyList;
     use pyo3::Python;
-
-    pyo3::prepare_freethreaded_python();
 
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("test.db");
@@ -140,12 +149,12 @@ fn test_batch_lookup() {
             ("99999999", "NonExistent.esp"),
         ];
 
-        let py_list = PyList::new(py, pairs.iter().map(|(f, p)| (f, p)));
+        let py_list = PyList::new(py, pairs.iter().map(|(f, p)| (f, p))).expect("Failed to create PyList");
 
         // Test batch_lookup (new method)
         let results = pool.py_batch_lookup(
             py,
-            py_list.as_ref(),
+            &py_list,
             Some("Fallout4".to_string())
         ).unwrap();
 
@@ -157,10 +166,9 @@ fn test_batch_lookup() {
 
 #[test]
 fn test_batch_entries_legacy() {
+    init_python();
     use pyo3::types::PyList;
     use pyo3::Python;
-
-    pyo3::prepare_freethreaded_python();
 
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("test.db");
@@ -180,11 +188,11 @@ fn test_batch_entries_legacy() {
             ("99999999", "NonExistent.esp"),
         ];
 
-        let py_list = PyList::new(py, pairs.iter().map(|(f, p)| (f, p)));
+        let py_list = PyList::new(py, pairs.iter().map(|(f, p)| (f, p))).expect("Failed to create PyList");
 
         let results = pool.py_get_entries_batch(
             py,
-            py_list.as_ref(),
+            &py_list,
             Some("Fallout4".to_string()),
             None
         ).unwrap();
@@ -201,8 +209,7 @@ fn test_batch_entries_legacy() {
 
 #[test]
 fn test_cache_operations() {
-    pyo3::prepare_freethreaded_python();
-
+    init_python();
     let pool = RustDatabasePool::new(None, Some(1), Some("Fallout4".to_string())); // 1 second TTL
 
     Python::attach(|py| {
@@ -237,8 +244,7 @@ fn test_cache_operations() {
 
 #[test]
 fn test_multiple_databases() {
-    pyo3::prepare_freethreaded_python();
-
+    init_python();
     let temp_dir = TempDir::new().unwrap();
     let db1_path = temp_dir.path().join("main.db");
     let db2_path = temp_dir.path().join("local.db");
@@ -285,8 +291,7 @@ fn test_multiple_databases() {
 
 #[test]
 fn test_optimization() {
-    pyo3::prepare_freethreaded_python();
-
+    init_python();
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("test.db");
 
@@ -304,10 +309,9 @@ fn test_optimization() {
 
 #[test]
 fn test_concurrent_access() {
+    init_python();
     use std::thread;
     use std::sync::Arc;
-
-    pyo3::prepare_freethreaded_python();
 
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("test.db");
@@ -344,7 +348,7 @@ fn test_concurrent_access() {
         handle.join().unwrap();
     }
 
-    Python::attach(|py| {
+    Python::attach(|_py| {
         let stats = pool.py_get_stats().unwrap();
         assert!(stats.get("total_queries").copied().unwrap_or(0) >= 100);
     });
