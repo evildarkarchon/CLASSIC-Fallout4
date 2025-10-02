@@ -1,16 +1,37 @@
 """
 Sync wrapper for AsyncYamlSettingsCore providing synchronous YAML settings access.
 
-This module provides a synchronous interface to the async-first YAML settings system,
-using AsyncBridge for efficient sync-to-async execution without event loop overhead.
+This module provides both synchronous and asynchronous interfaces to the async-first
+YAML settings system:
+
+- Sync methods (e.g., batch_get_settings) use AsyncBridge for sync-to-async bridging
+- Async methods (e.g., batch_get_settings_async) can be used directly in async contexts
+- Module-level async functions (yaml_settings_async, classic_settings_async) provide
+  convenient async access without needing the cache instance
+
+Usage:
+    # Sync context (e.g., __init__, __post_init__)
+    from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
+    result = yaml_cache.batch_get_settings(requests)
+    value = yaml_settings(str, YAML.Main, "key")
+
+    # Async context (e.g., async def functions)
+    from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings_async
+    result = await yaml_cache.batch_get_settings_async(requests)
+    value = await yaml_settings_async(str, YAML.Main, "key")
 """
 
+import asyncio
 import threading
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 
 from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.AsyncYamlSettings.core import get_async_yaml_core
+from ClassicLib.AsyncYamlSettings.core import (
+    classic_settings_async,
+    get_async_yaml_core,
+    yaml_settings_async,
+)
 from ClassicLib.AsyncYamlSettings.types import (
     YAMLLiteral,
     YAMLMapping,
@@ -44,6 +65,7 @@ class YamlSettingsCache:
         self._bridge = AsyncBridge.get_instance()
         # Get the async core instance using the bridge
         self._async_core = self._bridge.run_async(get_async_yaml_core())
+        self._init_lock = threading.Lock()
 
     @classmethod
     def get_instance(cls) -> "YamlSettingsCache":
@@ -80,9 +102,9 @@ class YamlSettingsCache:
         # Get path through file_ops
         return self._async_core.file_ops.get_path_for_store(yaml_store)
 
-    def load_yaml(self, yaml_path: Path) -> YAMLMapping:
+    async def load_yaml_async(self, yaml_path: Path) -> YAMLMapping:
         """
-        Load a YAML file with caching.
+        Load a YAML file with caching (async version).
 
         Args:
             yaml_path: Path to the YAML file
@@ -90,7 +112,21 @@ class YamlSettingsCache:
         Returns:
             YAMLMapping: The loaded YAML data
         """
-        # Load through file_ops
+        return await self._async_core.file_ops.load_yaml_file(yaml_path)
+
+    def load_yaml(self, yaml_path: Path) -> YAMLMapping:
+        """
+        Load a YAML file with caching (sync version).
+
+        Use this from sync contexts. For async contexts, use load_yaml_async() instead.
+
+        Args:
+            yaml_path: Path to the YAML file
+
+        Returns:
+            YAMLMapping: The loaded YAML data
+        """
+        # Load through file_ops using AsyncBridge
         return self._bridge.run_async(self._async_core.file_ops.load_yaml_file(yaml_path))
 
     def async_yaml_settings(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
@@ -108,6 +144,22 @@ class YamlSettingsCache:
         """
         return self._bridge.run_async(self._async_core.async_yaml_settings(_type, yaml_store, key_path, new_value))
 
+    async def load_multiple_stores_async(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
+        """
+        Load multiple YAML stores concurrently (async version).
+
+        Args:
+            stores: List of YAML stores to load
+
+        Returns:
+            dict: Mapping of YAML store to loaded data
+        """
+        results = {}
+        for store in stores:
+            path = self._async_core.file_ops.get_path_for_store(store)
+            results[store] = await self._async_core.file_ops.load_yaml_file(path)
+        return results
+
     def load_multiple_stores(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
         """
         Load multiple YAML stores concurrently.
@@ -118,16 +170,19 @@ class YamlSettingsCache:
         Returns:
             dict: Mapping of YAML store to loaded data
         """
+        return self._bridge.run_async(self.load_multiple_stores_async(stores))
 
-        # Load multiple stores - need to implement this differently
-        async def _load_stores() -> dict[Any, Any]:
-            results = {}
-            for store in stores:
-                path = self._async_core.file_ops.get_path_for_store(store)
-                results[store] = await self._async_core.file_ops.load_yaml_file(path)
-            return results
+    async def batch_get_settings_async(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
+        """
+        Get multiple settings in a single batch operation (async version).
 
-        return self._bridge.run_async(_load_stores())
+        Args:
+            requests: List of (type, yaml_store, key_path) tuples
+
+        Returns:
+            list: Setting values in the same order as requests
+        """
+        return await self._async_core.batch_get_settings(requests)
 
     def batch_get_settings(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
         """
@@ -292,6 +347,8 @@ __all__ = [
     "YAMLValueOptional",
     "YamlSettingsCache",
     "classic_settings",
+    "classic_settings_async",
     "yaml_cache",
     "yaml_settings",
+    "yaml_settings_async",
 ]

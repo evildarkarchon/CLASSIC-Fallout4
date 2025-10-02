@@ -18,7 +18,7 @@ from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
-from ClassicLib.ScanLog.Util import crashlogs_get_files, crashlogs_reformat
+from ClassicLib.ScanLog.Util import crashlogs_get_files
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
@@ -47,19 +47,16 @@ class ScanLogsExecutor:
 
         # Get crash log files
         self.crashlog_list: list[Path] = crashlogs_get_files()
-        msg_info("REFORMATTING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
 
         # Load settings if not provided in config
         if not self.config.remove_list:
             self.config.remove_list = yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
 
-        # Optimized reformatting - only writes files that actually change
-        # noinspection PyTypeChecker
-        crashlogs_reformat(self.crashlog_list, self.config.remove_list)
-        logger.debug("Used optimized crash log reformatting")
+        # Reformatting now happens inline during processing for zero-delay startup
+        logger.debug("Reformatting will happen inline during log processing")
 
-        # Initialize configuration
-        self.yamldata = ClassicScanLogsInfo()
+        # Defer yamldata initialization to execute_scan for faster startup
+        self.yamldata: ClassicScanLogsInfo | None = None
 
         # Set up database availability
         self.config.formid_db_exists = any(db.is_file() for db in DB_PATHS)
@@ -116,15 +113,20 @@ class ScanLogsExecutor:
         """
         logger.info("Starting crash log scan execution")
 
+        # Initialize yamldata here using async factory (no AsyncBridge overhead)
+        if self.yamldata is None:
+            self.yamldata = await ClassicScanLogsInfo.create_async()
+            logger.debug("Initialized ClassicScanLogsInfo (async, no blocking)")
+
         # Create result object
         result = ScanResult(stats=self.statistics)
 
         msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
 
         # Create async orchestrator with context manager for proper resource management
-        # No longer passing crashlogs cache - files are read directly during processing
+        # Reformatting happens inline during processing - no blocking preload
         async with OrchestratorCore(
-            self.yamldata, self.config.fcx_mode, self.config.show_formid_values, self.config.formid_db_exists
+            self.yamldata, self.config.fcx_mode, self.config.show_formid_values, self.config.formid_db_exists, self.config.remove_list
         ) as orchestrator:
             # Run FCX checks if enabled
             if self.config.fcx_mode:

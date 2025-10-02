@@ -31,7 +31,7 @@ from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
 from ClassicLib.Util import crashgen_version_gen
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
@@ -75,6 +75,7 @@ class OrchestratorCore:
         fcx_mode: bool | None,
         show_formid_values: bool | None,
         formid_db_exists: bool,
+        remove_list: tuple[str] | None = None,
     ) -> None:
         """
         Initializes an instance of the class with necessary dependencies and configurations.
@@ -97,6 +98,8 @@ class OrchestratorCore:
         self.yamldata: ClassicScanLogsInfo = yamldata
         self.show_formid_values = show_formid_values
         self.formid_db_exists = formid_db_exists
+        self.remove_list = remove_list or yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
+        self.simplify_logs = classic_settings(bool, "Simplify Logs")
 
         # Initialize all modules (using refactored versions where available)
         self.plugin_analyzer = PluginAnalyzer(yamldata)
@@ -167,9 +170,9 @@ class OrchestratorCore:
         """
         Fragment-based async implementation for processing a crash log file.
 
-        Uses direct file I/O with Python's native Path.read_text() for optimal
-        performance on small crash log files (typically <100KB). Performance analysis
-        shows this is faster than async file I/O for small files due to lower overhead.
+        Uses async file I/O to allow parallel processing of multiple crash logs.
+        When Rust acceleration is available, this uses RustFileIOCore for 10x speedup.
+        Otherwise falls back to Python aiofiles for proper async concurrency.
 
         Args:
             crashlog_file: Path to the crash log file to be processed
@@ -184,10 +187,13 @@ class OrchestratorCore:
         trigger_scan_failed = False
         local_stats: Counter[str] = Counter(scanned=1, incomplete=0, failed=0)
 
-        # Read crash data directly from file using native Python I/O
-        # This is faster than async I/O for small files due to lower overhead
-        content = crashlog_file.read_text(encoding='utf-8', errors='ignore')
-        crash_data: list[str] = content.splitlines()
+        # Read and reformat crash data inline (no blocking preload)
+        # When Rust is enabled, this allows concurrent processing of multiple logs
+        io_core = get_file_io()
+        content = await io_core.read_file(crashlog_file)
+
+        # Reformat inline as part of processing pipeline
+        crash_data = self._reformat_crash_data_inline(content.splitlines())
 
         # Create report composer
         composer = ReportComposer()
@@ -680,6 +686,55 @@ class OrchestratorCore:
         plugins_loaded = bool(loadorder_plugins)
 
         return loadorder_plugins, plugins_loaded, ReportFragment.from_lines(lines)
+
+    def _reformat_crash_data_inline(self, lines: list[str]) -> list[str]:
+        """
+        Reformat crash log data inline as part of processing pipeline.
+
+        This eliminates the need for blocking preload/reformat before scanning starts.
+        Each log is reformatted only when it's being processed, allowing parallel processing.
+
+        Args:
+            lines: Original crash log lines
+
+        Returns:
+            Reformatted lines ready for parsing
+        """
+        processed_lines_reversed: list[str] = []
+        in_plugins_section = True  # State for tracking if currently in the PLUGINS section
+
+        # Iterate over lines from bottom to top to correctly handle PLUGINS section logic
+        for line in reversed(lines):
+            if in_plugins_section and line.startswith("PLUGINS:"):
+                in_plugins_section = False  # Exited the PLUGINS section (from bottom)
+
+            # Condition for removing lines if Simplify Logs is enabled
+            if self.simplify_logs and any(string in line for string in self.remove_list):
+                # Skip this line by not adding it to processed_lines_reversed
+                continue
+
+            # Condition for reformatting lines within the PLUGINS section
+            if in_plugins_section and "[" in line:
+                # Replace all spaces inside the load order [brackets] with 0s.
+                # This maintains consistency between different versions of Buffout 4.
+                try:
+                    indent, rest = line.split("[", 1)
+                    fid, name = rest.split("]", 1)
+                    # Only modify if spaces exist
+                    if " " in fid:
+                        modified_line: str = f"{indent}[{fid.replace(' ', '0')}]{name}"
+                        processed_lines_reversed.append(modified_line)
+                    else:
+                        processed_lines_reversed.append(line)
+                except ValueError:
+                    # If line format is unexpected, keep original line
+                    processed_lines_reversed.append(line)
+            else:
+                # Line is not removed or modified, keep as is
+                processed_lines_reversed.append(line)
+
+        # The processed_lines_reversed list is in reverse order, so reverse it back
+        return list(reversed(processed_lines_reversed))
 
     @staticmethod
     def _parse_crashgen_settings(segment_crashgen: list[str]) -> dict[str, bool | int | str]:
