@@ -15,7 +15,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # PyO3 for Python bindings - using abi3-py312 for Python 3.12+ compatibility
-pyo3 = { workspace=true,  version = "0.26.0", features = ["extension-module", "abi3-py312"] }
+pyo3 = { version = "0.26.0", features = ["extension-module", "abi3-py312"] }
 
 # Async runtime (used internally in Rust, not exposed to Python)
 tokio = { version = "1.41", features = ["full"] }

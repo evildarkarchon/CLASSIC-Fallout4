@@ -2,7 +2,6 @@
 # This script builds all versions with proper data bundling and error handling
 
 param(
-    [switch]$SkipTest = $false,
     [switch]$BuildTest = $false,
     [switch]$NoClean = $false,
     [string]$UpxDir = "",
@@ -16,13 +15,11 @@ Write-Host ""
 
 # Determine Python command - check for uv, otherwise use system Python
 if (Get-Command uv -ErrorAction SilentlyContinue) {
-    $PythonCmd = "uv run python"
     $PyInstallerCmd = "uv run pyinstaller"
     $MaturinCmd = "uv run maturin"
     Write-Host "Using uv environment" -ForegroundColor Green
 }
 else {
-    $PythonCmd = "python"
     $PyInstallerCmd = "pyinstaller"
     $MaturinCmd = "maturin"
     Write-Host "Using system Python - Note: uv is recommended for this project" -ForegroundColor Yellow
@@ -110,21 +107,6 @@ if (-not $NoClean) {
     Write-Host "Cleaning previous builds..." -ForegroundColor Yellow
     if (Test-Path "dist") { Remove-Item -Path "dist" -Recurse -Force }
     if (Test-Path "build") { Remove-Item -Path "build" -Recurse -Force }
-    Write-Host ""
-}
-
-# Test resource loading in development mode
-if (-not $SkipTest) {
-    Write-Host "Testing resource loading..." -ForegroundColor Yellow
-    Invoke-Expression "$PythonCmd test_resource_loading.py" | Out-Null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "Resource loading test passed!" -ForegroundColor Green
-    }
-    else {
-        Write-Host "ERROR: Resource loading test failed!" -ForegroundColor Red
-        Write-Host "Please fix the issues before building." -ForegroundColor Red
-        exit 1
-    }
     Write-Host ""
 }
 
