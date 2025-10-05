@@ -1,11 +1,10 @@
 # PowerShell build script for CLASSIC-Fallout4 PyInstaller executables
 # This script builds all versions with proper data bundling and error handling
+# Note: UPX compression is disabled to avoid antivirus false positives
 
 param(
     [switch]$BuildTest = $false,
-    [switch]$NoClean = $false,
-    [string]$UpxDir = "",
-    [switch]$NoUpx = $false
+    [switch]$NoClean = $false
 )
 
 Write-Host "============================================================" -ForegroundColor Cyan
@@ -120,15 +119,8 @@ if (-not $NoClean) {
     Write-Host ""
 }
 
-# Prepare PyInstaller arguments
+# Prepare PyInstaller arguments (UPX disabled in spec files)
 $PyInstallerArgs = @("--clean")
-if ($NoUpx) {
-    Write-Host "Building without UPX compression" -ForegroundColor Yellow
-}
-elseif ($UpxDir) {
-    $PyInstallerArgs += "--upx-dir", $UpxDir
-    Write-Host "Using UPX from: $UpxDir" -ForegroundColor Green
-}
 
 # Function to build a spec file
 function Build-Spec {

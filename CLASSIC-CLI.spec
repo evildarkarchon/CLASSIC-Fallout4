@@ -141,11 +141,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    upx_exclude=[
-        '*.pyd',  # Python extension modules
-        'python*.dll',  # Python DLL
-    ],
+    upx=False,  # Disabled to avoid antivirus false positives
     runtime_tmpdir=None,
     console=True,  # CLI application needs console
     disable_windowed_traceback=False,

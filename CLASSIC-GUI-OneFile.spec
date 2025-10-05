@@ -7,9 +7,6 @@ The exe extracts to a temporary directory when run.
 
 Build with:
     uv run pyinstaller --clean CLASSIC-GUI-OneFile.spec
-
-Or with UPX compression:
-    uv run pyinstaller --clean --upx-dir "C:\\Path\\to\\UPX" CLASSIC-GUI-OneFile.spec
 """
 
 from pathlib import Path
@@ -182,17 +179,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,  # Enable UPX compression
-    upx_exclude=[
-        # Don't compress these files as it may cause issues
-        "vcruntime*.dll",
-        "ucrtbase.dll",
-        "api-ms-*.dll",
-        "python*.dll",
-        "Qt*.dll",
-        "qwindows.dll",
-        "qwindowsvistastyle.dll",
-    ],
+    upx=False,  # Disabled to avoid antivirus false positives
     runtime_tmpdir=None,
     console=False,  # No console window for GUI
     disable_windowed_traceback=False,

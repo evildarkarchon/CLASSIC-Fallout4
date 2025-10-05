@@ -137,7 +137,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,  # Disabled to avoid antivirus false positives
     console=False,  # GUI application, no console window
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -153,12 +153,6 @@ coll = COLLECT(
     a.binaries,
     a.datas,
     strip=False,
-    upx=True,
-    upx_exclude=[
-        # Exclude files that shouldn't be compressed with UPX
-        '*.pyd',  # Python extension modules
-        'Qt*.dll',  # Qt libraries
-        'qwindows.dll',  # Qt platform plugin
-    ],
+    upx=False,  # Disabled to avoid antivirus false positives
     name='CLASSIC',
 )
