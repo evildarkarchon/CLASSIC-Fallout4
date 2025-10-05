@@ -42,11 +42,12 @@ def create_crashlog_file(tmp_path: Path, sample_crashlog: str) -> Path:
 
 
 @pytest.mark.unit
+@pytest.mark.asyncio
 class TestCrashLogProcessingUnit:
     """Unit tests for crash log processing."""
 
-    def test_process_crashlog_unit(self, create_crashlog_file: Path, message_handler, async_bridge) -> None:
-        """Test the full process_crashlog function with minimal mocking."""
+    async def test_process_crashlog_unit(self, create_crashlog_file: Path, message_handler) -> None:
+        """Test the full process_crashlog function with minimal mocking - Phase 5: Native async."""
         crash_file: Path = create_crashlog_file
         with patch('ClassicLib.YamlSettingsCache.yaml_settings') as mock_yaml, patch('ClassicLib.YamlSettingsCache.classic_settings') as mock_classic, patch('ClassicLib.ScanLog.Util.crashlogs_get_files') as mock_get_files, patch('ClassicLib.ScanLog.Util.crashlogs_reformat'):
 
@@ -75,15 +76,12 @@ class TestCrashLogProcessingUnit:
             # OrchestratorCore no longer requires crashlogs parameter
             try:
                 scanner: ClassicScanLogs = ClassicScanLogs()
-                from ClassicLib.AsyncBridge import AsyncBridge
                 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
-                async def process_with_orchestrator():
-                    async with OrchestratorCore(scanner.yamldata, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
-                        return await scanner.process_crashlog_async(crash_file, orchestrator)
+                # Phase 5: Use native async instead of AsyncBridge
+                async with OrchestratorCore(scanner.yamldata, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
+                    result: tuple[Path, list[str], bool, Any] = await scanner.process_crashlog_async(crash_file, orchestrator)
 
-                bridge = AsyncBridge.get_instance()
-                result: tuple[Path, list[str], bool, Any] = bridge.run_async(process_with_orchestrator())
                 assert result is not None
                 assert len(result) == 4
                 assert result[0] == crash_file

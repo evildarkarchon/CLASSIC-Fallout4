@@ -1,25 +1,26 @@
-"""Game integrity and mod scanning CLI entry point for CLASSIC.
+"""Game integrity and mod scanning shared interface for CLASSIC.
 
-This module provides the main entry point for game file integrity checks and mod scanning
-operations. It serves as a high-level interface that delegates to the ScanGameCore and
-related modules while maintaining backward compatibility with existing code.
+This module provides sync wrappers for game file integrity checks and mod scanning
+operations. It serves as a shared interface used by GUI workers, TUI, and scanning contexts.
 
 Main functionality:
 - Game file integrity checking and management (backup, restore, remove)
 - Mod scanning for both unpacked and archived mods
 - Combined result generation for comprehensive reports
-- Synchronous adapters for async operations using AsyncBridge
-- CLI entry point for standalone game scanning operations
+- Phase 2 context-aware sync wrappers (work in GUI, error in CLI/TUI)
 
-The module follows the async-first orchestrator pattern by delegating core functionality
-to ScanGameCore while providing sync wrappers for CLI usage.
+IMPORTANT: These are GUI-compatible sync wrappers. For pure async contexts:
+- Use ScanGameCore directly with await
+- TUI/CLI should use async methods, not these wrappers
+
+Phase 4: Refactored to use create_sync_wrapper() for context awareness.
 """
 
 from pathlib import Path
 from typing import Literal
 
 from ClassicLib import msg_info
-from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.ScanGame import (
     generate_game_combined_result,
     generate_mods_combined_result,
@@ -32,7 +33,7 @@ from ClassicLib.SetupCoordinator import SetupCoordinator
 
 
 # ================================================
-# DELEGATE FUNCTIONS TO SCANGAMECORE
+# SCANGAMECORE SINGLETON ACCESS
 # ================================================
 def get_scan_game_core() -> ScanGameCore:
     """Get singleton ScanGameCore instance from GlobalRegistry.
@@ -44,19 +45,16 @@ def get_scan_game_core() -> ScanGameCore:
     return ScanGameCore()
 
 
-# Backwards compatibility functions for existing code
-def check_log_errors(folder_path: Path | str) -> str:
-    """Sync adapter for async check_log_errors.
+# Get core instance for wrapper creation
+_scan_game_core = get_scan_game_core()
 
-    Args:
-        folder_path: Path to the folder containing log files to check for errors.
+# ================================================
+# PHASE 2 CONTEXT-AWARE SYNC WRAPPERS
+# ================================================
+# Created once at module load, reused for all calls
+# Work in GUI mode, error in CLI/TUI mode
 
-    Returns:
-        str: Results of the log error checking operation as a formatted string.
-    """
-    bridge: AsyncBridge = AsyncBridge.get_instance()
-    core: ScanGameCore = get_scan_game_core()
-    return bridge.run_async(core.check_log_errors(folder_path))
+check_log_errors = create_sync_wrapper(_scan_game_core.check_log_errors)
 
 
 def get_scan_settings() -> tuple[str, dict[str, str], Path | None]:
@@ -87,26 +85,8 @@ def get_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:
     return core.get_issue_messages(xse_acronym, mode)
 
 
-def scan_mods_unpacked() -> str:
-    """Sync adapter for async scan_mods_unpacked.
-
-    Returns:
-        str: Results of the unpacked mods scanning operation as a formatted string.
-    """
-    bridge: AsyncBridge = AsyncBridge.get_instance()
-    core: ScanGameCore = get_scan_game_core()
-    return bridge.run_async(core.scan_mods_unpacked())
-
-
-def scan_mods_archived() -> str:
-    """Sync adapter for async scan_mods_archived.
-
-    Returns:
-        str: Results of the archived mods scanning operation as a formatted string.
-    """
-    bridge: AsyncBridge = AsyncBridge.get_instance()
-    core: ScanGameCore = get_scan_game_core()
-    return bridge.run_async(core.scan_mods_archived())
+scan_mods_unpacked = create_sync_wrapper(_scan_game_core.scan_mods_unpacked)
+scan_mods_archived = create_sync_wrapper(_scan_game_core.scan_mods_archived)
 
 
 # ================================================

@@ -207,6 +207,11 @@ See `docs/` for detailed guides on:
    - Python: Never use deprecated APIs, update immediately
    - Rust: Never use deprecated PyO3/crate APIs, fix warnings immediately
    - Zero tolerance for deprecation warnings in CI/CD
+8. **API Stability Rules** - Production code maintains backward compatibility
+   - Tests are exempt from API stability (always use current APIs)
+   - Deprecated code ONLY used in tests or `__init__.py` can be deleted
+   - If code is marked deprecated AND has no production usage → DELETE IT
+   - Update tests to use current APIs when deleting deprecated code
 
 ### Common Anti-Patterns to Avoid
 - ❌ `asyncio.run()` in sync → ✅ `AsyncBridge.run_async()`

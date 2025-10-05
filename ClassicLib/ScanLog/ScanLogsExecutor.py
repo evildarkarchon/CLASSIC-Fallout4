@@ -12,7 +12,7 @@ from collections import Counter
 from pathlib import Path
 
 from ClassicLib import GlobalRegistry, MessageTarget, msg_info, msg_progress_context
-from ClassicLib.AsyncBridge import run_async
+from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
@@ -275,13 +275,22 @@ class ScanLogsExecutor:
 
     def scan_sync(self) -> ScanResult:
         """
-        Executes a synchronous scan by running the associated asynchronous scan
-        function and collecting the results.
+        Executes a synchronous scan - Phase 2 Context-Aware.
+
+        Works in GUI mode (Qt workers), errors in CLI mode.
+        For CLI/TUI, use: await executor.scan() or await executor.execute_scan()
+
+        NOTE: Wrapper is created on each call for instance method binding.
 
         Returns:
             ScanResult: The result of the executed scan.
+
+        Raises:
+            RuntimeError: If called in CLI/TUI mode (use async methods)
         """
-        return run_async(self.execute_scan())
+        # Create wrapper per call for proper instance method binding
+        wrapper = create_sync_wrapper(self.execute_scan)
+        return wrapper()
 
 
 # Backward compatibility alias

@@ -1,0 +1,64 @@
+# Minimal workspace Cargo.toml for maturin compatibility
+# The actual Rust code is in classic-rust/
+
+[workspace]
+members = ["classic-rust"]
+resolver = "2"
+
+# Workspace-wide lint configuration
+[workspace.lints.rust]
+deprecated = "deny"
+
+# This is just a shim to make maturin happy
+# All actual configuration is in classic-rust/Cargo.toml
+[package]
+name = "classic-workspace"
+version = "8.0.0"
+edition = "2021"
+publish = false
+
+# Empty library - actual code is in classic-rust/
+[lib]
+path = "classic-rust/src/lib.rs"
+name = "classic_core"
+crate-type = ["cdylib", "rlib"]
+
+# Re-export all dependencies from classic-rust
+[dependencies]
+pyo3 = { version = "0.26.0", features = ["extension-module", "abi3-py312"] }
+tokio = { version = "1.41", features = ["full"] }
+futures = "0.3"
+regex = "1.11"
+memchr = "2.7"
+aho-corasick = "1.1"
+rayon = "1.10"
+crossbeam = "0.8"
+rusqlite = { version = "0.37.0", features = ["bundled", "backup"] }
+encoding_rs = "0.8"
+memmap2 = "0.9"
+walkdir = "2.5"
+ddsfile = "0.5"
+anyhow = "1.0"
+thiserror = "2.0"
+once_cell = "1.20"
+dashmap = "6.1"
+lru = "0.16.1"
+linked-hash-map = "0.5"
+parking_lot = "0.12"
+string_cache = "0.9.0"
+smartstring = "1.0"
+log = "0.4"
+env_logger = "0.11"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+yaml-rust2 = "0.10.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = false
+debug = 1
+
+[profile.bench]
+inherits = "release"

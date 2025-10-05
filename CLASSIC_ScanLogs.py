@@ -4,8 +4,14 @@ CLASSIC ScanLogs CLI interface.
 This module provides a command-line interface for CLASSIC crash log scanning.
 It has been refactored to use the new modular architecture while maintaining
 backward compatibility.
+
+Phase 4: Async-First CLI Entry Point
+-------------------------------------
+This CLI uses native async patterns (like TUI) instead of AsyncBridge.
+The main() function is async and uses asyncio.run() only at the entry point.
 """
 
+import asyncio
 import os
 import sys
 import warnings
@@ -243,8 +249,13 @@ def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
     return config
 
 
-def main() -> None:
-    """Main CLI entry point."""
+async def main() -> None:
+    """
+    Main CLI entry point - Async-First (Phase 4).
+
+    This function is async and uses native await instead of AsyncBridge,
+    matching the TUI pattern. asyncio.run() is only used at the entry point.
+    """
     # Ensure UTF-8 encoding for Windows console
     from ClassicLib.MessageHandler import msg_info
 
@@ -267,9 +278,9 @@ def main() -> None:
     args: Namespace = parse_arguments()
     config: ScanConfig = create_config_from_args(args)
 
-    # Create executor and run scan
+    # Create executor and run scan using native async
     executor = ScanLogsExecutor(config)
-    result: ScanResult = executor.scan_sync()
+    result: ScanResult = await executor.scan()  # ✅ Direct async, no AsyncBridge
 
     # Display results summary
     msg_info(executor.generate_summary(result))
@@ -277,8 +288,9 @@ def main() -> None:
     # Ensure all output is flushed before pause
     sys.stdout.flush()
     sys.stderr.flush()
-    os.system("pause")
+    os.system("pause")  # Sync call in async context is fine
 
 
 if __name__ == "__main__":
-    main()
+    # Single asyncio.run() at entry point only
+    asyncio.run(main())

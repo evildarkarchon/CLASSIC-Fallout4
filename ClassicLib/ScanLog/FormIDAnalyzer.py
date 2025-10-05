@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ClassicLib.AsyncBridge import run_async
+from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 if TYPE_CHECKING:
@@ -96,11 +96,14 @@ class FormIDAnalyzer:
 
     def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> ReportFragment:
         """
-        Sync adapter for FormID matching.
+        Sync adapter for FormID matching - Phase 2 Context-Aware.
 
         Processes and returns a report fragment based on Form ID matches retrieved from crash logs.
         This method analyzes Form ID matches, compares them with plugins listed in the crash log,
         and optionally retrieves additional data from a Form ID database.
+
+        DEPRECATED: Use FormIDAnalyzerCore directly in async contexts.
+        This sync wrapper only works in GUI mode and will error in CLI/TUI mode.
 
         Args:
             formids_matches: A list of Form ID matches extracted from the crash log.
@@ -108,15 +111,22 @@ class FormIDAnalyzer:
 
         Returns:
             ReportFragment containing the FormID analysis results.
+
+        Raises:
+            RuntimeError: If called in CLI/TUI mode (use FormIDAnalyzerCore instead)
         """
-        # Run async method using AsyncBridge
-        return run_async(self._core.formid_match(formids_matches, crashlog_plugins))
+        # Use Phase 2 wrapper - errors in CLI/TUI, works in GUI
+        wrapper = create_sync_wrapper(self._core.formid_match)
+        return wrapper(formids_matches, crashlog_plugins)
 
     def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
         """
-        Sync adapter for FormID value lookup.
+        Sync adapter for FormID value lookup - Phase 2 Context-Aware.
 
         Look up the value associated with a given form ID and plugin in the database.
+
+        DEPRECATED: Use FormIDAnalyzerCore directly in async contexts.
+        This sync wrapper only works in GUI mode and will error in CLI/TUI mode.
 
         Args:
             formid: A string representing the form ID to look up.
@@ -126,6 +136,10 @@ class FormIDAnalyzer:
             A string containing the value associated with the form ID and plugin if
             found in the database, or None if the database does not exist or the
             value is not found.
+
+        Raises:
+            RuntimeError: If called in CLI/TUI mode (use FormIDAnalyzerCore instead)
         """
-        # Run async method using AsyncBridge
-        return run_async(self._core.lookup_formid_value(formid, plugin))
+        # Use Phase 2 wrapper - errors in CLI/TUI, works in GUI
+        wrapper = create_sync_wrapper(self._core.lookup_formid_value)
+        return wrapper(formid, plugin)

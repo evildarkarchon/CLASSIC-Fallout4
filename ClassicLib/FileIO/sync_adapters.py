@@ -1,61 +1,35 @@
-"""Synchronous adapter functions for backwards compatibility."""
+"""
+Synchronous adapter functions for FileIOCore - Phase 2 Context-Aware.
+
+These adapters use Phase 2 utilities to automatically error in CLI/TUI mode
+(where async should be used) while working in GUI mode via AsyncBridge.
+
+IMPORTANT: These are for GUI mode ONLY. In CLI/TUI, use FileIOCore async methods directly:
+    # GUI mode (works)
+    content = read_file_sync(path)
+
+    # CLI/TUI mode (use this instead)
+    io_core = FileIOCore()
+    content = await io_core.read_file(path)
+"""
 
 from pathlib import Path
 
-from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.AsyncBridge import create_sync_wrapper
 
 from .core import FileIOCore
 
+# Create a shared FileIOCore instance for sync adapters
+_io_core = FileIOCore()
 
-def read_file_sync(path: Path | str) -> str:
-    """Sync adapter for reading file contents."""
-    bridge = AsyncBridge.get_instance()
-    return bridge.run_async(FileIOCore().read_file(path))
-
-
-def read_lines_sync(path: Path | str) -> list[str]:
-    """Sync adapter for reading file lines."""
-    bridge = AsyncBridge.get_instance()
-    return bridge.run_async(FileIOCore().read_lines(path))
-
-
-def read_bytes_sync(path: Path | str) -> bytes:
-    """Sync adapter for reading file bytes."""
-    bridge = AsyncBridge.get_instance()
-    return bridge.run_async(FileIOCore().read_bytes(path))
-
-
-def write_file_sync(path: Path | str, content: str) -> None:
-    """Sync adapter for writing file contents."""
-    bridge = AsyncBridge.get_instance()
-    bridge.run_async(FileIOCore().write_file(path, content))
-
-
-def write_lines_sync(path: Path | str, lines: list[str]) -> None:
-    """Sync adapter for writing file lines."""
-    bridge = AsyncBridge.get_instance()
-    bridge.run_async(FileIOCore().write_lines(path, lines))
-
-
-def write_bytes_sync(path: Path | str, content: bytes) -> None:
-    """Sync adapter for writing file bytes."""
-    bridge = AsyncBridge.get_instance()
-    bridge.run_async(FileIOCore().write_bytes(path, content))
-
-
-def read_crash_log_sync(path: Path | str) -> list[str]:
-    """Sync adapter for reading crash logs."""
-    bridge = AsyncBridge.get_instance()
-    return bridge.run_async(FileIOCore().read_crash_log(path))
-
-
-def write_crash_report_sync(path: Path | str, report_lines: list[str]) -> None:
-    """Sync adapter for writing crash reports."""
-    bridge = AsyncBridge.get_instance()
-    bridge.run_async(FileIOCore().write_crash_report(path, report_lines))
-
-
-def append_file_sync(path: Path | str, content: str) -> None:
-    """Sync adapter for appending to files."""
-    bridge = AsyncBridge.get_instance()
-    bridge.run_async(FileIOCore().append_file(path, content))
+# Phase 2 Context-Aware Sync Adapters
+# These error in CLI/TUI mode, work in GUI mode
+read_file_sync = create_sync_wrapper(_io_core.read_file)
+read_lines_sync = create_sync_wrapper(_io_core.read_lines)
+read_bytes_sync = create_sync_wrapper(_io_core.read_bytes)
+write_file_sync = create_sync_wrapper(_io_core.write_file)
+write_lines_sync = create_sync_wrapper(_io_core.write_lines)
+write_bytes_sync = create_sync_wrapper(_io_core.write_bytes)
+read_crash_log_sync = create_sync_wrapper(_io_core.read_crash_log)
+write_crash_report_sync = create_sync_wrapper(_io_core.write_crash_report)
+append_file_sync = create_sync_wrapper(_io_core.append_file)

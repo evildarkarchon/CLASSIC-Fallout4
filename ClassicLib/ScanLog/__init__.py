@@ -38,7 +38,8 @@ from ClassicLib.ScanLog.ScanLogsUtils import (
     write_report_to_file,
     write_report_to_file_async,
 )
-from ClassicLib.ScanLog.ScanOrchestrator import ScanOrchestrator
+# ScanOrchestrator removed - deprecated, no production usage
+# Use OrchestratorCore directly for async operations
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments as SettingsScanner
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
 
@@ -85,7 +86,7 @@ __all__ = [
     "PluginAnalyzer",
     "RecordScanner",
     "ReportGenerator",
-    "ScanOrchestrator",
+    # "ScanOrchestrator" - REMOVED: deprecated, use OrchestratorCore
     "SettingsScanner",
     "SuspectScanner",
     # Detection functions

@@ -30,11 +30,12 @@ PROBABLE CALL STACK:
 """
 
 @pytest.mark.integration
+@pytest.mark.asyncio
 class TestCrashLogProcessingIntegration:
     """Integration tests for crash log processing."""
 
-    def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str, message_handler, async_bridge) -> None:
-        """Test the entire crash log scanning process."""
+    async def test_end_to_end_scan_logs(self, tmp_path: Path, sample_crashlog: str, message_handler) -> None:
+        """Test the entire crash log scanning process - Phase 5: Native async."""
         crash_dir: Path = tmp_path / 'Crash Logs'
         crash_dir.mkdir(exist_ok=True)
         crash_log_files: list[Any] = []
@@ -73,17 +74,14 @@ class TestCrashLogProcessingIntegration:
                 # The scanner's crashlog_list should use our mocked files
                 scanner.crashlog_list = crash_log_files
                 results: list[Any] = []
+
+                # Phase 5: Use native async instead of AsyncBridge
+                from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
                 for crash_file in scanner.crashlog_list:
-                    from ClassicLib.AsyncBridge import AsyncBridge
-                    from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+                    async with OrchestratorCore(scanner.yamldata, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
+                        crashlog_file, autoscan_report, trigger_scan_failed, local_stats = await scanner.process_crashlog_async(crash_file, orchestrator)
+                        results.append(autoscan_report)
 
-                    async def process_with_orchestrator():
-                        async with OrchestratorCore(scanner.yamldata, scanner.fcx_mode, scanner.show_formid_values, scanner.formid_db_exists) as orchestrator:
-                            return await scanner.process_crashlog_async(crash_file, orchestrator)
-
-                    bridge = AsyncBridge.get_instance()
-                    crashlog_file, autoscan_report, trigger_scan_failed, local_stats = bridge.run_async(process_with_orchestrator())
-                    results.append(autoscan_report)
                 assert scanner.crashlog_list is not None
                 assert len(scanner.crashlog_list) == 3
                 assert len(results) == 3
