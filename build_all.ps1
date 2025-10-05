@@ -32,9 +32,11 @@ if (Test-Path "classic-rust") {
     Write-Host "Building Rust extensions..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
 
-    # Build the Rust extension
+    # Build the Rust extension from classic-rust directory
     Write-Host "Building release build with maturin..." -ForegroundColor Yellow
-    Invoke-Expression "$MaturinCmd build --release --out dist-rust 2>&1" | Out-Null
+    Push-Location classic-rust
+    Invoke-Expression "$MaturinCmd build --release --out ../dist-rust 2>&1" | Out-Null
+    Pop-Location
 
     if ($LASTEXITCODE -eq 0) {
         # Extract the built extension from wheel

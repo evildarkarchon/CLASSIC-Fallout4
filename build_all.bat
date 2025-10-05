@@ -29,9 +29,11 @@ if exist classic-rust (
     echo Building Rust extensions...
     echo ============================================================
 
-    REM Build the Rust extension
+    REM Build the Rust extension from classic-rust directory
     echo Building release build with maturin...
-    %MATURIN_CMD% build --release --out dist-rust
+    cd classic-rust
+    %MATURIN_CMD% build --release --out ..\dist-rust
+    cd ..
     if %errorlevel% neq 0 (
         echo WARNING: Rust extension build failed!
         echo Continuing without Rust optimizations...
