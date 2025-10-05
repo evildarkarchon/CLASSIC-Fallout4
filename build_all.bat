@@ -38,15 +38,21 @@ if exist classic-rust (
         echo WARNING: Rust extension build failed!
         echo Continuing without Rust optimizations...
     ) else (
-        REM Extract the built extension from wheel
+        REM Extract the entire classic_core package from wheel
         echo Extracting Rust extension from wheel...
-        if not exist classic_core mkdir classic_core
 
-        REM Use Python to extract the .pyd file from the wheel
-        %PYTHON_CMD% -c "import zipfile, glob, shutil; wheel = glob.glob('dist-rust/*.whl')[0]; z = zipfile.ZipFile(wheel); [z.extract(f, 'temp_extract') for f in z.namelist() if f.endswith('.pyd')]; [shutil.copy2(f'temp_extract/{f}', 'classic_core/') for f in z.namelist() if f.endswith('.pyd')]"
+        REM Remove old classic_core if it exists
+        if exist classic_core rmdir /s /q classic_core
+
+        REM Use Python to extract the entire classic_core directory from the wheel
+        %PYTHON_CMD% -c "import zipfile, glob, shutil, os; wheel = glob.glob('dist-rust/*.whl')[0]; z = zipfile.ZipFile(wheel); members = [f for f in z.namelist() if f.startswith('classic_core/')]; z.extractall('temp_extract', members); shutil.copytree('temp_extract/classic_core', 'classic_core', dirs_exist_ok=True)"
 
         REM Clean up
         if exist temp_extract rmdir /s /q temp_extract
+
+        REM Show what was extracted
+        echo Extracted classic_core package with:
+        dir /b classic_core\*.*
 
         REM Create manifest file
         echo Rust extensions built on %date% %time% > classic_core\MANIFEST.txt

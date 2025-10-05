@@ -124,3 +124,6 @@ test_patterns_bench_output.txt
 check_yaml_rust2.txt
 check_output.txt
 build_output.txt
+build_all.ps1
+*.egg-info
+MANIFEST.txt

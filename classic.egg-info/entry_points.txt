@@ -1,6 +1,0 @@
-[console_scripts]
-classic = classic.gui:main
-classic-cli = classic.cli:main
-classic-gui = classic.gui:main
-classic-scan = classic.scan:main
-classic-tui = classic.tui:main

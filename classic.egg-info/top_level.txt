@@ -1,6 +1,0 @@
-CLASSIC_Interface
-CLASSIC_ScanGame
-CLASSIC_ScanLogs
-CLASSIC_TUI
-ClassicLib
-classic

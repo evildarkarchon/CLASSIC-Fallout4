@@ -45,7 +45,7 @@ if (Test-Path "classic-rust") {
             New-Item -ItemType Directory -Path "classic_core" | Out-Null
         }
 
-        # Extract .pyd file from wheel using native PowerShell
+        # Extract classic_core package from wheel using native PowerShell
         $wheel = Get-ChildItem -Path "dist-rust\*.whl" | Select-Object -First 1
         if ($wheel) {
             $tempDir = "temp_extract"
@@ -53,14 +53,22 @@ if (Test-Path "classic-rust") {
             # Extract wheel (it's just a zip file)
             Expand-Archive -Path $wheel.FullName -DestinationPath $tempDir -Force
 
-            # Find and copy the .pyd file
-            $pydFile = Get-ChildItem -Path $tempDir -Filter "classic_core*.pyd" -Recurse | Select-Object -First 1
-            if ($pydFile) {
-                Copy-Item -Path $pydFile.FullName -Destination "classic_core\$($pydFile.Name)" -Force
-                Write-Host "Extracted: $($pydFile.Name)" -ForegroundColor Green
+            # Find and copy the entire classic_core directory
+            $coreDir = Get-ChildItem -Path $tempDir -Directory -Filter "classic_core" -Recurse | Select-Object -First 1
+            if ($coreDir) {
+                # Remove old classic_core if it exists
+                if (Test-Path "classic_core") {
+                    Remove-Item -Path "classic_core" -Recurse -Force
+                }
+                # Copy the entire directory
+                Copy-Item -Path $coreDir.FullName -Destination "classic_core" -Recurse -Force
+                Write-Host "Extracted classic_core package with:" -ForegroundColor Green
+                Get-ChildItem -Path "classic_core" -File | ForEach-Object {
+                    Write-Host "  - $($_.Name)" -ForegroundColor White
+                }
             }
             else {
-                Write-Host "WARNING: No .pyd file found in wheel!" -ForegroundColor Red
+                Write-Host "WARNING: classic_core directory not found in wheel!" -ForegroundColor Red
             }
 
             # Clean up temp directory
