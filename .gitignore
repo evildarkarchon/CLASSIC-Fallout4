@@ -80,7 +80,6 @@ performance_baselines/*.json
 *.7z
 Archive/
 Release/
-Crash Logs/
 compile.py
 /package-lock.json
 /Examples/
