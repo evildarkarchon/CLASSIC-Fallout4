@@ -10,6 +10,8 @@ It also provides integration with Rust extensions through the rust_loader module
 
 import os
 import sys
+from importlib.metadata import PackageNotFoundError, distribution
+from importlib.resources import files
 from pathlib import Path
 
 from ClassicLib import GlobalRegistry
@@ -73,27 +75,24 @@ class ResourceLoader:
             if package_data:
                 return package_data
 
-            # Check if it's in the egg/wheel and extract if needed
-            return ResourceLoader._extract_from_wheel()
+            # Check if it's in the package resources and extract if needed
+            return ResourceLoader._extract_from_package()
 
-        except ImportError:
-            logger.debug("pkg_resources not available")
+        except (ImportError, PackageNotFoundError):
+            logger.debug("Package distribution not available")
             return None
 
     @staticmethod
     def _get_distribution() -> object | None:
         """Get the package distribution object."""
-        import pkg_resources
-
         try:
             # Try both naming conventions
             for package_name in ["classic-fallout4", "classic_fallout4", "classic"]:
                 try:
-                    dist = pkg_resources.get_distribution(package_name)
-                    if dist.location is not None:
-                        return dist
-                    logger.debug("Package distribution has no location")
-                except pkg_resources.DistributionNotFound:
+                    dist = distribution(package_name)
+                    # Distribution object from importlib.metadata always has location info
+                    return dist
+                except PackageNotFoundError:
                     continue
 
             logger.debug("Package not installed via pip/setuptools")
@@ -106,34 +105,76 @@ class ResourceLoader:
     @staticmethod
     def _check_package_location(dist) -> Path | None:  # noqa: ANN001
         """Check for CLASSIC Data in package location."""
-        package_location = Path(dist.location)
-        data_dir = package_location / "CLASSIC Data"
-        if data_dir.exists():
-            logger.debug(f"Using CLASSIC Data from package location: {data_dir}")
-            return data_dir
+        try:
+            # Get location from the distribution metadata
+            # For wheel/installed packages, check the site-packages location
+            if hasattr(dist, '_path') and dist._path:
+                package_location = Path(dist._path).parent
+            elif hasattr(dist, 'locate_file'):
+                # Alternative method for some distributions
+                package_location = Path(str(dist.locate_file('')))
+            else:
+                # Fallback: try to find via files() API
+                try:
+                    pkg_files = files('classic')
+                    if pkg_files:
+                        package_location = Path(str(pkg_files)).parent
+                    else:
+                        return None
+                except Exception:
+                    return None
+
+            data_dir = package_location / "CLASSIC Data"
+            if data_dir.exists():
+                logger.debug(f"Using CLASSIC Data from package location: {data_dir}")
+                return data_dir
+        except Exception as e:
+            logger.debug(f"Error checking package location: {e}")
         return None
 
     @staticmethod
-    def _extract_from_wheel() -> Path | None:
-        """Extract CLASSIC Data from egg/wheel if needed."""
-        import pkg_resources
+    def _extract_from_package() -> Path | None:
+        """Extract CLASSIC Data from package resources if needed."""
+        try:
+            # Try to get package files - works for installed packages
+            # Try different package name variations
+            package_files = None
+            for pkg_name in ["ClassicLib", "classic"]:
+                try:
+                    package_files = files(pkg_name)
+                    if package_files:
+                        break
+                except (ModuleNotFoundError, TypeError):
+                    continue
 
-        if not pkg_resources.resource_exists("classic_fallout4", "CLASSIC Data"):
-            return None
+            if not package_files:
+                logger.debug("Package files not available via importlib.resources")
+                return None
 
-        # Extract to a stable location (not temp)
-        import appdirs
+            # Check if CLASSIC Data directory exists in package
+            try:
+                classic_data = package_files / "CLASSIC Data"
+                if not classic_data.is_dir():
+                    return None
+            except (AttributeError, TypeError):
+                return None
 
-        app_data_dir = Path(appdirs.user_data_dir("CLASSIC-Fallout4", "CLASSIC"))
-        data_dir = app_data_dir / "CLASSIC Data"
+            # Extract to a stable location (not temp)
+            import appdirs
 
-        if not data_dir.exists():
-            data_dir.mkdir(parents=True, exist_ok=True)
-            ResourceLoader._extract_bundled_data_pkg_resources(data_dir)
+            app_data_dir = Path(appdirs.user_data_dir("CLASSIC-Fallout4", "CLASSIC"))
+            data_dir = app_data_dir / "CLASSIC Data"
 
-        if data_dir.exists():
-            logger.debug(f"Using extracted CLASSIC Data: {data_dir}")
-            return data_dir
+            if not data_dir.exists():
+                data_dir.mkdir(parents=True, exist_ok=True)
+                ResourceLoader._extract_bundled_data_importlib(data_dir, package_files)
+
+            if data_dir.exists():
+                logger.debug(f"Using extracted CLASSIC Data: {data_dir}")
+                return data_dir
+        except Exception as e:
+            logger.debug(f"Could not extract from package resources: {e}")
+
         return None
 
     @staticmethod
@@ -181,11 +222,12 @@ class ResourceLoader:
         Get the path to the CLASSIC Data directory.
 
         Tries multiple strategies:
-        1. Check GlobalRegistry LOCAL_DIR
-        2. Check relative to package installation using pkg_resources
-        3. Check relative to module for source installations
-        4. Check current working directory
-        5. Create in user app data directory as last resort
+        1. Check PyInstaller frozen bundle
+        2. Check GlobalRegistry LOCAL_DIR
+        3. Check relative to package installation using importlib.metadata
+        4. Check relative to module for source installations
+        5. Check current working directory
+        6. Create in user app data directory as last resort
 
         Returns:
             Path to the CLASSIC Data directory
@@ -209,15 +251,14 @@ class ResourceLoader:
         return ResourceLoader._create_in_app_data()
 
     @staticmethod
-    def _extract_bundled_data_pkg_resources(target_dir: Path) -> None:
+    def _extract_bundled_data_importlib(target_dir: Path, package_files=None) -> None:  # noqa: ANN001
         """
-        Extract bundled data files using pkg_resources.
+        Extract bundled data files using importlib.resources.
 
         Args:
             target_dir: Directory to extract files to
+            package_files: Optional pre-loaded package files traversable
         """
-        import pkg_resources
-
         try:
             # List of essential files to extract
             essential_files = [
@@ -228,13 +269,32 @@ class ResourceLoader:
                 "databases/Fallout4 FID Mods.txt",
             ]
 
-            for file_path in essential_files:
-                resource_path = f"CLASSIC Data/{file_path}"
+            # Get package files if not provided
+            if package_files is None:
+                for pkg_name in ["ClassicLib", "classic"]:
+                    try:
+                        package_files = files(pkg_name)
+                        if package_files:
+                            break
+                    except (ModuleNotFoundError, TypeError):
+                        continue
 
+            if not package_files:
+                logger.warning("Package files not available")
+                return
+
+            for file_path in essential_files:
                 try:
-                    if pkg_resources.resource_exists("classic_fallout4", resource_path.replace("/", "/")):
+                    # Navigate to the resource using the traversable interface
+                    resource_parts = ["CLASSIC Data"] + file_path.split("/")
+                    resource = package_files
+
+                    for part in resource_parts:
+                        resource = resource / part
+
+                    if resource.is_file():
                         # Read the resource
-                        data = pkg_resources.resource_string("classic_fallout4", resource_path)
+                        data = resource.read_bytes()
 
                         # Write to target location
                         target_file = target_dir / file_path
@@ -243,6 +303,8 @@ class ResourceLoader:
                         # Write as binary to preserve exact content
                         target_file.write_bytes(data)
                         logger.debug(f"Extracted {file_path} from package")
+                    else:
+                        logger.debug(f"Resource not found: {file_path}")
 
                 except Exception as e:
                     logger.warning(f"Could not extract {file_path}: {e}")

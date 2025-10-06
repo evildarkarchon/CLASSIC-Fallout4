@@ -276,11 +276,11 @@ class ResultsViewerMixin:
         directory, a custom scan folder defined in the settings, and a backup folder for
         unsolved logs. The function also ensures that the directories are monitored by
         the file watcher for modifications. Duplicates in the list of found reports are removed,
-        and the results are sorted by their last modification time in descending order.
+        and the results are sorted by name in descending order.
 
         Returns:
             list[Path]: A sorted list of paths to all unique report files found, ordered
-            by their last modification time (newest first).
+            by name in descending order (Z to A).
         """
         reports = []
 
@@ -313,9 +313,9 @@ class ResultsViewerMixin:
             if backup_path.exists():
                 reports.extend(backup_path.glob("*-AUTOSCAN.md"))
 
-        # Remove duplicates and sort by modification time (newest first)
+        # Remove duplicates and sort by name (descending)
         unique_reports = list(set(reports))
-        unique_reports.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        unique_reports.sort(key=lambda p: p.name, reverse=True)
 
         logger.debug(f"Found {len(unique_reports)} scan reports")
         return unique_reports

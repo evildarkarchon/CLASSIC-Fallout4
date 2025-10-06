@@ -13,33 +13,21 @@ import os
 # Get the project root directory
 PROJECT_ROOT = Path(os.path.abspath(SPECPATH))
 
+# Add project root to sys.path so we can import the helper
+import sys
+sys.path.insert(0, str(PROJECT_ROOT))
+
 # Collect all PySide6 data and binaries for GUI support
 datas = []
 binaries = []
 hiddenimports = []
 
-# Bundle Rust extensions from site-packages
-# Rust modules are installed via maturin build + pip install
-import site
-site_packages = Path(site.getsitepackages()[0])
-rust_package_dir = site_packages / "classic_core"
+# Bundle Rust extensions - checks local build directory first, then site-packages
+from pyinstaller_rust_helper import find_rust_extensions
 
-if rust_package_dir.exists():
-    print(f"Bundling Rust extensions from {rust_package_dir}")
-    # Add the entire classic_core package
-    for pyd_file in rust_package_dir.glob("*.pyd"):
-        binaries.append((str(pyd_file), "classic_core"))
-        print(f"  - Adding extension: {pyd_file.name}")
-
-    # Add __init__.py
-    init_file = rust_package_dir / "__init__.py"
-    if init_file.exists():
-        datas.append((str(init_file), "classic_core"))
-else:
-    print(f"WARNING: Rust extensions not found at {rust_package_dir}")
-    print("The executable will work but without Rust performance optimizations!")
-    print("Run: maturin build --release --out classic-rust/dist")
-    print("Then: uv pip install classic-rust/dist/classic-*.whl --force-reinstall")
+rust_binaries, rust_datas, rust_found = find_rust_extensions(PROJECT_ROOT)
+binaries.extend(rust_binaries)
+datas.extend(rust_datas)
 
 # Add Rust integration modules to hidden imports
 hiddenimports.extend([
@@ -71,7 +59,6 @@ hiddenimports += [
     'rich',
     'tqdm',
     'markdown',
-    'pkg_resources',
     'appdirs',
     'yaml',
     'ruamel.yaml',

@@ -13,8 +13,13 @@ from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_submodules
 
-# Project paths
-PROJECT_ROOT = Path(__file__).parent.resolve()
+# Project paths - use SPECPATH provided by PyInstaller
+PROJECT_ROOT = Path(SPECPATH).resolve()
+
+# Add project root to sys.path so we can import the helper
+import sys
+sys.path.insert(0, str(PROJECT_ROOT))
+
 CLASSIC_DATA_PATH = PROJECT_ROOT / "CLASSIC Data"
 
 # Verify data directory exists
@@ -23,31 +28,10 @@ if not CLASSIC_DATA_PATH.exists():
     print("Creating empty directory for build...")
     CLASSIC_DATA_PATH.mkdir(exist_ok=True)
 
-# Bundle Rust extensions from site-packages
-# Rust modules are installed via maturin build + pip install
-import site
-binaries = []
-datas = []
+# Bundle Rust extensions - checks local build directory first, then site-packages
+from pyinstaller_rust_helper import find_rust_extensions
 
-site_packages = Path(site.getsitepackages()[0])
-rust_package_dir = site_packages / "classic_core"
-
-if rust_package_dir.exists():
-    print(f"Bundling Rust extensions from {rust_package_dir}")
-    # Add the entire classic_core package
-    for pyd_file in rust_package_dir.glob("*.pyd"):
-        binaries.append((str(pyd_file), "classic_core"))
-        print(f"  - Adding extension: {pyd_file.name}")
-
-    # Add __init__.py
-    init_file = rust_package_dir / "__init__.py"
-    if init_file.exists():
-        datas.append((str(init_file), "classic_core"))
-else:
-    print(f"WARNING: Rust extensions not found at {rust_package_dir}")
-    print("The executable will work but without Rust performance optimizations!")
-    print("Run: maturin build --release --out classic-rust/dist")
-    print("Then: uv pip install classic-rust/dist/classic-*.whl --force-reinstall")
+binaries, datas, rust_found = find_rust_extensions(PROJECT_ROOT)
 
 # Collect all PySide6 components (required for GUI)
 pyside6_datas, pyside6_binaries, pyside6_hiddenimports = collect_all("PySide6")
@@ -82,7 +66,7 @@ hiddenimports = [
     # Standard library
     "encodings",
     "importlib.metadata",
-    "pkg_resources",
+    "importlib.resources",
 
     # Third-party
     "aiohttp",
@@ -111,15 +95,7 @@ hiddenimports = [
 ] + pyside6_hiddenimports
 
 # Data files to bundle (combine with already created datas list)
-datas += [
-    # Bundle entire CLASSIC Data directory with all configs
-    (CLASSIC_DATA_PATH, "CLASSIC Data"),
-
-    # Include README and documentation
-    (PROJECT_ROOT / "README.md", "."),
-    (PROJECT_ROOT / "LICENSE", "."),
-    (PROJECT_ROOT / "CLASSIC - Readme.pdf", "."),
-] + pyside6_datas
+datas += pyside6_datas
 
 # Binary files (combine with already created binaries list)
 binaries += pyside6_binaries

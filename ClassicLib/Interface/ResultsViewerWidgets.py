@@ -513,13 +513,11 @@ class ReportMetadataWidget(QGroupBox):
 
         # Create labels for metadata
         self.date_label = QLabel("Date: N/A")
-        self.status_label = QLabel("Status: N/A")
         self.size_label = QLabel("Size: N/A")
         self.issues_label = QLabel("Issues: N/A")
 
         # Add labels to layout
         layout.addWidget(self.date_label)
-        layout.addWidget(self.status_label)
         layout.addWidget(self.issues_label)
         layout.addWidget(self.size_label)
         layout.addStretch()
@@ -567,39 +565,9 @@ class ReportMetadataWidget(QGroupBox):
         size_kb = stat.st_size / 1024
         self.size_label.setText(f"Size: {size_kb:.1f} KB")
 
-        # Determine status from content
-        status = self._determine_status(content)
-        self.status_label.setText(f"Status: {status}")
-
-        # Apply status coloring
-        self._apply_status_color(status)
-
         # Count issues
         issues = self._count_issues(content)
         self.issues_label.setText(f"Issues: {issues}")
-
-    @staticmethod
-    def _determine_status(content: str) -> str:
-        """
-        Determine report status from content.
-
-        Args:
-            content: The report content.
-
-        Returns:
-            Status string.
-        """
-        content_upper = content.upper()
-
-        if "INCOMPLETE" in content_upper:
-            return "Incomplete"
-        if "UNSOLVED" in content_upper:
-            return "Unsolved"
-        if "SOLVED" in content_upper:
-            return "Solved"
-        if "ERROR" in content_upper:
-            return "Has Errors"
-        return "Analyzed"
 
     # noinspection RegExpRedundantEscape
     @staticmethod
@@ -628,26 +596,8 @@ class ReportMetadataWidget(QGroupBox):
             return f"{issues} items"
         return "None found"
 
-    def _apply_status_color(self, status: str) -> None:
-        """
-        Apply color coding based on status.
-
-        Args:
-            status: The status string.
-        """
-        if "Solved" in status:
-            self.status_label.setStyleSheet("color: #4CAF50;")  # Green
-        elif "Unsolved" in status or "Error" in status:
-            self.status_label.setStyleSheet("color: #f44336;")  # Red
-        elif "Incomplete" in status:
-            self.status_label.setStyleSheet("color: #ff9800;")  # Orange
-        else:
-            self.status_label.setStyleSheet("color: #2196F3;")  # Blue
-
     def clear(self) -> None:
         """Clear all metadata displays."""
         self.date_label.setText("Date: N/A")
-        self.status_label.setText("Status: N/A")
         self.size_label.setText("Size: N/A")
         self.issues_label.setText("Issues: N/A")
-        self.status_label.setStyleSheet("")

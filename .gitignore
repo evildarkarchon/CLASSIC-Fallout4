@@ -56,6 +56,8 @@ temp_rust_build/
 # rust_extensions/  <-- DON'T ADD THIS
 # But do ignore build artifacts in other locations
 classic-rust/target/
+dist-rust/
+classic_core/
 *.whl
 # Keep specific DLLs in rust_extensions/
 *.dll
