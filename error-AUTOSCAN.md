@@ -1,0 +1,1 @@
+Error: startswith first arg must be str or a tuple of str, not MagicMock

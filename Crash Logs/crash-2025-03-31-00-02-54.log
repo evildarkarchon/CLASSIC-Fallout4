@@ -1,0 +1,807 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.37.0 Mar 12 2025 22:11:48
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF663BA5B45 Fallout4.exe+22E5B45	mov r8, [r13+0x48] |  BSScaleformImageLoader::LoadProtocolImage(Scaleform::GFx::ImageCreateInfo&,Scaleform::String&)_22E5B45)
+Exception Flags: 0x00000000
+Number of Parameters: 2
+Access Violation: Tried to read memory at 0x000000000048
+
+	[Compatibility]
+		F4EE: true
+	[Debug]
+		Symcache: c:symcache
+		WaitForDebugger: false
+	[Fixes]
+		ActorIsHostileToActor: true
+		BGSAIWorldLocationRefRadiusNull: true
+		BSLightingShaderMaterialGlowmap: true
+		BackportedBA2Support: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		EscapeFreeze: true
+		FixScriptPageAllocation: true
+		FixToggleScriptsCommand: true
+		FollowerStrayBullet: true
+		GreyMovies: true
+		InteriorNavCut: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		PipboyLightInvFix: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+		WorkBenchSwap: true
+	[Patches]
+		Achievements: true
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: false
+		HavokMemorySystem: false
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: 2048
+		MemoryManager: false
+		MemoryManagerDebug: false
+		ScaleformAllocator: false
+		SmallBlockAllocator: false
+		WorkshopMenu: true
+	[Tweaks]
+		MaxPapyrusOpsPerFrame: 1000
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 11 Pro v10.0.26100
+	CPU: AuthenticAMD AMD Ryzen 7 7800X3D 8-Core Processor           
+	GPU #1: Nvidia AD104 [GeForce RTX 4070]
+	GPU #2: AMD Raphael
+	GPU #3: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 23.19 GB/63.10 GB
+
+
+PROBABLE CALL STACK:
+	[0] 0x7FF663BA5B45 Fallout4.exe+22E5B45	mov r8, [r13+0x48] |  BSScaleformImageLoader::LoadProtocolImage(Scaleform::GFx::ImageCreateInfo&,Scaleform::String&)_22E5B45 -> 142311+0x75	mov r8, [r13+0x48]
+	[1] 0x7FF662B6051A Fallout4.exe+12A051A	lea rcx, [rbp+0x150] |  MainMenu::MainMenu(UIMessage&)_12A051A -> 1079380+0x5EA	lea rcx, [rbp+0x150]
+	[2] 0x7FF662B66C1A Fallout4.exe+12A6C1A	mov [rdi], ebx |  nsMainMenu::NoDurangoUserSignedInCallback::`scalar_deleting_destructor'(uint)_12A6C1A -> 543460+0x5A	mov [rdi], ebx
+	[3] 0x7FF663902D1C Fallout4.exe+2042D1C	mov rcx, [rsp+0x40] |  UI::ProcessMessages(void)_2042D1C -> 239710+0x8EC	mov rcx, [rsp+0x40]
+	[4] 0x7FF66257FF35 Fallout4.exe+0CBFF35	mov rcx, [0x00007FF667190898] |  long (mangled: JobListManager::ServingThread::DisplayLoadingScreen(void))_CBFF35 -> 132841+0x105	mov rcx, [0x00007FF667190898]
+	[5] 0x7FF66258079D Fallout4.exe+0CC079D	jmp 0x00007FF6625807A7 |  long (mangled: JobListManager::ServingThread::ThreadProc(void))_CC079D -> 1166392+0x7D	jmp 0x00007FF6625807A7
+	[6] 0x7FF6633DCFED Fallout4.exe+1B1CFED	mov rcx, [0x00007FF66741BD38] |  BSThread::CallThreadProc(void)_1B1CFED -> 1079791+0x3D	mov rcx, [0x00007FF66741BD38]
+	[7] 0x7FFFB227E8D7 KERNEL32.DLL+002E8D7
+	[8] 0x7FFFB377BF6C    ntdll.dll+00BBF6C
+
+REGISTERS:
+	RAX 0xD6465A81         (size_t) [3594934913]
+	RCX 0xF                (size_t) [15]
+	RDX 0x467409           (size_t) [4617225]
+	RBX 0x0                (size_t) [0]
+	RSP 0xB99F18F0F0       (void*)
+	RBP 0xB99F18F168       (void*)
+	RSI 0x298F231CAA8      (void*)
+	RDI 0x0                (size_t) [0]
+	R8  0x90F969           (size_t) [9501033]
+	R9  0x90F969A0         (size_t) [2432264608]
+	R10 0x3866             (size_t) [14438]
+	R11 0xB99F18F1A0       (void*)
+	R12 0x298F231CA38      (MainMenu*)
+	R13 0x0                (size_t) [0]
+	R14 0x298F231C810      (MainMenu*)
+	R15 0x0                (size_t) [0]
+
+STACK:
+	[RSP+0  ] 0x0                (size_t) [0]
+	[RSP+8  ] 0x0                (size_t) [0]
+	[RSP+10 ] 0x298F231CAA8      (void*)
+	[RSP+18 ] 0x0                (size_t) [0]
+	[RSP+20 ] 0xB99F18F290       (void*)
+	[RSP+28 ] 0x298F231CAB8      (void*)
+	[RSP+30 ] 0x2978C464790      (NiTexture*)
+		Name: "Textures\Interface\DLCBannerDLC01.DDS"
+		RTTIName: "NiTexture"
+	[RSP+38 ] 0x7FF663401EB2     (void* -> Fallout4.exe+1B41EB2	mov rax, rbx |  BSFixedString::operator<<(char*)_1B41EB2)
+	[RSP+40 ] 0x0                (size_t) [0]
+	[RSP+48 ] 0x0                (size_t) [0]
+	[RSP+50 ] 0x7FF600000000     (size_t) [140694538682368]
+	[RSP+58 ] 0xB99F18F4F0       (char*) "Textures\Interface\DLCBannerDLC01.dds"
+	[RSP+60 ] 0x298F231C810      (MainMenu*)
+	[RSP+68 ] 0x7FF6639D44C4     (void* -> Fallout4.exe+21144C4	mov rcx, [rbx] |  BSScaleformExternalTexture::SetTexture(NiTexture*)_21144C4)
+	[RSP+70 ] 0x0                (size_t) [0]
+	[RSP+78 ] 0x1                (size_t) [1]
+	[RSP+80 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
+	[RSP+88 ] 0x7FF66464B1F4     (char*) "Grey"
+	[RSP+90 ] 0xB99F18F290       (void*)
+	[RSP+98 ] 0x7FF662B6051A     (void* -> Fallout4.exe+12A051A	lea rcx, [rbp+0x150] |  MainMenu::MainMenu(UIMessage&)_12A051A)
+	[RSP+A0 ] 0x0                (size_t) [0]
+	[RSP+A8 ] 0x0                (size_t) [0]
+	[RSP+B0 ] 0xD6465A81         (size_t) [3594934913]
+	[RSP+B8 ] 0x7FF63866CB10     (size_t) [140695484943120]
+	[RSP+C0 ] 0x7FF600000000     (size_t) [140694538682368]
+	[RSP+C8 ] 0x0                (size_t) [0]
+	[RSP+D0 ] 0xB99F18F200       (void*)
+	[RSP+D8 ] 0x1                (size_t) [1]
+	[RSP+E0 ] 0x297FF19F3A0      (void*)
+	[RSP+E8 ] 0x10000            (size_t) [65536]
+	[RSP+F0 ] 0x0                (size_t) [0]
+	[RSP+F8 ] 0x20               (size_t) [32]
+	[RSP+100] 0x0                (size_t) [0]
+	[RSP+108] 0x297CC246BA0      (voltek::memory_manager::memory_manager*)
+	[RSP+110] 0xB99F18F270       (void*)
+	[RSP+118] 0x7FFE69850D58     (void* -> x-cell-og.dll+0070D58	lea r11, [rsp+0x60] |  E:\Projects\X-Cell-FO4\depends\vmm\source\vmmmain.cpp:482 voltek::memory_manager::memory_manager::alloc (mangled: ?alloc@memory_manager@1voltek@@QEAAPEAX_K@Z))
+	[RSP+120] 0x4                (size_t) [4]
+	[RSP+128] 0xB99F18F240       (void*)
+	[RSP+130] 0x0                (size_t) [0]
+	[RSP+138] 0x29700000002      (size_t) [2847563317250]
+	[RSP+140] 0x0                (size_t) [0]
+	[RSP+148] 0x7FFE697EB2CD     (void* -> x-cell-og.dll+000B2CD	mov rbx, [rsp+0xB0] |  E:\Projects\X-Cell-FO4\source\XCellModuleMemory.cpp:72 XCell::memory_manager::alloc (mangled: ?alloc@memory_manager@XCell@@SAPEAX_K0_N1@Z))
+	[RSP+150] 0x0                (size_t) [0]
+	[RSP+158] 0x29700000002      (size_t) [2847563317250]
+	[RSP+160] 0x0                (size_t) [0]
+	[RSP+168] 0x298F1F12EF0      (ButtonBarMenu*)
+	[RSP+170] 0x297CC246BD0      (voltek::core::_internal::simple_lock*)
+	[RSP+178] 0x6E37D3559863     (size_t) [121186047858787]
+	[RSP+180] 0x0                (size_t) [0]
+	[RSP+188] 0x298F1F12EF0      (ButtonBarMenu*)
+	[RSP+190] 0x7FF667326DD0     (UI*)
+	[RSP+198] 0x297881370A8      (void*)
+	[RSP+1A0] 0x0                (size_t) [0]
+	[RSP+1A8] 0x7FFE697EB2CD     (void* -> x-cell-og.dll+000B2CD	mov rbx, [rsp+0xB0] |  E:\Projects\X-Cell-FO4\source\XCellModuleMemory.cpp:72 XCell::memory_manager::alloc (mangled: ?alloc@memory_manager@XCell@@SAPEAX_K0_N1@Z))
+	[RSP+1B0] 0x4                (size_t) [4]
+	[RSP+1B8] 0x0                (size_t) [0]
+	[RSP+1C0] 0x8                (size_t) [8]
+	[RSP+1C8] 0x20               (size_t) [32]
+	[RSP+1D0] 0x7FFE698FC260     (char*) "(alignment != 0) && ((alignment % 2) == 0)"
+	[RSP+1D8] 0x4                (size_t) [4]
+	[RSP+1E0] 0x4074A00000000000 (size_t) [4644513037586268160]
+	[RSP+1E8] 0xB99F18F1E0       (void*)
+	[RSP+1F0] 0x2978BE5EC30      (void*)
+	[RSP+1F8] 0x297FEE76FA0      (voltek::memory_manager::page_t<voltek::memory_manager::block_base_t<128>,voltek::core::bits_regions>*)
+	[RSP+200] 0x0                (size_t) [0]
+	[RSP+208] 0x298F1F12EF0      (ButtonBarMenu*)
+	[RSP+210] 0x7FF667326DD0     (UI*)
+	[RSP+218] 0x297881370A8      (void*)
+	[RSP+220] 0x2978BE5EC40      (BSGFxDisplayObject*)
+	[RSP+228] 0x7FF6645DAD40     (char*) "textField"
+	[RSP+230] 0x6E37D35598D3     (size_t) [121186047858899]
+	[RSP+238] 0x0                (size_t) [0]
+	[RSP+240] 0x7FF667327058     (void* -> Fallout4.exe+5A67058	adc [rbx+0x13], dh |  aDiveBombChance_5A67058)
+	[RSP+248] 0x7FF6633D1042     (void* -> Fallout4.exe+1B11042	mov rcx, rax |  BSTArrayHeapAllocator::Allocate(uint,uint)_1B11042)
+	[RSP+250] 0xB99F18EF20       (void*)
+	[RSP+258] 0x7FF6618E44E3     (void* -> Fallout4.exe+00244E3	mov esi, eax |  BSSpinLock::Lock(char*)_244E3)
+	[RSP+260] 0x4                (size_t) [4]
+	[RSP+268] 0x200              (size_t) [512]
+	[RSP+270] 0x298F1F12FD0      (ButtonBarMenu*)
+	[RSP+278] 0x7FF6633D0DBA     (void* -> Fallout4.exe+1B10DBA	test al, al |  BSTArrayBase::AddUninitialized(BSTArrayBase::IAllocatorFunctor&,uint,uint)_1B10DBA)
+	[RSP+280] 0x7FF667327068     (void* -> Fallout4.exe+5A67068	add [rax], eax |  aDiveBombChance_5A67068)
+	[RSP+288] 0x7FF667327058     (void* -> Fallout4.exe+5A67058	adc [rbx+0x13], dh |  aDiveBombChance_5A67058)
+	[RSP+290] 0x7FF66741BC70     (void* -> Fallout4.exe+5B5BC70	add [rax], al |  aDiveBombChance_5B5BC70)
+	[RSP+298] 0xB99F18F780       (void*)
+	[RSP+2A0] 0x7FF66741BC70     (void* -> Fallout4.exe+5B5BC70	add [rax], al |  aDiveBombChance_5B5BC70)
+	[RSP+2A8] 0x298F244B000      (void*)
+	[RSP+2B0] 0x7FF667327050     (void* -> Fallout4.exe+5A67050	add [rax], al |  aDiveBombChance_5A67050)
+	[RSP+2B8] 0x7FF6623C8D0B     (void* -> Fallout4.exe+0B08D0B	cmp eax, 0xFFFFFFFF |  BSTEventSource<ButtonBarMenuUpdateEvent>::RegisterSink(BSTEventSink<ButtonBarMenuUpdateEvent>*)_B08D0B)
+	[RSP+2C0] 0x7FF667327050     (void* -> Fallout4.exe+5A67050	add [rax], al |  aDiveBombChance_5A67050)
+	[RSP+2C8] 0xB99F18F780       (void*)
+	[RSP+2D0] 0x297881370A0      (void*)
+	[RSP+2D8] 0x7FF66741BC78     (void* -> Fallout4.exe+5B5BC78	loopne 0x00007FF66741BBFF |  aDiveBombChance_5B5BC78)
+	[RSP+2E0] 0x7FF667327040     (BSTGlobalEvent::EventSource<ButtonBarMenuUpdateEvent>*)
+	[RSP+2E8] 0x7FF6623C7297     (void* -> Fallout4.exe+0B07297	mov rbx, [rsp+0x30] |  BSTGlobalEvent::EventSource<ButtonBarMenuUpdateEvent>::EventSource<ButtonBarMenuUpdateEvent>(BSTGlobalEvent::KillSDMEventSource*)_B07297)
+	[RSP+2F0] 0xB99F18F780       (void*)
+	[RSP+2F8] 0x7FF66741BC70     (void* -> Fallout4.exe+5B5BC70	add [rax], al |  aDiveBombChance_5B5BC70)
+	[RSP+300] 0x7FF66450A948     (void* -> Fallout4.exe+2C4A948	shl byte ptr [rdx], 0x01 |  hkbInternal::hks::execute<0>(hkbInternal::lua_State*,hkbInternal::hksInstruction*,int)_2C4A948)
+	[RSP+308] 0x7FF667327058     (void* -> Fallout4.exe+5A67058	adc [rbx+0x13], dh |  aDiveBombChance_5A67058)
+	[RSP+310] 0x2979CA89E50      (BSGFxShaderFXTarget*)
+	[RSP+318] 0x7FF6623C5C63     (void* -> Fallout4.exe+0B05C63	lea r11, [rsp+0x220] |  ButtonBarMenu::ButtonBarMenu(UIMessage&)_B05C63)
+	[RSP+320] 0xB99F18F780       (void*)
+	[RSP+328] 0x297881370A0      (void*)
+	[RSP+330] 0x298F1F12F60      (void*)
+	[RSP+338] 0x2979CA89E50      (BSGFxShaderFXTarget*)
+	[RSP+340] 0x7FF6645DACD8     (char*) "root1"
+	[RSP+348] 0x29700000002      (size_t) [2847563317250]
+	[RSP+350] 0xB900000000       (size_t) [794568949760]
+	[RSP+358] 0x7FFFB36DBE86     (void* -> ntdll.dll+001BE86	mov r14, rax)
+	[RSP+360] 0x7FF66450A948     (void* -> Fallout4.exe+2C4A948	shl byte ptr [rdx], 0x01 |  hkbInternal::hks::execute<0>(hkbInternal::lua_State*,hkbInternal::hksInstruction*,int)_2C4A948)
+	[RSP+368] 0x298F1F12F60      (void*)
+	[RSP+370] 0x2                (size_t) [2]
+	[RSP+378] 0x297881370A0      (void*)
+	[RSP+380] 0x297CC23D280      (voltek::memory_manager::pool_t<voltek::memory_manager::block_base_t<32>,voltek::memory_manager::page_t<voltek::memory_manager::block_base_t<32>,voltek::core::bits_regions>,262144>*)
+	[RSP+388] 0x297FED6B790      (voltek::memory_manager::page_t<voltek::memory_manager::block_base_t<32>,voltek::core::bits_regions>*)
+	[RSP+390] 0xB99F18F590       (void*)
+	[RSP+398] 0x7FFE69851A20     (void* -> x-cell-og.dll+0071A20	lea r11, [rsp+0x190] |  E:\Projects\X-Cell-FO4\depends\vmm\source\vmmmain.cpp:789 voltek::memory_manager::memory_manager::free (mangled: ?free@memory_manager@1voltek@@QEAA_NPEBX@Z))
+	[RSP+3A0] 0x11AC             (size_t) [4524]
+	[RSP+3A8] 0xB99F18F590       (void*)
+	[RSP+3B0] 0x297FED6B790      (voltek::memory_manager::page_t<voltek::memory_manager::block_base_t<32>,voltek::core::bits_regions>*)
+	[RSP+3B8] 0x1101             (size_t) [4353]
+	[RSP+3C0] 0x297FED6B790      (voltek::memory_manager::page_t<voltek::memory_manager::block_base_t<32>,voltek::core::bits_regions>*)
+	[RSP+3C8] 0x40590000000011AC (size_t) [4636737291354640812]
+	[RSP+3D0] 0x7FF667326200     (void* -> Fallout4.exe+5A66200	add [rax], al |  aDiveBombChance_5A66200)
+	[RSP+3D8] 0x7FF66243D76D     (void* -> Fallout4.exe+0B7D76D	xor r12d, r12d |  BSTEventSource<MultiActivateUseRolloverEvent>::Notify(MultiActivateUseRolloverEvent&)_B7D76D)
+	[RSP+3E0] 0x7FF6673738B8     (void* -> Fallout4.exe+5AB38B8	add [rax], al |  aDiveBombChance_5AB38B8)
+	[RSP+3E8] 0xB99F18F780       (void*)
+	[RSP+3F0] 0x7FF6673737E0     (MultiActivateManager*)
+	[RSP+3F8] 0xB99F18F4F0       (char*) "Textures\Interface\DLCBannerDLC01.dds"
+	[RSP+400] 0x7365727574786554 (size_t) [8315178135800276308]
+	[RSP+408] 0x61667265746E495C (size_t) [7018422849374144860]
+	[RSP+410] 0x6142434C445C6563 (size_t) [7008237964985394531]
+	[RSP+418] 0x30434C4472656E6E (size_t) [3477707194120892014]
+	[RSP+420] 0x3F80007364642E31 (size_t) [4575657717013950001]
+	[RSP+428] 0x7FF663BB244A     (void* -> Fallout4.exe+22F244A	movzx eax, al |  Scaleform::HeapPT::TreeBin::FindBest(unsigned___int64)_22F244A)
+	[RSP+430] 0x0                (size_t) [0]
+	[RSP+438] 0x7FF6618E44E3     (void* -> Fallout4.exe+00244E3	mov esi, eax |  BSSpinLock::Lock(char*)_244E3)
+	[RSP+440] 0x7FF6673737E0     (MultiActivateManager*)
+	[RSP+448] 0xB99F18F780       (void*)
+	[RSP+450] 0x3F               (size_t) [63]
+	[RSP+458] 0x7FF663BB2FD7     (void* -> Fallout4.exe+22F2FD7	mov rdx, rdi |  Scaleform::HeapPT::FreeBin::Push(uchar*)_22F2FD7)
+	[RSP+460] 0x298F1A721D0      (char*) "
+"
+	[RSP+468] 0x0                (size_t) [0]
+	[RSP+470] 0x1                (size_t) [1]
+	[RSP+478] 0xB99F18F598       (void*)
+	[RSP+480] 0x298F231C810      (MainMenu*)
+	[RSP+488] 0x7FF663CDEEFB     (void* -> Fallout4.exe+241EEFB	mov rax, [rsp+0x60] |  Scaleform::HeapPT::AllocBitSet2::Alloc(unsigned___int64,Scaleform::Heap::HeapSegment**)_241EEFB)
+	[RSP+490] 0x140              (size_t) [320]
+	[RSP+498] 0x3F               (size_t) [63]
+	[RSP+4A0] 0x298F231C810      (MainMenu*)
+	[RSP+4A8] 0x0                (size_t) [0]
+	[RSP+4B0] 0x0                (size_t) [0]
+	[RSP+4B8] 0x297881372E8      (void*)
+	[RSP+4C0] 0x3F0              (size_t) [1008]
+	[RSP+4C8] 0x3E8              (size_t) [1000]
+	[RSP+4D0] 0xB99F18F780       (void*)
+	[RSP+4D8] 0x7FF663BB5781     (void* -> Fallout4.exe+22F5781	mov rcx, rax |  Scaleform::HeapPT::AllocEngine::allocBitSet(unsigned___int64,unsigned___int64)_22F5781)
+	[RSP+4E0] 0x298F1A72198      (void*)
+	[RSP+4E8] 0x7FF667326DD0     (UI*)
+	[RSP+4F0] 0xB99F18F630       (void*)
+	[RSP+4F8] 0x0                (size_t) [0]
+	[RSP+500] 0x0                (size_t) [0]
+	[RSP+508] 0x0                (size_t) [0]
+	[RSP+510] 0x0                (size_t) [0]
+	[RSP+518] 0x0                (size_t) [0]
+	[RSP+520] 0x7FF667326DD0     (UI*)
+	[RSP+528] 0x297881372E8      (void*)
+	[RSP+530] 0x0                (size_t) [0]
+	[RSP+538] 0x0                (size_t) [0]
+	[RSP+540] 0x2986EB8F900      (char*) "B"
+	[RSP+548] 0x42               (size_t) [66]
+	[RSP+550] 0xB99F18F780       (void*)
+	[RSP+558] 0x7FF662B66C1A     (void* -> Fallout4.exe+12A6C1A	mov [rdi], ebx |  nsMainMenu::NoDurangoUserSignedInCallback::`scalar_deleting_destructor'(uint)_12A6C1A)
+	[RSP+560] 0x42               (size_t) [66]
+	[RSP+568] 0x297881372E0      (UIMessage*)
+	[RSP+570] 0x2978C464790      (NiTexture*)
+		Name: "Textures\Interface\DLCBannerDLC01.DDS"
+		RTTIName: "NiTexture"
+	[RSP+578] 0x7FF667326DD0     (UI*)
+	[RSP+580] 0x297881372E0      (UIMessage*)
+	[RSP+588] 0x7FF663902D1C     (void* -> Fallout4.exe+2042D1C	mov rcx, [rsp+0x40] |  UI::ProcessMessages(void)_2042D1C)
+	[RSP+590] 0x0                (size_t) [0]
+	[RSP+598] 0x7FF667326F80     (void* -> Fallout4.exe+5A66F80	add [rax], al |  aDiveBombChance_5A66F80)
+	[RSP+5A0] 0xB99F18F780       (void*)
+	[RSP+5A8] 0x7FF667326F80     (void* -> Fallout4.exe+5A66F80	add [rax], al |  aDiveBombChance_5A66F80)
+	[RSP+5B0] 0xB99F18F6C0       (void*)
+	[RSP+5B8] 0xB99F18FA58       (void*)
+	[RSP+5C0] 0x297881372E0      (UIMessage*)
+	[RSP+5C8] 0x0                (size_t) [0]
+	[RSP+5D0] 0x0                (size_t) [0]
+	[RSP+5D8] 0x7FF662B66BC0     (void* -> Fallout4.exe+12A6BC0	mov [rsp+0x08], rbx |  nsMainMenu::NoDurangoUserSignedInCallback::`scalar_deleting_destructor'(uint)_12A6BC0)
+	[RSP+5E0] 0x0                (size_t) [0]
+	[RSP+5E8] 0x298E2DB8E20      (void*)
+	[RSP+5F0] 0x29800000001      (void*)
+	[RSP+5F8] 0x6C32918700       (size_t) [464704866048]
+	[RSP+600] 0xB99F18F7F8       (void*)
+	[RSP+608] 0xE609447          (size_t) [241210439]
+	[RSP+610] 0x0                (size_t) [0]
+	[RSP+618] 0x0                (size_t) [0]
+	[RSP+620] 0x2986EB8F900      (char*) "B"
+	[RSP+628] 0xE609447          (size_t) [241210439]
+	[RSP+630] 0x69487C51         (size_t) [1766358097]
+	[RSP+638] 0xB99F18F800       (void*)
+	[RSP+640] 0xB99F18F890       (void*)
+	[RSP+648] 0xB99F18F898       (void*)
+	[RSP+650] 0xB99F18F8E9       (void*)
+	[RSP+658] 0x297881371A0      (void*)
+	[RSP+660] 0x0                (size_t) [0]
+	[RSP+668] 0x0                (size_t) [0]
+	[RSP+670] 0x206              (size_t) [518]
+	[RSP+678] 0x0                (size_t) [0]
+	[RSP+680] 0x5401             (size_t) [21505]
+	[RSP+688] 0xB900000000       (size_t) [794568949760]
+	[RSP+690] 0x29800000000      (void*)
+	[RSP+698] 0x7FFE00000000     (size_t) [140728898420736]
+	[RSP+6A0] 0xB99F18F7D8       (void*)
+	[RSP+6A8] 0x7FFE0011400C     (size_t) [140728899551244]
+	[RSP+6B0] 0x0                (size_t) [0]
+	[RSP+6B8] 0x7FFE00000000     (size_t) [140728898420736]
+	[RSP+6C0] 0x298E2DB8A60      (ScaleformMCM::GetGlobalValue*)
+	[RSP+6C8] 0x15               (size_t) [21]
+	[RSP+6D0] 0x7FFE00000000     (size_t) [140728898420736]
+	[RSP+6D8] 0x54FC             (size_t) [21756]
+	[RSP+6E0] 0x0                (size_t) [0]
+	[RSP+6E8] 0x0                (size_t) [0]
+	[RSP+6F0] 0x10               (size_t) [16]
+	[RSP+6F8] 0x30               (size_t) [48]
+	[RSP+700] 0x80000040         (size_t) [2147483712]
+	[RSP+708] 0x297881372E0      (UIMessage*)
+	[RSP+710] 0x0                (size_t) [0]
+	[RSP+718] 0x0                (size_t) [0]
+	[RSP+720] 0x0                (size_t) [0]
+	[RSP+728] 0x7FFEFA19A78B     (void* -> tier0_s64.dll+000A78B	jmp 0x00007FFEFA19A7A1)
+	[RSP+730] 0x0                (size_t) [0]
+	[RSP+738] 0x297DE220480      (void*)
+	[RSP+740] 0x0                (size_t) [0]
+	[RSP+748] 0x7FFEF7A139CB     (void* -> steamclient64.dll+08839CB	test eax, eax)
+	[RSP+750] 0xB99F18F950       (void*)
+	[RSP+758] 0x297DE2205D0      (void*)
+	[RSP+760] 0x0                (size_t) [0]
+	[RSP+768] 0x297DE220480      (void*)
+	[RSP+770] 0xB99F18F9E0       (void*)
+	[RSP+778] 0x297DE2205D0      (void*)
+	[RSP+780] 0xB99F18F8E9       (void*)
+	[RSP+788] 0x7FFEF7A105D0     (void* -> steamclient64.dll+08805D0	movzx eax, bl)
+	[RSP+790] 0x29700000000      (size_t) [2847563317248]
+	[RSP+798] 0xB900000000       (size_t) [794568949760]
+	[RSP+7A0] 0x29700000000      (size_t) [2847563317248]
+	[RSP+7A8] 0xB99F18F900       (char*) "p"
+	[RSP+7B0] 0x297DE220500      (void*)
+	[RSP+7B8] 0x7FFEF79BDB5D     (void* -> steamclient64.dll+082DB5D	movsxd rcx, dword ptr [rbx+0x28])
+	[RSP+7C0] 0x297DE1E17E0      (void*)
+	[RSP+7C8] 0x9B0001           (size_t) [10158081]
+	[RSP+7D0] 0x7FFEFA1F10F0     (void* -> tier0_s64.dll+00610F0	rcl byte ptr [rdi], 0x1E)
+	[RSP+7D8] 0x7FFEFA19C384     (void* -> tier0_s64.dll+000C384	mov rbx, [rsp+0x40])
+	[RSP+7E0] 0x297DE1E17C0      (void*)
+	[RSP+7E8] 0x7FFEFA19C4BE     (void* -> tier0_s64.dll+000C4BE	test rax, rax)
+	[RSP+7F0] 0x0                (size_t) [0]
+	[RSP+7F8] 0x0                (size_t) [0]
+	[RSP+800] 0x0                (size_t) [0]
+	[RSP+808] 0x7FF6618E44E3     (void* -> Fallout4.exe+00244E3	mov esi, eax |  BSSpinLock::Lock(char*)_244E3)
+	[RSP+810] 0x297DE270070      (void*)
+	[RSP+818] 0x7FFEF79BFC86     (void* -> steamclient64.dll+082FC86	mov [rdi], r15)
+	[RSP+820] 0x0                (size_t) [0]
+	[RSP+828] 0x297DE1D1920      (char*) "p"
+	[RSP+830] 0x7FF66737D378     (void* -> Fallout4.exe+5ABD378	add [rax], al |  aDiveBombChance_5ABD378)
+	[RSP+838] 0x7FF6624C56ED     (void* -> Fallout4.exe+0C056ED	xor r12d, r12d |  BSTEventSource<PipboyValueChangedEvent>::Notify(PipboyValueChangedEvent&)_C056ED)
+	[RSP+840] 0x7FF66737D450     (void* -> Fallout4.exe+5ABD450	xor al, cl |  aDiveBombChance_5ABD450)
+	[RSP+848] 0x1                (size_t) [1]
+	[RSP+850] 0xB                (size_t) [11]
+	[RSP+858] 0x7FFEF79BEF43     (void* -> steamclient64.dll+082EF43	cmp dword ptr [rbx+0x08], 0x20)
+	[RSP+860] 0xB99F18F9E9       (void*)
+	[RSP+868] 0x7FF6624C43B4     (void* -> Fallout4.exe+0C043B4	inc ebx |  PipboyArray::ClearDirtyToGame(void)_C043B4)
+	[RSP+870] 0x0                (size_t) [0]
+	[RSP+878] 0x5BA1FC50         (void* -> steam_api64.dll+002FC50	xor [rsi], cl)
+	[RSP+880] 0x1                (size_t) [1]
+	[RSP+888] 0x0                (size_t) [0]
+	[RSP+890] 0x29789768150      (void*)
+	[RSP+898] 0x7FF6624F15E6     (void* -> Fallout4.exe+0C315E6	add rbx, 0x18 |  PipboyObject::ClearDirtyToGame(void)_C315E6)
+	[RSP+8A0] 0x297897680D8      (void*)
+	[RSP+8A8] 0x1                (size_t) [1]
+	[RSP+8B0] 0x7FF66737D450     (void* -> Fallout4.exe+5ABD450	xor al, cl |  aDiveBombChance_5ABD450)
+	[RSP+8B8] 0x0                (size_t) [0]
+	[RSP+8C0] 0x29789767F40      (void*)
+	[RSP+8C8] 0x7FF6624F15E6     (void* -> Fallout4.exe+0C315E6	add rbx, 0x18 |  PipboyObject::ClearDirtyToGame(void)_C315E6)
+	[RSP+8D0] 0x0                (size_t) [0]
+	[RSP+8D8] 0x7FF66737C790     (void* -> Fallout4.exe+5ABC790	add [rax], al |  aDiveBombChance_5ABC790)
+	[RSP+8E0] 0x7FF66737D4A8     (void* -> Fallout4.exe+5ABD4A8	add [rax], al |  aDiveBombChance_5ABD4A8)
+	[RSP+8E8] 0x1                (size_t) [1]
+	[RSP+8F0] 0x0                (size_t) [0]
+	[RSP+8F8] 0x7FF6633D093F     (void* -> Fallout4.exe+1B1093F	cmp [rdi], eax |  BSReadWriteLock::LockForRead(void)_1B1093F)
+	[RSP+900] 0x7FF66737D450     (void* -> Fallout4.exe+5ABD450	xor al, cl |  aDiveBombChance_5ABD450)
+	[RSP+908] 0x1                (size_t) [1]
+	[RSP+910] 0x0                (size_t) [0]
+	[RSP+918] 0x0                (size_t) [0]
+	[RSP+920] 0x0                (size_t) [0]
+	[RSP+928] 0x0                (size_t) [0]
+	[RSP+930] 0x0                (size_t) [0]
+	[RSP+938] 0x7FF66732BDC0     (JobListManager::ServingThread*)
+	[RSP+940] 0x2986EB8EF40      (void*)
+	[RSP+948] 0x2                (size_t) [2]
+	[RSP+950] 0x9C0              (size_t) [2496]
+	[RSP+958] 0x7FF66257FF35     (void* -> Fallout4.exe+0CBFF35	mov rcx, [0x00007FF667190898] |  long (mangled: JobListManager::ServingThread::DisplayLoadingScreen(void))_CBFF35)
+	[RSP+960] 0x29800000001      (void*)
+	[RSP+968] 0x1                (size_t) [1]
+	[RSP+970] 0x0                (size_t) [0]
+	[RSP+978] 0x45               (size_t) [69]
+	[RSP+980] 0x0                (size_t) [0]
+	[RSP+988] 0x7FF66258079D     (void* -> Fallout4.exe+0CC079D	jmp 0x00007FF6625807A7 |  long (mangled: JobListManager::ServingThread::ThreadProc(void))_CC079D)
+	[RSP+990] 0x7FF66732BDC0     (JobListManager::ServingThread*)
+	[RSP+998] 0x0                (size_t) [0]
+	[RSP+9A0] 0x0                (size_t) [0]
+	[RSP+9A8] 0x53FC             (size_t) [21500]
+	[RSP+9B0] 0x7FF66732BDC0     (JobListManager::ServingThread*)
+	[RSP+9B8] 0x7FF6633DCFED     (void* -> Fallout4.exe+1B1CFED	mov rcx, [0x00007FF66741BD38] |  BSThread::CallThreadProc(void)_1B1CFED)
+	[RSP+9C0] 0x5474             (size_t) [21620]
+	[RSP+9C8] 0xB99F18FAD0       (void*)
+	[RSP+9D0] 0x297881084C0      (void*)
+	[RSP+9D8] 0x0                (size_t) [0]
+	[RSP+9E0] 0x7FF66732BDC0     (JobListManager::ServingThread*)
+	[RSP+9E8] 0x0                (size_t) [0]
+	[RSP+9F0] 0x0                (size_t) [0]
+	[RSP+9F8] 0x7FFFB227E8D7     (void* -> KERNEL32.DLL+002E8D7	mov ecx, eax)
+	[RSP+A00] 0x0                (size_t) [0]
+	[RSP+A08] 0x0                (size_t) [0]
+	[RSP+A10] 0x0                (size_t) [0]
+	[RSP+A18] 0x0                (size_t) [0]
+	[RSP+A20] 0x0                (size_t) [0]
+	[RSP+A28] 0x7FFFB377BF6C     (void* -> ntdll.dll+00BBF6C	jmp 0x00007FFFB377BF96)
+	[RSP+A30] 0x0                (size_t) [0]
+	[RSP+A38] 0x0                (size_t) [0]
+	[RSP+A40] 0x4F0FFFFFB30      (size_t) [5433133628208]
+	[RSP+A48] 0x4D0FFFFFB30      (size_t) [5295694674736]
+	[RSP+A50] 0x21               (size_t) [33]
+	[RSP+A58] 0x7FFFB122AD90     (void* -> KERNELBASE.dll+011AD90	mov [rsp+0x10], rbx)
+	[RSP+A60] 0xB99F18DBC0       (void*)
+	[RSP+A68] 0xB99F18DBC0       (void*)
+	[RSP+A70] 0x0                (size_t) [0]
+	[RSP+A78] 0x0                (size_t) [0]
+	[RSP+A80] 0x0                (size_t) [0]
+	[RSP+A88] 0x0                (size_t) [0]
+	[RSP+A90] 0x0                (size_t) [0]
+	[RSP+A98] 0x0                (size_t) [0]
+	[RSP+AA0] 0x0                (size_t) [0]
+	[RSP+AA8] 0x0                (size_t) [0]
+	[RSP+AB0] 0x0                (size_t) [0]
+	[RSP+AB8] 0x0                (size_t) [0]
+	[RSP+AC0] 0x0                (size_t) [0]
+	[RSP+AC8] 0x0                (size_t) [0]
+	[RSP+AD0] 0x0                (size_t) [0]
+	[RSP+AD8] 0x0                (size_t) [0]
+	[RSP+AE0] 0x0                (size_t) [0]
+	[RSP+AE8] 0x0                (size_t) [0]
+	[RSP+AF0] 0x0                (size_t) [0]
+	[RSP+AF8] 0x0                (size_t) [0]
+	[RSP+B00] 0x0                (size_t) [0]
+	[RSP+B08] 0x0                (size_t) [0]
+	[RSP+B10] 0x0                (size_t) [0]
+	[RSP+B18] 0x0                (size_t) [0]
+	[RSP+B20] 0x0                (size_t) [0]
+	[RSP+B28] 0x0                (size_t) [0]
+	[RSP+B30] 0x0                (size_t) [0]
+	[RSP+B38] 0x0                (size_t) [0]
+	[RSP+B40] 0x0                (size_t) [0]
+	[RSP+B48] 0x0                (size_t) [0]
+	[RSP+B50] 0x0                (size_t) [0]
+	[RSP+B58] 0x0                (size_t) [0]
+	[RSP+B60] 0x0                (size_t) [0]
+	[RSP+B68] 0x0                (size_t) [0]
+	[RSP+B70] 0x0                (size_t) [0]
+	[RSP+B78] 0x0                (size_t) [0]
+	[RSP+B80] 0x0                (size_t) [0]
+	[RSP+B88] 0x0                (size_t) [0]
+	[RSP+B90] 0x0                (size_t) [0]
+	[RSP+B98] 0x0                (size_t) [0]
+	[RSP+BA0] 0x0                (size_t) [0]
+	[RSP+BA8] 0x0                (size_t) [0]
+	[RSP+BB0] 0x0                (size_t) [0]
+	[RSP+BB8] 0x0                (size_t) [0]
+	[RSP+BC0] 0x0                (size_t) [0]
+	[RSP+BC8] 0x0                (size_t) [0]
+	[RSP+BD0] 0x0                (size_t) [0]
+	[RSP+BD8] 0x0                (size_t) [0]
+	[RSP+BE0] 0x0                (size_t) [0]
+	[RSP+BE8] 0x0                (size_t) [0]
+	[RSP+BF0] 0x0                (size_t) [0]
+	[RSP+BF8] 0x0                (size_t) [0]
+	[RSP+C00] 0x0                (size_t) [0]
+	[RSP+C08] 0x0                (size_t) [0]
+	[RSP+C10] 0x0                (size_t) [0]
+	[RSP+C18] 0x0                (size_t) [0]
+	[RSP+C20] 0x0                (size_t) [0]
+	[RSP+C28] 0x0                (size_t) [0]
+	[RSP+C30] 0x0                (size_t) [0]
+	[RSP+C38] 0x0                (size_t) [0]
+	[RSP+C40] 0x0                (size_t) [0]
+	[RSP+C48] 0x0                (size_t) [0]
+	[RSP+C50] 0x0                (size_t) [0]
+	[RSP+C58] 0x0                (size_t) [0]
+	[RSP+C60] 0x0                (size_t) [0]
+	[RSP+C68] 0x0                (size_t) [0]
+	[RSP+C70] 0x0                (size_t) [0]
+	[RSP+C78] 0x0                (size_t) [0]
+	[RSP+C80] 0x0                (size_t) [0]
+	[RSP+C88] 0x0                (size_t) [0]
+	[RSP+C90] 0x0                (size_t) [0]
+	[RSP+C98] 0x0                (size_t) [0]
+	[RSP+CA0] 0x0                (size_t) [0]
+	[RSP+CA8] 0x0                (size_t) [0]
+	[RSP+CB0] 0x0                (size_t) [0]
+	[RSP+CB8] 0x0                (size_t) [0]
+	[RSP+CC0] 0x0                (size_t) [0]
+	[RSP+CC8] 0x0                (size_t) [0]
+	[RSP+CD0] 0x0                (size_t) [0]
+	[RSP+CD8] 0x0                (size_t) [0]
+	[RSP+CE0] 0x0                (size_t) [0]
+	[RSP+CE8] 0x0                (size_t) [0]
+	[RSP+CF0] 0x0                (size_t) [0]
+	[RSP+CF8] 0x0                (size_t) [0]
+	[RSP+D00] 0x0                (size_t) [0]
+	[RSP+D08] 0x0                (size_t) [0]
+	[RSP+D10] 0x0                (size_t) [0]
+	[RSP+D18] 0x0                (size_t) [0]
+	[RSP+D20] 0x0                (size_t) [0]
+	[RSP+D28] 0x0                (size_t) [0]
+	[RSP+D30] 0x0                (size_t) [0]
+	[RSP+D38] 0x0                (size_t) [0]
+	[RSP+D40] 0x0                (size_t) [0]
+	[RSP+D48] 0x0                (size_t) [0]
+	[RSP+D50] 0x0                (size_t) [0]
+	[RSP+D58] 0x0                (size_t) [0]
+	[RSP+D60] 0x0                (size_t) [0]
+	[RSP+D68] 0x0                (size_t) [0]
+	[RSP+D70] 0x0                (size_t) [0]
+	[RSP+D78] 0x0                (size_t) [0]
+	[RSP+D80] 0x0                (size_t) [0]
+	[RSP+D88] 0x0                (size_t) [0]
+	[RSP+D90] 0x0                (size_t) [0]
+	[RSP+D98] 0x0                (size_t) [0]
+	[RSP+DA0] 0x0                (size_t) [0]
+	[RSP+DA8] 0x0                (size_t) [0]
+	[RSP+DB0] 0x0                (size_t) [0]
+	[RSP+DB8] 0x0                (size_t) [0]
+	[RSP+DC0] 0x0                (size_t) [0]
+	[RSP+DC8] 0x0                (size_t) [0]
+	[RSP+DD0] 0x0                (size_t) [0]
+	[RSP+DD8] 0x0                (size_t) [0]
+	[RSP+DE0] 0x0                (size_t) [0]
+	[RSP+DE8] 0x0                (size_t) [0]
+	[RSP+DF0] 0x0                (size_t) [0]
+	[RSP+DF8] 0x0                (size_t) [0]
+	[RSP+E00] 0x0                (size_t) [0]
+	[RSP+E08] 0x0                (size_t) [0]
+	[RSP+E10] 0x0                (size_t) [0]
+	[RSP+E18] 0x0                (size_t) [0]
+	[RSP+E20] 0x0                (size_t) [0]
+	[RSP+E28] 0x0                (size_t) [0]
+	[RSP+E30] 0x0                (size_t) [0]
+	[RSP+E38] 0x0                (size_t) [0]
+	[RSP+E40] 0x0                (size_t) [0]
+	[RSP+E48] 0x0                (size_t) [0]
+	[RSP+E50] 0x0                (size_t) [0]
+	[RSP+E58] 0x0                (size_t) [0]
+	[RSP+E60] 0x0                (size_t) [0]
+	[RSP+E68] 0x0                (size_t) [0]
+	[RSP+E70] 0x0                (size_t) [0]
+	[RSP+E78] 0x0                (size_t) [0]
+	[RSP+E80] 0x0                (size_t) [0]
+	[RSP+E88] 0x0                (size_t) [0]
+	[RSP+E90] 0x0                (size_t) [0]
+	[RSP+E98] 0x0                (size_t) [0]
+	[RSP+EA0] 0x0                (size_t) [0]
+	[RSP+EA8] 0x0                (size_t) [0]
+	[RSP+EB0] 0x0                (size_t) [0]
+	[RSP+EB8] 0x0                (size_t) [0]
+	[RSP+EC0] 0x0                (size_t) [0]
+	[RSP+EC8] 0x0                (size_t) [0]
+	[RSP+ED0] 0x0                (size_t) [0]
+	[RSP+ED8] 0x0                (size_t) [0]
+	[RSP+EE0] 0x0                (size_t) [0]
+	[RSP+EE8] 0x0                (size_t) [0]
+	[RSP+EF0] 0x0                (size_t) [0]
+	[RSP+EF8] 0x0                (size_t) [0]
+	[RSP+F00] 0x0                (size_t) [0]
+	[RSP+F08] 0x0                (size_t) [0]
+
+MODULES:
+	XINPUT1_3.dll                      0x000000400000
+	steam_api64.dll                    0x00005B9F0000
+	X3DAudio1_7.dll                    0x00005D2E0000
+	d3d11.dll                          0x000180000000
+	BetterConsole.dll                  0x0297E4A60000
+	LL_fourPlay_1_10_163.dll           0x0297F3CB0000
+	Fallout4.exe                       0x7FF6618C0000
+	XAudio2_7.dll                      0x7FFE67100000
+	d3dcompiler_47_64.dll              0x7FFE675D0000
+	NvCamera64.dll                     0x7FFE68320000
+	d3dcompiler_46e.dll                0x7FFE68C40000
+	gameoverlayrenderer64.dll          0x7FFE695D0000
+	XDI.dll                            0x7FFE69770000
+	x-cell-og.dll                      0x7FFE697E0000
+	wsfw_identifier.dll                0x7FFE69930000
+	WhoseQuestIsItAnywayF4.dll         0x7FFE69A30000
+	WeaponDebrisCrashFix.dll           0x7FFE69A90000
+	UnlimitedFastTravel.dll            0x7FFE69AE0000
+	SUP_F4SE.dll                       0x7FFE69B30000
+	SprintStutteringFix.dll            0x7FFE69D60000
+	RobCo_Patcher.dll                  0x7FFE69DB0000
+	po3_SpellPerkItemDistributorF4.dll 0x7FFE69E90000
+	po3_SimpleOffenceSuppressionF4.dll 0x7FFE69FA0000
+	po3_BaseObjectSwapperF4.dll        0x7FFE6A030000
+	PapyrusCommonLibrary.dll           0x7FFE6A130000
+	MentatsF4SE.dll                    0x7FFE6A540000
+	LighthousePapyrusExtender.dll      0x7FFE6A650000
+	GardenOfEdenPapyrusExtender.dll    0x7FFE6A7A0000
+	BackportedBA2Support.dll           0x7FFE6AA90000
+	D3DCOMPILER_43.dll                 0x7FFE6B750000
+	place.dll                          0x7FFE6BA00000
+	mcm.dll                            0x7FFE6BA80000
+	HighFPSPhysicsFix.dll              0x7FFE6BB20000
+	WINHTTP.dll                        0x7FFE6BC30000
+	MODExplorer.dll                    0x7FFE6D6E0000
+	MagicSystemFixes.dll               0x7FFE6D760000
+	HHS.dll                            0x7FFE6D7E0000
+	PowerGridTools.dll                 0x7FFE6D970000
+	flexRelease_x64.dll                0x7FFE6D9E0000
+	SettlementOfUnlimitedSize.dll      0x7FFE6E130000
+	MeleeAndThrow.dll                  0x7FFE6E850000
+	Interior-NavCut-Fix.dll            0x7FFE6E8A0000
+	FollowerStrayBulletFix.dll         0x7FFE706E0000
+	f4ee.dll                           0x7FFE79E50000
+	Buffout4.dll                       0x7FFE79F60000
+	FollowerAIApproachReactionFix.dll  0x7FFE7B300000
+	EscapeFreeze.dll                   0x7FFE7B350000
+	DisableCompanionCollision.dll      0x7FFE7B410000
+	crafting_highlight_fix.dll         0x7FFE7B470000
+	cbp.dll                            0x7FFE7B4C0000
+	BakaFramework.dll                  0x7FFE7B540000
+	ConsoleUtilF4.dll                  0x7FFE7C920000
+	PlotUI.dll                         0x7FFE7CF20000
+	d3dx11_43.dll                      0x7FFE7D4E0000
+	VoltekLib.Detours.dll              0x7FFE7D530000
+	f4se_steam_loader.dll              0x7FFE7D6B0000
+	cudart64_75.dll                    0x7FFE7D810000
+	GFSDK_GodraysLib.x64.dll           0x7FFE7D870000
+	MSVCR110.dll                       0x7FFE7D8D0000
+	VoltekLib.RelocationDatabase.dll   0x7FFE7EAF0000
+	GFSDK_SSAO_D3D11.win64.dll         0x7FFE7F310000
+	flexExtRelease_x64.dll             0x7FFE7F840000
+	MSVCP110.dll                       0x7FFE7F8A0000
+	bink2w64.dll                       0x7FFE7FF80000
+	ConsoleEx.dll                      0x7FFE80CF0000
+	VoltekLib.MemoryManager.dll        0x7FFE82240000
+	VoltekLib.UnicodeConverter.dll     0x7FFE840A0000
+	encounter_zone_recalculation.dll   0x7FFE86820000
+	f4se_1_10_163.dll                  0x7FFE868C0000
+	CONCRT140.dll                      0x7FFEA8F80000
+	steamclient64.dll                  0x7FFEF7190000
+	tier0_s64.dll                      0x7FFEFA190000
+	vstdlib_s64.dll                    0x7FFF01BC0000
+	MSVCP140_ATOMIC_WAIT.dll           0x7FFF05DF0000
+	ResampleDmo.DLL                    0x7FFF05FC0000
+	msdmo.dll                          0x7FFF06640000
+	DSOUND.DLL                         0x7FFF066A0000
+	DINPUT8.dll                        0x7FFF58FA0000
+	nvspcap64.dll                      0x7FFF73E80000
+	nvppex.dll                         0x7FFF75A70000
+	usvfs_x64.dll                      0x7FFF80BA0000
+	ArmorPenetrationBugFix.dll         0x7FFF81530000
+	nvToolsExt64_1.dll                 0x7FFF82FF0000
+	XINPUT9_1_0.dll                    0x7FFF870E0000
+	winmmbase.dll                      0x7FFF87300000
+	inputhost.dll                      0x7FFF8ED30000
+	OneCoreCommonProxyStub.dll         0x7FFF8FB60000
+	textinputframework.dll             0x7FFF90350000
+	Windows.UI.dll                     0x7FFF92630000
+	VCRUNTIME140_1.dll                 0x7FFF97230000
+	WININET.dll                        0x7FFF97240000
+	VCRUNTIME140.dll                   0x7FFF974D0000
+	MSVCP140.dll                       0x7FFF97530000
+	AUDIOSES.DLL                       0x7FFF99060000
+	COMCTL32.dll                       0x7FFF9B3C0000
+	gdiplus.dll                        0x7FFF9B660000
+	NvMessageBus.dll                   0x7FFF9C0C0000
+	nvapi64.dll                        0x7FFF9C430000
+	nvwgf2umx.dll                      0x7FFF9DDD0000
+	OneCoreUAPCommonProxyStub.dll      0x7FFFA3430000
+	WINMM.dll                          0x7FFFA3ED0000
+	NvMemMapStoragex.dll               0x7FFFA3FD0000
+	MSIMG32.dll                        0x7FFFA4190000
+	dbghelp.dll                        0x7FFFA4340000
+	nvgpucomp64.dll                    0x7FFFA5540000
+	drvstore.dll                       0x7FFFA8FC0000
+	cryptnet.dll                       0x7FFFA91C0000
+	nvldumdx.dll                       0x7FFFA9410000
+	WINHTTP.DLL                        0x7FFFA94E0000
+	VERSION.dll                        0x7FFFA9BA0000
+	MMDevApi.dll                       0x7FFFA9CF0000
+	CoreUIComponents.dll               0x7FFFA9E50000
+	avrt.dll                           0x7FFFAACD0000
+	Microsoft.Internal.WarpPal.dll     0x7FFFABDA0000
+	WindowsCodecs.dll                  0x7FFFAC250000
+	d3d11.dll                          0x7FFFACD40000
+	dcomp.dll                          0x7FFFACFB0000
+	CoreMessaging.dll                  0x7FFFAD1E0000
+	apphelp.dll                        0x7FFFADA00000
+	Secur32.dll                        0x7FFFADAA0000
+	UxTheme.dll                        0x7FFFADB40000
+	dxcore.dll                         0x7FFFADCF0000
+	directxdatabasehelper.dll          0x7FFFADD40000
+	dxgi.dll                           0x7FFFADDA0000
+	dwmapi.dll                         0x7FFFAE100000
+	resourcepolicyclient.dll           0x7FFFAE190000
+	windows.storage.dll                0x7FFFAE580000
+	HID.DLL                            0x7FFFAEDD0000
+	IPHLPAPI.DLL                       0x7FFFAF0C0000
+	rsaenh.dll                         0x7FFFAF600000
+	kernel.appcore.dll                 0x7FFFAF6A0000
+	ntmarta.dll                        0x7FFFAF830000
+	SSPICLI.DLL                        0x7FFFAF9B0000
+	MSWSOCK.dll                        0x7FFFAFC30000
+	UMPDC.dll                          0x7FFFAFCA0000
+	POWRPROF.dll                       0x7FFFAFCC0000
+	gpapi.dll                          0x7FFFAFD20000
+	CRYPTBASE.DLL                      0x7FFFAFEE0000
+	wldp.dll                           0x7FFFAFF80000
+	CRYPTSP.dll                        0x7FFFB0060000
+	msasn1.dll                         0x7FFFB00C0000
+	bcrypt.dll                         0x7FFFB01F0000
+	devobj.dll                         0x7FFFB0520000
+	CFGMGR32.dll                       0x7FFFB0550000
+	profapi.dll                        0x7FFFB07D0000
+	ucrtbase.dll                       0x7FFFB08C0000
+	gdi32full.dll                      0x7FFFB0AD0000
+	bcryptPrimitives.dll               0x7FFFB0C10000
+	CRYPT32.dll                        0x7FFFB0CB0000
+	win32u.dll                         0x7FFFB0E30000
+	wintypes.dll                       0x7FFFB0E60000
+	msvcp_win.dll                      0x7FFFB0FD0000
+	wintrust.dll                       0x7FFFB1080000
+	KERNELBASE.dll                     0x7FFFB1110000
+	MSCTF.dll                          0x7FFFB1530000
+	sechost.dll                        0x7FFFB1690000
+	imagehlp.dll                       0x7FFFB1740000
+	ADVAPI32.dll                       0x7FFFB1770000
+	combase.dll                        0x7FFFB1830000
+	GDI32.dll                          0x7FFFB1BC0000
+	PSAPI.DLL                          0x7FFFB1BF0000
+	msvcrt.dll                         0x7FFFB1C30000
+	WS2_32.dll                         0x7FFFB1CE0000
+	OLEAUT32.dll                       0x7FFFB1D60000
+	clbcatq.dll                        0x7FFFB1E40000
+	COMDLG32.dll                       0x7FFFB20D0000
+	KERNEL32.DLL                       0x7FFFB2250000
+	SETUPAPI.dll                       0x7FFFB2320000
+	IMM32.DLL                          0x7FFFB28A0000
+	SHELL32.dll                        0x7FFFB28F0000
+	SHLWAPI.dll                        0x7FFFB3020000
+	shcore.dll                         0x7FFFB3080000
+	RPCRT4.dll                         0x7FFFB3170000
+	USER32.dll                         0x7FFFB3290000
+	ole32.dll                          0x7FFFB3460000
+	ntdll.dll                          0x7FFFB36C0000
+
+F4SE PLUGINS:
+	ArmorPenetrationBugFix.dll v1
+	BackportedBA2Support.dll v1
+	BakaFramework.dll v1.10
+	BetterConsole.dll
+	Buffout4.dll v1.37
+	cbp.dll
+	ConsoleEx.dll v1.2
+	ConsoleUtilF4.dll v1.0.1
+	crafting_highlight_fix.dll
+	DisableCompanionCollision.dll v1.0.1
+	encounter_zone_recalculation.dll
+	EscapeFreeze.dll v1
+	f4ee.dll
+	FollowerAIApproachReactionFix.dll v1
+	FollowerStrayBulletFix.dll v1
+	GardenOfEdenPapyrusExtender.dll v19.4
+	HHS.dll
+	HighFPSPhysicsFix.dll v0.8.11
+	Interior-NavCut-Fix.dll v1.0.3
+	LighthousePapyrusExtender.dll v1.13
+	LL_fourPlay_1_10_163.dll
+	MagicSystemFixes.dll v1.1
+	mcm.dll
+	MeleeAndThrow.dll v1
+	MentatsF4SE.dll v1
+	MODExplorer.dll
+	PapyrusCommonLibrary.dll v1.6.1
+	place.dll
+	PlotUI.dll
+	po3_BaseObjectSwapperF4.dll v1.1
+	po3_SimpleOffenceSuppressionF4.dll v1
+	po3_SpellPerkItemDistributorF4.dll v2
+	PowerGridTools.dll
+	RobCo_Patcher.dll v3.6
+	SettlementOfUnlimitedSize.dll
+	SprintStutteringFix.dll v1.3
+	SUP_F4SE.dll
+	UnlimitedFastTravel.dll
+	WeaponDebrisCrashFix.dll v1.3
+	WhoseQuestIsItAnywayF4.dll v1
+	wsfw_identifier.dll
+	x-cell-og.dll v2
+	XDI.dll
+
+PLUGINS:

@@ -1,0 +1,4209 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FFC9FB1BC53 nvwgf2umx.dll+166BC53
+
+	[Compatibility]
+		F4EE: true
+	[Crashlog]
+		AutoOpen: false
+		PromptUpload: false
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		ArchiveLimit: false
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: false
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: 2048
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 11 Pro v10.0.22631
+	CPU: AuthenticAMD AMD Ryzen 7 7800X3D 8-Core Processor           
+	GPU #1: Nvidia AD104 [GeForce RTX 4070]
+	GPU #2: AMD Raphael
+	GPU #3: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 26.19 GB/63.15 GB
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FFC9FB1BC53             nvwgf2umx.dll+166BC53
+	[ 1] 0x7FFC9E8E5407             nvwgf2umx.dll+0435407
+	[ 2] 0x7FFC9E67112A             nvwgf2umx.dll+01C112A
+	[ 3] 0x7FFC9E66A9B8             nvwgf2umx.dll+01BA9B8
+	[ 4] 0x7FFC9E597A78             nvwgf2umx.dll+00E7A78
+	[ 5] 0x7FFC9FB74FEB             nvwgf2umx.dll+16C4FEB
+	[ 6] 0x7FFC9FB73B4A             nvwgf2umx.dll+16C3B4A
+	[ 7] 0x7FFC9FB7374F             nvwgf2umx.dll+16C374F
+	[ 8] 0x7FFC9FB52E04             nvwgf2umx.dll+16A2E04
+	[ 9] 0x7FFC9FB71388             nvwgf2umx.dll+16C1388
+	[10] 0x7FFC9FB70244             nvwgf2umx.dll+16C0244
+	[11] 0x7FFC9FB6DD8C             nvwgf2umx.dll+16BDD8C
+	[12] 0x7FFC9FB79243             nvwgf2umx.dll+16C9243
+	[13] 0x7FFC9FB7909D             nvwgf2umx.dll+16C909D
+	[14] 0x7FFC9FB7D7C7             nvwgf2umx.dll+16CD7C7
+	[15] 0x7FFC9FB93B28             nvwgf2umx.dll+16E3B28
+	[16] 0x7FFC9FBA2DB9             nvwgf2umx.dll+16F2DB9
+	[17] 0x7FFC26B56681             D3D12Core.dll+00B6681
+	[18] 0x7FFC26B55F8C             D3D12Core.dll+00B5F8C
+	[19] 0x7FFCC4BB24AD                  dxgi.dll+00824AD
+	[20] 0x7FFCC4BB4CCD                  dxgi.dll+0084CCD
+	[21] 0x7FFCC4B62601                  dxgi.dll+0032601
+	[22] 0x7FFCC4B33B7F                  dxgi.dll+0003B7F
+	[23] 0x7FFCC4B338DA                  dxgi.dll+00038DA
+	[24] 0x7FFCC4B43AE9                  dxgi.dll+0013AE9
+	[25] 0x7FFCC4B42C70                  dxgi.dll+0012C70
+	[26] 0x7FFCC4B64866                  dxgi.dll+0034866
+	[27] 0x7FFBE9E4B394 gameoverlayrenderer64.dll+008B394
+	[28] 0x7FFBE9D53B64             sl.common.dll+0043B64
+	[29] 0x7FFBE9C9B399             sl.dlss_g.dll+001B399
+	[30] 0x7FFBE9CA190C             sl.dlss_g.dll+002190C
+	[31] 0x7FFBE9C98450             sl.dlss_g.dll+0018450
+	[32] 0x7FFBE9CB3512             sl.dlss_g.dll+0033512
+	[33] 0x7FFBE9C97039             sl.dlss_g.dll+0017039
+	[34] 0x7FFCC7809363              ucrtbase.dll+0029363
+	[35] 0x7FFCC963257D              KERNEL32.DLL+001257D
+	[36] 0x7FFCCA28AA58                 ntdll.dll+005AA58
+
+REGISTERS:
+	RAX 0x6AA00000022406C7 (size_t)
+	RCX 0x17A93D2996C4F860 (size_t)
+	RDX 0x226C9C1D6B0      (void*)
+	RBX 0x226C9C1D530      (void*)
+	RSP 0x9F75B99890       (void*)
+	RBP 0x9F75B99990       (void*)
+	RSI 0x22406C6D500      (void*)
+	RDI 0x6AA00000022406C7 (size_t)
+	R8  0x2FA              (size_t)
+	R9  0x226C9C1DFF0      (void*)
+	R10 0x22406C6D608      (void*)
+	R11 0x98480C404549245F (size_t)
+	R12 0x22406C6D621      (void*)
+	R13 0x22406C6D608      (void*)
+	R14 0x22406C6D618      (void*)
+	R15 0x0                (size_t)
+
+STACK:
+	[RSP+0   ] 0x226C9C1D870      (void*)
+	[RSP+8   ] 0x9F75B99990       (void*)
+	[RSP+10  ] 0x22406C6D500      (void*)
+	[RSP+18  ] 0x226C9C1D530      (void*)
+	[RSP+20  ] 0x17A93D2996C50400 (size_t)
+	[RSP+28  ] 0x2243C24F618      (void*)
+	[RSP+30  ] 0x2243C24F118      (void*)
+	[RSP+38  ] 0x0                (size_t)
+	[RSP+40  ] 0x3B94D436AB       (size_t)
+	[RSP+48  ] 0x0                (size_t)
+	[RSP+50  ] 0x0                (size_t)
+	[RSP+58  ] 0x0                (size_t)
+	[RSP+60  ] 0x17A93D2997513420 (size_t)
+	[RSP+68  ] 0xD9136            (size_t)
+	[RSP+70  ] 0x9F75B998C8       (void*)
+	[RSP+78  ] 0x20               (size_t)
+	[RSP+80  ] 0x0                (size_t)
+	[RSP+88  ] 0x20               (size_t)
+	[RSP+90  ] 0x0                (size_t)
+	[RSP+98  ] 0x1DA              (size_t)
+	[RSP+A0  ] 0x1                (size_t)
+	[RSP+A8  ] 0x2240B867C60      (void*)
+	[RSP+B0  ] 0x0                (size_t)
+	[RSP+B8  ] 0x0                (size_t)
+	[RSP+C0  ] 0x2243C24E730      (void*)
+	[RSP+C8  ] 0x7FFC9E8A23F9     (void* -> nvwgf2umx.dll+03F23F9)
+	[RSP+D0  ] 0x0                (size_t)
+	[RSP+D8  ] 0x9F75B99A60       (void*)
+	[RSP+E0  ] 0x0                (size_t)
+	[RSP+E8  ] 0x0                (size_t)
+	[RSP+F0  ] 0x0                (size_t)
+	[RSP+F8  ] 0x1DA              (size_t)
+	[RSP+100 ] 0x47814940         (size_t)
+	[RSP+108 ] 0x1                (size_t)
+	[RSP+110 ] 0x1                (size_t)
+	[RSP+118 ] 0x7FFC9FC970A9     (void* -> nvwgf2umx.dll+17E70A9)
+	[RSP+120 ] 0x2                (size_t)
+	[RSP+128 ] 0x22406C6D6C0      (void*)
+	[RSP+130 ] 0x0                (size_t)
+	[RSP+138 ] 0x400000000        (size_t)
+	[RSP+140 ] 0x22400000000      (char*) "Actx "
+	[RSP+148 ] 0x3B94D436A5       (size_t)
+	[RSP+150 ] 0x2243C24F070      (void*)
+	[RSP+158 ] 0x0                (size_t)
+	[RSP+160 ] 0xCCD5044B7B9C     (size_t)
+	[RSP+168 ] 0x1DA              (size_t)
+	[RSP+170 ] 0x0                (size_t)
+	[RSP+178 ] 0x0                (size_t)
+	[RSP+180 ] 0x0                (size_t)
+	[RSP+188 ] 0x0                (size_t)
+	[RSP+190 ] 0x0                (size_t)
+	[RSP+198 ] 0x0                (size_t)
+	[RSP+1A0 ] 0x0                (size_t)
+	[RSP+1A8 ] 0x0                (size_t)
+	[RSP+1B0 ] 0x0                (size_t)
+	[RSP+1B8 ] 0x0                (size_t)
+	[RSP+1C0 ] 0x0                (size_t)
+	[RSP+1C8 ] 0x0                (size_t)
+	[RSP+1D0 ] 0x0                (size_t)
+	[RSP+1D8 ] 0x0                (size_t)
+	[RSP+1E0 ] 0x0                (size_t)
+	[RSP+1E8 ] 0x1                (size_t)
+	[RSP+1F0 ] 0x0                (size_t)
+	[RSP+1F8 ] 0x2243C24E730      (void*)
+	[RSP+200 ] 0x9F75B99C90       (void*)
+	[RSP+208 ] 0x7FFC9E8E5407     (void* -> nvwgf2umx.dll+0435407)
+	[RSP+210 ] 0x2243C24E730      (void*)
+	[RSP+218 ] 0x22406C6C3C0      (void*)
+	[RSP+220 ] 0x22409DF86F0      (void*)
+	[RSP+228 ] 0x0                (size_t)
+	[RSP+230 ] 0x2240702B8A0      (void*)
+	[RSP+238 ] 0x7FFC9E67112A     (void* -> nvwgf2umx.dll+01C112A)
+	[RSP+240 ] 0x22409DF86F0      (void*)
+	[RSP+248 ] 0x2243C24E730      (void*)
+	[RSP+250 ] 0x22409DF86F0      (void*)
+	[RSP+258 ] 0x2243C24E730      (void*)
+	[RSP+260 ] 0x0                (size_t)
+	[RSP+268 ] 0x0                (size_t)
+	[RSP+270 ] 0x22400000000      (char*) "Actx "
+	[RSP+278 ] 0x1                (size_t)
+	[RSP+280 ] 0x3B94D43695       (size_t)
+	[RSP+288 ] 0xE6F73B           (size_t)
+	[RSP+290 ] 0xE6F73B           (size_t)
+	[RSP+298 ] 0xE6F73B           (size_t)
+	[RSP+2A0 ] 0xE6F73B           (size_t)
+	[RSP+2A8 ] 0xE6F73B           (size_t)
+	[RSP+2B0 ] 0xCCD5044B79DC     (size_t)
+	[RSP+2B8 ] 0x0                (size_t)
+	[RSP+2C0 ] 0x0                (size_t)
+	[RSP+2C8 ] 0x9F75B9A8E0       (void*)
+	[RSP+2D0 ] 0x0                (size_t)
+	[RSP+2D8 ] 0x9F75B9A8E0       (void*)
+	[RSP+2E0 ] 0x1                (size_t)
+	[RSP+2E8 ] 0x22409DF86F0      (void*)
+	[RSP+2F0 ] 0x0                (size_t)
+	[RSP+2F8 ] 0x7FFC9E66A9B8     (void* -> nvwgf2umx.dll+01BA9B8)
+	[RSP+300 ] 0x1                (size_t)
+	[RSP+308 ] 0x9F00000000       (size_t)
+	[RSP+310 ] 0x1                (size_t)
+	[RSP+318 ] 0x1                (size_t)
+	[RSP+320 ] 0x0                (size_t)
+	[RSP+328 ] 0x9F75B9A300       (void*)
+	[RSP+330 ] 0x9F75B9A568       (void*)
+	[RSP+338 ] 0x0                (size_t)
+	[RSP+340 ] 0x0                (size_t)
+	[RSP+348 ] 0x9F75B99D38       (void*)
+	[RSP+350 ] 0x9F00000000       (size_t)
+	[RSP+358 ] 0x7FFC00000000     (size_t)
+	[RSP+360 ] 0x9F75B9F700       (void*)
+	[RSP+368 ] 0x9F75B9A870       (void*)
+	[RSP+370 ] 0x0                (size_t)
+	[RSP+378 ] 0x9F75B9A200       (void*)
+	[RSP+380 ] 0x9F75B90001       (void*)
+	[RSP+388 ] 0x9F75B9A8E0       (void*)
+	[RSP+390 ] 0x1                (size_t)
+	[RSP+398 ] 0x9F75B9A8E0       (void*)
+	[RSP+3A0 ] 0x0                (size_t)
+	[RSP+3A8 ] 0x0                (size_t)
+	[RSP+3B0 ] 0x6100000000       (size_t)
+	[RSP+3B8 ] 0x0                (size_t)
+	[RSP+3C0 ] 0x0                (size_t)
+	[RSP+3C8 ] 0x9F75B9A360       (void*)
+	[RSP+3D0 ] 0x7FFCCA3BEBF8     (void* -> ntdll.dll+018EBF8)
+	[RSP+3D8 ] 0x7FFCCA230000     (void*)
+	[RSP+3E0 ] 0x1                (size_t)
+	[RSP+3E8 ] 0x0                (size_t)
+	[RSP+3F0 ] 0x9F75B9A870       (void*)
+	[RSP+3F8 ] 0x0                (size_t)
+	[RSP+400 ] 0x0                (size_t)
+	[RSP+408 ] 0x22406C796C0      (void*)
+	[RSP+410 ] 0x0                (size_t)
+	[RSP+418 ] 0x224F7BF6368      (void*)
+	[RSP+420 ] 0x0                (size_t)
+	[RSP+428 ] 0x7FFCCA3BEB00     (void* -> ntdll.dll+018EB00)
+	[RSP+430 ] 0x9F75B9A568       (void*)
+	[RSP+438 ] 0x9F75B9A200       (void*)
+	[RSP+440 ] 0x9F75B9A268       (void*)
+	[RSP+448 ] 0x9F75B9A260       (void*)
+	[RSP+450 ] 0x0                (size_t)
+	[RSP+458 ] 0x9F75B9A248       (void*)
+	[RSP+460 ] 0x0                (size_t)
+	[RSP+468 ] 0x8                (size_t)
+	[RSP+470 ] 0x22400000000      (char*) "Actx "
+	[RSP+478 ] 0x9F75B99F60       (void*)
+	[RSP+480 ] 0x0                (size_t)
+	[RSP+488 ] 0x22409DF86F0      (void*)
+	[RSP+490 ] 0x10147814940      (size_t)
+	[RSP+498 ] 0x100000000        (size_t)
+	[RSP+4A0 ] 0x1FA000000000     (size_t)
+	[RSP+4A8 ] 0x1                (size_t)
+	[RSP+4B0 ] 0xCCD5044B7A00     (size_t)
+	[RSP+4B8 ] 0x0                (size_t)
+	[RSP+4C0 ] 0x4000940000000001 (size_t)
+	[RSP+4C8 ] 0x0                (size_t)
+	[RSP+4D0 ] 0x0                (size_t)
+	[RSP+4D8 ] 0x0                (size_t)
+	[RSP+4E0 ] 0x0                (size_t)
+	[RSP+4E8 ] 0x0                (size_t)
+	[RSP+4F0 ] 0x0                (size_t)
+	[RSP+4F8 ] 0x0                (size_t)
+	[RSP+500 ] 0x0                (size_t)
+	[RSP+508 ] 0x0                (size_t)
+	[RSP+510 ] 0x0                (size_t)
+	[RSP+518 ] 0x0                (size_t)
+	[RSP+520 ] 0x0                (size_t)
+	[RSP+528 ] 0x0                (size_t)
+	[RSP+530 ] 0x0                (size_t)
+	[RSP+538 ] 0x0                (size_t)
+	[RSP+540 ] 0x0                (size_t)
+	[RSP+548 ] 0x0                (size_t)
+	[RSP+550 ] 0x0                (size_t)
+	[RSP+558 ] 0x0                (size_t)
+	[RSP+560 ] 0x0                (size_t)
+	[RSP+568 ] 0x0                (size_t)
+	[RSP+570 ] 0x0                (size_t)
+	[RSP+578 ] 0x0                (size_t)
+	[RSP+580 ] 0x0                (size_t)
+	[RSP+588 ] 0x0                (size_t)
+	[RSP+590 ] 0x0                (size_t)
+	[RSP+598 ] 0x0                (size_t)
+	[RSP+5A0 ] 0x0                (size_t)
+	[RSP+5A8 ] 0x0                (size_t)
+	[RSP+5B0 ] 0x0                (size_t)
+	[RSP+5B8 ] 0x0                (size_t)
+	[RSP+5C0 ] 0x0                (size_t)
+	[RSP+5C8 ] 0x0                (size_t)
+	[RSP+5D0 ] 0x0                (size_t)
+	[RSP+5D8 ] 0x0                (size_t)
+	[RSP+5E0 ] 0x0                (size_t)
+	[RSP+5E8 ] 0x0                (size_t)
+	[RSP+5F0 ] 0x0                (size_t)
+	[RSP+5F8 ] 0x0                (size_t)
+	[RSP+600 ] 0x0                (size_t)
+	[RSP+608 ] 0x0                (size_t)
+	[RSP+610 ] 0x0                (size_t)
+	[RSP+618 ] 0x0                (size_t)
+	[RSP+620 ] 0x0                (size_t)
+	[RSP+628 ] 0x0                (size_t)
+	[RSP+630 ] 0x0                (size_t)
+	[RSP+638 ] 0x0                (size_t)
+	[RSP+640 ] 0x0                (size_t)
+	[RSP+648 ] 0x0                (size_t)
+	[RSP+650 ] 0x0                (size_t)
+	[RSP+658 ] 0x0                (size_t)
+	[RSP+660 ] 0x0                (size_t)
+	[RSP+668 ] 0x0                (size_t)
+	[RSP+670 ] 0x0                (size_t)
+	[RSP+678 ] 0x0                (size_t)
+	[RSP+680 ] 0x0                (size_t)
+	[RSP+688 ] 0x0                (size_t)
+	[RSP+690 ] 0x0                (size_t)
+	[RSP+698 ] 0x0                (size_t)
+	[RSP+6A0 ] 0x0                (size_t)
+	[RSP+6A8 ] 0x0                (size_t)
+	[RSP+6B0 ] 0x0                (size_t)
+	[RSP+6B8 ] 0x0                (size_t)
+	[RSP+6C0 ] 0x0                (size_t)
+	[RSP+6C8 ] 0x0                (size_t)
+	[RSP+6D0 ] 0x0                (size_t)
+	[RSP+6D8 ] 0x0                (size_t)
+	[RSP+6E0 ] 0x0                (size_t)
+	[RSP+6E8 ] 0x0                (size_t)
+	[RSP+6F0 ] 0x0                (size_t)
+	[RSP+6F8 ] 0x0                (size_t)
+	[RSP+700 ] 0x0                (size_t)
+	[RSP+708 ] 0x0                (size_t)
+	[RSP+710 ] 0x0                (size_t)
+	[RSP+718 ] 0x0                (size_t)
+	[RSP+720 ] 0x0                (size_t)
+	[RSP+728 ] 0x0                (size_t)
+	[RSP+730 ] 0x0                (size_t)
+	[RSP+738 ] 0x0                (size_t)
+	[RSP+740 ] 0x0                (size_t)
+	[RSP+748 ] 0x0                (size_t)
+	[RSP+750 ] 0x0                (size_t)
+	[RSP+758 ] 0x0                (size_t)
+	[RSP+760 ] 0x0                (size_t)
+	[RSP+768 ] 0x0                (size_t)
+	[RSP+770 ] 0x0                (size_t)
+	[RSP+778 ] 0x0                (size_t)
+	[RSP+780 ] 0x0                (size_t)
+	[RSP+788 ] 0x0                (size_t)
+	[RSP+790 ] 0x0                (size_t)
+	[RSP+798 ] 0x0                (size_t)
+	[RSP+7A0 ] 0x0                (size_t)
+	[RSP+7A8 ] 0x0                (size_t)
+	[RSP+7B0 ] 0x0                (size_t)
+	[RSP+7B8 ] 0x0                (size_t)
+	[RSP+7C0 ] 0x0                (size_t)
+	[RSP+7C8 ] 0x0                (size_t)
+	[RSP+7D0 ] 0x0                (size_t)
+	[RSP+7D8 ] 0x0                (size_t)
+	[RSP+7E0 ] 0x0                (size_t)
+	[RSP+7E8 ] 0x0                (size_t)
+	[RSP+7F0 ] 0x0                (size_t)
+	[RSP+7F8 ] 0x0                (size_t)
+	[RSP+800 ] 0x0                (size_t)
+	[RSP+808 ] 0x0                (size_t)
+	[RSP+810 ] 0x0                (size_t)
+	[RSP+818 ] 0x0                (size_t)
+	[RSP+820 ] 0x0                (size_t)
+	[RSP+828 ] 0x0                (size_t)
+	[RSP+830 ] 0x0                (size_t)
+	[RSP+838 ] 0x0                (size_t)
+	[RSP+840 ] 0x0                (size_t)
+	[RSP+848 ] 0x0                (size_t)
+	[RSP+850 ] 0x0                (size_t)
+	[RSP+858 ] 0x0                (size_t)
+	[RSP+860 ] 0x0                (size_t)
+	[RSP+868 ] 0x0                (size_t)
+	[RSP+870 ] 0x0                (size_t)
+	[RSP+878 ] 0x0                (size_t)
+	[RSP+880 ] 0x0                (size_t)
+	[RSP+888 ] 0x0                (size_t)
+	[RSP+890 ] 0x0                (size_t)
+	[RSP+898 ] 0x0                (size_t)
+	[RSP+8A0 ] 0x0                (size_t)
+	[RSP+8A8 ] 0x0                (size_t)
+	[RSP+8B0 ] 0x0                (size_t)
+	[RSP+8B8 ] 0x0                (size_t)
+	[RSP+8C0 ] 0x0                (size_t)
+	[RSP+8C8 ] 0x0                (size_t)
+	[RSP+8D0 ] 0x0                (size_t)
+	[RSP+8D8 ] 0x0                (size_t)
+	[RSP+8E0 ] 0x0                (size_t)
+	[RSP+8E8 ] 0x0                (size_t)
+	[RSP+8F0 ] 0x0                (size_t)
+	[RSP+8F8 ] 0x0                (size_t)
+	[RSP+900 ] 0x0                (size_t)
+	[RSP+908 ] 0x0                (size_t)
+	[RSP+910 ] 0x0                (size_t)
+	[RSP+918 ] 0x0                (size_t)
+	[RSP+920 ] 0x0                (size_t)
+	[RSP+928 ] 0x0                (size_t)
+	[RSP+930 ] 0x0                (size_t)
+	[RSP+938 ] 0x0                (size_t)
+	[RSP+940 ] 0x0                (size_t)
+	[RSP+948 ] 0x0                (size_t)
+	[RSP+950 ] 0x0                (size_t)
+	[RSP+958 ] 0x0                (size_t)
+	[RSP+960 ] 0x0                (size_t)
+	[RSP+968 ] 0x0                (size_t)
+	[RSP+970 ] 0x0                (size_t)
+	[RSP+978 ] 0x0                (size_t)
+	[RSP+980 ] 0x0                (size_t)
+	[RSP+988 ] 0x0                (size_t)
+	[RSP+990 ] 0x0                (size_t)
+	[RSP+998 ] 0x0                (size_t)
+	[RSP+9A0 ] 0x0                (size_t)
+	[RSP+9A8 ] 0x0                (size_t)
+	[RSP+9B0 ] 0x0                (size_t)
+	[RSP+9B8 ] 0x0                (size_t)
+	[RSP+9C0 ] 0x0                (size_t)
+	[RSP+9C8 ] 0x0                (size_t)
+	[RSP+9D0 ] 0x0                (size_t)
+	[RSP+9D8 ] 0x0                (size_t)
+	[RSP+9E0 ] 0x0                (size_t)
+	[RSP+9E8 ] 0x0                (size_t)
+	[RSP+9F0 ] 0x0                (size_t)
+	[RSP+9F8 ] 0x0                (size_t)
+	[RSP+A00 ] 0x0                (size_t)
+	[RSP+A08 ] 0x0                (size_t)
+	[RSP+A10 ] 0x0                (size_t)
+	[RSP+A18 ] 0x0                (size_t)
+	[RSP+A20 ] 0x0                (size_t)
+	[RSP+A28 ] 0x0                (size_t)
+	[RSP+A30 ] 0x0                (size_t)
+	[RSP+A38 ] 0x0                (size_t)
+	[RSP+A40 ] 0x0                (size_t)
+	[RSP+A48 ] 0x0                (size_t)
+	[RSP+A50 ] 0x0                (size_t)
+	[RSP+A58 ] 0x0                (size_t)
+	[RSP+A60 ] 0x0                (size_t)
+	[RSP+A68 ] 0x0                (size_t)
+	[RSP+A70 ] 0x0                (size_t)
+	[RSP+A78 ] 0x0                (size_t)
+	[RSP+A80 ] 0x0                (size_t)
+	[RSP+A88 ] 0x0                (size_t)
+	[RSP+A90 ] 0x0                (size_t)
+	[RSP+A98 ] 0x0                (size_t)
+	[RSP+AA0 ] 0x0                (size_t)
+	[RSP+AA8 ] 0x0                (size_t)
+	[RSP+AB0 ] 0x0                (size_t)
+	[RSP+AB8 ] 0x0                (size_t)
+	[RSP+AC0 ] 0x9F00000000       (size_t)
+	[RSP+AC8 ] 0x7FFC9FCBE5DC     (void* -> nvwgf2umx.dll+180E5DC)
+	[RSP+AD0 ] 0x100044E564441    (size_t)
+	[RSP+AD8 ] 0x4E564458000000BE (size_t)
+	[RSP+AE0 ] 0x0                (size_t)
+	[RSP+AE8 ] 0x0                (size_t)
+	[RSP+AF0 ] 0x0                (size_t)
+	[RSP+AF8 ] 0x0                (size_t)
+	[RSP+B00 ] 0x0                (size_t)
+	[RSP+B08 ] 0x0                (size_t)
+	[RSP+B10 ] 0x0                (size_t)
+	[RSP+B18 ] 0x0                (size_t)
+	[RSP+B20 ] 0x0                (size_t)
+	[RSP+B28 ] 0x0                (size_t)
+	[RSP+B30 ] 0x0                (size_t)
+	[RSP+B38 ] 0x0                (size_t)
+	[RSP+B40 ] 0x0                (size_t)
+	[RSP+B48 ] 0x0                (size_t)
+	[RSP+B50 ] 0x0                (size_t)
+	[RSP+B58 ] 0x0                (size_t)
+	[RSP+B60 ] 0x100000000000000  (size_t)
+	[RSP+B68 ] 0x0                (size_t)
+	[RSP+B70 ] 0x0                (size_t)
+	[RSP+B78 ] 0x9139010000002000 (size_t)
+	[RSP+B80 ] 0xD                (size_t)
+	[RSP+B88 ] 0x0                (size_t)
+	[RSP+B90 ] 0xCCD5044B789C     (size_t)
+	[RSP+B98 ] 0x0                (size_t)
+	[RSP+BA0 ] 0x9F75B9A8E0       (void*)
+	[RSP+BA8 ] 0x22409DF86F0      (void*)
+	[RSP+BB0 ] 0x0                (size_t)
+	[RSP+BB8 ] 0x0                (size_t)
+	[RSP+BC0 ] 0x9F75B9A8E0       (void*)
+	[RSP+BC8 ] 0x0                (size_t)
+	[RSP+BD0 ] 0x9F75B9A570       (void*)
+	[RSP+BD8 ] 0x7FFC9E597A78     (void* -> nvwgf2umx.dll+00E7A78)
+	[RSP+BE0 ] 0x0                (size_t)
+	[RSP+BE8 ] 0x0                (size_t)
+	[RSP+BF0 ] 0x0                (size_t)
+	[RSP+BF8 ] 0x0                (size_t)
+	[RSP+C00 ] 0x224F7BF6368      (void*)
+	[RSP+C08 ] 0x1                (size_t)
+	[RSP+C10 ] 0x9F75B9A568       (void*)
+	[RSP+C18 ] 0x61               (size_t)
+	[RSP+C20 ] 0x7FFC00000000     (size_t)
+	[RSP+C28 ] 0x0                (size_t)
+	[RSP+C30 ] 0x0                (size_t)
+	[RSP+C38 ] 0x0                (size_t)
+	[RSP+C40 ] 0x0                (size_t)
+	[RSP+C48 ] 0x0                (size_t)
+	[RSP+C50 ] 0x9F75B9A870       (void*)
+	[RSP+C58 ] 0x0                (size_t)
+	[RSP+C60 ] 0x0                (size_t)
+	[RSP+C68 ] 0x0                (size_t)
+	[RSP+C70 ] 0x0                (size_t)
+	[RSP+C78 ] 0x9F75B9A8E0       (void*)
+	[RSP+C80 ] 0xF161F100         (size_t)
+	[RSP+C88 ] 0x22409DF86F0      (void*)
+	[RSP+C90 ] 0x1F0EAF01         (size_t)
+	[RSP+C98 ] 0x0                (size_t)
+	[RSP+CA0 ] 0x224F7BF6368      (void*)
+	[RSP+CA8 ] 0x0                (size_t)
+	[RSP+CB0 ] 0x2240A8A4160      (void*)
+	[RSP+CB8 ] 0x30               (size_t)
+	[RSP+CC0 ] 0x9F75B9A880       (void*)
+	[RSP+CC8 ] 0x7FFC26B3D270     (void* -> D3D12Core.dll+009D270)
+	[RSP+CD0 ] 0x0                (size_t)
+	[RSP+CD8 ] 0x0                (size_t)
+	[RSP+CE0 ] 0x0                (size_t)
+	[RSP+CE8 ] 0x0                (size_t)
+	[RSP+CF0 ] 0x9F75B9A870       (void*)
+	[RSP+CF8 ] 0x0                (size_t)
+	[RSP+D00 ] 0x4                (size_t)
+	[RSP+D08 ] 0x7FFC9E918DBF     (void* -> nvwgf2umx.dll+0468DBF)
+	[RSP+D10 ] 0x2240A926630      (void*)
+	[RSP+D18 ] 0x7FFC26B2D55C     (void* -> D3D12Core.dll+008D55C)
+	[RSP+D20 ] 0x22409F72D70      (void*)
+	[RSP+D28 ] 0x7FFC9FA8B471     (void* -> nvwgf2umx.dll+15DB471)
+	[RSP+D30 ] 0x22409F72D70      (void*)
+	[RSP+D38 ] 0x0                (size_t)
+	[RSP+D40 ] 0x0                (size_t)
+	[RSP+D48 ] 0x7FFC26B3E356     (void* -> D3D12Core.dll+009E356)
+	[RSP+D50 ] 0x9F75B9A7B0       (void*)
+	[RSP+D58 ] 0x7FFC9FBA09F0     (void* -> nvwgf2umx.dll+16F09F0)
+	[RSP+D60 ] 0x22407777FF0      (void*)
+	[RSP+D68 ] 0x7FFC9E8E2AFB     (void* -> nvwgf2umx.dll+0432AFB)
+	[RSP+D70 ] 0xCCD5044B46CC     (size_t)
+	[RSP+D78 ] 0x7FFCC2E67122     (void* -> d3d11.dll+0037122)
+	[RSP+D80 ] 0x224026B8410      (void*)
+	[RSP+D88 ] 0x4                (size_t)
+	[RSP+D90 ] 0x9F75B9A7D0       (void*)
+	[RSP+D98 ] 0x4                (size_t)
+	[RSP+DA0 ] 0x2240A8A4160      (void*)
+	[RSP+DA8 ] 0x7FFCC2E69E8A     (void* -> d3d11.dll+0039E8A)
+	[RSP+DB0 ] 0x0                (size_t)
+	[RSP+DB8 ] 0x7FFC9FA8B471     (void* -> nvwgf2umx.dll+15DB471)
+	[RSP+DC0 ] 0x300000000        (size_t)
+	[RSP+DC8 ] 0x11800008000      (size_t)
+	[RSP+DD0 ] 0x226BE5E0480      (void*)
+	[RSP+DD8 ] 0x226BE5E04A0      (void*)
+	[RSP+DE0 ] 0x0                (size_t)
+	[RSP+DE8 ] 0x7FFC9FBA09F0     (void* -> nvwgf2umx.dll+16F09F0)
+	[RSP+DF0 ] 0x0                (size_t)
+	[RSP+DF8 ] 0x7FFC9F9980A8     (void* -> nvwgf2umx.dll+14E80A8)
+	[RSP+E00 ] 0x22406E74B60      (void*)
+	[RSP+E08 ] 0x0                (size_t)
+	[RSP+E10 ] 0x224026BA200      (void*)
+	[RSP+E18 ] 0x4                (size_t)
+	[RSP+E20 ] 0x9F75B9A7D0       (void*)
+	[RSP+E28 ] 0x4                (size_t)
+	[RSP+E30 ] 0x2240A8A4160      (void*)
+	[RSP+E38 ] 0x9F75B9A770       (void*)
+	[RSP+E40 ] 0x8                (size_t)
+	[RSP+E48 ] 0x7FFC9E5DA5FC     (void* -> nvwgf2umx.dll+012A5FC)
+	[RSP+E50 ] 0x22406E74B60      (void*)
+	[RSP+E58 ] 0x6F03DBEA5222     (size_t)
+	[RSP+E60 ] 0x9F75B9A770       (void*)
+	[RSP+E68 ] 0x22406E35DA0      (void*)
+	[RSP+E70 ] 0x22406E35DA0      (void*)
+	[RSP+E78 ] 0x7FFCC2E67162     (void* -> d3d11.dll+0037162)
+	[RSP+E80 ] 0x0                (size_t)
+	[RSP+E88 ] 0x0                (size_t)
+	[RSP+E90 ] 0x224026BB400      (void*)
+	[RSP+E98 ] 0x4                (size_t)
+	[RSP+EA0 ] 0x9F75B9A7D0       (void*)
+	[RSP+EA8 ] 0x4                (size_t)
+	[RSP+EB0 ] 0x2240A8A4160      (void*)
+	[RSP+EB8 ] 0x7FFC9FAD0784     (void* -> nvwgf2umx.dll+1620784)
+	[RSP+EC0 ] 0x7FFCBC3F7720     (void* -> nvapi64.dll+06E7720)
+	[RSP+EC8 ] 0x22406E35DA0      (void*)
+	[RSP+ED0 ] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+ED8 ] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+EE0 ] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+EE8 ] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+EF0 ] 0x9F75B9A878       (char*) "W"
+	[RSP+EF8 ] 0x7FFC9E5DE484     (void* -> nvwgf2umx.dll+012E484)
+	[RSP+F00 ] 0x22409E05A68      (void*)
+	[RSP+F08 ] 0x22409DF86F0      (void*)
+	[RSP+F10 ] 0xCCD5044B477C     (size_t)
+	[RSP+F18 ] 0x0                (size_t)
+	[RSP+F20 ] 0xCCD5044B406C     (size_t)
+	[RSP+F28 ] 0xCCD500000004     (size_t)
+	[RSP+F30 ] 0x0                (size_t)
+	[RSP+F38 ] 0x2241F0EAF30      (void*)
+	[RSP+F40 ] 0x0                (size_t)
+	[RSP+F48 ] 0x224F7BF6310      (void*)
+	[RSP+F50 ] 0x80070057         (size_t)
+	[RSP+F58 ] 0x0                (size_t)
+	[RSP+F60 ] 0x22409DF86F0      (void*)
+	[RSP+F68 ] 0x2                (size_t)
+	[RSP+F70 ] 0x9F75B9A910       (void*)
+	[RSP+F78 ] 0x7FFC9FB74FEB     (void* -> nvwgf2umx.dll+16C4FEB)
+	[RSP+F80 ] 0x9F75B9A890       (void*)
+	[RSP+F88 ] 0x7FFCA0919560     (char*) "PLO : %d F"
+	[RSP+F90 ] 0x0                (size_t)
+	[RSP+F98 ] 0x7FFCCA3BEBF8     (void* -> ntdll.dll+018EBF8)
+	[RSP+FA0 ] 0x1                (size_t)
+	[RSP+FA8 ] 0x22400000061      (void*)
+	[RSP+FB0 ] 0x7FFC00000000     (size_t)
+	[RSP+FB8 ] 0x0                (size_t)
+	[RSP+FC0 ] 0x0                (size_t)
+	[RSP+FC8 ] 0x0                (size_t)
+	[RSP+FD0 ] 0x0                (size_t)
+	[RSP+FD8 ] 0x9F75B9A870       (void*)
+	[RSP+FE0 ] 0x0                (size_t)
+	[RSP+FE8 ] 0x22480070057      (void*)
+	[RSP+FF0 ] 0x9F75B9A8E0       (void*)
+	[RSP+FF8 ] 0x224F7BF6368      (void*)
+	[RSP+1000] 0x22409F72D70      (void*)
+	[RSP+1008] 0x0                (size_t)
+	[RSP+1010] 0x0                (size_t)
+	[RSP+1018] 0x0                (size_t)
+	[RSP+1020] 0x0                (size_t)
+	[RSP+1028] 0x224F7BF6348      (void*)
+	[RSP+1030] 0x0                (size_t)
+	[RSP+1038] 0x0                (size_t)
+	[RSP+1040] 0x0                (size_t)
+	[RSP+1048] 0x2240A926630      (void*)
+	[RSP+1050] 0x224F77165C0      (void*)
+	[RSP+1058] 0x0                (size_t)
+	[RSP+1060] 0x0                (size_t)
+	[RSP+1068] 0x0                (size_t)
+	[RSP+1070] 0x0                (size_t)
+	[RSP+1078] 0x0                (size_t)
+	[RSP+1080] 0x0                (size_t)
+	[RSP+1088] 0x0                (size_t)
+	[RSP+1090] 0x0                (size_t)
+	[RSP+1098] 0x0                (size_t)
+	[RSP+10A0] 0x0                (size_t)
+	[RSP+10A8] 0x0                (size_t)
+	[RSP+10B0] 0x0                (size_t)
+	[RSP+10B8] 0x0                (size_t)
+	[RSP+10C0] 0x0                (size_t)
+	[RSP+10C8] 0x0                (size_t)
+	[RSP+10D0] 0xCCD5044B4B1C     (size_t)
+	[RSP+10D8] 0x22409DF86F0      (void*)
+	[RSP+10E0] 0x0                (size_t)
+	[RSP+10E8] 0x9F75B9AAF0       (void*)
+	[RSP+10F0] 0x0                (size_t)
+	[RSP+10F8] 0x0                (size_t)
+	[RSP+1100] 0x22409DF86F0      (void*)
+	[RSP+1108] 0x0                (size_t)
+	[RSP+1110] 0x22409F816F0      (void*)
+	[RSP+1118] 0x7FFC9FB73B4A     (void* -> nvwgf2umx.dll+16C3B4A)
+	[RSP+1120] 0x9F75B9AAF0       (void*)
+	[RSP+1128] 0x22409F816F0      (void*)
+	[RSP+1130] 0x0                (size_t)
+	[RSP+1138] 0x224F7BF6310      (void*)
+	[RSP+1140] 0x0                (size_t)
+	[RSP+1148] 0x0                (size_t)
+	[RSP+1150] 0xFFFFFFFF         (size_t)
+	[RSP+1158] 0x7FFC9FB64E44     (void* -> nvwgf2umx.dll+16B4E44)
+	[RSP+1160] 0x0                (size_t)
+	[RSP+1168] 0x22409DF86F0      (void*)
+	[RSP+1170] 0x224F7ABB1B0      (void*)
+	[RSP+1178] 0x224F7ABB1B0      (void*)
+	[RSP+1180] 0x0                (size_t)
+	[RSP+1188] 0x0                (size_t)
+	[RSP+1190] 0x0                (size_t)
+	[RSP+1198] 0x0                (size_t)
+	[RSP+11A0] 0x0                (size_t)
+	[RSP+11A8] 0x22409DF86F0      (void*)
+	[RSP+11B0] 0x0                (size_t)
+	[RSP+11B8] 0x7FFC9FB7374F     (void* -> nvwgf2umx.dll+16C374F)
+	[RSP+11C0] 0x22409F816F0      (void*)
+	[RSP+11C8] 0x9F75B9AB50       (void*)
+	[RSP+11D0] 0x224F7ABB1B0      (void*)
+	[RSP+11D8] 0xFFFFFFFF         (size_t)
+	[RSP+11E0] 0x9F75B9AAB0       (void*)
+	[RSP+11E8] 0x225497599B0      (void*)
+	[RSP+11F0] 0x2240A8A48E8      (void*)
+	[RSP+11F8] 0x224F7BF6260      (void*)
+	[RSP+1200] 0x22400000000      (char*) "Actx "
+	[RSP+1208] 0x0                (size_t)
+	[RSP+1210] 0x2240A8A48E8      (void*)
+	[RSP+1218] 0x7FFC9FDA6618     (void* -> nvwgf2umx.dll+18F6618)
+	[RSP+1220] 0x2240A8A48E8      (void*)
+	[RSP+1228] 0x224F7BF6260      (void*)
+	[RSP+1230] 0x22400000000      (char*) "Actx "
+	[RSP+1238] 0x90               (size_t)
+	[RSP+1240] 0x2240A8A48E8      (void*)
+	[RSP+1248] 0x22407777FF0      (void*)
+	[RSP+1250] 0x0                (size_t)
+	[RSP+1258] 0x2240A670F30      (void*)
+	[RSP+1260] 0x224C76213C0      (void*)
+	[RSP+1268] 0x2241DBDBA20      (void*)
+	[RSP+1270] 0x22400000002      (char*) "tx "
+	[RSP+1278] 0x0                (size_t)
+	[RSP+1280] 0x0                (size_t)
+	[RSP+1288] 0x224FFFFFFFF      (void*)
+	[RSP+1290] 0x0                (size_t)
+	[RSP+1298] 0x0                (size_t)
+	[RSP+12A0] 0xFFFFFFFF         (size_t)
+	[RSP+12A8] 0x0                (size_t)
+	[RSP+12B0] 0x0                (size_t)
+	[RSP+12B8] 0x7FFCFFFFFFFF     (size_t)
+	[RSP+12C0] 0x0                (size_t)
+	[RSP+12C8] 0x0                (size_t)
+	[RSP+12D0] 0x224FFFFFFFF      (void*)
+	[RSP+12D8] 0x22406C787B0      (void*)
+	[RSP+12E0] 0xCCD5044B495C     (size_t)
+	[RSP+12E8] 0x9F75B9CEC0       (void*)
+	[RSP+12F0] 0x1                (size_t)
+	[RSP+12F8] 0x9F75B9CEC0       (void*)
+	[RSP+1300] 0x22409DF86F0      (void*)
+	[RSP+1308] 0x2240A670F30      (void*)
+	[RSP+1310] 0x2240AA3CD00      (void*)
+	[RSP+1318] 0x7FFC9FB52E04     (void* -> nvwgf2umx.dll+16A2E04)
+	[RSP+1320] 0x22409DF86F0      (void*)
+	[RSP+1328] 0x22409D5E800      (void*)
+	[RSP+1330] 0x0                (size_t)
+	[RSP+1338] 0x0                (size_t)
+	[RSP+1340] 0x2240AA3CD60      (void*)
+	[RSP+1348] 0x22409DF86F0      (void*)
+	[RSP+1350] 0x22400000000      (char*) "Actx "
+	[RSP+1358] 0x9F75B9CEC0       (void*)
+	[RSP+1360] 0x155D8200         (size_t)
+	[RSP+1368] 0x22409DF86F0      (void*)
+	[RSP+1370] 0x0                (size_t)
+	[RSP+1378] 0x1                (size_t)
+	[RSP+1380] 0x22401F8D170      (void*)
+	[RSP+1388] 0x9F75B9CEC0       (void*)
+	[RSP+1390] 0x1                (size_t)
+	[RSP+1398] 0x22401F8D100      (void*)
+	[RSP+13A0] 0x2240AA3CD01      (void*)
+	[RSP+13A8] 0x7FFC9FB71388     (void* -> nvwgf2umx.dll+16C1388)
+	[RSP+13B0] 0x2240AA3CD00      (void*)
+	[RSP+13B8] 0x2240AA3CD60      (void*)
+	[RSP+13C0] 0x9F75B9CEC0       (void*)
+	[RSP+13C8] 0x22401F8D100      (void*)
+	[RSP+13D0] 0x9F75B9CEC0       (void*)
+	[RSP+13D8] 0x22401F8D170      (void*)
+	[RSP+13E0] 0x9F75B9AD40       (void*)
+	[RSP+13E8] 0x7FFC9FB70244     (void* -> nvwgf2umx.dll+16C0244)
+	[RSP+13F0] 0x2240AA3CD60      (void*)
+	[RSP+13F8] 0x22401F8D170      (void*)
+	[RSP+1400] 0x22406C31DE0      (void*)
+	[RSP+1408] 0x22401F8D170      (void*)
+	[RSP+1410] 0x9F75B9AD08       (void*)
+	[RSP+1418] 0x2240BA54E30      (void*)
+	[RSP+1420] 0x22406C787B0      (void*)
+	[RSP+1428] 0x0                (size_t)
+	[RSP+1430] 0x2240BA54E00      (void*)
+	[RSP+1438] 0x7FFCCA2516D2     (void* -> ntdll.dll+00216D2)
+	[RSP+1440] 0x0                (size_t)
+	[RSP+1448] 0x22401F8D170      (void*)
+	[RSP+1450] 0x22409DF86F0      (void*)
+	[RSP+1458] 0x0                (size_t)
+	[RSP+1460] 0x2240AA3CD60      (void*)
+	[RSP+1468] 0x7FFC9FB6DD8C     (void* -> nvwgf2umx.dll+16BDD8C)
+	[RSP+1470] 0x2240BB02370      (void*)
+	[RSP+1478] 0x0                (size_t)
+	[RSP+1480] 0x0                (size_t)
+	[RSP+1488] 0x22406C787B0      (void*)
+	[RSP+1490] 0x9F75B9AD40       (void*)
+	[RSP+1498] 0x9F75B9AD41       (void*)
+	[RSP+14A0] 0x22406C78314      (void*)
+	[RSP+14A8] 0x2241F0DCC00      (void*)
+	[RSP+14B0] 0x11F0D0000        (size_t)
+	[RSP+14B8] 0x9F75B9CEC0       (void*)
+	[RSP+14C0] 0x8                (size_t)
+	[RSP+14C8] 0x1                (size_t)
+	[RSP+14D0] 0x0                (size_t)
+	[RSP+14D8] 0x100010004        (size_t)
+	[RSP+14E0] 0x4                (size_t)
+	[RSP+14E8] 0xCCD5044B4E0C     (size_t)
+	[RSP+14F0] 0x22406C7830C      (void*)
+	[RSP+14F8] 0x2240BA54180      (void*)
+	[RSP+1500] 0x9F75B9CEC0       (void*)
+	[RSP+1508] 0x1                (size_t)
+	[RSP+1510] 0x0                (size_t)
+	[RSP+1518] 0x2240BA54E30      (void*)
+	[RSP+1520] 0x1                (size_t)
+	[RSP+1528] 0x0                (size_t)
+	[RSP+1530] 0x2240BA54E00      (void*)
+	[RSP+1538] 0x7FFC9FB79243     (void* -> nvwgf2umx.dll+16C9243)
+	[RSP+1540] 0x9F75B9AEA0       (void*)
+	[RSP+1548] 0x7FFC26AB8A45     (void* -> D3D12Core.dll+0018A45)
+	[RSP+1550] 0x2240BA54E00      (void*)
+	[RSP+1558] 0x0                (size_t)
+	[RSP+1560] 0x2240A670F30      (void*)
+	[RSP+1568] 0x4                (size_t)
+	[RSP+1570] 0x4                (size_t)
+	[RSP+1578] 0x1                (size_t)
+	[RSP+1580] 0x0                (size_t)
+	[RSP+1588] 0xA                (size_t)
+	[RSP+1590] 0x50               (size_t)
+	[RSP+1598] 0x0                (size_t)
+	[RSP+15A0] 0x224026B8410      (void*)
+	[RSP+15A8] 0x0                (size_t)
+	[RSP+15B0] 0x2241F0DCC50      (void*)
+	[RSP+15B8] 0x7FFC26AB8988     (void* -> D3D12Core.dll+0018988)
+	[RSP+15C0] 0x143              (size_t)
+	[RSP+15C8] 0x7FFC26AAFC3F     (void* -> D3D12Core.dll+000FC3F)
+	[RSP+15D0] 0x7CECC0           (size_t)
+	[RSP+15D8] 0x7FFC26AB9F3B     (void* -> D3D12Core.dll+0019F3B)
+	[RSP+15E0] 0x4                (size_t)
+	[RSP+15E8] 0x1                (size_t)
+	[RSP+15F0] 0x1                (size_t)
+	[RSP+15F8] 0x7FFC26AB84F3     (void* -> D3D12Core.dll+00184F3)
+	[RSP+1600] 0x0                (size_t)
+	[RSP+1608] 0x7FFC26AAFC3F     (void* -> D3D12Core.dll+000FC3F)
+	[RSP+1610] 0x5A0007CECC0      (size_t)
+	[RSP+1618] 0x100000001        (size_t)
+	[RSP+1620] 0x2241F0DCC50      (void*)
+	[RSP+1628] 0x143              (size_t)
+	[RSP+1630] 0x7CECC0           (size_t)
+	[RSP+1638] 0x7FFC26AB85D7     (void* -> D3D12Core.dll+00185D7)
+	[RSP+1640] 0x0                (size_t)
+	[RSP+1648] 0x7CECC0           (size_t)
+	[RSP+1650] 0x143              (size_t)
+	[RSP+1658] 0x10000            (size_t)
+	[RSP+1660] 0x7CECC0           (size_t)
+	[RSP+1668] 0x7FFC26ABC5EE     (void* -> D3D12Core.dll+001C5EE)
+	[RSP+1670] 0x7FFC26C6C380     (void* -> D3D12Core.dll+01CC380)
+	[RSP+1678] 0x9F75B9AFE0       (void*)
+	[RSP+1680] 0x7CECC0           (size_t)
+	[RSP+1688] 0x7FFC26C6F9D8     (void* -> D3D12Core.dll+01CF9D8)
+	[RSP+1690] 0x0                (size_t)
+	[RSP+1698] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+16A0] 0xE000C            (size_t)
+	[RSP+16A8] 0x7FFC26ABC75C     (void* -> D3D12Core.dll+001C75C)
+	[RSP+16B0] 0x225338335E0      (void*)
+	[RSP+16B8] 0x18220040000      (size_t)
+	[RSP+16C0] 0x0                (size_t)
+	[RSP+16C8] 0x7FFC9FB0C4E3     (void* -> nvwgf2umx.dll+165C4E3)
+	[RSP+16D0] 0xFFFFFFFF00000000 (size_t)
+	[RSP+16D8] 0x2241EEFC780      (void*)
+	[RSP+16E0] 0x6000000000000    (size_t)
+	[RSP+16E8] 0x7FFC26AC01B0     (void* -> D3D12Core.dll+00201B0)
+	[RSP+16F0] 0x2241EEF02BC      (void*)
+	[RSP+16F8] 0x70               (size_t)
+	[RSP+1700] 0x2241EEF0D80      (void*)
+	[RSP+1708] 0xA0000000000000   (size_t)
+	[RSP+1710] 0x0                (size_t)
+	[RSP+1718] 0x7FFC26AB9A04     (void* -> D3D12Core.dll+0019A04)
+	[RSP+1720] 0x0                (size_t)
+	[RSP+1728] 0x9F75B9B100       (void*)
+	[RSP+1730] 0x0                (size_t)
+	[RSP+1738] 0x7                (size_t)
+	[RSP+1740] 0x9F75B9AFE0       (void*)
+	[RSP+1748] 0x7FFCCA26BE70     (void* -> ntdll.dll+003BE70)
+	[RSP+1750] 0x100000000        (size_t)
+	[RSP+1758] 0x143              (size_t)
+	[RSP+1760] 0x1                (size_t)
+	[RSP+1768] 0x100000000        (size_t)
+	[RSP+1770] 0x143              (size_t)
+	[RSP+1778] 0x1                (size_t)
+	[RSP+1780] 0x2253537EE7F      (void*)
+	[RSP+1788] 0x7FFC00000005     (size_t)
+	[RSP+1790] 0x3                (size_t)
+	[RSP+1798] 0x225338335E0      (void*)
+	[RSP+17A0] 0x2253537EC00      (void*)
+	[RSP+17A8] 0x1                (size_t)
+	[RSP+17B0] 0xF000000143       (size_t)
+	[RSP+17B8] 0x0                (size_t)
+	[RSP+17C0] 0x0                (size_t)
+	[RSP+17C8] 0x3                (size_t)
+	[RSP+17D0] 0x0                (size_t)
+	[RSP+17D8] 0x0                (size_t)
+	[RSP+17E0] 0x224026B8410      (void*)
+	[RSP+17E8] 0x0                (size_t)
+	[RSP+17F0] 0x0                (size_t)
+	[RSP+17F8] 0x0                (size_t)
+	[RSP+1800] 0x2253537EE80      (std::ctype<unsigned short>*)
+	[RSP+1808] 0x7FFCCA26AB11     (void* -> ntdll.dll+003AB11)
+	[RSP+1810] 0x2253537EE70      (void*)
+	[RSP+1818] 0x2241F0D0000      (void*)
+	[RSP+1820] 0x9F75B9B340       (void*)
+	[RSP+1828] 0x0                (size_t)
+	[RSP+1830] 0x0                (size_t)
+	[RSP+1838] 0x7FFC26B0E6D4     (void* -> D3D12Core.dll+006E6D4)
+	[RSP+1840] 0x0                (size_t)
+	[RSP+1848] 0x7FFC26AB0EE8     (void* -> D3D12Core.dll+0010EE8)
+	[RSP+1850] 0x2253537EE80      (std::ctype<unsigned short>*)
+	[RSP+1858] 0x9F75B9B2C8       (void*)
+	[RSP+1860] 0x9F75B9B2C8       (void*)
+	[RSP+1868] 0x7FFC26B2A708     (void* -> D3D12Core.dll+008A708)
+	[RSP+1870] 0x0                (size_t)
+	[RSP+1878] 0x7FFC26AAFAE9     (void* -> D3D12Core.dll+000FAE9)
+	[RSP+1880] 0x9F75B9B340       (void*)
+	[RSP+1888] 0x9F75B9B2C8       (void*)
+	[RSP+1890] 0xC1F              (size_t)
+	[RSP+1898] 0x9F75B9B2C8       (void*)
+	[RSP+18A0] 0x0                (size_t)
+	[RSP+18A8] 0x7FFC26B3BAA1     (void* -> D3D12Core.dll+009BAA1)
+	[RSP+18B0] 0x0                (size_t)
+	[RSP+18B8] 0x9F75B9B340       (void*)
+	[RSP+18C0] 0x9F75B9B2C8       (void*)
+	[RSP+18C8] 0xC1F              (size_t)
+	[RSP+18D0] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+18D8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+18E0] 0x40004080         (size_t)
+	[RSP+18E8] 0x0                (size_t)
+	[RSP+18F0] 0x0                (size_t)
+	[RSP+18F8] 0x0                (size_t)
+	[RSP+1900] 0x0                (size_t)
+	[RSP+1908] 0x100000000        (size_t)
+	[RSP+1910] 0x2253537EE80      (std::ctype<unsigned short>*)
+	[RSP+1918] 0x4000             (size_t)
+	[RSP+1920] 0x0                (size_t)
+	[RSP+1928] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1930] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1938] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1940] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1948] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1950] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1958] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1960] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1968] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1970] 0x0                (size_t)
+	[RSP+1978] 0x0                (size_t)
+	[RSP+1980] 0x9F75B9BC00       (void*)
+	[RSP+1988] 0x9F75B9B310       (void*)
+	[RSP+1990] 0x1                (size_t)
+	[RSP+1998] 0x22409F72D70      (void*)
+	[RSP+19A0] 0x0                (size_t)
+	[RSP+19A8] 0x7FFC9E5DC5AA     (void* -> nvwgf2umx.dll+012C5AA)
+	[RSP+19B0] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+19B8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+19C0] 0x2253537EE80      (std::ctype<unsigned short>*)
+	[RSP+19C8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+19D0] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+19D8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+19E0] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+19E8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+19F0] 0xFFFFFFFFFFFFFF00 (size_t)
+	[RSP+19F8] 0x0                (size_t)
+	[RSP+1A00] 0x0                (size_t)
+	[RSP+1A08] 0x0                (size_t)
+	[RSP+1A10] 0x100000000        (size_t)
+	[RSP+1A18] 0x9F75B9BC00       (void*)
+	[RSP+1A20] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1A28] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+1A30] 0x9F75B9BC00       (void*)
+	[RSP+1A38] 0x7FFC26B2C684     (void* -> D3D12Core.dll+008C684)
+	[RSP+1A40] 0x0                (size_t)
+	[RSP+1A48] 0x0                (size_t)
+	[RSP+1A50] 0x100000000        (size_t)
+	[RSP+1A58] 0x9F75B9B310       (void*)
+	[RSP+1A60] 0x9F75B9B450       (void*)
+	[RSP+1A68] 0x7FFC26B3E356     (void* -> D3D12Core.dll+009E356)
+	[RSP+1A70] 0x22409DF86F0      (void*)
+	[RSP+1A78] 0x0                (size_t)
+	[RSP+1A80] 0x4002E2C0         (size_t)
+	[RSP+1A88] 0x0                (size_t)
+	[RSP+1A90] 0x224026B8410      (void*)
+	[RSP+1A98] 0x7FFC26B3E2FE     (void* -> D3D12Core.dll+009E2FE)
+	[RSP+1AA0] 0x9F75B9B450       (void*)
+	[RSP+1AA8] 0x9F75B9B4C9       (void*)
+	[RSP+1AB0] 0x0                (size_t)
+	[RSP+1AB8] 0x0                (size_t)
+	[RSP+1AC0] 0x0                (size_t)
+	[RSP+1AC8] 0x0                (size_t)
+	[RSP+1AD0] 0x400085C0         (size_t)
+	[RSP+1AD8] 0x7FFCCA2C5511     (void* -> ntdll.dll+0095511)
+	[RSP+1AE0] 0x4000000          (size_t)
+	[RSP+1AE8] 0x0                (size_t)
+	[RSP+1AF0] 0x4002E2C0         (size_t)
+	[RSP+1AF8] 0x7FFCCA2C5511     (void* -> ntdll.dll+0095511)
+	[RSP+1B00] 0x20               (size_t)
+	[RSP+1B08] 0x7FFCCA2C18C1     (void* -> ntdll.dll+00918C1)
+	[RSP+1B10] 0x0                (size_t)
+	[RSP+1B18] 0x0                (size_t)
+	[RSP+1B20] 0x0                (size_t)
+	[RSP+1B28] 0x7FFCCA2C18F4     (void* -> ntdll.dll+00918F4)
+	[RSP+1B30] 0x1BD3             (size_t)
+	[RSP+1B38] 0x7FFCCA2C5511     (void* -> ntdll.dll+0095511)
+	[RSP+1B40] 0x9F75B9B548       (void*)
+	[RSP+1B48] 0x9F75B9B540       (void*)
+	[RSP+1B50] 0x9F73C12000       (void*)
+	[RSP+1B58] 0x7FFCCA24D8E6     (void* -> ntdll.dll+001D8E6)
+	[RSP+1B60] 0x1                (size_t)
+	[RSP+1B68] 0x7FFCCA2C18C1     (void* -> ntdll.dll+00918C1)
+	[RSP+1B70] 0x9F75B9B5E8       (void*)
+	[RSP+1B78] 0x7FFCCA24D484     (void* -> ntdll.dll+001D484)
+	[RSP+1B80] 0x2241EE50AC0      (void*)
+	[RSP+1B88] 0xC0               (size_t)
+	[RSP+1B90] 0x2241EE50AD8      (void*)
+	[RSP+1B98] 0x2241EE50A94      (char*) "SsHd,"
+	[RSP+1BA0] 0x9F75B9B548       (void*)
+	[RSP+1BA8] 0x9F75B9B788       (void*)
+	[RSP+1BB0] 0x9F73D11000       (void*)
+	[RSP+1BB8] 0x7FFCCA24D8E6     (void* -> ntdll.dll+001D8E6)
+	[RSP+1BC0] 0x2241EE40000      (char*) "Actx "
+	[RSP+1BC8] 0x2                (size_t)
+	[RSP+1BD0] 0x100000101        (size_t)
+	[RSP+1BD8] 0x0                (size_t)
+	[RSP+1BE0] 0x7FFCCA2997F0     (void* -> ntdll.dll+00697F0)
+	[RSP+1BE8] 0x4B4              (size_t)
+	[RSP+1BF0] 0x9F75B9B5E8       (void*)
+	[RSP+1BF8] 0x9F75B9B610       (void*)
+	[RSP+1C00] 0x2                (size_t)
+	[RSP+1C08] 0x7FFCCA2C18C1     (void* -> ntdll.dll+00918C1)
+	[RSP+1C10] 0x97DF21D8323C     (size_t)
+	[RSP+1C18] 0x97DF21D8327C     (size_t)
+	[RSP+1C20] 0x4B4              (size_t)
+	[RSP+1C28] 0x3                (size_t)
+	[RSP+1C30] 0x9F75B9B788       (void*)
+	[RSP+1C38] 0x9F75B9B5E8       (void*)
+	[RSP+1C40] 0x9F75B9B610       (void*)
+	[RSP+1C48] 0x2241EE4177C      (char*) "SsHd,"
+	[RSP+1C50] 0x0                (size_t)
+	[RSP+1C58] 0x7FFCCA24D071     (void* -> ntdll.dll+001D071)
+	[RSP+1C60] 0x2                (size_t)
+	[RSP+1C68] 0x9F75B9B570       (void*)
+	[RSP+1C70] 0x9F75B9B570       (void*)
+	[RSP+1C78] 0x0                (size_t)
+	[RSP+1C80] 0x9F75B9B53C       (void*)
+	[RSP+1C88] 0x9F75B9B538       (void*)
+	[RSP+1C90] 0x2241EEF0D20      (void*)
+	[RSP+1C98] 0x9F75B9B6B0       (void*)
+	[RSP+1CA0] 0x4B400000002      (size_t)
+	[RSP+1CA8] 0x1EB33EC37        (size_t)
+	[RSP+1CB0] 0x9F73C12000       (void*)
+	[RSP+1CB8] 0x2241EE4177C      (char*) "SsHd,"
+	[RSP+1CC0] 0x300000020        (size_t)
+	[RSP+1CC8] 0x0                (size_t)
+	[RSP+1CD0] 0x300000002        (size_t)
+	[RSP+1CD8] 0x9F00000002       (size_t)
+	[RSP+1CE0] 0x0                (size_t)
+	[RSP+1CE8] 0x0                (size_t)
+	[RSP+1CF0] 0x0                (size_t)
+	[RSP+1CF8] 0x9F75B9B800       (void*)
+	[RSP+1D00] 0x9F75B9B6A0       (void*)
+	[RSP+1D08] 0x7FFCCA24CC75     (void* -> ntdll.dll+001CC75)
+	[RSP+1D10] 0x9F75B9B750       (void*)
+	[RSP+1D18] 0x0                (size_t)
+	[RSP+1D20] 0x9F00000002       (size_t)
+	[RSP+1D28] 0x9F75B9B5E8       (void*)
+	[RSP+1D30] 0x9F75B9B610       (void*)
+	[RSP+1D38] 0x7FFCCA26BE70     (void* -> ntdll.dll+003BE70)
+	[RSP+1D40] 0x4B475B9B6A0      (size_t)
+	[RSP+1D48] 0x0                (size_t)
+	[RSP+1D50] 0x0                (size_t)
+	[RSP+1D58] 0x9F001E001C       (size_t)
+	[RSP+1D60] 0xCCD5044B4EDC     (size_t)
+	[RSP+1D68] 0x0                (size_t)
+	[RSP+1D70] 0x1                (size_t)
+	[RSP+1D78] 0x2240BA54180      (void*)
+	[RSP+1D80] 0x2240A4E2930      (void*)
+	[RSP+1D88] 0x9F75B9CEC0       (void*)
+	[RSP+1D90] 0x1                (size_t)
+	[RSP+1D98] 0x7FFC9FB7909D     (void* -> nvwgf2umx.dll+16C909D)
+	[RSP+1DA0] 0x0                (size_t)
+	[RSP+1DA8] 0x0                (size_t)
+	[RSP+1DB0] 0x0                (size_t)
+	[RSP+1DB8] 0x2240BA54180      (void*)
+	[RSP+1DC0] 0x0                (size_t)
+	[RSP+1DC8] 0x0                (size_t)
+	[RSP+1DD0] 0x0                (size_t)
+	[RSP+1DD8] 0x0                (size_t)
+	[RSP+1DE0] 0x0                (size_t)
+	[RSP+1DE8] 0x0                (size_t)
+	[RSP+1DF0] 0x22700020000      (size_t)
+	[RSP+1DF8] 0x9F75B9B6B0       (void*)
+	[RSP+1E00] 0x9F75B9B6B0       (void*)
+	[RSP+1E08] 0x9F75B9B6B0       (void*)
+	[RSP+1E10] 0x2                (size_t)
+	[RSP+1E18] 0x2                (size_t)
+	[RSP+1E20] 0x97DF21D80000     (size_t)
+	[RSP+1E28] 0x97DF21D833CC     (size_t)
+	[RSP+1E30] 0x1                (size_t)
+	[RSP+1E38] 0x9F75B9B9A0       (void*)
+	[RSP+1E40] 0x0                (size_t)
+	[RSP+1E48] 0x0                (size_t)
+	[RSP+1E50] 0x0                (size_t)
+	[RSP+1E58] 0x0                (size_t)
+	[RSP+1E60] 0x9F75B9B800       (void*)
+	[RSP+1E68] 0x7FFCCA24B47F     (void* -> ntdll.dll+001B47F)
+	[RSP+1E70] 0xC0000225         (size_t)
+	[RSP+1E78] 0x0                (size_t)
+	[RSP+1E80] 0x0                (size_t)
+	[RSP+1E88] 0x0                (size_t)
+	[RSP+1E90] 0x9F75B9B800       (void*)
+	[RSP+1E98] 0x9F75B9B750       (void*)
+	[RSP+1EA0] 0x9F75B9B750       (void*)
+	[RSP+1EA8] 0x9F75B9B750       (void*)
+	[RSP+1EB0] 0x500000000        (size_t)
+	[RSP+1EB8] 0x2                (size_t)
+	[RSP+1EC0] 0x9F001E001C       (size_t)
+	[RSP+1EC8] 0x9F75B9B860       (void*)
+	[RSP+1ED0] 0x0                (size_t)
+	[RSP+1ED8] 0x0                (size_t)
+	[RSP+1EE0] 0x100000000        (size_t)
+	[RSP+1EE8] 0x0                (size_t)
+	[RSP+1EF0] 0x0                (size_t)
+	[RSP+1EF8] 0x0                (size_t)
+	[RSP+1F00] 0x9F00800000       (size_t)
+	[RSP+1F08] 0x9F75B9B880       (void*)
+	[RSP+1F10] 0x160014           (size_t)
+	[RSP+1F18] 0x227647EDB70      (void*)
+	[RSP+1F20] 0xA0008            (size_t)
+	[RSP+1F28] 0x7FFCCA36E3B8     (char*) "."
+	[RSP+1F30] 0x9F00200000       (size_t)
+	[RSP+1F38] 0x9F75B9B860       (void*)
+	[RSP+1F40] 0x9F75B9B860       (void*)
+	[RSP+1F48] 0x9F75B9B860       (void*)
+	[RSP+1F50] 0x20               (size_t)
+	[RSP+1F58] 0x20               (size_t)
+	[RSP+1F60] 0x9F001E001C       (size_t)
+	[RSP+1F68] 0x9F75B9BC30       (void*)
+	[RSP+1F70] 0x9F75B9BAA0       (void*)
+	[RSP+1F78] 0x7FFCCA25963A     (void* -> ntdll.dll+002963A)
+	[RSP+1F80] 0x0                (size_t)
+	[RSP+1F88] 0x0                (size_t)
+	[RSP+1F90] 0x0                (size_t)
+	[RSP+1F98] 0x0                (size_t)
+	[RSP+1FA0] 0x0                (size_t)
+	[RSP+1FA8] 0x0                (size_t)
+	[RSP+1FB0] 0x0                (size_t)
+	[RSP+1FB8] 0x0                (size_t)
+	[RSP+1FC0] 0x9F75B9BC20       (void*)
+	[RSP+1FC8] 0x20               (size_t)
+	[RSP+1FD0] 0x9F75B9BC30       (void*)
+	[RSP+1FD8] 0x9F75B9B980       (void*)
+	[RSP+1FE0] 0xC0000135         (size_t)
+	[RSP+1FE8] 0x7FFCCA25A9FC     (void* -> ntdll.dll+002A9FC)
+	[RSP+1FF0] 0x7FFCCA3679E8     (char*) "minkernel\ntdll\ldrfind.c"
+	[RSP+1FF8] 0x1E0              (size_t)
+	[RSP+2000] 0x9F75B9BAA0       (void*)
+	[RSP+2008] 0x9F75B9BCD0       (void*)
+	[RSP+2010] 0x7FFCCA367960     (char*) "Status: 0x%08lx
+"
+	[RSP+2018] 0x7FFCC0000135     (void*)
+	[RSP+2020] 0x0                (size_t)
+	[RSP+2028] 0x0                (size_t)
+	[RSP+2030] 0x0                (size_t)
+	[RSP+2038] 0x0                (size_t)
+	[RSP+2040] 0x0                (size_t)
+	[RSP+2048] 0x0                (size_t)
+	[RSP+2050] 0x0                (size_t)
+	[RSP+2058] 0x0                (size_t)
+	[RSP+2060] 0x9F75B9BCC0       (void*)
+	[RSP+2068] 0x20               (size_t)
+	[RSP+2070] 0x97DF21D8316C     (size_t)
+	[RSP+2078] 0x9F75B9BA20       (void*)
+	[RSP+2080] 0x9F73D11000       (void*)
+	[RSP+2088] 0x9F75B9BA90       (char*) " "
+	[RSP+2090] 0x0                (size_t)
+	[RSP+2098] 0x9F75B9BA78       (void*)
+	[RSP+20A0] 0x9F75B9BD40       (void*)
+	[RSP+20A8] 0x7FFCCA249556     (void* -> ntdll.dll+0019556)
+	[RSP+20B0] 0x0                (size_t)
+	[RSP+20B8] 0x9F75B9BAA0       (void*)
+	[RSP+20C0] 0x9F75B9BAA0       (void*)
+	[RSP+20C8] 0x0                (size_t)
+	[RSP+20D0] 0x9F75B9B9A0       (void*)
+	[RSP+20D8] 0x0                (size_t)
+	[RSP+20E0] 0x0                (size_t)
+	[RSP+20E8] 0x0                (size_t)
+	[RSP+20F0] 0x0                (size_t)
+	[RSP+20F8] 0x9F75B9BA10       (void*)
+	[RSP+2100] 0x0                (size_t)
+	[RSP+2108] 0x0                (size_t)
+	[RSP+2110] 0x0                (size_t)
+	[RSP+2118] 0x0                (size_t)
+	[RSP+2120] 0x9F73D11000       (void*)
+	[RSP+2128] 0x7FFCCA249711     (void* -> ntdll.dll+0019711)
+	[RSP+2130] 0x22406C31DE0      (void*)
+	[RSP+2138] 0x22409DF86F0      (void*)
+	[RSP+2140] 0x0                (size_t)
+	[RSP+2148] 0x9F75B9BAA0       (void*)
+	[RSP+2150] 0x9F75B9BA90       (char*) " "
+	[RSP+2158] 0x7FFCCA2493EF     (void* -> ntdll.dll+00193EF)
+	[RSP+2160] 0x0                (size_t)
+	[RSP+2168] 0x9F75B9BB00       (void*)
+	[RSP+2170] 0x97DF21D83EEC     (size_t)
+	[RSP+2178] 0x9F75B9BAA0       (void*)
+	[RSP+2180] 0x9F75B9BA00       (void*)
+	[RSP+2188] 0x22406C31DE0      (void*)
+	[RSP+2190] 0x0                (size_t)
+	[RSP+2198] 0x7FFC9E5C5ED7     (void* -> nvwgf2umx.dll+0115ED7)
+	[RSP+21A0] 0xE6F7A5           (size_t)
+	[RSP+21A8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+21B0] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+21B8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+21C0] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+21C8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+21D0] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+21D8] 0xFFFFFFFFFFFFFFFF (size_t)
+	[RSP+21E0] 0xE6F7A5           (size_t)
+	[RSP+21E8] 0x9F75B9BB00       (void*)
+	[RSP+21F0] 0x9F00000020       (size_t)
+	[RSP+21F8] 0x7FFCCA2493EF     (void* -> ntdll.dll+00193EF)
+	[RSP+2200] 0x20               (size_t)
+	[RSP+2208] 0x9F75B9BC00       (void*)
+	[RSP+2210] 0x97DF0100001C     (size_t)
+	[RSP+2218] 0x9F75B9BAB0       (char*) "o"
+	[RSP+2220] 0x6E00650070006F   (size_t)
+	[RSP+2228] 0x61005F00720076   (size_t)
+	[RSP+2230] 0x44002E00690070   (size_t)
+	[RSP+2238] 0x4C004C           (size_t)
+	[RSP+2240] 0x2277812B8F0      (void*)
+	[RSP+2248] 0x9F75B9BCC0       (void*)
+	[RSP+2250] 0x9F75B9BCD0       (void*)
+	[RSP+2258] 0x0                (size_t)
+	[RSP+2260] 0x9F00000000       (size_t)
+	[RSP+2268] 0x2241EEF4B00      (void*)
+	[RSP+2270] 0x0                (size_t)
+	[RSP+2278] 0x9F75B9BC00       (void*)
+	[RSP+2280] 0x2241EEF02A8      (void*)
+	[RSP+2288] 0x20               (size_t)
+	[RSP+2290] 0x2241EEF0D20      (void*)
+	[RSP+2298] 0x0                (size_t)
+	[RSP+22A0] 0x20               (size_t)
+	[RSP+22A8] 0x16               (size_t)
+	[RSP+22B0] 0x0                (size_t)
+	[RSP+22B8] 0x20               (size_t)
+	[RSP+22C0] 0x0                (size_t)
+	[RSP+22C8] 0x2                (size_t)
+	[RSP+22D0] 0x0                (size_t)
+	[RSP+22D8] 0x9F75B9BC19       (void*)
+	[RSP+22E0] 0x2241F0D0000      (void*)
+	[RSP+22E8] 0x7FFCCA26C7BA     (void* -> ntdll.dll+003C7BA)
+	[RSP+22F0] 0x2241EEF0000      (void*)
+	[RSP+22F8] 0x9F00000002       (size_t)
+	[RSP+2300] 0x16               (size_t)
+	[RSP+2308] 0x22400000000      (char*) "Actx "
+	[RSP+2310] 0x66               (size_t)
+	[RSP+2318] 0x7FFCCA25AB1C     (void* -> ntdll.dll+002AB1C)
+	[RSP+2320] 0x0                (size_t)
+	[RSP+2328] 0x20               (size_t)
+	[RSP+2330] 0x9F75B9BD60       (void*)
+	[RSP+2338] 0x0                (size_t)
+	[RSP+2340] 0x9F75B9BD40       (void*)
+	[RSP+2348] 0x1                (size_t)
+	[RSP+2350] 0xCCD5044B593C     (size_t)
+	[RSP+2358] 0x7FFCCA259DEE     (void* -> ntdll.dll+0029DEE)
+	[RSP+2360] 0x1                (size_t)
+	[RSP+2368] 0x398              (size_t)
+	[RSP+2370] 0x22549744F80      (void*)
+	[RSP+2378] 0x7FFC9E5C5D1B     (void* -> nvwgf2umx.dll+0115D1B)
+	[RSP+2380] 0x22407621610      (void*)
+	[RSP+2388] 0x22407621610      (void*)
+	[RSP+2390] 0xE6F789           (size_t)
+	[RSP+2398] 0x7FFCCA26BE70     (void* -> ntdll.dll+003BE70)
+	[RSP+23A0] 0x0                (size_t)
+	[RSP+23A8] 0x7FFC7E54D296     (void* -> nvspcap64.dll+018D296)
+	[RSP+23B0] 0x1                (size_t)
+	[RSP+23B8] 0x225497423C0      (void*)
+	[RSP+23C0] 0xE6F7A3           (size_t)
+	[RSP+23C8] 0xE6F7A3           (size_t)
+	[RSP+23D0] 0x9F75B9C218       (void*)
+	[RSP+23D8] 0x7FFC7E54C825     (void* -> nvspcap64.dll+018C825)
+	[RSP+23E0] 0x9F75B9BDB0       (void*)
+	[RSP+23E8] 0x9F75B9BDD8       (void*)
+	[RSP+23F0] 0xFFFFFFFF         (size_t)
+	[RSP+23F8] 0x0                (size_t)
+	[RSP+2400] 0x9F75B9BDC0       (void*)
+	[RSP+2408] 0x22407621610      (void*)
+	[RSP+2410] 0xB                (size_t)
+	[RSP+2418] 0x225497423C0      (void*)
+	[RSP+2420] 0x490D08254E46     (size_t)
+	[RSP+2428] 0x41               (size_t)
+	[RSP+2430] 0x0                (size_t)
+	[RSP+2438] 0x7FFC7E5412F3     (void* -> nvspcap64.dll+01812F3)
+	[RSP+2440] 0x9F75B9BDB0       (void*)
+	[RSP+2448] 0x9F75B9BDB0       (void*)
+	[RSP+2450] 0xFFFFFFFF         (size_t)
+	[RSP+2458] 0x7FFC7E53DCF0     (void* -> nvspcap64.dll+017DCF0)
+	[RSP+2460] 0x9F75B9BDC0       (void*)
+	[RSP+2468] 0x7FFC7E5BA8A0     (char*) "CSPOscOverlayRenderer::ManageOverlayUpdatedFlagLocal: Resetting bOverlayUpdated locally"
+	[RSP+2470] 0x4                (size_t)
+	[RSP+2478] 0x0                (size_t)
+	[RSP+2480] 0xFFFFFFFF         (size_t)
+	[RSP+2488] 0x7FFC7E53BA39     (void* -> nvspcap64.dll+017BA39)
+	[RSP+2490] 0x0                (size_t)
+	[RSP+2498] 0x9F75B9BDB0       (void*)
+	[RSP+24A0] 0x7FFC7E5DE8F0     (void* -> nvspcap64.dll+021E8F0)
+	[RSP+24A8] 0x0                (size_t)
+	[RSP+24B0] 0x0                (size_t)
+	[RSP+24B8] 0x7FFC9FCC2CEB     (void* -> nvwgf2umx.dll+1812CEB)
+	[RSP+24C0] 0x7FFC7E5BA7C0     (char*) "CSPOscOverlayRenderer::ManageOverlayUpdatedFlagGlobal: proxycount = %d, ovlycount = %d"
+	[RSP+24C8] 0x7FFC7E5BA7C0     (char*) "CSPOscOverlayRenderer::ManageOverlayUpdatedFlagGlobal: proxycount = %d, ovlycount = %d"
+	[RSP+24D0] 0x9F75B9BE50       (void*)
+	[RSP+24D8] 0x9F75B9C320       (void*)
+	[RSP+24E0] 0x9F75B9C374       (void*)
+	[RSP+24E8] 0x3FF              (size_t)
+	[RSP+24F0] 0x54               (size_t)
+	[RSP+24F8] 0x0                (size_t)
+	[RSP+2500] 0x0                (size_t)
+	[RSP+2508] 0x0                (size_t)
+	[RSP+2510] 0x0                (size_t)
+	[RSP+2518] 0x0                (size_t)
+	[RSP+2520] 0x0                (size_t)
+	[RSP+2528] 0x7FFC00000000     (size_t)
+	[RSP+2530] 0x225F3DC3870      (void*)
+	[RSP+2538] 0x225F3DC3870      (void*)
+	[RSP+2540] 0x225F3DC3860      (void*)
+	[RSP+2548] 0x22409DF86F0      (void*)
+	[RSP+2550] 0x0                (size_t)
+	[RSP+2558] 0x22409E05570      (void*)
+	[RSP+2560] 0x9F75B9C900       (void*)
+	[RSP+2568] 0x2240A926630      (void*)
+	[RSP+2570] 0x1                (size_t)
+	[RSP+2578] 0x7FFC9E598CF3     (void* -> nvwgf2umx.dll+00E8CF3)
+	[RSP+2580] 0x22406C584A0      (void*)
+	[RSP+2588] 0x225F3DC3870      (void*)
+	[RSP+2590] 0x2240A926630      (void*)
+	[RSP+2598] 0x22400000000      (char*) "Actx "
+	[RSP+25A0] 0x0                (size_t)
+	[RSP+25A8] 0x1                (size_t)
+	[RSP+25B0] 0x1B282000         (size_t)
+	[RSP+25B8] 0x11800000000      (size_t)
+	[RSP+25C0] 0x1                (size_t)
+	[RSP+25C8] 0xCCD5FFFFFFFF     (size_t)
+	[RSP+25D0] 0x0                (size_t)
+	[RSP+25D8] 0x7FFC9FD2870D     (void* -> nvwgf2umx.dll+187870D)
+	[RSP+25E0] 0x22409DF86F0      (void*)
+	[RSP+25E8] 0x9F75B9BFB0       (void*)
+	[RSP+25F0] 0x22409D67380      (void*)
+	[RSP+25F8] 0x0                (size_t)
+	[RSP+2600] 0x1                (size_t)
+	[RSP+2608] 0x0                (size_t)
+	[RSP+2610] 0x9F75B9CBA0       (void*)
+	[RSP+2618] 0x7FFC9E5A2FCC     (void* -> nvwgf2umx.dll+00F2FCC)
+	[RSP+2620] 0x1                (size_t)
+	[RSP+2628] 0x0                (size_t)
+	[RSP+2630] 0x2240A926630      (void*)
+	[RSP+2638] 0x9F75B9BFB0       (void*)
+	[RSP+2640] 0x0                (size_t)
+	[RSP+2648] 0x0                (size_t)
+	[RSP+2650] 0x19BF8000         (size_t)
+	[RSP+2658] 0x9F00000000       (size_t)
+	[RSP+2660] 0x1                (size_t)
+	[RSP+2668] 0x22400000061      (void*)
+	[RSP+2670] 0x1                (size_t)
+	[RSP+2678] 0x0                (size_t)
+	[RSP+2680] 0x7FFCA0F428AC     (void* -> nvwgf2umx.dll+2A928AC)
+	[RSP+2688] 0x7FFC9E8E1400     (void* -> nvwgf2umx.dll+0431400)
+	[RSP+2690] 0x0                (size_t)
+	[RSP+2698] 0x0                (size_t)
+	[RSP+26A0] 0x0                (size_t)
+	[RSP+26A8] 0x100000000        (size_t)
+	[RSP+26B0] 0x0                (size_t)
+	[RSP+26B8] 0x2240A926630      (void*)
+	[RSP+26C0] 0x225F3DC3860      (void*)
+	[RSP+26C8] 0x9F75B9CBA0       (void*)
+	[RSP+26D0] 0x9F75B9C660       (void*)
+	[RSP+26D8] 0x1                (size_t)
+	[RSP+26E0] 0x22400000100      (void*)
+	[RSP+26E8] 0x1                (size_t)
+	[RSP+26F0] 0x4000940000000001 (size_t)
+	[RSP+26F8] 0x0                (size_t)
+	[RSP+2700] 0x0                (size_t)
+	[RSP+2708] 0x0                (size_t)
+	[RSP+2710] 0x0                (size_t)
+	[RSP+2718] 0x0                (size_t)
+	[RSP+2720] 0x0                (size_t)
+	[RSP+2728] 0x0                (size_t)
+	[RSP+2730] 0x0                (size_t)
+	[RSP+2738] 0x0                (size_t)
+	[RSP+2740] 0x0                (size_t)
+	[RSP+2748] 0x0                (size_t)
+	[RSP+2750] 0x0                (size_t)
+	[RSP+2758] 0x0                (size_t)
+	[RSP+2760] 0x0                (size_t)
+	[RSP+2768] 0x0                (size_t)
+	[RSP+2770] 0x0                (size_t)
+	[RSP+2778] 0x0                (size_t)
+	[RSP+2780] 0x0                (size_t)
+	[RSP+2788] 0x0                (size_t)
+	[RSP+2790] 0x0                (size_t)
+	[RSP+2798] 0x0                (size_t)
+	[RSP+27A0] 0x0                (size_t)
+	[RSP+27A8] 0x0                (size_t)
+	[RSP+27B0] 0x0                (size_t)
+	[RSP+27B8] 0x0                (size_t)
+	[RSP+27C0] 0x0                (size_t)
+	[RSP+27C8] 0x0                (size_t)
+	[RSP+27D0] 0x0                (size_t)
+	[RSP+27D8] 0x0                (size_t)
+	[RSP+27E0] 0x0                (size_t)
+	[RSP+27E8] 0x0                (size_t)
+	[RSP+27F0] 0x0                (size_t)
+	[RSP+27F8] 0x0                (size_t)
+	[RSP+2800] 0x0                (size_t)
+	[RSP+2808] 0x0                (size_t)
+	[RSP+2810] 0x0                (size_t)
+	[RSP+2818] 0x0                (size_t)
+	[RSP+2820] 0x0                (size_t)
+	[RSP+2828] 0x7FFC9E6E0384     (void* -> nvwgf2umx.dll+0230384)
+	[RSP+2830] 0x0                (size_t)
+	[RSP+2838] 0x0                (size_t)
+	[RSP+2840] 0x0                (size_t)
+	[RSP+2848] 0x0                (size_t)
+	[RSP+2850] 0x0                (size_t)
+	[RSP+2858] 0x0                (size_t)
+	[RSP+2860] 0x0                (size_t)
+	[RSP+2868] 0x0                (size_t)
+	[RSP+2870] 0x0                (size_t)
+	[RSP+2878] 0x0                (size_t)
+	[RSP+2880] 0x0                (size_t)
+	[RSP+2888] 0x5                (size_t)
+	[RSP+2890] 0x0                (size_t)
+	[RSP+2898] 0x0                (size_t)
+	[RSP+28A0] 0x0                (size_t)
+	[RSP+28A8] 0x0                (size_t)
+	[RSP+28B0] 0x0                (size_t)
+	[RSP+28B8] 0x0                (size_t)
+	[RSP+28C0] 0x0                (size_t)
+	[RSP+28C8] 0x0                (size_t)
+	[RSP+28D0] 0x0                (size_t)
+	[RSP+28D8] 0x0                (size_t)
+	[RSP+28E0] 0x0                (size_t)
+	[RSP+28E8] 0x0                (size_t)
+	[RSP+28F0] 0x0                (size_t)
+	[RSP+28F8] 0x0                (size_t)
+	[RSP+2900] 0x0                (size_t)
+	[RSP+2908] 0x0                (size_t)
+	[RSP+2910] 0x0                (size_t)
+	[RSP+2918] 0x0                (size_t)
+	[RSP+2920] 0x0                (size_t)
+	[RSP+2928] 0x0                (size_t)
+	[RSP+2930] 0x0                (size_t)
+	[RSP+2938] 0x0                (size_t)
+	[RSP+2940] 0x0                (size_t)
+	[RSP+2948] 0x0                (size_t)
+	[RSP+2950] 0x0                (size_t)
+	[RSP+2958] 0x0                (size_t)
+	[RSP+2960] 0x0                (size_t)
+	[RSP+2968] 0x0                (size_t)
+	[RSP+2970] 0x0                (size_t)
+	[RSP+2978] 0x0                (size_t)
+	[RSP+2980] 0x0                (size_t)
+	[RSP+2988] 0x0                (size_t)
+	[RSP+2990] 0x0                (size_t)
+	[RSP+2998] 0x0                (size_t)
+	[RSP+29A0] 0x0                (size_t)
+	[RSP+29A8] 0x0                (size_t)
+	[RSP+29B0] 0x0                (size_t)
+	[RSP+29B8] 0x0                (size_t)
+	[RSP+29C0] 0x0                (size_t)
+	[RSP+29C8] 0x0                (size_t)
+	[RSP+29D0] 0x0                (size_t)
+	[RSP+29D8] 0x0                (size_t)
+	[RSP+29E0] 0x0                (size_t)
+	[RSP+29E8] 0x0                (size_t)
+	[RSP+29F0] 0x0                (size_t)
+	[RSP+29F8] 0x0                (size_t)
+	[RSP+2A00] 0x0                (size_t)
+	[RSP+2A08] 0x0                (size_t)
+	[RSP+2A10] 0x0                (size_t)
+	[RSP+2A18] 0x0                (size_t)
+	[RSP+2A20] 0x0                (size_t)
+	[RSP+2A28] 0x0                (size_t)
+	[RSP+2A30] 0x0                (size_t)
+	[RSP+2A38] 0x0                (size_t)
+	[RSP+2A40] 0x0                (size_t)
+	[RSP+2A48] 0x0                (size_t)
+	[RSP+2A50] 0x0                (size_t)
+	[RSP+2A58] 0x0                (size_t)
+	[RSP+2A60] 0x0                (size_t)
+	[RSP+2A68] 0x0                (size_t)
+	[RSP+2A70] 0x0                (size_t)
+	[RSP+2A78] 0x0                (size_t)
+	[RSP+2A80] 0x0                (size_t)
+	[RSP+2A88] 0x0                (size_t)
+	[RSP+2A90] 0x0                (size_t)
+	[RSP+2A98] 0x0                (size_t)
+	[RSP+2AA0] 0x0                (size_t)
+	[RSP+2AA8] 0x0                (size_t)
+	[RSP+2AB0] 0x0                (size_t)
+	[RSP+2AB8] 0x0                (size_t)
+	[RSP+2AC0] 0x0                (size_t)
+	[RSP+2AC8] 0x0                (size_t)
+	[RSP+2AD0] 0x0                (size_t)
+	[RSP+2AD8] 0x0                (size_t)
+	[RSP+2AE0] 0x0                (size_t)
+	[RSP+2AE8] 0x0                (size_t)
+	[RSP+2AF0] 0x0                (size_t)
+	[RSP+2AF8] 0x0                (size_t)
+	[RSP+2B00] 0x0                (size_t)
+	[RSP+2B08] 0x0                (size_t)
+	[RSP+2B10] 0x0                (size_t)
+	[RSP+2B18] 0x0                (size_t)
+	[RSP+2B20] 0x0                (size_t)
+	[RSP+2B28] 0x0                (size_t)
+	[RSP+2B30] 0x0                (size_t)
+	[RSP+2B38] 0x0                (size_t)
+	[RSP+2B40] 0x0                (size_t)
+	[RSP+2B48] 0x0                (size_t)
+	[RSP+2B50] 0x0                (size_t)
+	[RSP+2B58] 0x0                (size_t)
+	[RSP+2B60] 0x0                (size_t)
+	[RSP+2B68] 0x0                (size_t)
+	[RSP+2B70] 0x0                (size_t)
+	[RSP+2B78] 0x0                (size_t)
+	[RSP+2B80] 0x0                (size_t)
+	[RSP+2B88] 0x0                (size_t)
+	[RSP+2B90] 0x0                (size_t)
+	[RSP+2B98] 0x2240A8A48E0      (void*)
+	[RSP+2BA0] 0x224F7BF62FC      (void*)
+	[RSP+2BA8] 0x0                (size_t)
+	[RSP+2BB0] 0x0                (size_t)
+	[RSP+2BB8] 0x0                (size_t)
+	[RSP+2BC0] 0x0                (size_t)
+	[RSP+2BC8] 0x7FFC9E7088C6     (void* -> nvwgf2umx.dll+02588C6)
+	[RSP+2BD0] 0x0                (size_t)
+	[RSP+2BD8] 0x7FFC9FB224C7     (void* -> nvwgf2umx.dll+16724C7)
+	[RSP+2BE0] 0x0                (size_t)
+	[RSP+2BE8] 0x0                (size_t)
+	[RSP+2BF0] 0x0                (size_t)
+	[RSP+2BF8] 0x0                (size_t)
+	[RSP+2C00] 0x0                (size_t)
+	[RSP+2C08] 0x7FFC9FB2204C     (void* -> nvwgf2umx.dll+167204C)
+	[RSP+2C10] 0x0                (size_t)
+	[RSP+2C18] 0x22409F66C00      (void*)
+	[RSP+2C20] 0x300000000        (size_t)
+	[RSP+2C28] 0x22409F66C00      (void*)
+	[RSP+2C30] 0x0                (size_t)
+	[RSP+2C38] 0x0                (size_t)
+	[RSP+2C40] 0xCCD5044B277C     (size_t)
+	[RSP+2C48] 0x0                (size_t)
+	[RSP+2C50] 0x22409F66C00      (void*)
+	[RSP+2C58] 0x2240A8A48E0      (void*)
+	[RSP+2C60] 0x22406CF7B50      (void*)
+	[RSP+2C68] 0x22409E96440      (void*)
+	[RSP+2C70] 0x0                (size_t)
+	[RSP+2C78] 0x7FFC9E5F8B35     (void* -> nvwgf2umx.dll+0148B35)
+	[RSP+2C80] 0x0                (size_t)
+	[RSP+2C88] 0x0                (size_t)
+	[RSP+2C90] 0x0                (size_t)
+	[RSP+2C98] 0x7FFC9FB224C7     (void* -> nvwgf2umx.dll+16724C7)
+	[RSP+2CA0] 0xCCD5044B23CC     (size_t)
+	[RSP+2CA8] 0x0                (size_t)
+	[RSP+2CB0] 0xCCD5044B261C     (size_t)
+	[RSP+2CB8] 0x22409EB84C0      (void*)
+	[RSP+2CC0] 0x0                (size_t)
+	[RSP+2CC8] 0x0                (size_t)
+	[RSP+2CD0] 0x0                (size_t)
+	[RSP+2CD8] 0x0                (size_t)
+	[RSP+2CE0] 0x22409E96440      (void*)
+	[RSP+2CE8] 0x7FFC9E5ACF93     (void* -> nvwgf2umx.dll+00FCF93)
+	[RSP+2CF0] 0x22409E96440      (void*)
+	[RSP+2CF8] 0x0                (size_t)
+	[RSP+2D00] 0x22400000000      (char*) "Actx "
+	[RSP+2D08] 0x22409E96440      (void*)
+	[RSP+2D10] 0x22409E90000      (void*)
+	[RSP+2D18] 0x0                (size_t)
+	[RSP+2D20] 0x500040078        (size_t)
+	[RSP+2D28] 0x9F75B9C5A8       (void*)
+	[RSP+2D30] 0x0                (size_t)
+	[RSP+2D38] 0xA8               (size_t)
+	[RSP+2D40] 0x1C0060           (size_t)
+	[RSP+2D48] 0x400000004        (size_t)
+	[RSP+2D50] 0x0                (size_t)
+	[RSP+2D58] 0x0                (size_t)
+	[RSP+2D60] 0x0                (size_t)
+	[RSP+2D68] 0x0                (size_t)
+	[RSP+2D70] 0x0                (size_t)
+	[RSP+2D78] 0x0                (size_t)
+	[RSP+2D80] 0x0                (size_t)
+	[RSP+2D88] 0x0                (size_t)
+	[RSP+2D90] 0x0                (size_t)
+	[RSP+2D98] 0x0                (size_t)
+	[RSP+2DA0] 0x0                (size_t)
+	[RSP+2DA8] 0x0                (size_t)
+	[RSP+2DB0] 0x0                (size_t)
+	[RSP+2DB8] 0x61               (size_t)
+	[RSP+2DC0] 0x0                (size_t)
+	[RSP+2DC8] 0x0                (size_t)
+	[RSP+2DD0] 0x0                (size_t)
+	[RSP+2DD8] 0x7FFC9FB224C7     (void* -> nvwgf2umx.dll+16724C7)
+	[RSP+2DE0] 0x224F77165C0      (void*)
+	[RSP+2DE8] 0x22409E96440      (void*)
+	[RSP+2DF0] 0x0                (size_t)
+	[RSP+2DF8] 0x9F75B9CBA0       (void*)
+	[RSP+2E00] 0x225F3DC3860      (void*)
+	[RSP+2E08] 0x0                (size_t)
+	[RSP+2E10] 0x0                (size_t)
+	[RSP+2E18] 0x100000000        (size_t)
+	[RSP+2E20] 0x61               (size_t)
+	[RSP+2E28] 0x3800000000       (size_t)
+	[RSP+2E30] 0x6800000058       (size_t)
+	[RSP+2E38] 0x0                (size_t)
+	[RSP+2E40] 0x0                (size_t)
+	[RSP+2E48] 0x2240A926630      (void*)
+	[RSP+2E50] 0x0                (size_t)
+	[RSP+2E58] 0x0                (size_t)
+	[RSP+2E60] 0x0                (size_t)
+	[RSP+2E68] 0x0                (size_t)
+	[RSP+2E70] 0x0                (size_t)
+	[RSP+2E78] 0x0                (size_t)
+	[RSP+2E80] 0x0                (size_t)
+	[RSP+2E88] 0x0                (size_t)
+	[RSP+2E90] 0x0                (size_t)
+	[RSP+2E98] 0x7FFC9E5F8B35     (void* -> nvwgf2umx.dll+0148B35)
+	[RSP+2EA0] 0x0                (size_t)
+	[RSP+2EA8] 0x0                (size_t)
+	[RSP+2EB0] 0x0                (size_t)
+	[RSP+2EB8] 0x2241DBDBA38      (void*)
+	[RSP+2EC0] 0xCCD5044B26EC     (size_t)
+	[RSP+2EC8] 0x0                (size_t)
+	[RSP+2ED0] 0xCCD5044B243C     (size_t)
+	[RSP+2ED8] 0x7FFC9E5F8B35     (void* -> nvwgf2umx.dll+0148B35)
+	[RSP+2EE0] 0x9F75B9C9A0       (char*) "]"
+	[RSP+2EE8] 0x22409E96440      (void*)
+	[RSP+2EF0] 0x22409E96D10      (void*)
+	[RSP+2EF8] 0x9F75B9C9A0       (char*) "]"
+	[RSP+2F00] 0x22409EB84C0      (void*)
+	[RSP+2F08] 0x7FFC9FB3021D     (void* -> nvwgf2umx.dll+168021D)
+	[RSP+2F10] 0xCCD5044B247C     (size_t)
+	[RSP+2F18] 0x0                (size_t)
+	[RSP+2F20] 0x9F75B9C9A0       (char*) "]"
+	[RSP+2F28] 0x22409E96D10      (void*)
+	[RSP+2F30] 0x2240A926630      (void*)
+	[RSP+2F38] 0x22409EB6480      (void*)
+	[RSP+2F40] 0x22409E96440      (void*)
+	[RSP+2F48] 0x7FFC9FB5D2CD     (void* -> nvwgf2umx.dll+16AD2CD)
+	[RSP+2F50] 0x22409E96440      (void*)
+	[RSP+2F58] 0x22409EB6480      (void*)
+	[RSP+2F60] 0x2240A926630      (void*)
+	[RSP+2F68] 0x989680           (size_t)
+	[RSP+2F70] 0x40               (size_t)
+	[RSP+2F78] 0x9F75B9C920       (void*)
+	[RSP+2F80] 0x0                (size_t)
+	[RSP+2F88] 0x7FFC9FB84F90     (void* -> nvwgf2umx.dll+16D4F90)
+	[RSP+2F90] 0x224026BA200      (void*)
+	[RSP+2F98] 0x0                (size_t)
+	[RSP+2FA0] 0x2240A926630      (void*)
+	[RSP+2FA8] 0x0                (size_t)
+	[RSP+2FB0] 0x0                (size_t)
+	[RSP+2FB8] 0x0                (size_t)
+	[RSP+2FC0] 0x0                (size_t)
+	[RSP+2FC8] 0x0                (size_t)
+	[RSP+2FD0] 0x0                (size_t)
+	[RSP+2FD8] 0x0                (size_t)
+	[RSP+2FE0] 0x0                (size_t)
+	[RSP+2FE8] 0x0                (size_t)
+	[RSP+2FF0] 0xCCD5044B24EC     (size_t)
+	[RSP+2FF8] 0x5A000000A00      (size_t)
+	[RSP+3000] 0x9F75B9D1D0       (void*)
+	[RSP+3008] 0x0                (size_t)
+	[RSP+3010] 0x1                (size_t)
+	[RSP+3018] 0x0                (size_t)
+	[RSP+3020] 0x9F75B9D260       (void*)
+	[RSP+3028] 0x7FFC9FB7A21B     (void* -> nvwgf2umx.dll+16CA21B)
+	[RSP+3030] 0x2240A670F30      (void*)
+	[RSP+3038] 0x9F75B9C9C0       (void*)
+	[RSP+3040] 0x2240A670F30      (void*)
+	[RSP+3048] 0x0                (size_t)
+	[RSP+3050] 0x3B94D430EA       (size_t)
+	[RSP+3058] 0xFFFFFFFFFFFFFFFE (size_t)
+	[RSP+3060] 0x0                (size_t)
+	[RSP+3068] 0x5A000000A00      (size_t)
+	[RSP+3070] 0x9F75B9CAD0       (void*)
+	[RSP+3078] 0x38               (size_t)
+	[RSP+3080] 0x0                (size_t)
+	[RSP+3088] 0x9F75B9D140       (void*)
+	[RSP+3090] 0x61044B2B00       (size_t)
+	[RSP+3098] 0x7FFC00000001     (size_t)
+	[RSP+30A0] 0x0                (size_t)
+	[RSP+30A8] 0x7FFC9E5BF10F     (void* -> nvwgf2umx.dll+010F10F)
+	[RSP+30B0] 0x9F75B9CA60       (void*)
+	[RSP+30B8] 0x9F75B9CA20       (void*)
+	[RSP+30C0] 0x22409DF86F0      (void*)
+	[RSP+30C8] 0x22407777FF0      (void*)
+	[RSP+30D0] 0x9F75B9CBA0       (void*)
+	[RSP+30D8] 0x0                (size_t)
+	[RSP+30E0] 0x9F75B9CBB0       (void*)
+	[RSP+30E8] 0x22409E96440      (void*)
+	[RSP+30F0] 0x0                (size_t)
+	[RSP+30F8] 0x0                (size_t)
+	[RSP+3100] 0x2240A670F30      (void*)
+	[RSP+3108] 0x2240BA54E00      (void*)
+	[RSP+3110] 0x16005D           (size_t)
+	[RSP+3118] 0x6100000001       (size_t)
+	[RSP+3120] 0x0                (size_t)
+	[RSP+3128] 0x7F00000000BE     (size_t)
+	[RSP+3130] 0x9F75B9CAD0       (void*)
+	[RSP+3138] 0x22409DF86F0      (void*)
+	[RSP+3140] 0x0                (size_t)
+	[RSP+3148] 0x9F75B9C940       (void*)
+	[RSP+3150] 0x0                (size_t)
+	[RSP+3158] 0x225F3DC3860      (void*)
+	[RSP+3160] 0x9F75B9CBA0       (void*)
+	[RSP+3168] 0x0                (size_t)
+	[RSP+3170] 0x224026BB400      (void*)
+	[RSP+3178] 0x0                (size_t)
+	[RSP+3180] 0x10060            (size_t)
+	[RSP+3188] 0x22409DF86F0      (void*)
+	[RSP+3190] 0x0                (size_t)
+	[RSP+3198] 0x0                (size_t)
+	[RSP+31A0] 0x0                (size_t)
+	[RSP+31A8] 0x0                (size_t)
+	[RSP+31B0] 0x0                (size_t)
+	[RSP+31B8] 0x0                (size_t)
+	[RSP+31C0] 0x0                (size_t)
+	[RSP+31C8] 0x0                (size_t)
+	[RSP+31D0] 0x2240A926630      (void*)
+	[RSP+31D8] 0x0                (size_t)
+	[RSP+31E0] 0x0                (size_t)
+	[RSP+31E8] 0x0                (size_t)
+	[RSP+31F0] 0x0                (size_t)
+	[RSP+31F8] 0x0                (size_t)
+	[RSP+3200] 0x0                (size_t)
+	[RSP+3208] 0x0                (size_t)
+	[RSP+3210] 0x0                (size_t)
+	[RSP+3218] 0x0                (size_t)
+	[RSP+3220] 0x0                (size_t)
+	[RSP+3228] 0x0                (size_t)
+	[RSP+3230] 0x0                (size_t)
+	[RSP+3238] 0x0                (size_t)
+	[RSP+3240] 0x0                (size_t)
+	[RSP+3248] 0x0                (size_t)
+	[RSP+3250] 0xCCD5044B2BCC     (size_t)
+	[RSP+3258] 0x0                (size_t)
+	[RSP+3260] 0x0                (size_t)
+	[RSP+3268] 0x7FFC7E3FE0F8     (void* -> nvspcap64.dll+003E0F8)
+	[RSP+3270] 0x9F75B9D1D0       (void*)
+	[RSP+3278] 0x224F8335CC8      (void*)
+	[RSP+3280] 0x7FFC7E644930     (void* -> nvspcap64.dll+0284930)
+	[RSP+3288] 0x7FFC7E6448D0     (void* -> nvspcap64.dll+02848D0)
+	[RSP+3290] 0xFFFFFFFFFFFFFFFE (size_t)
+	[RSP+3298] 0x2240A670F30      (void*)
+	[RSP+32A0] 0x2240BA54E00      (void*)
+	[RSP+32A8] 0x7FFC7E4015B5     (void* -> nvspcap64.dll+00415B5)
+	[RSP+32B0] 0x0                (size_t)
+	[RSP+32B8] 0x2240A1117D0      (void*)
+	[RSP+32C0] 0x0                (size_t)
+	[RSP+32C8] 0x2240BA54180      (void*)
+	[RSP+32D0] 0x10020            (size_t)
+	[RSP+32D8] 0x22409DF86F0      (void*)
+	[RSP+32E0] 0x0                (size_t)
+	[RSP+32E8] 0x7FFC9FB80585     (void* -> nvwgf2umx.dll+16D0585)
+	[RSP+32F0] 0x2240BA54E00      (void*)
+	[RSP+32F8] 0x7FFC9FB940EC     (void* -> nvwgf2umx.dll+16E40EC)
+	[RSP+3300] 0x3144334474654720 (size_t)
+	[RSP+3308] 0x7FFCCA259BC1     (void* -> ntdll.dll+0029BC1)
+	[RSP+3310] 0x2240A1117D0      (void*)
+	[RSP+3318] 0x2240BA54180      (void*)
+	[RSP+3320] 0x0                (size_t)
+	[RSP+3328] 0x10020            (size_t)
+	[RSP+3330] 0x22409DF86F0      (void*)
+	[RSP+3338] 0x0                (size_t)
+	[RSP+3340] 0x0                (size_t)
+	[RSP+3348] 0xCCD5044B289C     (size_t)
+	[RSP+3350] 0x9F75B9D1D0       (void*)
+	[RSP+3358] 0x2240A4E2EA0      (void*)
+	[RSP+3360] 0x9F75B9D680       (void*)
+	[RSP+3368] 0x9F75B9CDC0       (void*)
+	[RSP+3370] 0x2240A1117D0      (void*)
+	[RSP+3378] 0x7FFC9FB942CA     (void* -> nvwgf2umx.dll+16E42CA)
+	[RSP+3380] 0x2240A1117D0      (void*)
+	[RSP+3388] 0x9F75B9D680       (void*)
+	[RSP+3390] 0x2240A1117D0      (void*)
+	[RSP+3398] 0x7FFCA3757120     (void* -> nvwgf2umx.dll+52A7120)
+	[RSP+33A0] 0x0                (size_t)
+	[RSP+33A8] 0x9F75B9D260       (void*)
+	[RSP+33B0] 0x0                (size_t)
+	[RSP+33B8] 0x60               (size_t)
+	[RSP+33C0] 0x2240A4E2800      (void*)
+	[RSP+33C8] 0x9F75B9D1D0       (void*)
+	[RSP+33D0] 0x2240A4E2EA0      (void*)
+	[RSP+33D8] 0x0                (size_t)
+	[RSP+33E0] 0x9F75B9D1D0       (void*)
+	[RSP+33E8] 0x7FFC26BCFEB4     (void* -> D3D12Core.dll+012FEB4)
+	[RSP+33F0] 0x0                (size_t)
+	[RSP+33F8] 0x60               (size_t)
+	[RSP+3400] 0x9F75B9D680       (void*)
+	[RSP+3408] 0x6                (size_t)
+	[RSP+3410] 0x0                (size_t)
+	[RSP+3418] 0x9F75B9D260       (void*)
+	[RSP+3420] 0x2240734EE10      (void*)
+	[RSP+3428] 0x7FFC26BE8ED3     (void* -> D3D12Core.dll+0148ED3)
+	[RSP+3430] 0x2241EEF0000      (void*)
+	[RSP+3438] 0x8                (size_t)
+	[RSP+3440] 0x50               (size_t)
+	[RSP+3448] 0x0                (size_t)
+	[RSP+3450] 0x9F75B9D680       (void*)
+	[RSP+3458] 0x0                (size_t)
+	[RSP+3460] 0x9F75B9D260       (void*)
+	[RSP+3468] 0x7FFCCA26C7BA     (void* -> ntdll.dll+003C7BA)
+	[RSP+3470] 0x2241EEF0000      (void*)
+	[RSP+3478] 0x7FFC9FAC4D41     (void* -> nvwgf2umx.dll+1614D41)
+	[RSP+3480] 0x7FFC9E6F6170     (void* -> nvwgf2umx.dll+0246170)
+	[RSP+3488] 0x0                (size_t)
+	[RSP+3490] 0x22409EB6480      (void*)
+	[RSP+3498] 0x7FFC26C3DFA0     (void* -> D3D12Core.dll+019DFA0)
+	[RSP+34A0] 0x22409EB84C0      (void*)
+	[RSP+34A8] 0x0                (size_t)
+	[RSP+34B0] 0x22409E96440      (void*)
+	[RSP+34B8] 0x7FFC9FAC57A9     (void* -> nvwgf2umx.dll+16157A9)
+	[RSP+34C0] 0x2240000040C      (void*)
+	[RSP+34C8] 0x22400000004      (char*) " "
+	[RSP+34D0] 0x0                (size_t)
+	[RSP+34D8] 0x9F75B9D268       (void*)
+	[RSP+34E0] 0x2241EEF0200      (char*) "
+"
+	[RSP+34E8] 0x7FFC9FAC4B0E     (void* -> nvwgf2umx.dll+1614B0E)
+	[RSP+34F0] 0x1C0060           (size_t)
+	[RSP+34F8] 0x400000004        (size_t)
+	[RSP+3500] 0x0                (size_t)
+	[RSP+3508] 0x0                (size_t)
+	[RSP+3510] 0x0                (size_t)
+	[RSP+3518] 0x0                (size_t)
+	[RSP+3520] 0x0                (size_t)
+	[RSP+3528] 0x0                (size_t)
+	[RSP+3530] 0x0                (size_t)
+	[RSP+3538] 0x0                (size_t)
+	[RSP+3540] 0x0                (size_t)
+	[RSP+3548] 0x0                (size_t)
+	[RSP+3550] 0xCCD5044B26CC     (size_t)
+	[RSP+3558] 0x0                (size_t)
+	[RSP+3560] 0x1                (size_t)
+	[RSP+3568] 0x2240BA54180      (void*)
+	[RSP+3570] 0x225370C10D8      (void*)
+	[RSP+3578] 0x9F75B9E6B0       (void*)
+	[RSP+3580] 0x1                (size_t)
+	[RSP+3588] 0x7FFC9FB7908A     (void* -> nvwgf2umx.dll+16C908A)
+	[RSP+3590] 0x22420FAA180      (boost::filesystem::detail::utf8_codecvt_facet*)
+	[RSP+3598] 0x7FFBDEBF784C     (void* -> usvfs_x64.dll+00C784C)
+	[RSP+35A0] 0x2242D72B7D0      (void*)
+	[RSP+35A8] 0x2240BA54180      (void*)
+	[RSP+35B0] 0x2240A4E2990      (void*)
+	[RSP+35B8] 0x2240A4E2990      (void*)
+	[RSP+35C0] 0xCCD5044B553C     (size_t)
+	[RSP+35C8] 0x80               (size_t)
+	[RSP+35D0] 0x7F9BDFFF7FF6FFFB (size_t)
+	[RSP+35D8] 0x7FFC9FB78F2F     (void* -> nvwgf2umx.dll+16C8F2F)
+	[RSP+35E0] 0x225F3755BF0      (void*)
+	[RSP+35E8] 0x1                (size_t)
+	[RSP+35F0] 0x0                (size_t)
+	[RSP+35F8] 0x7FFC9FB7D7C7     (void* -> nvwgf2umx.dll+16CD7C7)
+	[RSP+3600] 0x2277812B8F0      (void*)
+	[RSP+3608] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+3610] 0x11E0162          (size_t)
+	[RSP+3618] 0x60               (size_t)
+	[RSP+3620] 0x22400000000      (char*) "Actx "
+	[RSP+3628] 0x2241EEF4B00      (void*)
+	[RSP+3630] 0x2240A670F30      (void*)
+	[RSP+3638] 0x2241EEF0D20      (void*)
+	[RSP+3640] 0x2241EEF02A8      (void*)
+	[RSP+3648] 0x20               (size_t)
+	[RSP+3650] 0x2241EEF0D20      (void*)
+	[RSP+3658] 0x60               (size_t)
+	[RSP+3660] 0x400046           (void* -> XINPUT1_3.dll+0000046)
+	[RSP+3668] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+3670] 0x4A0046           (size_t)
+	[RSP+3678] 0xD0               (size_t)
+	[RSP+3680] 0x2254A1CE0A0      (void*)
+	[RSP+3688] 0x2                (size_t)
+	[RSP+3690] 0x0                (size_t)
+	[RSP+3698] 0x9F75B9CFD9       (void*)
+	[RSP+36A0] 0x22400000000      (char*) "Actx "
+	[RSP+36A8] 0x2241EEFDD40      (void*)
+	[RSP+36B0] 0x2241EEF0000      (void*)
+	[RSP+36B8] 0x22400000002      (char*) "tx "
+	[RSP+36C0] 0x2241EEF02D4      (void*)
+	[RSP+36C8] 0xD0               (size_t)
+	[RSP+36D0] 0x2241EEF0D20      (void*)
+	[RSP+36D8] 0x8                (size_t)
+	[RSP+36E0] 0x2                (size_t)
+	[RSP+36E8] 0xBE               (size_t)
+	[RSP+36F0] 0x0                (size_t)
+	[RSP+36F8] 0xD0               (size_t)
+	[RSP+3700] 0x0                (size_t)
+	[RSP+3708] 0xD                (size_t)
+	[RSP+3710] 0x0                (size_t)
+	[RSP+3718] 0x9F75B9D059       (void*)
+	[RSP+3720] 0x2241F0D0000      (void*)
+	[RSP+3728] 0x7FFCCA26C7BA     (void* -> ntdll.dll+003C7BA)
+	[RSP+3730] 0x2241EEF0000      (void*)
+	[RSP+3738] 0x2                (size_t)
+	[RSP+3740] 0xBE               (size_t)
+	[RSP+3748] 0x7FFB00000000     (size_t)
+	[RSP+3750] 0x9F75B9D2C0       (void*)
+	[RSP+3758] 0x7FFBDEB5E0CB     (void* -> usvfs_x64.dll+002E0CB)
+	[RSP+3760] 0x9F00000002       (size_t)
+	[RSP+3768] 0x2241EEF1B00      (void*)
+	[RSP+3770] 0x0                (size_t)
+	[RSP+3778] 0x9F75B9DB38       (void*)
+	[RSP+3780] 0x1                (size_t)
+	[RSP+3788] 0x0                (size_t)
+	[RSP+3790] 0x2240A4E29E8      (void*)
+	[RSP+3798] 0x2240B621438      (void*)
+	[RSP+37A0] 0x58DA02719EDBE67E (size_t)
+	[RSP+37A8] 0x7FFC26AB0E40     (void* -> D3D12Core.dll+0010E40)
+	[RSP+37B0] 0x0                (size_t)
+	[RSP+37B8] 0x18               (size_t)
+	[RSP+37C0] 0x0                (size_t)
+	[RSP+37C8] 0x0                (size_t)
+	[RSP+37D0] 0x0                (size_t)
+	[RSP+37D8] 0x9F75B9D119       (void*)
+	[RSP+37E0] 0x2241F0D0000      (void*)
+	[RSP+37E8] 0x7FFCCA26C7BA     (void* -> ntdll.dll+003C7BA)
+	[RSP+37F0] 0xBE               (size_t)
+	[RSP+37F8] 0x0                (size_t)
+	[RSP+3800] 0x224F8335CC8      (void*)
+	[RSP+3808] 0x2240A4E2AE0      (void*)
+	[RSP+3810] 0xBE               (size_t)
+	[RSP+3818] 0x0                (size_t)
+	[RSP+3820] 0x9F75B9E280       (void*)
+	[RSP+3828] 0x7FFC26AB0E40     (void* -> D3D12Core.dll+0010E40)
+	[RSP+3830] 0x0                (size_t)
+	[RSP+3838] 0xBE               (size_t)
+	[RSP+3840] 0x0                (size_t)
+	[RSP+3848] 0x9F75B90000       (void*)
+	[RSP+3850] 0x2240A926440      (void*)
+	[RSP+3858] 0x7FFC26BD5413     (void* -> D3D12Core.dll+0135413)
+	[RSP+3860] 0x2240A4E2800      (void*)
+	[RSP+3868] 0x9F75B9E280       (void*)
+	[RSP+3870] 0xBE               (size_t)
+	[RSP+3878] 0x7FFC26AD9ADC     (void* -> D3D12Core.dll+0039ADC)
+	[RSP+3880] 0x1                (size_t)
+	[RSP+3888] 0x100000000000000  (size_t)
+	[RSP+3890] 0x227647EDC50      (void*)
+	[RSP+3898] 0x1                (size_t)
+	[RSP+38A0] 0x45BCF1619EA5     (size_t)
+	[RSP+38A8] 0x80               (size_t)
+	[RSP+38B0] 0x0                (size_t)
+	[RSP+38B8] 0x80               (size_t)
+	[RSP+38C0] 0x9F75B9D260       (void*)
+	[RSP+38C8] 0x4                (size_t)
+	[RSP+38D0] 0x2                (size_t)
+	[RSP+38D8] 0x22409CAB5E0      (void*)
+	[RSP+38E0] 0x9F75B9E280       (void*)
+	[RSP+38E8] 0x7FFC26BD41D7     (void* -> D3D12Core.dll+01341D7)
+	[RSP+38F0] 0x22409CAB5E0      (void*)
+	[RSP+38F8] 0x2                (size_t)
+	[RSP+3900] 0x22409CAB070      (void*)
+	[RSP+3908] 0x10               (size_t)
+	[RSP+3910] 0x0                (size_t)
+	[RSP+3918] 0x9F75B9D260       (void*)
+	[RSP+3920] 0x2240A4E2AE0      (void*)
+	[RSP+3928] 0xBE               (size_t)
+	[RSP+3930] 0x2240734EBC0      (void*)
+	[RSP+3938] 0x2240A4E2800      (void*)
+	[RSP+3940] 0x9F75B9D248       (void*)
+	[RSP+3948] 0x1                (size_t)
+	[RSP+3950] 0x0                (size_t)
+	[RSP+3958] 0x3100000000       (size_t)
+	[RSP+3960] 0x0                (size_t)
+	[RSP+3968] 0x0                (size_t)
+	[RSP+3970] 0xBE00000000       (size_t)
+	[RSP+3978] 0x225F3DC3860      (void*)
+	[RSP+3980] 0x0                (size_t)
+	[RSP+3988] 0x1000001000100    (size_t)
+	[RSP+3990] 0x0                (size_t)
+	[RSP+3998] 0x0                (size_t)
+	[RSP+39A0] 0x0                (size_t)
+	[RSP+39A8] 0x9F75B9D954       (void*)
+	[RSP+39B0] 0x2240A4E2AE0      (void*)
+	[RSP+39B8] 0x2240A926600      (void*)
+	[RSP+39C0] 0x0                (size_t)
+	[RSP+39C8] 0x7FFB00000010     (size_t)
+	[RSP+39D0] 0x1                (size_t)
+	[RSP+39D8] 0x2240A8593A0      (void*)
+	[RSP+39E0] 0x0                (size_t)
+	[RSP+39E8] 0x0                (size_t)
+	[RSP+39F0] 0x0                (size_t)
+	[RSP+39F8] 0x0                (size_t)
+	[RSP+3A00] 0x0                (size_t)
+	[RSP+3A08] 0x0                (size_t)
+	[RSP+3A10] 0x0                (size_t)
+	[RSP+3A18] 0x0                (size_t)
+	[RSP+3A20] 0x0                (size_t)
+	[RSP+3A28] 0x0                (size_t)
+	[RSP+3A30] 0x0                (size_t)
+	[RSP+3A38] 0x0                (size_t)
+	[RSP+3A40] 0x0                (size_t)
+	[RSP+3A48] 0x0                (size_t)
+	[RSP+3A50] 0x0                (size_t)
+	[RSP+3A58] 0x0                (size_t)
+	[RSP+3A60] 0x0                (size_t)
+	[RSP+3A68] 0x0                (size_t)
+	[RSP+3A70] 0x0                (size_t)
+	[RSP+3A78] 0x0                (size_t)
+	[RSP+3A80] 0x0                (size_t)
+	[RSP+3A88] 0x0                (size_t)
+	[RSP+3A90] 0x0                (size_t)
+	[RSP+3A98] 0x0                (size_t)
+	[RSP+3AA0] 0x0                (size_t)
+	[RSP+3AA8] 0x0                (size_t)
+	[RSP+3AB0] 0x0                (size_t)
+	[RSP+3AB8] 0x0                (size_t)
+	[RSP+3AC0] 0x0                (size_t)
+	[RSP+3AC8] 0x0                (size_t)
+	[RSP+3AD0] 0x0                (size_t)
+	[RSP+3AD8] 0x0                (size_t)
+	[RSP+3AE0] 0x0                (size_t)
+	[RSP+3AE8] 0x0                (size_t)
+	[RSP+3AF0] 0x0                (size_t)
+	[RSP+3AF8] 0x0                (size_t)
+	[RSP+3B00] 0x0                (size_t)
+	[RSP+3B08] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+3B10] 0x2CD046A          (size_t)
+	[RSP+3B18] 0x30               (size_t)
+	[RSP+3B20] 0x227560471F0      (void*)
+	[RSP+3B28] 0x0                (size_t)
+	[RSP+3B30] 0x0                (size_t)
+	[RSP+3B38] 0x0                (size_t)
+	[RSP+3B40] 0x0                (size_t)
+	[RSP+3B48] 0x2241EEF1680      (void*)
+	[RSP+3B50] 0x0                (size_t)
+	[RSP+3B58] 0x0                (size_t)
+	[RSP+3B60] 0x2241EEF02AC      (void*)
+	[RSP+3B68] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+3B70] 0x2F60516          (size_t)
+	[RSP+3B78] 0x40               (size_t)
+	[RSP+3B80] 0x226B97AA340      (void*)
+	[RSP+3B88] 0x0                (size_t)
+	[RSP+3B90] 0x0                (size_t)
+	[RSP+3B98] 0x0                (size_t)
+	[RSP+3BA0] 0x0                (size_t)
+	[RSP+3BA8] 0x2241EEF7680      (void*)
+	[RSP+3BB0] 0x0                (size_t)
+	[RSP+3BB8] 0x7FFC9FB224C7     (void* -> nvwgf2umx.dll+16724C7)
+	[RSP+3BC0] 0x2241EEF02B0      (void*)
+	[RSP+3BC8] 0x40               (size_t)
+	[RSP+3BD0] 0x2241EEF0D20      (void*)
+	[RSP+3BD8] 0x2                (size_t)
+	[RSP+3BE0] 0x21               (size_t)
+	[RSP+3BE8] 0x30               (size_t)
+	[RSP+3BF0] 0x0                (size_t)
+	[RSP+3BF8] 0x40               (size_t)
+	[RSP+3C00] 0x0                (size_t)
+	[RSP+3C08] 0x4                (size_t)
+	[RSP+3C10] 0x0                (size_t)
+	[RSP+3C18] 0x9F75B9D559       (void*)
+	[RSP+3C20] 0x2241F0D0000      (void*)
+	[RSP+3C28] 0x7FFCCA26C7BA     (void* -> ntdll.dll+003C7BA)
+	[RSP+3C30] 0x2241EEF0000      (void*)
+	[RSP+3C38] 0x22400000002      (char*) "tx "
+	[RSP+3C40] 0x30               (size_t)
+	[RSP+3C48] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+3C50] 0x2FA0468          (size_t)
+	[RSP+3C58] 0x30               (size_t)
+	[RSP+3C60] 0x227560471F0      (void*)
+	[RSP+3C68] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+3C70] 0xBC0049           (size_t)
+	[RSP+3C78] 0x10               (size_t)
+	[RSP+3C80] 0x225F173E330      (void*)
+	[RSP+3C88] 0x2241EEF1680      (void*)
+	[RSP+3C90] 0x22400000000      (char*) "Actx "
+	[RSP+3C98] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+3CA0] 0x0                (size_t)
+	[RSP+3CA8] 0x2241EEF6300      (void*)
+	[RSP+3CB0] 0x225F173E330      (void*)
+	[RSP+3CB8] 0x30               (size_t)
+	[RSP+3CC0] 0x2241EEF02A4      (void*)
+	[RSP+3CC8] 0x10               (size_t)
+	[RSP+3CD0] 0x2241EEF0D20      (void*)
+	[RSP+3CD8] 0x2241EEF6300      (void*)
+	[RSP+3CE0] 0x0                (size_t)
+	[RSP+3CE8] 0x8                (size_t)
+	[RSP+3CF0] 0x0                (size_t)
+	[RSP+3CF8] 0x10               (size_t)
+	[RSP+3D00] 0x0                (size_t)
+	[RSP+3D08] 0x1                (size_t)
+	[RSP+3D10] 0x0                (size_t)
+	[RSP+3D18] 0x9F75B9D659       (void*)
+	[RSP+3D20] 0x2241F0D0000      (void*)
+	[RSP+3D28] 0x7FFCCA26C7BA     (void* -> ntdll.dll+003C7BA)
+	[RSP+3D30] 0x2241EEF0000      (void*)
+	[RSP+3D38] 0x2                (size_t)
+	[RSP+3D40] 0x8                (size_t)
+	[RSP+3D48] 0x9F00000000       (size_t)
+	[RSP+3D50] 0x2241F0D0000      (void*)
+	[RSP+3D58] 0x7FFCCA26C7BA     (void* -> ntdll.dll+003C7BA)
+	[RSP+3D60] 0x22400000002      (char*) "tx "
+	[RSP+3D68] 0x2                (size_t)
+	[RSP+3D70] 0x8                (size_t)
+	[RSP+3D78] 0x7FFC00000000     (size_t)
+	[RSP+3D80] 0x140008B40        (size_t)
+	[RSP+3D88] 0x0                (size_t)
+	[RSP+3D90] 0x9F00000002       (size_t)
+	[RSP+3D98] 0x1                (size_t)
+	[RSP+3DA0] 0x9F75B9D750       (void*)
+	[RSP+3DA8] 0x7FFC26C00EB0     (void* -> D3D12Core.dll+0160EB0)
+	[RSP+3DB0] 0x2240A926410      (void*)
+	[RSP+3DB8] 0x0                (size_t)
+	[RSP+3DC0] 0xE9E81AC06B70     (size_t)
+	[RSP+3DC8] 0x7FFC9FB9363D     (void* -> nvwgf2umx.dll+16E363D)
+	[RSP+3DD0] 0x9F75B9D788       (void*)
+	[RSP+3DD8] 0x2240734ECF0      (void*)
+	[RSP+3DE0] 0x2240A4E2930      (void*)
+	[RSP+3DE8] 0x0                (size_t)
+	[RSP+3DF0] 0x2240A4E2930      (void*)
+	[RSP+3DF8] 0x225F3755CF0      (void*)
+	[RSP+3E00] 0x1                (size_t)
+	[RSP+3E08] 0x0                (size_t)
+	[RSP+3E10] 0x2240B865E00      (void*)
+	[RSP+3E18] 0x1                (size_t)
+	[RSP+3E20] 0x2240BA54A90      (void*)
+	[RSP+3E28] 0x7FFCA0308F30     (void* -> nvwgf2umx.dll+1E58F30)
+	[RSP+3E30] 0xCCD5044B2D9C     (size_t)
+	[RSP+3E38] 0x8                (size_t)
+	[RSP+3E40] 0x225F3755CF0      (void*)
+	[RSP+3E48] 0x2240B865E00      (void*)
+	[RSP+3E50] 0x225F3755BF0      (void*)
+	[RSP+3E58] 0x7FFC9FB93B28     (void* -> nvwgf2umx.dll+16E3B28)
+	[RSP+3E60] 0x0                (size_t)
+	[RSP+3E68] 0x8                (size_t)
+	[RSP+3E70] 0x1                (size_t)
+	[RSP+3E78] 0x0                (size_t)
+	[RSP+3E80] 0x1                (size_t)
+	[RSP+3E88] 0x7FFC9FBA2DB9     (void* -> nvwgf2umx.dll+16F2DB9)
+	[RSP+3E90] 0x0                (size_t)
+	[RSP+3E98] 0x2240BA54A90      (void*)
+	[RSP+3EA0] 0x225F3755CF0      (void*)
+	[RSP+3EA8] 0xFFFFFFFE0E38DA50 (size_t)
+	[RSP+3EB0] 0x2240734ECF0      (void*)
+	[RSP+3EB8] 0x7FFC26B56681     (void* -> D3D12Core.dll+00B6681)
+	[RSP+3EC0] 0x2240734EBC0      (void*)
+	[RSP+3EC8] 0x0                (size_t)
+	[RSP+3ED0] 0x2240734EDD0      (void*)
+	[RSP+3ED8] 0x2240734EDE8      (void*)
+	[RSP+3EE0] 0x9F75B9D788       (void*)
+	[RSP+3EE8] 0x0                (size_t)
+	[RSP+3EF0] 0x22700000000      (size_t)
+	[RSP+3EF8] 0x22440009400      (void*)
+	[RSP+3F00] 0x2240A4E2930      (void*)
+	[RSP+3F08] 0x7FFC00000001     (size_t)
+	[RSP+3F10] 0x2240A926440      (void*)
+	[RSP+3F18] 0x2240B621430      (void*)
+	[RSP+3F20] 0x2240A926440      (void*)
+	[RSP+3F28] 0x2240BAED780      (void*)
+	[RSP+3F30] 0x0                (size_t)
+	[RSP+3F38] 0x224026B9730      (void*)
+	[RSP+3F40] 0x2240A4E2800      (void*)
+	[RSP+3F48] 0x2240734ECF0      (void*)
+	[RSP+3F50] 0x2240734EBC0      (void*)
+	[RSP+3F58] 0x22409CAB000      (void*)
+	[RSP+3F60] 0x227564BC750      (void*)
+	[RSP+3F68] 0x1                (size_t)
+	[RSP+3F70] 0x0                (size_t)
+	[RSP+3F78] 0x9F75B9E100       (void*)
+	[RSP+3F80] 0x0                (size_t)
+	[RSP+3F88] 0x0                (size_t)
+	[RSP+3F90] 0x1                (size_t)
+	[RSP+3F98] 0x2240734EBC0      (void*)
+	[RSP+3FA0] 0x9F75B9D8F0       (void*)
+	[RSP+3FA8] 0x7FFC26B55F8C     (void* -> D3D12Core.dll+00B5F8C)
+	[RSP+3FB0] 0x2240734EBC0      (void*)
+	[RSP+3FB8] 0x1                (size_t)
+	[RSP+3FC0] 0x9F75B9D8F0       (void*)
+	[RSP+3FC8] 0x9F75B9E100       (void*)
+	[RSP+3FD0] 0x224026B9028      (void*)
+	[RSP+3FD8] 0x22409CAB001      (void*)
+	[RSP+3FE0] 0x22409CAB070      (void*)
+	[RSP+3FE8] 0x7FFCC4BB24AD     (void* -> dxgi.dll+00824AD)
+	[RSP+3FF0] 0x22409CAB130      (void*)
+	[RSP+3FF8] 0x22409CAB000      (void*)
+	[RSP+4000] 0x100000001        (size_t)
+	[RSP+4008] 0x7FFCC4BB361B     (void* -> dxgi.dll+008361B)
+	[RSP+4010] 0x45BCF16183E5     (size_t)
+	[RSP+4018] 0x22409CAB070      (void*)
+	[RSP+4020] 0x22409CAB108      (void*)
+	[RSP+4028] 0x9F75B9E1F8       (void*)
+	[RSP+4030] 0x22409CAB108      (void*)
+	[RSP+4038] 0x9F75B9E1F8       (void*)
+	[RSP+4040] 0x0                (size_t)
+	[RSP+4048] 0x0                (size_t)
+	[RSP+4050] 0x22409CAB070      (void*)
+	[RSP+4058] 0x7FFCC4BB4CCD     (void* -> dxgi.dll+0084CCD)
+	[RSP+4060] 0x2240A4E2930      (void*)
+	[RSP+4068] 0x22409CAB5E0      (void*)
+	[RSP+4070] 0x9F75B9E280       (void*)
+	[RSP+4078] 0x22409CAB070      (void*)
+	[RSP+4080] 0x0                (size_t)
+	[RSP+4088] 0x0                (size_t)
+	[RSP+4090] 0x0                (size_t)
+	[RSP+4098] 0x181              (size_t)
+	[RSP+40A0] 0x22600000000      (size_t)
+	[RSP+40A8] 0x9F75B9D954       (void*)
+	[RSP+40B0] 0x22409CAB5E0      (void*)
+	[RSP+40B8] 0x0                (size_t)
+	[RSP+40C0] 0x100000001        (size_t)
+	[RSP+40C8] 0x7FFC9FB569DF     (void* -> nvwgf2umx.dll+16A69DF)
+	[RSP+40D0] 0x0                (size_t)
+	[RSP+40D8] 0x0                (size_t)
+	[RSP+40E0] 0x2240A4E2AE0      (void*)
+	[RSP+40E8] 0x0                (size_t)
+	[RSP+40F0] 0x0                (size_t)
+	[RSP+40F8] 0x400FFFFFFFF      (size_t)
+	[RSP+4100] 0x0                (size_t)
+	[RSP+4108] 0x22409CAB108      (void*)
+	[RSP+4110] 0x2240A4E2930      (void*)
+	[RSP+4118] 0x22409CAB070      (void*)
+	[RSP+4120] 0x3F               (size_t)
+	[RSP+4128] 0x7FFC9FAC60C1     (void* -> nvwgf2umx.dll+16160C1)
+	[RSP+4130] 0x3F               (size_t)
+	[RSP+4138] 0x0                (size_t)
+	[RSP+4140] 0x2                (size_t)
+	[RSP+4148] 0x2240B64A460      (CD3D11Renderer*)
+	[RSP+4150] 0x9F75B9DA10       (void*)
+	[RSP+4158] 0x7FFBE9EAC7B0     (void* -> gameoverlayrenderer64.dll+00EC7B0)
+	[RSP+4160] 0x22400000002      (char*) "tx "
+	[RSP+4168] 0x7FFC9FAC63E0     (void* -> nvwgf2umx.dll+16163E0)
+	[RSP+4170] 0x7FFC9FAC6830     (void* -> nvwgf2umx.dll+1616830)
+	[RSP+4178] 0x9F75B9DCE0       (void*)
+	[RSP+4180] 0x37F800000200     (size_t)
+	[RSP+4188] 0x400              (size_t)
+	[RSP+4190] 0x2240A926630      (void*)
+	[RSP+4198] 0x1000001000100    (size_t)
+	[RSP+41A0] 0xCCD500000010     (size_t)
+	[RSP+41A8] 0x7FFCCA24B47F     (void* -> ntdll.dll+001B47F)
+	[RSP+41B0] 0x0                (size_t)
+	[RSP+41B8] 0x181              (size_t)
+	[RSP+41C0] 0x0                (size_t)
+	[RSP+41C8] 0x0                (size_t)
+	[RSP+41D0] 0x0                (size_t)
+	[RSP+41D8] 0x9F75B9E1F0       (void*)
+	[RSP+41E0] 0x22409DC3630      (void*)
+	[RSP+41E8] 0x7FFCC4B62601     (void* -> dxgi.dll+0032601)
+	[RSP+41F0] 0x22409CAB070      (void*)
+	[RSP+41F8] 0x9F75B9DB38       (void*)
+	[RSP+4200] 0x22400000001      (char*) "ctx "
+	[RSP+4208] 0x0                (size_t)
+	[RSP+4210] 0x9F75B9E1F8       (void*)
+	[RSP+4218] 0x9F00000181       (size_t)
+	[RSP+4220] 0x0                (size_t)
+	[RSP+4228] 0x7FFC00000000     (size_t)
+	[RSP+4230] 0x9F75B9DAF0       (void*)
+	[RSP+4238] 0x9F75B9DB80       (void*)
+	[RSP+4240] 0x22409DC3630      (void*)
+	[RSP+4248] 0x7FFCC4B33B7F     (void* -> dxgi.dll+0003B7F)
+	[RSP+4250] 0x22409DC3630      (void*)
+	[RSP+4258] 0x9F75B9E280       (void*)
+	[RSP+4260] 0x9F00000001       (size_t)
+	[RSP+4268] 0x0                (size_t)
+	[RSP+4270] 0x9F75B9E1F8       (void*)
+	[RSP+4278] 0x20000000181      (size_t)
+	[RSP+4280] 0x80000000010      (size_t)
+	[RSP+4288] 0x227635C8BF0      (void*)
+	[RSP+4290] 0x1000001000100    (size_t)
+	[RSP+4298] 0x7FFB00000010     (size_t)
+	[RSP+42A0] 0x2240B681D48      (void*)
+	[RSP+42A8] 0x2240A926440      (void*)
+	[RSP+42B0] 0x0                (size_t)
+	[RSP+42B8] 0x2243C136AE0      (void*)
+	[RSP+42C0] 0x9F75B9DBD0       (char*) "$"
+	[RSP+42C8] 0x7FFBE9E896BB     (void* -> gameoverlayrenderer64.dll+00C96BB)
+	[RSP+42D0] 0x0                (size_t)
+	[RSP+42D8] 0x7FFBE9F02550     (void* -> gameoverlayrenderer64.dll+0142550)
+	[RSP+42E0] 0x2243C0A2AA0      (void*)
+	[RSP+42E8] 0x0                (size_t)
+	[RSP+42F0] 0x0                (size_t)
+	[RSP+42F8] 0x7FFBE9E89259     (void* -> gameoverlayrenderer64.dll+00C9259)
+	[RSP+4300] 0x9F75B9E0E8       (void*)
+	[RSP+4308] 0x2243C136AE0      (void*)
+	[RSP+4310] 0x9F75B9E138       (void*)
+	[RSP+4318] 0x1F               (size_t)
+	[RSP+4320] 0x0                (size_t)
+	[RSP+4328] 0x7FFBE9F02550     (void* -> gameoverlayrenderer64.dll+0142550)
+	[RSP+4330] 0x2243C0A2AA0      (void*)
+	[RSP+4338] 0x9F75B9E100       (void*)
+	[RSP+4340] 0x24               (size_t)
+	[RSP+4348] 0x9F75B9DBB8       (void*)
+	[RSP+4350] 0x0                (size_t)
+	[RSP+4358] 0x7FFBE9EBE7FA     (void* -> gameoverlayrenderer64.dll+00FE7FA)
+	[RSP+4360] 0x9F75B9E218       (void*)
+	[RSP+4368] 0x7FFC9FB208DA     (void* -> nvwgf2umx.dll+16708DA)
+	[RSP+4370] 0x0                (size_t)
+	[RSP+4378] 0x22400000000      (char*) "Actx "
+	[RSP+4380] 0x2241F0E0000      (void*)
+	[RSP+4388] 0x0                (size_t)
+	[RSP+4390] 0x20000000000      (size_t)
+	[RSP+4398] 0x7FFC9FB20AF2     (void* -> nvwgf2umx.dll+1670AF2)
+	[RSP+43A0] 0x0                (size_t)
+	[RSP+43A8] 0x0                (size_t)
+	[RSP+43B0] 0x97DF21D85C01     (size_t)
+	[RSP+43B8] 0x22409F65E80      (void*)
+	[RSP+43C0] 0x194D660B00       (size_t)
+	[RSP+43C8] 0x22409F65E80      (void*)
+	[RSP+43D0] 0x0                (size_t)
+	[RSP+43D8] 0x9F75B9DDB8       (void*)
+	[RSP+43E0] 0x9F75B9E080       (void*)
+	[RSP+43E8] 0xCCD5044B3F0C     (size_t)
+	[RSP+43F0] 0x40020339DF0000   (size_t)
+	[RSP+43F8] 0x40               (size_t)
+	[RSP+4400] 0x1                (size_t)
+	[RSP+4408] 0x2240BCB7E58      (void*)
+	[RSP+4410] 0x0                (size_t)
+	[RSP+4418] 0x40               (size_t)
+	[RSP+4420] 0x1                (size_t)
+	[RSP+4428] 0x2240BC542E0      (void*)
+	[RSP+4430] 0x2240B68CF70      (void*)
+	[RSP+4438] 0x7FFC9E90EC6D     (void* -> nvwgf2umx.dll+045EC6D)
+	[RSP+4440] 0x2                (size_t)
+	[RSP+4448] 0x5D0              (size_t)
+	[RSP+4450] 0x1                (size_t)
+	[RSP+4458] 0x40               (size_t)
+	[RSP+4460] 0x224FFFFFFFF      (void*)
+	[RSP+4468] 0x0                (size_t)
+	[RSP+4470] 0x22401C4ED20      (void*)
+	[RSP+4478] 0x7FFC9E6DC4E7     (void* -> nvwgf2umx.dll+022C4E7)
+	[RSP+4480] 0x0                (size_t)
+	[RSP+4488] 0x0                (size_t)
+	[RSP+4490] 0x1                (size_t)
+	[RSP+4498] 0x2240BC542E0      (void*)
+	[RSP+44A0] 0xFFFFFFFF         (size_t)
+	[RSP+44A8] 0x22401C4ED20      (void*)
+	[RSP+44B0] 0x97DF0000BA00     (size_t)
+	[RSP+44B8] 0x9F75B9DD01       (void*)
+	[RSP+44C0] 0x9F75B9DD00       (void*)
+	[RSP+44C8] 0x1554C00          (size_t)
+	[RSP+44D0] 0x0                (size_t)
+	[RSP+44D8] 0x0                (size_t)
+	[RSP+44E0] 0x2240B64A460      (CD3D11Renderer*)
+	[RSP+44E8] 0x9F75B9DF60       (void*)
+	[RSP+44F0] 0x9F75B9DF70       (void*)
+	[RSP+44F8] 0x0                (size_t)
+	[RSP+4500] 0x9F75B9DEA0       (void*)
+	[RSP+4508] 0x7FFCCA245D9D     (void* -> ntdll.dll+0015D9D)
+	[RSP+4510] 0x0                (size_t)
+	[RSP+4518] 0x9F00000018       (size_t)
+	[RSP+4520] 0x1                (size_t)
+	[RSP+4528] 0x224C6AEBC20      (void*)
+	[RSP+4530] 0x2240BC542E0      (void*)
+	[RSP+4538] 0x2240BCA7600      (void*)
+	[RSP+4540] 0x2                (size_t)
+	[RSP+4548] 0x2                (size_t)
+	[RSP+4550] 0x9F75B9E5E0       (void*)
+	[RSP+4558] 0x7FFC9E8C617E     (void* -> nvwgf2umx.dll+041617E)
+	[RSP+4560] 0x0                (size_t)
+	[RSP+4568] 0x9F75B9DEA0       (void*)
+	[RSP+4570] 0x0                (size_t)
+	[RSP+4578] 0x0                (size_t)
+	[RSP+4580] 0x9F75B9DE20       (void*)
+	[RSP+4588] 0x101              (size_t)
+	[RSP+4590] 0x225000005D0      (void*)
+	[RSP+4598] 0x2240B68CF70      (void*)
+	[RSP+45A0] 0x1B4000006014920F (size_t)
+	[RSP+45A8] 0x7FFC9E7088C6     (void* -> nvwgf2umx.dll+02588C6)
+	[RSP+45B0] 0x8000059FE28009FF (size_t)
+	[RSP+45B8] 0x0                (size_t)
+	[RSP+45C0] 0x6014920F         (size_t)
+	[RSP+45C8] 0x0                (size_t)
+	[RSP+45D0] 0x5A000000A00      (size_t)
+	[RSP+45D8] 0x1                (size_t)
+	[RSP+45E0] 0x0                (size_t)
+	[RSP+45E8] 0xC40500000000     (size_t)
+	[RSP+45F0] 0x0                (size_t)
+	[RSP+45F8] 0x0                (size_t)
+	[RSP+4600] 0x0                (size_t)
+	[RSP+4608] 0x110              (size_t)
+	[RSP+4610] 0xB58000006014920F (size_t)
+	[RSP+4618] 0x2000600003       (size_t)
+	[RSP+4620] 0x8000059FE28009FF (size_t)
+	[RSP+4628] 0x0                (size_t)
+	[RSP+4630] 0x1B4000006014920F (size_t)
+	[RSP+4638] 0x2000600000       (size_t)
+	[RSP+4640] 0x22406CF7B50      (void*)
+	[RSP+4648] 0x2240BC542E0      (void*)
+	[RSP+4650] 0x0                (size_t)
+	[RSP+4658] 0x7FFC9E5F8B35     (void* -> nvwgf2umx.dll+0148B35)
+	[RSP+4660] 0x0                (size_t)
+	[RSP+4668] 0x0                (size_t)
+	[RSP+4670] 0x0                (size_t)
+	[RSP+4678] 0x0                (size_t)
+	[RSP+4680] 0xCCD5044B39AC     (size_t)
+	[RSP+4688] 0x0                (size_t)
+	[RSP+4690] 0xCCD5044B3DFC     (size_t)
+	[RSP+4698] 0x2240A301E00      (void*)
+	[RSP+46A0] 0x0                (size_t)
+	[RSP+46A8] 0x0                (size_t)
+	[RSP+46B0] 0x0                (size_t)
+	[RSP+46B8] 0x0                (size_t)
+	[RSP+46C0] 0x2240BC542E0      (void*)
+	[RSP+46C8] 0x7FFC9E5ACF93     (void* -> nvwgf2umx.dll+00FCF93)
+	[RSP+46D0] 0x2240BC542E0      (void*)
+	[RSP+46D8] 0x0                (size_t)
+	[RSP+46E0] 0x22400000000      (char*) "Actx "
+	[RSP+46E8] 0x2240BC542E0      (void*)
+	[RSP+46F0] 0x0                (size_t)
+	[RSP+46F8] 0x0                (size_t)
+	[RSP+4700] 0x500040078        (size_t)
+	[RSP+4708] 0x9F75B9DF88       (void*)
+	[RSP+4710] 0x0                (size_t)
+	[RSP+4718] 0x7FFC9E5D3004     (void* -> nvwgf2umx.dll+0123004)
+	[RSP+4720] 0x1C0060           (size_t)
+	[RSP+4728] 0x400000004        (size_t)
+	[RSP+4730] 0x0                (size_t)
+	[RSP+4738] 0x0                (size_t)
+	[RSP+4740] 0x0                (size_t)
+	[RSP+4748] 0x7FFCC4B458A2     (void* -> dxgi.dll+00158A2)
+	[RSP+4750] 0x0                (size_t)
+	[RSP+4758] 0x0                (size_t)
+	[RSP+4760] 0x0                (size_t)
+	[RSP+4768] 0x0                (size_t)
+	[RSP+4770] 0x0                (size_t)
+	[RSP+4778] 0x0                (size_t)
+	[RSP+4780] 0x1000000000       (size_t)
+	[RSP+4788] 0x22409DC3BA8      (void*)
+	[RSP+4790] 0x0                (size_t)
+	[RSP+4798] 0x9F75B9E694       (void*)
+	[RSP+47A0] 0x0                (size_t)
+	[RSP+47A8] 0x0                (size_t)
+	[RSP+47B0] 0x9F75B9E030       (void*)
+	[RSP+47B8] 0x200              (size_t)
+	[RSP+47C0] 0x2240BCA6F18      (void*)
+	[RSP+47C8] 0x7FFC9E5D6573     (void* -> nvwgf2umx.dll+0126573)
+	[RSP+47D0] 0x2240A927950      (void*)
+	[RSP+47D8] 0x7FFC26AE4890     (void* -> D3D12Core.dll+0044890)
+	[RSP+47E0] 0x9F75B9E150       (void*)
+	[RSP+47E8] 0x2240BCA5B80      (void*)
+	[RSP+47F0] 0x22409CACCD0      (void*)
+	[RSP+47F8] 0x0                (size_t)
+	[RSP+4800] 0x100000000        (size_t)
+	[RSP+4808] 0x7FFCC4B45BE0     (void* -> dxgi.dll+0015BE0)
+	[RSP+4810] 0x0                (size_t)
+	[RSP+4818] 0x22409F65E80      (void*)
+	[RSP+4820] 0x4700000101       (size_t)
+	[RSP+4828] 0x22400000000      (char*) "Actx "
+	[RSP+4830] 0x22409CAB070      (void*)
+	[RSP+4838] 0x7FFCC4B6621D     (void* -> dxgi.dll+003621D)
+	[RSP+4840] 0x2240BA566B8      (void*)
+	[RSP+4848] 0x2240BCA6F18      (void*)
+	[RSP+4850] 0x2240BA566B8      (void*)
+	[RSP+4858] 0x22409CABA18      (void*)
+	[RSP+4860] 0x9F75B9E159       (void*)
+	[RSP+4868] 0x7FFC9E8C71A3     (void* -> nvwgf2umx.dll+04171A3)
+	[RSP+4870] 0x7FFCC4B66190     (void* -> dxgi.dll+0036190)
+	[RSP+4878] 0x7FFCC4B3196A     (void* -> dxgi.dll+000196A)
+	[RSP+4880] 0x0                (size_t)
+	[RSP+4888] 0x5A000000A00      (size_t)
+	[RSP+4890] 0x2                (size_t)
+	[RSP+4898] 0x2240BC52B84      (void*)
+	[RSP+48A0] 0x9A45395C9112     (size_t)
+	[RSP+48A8] 0x9F75B9E1F0       (void*)
+	[RSP+48B0] 0x9A45395C9412     (size_t)
+	[RSP+48B8] 0x9F75B9F208       (void*)
+	[RSP+48C0] 0x0                (size_t)
+	[RSP+48C8] 0x9F75B9F208       (void*)
+	[RSP+48D0] 0x0                (size_t)
+	[RSP+48D8] 0x9F75B9F101       (void*)
+	[RSP+48E0] 0x0                (size_t)
+	[RSP+48E8] 0x7FFCC4B338DA     (void* -> dxgi.dll+00038DA)
+	[RSP+48F0] 0x22409DC3630      (void*)
+	[RSP+48F8] 0x22409DC3630      (void*)
+	[RSP+4900] 0x200              (size_t)
+	[RSP+4908] 0x22409CACCD0      (void*)
+	[RSP+4910] 0x9F00000001       (size_t)
+	[RSP+4918] 0x0                (size_t)
+	[RSP+4920] 0x0                (size_t)
+	[RSP+4928] 0x7FFC9FB7EF59     (void* -> nvwgf2umx.dll+16CEF59)
+	[RSP+4930] 0x200              (size_t)
+	[RSP+4938] 0x9F75B9E888       (void*)
+	[RSP+4940] 0x0                (size_t)
+	[RSP+4948] 0x0                (size_t)
+	[RSP+4950] 0x5A000000A00      (size_t)
+	[RSP+4958] 0x0                (size_t)
+	[RSP+4960] 0x22409DC3630      (void*)
+	[RSP+4968] 0x0                (size_t)
+	[RSP+4970] 0x4640FB2          (size_t)
+	[RSP+4978] 0x0                (size_t)
+	[RSP+4980] 0x0                (size_t)
+	[RSP+4988] 0x0                (size_t)
+	[RSP+4990] 0x0                (size_t)
+	[RSP+4998] 0x0                (size_t)
+	[RSP+49A0] 0x0                (size_t)
+	[RSP+49A8] 0x0                (size_t)
+	[RSP+49B0] 0x0                (size_t)
+	[RSP+49B8] 0xD9139            (size_t)
+	[RSP+49C0] 0x9000             (size_t)
+	[RSP+49C8] 0x0                (size_t)
+	[RSP+49D0] 0x0                (size_t)
+	[RSP+49D8] 0x0                (size_t)
+	[RSP+49E0] 0x0                (size_t)
+	[RSP+49E8] 0x0                (size_t)
+	[RSP+49F0] 0x0                (size_t)
+	[RSP+49F8] 0x0                (size_t)
+	[RSP+4A00] 0x0                (size_t)
+	[RSP+4A08] 0x0                (size_t)
+	[RSP+4A10] 0x0                (size_t)
+	[RSP+4A18] 0x0                (size_t)
+	[RSP+4A20] 0x0                (size_t)
+	[RSP+4A28] 0x0                (size_t)
+	[RSP+4A30] 0x0                (size_t)
+	[RSP+4A38] 0x0                (size_t)
+	[RSP+4A40] 0x0                (size_t)
+	[RSP+4A48] 0x0                (size_t)
+	[RSP+4A50] 0x0                (size_t)
+	[RSP+4A58] 0x0                (size_t)
+	[RSP+4A60] 0x0                (size_t)
+	[RSP+4A68] 0x0                (size_t)
+	[RSP+4A70] 0x0                (size_t)
+	[RSP+4A78] 0x0                (size_t)
+	[RSP+4A80] 0x0                (size_t)
+	[RSP+4A88] 0x0                (size_t)
+	[RSP+4A90] 0x0                (size_t)
+	[RSP+4A98] 0x0                (size_t)
+	[RSP+4AA0] 0x0                (size_t)
+	[RSP+4AA8] 0x0                (size_t)
+	[RSP+4AB0] 0x0                (size_t)
+	[RSP+4AB8] 0x0                (size_t)
+	[RSP+4AC0] 0x0                (size_t)
+	[RSP+4AC8] 0x1594             (size_t)
+	[RSP+4AD0] 0x2                (size_t)
+	[RSP+4AD8] 0x1                (size_t)
+	[RSP+4AE0] 0xD9139            (size_t)
+	[RSP+4AE8] 0x1590             (size_t)
+	[RSP+4AF0] 0x0                (size_t)
+	[RSP+4AF8] 0x0                (size_t)
+	[RSP+4B00] 0x1                (size_t)
+	[RSP+4B08] 0x80018000000000   (size_t)
+	[RSP+4B10] 0x0                (size_t)
+	[RSP+4B18] 0x0                (size_t)
+	[RSP+4B20] 0x0                (size_t)
+	[RSP+4B28] 0x0                (size_t)
+	[RSP+4B30] 0x0                (size_t)
+	[RSP+4B38] 0x0                (size_t)
+	[RSP+4B40] 0x0                (size_t)
+	[RSP+4B48] 0xD913900000000    (size_t)
+	[RSP+4B50] 0x0                (size_t)
+	[RSP+4B58] 0x0                (size_t)
+	[RSP+4B60] 0x1                (size_t)
+	[RSP+4B68] 0x1580             (size_t)
+	[RSP+4B70] 0x0                (size_t)
+	[RSP+4B78] 0x0                (size_t)
+	[RSP+4B80] 0x0                (size_t)
+	[RSP+4B88] 0x0                (size_t)
+	[RSP+4B90] 0x0                (size_t)
+	[RSP+4B98] 0x0                (size_t)
+	[RSP+4BA0] 0x0                (size_t)
+	[RSP+4BA8] 0x0                (size_t)
+	[RSP+4BB0] 0x0                (size_t)
+	[RSP+4BB8] 0x0                (size_t)
+	[RSP+4BC0] 0x0                (size_t)
+	[RSP+4BC8] 0x0                (size_t)
+	[RSP+4BD0] 0x0                (size_t)
+	[RSP+4BD8] 0x0                (size_t)
+	[RSP+4BE0] 0x0                (size_t)
+	[RSP+4BE8] 0x0                (size_t)
+	[RSP+4BF0] 0x0                (size_t)
+	[RSP+4BF8] 0x0                (size_t)
+	[RSP+4C00] 0x0                (size_t)
+	[RSP+4C08] 0x0                (size_t)
+	[RSP+4C10] 0x0                (size_t)
+	[RSP+4C18] 0x0                (size_t)
+	[RSP+4C20] 0x0                (size_t)
+	[RSP+4C28] 0x0                (size_t)
+	[RSP+4C30] 0x0                (size_t)
+	[RSP+4C38] 0x0                (size_t)
+	[RSP+4C40] 0x0                (size_t)
+	[RSP+4C48] 0x0                (size_t)
+	[RSP+4C50] 0x0                (size_t)
+	[RSP+4C58] 0x0                (size_t)
+	[RSP+4C60] 0x0                (size_t)
+	[RSP+4C68] 0x0                (size_t)
+	[RSP+4C70] 0x0                (size_t)
+	[RSP+4C78] 0x0                (size_t)
+	[RSP+4C80] 0x0                (size_t)
+	[RSP+4C88] 0x0                (size_t)
+	[RSP+4C90] 0x0                (size_t)
+	[RSP+4C98] 0x0                (size_t)
+	[RSP+4CA0] 0x0                (size_t)
+	[RSP+4CA8] 0x0                (size_t)
+	[RSP+4CB0] 0x0                (size_t)
+	[RSP+4CB8] 0x0                (size_t)
+	[RSP+4CC0] 0x0                (size_t)
+	[RSP+4CC8] 0x0                (size_t)
+	[RSP+4CD0] 0x0                (size_t)
+	[RSP+4CD8] 0x0                (size_t)
+	[RSP+4CE0] 0x0                (size_t)
+	[RSP+4CE8] 0x0                (size_t)
+	[RSP+4CF0] 0x0                (size_t)
+	[RSP+4CF8] 0x0                (size_t)
+	[RSP+4D00] 0x0                (size_t)
+	[RSP+4D08] 0x0                (size_t)
+	[RSP+4D10] 0x0                (size_t)
+	[RSP+4D18] 0x0                (size_t)
+	[RSP+4D20] 0x0                (size_t)
+	[RSP+4D28] 0x0                (size_t)
+	[RSP+4D30] 0x0                (size_t)
+	[RSP+4D38] 0x0                (size_t)
+	[RSP+4D40] 0x0                (size_t)
+	[RSP+4D48] 0x0                (size_t)
+	[RSP+4D50] 0x0                (size_t)
+	[RSP+4D58] 0x0                (size_t)
+	[RSP+4D60] 0x0                (size_t)
+	[RSP+4D68] 0x0                (size_t)
+	[RSP+4D70] 0x0                (size_t)
+	[RSP+4D78] 0x0                (size_t)
+	[RSP+4D80] 0x0                (size_t)
+	[RSP+4D88] 0x0                (size_t)
+	[RSP+4D90] 0x0                (size_t)
+	[RSP+4D98] 0x0                (size_t)
+	[RSP+4DA0] 0x0                (size_t)
+	[RSP+4DA8] 0x0                (size_t)
+	[RSP+4DB0] 0x0                (size_t)
+	[RSP+4DB8] 0xA0000000000      (size_t)
+	[RSP+4DC0] 0xA00000005A0      (size_t)
+	[RSP+4DC8] 0x5A0              (size_t)
+	[RSP+4DD0] 0x0                (size_t)
+	[RSP+4DD8] 0x3F80000000000000 (size_t)
+	[RSP+4DE0] 0x0                (size_t)
+	[RSP+4DE8] 0x3F800000         (size_t)
+	[RSP+4DF0] 0x0                (size_t)
+	[RSP+4DF8] 0x0                (size_t)
+	[RSP+4E00] 0x100000000        (size_t)
+	[RSP+4E08] 0x0                (size_t)
+	[RSP+4E10] 0x5A000000A00      (size_t)
+	[RSP+4E18] 0x0                (size_t)
+	[RSP+4E20] 0x0                (size_t)
+	[RSP+4E28] 0x0                (size_t)
+	[RSP+4E30] 0x0                (size_t)
+	[RSP+4E38] 0x0                (size_t)
+	[RSP+4E40] 0x0                (size_t)
+	[RSP+4E48] 0x0                (size_t)
+	[RSP+4E50] 0x0                (size_t)
+	[RSP+4E58] 0x0                (size_t)
+	[RSP+4E60] 0x0                (size_t)
+	[RSP+4E68] 0x0                (size_t)
+	[RSP+4E70] 0x0                (size_t)
+	[RSP+4E78] 0x0                (size_t)
+	[RSP+4E80] 0x0                (size_t)
+	[RSP+4E88] 0x0                (size_t)
+	[RSP+4E90] 0x0                (size_t)
+	[RSP+4E98] 0x0                (size_t)
+	[RSP+4EA0] 0x0                (size_t)
+	[RSP+4EA8] 0x0                (size_t)
+	[RSP+4EB0] 0x0                (size_t)
+	[RSP+4EB8] 0x0                (size_t)
+	[RSP+4EC0] 0x0                (size_t)
+	[RSP+4EC8] 0x0                (size_t)
+	[RSP+4ED0] 0x0                (size_t)
+	[RSP+4ED8] 0x0                (size_t)
+	[RSP+4EE0] 0x0                (size_t)
+	[RSP+4EE8] 0x0                (size_t)
+	[RSP+4EF0] 0x0                (size_t)
+	[RSP+4EF8] 0x0                (size_t)
+	[RSP+4F00] 0x0                (size_t)
+	[RSP+4F08] 0x0                (size_t)
+	[RSP+4F10] 0x0                (size_t)
+	[RSP+4F18] 0x0                (size_t)
+	[RSP+4F20] 0x0                (size_t)
+	[RSP+4F28] 0x0                (size_t)
+	[RSP+4F30] 0x0                (size_t)
+	[RSP+4F38] 0x0                (size_t)
+	[RSP+4F40] 0x9F75B9F208       (void*)
+	[RSP+4F48] 0x2240B681D38      (void*)
+	[RSP+4F50] 0x9A45395CAF72     (size_t)
+	[RSP+4F58] 0x7FFCC4C415B9     (void* -> dwmapi.dll+00015B9)
+	[RSP+4F60] 0x0                (size_t)
+	[RSP+4F68] 0x0                (size_t)
+	[RSP+4F70] 0x22409DC3630      (void*)
+	[RSP+4F78] 0x0                (size_t)
+	[RSP+4F80] 0x9F75B9E920       (void*)
+	[RSP+4F88] 0x7FFCC4B43AE9     (void* -> dxgi.dll+0013AE9)
+	[RSP+4F90] 0x224C71F0000      (void*)
+	[RSP+4F98] 0x0                (size_t)
+	[RSP+4FA0] 0x9F75B9F100       (void*)
+	[RSP+4FA8] 0x0                (size_t)
+	[RSP+4FB0] 0x9F75B9E888       (void*)
+	[RSP+4FB8] 0x0                (size_t)
+	[RSP+4FC0] 0x0                (size_t)
+	[RSP+4FC8] 0x0                (size_t)
+	[RSP+4FD0] 0x9F75B9E8E0       (void*)
+	[RSP+4FD8] 0xFFFFF            (size_t)
+	[RSP+4FE0] 0x0                (size_t)
+	[RSP+4FE8] 0x7FFCC4B4F969     (void* -> dxgi.dll+001F969)
+	[RSP+4FF0] 0x0                (size_t)
+	[RSP+4FF8] 0x0                (size_t)
+	[RSP+5000] 0x20000000000      (size_t)
+	[RSP+5008] 0x9F75B9F1B0       (void*)
+	[RSP+5010] 0x0                (size_t)
+	[RSP+5018] 0x7FFC00000001     (size_t)
+	[RSP+5020] 0x0                (size_t)
+	[RSP+5028] 0x9F75B9E9D0       (void*)
+	[RSP+5030] 0x0                (size_t)
+	[RSP+5038] 0x0                (size_t)
+	[RSP+5040] 0x0                (size_t)
+	[RSP+5048] 0x9F75B9F208       (void*)
+	[RSP+5050] 0x400000000        (size_t)
+	[RSP+5058] 0x22400000001      (char*) "ctx "
+	[RSP+5060] 0x0                (size_t)
+	[RSP+5068] 0x0                (size_t)
+	[RSP+5070] 0x0                (size_t)
+	[RSP+5078] 0x0                (size_t)
+	[RSP+5080] 0x2241F165C38      (void*)
+	[RSP+5088] 0x340004080        (size_t)
+	[RSP+5090] 0x0                (size_t)
+	[RSP+5098] 0x0                (size_t)
+	[RSP+50A0] 0x0                (size_t)
+	[RSP+50A8] 0x0                (size_t)
+	[RSP+50B0] 0x0                (size_t)
+	[RSP+50B8] 0x0                (size_t)
+	[RSP+50C0] 0x2241F165C38      (void*)
+	[RSP+50C8] 0x7FFCC7934401     (void* -> KERNELBASE.dll+0034401)
+	[RSP+50D0] 0x22700000000      (size_t)
+	[RSP+50D8] 0x5EC              (size_t)
+	[RSP+50E0] 0x224211DB010      (CSharedMemStream*)
+	[RSP+50E8] 0x7FFBE9E7476C     (void* -> gameoverlayrenderer64.dll+00B476C)
+	[RSP+50F0] 0x9A4500000102     (size_t)
+	[RSP+50F8] 0x0                (size_t)
+	[RSP+5100] 0x48               (size_t)
+	[RSP+5108] 0x1                (size_t)
+	[RSP+5110] 0x0                (size_t)
+	[RSP+5118] 0x0                (size_t)
+	[RSP+5120] 0x0                (size_t)
+	[RSP+5128] 0x0                (size_t)
+	[RSP+5130] 0x0                (size_t)
+	[RSP+5138] 0x0                (size_t)
+	[RSP+5140] 0x0                (size_t)
+	[RSP+5148] 0x100000090        (size_t)
+	[RSP+5150] 0x0                (size_t)
+	[RSP+5158] 0x18678D0          (size_t)
+	[RSP+5160] 0x18678D0          (size_t)
+	[RSP+5168] 0x7FFBE9E697EE     (void* -> gameoverlayrenderer64.dll+00A97EE)
+	[RSP+5170] 0x2240B64A460      (CD3D11Renderer*)
+	[RSP+5178] 0x18678D0          (size_t)
+	[RSP+5180] 0x0                (size_t)
+	[RSP+5188] 0x2240B64A460      (CD3D11Renderer*)
+	[RSP+5190] 0x9F75B9EB30       (void*)
+	[RSP+5198] 0x7FFBE9E70AE7     (void* -> gameoverlayrenderer64.dll+00B0AE7)
+	[RSP+51A0] 0x3B94D43075       (size_t)
+	[RSP+51A8] 0x2240BAF0A80      (CSavedMemStream*)
+	[RSP+51B0] 0x2240B64A460      (CD3D11Renderer*)
+	[RSP+51B8] 0x1                (size_t)
+	[RSP+51C0] 0x9F000005A0       (size_t)
+	[RSP+51C8] 0x60               (size_t)
+	[RSP+51D0] 0x2240260EE40      (void*)
+	[RSP+51D8] 0x5A000000A00      (size_t)
+	[RSP+51E0] 0x9F75B9EBE8       (void*)
+	[RSP+51E8] 0x0                (size_t)
+	[RSP+51F0] 0x0                (size_t)
+	[RSP+51F8] 0x9F75B9EB50       (void*)
+	[RSP+5200] 0x9F75B9EBE8       (void*)
+	[RSP+5208] 0x10000            (size_t)
+	[RSP+5210] 0x12               (size_t)
+	[RSP+5218] 0x22400000000      (char*) "Actx "
+	[RSP+5220] 0x9F75B9EB60       (void*)
+	[RSP+5228] 0x7FFCA0308F30     (void* -> nvwgf2umx.dll+1E58F30)
+	[RSP+5230] 0xE                (size_t)
+	[RSP+5238] 0x6000000060       (size_t)
+	[RSP+5240] 0x9F75B9EBE8       (void*)
+	[RSP+5248] 0x10000            (size_t)
+	[RSP+5250] 0x2240BC542E0      (void*)
+	[RSP+5258] 0x7FFC9E5F8B35     (void* -> nvwgf2umx.dll+0148B35)
+	[RSP+5260] 0x224026BC630      (void*)
+	[RSP+5268] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+5270] 0x6E5015D          (size_t)
+	[RSP+5278] 0x20               (size_t)
+	[RSP+5280] 0x2277812B8F0      (void*)
+	[RSP+5288] 0x7FFC9FB66E0A     (void* -> nvwgf2umx.dll+16B6E0A)
+	[RSP+5290] 0xCCD5044B09FC     (size_t)
+	[RSP+5298] 0x7FFC9E6574AE     (void* -> nvwgf2umx.dll+01A74AE)
+	[RSP+52A0] 0x0                (size_t)
+	[RSP+52A8] 0x2241EEF4B00      (void*)
+	[RSP+52B0] 0x2240A2FFDC0      (void*)
+	[RSP+52B8] 0x7FFC26B70EF2     (void* -> D3D12Core.dll+00D0EF2)
+	[RSP+52C0] 0x1                (size_t)
+	[RSP+52C8] 0x100000000        (size_t)
+	[RSP+52D0] 0x2241EEF0D20      (void*)
+	[RSP+52D8] 0xF00000           (size_t)
+	[RSP+52E0] 0x1                (size_t)
+	[RSP+52E8] 0x100000000        (size_t)
+	[RSP+52F0] 0x22400000001      (char*) "ctx "
+	[RSP+52F8] 0x10000            (size_t)
+	[RSP+5300] 0x9F00000084       (size_t)
+	[RSP+5308] 0x1                (size_t)
+	[RSP+5310] 0x100000000        (size_t)
+	[RSP+5318] 0x7FFC26AF9CF2     (void* -> D3D12Core.dll+0059CF2)
+	[RSP+5320] 0x5                (size_t)
+	[RSP+5328] 0x1                (size_t)
+	[RSP+5330] 0x0                (size_t)
+	[RSP+5338] 0x0                (size_t)
+	[RSP+5340] 0x224026B8B18      (void*)
+	[RSP+5348] 0x7FFC26BDAA8A     (void* -> D3D12Core.dll+013AA8A)
+	[RSP+5350] 0x8                (size_t)
+	[RSP+5358] 0x3                (size_t)
+	[RSP+5360] 0x9F75B9ED58       (void*)
+	[RSP+5368] 0x0                (size_t)
+	[RSP+5370] 0x100000005        (size_t)
+	[RSP+5378] 0x224026B8B18      (void*)
+	[RSP+5380] 0x1                (size_t)
+	[RSP+5388] 0x1                (size_t)
+	[RSP+5390] 0x1                (size_t)
+	[RSP+5398] 0x7FFC26BDAA21     (void* -> D3D12Core.dll+013AA21)
+	[RSP+53A0] 0x9F75B9ED58       (void*)
+	[RSP+53A8] 0x224026B8B18      (void*)
+	[RSP+53B0] 0x227635C8A00      (void*)
+	[RSP+53B8] 0x7FFC26BCCE79     (void* -> D3D12Core.dll+012CE79)
+	[RSP+53C0] 0x5                (size_t)
+	[RSP+53C8] 0x1                (size_t)
+	[RSP+53D0] 0x22400000000      (char*) "Actx "
+	[RSP+53D8] 0x224026B8B18      (void*)
+	[RSP+53E0] 0x1                (size_t)
+	[RSP+53E8] 0x100000000        (size_t)
+	[RSP+53F0] 0x2240B6217F0      (void*)
+	[RSP+53F8] 0x227647EDE10      (void*)
+	[RSP+5400] 0x2240A8A49E0      (void*)
+	[RSP+5408] 0x226BE276BF0      (char*) "C"
+	[RSP+5410] 0x2240A7B9920      (void*)
+	[RSP+5418] 0x7FFC26BCBFEF     (void* -> D3D12Core.dll+012BFEF)
+	[RSP+5420] 0x2240A7B9660      (void*)
+	[RSP+5428] 0x9F75B9ED20       (void*)
+	[RSP+5430] 0xCCD5044B04AC     (size_t)
+	[RSP+5438] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+5440] 0x2D50469          (size_t)
+	[RSP+5448] 0x30               (size_t)
+	[RSP+5450] 0x227560471F0      (void*)
+	[RSP+5458] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+5460] 0x800049           (size_t)
+	[RSP+5468] 0x10               (size_t)
+	[RSP+5470] 0x225F173E330      (void*)
+	[RSP+5478] 0x2241EEF1680      (void*)
+	[RSP+5480] 0x9F75B9ED58       (void*)
+	[RSP+5488] 0x7FFCCA26D1AA     (void* -> ntdll.dll+003D1AA)
+	[RSP+5490] 0x0                (size_t)
+	[RSP+5498] 0x2241EEF6300      (void*)
+	[RSP+54A0] 0x225F173E330      (void*)
+	[RSP+54A8] 0x7FFC26BE593A     (void* -> D3D12Core.dll+014593A)
+	[RSP+54B0] 0x2241EEF02A4      (void*)
+	[RSP+54B8] 0x10               (size_t)
+	[RSP+54C0] 0x2241EEF0D20      (void*)
+	[RSP+54C8] 0x2241EEF6300      (void*)
+	[RSP+54D0] 0x0                (size_t)
+	[RSP+54D8] 0x8                (size_t)
+	[RSP+54E0] 0x0                (size_t)
+	[RSP+54E8] 0x10               (size_t)
+	[RSP+54F0] 0x0                (size_t)
+	[RSP+54F8] 0x1                (size_t)
+	[RSP+5500] 0x0                (size_t)
+	[RSP+5508] 0x9F75B9EE49       (void*)
+	[RSP+5510] 0x2241F0D0000      (void*)
+	[RSP+5518] 0x7FFCCA26BE70     (void* -> ntdll.dll+003BE70)
+	[RSP+5520] 0x2241EEF0000      (void*)
+	[RSP+5528] 0x2                (size_t)
+	[RSP+5530] 0x8                (size_t)
+	[RSP+5538] 0x9F00000000       (size_t)
+	[RSP+5540] 0x2241F0D0000      (void*)
+	[RSP+5548] 0x7FFCCA26C7BA     (void* -> ntdll.dll+003C7BA)
+	[RSP+5550] 0x227564BC83F      (void*)
+	[RSP+5558] 0x2D1              (size_t)
+	[RSP+5560] 0x8                (size_t)
+	[RSP+5568] 0x227560471F0      (void*)
+	[RSP+5570] 0x227564B4010      (void*)
+	[RSP+5578] 0x7FFCCA26BE70     (void* -> ntdll.dll+003BE70)
+	[RSP+5580] 0x9F00000002       (size_t)
+	[RSP+5588] 0x1                (size_t)
+	[RSP+5590] 0x9F75B9EF40       (void*)
+	[RSP+5598] 0x7FFC26C00EB0     (void* -> D3D12Core.dll+0160EB0)
+	[RSP+55A0] 0x2240A926410      (void*)
+	[RSP+55A8] 0x0                (size_t)
+	[RSP+55B0] 0x225370C10D8      (void*)
+	[RSP+55B8] 0x2240734ECF0      (void*)
+	[RSP+55C0] 0x1                (size_t)
+	[RSP+55C8] 0x0                (size_t)
+	[RSP+55D0] 0x227564BC840      (void*)
+	[RSP+55D8] 0x7FFCCA26AB11     (void* -> ntdll.dll+003AB11)
+	[RSP+55E0] 0x227564BC830      (void*)
+	[RSP+55E8] 0x2241F0D0000      (void*)
+	[RSP+55F0] 0x2240A8A30E0      (void*)
+	[RSP+55F8] 0x0                (size_t)
+	[RSP+5600] 0x0                (size_t)
+	[RSP+5608] 0x1                (size_t)
+	[RSP+5610] 0x2240734EDE8      (void*)
+	[RSP+5618] 0x7FFC26AB0EE8     (void* -> D3D12Core.dll+0010EE8)
+	[RSP+5620] 0x227564BC840      (void*)
+	[RSP+5628] 0x2240734EDD0      (void*)
+	[RSP+5630] 0x225F3755930      (void*)
+	[RSP+5638] 0x7FFCCA26AB11     (void* -> ntdll.dll+003AB11)
+	[RSP+5640] 0x0                (size_t)
+	[RSP+5648] 0x7FFC26AA7DE3     (void* -> D3D12Core.dll+0007DE3)
+	[RSP+5650] 0x227564BC840      (void*)
+	[RSP+5658] 0x20               (size_t)
+	[RSP+5660] 0x0                (size_t)
+	[RSP+5668] 0x7FFCCA25FEF8     (void* -> ntdll.dll+002FEF8)
+	[RSP+5670] 0x22409DC3630      (void*)
+	[RSP+5678] 0x7FFCC7622D7C     (void* -> msvcp_win.dll+0002D7C)
+	[RSP+5680] 0x2240734EDE8      (void*)
+	[RSP+5688] 0x2240734EDD0      (void*)
+	[RSP+5690] 0x225F3755930      (void*)
+	[RSP+5698] 0xFFFFFFFE0E38DE10 (size_t)
+	[RSP+56A0] 0x2240734EBC0      (void*)
+	[RSP+56A8] 0x7FFC26B566E5     (void* -> D3D12Core.dll+00B66E5)
+	[RSP+56B0] 0x2240BAED780      (void*)
+	[RSP+56B8] 0x22400000000      (char*) "Actx "
+	[RSP+56C0] 0x9F75B9F130       (void*)
+	[RSP+56C8] 0x734EDE8          (size_t)
+	[RSP+56D0] 0x3C               (size_t)
+	[RSP+56D8] 0xA0000000000      (size_t)
+	[RSP+56E0] 0x5A0              (size_t)
+	[RSP+56E8] 0xA0000000000      (size_t)
+	[RSP+56F0] 0x94000000000005A0 (size_t)
+	[RSP+56F8] 0x120000800        (size_t)
+	[RSP+5700] 0x0                (size_t)
+	[RSP+5708] 0x500C385          (size_t)
+	[RSP+5710] 0x0                (size_t)
+	[RSP+5718] 0x60000D700        (size_t)
+	[RSP+5720] 0x9F75B9F130       (void*)
+	[RSP+5728] 0x224026B9730      (void*)
+	[RSP+5730] 0x0                (size_t)
+	[RSP+5738] 0x22400000000      (char*) "Actx "
+	[RSP+5740] 0x2240734EBC0      (void*)
+	[RSP+5748] 0x0                (size_t)
+	[RSP+5750] 0x227564BC840      (void*)
+	[RSP+5758] 0x1                (size_t)
+	[RSP+5760] 0x2240A8A30E0      (void*)
+	[RSP+5768] 0x7FFC26AAFA80     (void* -> D3D12Core.dll+000FA80)
+	[RSP+5770] 0x9F75B9F4A0       (void*)
+	[RSP+5778] 0x2240BAB6F70      (sl::chi::CommandListContext*)
+	[RSP+5780] 0x1                (size_t)
+	[RSP+5788] 0x2240734EBC0      (void*)
+	[RSP+5790] 0x9F75B9F098       (void*)
+	[RSP+5798] 0x7FFC26B55F96     (void* -> D3D12Core.dll+00B5F96)
+	[RSP+57A0] 0x2240734EBC0      (void*)
+	[RSP+57A8] 0x7FFC00000001     (size_t)
+	[RSP+57B0] 0x9F75B9F098       (void*)
+	[RSP+57B8] 0x2240A7B9700      (void*)
+	[RSP+57C0] 0x224026B9028      (void*)
+	[RSP+57C8] 0x9F75B9F201       (void*)
+	[RSP+57D0] 0x97DF21D8696C     (size_t)
+	[RSP+57D8] 0x7FFBEBAD297D     (void* -> dxgi.dll+00E297D)
+	[RSP+57E0] 0x2240A8A3110      (void*)
+	[RSP+57E8] 0x225370C10D8      (void*)
+	[RSP+57F0] 0x22409DC3630      (void*)
+	[RSP+57F8] 0x9F75B9F4A0       (void*)
+	[RSP+5800] 0x2240BAB6F70      (sl::chi::CommandListContext*)
+	[RSP+5808] 0x0                (size_t)
+	[RSP+5810] 0x200              (size_t)
+	[RSP+5818] 0x22409DC3630      (void*)
+	[RSP+5820] 0x9A45395CA6D2     (size_t)
+	[RSP+5828] 0x7FFCC4B63780     (void* -> dxgi.dll+0033780)
+	[RSP+5830] 0x2240BC542E0      (void*)
+	[RSP+5838] 0x0                (size_t)
+	[RSP+5840] 0x9F75B9F208       (void*)
+	[RSP+5848] 0x0                (size_t)
+	[RSP+5850] 0x22409CAB070      (void*)
+	[RSP+5858] 0x1                (size_t)
+	[RSP+5860] 0x22409DC36B8      (void*)
+	[RSP+5868] 0x22409DC3630      (void*)
+	[RSP+5870] 0x0                (size_t)
+	[RSP+5878] 0x7FFCC4B42C70     (void* -> dxgi.dll+0012C70)
+	[RSP+5880] 0x0                (size_t)
+	[RSP+5888] 0x0                (size_t)
+	[RSP+5890] 0x0                (size_t)
+	[RSP+5898] 0x0                (size_t)
+	[RSP+58A0] 0x0                (size_t)
+	[RSP+58A8] 0x0                (size_t)
+	[RSP+58B0] 0x0                (size_t)
+	[RSP+58B8] 0x9F75B9F1B0       (void*)
+	[RSP+58C0] 0x22409DC36B8      (void*)
+	[RSP+58C8] 0x22409CAB070      (void*)
+	[RSP+58D0] 0x1                (size_t)
+	[RSP+58D8] 0x0                (size_t)
+	[RSP+58E0] 0x0                (size_t)
+	[RSP+58E8] 0x0                (size_t)
+	[RSP+58F0] 0x225370C10D8      (void*)
+	[RSP+58F8] 0x22409DC3630      (void*)
+	[RSP+5900] 0x9F75B9F4A0       (void*)
+	[RSP+5908] 0x2240BAB6F70      (sl::chi::CommandListContext*)
+	[RSP+5910] 0x0                (size_t)
+	[RSP+5918] 0x7FFCC4B64866     (void* -> dxgi.dll+0034866)
+	[RSP+5920] 0x22400000000      (char*) "Actx "
+	[RSP+5928] 0x22409DC3630      (void*)
+	[RSP+5930] 0x9F75B9F1F9       (void*)
+	[RSP+5938] 0x200              (size_t)
+	[RSP+5940] 0x9A4500000000     (size_t)
+	[RSP+5948] 0x0                (size_t)
+	[RSP+5950] 0x0                (size_t)
+	[RSP+5958] 0x7FFCC4B537E1     (void* -> dxgi.dll+00237E1)
+	[RSP+5960] 0x0                (size_t)
+	[RSP+5968] 0x22409DC3630      (void*)
+	[RSP+5970] 0x0                (size_t)
+	[RSP+5978] 0x20000000001      (size_t)
+	[RSP+5980] 0x0                (size_t)
+	[RSP+5988] 0x370C1000         (size_t)
+	[RSP+5990] 0x0                (size_t)
+	[RSP+5998] 0x0                (size_t)
+	[RSP+59A0] 0x9A45395CBF42     (size_t)
+	[RSP+59A8] 0x0                (size_t)
+	[RSP+59B0] 0x0                (size_t)
+	[RSP+59B8] 0x0                (size_t)
+	[RSP+59C0] 0x200              (size_t)
+	[RSP+59C8] 0x7FFBE9E4B394     (void* -> gameoverlayrenderer64.dll+008B394)
+	[RSP+59D0] 0x2240BAAEDF0      (void*)
+	[RSP+59D8] 0x22409DC3630      (void*)
+	[RSP+59E0] 0x0                (size_t)
+	[RSP+59E8] 0x2240B64A460      (CD3D11Renderer*)
+	[RSP+59F0] 0x2240BAAEDF0      (void*)
+	[RSP+59F8] 0x7FFBE9D53B64     (void* -> sl.common.dll+0043B64)
+	[RSP+5A00] 0x200              (size_t)
+	[RSP+5A08] 0x22409DC3630      (void*)
+	[RSP+5A10] 0x9F75B9F3C0       (void*)
+	[RSP+5A18] 0x0                (size_t)
+	[RSP+5A20] 0x7FFBE9DABD60     (sl::chi::D3D12*)
+	[RSP+5A28] 0x7FFBE9C9B399     (void* -> sl.dlss_g.dll+001B399)
+	[RSP+5A30] 0x2247E7C38D0      (void*)
+	[RSP+5A38] 0x7FFB00000000     (size_t)
+	[RSP+5A40] 0x7FFBE9DABD60     (sl::chi::D3D12*)
+	[RSP+5A48] 0x7FFBE9D16BC0     (void* -> sl.common.dll+0006BC0)
+	[RSP+5A50] 0x0                (size_t)
+	[RSP+5A58] 0x40247CED916872B0 (size_t)
+	[RSP+5A60] 0x916872B0         (size_t)
+	[RSP+5A68] 0x40247CED916872B0 (size_t)
+	[RSP+5A70] 0x0                (size_t)
+	[RSP+5A78] 0x2240A8A46E0      (void*)
+	[RSP+5A80] 0x2240BAAEE70      (void*)
+	[RSP+5A88] 0x2240A8A46E0      (void*)
+	[RSP+5A90] 0x4000000002000    (size_t)
+	[RSP+5A98] 0xFFFFFFFF00000000 (size_t)
+	[RSP+5AA0] 0x226B8B032B0      (void*)
+	[RSP+5AA8] 0x400C000001000    (size_t)
+	[RSP+5AB0] 0xFFFFFFFF00000000 (size_t)
+	[RSP+5AB8] 0x0                (size_t)
+	[RSP+5AC0] 0x0                (size_t)
+	[RSP+5AC8] 0x0                (size_t)
+	[RSP+5AD0] 0xFFFFFFFFFFFFFFFE (size_t)
+	[RSP+5AD8] 0x40247CED916872B0 (size_t)
+	[RSP+5AE0] 0x40247CED916872B0 (size_t)
+	[RSP+5AE8] 0x40247CED916872B0 (size_t)
+	[RSP+5AF0] 0x40247D70A3D70A3D (size_t)
+	[RSP+5AF8] 0x40247D70A3D70A3D (size_t)
+	[RSP+5B00] 0x40247D70A3D70A3D (size_t)
+	[RSP+5B08] 0x40247D70A3D70A3D (size_t)
+	[RSP+5B10] 0x989680           (size_t)
+	[RSP+5B18] 0x3B94D29DBD       (size_t)
+	[RSP+5B20] 0x2807             (size_t)
+	[RSP+5B28] 0xC4C04768F209     (size_t)
+	[RSP+5B30] 0x0                (size_t)
+	[RSP+5B38] 0x0                (size_t)
+	[RSP+5B40] 0x265B             (size_t)
+	[RSP+5B48] 0x225370C1150      (void*)
+	[RSP+5B50] 0x224F8318BF8      (void*)
+	[RSP+5B58] 0x2                (size_t)
+	[RSP+5B60] 0x22407750C20      (void*)
+	[RSP+5B68] 0x224F8318B00      (void*)
+	[RSP+5B70] 0x9F75B9F4E9       (void*)
+	[RSP+5B78] 0x7FFBE9CA190C     (void* -> sl.dlss_g.dll+002190C)
+	[RSP+5B80] 0x0                (size_t)
+	[RSP+5B88] 0x225370C1058      (void*)
+	[RSP+5B90] 0x225370C1001      (void*)
+	[RSP+5B98] 0x2272FC4E980      (void*)
+	[RSP+5BA0] 0x2FC4E970         (size_t)
+	[RSP+5BA8] 0x2272FC4E980      (void*)
+	[RSP+5BB0] 0x0                (size_t)
+	[RSP+5BB8] 0x0                (size_t)
+	[RSP+5BC0] 0x9F75B9F558       (void*)
+	[RSP+5BC8] 0x225370C1150      (void*)
+	[RSP+5BD0] 0x0                (size_t)
+	[RSP+5BD8] 0x2910             (size_t)
+	[RSP+5BE0] 0xFFFFFFFFFFFFFFFE (size_t)
+	[RSP+5BE8] 0x0                (size_t)
+	[RSP+5BF0] 0x0                (size_t)
+	[RSP+5BF8] 0x224F8318BB0      (void*)
+	[RSP+5C00] 0x224F8318BF8      (void*)
+	[RSP+5C08] 0x2240A93A038      (void*)
+	[RSP+5C10] 0x0                (size_t)
+	[RSP+5C18] 0x0                (size_t)
+	[RSP+5C20] 0x0                (size_t)
+	[RSP+5C28] 0x0                (size_t)
+	[RSP+5C30] 0x0                (size_t)
+	[RSP+5C38] 0x0                (size_t)
+	[RSP+5C40] 0x0                (size_t)
+	[RSP+5C48] 0x0                (size_t)
+	[RSP+5C50] 0x0                (size_t)
+	[RSP+5C58] 0x0                (size_t)
+	[RSP+5C60] 0x0                (size_t)
+	[RSP+5C68] 0x0                (size_t)
+	[RSP+5C70] 0x0                (size_t)
+	[RSP+5C78] 0x100              (size_t)
+	[RSP+5C80] 0x0                (size_t)
+	[RSP+5C88] 0x224F8318BB0      (void*)
+	[RSP+5C90] 0x2240A93A038      (void*)
+	[RSP+5C98] 0x224F8318BB8      (void*)
+	[RSP+5CA0] 0x224F8318BF8      (void*)
+	[RSP+5CA8] 0x2240A939F30      (void*)
+	[RSP+5CB0] 0x9F75B9F650       (void*)
+	[RSP+5CB8] 0x7FFBE9C98450     (void* -> sl.dlss_g.dll+0018450)
+	[RSP+5CC0] 0x2240A939F00      (void*)
+	[RSP+5CC8] 0x2240A939F00      (void*)
+	[RSP+5CD0] 0x3B94D293B2       (size_t)
+	[RSP+5CD8] 0x3FD0000000000000 (size_t)
+	[RSP+5CE0] 0x9F75B9F5D8       (void*)
+	[RSP+5CE8] 0x0                (size_t)
+	[RSP+5CF0] 0x2240A939F30      (void*)
+	[RSP+5CF8] 0x0                (size_t)
+	[RSP+5D00] 0xFFFFFFFFFFFFFFFE (size_t)
+	[RSP+5D08] 0x0                (size_t)
+	[RSP+5D10] 0x0                (size_t)
+	[RSP+5D18] 0x0                (size_t)
+	[RSP+5D20] 0x0                (size_t)
+	[RSP+5D28] 0x0                (size_t)
+	[RSP+5D30] 0x0                (size_t)
+	[RSP+5D38] 0x0                (size_t)
+	[RSP+5D40] 0x0                (size_t)
+	[RSP+5D48] 0x0                (size_t)
+	[RSP+5D50] 0x0                (size_t)
+	[RSP+5D58] 0x0                (size_t)
+	[RSP+5D60] 0x0                (size_t)
+	[RSP+5D68] 0x0                (size_t)
+	[RSP+5D70] 0x0                (size_t)
+	[RSP+5D78] 0x7FFCCA299625     (void* -> ntdll.dll+0069625)
+	[RSP+5D80] 0x225370C1050      (std::_Func_impl_no_alloc<<lambda_3a6c656f0226defaff647fc541b05188>,void>*)
+	[RSP+5D88] 0x0                (size_t)
+	[RSP+5D90] 0x9F73B0E470       (void*)
+	[RSP+5D98] 0x0                (size_t)
+	[RSP+5DA0] 0x0                (size_t)
+	[RSP+5DA8] 0x2240B621CB0      (void*)
+	[RSP+5DB0] 0x0                (size_t)
+	[RSP+5DB8] 0x7FFCCA261250     (void* -> ntdll.dll+0031250)
+	[RSP+5DC0] 0x9F73B0E5C8       (void*)
+	[RSP+5DC8] 0x0                (size_t)
+	[RSP+5DD0] 0x0                (size_t)
+	[RSP+5DD8] 0x0                (size_t)
+	[RSP+5DE0] 0xC4C04768E859     (size_t)
+	[RSP+5DE8] 0x7FFCB7632648     (void* -> MSVCP140.dll+0012648)
+	[RSP+5DF0] 0x0                (size_t)
+	[RSP+5DF8] 0x0                (size_t)
+	[RSP+5E00] 0x0                (size_t)
+	[RSP+5E08] 0x0                (size_t)
+	[RSP+5E10] 0x0                (size_t)
+	[RSP+5E18] 0x7FFBE9CB3512     (void* -> sl.dlss_g.dll+0033512)
+	[RSP+5E20] 0x0                (size_t)
+	[RSP+5E28] 0x9F73B0E5C8       (void*)
+	[RSP+5E30] 0x0                (size_t)
+	[RSP+5E38] 0x2240B621CB0      (void*)
+	[RSP+5E40] 0xFFFFFFFFFFFFFFFE (size_t)
+	[RSP+5E48] 0x0                (size_t)
+	[RSP+5E50] 0x0                (size_t)
+	[RSP+5E58] 0x7FFBE9C97039     (void* -> sl.dlss_g.dll+0017039)
+	[RSP+5E60] 0x2240BAE9C70      (void*)
+	[RSP+5E68] 0x2240BC35380      (void*)
+	[RSP+5E70] 0x0                (size_t)
+	[RSP+5E78] 0x0                (size_t)
+	[RSP+5E80] 0x0                (size_t)
+	[RSP+5E88] 0x7FFCC7809363     (void* -> ucrtbase.dll+0029363)
+	[RSP+5E90] 0x2240BAE9C70      (void*)
+	[RSP+5E98] 0x0                (size_t)
+	[RSP+5EA0] 0x0                (size_t)
+	[RSP+5EA8] 0x0                (size_t)
+	[RSP+5EB0] 0x0                (size_t)
+	[RSP+5EB8] 0x7FFCC963257D     (void* -> KERNEL32.DLL+001257D)
+	[RSP+5EC0] 0x0                (size_t)
+	[RSP+5EC8] 0x0                (size_t)
+	[RSP+5ED0] 0x0                (size_t)
+	[RSP+5ED8] 0x0                (size_t)
+	[RSP+5EE0] 0x0                (size_t)
+	[RSP+5EE8] 0x7FFCCA28AA58     (void* -> ntdll.dll+005AA58)
+	[RSP+5EF0] 0x0                (size_t)
+	[RSP+5EF8] 0x0                (size_t)
+	[RSP+5F00] 0x0                (size_t)
+	[RSP+5F08] 0x0                (size_t)
+	[RSP+5F10] 0x0                (size_t)
+	[RSP+5F18] 0x0                (size_t)
+	[RSP+5F20] 0x57579CAA00000000 (size_t)
+	[RSP+5F28] 0x0                (size_t)
+	[RSP+5F30] 0x4F0FFFFFB30      (size_t)
+	[RSP+5F38] 0x7FFCC7A5C720     (void* -> KERNELBASE.dll+015C720)
+	[RSP+5F40] 0x9F75B98380       (void*)
+	[RSP+5F48] 0xFF243C96E280001F (size_t)
+	[RSP+5F50] 0x7FFC90F25B8A     (size_t)
+	[RSP+5F58] 0x9F75B98380       (void*)
+	[RSP+5F60] 0x0                (size_t)
+	[RSP+5F68] 0x0                (size_t)
+	[RSP+5F70] 0x0                (size_t)
+	[RSP+5F78] 0x0                (size_t)
+	[RSP+5F80] 0x0                (size_t)
+	[RSP+5F88] 0x0                (size_t)
+	[RSP+5F90] 0x0                (size_t)
+	[RSP+5F98] 0x0                (size_t)
+	[RSP+5FA0] 0x0                (size_t)
+	[RSP+5FA8] 0x0                (size_t)
+	[RSP+5FB0] 0x0                (size_t)
+	[RSP+5FB8] 0x0                (size_t)
+	[RSP+5FC0] 0x0                (size_t)
+	[RSP+5FC8] 0x0                (size_t)
+	[RSP+5FD0] 0x0                (size_t)
+	[RSP+5FD8] 0x0                (size_t)
+	[RSP+5FE0] 0x0                (size_t)
+	[RSP+5FE8] 0x0                (size_t)
+	[RSP+5FF0] 0x0                (size_t)
+	[RSP+5FF8] 0x0                (size_t)
+	[RSP+6000] 0x0                (size_t)
+	[RSP+6008] 0x0                (size_t)
+	[RSP+6010] 0x0                (size_t)
+	[RSP+6018] 0x0                (size_t)
+	[RSP+6020] 0x0                (size_t)
+	[RSP+6028] 0x0                (size_t)
+	[RSP+6030] 0x0                (size_t)
+	[RSP+6038] 0x0                (size_t)
+	[RSP+6040] 0x0                (size_t)
+	[RSP+6048] 0x0                (size_t)
+	[RSP+6050] 0x0                (size_t)
+	[RSP+6058] 0x0                (size_t)
+	[RSP+6060] 0x0                (size_t)
+	[RSP+6068] 0x0                (size_t)
+	[RSP+6070] 0x0                (size_t)
+	[RSP+6078] 0x0                (size_t)
+	[RSP+6080] 0x0                (size_t)
+	[RSP+6088] 0x0                (size_t)
+	[RSP+6090] 0x0                (size_t)
+	[RSP+6098] 0x0                (size_t)
+	[RSP+60A0] 0x0                (size_t)
+	[RSP+60A8] 0x0                (size_t)
+	[RSP+60B0] 0x0                (size_t)
+	[RSP+60B8] 0x0                (size_t)
+	[RSP+60C0] 0x0                (size_t)
+	[RSP+60C8] 0x0                (size_t)
+	[RSP+60D0] 0x0                (size_t)
+	[RSP+60D8] 0x0                (size_t)
+	[RSP+60E0] 0x0                (size_t)
+	[RSP+60E8] 0x0                (size_t)
+	[RSP+60F0] 0x0                (size_t)
+	[RSP+60F8] 0x0                (size_t)
+	[RSP+6100] 0x0                (size_t)
+	[RSP+6108] 0x0                (size_t)
+	[RSP+6110] 0x0                (size_t)
+	[RSP+6118] 0x0                (size_t)
+	[RSP+6120] 0x0                (size_t)
+	[RSP+6128] 0x0                (size_t)
+	[RSP+6130] 0x0                (size_t)
+	[RSP+6138] 0x0                (size_t)
+	[RSP+6140] 0x0                (size_t)
+	[RSP+6148] 0x0                (size_t)
+	[RSP+6150] 0x0                (size_t)
+	[RSP+6158] 0x0                (size_t)
+	[RSP+6160] 0x0                (size_t)
+	[RSP+6168] 0x0                (size_t)
+	[RSP+6170] 0x0                (size_t)
+	[RSP+6178] 0x0                (size_t)
+	[RSP+6180] 0x0                (size_t)
+	[RSP+6188] 0x0                (size_t)
+	[RSP+6190] 0x0                (size_t)
+	[RSP+6198] 0x0                (size_t)
+	[RSP+61A0] 0x0                (size_t)
+	[RSP+61A8] 0x0                (size_t)
+	[RSP+61B0] 0x0                (size_t)
+	[RSP+61B8] 0x0                (size_t)
+	[RSP+61C0] 0x0                (size_t)
+	[RSP+61C8] 0x0                (size_t)
+	[RSP+61D0] 0x0                (size_t)
+	[RSP+61D8] 0x0                (size_t)
+	[RSP+61E0] 0x0                (size_t)
+	[RSP+61E8] 0x0                (size_t)
+	[RSP+61F0] 0x0                (size_t)
+	[RSP+61F8] 0x0                (size_t)
+	[RSP+6200] 0x0                (size_t)
+	[RSP+6208] 0x0                (size_t)
+	[RSP+6210] 0x0                (size_t)
+	[RSP+6218] 0x0                (size_t)
+	[RSP+6220] 0x0                (size_t)
+	[RSP+6228] 0x0                (size_t)
+	[RSP+6230] 0x0                (size_t)
+	[RSP+6238] 0x0                (size_t)
+	[RSP+6240] 0x0                (size_t)
+	[RSP+6248] 0x0                (size_t)
+	[RSP+6250] 0x0                (size_t)
+	[RSP+6258] 0x0                (size_t)
+	[RSP+6260] 0x0                (size_t)
+	[RSP+6268] 0x0                (size_t)
+	[RSP+6270] 0x0                (size_t)
+	[RSP+6278] 0x0                (size_t)
+	[RSP+6280] 0x0                (size_t)
+	[RSP+6288] 0x0                (size_t)
+	[RSP+6290] 0x0                (size_t)
+	[RSP+6298] 0x0                (size_t)
+	[RSP+62A0] 0x0                (size_t)
+	[RSP+62A8] 0x0                (size_t)
+	[RSP+62B0] 0x0                (size_t)
+	[RSP+62B8] 0x0                (size_t)
+	[RSP+62C0] 0x0                (size_t)
+	[RSP+62C8] 0x0                (size_t)
+	[RSP+62D0] 0x0                (size_t)
+	[RSP+62D8] 0x0                (size_t)
+	[RSP+62E0] 0x0                (size_t)
+	[RSP+62E8] 0x0                (size_t)
+	[RSP+62F0] 0x0                (size_t)
+	[RSP+62F8] 0x0                (size_t)
+	[RSP+6300] 0x0                (size_t)
+	[RSP+6308] 0x0                (size_t)
+	[RSP+6310] 0x0                (size_t)
+	[RSP+6318] 0x0                (size_t)
+	[RSP+6320] 0x0                (size_t)
+	[RSP+6328] 0x0                (size_t)
+	[RSP+6330] 0x0                (size_t)
+	[RSP+6338] 0x0                (size_t)
+	[RSP+6340] 0x0                (size_t)
+	[RSP+6348] 0x0                (size_t)
+	[RSP+6350] 0x0                (size_t)
+	[RSP+6358] 0x0                (size_t)
+	[RSP+6360] 0x0                (size_t)
+	[RSP+6368] 0x0                (size_t)
+	[RSP+6370] 0x0                (size_t)
+	[RSP+6378] 0x0                (size_t)
+	[RSP+6380] 0x0                (size_t)
+	[RSP+6388] 0x0                (size_t)
+	[RSP+6390] 0x0                (size_t)
+	[RSP+6398] 0x0                (size_t)
+	[RSP+63A0] 0x0                (size_t)
+	[RSP+63A8] 0x0                (size_t)
+	[RSP+63B0] 0x0                (size_t)
+	[RSP+63B8] 0x0                (size_t)
+	[RSP+63C0] 0x0                (size_t)
+	[RSP+63C8] 0x0                (size_t)
+	[RSP+63D0] 0x0                (size_t)
+	[RSP+63D8] 0x0                (size_t)
+	[RSP+63E0] 0x0                (size_t)
+	[RSP+63E8] 0x0                (size_t)
+	[RSP+63F0] 0x0                (size_t)
+	[RSP+63F8] 0x0                (size_t)
+	[RSP+6400] 0x0                (size_t)
+	[RSP+6408] 0x0                (size_t)
+	[RSP+6410] 0x0                (size_t)
+	[RSP+6418] 0x0                (size_t)
+	[RSP+6420] 0x0                (size_t)
+	[RSP+6428] 0x0                (size_t)
+	[RSP+6430] 0x0                (size_t)
+	[RSP+6438] 0x0                (size_t)
+	[RSP+6440] 0x0                (size_t)
+	[RSP+6448] 0x0                (size_t)
+	[RSP+6450] 0x0                (size_t)
+	[RSP+6458] 0x0                (size_t)
+	[RSP+6460] 0x0                (size_t)
+	[RSP+6468] 0x0                (size_t)
+	[RSP+6470] 0x0                (size_t)
+	[RSP+6478] 0x0                (size_t)
+	[RSP+6480] 0x0                (size_t)
+	[RSP+6488] 0x0                (size_t)
+	[RSP+6490] 0x0                (size_t)
+	[RSP+6498] 0x0                (size_t)
+	[RSP+64A0] 0x0                (size_t)
+	[RSP+64A8] 0x0                (size_t)
+	[RSP+64B0] 0x0                (size_t)
+	[RSP+64B8] 0x0                (size_t)
+	[RSP+64C0] 0x0                (size_t)
+	[RSP+64C8] 0x0                (size_t)
+	[RSP+64D0] 0x0                (size_t)
+	[RSP+64D8] 0x0                (size_t)
+	[RSP+64E0] 0x0                (size_t)
+	[RSP+64E8] 0x0                (size_t)
+	[RSP+64F0] 0x0                (size_t)
+	[RSP+64F8] 0x0                (size_t)
+	[RSP+6500] 0x0                (size_t)
+	[RSP+6508] 0x0                (size_t)
+	[RSP+6510] 0x0                (size_t)
+	[RSP+6518] 0x0                (size_t)
+	[RSP+6520] 0x0                (size_t)
+	[RSP+6528] 0x0                (size_t)
+	[RSP+6530] 0x0                (size_t)
+	[RSP+6538] 0x0                (size_t)
+	[RSP+6540] 0x0                (size_t)
+	[RSP+6548] 0x0                (size_t)
+	[RSP+6550] 0x0                (size_t)
+	[RSP+6558] 0x0                (size_t)
+	[RSP+6560] 0x0                (size_t)
+	[RSP+6568] 0x0                (size_t)
+	[RSP+6570] 0x0                (size_t)
+	[RSP+6578] 0x0                (size_t)
+	[RSP+6580] 0x0                (size_t)
+	[RSP+6588] 0x0                (size_t)
+	[RSP+6590] 0x0                (size_t)
+	[RSP+6598] 0x0                (size_t)
+	[RSP+65A0] 0x0                (size_t)
+	[RSP+65A8] 0x0                (size_t)
+	[RSP+65B0] 0x0                (size_t)
+	[RSP+65B8] 0x0                (size_t)
+	[RSP+65C0] 0x0                (size_t)
+	[RSP+65C8] 0x0                (size_t)
+	[RSP+65D0] 0x0                (size_t)
+	[RSP+65D8] 0x0                (size_t)
+	[RSP+65E0] 0x0                (size_t)
+	[RSP+65E8] 0x0                (size_t)
+	[RSP+65F0] 0x0                (size_t)
+	[RSP+65F8] 0x0                (size_t)
+	[RSP+6600] 0x0                (size_t)
+	[RSP+6608] 0x0                (size_t)
+	[RSP+6610] 0x0                (size_t)
+	[RSP+6618] 0x0                (size_t)
+	[RSP+6620] 0x0                (size_t)
+	[RSP+6628] 0x0                (size_t)
+	[RSP+6630] 0x0                (size_t)
+	[RSP+6638] 0x0                (size_t)
+	[RSP+6640] 0x0                (size_t)
+	[RSP+6648] 0x0                (size_t)
+	[RSP+6650] 0x0                (size_t)
+	[RSP+6658] 0x0                (size_t)
+	[RSP+6660] 0x0                (size_t)
+	[RSP+6668] 0x0                (size_t)
+	[RSP+6670] 0x0                (size_t)
+	[RSP+6678] 0x0                (size_t)
+	[RSP+6680] 0x0                (size_t)
+	[RSP+6688] 0x0                (size_t)
+	[RSP+6690] 0x0                (size_t)
+	[RSP+6698] 0x0                (size_t)
+	[RSP+66A0] 0x0                (size_t)
+	[RSP+66A8] 0x0                (size_t)
+	[RSP+66B0] 0x0                (size_t)
+	[RSP+66B8] 0x0                (size_t)
+	[RSP+66C0] 0x0                (size_t)
+	[RSP+66C8] 0x0                (size_t)
+	[RSP+66D0] 0x0                (size_t)
+	[RSP+66D8] 0x0                (size_t)
+	[RSP+66E0] 0x0                (size_t)
+	[RSP+66E8] 0x0                (size_t)
+	[RSP+66F0] 0x0                (size_t)
+	[RSP+66F8] 0x0                (size_t)
+	[RSP+6700] 0x0                (size_t)
+	[RSP+6708] 0x0                (size_t)
+	[RSP+6710] 0x0                (size_t)
+	[RSP+6718] 0x0                (size_t)
+	[RSP+6720] 0x0                (size_t)
+	[RSP+6728] 0x0                (size_t)
+	[RSP+6730] 0x0                (size_t)
+	[RSP+6738] 0x0                (size_t)
+	[RSP+6740] 0x0                (size_t)
+	[RSP+6748] 0x0                (size_t)
+	[RSP+6750] 0x0                (size_t)
+	[RSP+6758] 0x0                (size_t)
+	[RSP+6760] 0x0                (size_t)
+	[RSP+6768] 0x0                (size_t)
+
+MODULES:
+	XINPUT1_3.dll                      0x000000400000
+	X3DAudio1_7.dll                    0x000055C80000
+	steam_api64.dll                    0x000055C90000
+	d3d11.dll                          0x000180000000
+	NSI.dll                            0x022400110000
+	DSOUND.DLL                         0x02240E960000
+	tbb.dll                            0x022420C20000
+	tbbmalloc.dll                      0x022420C90000
+	LL_fourPlay_1_10_163.dll           0x0224486B0000
+	Fallout4.exe                       0x7FF660620000
+	nvcuda64.dll                       0x7FFBAE1F0000
+	nvngx_dlssg.dll                    0x7FFBAEBA0000
+	nvngx_dlss.dll                     0x7FFBB0FF0000
+	NvCamera64.dll                     0x7FFBBB8F0000
+	steamclient64.dll                  0x7FFBBC160000
+	dxilconv.dll                       0x7FFBD97C0000
+	usvfs_x64.dll                      0x7FFBDEB30000
+	d3dcompiler_47_64.dll              0x7FFBDEFA0000
+	d3d11on12.dll                      0x7FFBE5580000
+	d3dcompiler_46e.dll                0x7FFBE5610000
+	nvcuda.dll                         0x7FFBE59D0000
+	XAudio2_7.dll                      0x7FFBE7070000
+	nvofapi64.dll                      0x7FFBE7100000
+	vulkan-1.dll                       0x7FFBE93C0000
+	_nvngx.dll                         0x7FFBE9520000
+	DINPUT8.dll                        0x7FFBE99D0000
+	KiLoaderSatelliteENB.dllplugin     0x7FFBE9A80000
+	sl.reflex.dll                      0x7FFBE9AD0000
+	sl.dlss_g.dll                      0x7FFBE9C80000
+	sl.common.dll                      0x7FFBE9D10000
+	gameoverlayrenderer64.dll          0x7FFBE9DC0000
+	XDI.dll                            0x7FFBE9F50000
+	wsfw_identifier.dll                0x7FFBE9FC0000
+	SUP_F4SE.dll                       0x7FFBEA0C0000
+	WhoseQuestIsItAnywayF4.dll         0x7FFBEA520000
+	WeightlessItems.dll                0x7FFBEA580000
+	UnlimitedFastTravel.dll            0x7FFBEA5D0000
+	ShadowBoostFO4.dll                 0x7FFBEA620000
+	SettlementOfUnlimitedSize.dll      0x7FFBEA6F0000
+	ScaleformCopyPaste.dll             0x7FFBEA740000
+	RobCo_Patcher.dll                  0x7FFBEA790000
+	PRKF.dll                           0x7FFBEA880000
+	PrivateProfileRedirector.dll       0x7FFBEA910000
+	PowerGridTools.dll                 0x7FFBEA970000
+	po3_SpellPerkItemDistributorF4.dll 0x7FFBEA9E0000
+	po3_SimpleOffenceSuppressionF4.dll 0x7FFBEAAF0000
+	po3_BaseObjectSwapperF4.dll        0x7FFBEAB80000
+	place.dll                          0x7FFBEAC80000
+	PipboyTabs.dll                     0x7FFBEAD00000
+	Outfit-ReDress-Fix.dll             0x7FFBEAD60000
+	MODExplorer.dll                    0x7FFBEADB0000
+	MeleeAndThrow.dll                  0x7FFBEAE30000
+	mcm.dll                            0x7FFBEAE80000
+	lootman.dll                        0x7FFBEAF20000
+	LighthousePapyrusExtender.dll      0x7FFBEAF90000
+	KiENBExtender.dll                  0x7FFBEB0C0000
+	KiLoader.dll                       0x7FFBEB190000
+	KiLoaderSatelliteF4SE.dll          0x7FFBEB220000
+	CONCRT140.dll                      0x7FFBEB270000
+	Interior-NavCut-Fix.dll            0x7FFBEB2C0000
+	GCBugFix.dll                       0x7FFBEB310000
+	GardenOfEdenPapyrusExtender.dll    0x7FFBEB370000
+	F4z Ro D'oh.dll                    0x7FFBEB530000
+	f4ee.dll                           0x7FFBEB5A0000
+	EscapeFreeze.dll                   0x7FFBEB6B0000
+	BakaPowerArmorStorage.dll          0x7FFBEB770000
+	BakaMaxPapyrusOps.dll              0x7FFBEB860000
+	BakaFullscreenPipboy.dll           0x7FFBEB910000
+	dxgi.dll                           0x7FFBEB9F0000
+	DirectHit.dll                      0x7FFBEBF10000
+	BakaFramework.dll                  0x7FFBEBF70000
+	D3DCOMPILER_43.dll                 0x7FFBEC060000
+	WINHTTP.dll                        0x7FFBEC2D0000
+	PlotUI.dll                         0x7FFBEC590000
+	crafting_highlight_fix.dll         0x7FFBEC5D0000
+	BakaAutoLockpicking.dll            0x7FFBEC620000
+	HighFPSPhysicsFix.dll              0x7FFBEC6C0000
+	sl.interposer.dll                  0x7FFBEC750000
+	ConsoleUtilF4.dll                  0x7FFBEC800000
+	PDPerfPlugin.dll                   0x7FFBEC850000
+	Fallout4Upscaler.dll               0x7FFBEC8B0000
+	Buffout4.dll                       0x7FFBEC9C0000
+	PriorityMod.dll                    0x7FFBF1D20000
+	ArmorPenetrationBugFix.dll         0x7FFBF1FA0000
+	spdlog.dll                         0x7FFBF23F0000
+	tier0_s64.dll                      0x7FFBF2450000
+	encounter_zone_recalculation.dll   0x7FFBF26C0000
+	flexRelease_x64.dll                0x7FFBF4EB0000
+	f4se_1_10_163.dll                  0x7FFBF6320000
+	ESPExplorer.dll                    0x7FFBF6860000
+	d3dx11_43.dll                      0x7FFBF68C0000
+	MSVCR110.dll                       0x7FFBF6910000
+	GFSDK_SSAO_D3D11.win64.dll         0x7FFBF6A50000
+	cudart64_75.dll                    0x7FFBF6B10000
+	GFSDK_GodraysLib.x64.dll           0x7FFBF6C60000
+	bink2w64.dll                       0x7FFBF6CC0000
+	WeaponDebrisCrashFix.dll           0x7FFBF7330000
+	MSVCP110.dll                       0x7FFBF7350000
+	ConsoleEx.dll                      0x7FFBF7400000
+	vstdlib_s64.dll                    0x7FFBF7440000
+	pppl.dll                           0x7FFBFE5E0000
+	D3DSCache.dll                      0x7FFC268F0000
+	D3D12Core.dll                      0x7FFC26AA0000
+	ResampleDmo.DLL                    0x7FFC26EE0000
+	d3d12.dll                          0x7FFC27050000
+	msdmo.dll                          0x7FFC55140000
+	xinput1_4.dll                      0x7FFC61FE0000
+	nvspcap64.dll                      0x7FFC7E3C0000
+	UIAutomationCore.DLL               0x7FFC91A60000
+	NvTelemetryBridge64.dll            0x7FFC98310000
+	OLEACC.dll                         0x7FFC9C060000
+	threadpoolwinrt.dll                0x7FFC9D130000
+	nvwgf2umx.dll                      0x7FFC9E4B0000
+	MSIMG32.dll                        0x7FFCA47A0000
+	ondemandconnroutehelper.dll        0x7FFCA48C0000
+	WININET.dll                        0x7FFCA48E0000
+	fmt.dll                            0x7FFCA5E70000
+	BetterConsole.dll                  0x7FFCA5EA0000
+	flexExtRelease_x64.dll             0x7FFCA5F20000
+	libdiskCacheEnabler.dll            0x7FFCA5F80000
+	enbhelperf4.dll                    0x7FFCA5FA0000
+	XINPUT9_1_0.dll                    0x7FFCA6270000
+	textinputframework.dll             0x7FFCA63F0000
+	inputhost.dll                      0x7FFCA6540000
+	Windows.UI.dll                     0x7FFCA87C0000
+	f4se_steam_loader.dll              0x7FFCA9970000
+	nvgpucomp64.dll                    0x7FFCA9EF0000
+	nvldumdx.dll                       0x7FFCAC560000
+	directxdatabasehelper.dll          0x7FFCAEA30000
+	ncryptsslp.dll                     0x7FFCAEFE0000
+	MessageBus.dll                     0x7FFCB1530000
+	COMCTL32.dll                       0x7FFCB2880000
+	AUDIOSES.DLL                       0x7FFCB2DF0000
+	NvTelemetryAPI64.dll               0x7FFCB3F30000
+	srvcli.dll                         0x7FFCB5940000
+	iertutil.dll                       0x7FFCB5970000
+	urlmon.dll                         0x7FFCB5F20000
+	winmmbase.dll                      0x7FFCB75F0000
+	MSVCP140.dll                       0x7FFCB7620000
+	VCRUNTIME140_1.dll                 0x7FFCB76B0000
+	VCRUNTIME140.dll                   0x7FFCB76C0000
+	webio.dll                          0x7FFCB76E0000
+	gdiplus.dll                        0x7FFCB7B00000
+	KiHalloc.dll                       0x7FFCB7CE0000
+	SPINF.dll                          0x7FFCB8C50000
+	avrt.dll                           0x7FFCB92F0000
+	MMDevApi.dll                       0x7FFCBAA60000
+	dbgcore.DLL                        0x7FFCBAD00000
+	MessageBus.dll                     0x7FFCBAFC0000
+	MpOav.dll                          0x7FFCBB860000
+	wbemsvc.dll                        0x7FFCBB980000
+	fastprox.dll                       0x7FFCBB9A0000
+	nvapi64.dll                        0x7FFCBBD10000
+	WINMM.dll                          0x7FFCBC590000
+	wbemcomn.dll                       0x7FFCBE1A0000
+	wbemprox.dll                       0x7FFCBE2E0000
+	CoreUIComponents.dll               0x7FFCBE970000
+	amsi.dll                           0x7FFCBED50000
+	twinapi.appcore.dll                0x7FFCBED70000
+	dbghelp.dll                        0x7FFCBF200000
+	drvstore.dll                       0x7FFCC0040000
+	cryptnet.dll                       0x7FFCC01A0000
+	VERSION.dll                        0x7FFCC01E0000
+	DEVRTL.dll                         0x7FFCC0350000
+	nvToolsExt64_1.dll                 0x7FFCC05F0000
+	MSVCP140_ATOMIC_WAIT.dll           0x7FFCC06F0000
+	fwpuclnt.dll                       0x7FFCC0CC0000
+	dhcpcsvc.DLL                       0x7FFCC17A0000
+	dhcpcsvc6.DLL                      0x7FFCC17E0000
+	WINHTTP.DLL                        0x7FFCC1A30000
+	rasadhlp.dll                       0x7FFCC1B70000
+	WindowsCodecs.dll                  0x7FFCC1FF0000
+	D3DCOMPILER_47.dll                 0x7FFCC21A0000
+	d3d11.dll                          0x7FFCC2E30000
+	dcomp.dll                          0x7FFCC30D0000
+	CoreMessaging.dll                  0x7FFCC3C80000
+	UxTheme.dll                        0x7FFCC48C0000
+	dxgi.dll                           0x7FFCC4B30000
+	dwmapi.dll                         0x7FFCC4C40000
+	WINNSI.DLL                         0x7FFCC4C70000
+	dxcore.dll                         0x7FFCC4CB0000
+	resourcepolicyclient.dll           0x7FFCC5030000
+	wintypes.dll                       0x7FFCC5340000
+	windows.storage.dll                0x7FFCC5480000
+	HID.DLL                            0x7FFCC5D80000
+	netutils.dll                       0x7FFCC5FA0000
+	IPHLPAPI.DLL                       0x7FFCC6090000
+	DNSAPI.dll                         0x7FFCC60C0000
+	UMPDC.dll                          0x7FFCC6390000
+	POWRPROF.dll                       0x7FFCC63B0000
+	Secur32.dll                        0x7FFCC6420000
+	schannel.DLL                       0x7FFCC64A0000
+	rsaenh.dll                         0x7FFCC65B0000
+	kernel.appcore.dll                 0x7FFCC6650000
+	ntmarta.dll                        0x7FFCC6670000
+	SSPICLI.DLL                        0x7FFCC68B0000
+	MSWSOCK.dll                        0x7FFCC6AC0000
+	gpapi.dll                          0x7FFCC6B30000
+	USERENV.dll                        0x7FFCC6B60000
+	wldp.dll                           0x7FFCC6D40000
+	CRYPTBASE.DLL                      0x7FFCC6DF0000
+	CRYPTSP.dll                        0x7FFCC6E10000
+	NTASN1.dll                         0x7FFCC6EC0000
+	ncrypt.dll                         0x7FFCC6F00000
+	MSASN1.dll                         0x7FFCC7210000
+	devobj.dll                         0x7FFCC7230000
+	CFGMGR32.dll                       0x7FFCC7280000
+	DPAPI.DLL                          0x7FFCC72D0000
+	profapi.dll                        0x7FFCC74A0000
+	bcrypt.dll                         0x7FFCC7570000
+	bcryptPrimitives.dll               0x7FFCC75A0000
+	msvcp_win.dll                      0x7FFCC7620000
+	gdi32full.dll                      0x7FFCC76C0000
+	ucrtbase.dll                       0x7FFCC77E0000
+	KERNELBASE.dll                     0x7FFCC7900000
+	CRYPT32.dll                        0x7FFCC7CB0000
+	WINTRUST.dll                       0x7FFCC7EE0000
+	win32u.dll                         0x7FFCC7F50000
+	imagehlp.dll                       0x7FFCC7F80000
+	USER32.dll                         0x7FFCC7FB0000
+	SHELL32.dll                        0x7FFCC81E0000
+	sechost.dll                        0x7FFCC8A90000
+	IMM32.DLL                          0x7FFCC8B40000
+	ADVAPI32.dll                       0x7FFCC8D40000
+	SETUPAPI.dll                       0x7FFCC8E00000
+	combase.dll                        0x7FFCC9290000
+	KERNEL32.DLL                       0x7FFCC9620000
+	ole32.dll                          0x7FFCC96F0000
+	COMDLG32.dll                       0x7FFCC9890000
+	OLEAUT32.dll                       0x7FFCC9990000
+	GDI32.dll                          0x7FFCC9A70000
+	shcore.dll                         0x7FFCC9AA0000
+	clbcatq.dll                        0x7FFCC9BA0000
+	SHLWAPI.dll                        0x7FFCC9CE0000
+	MSCTF.dll                          0x7FFCC9D40000
+	WS2_32.dll                         0x7FFCC9EA0000
+	RPCRT4.dll                         0x7FFCC9FB0000
+	msvcrt.dll                         0x7FFCCA0D0000
+	PSAPI.DLL                          0x7FFCCA180000
+	ntdll.dll                          0x7FFCCA230000
+
+F4SE PLUGINS:
+	ArmorPenetrationBugFix.dll v1
+	BakaAutoLockpicking.dll v2
+	BakaFramework.dll v1.10
+	BakaFullscreenPipboy.dll v1.8
+	BakaMaxPapyrusOps.dll v1.1
+	BakaPowerArmorStorage.dll v1.3
+	BetterConsole.dll
+	Buffout4.dll v1.28.6
+	ConsoleEx.dll v1
+	ConsoleUtilF4.dll v1.0.1
+	crafting_highlight_fix.dll
+	DirectHit.dll v1
+	enbhelperf4.dll v1
+	encounter_zone_recalculation.dll
+	EscapeFreeze.dll v1
+	ESPExplorer.dll
+	f4ee.dll
+	F4z Ro D'oh.dll v1.1.6.1030
+	Fallout4Upscaler.dll v1
+	fmt.dll
+	GardenOfEdenPapyrusExtender.dll v16
+	GCBugFix.dll v1
+	HighFPSPhysicsFix.dll
+	Interior-NavCut-Fix.dll v1.0.3
+	KiLoaderSatelliteF4SE.dll v1.2
+	libdiskCacheEnabler.dll
+	LighthousePapyrusExtender.dll v1.4
+	LL_fourPlay_1_10_163.dll
+	lootman.dll
+	mcm.dll
+	MeleeAndThrow.dll v1
+	MODExplorer.dll
+	Outfit-ReDress-Fix.dll v1
+	PipboyTabs.dll
+	place.dll
+	PlotUI.dll
+	po3_BaseObjectSwapperF4.dll v1.1
+	po3_SimpleOffenceSuppressionF4.dll v1
+	po3_SpellPerkItemDistributorF4.dll v2
+	PowerGridTools.dll
+	pppl.dll
+	PriorityMod.dll
+	PrivateProfileRedirector.dll
+	PRKF.dll
+	RobCo_Patcher.dll v3.6
+	ScaleformCopyPaste.dll v1
+	SettlementOfUnlimitedSize.dll
+	ShadowBoostFO4.dll
+	spdlog.dll v1.10
+	SUP_F4SE.dll
+	UnlimitedFastTravel.dll
+	WeaponDebrisCrashFix.dll
+	WeightlessItems.dll
+	WhoseQuestIsItAnywayF4.dll v1
+	wsfw_identifier.dll
+	XDI.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     Unofficial Fallout 4 Patch.esp
+	[08]     HUDFramework.esm
+	[09]     WorkshopFramework.esm
+	[0A]     MFC2023_EndAlz_Trunk.esm
+	[0B]     SouthOfTheSea.esm
+	[0C]     Random Robots - True Leveled.esm
+	[0D]     XDI.esm
+	[0E]     Games.esm
+	[0F]     BarstoolGames.esm
+	[10]     CompanionIvy.esm
+	[11]     Darlene.esm
+	[12]     Eli_Armour_Compendium.esp
+	[13]     GoodneighborExpanded.esp
+	[14]     Ketaros_NewMags.esp
+	[15]     NukaWorldReborn.esp
+	[16]     AAF.esm
+	[17]     SS2.esm
+	[18]     SS2_XPAC_Chapter2.esm
+	[19]     SS2_XPAC_Chapter3.esm
+	[1A]     VivaNukaWorldQuests.esp
+	[1B]     10MMTF.esp
+	[1C]     AtomsGloryThreads.esp
+	[1D]     CF_AtomicWarlord.esp
+	[1E]     SettlementMenuManager.esp
+	[1F]     Useful_Companions.esp
+	[20]     Vault 88 Template - Optimised.esp
+	[21]     ImprovedMinutemen.esp
+	[22]     ImprovedMinutemenEncounters.esp
+	[23]     WorkshopPlus.esp
+	[24]     Vault-Tec Workshop Overhaul Redux.esp
+	[25]     Vault88 - Essentials.esp
+	[26]     The Eyes Of Beauty.esp
+	[27]     jsrs.esp
+	[28]     LooksMenu Customization Compendium.esp
+	[29]     PoseidonOffices.esp
+	[2A]     Alex's Settlement Power Pylon.esp
+	[2B]     AutomatronUnlockedNukaParts.esp
+	[2C]     Better Randomized Robots - vanilla loot patch.esp
+	[2D]     Better_Settlement_Defence.esp
+	[2E]     CheatTerminal.esp
+	[2F]     ChineseStealthSuit.esp
+	[30]     CoASettlers.esp
+	[31]     CompanionStatus.esp
+	[32]     Configurable Artillery.esp
+	[33]     ESPExplorerFO4.esp
+	[34]     Ketaros_Treasures.esp
+	[35]     FO4R.esp
+	[36]     HoloTime_2.esp
+	[37]     Jacq-CompanionPerkMags.esp
+	[38]     Ketaros_MissingMags.esp
+	[39]     KSHairdos.esp
+	[3A]     KSHairsFemsheppingRadbeetle.esp
+	[3B]     Reverb and Ambiance Overhaul.esp
+	[3C]     llamaCompanionHeatherv2.esp
+	[3D]     MercerRescuedSynths.esp
+	[3E]     Mors Shortcut to Curie.esp
+	[3F]     NoSharedDogmeatTemplate.esp
+	[40]     PersistentVolumeSliders.esp
+	[41]     Playable Synth Eyes.esp
+	[42]     PoseidonOffices_NoBugs.esp
+	[43]     SKKFastBOS.esp
+	[44]     SKKFastReunions.esp
+	[45]     SRV_StopRadioVoice.esp
+	[46]     BarstoolGames_FH.esp
+	[47]     BarstoolGames_NW.esp
+	[48]     PortableCloningDevice.esp
+	[49]     SKKFastMinutemen.esp
+	[4A]     Q_Lore_MQ106_Cryolator.esp
+	[4B]     FatherCompanion.esp
+	[4C]     InstituteReformation.esp
+	[4D]     CompanionIvy_Mags.esp
+	[4E]     CompanionIvy_Nuka.esp
+	[4F]     CompanionIvy_quest.esp
+	[50]     BetterFarHarbor_Open.esp
+	[51]     Patch Ivy-XDI.esp
+	[52]     EnhancedLightsandFX.esp
+	[53]     FBFH_EE_Acadia_Cleanup.esp
+	[54]     _00Stingray.esp
+	[55]     LaserDesignator.esp
+	[56]     LaserDesignatorA10Addon.esp
+	[57]     BostonLibrarySettlement.esp
+	[58]     [SS2 Addon] SimSettlements SuperStructures.esp
+	[59]     Cho1_ss2_Barmod_Conversion.esp
+	[5A]     DZK_1x1_Pack.esp
+	[5B]     GarageHomesAndSensibleSecurity.esp
+	[5C]     GtN_SettlersatPlay.esp
+	[5D]     JunkTownTwo.esp
+	[5E]     MS Contraptions - SS2 ASAM Builder.esp
+	[5F]     ohSIM_Sim2_Settlements_Scrappers_Addon.esp
+	[60]     Shadow Wastelands SS2 World Repopulation Cells.esp
+	[61]     SS2-Jampads2.esp
+	[62]     SS2-PraRandomAddon.esp
+	[63]     SS2_Addon_Favelabulous.esp
+	[64]     SS2_Addon_FHE.esp
+	[65]     SS2_Addon_NWE.esp
+	[66]     SS2_Addon_PSC_Plots.esp
+	[67]     SS2_Addon_R2R.esp
+	[68]     SS2_CityPlanContestAssistant.esp
+	[69]     SS2_FDK_TinyLiving.esp
+	[6A]     SS2_MsB_PlainPlans.esp
+	[6B]     SS2_ruined_simsettlement_addonpack.esp
+	[6C]     SS2_SIMPDDDD.esp
+	[6D]     SS2_STRA_Buildings_and_Skins.esp
+	[6E]     SS2_STRA_Support_Buildings.esp
+	[6F]     SS2_WastelandDefense.esp
+	[70]     SS2CaravanSnatex.esp
+	[71]     SS2HappyTrails.esp
+	[72]     SS2UI.esp
+	[73]     SS2WastelandVenturers.esp
+	[74]     TheRon_MapMarker.esp
+	[75]     EasyStartCheatBox_FO4.esp
+	[76]     SelectPowerArmor.esp
+	[77]     ImprovedRR.esp
+	[78]     ImprovedRREncounters.esp
+	[79]     OWR.esp
+	[7A]     OWR2.esp
+	[7B]     ImprovedBoS.esp
+	[7C]     ImprovedBoSEncounters.esp
+	[7D]     ImprovedInstitute.esp
+	[7E]     ImprovedInstituteEncounters.esp
+	[7F]     SS2WastelandReconstructionKit.esp
+	[80]     SelectRapidMG.esp
+	[81]     SelectRevolver.esp
+	[82]     SelectShotgun.esp
+	[83]     HeavySelectShotgun.esp
+	[84]     SelectAssaultRifle.esp
+	[85]     SelectMarksman.esp
+	[86]     DualGun.esp
+	[87]     SS2_NCRP.esp
+	[88]     SS2Extended.esp
+	[89]     ImmersiveCleaning.esp
+	[8A]     OCsLakesideTweaks.esp
+	[8B]     OCsLakesideReduceGrass.esp
+	[8C]     NAC.esp
+	[8D]     SKKFastStartNewGame.esp
+	[FE:000] Community Fixes Merged.esp
+	[FE:001] CanarySaveFileMonitor.esl
+	[FE:002] BakaFramework.esm
+	[FE:003] LIF.esl
+	[FE:004] PPF.esm
+	[FE:005] ConfigurableHotkeys.esl
+	[FE:006] ImmersiveTeleportation.esl
+	[FE:007] DDLL.esl
+	[FE:008] LIF_DisableInjectionOptions.esl
+	[FE:009] BakaPowerArmorStorage.esm
+	[FE:00A] FixRobotVisualEffects.esl
+	[FE:00B] Natural Landscapes.esl
+	[FE:00C] Natural Roads.esl
+	[FE:00D] Natural Rocks.esl
+	[FE:00E] BakaFullscreenPipboy.esm
+	[FE:00F] BakaAutoLockpicking.esm
+	[FE:010] REFramework.esm
+	[FE:011] TMR_GlitchfinderAIO.esm
+	[FE:012] Wetness Shader Fix.esm
+	[FE:013] Munitions - An Ammo Expansion.esl
+	[FE:014] Munitions - Vanilla Ammo Addon.esl
+	[FE:015] UniversalDisassembler.esl
+	[FE:016] Gris_WSFWLayouts_RedRockets_V4.esl
+	[FE:017] HoloGlowNS21.esl
+	[FE:018] VCM_CoastalCottage_Navmesh_Update.esl
+	[FE:019] VCM_CoastalCottage_GarageFloorFix_F-ESL.esl
+	[FE:01A] VCM_EgretTours_Navmesh_Update.esl
+	[FE:01B] VCM_GreentopNursery_Navmesh_Update.esl
+	[FE:01C] VCM_KingsportLighthouse_Vanilla_Navmesh_Update.esl
+	[FE:01D] VCM_Murkwater_Navmesh_Update.esl
+	[FE:01E] VCM_RedRocket_Navmesh_Update.esl
+	[FE:01F] VCM_Sanctuary_Navmesh_Update_W_Roof.esl
+	[FE:020] VCM_StarlightDrivein_Navmesh_Update.esl
+	[FE:021] VCM_TheSlog_Navmesh_Update.esl
+	[FE:022] VCM_CountyCrossing_Vanilla_NavmeshUpdate.esl
+	[FE:023] ZJ-Starlight-PerfPlan.esl
+	[FE:024] ZJ PerfPlan - Zimonja.esl
+	[FE:025] ZJ PerfPlan - Tenpines.esl
+	[FE:026] ZJ PerfPlan - Taffington.esl
+	[FE:027] ZJ PerfPlan - Sunshine.esl
+	[FE:028] ZJ PerfPlan - Sanctuary.esl
+	[FE:029] ZJ PerfPlan - RedRocket.esl
+	[FE:02A] ZJ PerfPlan - Abernathy.esl
+	[FE:02B] WG City Plans Pack ESL.esl
+	[FE:02C] Vee_SS2_SettlersEssentialPatch.esl
+	[FE:02D] UNDRCVR_SimplySettled2022.esl
+	[FE:02E] ThrowMoneyAtSS2.esl
+	[FE:02F] GavMan_Somerville_CityPlan.esl
+	[FE:030] GavMan_RedRocket_Outpost_CityPlan.esl
+	[FE:031] GavMan_LongfellowsJun21_CityPlan.esl
+	[FE:032] GavMan_Greentop_CityPlan.esl
+	[FE:033] GavMan_Finch_Feb22_CityPlan.esl
+	[FE:034] GavMan_CastleMar22_CityPlan.esl
+	[FE:035] GavMan_AbernathyJan22_CityPlan.esl
+	[FE:036] Cho1_Vault88_Metro_Plan.esl
+	[FE:037] CC_OberlandPlanetX_Ch2Update.esl
+	[FE:038] Vee_SS2_Chapter2_SettlersEssentialPatch.esl
+	[FE:039] MysticRogue_AbernathyFarm and Outpost.esl
+	[FE:03A] SuperAffinity.esp
+	[FE:03B] 10SPECIAL.esp
+	[FE:03C] Dank_ECO.esp
+	[FE:03D] Dank_LAB.esp
+	[FE:03E] StealthBoyBuffWithRecipe.esp
+	[FE:03F] SuperAffinitySeason.esp
+	[FE:040] TeoB Fallout Remastered - Vanilla eyes replacer 2k.esp
+	[FE:041] UnlimitedStimpakForNPCs.esp
+	[FE:042] V88-MoleRatsDisabled.esp
+	[FE:043] ImprovedMinutemenEncountersPatch.esp
+	[FE:044] YouAndWhatArmy.esp
+	[FE:045] YAWA_ImmuneToRadiation.esp
+	[FE:046] WhoIsTheGeneral.esp
+	[FE:047] WestonWaterLOD.esp
+	[FE:048] U.S. Covert Operations Manual Redux - Magazine Retexture.esp
+	[FE:049] Dank_LEO.esp
+	[FE:04A] DCRE.esp
+	[FE:04B] 4estGimp - SotS Atoms Storm Atoms Glory Threads CoA.esp
+	[FE:04C] AccessibleBridges.esp
+	[FE:04D] Actual Legendary Rust Devils.esp
+	[FE:04E] ArtilleryChanges.esp
+	[FE:04F] AtomsGloryThreadsPatch_CoAOverhaul.esp
+	[FE:050] AutomatronUnlocked.esp
+	[FE:051] Better Computer Terminals - 4K Standard.esp
+	[FE:052] CBBE.esp
+	[FE:053] CBBEHR.esp
+	[FE:054] ChameleonAndStealthFixes.esp
+	[FE:055] Chemfluence AI Combat Dynamics.esp
+	[FE:056] Companions Use Companion Perk Overhaul.esp
+	[FE:057] Computer Console illuminated.esp
+	[FE:058] CROSS_CoA.esp
+	[FE:059] CROSS_CourserStrigidae.esp
+	[FE:05A] CROSS_InstituteExpeditionarySuit.esp
+	[FE:05B] Dank_ECO_DisablePlacedItems.esp
+	[FE:05C] Dank_ECO_DLCCoast.esp
+	[FE:05D] Dank_ECO_DLCNukaWorld.esp
+	[FE:05E] Dank_ECO_DLCRobot.esp
+	[FE:05F] Dank_LAB_DLCNukaWorld.esp
+	[FE:060] Dank_LAB_LEO.esp
+	[FE:061] Dank_LEO-Automatron.esp
+	[FE:062] More Legendary Effects.esp
+	[FE:063] Dank_LEO-MLE.esp
+	[FE:064] Dank_LEO_DLCCoast.esp
+	[FE:065] Dank_LEO_DLCNukaWorld.esp
+	[FE:066] Dead Settlement Brahmin Despawn.esp
+	[FE:067] Diamond City Owns It's Crops.esp
+	[FE:068] DiscreteFemaleSkeleton.esp
+	[FE:069] DX Courser X-92 Power Suit.esp
+	[FE:06A] Enhanced Vanilla Bodies - NeverNude Male.esp
+	[FE:06B] Enhanced Vanilla Plants.esp
+	[FE:06C] Enhanced Vanilla Rocks.esp
+	[FE:06D] Enhanced Vanilla Vines.esp
+	[FE:06E] Esk_NoTeleportingCreatures.esp
+	[FE:06F] eXoKetarosLootableTreasures.esp
+	[FE:070] Far Harbor 3d Tree LODs.esp
+	[FE:071] FO4LODGen-DLCCoast-WindTurbines.esp
+	[FE:072] FO4LODGen.esp
+	[FE:073] FOLIP - New LODs.esp
+	[FE:074] FS_FarHarborBoatFastTravel.esp
+	[FE:075] FS_NukaWorldTramFastTravel.esp
+	[FE:076] HuntingRifle.esp
+	[FE:077] ImmersiveTeleportation_lessPower.esp
+	[FE:078] ImmersiveTeleportation_lessRads.esp
+	[FE:079] ImmersiveTeleportation_quickstart.esp
+	[FE:07A] JSRS_Regions.esp
+	[FE:07B] Keep Radiants In Commonwealth.esp
+	[FE:07C] LAT RAO - DCRE Patch.esp
+	[FE:07D] Legendary Mod Additions.esp
+	[FE:07E] LOD Fixes and Additons.esp
+	[FE:07F] Long Time No Speak.esp
+	[FE:080] LookingStranger.esp
+	[FE:081] LooksMenu.esp
+	[FE:082] LooksMenu1stPersonViewItemsFix.esp
+	[FE:083] Lots More Facial Hair.esp
+	[FE:084] Lots More Male Hairstyles.esp
+	[FE:085] MiscHairstyle.esp
+	[FE:086] MS SPECIAL Zapper.esp
+	[FE:087] NewtonsRegards.esp
+	[FE:088] NO MORE HAMMERS.esp
+	[FE:089] NoAffinityCooldown.esp
+	[FE:08A] NoVault88Radiation.esp
+	[FE:08B] NPCs Use Items.esp
+	[FE:08C] Operator Edits - Companion Fall Damage Immunity.esp
+	[FE:08D] Optimized Vanilla Tree LODs.esp
+	[FE:08E] PA-Quick Animations.esp
+	[FE:08F] PA_UnderwearPerks.esp
+	[FE:090] Pistol Reanimation Pack - REBORN.esp
+	[FE:091] LaserGarand.esp
+	[FE:092] PR_Automatron.esp
+	[FE:093] Radium.esp
+	[FE:094] SaveAcadiaFromBoS.esp
+	[FE:095] Skip DIMA memories.esp
+	[FE:096] SmokeHomingBeaconGrenadeThrowArc.esp
+	[FE:097] HighlightConsoleReference.esp
+	[FE:098] GaS2BVTurretsBroke.esp
+	[FE:099] DCRE-FixRadio.esp
+	[FE:09A] WHN AiO.esp
+	[FE:09B] Wireless Workshop Items.esp
+	[FE:09C] PoseidonEnergyCanHaveRadarTransmitter.esp
+	[FE:09D] Radium Rifle Improvements.esp
+	[FE:09E] Darlene-theForgiving.esp
+	[FE:09F] CF_AtomicWarlord_CBBE.esp
+	[FE:0A0] ConsoleEx.esp
+	[FE:0A1] Fallout76_wpn_dmg.esp
+	[FE:0A2] MinimalMinutemenRadiants.esp
+	[FE:0A3] MMR_NoRadiantsForOwnedSettlements.esp
+	[FE:0A4] JSRS - Minigun Sound Fix.esp
+	[FE:0A5] TeleporterRelayRemote.esp
+	[FE:0A6] Burst Impact Blast FX.esp
+	[FE:0A7] SF Institute.esp
+	[FE:0A8] CompanionIvy_Textures Patch.esp
+	[FE:0A9] WCLI_North_Point_Park.esp
+	[FE:0AA] WTG - KRIC Patch.esp
+	[FE:0AB] LaserDesignatorCraftingSwapBoth.esp
+	[FE:0AC] LaserDesignatorScopeCompat.esp
+	[FE:0AD] CompanionStealth.esp
+	[FE:0AE] Mechanist's Lair without robobrain in chair.esp
+	[FE:0AF] AutomatronCaravanFixes.esp
+	[FE:0B0] LongerPowerLinesInf.esp
+	[FE:0B1] WCLINPP_AB_Patch.esp
+	[FE:0B2] DiverseBoS.esp
+	[FE:0B3] DiverseCoA.esp
+	[FE:0B4] DiverseGunners.esp
+	[FE:0B5] DiverseMinutemen.esp
+	[FE:0B6] DiverseRaiders.esp
+	[FE:0B7] DiverseTrappers.esp
+	[FE:0B8] DiverseTriggermen.esp
+	[FE:0B9] DiverseDisciples.esp
+	[FE:0BA] DiverseRailroad.esp
+	[FE:0BB] fairlinesettlement.esp
+	[FE:0BC] WCLI_NatickSubstation.esp
+	[FE:0BD] WCLI_RockIslandLighthouse.esp
+	[FE:0BE] PoseidonOffices_AB_Patch.esp
+	[FE:0BF] LOST Audio Tweaks.esp
+	[FE:0C0] LegendariesTheyCanUse.esp
+	[FE:0C1] [SS2 Addon] BloodMoonRaiders.esp
+	[FE:0C2] [SS2] BBVault 88.esp
+	[FE:0C3] Fairline_veelynnlove.esp
+	[FE:0C4] DiverseOperators.esp
+	[FE:0C5] DiversePack.esp
+	[FE:0C6] DiverseScavengers.esp
+	[FE:0C7] GtN_DivisionCityPlan_CPC_03.23.esp
+	[FE:0C8] IT_SS2.esp
+	[FE:0C9] JunkTown-FENCES2.esp
+	[FE:0CA] JunkTown2 - EXTREME.esp
+	[FE:0CB] NukaWorldRedRocket Sim Settlements 2 Plan.esp
+	[FE:0CC] SimHomestead2.esp
+	[FE:0CD] SimSettlements2_AddOnPack_ApocalypticAdditions_SirLach.esp
+	[FE:0CE] SS2 Lexington Underground Fix.esp
+	[FE:0CF] SS2 Sanctuary Green Hills.esp
+	[FE:0D0] SS2-AUR-HangmansAlleyCityPlan.esp
+	[FE:0D1] SS2-AUR-HangmansAlleyCityPlanTweaks.esp
+	[FE:0D2] SS2_Addon_ShazbotsCots.esp
+	[FE:0D3] SS2_DLCSettlerPatch.esp
+	[FE:0D4] SS2_NobodysLeaders2.esp
+	[FE:0D5] SS2_NobodysLeaders2_Automatron.esp
+	[FE:0D6] SS2_NobodysLeaders2_VaultTecWorkshop.esp
+	[FE:0D7] SS2_RobotMod.esp
+	[FE:0D8] SS2_StarlightTradeHubAndTheater.esp
+	[FE:0D9] SS2_XDI Patch.esp
+	[FE:0DA] SS2Addon_MS_BareEssentials.esp
+	[FE:0DB] SS2AOP_VaultTecTools.esp
+	[FE:0DC] PipWS_Replacer.esp
+	[FE:0DD] RustyFaceFixRedux.esp
+	[FE:0DE] Faster Upfront Training SS2.esp
+	[FE:0DF] AdvPortableTurretSet.esp
+	[FE:0E0] AdvPortableTurretSet-Extension.esp
+	[FE:0E1] AdvSettleTurretSet.esp
+	[FE:0E2] ImprovedRRBoss.esp
+	[FE:0E3] ImprovedRREncountersPatch.esp
+	[FE:0E4] OWR2_CraftableDecor.esp
+	[FE:0E5] OWR2_CraftableDecor_CW.esp
+	[FE:0E6] OWR_CraftableDecor.esp
+	[FE:0E7] OWR_CraftableDecor_CW.esp
+	[FE:0E8] RAO - OWR patch.esp
+	[FE:0E9] YAWA_OWR_Patch.esp
+	[FE:0EA] ImprovedBoSBoss.esp
+	[FE:0EB] ImprovedInstituteBoss.esp
+	[FE:0EC] IQOFO4.esp
+	[FE:0ED] IQOFO4 [CFM-Patch].esp
+	[FE:0EE] Cho1_SS2_Nuka_Plot.esp
+	[FE:0EF] LootMan.esp
+	[FE:0F0] ScrapZapper2.esp
+	[FE:0F1] ImTalkingToYou.esp
+	[FE:0F2] ImprovedRRStatAgents.esp
+	[FE:0F3] HuntressIslandSettlement.esp
+	[FE:0F4] PRP.esp
+	[FE:0F5] ELFX-PreVis.esp
+	[FE:0F6] ELFX-eXoPatch.esp
+	[FE:0F7] PRP_IC.esp
+	[FE:0F8] SouthOfTheSea[Previs].esp
+	[FE:0F9] PRP-Compat-JSRS-Regions.esp
+	[FE:0FA] PRP-AccessibleBridges.esp
+	[FE:0FB] LO_Previsibines_Base.esp
+	[FE:0FC] TheKrampus.esp
+	[FE:0FD] Santatron.esp
+	[FE:0FE] GoodneighborExpanded[Patch-Previs].esp
+	[FE:0FF] GoodneighborExpanded[Patch-PRP].esp
+	[FE:100] PondSettlement.esp
+	[FE:101] BostonLibrarySettlementPRP.esp
+	[FE:102] LibraryExtras.esp
+	[FE:103] BostonLibrarySettlementSS2.esp
+	[FE:104] BostonLibrarySettlementRobots.esp
+	[FE:105] FlickerFixer-eXofied.esp
+	[FE:106] EdenMeadowsSettlement.esp
+	[FE:107] OCsCochituate.esp
+	[FE:108] OCsCochituateReducedGrass.esp
+	[FE:109] OCsNukaIsland.esp
+	[FE:10A] OCsLakeQ.esp
+	[FE:10B] OCsNukaTransitCenter.esp
+	[FE:10C] OCsShovelMuseum.esp
+	[FE:10D] NukaWorldFarmSettlement.esp
+	[FE:10E] Yagisan_SSSL_Red_Rocket_Settlements.esp
+	[FE:10F] Yagisan_SSSL_Quick_Fill_Settlements.esp
+	[FE:110] Settlement_CoA_Ruined_Church.esp
+	[FE:111] Settlement_CoA_Crater_of_Atom.esp
+	[FE:112] AtomsRadiance_veelynnlove.esp
+	[FE:113] Yagisan_SSSL_Lakeside_Cabin_Settlement.esp
+	[FE:114] WCLIRIL_Previs.esp
+	[FE:115] WCLINPP_Previs.esp
+	[FE:116] WCLINS_Previs.esp
+	[FE:117] Settlement_CoA_Radiant_Crest_Shrine.esp
+	[FE:118] LSC-WHN AiO Patch.esp
+	[FE:119] OCsFiddlersGreen.esp
+	[FE:11A] FiddlersGreenTarberrySwap.esp
+	[FE:11B] OCsCharlesviewAmpitheater.esp
+	[FE:11C] CharlesviewHappyCult.esp
+	[FE:11D] CharlesviewGrowCult.esp
+	[FE:11E] OCsProspectPark.esp
+	[FE:11F] NorthPointSpawnFix.esp
+	[FE:120] LiveLove - Heather.esp
+	[FE:121] SF Valentine.esp
+	[FE:122] Valentine Reconciliation.esp
+	[FE:123] Black Codsworth and windows fix.esp
+	[FE:124] OCsNorthpointDam.esp
+	[FE:125] OCsWindTower.esp
+	[FE:126] Far Harbor Satellite Map.esp
+	[FE:127] Satellite World Map Fixed.esp
+	[FE:128] Nuka-World Satellite Map.esp
+	[FE:129] More Legendary Effects - Naming Rules Merge.esp
+	[FE:12A] Dank_ECO-INNR.esp
+	[FE:12B] Dank_ECO-LEO.esp
+	[FE:12C] Dank_LEO-LMA.esp
+	[FE:12D] Dank_LEO-MLE_INNR_CS.esp
+	[FE:12E] Dank_LEO-MLM.esp
+	[FE:12F] Dank_ECO-UniversalDisassembler.esp
+	[FE:130] NAC-NW.esp
+	[FE:131] NAC-FH.esp
+	[FE:132] NAC-RemoveMenuItem.esp
+	[FE:133] NACskintonefix.esp
+	[FE:134] OCsOldPondHouse.esp
+	[FE:135] OCsOldPondHouseAltName.esp
+	[FE:136] MechLairPathfindingFix.esp
+	[FE:137] Artillery Reconciliation.esp
+	[FE:138] Facegen Regeneration.esp
+	[FE:139] Diverse Facegen.esp
+	[FE:13A] SS2 Facegen.esp
+	[FE:13B] Yagisan_SSSL_Reeb_Marina_Settlement.esp
+	[FE:13C] Settlement_BoS_Fort_Strong.esp
+	[FE:13D] 10mm HD.esp
+	[FE:13E] Dpillari's 10mm HD - No Engravings.esp
+	[FE:13F] Dpillari's 10mm HD - No Laser Sticker.esp
+	[FE:140] Clean 4k Pre-War Retextures.esp
+	[FE:141] Munitions-Additional Ammo.esp
+	[FE:142] Dank_ECO-Munitions.esp
+	[FE:143] Dank_ECO-Munitions_INNR_CS.esp
+	[FE:144] Looking Stranger - Synth Eye Adjustments.esp
+	[FE:145] Luxor's Quantum X-01 power armor.esp
+	[FE:146] Seamless Body CBBE Rework.esp
+	[FE:147] OCsUniversityPoint.esp
+	[FE:148] OCsDartmouthSkyscraper.esp
+	[FE:149] Yagisan_SSSL_Bridgeport_Settlement.esp
+	[FE:14A] FO4 HD Overhaul Fixed Alpha Maps.esp
+	[FE:14B] PRP-SS2-Fixes-Ch1.esp
+	[FE:14C] PRP-SS2-Fixes-Ch2.esp
+	[FE:14D] UNDRCVR_RuinedChurchPhiOutpost.esp
+	[FE:14E] UNDRCVR_SimplySettledFairlineOutpost.esp
+	[FE:14F] UNDRCVR_SimplySettledLakesideCabin.esp
+	[FE:150] UNDRCVR_SimplySettledNPointPark.esp
+	[FE:151] Companion Affinity Pip-Boy Tab.esp
+	[FE:152] Invisible M-Sat and Radar Beacon.esp
+	[FE:153] OCsVault88Fixes.esp
+	[FE:154] LO_Previsibines.esp
+	[FE:155] FOLIP Synthesis.esp
+	[FE:156] xLODGen_Output.esp
+	[FE:157] Enhanced Vanilla Armor and Clothing.esp
+	[FE:158] M8r Complex Sorter.esp

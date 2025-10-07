@@ -30,9 +30,9 @@ dist/
 _internal/
 
 # CLASSIC Runtime-Created Files
-*-AUTOSCAN.md
-*.db
 *.log
+!Crash Logs/*.log
+*.db
 *Local.yaml
 CLASSIC Backup/
 CLASSIC GFS Report.md
