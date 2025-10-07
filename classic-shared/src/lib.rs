@@ -56,8 +56,9 @@ pub(crate) static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
 /// Use this function in all CLASSIC crates instead of creating new runtimes.
 ///
 /// # Examples
-/// ```rust
+/// ```rust,no_run
 /// use classic_shared::get_runtime;
+/// use pyo3::prelude::*;
 ///
 /// // Sync API to Python, async internally
 /// pub fn read_file(path: String) -> PyResult<String> {

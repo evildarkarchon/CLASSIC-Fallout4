@@ -1,6 +1,6 @@
 //! Tests for the file I/O module
 
-use classic_core::file_io::{RustFileIOCore, DDSHeader, EncodingDetector};
+use classic_file_io::{RustFileIOCore, DDSHeader, EncodingDetector};
 use ddsfile::Dds;
 use std::fs;
 use std::io::Cursor;

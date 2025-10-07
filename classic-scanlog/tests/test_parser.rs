@@ -7,7 +7,7 @@
 //! - SIMD optimizations
 //! - Cache effectiveness
 
-use classic_core::scanlog::LogParser;
+use classic_scanlog::LogParser;
 use std::time::Instant;
 
 fn create_sample_log() -> Vec<String> {

@@ -9,7 +9,7 @@
 //! - Cache effectiveness
 //! - PyO3 bindings and error handling
 
-use classic_core::scanlog::{
+use classic_scanlog::{
     FormIDAnalyzer, FormIDAnalyzerCore, extract_formids_batch,
     is_valid_formid, validate_formids_batch
 };

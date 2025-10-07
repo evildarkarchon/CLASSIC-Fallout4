@@ -25,5 +25,9 @@ yaml-rust2 = { workspace = true }
 dashmap = { workspace = true }
 once_cell = { workspace = true }
 
+[dev-dependencies]
+tempfile = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module"] }
+
 [profile.release]
 # Inherits from workspace

@@ -8,7 +8,7 @@
 //! - Performance benchmarks
 //! - PyO3 bindings and error handling
 
-use classic_core::scanlog::{StringPool, ReportFragment, ReportComposer, ReportGenerator, ParallelReportProcessor};
+use classic_scanlog::{StringPool, ReportFragment, ReportComposer, ReportGenerator, ParallelReportProcessor};
 use std::time::Instant;
 
 // ===== Unit Tests (Pure Rust) =====

@@ -11,7 +11,7 @@
 //! - Cache effectiveness
 //! - PyO3 bindings and error handling
 #[deny(warnings, deprecated)]
-use classic_core::scanlog::{PluginAnalyzer, detect_plugins_batch, contains_plugin};
+use classic_scanlog::{PluginAnalyzer, detect_plugins_batch, contains_plugin};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 use pyo3::prelude::*;

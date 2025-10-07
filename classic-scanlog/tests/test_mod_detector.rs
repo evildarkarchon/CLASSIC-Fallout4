@@ -8,7 +8,7 @@
 //! - Pattern matching and case sensitivity
 //! - Edge cases and error handling
 
-use classic_core::scanlog::{detect_mods_single, detect_mods_double, detect_mods_important, detect_mods_batch};
+use classic_scanlog::{detect_mods_single, detect_mods_double, detect_mods_important, detect_mods_batch};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 

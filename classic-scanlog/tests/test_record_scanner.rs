@@ -9,7 +9,7 @@
 //! - Performance benchmarks (40x speedup target)
 //! - Edge cases and error handling
 
-use classic_core::scanlog::{RecordScanner, scan_records_batch, contains_record};
+use classic_scanlog::{RecordScanner, scan_records_batch, contains_record};
 use std::time::Instant;
 
 // ===== Unit Tests (Pure Rust) =====

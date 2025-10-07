@@ -36,3 +36,8 @@ log = { workspace = true }
 
 [profile.release]
 # Inherits from workspace
+
+[dev-dependencies]
+tempfile = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module"] }
+rusqlite = { workspace = true }
