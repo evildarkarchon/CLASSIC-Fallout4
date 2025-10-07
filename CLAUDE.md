@@ -381,12 +381,6 @@ crate-type = ["rlib"]  # Only rlib
    - Avoid `get_runtime().block_on()` when already in a Python context
    - Use synchronous I/O for now in contexts where async causes conflicts
 
-## Pre-commit Hooks
-```bash
-uv run pre-commit install                    # Install hooks
-uv run pre-commit run --all-files           # Run manually
-```
-
 ## Important Notes
 - **Python 3.12+ required**
 - **uv** package manager (faster than poetry)

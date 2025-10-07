@@ -103,6 +103,21 @@ def detect_rust_components() -> dict[str, bool]:
     except Exception as e:
         logger.error(f"Error detecting Rust components: {e}")
 
+    # Check config-core (standalone module)
+    try:
+        import classic_config
+        logger.info(f"classic_config module loaded (version: {getattr(classic_config, '__version__', 'unknown')})")
+
+        # YamlData
+        if hasattr(classic_config, "YamlData"):
+            components["yamldata"] = True
+            logger.debug("YamlData component available")
+
+    except ImportError as e:
+        logger.warning(f"classic_core module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting Rust components: {e}")
+
     return components
 
 
@@ -148,4 +163,5 @@ def _get_empty_component_dict() -> dict[str, bool]:
         "mod_detector": False,
         "yaml": False,
         "yaml_operations": False,
+        "yamldata": False,
     }

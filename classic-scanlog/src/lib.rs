@@ -55,6 +55,9 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<ReportGenerator>()?;
     m.add_class::<ParallelReportProcessor>()?;
 
+    // Add test classes
+    m.add_class::<TestClass>()?;
+
     // Add standalone functions
     m.add_function(wrap_pyfunction!(extract_formids_batch, m)?)?;
     m.add_function(wrap_pyfunction!(is_valid_formid, m)?)?;

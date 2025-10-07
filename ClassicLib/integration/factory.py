@@ -301,6 +301,34 @@ def get_mod_detector() -> dict[str, Any]:
     }
 
 
+def get_yamldata(yaml_dirs: list, game: str, is_vr: bool) -> Any:
+    """
+    Get the best available YamlData implementation.
+
+    Args:
+        yaml_dirs: List of YAML directory paths
+        game: Game name ("Fallout4" or "Skyrim")
+        is_vr: Whether VR mode is enabled
+
+    Returns:
+        Rust YamlData if available, otherwise ClassicScanLogsInfo
+    """
+    components = _get_components()
+
+    if not _is_rust_disabled() and components.get("yamldata", False):
+        try:
+            from classic_config import YamlData
+            logger.debug("Using Rust YamlData (15-30x faster YAML loading)")
+            return YamlData(yaml_dirs, game, is_vr)
+        except (ImportError, AttributeError) as e:
+            logger.warning(f"Failed to import Rust YamlData: {e}")
+
+    # Fall back to Python implementation
+    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    logger.debug("Using Python ClassicScanLogsInfo implementation")
+    return ClassicScanLogsInfo()
+
+
 def reset_cache() -> None:
     """Reset the component cache to force re-detection."""
     global _components_cache

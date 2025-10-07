@@ -1,0 +1,389 @@
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncYamlSettings\core.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncYamlSettings\core.py:177:33 - warning: Cannot access attribute "ensure_file_exists" for class "YamlFileOperations"
+    Attribute "ensure_file_exists" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncYamlSettings\core.py:194:40 - warning: Cannot access attribute "backup_file" for class "YamlFileOperations"
+    Attribute "backup_file" is unknown (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncYamlSettings\file_operations.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncYamlSettings\file_operations.py:266:51 - warning: "FileGeneration" is unknown import symbol (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\GamePath.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\GamePath.py:103:53 - error: "lower" is not a known attribute of "None" (reportOptionalMemberAccess)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\GamePath.py:119:53 - error: "lower" is not a known attribute of "None" (reportOptionalMemberAccess)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\GamePath.py:120:84 - error: "lower" is not a known attribute of "None" (reportOptionalMemberAccess)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\GamePath.py:125:63 - error: "lower" is not a known attribute of "None" (reportOptionalMemberAccess)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\GamePath.py:175:16 - error: Type "Path | None" is not assignable to return type "Path"
+    Type "Path | None" is not assignable to type "Path"
+      "None" is not assignable to "Path" (reportReturnType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\BackupOperations.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\BackupOperations.py:177:17 - error: Argument of type "Self@BackupOperationsMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "critical"
+    Type "Self@BackupOperationsMixin" is not assignable to type "QWidget | None"
+      "BackupOperationsMixin*" is not assignable to "QWidget"
+      "BackupOperationsMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\BackupOperations.py:185:17 - error: Argument of type "Self@BackupOperationsMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@BackupOperationsMixin" is not assignable to type "QWidget | None"
+      "BackupOperationsMixin*" is not assignable to "QWidget"
+      "BackupOperationsMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py:50:60 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "getExistingDirectory"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py:62:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py:94:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py:105:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py:128:56 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "getExistingDirectory"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py:157:56 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "getExistingDirectory"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py:160:37 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "information"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagement.py:177:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "critical"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py:59:60 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "getExistingDirectory"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py:72:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py:103:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py:115:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py:139:56 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "getExistingDirectory"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py:172:33 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "__init__"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py:208:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "critical"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\FolderManagementMixin.py:236:17 - error: Argument of type "Self@FolderManagementMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "critical"
+    Type "Self@FolderManagementMixin" is not assignable to type "QWidget | None"
+      "FolderManagementMixin*" is not assignable to "QWidget"
+      "FolderManagementMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\HelpAndAboutMixin.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\HelpAndAboutMixin.py:39:55 - error: Argument of type "Self@HelpAndAboutMixin" cannot be assigned to parameter "parent" of type "QMainWindow | QDialog | None" in function "__init__"
+    Type "Self@HelpAndAboutMixin" is not assignable to type "QMainWindow | QDialog | None"
+      "HelpAndAboutMixin*" is not assignable to "QMainWindow"
+      "HelpAndAboutMixin*" is not assignable to "QDialog"
+      "HelpAndAboutMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\HelpAndAboutMixin.py:51:33 - error: Argument of type "Self@HelpAndAboutMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "information"
+    Type "Self@HelpAndAboutMixin" is not assignable to type "QWidget | None"
+      "HelpAndAboutMixin*" is not assignable to "QWidget"
+      "HelpAndAboutMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PapyrusManager.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PapyrusManager.py:89:60 - error: Argument of type "Self@PapyrusManagerMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "__init__"
+    Type "Self@PapyrusManagerMixin" is not assignable to type "QWidget | None"
+      "PapyrusManagerMixin*" is not assignable to "QWidget"
+      "PapyrusManagerMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PastebinMixin.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PastebinMixin.py:121:33 - error: Argument of type "Self@PastebinMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@PastebinMixin" is not assignable to type "QWidget | None"
+      "PastebinMixin*" is not assignable to "QWidget"
+      "PastebinMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PastebinMixin.py:145:88 - error: Argument of type "Self@PastebinMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "information"
+    Type "Self@PastebinMixin" is not assignable to type "QWidget | None"
+      "PastebinMixin*" is not assignable to "QWidget"
+      "PastebinMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PastebinMixin.py:146:76 - error: Argument of type "Self@PastebinMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@PastebinMixin" is not assignable to type "QWidget | None"
+      "PastebinMixin*" is not assignable to "QWidget"
+      "PastebinMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PathDialogMixin.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PathDialogMixin.py:41:20 - error: Argument of type "Self@PathDialogMixin" cannot be assigned to parameter "parent" of type "QMainWindow | None" in function "__init__"
+    Type "Self@PathDialogMixin" is not assignable to type "QMainWindow | None"
+      "PathDialogMixin*" is not assignable to "QMainWindow"
+      "PathDialogMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\PathDialogMixin.py:60:20 - error: Argument of type "Self@PathDialogMixin" cannot be assigned to parameter "parent" of type "QMainWindow | None" in function "__init__"
+    Type "Self@PathDialogMixin" is not assignable to type "QMainWindow | None"
+      "PathDialogMixin*" is not assignable to "QMainWindow"
+      "PathDialogMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\ResultsViewerMixin.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\ResultsViewerMixin.py:339:14 - warning: Cannot access attribute "reports_refreshed" for class "ResultsViewerMixin*"
+    No overloads for "__get__" match the provided arguments
+    Argument of type "Self@ResultsViewerMixin" cannot be assigned to parameter "instance" of type "None" in function "__get__"
+      "ResultsViewerMixin*" is not assignable to "None" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\ResultsViewerMixin.py:394:18 - warning: Cannot access attribute "report_loaded" for class "ResultsViewerMixin*"
+    No overloads for "__get__" match the provided arguments
+    Argument of type "Self@ResultsViewerMixin" cannot be assigned to parameter "instance" of type "None" in function "__get__"
+      "ResultsViewerMixin*" is not assignable to "None" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\ResultsViewerMixin.py:580:38 - error: Argument of type "int | None" cannot be assigned to parameter "msec" of type "int" in function "start"
+    Type "int | None" is not assignable to type "int"
+      "None" is not assignable to "int" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\ScanOperations.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\ScanOperations.py:80:37 - error: Argument of type "Self@ScanOperationsMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@ScanOperationsMixin" is not assignable to type "QWidget | None"
+      "ScanOperationsMixin*" is not assignable to "QWidget"
+      "ScanOperationsMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\ScanOperations.py:128:37 - error: Argument of type "Self@ScanOperationsMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@ScanOperationsMixin" is not assignable to type "QWidget | None"
+      "ScanOperationsMixin*" is not assignable to "QWidget"
+      "ScanOperationsMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\UpdateManager.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\UpdateManager.py:141:37 - error: Argument of type "Self@UpdateManagerMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "information"
+    Type "Self@UpdateManagerMixin" is not assignable to type "QWidget | None"
+      "UpdateManagerMixin*" is not assignable to "QWidget"
+      "UpdateManagerMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\UpdateManager.py:190:37 - error: Argument of type "Self@UpdateManagerMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "information"
+    Type "Self@UpdateManagerMixin" is not assignable to type "QWidget | None"
+      "UpdateManagerMixin*" is not assignable to "QWidget"
+      "UpdateManagerMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\UpdateManager.py:194:17 - error: Argument of type "Self@UpdateManagerMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "question"
+    Type "Self@UpdateManagerMixin" is not assignable to type "QWidget | None"
+      "UpdateManagerMixin*" is not assignable to "QWidget"
+      "UpdateManagerMixin*" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\UpdateManager.py:213:13 - error: Argument of type "Self@UpdateManagerMixin" cannot be assigned to parameter "parent" of type "QWidget | None" in function "warning"
+    Type "Self@UpdateManagerMixin" is not assignable to type "QWidget | None"
+      "UpdateManagerMixin*" is not assignable to "QWidget"
+      "UpdateManagerMixin*" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\WindowGeometryMixin.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\WindowGeometryMixin.py:51:34 - error: Variable not allowed in type expression (reportInvalidTypeForm)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\WindowGeometryMixin.py:149:103 - warning: Cannot access attribute "width" for class "object"
+    Attribute "width" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\WindowGeometryMixin.py:150:104 - warning: Cannot access attribute "height" for class "object"
+    Attribute "height" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\WindowGeometryMixin.py:152:84 - warning: Cannot access attribute "width" for class "object"
+    Attribute "width" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\Interface\WindowGeometryMixin.py:152:106 - warning: Cannot access attribute "height" for class "object"
+    Attribute "height" is unknown (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\handler.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\handler.py:180:34 - error: Type "MessageHandler.models.QWidget | PySide6.QtWidgets.QWidget | None" is not assignable to declared type "QWidget | None"
+    Type "MessageHandler.models.QWidget | PySide6.QtWidgets.QWidget | None" is not assignable to type "QWidget | None"
+      Type "QWidget" is not assignable to type "QWidget | None"
+        "MessageHandler.models.QWidget" is not assignable to "PySide6.QtWidgets.QWidget"
+        "QWidget" is not assignable to "None" (reportAssignmentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\models.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\models.py:19:39 - error: Type "type[PySide6.QtWidgets.QWidget]" is not assignable to declared type "type[MessageHandler.models.QWidget]"
+    "PySide6.QtWidgets.QWidget" is not assignable to "MessageHandler.models.QWidget"
+    Type "type[PySide6.QtWidgets.QWidget]" is not assignable to type "type[MessageHandler.models.QWidget]" (reportAssignmentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\progress_context.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\progress_context.py:26:30 - error: Type "type[tqdm[_T@tqdm]]" is not assignable to declared type "type[TqdmProgress]"
+    "type[tqdm[_T@tqdm]]" is not assignable to "type[TqdmProgress]"
+    Type "type[tqdm[_T@tqdm]]" is not assignable to type "type[TqdmProgress]" (reportAssignmentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\qt_compat.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\qt_compat.py:7:32 - error: Type "type[PySide6.QtCore.QObject]" is not assignable to declared type "type[MessageHandler.qt_compat.QObject]"
+    "PySide6.QtCore.QObject" is not assignable to "MessageHandler.qt_compat.QObject"
+    Type "type[PySide6.QtCore.QObject]" is not assignable to type "type[MessageHandler.qt_compat.QObject]" (reportAssignmentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\qt_compat.py:7:41 - error: Type "type[PySide6.QtCore.QThread]" is not assignable to declared type "type[MessageHandler.qt_compat.QThread]"
+    "PySide6.QtCore.QThread" is not assignable to "MessageHandler.qt_compat.QThread"
+    Type "type[PySide6.QtCore.QThread]" is not assignable to type "type[MessageHandler.qt_compat.QThread]" (reportAssignmentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\qt_compat.py:7:50 - error: Type "type[PySide6.QtCore.Signal]" is not assignable to declared type "type[MessageHandler.qt_compat.Signal]"
+    "PySide6.QtCore.Signal" is not assignable to "MessageHandler.qt_compat.Signal"
+    Type "type[PySide6.QtCore.Signal]" is not assignable to type "type[MessageHandler.qt_compat.Signal]" (reportAssignmentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\qt_compat.py:8:35 - error: Type "type[PySide6.QtWidgets.QMessageBox]" is not assignable to declared type "type[MessageHandler.qt_compat.QMessageBox]"
+    "PySide6.QtWidgets.QMessageBox" is not assignable to "MessageHandler.qt_compat.QMessageBox"
+    Type "type[PySide6.QtWidgets.QMessageBox]" is not assignable to type "type[MessageHandler.qt_compat.QMessageBox]" (reportAssignmentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\qt_compat.py:8:48 - error: Type "type[PySide6.QtWidgets.QProgressDialog]" is not assignable to declared type "type[MessageHandler.qt_compat.QProgressDialog]"
+    "PySide6.QtWidgets.QProgressDialog" is not assignable to "MessageHandler.qt_compat.QProgressDialog"
+    Type "type[PySide6.QtWidgets.QProgressDialog]" is not assignable to type "type[MessageHandler.qt_compat.QProgressDialog]" (reportAssignmentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\qt_compat.py:8:65 - error: Type "type[PySide6.QtWidgets.QWidget]" is not assignable to declared type "type[MessageHandler.qt_compat.QWidget]"
+    "PySide6.QtWidgets.QWidget" is not assignable to "MessageHandler.qt_compat.QWidget"
+    Type "type[PySide6.QtWidgets.QWidget]" is not assignable to type "type[MessageHandler.qt_compat.QWidget]" (reportAssignmentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\MessageHandler\qt_compat.py:24:32 - error: Function with declared return type "QThread" must return value on all code paths
+    "None" is not assignable to "QThread" (reportReturnType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ResourceLoader.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ResourceLoader.py:38:35 - warning: "_MEIPASS" is not a known attribute of module "sys" (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\RustAcceleration.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\RustAcceleration.py:291:22 - error: Import "ClassicLib.AsyncDatabasePool" could not be resolved (reportMissingImports)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\RustAcceleration.py:295:22 - error: Import "ClassicLib.ScanLog.RustReportGeneration" could not be resolved (reportMissingImports)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_analyzer.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_analyzer.py:18:10 - error: Import "pyffi.formats.dds" could not be resolved (reportMissingImports)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_analyzer.py:24:10 - error: Import "PIL" could not be resolved (reportMissingImports)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_analyzer.py:229:19 - error: "DdsFormat" is possibly unbound (reportPossiblyUnboundVariable)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_analyzer.py:270:18 - error: "Image" is possibly unbound (reportPossiblyUnboundVariable)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_processor.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_processor.py:29:24 - error: "EnhancedDDSAnalyzer" is possibly unbound (reportPossiblyUnboundVariable)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_processor.py:31:29 - error: "EnhancedDDSAnalyzer" is possibly unbound (reportPossiblyUnboundVariable)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_processor.py:54:53 - error: Variable not allowed in type expression (reportInvalidTypeForm)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanGame\core\dds_processor.py:64:65 - error: Variable not allowed in type expression (reportInvalidTypeForm)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\AsyncUtil.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\AsyncUtil.py:53:20 - error: Object of type "None" cannot be used with "async with" (reportOptionalContextManager)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\Parser.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\Parser.py:272:37 - error: Expected class but received "(iterable: Iterable[object], /) -> bool" (reportGeneralTypeIssues)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\ScanLogsExecutor.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\ScanLogsExecutor.py:129:112 - error: Argument of type "tuple[str, ...]" cannot be assigned to parameter "remove_list" of type "tuple[str] | None" in function "__init__"
+    Type "tuple[str, ...]" is not assignable to type "tuple[str] | None"
+      "tuple[str, ...]" is not assignable to "tuple[str]"
+        Tuple size mismatch; expected 1 but received indeterminate
+      "tuple[str, ...]" is not assignable to "None" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\ScanLogsExecutor.py:261:75 - error: "classic_game_hints" is not a known attribute of "None" (reportOptionalMemberAccess)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\ScanLogsExecutor.py:262:62 - error: "classic_game_hints" is not a known attribute of "None" (reportOptionalMemberAccess)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\ScanLogsExecutor.py:272:52 - error: "autoscan_text" is not a known attribute of "None" (reportOptionalMemberAccess)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\ScanLogsUtils.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\ScanLogsUtils.py:211:40 - error: Argument of type "ClassicScanLogsInfo | None" cannot be assigned to parameter "yamldata" of type "ClassicScanLogsInfo" in function "complete_scan_with_summary"
+    Type "ClassicScanLogsInfo | None" is not assignable to type "ClassicScanLogsInfo"
+      "None" is not assignable to "ClassicScanLogsInfo" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\SettingsScanner.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\SettingsScanner.py:95:13 - error: Argument of type "bool | int | str" cannot be assigned to parameter "mem_enabled" of type "bool" in function "_validate_memory_config"
+    Type "bool | int | str" is not assignable to type "bool"
+      "int" is not assignable to "bool" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\SettingsScanner.py:107:42 - error: Expected class but received "(obj: object, /) -> TypeIs[(...) -> object]" (reportGeneralTypeIssues)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\SettingsScanner.py:107:65 - error: Expected class but received "(obj: object, /) -> TypeIs[(...) -> object]" (reportGeneralTypeIssues)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\SettingsScanner.py:145:64 - error: Expected class but received "(obj: object, /) -> TypeIs[(...) -> object]" (reportGeneralTypeIssues)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\ScanLog\SettingsScanner.py:145:87 - error: Expected class but received "(obj: object, /) -> TypeIs[(...) -> object]" (reportGeneralTypeIssues)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\handlers\scan_handler.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\handlers\scan_handler.py:111:24 - error: Type "str | None" is not assignable to return type "str"
+    Type "str | None" is not assignable to type "str"
+      "None" is not assignable to "str" (reportReturnType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\handlers\scan_handler.py:137:21 - warning: Cannot access attribute "crashlogs" for class "ClassicScanLogs"
+    Attribute "crashlogs" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\handlers\scan_handler.py:139:13 - error: Argument of type "bool | None" cannot be assigned to parameter "formid_db_exists" of type "bool" in function "__init__"
+    Type "bool | None" is not assignable to type "bool"
+      "None" is not assignable to "bool" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\handlers\scan_handler.py:140:13 - error: Argument of type "bool" cannot be assigned to parameter "remove_list" of type "tuple[str] | None" in function "__init__"
+    Type "bool" is not assignable to type "tuple[str] | None"
+      "bool" is not assignable to "tuple[str]"
+      "bool" is not assignable to "None" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\widgets\dialogs\confirmation_dialog.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\widgets\dialogs\confirmation_dialog.py:88:25 - error: Argument of type "str | None" cannot be assigned to parameter "content" of type "VisualType" in function "__init__"
+    Type "str | None" is not assignable to type "VisualType"
+      Type "None" is not assignable to type "VisualType"
+        "None" is incompatible with protocol "ConsoleRenderable"
+          "__rich_console__" is not present
+        "None" is incompatible with protocol "RichCast"
+          "__rich__" is not present
+        "None" is not assignable to "str"
+        "None" is incompatible with protocol "SupportsVisual"
+    ... (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\widgets\dialogs\progress_dialog.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\widgets\dialogs\progress_dialog.py:82:25 - error: Argument of type "str | None" cannot be assigned to parameter "content" of type "VisualType" in function "__init__"
+    Type "str | None" is not assignable to type "VisualType"
+      Type "None" is not assignable to type "VisualType"
+        "None" is incompatible with protocol "ConsoleRenderable"
+          "__rich_console__" is not present
+        "None" is incompatible with protocol "RichCast"
+          "__rich__" is not present
+        "None" is not assignable to "str"
+        "None" is incompatible with protocol "SupportsVisual"
+    ... (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\widgets\papyrus_monitor.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\TUI\widgets\papyrus_monitor.py:236:34 - error: Argument of type "str" cannot be assigned to parameter "add" of type "bool" in function "set_class"
+    "str" is not assignable to "bool" (reportArgumentType)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\detector.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\detector.py:38:36 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\detector.py:77:37 - warning: "database" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\detector.py:77:91 - warning: "database" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\detector.py:87:37 - warning: "file_io" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\detector.py:97:37 - warning: "yaml" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\detector.py:108:16 - error: Import "classic_config" could not be resolved (reportMissingImports)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\factory.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\factory.py:222:28 - error: Argument of type "ClassicScanLogsInfo | None" cannot be assigned to parameter "yamldata" of type "ClassicScanLogsInfo" in function "__init__"
+    Type "ClassicScanLogsInfo | None" is not assignable to type "ClassicScanLogsInfo"
+      "None" is not assignable to "ClassicScanLogsInfo" (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\factory.py:237:71 - warning: "yaml" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\factory.py:239:37 - warning: "yaml" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\factory.py:296:51 - warning: "detect_mods_batch" is unknown import symbol (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\factory.py:320:18 - error: Import "classic_config" could not be resolved (reportMissingImports)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\status.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\integration\status.py:191:38 - error: "DISABLE_RUST_ENV_VAR" is not defined (reportUndefinedVariable)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\database_rust.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\database_rust.py:15:10 - error: Import "classic_core.database" could not be resolved (reportMissingImports)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\database_rust.py:56:20 - error: Object of type "None" cannot be used with "async with" (reportOptionalContextManager)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\database_rust.py:97:31 - error: Object of type "None" cannot be called (reportOptionalCall)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\file_io_rust.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\file_io_rust.py:34:33 - warning: "file_io" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\file_io_rust.py:35:37 - warning: "file_io" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:51:74 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:52:51 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:60:76 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:62:55 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:101:41 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:102:58 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:147:30 - error: Import "ClassicLib.Report.ReportFragment" could not be resolved (reportMissingImports)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:158:66 - error: Expected 2 positional arguments (reportCallIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:163:53 - error: Expected 2 positional arguments (reportCallIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:180:41 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\formid_rust.py:181:58 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\mod_detector_rust.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\mod_detector_rust.py:29:32 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\parser_rust.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\parser_rust.py:38:74 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\parser_rust.py:39:42 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\plugin_rust.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\plugin_rust.py:43:74 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\plugin_rust.py:44:55 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\record_rust.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\record_rust.py:43:74 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\record_rust.py:44:54 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\record_rust.py:159:41 - warning: Cannot access attribute "patterns" for class "RecordScanner"
+    Attribute "patterns" is unknown (reportAttributeAccessIssue)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:21:43 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:22:43 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:23:44 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:24:39 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:25:46 - warning: "scanlog" is not a known attribute of module "classic_core" (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:71:53 - error: "empty" is not a known attribute of "None" (reportOptionalMemberAccess)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:74:34 - error: Object of type "None" cannot be called (reportOptionalCall)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:88:53 - error: "empty" is not a known attribute of "None" (reportOptionalMemberAccess)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:153:20 - error: Argument of type "Unknown | ReportFragment" cannot be assigned to parameter "obj" of type "Sized" in function "len"
+    Type "Unknown | ReportFragment" is not assignable to type "Sized"
+      "ReportFragment" is incompatible with protocol "Sized"
+        "__len__" is not present (reportArgumentType)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:178:30 - error: Object of type "None" cannot be called (reportOptionalCall)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:198:36 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:201:33 - error: Object of type "None" cannot be called (reportOptionalCall)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:202:36 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:204:29 - error: Object of type "None" cannot be called (reportOptionalCall)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:205:32 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:208:32 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:211:32 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:214:28 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:216:28 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:220:28 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:222:28 - warning: Cannot access attribute "add" for class "ReportComposer"
+    Attribute "add" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:232:47 - warning: Cannot access attribute "compose_optimized" for class "ReportComposer"
+    Attribute "compose_optimized" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:245:35 - warning: Cannot access attribute "to_list" for class "ReportComposer"
+    Attribute "to_list" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:246:31 - warning: Cannot access attribute "to_list" for class "ReportComposer"
+    Attribute "to_list" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:251:35 - warning: Cannot access attribute "build_string" for class "ReportComposer"
+    Attribute "build_string" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:254:32 - warning: Cannot access attribute "to_list" for class "ReportComposer"
+    Attribute "to_list" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:266:35 - warning: Cannot access attribute "pool_stats" for class "ReportComposer"
+    Attribute "pool_stats" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:286:29 - warning: Cannot assign to attribute "yamldata" for class "ReportGeneratorFunctional"
+    Attribute "yamldata" is unknown (reportAttributeAccessIssue)
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust\report_rust.py:362:31 - error: Object of type "None" cannot be called (reportOptionalCall)
+f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust_loader.py
+  f:\Python Projects\CLASSIC-Fallout4\ClassicLib\rust_loader.py:49:35 - warning: "_MEIPASS" is not a known attribute of module "sys" (reportAttributeAccessIssue)
+95 errors, 59 warnings, 0 informations

@@ -40,7 +40,6 @@ pub use classic_scanlog::{
     scan_records_batch, contains_record,
     detect_plugins_batch, contains_plugin,
     detect_mods_single, detect_mods_double, detect_mods_important, detect_mods_batch,
-    MinimalTest,
 };
 
 // Legacy classes for backward compatibility
@@ -191,7 +190,7 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     scanlog_module.add_class::<ReportComposer>()?;
     scanlog_module.add_class::<ReportGenerator>()?;
     scanlog_module.add_class::<ParallelReportProcessor>()?;
-    scanlog_module.add_class::<MinimalTest>()?;
+    scanlog_module.add_class::<TestClass>()?;
     scanlog_module.add_function(wrap_pyfunction!(extract_formids_batch, &scanlog_module)?)?;
     scanlog_module.add_function(wrap_pyfunction!(is_valid_formid, &scanlog_module)?)?;
     scanlog_module.add_function(wrap_pyfunction!(validate_formids_batch, &scanlog_module)?)?;

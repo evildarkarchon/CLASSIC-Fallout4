@@ -26,8 +26,18 @@ try:
 
         RUST_AVAILABLE = True
     else:
+        RustReportFragment = None  # type: ignore[assignment]
+        RustReportComposer = None  # type: ignore[assignment]
+        RustReportGenerator = None  # type: ignore[assignment]
+        RustStringPool = None  # type: ignore[assignment]
+        RustParallelProcessor = None  # type: ignore[assignment]
         RUST_AVAILABLE = False
 except (ImportError, AttributeError):
+    RustReportFragment = None  # type: ignore[assignment]
+    RustReportComposer = None  # type: ignore[assignment]
+    RustReportGenerator = None  # type: ignore[assignment]
+    RustStringPool = None  # type: ignore[assignment]
+    RustParallelProcessor = None  # type: ignore[assignment]
     RUST_AVAILABLE = False
 
 # Import Python fallback
@@ -270,9 +280,10 @@ class RustAcceleratedReportGenerator:
         self.yamldata = yamldata
 
         if self._use_rust:
-            self._generator = RustReportGenerator()
+            self._generator = RustReportGenerator()  # type: ignore[misc]
         else:
-            self._generator = PyReportGenerator(yamldata)
+            self._generator = PyReportGenerator()
+            self._generator.yamldata = yamldata
 
     def generate_header(self, crashlog_filename: str, version: str = "") -> RustAcceleratedReportFragment:
         """Generate a report header."""
@@ -362,8 +373,8 @@ class ParallelReportProcessor:
         Returns:
             List of processed report strings
         """
-        if self._use_rust:
-            return self._processor.process_reports(reports)
+        if self._use_rust and self._processor is not None:
+            return self._processor.process_reports(reports)  # type: ignore[union-attr]
 
         # Python fallback - sequential processing
         results = []
@@ -383,9 +394,9 @@ class ParallelReportProcessor:
         Returns:
             Combined fragment
         """
-        if self._use_rust and all(f._use_rust for f in fragments):
+        if self._use_rust and self._processor is not None and all(f._use_rust for f in fragments):
             rust_fragments = [f._fragment for f in fragments]
-            result_fragment = self._processor.combine_fragments_parallel(rust_fragments)
+            result_fragment = self._processor.combine_fragments_parallel(rust_fragments)  # type: ignore[union-attr]
 
             result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
             result._use_rust = True
@@ -410,7 +421,7 @@ ReportGenerator = RustAcceleratedReportGenerator
 
 
 # Export the string pool if available
-if RUST_AVAILABLE:
+if RUST_AVAILABLE and RustStringPool is not None:
     StringPool = RustStringPool
 else:
     # Dummy implementation for Python fallback

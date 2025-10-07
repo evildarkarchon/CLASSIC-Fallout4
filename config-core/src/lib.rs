@@ -23,5 +23,6 @@ pub use classic_shared::get_runtime;
 fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<YamlData>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
