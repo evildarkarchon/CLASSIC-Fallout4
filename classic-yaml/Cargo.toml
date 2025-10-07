@@ -31,3 +31,6 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 
 [profile.release]
 # Inherits from workspace
+
+[lints.rust]
+deprecated="deny"

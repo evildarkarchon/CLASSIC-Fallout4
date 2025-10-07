@@ -289,6 +289,45 @@ export CLASSIC_DISABLE_RUST=1
 python -c "import classic_core; print('Rust available')"
 ```
 
+### PyO3 Module Registration Patterns
+
+**CRITICAL**: PyO3 `#[pyclass]` types are ONLY exported when registered in a `#[pymodule]` function of a **standalone cdylib** module.
+
+**Pattern 1: Standalone Module (REQUIRED for #[pyclass] export)**
+```toml
+# Cargo.toml
+[lib]
+crate-type = ["cdylib", "rlib"]  # Both cdylib AND rlib
+```
+```rust
+// lib.rs
+#[pymodule]
+fn my_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<MyClass>()?;  // This registers the class
+    Ok(())
+}
+```
+**Result**: Classes are accessible from Python as `import my_module; my_module.MyClass()`
+
+**Pattern 2: Library-only Module (DOES NOT export #[pyclass])**
+```toml
+# Cargo.toml
+[lib]
+crate-type = ["rlib"]  # Only rlib
+```
+**Result**: `#[pyclass]` types are NOT accessible from Python, even if registered in a `#[pymodule]` function!
+
+**Architecture Rule**: Each Rust crate that exports Python classes MUST be:
+1. Built as BOTH `cdylib` and `rlib`
+2. Have its own `#[pymodule]` function
+3. Be installed as a separate Python module
+
+**Example**:
+- ✅ `classic_config` - standalone module with YamlData
+- ✅ `classic_scanlog` - standalone module with RustOrchestrator, AnalysisConfig, AnalysisResult
+- ✅ `classic_core` - standalone module re-exporting from other crates
+- ❌ `classic-yaml` as rlib-only - classes not accessible (but re-exported through classic_core)
+
 ### Common Issues
 1. **Module not found**: Use build method 1 (recommended) to update .pyd
    ```bash
@@ -296,29 +335,35 @@ python -c "import classic_core; print('Rust available')"
    uv pip install classic-core/dist/classic-*.whl --force-reinstall
    ```
 
-2. **Old .pyd loads**: Remove from site-packages before editable install
+2. **Classes not exported from module**: Ensure crate is built as `cdylib` (not just `rlib`)
+   ```toml
+   [lib]
+   crate-type = ["cdylib", "rlib"]  # Need BOTH!
+   ```
+
+3. **Old .pyd loads**: Remove from site-packages before editable install
    ```bash
    rm .venv/Lib/site-packages/classic_core.pyd
    uv pip install -e . --force-reinstall
    ```
 
-3. **PyO3 conversion errors**: Use direct attribute access or pre-convert
+4. **PyO3 conversion errors**: Use direct attribute access or pre-convert
    - Rust components expect specific data types
    - Check logs for conversion errors
 
-4. **Changes not reflected**: Use `--force-reinstall` and verify timestamp
+5. **Changes not reflected**: Use `--force-reinstall` and verify timestamp
    ```python
    import classic_core
    print(f"Version: {classic_core.__version__}")
    ```
 
-5. **Performance not improving**: Check component status
+6. **Performance not improving**: Check component status
    ```python
    from ClassicLib.integration.status import RUST_AVAILABLE
    print(f"Available components: {RUST_AVAILABLE}")
    ```
 
-6. **Build failures**: Common causes and solutions
+7. **Build failures**: Common causes and solutions
    ```bash
    # Update Rust toolchain
    rustup update
@@ -329,6 +374,12 @@ python -c "import classic_core; print('Rust available')"
    # Reinstall maturin
    uv pip install --upgrade maturin
    ```
+
+8. **Nested runtime errors** ("Cannot start a runtime from within a runtime"):
+   - Use `py.detach()` to release GIL before parallel work
+   - Use `Python::attach()` to reacquire GIL in worker threads
+   - Avoid `get_runtime().block_on()` when already in a Python context
+   - Use synchronous I/O for now in contexts where async causes conflicts
 
 ## Pre-commit Hooks
 ```bash
@@ -440,3 +491,7 @@ For comprehensive Rust documentation, see:
 - **classic_core import pattern**: Always use `from classic_core import <module>` NOT `from classic_core.<module> import <class>` (applies to all submodules: yaml, database, file_io, scanlog, utils, etc. - this is a PyO3 packaging pattern)
 - **Workspace modularization complete**: classic-rust renamed to classic-core as thin facade (2025-10-06)
 - **ONE RUNTIME RULE**: All Rust crates use `classic_shared::get_runtime()` to share global Tokio runtime
+- **PyO3 module registration**: `#[pyclass]` types ONLY export from standalone cdylib modules - rlib-only crates cannot export classes to Python (discovered 2025-10-07)
+- **Standalone module pattern**: Each Rust crate exporting Python classes must have `crate-type = ["cdylib", "rlib"]` AND be installed as separate Python module (like classic_config, classic_scanlog)
+- **GIL handling for parallel work**: Use `py.detach()` to release GIL, `Python::attach()` to reacquire in worker threads (PyO3 0.26)
+- **Runtime conflicts**: Avoid `get_runtime().block_on()` when already in Python context - use synchronous I/O or proper async patterns

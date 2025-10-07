@@ -135,7 +135,7 @@ impl YamlData {
         // Construct file paths
         let main_yaml = yaml_dirs[0].join("CLASSIC Main.yaml");
         let game_yaml = yaml_dirs[1].join(format!("CLASSIC {}.yaml", game));
-        let ignore_yaml = yaml_dirs[2].join("CLASSIC_Ignore.yaml");
+        let ignore_yaml = yaml_dirs[2].join("CLASSIC Ignore.yaml");
 
         // Verify files exist before loading
         for path in [&main_yaml, &game_yaml, &ignore_yaml] {

@@ -38,3 +38,6 @@ log = { workspace = true }
 
 [profile.release]
 # Inherits from workspace
+
+[lints.rust]
+deprecated = "deny"

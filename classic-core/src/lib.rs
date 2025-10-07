@@ -32,13 +32,15 @@ pub use classic_database::RustDatabasePool;
 pub use classic_file_io::{RustFileIOCore, EncodingDetector, DDSHeader};
 
 pub use classic_scanlog::{
-    FormIDAnalyzer, FormIDAnalyzerCore, LogParser, PatternMatcher,
+    FormIDAnalyzer, RustFormIDAnalyzer, FormIDAnalyzerCore, LogParser, PatternMatcher,
     PluginAnalyzer, RecordScanner, TestClass,
+    RustOrchestrator, AnalysisConfig, AnalysisResult,
     ReportFragment, ReportComposer, ReportGenerator, StringPool, ParallelReportProcessor,
     extract_formids_batch, is_valid_formid, validate_formids_batch,
     scan_records_batch, contains_record,
     detect_plugins_batch, contains_plugin,
     detect_mods_single, detect_mods_double, detect_mods_important, detect_mods_batch,
+    MinimalTest,
 };
 
 // Legacy classes for backward compatibility
@@ -175,16 +177,21 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register scanlog submodule (from classic-scanlog)
     let scanlog_module = PyModule::new(m.py(), "scanlog")?;
     scanlog_module.add_class::<FormIDAnalyzer>()?;
+    scanlog_module.add_class::<RustFormIDAnalyzer>()?;
     scanlog_module.add_class::<FormIDAnalyzerCore>()?;
     scanlog_module.add_class::<LogParser>()?;
     scanlog_module.add_class::<PatternMatcher>()?;
     scanlog_module.add_class::<PluginAnalyzer>()?;
     scanlog_module.add_class::<RecordScanner>()?;
+    scanlog_module.add_class::<RustOrchestrator>()?;
+    scanlog_module.add_class::<AnalysisConfig>()?;
+    scanlog_module.add_class::<AnalysisResult>()?;
     scanlog_module.add_class::<StringPool>()?;
     scanlog_module.add_class::<ReportFragment>()?;
     scanlog_module.add_class::<ReportComposer>()?;
     scanlog_module.add_class::<ReportGenerator>()?;
     scanlog_module.add_class::<ParallelReportProcessor>()?;
+    scanlog_module.add_class::<MinimalTest>()?;
     scanlog_module.add_function(wrap_pyfunction!(extract_formids_batch, &scanlog_module)?)?;
     scanlog_module.add_function(wrap_pyfunction!(is_valid_formid, &scanlog_module)?)?;
     scanlog_module.add_function(wrap_pyfunction!(validate_formids_batch, &scanlog_module)?)?;

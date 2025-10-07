@@ -21,6 +21,9 @@ classic-shared = { path = "../classic-shared" }
 # YAML operations (for data structures)
 classic-yaml = { path = "../classic-yaml" }
 
+# File I/O operations (for RustOrchestrator)
+classic-file-io = { path = "../classic-file-io" }
+
 # Parsing and pattern matching
 regex = { workspace = true }
 memchr = { workspace = true }
@@ -66,3 +69,6 @@ serde_json = { workspace = true }
 tempfile = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module"] }
 rusqlite = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
