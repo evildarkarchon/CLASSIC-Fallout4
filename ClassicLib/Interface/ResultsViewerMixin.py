@@ -577,5 +577,6 @@ class ResultsViewerMixin:
         if auto_refresh:
             # Get refresh interval (default 5 seconds)
             interval = yaml_settings(int, YAML.Settings, "ResultsViewer.RefreshInterval", 5000)
-            self.refresh_timer.start(interval)
+            if interval is not None:
+                self.refresh_timer.start(interval)
             logger.debug(f"Auto-refresh enabled with interval: {interval}ms")

@@ -32,6 +32,8 @@ dependencies = [
     "markdown2>=2.5.4",
     "qasync>=0.28.0",
     "maturin>=1.9.4,<2.0",
+    "pillow>=11.3.0",
+    "pyffi>=2.2.2",
 ]
 
 [project.optional-dependencies]

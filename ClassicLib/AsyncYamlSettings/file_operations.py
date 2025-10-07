@@ -249,6 +249,41 @@ class YamlFileOperations:
             logger.error(f"Failed to save YAML file {file_path}: {e}")
             return False
 
+    async def ensure_file_exists(self, file_path: Path) -> None:
+        """
+        Ensure that a YAML file exists, creating it if necessary.
+
+        Args:
+            file_path: Path to the YAML file
+        """
+        if not file_path.exists():
+            logger.debug(f"Creating missing YAML file: {file_path}")
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            # Create empty YAML file
+            await self.io_core.write_file(file_path, "{}\n")
+
+    async def backup_file(self, file_path: Path, backup_suffix: str = ".bak") -> Path:
+        """
+        Create a backup of a YAML file.
+
+        Args:
+            file_path: Path to the file to backup
+            backup_suffix: Suffix to append to the backup file
+
+        Returns:
+            Path to the backup file
+        """
+        backup_path = file_path.with_suffix(file_path.suffix + backup_suffix)
+
+        if file_path.exists():
+            content = await self.io_core.read_file(file_path)
+            await self.io_core.write_file(backup_path, content)
+            logger.debug(f"Created backup: {backup_path}")
+        else:
+            logger.warning(f"Cannot backup non-existent file: {file_path}")
+
+        return backup_path
+
     async def regenerate_settings_file(self, yaml_store: YAML) -> dict[str, Any]:
         """
         Regenerate a settings file from defaults.

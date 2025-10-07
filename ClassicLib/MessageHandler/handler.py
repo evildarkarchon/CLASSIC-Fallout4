@@ -177,7 +177,7 @@ class MessageHandler(QObject):
         if not HAS_QT:
             return
 
-        parent: QWidget | None = message.parent or self.parent_widget
+        parent: QWidget | None = message.parent or self.parent_widget  # type: ignore[assignment]
         title: str | LiteralString = message.title or message.msg_type.name.title()
         icon_map = {
             MessageType.INFO: QMessageBox.Icon.Information,

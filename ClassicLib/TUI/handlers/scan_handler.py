@@ -134,7 +134,6 @@ class TuiScanHandler:
 
         async with OrchestratorCore(
             scanner.yamldata,
-            scanner.crashlogs,
             scanner.fcx_mode,
             scanner.show_formid_values,
             scanner.formid_db_exists,

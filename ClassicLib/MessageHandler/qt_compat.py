@@ -1,6 +1,6 @@
 """Qt compatibility layer for environments without PySide6."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 # Try to import PySide6 for GUI mode
 try:

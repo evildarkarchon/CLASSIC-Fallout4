@@ -54,7 +54,7 @@ class WindowGeometryMixin:
 
         def showNormal(self) -> None: ...  # noqa: D102
 
-        def normalGeometry(self) -> object: ...  # noqa: D102
+        def normalGeometry(self) -> Any: ...  # noqa: D102
 
     def __init__(self) -> None:
         """Initialize window geometry tracking."""
@@ -146,10 +146,10 @@ class WindowGeometryMixin:
             # normalGeometry() returns the geometry the window will have when restored
             if hasattr(self, "normalGeometry"):
                 normal_geom = self.normalGeometry()  # type: ignore[attr-defined]
-                yaml_settings(int, YAML.Settings, f"UI.window_geometry.{tab_name}.width", normal_geom.width())
-                yaml_settings(int, YAML.Settings, f"UI.window_geometry.{tab_name}.height", normal_geom.height())
+                yaml_settings(int, YAML.Settings, f"UI.window_geometry.{tab_name}.width", normal_geom.width())  # type: ignore[attr-defined]
+                yaml_settings(int, YAML.Settings, f"UI.window_geometry.{tab_name}.height", normal_geom.height())  # type: ignore[attr-defined]
                 logger.debug(
-                    f"Saved normal geometry for maximized {tab_name}: {normal_geom.width()}x{normal_geom.height()} (maximized=True)"
+                    f"Saved normal geometry for maximized {tab_name}: {normal_geom.width()}x{normal_geom.height()} (maximized=True)"  # type: ignore[attr-defined]
                 )
             else:
                 # Fallback if normalGeometry is not available

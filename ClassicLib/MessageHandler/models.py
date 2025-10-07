@@ -14,13 +14,7 @@ from typing import TYPE_CHECKING
 from ClassicLib.MessageHandler.enums import MessageTarget, MessageType
 
 if TYPE_CHECKING:
-    # Try to import PySide6 for GUI mode
-    try:
-        from PySide6.QtWidgets import QWidget
-    except ImportError:
-        # Define dummy class for type checking when Qt is not available
-        class QWidget:  # noqa: D101
-            pass
+    from ClassicLib.MessageHandler.qt_compat import QWidget
 
 
 @dataclass

@@ -174,7 +174,7 @@ class BackupOperationsMixin:
 
         except PermissionError:
             QMessageBox.critical(
-                self,
+                self,  # type: ignore[arg-type]  # Mixin used in QWidget subclass
                 "Error",
                 "Unable to access files from your game folder. Please run CLASSIC in admin mode to resolve this problem.",
                 QMessageBox.StandardButton.NoButton,
@@ -182,7 +182,7 @@ class BackupOperationsMixin:
             )
         except ValueError as e:
             QMessageBox.warning(
-                self,
+                self,  # type: ignore[arg-type]  # Mixin used in QWidget subclass
                 "Warning",
                 str(e),
                 QMessageBox.StandardButton.NoButton,

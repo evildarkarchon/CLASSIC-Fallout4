@@ -99,8 +99,9 @@ class GamePathFinder:
         from ClassicLib.Util import validate_path
 
         if not self.xse_file:
+            xse_acronym_lower = self.xse_acronym.lower() if self.xse_acronym else "xse"
             msg_error(
-                f"❌ CAUTION : THE {self.xse_acronym.lower()}.log FILE PATH IS NOT CONFIGURED! \n"
+                f"❌ CAUTION : THE {xse_acronym_lower}.log FILE PATH IS NOT CONFIGURED! \n"
                 "   Please configure the game documents folder first! \n-----\n"
             )
             return False
@@ -114,15 +115,16 @@ class GamePathFinder:
 
     def _report_xse_error(self, error_msg: str) -> None:
         """Report XSE file access errors with appropriate messages."""
+        xse_acronym_lower = self.xse_acronym.lower() if self.xse_acronym else "xse"
         if "does not exist" in error_msg:
             msg_error(
-                f"❌ CAUTION : THE {self.xse_acronym.lower()}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n"
-                f"   You need to run the game at least once with {self.xse_acronym.lower()}_loader.exe \n"
+                f"❌ CAUTION : THE {xse_acronym_lower}.log FILE IS MISSING FROM YOUR GAME DOCUMENTS FOLDER! \n"
+                f"   You need to run the game at least once with {xse_acronym_lower}_loader.exe \n"
                 f"    After that, try running CLASSIC again! \n   Error: {error_msg} \n-----\n"
             )
         else:
             msg_error(
-                f"❌ CAUTION : CANNOT ACCESS {self.xse_acronym.lower()}.log FILE! \n"
+                f"❌ CAUTION : CANNOT ACCESS {xse_acronym_lower}.log FILE! \n"
                 f"   Error: {error_msg} \n"
                 "   Please check your game documents folder and try again! \n-----\n"
             )
@@ -172,7 +174,11 @@ class GamePathFinder:
     def _get_path_from_user_gui(self) -> Path:
         """Get game path from user via GUI dialog."""
         # This will return a valid path or exit the application if cancelled
-        return show_game_path_dialog_static()
+        result = show_game_path_dialog_static()
+        if result is None:
+            # Should not reach here as the dialog exits on cancel, but handle it safely
+            raise RuntimeError("Game path selection was cancelled")
+        return result
 
     def _get_path_from_user_console(self) -> Path:
         """Get game path from user via console input."""
