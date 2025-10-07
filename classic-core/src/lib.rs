@@ -1,47 +1,48 @@
 //! CLASSIC Core - High-performance Rust extensions for CLASSIC Fallout 4
 //!
-//! This module provides optimized utilities and processing capabilities for the CLASSIC
-//! crash log analyzer, implementing Phase 1.2 and Phase 2 of the Rust migration plan.
+//! This is a thin facade module that re-exports all functionality from the modular
+//! CLASSIC Rust crates, maintaining backward compatibility with the original monolithic API.
+//!
+//! ## Architecture (Post-Modularization)
+//! - **classic-shared**: Foundation (runtime, errors, utilities)
+//! - **classic-yaml**: YAML operations
+//! - **classic-database**: SQLite operations
+//! - **classic-file-io**: File I/O operations
+//! - **classic-scanlog**: Log parsing & analysis
+//! - **classic-core** (this crate): Facade that re-exports everything
+//!
+//! ## ONE RUNTIME RULE
+//! All async operations use the shared runtime from classic-shared.
 
 use pyo3::prelude::*;
-use tokio::runtime::Runtime;
-use once_cell::sync::Lazy;
 
-// Module declarations
-pub mod database;
-pub mod file_io;
-pub mod scanlog;
-pub mod utils;
-pub mod yaml;
+// Re-export the shared runtime for backward compatibility
+pub use classic_shared::get_runtime;
 
-// Re-export key types for convenience
-pub use utils::{
-    ClassicError, ClassicResult,
-    PathHandler, StringProcessor, LogProcessor, RustPerformanceMonitor
+// Re-export all types from modular crates
+pub use classic_shared::{
+    ClassicError, ClassicResult, IntoClassicError,
+    PathHandler, StringProcessor, RustPerformanceMonitor,
 };
 
-/// Shared tokio runtime for all async operations (ONE RUNTIME RULE)
-///
-/// This is the ONLY runtime that should exist in the entire application.
-/// All submodules MUST use this runtime via crate::get_runtime() to avoid deadlocks.
-pub(crate) static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    let worker_threads = std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(4);
+pub use classic_yaml::RustYamlOperations;
 
-    tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(worker_threads)
-        .enable_all()
-        .build()
-        .expect("Failed to create Tokio runtime")
-});
+pub use classic_database::RustDatabasePool;
 
-/// Get a reference to the global runtime
-///
-/// Use this function in submodules instead of creating new runtimes.
-pub(crate) fn get_runtime() -> &'static Runtime {
-    &RUNTIME
-}
+pub use classic_file_io::{RustFileIOCore, EncodingDetector, DDSHeader};
+
+pub use classic_scanlog::{
+    FormIDAnalyzer, FormIDAnalyzerCore, LogParser, PatternMatcher,
+    PluginAnalyzer, RecordScanner, TestClass,
+    ReportFragment, ReportComposer, ReportGenerator, StringPool, ParallelReportProcessor,
+    extract_formids_batch, is_valid_formid, validate_formids_batch,
+    scan_records_batch, contains_record,
+    detect_plugins_batch, contains_plugin,
+    detect_mods_single, detect_mods_double, detect_mods_important, detect_mods_batch,
+};
+
+// Legacy classes for backward compatibility
+// These are kept here to maintain the exact same API
 
 /// High-performance file reader using async I/O internally
 #[pyclass]
@@ -57,7 +58,7 @@ impl FileReader {
     /// Read a file synchronously (but uses async I/O internally)
     fn read_file(&self, path: String) -> PyResult<String> {
         // Use global runtime for async operation
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             tokio::fs::read_to_string(path).await
         })
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
@@ -66,7 +67,7 @@ impl FileReader {
     /// Read multiple files in parallel (exposed as sync to Python)
     fn read_files_batch(&self, paths: Vec<String>) -> PyResult<Vec<Option<String>>> {
         // Use global runtime for parallel I/O
-        let results = RUNTIME.block_on(async move {
+        let results = get_runtime().block_on(async move {
             let tasks: Vec<_> = paths
                 .into_iter()
                 .map(|path| {
@@ -118,7 +119,7 @@ impl FormIDProcessor {
     /// Async database lookup exposed as sync
     fn lookup_formids(&self, db_path: String, formids: Vec<String>) -> PyResult<Vec<Option<String>>> {
         // Use the global runtime for async operations
-        RUNTIME.block_on(async move {
+        get_runtime().block_on(async move {
             // Simulate async database operations
             let _contents = tokio::fs::read_to_string(&db_path).await?;
 
@@ -149,7 +150,7 @@ impl FormIDProcessor {
 #[pyfunction]
 fn count_patterns_in_file(path: String, pattern: String) -> PyResult<usize> {
     // Use global runtime for one-off async operations
-    RUNTIME.block_on(async move {
+    get_runtime().block_on(async move {
         let content = tokio::fs::read_to_string(path).await?;
         Ok::<usize, tokio::io::Error>(content.matches(&pattern).count())
     })
@@ -159,33 +160,58 @@ fn count_patterns_in_file(path: String, pattern: String) -> PyResult<usize> {
 /// Python module initialization
 #[pymodule]
 fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Add classes
+    // Legacy classes (for backward compatibility)
     m.add_class::<FileReader>()?;
     m.add_class::<FormIDProcessor>()?;
-
-    // Add functions
     m.add_function(wrap_pyfunction!(count_patterns_in_file, m)?)?;
 
-    // Register submodules
+    // Register utils submodule (from classic-shared)
     let utils_module = PyModule::new(m.py(), "utils")?;
-    utils::register_module(&utils_module)?;
+    utils_module.add_class::<StringProcessor>()?;
+    utils_module.add_class::<PathHandler>()?;
+    utils_module.add_class::<RustPerformanceMonitor>()?;
     m.add_submodule(&utils_module)?;
 
+    // Register scanlog submodule (from classic-scanlog)
     let scanlog_module = PyModule::new(m.py(), "scanlog")?;
-    scanlog::register_module(&scanlog_module)?;
+    scanlog_module.add_class::<FormIDAnalyzer>()?;
+    scanlog_module.add_class::<FormIDAnalyzerCore>()?;
+    scanlog_module.add_class::<LogParser>()?;
+    scanlog_module.add_class::<PatternMatcher>()?;
+    scanlog_module.add_class::<PluginAnalyzer>()?;
+    scanlog_module.add_class::<RecordScanner>()?;
+    scanlog_module.add_class::<StringPool>()?;
+    scanlog_module.add_class::<ReportFragment>()?;
+    scanlog_module.add_class::<ReportComposer>()?;
+    scanlog_module.add_class::<ReportGenerator>()?;
+    scanlog_module.add_class::<ParallelReportProcessor>()?;
+    scanlog_module.add_function(wrap_pyfunction!(extract_formids_batch, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(is_valid_formid, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(validate_formids_batch, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(scan_records_batch, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(contains_record, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(detect_plugins_batch, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(contains_plugin, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(detect_mods_single, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(detect_mods_double, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(detect_mods_important, &scanlog_module)?)?;
+    scanlog_module.add_function(wrap_pyfunction!(detect_mods_batch, &scanlog_module)?)?;
     m.add_submodule(&scanlog_module)?;
 
+    // Register database submodule (from classic-database)
     let database_module = PyModule::new(m.py(), "database")?;
-    database::register_module(&database_module)?;
+    database_module.add_class::<RustDatabasePool>()?;
     m.add_submodule(&database_module)?;
 
+    // Register file_io submodule (from classic-file-io)
     let file_io_module = PyModule::new(m.py(), "file_io")?;
-    file_io::register_module(&file_io_module)?;
+    file_io_module.add_class::<RustFileIOCore>()?;
+    file_io_module.add_class::<EncodingDetector>()?;
     m.add_submodule(&file_io_module)?;
 
-    // YAML module - Fixed to comply with ONE RUNTIME RULE (removed Python::attach calls)
+    // Register YAML submodule (from classic-yaml)
     let yaml_module = PyModule::new(m.py(), "yaml")?;
-    yaml::init_module(&yaml_module)?;
+    yaml_module.add_class::<RustYamlOperations>()?;
     m.add_submodule(&yaml_module)?;
 
     // Add version

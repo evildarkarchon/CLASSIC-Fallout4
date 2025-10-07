@@ -4,24 +4,22 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "🧹 Cleaning old builds..." -ForegroundColor Cyan
-Push-Location classic-rust
-cargo clean
-Pop-Location
+cargo clean --workspace
 
 Write-Host "🗑️  Removing old .pyd files..." -ForegroundColor Cyan
 Remove-Item -Path ".venv\Lib\site-packages\classic_core*.pyd" -ErrorAction SilentlyContinue
 Remove-Item -Path ".venv\Lib\site-packages\classic_core*.dll" -ErrorAction SilentlyContinue
 Remove-Item -Path ".venv\Lib\site-packages\classic_core-*.dist-info" -Recurse -ErrorAction SilentlyContinue
-Remove-Item -Path "classic-rust\python\classic_core\*.pyd" -ErrorAction SilentlyContinue
-Remove-Item -Path "classic-rust\python\classic_core\*.dll" -ErrorAction SilentlyContinue
+Remove-Item -Path "classic-core\python\classic_core\*.pyd" -ErrorAction SilentlyContinue
+Remove-Item -Path "classic-core\python\classic_core\*.dll" -ErrorAction SilentlyContinue
 
-Write-Host "🔨 Building Rust extension..." -ForegroundColor Yellow
-Push-Location classic-rust
+Write-Host "🔨 Building Rust workspace..." -ForegroundColor Yellow
+Push-Location classic-core
 maturin build --release --out dist
 Pop-Location
 
 Write-Host "📦 Installing wheel..." -ForegroundColor Green
-$wheel = Get-ChildItem -Path "classic-rust\dist\classic_core-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$wheel = Get-ChildItem -Path "classic-core\dist\classic_core-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if ($wheel) {
     uv pip install $wheel.FullName --force-reinstall
 } else {

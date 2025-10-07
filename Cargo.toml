@@ -1,0 +1,70 @@
+[workspace]
+members = [
+    "classic-shared",
+    "classic-yaml",
+    "classic-database",
+    "classic-file-io",
+    "classic-scanlog",
+    "classic-core",
+    "config-core",
+]
+resolver = "2"
+
+[workspace.dependencies]
+# PyO3 bindings
+pyo3 = { version = "0.26.0", features = ["abi3-py312"] }
+
+# Async runtime (ONE RUNTIME RULE)
+tokio = { version = "1.42", features = ["full"] }
+futures = "0.3"
+
+# Performance
+once_cell = "1.20"
+dashmap = "6.1"
+parking_lot = "0.12"
+rayon = "1.10"
+crossbeam = "0.8"
+
+# YAML
+yaml-rust2 = "0.10.4"
+
+# Strings & errors
+string_cache = "0.9.0"
+smartstring = "1.0"
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Database
+rusqlite = { version = "0.37.0", features = ["bundled", "backup"] }
+
+# File I/O
+encoding_rs = "0.8"
+memmap2 = "0.9"
+walkdir = "2.5"
+ddsfile = "0.5"
+
+# Parsing
+regex = "1.11"
+memchr = "2.7"
+aho-corasick = "1.1"
+
+# Caching
+lru = "0.16.1"
+linked-hash-map = "0.5"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+[workspace.lints.rust]
+deprecated = "deny"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true

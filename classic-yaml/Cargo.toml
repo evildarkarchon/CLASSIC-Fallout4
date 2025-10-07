@@ -1,0 +1,29 @@
+[package]
+name = "classic-yaml"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "High-performance YAML operations for CLASSIC Rust extensions"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_yaml"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# CLASSIC shared utilities
+classic-shared = { path = "../classic-shared" }
+
+# YAML parsing
+yaml-rust2 = { workspace = true }
+
+# Caching
+dashmap = { workspace = true }
+once_cell = { workspace = true }
+
+[profile.release]
+# Inherits from workspace

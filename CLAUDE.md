@@ -47,8 +47,8 @@ uv run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
 ```bash
 # Method 1: Build wheel (MOST RELIABLE - RECOMMENDED)
 # Note: Build from project root where Cargo.toml is located
-maturin build --release --out classic-rust/dist
-uv pip install classic-rust/dist/classic-*.whl --force-reinstall
+maturin build --release --out classic-core/dist
+uv pip install classic-core/dist/classic_*.whl --force-reinstall
 
 # Method 2: Editable install (DEVELOPMENT)
 rm .venv/Lib/site-packages/classic_core.pyd  # Remove old FIRST
@@ -59,18 +59,26 @@ uv run python -c "import classic_core; print(f'Rust version: {classic_core.__ver
 uv run python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
 
 # Build Rust without installing (for testing)
-cargo build --release
-cargo test --all-features
+cargo build --release --workspace
+cargo test --all-features --workspace
 ```
 
 ## Architecture
 
 ### Hybrid Python-Rust Architecture
 - **Python**: UI, high-level logic, and coordination in `src/classic/` and `ClassicLib/`
-- **Rust**: CPU-intensive operations in `classic-rust/src/` with 10-150x performance gains
+- **Rust**: Modular workspace with 7 crates delivering 10-150x performance gains
+  - **classic-shared**: Foundation (runtime, errors, utilities)
+  - **classic-yaml**: YAML operations (yaml-rust2)
+  - **classic-database**: SQLite operations with connection pooling
+  - **classic-file-io**: File I/O, encoding detection, DDS parsing
+  - **classic-scanlog**: Log parsing, FormID analysis, pattern matching
+  - **classic-core**: Thin facade re-exporting all modules (Python entry point)
+  - **config-core**: Configuration management
 - **Integration**: PyO3 0.26.0 bindings with native async solution (no PyO3-asyncio dependency)
 - **Fallback**: Full Python implementations ensure compatibility when Rust unavailable
 - **Transparent**: Automatic acceleration - no API changes required
+- **Architecture**: ONE RUNTIME RULE - single global Tokio runtime shared across all crates
 
 #### Rust Performance Benefits
 | Component | Python Time | Rust Time | Speedup |
@@ -134,17 +142,29 @@ analyzer = get_formid_analyzer(yamldata, show_values, db_exists)
 ```
 
 #### Native Async Solution (No PyO3-asyncio)
-CLASSIC uses a native async solution that's more reliable and performant:
+CLASSIC uses a native async solution that's more reliable and performant. The ONE RUNTIME RULE ensures all crates share a single global Tokio runtime to prevent deadlocks:
+
 ```rust
-// Single global Tokio runtime
-static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Runtime::new().expect("Failed to create Tokio runtime")
+// In classic-shared/src/runtime.rs - shared across all crates
+pub(crate) static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
+    let worker_threads = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4);
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(worker_threads)
+        .enable_all()
+        .build()
+        .expect("Failed to create Tokio runtime")
 });
 
-// Sync API to Python, async internally
+pub fn get_runtime() -> &'static Runtime {
+    &RUNTIME
+}
+
+// In other crates - use classic_shared::get_runtime()
 #[pyfunction]
 fn process_data(data: String) -> PyResult<String> {
-    RUNTIME.block_on(async move {
+    classic_shared::get_runtime().block_on(async move {
         // Full async Rust operations here
         async_operation(data).await
     })
@@ -272,14 +292,14 @@ python -c "import classic_core; print('Rust available')"
 ### Common Issues
 1. **Module not found**: Use build method 1 (recommended) to update .pyd
    ```bash
-   cd classic-rust && maturin build --release --out dist
-   uv pip install dist/classic-*.whl --force-reinstall
+   maturin build --release --out classic-core/dist
+   uv pip install classic-core/dist/classic-*.whl --force-reinstall
    ```
 
 2. **Old .pyd loads**: Remove from site-packages before editable install
    ```bash
    rm .venv/Lib/site-packages/classic_core.pyd
-   uv pip install -e classic-rust --force-reinstall
+   uv pip install -e . --force-reinstall
    ```
 
 3. **PyO3 conversion errors**: Use direct attribute access or pre-convert
@@ -325,6 +345,66 @@ uv run pre-commit run --all-files           # Run manually
 - **Native async solution** - no PyO3-asyncio dependency
 - **No proactive doc creation** unless requested
 
+## Rust Workspace Structure
+
+CLASSIC uses a modular Cargo workspace with 7 specialized crates:
+
+```
+.
+├── Cargo.toml                  # Workspace root with shared dependencies
+├── classic-shared/             # Foundation crate (runtime, errors, utilities)
+│   ├── src/
+│   │   ├── runtime.rs         # Global Tokio runtime (ONE RUNTIME RULE)
+│   │   ├── errors.rs          # ClassicError and ClassicResult types
+│   │   ├── paths.rs           # Path handling utilities
+│   │   ├── strings.rs         # String processing utilities
+│   │   └── performance.rs     # Performance monitoring
+├── classic-yaml/               # YAML operations (yaml-rust2)
+│   └── src/lib.rs
+├── classic-database/           # SQLite operations with connection pooling
+│   ├── src/
+│   │   ├── pool.rs            # Database connection pool
+│   │   └── formid.rs          # FormID lookup operations
+├── classic-file-io/            # File I/O, encoding, DDS parsing
+│   ├── src/
+│   │   ├── core.rs            # RustFileIOCore
+│   │   ├── encoding.rs        # Encoding detection
+│   │   └── dds.rs             # DDS header parsing
+├── classic-scanlog/            # Log parsing and analysis (~1500 LOC)
+│   ├── src/
+│   │   ├── parser.rs          # Log segment parsing
+│   │   ├── formid.rs          # FormID extraction
+│   │   ├── formid_analyzer.rs # FormID analysis
+│   │   ├── patterns.rs        # Pattern matching
+│   │   ├── plugin_analyzer.rs # Plugin analysis
+│   │   ├── record_scanner.rs  # Record scanning
+│   │   └── ...
+├── classic-core/               # Thin facade (Python entry point)
+│   └── src/lib.rs             # Re-exports all modules
+└── config-core/                # Configuration management
+    └── src/lib.rs
+```
+
+### Dependency Hierarchy
+```
+classic-shared (foundation)
+    ↑
+    ├── classic-yaml
+    │       ↑
+    │       └── classic-scanlog (uses YAML data structures)
+    ├── classic-database
+    ├── classic-file-io
+    └── config-core
+
+classic-core (facade) depends on ALL of the above
+```
+
+**Key Rules:**
+- No circular dependencies
+- All crates use `classic_shared::get_runtime()` (ONE RUNTIME RULE)
+- Workspace dependencies centralized in root `Cargo.toml`
+- classic-core is a thin facade that re-exports all functionality
+
 ## Rust Documentation
 For comprehensive Rust documentation, see:
 - **[Rust Documentation Index](docs/RUST_DOCUMENTATION_INDEX.md)** - Complete guide to all Rust docs
@@ -332,8 +412,8 @@ For comprehensive Rust documentation, see:
 - **[Performance Monitoring](docs/performance_monitoring.md)** - Monitor Rust performance
 - **[Troubleshooting Guide](docs/troubleshooting_rust.md)** - Debug Rust issues
 - **[Development Guide](docs/development_with_rust.md)** - Develop with Rust components
-- **[Migration Plan](RUST_MIGRATION_PLAN.md)** - Complete migration strategy
-- **[yaml-rust2 Migration Plan](docs/yaml_rust2_migration_plan.md)** - YAML library migration (completed 2025-10-02)
+- **[Full Backend Migration Plan](docs/rust_full_backend_migration_plan.md)** - Complete backend migration strategy
+- **[Core Modularization Plan](docs/classic_core_modularization_plan.md)** - Workspace modularization (completed 2025-10-06)
 
 ### YAML Operations (yaml-rust2)
 - **Library**: yaml-rust2 v0.10.4 (YAML 1.2 compliant, pure Rust, owned types)
@@ -358,3 +438,5 @@ For comprehensive Rust documentation, see:
 - Use Mixins with TYPE_CHECKING for MainWindow extensions
 - Maintain API compatibility with deprecation warnings
 - **classic_core import pattern**: Always use `from classic_core import <module>` NOT `from classic_core.<module> import <class>` (applies to all submodules: yaml, database, file_io, scanlog, utils, etc. - this is a PyO3 packaging pattern)
+- **Workspace modularization complete**: classic-rust renamed to classic-core as thin facade (2025-10-06)
+- **ONE RUNTIME RULE**: All Rust crates use `classic_shared::get_runtime()` to share global Tokio runtime

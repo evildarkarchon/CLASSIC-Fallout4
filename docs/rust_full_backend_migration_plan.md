@@ -31,11 +31,15 @@ Transform CLASSIC into a **Rust-first application** where:
 
 ### Key Benefits
 - **Performance**: 150x faster end-to-end analysis (2-3s → 15-20ms per log)
+- **Dependency Elimination**: Remove ruamel.yaml completely (15-30x faster config loading)
 - **Scalability**: Process 100+ logs concurrently without Python GIL bottlenecks
 - **Maintainability**: Single source of truth for business logic in Rust
 - **Type Safety**: Complete type stubs for IDE support and static analysis
+- **Startup Speed**: Application initialization 15-30x faster with Rust yamldata
 
 ### Success Metrics
+- [ ] **YamlData loads in Rust in < 5ms (vs ~150ms Python with ruamel.yaml)**
+- [ ] **ruamel.yaml dependency completely removed from project**
 - [ ] Single FFI call processes entire crash log → returns complete report
 - [ ] 95%+ of analysis logic runs in Rust (no Python fallbacks)
 - [ ] Complete .pyi stubs with 100% type coverage
@@ -410,6 +414,277 @@ pub fn process_crash_log(
 
 **Goal**: Establish Rust orchestration foundation
 
+#### 1.0 Yamldata Generation in Rust (Priority Zero)
+
+**Rationale**: Moving yamldata generation to Rust eliminates ruamel.yaml dependency and provides 15-30x speedup for configuration loading. This is foundational for all other components.
+
+```rust
+// classic-rust/src/config/yamldata_builder.rs
+
+use classic_core::yaml::RustYamlOperations;
+use pyo3::prelude::*;
+use std::path::PathBuf;
+
+/// Rust equivalent of ClassicScanLogsInfo
+#[pyclass]
+pub struct YamlData {
+    // Game configuration
+    #[pyo3(get)]
+    pub classic_game_hints: Vec<String>,
+    #[pyo3(get)]
+    pub classic_records_list: Vec<String>,
+    #[pyo3(get)]
+    pub classic_version: String,
+    #[pyo3(get)]
+    pub classic_version_date: String,
+
+    // Crashgen configuration
+    #[pyo3(get)]
+    pub crashgen_name: String,
+    #[pyo3(get)]
+    pub crashgen_latest_og: String,
+    #[pyo3(get)]
+    pub crashgen_latest_vr: String,
+    #[pyo3(get)]
+    pub crashgen_ignore: Vec<String>,
+
+    // Warnings
+    #[pyo3(get)]
+    pub warn_noplugins: String,
+    #[pyo3(get)]
+    pub warn_outdated: String,
+
+    // XSE configuration
+    #[pyo3(get)]
+    pub xse_acronym: String,
+
+    // Ignore lists
+    #[pyo3(get)]
+    pub game_ignore_plugins: Vec<String>,
+    #[pyo3(get)]
+    pub game_ignore_records: Vec<String>,
+    #[pyo3(get)]
+    pub ignore_list: Vec<String>,
+
+    // Suspect patterns
+    #[pyo3(get)]
+    pub suspects_error_list: HashMap<String, String>,
+    #[pyo3(get)]
+    pub suspects_stack_list: HashMap<String, Vec<String>>,
+
+    // Mod databases
+    #[pyo3(get)]
+    pub game_mods_conf: HashMap<String, String>,
+    #[pyo3(get)]
+    pub game_mods_core: HashMap<String, String>,
+    #[pyo3(get)]
+    pub game_mods_core_folon: Option<HashMap<String, String>>,
+    #[pyo3(get)]
+    pub game_mods_freq: HashMap<String, String>,
+    #[pyo3(get)]
+    pub game_mods_opc2: HashMap<String, String>,
+    #[pyo3(get)]
+    pub game_mods_solu: HashMap<String, String>,
+
+    // UI configuration
+    #[pyo3(get)]
+    pub autoscan_text: String,
+
+    // Cached YAML operations instance
+    yaml_ops: RustYamlOperations,
+}
+
+#[pymethods]
+impl YamlData {
+    #[new]
+    pub fn new(
+        yaml_dirs: Vec<PathBuf>,
+        game: String,
+        vr_mode: bool,
+    ) -> PyResult<Self> {
+        let yaml_ops = RustYamlOperations::new();
+
+        // Build YamlData using batch YAML operations
+        Self::load_from_yaml_files(yaml_ops, yaml_dirs, game, vr_mode)
+    }
+
+    /// Load all configuration from YAML files in a single pass
+    fn load_from_yaml_files(
+        yaml_ops: RustYamlOperations,
+        yaml_dirs: Vec<PathBuf>,
+        game: String,
+        vr_mode: bool,
+    ) -> PyResult<Self> {
+        // Construct file paths
+        let main_yaml = yaml_dirs[0].join("CLASSIC Main.yaml");
+        let game_yaml = yaml_dirs[1].join(format!("CLASSIC {}.yaml", game));
+        let ignore_yaml = yaml_dirs[2].join("CLASSIC_Ignore.yaml");
+
+        // Load all YAML files in parallel (Rust async)
+        let (main_data, game_data, ignore_data) = {
+            use tokio::task::JoinSet;
+            let mut set = JoinSet::new();
+
+            let yaml_ops_clone1 = yaml_ops.clone();
+            let main_path = main_yaml.clone();
+            set.spawn(async move {
+                yaml_ops_clone1.parse_yaml_file(&main_path)
+            });
+
+            let yaml_ops_clone2 = yaml_ops.clone();
+            let game_path = game_yaml.clone();
+            set.spawn(async move {
+                yaml_ops_clone2.parse_yaml_file(&game_path)
+            });
+
+            let yaml_ops_clone3 = yaml_ops.clone();
+            let ignore_path = ignore_yaml.clone();
+            set.spawn(async move {
+                yaml_ops_clone3.parse_yaml_file(&ignore_path)
+            });
+
+            // Wait for all three files
+            RUNTIME.block_on(async {
+                let r1 = set.join_next().await.unwrap()??;
+                let r2 = set.join_next().await.unwrap()??;
+                let r3 = set.join_next().await.unwrap()??;
+                Ok::<_, PyErr>((r1, r2, r3))
+            })?
+        };
+
+        // Extract values using optimized key lookups
+        let vr_suffix = if vr_mode { "VR" } else { "" };
+
+        Ok(Self {
+            // Main YAML values
+            classic_version: yaml_ops.get_string(&main_data, "CLASSIC_Info.version")?,
+            classic_version_date: yaml_ops.get_string(&main_data, "CLASSIC_Info.version_date")?,
+            classic_records_list: yaml_ops.get_list(&main_data, "catch_log_records")?,
+            autoscan_text: yaml_ops.get_string(&main_data, &format!("CLASSIC_Interface.autoscan_text_{}", game))?,
+
+            // Game YAML values
+            classic_game_hints: yaml_ops.get_list(&game_data, "Game_Hints")?,
+            crashgen_name: yaml_ops.get_string(&game_data, &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix))?,
+            crashgen_latest_og: yaml_ops.get_string(&game_data, "Game_Info.CRASHGEN_LatestVer")?,
+            crashgen_latest_vr: yaml_ops.get_string(&game_data, "GameVR_Info.CRASHGEN_LatestVer")?,
+            crashgen_ignore: yaml_ops.get_list(&game_data, &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix))?,
+            warn_noplugins: yaml_ops.get_string(&game_data, "Warnings_CRASHGEN.Warn_NOPlugins")?,
+            warn_outdated: yaml_ops.get_string(&game_data, "Warnings_CRASHGEN.Warn_Outdated")?,
+            xse_acronym: yaml_ops.get_string(&game_data, "Game_Info.XSE_Acronym")?,
+            game_ignore_plugins: yaml_ops.get_list(&game_data, "Crashlog_Plugins_Exclude")?,
+            game_ignore_records: yaml_ops.get_list(&game_data, "Crashlog_Records_Exclude")?,
+            suspects_error_list: yaml_ops.get_dict(&game_data, "Crashlog_Error_Check")?,
+            suspects_stack_list: yaml_ops.get_dict(&game_data, "Crashlog_Stack_Check")?,
+            game_mods_conf: yaml_ops.get_dict(&game_data, "Mods_CONF")?,
+            game_mods_core: yaml_ops.get_dict(&game_data, "Mods_CORE")?,
+            game_mods_core_folon: yaml_ops.get_dict_optional(&game_data, "Mods_CORE_FOLON")?,
+            game_mods_freq: yaml_ops.get_dict(&game_data, "Mods_FREQ")?,
+            game_mods_opc2: yaml_ops.get_dict(&game_data, "Mods_OPC2")?,
+            game_mods_solu: yaml_ops.get_dict(&game_data, "Mods_SOLU")?,
+
+            // Ignore YAML values
+            ignore_list: yaml_ops.get_list(&ignore_data, &format!("CLASSIC_Ignore_{}", game))?,
+
+            yaml_ops,
+        })
+    }
+
+    /// Clone the YamlData instance
+    pub fn clone(&self) -> Self {
+        Self {
+            classic_game_hints: self.classic_game_hints.clone(),
+            classic_records_list: self.classic_records_list.clone(),
+            // ... clone all fields
+            yaml_ops: self.yaml_ops.clone(),
+        }
+    }
+}
+
+/// Python API function to create YamlData
+#[pyfunction]
+pub fn create_yamldata(
+    yaml_dirs: Vec<PathBuf>,
+    game: String,
+    vr_mode: bool,
+) -> PyResult<YamlData> {
+    YamlData::new(yaml_dirs, game, vr_mode)
+}
+```
+
+**Python API Layer**:
+```python
+# ClassicLib/config/yamldata.py
+"""
+Rust-accelerated yamldata generation.
+
+This module provides a drop-in replacement for ClassicScanLogsInfo
+using Rust for 15-30x faster configuration loading.
+"""
+from pathlib import Path
+from typing import Dict, List, Optional
+
+try:
+    from classic_core.config import create_yamldata, YamlData
+    RUST_AVAILABLE = True
+except ImportError:
+    RUST_AVAILABLE = False
+    YamlData = None
+
+from ClassicLib import GlobalRegistry
+from ClassicLib.ScanLog.scanloginfo.classic_scan_logs_info import ClassicScanLogsInfo
+
+class YamlDataFactory:
+    """Factory for creating yamldata with Rust acceleration"""
+
+    @staticmethod
+    def create(use_rust: bool = True) -> ClassicScanLogsInfo | YamlData:
+        """
+        Create yamldata instance using Rust if available.
+
+        Args:
+            use_rust: Whether to use Rust acceleration (default: True)
+
+        Returns:
+            YamlData (Rust) if available and use_rust=True,
+            else ClassicScanLogsInfo (Python)
+        """
+        if use_rust and RUST_AVAILABLE:
+            # Use Rust implementation
+            yaml_dirs = [
+                Path("yaml/settings"),
+                Path(f"yaml/{GlobalRegistry.get_game()}"),
+                Path("yaml/ignore"),
+            ]
+
+            return create_yamldata(
+                yaml_dirs=yaml_dirs,
+                game=GlobalRegistry.get_game(),
+                vr_mode=GlobalRegistry.get_vr() == "VR",
+            )
+        else:
+            # Fall back to Python implementation
+            return ClassicScanLogsInfo()
+
+# Convenience function
+def get_yamldata() -> ClassicScanLogsInfo | YamlData:
+    """Get yamldata with automatic Rust acceleration"""
+    return YamlDataFactory.create()
+```
+
+**Benefits**:
+1. **Performance**: 15-30x faster than ruamel.yaml (loads all config in ~5ms instead of ~150ms)
+2. **Parallelism**: Loads multiple YAML files in parallel using Tokio
+3. **Memory**: More efficient memory usage (no Python overhead for dicts/lists)
+4. **Dependency Elimination**: Removes ruamel.yaml dependency completely
+5. **Type Safety**: Full type checking in Rust with guaranteed correctness
+
+**Migration Path**:
+1. Create `YamlData` in Rust with complete field coverage
+2. Add parallel YAML loading with yaml-rust2
+3. Create Python wrapper with fallback to `ClassicScanLogsInfo`
+4. Update `OrchestratorCore` to use new factory
+5. Deprecate `ClassicScanLogsInfo` after validation
+
 #### 1.1 Create RustOrchestrator
 ```rust
 // classic-rust/src/orchestrator/mod.rs
@@ -508,8 +783,11 @@ impl RustOrchestrator {
 - Add validation and defaults
 
 #### 1.3 Deliverables
+- [ ] **Priority**: `classic-rust/src/config/yamldata_builder.rs` - Rust YamlData with parallel YAML loading
+- [ ] **Priority**: `ClassicLib/config/yamldata.py` - Python factory with fallback
+- [ ] **Priority**: Integration tests comparing Python vs Rust yamldata output
 - [ ] `classic-rust/src/orchestrator/mod.rs` - Core orchestrator
-- [ ] `classic-rust/src/config/` - Configuration types
+- [ ] `classic-rust/src/config/` - Configuration types (using YamlData)
 - [ ] `classic-rust/src/types/` - Shared type definitions
 - [ ] Tests for basic orchestration flow
 
@@ -1524,8 +1802,11 @@ Must match exactly:
 ### Milestones
 
 #### M1: Foundation (Week 2)
+- [ ] **YamlData in Rust** (eliminates ruamel.yaml dependency)
+- [ ] Parallel YAML loading with yaml-rust2
+- [ ] YamlDataFactory with Python fallback
 - [ ] RustOrchestrator skeleton
-- [ ] Configuration type system
+- [ ] Configuration type system (using YamlData)
 - [ ] Basic end-to-end flow
 - [ ] First integration test passes
 
@@ -1739,6 +2020,8 @@ def test_memory_leak_detection(logs_1000):
 ## Success Criteria
 
 ### Must Have
+- [ ] **ruamel.yaml dependency completely eliminated**
+- [ ] **YamlData loads in < 5ms (vs ~150ms with Python)**
 - [ ] All 500+ existing tests pass without modification
 - [ ] Output format 100% identical to current implementation
 - [ ] Single FFI call processes entire crash log
@@ -1819,10 +2102,16 @@ Detailed breakdown of FFI calls per log:
 - [ ] Collect real crash log corpus
 - [ ] Baseline performance metrics
 - [ ] Identify all output formats
+- [ ] Measure ruamel.yaml performance baseline
 
-#### Phase 1
+#### Phase 1 (Week 1-2)
+- [ ] **YamlData struct in Rust with all fields**
+- [ ] **Parallel YAML loading with yaml-rust2**
+- [ ] **YamlDataFactory with Rust/Python fallback**
+- [ ] **Validation: yamldata output matches Python exactly**
+- [ ] **Performance benchmark: < 5ms vs ~150ms**
 - [ ] RustOrchestrator structure
-- [ ] Config type conversion
+- [ ] Config type conversion (using YamlData)
 - [ ] Basic process_log flow
 - [ ] First integration test
 

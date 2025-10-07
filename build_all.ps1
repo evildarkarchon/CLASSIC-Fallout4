@@ -25,15 +25,15 @@ else {
     Write-Host "Install uv from: https://github.com/astral-sh/uv" -ForegroundColor Yellow
 }
 
-# Build Rust extensions first (if source available)
-if (Test-Path "classic-rust") {
+# Build Rust workspace (if source available)
+if (Test-Path "classic-core") {
     Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host "Building Rust extensions..." -ForegroundColor Cyan
+    Write-Host "Building Rust workspace..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
 
-    # Build the Rust extension from classic-rust directory
+    # Build the Rust workspace from classic-core directory
     Write-Host "Building release build with maturin..." -ForegroundColor Yellow
-    Push-Location classic-rust
+    Push-Location classic-core
     Invoke-Expression "$MaturinCmd build --release --out ../dist-rust 2>&1" | Out-Null
     Pop-Location
 

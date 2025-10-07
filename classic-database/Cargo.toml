@@ -1,0 +1,38 @@
+[package]
+name = "classic-database"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "High-performance SQLite operations for CLASSIC"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_database"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# CLASSIC shared utilities
+classic-shared = { path = "../classic-shared" }
+
+# Database
+rusqlite = { workspace = true }
+
+# Async runtime (for spawn_blocking)
+tokio = { workspace = true, features = ["full"] }
+
+# Caching and concurrency
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+[profile.release]
+# Inherits from workspace

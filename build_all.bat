@@ -24,14 +24,14 @@ if %errorlevel% equ 0 (
 )
 
 REM Build Rust extensions first (if source available)
-if exist classic-rust (
+if exist classic-core (
     echo ============================================================
-    echo Building Rust extensions...
+    echo Building Rust workspace...
     echo ============================================================
 
-    REM Build the Rust extension from classic-rust directory
+    REM Build the Rust extension from classic-core directory
     echo Building release build with maturin...
-    cd classic-rust
+    cd classic-core
     %MATURIN_CMD% build --release --out ..\dist-rust
     cd ..
     if %errorlevel% neq 0 (

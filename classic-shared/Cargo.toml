@@ -1,0 +1,40 @@
+[package]
+name = "classic-shared"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Shared utilities and runtime for CLASSIC Rust extensions"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_shared"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# Async runtime (ONE RUNTIME RULE)
+tokio = { workspace = true, features = ["full"] }
+futures = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Performance and caching
+once_cell = { workspace = true }
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+rayon = { workspace = true }
+
+# String optimization
+string_cache = { workspace = true }
+smartstring = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+[profile.release]
+# Inherits from workspace
