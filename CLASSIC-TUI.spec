@@ -37,6 +37,13 @@ hiddenimports.extend([
     "ClassicLib.integration.config",
     "ClassicLib.integration.status",
     "ClassicLib.integration.detector",
+    # All Rust Python modules
+    "classic_shared",
+    "classic_yaml",
+    "classic_database",
+    "classic_file_io",
+    "classic_scanlog",
+    "classic_config",
     "classic_core",
 ])
 
