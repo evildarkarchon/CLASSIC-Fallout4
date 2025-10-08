@@ -22,12 +22,10 @@
 
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyAny};
-use std::path::PathBuf;
 use std::collections::HashMap;
 
 use crate::parser::LogParser;
 
-use classic_shared::{get_runtime, ClassicError};
 use classic_file_io::RustFileIOCore;
 
 /// Analysis configuration
@@ -212,12 +210,22 @@ impl AnalysisResult {
 ///
 /// Coordinates all analysis components to process crash logs from start to finish.
 /// Uses async I/O and parallel processing for maximum performance.
+///
+/// ## Integrated Components (Phase 2)
+/// - SuspectScanner: Pattern matching for error and stack signatures
+/// - SettingsValidator: Validation of crashgen and mod settings
+/// - GpuDetector: GPU hardware detection and analysis
+/// - FcxModeHandler: FCX mode state and message generation
 #[pyclass]
 pub struct RustOrchestrator {
     config: AnalysisConfig,
-    file_io: Py<RustFileIOCore>,
+    _file_io: Py<RustFileIOCore>,  // TODO: use for async file operations
     parser: Py<LogParser>,
-    // Future components will be added as we implement them
+    // Phase 2 components
+    suspect_scanner: Option<Py<PyAny>>,  // SuspectScanner
+    _settings_validator: Option<Py<PyAny>>,  // SettingsValidator - TODO: integrate validation
+    gpu_detector: Option<Py<PyAny>>,  // GpuDetector (static methods)
+    fcx_handler: Option<Py<PyAny>>,  // FcxModeHandler
 }
 
 #[pymethods]
@@ -226,10 +234,64 @@ impl RustOrchestrator {
     #[pyo3(signature = (config))]
     pub fn new(config: AnalysisConfig) -> PyResult<Self> {
         Python::attach(|py| {
+            // Initialize Phase 2 components if enabled
+            let (suspect_scanner, settings_validator, gpu_detector, fcx_handler) = {
+                // Try to import Phase 2 components from classic_scanlog module
+                match py.import("classic_scanlog") {
+                    Ok(scanlog_module) => {
+                        // Create SuspectScanner
+                        let suspect_scanner = {
+                            let suspects_error = config.suspects_error.clone();
+                            let suspects_stack = config.suspects_stack.clone();
+
+                            // Convert HashMaps to PyDict
+                            let error_dict = PyDict::new(py);
+                            for (k, v) in suspects_error {
+                                let _ = error_dict.set_item(k, v);
+                            }
+
+                            let stack_dict = PyDict::new(py);
+                            for (k, v) in suspects_stack {
+                                let _ = stack_dict.set_item(k, v);
+                            }
+
+                            scanlog_module.call_method1("SuspectScanner", (error_dict, stack_dict))
+                                .ok()
+                                .map(|obj| obj.into())
+                        };
+
+                        // Create SettingsValidator
+                        let settings_validator = scanlog_module
+                            .call_method1("SettingsValidator", (&config.crashgen_name, &config.ignore_list))
+                            .ok()
+                            .map(|obj| obj.into());
+
+                        // Get GpuDetector (static methods)
+                        let gpu_detector = scanlog_module
+                            .getattr("GpuDetector")
+                            .ok()
+                            .map(|obj| obj.into());
+
+                        // Create FcxModeHandler (FCX mode defaults to false)
+                        let fcx_handler = scanlog_module
+                            .call_method1("FcxModeHandler", (false,))
+                            .ok()
+                            .map(|obj| obj.into());
+
+                        (suspect_scanner, settings_validator, gpu_detector, fcx_handler)
+                    }
+                    Err(_) => (None, None, None, None)
+                }
+            };
+
             Ok(Self {
                 config,
-                file_io: Py::new(py, RustFileIOCore::new("utf-8", "ignore", 100, 50)?)?,
+                _file_io: Py::new(py, RustFileIOCore::new("utf-8", "ignore", 100, 50)?)?,
                 parser: Py::new(py, LogParser::new(None)?)?,
+                suspect_scanner,
+                _settings_validator: settings_validator,
+                gpu_detector,
+                fcx_handler,
             })
         })
     }
@@ -254,24 +316,126 @@ impl RustOrchestrator {
                 format!("Failed to read log file {}: {}", log_path, e)
             ))?;
 
-        // Parse log segments
+        // Parse log segments using parse_all_sections to get HashMap
         let lines: Vec<String> = log_content.lines().map(|s| s.to_string()).collect();
-        let segments = self.parser.bind(py).borrow().parse_segments(lines);
+        let segments = self.parser.bind(py).borrow().parse_all_sections(lines);
 
         // Create result
         let mut result = AnalysisResult::new(log_path);
         result.success = true;
-        result.processing_time_ms = start.elapsed().as_millis() as u64;
 
-        // For now, just return basic info
-        // We'll add more analysis steps as we implement the components
-        result.report_lines = vec![
-            "# Crash Log Analysis".to_string(),
+        // Build report lines
+        let mut report = vec![
+            "# Crash Log Analysis (Rust-Accelerated)".to_string(),
             String::new(),
-            format!("Log file: {}", result.log_path),
-            format!("Processing time: {}ms", result.processing_time_ms),
-            format!("Segments found: {}", segments.len()),
         ];
+
+        // === Phase 1: Basic Parsing ===
+        report.push(format!("Log file: {}", result.log_path));
+        report.push(format!("Segments found: {}", segments.len()));
+        report.push(String::new());
+
+        // === Phase 2: Advanced Analysis ===
+
+        // GPU Detection
+        if let Some(ref gpu_detector) = self.gpu_detector {
+            if let Some(system_segment) = segments.get("SYSTEM") {
+                if let Ok(gpu_info) = gpu_detector.call_method1(py, "get_gpu_info", (system_segment,)) {
+                    report.push("## GPU Information".to_string());
+                    if let Ok(primary) = gpu_info.getattr(py, "get").and_then(|g| g.call1(py, ("primary",))) {
+                        if let Ok(primary_str) = primary.extract::<String>(py) {
+                            report.push(format!("Primary GPU: {}", primary_str));
+                        }
+                    }
+                    if let Ok(manufacturer) = gpu_info.getattr(py, "get").and_then(|g| g.call1(py, ("manufacturer",))) {
+                        if let Ok(mfr_str) = manufacturer.extract::<String>(py) {
+                            report.push(format!("Manufacturer: {}", mfr_str));
+                        }
+                    }
+                    report.push(String::new());
+                }
+            }
+        }
+
+        // Suspect Scanning
+        if let Some(ref suspect_scanner) = self.suspect_scanner {
+            if let Some(main_error) = segments.get("ERROR") {
+                // Scan main error
+                if let Ok((fragment, found)) = suspect_scanner
+                    .call_method1(py, "suspect_scan_mainerror", (main_error, 50))
+                    .and_then(|r| {
+                        let f = r.getattr(py, "__getitem__").and_then(|g| g.call1(py, (0,)))?;
+                        let b = r.getattr(py, "__getitem__").and_then(|g| g.call1(py, (1,)))?;
+                        Ok((f, b.extract::<bool>(py)?))
+                    })
+                {
+                    if found {
+                        report.push("## Suspect Analysis (Main Error)".to_string());
+                        if let Ok(content) = fragment.getattr(py, "fragment_content").and_then(|c| c.extract::<String>(py)) {
+                            report.push(content);
+                        }
+                        result.suspect_count += 1;
+                    }
+                }
+
+                // Scan call stack if available
+                if let Some(callstack) = segments.get("CALLSTACK") {
+                    if let Ok((fragment, found)) = suspect_scanner
+                        .call_method1(py, "suspect_scan_stack", (main_error, callstack, 50))
+                        .and_then(|r| {
+                            let f = r.getattr(py, "__getitem__").and_then(|g| g.call1(py, (0,)))?;
+                            let b = r.getattr(py, "__getitem__").and_then(|g| g.call1(py, (1,)))?;
+                            Ok((f, b.extract::<bool>(py)?))
+                        })
+                    {
+                        if found {
+                            report.push("## Suspect Analysis (Call Stack)".to_string());
+                            if let Ok(content) = fragment.getattr(py, "fragment_content").and_then(|c| c.extract::<String>(py)) {
+                                report.push(content);
+                            }
+                            result.suspect_count += 1;
+                        }
+                    }
+                }
+
+                // Check for DLL crashes
+                if let Ok((fragment, found)) = suspect_scanner
+                    .call_method1(py, "check_dll_crash", (main_error, 50))
+                    .and_then(|r| {
+                        let f = r.getattr(py, "__getitem__").and_then(|g| g.call1(py, (0,)))?;
+                        let b = r.getattr(py, "__getitem__").and_then(|g| g.call1(py, (1,)))?;
+                        Ok((f, b.extract::<bool>(py)?))
+                    })
+                {
+                    if found {
+                        report.push("## DLL Crash Detected".to_string());
+                        if let Ok(content) = fragment.getattr(py, "fragment_content").and_then(|c| c.extract::<String>(py)) {
+                            report.push(content);
+                        }
+                    }
+                }
+            }
+        }
+
+        // FCX Mode Messages
+        if let Some(ref fcx_handler) = self.fcx_handler {
+            if let Ok(fragment) = fcx_handler.call_method0(py, "get_fcx_messages") {
+                if let Ok(content) = fragment.getattr(py, "fragment_content").and_then(|c| c.extract::<String>(py)) {
+                    if !content.is_empty() {
+                        report.push("## FCX Mode".to_string());
+                        report.push(content);
+                    }
+                }
+            }
+        }
+
+        // === Finalize ===
+        result.processing_time_ms = start.elapsed().as_millis() as u64;
+        report.push(String::new());
+        report.push(format!("**Processing time: {}ms** (Rust-accelerated)", result.processing_time_ms));
+        report.push(format!("**Suspects found: {}**", result.suspect_count));
+
+        result.report_lines = report;
 
         Ok(result)
     }

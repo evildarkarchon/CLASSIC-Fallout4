@@ -68,6 +68,33 @@ def detect_rust_components() -> dict[str, bool]:
                 components["mod_detector"] = True
                 logger.debug("ModDetector functions available")
 
+        # Check classic_scanlog standalone module for Phase 2 components
+        try:
+            import classic_scanlog
+
+            # SuspectScanner
+            if hasattr(classic_scanlog, "SuspectScanner"):
+                components["suspect_scanner"] = True
+                logger.debug("SuspectScanner component available (classic_scanlog)")
+
+            # SettingsValidator
+            if hasattr(classic_scanlog, "SettingsValidator"):
+                components["settings_validator"] = True
+                logger.debug("SettingsValidator component available (classic_scanlog)")
+
+            # GpuDetector
+            if hasattr(classic_scanlog, "GpuDetector"):
+                components["gpu_detector"] = True
+                logger.debug("GpuDetector component available (classic_scanlog)")
+
+            # FcxModeHandler
+            if hasattr(classic_scanlog, "FcxModeHandler"):
+                components["fcx_handler"] = True
+                logger.debug("FcxModeHandler component available (classic_scanlog)")
+
+        except ImportError:
+            logger.debug("classic_scanlog module not available for Phase 2 components")
+
         # Check database module components
         if hasattr(classic_core, "database"):
             components["database"] = True
@@ -164,4 +191,9 @@ def _get_empty_component_dict() -> dict[str, bool]:
         "yaml": False,
         "yaml_operations": False,
         "yamldata": False,
+        # Phase 2 components (classic_scanlog module)
+        "suspect_scanner": False,
+        "settings_validator": False,
+        "gpu_detector": False,
+        "fcx_handler": False,
     }

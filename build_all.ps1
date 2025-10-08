@@ -31,66 +31,102 @@ if (Test-Path "classic-core") {
     Write-Host "Building Rust workspace..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
 
-    # Build the Rust workspace from classic-core directory
-    Write-Host "Building release build with maturin..." -ForegroundColor Yellow
-    Push-Location classic-core
-    Invoke-Expression "$MaturinCmd build --release --out ../dist-rust 2>&1" | Out-Null
-    Pop-Location
+    # Define all Rust Python modules in dependency order
+    $RustModules = @(
+        @{Name = "classic_shared"; Dir = "classic-shared"},
+        @{Name = "classic_yaml"; Dir = "classic-yaml"},
+        @{Name = "classic_database"; Dir = "classic-database"},
+        @{Name = "classic_file_io"; Dir = "classic-file-io"},
+        @{Name = "classic_scanlog"; Dir = "classic-scanlog"},
+        @{Name = "classic_config"; Dir = "config-core"},
+        @{Name = "classic_core"; Dir = "classic-core"}
+    )
 
-    if ($LASTEXITCODE -eq 0) {
-        # Extract the built extension from wheel
-        Write-Host "Extracting Rust extension from wheel..." -ForegroundColor Yellow
-        if (-not (Test-Path "classic_core")) {
-            New-Item -ItemType Directory -Path "classic_core" | Out-Null
+    # Build all Rust modules
+    Write-Host "Building Rust modules with maturin..." -ForegroundColor Yellow
+    $buildSuccess = $true
+    foreach ($module in $RustModules) {
+        Write-Host "  Building $($module.Name)..." -ForegroundColor Cyan
+        Push-Location $module.Dir
+        Invoke-Expression "$MaturinCmd build --release --out ../dist-rust 2>&1" | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  WARNING: $($module.Name) build failed!" -ForegroundColor Red
+            $buildSuccess = $false
         }
+        Pop-Location
+    }
 
-        # Extract classic_core package from wheel using native PowerShell
-        $wheel = Get-ChildItem -Path "dist-rust\*.whl" | Select-Object -First 1
-        if ($wheel) {
-            $tempDir = "temp_extract"
+    if ($buildSuccess) {
+        # Extract all built extensions from wheels
+        Write-Host "Extracting Rust extensions from wheels..." -ForegroundColor Yellow
 
-            # Extract wheel (it's just a zip file)
-            Expand-Archive -Path $wheel.FullName -DestinationPath $tempDir -Force
+        # Create base directory for all Rust modules
+        $rustExtDir = "rust_extensions"
+        if (Test-Path $rustExtDir) {
+            Remove-Item -Path $rustExtDir -Recurse -Force
+        }
+        New-Item -ItemType Directory -Path $rustExtDir | Out-Null
 
-            # Find and copy the entire classic_core directory
-            $coreDir = Get-ChildItem -Path $tempDir -Directory -Filter "classic_core" -Recurse | Select-Object -First 1
-            if ($coreDir) {
-                # Remove old classic_core if it exists
-                if (Test-Path "classic_core") {
-                    Remove-Item -Path "classic_core" -Recurse -Force
+        # Extract each module's .pyd from its wheel
+        $extractedModules = @()
+        foreach ($module in $RustModules) {
+            $wheel = Get-ChildItem -Path "dist-rust\$($module.Name)-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+            if ($wheel) {
+                $tempDir = "temp_extract_$($module.Name)"
+
+                # Extract wheel (it's just a zip file)
+                Expand-Archive -Path $wheel.FullName -DestinationPath $tempDir -Force
+
+                # Find and copy the module directory
+                $moduleDir = Get-ChildItem -Path $tempDir -Directory -Filter $module.Name -Recurse | Select-Object -First 1
+                if ($moduleDir) {
+                    # Copy the entire module directory
+                    $destPath = Join-Path $rustExtDir $module.Name
+                    Copy-Item -Path $moduleDir.FullName -Destination $destPath -Recurse -Force
+
+                    # Track extracted files
+                    $pydFiles = Get-ChildItem -Path $destPath -Filter "*.pyd" -Recurse
+                    foreach ($pyd in $pydFiles) {
+                        $extractedModules += @{Module = $module.Name; File = $pyd.Name}
+                    }
                 }
-                # Copy the entire directory
-                Copy-Item -Path $coreDir.FullName -Destination "classic_core" -Recurse -Force
-                Write-Host "Extracted classic_core package with:" -ForegroundColor Green
-                Get-ChildItem -Path "classic_core" -File | ForEach-Object {
-                    Write-Host "  - $($_.Name)" -ForegroundColor White
+                else {
+                    Write-Host "  WARNING: $($module.Name) directory not found in wheel!" -ForegroundColor Yellow
                 }
+
+                # Clean up temp directory
+                Remove-Item -Path $tempDir -Recurse -Force
             }
             else {
-                Write-Host "WARNING: classic_core directory not found in wheel!" -ForegroundColor Red
+                Write-Host "  WARNING: No wheel file found for $($module.Name)!" -ForegroundColor Yellow
+            }
+        }
+
+        # Display extracted modules
+        if ($extractedModules.Count -gt 0) {
+            Write-Host "Extracted Rust extensions:" -ForegroundColor Green
+            foreach ($ext in $extractedModules) {
+                Write-Host "  - $($ext.Module): $($ext.File)" -ForegroundColor White
             }
 
-            # Clean up temp directory
-            Remove-Item -Path $tempDir -Recurse -Force
-        }
-        else {
-            Write-Host "WARNING: No wheel file found in dist-rust!" -ForegroundColor Red
-        }
-
-        # Create manifest file
-        $manifestContent = @"
+            # Create manifest file
+            $manifestContent = @"
 Rust extensions built on $(Get-Date)
 
-Extensions:
-$(Get-ChildItem -Path "classic_core" -Filter "*.pyd" | ForEach-Object { $_.Name })
+Modules:
+$($extractedModules | ForEach-Object { "$($_.Module): $($_.File)" } | Out-String)
 "@
-        Set-Content -Path "classic_core\MANIFEST.txt" -Value $manifestContent
+            Set-Content -Path "$rustExtDir\MANIFEST.txt" -Value $manifestContent
+        }
+        else {
+            Write-Host "WARNING: No Rust extensions extracted!" -ForegroundColor Red
+        }
 
-        Write-Host "Rust extensions ready in classic_core/" -ForegroundColor Green
+        Write-Host "Rust extensions ready in $rustExtDir/" -ForegroundColor Green
     }
     else {
-        Write-Host "WARNING: Rust extension build failed!" -ForegroundColor Red
-        Write-Host "Continuing without Rust optimizations..." -ForegroundColor Yellow
+        Write-Host "WARNING: Some Rust modules failed to build!" -ForegroundColor Red
+        Write-Host "Continuing without full Rust optimizations..." -ForegroundColor Yellow
     }
     Write-Host ""
 }
@@ -99,9 +135,10 @@ else {
     Write-Host "Rust source not found - checking for pre-built extensions..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
 
-    if (Test-Path "classic_core") {
-        Write-Host "Found pre-built Rust extensions in classic_core/" -ForegroundColor Green
-        Get-ChildItem -Path "classic_core" -Filter "*.pyd" | ForEach-Object {
+    $rustExtDir = "rust_extensions"
+    if (Test-Path $rustExtDir) {
+        Write-Host "Found pre-built Rust extensions in $rustExtDir/" -ForegroundColor Green
+        Get-ChildItem -Path $rustExtDir -Filter "*.pyd" -Recurse | ForEach-Object {
             Write-Host "  - $($_.Name)" -ForegroundColor White
         }
     }

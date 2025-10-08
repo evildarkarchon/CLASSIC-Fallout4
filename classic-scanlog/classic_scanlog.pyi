@@ -924,6 +924,224 @@ def detect_mods_batch(
 
 
 # =============================================================================
+# Suspect Scanning (Phase 2)
+# =============================================================================
+
+class SuspectScanner:
+    """Suspect pattern matching with signal modifiers (40x speedup).
+
+    Supports three pattern modifier types:
+    - ME-REQ: Main error required (must match in main error)
+    - ME-OPT: Main error optional (bonus if in main error)
+    - NOT: Negative pattern (excludes if matched)
+    """
+
+    def __init__(self, yamldata: Any) -> None:
+        """Create suspect scanner.
+
+        Args:
+            yamldata: YAML configuration data with suspect patterns
+        """
+        ...
+
+    def scan_mainerror(
+        self,
+        main_error: str,
+        max_matches: int = 50
+    ) -> tuple[list[str], bool]:
+        """Scan main error for suspects.
+
+        Args:
+            main_error: Main error message from crash log
+            max_matches: Maximum number of matches to return
+
+        Returns:
+            Tuple of (suspect_lines, found_suspect)
+        """
+        ...
+
+    def scan_stack(
+        self,
+        main_error: str,
+        callstack: str,
+        max_matches: int = 50
+    ) -> tuple[list[str], bool]:
+        """Scan call stack for suspects.
+
+        Uses signal modifier logic to match patterns across
+        main error and callstack.
+
+        Args:
+            main_error: Main error message
+            callstack: Call stack text
+            max_matches: Maximum matches
+
+        Returns:
+            Tuple of (suspect_lines, found_suspect)
+        """
+        ...
+
+    def check_dll_crash(self, main_error: str) -> list[str]:
+        """Check for DLL-related crashes.
+
+        Args:
+            main_error: Main error message
+
+        Returns:
+            List of DLL crash indicators
+        """
+        ...
+
+
+# =============================================================================
+# Settings Validation (Phase 2)
+# =============================================================================
+
+class SettingsValidator:
+    """Settings validation (checks crashgen configuration).
+
+    Validates:
+    - Memory management settings
+    - Achievements settings
+    - Archive limit settings
+    - LooksMenu settings
+    """
+
+    def __init__(self, yamldata: Any) -> None:
+        """Create settings validator.
+
+        Args:
+            yamldata: YAML configuration data
+        """
+        ...
+
+    def validate_all(
+        self,
+        crashgen_settings: dict[str, Any],
+        xse_modules: set[str],
+        crashgen_version: str
+    ) -> list[str]:
+        """Validate all settings.
+
+        Args:
+            crashgen_settings: Settings from crash log
+            xse_modules: Set of XSE module names
+            crashgen_version: Crash generator version
+
+        Returns:
+            List of settings issue lines
+        """
+        ...
+
+    def check_memory_settings(
+        self,
+        crashgen_settings: dict[str, Any]
+    ) -> str | None:
+        """Check memory management settings.
+
+        Args:
+            crashgen_settings: Settings dict
+
+        Returns:
+            Issue description or None
+        """
+        ...
+
+    def check_achievements(
+        self,
+        crashgen_settings: dict[str, Any],
+        xse_modules: set[str]
+    ) -> str | None:
+        """Check achievements settings.
+
+        Args:
+            crashgen_settings: Settings dict
+            xse_modules: XSE modules set
+
+        Returns:
+            Issue description or None
+        """
+        ...
+
+
+# =============================================================================
+# GPU Detection (Phase 2)
+# =============================================================================
+
+class GpuDetector:
+    """GPU vendor detection from system info.
+
+    Detects GPU vendors: AMD, Nvidia, Intel from crash log
+    system information section.
+    """
+
+    def __init__(self) -> None:
+        """Create GPU detector."""
+        ...
+
+    def detect_gpu(self, system_info: list[str]) -> tuple[str | None, str | None]:
+        """Detect GPU from system info.
+
+        Args:
+            system_info: System info section lines
+
+        Returns:
+            Tuple of (vendor, model) or (None, None) if not detected
+        """
+        ...
+
+    def get_vendor(self, gpu_string: str) -> str | None:
+        """Get GPU vendor from string.
+
+        Args:
+            gpu_string: GPU description string
+
+        Returns:
+            Vendor name ("AMD", "Nvidia", "Intel") or None
+        """
+        ...
+
+
+# =============================================================================
+# FCX Mode Handler (Phase 2)
+# =============================================================================
+
+class FcxModeHandler:
+    """FCX mode state management.
+
+    Manages FCX (First Crash eXpert) mode state and messages.
+    """
+
+    def __init__(self, enabled: bool = False) -> None:
+        """Create FCX mode handler.
+
+        Args:
+            enabled: Whether FCX mode is enabled
+        """
+        ...
+
+    def check_fcx_mode(self) -> None:
+        """Check and update FCX mode state."""
+        ...
+
+    def get_messages(self) -> list[str]:
+        """Get FCX mode messages.
+
+        Returns:
+            List of FCX-related messages
+        """
+        ...
+
+    def is_enabled(self) -> bool:
+        """Check if FCX mode is enabled.
+
+        Returns:
+            True if enabled
+        """
+        ...
+
+
+# =============================================================================
 # Test Classes
 # =============================================================================
 

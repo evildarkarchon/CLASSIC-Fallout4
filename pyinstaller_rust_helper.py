@@ -9,13 +9,25 @@ from pathlib import Path
 import site
 
 
+# All Rust Python modules to bundle
+RUST_MODULES = [
+    "classic_shared",
+    "classic_yaml",
+    "classic_database",
+    "classic_file_io",
+    "classic_scanlog",
+    "classic_config",
+    "classic_core"
+]
+
+
 def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
     """
     Find Rust extensions for bundling in PyInstaller.
 
     Checks in order:
-    1. Local classic_core/ directory (created by build_all.bat)
-    2. Site-packages classic_core/ (installed via pip)
+    1. Local rust_extensions/ directory (created by build_all.ps1)
+    2. Site-packages (installed via pip/uv)
 
     Args:
         project_root: Path to the project root directory (from SPECPATH)
@@ -23,64 +35,85 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
     Returns:
         Tuple of (binaries, datas, found):
         - binaries: List of (source, dest) tuples for .pyd files
-        - datas: List of (source, dest) tuples for __init__.py
+        - datas: List of (source, dest) tuples for __init__.py and other data
         - found: Boolean indicating if Rust extensions were found
     """
     binaries = []
     datas = []
+    modules_found = []
 
-    # Check local directory first (from build_all.bat)
-    local_rust_dir = project_root / "classic_core"
-    if local_rust_dir.exists() and list(local_rust_dir.glob("*.pyd")):
+    # Check local directory first (from build_all.ps1)
+    local_rust_dir = project_root / "rust_extensions"
+    if local_rust_dir.exists():
         print(f"✓ Found Rust extensions in local build directory: {local_rust_dir}")
 
-        # Add all .pyd files
-        for pyd_file in local_rust_dir.glob("*.pyd"):
-            binaries.append((str(pyd_file), "classic_core"))
-            print(f"  - Adding extension: {pyd_file.name}")
+        for module_name in RUST_MODULES:
+            module_dir = local_rust_dir / module_name
+            if module_dir.exists():
+                # Add all .pyd files
+                pyd_files = list(module_dir.glob("*.pyd"))
+                if pyd_files:
+                    modules_found.append(module_name)
+                    for pyd_file in pyd_files:
+                        binaries.append((str(pyd_file), module_name))
+                        print(f"  - {module_name}: {pyd_file.name}")
 
-        # Add __init__.py
-        init_file = local_rust_dir / "__init__.py"
-        if init_file.exists():
-            datas.append((str(init_file), "classic_core"))
+                # Add __init__.py if it exists
+                init_file = module_dir / "__init__.py"
+                if init_file.exists():
+                    datas.append((str(init_file), module_name))
+
+                # Add .pyi stub files if they exist
+                for pyi_file in module_dir.glob("*.pyi"):
+                    datas.append((str(pyi_file), module_name))
 
         # Add MANIFEST.txt if it exists
         manifest_file = local_rust_dir / "MANIFEST.txt"
         if manifest_file.exists():
-            datas.append((str(manifest_file), "classic_core"))
+            datas.append((str(manifest_file), "."))
 
-        return binaries, datas, True
+        if modules_found:
+            print(f"  Total modules bundled: {len(modules_found)}/{len(RUST_MODULES)}")
+            return binaries, datas, True
 
     # Fall back to site-packages
     site_packages = Path(site.getsitepackages()[0])
-    site_rust_dir = site_packages / "classic_core"
+    print(f"✓ Checking site-packages: {site_packages}")
 
-    if site_rust_dir.exists() and list(site_rust_dir.glob("*.pyd")):
-        print(f"✓ Found Rust extensions in site-packages: {site_rust_dir}")
-        print("  Note: Using installed version. Run build_all.bat to use local build.")
+    for module_name in RUST_MODULES:
+        module_dir = site_packages / module_name
+        if module_dir.exists():
+            # Add all .pyd files
+            pyd_files = list(module_dir.glob("*.pyd"))
+            if pyd_files:
+                modules_found.append(module_name)
+                for pyd_file in pyd_files:
+                    binaries.append((str(pyd_file), module_name))
+                    print(f"  - {module_name}: {pyd_file.name}")
 
-        # Add all .pyd files
-        for pyd_file in site_rust_dir.glob("*.pyd"):
-            binaries.append((str(pyd_file), "classic_core"))
-            print(f"  - Adding extension: {pyd_file.name}")
+            # Add __init__.py if it exists
+            init_file = module_dir / "__init__.py"
+            if init_file.exists():
+                datas.append((str(init_file), module_name))
 
-        # Add __init__.py
-        init_file = site_rust_dir / "__init__.py"
-        if init_file.exists():
-            datas.append((str(init_file), "classic_core"))
+            # Add .pyi stub files if they exist
+            for pyi_file in module_dir.glob("*.pyi"):
+                datas.append((str(pyi_file), module_name))
 
+    if modules_found:
+        print(f"  Total modules bundled from site-packages: {len(modules_found)}/{len(RUST_MODULES)}")
+        print("  Note: Using installed versions. Run build_all.ps1 to use local builds.")
         return binaries, datas, True
 
     # No Rust extensions found
-    print("⚠ WARNING: Rust extensions not found!")
+    print("⚠ WARNING: No Rust extensions found!")
     print("  Checked:")
     print(f"    - Local build: {local_rust_dir}")
-    print(f"    - Site-packages: {site_rust_dir}")
+    print(f"    - Site-packages: {site_packages}")
     print("  The executable will work but without Rust performance optimizations.")
     print("  To build Rust extensions, run:")
-    print("    1. cd classic-rust")
-    print("    2. maturin build --release --out ../dist-rust")
-    print("    3. cd ..")
-    print("  Or run build_all.bat which handles this automatically.")
+    print("    .\\build_all.ps1")
+    print("  Or for development:")
+    print("    .\\rebuild_rust.ps1")
 
     return binaries, datas, False

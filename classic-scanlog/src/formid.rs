@@ -8,7 +8,7 @@
 //! The module matches the Python API from ClassicLib.ScanLog.FormIDAnalyzerCore
 
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::PyDict;
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use regex::Regex;

@@ -36,6 +36,7 @@ pub use classic_scanlog::{
     PluginAnalyzer, RecordScanner, TestClass,
     RustOrchestrator, AnalysisConfig, AnalysisResult,
     ReportFragment, ReportComposer, ReportGenerator, StringPool, ParallelReportProcessor,
+    SuspectScanner, SettingsValidator, GpuDetector, GpuInfo, GpuVendor, FcxModeHandler,
     extract_formids_batch, is_valid_formid, validate_formids_batch,
     scan_records_batch, contains_record,
     detect_plugins_batch, contains_plugin,
@@ -190,6 +191,12 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     scanlog_module.add_class::<ReportComposer>()?;
     scanlog_module.add_class::<ReportGenerator>()?;
     scanlog_module.add_class::<ParallelReportProcessor>()?;
+    scanlog_module.add_class::<SuspectScanner>()?;
+    scanlog_module.add_class::<SettingsValidator>()?;
+    scanlog_module.add_class::<GpuDetector>()?;
+    scanlog_module.add_class::<GpuInfo>()?;
+    scanlog_module.add_class::<GpuVendor>()?;
+    scanlog_module.add_class::<FcxModeHandler>()?;
     scanlog_module.add_class::<TestClass>()?;
     scanlog_module.add_function(wrap_pyfunction!(extract_formids_batch, &scanlog_module)?)?;
     scanlog_module.add_function(wrap_pyfunction!(is_valid_formid, &scanlog_module)?)?;
