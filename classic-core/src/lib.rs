@@ -25,23 +25,48 @@ pub use classic_shared::{
     PathHandler, StringProcessor, RustPerformanceMonitor,
 };
 
-pub use classic_yaml::RustYamlOperations;
+pub use classic_yaml::PyYamlOperations as RustYamlOperations;
 
-pub use classic_database::RustDatabasePool;
+pub use classic_database::PyDatabasePool as RustDatabasePool;
 
-pub use classic_file_io::{RustFileIOCore, EncodingDetector, DDSHeader};
+pub use classic_file_io::{PyFileIOCore as RustFileIOCore, PyEncodingDetector as EncodingDetector};
 
 pub use classic_scanlog::{
-    FormIDAnalyzer, RustFormIDAnalyzer, FormIDAnalyzerCore, LogParser, PatternMatcher,
-    PluginAnalyzer, RecordScanner, TestClass,
-    RustOrchestrator, AnalysisConfig, AnalysisResult,
-    ReportFragment, ReportComposer, ReportGenerator, StringPool, ParallelReportProcessor,
-    SuspectScanner, SettingsValidator, GpuDetector, GpuInfo, GpuVendor, FcxModeHandler,
-    extract_formids_batch, is_valid_formid, validate_formids_batch,
-    scan_records_batch, contains_record,
-    detect_plugins_batch, contains_plugin,
-    detect_mods_single, detect_mods_double, detect_mods_important, detect_mods_batch,
+    PyFormIDAnalyzer as FormIDAnalyzer,
+    PyRustFormIDAnalyzer as RustFormIDAnalyzer,
+    PyFormIDAnalyzerCore as FormIDAnalyzerCore,
+    PyLogParser as LogParser,
+    PyPatternMatcher as PatternMatcher,
+    PyPluginAnalyzer as PluginAnalyzer,
+    PyRecordScanner as RecordScanner,
+    PyRustOrchestrator as RustOrchestrator,
+    PyAnalysisConfig as AnalysisConfig,
+    PyAnalysisResult as AnalysisResult,
+    PyReportFragment as ReportFragment,
+    PyReportComposer as ReportComposer,
+    PyReportGenerator as ReportGenerator,
+    PyStringPool as StringPool,
+    PyParallelReportProcessor as ParallelReportProcessor,
+    PySuspectScanner as SuspectScanner,
+    PySettingsValidator as SettingsValidator,
+    PyGpuDetector as GpuDetector,
+    PyGpuInfo as GpuInfo,
+    PyGpuVendor as GpuVendor,
+    PyFcxModeHandler as FcxModeHandler,
+    extract_formids_batch,
+    is_valid_formid,
+    validate_formids_batch,
+    scan_records_batch,
+    contains_record,
+    detect_plugins_batch,
+    contains_plugin,
+    detect_mods_single,
+    detect_mods_double,
+    detect_mods_important,
+    detect_mods_batch,
 };
+
+// Note: classic_config module is re-exported in Python's __init__.py as classic_core.config
 
 // Legacy classes for backward compatibility
 // These are kept here to maintain the exact same API
@@ -197,7 +222,6 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     scanlog_module.add_class::<GpuInfo>()?;
     scanlog_module.add_class::<GpuVendor>()?;
     scanlog_module.add_class::<FcxModeHandler>()?;
-    scanlog_module.add_class::<TestClass>()?;
     scanlog_module.add_function(wrap_pyfunction!(extract_formids_batch, &scanlog_module)?)?;
     scanlog_module.add_function(wrap_pyfunction!(is_valid_formid, &scanlog_module)?)?;
     scanlog_module.add_function(wrap_pyfunction!(validate_formids_batch, &scanlog_module)?)?;
@@ -226,6 +250,9 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     let yaml_module = PyModule::new(m.py(), "yaml")?;
     yaml_module.add_class::<RustYamlOperations>()?;
     m.add_submodule(&yaml_module)?;
+
+    // Note: config submodule is re-exported in Python's __init__.py
+    // This allows classic_config to be accessed as classic_core.config
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

@@ -1,0 +1,66 @@
+[package]
+name = "classic-scanlog-core"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Pure Rust business logic for log parsing and analysis (NO PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library ONLY - NO Python bindings
+
+[dependencies]
+# CLASSIC core dependencies (pure Rust - NO PyO3!)
+classic-shared = { path = "../classic-shared" }
+classic-yaml-core = { path = "../classic-yaml-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+classic-database-core = { path = "../classic-database-core" }
+
+# Parsing and pattern matching
+regex = { workspace = true }
+memchr = { workspace = true }
+aho-corasick = { workspace = true }
+
+# Parallel processing
+rayon = { workspace = true }
+crossbeam = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true, features = ["full"] }
+futures = { workspace = true }
+
+# Caching and concurrency
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+once_cell = { workspace = true }
+lru = { workspace = true }
+linked-hash-map = { workspace = true }
+
+# Database operations
+rusqlite = { workspace = true }
+
+# String optimization
+string_cache = { workspace = true }
+smartstring = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[profile.release]
+# Inherits from workspace
+
+[dev-dependencies]
+tempfile = { workspace = true }
+rusqlite = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"

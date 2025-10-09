@@ -1,0 +1,21 @@
+[package]
+name = "classic-file-io-py"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.82"
+
+[lib]
+name = "classic_file_io"  # Python module name
+crate-type = ["cdylib", "rlib"]  # Python extension + Rust library
+
+[dependencies]
+classic-file-io-core = { path = "../classic-file-io-core" }
+classic-shared = { path = "../classic-shared" }
+pyo3 = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"

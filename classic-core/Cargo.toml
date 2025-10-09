@@ -19,10 +19,11 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 
 # CLASSIC modular crates (workspace dependencies)
 classic-shared = { path = "../classic-shared" }
-classic-yaml = { path = "../classic-yaml" }
-classic-database = { path = "../classic-database" }
-classic-file-io = { path = "../classic-file-io" }
-classic-scanlog = { path = "../classic-scanlog" }
+classic-yaml-py = { path = "../classic-yaml-py" }
+classic-database-py = { path = "../classic-database-py" }
+classic-file-io-py = { path = "../classic-file-io-py" }
+classic-scanlog-py = { path = "../classic-scanlog-py" }
+classic-config-py = { path = "../classic-config-py" }
 
 # Legacy support - minimal dependencies for backward compatibility
 tokio = { workspace = true, features = ["full"] }

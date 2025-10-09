@@ -1,12 +1,24 @@
 [workspace]
 members = [
+    # Foundation
     "classic-shared",
-    "classic-yaml",
-    "classic-database",
-    "classic-file-io",
-    "classic-scanlog",
+
+    # Business Logic (Pure Rust - no PyO3)
+    "classic-yaml-core",
+    "classic-database-core",
+    "classic-file-io-core",
+    "classic-scanlog-core",
+    "classic-config-core",
+
+    # Python Bindings (PyO3 adapters)
+    "classic-yaml-py",
+    "classic-database-py",
+    "classic-file-io-py",
+    "classic-scanlog-py",
+    "classic-config-py",
+
+    # Facade
     "classic-core",
-    "config-core",
 ]
 resolver = "2"
 

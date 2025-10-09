@@ -1,0 +1,28 @@
+[package]
+name = "classic-config-py"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-config-core"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_config"  # Python module name
+crate-type = ["cdylib", "rlib"]  # Both for Python and Rust usage
+
+[dependencies]
+# Business logic (pure Rust)
+classic-config-core = { path = "../classic-config-core" }
+
+# Foundation
+classic-shared = { path = "../classic-shared" }
+
+# Python bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[profile.release]
+# Inherits from workspace

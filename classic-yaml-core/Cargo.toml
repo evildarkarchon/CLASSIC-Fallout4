@@ -1,0 +1,33 @@
+[package]
+name = "classic-yaml-core"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Pure Rust YAML business logic for CLASSIC (no PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+
+[dependencies]
+# CLASSIC shared utilities
+classic-shared = { path = "../classic-shared" }
+
+# YAML parsing (yaml-rust2)
+yaml-rust2 = { workspace = true }
+
+# Caching
+dashmap = { workspace = true }
+once_cell = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+# NO PyO3 dependency!
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"

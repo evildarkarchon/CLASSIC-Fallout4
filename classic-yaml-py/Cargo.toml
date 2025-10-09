@@ -1,0 +1,32 @@
+[package]
+name = "classic-yaml-py"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-yaml-core (PyO3 adapter)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_yaml"  # Python module name
+crate-type = ["cdylib", "rlib"]  # Python extension + Rust library
+
+[dependencies]
+# Business logic (pure Rust)
+classic-yaml-core = { path = "../classic-yaml-core" }
+
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# YAML types (for conversions)
+yaml-rust2 = { workspace = true }
+
+# Shared utilities
+classic-shared = { path = "../classic-shared" }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+[lints.rust]
+deprecated = "deny"

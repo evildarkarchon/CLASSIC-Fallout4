@@ -1,2 +1,0 @@
-Using CPython 3.13.8 interpreter at: C:\Users\evild\AppData\Local\Programs\Python\Python313\python.exe
-error: failed to remove directory `F:\Python Projects\CLASSIC-Fallout4\.venv\Scripts`: Access is denied. (os error 5)

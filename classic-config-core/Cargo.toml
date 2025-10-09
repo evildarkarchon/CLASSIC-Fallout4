@@ -1,0 +1,27 @@
+[package]
+name = "classic-config-core"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Pure Rust configuration loading business logic for CLASSIC"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library ONLY - no PyO3
+
+[dependencies]
+# CLASSIC shared utilities (provides runtime)
+classic-shared = { path = "../classic-shared" }
+
+# Async runtime (for JoinSet and file I/O)
+tokio = { workspace = true, features = ["full"] }
+
+# YAML parsing
+yaml-rust2 = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+[profile.release]
+# Inherits from workspace

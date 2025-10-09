@@ -1,0 +1,43 @@
+[package]
+name = "classic-scanlog-py"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-scanlog-core - High-performance log parsing"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_scanlog"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# Core business logic (pure Rust - no PyO3)
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+
+# CLASSIC shared utilities
+classic-shared = { path = "../classic-shared" }
+
+# Database operations (for FormID analyzer)
+classic-database-core = { path = "../classic-database-core" }
+
+# Error handling (minimal for bindings)
+anyhow = { workspace = true }
+
+# Dependencies for regex patterns (needed by some wrappers)
+regex = { workspace = true }
+rayon = { workspace = true }
+
+[profile.release]
+# Inherits from workspace
+
+[dev-dependencies]
+tempfile = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module", "auto-initialize"] }
+rusqlite = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"

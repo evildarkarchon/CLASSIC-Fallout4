@@ -1,0 +1,30 @@
+[package]
+name = "classic-database-py"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-database-core (PyO3 adapter)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_database"  # Python module name
+crate-type = ["cdylib", "rlib"]  # Python extension + Rust library
+
+[dependencies]
+# Business logic (pure Rust)
+classic-database-core = { path = "../classic-database-core" }
+
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# Shared utilities
+classic-shared = { path = "../classic-shared" }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module"] }
+rusqlite = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"

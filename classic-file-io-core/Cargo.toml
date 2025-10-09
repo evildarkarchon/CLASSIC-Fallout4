@@ -1,0 +1,49 @@
+[package]
+name = "classic-file-io-core"
+version = "8.0.0"
+edition = "2021"
+rust-version = "1.81"
+authors = ["CLASSIC Development Team"]
+description = "Pure Rust file I/O operations for CLASSIC (no PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+
+[dependencies]
+# CLASSIC shared utilities
+classic-shared = { path = "../classic-shared" }
+
+# File I/O
+encoding_rs = { workspace = true }
+memmap2 = { workspace = true }
+walkdir = { workspace = true }
+ddsfile = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true, features = ["full"] }
+futures = { workspace = true }
+
+# Caching and concurrency
+dashmap = { workspace = true }
+lru = { workspace = true }
+parking_lot = { workspace = true }
+rayon = { workspace = true }
+
+# Parsing
+regex = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+# NO PyO3 dependency!
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"

@@ -67,18 +67,28 @@ cargo test --all-features --workspace
 
 ### Hybrid Python-Rust Architecture
 - **Python**: UI, high-level logic, and coordination in `src/classic/` and `ClassicLib/`
-- **Rust**: Modular workspace with 7 crates delivering 10-150x performance gains
-  - **classic-shared**: Foundation (runtime, errors, utilities)
-  - **classic-yaml**: YAML operations (yaml-rust2)
-  - **classic-database**: SQLite operations with connection pooling
-  - **classic-file-io**: File I/O, encoding detection, DDS parsing
-  - **classic-scanlog**: Log parsing, FormID analysis, pattern matching
-  - **classic-core**: Thin facade re-exporting all modules (Python entry point)
-  - **config-core**: Configuration management
+- **Rust**: Three-layer modular architecture delivering 10-150x performance gains
+  - **Foundation Layer**: `classic-shared` (runtime, errors, utilities)
+  - **Business Logic Layer** (Pure Rust - no PyO3):
+    - `classic-yaml-core` - YAML operations (yaml-rust2)
+    - `classic-database-core` - SQLite operations with connection pooling
+    - `classic-file-io-core` - File I/O, encoding detection, DDS parsing
+    - `classic-scanlog-core` - Log parsing, FormID analysis, pattern matching
+  - **Python Bindings Layer** (PyO3 adapters):
+    - `classic-yaml-py` - Python bindings for yaml-core
+    - `classic-database-py` - Python bindings for database-core
+    - `classic-file-io-py` - Python bindings for file-io-core
+    - `classic-scanlog-py` - Python bindings for scanlog-core
+    - `classic-config-py` - Python bindings for config-core
+  - **Facade Layer**: `classic-core` (re-exports all Python modules)
+  - **Legacy Crates**: `classic-yaml`, `classic-database`, `classic-file-io`, `classic-scanlog` (being phased out)
 - **Integration**: PyO3 0.26.0 bindings with native async solution (no PyO3-asyncio dependency)
 - **Fallback**: Full Python implementations ensure compatibility when Rust unavailable
 - **Transparent**: Automatic acceleration - no API changes required
-- **Architecture**: ONE RUNTIME RULE - single global Tokio runtime shared across all crates
+- **Architecture Rules**:
+  - **ONE RUNTIME RULE**: Single global Tokio runtime shared across all crates
+  - **SEPARATION OF CONCERNS**: Business logic in `-core` crates, PyO3 bindings in `-py` crates
+  - **NO MIXED CRATES**: Never combine business logic with PyO3 bindings in the same crate
 
 #### Rust Performance Benefits
 | Component | Python Time | Rust Time | Speedup |
@@ -392,63 +402,131 @@ crate-type = ["rlib"]  # Only rlib
 
 ## Rust Workspace Structure
 
-CLASSIC uses a modular Cargo workspace with 7 specialized crates:
+### Architecture Rules (NEW - 2025-10-08)
+
+**CRITICAL**: All new Rust code MUST follow the separated architecture pattern:
+
+1. **Business Logic Crates** (`*-core`):
+   - `crate-type = ["rlib"]` - Pure Rust library only
+   - **NO PyO3 dependency** - Must compile without PyO3
+   - Contains all algorithms, data structures, and logic
+   - Can be used by CLI/TUI applications directly
+   - Example: `classic-yaml-core`, `classic-scanlog-core`
+
+2. **Python Binding Crates** (`*-py`):
+   - `crate-type = ["cdylib"]` - Python extension only
+   - Depends on corresponding `-core` crate
+   - Thin adapter layer converting Python ↔ Rust types
+   - Should be **minimal** - only type conversions and `#[pyclass]`/`#[pymethods]` wrappers
+   - No business logic - all algorithms/data structures belong in `-core`
+   - Example: `classic-yaml-py`, `classic-scanlog-py`
+
+3. **Naming Convention**:
+   - Business logic: `classic-{name}-core`
+   - Python bindings: `classic-{name}-py`
+   - Python module name: `classic_{name}` (in Cargo.toml `[lib]` section)
+
+4. **Migration Status**:
+   - ✅ **New crates created**: All `-core` and `-py` crates exist as of Phase 0
+   - 🔄 **Legacy crates**: `classic-yaml`, `classic-database`, `classic-file-io`, `classic-scanlog` being phased out
+   - 📋 **Migration plan**: See [Business Logic Separation Plan](docs/rust_business_logic_separation_plan.md)
+
+**Example Structure**:
+```toml
+# classic-yaml-core/Cargo.toml (Business Logic)
+[lib]
+crate-type = ["rlib"]  # Pure Rust
+
+[dependencies]
+classic-shared = { path = "../classic-shared" }
+yaml-rust2 = { workspace = true }
+# NO pyo3!
+
+# classic-yaml-py/Cargo.toml (Python Bindings)
+[lib]
+name = "classic_yaml"  # Python module name
+crate-type = ["cdylib"]
+
+[dependencies]
+classic-yaml-core = { path = "../classic-yaml-core" }
+pyo3 = { workspace = true }
+```
+
+CLASSIC uses a modular Cargo workspace with separated business logic and Python bindings:
 
 ```
 .
-├── Cargo.toml                  # Workspace root with shared dependencies
-├── classic-shared/             # Foundation crate (runtime, errors, utilities)
-│   ├── src/
-│   │   ├── runtime.rs         # Global Tokio runtime (ONE RUNTIME RULE)
-│   │   ├── errors.rs          # ClassicError and ClassicResult types
-│   │   ├── paths.rs           # Path handling utilities
-│   │   ├── strings.rs         # String processing utilities
-│   │   └── performance.rs     # Performance monitoring
-├── classic-yaml/               # YAML operations (yaml-rust2)
-│   └── src/lib.rs
-├── classic-database/           # SQLite operations with connection pooling
-│   ├── src/
-│   │   ├── pool.rs            # Database connection pool
-│   │   └── formid.rs          # FormID lookup operations
-├── classic-file-io/            # File I/O, encoding, DDS parsing
-│   ├── src/
-│   │   ├── core.rs            # RustFileIOCore
-│   │   ├── encoding.rs        # Encoding detection
-│   │   └── dds.rs             # DDS header parsing
-├── classic-scanlog/            # Log parsing and analysis (~1500 LOC)
-│   ├── src/
-│   │   ├── parser.rs          # Log segment parsing
-│   │   ├── formid.rs          # FormID extraction
-│   │   ├── formid_analyzer.rs # FormID analysis
-│   │   ├── patterns.rs        # Pattern matching
-│   │   ├── plugin_analyzer.rs # Plugin analysis
-│   │   ├── record_scanner.rs  # Record scanning
-│   │   └── ...
-├── classic-core/               # Thin facade (Python entry point)
-│   └── src/lib.rs             # Re-exports all modules
-└── config-core/                # Configuration management
-    └── src/lib.rs
+├── Cargo.toml                       # Workspace root with shared dependencies
+│
+├── classic-shared/                  # Foundation (runtime, errors, utilities)
+│   └── src/runtime.rs              # Global Tokio runtime (ONE RUNTIME RULE)
+│
+├── classic-yaml-core/               # YAML business logic (pure Rust)
+│   └── src/lib.rs                  # YamlOperations
+├── classic-yaml-py/                 # YAML Python bindings (PyO3)
+│   └── src/lib.rs                  # PyYamlOperations wrapper
+│
+├── classic-database-core/           # Database business logic (pure Rust)
+│   └── src/lib.rs                  # DatabasePool, FormID lookups
+├── classic-database-py/             # Database Python bindings (PyO3)
+│   └── src/lib.rs                  # PyDatabasePool wrapper
+│
+├── classic-file-io-core/            # File I/O business logic (pure Rust)
+│   └── src/lib.rs                  # FileIOCore, encoding, DDS
+├── classic-file-io-py/              # File I/O Python bindings (PyO3)
+│   └── src/lib.rs                  # RustFileIOCore wrapper
+│
+├── classic-scanlog-core/            # Scanlog business logic (pure Rust)
+│   └── src/lib.rs                  # LogParser, FormIDAnalyzer, etc.
+├── classic-scanlog-py/              # Scanlog Python bindings (PyO3)
+│   └── src/lib.rs                  # Rust*Parser wrappers
+│
+├── classic-config-py/               # Config Python bindings (PyO3)
+│   └── src/lib.rs                  # YamlData wrapper
+├── config-core/                     # Config business logic (package: classic-config)
+│   └── src/lib.rs                  # Configuration management
+│
+├── classic-core/                    # Facade (re-exports all -py modules)
+│   └── src/lib.rs                  # Python entry point
+│
+└── [Legacy crates being phased out]
+    ├── classic-yaml/                # To be replaced by classic-yaml-py
+    ├── classic-database/            # To be replaced by classic-database-py
+    ├── classic-file-io/             # To be replaced by classic-file-io-py
+    └── classic-scanlog/             # To be replaced by classic-scanlog-py
 ```
 
-### Dependency Hierarchy
+### Dependency Hierarchy (New Architecture)
 ```
-classic-shared (foundation)
-    ↑
-    ├── classic-yaml
-    │       ↑
-    │       └── classic-scanlog (uses YAML data structures)
-    ├── classic-database
-    ├── classic-file-io
-    └── config-core
-
-classic-core (facade) depends on ALL of the above
+┌─────────────────────────────────────────────┐
+│  Python Application Layer                   │
+│  - Python imports classic_core              │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│  Python Bindings Layer (-py crates)        │
+│  classic-yaml-py, classic-database-py       │
+│  classic-file-io-py, classic-scanlog-py    │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│  Business Logic Layer (-core crates)       │
+│  classic-yaml-core, classic-database-core   │
+│  classic-file-io-core, classic-scanlog-core│
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│  Foundation Layer                           │
+│  classic-shared (runtime, errors)          │
+└─────────────────────────────────────────────┘
 ```
 
 **Key Rules:**
-- No circular dependencies
-- All crates use `classic_shared::get_runtime()` (ONE RUNTIME RULE)
-- Workspace dependencies centralized in root `Cargo.toml`
-- classic-core is a thin facade that re-exports all functionality
+- **NO circular dependencies** between crates
+- **ONE RUNTIME RULE**: All crates use `classic_shared::get_runtime()`
+- **SEPARATION OF CONCERNS**: `-core` crates have NO PyO3, `-py` crates are thin adapters
+- **Workspace dependencies**: Centralized in root `Cargo.toml`
+- **CLI/TUI applications**: Use `-core` crates directly (bypass Python bindings)
 
 ## Rust Documentation
 For comprehensive Rust documentation, see:
@@ -489,3 +567,5 @@ For comprehensive Rust documentation, see:
 - **Standalone module pattern**: Each Rust crate exporting Python classes must have `crate-type = ["cdylib", "rlib"]` AND be installed as separate Python module (like classic_config, classic_scanlog)
 - **GIL handling for parallel work**: Use `py.detach()` to release GIL, `Python::attach()` to reacquire in worker threads (PyO3 0.26)
 - **Runtime conflicts**: Avoid `get_runtime().block_on()` when already in Python context - use synchronous I/O or proper async patterns
+- **Business logic separation** (2025-10-08): ALL new Rust code MUST separate business logic (`-core` crates, no PyO3) from Python bindings (`-py` crates, thin adapters). Phase 0 complete - 9 new crates created. See [Business Logic Separation Plan](docs/rust_business_logic_separation_plan.md)
+- **NO MIXED CRATES**: Never combine business logic with PyO3 bindings in the same crate - this is a fundamental architectural rule going forward
