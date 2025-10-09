@@ -41,4 +41,4 @@ pub use settings_validator::SettingsValidator;
 pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
 pub use fcx_handler::FcxModeHandler;
 pub use orchestrator::{OrchestratorCore, AnalysisConfig, AnalysisResult};
-pub use report::{ReportFragment, ReportComposer, ReportGenerator, StringPool, ParallelReportProcessor};
+pub use report::{ReportFragment, ReportComposer, ReportGenerator, StringPool};

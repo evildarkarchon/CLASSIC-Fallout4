@@ -82,27 +82,6 @@ impl StringPool {
     }
 }
 
-impl StringPool {
-    fn py_new() -> Self {
-        Self::new()
-    }
-
-        fn py_intern(&self, s: String) -> String {
-        self.intern(&s)
-    }
-
-        fn py_intern_batch(&self, strings: Vec<String>) -> Vec<String> {
-        self.intern_batch(&strings)
-    }
-
-        fn py_stats(&self) -> (usize, usize, usize, usize) {
-        self.get_stats()
-    }
-
-        fn py_clear(&self) {
-        self.clear()
-    }
-}
 
 /// Immutable report fragment for functional composition
 #[derive(Clone, Debug)]
@@ -195,61 +174,6 @@ impl ReportFragment {
     /// Check if empty
     pub fn is_empty(&self) -> bool {
         self.content.is_empty()
-    }
-}
-
-impl ReportFragment {
-        fn py_new(lines: Option<Vec<String>>, check_content: bool, use_pool: bool) -> Self {
-        match lines {
-            Some(lines) if use_pool => {
-                Self::from_lines_pooled(lines, &STRING_POOL)
-            }
-            Some(lines) => {
-                let has_content = if check_content { !lines.is_empty() } else { true };
-                Self {
-                    content: Arc::new(lines),
-                    has_content,
-                    pool: if use_pool { Some(STRING_POOL.clone()) } else { None },
-                }
-            }
-            None => Self::empty(),
-        }
-    }
-
-        fn py_empty() -> Self {
-        Self::empty()
-    }
-
-        fn py_from_lines(lines: Vec<String>) -> Self {
-        Self::from_lines(lines)
-    }
-
-        fn py_with_header(&self, header_lines: Vec<String>) -> Self {
-        self.with_header(header_lines)
-    }
-
-    fn __add__(&self, other: &ReportFragment) -> Self {
-        self.combine(other)
-    }
-
-        fn py_to_list(&self) -> Vec<String> {
-        self.to_list()
-    }
-
-    fn __len__(&self) -> usize {
-        self.len()
-    }
-
-    fn __bool__(&self) -> bool {
-        self.has_content
-    }
-
-    pub fn content(&self) -> Vec<String> {
-        self.content.to_vec()
-    }
-
-    pub fn has_content(&self) -> bool {
-        self.has_content
     }
 }
 
@@ -373,56 +297,6 @@ impl ReportComposer {
     }
 }
 
-impl ReportComposer {
-        fn py_new(parallel_threshold: Option<usize>) -> Self {
-        let mut composer = Self::new();
-        if let Some(threshold) = parallel_threshold {
-            composer.parallel_threshold = threshold;
-        }
-        composer
-    }
-
-        fn py_add(&mut self, fragment: ReportFragment) {
-        self.add(fragment);
-    }
-
-        fn py_add_many(&mut self, fragments: Vec<ReportFragment>) {
-        self.add_many(fragments);
-    }
-
-        fn py_compose(&self) -> ReportFragment {
-        self.compose()
-    }
-
-        fn py_compose_optimized(&self) -> ReportFragment {
-        self.compose_optimized()
-    }
-
-        fn py_build(&self) -> ReportFragment {
-        self.compose_optimized()
-    }
-
-        fn py_build_string(&self) -> String {
-        self.build_string()
-    }
-
-        fn py_to_list(&self) -> Vec<String> {
-        self.compose_optimized().to_list()
-    }
-
-    fn __len__(&self) -> usize {
-        self.fragments.len()
-    }
-
-    pub fn fragments(&self) -> Vec<ReportFragment> {
-        self.fragments.clone()
-    }
-
-    pub fn pool_stats(&self) -> (usize, usize, usize, usize) {
-        self.pool.get_stats()
-    }
-}
-
 /// Generator for report fragments with efficient string building
 pub struct ReportGenerator {
     pool: StringPool,
@@ -492,90 +366,6 @@ impl ReportGenerator {
     }
 }
 
-impl ReportGenerator {
-    fn py_new() -> Self {
-        Self::new()
-    }
-
-        fn py_generate_header(&self, filename: String, version: String) -> ReportFragment {
-        self.generate_header(&filename, &version)
-    }
-
-        fn py_generate_error_section(
-        &self,
-        main_error: String,
-        crashgen_version: String,
-        crashgen_name: String,
-        is_latest: bool,
-        warn_outdated: String,
-    ) -> ReportFragment {
-        self.generate_error_section(&main_error, &crashgen_version, &crashgen_name, is_latest, &warn_outdated)
-    }
-
-        fn py_generate_suspect_section(&self, found_suspects: Vec<String>) -> ReportFragment {
-        self.generate_suspect_section(found_suspects)
-    }
-}
-
-/// Parallel report processor for batch operations
-pub struct ParallelReportProcessor;
-
-impl ParallelReportProcessor {
-    fn new() -> Self {
-        Self
-    }
-
-    /// Process multiple reports in parallel
-        fn process_reports(&self, reports: Vec<Vec<String>>) -> Vec<String> {
-        reports
-            .par_iter()
-            .map(|lines| {
-                let fragment = ReportFragment::from_lines_pooled(lines.clone(), &STRING_POOL);
-                let composer = ReportComposer::new();
-                let mut comp = composer;
-                comp.add(fragment);
-                comp.build_string()
-            })
-            .collect()
-    }
-
-    /// Combine multiple fragments in parallel
-        fn combine_fragments_parallel(&self, fragments: Vec<ReportFragment>) -> ReportFragment {
-        fragments
-            .into_par_iter()
-            .reduce(
-                || ReportFragment::empty(),
-                |a, b| a.combine(&b),
-            )
-    }
-
-    /// Transform fragments in parallel
-        fn transform_fragments(&self, fragments: Vec<ReportFragment>, operation: String) -> Vec<ReportFragment> {
-        fragments
-            .par_iter()
-            .map(|fragment| {
-                match operation.as_str() {
-                    "uppercase" => {
-                        let upper_lines: Vec<String> = fragment.content
-                            .iter()
-                            .map(|s| s.to_uppercase())
-                            .collect();
-                        ReportFragment::from_lines(upper_lines)
-                    }
-                    "trim" => {
-                        let trimmed_lines: Vec<String> = fragment.content
-                            .iter()
-                            .map(|s| s.trim().to_string())
-                            .collect();
-                        ReportFragment::from_lines(trimmed_lines)
-                    }
-                    _ => fragment.clone(),
-                }
-            })
-            .collect()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -622,15 +412,4 @@ mod tests {
         assert!(text.contains("Line 19"));
     }
 
-    #[test]
-    fn test_parallel_processing() {
-        let fragments: Vec<ReportFragment> = (0..100)
-            .map(|i| ReportFragment::from_lines(vec![format!("Fragment {}", i)]))
-            .collect();
-
-        let processor = ParallelReportProcessor;
-        let combined = processor.combine_fragments_parallel(fragments);
-
-        assert_eq!(combined.len(), 100);
-    }
 }
