@@ -277,14 +277,12 @@ mod output_integration {
             patterns_matched: 234,
             formids_resolved: 1842,
             suspects_identified: 12,
-            errors: 2,
         };
 
         assert_eq!(stats.scanned_logs, 47);
         assert_eq!(stats.patterns_matched, 234);
         assert_eq!(stats.formids_resolved, 1842);
         assert_eq!(stats.suspects_identified, 12);
-        assert_eq!(stats.errors, 2);
     }
 }
 
