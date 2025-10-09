@@ -19,11 +19,21 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 
 # CLASSIC modular crates (workspace dependencies)
 classic-shared = { path = "../classic-shared" }
-classic-yaml-py = { path = "../classic-yaml-py" }
-classic-database-py = { path = "../classic-database-py" }
-classic-file-io-py = { path = "../classic-file-io-py" }
-classic-scanlog-py = { path = "../classic-scanlog-py" }
-classic-config-py = { path = "../classic-config-py" }
+
+# Pure business logic crates (for re-export)
+classic-yaml-core = { path = "../classic-yaml-core" }
+classic-database-core = { path = "../classic-database-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+classic-config-core = { path = "../classic-config-core" }
+
+# Python binding crates (for re-export)
+# Use package names since [lib] name differs from package name
+classic-yaml = { package = "classic-yaml-py", path = "../classic-yaml-py" }
+classic-database = { package = "classic-database-py", path = "../classic-database-py" }
+classic-file-io = { package = "classic-file-io-py", path = "../classic-file-io-py" }
+classic-scanlog = { package = "classic-scanlog-py", path = "../classic-scanlog-py" }
+classic-config = { package = "classic-config-py", path = "../classic-config-py" }
 
 # Legacy support - minimal dependencies for backward compatibility
 tokio = { workspace = true, features = ["full"] }

@@ -109,3 +109,59 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
+
+/// Public registration function for use by facade modules
+/// This allows classic-core to include all scanlog components in its submodule
+pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Parser
+    m.add_class::<PyLogParser>()?;
+
+    // FormID analysis
+    m.add_class::<PyFormIDAnalyzer>()?;
+    m.add_class::<PyRustFormIDAnalyzer>()?;
+    m.add_class::<PyFormIDAnalyzerCore>()?;
+    m.add_function(wrap_pyfunction!(extract_formids_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(is_valid_formid, m)?)?;
+    m.add_function(wrap_pyfunction!(validate_formids_batch, m)?)?;
+
+    // Scanners and analyzers
+    m.add_class::<PyRecordScanner>()?;
+    m.add_function(wrap_pyfunction!(scan_records_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(contains_record, m)?)?;
+
+    m.add_class::<PyPluginAnalyzer>()?;
+    m.add_function(wrap_pyfunction!(detect_plugins_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(contains_plugin, m)?)?;
+
+    m.add_class::<PyPatternMatcher>()?;
+    m.add_class::<PySuspectScanner>()?;
+
+    // Detectors
+    m.add_class::<PyGpuDetector>()?;
+    m.add_class::<PyGpuInfo>()?;
+    m.add_class::<PyGpuVendor>()?;
+
+    // Mod detection
+    m.add_function(wrap_pyfunction!(detect_mods_single, m)?)?;
+    m.add_function(wrap_pyfunction!(detect_mods_double, m)?)?;
+    m.add_function(wrap_pyfunction!(detect_mods_important, m)?)?;
+    m.add_function(wrap_pyfunction!(detect_mods_batch, m)?)?;
+
+    // Validators and handlers
+    m.add_class::<PySettingsValidator>()?;
+    m.add_class::<PyFcxModeHandler>()?;
+
+    // Orchestrator
+    m.add_class::<PyRustOrchestrator>()?;
+    m.add_class::<PyAnalysisConfig>()?;
+    m.add_class::<PyAnalysisResult>()?;
+
+    // Report generation
+    m.add_class::<PyStringPool>()?;
+    m.add_class::<PyReportFragment>()?;
+    m.add_class::<PyReportComposer>()?;
+    m.add_class::<PyReportGenerator>()?;
+    m.add_class::<PyParallelReportProcessor>()?;
+
+    Ok(())
+}

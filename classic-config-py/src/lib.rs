@@ -299,3 +299,11 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
+
+/// Public registration function for use by facade modules
+/// This allows classic-core to include config components in its submodule
+pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<PyYamlData>()?;
+    m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
+    Ok(())
+}

@@ -141,9 +141,9 @@ def detect_rust_components() -> dict[str, bool]:
             logger.debug("YamlData component available")
 
     except ImportError as e:
-        logger.warning(f"classic_core module not available: {e}")
+        logger.warning(f"classic_config module not available: {e}")
     except Exception as e:
-        logger.error(f"Error detecting Rust components: {e}")
+        logger.error(f"Error detecting config module: {e}")
 
     return components
 

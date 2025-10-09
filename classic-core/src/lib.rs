@@ -3,28 +3,57 @@
 //! This is a thin facade module that re-exports all functionality from the modular
 //! CLASSIC Rust crates, maintaining backward compatibility with the original monolithic API.
 //!
-//! ## Architecture (Post-Modularization)
-//! - **classic-shared**: Foundation (runtime, errors, utilities)
-//! - **classic-yaml**: YAML operations
-//! - **classic-database**: SQLite operations
-//! - **classic-file-io**: File I/O operations
-//! - **classic-scanlog**: Log parsing & analysis
-//! - **classic-core** (this crate): Facade that re-exports everything
+//! ## Architecture (Post-Business Logic Separation)
+//!
+//! ### Foundation Layer
+//! - **classic-shared**: Runtime, errors, utilities
+//!
+//! ### Business Logic Layer (Pure Rust, no PyO3)
+//! - **classic-yaml-core**: YAML operations (yaml-rust2)
+//! - **classic-database-core**: SQLite operations with connection pooling
+//! - **classic-file-io-core**: File I/O, encoding detection, DDS parsing
+//! - **classic-scanlog-core**: Log parsing, FormID analysis, pattern matching
+//!
+//! ### Python Bindings Layer (PyO3 adapters)
+//! - **classic-yaml-py**: Python bindings for yaml-core
+//! - **classic-database-py**: Python bindings for database-core
+//! - **classic-file-io-py**: Python bindings for file-io-core
+//! - **classic-scanlog-py**: Python bindings for scanlog-core
+//! - **classic-config-py**: Python bindings for config-core
+//!
+//! ### Facade Layer
+//! - **classic-core** (this crate): Re-exports all Python bindings for backward compatibility
 //!
 //! ## ONE RUNTIME RULE
 //! All async operations use the shared runtime from classic-shared.
+//!
+//! ## Usage
+//!
+//! ### From Python (via PyO3 bindings):
+//! ```python
+//! import classic_core
+//! parser = classic_core.scanlog.LogParser()
+//! ```
+//!
+//! ### From Rust (direct business logic access):
+//! ```rust
+//! use classic_core::core::scanlog::LogParser;
+//! let parser = LogParser::new(Default::default());
+//! ```
 
 use pyo3::prelude::*;
 
 // Re-export the shared runtime for backward compatibility
 pub use classic_shared::get_runtime;
 
-// Re-export all types from modular crates
+// Re-export all types from shared foundation
 pub use classic_shared::{
     ClassicError, ClassicResult, IntoClassicError,
     PathHandler, StringProcessor, RustPerformanceMonitor,
 };
 
+// Re-export Python bindings (for Python usage via PyO3)
+// Note: These use the library names from [lib] name in each crate's Cargo.toml
 pub use classic_yaml::PyYamlOperations as RustYamlOperations;
 
 pub use classic_database::PyDatabasePool as RustDatabasePool;
@@ -66,7 +95,24 @@ pub use classic_scanlog::{
     detect_mods_batch,
 };
 
-// Note: classic_config module is re-exported in Python's __init__.py as classic_core.config
+// Re-export config bindings
+pub use classic_config::PyYamlData as YamlData;
+pub use classic_config::create_yamldata;
+
+// Re-export pure business logic (for internal Rust usage)
+/// Pure Rust business logic modules - use these for CLI/TUI or internal Rust code
+pub mod core {
+    /// YAML operations (yaml-rust2)
+    pub use classic_yaml_core as yaml;
+    /// Database operations (SQLite with connection pooling)
+    pub use classic_database_core as database;
+    /// File I/O (encoding detection, DDS parsing)
+    pub use classic_file_io_core as file_io;
+    /// Log parsing and analysis
+    pub use classic_scanlog_core as scanlog;
+    /// Configuration data structures
+    pub use classic_config_core as config;
+}
 
 // Legacy classes for backward compatibility
 // These are kept here to maintain the exact same API
@@ -199,40 +245,10 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     utils_module.add_class::<RustPerformanceMonitor>()?;
     m.add_submodule(&utils_module)?;
 
-    // Register scanlog submodule (from classic-scanlog)
+    // Register scanlog submodule (from classic-scanlog-py)
+    // Use the registration function to include all components
     let scanlog_module = PyModule::new(m.py(), "scanlog")?;
-    scanlog_module.add_class::<FormIDAnalyzer>()?;
-    scanlog_module.add_class::<RustFormIDAnalyzer>()?;
-    scanlog_module.add_class::<FormIDAnalyzerCore>()?;
-    scanlog_module.add_class::<LogParser>()?;
-    scanlog_module.add_class::<PatternMatcher>()?;
-    scanlog_module.add_class::<PluginAnalyzer>()?;
-    scanlog_module.add_class::<RecordScanner>()?;
-    scanlog_module.add_class::<RustOrchestrator>()?;
-    scanlog_module.add_class::<AnalysisConfig>()?;
-    scanlog_module.add_class::<AnalysisResult>()?;
-    scanlog_module.add_class::<StringPool>()?;
-    scanlog_module.add_class::<ReportFragment>()?;
-    scanlog_module.add_class::<ReportComposer>()?;
-    scanlog_module.add_class::<ReportGenerator>()?;
-    scanlog_module.add_class::<ParallelReportProcessor>()?;
-    scanlog_module.add_class::<SuspectScanner>()?;
-    scanlog_module.add_class::<SettingsValidator>()?;
-    scanlog_module.add_class::<GpuDetector>()?;
-    scanlog_module.add_class::<GpuInfo>()?;
-    scanlog_module.add_class::<GpuVendor>()?;
-    scanlog_module.add_class::<FcxModeHandler>()?;
-    scanlog_module.add_function(wrap_pyfunction!(extract_formids_batch, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(is_valid_formid, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(validate_formids_batch, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(scan_records_batch, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(contains_record, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(detect_plugins_batch, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(contains_plugin, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(detect_mods_single, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(detect_mods_double, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(detect_mods_important, &scanlog_module)?)?;
-    scanlog_module.add_function(wrap_pyfunction!(detect_mods_batch, &scanlog_module)?)?;
+    classic_scanlog::register_scanlog_module(&scanlog_module)?;
     m.add_submodule(&scanlog_module)?;
 
     // Register database submodule (from classic-database)
@@ -251,8 +267,11 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     yaml_module.add_class::<RustYamlOperations>()?;
     m.add_submodule(&yaml_module)?;
 
-    // Note: config submodule is re-exported in Python's __init__.py
-    // This allows classic_config to be accessed as classic_core.config
+    // Register config submodule (from classic-config-py)
+    // Use the registration function to include all components
+    let config_module = PyModule::new(m.py(), "config")?;
+    classic_config::register_config_module(&config_module)?;
+    m.add_submodule(&config_module)?;
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
