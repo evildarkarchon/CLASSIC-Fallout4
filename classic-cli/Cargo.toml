@@ -1,0 +1,58 @@
+[package]
+name = "classic-cli"
+version = "8.0.0"
+edition = "2021"
+authors = ["CLASSIC Team"]
+description = "CLASSIC Command-Line Interface - Crash Log Auto Scanner"
+license = "MIT"
+
+[lib]
+name = "classic_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "classic-cli"
+path = "src/main.rs"
+
+[dependencies]
+# CLI framework
+clap = { version = "4.5", features = ["derive", "cargo"] }
+
+# Async runtime
+tokio = { version = "1.47", features = ["full"] }
+
+# Error handling
+anyhow = "1.0"
+
+# Business logic crates (NO PyO3 overhead - direct access)
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+classic-database-core = { path = "../classic-database-core" }
+classic-yaml-core = { path = "../classic-yaml-core" }
+classic-config-core = { path = "../classic-config-core" }
+classic-shared = { path = "../classic-shared" }
+
+# CLI utilities
+indicatif = "0.17"
+console = "0.15"
+walkdir = { workspace = true }
+dirs = "5.0"
+
+# Serialization (for config)
+serde = { version = "1.0", features = ["derive"] }
+yaml-rust2 = { workspace = true }
+hashlink = "0.10"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true

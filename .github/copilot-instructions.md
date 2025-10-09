@@ -1,613 +1,195 @@
-# CLASSIC-Fallout4 AI Coding Agent Instructions
+# GitHub Copilot Instructions for CLASSIC-Fallout4
 
 ## Project Overview
 
-CLASSIC is a crash log analyzer for Fallout 4 and Skyrim that processes Buffout 4/Crash Logger output. The architecture evolved from monolithic to async-first orchestrator pattern supporting three interfaces: GUI (PySide6), TUI (Textual), and CLI modes.
+CLASSIC is a hybrid Python-Rust desktop application for analyzing Bethesda game crash logs (Fallout 4/Skyrim). It provides three interfaces: GUI (PySide6), TUI (Textual), and CLI. The project achieves 10-150x performance gains through strategic Rust acceleration while maintaining full Python compatibility.
 
-## Essential Development Commands
+## Architecture Patterns
 
-```bash
-# Environment setup
-uv sync                              # Install all dependencies
-uv sync --extra gui                 # Include PySide6 for GUI development
-uv sync --extra windows             # Include Windows-specific dependencies
-uv sync --all-extras               # Install all optional features
+### Hybrid Python-Rust Design
+- **Python Layer**: UI logic, coordination, high-level operations in `ClassicLib/`
+- **Rust Layer**: Performance-critical operations with automatic fallback
+- **Integration**: Transparent acceleration via `ClassicLib.integration.factory` module
+- **Fallback**: Full Python implementations ensure compatibility when Rust unavailable
 
-# Running the application
-python CLASSIC_Interface.py            # GUI mode
-python CLASSIC_TUI.py                  # TUI mode (Terminal UI)
-python CLASSIC_ScanLogs.py            # CLI mode
-python CLASSIC_ScanGame.py            # Game integrity checker
+### Rust Architecture (Separated Business Logic - 2025)
+```
+Business Logic (*-core crates): Pure Rust, rlib only, NO PyO3
+  ├── classic-yaml-core, classic-database-core, classic-file-io-core
+  └── classic-scanlog-core, classic-config-core
 
-# Testing (critical - maintain 100% pass rate)
-python -m pytest tests/ -v            # All tests with verbose output
-python -m pytest -n auto              # Parallel execution (auto-detect cores)
-python -m pytest -m "unit and not slow" --maxfail=3  # Quick feedback
+Python Bindings (*-py crates): Thin PyO3 adapters, cdylib output
+  ├── classic-yaml-py, classic-database-py, classic-file-io-py
+  └── classic-scanlog-py, classic-config-py
 
-# Code quality
-ruff check .                           # Lint check
-ruff format .                          # Format code
-uv lock --upgrade                     # Update dependencies
+Facade: classic-core (re-exports all Python modules)
 ```
 
-## Architecture: Async-First Orchestrator Pattern
+**Critical Rule**: Business logic MUST be in `-core` crates (no PyO3), bindings MUST be in `-py` crates (thin adapters only).
 
-### Core Flow
-1. **OrchestratorCore** (`ClassicLib.ScanLog.OrchestratorCore`) - Async-first implementation
-2. **ScanOrchestrator** - Sync adapter wrapping `OrchestratorCore` with `asyncio.run()`
-3. **AsyncScanOrchestrator** - DEPRECATED: Now aliases to `OrchestratorCore`
+### Async Patterns
+- **AsyncBridge**: Singleton for sync/async bridging - use `AsyncBridge.get_instance().run_async()`
+- **Native async solution**: No PyO3-asyncio dependency
+- **ONE RUNTIME RULE**: All Rust crates share global Tokio runtime via `classic_shared::get_runtime()`
 
-### Entry Points
-- `CLASSIC_ScanLogs.py` - CLI with async/sync fallback
-- `CLASSIC_Interface.py` - GUI with PySide6
-- `CLASSIC_TUI.py` - Terminal UI with Textual framework
-- `CLASSIC_ScanGame.py` - Game file validation
-
-### Component Coordination
-```python
-# Orchestrators manage specialized analyzers:
-FormIDAnalyzer     # Database lookups for mod identification
-PluginAnalyzer     # Mod file analysis
-SettingsScanner   # Configuration validation
-SuspectScanner    # Known problematic pattern detection
-ReportGenerator   # Final output formatting
-```
-
-## Critical Patterns
-
-### Conditional Imports (GUI/CLI Compatibility)
-```python
-try:
-    from PySide6.QtCore import QObject, Signal
-    HAS_QT = True
-except ImportError:
-    HAS_QT = False
-    class QObject:
-        """Stub for when PySide6 is not available."""
-```
-
-### MessageHandler (Never Use Print)
-```python
-from ClassicLib import msg_info, msg_warning, msg_error
-msg_info("Processing complete")         # ✓ Correct
-print("Processing complete")            # ✗ Never do this
-```
-
-### FileIOCore (Unified Async File Operations)
-```python
-from ClassicLib.FileIOCore import FileIOCore
-
-# Async-first file operations
-async def process_files():
-    io_core = FileIOCore()
-    content = await io_core.read_file(path)
-    await io_core.write_file(output_path, processed_content)
-
-# Sync fallback available
-from ClassicLib.FileIOCore import read_file_sync
-content = read_file_sync(path)
-```
-
-### Async/Sync Compatibility
-```python
-try:
-    return asyncio.run(self._process_crashlog_async(crashlog_file))
-except ImportError:
-    return self.orchestrator.process_crash_log(crashlog_file)
-```
-
-### Type Safety (Python 3.12+)
-```python
-def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
-    """All functions MUST have complete type annotations."""
-```
-
-## Testing Requirements
-
-### Test-Driven Development (TDD) Cycle
-```python
-# 1. RED: Write failing test first
-@pytest.mark.asyncio
-async def test_new_feature():
-    result = await new_async_function()
-    assert result.status == "success"
-
-# 2. GREEN: Minimal implementation
-async def new_async_function():
-    return SimpleResult(status="success")
-
-# 3. REFACTOR: Improve with performance/structure
-```
-
-### Test Isolation (CRITICAL)
-```python
-# NEVER access production YAML stores in tests
-yaml_settings(str, YAML.Settings, "key")     # ❌ FORBIDDEN
-yaml_settings(str, YAML.TEST, "key")         # ✅ Safe for testing
-
-# NEVER create production directories
-Path("CLASSIC Data").mkdir()                 # ❌ FORBIDDEN
-Path(tmp_path / "CLASSIC Data").mkdir()      # ✅ Use tmp_path
-
-# Pre-commit hooks enforce these rules automatically
-```
-
-### Test Initialization Pattern
-```python
-# REQUIRED: Initialize MessageHandler before creating ClassicScanLogs
-from tests.conftest import init_message_handler_fixture
-scanner = init_message_handler_fixture()  # Use fixture
-
-# DEFENSIVE: Check component availability
-if hasattr(scanner.orchestrator, '_formid_analyzer'):
-    scanner.orchestrator._formid_analyzer.formid_match(formids, plugins, report)
-```
-
-### Testing AsyncBridge and Async Code
-
-**IMPORTANT**: When testing code that uses AsyncBridge, proper mocking is critical to avoid `RuntimeWarning: coroutine was never awaited` errors.
-
-```python
-# ✅ CORRECT: Mock AsyncBridge.run_async for sync wrappers
-with patch("module.AsyncBridge") as mock_bridge_class:
-    mock_bridge = MagicMock()
-    mock_bridge_class.get_instance.return_value = mock_bridge
-    mock_bridge.run_async.return_value = "expected_result"
-
-    result = sync_wrapper_function()
-    assert result == "expected_result"
-
-# ❌ WRONG: Don't use AsyncMock for bridge-wrapped methods
-mock_instance.async_method = AsyncMock()  # This causes RuntimeWarning!
-```
-
-### Testing GlobalRegistry and Singletons
-
-**CRITICAL**: GlobalRegistry manages singleton instances that persist across tests, causing test pollution and race conditions in parallel execution.
-
-```python
-# ✅ CORRECT: Clear registry in fixtures
-@pytest.fixture(autouse=True)
-def clean_global_registry():
-    GlobalRegistry._registry.clear()
-    yield
-    GlobalRegistry._registry.clear()
-
-# ✅ CORRECT: Use unique keys for parallel tests
-test_key = f"key_{uuid.uuid4()}"
-GlobalRegistry.register(test_key, value)
-```
-
-### Testing YamlSettingsCache
-
-**WARNING**: NEVER modify production YAML files in tests. Always use mocks or the YAML.TEST enum.
-
-```python
-# ✅ CORRECT: Mock yaml_settings for tests
-@patch("ClassicLib.YamlSettingsCache.yaml_settings")
-def test_with_mock(mock_yaml):
-    mock_yaml.return_value = "test_value"
-    # Your test code
-
-# ❌ FORBIDDEN: Never modify production settings
-yaml_settings(str, YAML.Settings, "key", "value")  # NEVER in tests!
-
-# ✅ CORRECT: Use test enum or temp files
-yaml_settings(str, YAML.TEST, "key", "value")  # Safe for testing
-```
-
-### Testing Guides Index
-
-Complete testing documentation for CLASSIC components and test pollution prevention:
-
-#### Core Pollution Sources (Critical)
-1. **[Testing AsyncBridge](../docs/testing_async_bridge.md)** - Async/sync bridge mocking patterns
-2. **[Testing GlobalRegistry](../docs/testing_global_registry.md)** - Singleton isolation and parallel testing
-3. **[Testing YamlSettingsCache](../docs/testing_yaml_cache.md)** - Configuration testing without pollution
-
-#### Additional Pollution Sources
-4. **[Testing MessageHandler](../docs/testing_message_handler.md)** - Message system singleton isolation
-5. **[Testing Database Pools](../docs/testing_database_pools.md)** - Connection pool resource management
-6. **[Testing ThreadSafeLogCache](../docs/testing_thread_safe_cache.md)** - Thread-safe cache isolation
-7. **[Testing FileIOCore](../docs/testing_fileio_core.md)** - File I/O operations without bridge pollution
-
-#### Master Guide
-8. **[Test Pollution Prevention Guide](../docs/test_pollution_guide.md)** - **Comprehensive guide covering all pollution sources with quick reference patterns**
-
-These guides are essential for writing reliable, isolated tests, especially when using `pytest-xdist` for parallel execution.
-
-### Test Markers and Categories
-```python
-# Use appropriate pytest markers for test categorization
-@pytest.mark.unit                # Fast, isolated tests
-@pytest.mark.integration         # Multi-component tests
-@pytest.mark.async_test          # Async/await pattern tests
-@pytest.mark.gui                 # GUI-dependent tests (requires Qt)
-@pytest.mark.slow                # Tests taking >1 second
-@pytest.mark.performance         # Performance regression tests
-@pytest.mark.file_io             # File I/O operations
-```
-
-### Test Organization Rules
-```python
-# Test organization requirements
-# - NO tests in root tests/ directory - must be in subdirectories
-# - Use descriptive names: test_<component>_<aspect>.py
-
-# Test directories by functionality:
-tests/async_tests/     # Async patterns and infrastructure
-tests/core/           # Core functionality (crash logs, FormID, etc.)
-tests/scanning/       # Log and mod scanning
-tests/game/          # Game path and integrity
-tests/settings/      # YAML and settings management
-```
-
-#### Test Type Separation
-**CRITICAL**: Different test types must be in separate files for maintainability and execution control.
-
-- **Unit Tests** - Must be in files named `test_<component>_unit.py`
-  - Test individual functions/methods in isolation
-  - Mock all external dependencies
-  - Should run quickly (< 100ms per test)
-  - Example: `test_formid_analyzer_unit.py`
-
-- **Integration Tests** - Must be in files named `test_<component>_integration.py`
-  - Test interaction between multiple components
-  - May use real file I/O with temp directories
-  - Can test database connections and external services
-  - Example: `test_scan_pipeline_integration.py`
-
-- **End-to-End Tests** - Must be in files named `test_<component>_e2e.py`
-  - Test complete workflows from entry point to output
-  - Simulate real user scenarios
-  - May involve GUI/TUI interactions
-  - Example: `test_crash_log_scanning_e2e.py`
-
-**Never mix test types in the same file** - This ensures:
-- Faster test execution by running only needed test types
-- Clear dependency requirements for each test file
-- Better mock management and test isolation
-- Easier debugging when tests fail
-
-### Test Isolation Rules
-**CRITICAL**: Production data and settings must be treated as READ-ONLY in tests.
-
-#### Production Data is Read-Only
-- **NEVER** modify `YAML.Settings` or other production YAML stores in tests
-- **NEVER** write to production configuration files during testing
-- **NEVER** access or modify user's actual game directories or crash logs
-- Tests that need to modify settings should use `YAML.TEST` or create temporary files
-
-#### API Changes and Test Updates
-- **ALWAYS** update tests to use the new API when refactoring occurs
-- **NEVER** add backward compatibility functions to production code just to make tests pass
-- Tests should validate the actual production API, not compatibility layers
-- This ensures tests catch real breaking changes and API misuse
-
-## Development Workflows
+## Development Workflow
 
 ### Environment Setup
-- **Python 3.12+** with uv package manager (faster than Poetry)
-- **VS Code** with extensions from `.vscode/` recommendations
-- **Commands**: `uv sync`, `uv lock --upgrade`, `ruff check .`, `ruff format .`
-
-### Build Process
-- **PyInstaller** builds via VS Code (Ctrl+Shift+D) or `pyinstaller CLASSIC.spec`
-- **Multiple specs**: `CLASSIC.spec` (GUI), `CLASSIC-CLI.spec` (CLI), `CLASSIC-Test.spec` (testing)
-- **UPX compression** supported for exe optimization
-
-### Task Management
-Available VS Code tasks:
-- `delete-runtime-files`: Cleans log/config files
-- `delete-runtime-folders`: Removes generated directories
-- `cleanup-pyinstaller-folders`: Removes build artifacts
-
-### Code Quality Enforcement
-- **Pre-commit hooks**: Automatically check test isolation, YAML usage, and code quality
-- **Installation**: `uv run pre-commit install`
-- **Manual run**: `uv run pre-commit run --all-files`
-- **Test isolation**: Prevents production YAML/path usage in tests
-
-#### Available Hooks
-- **Production YAML Checker** - Prevents use of production YAML stores in tests
-- **Production Path Checker** - Prevents hardcoded production paths in tests
-- **Standard hooks** - Trailing whitespace, YAML validation, etc.
-
-#### Running Pre-commit Manually
 ```bash
-# Run on all files
-uv run pre-commit run --all-files
+# Clone and setup
+git clone https://github.com/evildarkarchon/CLASSIC-Fallout4.git
+cd CLASSIC-Fallout4
+uv sync --all-extras
 
-# Run on staged files
-uv run pre-commit run
-
-# Run specific hook
-uv run pre-commit run check-test-isolation
+# Run application
+uv run python CLASSIC_Interface.py  # GUI
+uv run python CLASSIC_TUI.py        # TUI  
+uv run python CLASSIC_ScanLogs.py   # CLI
 ```
 
-## Key Integration Points
-
-### Fragment-Based Architecture (CURRENT)
-```python
-# Modern immutable fragment composition pattern - REQUIRED for new report code
-from ClassicLib.ScanLog.fragments import ReportFragment, ReportComposer
-
-# Generate fragments instead of mutating lists
-def detect_mods_new() -> ReportFragment:
-    lines = ["* ⚠️ Mod warning\n"]
-    return ReportFragment.from_lines(lines)
-
-# Compose fragments immutably
-composer = ReportComposer()
-composer.add(header_fragment)
-composer.add_conditional(lambda: detect_mods(), "SECTION HEADER")
-final_report = composer.build()
-
-# Conditional sections with automatic headers
-from ClassicLib.ScanLog.composition import ConditionalSection
-section = ConditionalSection.with_header(
-    lambda: content_fragment,
-    "Header added only if content exists"
-)
-```
-
-### AsyncBridge Pattern (Critical Performance)
-```python
-# Thread-safe singleton for efficient sync-to-async execution
-from ClassicLib.AsyncBridge import AsyncBridge
-
-bridge = AsyncBridge.get_instance()
-result = bridge.run_async(async_function())
-
-# PERFORMANCE: Maintains persistent thread-local event loops
-# ❌ Don't: asyncio.run() repeatedly (creates new loops each time)
-# ✅ Do: AsyncBridge for persistent thread-local event loops
-# ❌ Don't: Create event loops manually
-# ✅ Do: Use AsyncBridge singleton pattern
-```
-
-### Modular File Organization (CURRENT STRUCTURE)
-```python
-# Post-refactoring: One class per file, logical subdirectories
-ClassicLib/
-  ScanLog/
-    fragments/          # Fragment composition system
-      report_fragment.py
-      report_composer.py
-      fragment_collector.py
-    composition/        # Conditional sections
-      conditional_section.py
-      report_composer.py
-    models/            # Data classes
-      scan_config.py
-      scan_statistics.py
-      scan_result.py
-  MessageHandler/      # Messaging system
-    handler.py         # Main handler
-    models.py         # Message data classes
-    enums.py          # Message types
-  FileIO/             # File operations
-    core.py           # FileIOCore class
-    sync_adapters.py  # Sync compatibility
-  Utils/              # Utilities by category
-    path_utils.py
-    string_utils.py
-    file_utils.py
-
-# Backward compatibility maintained via re-exports
-from ClassicLib.ScanLog.ReportFragment import ReportFragment  # ✅ Works but deprecated
-from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment  # ✅ Preferred
-```
-
-### TUI Architecture (Terminal User Interface)
-- **Main app**: `ClassicLib/TUI/app.py` - Textual application controller
-- **Screens**: `ClassicLib/TUI/screens/` - Full-screen interfaces (main, help, settings, papyrus)
-- **Widgets**: `ClassicLib/TUI/widgets/` - Reusable UI components (progress bars, dialogs, input forms)
-- **Handlers**: `ClassicLib/TUI/handlers/` - Business logic handlers for scan operations
-- **Themes**: `ClassicLib/TUI/themes/` - UI styling and color schemes
-
-### Crash Log Processing Pipeline
-1. **File discovery**: `crashlogs_get_files()` finds log files
-2. **Reformatting**: `crashlogs_reformat()` or `crashlogs_reformat_async()` standardizes formats
-3. **Async orchestration**: `OrchestratorCore` (async-first) coordinates analysis via fragments
-4. **Component analysis**: FormID, plugin, settings, and suspect scanning via specialized analyzers
-5. **Fragment composition**: `ReportComposer` builds immutable reports from fragments
-
-### FormID Database System
-- **Async-first lookups**: `AsyncFormIDAnalyzer` with sync fallback to `FormIDAnalyzer`
-- **Database paths**: Configured via `ClassicLib.Constants.DB_PATHS`
-- **Plugin cross-reference**: Maps crash data FormIDs to mod origins
-
-### Configuration System
-- **YAML cache**: Type-safe access via `yaml_settings(type, YAML.Section, "key")`
-- **Main settings**: `CLASSIC Settings.yaml` for core configuration
-- **Game-specific**: `CLASSIC Data/CLASSIC <GAME> Local.yaml` for local overrides
-- **Ignore patterns**: `CLASSIC Ignore.yaml` for filtering false positives
-
-## Error Handling Patterns
-
-### Exception Management
-- **Avoid blind exceptions** unless required for optional functionality
-- **Use `contextlib.suppress(ImportError)`** for optional imports
-- **Log via MessageHandler**: Never use direct print statements
-
-### Thread Safety & Async Patterns
-- **ThreadSafeLogCache**: Thread-safe in-memory cache for crash log data
-- **Async database operations**: Use `aiosqlite` when available, fallback to sync
-- **Resource cleanup**: Always use context managers and finally blocks
-
-## Performance Considerations
-
-- **Async-first architecture**: Core operations use async/await for better performance
-- **Memory management**: Use generators for large data processing, avoid loading entire files
-- **Database optimization**: Async FormID lookups with connection pooling
-- **File I/O**: Batch operations where possible, use `FileIOCore` for unified async file handling
-
-## Code Quality Tools
-
-- **Ruff**: Configured in `pyproject.toml` for linting/formatting
-- **Pylint**: Used for additional code quality checks including complexity analysis
-- **Pytest**: With coverage reporting via `pytest --cov=. --cov-report=html`
-- **Type checking**: MyPy configuration in `pyproject.toml`
-
-## Code Complexity Standards
-
-### Branch Complexity (PLR0912)
-
-**CRITICAL**: Functions must comply with pylint's PLR0912 rule - **maximum 12 branches per function/method**.
-
-#### What Counts as a Branch
-- `if`, `elif`, `else` statements
-- `for`, `while` loops
-- `try`, `except`, `finally` blocks
-- `with` statements
-- `match`/`case` statements (Python 3.10+)
-- Ternary operators (`x if condition else y`)
-- Boolean operators in complex conditions (`and`, `or`)
-
-#### Refactoring Strategies
-
-**1. Extract Functions**
-```python
-# ❌ Too many branches (>12)
-def process_data(data):
-    if data.type == "A":
-        if data.valid:
-            if data.processed:
-                # ... many more conditions
-                pass
-
-# ✅ Refactored with extraction
-def process_data(data):
-    if data.type == "A":
-        return process_type_a(data)
-    elif data.type == "B":
-        return process_type_b(data)
-
-def process_type_a(data):
-    if not data.valid:
-        return handle_invalid(data)
-    return handle_valid_a(data)
-```
-
-**2. Use Dispatch Patterns**
-```python
-# ❌ Many if/elif branches
-def handle_command(command):
-    if command == "start":
-        # logic
-    elif command == "stop":
-        # logic
-    # ... 10+ more elif statements
-
-# ✅ Dictionary dispatch
-def handle_command(command):
-    handlers = {
-        "start": handle_start,
-        "stop": handle_stop,
-        "restart": handle_restart,
-        # ...
-    }
-    handler = handlers.get(command, handle_unknown)
-    return handler()
-```
-
-**3. Early Returns and Guard Clauses**
-```python
-# ❌ Nested conditions
-def validate_user(user):
-    if user:
-        if user.active:
-            if user.verified:
-                if user.permissions:
-                    # actual logic
-                    pass
-
-# ✅ Guard clauses
-def validate_user(user):
-    if not user:
-        return False
-    if not user.active:
-        return False
-    if not user.verified:
-        return False
-    if not user.permissions:
-        return False
-
-    # actual logic
-    return True
-```
-
-**4. State Machines for Complex Logic**
-```python
-# ✅ State machine pattern for complex workflows
-class DocumentProcessor:
-    def process(self, document):
-        state_handlers = {
-            "draft": self._handle_draft,
-            "review": self._handle_review,
-            "approved": self._handle_approved,
-        }
-        return state_handlers[document.state](document)
-```
-
-#### Checking Compliance
-
+### Rust Development
 ```bash
-# Check for PLR0912 violations
-pylint --disable=all --enable=PLR0912 ClassicLib/
+# Method 1: Build wheel (MOST RELIABLE)
+maturin build --release --out classic-core/dist
+uv pip install classic-core/dist/classic_*.whl --force-reinstall
 
-# Or check all pylint rules
-pylint ClassicLib/
+# Method 2: Editable install (development)
+rm .venv/Lib/site-packages/classic_core.pyd  # Remove old first
+uv pip install -e . --force-reinstall
+
+# Verify acceleration
+uv run python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
 ```
 
-#### When Complexity is Unavoidable
+### Testing
+```bash
+# Run tests (use terminal, not VS Code test tool)
+uv run pytest -n auto               # All tests, parallel
+uv run pytest -n 4 -m "unit and not slow"  # Quick unit tests
+uv run pytest tests/rust_integration/ -v   # Rust integration tests
+```
 
-In rare cases where high complexity is unavoidable:
-1. **Document thoroughly** - Explain why the complexity is necessary
-2. **Add comprehensive tests** - Test all branches
-3. **Consider splitting the module** - Break into smaller, focused modules
-4. **Use type hints extensively** - Help readers understand the flow
+## Code Quality Standards
 
+### Development Rules
+1. **No print()** - Use `MessageHandler` (`msg_info()`, `msg_warning()`, `msg_error()`)
+2. **Use pathlib.Path** - Never string paths
+3. **Async-first** - Use `AsyncBridge` for sync contexts
+4. **Type annotations** - Complete Python 3.12+ syntax required
+5. **Test markers** - All tests need `@pytest.mark.unit/.integration/.rust` etc.
+6. **Deprecated APIs = ERRORS** - Zero tolerance for deprecation warnings
+
+### Common Patterns
 ```python
-def complex_parser(data: ComplexDataType) -> ParseResult:
-    """
-    Parse complex data format with multiple variants.
+# Rust acceleration (automatic with fallback)
+from ClassicLib.integration.factory import get_parser, get_formid_analyzer
+parser = get_parser()  # Uses RustLogParser if available
 
-    High complexity is unavoidable due to the need to handle
-    15+ different data format variations in a single pass.
-    Each branch handles a specific format case.
-    """
-    # pylint: disable=too-many-branches
-    # Complexity justified by format requirements
+# File I/O
+from ClassicLib.FileIOCore import FileIOCore
+io_core = FileIOCore()
+content = await io_core.read_file(path)
+
+# Settings
+from ClassicLib.YamlSettingsCache import yaml_cache
+values = yaml_cache.batch_get_settings([
+    (str, YAML.Settings, "key1"),
+    (bool, YAML.Settings, "key2")
+])
+
+# Messaging
+from ClassicLib.MessageHandler import msg_info, msg_warning, msg_error
+msg_info("Operation completed")
 ```
 
-## Common Anti-Patterns
+### Anti-Patterns to Avoid
+- ❌ `asyncio.run()` in sync contexts → ✅ `AsyncBridge.run_async()`
+- ❌ Production YAML in tests → ✅ `YAML.TEST` or mocks
+- ❌ String paths → ✅ `pathlib.Path`
+- ❌ Missing test markers → ✅ `@pytest.mark.unit` etc.
+- ❌ Deprecated APIs → ✅ Update to current APIs immediately
 
-1. ❌ `print()` statements → ✅ `msg_info()`, `msg_warning()`, `msg_error()`
-2. ❌ String paths → ✅ `pathlib.Path` objects
-3. ❌ Unused imports → ✅ Audit and remove
-4. ❌ Missing type annotations → ✅ Complete function signatures
-5. ❌ Patching definitions → ✅ Patch where used in tests
-6. ❌ Skip MessageHandler init → ✅ Use `init_message_handler_fixture`
-7. ❌ `asyncio.run()` in sync context → ✅ Use `AsyncBridge.get_instance().run_async()`
-8. ❌ Mutable lists in reports → ✅ Use `ReportFragment` composition
-9. ❌ Production YAML in tests → ✅ Use `YAML.TEST` or mock `yaml_settings()`
-10. ❌ Creating event loops manually → ✅ Use `AsyncBridge` for persistent loops
-11. ❌ Multiple classes per file → ✅ One primary class per file
-12. ❌ Tests in root tests/ → ✅ Organize in subdirectories by functionality
-13. ❌ Adding backward compatibility for tests → ✅ Update tests to match the new API
-14. ❌ Functions with >12 branches (PLR0912) → ✅ Refactor using extraction, dispatch patterns, or guard clauses
+## Project Structure
 
-## Key Architecture Files
+### Entry Points
+- `CLASSIC_Interface.py` - GUI (PySide6/Qt)
+- `CLASSIC_TUI.py` - Terminal UI (Textual)
+- `CLASSIC_ScanLogs.py` - CLI scanner
 
-- `ClassicLib/__init__.py` - Main exports and MessageHandler functions
-- `ClassicLib/ScanLog/OrchestratorCore.py` - Async-first core orchestration
-- `ClassicLib/FileIOCore.py` - Unified async file I/O operations
-- `ClassicLib/MessageHandler/handler.py` - Universal output system
-- `ClassicLib/GlobalRegistry.py` - Shared state management
-- `ClassicLib/TUI/app.py` - Terminal UI application controller
-- `ClassicLib/AsyncBridge.py` - Sync-to-async execution bridge
-- `ClassicLib/ScanLog/fragments/report_fragment.py` - Immutable fragment composition system
-- `ClassicLib/ScanLog/composition/report_composer.py` - Fragment composition utilities
-- `tests/conftest.py` - Test fixtures and initialization
+### Core Components (`ClassicLib/`)
+- **AsyncBridge** - Sync/async coordination
+- **MessageHandler/** - Central messaging system
+- **integration/** - Rust acceleration with Python fallback
+- **Interface/** - GUI components (modular mixins)
+- **ScanLog/** - Log parsing with Rust acceleration
+- **FileIO/** - File operations with encoding detection
+- **TUI/** - Terminal UI screens and widgets
+
+### Configuration
+- **uv** package manager (not pip/poetry)
+- **Python 3.12+** required
+- **Dependencies**: PySide6, Textual, aiohttp, ruamel-yaml
+- **Build**: PyInstaller for executables
+
+## Testing Guidelines
+
+### Test Organization
+- **Domain directories**: `tests/async_resources/`, `tests/io/`, `tests/rust_integration/`
+- **File naming**: `test_<component>_<type>.py` (unit/integration/e2e)
+- **Required markers**: `@pytest.mark.unit`, `.integration`, `.rust`, `.slow`, `.gui`
+
+### Critical Rules
+1. **NEVER modify production YAML** - Use `YAML.TEST` or mocks
+2. **NEVER add backward compatibility** to fix tests - Update tests to current API
+3. **Always clear singletons** between tests (GlobalRegistry, MessageHandler)
+4. **Use proper async mocking** to avoid unawaited coroutine warnings
+5. **Test Rust integration** with `@pytest.mark.rust` for accelerated components
+
+## Performance Monitoring
+
+### Rust Status Checking
+```python
+# Check component status
+from ClassicLib.integration.status import get_rust_component_status, print_rust_status
+status = get_rust_component_status()
+if status["acceleration_active"]:
+    print(f"🚀 {status['active_count']}/{status['total_count']} components accelerated")
+
+# Force Python fallback (debugging)
+import os
+os.environ["CLASSIC_DISABLE_RUST"] = "1"
+```
+
+### Performance Gains
+| Component | Python Time | Rust Time | Speedup |
+|-----------|-------------|-----------|---------|
+| Log Parsing | 2-3 seconds | 200-300ms | 10x |
+| FormID Analysis | 250ms/1000 IDs | 10ms/1000 IDs | 25x |
+| Pattern Matching | 100ms/scan | 5ms/scan | 20x |
+| File I/O | 50ms/file | 5ms/file | 10x |
+
+## Build and Distribution
+
+### Development Build
+```bash
+# Build Rust components
+maturin build --release --out classic-core/dist
+uv pip install classic-core/dist/classic_*.whl --force-reinstall
+
+# Build executable
+uv run pyinstaller --clean .\CLASSIC.spec
+```
+
+### Distribution Methods
+1. **PyInstaller executables** - Primary distribution (no Python needed)
+2. **uvx from GitHub** - `uvx --from github:evildarkarchon/CLASSIC-Fallout4 classic`
+3. **NOT pip install** - Not published to PyPI
+
+## Key Files to Understand
+- `ClassicLib/AsyncBridge.py` - Async/sync coordination patterns
+- `ClassicLib/integration/factory.py` - Rust acceleration factory
+- `ClassicLib/MessageHandler/` - Centralized messaging
+- `build_all.ps1` - Complete build workflow
+- `rebuild_rust.ps1` - Rust build and install script
+- `pyproject.toml` - Project configuration and entry points
+- `Cargo.toml` - Rust workspace with separated architecture

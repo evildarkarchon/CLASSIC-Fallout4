@@ -37,14 +37,15 @@ hiddenimports.extend([
     "ClassicLib.integration.config",
     "ClassicLib.integration.status",
     "ClassicLib.integration.detector",
-    # All Rust Python modules
-    "classic_shared",
-    "classic_yaml",
-    "classic_database",
-    "classic_file_io",
-    "classic_scanlog",
-    "classic_config",
-    "classic_core",
+    # All Rust Python modules (.pyd files from separated architecture)
+    # Architecture: *-core crates (pure Rust business logic) + *-py crates (PyO3 bindings)
+    "classic_shared",      # Foundation (runtime, errors, utilities)
+    "classic_yaml",        # From classic-yaml-py (bindings for yaml-rust2 operations)
+    "classic_database",    # From classic-database-py (bindings for SQLite operations)
+    "classic_file_io",     # From classic-file-io-py (bindings for file I/O + DDS parsing)
+    "classic_scanlog",     # From classic-scanlog-py (bindings for log parsing + analysis)
+    "classic_config",      # From classic-config-py (bindings for YamlData configuration)
+    "classic_core",        # Facade re-exporting Phase 1 components
 ])
 
 # Collect PySide6 dependencies

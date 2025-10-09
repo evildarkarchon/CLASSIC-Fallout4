@@ -19,6 +19,9 @@ members = [
 
     # Facade
     "classic-core",
+
+    # Native Applications
+    "classic-cli",
 ]
 resolver = "2"
 

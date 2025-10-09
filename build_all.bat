@@ -24,10 +24,24 @@ if %errorlevel% equ 0 (
 )
 
 REM Build Rust extensions first (if source available)
+REM
+REM Architecture Overview (as of 2025-10-08):
+REM -----------------------------------------
+REM The Rust workspace uses separated architecture:
+REM   - *-core crates: Pure Rust business logic (rlib only, NO PyO3)
+REM   - *-py crates: Thin PyO3 bindings (cdylib, produces .pyd files)
+REM   - classic-core: Facade crate re-exporting Phase 1 components
+REM
+REM This separation enables:
+REM   1. CLI/TUI applications to use pure Rust business logic directly
+REM   2. Python applications to use the same logic via PyO3 bindings
+REM   3. 10-150x performance improvements for all operations
+REM
 if exist classic-core (
     echo ============================================================
-    echo Building Rust workspace...
+    echo Building Rust workspace (separated architecture)...
     echo ============================================================
+    echo Building: *-core crates (business logic) + *-py crates (bindings)
 
     REM Build the Rust extension from classic-core directory
     echo Building release build with maturin...
@@ -51,11 +65,17 @@ if exist classic-core (
         if exist temp_extract rmdir /s /q temp_extract
 
         REM Show what was extracted
-        echo Extracted classic_core package with:
-        dir /b classic_core\*.*
+        echo.
+        echo Extracted Rust Python modules (.pyd files):
+        dir /b classic_core\*.pyd 2>nul
+        echo.
+        echo Note: These .pyd files are from *-py crates (PyO3 bindings)
+        echo The *-core crates provide pure Rust business logic for CLI/TUI
 
         REM Create manifest file
         echo Rust extensions built on %date% %time% > classic_core\MANIFEST.txt
+        echo. >> classic_core\MANIFEST.txt
+        echo Architecture: Separated *-core (business logic) + *-py (PyO3 bindings) >> classic_core\MANIFEST.txt
         echo. >> classic_core\MANIFEST.txt
         dir /b classic_core\*.pyd >> classic_core\MANIFEST.txt
 

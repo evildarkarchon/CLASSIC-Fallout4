@@ -3,21 +3,49 @@ Helper functions for PyInstaller spec files to locate and bundle Rust extensions
 
 This module provides a common way for all spec files to find Rust extensions,
 checking the local build directory first before falling back to site-packages.
+
+Architecture Overview (as of 2025-10-08):
+-----------------------------------------
+The Rust workspace follows a separated architecture with business logic in *-core
+crates (pure Rust, no PyO3) and Python bindings in *-py crates (thin PyO3 adapters).
+
+Rust Crate Structure → Python Modules:
+- classic-shared (foundation) → classic_shared.pyd
+- classic-yaml-py (bindings) → classic_yaml.pyd
+  - Depends on: classic-yaml-core (business logic)
+- classic-database-py (bindings) → classic_database.pyd
+  - Depends on: classic-database-core (business logic)
+- classic-file-io-py (bindings) → classic_file_io.pyd
+  - Depends on: classic-file-io-core (business logic)
+- classic-scanlog-py (bindings) → classic_scanlog.pyd
+  - Depends on: classic-scanlog-core (business logic)
+- classic-config-py (bindings) → classic_config.pyd
+  - Depends on: config-core (business logic)
+- classic-core (facade) → classic_core.pyd
+  - Re-exports Phase 1 components for Python
+
+Note: Only the *-py crates produce .pyd files. The *-core crates are rlib only
+and provide pure Rust business logic that can be used by CLI/TUI applications.
+
+Performance: These Rust extensions provide 10-150x speedups for:
+- Log parsing (10x), FormID analysis (25x), Pattern matching (20x)
+- File I/O (10x), DDS processing (40x), Record scanning (40x)
 """
 
 from pathlib import Path
 import site
 
 
-# All Rust Python modules to bundle
+# All Rust Python modules to bundle (.pyd files from *-py crates)
+# These are the standalone Python extension modules that PyInstaller needs to include
 RUST_MODULES = [
-    "classic_shared",
-    "classic_yaml",
-    "classic_database",
-    "classic_file_io",
-    "classic_scanlog",
-    "classic_config",
-    "classic_core"
+    "classic_shared",      # Foundation layer (runtime, errors, utilities)
+    "classic_yaml",        # YAML operations (from classic-yaml-py)
+    "classic_database",    # SQLite operations (from classic-database-py)
+    "classic_file_io",     # File I/O operations (from classic-file-io-py)
+    "classic_scanlog",     # Log parsing (from classic-scanlog-py)
+    "classic_config",      # Configuration (from classic-config-py)
+    "classic_core"         # Facade re-exporting Phase 1 components
 ]
 
 

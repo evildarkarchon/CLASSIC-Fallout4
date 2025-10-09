@@ -112,12 +112,15 @@ This document outlines the comprehensive plan to migrate CLASSIC's Command-Line 
 
 ### Shared Backend Components (Already in Rust)
 
-**Rust Acceleration Active in:**
-- ✅ **classic-scanlog**: Log parsing, FormID analysis, pattern matching (~1500 LOC)
-- ✅ **classic-file-io**: File I/O, encoding detection, DDS parsing
-- ✅ **classic-database**: SQLite FormID lookups with connection pooling
-- ✅ **classic-yaml**: YAML operations (yaml-rust2)
+**Rust Business Logic Available in `-core` Crates:**
+- ✅ **classic-scanlog-core**: Log parsing, FormID analysis, pattern matching (~1500 LOC)
+- ✅ **classic-file-io-core**: File I/O, encoding detection, DDS parsing
+- ✅ **classic-database-core**: SQLite FormID lookups with connection pooling
+- ✅ **classic-yaml-core**: YAML operations (yaml-rust2)
+- ✅ **classic-config-core**: Configuration management
 - ✅ **classic-shared**: Runtime, errors, utilities
+
+**Architecture Note**: CLI and TUI will use `-core` crates **directly** (no PyO3 overhead), while Python bindings (`-py` crates) are only for Python integration.
 
 **Performance Gains:**
 | Component | Python Time | Rust Time | Speedup |
@@ -172,10 +175,24 @@ This document outlines the comprehensive plan to migrate CLASSIC's Command-Line 
 
 ## Architecture Overview
 
+### Architecture Rule: CLI/TUI Use Business Logic Directly
+
+**CRITICAL DESIGN PRINCIPLE**: CLI and TUI are **native Rust applications** that:
+- ✅ Use `-core` crates directly (pure Rust business logic)
+- ✅ Bypass PyO3 entirely (no Python bindings overhead)
+- ✅ Share the global Tokio runtime via `classic_shared::get_runtime()`
+- ❌ Do NOT depend on `-py` crates (Python bindings)
+
+**Dependency Flow:**
+```
+Python Application → `-py` crates → `-core` crates → classic-shared
+CLI/TUI Application → `-core` crates (direct) → classic-shared
+```
+
 ### Proposed Rust Crate Structure
 
 ```
-classic-cli/          # New CLI application crate
+classic-cli/          # New CLI application crate (uses -core directly)
 ├── src/
 │   ├── main.rs       # CLI entry point
 │   ├── args.rs       # Argument parsing (clap)
@@ -184,7 +201,7 @@ classic-cli/          # New CLI application crate
 │   └── output.rs     # Output formatting and display
 └── Cargo.toml
 
-classic-tui/          # New TUI application crate
+classic-tui/          # New TUI application crate (uses -core directly)
 ├── src/
 │   ├── main.rs       # TUI entry point
 │   ├── app.rs        # Application state and event loop
@@ -207,43 +224,53 @@ classic-tui/          # New TUI application crate
 │   └── events.rs     # Event definitions
 └── Cargo.toml
 
-classic-shared/       # Existing (enhance for CLI/TUI)
+classic-shared/       # Foundation layer (runtime, errors, utilities)
 ├── src/
-│   ├── runtime.rs    # Global Tokio runtime
+│   ├── runtime.rs    # Global Tokio runtime (ONE RUNTIME RULE)
 │   ├── errors.rs     # Error types
 │   ├── paths.rs      # Path utilities
-│   └── config.rs     # Shared config types
+│   └── lib.rs        # Common utilities
 ```
 
 ### Key Rust Dependencies
 
-#### CLI Dependencies:
+#### CLI Dependencies (Uses `-core` Crates Directly):
 ```toml
 [dependencies]
 clap = { version = "4.5", features = ["derive", "cargo"] }
 tokio = { version = "1.47", features = ["full"] }
 anyhow = "1.0"
-classic-scanlog = { path = "../classic-scanlog" }
-classic-file-io = { path = "../classic-file-io" }
-classic-database = { path = "../classic-database" }
-classic-yaml = { path = "../classic-yaml" }
+
+# Business logic crates (NO PyO3 overhead)
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+classic-database-core = { path = "../classic-database-core" }
+classic-yaml-core = { path = "../classic-yaml-core" }
+classic-config-core = { path = "../classic-config-core" }
 classic-shared = { path = "../classic-shared" }
+
+# CLI utilities
 indicatif = "0.17"  # Progress bars
 console = "0.15"    # Terminal utilities
 ```
 
-#### TUI Dependencies:
+#### TUI Dependencies (Uses `-core` Crates Directly):
 ```toml
 [dependencies]
 ratatui = "0.28"    # Modern TUI framework (fork of tui-rs)
 crossterm = "0.28"  # Terminal manipulation
 tokio = { version = "1.47", features = ["full"] }
 anyhow = "1.0"
-classic-scanlog = { path = "../classic-scanlog" }
-classic-file-io = { path = "../classic-file-io" }
-classic-database = { path = "../classic-database" }
-classic-yaml = { path = "../classic-yaml" }
+
+# Business logic crates (NO PyO3 overhead)
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+classic-database-core = { path = "../classic-database-core" }
+classic-yaml-core = { path = "../classic-yaml-core" }
+classic-config-core = { path = "../classic-config-core" }
 classic-shared = { path = "../classic-shared" }
+
+# TUI utilities
 tui-input = "0.9"   # Text input widgets
 ```
 
@@ -256,10 +283,12 @@ tui-input = "0.9"   # Text input widgets
 
 ### Shared Configuration Layer
 
-**Design**: Both CLI and TUI will use a shared `ClassicConfig` struct in `classic-shared`:
+**Design**: Both CLI and TUI will use configuration types from `classic-config-core` crate (pure Rust, no PyO3):
 
 ```rust
-// classic-shared/src/config.rs
+// classic-config-core/src/lib.rs
+use classic_yaml_core::YamlOperations;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClassicConfig {
     pub fcx_mode: bool,
@@ -280,11 +309,36 @@ pub struct PathConfig {
 }
 
 impl ClassicConfig {
-    pub fn load_from_yaml(path: &Path) -> Result<Self>;
-    pub fn save_to_yaml(&self, path: &Path) -> Result<()>;
-    pub fn merge_cli_args(&mut self, args: &CliArgs);
+    /// Load configuration from YAML using classic-yaml-core
+    pub async fn load_from_yaml(path: &Path) -> Result<Self> {
+        let yaml_ops = YamlOperations::new();
+        let content = tokio::fs::read_to_string(path).await?;
+        yaml_ops.parse_yaml(&content)
+    }
+
+    /// Save configuration to YAML using classic-yaml-core
+    pub async fn save_to_yaml(&self, path: &Path) -> Result<()> {
+        let yaml_ops = YamlOperations::new();
+        let content = yaml_ops.serialize_yaml(self)?;
+        tokio::fs::write(path, content).await?;
+        Ok(())
+    }
+
+    /// Merge CLI arguments into configuration
+    pub fn merge_cli_args(&mut self, args: &CliArgs) {
+        if let Some(fcx_mode) = args.fcx_mode {
+            self.fcx_mode = fcx_mode;
+        }
+        // ... merge other fields
+    }
 }
 ```
+
+**Key Points:**
+- Uses `classic-yaml-core` for YAML operations (no PyO3)
+- Async-first with `tokio::fs` for file I/O
+- Shared runtime via `classic_shared::get_runtime()`
+- Can be used by CLI, TUI, and Python (via `classic-config-py` bindings)
 
 ---
 
@@ -347,9 +401,10 @@ impl ClassicConfig {
    - Validate and persist settings
 
 4. **Scan executor** (`executor.rs`):
-   - Bridge to existing Rust backend
-   - Call `classic-scanlog` components
-   - Handle async scan orchestration
+   - Use `classic-scanlog-core` directly (no PyO3 overhead)
+   - Use `classic-database-core` for FormID lookups
+   - Use `classic-file-io-core` for file operations
+   - Handle async scan orchestration with shared runtime
 
 5. **Output formatting** (`output.rs`):
    - Match Python CLI output format
@@ -710,12 +765,15 @@ impl OutputViewer {
 
 ### Async Architecture
 
-**Pattern**: Tokio-based async runtime with message passing:
+**Pattern**: Tokio-based async runtime with message passing (ONE RUNTIME RULE):
 
 ```rust
 // main.rs
 #[tokio::main]
 async fn main() -> Result<()> {
+    // ONE RUNTIME RULE: tokio::main creates the runtime
+    // All -core crates share this via classic_shared::get_runtime()
+
     let (event_tx, mut event_rx) = mpsc::channel(100);
     let (scan_tx, mut scan_rx) = mpsc::channel(100);
 
@@ -747,6 +805,32 @@ async fn main() -> Result<()> {
 
     ui_handle.await??;
     Ok(())
+}
+```
+
+**Using -core Crates in CLI/TUI:**
+```rust
+// executor.rs - Using business logic directly
+use classic_scanlog_core::{LogParser, FormIDAnalyzer};
+use classic_database_core::DatabasePool;
+use classic_file_io_core::FileIOCore;
+use classic_yaml_core::YamlOperations;
+
+pub struct ScanExecutor {
+    parser: LogParser,
+    analyzer: FormIDAnalyzer,
+    db_pool: DatabasePool,
+    file_io: FileIOCore,
+}
+
+impl ScanExecutor {
+    pub async fn scan(&self, config: &ClassicConfig) -> Result<ScanResults> {
+        // Direct access to Rust business logic (no PyO3 conversion overhead)
+        let logs = self.file_io.read_crash_logs(&config.paths.scan_custom).await?;
+        let parsed = self.parser.parse_logs(&logs).await?;
+        let analyzed = self.analyzer.analyze_formids(&parsed, &self.db_pool).await?;
+        Ok(analyzed)
+    }
 }
 ```
 
@@ -1057,11 +1141,39 @@ jobs:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2025-10-08 | AI Assistant | Initial comprehensive plan |
+| 1.1 | 2025-10-09 | AI Assistant | Updated for new crate separation architecture: CLI/TUI use `-core` crates directly, bypassing `-py` bindings |
 
 ---
 
+## Architecture Summary
+
+**Key Architectural Decisions:**
+
+1. **Separated Business Logic & Bindings**:
+   - `-core` crates: Pure Rust business logic (no PyO3)
+   - `-py` crates: Thin PyO3 adapters for Python integration
+   - CLI/TUI: Use `-core` crates directly (native Rust applications)
+
+2. **ONE RUNTIME RULE**:
+   - Single global Tokio runtime via `classic_shared::get_runtime()`
+   - Prevents "runtime within runtime" errors
+   - Shared across all `-core` crates
+
+3. **Performance Benefits**:
+   - CLI/TUI bypass PyO3 conversion overhead entirely
+   - Direct access to high-performance Rust implementations
+   - <500ms startup time (vs 2-3s Python)
+   - <100MB memory footprint
+
+4. **Dependency Flow**:
+   ```
+   Python App → classic-core (facade) → *-py bindings → *-core logic → classic-shared
+   CLI/TUI    → *-core logic (direct) → classic-shared
+   ```
+
 **Next Steps:**
-1. Review plan with stakeholders
+1. Review updated plan with stakeholders
 2. Set up `classic-cli` and `classic-tui` crate skeletons
-3. Begin Phase 1: CLI Foundation
+3. Begin Phase 1: CLI Foundation (use `-core` crates)
 4. Establish CI/CD pipeline for Rust builds
+5. Ensure all `-core` crates follow architecture rules (no PyO3)
