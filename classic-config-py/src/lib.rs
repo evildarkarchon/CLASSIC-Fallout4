@@ -4,10 +4,10 @@
 //! It contains ONLY type conversions and Python wrappers - all business
 //! logic is in classic-config-core.
 
+use classic_config_core::{ConfigError, YamlDataCore};
+use classic_shared::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
-use classic_config_core::{YamlDataCore, ConfigError};
-use classic_shared::get_runtime;
 use std::path::PathBuf;
 
 /// Python wrapper for YamlDataCore
@@ -26,15 +26,11 @@ pub struct PyYamlData {
 impl PyYamlData {
     #[new]
     #[pyo3(signature = (yaml_dirs, game, vr_mode))]
-    fn new(
-        yaml_dirs: Vec<PathBuf>,
-        game: String,
-        vr_mode: bool,
-    ) -> PyResult<Self> {
+    fn new(yaml_dirs: Vec<PathBuf>, game: String, vr_mode: bool) -> PyResult<Self> {
         // Call pure Rust core using shared runtime
-        let core = get_runtime().block_on(async {
-            YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await
-        }).map_err(to_pyerr)?;
+        let core = get_runtime()
+            .block_on(async { YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await })
+            .map_err(to_pyerr)?;
 
         Ok(Self { inner: core })
     }
@@ -252,7 +248,11 @@ impl PyYamlData {
     fn __repr__(&self) -> String {
         format!(
             "YamlData(game={}, version={}, vr_mode={})",
-            self.inner.crashgen_name.split('_').next().unwrap_or("unknown"),
+            self.inner
+                .crashgen_name
+                .split('_')
+                .next()
+                .unwrap_or("unknown"),
             self.inner.classic_version,
             !self.inner.crashgen_latest_vr.is_empty()
         )
@@ -262,18 +262,10 @@ impl PyYamlData {
 /// Convert ConfigError to Python exception
 fn to_pyerr(err: ConfigError) -> PyErr {
     match err {
-        ConfigError::InvalidInput(msg) => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(msg)
-        }
-        ConfigError::IOError(msg) => {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(msg)
-        }
-        ConfigError::ParseError(msg) => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(msg)
-        }
-        ConfigError::RuntimeError(msg) => {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(msg)
-        }
+        ConfigError::InvalidInput(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(msg),
+        ConfigError::IOError(msg) => PyErr::new::<pyo3::exceptions::PyIOError, _>(msg),
+        ConfigError::ParseError(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(msg),
+        ConfigError::RuntimeError(msg) => PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(msg),
     }
 }
 

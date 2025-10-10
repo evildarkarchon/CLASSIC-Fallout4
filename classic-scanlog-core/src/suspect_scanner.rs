@@ -7,8 +7,8 @@
 //! - YAML-defined suspect pattern matching
 
 use crate::error::Result;
-use std::collections::HashMap;
 use rayon::prelude::*;
+use std::collections::HashMap;
 
 use crate::report::ReportFragment;
 
@@ -89,7 +89,8 @@ impl SuspectScanner {
             // Parse error information (format: "Severity | Error Name")
             if let Some((error_severity, error_name)) = error_key.split_once(" | ") {
                 // Format error name for report
-                let formatted_error_name = format!("{:.<width$}", error_name, width = max_warn_length);
+                let formatted_error_name =
+                    format!("{:.<width$}", error_name, width = max_warn_length);
 
                 // Add to report
                 lines.push(format!(
@@ -154,7 +155,8 @@ impl SuspectScanner {
 
             // Check if we have a suspect match
             if match_status.is_suspect() {
-                let formatted_error_name = format!("{:.<width$}", error_name, width = max_warn_length);
+                let formatted_error_name =
+                    format!("{:.<width$}", error_name, width = max_warn_length);
                 lines.push(format!(
                     "- **Checking for {} SUSPECT FOUND! > Severity : {}** \n\n",
                     formatted_error_name, error_severity
@@ -252,7 +254,7 @@ impl SuspectScanner {
     /// This provides significant speedup for batch operations
     pub fn scan_suspects_batch(
         &self,
-        crash_logs: Vec<(String, String)>,  // Vec<(main_error, callstack)>
+        crash_logs: Vec<(String, String)>, // Vec<(main_error, callstack)>
         max_warn_length: usize,
     ) -> Result<Vec<(ReportFragment, bool)>> {
         let results: Vec<_> = crash_logs
@@ -301,16 +303,13 @@ mod tests {
 
     #[test]
     fn test_check_dll_crash() {
-        let fragment = SuspectScanner::check_dll_crash(
-            "Error in plugin.dll at address 0x12345"
-        ).unwrap();
+        let fragment =
+            SuspectScanner::check_dll_crash("Error in plugin.dll at address 0x12345").unwrap();
 
         assert!(fragment.len() > 0);
 
         // Should not trigger for tbbmalloc
-        let fragment2 = SuspectScanner::check_dll_crash(
-            "Error in tbbmalloc.dll"
-        ).unwrap();
+        let fragment2 = SuspectScanner::check_dll_crash("Error in tbbmalloc.dll").unwrap();
 
         assert!(fragment2.len() == 0);
     }

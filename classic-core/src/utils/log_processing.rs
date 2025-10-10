@@ -3,21 +3,19 @@
 //! This module provides high-performance string operations specifically
 //! designed for parsing and analyzing Bethesda game crash logs.
 
+use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
+use dashmap::DashMap;
+use memchr::memmem;
+use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use rayon::prelude::*;
 use regex::Regex;
-use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
-use dashmap::DashMap;
-use once_cell::sync::Lazy;
 use std::sync::Arc;
-use memchr::memmem;
 
 use super::performance::Timer;
 
 /// Cache for compiled regex patterns
-static PATTERN_CACHE: Lazy<Arc<DashMap<String, Regex>>> = Lazy::new(|| {
-    Arc::new(DashMap::new())
-});
+static PATTERN_CACHE: Lazy<Arc<DashMap<String, Regex>>> = Lazy::new(|| Arc::new(DashMap::new()));
 
 /// Log processor optimized for crash log analysis
 #[pyclass]
@@ -63,24 +61,24 @@ impl LogProcessor {
 
     /// Find all occurrences of multiple patterns in text (optimized for crash logs)
     #[pyo3(signature = (text, patterns))]
-    pub fn find_all_patterns(&self, text: String, patterns: Vec<String>) -> Vec<(String, Vec<usize>)> {
+    pub fn find_all_patterns(
+        &self,
+        text: String,
+        patterns: Vec<String>,
+    ) -> Vec<(String, Vec<usize>)> {
         let _timer = Timer::start("find_all_patterns");
 
         // Build temporary matcher if not initialized
         let ac = match &self.pattern_matcher {
             Some(matcher) => matcher.clone(),
-            None => {
-                AhoCorasickBuilder::new()
-                    .ascii_case_insensitive(true)
-                    .build(&patterns)
-                    .unwrap()
-            }
+            None => AhoCorasickBuilder::new()
+                .ascii_case_insensitive(true)
+                .build(&patterns)
+                .unwrap(),
         };
 
-        let mut results: Vec<(String, Vec<usize>)> = patterns
-            .iter()
-            .map(|p| (p.clone(), Vec::new()))
-            .collect();
+        let mut results: Vec<(String, Vec<usize>)> =
+            patterns.iter().map(|p| (p.clone(), Vec::new())).collect();
 
         for mat in ac.find_iter(&text) {
             results[mat.pattern().as_usize()].1.push(mat.start());
@@ -138,12 +136,10 @@ impl LogProcessor {
         timer.set_bytes(text.len() as u64);
 
         // Get or compile regex pattern
-        let pattern = self.get_or_compile_pattern(
-            "formid",
-            r"(?i)(?:0x)?([0-9a-f]{6,8})\b"
-        );
+        let pattern = self.get_or_compile_pattern("formid", r"(?i)(?:0x)?([0-9a-f]{6,8})\b");
 
-        pattern.find_iter(&text)
+        pattern
+            .find_iter(&text)
             .map(|m| m.as_str().to_string())
             .collect()
     }
@@ -177,19 +173,26 @@ impl LogProcessor {
 
     /// Find stack frames with addresses and module information
     #[pyo3(signature = (lines))]
-    pub fn extract_stack_frames(&self, lines: Vec<String>) -> Vec<(String, Option<String>, Option<String>)> {
+    pub fn extract_stack_frames(
+        &self,
+        lines: Vec<String>,
+    ) -> Vec<(String, Option<String>, Option<String>)> {
         let _timer = Timer::start("extract_stack_frames");
 
-        lines.par_iter()
+        lines
+            .par_iter()
             .filter_map(|line| {
                 // Pattern: address module+offset or address symbol
                 let pattern = self.get_or_compile_pattern(
                     "stack_frame",
-                    r"(?i)([0-9a-f]{8,16})\s+(\w+(?:\.\w+)?)\s*\+?\s*([0-9a-f]+)?"
+                    r"(?i)([0-9a-f]{8,16})\s+(\w+(?:\.\w+)?)\s*\+?\s*([0-9a-f]+)?",
                 );
 
                 pattern.captures(line).map(|caps| {
-                    let address = caps.get(1).map(|m| m.as_str().to_string()).unwrap_or_default();
+                    let address = caps
+                        .get(1)
+                        .map(|m| m.as_str().to_string())
+                        .unwrap_or_default();
                     let module = caps.get(2).map(|m| m.as_str().to_string());
                     let offset = caps.get(3).map(|m| m.as_str().to_string());
                     (address, module, offset)
@@ -208,20 +211,27 @@ impl LogProcessor {
     ) -> Vec<String> {
         let _timer = Timer::start("filter_lines");
 
-        lines.par_iter()
+        lines
+            .par_iter()
             .filter(|line| {
                 let line_lower = line.to_lowercase();
 
                 // Check include keywords
                 if let Some(ref includes) = include_keywords {
-                    if !includes.iter().any(|kw| line_lower.contains(&kw.to_lowercase())) {
+                    if !includes
+                        .iter()
+                        .any(|kw| line_lower.contains(&kw.to_lowercase()))
+                    {
                         return false;
                     }
                 }
 
                 // Check exclude keywords
                 if let Some(ref excludes) = exclude_keywords {
-                    if excludes.iter().any(|kw| line_lower.contains(&kw.to_lowercase())) {
+                    if excludes
+                        .iter()
+                        .any(|kw| line_lower.contains(&kw.to_lowercase()))
+                    {
                         return false;
                     }
                 }
@@ -237,7 +247,8 @@ impl LogProcessor {
     pub fn count_patterns(&self, text: String, patterns: Vec<String>) -> Vec<(String, usize)> {
         let _timer = Timer::start("count_patterns");
 
-        patterns.par_iter()
+        patterns
+            .par_iter()
             .map(|pattern| {
                 let count = text.matches(pattern.as_str()).count();
                 (pattern.clone(), count)
@@ -257,9 +268,17 @@ impl LogProcessor {
 
         // Section markers commonly found in crash logs
         let markers = vec![
-            "SYSTEM SPECS:", "PROBABLE CALL STACK:", "REGISTERS:",
-            "STACK WALK:", "MODULES:", "STACK:", "MEMORY MAP:",
-            "GAME LOADED:", "PLUGINS:", "SETTINGS:", "INI CONFIGURATION:",
+            "SYSTEM SPECS:",
+            "PROBABLE CALL STACK:",
+            "REGISTERS:",
+            "STACK WALK:",
+            "MODULES:",
+            "STACK:",
+            "MEMORY MAP:",
+            "GAME LOADED:",
+            "PLUGINS:",
+            "SETTINGS:",
+            "INI CONFIGURATION:",
         ];
 
         for line in text.lines() {
@@ -302,14 +321,13 @@ impl LogProcessor {
             let text_lower = text.to_lowercase();
             let needle_lower = needle.to_lowercase();
             let finder = memmem::Finder::new(&needle_lower);
-            finder.find_iter(text_lower.as_bytes())
+            finder
+                .find_iter(text_lower.as_bytes())
                 .map(|pos| pos)
                 .collect()
         } else {
             let finder = memmem::Finder::new(&needle);
-            finder.find_iter(text.as_bytes())
-                .map(|pos| pos)
-                .collect()
+            finder.find_iter(text.as_bytes()).map(|pos| pos).collect()
         }
     }
 
@@ -318,16 +336,15 @@ impl LogProcessor {
     pub fn process_lines_parallel(&self, lines: Vec<String>, operation: String) -> Vec<String> {
         let _timer = Timer::start(format!("process_lines_{}", operation));
 
-        lines.par_iter()
-            .map(|line| {
-                match operation.as_str() {
-                    "trim" => line.trim().to_string(),
-                    "upper" => line.to_uppercase(),
-                    "lower" => line.to_lowercase(),
-                    "strip_timestamps" => self.strip_timestamp(line),
-                    "normalize_whitespace" => self.normalize_whitespace(line),
-                    _ => line.clone(),
-                }
+        lines
+            .par_iter()
+            .map(|line| match operation.as_str() {
+                "trim" => line.trim().to_string(),
+                "upper" => line.to_uppercase(),
+                "lower" => line.to_lowercase(),
+                "strip_timestamps" => self.strip_timestamp(line),
+                "normalize_whitespace" => self.normalize_whitespace(line),
+                _ => line.clone(),
             })
             .collect()
     }
@@ -371,7 +388,7 @@ impl LogProcessor {
         // Common timestamp patterns
         let pattern = self.get_or_compile_pattern(
             "timestamp",
-            r"^\s*\[?\d{4}[-/]\d{2}[-/]\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?\]?\s*"
+            r"^\s*\[?\d{4}[-/]\d{2}[-/]\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?\]?\s*",
         );
 
         pattern.replace(line, "").to_string()

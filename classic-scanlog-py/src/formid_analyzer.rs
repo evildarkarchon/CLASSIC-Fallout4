@@ -22,21 +22,19 @@ impl PyFormIDAnalyzerCore {
         mods_double: HashMap<String, String>,
     ) -> PyResult<Self> {
         let inner = FormIDAnalyzerCore::new(
-            None,  // db_pool not exposed to Python API (would need wrapper)
+            None, // db_pool not exposed to Python API (would need wrapper)
             show_formid_values,
             crashgen_name,
             important_mods,
             mods_single,
             mods_double,
-        ).map_err(crate::to_pyerr)?;
+        )
+        .map_err(crate::to_pyerr)?;
         Ok(Self { inner })
     }
 
     /// Extract FormIDs from callstack segment
-    pub fn extract_formids(
-        &self,
-        segment_callstack: Vec<String>,
-    ) -> PyResult<Vec<String>> {
+    pub fn extract_formids(&self, segment_callstack: Vec<String>) -> PyResult<Vec<String>> {
         // extract_formids returns Vec<String>, not Result
         Ok(self.inner.extract_formids(segment_callstack))
     }

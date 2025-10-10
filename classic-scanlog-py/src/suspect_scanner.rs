@@ -44,7 +44,11 @@ impl PySuspectScanner {
     ) -> PyResult<(Vec<String>, bool)> {
         let (fragment, found) = self
             .inner
-            .suspect_scan_stack(&crashlog_mainerror, &segment_callstack_intact, max_warn_length)
+            .suspect_scan_stack(
+                &crashlog_mainerror,
+                &segment_callstack_intact,
+                max_warn_length,
+            )
             .map_err(crate::to_pyerr)?;
         Ok((fragment.to_list(), found))
     }

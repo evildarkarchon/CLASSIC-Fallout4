@@ -28,7 +28,7 @@ pub struct YamlDataCore {
     pub crashgen_name: String,
     pub crashgen_latest_og: String,
     pub crashgen_latest_vr: String,
-    pub crashgen_ignore: Vec<String>,  // Converted from Python set
+    pub crashgen_ignore: Vec<String>, // Converted from Python set
 
     // Warnings
     pub warn_noplugins: String,
@@ -86,7 +86,7 @@ impl YamlDataCore {
         // Validate input
         if yaml_dirs.len() < 3 {
             return Err(ConfigError::InvalidInput(
-                "yaml_dirs must contain at least 3 directories (main, game, ignore)".to_string()
+                "yaml_dirs must contain at least 3 directories (main, game, ignore)".to_string(),
             ));
         }
 
@@ -98,9 +98,10 @@ impl YamlDataCore {
         // Verify files exist before loading
         for path in [&main_yaml, &game_yaml, &ignore_yaml] {
             if !path.exists() {
-                return Err(ConfigError::IOError(
-                    format!("YAML file not found: {}", path.display())
-                ));
+                return Err(ConfigError::IOError(format!(
+                    "YAML file not found: {}",
+                    path.display()
+                )));
             }
         }
 
@@ -131,15 +132,21 @@ impl YamlDataCore {
             });
 
             // Wait for all three files to load
-            let r1 = set.join_next().await
+            let r1 = set
+                .join_next()
+                .await
                 .ok_or_else(|| ConfigError::RuntimeError("Task join failed".to_string()))?
                 .map_err(|e| ConfigError::RuntimeError(format!("Join error: {}", e)))?
                 .map_err(ConfigError::IOError)?;
-            let r2 = set.join_next().await
+            let r2 = set
+                .join_next()
+                .await
                 .ok_or_else(|| ConfigError::RuntimeError("Task join failed".to_string()))?
                 .map_err(|e| ConfigError::RuntimeError(format!("Join error: {}", e)))?
                 .map_err(ConfigError::IOError)?;
-            let r3 = set.join_next().await
+            let r3 = set
+                .join_next()
+                .await
                 .ok_or_else(|| ConfigError::RuntimeError("Task join failed".to_string()))?
                 .map_err(|e| ConfigError::RuntimeError(format!("Join error: {}", e)))?
                 .map_err(ConfigError::IOError)?;
@@ -156,11 +163,14 @@ impl YamlDataCore {
             .map_err(|e| ConfigError::ParseError(format!("Failed to parse ignore YAML: {}", e)))?;
 
         // Get first document from each file
-        let main_data = main_docs.first()
+        let main_data = main_docs
+            .first()
             .ok_or_else(|| ConfigError::ParseError("Main YAML is empty".to_string()))?;
-        let game_data = game_docs.first()
+        let game_data = game_docs
+            .first()
             .ok_or_else(|| ConfigError::ParseError("Game YAML is empty".to_string()))?;
-        let ignore_data = ignore_docs.first()
+        let ignore_data = ignore_docs
+            .first()
             .ok_or_else(|| ConfigError::ParseError("Ignore YAML is empty".to_string()))?;
 
         // Extract values using helper functions
@@ -172,14 +182,25 @@ impl YamlDataCore {
             classic_version: Self::get_string(main_data, "CLASSIC_Info.version", ""),
             classic_version_date: Self::get_string(main_data, "CLASSIC_Info.version_date", ""),
             classic_records_list: Self::get_vec(main_data, "catch_log_records"),
-            autoscan_text: Self::get_string(main_data, &format!("CLASSIC_Interface.autoscan_text_{}", game), ""),
+            autoscan_text: Self::get_string(
+                main_data,
+                &format!("CLASSIC_Interface.autoscan_text_{}", game),
+                "",
+            ),
 
             // Game YAML values
             classic_game_hints: Self::get_vec(game_data, "Game_Hints"),
-            crashgen_name: Self::get_string(game_data, &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix), ""),
+            crashgen_name: Self::get_string(
+                game_data,
+                &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix),
+                "",
+            ),
             crashgen_latest_og: Self::get_string(game_data, "Game_Info.CRASHGEN_LatestVer", ""),
             crashgen_latest_vr: Self::get_string(game_data, "GameVR_Info.CRASHGEN_LatestVer", ""),
-            crashgen_ignore: Self::get_vec(game_data, &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix)),
+            crashgen_ignore: Self::get_vec(
+                game_data,
+                &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix),
+            ),
             warn_noplugins: Self::get_string(game_data, "Warnings_CRASHGEN.Warn_NOPlugins", ""),
             warn_outdated: Self::get_string(game_data, "Warnings_CRASHGEN.Warn_Outdated", ""),
             xse_acronym: Self::get_string(game_data, "Game_Info.XSE_Acronym", ""),
@@ -239,12 +260,11 @@ impl YamlDataCore {
         }
 
         match current {
-            Yaml::Array(arr) => {
-                arr.iter()
-                    .filter_map(|item| item.as_str().map(String::from))
-                    .collect()
-            }
-            _ => Vec::new()
+            Yaml::Array(arr) => arr
+                .iter()
+                .filter_map(|item| item.as_str().map(String::from))
+                .collect(),
+            _ => Vec::new(),
         }
     }
 
@@ -265,19 +285,16 @@ impl YamlDataCore {
         }
 
         match current {
-            Yaml::Hash(map) => {
-                map.iter()
-                    .filter_map(|(k, v)| {
-                        match (k.as_str(), v.as_str()) {
-                            (Some(key_str), Some(val_str)) => {
-                                Some((key_str.to_string(), val_str.to_string()))
-                            }
-                            _ => None
-                        }
-                    })
-                    .collect()
-            }
-            _ => HashMap::new()
+            Yaml::Hash(map) => map
+                .iter()
+                .filter_map(|(k, v)| match (k.as_str(), v.as_str()) {
+                    (Some(key_str), Some(val_str)) => {
+                        Some((key_str.to_string(), val_str.to_string()))
+                    }
+                    _ => None,
+                })
+                .collect(),
+            _ => HashMap::new(),
         }
     }
 }

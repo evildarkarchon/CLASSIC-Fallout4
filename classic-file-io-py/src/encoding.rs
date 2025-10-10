@@ -1,7 +1,7 @@
 //! Python bindings for encoding detection (thin PyO3 adapter)
 
-use pyo3::prelude::*;
 use classic_file_io_core::EncodingDetector;
+use pyo3::prelude::*;
 
 /// Python wrapper for EncodingDetector
 #[pyclass(name = "EncodingDetector")]

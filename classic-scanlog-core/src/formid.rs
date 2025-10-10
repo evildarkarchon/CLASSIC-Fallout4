@@ -12,14 +12,12 @@ use std::collections::HashMap;
 
 /// Precompiled FormID regex pattern matching Python's format
 /// Pattern: r"^\s*Form ID:\s*0x([0-9A-F]{8})"
-static FORMID_EXTRACTION_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)^\s*Form ID:\s*0x([0-9A-F]{8})").unwrap()
-});
+static FORMID_EXTRACTION_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)^\s*Form ID:\s*0x([0-9A-F]{8})").unwrap());
 
 /// Generic FormID parsing pattern (for parse_formid method)
-static FORMID_PARSE_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)(?:0x)?([0-9a-f]{1,8})").unwrap()
-});
+static FORMID_PARSE_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)(?:0x)?([0-9a-f]{1,8})").unwrap());
 
 /// High-performance FormID analyzer
 pub struct RustFormIDAnalyzer {
@@ -74,7 +72,11 @@ impl RustFormIDAnalyzer {
     }
 
     /// Batch analyze FormIDs with plugin resolution
-    pub fn analyze_batch(&self, formids: Vec<String>, plugins: &HashMap<String, String>) -> Vec<(String, Option<String>)> {
+    pub fn analyze_batch(
+        &self,
+        formids: Vec<String>,
+        plugins: &HashMap<String, String>,
+    ) -> Vec<(String, Option<String>)> {
         let mut results = Vec::with_capacity(formids.len());
 
         for formid in formids {
@@ -129,7 +131,11 @@ impl FormIDAnalyzer {
         self.inner.parse_formid(formid)
     }
 
-    pub fn analyze_batch(&self, formids: Vec<String>, plugins: &HashMap<String, String>) -> Vec<(String, Option<String>)> {
+    pub fn analyze_batch(
+        &self,
+        formids: Vec<String>,
+        plugins: &HashMap<String, String>,
+    ) -> Vec<(String, Option<String>)> {
         self.inner.analyze_batch(formids, plugins)
     }
 

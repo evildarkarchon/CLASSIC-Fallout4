@@ -1,7 +1,7 @@
 //! Encoding detection utilities
 
-use pyo3::prelude::*;
 use encoding_rs::{Encoding, UTF_8, WINDOWS_1252};
+use pyo3::prelude::*;
 
 /// Fast encoding detection for text files
 #[pyclass]

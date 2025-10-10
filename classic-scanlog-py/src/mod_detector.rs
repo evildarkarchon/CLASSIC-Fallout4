@@ -9,8 +9,7 @@ pub fn detect_mods_single(
     yaml_dict: HashMap<String, String>,
     crashlog_plugins: HashMap<String, String>,
 ) -> PyResult<Vec<String>> {
-    classic_scanlog_core::detect_mods_single(yaml_dict, crashlog_plugins)
-        .map_err(crate::to_pyerr)
+    classic_scanlog_core::detect_mods_single(yaml_dict, crashlog_plugins).map_err(crate::to_pyerr)
 }
 
 /// Detect double-type mods (standalone function)
@@ -19,8 +18,7 @@ pub fn detect_mods_double(
     yaml_dict: HashMap<String, String>,
     crashlog_plugins: HashMap<String, String>,
 ) -> PyResult<Vec<String>> {
-    classic_scanlog_core::detect_mods_double(yaml_dict, crashlog_plugins)
-        .map_err(crate::to_pyerr)
+    classic_scanlog_core::detect_mods_double(yaml_dict, crashlog_plugins).map_err(crate::to_pyerr)
 }
 
 /// Detect important mods (standalone function)

@@ -48,8 +48,8 @@ pub use classic_shared::get_runtime;
 
 // Re-export all types from shared foundation
 pub use classic_shared::{
-    ClassicError, ClassicResult, IntoClassicError,
-    PathHandler, StringProcessor, RustPerformanceMonitor,
+    ClassicError, ClassicResult, IntoClassicError, PathHandler, RustPerformanceMonitor,
+    StringProcessor,
 };
 
 // Re-export Python bindings (for Python usage via PyO3)
@@ -58,60 +58,41 @@ pub use classic_yaml::PyYamlOperations as RustYamlOperations;
 
 pub use classic_database::PyDatabasePool as RustDatabasePool;
 
-pub use classic_file_io::{PyFileIOCore as RustFileIOCore, PyEncodingDetector as EncodingDetector};
+pub use classic_file_io::{PyEncodingDetector as EncodingDetector, PyFileIOCore as RustFileIOCore};
 
 pub use classic_scanlog::{
-    PyFormIDAnalyzer as FormIDAnalyzer,
-    PyRustFormIDAnalyzer as RustFormIDAnalyzer,
-    PyFormIDAnalyzerCore as FormIDAnalyzerCore,
-    PyLogParser as LogParser,
-    PyPatternMatcher as PatternMatcher,
-    PyPluginAnalyzer as PluginAnalyzer,
-    PyRecordScanner as RecordScanner,
-    PyRustOrchestrator as RustOrchestrator,
-    PyAnalysisConfig as AnalysisConfig,
-    PyAnalysisResult as AnalysisResult,
-    PyReportFragment as ReportFragment,
-    PyReportComposer as ReportComposer,
-    PyReportGenerator as ReportGenerator,
-    PyStringPool as StringPool,
-    PyParallelReportProcessor as ParallelReportProcessor,
+    contains_plugin, contains_record, detect_mods_batch, detect_mods_double, detect_mods_important,
+    detect_mods_single, detect_plugins_batch, extract_formids_batch, is_valid_formid,
+    scan_records_batch, validate_formids_batch, PyAnalysisConfig as AnalysisConfig,
+    PyAnalysisResult as AnalysisResult, PyFcxModeHandler as FcxModeHandler,
+    PyFormIDAnalyzer as FormIDAnalyzer, PyFormIDAnalyzerCore as FormIDAnalyzerCore,
+    PyGpuDetector as GpuDetector, PyGpuInfo as GpuInfo, PyGpuVendor as GpuVendor,
+    PyLogParser as LogParser, PyParallelReportProcessor as ParallelReportProcessor,
+    PyPatternMatcher as PatternMatcher, PyPluginAnalyzer as PluginAnalyzer,
+    PyRecordScanner as RecordScanner, PyReportComposer as ReportComposer,
+    PyReportFragment as ReportFragment, PyReportGenerator as ReportGenerator,
+    PyRustFormIDAnalyzer as RustFormIDAnalyzer, PyRustOrchestrator as RustOrchestrator,
+    PySettingsValidator as SettingsValidator, PyStringPool as StringPool,
     PySuspectScanner as SuspectScanner,
-    PySettingsValidator as SettingsValidator,
-    PyGpuDetector as GpuDetector,
-    PyGpuInfo as GpuInfo,
-    PyGpuVendor as GpuVendor,
-    PyFcxModeHandler as FcxModeHandler,
-    extract_formids_batch,
-    is_valid_formid,
-    validate_formids_batch,
-    scan_records_batch,
-    contains_record,
-    detect_plugins_batch,
-    contains_plugin,
-    detect_mods_single,
-    detect_mods_double,
-    detect_mods_important,
-    detect_mods_batch,
 };
 
 // Re-export config bindings
-pub use classic_config::PyYamlData as YamlData;
 pub use classic_config::create_yamldata;
+pub use classic_config::PyYamlData as YamlData;
 
 // Re-export pure business logic (for internal Rust usage)
 /// Pure Rust business logic modules - use these for CLI/TUI or internal Rust code
 pub mod core {
-    /// YAML operations (yaml-rust2)
-    pub use classic_yaml_core as yaml;
+    /// Configuration data structures
+    pub use classic_config_core as config;
     /// Database operations (SQLite with connection pooling)
     pub use classic_database_core as database;
     /// File I/O (encoding detection, DDS parsing)
     pub use classic_file_io_core as file_io;
     /// Log parsing and analysis
     pub use classic_scanlog_core as scanlog;
-    /// Configuration data structures
-    pub use classic_config_core as config;
+    /// YAML operations (yaml-rust2)
+    pub use classic_yaml_core as yaml;
 }
 
 // Legacy classes for backward compatibility
@@ -131,10 +112,9 @@ impl FileReader {
     /// Read a file synchronously (but uses async I/O internally)
     fn read_file(&self, path: String) -> PyResult<String> {
         // Use global runtime for async operation
-        get_runtime().block_on(async move {
-            tokio::fs::read_to_string(path).await
-        })
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
+        get_runtime()
+            .block_on(async move { tokio::fs::read_to_string(path).await })
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
     }
 
     /// Read multiple files in parallel (exposed as sync to Python)
@@ -143,11 +123,7 @@ impl FileReader {
         let results = get_runtime().block_on(async move {
             let tasks: Vec<_> = paths
                 .into_iter()
-                .map(|path| {
-                    tokio::spawn(async move {
-                        tokio::fs::read_to_string(path).await.ok()
-                    })
-                })
+                .map(|path| tokio::spawn(async move { tokio::fs::read_to_string(path).await.ok() }))
                 .collect();
 
             // Wait for all tasks to complete
@@ -190,32 +166,37 @@ impl FormIDProcessor {
     }
 
     /// Async database lookup exposed as sync
-    fn lookup_formids(&self, db_path: String, formids: Vec<String>) -> PyResult<Vec<Option<String>>> {
+    fn lookup_formids(
+        &self,
+        db_path: String,
+        formids: Vec<String>,
+    ) -> PyResult<Vec<Option<String>>> {
         // Use the global runtime for async operations
-        get_runtime().block_on(async move {
-            // Simulate async database operations
-            let _contents = tokio::fs::read_to_string(&db_path).await?;
+        get_runtime()
+            .block_on(async move {
+                // Simulate async database operations
+                let _contents = tokio::fs::read_to_string(&db_path).await?;
 
-            // Parallel async lookups
-            let tasks: Vec<_> = formids
-                .into_iter()
-                .map(|formid| {
-                    let _db = db_path.clone();
-                    tokio::spawn(async move {
-                        // Simulate database lookup
-                        tokio::time::sleep(tokio::time::Duration::from_micros(10)).await;
-                        Some(format!("Plugin_{}", formid))
+                // Parallel async lookups
+                let tasks: Vec<_> = formids
+                    .into_iter()
+                    .map(|formid| {
+                        let _db = db_path.clone();
+                        tokio::spawn(async move {
+                            // Simulate database lookup
+                            tokio::time::sleep(tokio::time::Duration::from_micros(10)).await;
+                            Some(format!("Plugin_{}", formid))
+                        })
                     })
-                })
-                .collect();
+                    .collect();
 
-            let mut results = Vec::new();
-            for task in tasks {
-                results.push(task.await.unwrap_or(None));
-            }
-            Ok::<Vec<Option<String>>, tokio::io::Error>(results)
-        })
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
+                let mut results = Vec::new();
+                for task in tasks {
+                    results.push(task.await.unwrap_or(None));
+                }
+                Ok::<Vec<Option<String>>, tokio::io::Error>(results)
+            })
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
     }
 }
 
@@ -223,11 +204,12 @@ impl FormIDProcessor {
 #[pyfunction]
 fn count_patterns_in_file(path: String, pattern: String) -> PyResult<usize> {
     // Use global runtime for one-off async operations
-    get_runtime().block_on(async move {
-        let content = tokio::fs::read_to_string(path).await?;
-        Ok::<usize, tokio::io::Error>(content.matches(&pattern).count())
-    })
-    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
+    get_runtime()
+        .block_on(async move {
+            let content = tokio::fs::read_to_string(path).await?;
+            Ok::<usize, tokio::io::Error>(content.matches(&pattern).count())
+        })
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
 }
 
 /// Python module initialization

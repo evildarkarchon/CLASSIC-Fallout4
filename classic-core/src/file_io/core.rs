@@ -8,25 +8,25 @@
 //! - Multi-level caching (content, paths, metadata)
 //! - Encoding detection for text files
 
-use pyo3::prelude::*;
+use anyhow::{Context, Result};
+use dashmap::DashMap;
+use lru::LruCache;
+use memmap2::Mmap;
 use pyo3::exceptions::PyRuntimeError;
+use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
+use rayon::prelude::*;
+use std::fs::File;
+use std::io::Read;
+use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
 use tokio::sync::{RwLock, Semaphore};
-use lru::LruCache;
-use anyhow::{Result, Context};
-use std::num::NonZeroUsize;
-use dashmap::DashMap;
-use memmap2::Mmap;
-use rayon::prelude::*;
 use walkdir::WalkDir;
-use std::fs::File;
-use std::io::Read;
 
-use super::encoding::EncodingDetector;
 use super::dds::DDSHeader;
+use super::encoding::EncodingDetector;
 
 // Use the global runtime from lib.rs (ONE RUNTIME RULE)
 use crate::get_runtime;
@@ -36,12 +36,12 @@ use crate::get_runtime;
 pub struct RustFileIOCore {
     encoding_detector: Arc<EncodingDetector>,
     // Multi-level caching
-    read_cache: Arc<RwLock<LruCache<PathBuf, String>>>,        // Text file content cache
-    path_cache: Arc<DashMap<String, PathBuf>>,                 // Path string to PathBuf cache
-    metadata_cache: Arc<DashMap<PathBuf, FileMetadata>>,       // File metadata cache
-    dds_cache: Arc<RwLock<LruCache<PathBuf, DDSHeader>>>,      // DDS header cache
+    read_cache: Arc<RwLock<LruCache<PathBuf, String>>>, // Text file content cache
+    path_cache: Arc<DashMap<String, PathBuf>>,          // Path string to PathBuf cache
+    metadata_cache: Arc<DashMap<PathBuf, FileMetadata>>, // File metadata cache
+    dds_cache: Arc<RwLock<LruCache<PathBuf, DDSHeader>>>, // DDS header cache
     // Concurrency control
-    io_semaphore: Arc<Semaphore>,                              // Limit concurrent I/O operations
+    io_semaphore: Arc<Semaphore>, // Limit concurrent I/O operations
     // Configuration
     default_encoding: String,
     #[allow(dead_code)] // Reserved for future error handling modes
@@ -60,7 +60,12 @@ struct FileMetadata {
 impl RustFileIOCore {
     #[new]
     #[pyo3(signature = (encoding="utf-8", errors="ignore", cache_size=100, max_concurrent_io=50))]
-    pub fn new(encoding: &str, errors: &str, cache_size: usize, max_concurrent_io: usize) -> PyResult<Self> {
+    pub fn new(
+        encoding: &str,
+        errors: &str,
+        cache_size: usize,
+        max_concurrent_io: usize,
+    ) -> PyResult<Self> {
         let cache_size = NonZeroUsize::new(cache_size.max(1)).unwrap();
         let dds_cache_size = NonZeroUsize::new(1000).unwrap(); // Larger cache for DDS headers
 
@@ -94,7 +99,8 @@ impl RustFileIOCore {
             }
 
             // Read file with encoding detection
-            let content = read_file_with_encoding(&path, &encoding_detector).await
+            let content = read_file_with_encoding(&path, &encoding_detector)
+                .await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
 
             // Update cache
@@ -111,7 +117,8 @@ impl RustFileIOCore {
     #[pyo3(name = "write_file")]
     pub fn py_write_file(&self, _py: Python<'_>, path: String, content: String) -> PyResult<()> {
         get_runtime().block_on(async move {
-            fs::write(&path, content.as_bytes()).await
+            fs::write(&path, content.as_bytes())
+                .await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
             Ok(())
         })
@@ -129,14 +136,20 @@ impl RustFileIOCore {
     pub fn py_read_bytes(&self, _py: Python<'_>, path: String) -> PyResult<Vec<u8>> {
         get_runtime().block_on(async move {
             let path = PathBuf::from(path);
-            fs::read(&path).await
+            fs::read(&path)
+                .await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
         })
     }
 
     /// Write lines to file
     #[pyo3(name = "write_lines")]
-    pub fn py_write_lines(&self, _py: Python<'_>, path: String, lines: Vec<String>) -> PyResult<()> {
+    pub fn py_write_lines(
+        &self,
+        _py: Python<'_>,
+        path: String,
+        lines: Vec<String>,
+    ) -> PyResult<()> {
         let mut content = lines.join("\n");
         if !content.ends_with('\n') {
             content.push('\n');
@@ -151,10 +164,12 @@ impl RustFileIOCore {
             let path = PathBuf::from(path);
             // Ensure parent directory exists
             if let Some(parent) = path.parent() {
-                fs::create_dir_all(parent).await
+                fs::create_dir_all(parent)
+                    .await
                     .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
             }
-            fs::write(&path, content).await
+            fs::write(&path, content)
+                .await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
         })
     }
@@ -169,7 +184,8 @@ impl RustFileIOCore {
             let path = PathBuf::from(path);
             // Ensure parent directory exists
             if let Some(parent) = path.parent() {
-                fs::create_dir_all(parent).await
+                fs::create_dir_all(parent)
+                    .await
                     .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
             }
 
@@ -180,7 +196,8 @@ impl RustFileIOCore {
                 .await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
 
-            file.write_all(content.as_bytes()).await
+            file.write_all(content.as_bytes())
+                .await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
 
             Ok(())
@@ -225,8 +242,8 @@ impl RustFileIOCore {
         let path = PathBuf::from(&path);
 
         // Parse DDS header
-        let header = read_dds_header_impl(&path)
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+        let header =
+            read_dds_header_impl(&path).map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
 
         if let Some(h) = header {
             Ok(Some((h.width, h.height)))
@@ -236,7 +253,11 @@ impl RustFileIOCore {
     }
 
     /// Batch DDS header reading with parallel processing
-    pub fn read_dds_headers_batch(&self, py: Python<'_>, paths: Vec<String>) -> PyResult<Py<PyDict>> {
+    pub fn read_dds_headers_batch(
+        &self,
+        py: Python<'_>,
+        paths: Vec<String>,
+    ) -> PyResult<Py<PyDict>> {
         let results: Vec<(String, Option<(u32, u32)>)> = paths
             .into_par_iter()
             .map(|path| {
@@ -274,7 +295,12 @@ impl RustFileIOCore {
     }
 
     /// Memory-mapped file reading for large files
-    pub fn py_read_file_mmap(&self, _py: Python<'_>, path: String, encoding: Option<String>) -> PyResult<String> {
+    pub fn py_read_file_mmap(
+        &self,
+        _py: Python<'_>,
+        path: String,
+        encoding: Option<String>,
+    ) -> PyResult<String> {
         let path = self.ensure_path(path);
         let encoding_detector = self.encoding_detector.clone();
         let encoding = encoding.unwrap_or_else(|| self.default_encoding.clone());
@@ -345,7 +371,9 @@ impl RustFileIOCore {
                 .map(|e| e.path().to_string_lossy().to_string())
                 .collect()
         } else {
-            walker.map(|e| e.path().to_string_lossy().to_string()).collect()
+            walker
+                .map(|e| e.path().to_string_lossy().to_string())
+                .collect()
         };
 
         // Convert to Python list
@@ -457,12 +485,14 @@ impl RustFileIOCore {
 
             for result in results {
                 match result {
-                    Ok(Ok(())) => {},
+                    Ok(Ok(())) => {}
                     Ok(Err(e)) => {
                         return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()));
                     }
                     Err(e) => {
-                        return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()));
+                        return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                            e.to_string(),
+                        ));
                     }
                 }
             }
@@ -474,7 +504,8 @@ impl RustFileIOCore {
 
 /// Internal async function to read file with encoding detection
 async fn read_file_with_encoding(path: &Path, detector: &EncodingDetector) -> Result<String> {
-    let bytes = fs::read(path).await
+    let bytes = fs::read(path)
+        .await
         .with_context(|| format!("Failed to read file: {:?}", path))?;
 
     let encoding = detector.detect(&bytes);
@@ -489,8 +520,8 @@ async fn read_file_with_encoding(path: &Path, detector: &EncodingDetector) -> Re
 
 /// Read DDS header from file
 fn read_dds_header_impl(path: &Path) -> Result<Option<DDSHeader>> {
-    let mut file = File::open(path)
-        .with_context(|| format!("Failed to open DDS file: {:?}", path))?;
+    let mut file =
+        File::open(path).with_context(|| format!("Failed to open DDS file: {:?}", path))?;
 
     // Check file size
     let metadata = file.metadata()?;

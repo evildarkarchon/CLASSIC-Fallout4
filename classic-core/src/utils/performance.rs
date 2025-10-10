@@ -3,18 +3,16 @@
 //! This module provides performance tracking that integrates with
 //! Python's PerformanceMonitor for unified metrics collection.
 
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 /// Global performance metrics collector
-static METRICS: Lazy<Arc<PerformanceMetrics>> = Lazy::new(|| {
-    Arc::new(PerformanceMetrics::new())
-});
+static METRICS: Lazy<Arc<PerformanceMetrics>> = Lazy::new(|| Arc::new(PerformanceMetrics::new()));
 
 /// Performance metrics storage
 pub struct PerformanceMetrics {
@@ -37,18 +35,21 @@ impl PerformanceMetrics {
 
     /// Record a timing for an operation
     pub fn record_timing(&self, operation: &str, duration: Duration) {
-        self.timings.entry(operation.to_string())
+        self.timings
+            .entry(operation.to_string())
             .or_insert_with(Vec::new)
             .push(duration);
 
-        self.counts.entry(operation.to_string())
+        self.counts
+            .entry(operation.to_string())
             .or_insert_with(|| AtomicUsize::new(0))
             .fetch_add(1, Ordering::Relaxed);
     }
 
     /// Record bytes processed
     pub fn record_bytes(&self, operation: &str, bytes: u64) {
-        self.bytes_processed.entry(operation.to_string())
+        self.bytes_processed
+            .entry(operation.to_string())
             .or_insert_with(|| AtomicU64::new(0))
             .fetch_add(bytes, Ordering::Relaxed);
     }
@@ -57,7 +58,9 @@ impl PerformanceMetrics {
     pub fn get_stats(&self, operation: &str) -> Option<OperationStats> {
         let timings = self.timings.get(operation)?;
         let count = self.counts.get(operation)?.load(Ordering::Relaxed);
-        let bytes = self.bytes_processed.get(operation)
+        let bytes = self
+            .bytes_processed
+            .get(operation)
             .map(|b| b.load(Ordering::Relaxed))
             .unwrap_or(0);
 
@@ -180,12 +183,20 @@ impl RustPerformanceMonitor {
 
     /// Stop timing an operation
     #[pyo3(signature = (timer_info, bytes_processed=None))]
-    pub fn stop_timer(&self, timer_info: &Bound<'_, PyDict>, bytes_processed: Option<u64>) -> PyResult<()> {
-        let operation: String = timer_info.get_item("operation")?
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyKeyError, _>("Missing 'operation' key"))?
+    pub fn stop_timer(
+        &self,
+        timer_info: &Bound<'_, PyDict>,
+        bytes_processed: Option<u64>,
+    ) -> PyResult<()> {
+        let operation: String = timer_info
+            .get_item("operation")?
+            .ok_or_else(|| {
+                PyErr::new::<pyo3::exceptions::PyKeyError, _>("Missing 'operation' key")
+            })?
             .extract()?;
 
-        let start: f64 = timer_info.get_item("start")?
+        let start: f64 = timer_info
+            .get_item("start")?
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyKeyError, _>("Missing 'start' key"))?
             .extract()?;
 
@@ -229,7 +240,11 @@ impl RustPerformanceMonitor {
     }
 
     /// Get statistics for a specific operation
-    pub fn get_operation_stats(&self, py: Python, operation: String) -> PyResult<Option<Py<PyDict>>> {
+    pub fn get_operation_stats(
+        &self,
+        py: Python,
+        operation: String,
+    ) -> PyResult<Option<Py<PyDict>>> {
         match METRICS.get_stats(&operation) {
             Some(stats) => {
                 let op_dict = PyDict::new(py);
@@ -323,7 +338,7 @@ mod tests {
 
         // Now the timer.stop() takes ownership and prevents Drop from recording again
         let stats = METRICS.get_stats("test_operation").unwrap();
-        assert_eq!(stats.count, 1);  // Exactly 1 recording
+        assert_eq!(stats.count, 1); // Exactly 1 recording
         assert!(stats.total >= Duration::from_millis(10));
     }
 

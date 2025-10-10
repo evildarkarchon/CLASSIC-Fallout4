@@ -11,13 +11,13 @@ use crate::report::ReportFragment;
 #[derive(Clone, Debug)]
 pub struct FcxModeHandler {
     /// Whether FCX mode is enabled
-        pub fcx_mode: bool,
+    pub fcx_mode: bool,
 
     /// Main files check result (from Python)
-        pub main_files_check: Option<String>,
+    pub main_files_check: Option<String>,
 
     /// Game files check result (from Python)
-        pub game_files_check: Option<String>,
+    pub game_files_check: Option<String>,
 }
 
 impl FcxModeHandler {
@@ -98,8 +98,13 @@ impl FcxModeHandler {
             return false;
         }
 
-        self.main_files_check.as_ref().map_or(false, |s| !s.is_empty())
-            || self.game_files_check.as_ref().map_or(false, |s| !s.is_empty())
+        self.main_files_check
+            .as_ref()
+            .map_or(false, |s| !s.is_empty())
+            || self
+                .game_files_check
+                .as_ref()
+                .map_or(false, |s| !s.is_empty())
     }
 
     /// Reset all FCX check results (for new scan session)
@@ -125,8 +130,6 @@ impl FcxModeHandler {
             game_files_check: None,
         }
     }
-
-
 }
 
 #[cfg(test)]

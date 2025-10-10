@@ -4,9 +4,9 @@
 //! while leveraging Rust's performance optimizations.
 
 use pyo3::prelude::*;
+use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use rayon::prelude::*;
 
 /// Convert dictionary keys to lowercase
 fn convert_to_lowercase(data: &HashMap<String, String>) -> HashMap<String, String> {
@@ -18,9 +18,10 @@ fn convert_to_lowercase(data: &HashMap<String, String>) -> HashMap<String, Strin
 /// Validate that a mod has a warning
 fn validate_warning(mod_name: &str, warning: &str) -> PyResult<()> {
     if warning.is_empty() {
-        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-            format!("ERROR: {} has no warning in the database!", mod_name)
-        ));
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+            "ERROR: {} has no warning in the database!",
+            mod_name
+        )));
     }
     Ok(())
 }
@@ -52,8 +53,9 @@ pub fn detect_mods_single(
         .collect();
 
     // Create a single compiled pattern with alternation for efficient matching
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Regex error: {}", e)))?;
+    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|"))).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Regex error: {}", e))
+    })?;
 
     // Create a lookup dictionary for O(1) access to mod warnings
     let mod_lookup: HashMap<String, String> = mod_items.iter().cloned().collect();
@@ -88,7 +90,10 @@ pub fn detect_mods_single(
         if !warning_lines.is_empty() {
             // First line (mod name) goes on the same line as FOUND header
             let mod_name_display = warning_lines[0].trim();
-            lines.push(format!("**[!] FOUND : {} {}**\n\n", plugin_list, mod_name_display));
+            lines.push(format!(
+                "**[!] FOUND : {} {}**\n\n",
+                plugin_list, mod_name_display
+            ));
 
             // Remaining lines are indented with double newlines for Qt compatibility
             for line in &warning_lines[1..] {
@@ -142,8 +147,9 @@ pub fn detect_mods_double(
         .iter()
         .map(|mod_name| regex::escape(mod_name))
         .collect();
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Regex error: {}", e)))?;
+    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|"))).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Regex error: {}", e))
+    })?;
 
     // Find which mods are present in the plugins
     let mut mods_present: HashSet<String> = HashSet::new();
@@ -178,21 +184,14 @@ pub fn detect_mods_important(
     gpu_rival: Option<&str>,
     xse_modules: HashSet<String>,
 ) -> PyResult<Vec<String>> {
-    let mut lines = vec![
-        "### Checking for Important Mods\n\n".to_string(),
-    ];
+    let mut lines = vec!["### Checking for Important Mods\n\n".to_string()];
 
     // Convert plugin names to lowercase once
-    let plugin_names_lower: Vec<String> = crashlog_plugins
-        .keys()
-        .map(|k| k.to_lowercase())
-        .collect();
+    let plugin_names_lower: Vec<String> =
+        crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
 
     // Add XSE module names (DLL files) to the search space
-    let module_names_lower: Vec<String> = xse_modules
-        .iter()
-        .map(|m| m.to_lowercase())
-        .collect();
+    let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
 
     let mut all_names = plugin_names_lower;
     all_names.extend(module_names_lower);
@@ -205,7 +204,9 @@ pub fn detect_mods_important(
         if parts.len() == 2 {
             let mod_id = parts[0];
             let pattern = Regex::new(&format!("(?i){}", regex::escape(&mod_id.to_lowercase())))
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Regex error: {}", e)))?;
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Regex error: {}", e))
+                })?;
             mod_patterns.insert(mod_entry.clone(), pattern);
         }
     }
@@ -270,8 +271,9 @@ pub fn detect_mods_batch(
         return Ok(vec![vec![]; crashlog_plugins_list.len()]);
     }
 
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Regex error: {}", e)))?;
+    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|"))).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Regex error: {}", e))
+    })?;
 
     // Process crash logs in parallel
     let results: Result<Vec<_>, _> = crashlog_plugins_list
@@ -294,7 +296,10 @@ pub fn detect_mods_batch(
             for (mod_name, plugin_id) in &mod_matches {
                 if let Some(mod_warning) = yaml_dict_lower.get(mod_name) {
                     if mod_warning.is_empty() {
-                        return Err(format!("ERROR: {} has no warning in the database!", mod_name));
+                        return Err(format!(
+                            "ERROR: {} has no warning in the database!",
+                            mod_name
+                        ));
                     }
 
                     let plugin_list = format!("[{}]", plugin_id);
@@ -302,7 +307,10 @@ pub fn detect_mods_batch(
 
                     if !warning_lines.is_empty() {
                         let mod_name_display = warning_lines[0].trim();
-                        lines.push(format!("**[!] FOUND : {} {}**\n\n", plugin_list, mod_name_display));
+                        lines.push(format!(
+                            "**[!] FOUND : {} {}**\n\n",
+                            plugin_list, mod_name_display
+                        ));
 
                         for line in &warning_lines[1..] {
                             if !line.trim().is_empty() {

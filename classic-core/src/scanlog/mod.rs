@@ -13,13 +13,19 @@ pub mod report;
 pub mod test_class;
 
 pub use formid::FormIDAnalyzer;
-pub use formid_analyzer::{FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch};
-pub use mod_detector::{detect_mods_single, detect_mods_double, detect_mods_important, detect_mods_batch};
+pub use formid_analyzer::{
+    extract_formids_batch, is_valid_formid, validate_formids_batch, FormIDAnalyzerCore,
+};
+pub use mod_detector::{
+    detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
+};
 pub use parser::LogParser;
 pub use patterns::PatternMatcher;
-pub use plugin_analyzer::{PluginAnalyzer, detect_plugins_batch, contains_plugin};
-pub use record_scanner::{RecordScanner, scan_records_batch, contains_record};
-pub use report::{ReportFragment, ReportComposer, ReportGenerator, StringPool, ParallelReportProcessor};
+pub use plugin_analyzer::{contains_plugin, detect_plugins_batch, PluginAnalyzer};
+pub use record_scanner::{contains_record, scan_records_batch, RecordScanner};
+pub use report::{
+    ParallelReportProcessor, ReportComposer, ReportFragment, ReportGenerator, StringPool,
+};
 pub use test_class::TestClass;
 
 /// Register the scanlog module with Python

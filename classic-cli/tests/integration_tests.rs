@@ -1,4 +1,4 @@
-use classic_cli::{CliArgs, CliConfig, PathConfig, OutputFormatter, ScanStats};
+use classic_cli::{CliArgs, CliConfig, OutputFormatter, PathConfig, ScanStats};
 use std::path::PathBuf;
 use tempfile::tempdir;
 use tokio::fs;
@@ -43,7 +43,7 @@ mod config_integration {
 
         // Simulate CLI run with --fcx-mode flag
         let args = CliArgs {
-            fcx_mode: true,         // Override via CLI flag
+            fcx_mode: true, // Override via CLI flag
             show_fid_values: false,
             stat_logging: false,
             move_unsolved: false,
@@ -175,9 +175,7 @@ mod yaml_round_trip_integration {
             };
 
             config.save_to_yaml(&config_path).await.unwrap();
-            let loaded = CliConfig::load_from_yaml(&config_path)
-                .await
-                .unwrap();
+            let loaded = CliConfig::load_from_yaml(&config_path).await.unwrap();
 
             assert_eq!(loaded.fcx_mode, fcx);
             assert_eq!(loaded.show_formid_values, show_fid);
@@ -210,9 +208,7 @@ mod yaml_round_trip_integration {
         };
 
         config.save_to_yaml(&config_path).await.unwrap();
-        let loaded = CliConfig::load_from_yaml(&config_path)
-            .await
-            .unwrap();
+        let loaded = CliConfig::load_from_yaml(&config_path).await.unwrap();
 
         assert!(loaded.paths.ini_folder.is_none());
         assert!(loaded.paths.scan_custom.is_none());

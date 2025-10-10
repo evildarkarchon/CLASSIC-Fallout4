@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tokio::fs;
-use yaml_rust2::{Yaml, YamlLoader, YamlEmitter};
+use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 
 use crate::args::CliArgs;
 
@@ -73,7 +73,9 @@ impl Default for PathConfig {
             ini_folder: None,
             scan_custom: None,
             mods_folder: None,
-            game_root: PathBuf::from("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4"),
+            game_root: PathBuf::from(
+                "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4",
+            ),
         }
     }
 }
@@ -92,14 +94,12 @@ impl CliConfig {
             .await
             .context(format!("Failed to read config file: {}", path.display()))?;
 
-        let docs = YamlLoader::load_from_str(&content)
-            .context("Failed to parse YAML configuration")?;
+        let docs =
+            YamlLoader::load_from_str(&content).context("Failed to parse YAML configuration")?;
 
-        let doc = docs.first()
-            .context("YAML file is empty")?;
+        let doc = docs.first().context("YAML file is empty")?;
 
-        Self::from_yaml(doc)
-            .context("Failed to extract configuration from YAML")
+        Self::from_yaml(doc).context("Failed to extract configuration from YAML")
     }
 
     /// Convert YAML document to CliConfig
@@ -187,10 +187,7 @@ impl CliConfig {
             Yaml::String(self.paths.game_root.to_string_lossy().to_string()),
         );
 
-        root.insert(
-            Yaml::String("paths".to_string()),
-            Yaml::Hash(paths),
-        );
+        root.insert(Yaml::String("paths".to_string()), Yaml::Hash(paths));
 
         Yaml::Hash(root)
     }
@@ -216,8 +213,7 @@ impl CliConfig {
         let yaml = self.to_yaml();
         let mut output = String::new();
         let mut emitter = YamlEmitter::new(&mut output);
-        emitter.dump(&yaml)
-            .context("Failed to emit YAML")?;
+        emitter.dump(&yaml).context("Failed to emit YAML")?;
 
         fs::write(path, output)
             .await
@@ -319,10 +315,7 @@ impl CliConfig {
 
         if let Some(ref ini_folder) = self.paths.ini_folder {
             if !ini_folder.exists() {
-                anyhow::bail!(
-                    "INI folder does not exist: {}",
-                    ini_folder.display()
-                );
+                anyhow::bail!("INI folder does not exist: {}", ini_folder.display());
             }
         }
 
@@ -337,10 +330,7 @@ impl CliConfig {
 
         if let Some(ref mods_folder) = self.paths.mods_folder {
             if !mods_folder.exists() {
-                anyhow::bail!(
-                    "Mods folder does not exist: {}",
-                    mods_folder.display()
-                );
+                anyhow::bail!("Mods folder does not exist: {}", mods_folder.display());
             }
         }
 
@@ -383,7 +373,10 @@ mod tests {
         assert!(config.fcx_mode);
         assert!(config.show_formid_values);
         assert!(!config.stat_logging); // Not changed (false flag)
-        assert_eq!(config.paths.ini_folder, Some(PathBuf::from("C:\\Test\\Ini")));
+        assert_eq!(
+            config.paths.ini_folder,
+            Some(PathBuf::from("C:\\Test\\Ini"))
+        );
     }
 
     #[tokio::test]
@@ -423,7 +416,9 @@ mod tests {
             simplify_logs: false,
         };
 
-        let config = CliConfig::load_or_create(&config_path, &args).await.unwrap();
+        let config = CliConfig::load_or_create(&config_path, &args)
+            .await
+            .unwrap();
         assert!(config.fcx_mode); // From args
         assert!(!config.show_formid_values); // Default (false flag)
     }
@@ -473,9 +468,9 @@ mod tests {
 
         // Load with different CLI args
         let args = CliArgs {
-            fcx_mode: false,        // Don't override (false is default)
-            show_fid_values: true,  // Enable via flag
-            stat_logging: false,    // Don't override (false is default)
+            fcx_mode: false,       // Don't override (false is default)
+            show_fid_values: true, // Enable via flag
+            stat_logging: false,   // Don't override (false is default)
             move_unsolved: false,
             ini_path: None,
             scan_path: None,
@@ -483,7 +478,9 @@ mod tests {
             simplify_logs: false,
         };
 
-        let loaded = CliConfig::load_or_create(&config_path, &args).await.unwrap();
+        let loaded = CliConfig::load_or_create(&config_path, &args)
+            .await
+            .unwrap();
 
         assert!(loaded.fcx_mode); // From saved config (not overridden by false flag)
         assert!(loaded.show_formid_values); // From args (enabled by flag)

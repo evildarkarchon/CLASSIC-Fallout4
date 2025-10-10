@@ -21,7 +21,9 @@ impl PyLogParser {
 
     /// Add a custom regex pattern for matching
     pub fn add_pattern(&self, name: String, pattern: String) -> PyResult<()> {
-        self.inner.add_pattern(name, pattern).map_err(crate::to_pyerr)
+        self.inner
+            .add_pattern(name, pattern)
+            .map_err(crate::to_pyerr)
     }
 
     /// Clear all caches to free memory
@@ -36,7 +38,11 @@ impl PyLogParser {
 
     /// Parse segments in parallel for large logs
     #[pyo3(name = "parse_segments_parallel", signature = (lines, chunk_size=None))]
-    pub fn parse_segments_parallel(&self, lines: Vec<String>, chunk_size: Option<usize>) -> Vec<Vec<String>> {
+    pub fn parse_segments_parallel(
+        &self,
+        lines: Vec<String>,
+        chunk_size: Option<usize>,
+    ) -> Vec<Vec<String>> {
         self.inner.parse_segments_parallel(&lines, chunk_size)
     }
 
@@ -47,26 +53,42 @@ impl PyLogParser {
 
     /// Find patterns in parallel chunks for better performance
     #[pyo3(name = "find_patterns_chunked", signature = (lines, chunk_size=None))]
-    pub fn find_patterns_chunked(&self, lines: Vec<String>, chunk_size: Option<usize>) -> Vec<(usize, String, String)> {
+    pub fn find_patterns_chunked(
+        &self,
+        lines: Vec<String>,
+        chunk_size: Option<usize>,
+    ) -> Vec<(usize, String, String)> {
         self.inner.find_patterns_chunked(&lines, chunk_size)
     }
 
     /// Extract section from log (Python-exposed method)
     #[pyo3(name = "extract_section")]
-    pub fn py_extract_section(&self, lines: Vec<String>, start_marker: String, end_marker: String) -> Option<Vec<String>> {
-        self.inner.extract_section(&lines, &start_marker, &end_marker)
+    pub fn py_extract_section(
+        &self,
+        lines: Vec<String>,
+        start_marker: String,
+        end_marker: String,
+    ) -> Option<Vec<String>> {
+        self.inner
+            .extract_section(&lines, &start_marker, &end_marker)
     }
 
     /// Extract multiple sections batch (Python-exposed method)
     #[pyo3(name = "extract_sections_batch")]
-    pub fn py_extract_sections_batch(&self, lines: Vec<String>, markers: Vec<(String, String)>) -> Vec<Option<Vec<String>>> {
+    pub fn py_extract_sections_batch(
+        &self,
+        lines: Vec<String>,
+        markers: Vec<(String, String)>,
+    ) -> Vec<Option<Vec<String>>> {
         self.inner.extract_sections_batch(&lines, &markers)
     }
 
     /// Parse crash header (Python-exposed method)
     #[pyo3(name = "parse_crash_header")]
     pub fn py_parse_crash_header(&self, lines: Vec<String>) -> PyResult<HashMap<String, String>> {
-        self.inner.parse_crash_header(&lines).map_err(crate::to_pyerr)
+        self.inner
+            .parse_crash_header(&lines)
+            .map_err(crate::to_pyerr)
     }
 
     /// Get specific section by name (commonly used sections)
@@ -89,7 +111,9 @@ impl PyLogParser {
         segment_boundaries: Vec<(String, String)>,
         xse_acronym: String,
     ) -> PyResult<(String, String, String, Vec<Vec<String>>)> {
-        self.inner.parse_complete(&lines, &segment_boundaries, &xse_acronym).map_err(crate::to_pyerr)
+        self.inner
+            .parse_complete(&lines, &segment_boundaries, &xse_acronym)
+            .map_err(crate::to_pyerr)
     }
 
     /// Count lines in each segment for analysis

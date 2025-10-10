@@ -47,7 +47,10 @@ impl SettingsValidator {
             .and_then(|v| v.parse::<bool>().ok())
             .unwrap_or(false);
 
-        if achievements && (xse_modules.contains("achievements.dll") || xse_modules.contains("unlimitedsurvivalmode.dll")) {
+        if achievements
+            && (xse_modules.contains("achievements.dll")
+                || xse_modules.contains("unlimitedsurvivalmode.dll"))
+        {
             lines.push(format!(
                 "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n"
             ));
@@ -111,11 +114,7 @@ impl SettingsValidator {
 
         // Check X-Cell specific settings
         if has_xcell {
-            self.validate_xcell_settings(
-                &mut lines,
-                crashgen,
-                separator,
-            )?;
+            self.validate_xcell_settings(&mut lines, crashgen, separator)?;
         }
 
         Ok(ReportFragment::from_lines(lines))
@@ -132,7 +131,7 @@ impl SettingsValidator {
     pub fn scan_archivelimit_setting(
         &self,
         crashgen: &HashMap<String, String>,
-        crashgen_version: Option<(u32, u32, u32)>,  // (major, minor, patch)
+        crashgen_version: Option<(u32, u32, u32)>, // (major, minor, patch)
     ) -> Result<ReportFragment> {
         // Skip check for versions >= 1.29.0
         if let Some((major, minor, _)) = crashgen_version {
@@ -265,15 +264,24 @@ impl SettingsValidator {
             (true, false, true) => {
                 Self::add_warning(
                     lines,
-                    &format!("The Baka ScrapHeap Mod is installed, but is redundant with {}", self.crashgen_name),
-                    &format!("Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {}.", self.crashgen_name),
+                    &format!(
+                        "The Baka ScrapHeap Mod is installed, but is redundant with {}",
+                        self.crashgen_name
+                    ),
+                    &format!(
+                        "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {}.",
+                        self.crashgen_name
+                    ),
                     separator,
                 );
             }
             (true, false, false) => {
                 Self::add_success(
                     lines,
-                    &format!("Memory Manager parameter is correctly configured in your {} settings!", self.crashgen_name),
+                    &format!(
+                        "Memory Manager parameter is correctly configured in your {} settings!",
+                        self.crashgen_name
+                    ),
                     separator,
                 );
             }
@@ -300,7 +308,7 @@ impl SettingsValidator {
                     separator,
                 );
             }
-            _ => {}  // (false, false, false) - no action needed
+            _ => {} // (false, false, false) - no action needed
         }
     }
 
@@ -350,10 +358,7 @@ mod tests {
 
     #[test]
     fn test_achievements_validation() {
-        let validator = SettingsValidator::new(
-            "Buffout 4".to_string(),
-            vec![],
-        );
+        let validator = SettingsValidator::new("Buffout 4".to_string(), vec![]);
 
         let mut crashgen = HashMap::new();
         crashgen.insert("Achievements".to_string(), "true".to_string());
@@ -372,20 +377,16 @@ mod tests {
 
     #[test]
     fn test_memory_management_xcell_conflict() {
-        let validator = SettingsValidator::new(
-            "Buffout 4".to_string(),
-            vec![],
-        );
+        let validator = SettingsValidator::new("Buffout 4".to_string(), vec![]);
 
         let mut crashgen = HashMap::new();
         crashgen.insert("MemoryManager".to_string(), "true".to_string());
 
         let fragment = validator
             .scan_buffout_memorymanagement_settings(
-                &crashgen,
-                true,   // has_xcell
-                false,  // has_old_xcell
-                false,  // has_baka
+                &crashgen, true,  // has_xcell
+                false, // has_old_xcell
+                false, // has_baka
             )
             .unwrap();
 
@@ -396,10 +397,7 @@ mod tests {
 
     #[test]
     fn test_archive_limit_warning() {
-        let validator = SettingsValidator::new(
-            "Buffout 4".to_string(),
-            vec![],
-        );
+        let validator = SettingsValidator::new("Buffout 4".to_string(), vec![]);
 
         let mut crashgen = HashMap::new();
         crashgen.insert("ArchiveLimit".to_string(), "true".to_string());
@@ -411,6 +409,5 @@ mod tests {
         assert!(fragment.len() > 0);
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("ArchiveLimit")));
-
     }
 }

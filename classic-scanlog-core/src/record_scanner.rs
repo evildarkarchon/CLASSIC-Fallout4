@@ -3,10 +3,10 @@
 //! This module handles named record detection with high performance.
 //! No PyO3 dependencies - accepts plain data structures.
 
-use std::collections::{HashMap, HashSet};
-use rayon::prelude::*;
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use once_cell::sync::OnceCell;
+use rayon::prelude::*;
+use std::collections::{HashMap, HashSet};
 
 /// Record scanner for detecting and analyzing named records in crash logs
 pub struct RecordScanner {
@@ -50,11 +50,8 @@ impl RecordScanner {
         const RSP_MARKER: &str = "[RSP+";
         const RSP_OFFSET: usize = 30;
 
-        let records_matches = self.find_matching_records_internal(
-            segment_callstack,
-            RSP_MARKER,
-            RSP_OFFSET
-        );
+        let records_matches =
+            self.find_matching_records_internal(segment_callstack, RSP_MARKER, RSP_OFFSET);
 
         let report_lines = if !records_matches.is_empty() {
             self.generate_found_records_lines(&records_matches)
@@ -83,7 +80,7 @@ impl RecordScanner {
         &self,
         segment_callstack: &[String],
         rsp_marker: &str,
-        rsp_offset: usize
+        rsp_offset: usize,
     ) -> Vec<String> {
         let mut records_matches = Vec::new();
 
@@ -166,21 +163,15 @@ impl RecordScanner {
 pub fn scan_records_batch(
     segments: Vec<Vec<String>>,
     target_records: Vec<String>,
-    ignore_records: Vec<String>
+    ignore_records: Vec<String>,
 ) -> Vec<Vec<String>> {
     const RSP_MARKER: &str = "[RSP+";
     const RSP_OFFSET: usize = 30;
 
     // Convert to lowercase sets
-    let lower_targets: HashSet<String> = target_records
-        .iter()
-        .map(|s| s.to_lowercase())
-        .collect();
+    let lower_targets: HashSet<String> = target_records.iter().map(|s| s.to_lowercase()).collect();
 
-    let lower_ignores: HashSet<String> = ignore_records
-        .iter()
-        .map(|s| s.to_lowercase())
-        .collect();
+    let lower_ignores: HashSet<String> = ignore_records.iter().map(|s| s.to_lowercase()).collect();
 
     // Build Aho-Corasick automatons for efficiency
     let target_patterns: Vec<_> = lower_targets.iter().cloned().collect();

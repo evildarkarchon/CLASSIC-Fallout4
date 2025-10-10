@@ -3,16 +3,16 @@
 //! This module provides a 1:1 behavior match with the Python implementation
 //! while leveraging Rust's performance characteristics.
 
+use dashmap::DashMap;
+use lru::LruCache;
+use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
-use dashmap::DashMap;
-use once_cell::sync::Lazy;
-use regex::Regex;
-use std::collections::HashMap;
 use rayon::prelude::*;
+use regex::Regex;
+use rusqlite::{params, Connection};
+use std::collections::HashMap;
 use std::sync::Arc;
-use rusqlite::{Connection, params};
-use lru::LruCache;
 use std::sync::Mutex;
 
 // Use the global runtime from lib.rs (ONE RUNTIME RULE)
@@ -20,14 +20,12 @@ use crate::get_runtime;
 
 /// Precompiled FormID pattern - exact match to Python's pattern
 /// Pattern: r"^\s*Form ID:\s*0x([0-9A-F]{8})" with case-insensitive flag
-static FORMID_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)^\s*Form ID:\s*0x([0-9A-F]{8})").unwrap()
-});
+static FORMID_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)^\s*Form ID:\s*0x([0-9A-F]{8})").unwrap());
 
 /// LRU cache for FormID lookups - matches Python's @lru_cache(maxsize=512)
-static FORMID_LOOKUP_CACHE: Lazy<Mutex<LruCache<(String, String), Option<String>>>> = Lazy::new(|| {
-    Mutex::new(LruCache::new(std::num::NonZeroUsize::new(512).unwrap()))
-});
+static FORMID_LOOKUP_CACHE: Lazy<Mutex<LruCache<(String, String), Option<String>>>> =
+    Lazy::new(|| Mutex::new(LruCache::new(std::num::NonZeroUsize::new(512).unwrap())));
 
 /// Database connection pool for FormID lookups
 struct FormIDDatabase {
@@ -60,7 +58,10 @@ impl FormIDDatabase {
         None
     }
 
-    fn batch_lookup(&self, lookups: &[(String, String)]) -> HashMap<(String, String), Option<String>> {
+    fn batch_lookup(
+        &self,
+        lookups: &[(String, String)],
+    ) -> HashMap<(String, String), Option<String>> {
         let mut results = HashMap::new();
 
         if let Some(_conn) = &self.conn {
@@ -75,9 +76,8 @@ impl FormIDDatabase {
 }
 
 /// Cache for plugin mappings to avoid repeated PyDict conversions
-static PLUGIN_CACHE: Lazy<DashMap<String, Arc<HashMap<String, String>>>> = Lazy::new(|| {
-    DashMap::new()
-});
+static PLUGIN_CACHE: Lazy<DashMap<String, Arc<HashMap<String, String>>>> =
+    Lazy::new(|| DashMap::new());
 
 /// Core FormID analyzer - exact behavioral match to Python FormIDAnalyzerCore
 #[pyclass]
@@ -104,9 +104,7 @@ impl FormIDAnalyzerCore {
         db_pool: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         // Extract crashgen_name from yamldata
-        let crashgen_name = yamldata
-            .getattr("crashgen_name")?
-            .extract::<String>()?;
+        let crashgen_name = yamldata.getattr("crashgen_name")?.extract::<String>()?;
 
         // Initialize database connection if db_pool provided
         let mut database = FormIDDatabase::new();
@@ -164,7 +162,7 @@ impl FormIDAnalyzerCore {
         &self,
         py: Python<'_>,
         formids_matches: Vec<String>,
-        crashlog_plugins: &Bound<'_, PyDict>
+        crashlog_plugins: &Bound<'_, PyDict>,
     ) -> PyResult<Py<PyAny>> {
         // Import ReportFragment from Python
         let report_fragment_module = py.import("ClassicLib.ScanLog.ReportFragment")?;
@@ -217,9 +215,15 @@ impl FormIDAnalyzerCore {
                     if self.show_formid_values && self.formid_db_exists {
                         if let Ok(db) = self.database.lock() {
                             if let Some(description) = db.lookup(formid_suffix, plugin) {
-                                lines.push(format!("- {} | [{}] | {} | {}\n", formid_full, plugin, description, count));
+                                lines.push(format!(
+                                    "- {} | [{}] | {} | {}\n",
+                                    formid_full, plugin, description, count
+                                ));
                             } else {
-                                lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
+                                lines.push(format!(
+                                    "- {} | [{}] | {}\n",
+                                    formid_full, plugin, count
+                                ));
                             }
                         } else {
                             lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
@@ -299,13 +303,13 @@ impl FormIDAnalyzerCore {
     pub fn extract_formids_nocopy<'py>(
         &self,
         py: Python<'py>,
-        segment_callstack: &Bound<'py, PyList>
+        segment_callstack: &Bound<'py, PyList>,
     ) -> PyResult<Py<PyList>> {
         let mut formids_matches = Vec::new();
 
         // Iterate without copying strings from Python
         for line in segment_callstack.iter() {
-            let line_str = line.extract::<&str>()?;  // Borrow, don't own
+            let line_str = line.extract::<&str>()?; // Borrow, don't own
 
             if let Some(captures) = FORMID_PATTERN.captures(line_str) {
                 if let Some(formid_match) = captures.get(1) {
@@ -342,14 +346,17 @@ impl FormIDAnalyzerCore {
     pub fn process_formids_cached<'py>(
         &self,
         py: Python<'py>,
-        formids: &Bound<'py, PyList>,  // List of "Form ID: XXXXXXXX" strings
-        plugin_cache_key: String
+        formids: &Bound<'py, PyList>, // List of "Form ID: XXXXXXXX" strings
+        plugin_cache_key: String,
     ) -> PyResult<Py<PyAny>> {
         // Get cached plugins without FFI overhead
-        let plugins = PLUGIN_CACHE.get(&plugin_cache_key)
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "Plugin cache not initialized. Call cache_plugins() first."
-            ))?
+        let plugins = PLUGIN_CACHE
+            .get(&plugin_cache_key)
+            .ok_or_else(|| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    "Plugin cache not initialized. Call cache_plugins() first.",
+                )
+            })?
             .clone();
 
         let mut results = Vec::new();
@@ -370,7 +377,9 @@ impl FormIDAnalyzerCore {
                     let line = if let Some(plugin) = plugins.get(prefix) {
                         if self.formid_db_exists && self.show_formid_values {
                             // Try database lookup
-                            if let Some(value) = self.lookup_formid_value_sync(&formid_upper, plugin) {
+                            if let Some(value) =
+                                self.lookup_formid_value_sync(&formid_upper, plugin)
+                            {
                                 format!("- {} | [{}] | {}\n", formid_upper, plugin, value)
                             } else {
                                 format!("- {} | [{}]\n", formid_upper, plugin)
@@ -388,7 +397,10 @@ impl FormIDAnalyzerCore {
         }
 
         // Add footer
-        results.push("\n[These Form IDs were found in the crash log and might be related to the crash.]\n".to_string());
+        results.push(
+            "\n[These Form IDs were found in the crash log and might be related to the crash.]\n"
+                .to_string(),
+        );
         results.push("You can search any listed Form IDs in xEdit to see if they lead to relevant records.\n".to_string());
 
         // Return results as a Python list for ReportFragment creation
@@ -400,7 +412,7 @@ impl FormIDAnalyzerCore {
         &self,
         py: Python<'py>,
         formids_matches: Vec<String>,
-        crashlog_plugins: &Bound<'_, PyDict>
+        crashlog_plugins: &Bound<'_, PyDict>,
     ) -> PyResult<Py<PyAny>> {
         // Import ReportFragment from Python
         let report_fragment_module = py.import("ClassicLib.ScanLog.ReportFragment")?;
@@ -451,7 +463,12 @@ impl FormIDAnalyzerCore {
 
             for (plugin, plugin_id) in &plugin_map {
                 if plugin_id == formid_prefix {
-                    lookup_tasks.push((formid_full.clone(), formid_suffix.to_string(), plugin.clone(), *count));
+                    lookup_tasks.push((
+                        formid_full.clone(),
+                        formid_suffix.to_string(),
+                        plugin.clone(),
+                        *count,
+                    ));
                     break;
                 }
             }
@@ -473,13 +490,18 @@ impl FormIDAnalyzerCore {
                     } else {
                         HashMap::new()
                     }
-                }).await.unwrap_or_else(|_| HashMap::new())
+                })
+                .await
+                .unwrap_or_else(|_| HashMap::new())
             });
 
             for (formid_full, formid_suffix, plugin, count) in &lookup_tasks {
                 let key = (formid_suffix.clone(), plugin.clone());
                 if let Some(Some(description)) = batch_results.get(&key) {
-                    lines.push(format!("- {} | [{}] | {} | {}\n", formid_full, plugin, description, count));
+                    lines.push(format!(
+                        "- {} | [{}] | {} | {}\n",
+                        formid_full, plugin, description, count
+                    ));
                 } else {
                     lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
                 }

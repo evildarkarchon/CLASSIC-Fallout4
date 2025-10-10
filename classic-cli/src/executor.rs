@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use classic_config_core::YamlDataCore;
 use classic_file_io_core::FileIOCore;
-use classic_scanlog_core::{OrchestratorCore, AnalysisConfig, AnalysisResult};
+use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 use std::path::{Path, PathBuf};
 
 use crate::config::CliConfig;
@@ -35,16 +35,25 @@ impl ScanExecutor {
 
         // Find crash log directory
         let crash_log_dir = self.find_crash_log_directory()?;
-        output.print_success(&format!("Found crash log directory: {}", crash_log_dir.display()));
+        output.print_success(&format!(
+            "Found crash log directory: {}",
+            crash_log_dir.display()
+        ));
 
         // Find all crash log files using FileIOCore
-        let log_files = self.file_io.walk_directory(
-            &crash_log_dir,
-            Some(r"^crash-.*\.(log|txt)$"),
-            Some(1) // Only search in current directory, not subdirectories
-        ).context("Failed to search for crash logs")?;
+        let log_files = self
+            .file_io
+            .walk_directory(
+                &crash_log_dir,
+                Some(r"^crash-.*\.(log|txt)$"),
+                Some(1), // Only search in current directory, not subdirectories
+            )
+            .context("Failed to search for crash logs")?;
 
-        output.print_success(&format!("Found {} crash logs in scan directory", log_files.len()));
+        output.print_success(&format!(
+            "Found {} crash logs in scan directory",
+            log_files.len()
+        ));
 
         if log_files.is_empty() {
             output.print_warning("No crash logs found to analyze");
@@ -55,8 +64,8 @@ impl ScanExecutor {
         let analysis_config = self.build_analysis_config();
 
         // Create orchestrator - uses core business logic directly
-        let orchestrator = OrchestratorCore::new(analysis_config)
-            .context("Failed to create orchestrator")?;
+        let orchestrator =
+            OrchestratorCore::new(analysis_config).context("Failed to create orchestrator")?;
 
         // Create progress bar
         let progress = output.create_progress_bar(log_files.len() as u64, "Scanning crash logs...");
@@ -75,7 +84,11 @@ impl ScanExecutor {
                 .and_then(|n| n.to_str())
                 .unwrap_or("unknown");
 
-            output.update_progress(&progress, idx as u64, &format!("Processing {}...", log_name));
+            output.update_progress(
+                &progress,
+                idx as u64,
+                &format!("Processing {}...", log_name),
+            );
 
             match orchestrator.process_log(log_path.clone()).await {
                 Ok(result) => results.push(result),
@@ -109,7 +122,8 @@ impl ScanExecutor {
 
         // Try to find default crash log directory in game documents
         if let Some(ref ini_folder) = self.config.paths.ini_folder {
-            let crash_logs = ini_folder.parent()
+            let crash_logs = ini_folder
+                .parent()
                 .and_then(|p| Some(p.join("Fallout 4").join("Crash Logs")))
                 .filter(|p| p.exists());
 
@@ -291,19 +305,13 @@ mod tests {
         let yaml_data = create_test_yaml_data();
         let executor = ScanExecutor::new(config, yaml_data);
 
-        let mut result1 = AnalysisResult::success(
-            "test1.log".to_string(),
-            vec!["Line 1".to_string()],
-            100,
-        );
+        let mut result1 =
+            AnalysisResult::success("test1.log".to_string(), vec!["Line 1".to_string()], 100);
         result1.formid_count = 10;
         result1.suspect_count = 2;
 
-        let mut result2 = AnalysisResult::success(
-            "test2.log".to_string(),
-            vec!["Line 2".to_string()],
-            150,
-        );
+        let mut result2 =
+            AnalysisResult::success("test2.log".to_string(), vec!["Line 2".to_string()], 150);
         result2.formid_count = 20;
         result2.suspect_count = 3;
 

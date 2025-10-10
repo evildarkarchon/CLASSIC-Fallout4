@@ -34,7 +34,11 @@ impl PyRustFormIDAnalyzer {
 
     /// Batch analyze FormIDs with plugin resolution
     #[pyo3(signature = (formids, plugins))]
-    pub fn analyze_batch(&self, formids: Vec<String>, plugins: Bound<'_, PyDict>) -> PyResult<Vec<(String, Option<String>)>> {
+    pub fn analyze_batch(
+        &self,
+        formids: Vec<String>,
+        plugins: Bound<'_, PyDict>,
+    ) -> PyResult<Vec<(String, Option<String>)>> {
         // Convert PyDict to HashMap<String, String>
         let plugins_map: HashMap<String, String> = plugins.extract()?;
         // analyze_batch returns Vec<...>, not Result
@@ -81,7 +85,11 @@ impl PyFormIDAnalyzer {
 
     /// Batch analyze FormIDs with plugin resolution
     #[pyo3(signature = (formids, plugins))]
-    pub fn analyze_batch(&self, formids: Vec<String>, plugins: Bound<'_, PyDict>) -> PyResult<Vec<(String, Option<String>)>> {
+    pub fn analyze_batch(
+        &self,
+        formids: Vec<String>,
+        plugins: Bound<'_, PyDict>,
+    ) -> PyResult<Vec<(String, Option<String>)>> {
         // Convert PyDict to HashMap<String, String>
         let plugins_map: HashMap<String, String> = plugins.extract()?;
         // analyze_batch returns Vec<...>, not Result

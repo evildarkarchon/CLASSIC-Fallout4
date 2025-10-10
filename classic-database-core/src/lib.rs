@@ -13,4 +13,4 @@
 
 mod pool;
 
-pub use pool::{DatabasePool, CacheEntry, PoolStatistics, DatabaseError};
+pub use pool::{CacheEntry, DatabaseError, DatabasePool, PoolStatistics};

@@ -13,7 +13,11 @@ pub struct PyRecordScanner {
 #[pymethods]
 impl PyRecordScanner {
     #[new]
-    pub fn new(target_records: Vec<String>, ignore_records: Vec<String>, crashgen_name: String) -> PyResult<Self> {
+    pub fn new(
+        target_records: Vec<String>,
+        ignore_records: Vec<String>,
+        crashgen_name: String,
+    ) -> PyResult<Self> {
         let inner = RecordScanner::new(target_records, ignore_records, crashgen_name);
         Ok(Self { inner })
     }
@@ -41,11 +45,19 @@ pub fn scan_records_batch(
     target_records: Vec<String>,
     ignore_records: Vec<String>,
 ) -> PyResult<Vec<Vec<String>>> {
-    Ok(classic_scanlog_core::scan_records_batch(segments, target_records, ignore_records))
+    Ok(classic_scanlog_core::scan_records_batch(
+        segments,
+        target_records,
+        ignore_records,
+    ))
 }
 
 /// Check if a line contains a record (standalone function)
 #[pyfunction]
-pub fn contains_record(line: String, target_records: Vec<String>, ignore_records: Vec<String>) -> bool {
+pub fn contains_record(
+    line: String,
+    target_records: Vec<String>,
+    ignore_records: Vec<String>,
+) -> bool {
     classic_scanlog_core::contains_record(&line, &target_records, &ignore_records)
 }

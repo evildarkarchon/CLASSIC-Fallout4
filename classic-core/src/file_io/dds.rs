@@ -29,7 +29,8 @@ impl DDSHeader {
         // Quick magic number check before full parsing
         if bytes.len() >= 4 {
             let magic = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
-            if magic != 0x20534444 {  // "DDS " in little-endian
+            if magic != 0x20534444 {
+                // "DDS " in little-endian
                 return Ok(None);
             }
         }
@@ -76,8 +77,7 @@ impl DDSHeader {
 
     /// Check if dimensions are within reasonable bounds
     pub fn is_reasonable_size(&self) -> bool {
-        self.width > 0 && self.width <= 16384 &&
-        self.height > 0 && self.height <= 16384
+        self.width > 0 && self.width <= 16384 && self.height > 0 && self.height <= 16384
     }
 
     /// Check if texture has mipmaps
@@ -87,10 +87,10 @@ impl DDSHeader {
 
     /// Check if format is a BC compressed format
     pub fn is_bc_compressed(&self) -> bool {
-        self.format.contains("Bc") ||
-        self.format.contains("Dxt") ||
-        self.format.contains("BC") ||
-        self.format.contains("DXT")
+        self.format.contains("Bc")
+            || self.format.contains("Dxt")
+            || self.format.contains("BC")
+            || self.format.contains("DXT")
     }
 }
 
@@ -102,7 +102,7 @@ fn is_power_of_2(n: u32) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ddsfile::{Dds, NewDxgiParams, DxgiFormat};
+    use ddsfile::{Dds, DxgiFormat, NewDxgiParams};
     use std::io::Cursor;
 
     fn create_test_dds(width: u32, height: u32) -> Vec<u8> {

@@ -5,11 +5,11 @@
 use crate::error::Result;
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
+use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use rayon::prelude::*;
-use std::sync::Arc;
 use std::path::Path;
+use std::sync::Arc;
 
 /// Precompiled plugin pattern - exact match to Python's pattern
 /// Pattern: r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)"
@@ -51,10 +51,8 @@ impl PluginAnalyzer {
             .map(|s| s.to_lowercase())
             .collect();
 
-        let ignore_plugins_list: HashSet<String> = ignore_list
-            .iter()
-            .map(|s| s.to_lowercase())
-            .collect();
+        let ignore_plugins_list: HashSet<String> =
+            ignore_list.iter().map(|s| s.to_lowercase()).collect();
 
         Ok(Self {
             lower_plugins_ignore,
@@ -88,8 +86,13 @@ impl PluginAnalyzer {
                     if loadorder_data.len() > 1 {
                         for plugin_entry in loadorder_data.iter().skip(1) {
                             let plugin_entry = plugin_entry.trim();
-                            if !plugin_entry.is_empty() && !loadorder_plugins.contains_key(plugin_entry) {
-                                loadorder_plugins.insert(plugin_entry.to_string(), PLUGIN_ORIGIN_LOADORDER.to_string());
+                            if !plugin_entry.is_empty()
+                                && !loadorder_plugins.contains_key(plugin_entry)
+                            {
+                                loadorder_plugins.insert(
+                                    plugin_entry.to_string(),
+                                    PLUGIN_ORIGIN_LOADORDER.to_string(),
+                                );
                             }
                         }
                     }
@@ -107,10 +110,7 @@ impl PluginAnalyzer {
 
     /// Scans log for plugins and returns just the load order
     /// This is the simplified version that only parses plugins, no version-specific logic
-    pub fn loadorder_scan_log(
-        &self,
-        segment_plugins: Vec<String>,
-    ) -> Result<Vec<String>> {
+    pub fn loadorder_scan_log(&self, segment_plugins: Vec<String>) -> Result<Vec<String>> {
         // Early return for empty input
         if segment_plugins.is_empty() {
             return Ok(Vec::new());
@@ -151,8 +151,10 @@ impl PluginAnalyzer {
         let version_137 = "1.37.0";
 
         // Determine game version characteristics
-        let is_original_game = game_version == self.game_version || game_version == self.game_version_vr;
-        let is_new_game_crashgen_pre_137 = game_version >= self.game_version_new.as_str() && version_current < version_137;
+        let is_original_game =
+            game_version == self.game_version || game_version == self.game_version_vr;
+        let is_new_game_crashgen_pre_137 =
+            game_version >= self.game_version_new.as_str() && version_current < version_137;
 
         let mut plugin_limit_triggered = false;
         let mut limit_check_disabled = false;
@@ -208,9 +210,7 @@ impl PluginAnalyzer {
 
             // Sort by count (descending) then by name for consistent output
             let mut sorted_matches: Vec<_> = plugins_matches.into_iter().collect();
-            sorted_matches.sort_by(|a, b| {
-                b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0))
-            });
+            sorted_matches.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
 
             for (plugin, count) in sorted_matches {
                 lines.push(format!("- {} | {}\n", plugin, count));
@@ -264,7 +264,10 @@ pub fn detect_plugins_batch(logs: Vec<String>) -> Vec<HashMap<String, String>> {
             for line in log.lines() {
                 if let Some(caps) = PLUGIN_PATTERN.captures(line) {
                     let plugin_id = caps.get(1).map(|m| m.as_str().to_string());
-                    let plugin_name = caps.get(3).map(|m| m.as_str().to_string()).unwrap_or_default();
+                    let plugin_name = caps
+                        .get(3)
+                        .map(|m| m.as_str().to_string())
+                        .unwrap_or_default();
 
                     if !plugin_name.is_empty() && !plugins.contains_key(&plugin_name) {
                         let status = if let Some(id) = plugin_id {

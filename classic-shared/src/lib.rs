@@ -3,9 +3,9 @@
 //! This crate provides shared infrastructure used by all other CLASSIC Rust modules,
 //! including the global runtime (ONE RUNTIME RULE), error types, and common utilities.
 
+use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
-use once_cell::sync::Lazy;
 
 // Module declarations
 pub mod errors;

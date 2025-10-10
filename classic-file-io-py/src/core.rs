@@ -3,24 +3,34 @@
 //! This module provides THIN adapters that delegate all business logic to classic-file-io-core.
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
-use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
-use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
-use std::path::PathBuf;
-use std::collections::HashMap;
 use classic_file_io_core::FileIOCore;
 use classic_shared::get_runtime;
+use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
+use pyo3::prelude::*;
+use pyo3::types::{PyDict, PyList};
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 /// Convert FileIOError to PyErr
 fn to_pyerr(err: classic_file_io_core::FileIOError) -> PyErr {
     match err {
         classic_file_io_core::FileIOError::IoError(e) => PyIOError::new_err(e.to_string()),
-        classic_file_io_core::FileIOError::NotFound(s) => PyIOError::new_err(format!("File not found: {}", s)),
+        classic_file_io_core::FileIOError::NotFound(s) => {
+            PyIOError::new_err(format!("File not found: {}", s))
+        }
         classic_file_io_core::FileIOError::InvalidPath(s) => PyValueError::new_err(s),
-        classic_file_io_core::FileIOError::EncodingError(s) => PyRuntimeError::new_err(format!("Encoding error: {}", s)),
-        classic_file_io_core::FileIOError::DDSError(s) => PyRuntimeError::new_err(format!("DDS error: {}", s)),
-        classic_file_io_core::FileIOError::JoinError(s) => PyRuntimeError::new_err(format!("Task error: {}", s)),
-        classic_file_io_core::FileIOError::CacheError(s) => PyRuntimeError::new_err(format!("Cache error: {}", s)),
+        classic_file_io_core::FileIOError::EncodingError(s) => {
+            PyRuntimeError::new_err(format!("Encoding error: {}", s))
+        }
+        classic_file_io_core::FileIOError::DDSError(s) => {
+            PyRuntimeError::new_err(format!("DDS error: {}", s))
+        }
+        classic_file_io_core::FileIOError::JoinError(s) => {
+            PyRuntimeError::new_err(format!("Task error: {}", s))
+        }
+        classic_file_io_core::FileIOError::CacheError(s) => {
+            PyRuntimeError::new_err(format!("Cache error: {}", s))
+        }
     }
 }
 
@@ -44,9 +54,7 @@ impl PyFileIOCore {
     #[pyo3(name = "read_file")]
     pub fn py_read_file(&self, _py: Python<'_>, path: String) -> PyResult<String> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async {
-            self.inner.read_file(&path_buf).await.map_err(to_pyerr)
-        })
+        get_runtime().block_on(async { self.inner.read_file(&path_buf).await.map_err(to_pyerr) })
     }
 
     /// Write a file
@@ -54,7 +62,10 @@ impl PyFileIOCore {
     pub fn py_write_file(&self, _py: Python<'_>, path: String, content: String) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
         get_runtime().block_on(async {
-            self.inner.write_file(&path_buf, &content).await.map_err(to_pyerr)
+            self.inner
+                .write_file(&path_buf, &content)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
@@ -62,26 +73,30 @@ impl PyFileIOCore {
     #[pyo3(name = "read_lines")]
     pub fn py_read_lines(&self, _py: Python<'_>, path: String) -> PyResult<Vec<String>> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async {
-            self.inner.read_lines(&path_buf).await.map_err(to_pyerr)
-        })
+        get_runtime().block_on(async { self.inner.read_lines(&path_buf).await.map_err(to_pyerr) })
     }
 
     /// Read file as bytes
     #[pyo3(name = "read_bytes")]
     pub fn py_read_bytes(&self, _py: Python<'_>, path: String) -> PyResult<Vec<u8>> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async {
-            self.inner.read_bytes(&path_buf).await.map_err(to_pyerr)
-        })
+        get_runtime().block_on(async { self.inner.read_bytes(&path_buf).await.map_err(to_pyerr) })
     }
 
     /// Write lines to file
     #[pyo3(name = "write_lines")]
-    pub fn py_write_lines(&self, _py: Python<'_>, path: String, lines: Vec<String>) -> PyResult<()> {
+    pub fn py_write_lines(
+        &self,
+        _py: Python<'_>,
+        path: String,
+        lines: Vec<String>,
+    ) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
         get_runtime().block_on(async {
-            self.inner.write_lines(&path_buf, lines).await.map_err(to_pyerr)
+            self.inner
+                .write_lines(&path_buf, lines)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
@@ -90,7 +105,10 @@ impl PyFileIOCore {
     pub fn py_write_bytes(&self, _py: Python<'_>, path: String, content: Vec<u8>) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
         get_runtime().block_on(async {
-            self.inner.write_bytes(&path_buf, content).await.map_err(to_pyerr)
+            self.inner
+                .write_bytes(&path_buf, content)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
@@ -99,7 +117,10 @@ impl PyFileIOCore {
     pub fn py_append_file(&self, _py: Python<'_>, path: String, content: String) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
         get_runtime().block_on(async {
-            self.inner.append_file(&path_buf, &content).await.map_err(to_pyerr)
+            self.inner
+                .append_file(&path_buf, &content)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
@@ -120,7 +141,10 @@ impl PyFileIOCore {
     /// Get file size in bytes
     pub fn get_file_size(&self, _py: Python<'_>, path: String) -> i64 {
         let path_buf = PathBuf::from(path);
-        self.inner.get_file_size(&path_buf).map(|s| s as i64).unwrap_or(-1)
+        self.inner
+            .get_file_size(&path_buf)
+            .map(|s| s as i64)
+            .unwrap_or(-1)
     }
 
     /// Parse DDS header with zero-copy operations
@@ -136,7 +160,11 @@ impl PyFileIOCore {
     }
 
     /// Batch DDS header reading with parallel processing
-    pub fn read_dds_headers_batch(&self, py: Python<'_>, paths: Vec<String>) -> PyResult<Py<PyDict>> {
+    pub fn read_dds_headers_batch(
+        &self,
+        py: Python<'_>,
+        paths: Vec<String>,
+    ) -> PyResult<Py<PyDict>> {
         let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
         let results = self.inner.read_dds_headers_batch(path_bufs);
 
@@ -155,10 +183,18 @@ impl PyFileIOCore {
     }
 
     /// Memory-mapped file reading for large files
-    pub fn py_read_file_mmap(&self, _py: Python<'_>, path: String, encoding: Option<String>) -> PyResult<String> {
+    pub fn py_read_file_mmap(
+        &self,
+        _py: Python<'_>,
+        path: String,
+        encoding: Option<String>,
+    ) -> PyResult<String> {
         let path_buf = PathBuf::from(path);
         get_runtime().block_on(async {
-            self.inner.read_file_mmap(&path_buf, encoding.as_deref()).await.map_err(to_pyerr)
+            self.inner
+                .read_file_mmap(&path_buf, encoding.as_deref())
+                .await
+                .map_err(to_pyerr)
         })
     }
 
@@ -171,10 +207,14 @@ impl PyFileIOCore {
         max_depth: Option<usize>,
     ) -> PyResult<Py<PyList>> {
         let path_buf = PathBuf::from(path);
-        let files = self.inner.walk_directory(&path_buf, pattern.as_deref(), max_depth).map_err(to_pyerr)?;
+        let files = self
+            .inner
+            .walk_directory(&path_buf, pattern.as_deref(), max_depth)
+            .map_err(to_pyerr)?;
 
         // Convert to Python list
-        let file_strings: Vec<String> = files.iter()
+        let file_strings: Vec<String> = files
+            .iter()
             .map(|p| p.to_string_lossy().to_string())
             .collect();
         let list = PyList::new(py, file_strings)?;
@@ -189,9 +229,8 @@ impl PyFileIOCore {
     ) -> PyResult<Py<PyDict>> {
         let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
 
-        let results = get_runtime().block_on(async {
-            self.inner.read_multiple_files(path_bufs).await
-        });
+        let results =
+            get_runtime().block_on(async { self.inner.read_multiple_files(path_bufs).await });
 
         // Convert to Python dict
         let dict = PyDict::new(py);
@@ -215,7 +254,8 @@ impl PyFileIOCore {
         _py: Python<'_>,
         files: HashMap<String, String>,
     ) -> PyResult<()> {
-        let file_pairs: Vec<(PathBuf, String)> = files.into_iter()
+        let file_pairs: Vec<(PathBuf, String)> = files
+            .into_iter()
             .map(|(path, content)| (PathBuf::from(path), content))
             .collect();
 
@@ -225,7 +265,11 @@ impl PyFileIOCore {
             // Check for errors
             for (path, result) in results {
                 if let Err(e) = result {
-                    return Err(PyIOError::new_err(format!("Failed to write {}: {}", path.display(), e)));
+                    return Err(PyIOError::new_err(format!(
+                        "Failed to write {}: {}",
+                        path.display(),
+                        e
+                    )));
                 }
             }
 

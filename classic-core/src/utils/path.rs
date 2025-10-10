@@ -4,13 +4,13 @@
 //! It caches path lookups and provides efficient path validation without hardcoding
 //! any game paths. All game paths are discovered at runtime through Python.
 
-use pyo3::prelude::*;
-use pyo3::exceptions::PyIOError;
 use dashmap::DashMap;
+use pyo3::exceptions::PyIOError;
+use pyo3::prelude::*;
+use rayon::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use rayon::prelude::*;
 
 /// Cache entry for path operations
 #[derive(Clone, Debug)]
@@ -98,14 +98,12 @@ impl PathHandler {
         let now = Instant::now();
 
         // Clean path cache
-        self.path_cache.retain(|_, entry| {
-            now.duration_since(entry.timestamp) < self.cache_ttl
-        });
+        self.path_cache
+            .retain(|_, entry| now.duration_since(entry.timestamp) < self.cache_ttl);
 
         // Clean validation cache
-        self.validation_cache.retain(|_, (_, _, timestamp)| {
-            now.duration_since(*timestamp) < self.cache_ttl
-        });
+        self.validation_cache
+            .retain(|_, (_, _, timestamp)| now.duration_since(*timestamp) < self.cache_ttl);
     }
 }
 
@@ -135,7 +133,8 @@ impl PathHandler {
 
     /// Validate multiple paths in parallel
     pub fn validate_paths_batch(&self, paths: Vec<String>) -> Vec<(String, bool, String)> {
-        paths.par_iter()
+        paths
+            .par_iter()
             .map(|path| {
                 let path_buf = PathBuf::from(path);
 
@@ -151,10 +150,8 @@ impl PathHandler {
                 let (is_valid, msg) = self.validate_single_path(&path_buf);
 
                 // Cache result
-                self.validation_cache.insert(
-                    path_buf.clone(),
-                    (is_valid, msg.clone(), Instant::now())
-                );
+                self.validation_cache
+                    .insert(path_buf.clone(), (is_valid, msg.clone(), Instant::now()));
 
                 (path.clone(), is_valid, msg)
             })
@@ -187,7 +184,8 @@ impl PathHandler {
     /// Split a path into components
     pub fn split_path(&self, path: String) -> Vec<String> {
         let path_buf = PathBuf::from(path);
-        path_buf.components()
+        path_buf
+            .components()
             .map(|c| c.as_os_str().to_string_lossy().to_string())
             .collect()
     }
@@ -195,22 +193,23 @@ impl PathHandler {
     /// Get file name from path
     pub fn get_filename(&self, path: String) -> PyResult<Option<String>> {
         let path_buf = PathBuf::from(path);
-        Ok(path_buf.file_name()
+        Ok(path_buf
+            .file_name()
             .map(|name| name.to_string_lossy().to_string()))
     }
 
     /// Get file extension
     pub fn get_extension(&self, path: String) -> PyResult<Option<String>> {
         let path_buf = PathBuf::from(path);
-        Ok(path_buf.extension()
+        Ok(path_buf
+            .extension()
             .map(|ext| ext.to_string_lossy().to_string()))
     }
 
     /// Get parent directory
     pub fn get_parent(&self, path: String) -> PyResult<Option<String>> {
         let path_buf = PathBuf::from(path);
-        Ok(path_buf.parent()
-            .map(|p| p.to_string_lossy().to_string()))
+        Ok(path_buf.parent().map(|p| p.to_string_lossy().to_string()))
     }
 
     /// Check if path is absolute
@@ -227,11 +226,9 @@ impl PathHandler {
         } else {
             match base {
                 Some(b) => PathBuf::from(b).join(path_buf),
-                None => {
-                    std::env::current_dir()
-                        .map_err(|e| PyIOError::new_err(e.to_string()))?
-                        .join(path_buf)
-                }
+                None => std::env::current_dir()
+                    .map_err(|e| PyIOError::new_err(e.to_string()))?
+                    .join(path_buf),
             }
         };
 
@@ -249,9 +246,10 @@ impl PathHandler {
 
         let mut common_len = 0;
         for i in 0..first_components.len() {
-            if path_bufs.iter().all(|p| {
-                p.components().nth(i) == Some(first_components[i])
-            }) {
+            if path_bufs
+                .iter()
+                .all(|p| p.components().nth(i) == Some(first_components[i]))
+            {
                 common_len = i + 1;
             } else {
                 break;

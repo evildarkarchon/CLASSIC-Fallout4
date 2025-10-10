@@ -1,11 +1,11 @@
 //! High-performance string processing utilities
 
-use pyo3::prelude::*;
-use smartstring::alias::String as SmartString;
-use string_cache::DefaultAtom;
 use dashmap::DashMap;
+use pyo3::prelude::*;
 use rayon::prelude::*;
+use smartstring::alias::String as SmartString;
 use std::sync::Arc;
+use string_cache::DefaultAtom;
 
 /// String processor with interning and parallel operations
 #[pyclass]
@@ -35,7 +35,8 @@ impl StringProcessor {
 
     /// Process multiple strings in parallel
     pub fn process_batch(&self, strings: Vec<String>, operation: String) -> Vec<String> {
-        strings.par_iter()
+        strings
+            .par_iter()
             .map(|s| match operation.as_str() {
                 "upper" => s.to_uppercase(),
                 "lower" => s.to_lowercase(),
@@ -87,9 +88,7 @@ impl StringProcessor {
 
     /// Split text into lines efficiently
     pub fn split_lines(&self, text: String) -> Vec<String> {
-        text.par_lines()
-            .map(|line| line.to_string())
-            .collect()
+        text.par_lines().map(|line| line.to_string()).collect()
     }
 
     /// Join lines with a separator

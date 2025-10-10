@@ -3,15 +3,15 @@
 //! This module provides exact behavioral parity with Python's PluginAnalyzer
 //! while leveraging Rust's performance optimizations.
 
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
+use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use rayon::prelude::*;
-use std::sync::Arc;
 use std::path::Path;
+use std::sync::Arc;
 
 /// Precompiled plugin pattern - exact match to Python's pattern
 /// Pattern: r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)"
@@ -44,11 +44,12 @@ impl PluginAnalyzer {
     #[pyo3(signature = (yamldata))]
     pub fn new(yamldata: &Bound<'_, PyAny>) -> PyResult<Self> {
         // Extract game ignore plugins
-        let game_ignore_plugins: Vec<String> = if let Ok(ignore_list) = yamldata.getattr("game_ignore_plugins") {
-            ignore_list.extract()?
-        } else {
-            Vec::new()
-        };
+        let game_ignore_plugins: Vec<String> =
+            if let Ok(ignore_list) = yamldata.getattr("game_ignore_plugins") {
+                ignore_list.extract()?
+            } else {
+                Vec::new()
+            };
 
         // Extract ignore list
         let ignore_list: Vec<String> = if let Ok(list) = yamldata.getattr("ignore_list") {
@@ -61,9 +62,12 @@ impl PluginAnalyzer {
         let game_version = if let Ok(ver) = yamldata.getattr("game_version") {
             // Try to get string representation - Version objects have __str__ method
             if let Ok(ver_str) = ver.call_method0("__str__") {
-                ver_str.extract::<String>().unwrap_or_else(|_| "1.10.163".to_string())
+                ver_str
+                    .extract::<String>()
+                    .unwrap_or_else(|_| "1.10.163".to_string())
             } else {
-                ver.extract::<String>().unwrap_or_else(|_| "1.10.163".to_string())
+                ver.extract::<String>()
+                    .unwrap_or_else(|_| "1.10.163".to_string())
             }
         } else {
             "1.10.163".to_string()
@@ -72,9 +76,12 @@ impl PluginAnalyzer {
         let game_version_vr = if let Ok(ver) = yamldata.getattr("game_version_vr") {
             // Try to get string representation - Version objects have __str__ method
             if let Ok(ver_str) = ver.call_method0("__str__") {
-                ver_str.extract::<String>().unwrap_or_else(|_| "1.10.163".to_string())
+                ver_str
+                    .extract::<String>()
+                    .unwrap_or_else(|_| "1.10.163".to_string())
             } else {
-                ver.extract::<String>().unwrap_or_else(|_| "1.10.163".to_string())
+                ver.extract::<String>()
+                    .unwrap_or_else(|_| "1.10.163".to_string())
             }
         } else {
             "1.10.163".to_string()
@@ -83,16 +90,20 @@ impl PluginAnalyzer {
         let game_version_new = if let Ok(ver) = yamldata.getattr("game_version_new") {
             // Try to get string representation - Version objects have __str__ method
             if let Ok(ver_str) = ver.call_method0("__str__") {
-                ver_str.extract::<String>().unwrap_or_else(|_| "1.10.984".to_string())
+                ver_str
+                    .extract::<String>()
+                    .unwrap_or_else(|_| "1.10.984".to_string())
             } else {
-                ver.extract::<String>().unwrap_or_else(|_| "1.10.984".to_string())
+                ver.extract::<String>()
+                    .unwrap_or_else(|_| "1.10.984".to_string())
             }
         } else {
             "1.10.984".to_string()
         };
 
         let crashgen_name = if let Ok(name) = yamldata.getattr("crashgen_name") {
-            name.extract::<String>().unwrap_or_else(|_| "Buffout4".to_string())
+            name.extract::<String>()
+                .unwrap_or_else(|_| "Buffout4".to_string())
         } else {
             "Buffout4".to_string()
         };
@@ -103,10 +114,8 @@ impl PluginAnalyzer {
             .map(|s| s.to_lowercase())
             .collect();
 
-        let ignore_plugins_list: HashSet<String> = ignore_list
-            .iter()
-            .map(|s| s.to_lowercase())
-            .collect();
+        let ignore_plugins_list: HashSet<String> =
+            ignore_list.iter().map(|s| s.to_lowercase()).collect();
 
         Ok(Self {
             lower_plugins_ignore,
@@ -141,8 +150,11 @@ impl PluginAnalyzer {
                     if loadorder_data.len() > 1 {
                         for plugin_entry in loadorder_data.iter().skip(1) {
                             let plugin_entry = plugin_entry.trim();
-                            if !plugin_entry.is_empty() && !loadorder_plugins.contains(plugin_entry)? {
-                                loadorder_plugins.set_item(plugin_entry, PLUGIN_ORIGIN_LOADORDER)?;
+                            if !plugin_entry.is_empty()
+                                && !loadorder_plugins.contains(plugin_entry)?
+                            {
+                                loadorder_plugins
+                                    .set_item(plugin_entry, PLUGIN_ORIGIN_LOADORDER)?;
                             }
                         }
                     }
@@ -160,10 +172,7 @@ impl PluginAnalyzer {
 
     /// Scans log for plugins and returns just the load order
     /// This is the simplified version that only parses plugins, no version-specific logic
-    pub fn loadorder_scan_log(
-        &self,
-        segment_plugins: Vec<String>,
-    ) -> PyResult<Vec<String>> {
+    pub fn loadorder_scan_log(&self, segment_plugins: Vec<String>) -> PyResult<Vec<String>> {
         // Early return for empty input
         if segment_plugins.is_empty() {
             return Ok(Vec::new());
@@ -204,8 +213,10 @@ impl PluginAnalyzer {
         let version_137 = "1.37.0";
 
         // Determine game version characteristics
-        let is_original_game = game_version == self.game_version || game_version == self.game_version_vr;
-        let is_new_game_crashgen_pre_137 = game_version >= self.game_version_new.as_str() && version_current < version_137;
+        let is_original_game =
+            game_version == self.game_version || game_version == self.game_version_vr;
+        let is_new_game_crashgen_pre_137 =
+            game_version >= self.game_version_new.as_str() && version_current < version_137;
 
         let mut plugin_limit_triggered = false;
         let mut limit_check_disabled = false;
@@ -261,9 +272,7 @@ impl PluginAnalyzer {
 
             // Sort by count (descending) then by name for consistent output
             let mut sorted_matches: Vec<_> = plugins_matches.into_iter().collect();
-            sorted_matches.sort_by(|a, b| {
-                b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0))
-            });
+            sorted_matches.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
 
             for (plugin, count) in sorted_matches {
                 lines.push(format!("- {} | {}\n", plugin, count));
@@ -318,7 +327,10 @@ pub fn detect_plugins_batch(logs: Vec<String>) -> PyResult<Vec<HashMap<String, S
             for line in log.lines() {
                 if let Some(caps) = PLUGIN_PATTERN.captures(line) {
                     let plugin_id = caps.get(1).map(|m| m.as_str().to_string());
-                    let plugin_name = caps.get(3).map(|m| m.as_str().to_string()).unwrap_or_default();
+                    let plugin_name = caps
+                        .get(3)
+                        .map(|m| m.as_str().to_string())
+                        .unwrap_or_default();
 
                     if !plugin_name.is_empty() && !plugins.contains_key(&plugin_name) {
                         let status = if let Some(id) = plugin_id {

@@ -172,7 +172,11 @@ impl OrchestratorCore {
 
         let processing_time_ms = start_time.elapsed().as_millis() as u64;
 
-        Ok(AnalysisResult::success(log_path, report_lines, processing_time_ms))
+        Ok(AnalysisResult::success(
+            log_path,
+            report_lines,
+            processing_time_ms,
+        ))
     }
 
     /// Process multiple log files in parallel

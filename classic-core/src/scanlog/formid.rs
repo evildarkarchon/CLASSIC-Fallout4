@@ -1,17 +1,16 @@
 //! FormID analysis - Ultra-fast FormID parsing and validation
 
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use regex::Regex;
 use std::collections::HashMap;
 // use anyhow::Result; // Currently unused
 
 /// Precompiled FormID regex pattern
-static FORMID_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)(?:0x)?([0-9a-f]{1,8})").unwrap()
-});
+static FORMID_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)(?:0x)?([0-9a-f]{1,8})").unwrap());
 
 /// High-performance FormID analyzer with caching
 #[pyclass]
@@ -39,11 +38,16 @@ impl FormIDAnalyzer {
 
     /// Batch analyze FormIDs with plugin resolution
     #[pyo3(signature = (formids, plugins))]
-    pub fn analyze_batch(&self, formids: Vec<String>, plugins: Bound<'_, PyDict>) -> PyResult<Vec<(String, Option<String>)>> {
+    pub fn analyze_batch(
+        &self,
+        formids: Vec<String>,
+        plugins: Bound<'_, PyDict>,
+    ) -> PyResult<Vec<(String, Option<String>)>> {
         let mut results = Vec::with_capacity(formids.len());
 
         // Convert PyDict to HashMap for faster lookups
-        let plugin_map: HashMap<String, String> = plugins.iter()
+        let plugin_map: HashMap<String, String> = plugins
+            .iter()
             .map(|(k, v)| {
                 let key = k.extract::<String>()?;
                 let value = v.extract::<String>()?;

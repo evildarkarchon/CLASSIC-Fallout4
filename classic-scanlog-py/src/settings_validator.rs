@@ -42,7 +42,12 @@ impl PySettingsValidator {
     ) -> PyResult<Vec<String>> {
         let fragment = self
             .inner
-            .scan_buffout_memorymanagement_settings(&crashgen, has_xcell, has_old_xcell, has_baka_scrapheap)
+            .scan_buffout_memorymanagement_settings(
+                &crashgen,
+                has_xcell,
+                has_old_xcell,
+                has_baka_scrapheap,
+            )
             .map_err(crate::to_pyerr)?;
         Ok(fragment.to_list())
     }

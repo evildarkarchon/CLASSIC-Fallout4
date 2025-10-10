@@ -27,19 +27,38 @@ impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CliError::ConfigError(msg) => {
-                write!(f, "Configuration Error: {}\n\nTip: Check that CLASSIC Settings.yaml exists and is properly formatted.", msg)
+                write!(
+                    f,
+                    "Configuration Error: {}\n\nTip: Check that CLASSIC Settings.yaml exists and is properly formatted.",
+                    msg
+                )
             }
             CliError::YamlError(msg) => {
-                write!(f, "YAML Data Error: {}\n\nTip: Ensure YAML/ directory exists with Main, Games, and Ignore subdirectories.", msg)
+                write!(
+                    f,
+                    "YAML Data Error: {}\n\nTip: Ensure YAML/ directory exists with Main, Games, and Ignore subdirectories.",
+                    msg
+                )
             }
             CliError::DirectoryNotFound(path) => {
-                write!(f, "Directory Not Found: {}\n\nTip: Specify a custom scan path with --scan-path or ensure crash logs are in the default location.", path)
+                write!(
+                    f,
+                    "Directory Not Found: {}\n\nTip: Specify a custom scan path with --scan-path or ensure crash logs are in the default location.",
+                    path
+                )
             }
             CliError::NoCrashLogs => {
-                write!(f, "No Crash Logs Found\n\nTip: Crash log files must start with 'crash-' prefix and have .log or .txt extension.")
+                write!(
+                    f,
+                    "No Crash Logs Found\n\nTip: Crash log files must start with 'crash-' prefix and have .log or .txt extension."
+                )
             }
             CliError::ScanError(msg) => {
-                write!(f, "Scan Error: {}\n\nTip: Check that crash logs are accessible and not corrupted.", msg)
+                write!(
+                    f,
+                    "Scan Error: {}\n\nTip: Check that crash logs are accessible and not corrupted.",
+                    msg
+                )
             }
             CliError::IoError(msg) => {
                 write!(

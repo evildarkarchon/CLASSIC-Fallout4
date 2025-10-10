@@ -11,11 +11,11 @@
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use pyo3::prelude::*;
-use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::SystemTime;
+use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 
 /// Global YAML cache for frequently accessed files
 ///
@@ -75,17 +75,15 @@ impl RustYamlOperations {
     #[pyo3(signature = (content))]
     fn parse_yaml(&self, py: Python<'_>, content: &str) -> PyResult<Py<PyAny>> {
         // Load YAML documents
-        let docs = YamlLoader::load_from_str(content)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Failed to parse YAML: {}", e)
-            ))?;
+        let docs = YamlLoader::load_from_str(content).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse YAML: {}", e))
+        })?;
 
         // Get first document (most common case)
         // TODO: Handle multi-document YAML if needed
-        let yaml = docs.first()
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "Empty YAML document"
-            ))?;
+        let yaml = docs.first().ok_or_else(|| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty YAML document")
+        })?;
 
         self.yaml_to_python(py, yaml)
     }
@@ -99,10 +97,12 @@ impl RustYamlOperations {
         let mut out_str = String::new();
         let mut emitter = YamlEmitter::new(&mut out_str);
 
-        emitter.dump(&yaml)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Failed to serialize YAML: {}", e)
-            ))?;
+        emitter.dump(&yaml).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Failed to serialize YAML: {}",
+                e
+            ))
+        })?;
 
         Ok(out_str)
     }
@@ -128,21 +128,27 @@ impl RustYamlOperations {
         }
 
         // Read and parse file
-        let content = std::fs::read_to_string(&file_path)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                format!("Failed to read file {}: {}", path, e)
-            ))?;
+        let content = std::fs::read_to_string(&file_path).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                "Failed to read file {}: {}",
+                path, e
+            ))
+        })?;
 
         // Parse with saphyr
-        let docs = YamlLoader::load_from_str(&content)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Failed to parse YAML from {}: {}", path, e)
-            ))?;
+        let docs = YamlLoader::load_from_str(&content).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Failed to parse YAML from {}: {}",
+                path, e
+            ))
+        })?;
 
-        let yaml = docs.first()
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Empty YAML document in {}", path)
-            ))?;
+        let yaml = docs.first().ok_or_else(|| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Empty YAML document in {}",
+                path
+            ))
+        })?;
 
         // Update cache
         if self.cache_enabled {
@@ -171,25 +177,28 @@ impl RustYamlOperations {
         // Serialize
         let mut yaml_str = String::new();
         let mut emitter = YamlEmitter::new(&mut yaml_str);
-        emitter.dump(&yaml)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Failed to serialize YAML: {}", e)
-            ))?;
+        emitter.dump(&yaml).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Failed to serialize YAML: {}",
+                e
+            ))
+        })?;
 
         let file_path = PathBuf::from(path);
         let temp_path = file_path.with_extension("yaml.tmp");
 
         // Write to temp file first (atomic write pattern)
-        std::fs::write(&temp_path, yaml_str.as_bytes())
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                format!("Failed to write temp file: {}", e)
-            ))?;
+        std::fs::write(&temp_path, yaml_str.as_bytes()).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                "Failed to write temp file: {}",
+                e
+            ))
+        })?;
 
         // Rename temp file to target (atomic on most filesystems)
-        std::fs::rename(&temp_path, &file_path)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                format!("Failed to rename file: {}", e)
-            ))?;
+        std::fs::rename(&temp_path, &file_path).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to rename file: {}", e))
+        })?;
 
         // Invalidate cache
         if self.cache_enabled {
@@ -201,7 +210,12 @@ impl RustYamlOperations {
 
     /// Get a setting value by key path (dot notation)
     #[pyo3(signature = (data, key_path))]
-    fn get_setting(&self, py: Python<'_>, data: Py<PyAny>, key_path: &str) -> PyResult<Option<Py<PyAny>>> {
+    fn get_setting(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+    ) -> PyResult<Option<Py<PyAny>>> {
         let yaml = self.python_to_yaml(py, data)?;
 
         // Navigate through the key path
@@ -228,10 +242,18 @@ impl RustYamlOperations {
 
     /// Set a setting value by key path (dot notation)
     #[pyo3(signature = (data, key_path, value))]
-    fn set_setting(&self, py: Python<'_>, data: Py<PyAny>, key_path: &str, value: Py<PyAny>) -> PyResult<Py<PyAny>> {
+    fn set_setting(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+        value: Py<PyAny>,
+    ) -> PyResult<Py<PyAny>> {
         // Check for empty key path
         if key_path.trim().is_empty() {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty key path"));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                "Empty key path",
+            ));
         }
 
         let mut root_yaml = self.python_to_yaml(py, data)?;
@@ -239,7 +261,8 @@ impl RustYamlOperations {
 
         // Navigate and create path if necessary
         let keys: Vec<&str> = key_path.split('.').collect();
-        let last_key = keys.last()
+        let last_key = keys
+            .last()
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty key path"))?;
 
         // Helper function to ensure we have a mutable hash
@@ -258,7 +281,8 @@ impl RustYamlOperations {
         for key in &keys[..keys.len() - 1] {
             let key_yaml = Yaml::String(key.to_string());
             let hash = ensure_hash(current);
-            current = hash.entry(key_yaml)
+            current = hash
+                .entry(key_yaml)
                 .or_insert(Yaml::Hash(yaml_rust2::yaml::Hash::new()));
         }
 
@@ -279,7 +303,8 @@ impl RustYamlOperations {
         let mut stats = HashMap::new();
         stats.insert("cached_files".to_string(), YAML_CACHE.len());
 
-        let total_size: usize = YAML_CACHE.iter()
+        let total_size: usize = YAML_CACHE
+            .iter()
             .filter_map(|entry| entry.raw_content.as_ref().map(|s| s.len()))
             .sum();
 
@@ -300,10 +325,9 @@ impl RustYamlOperations {
 
             Yaml::Real(s) => {
                 // Parse string to f64
-                let f = s.parse::<f64>()
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                        format!("Invalid float: {}", e)
-                    ))?;
+                let f = s.parse::<f64>().map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid float: {}", e))
+                })?;
                 Ok(f.into_pyobject(py)?.as_any().clone().unbind())
             }
 
@@ -333,15 +357,13 @@ impl RustYamlOperations {
                 // Aliases should be resolved during parsing
                 // If we see one here, it's an error
                 Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    "Unresolved YAML alias"
+                    "Unresolved YAML alias",
                 ))
             }
 
-            Yaml::BadValue => {
-                Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    "Invalid YAML value"
-                ))
-            }
+            Yaml::BadValue => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                "Invalid YAML value",
+            )),
         }
     }
 
@@ -388,9 +410,10 @@ impl RustYamlOperations {
             return Ok(Yaml::Hash(hash));
         }
 
-        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-            format!("Cannot convert Python type to YAML: {:?}", bound_obj.get_type())
-        ))
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
+            "Cannot convert Python type to YAML: {:?}",
+            bound_obj.get_type()
+        )))
     }
 }
 

@@ -66,7 +66,10 @@ mod tests {
             let handler = PathHandler::new(300);
 
             // Test join
-            let joined = handler.join_paths("/base".to_string(), vec!["sub".to_string(), "file.txt".to_string()]);
+            let joined = handler.join_paths(
+                "/base".to_string(),
+                vec!["sub".to_string(), "file.txt".to_string()],
+            );
             assert!(joined.contains("sub"));
             assert!(joined.contains("file.txt"));
 
@@ -75,11 +78,15 @@ mod tests {
             assert!(components.len() > 0);
 
             // Test filename extraction
-            let filename = handler.get_filename("/path/to/file.txt".to_string()).unwrap();
+            let filename = handler
+                .get_filename("/path/to/file.txt".to_string())
+                .unwrap();
             assert_eq!(filename, Some("file.txt".to_string()));
 
             // Test extension extraction
-            let ext = handler.get_extension("/path/to/file.txt".to_string()).unwrap();
+            let ext = handler
+                .get_extension("/path/to/file.txt".to_string())
+                .unwrap();
             assert_eq!(ext, Some("txt".to_string()));
 
             // Test parent extraction
@@ -137,7 +144,7 @@ mod tests {
     }
 
     mod performance_tests {
-        use super::performance::{Timer, RustPerformanceMonitor};
+        use super::performance::{RustPerformanceMonitor, Timer};
         use std::thread;
         use std::time::Duration;
 
@@ -165,5 +172,4 @@ mod tests {
             monitor.record_metric("operation2".to_string(), 100, None);
         }
     }
-
 }

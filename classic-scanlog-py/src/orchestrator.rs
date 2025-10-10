@@ -1,9 +1,9 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
+use classic_shared::get_runtime;
 use pyo3::prelude::*;
 use std::collections::HashMap;
-use classic_shared::get_runtime;
 
 /// Python wrapper for AnalysisConfig
 #[pyclass(name = "AnalysisConfig")]
@@ -180,9 +180,7 @@ impl PyRustOrchestrator {
     pub fn process_log(&self, log_path: String) -> PyResult<PyAnalysisResult> {
         // Use shared runtime to run async method
         let result = get_runtime()
-            .block_on(async {
-                self.inner.process_log(log_path).await
-            })
+            .block_on(async { self.inner.process_log(log_path).await })
             .map_err(crate::to_pyerr)?;
         Ok(PyAnalysisResult { inner: result })
     }
@@ -190,10 +188,8 @@ impl PyRustOrchestrator {
     /// Analyze multiple crash logs in parallel
     pub fn process_logs_batch(&self, log_paths: Vec<String>) -> PyResult<Vec<PyAnalysisResult>> {
         // Use shared runtime to run async method
-        let results = get_runtime()
-            .block_on(async {
-                self.inner.process_logs_batch(log_paths).await
-            });
+        let results =
+            get_runtime().block_on(async { self.inner.process_logs_batch(log_paths).await });
         Ok(results
             .into_iter()
             .map(|r| PyAnalysisResult { inner: r })

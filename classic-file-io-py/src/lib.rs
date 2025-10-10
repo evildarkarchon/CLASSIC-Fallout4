@@ -8,8 +8,8 @@
 use pyo3::prelude::*;
 
 mod core;
-mod encoding;
 mod dds;
+mod encoding;
 
 pub use core::PyFileIOCore;
 pub use encoding::PyEncodingDetector;

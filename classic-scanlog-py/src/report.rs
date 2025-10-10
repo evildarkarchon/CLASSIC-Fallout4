@@ -183,7 +183,13 @@ impl PyReportGenerator {
         warn_outdated: String,
     ) -> PyReportFragment {
         PyReportFragment {
-            inner: self.inner.generate_error_section(&main_error, &crashgen_version, &crashgen_name, is_latest, &warn_outdated),
+            inner: self.inner.generate_error_section(
+                &main_error,
+                &crashgen_version,
+                &crashgen_name,
+                is_latest,
+                &warn_outdated,
+            ),
         }
     }
 

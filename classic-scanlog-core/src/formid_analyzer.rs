@@ -6,18 +6,17 @@
 use crate::error::Result;
 use crate::mod_detector;
 use classic_database_core::DatabasePool;
+use linked_hash_map::LinkedHashMap;
 use once_cell::sync::Lazy;
+use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use rayon::prelude::*;
 use std::sync::Arc;
-use linked_hash_map::LinkedHashMap;
 
 /// Precompiled FormID pattern - exact match to Python's pattern
 /// Pattern: r"^\s*Form ID:\s*0x([0-9A-F]{8})" with case-insensitive flag
-static FORMID_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)^\s*Form ID:\s*0x([0-9A-F]{8})").unwrap()
-});
+static FORMID_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)^\s*Form ID:\s*0x([0-9A-F]{8})").unwrap());
 
 /// Core FormID analyzer - pure Rust implementation (NO PyO3)
 pub struct FormIDAnalyzerCore {
@@ -27,9 +26,9 @@ pub struct FormIDAnalyzerCore {
     db_pool: Option<Arc<DatabasePool>>,
     // Mod detection dictionaries (from YAML configuration)
     // These are used by the mod_detector module functions
-    important_mods: HashMap<String, String>,  // game_mods_core
-    mods_single: HashMap<String, String>,     // game_mods_freq, _solu, _opc2
-    mods_double: HashMap<String, String>,     // game_mods_conf (conflicts)
+    important_mods: HashMap<String, String>, // game_mods_core
+    mods_single: HashMap<String, String>,    // game_mods_freq, _solu, _opc2
+    mods_double: HashMap<String, String>,    // game_mods_conf (conflicts)
 }
 
 impl FormIDAnalyzerCore {
@@ -83,10 +82,12 @@ impl FormIDAnalyzerCore {
     pub async fn formid_match(
         &self,
         formids_matches: Vec<String>,
-        crashlog_plugins: &HashMap<String, String>
+        crashlog_plugins: &HashMap<String, String>,
     ) -> Result<Vec<String>> {
         if formids_matches.is_empty() {
-            return Ok(vec!["* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n".to_string()]);
+            return Ok(vec![
+                "* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n".to_string()
+            ]);
         }
 
         let mut lines = Vec::new();
@@ -121,10 +122,18 @@ impl FormIDAnalyzerCore {
                     // Perform database lookup if available
                     if self.show_formid_values {
                         if let Some(ref pool) = self.db_pool {
-                            if let Ok(Some(description)) = pool.get_entry(formid_suffix, plugin, None).await {
-                                lines.push(format!("- {} | [{}] | {} | {}\n", formid_full, plugin, description, count));
+                            if let Ok(Some(description)) =
+                                pool.get_entry(formid_suffix, plugin, None).await
+                            {
+                                lines.push(format!(
+                                    "- {} | [{}] | {} | {}\n",
+                                    formid_full, plugin, description, count
+                                ));
                             } else {
-                                lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
+                                lines.push(format!(
+                                    "- {} | [{}] | {}\n",
+                                    formid_full, plugin, count
+                                ));
                             }
                         } else {
                             lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));

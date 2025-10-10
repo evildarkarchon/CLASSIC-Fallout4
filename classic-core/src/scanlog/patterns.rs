@@ -1,8 +1,8 @@
 //! Pattern matching engine with multi-pattern optimization
 
-use pyo3::prelude::*;
 use aho_corasick::{AhoCorasick, Match};
 use dashmap::DashMap;
+use pyo3::prelude::*;
 use std::sync::Arc;
 
 /// Multi-pattern matcher using Aho-Corasick algorithm
@@ -36,7 +36,8 @@ impl PatternMatcher {
             return cached.clone();
         }
 
-        let matches: Vec<(usize, String)> = self.matcher
+        let matches: Vec<(usize, String)> = self
+            .matcher
             .find_iter(text)
             .map(|m: Match| {
                 let pattern_idx = m.pattern().as_usize();

@@ -3,12 +3,12 @@
 //! This module handles named record detection with exact behavioral parity
 //! to the Python implementation while leveraging Rust's performance.
 
-use pyo3::prelude::*;
-use pyo3::types::PyList;
-use std::collections::{HashMap, HashSet};
-use rayon::prelude::*;
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use once_cell::sync::OnceCell;
+use pyo3::prelude::*;
+use pyo3::types::PyList;
+use rayon::prelude::*;
+use std::collections::{HashMap, HashSet};
 
 /// Record scanner for detecting and analyzing named records in crash logs
 #[pyclass]
@@ -26,17 +26,13 @@ impl RecordScanner {
     #[new]
     pub fn new(yamldata: &Bound<'_, PyAny>) -> PyResult<Self> {
         // Extract data from yamldata exactly as Python does
-        let classic_records_list: Vec<String> = yamldata
-            .getattr("classic_records_list")?
-            .extract()?;
+        let classic_records_list: Vec<String> =
+            yamldata.getattr("classic_records_list")?.extract()?;
 
-        let game_ignore_records: Vec<String> = yamldata
-            .getattr("game_ignore_records")?
-            .extract()?;
+        let game_ignore_records: Vec<String> =
+            yamldata.getattr("game_ignore_records")?.extract()?;
 
-        let crashgen_name: String = yamldata
-            .getattr("crashgen_name")?
-            .extract()?;
+        let crashgen_name: String = yamldata.getattr("crashgen_name")?.extract()?;
 
         // Convert to lowercase sets exactly as Python does
         let lower_records: HashSet<String> = classic_records_list
@@ -62,17 +58,14 @@ impl RecordScanner {
     pub fn scan_named_records(
         &self,
         py: Python<'_>,
-        segment_callstack: Vec<String>
+        segment_callstack: Vec<String>,
     ) -> PyResult<(Py<PyAny>, Vec<String>)> {
         // Constants matching Python implementation
         const RSP_MARKER: &str = "[RSP+";
         const RSP_OFFSET: usize = 30;
 
-        let records_matches = self.find_matching_records_internal(
-            &segment_callstack,
-            RSP_MARKER,
-            RSP_OFFSET
-        );
+        let records_matches =
+            self.find_matching_records_internal(&segment_callstack, RSP_MARKER, RSP_OFFSET);
 
         // Generate report fragment
         let report_fragment_module = py.import("ClassicLib.ScanLog.ReportFragment")?;
@@ -104,7 +97,7 @@ impl RecordScanner {
         &self,
         py: Python<'_>,
         segment_crashgen: Vec<String>,
-        report: &Bound<'_, PyAny>
+        report: &Bound<'_, PyAny>,
     ) -> PyResult<()> {
         // Call scan_named_records to get the fragment
         let (fragment, _matches) = self.scan_named_records(py, segment_crashgen)?;
@@ -127,7 +120,7 @@ impl RecordScanner {
         &self,
         segment_callstack: &[String],
         rsp_marker: &str,
-        rsp_offset: usize
+        rsp_offset: usize,
     ) -> Vec<String> {
         let mut records_matches = Vec::new();
 
@@ -180,7 +173,7 @@ impl RecordScanner {
         &self,
         py: Python<'_>,
         records_matches: &[String],
-        report_fragment_class: &Bound<'_, PyAny>
+        report_fragment_class: &Bound<'_, PyAny>,
     ) -> PyResult<Py<PyAny>> {
         let mut lines = Vec::new();
 
@@ -222,21 +215,15 @@ impl RecordScanner {
 pub fn scan_records_batch(
     segments: Vec<Vec<String>>,
     target_records: Vec<String>,
-    ignore_records: Vec<String>
+    ignore_records: Vec<String>,
 ) -> Vec<Vec<String>> {
     const RSP_MARKER: &str = "[RSP+";
     const RSP_OFFSET: usize = 30;
 
     // Convert to lowercase sets
-    let lower_targets: HashSet<String> = target_records
-        .iter()
-        .map(|s| s.to_lowercase())
-        .collect();
+    let lower_targets: HashSet<String> = target_records.iter().map(|s| s.to_lowercase()).collect();
 
-    let lower_ignores: HashSet<String> = ignore_records
-        .iter()
-        .map(|s| s.to_lowercase())
-        .collect();
+    let lower_ignores: HashSet<String> = ignore_records.iter().map(|s| s.to_lowercase()).collect();
 
     // Build Aho-Corasick automatons for efficiency
     let target_patterns: Vec<_> = lower_targets.iter().cloned().collect();
@@ -279,7 +266,11 @@ pub fn scan_records_batch(
 
 /// Check if a line contains any of the target records
 #[pyfunction]
-pub fn contains_record(line: &str, target_records: Vec<String>, ignore_records: Vec<String>) -> bool {
+pub fn contains_record(
+    line: &str,
+    target_records: Vec<String>,
+    ignore_records: Vec<String>,
+) -> bool {
     let lower_line = line.to_lowercase();
 
     // Check if any target record is present

@@ -89,19 +89,21 @@ impl OutputFormatter {
 
     /// Print footer with report location
     pub fn print_footer(&self, report_path: &str) {
-        println!("Reports saved to: {}", self.success_style.apply_to(report_path));
+        println!(
+            "Reports saved to: {}",
+            self.success_style.apply_to(report_path)
+        );
         println!();
         println!("Press Enter to continue...");
     }
 
     /// Flush output and wait for user input
     pub fn wait_for_input(&self) -> std::io::Result<()> {
-        use std::io::{stdin, BufRead};
+        use std::io::{BufRead, stdin};
         let stdin = stdin();
         let _ = stdin.lock().lines().next();
         Ok(())
     }
-
 }
 
 impl Default for OutputFormatter {

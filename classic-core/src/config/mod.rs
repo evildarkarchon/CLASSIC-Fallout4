@@ -4,7 +4,7 @@
 //! for CLASSIC, achieving 15-30x speedup over Python's ruamel.yaml.
 
 mod yamldata_builder_new;
-pub use yamldata_builder_new::{YamlData, create_yamldata};
+pub use yamldata_builder_new::{create_yamldata, YamlData};
 
 use pyo3::prelude::*;
 

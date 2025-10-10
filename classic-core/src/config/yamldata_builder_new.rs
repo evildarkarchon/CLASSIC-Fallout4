@@ -101,12 +101,7 @@ pub struct YamlData {
 impl YamlData {
     #[new]
     #[pyo3(signature = (yaml_dirs, game, vr_mode))]
-    fn new(
-        py: Python<'_>,
-        yaml_dirs: Vec<PathBuf>,
-        game: String,
-        vr_mode: bool,
-    ) -> PyResult<Self> {
+    fn new(py: Python<'_>, yaml_dirs: Vec<PathBuf>, game: String, vr_mode: bool) -> PyResult<Self> {
         Self::load_from_yaml_files(py, yaml_dirs, game, vr_mode)
     }
 
@@ -136,7 +131,7 @@ impl YamlData {
         // Validate input
         if yaml_dirs.len() < 3 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "yaml_dirs must contain at least 3 directories (main, game, ignore)"
+                "yaml_dirs must contain at least 3 directories (main, game, ignore)",
             ));
         }
 
@@ -148,9 +143,10 @@ impl YamlData {
         // Verify files exist before loading
         for path in [&main_yaml, &game_yaml, &ignore_yaml] {
             if !path.exists() {
-                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                    format!("YAML file not found: {}", path.display())
-                ));
+                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                    "YAML file not found: {}",
+                    path.display()
+                )));
             }
         }
 
@@ -164,69 +160,96 @@ impl YamlData {
             // Spawn parallel tasks to load each YAML file
             let main_path = main_yaml.clone();
             set.spawn(async move {
-                tokio::fs::read_to_string(&main_path)
-                    .await
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                        format!("Failed to read main YAML: {}", e)
+                tokio::fs::read_to_string(&main_path).await.map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                        "Failed to read main YAML: {}",
+                        e
                     ))
+                })
             });
 
             let game_path = game_yaml.clone();
             set.spawn(async move {
-                tokio::fs::read_to_string(&game_path)
-                    .await
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                        format!("Failed to read game YAML: {}", e)
+                tokio::fs::read_to_string(&game_path).await.map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                        "Failed to read game YAML: {}",
+                        e
                     ))
+                })
             });
 
             let ignore_path = ignore_yaml.clone();
             set.spawn(async move {
-                tokio::fs::read_to_string(&ignore_path)
-                    .await
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                        format!("Failed to read ignore YAML: {}", e)
+                tokio::fs::read_to_string(&ignore_path).await.map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                        "Failed to read ignore YAML: {}",
+                        e
                     ))
+                })
             });
 
             // Wait for all three files to load and unwrap results
-            let r1 = set.join_next().await
-                .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed"))?
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e)))?
-                ?;
-            let r2 = set.join_next().await
-                .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed"))?
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e)))?
-                ?;
-            let r3 = set.join_next().await
-                .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed"))?
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e)))?
-                ?;
+            let r1 = set
+                .join_next()
+                .await
+                .ok_or_else(|| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed")
+                })?
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e))
+                })??;
+            let r2 = set
+                .join_next()
+                .await
+                .ok_or_else(|| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed")
+                })?
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e))
+                })??;
+            let r3 = set
+                .join_next()
+                .await
+                .ok_or_else(|| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed")
+                })?
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e))
+                })??;
 
             Ok::<_, PyErr>((r1, r2, r3))
         })?;
 
         // Parse YAML contents using yaml-rust2 directly
-        let main_docs = YamlLoader::load_from_str(&main_content)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Failed to parse main YAML: {}", e)
-            ))?;
-        let game_docs = YamlLoader::load_from_str(&game_content)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Failed to parse game YAML: {}", e)
-            ))?;
-        let ignore_docs = YamlLoader::load_from_str(&ignore_content)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Failed to parse ignore YAML: {}", e)
-            ))?;
+        let main_docs = YamlLoader::load_from_str(&main_content).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Failed to parse main YAML: {}",
+                e
+            ))
+        })?;
+        let game_docs = YamlLoader::load_from_str(&game_content).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Failed to parse game YAML: {}",
+                e
+            ))
+        })?;
+        let ignore_docs = YamlLoader::load_from_str(&ignore_content).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Failed to parse ignore YAML: {}",
+                e
+            ))
+        })?;
 
         // Get first document from each file
-        let main_data = main_docs.first()
+        let main_data = main_docs
+            .first()
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>("Main YAML is empty"))?;
-        let game_data = game_docs.first()
+        let game_data = game_docs
+            .first()
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>("Game YAML is empty"))?;
-        let ignore_data = ignore_docs.first()
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>("Ignore YAML is empty"))?;
+        let ignore_data = ignore_docs.first().ok_or_else(|| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>("Ignore YAML is empty")
+        })?;
 
         // Extract values using key path lookups
         let vr_suffix = if vr_mode { "VR" } else { "" };
@@ -261,7 +284,7 @@ impl YamlData {
                     }
                     Ok(py_list.unbind())
                 }
-                _ => Ok(PyList::empty(py).unbind())
+                _ => Ok(PyList::empty(py).unbind()),
             }
         };
 
@@ -283,7 +306,7 @@ impl YamlData {
                     }
                     Ok(py_dict.unbind())
                 }
-                _ => Ok(PyDict::new(py).unbind())
+                _ => Ok(PyDict::new(py).unbind()),
             }
         };
 
@@ -293,15 +316,27 @@ impl YamlData {
             classic_version: get_string(main_data, "CLASSIC_Info.version", ""),
             classic_version_date: get_string(main_data, "CLASSIC_Info.version_date", ""),
             classic_records_list: get_py_list(py, main_data, "catch_log_records")?,
-            autoscan_text: get_string(main_data, &format!("CLASSIC_Interface.autoscan_text_{}", game), ""),
+            autoscan_text: get_string(
+                main_data,
+                &format!("CLASSIC_Interface.autoscan_text_{}", game),
+                "",
+            ),
 
             // Game YAML values
             classic_game_hints: get_py_list(py, game_data, "Game_Hints")?,
-            crashgen_name: get_string(game_data, &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix), ""),
+            crashgen_name: get_string(
+                game_data,
+                &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix),
+                "",
+            ),
             crashgen_latest_og: get_string(game_data, "Game_Info.CRASHGEN_LatestVer", ""),
             crashgen_latest_vr: get_string(game_data, "GameVR_Info.CRASHGEN_LatestVer", ""),
             crashgen_ignore: {
-                let list = get_py_list(py, game_data, &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix))?;
+                let list = get_py_list(
+                    py,
+                    game_data,
+                    &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix),
+                )?;
                 let py_set = PySet::new(py, list.bind(py).iter())?;
                 py_set.unbind().into()
             },

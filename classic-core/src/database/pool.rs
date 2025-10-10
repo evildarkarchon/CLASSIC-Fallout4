@@ -10,16 +10,16 @@
 //! - Dynamic table name support for different games
 //! - Comprehensive error logging
 
+use anyhow::{Context, Result};
+use dashmap::DashMap;
+use log::{debug, error, info, warn};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use rusqlite::{Connection, params, ToSql};
-use dashmap::DashMap;
-use std::sync::{Arc, Mutex, RwLock};
-use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use rusqlite::{params, Connection, ToSql};
 use std::collections::HashMap;
-use anyhow::{Result, Context};
-use log::{debug, error, warn, info};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, RwLock};
+use std::time::{Duration, Instant};
 
 // Use the global runtime from lib.rs (ONE RUNTIME RULE)
 use crate::get_runtime;
@@ -52,16 +52,14 @@ struct ConnectionWrapper {
 impl ConnectionWrapper {
     fn new(path: &Path) -> Result<Self> {
         // Open database in read-only mode with SQLITE_OPEN_READ_ONLY flag
-        let conn = Connection::open_with_flags(
-            path,
-            rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY
-        ).with_context(|| format!("Failed to open database: {:?}", path))?;
+        let conn = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .with_context(|| format!("Failed to open database: {:?}", path))?;
 
         // Read-only optimizations (non-modifying PRAGMAs)
         // These queries don't modify the database file
-        conn.pragma_update(None, "cache_size", 10000)?;  // Memory cache only
-        conn.pragma_update(None, "temp_store", "MEMORY")?;  // Temp data in memory
-        conn.pragma_update(None, "mmap_size", 30000000)?;  // Memory-mapped I/O
+        conn.pragma_update(None, "cache_size", 10000)?; // Memory cache only
+        conn.pragma_update(None, "temp_store", "MEMORY")?; // Temp data in memory
+        conn.pragma_update(None, "mmap_size", 30000000)?; // Memory-mapped I/O
 
         Ok(Self { conn })
     }
@@ -69,7 +67,7 @@ impl ConnectionWrapper {
 
 /// High-performance database pool with TTL caching
 /// Phase 4 implementation for CLASSIC Rust migration
-#[pyclass(unsendable)]  // Mark as unsendable due to rusqlite limitations
+#[pyclass(unsendable)] // Mark as unsendable due to rusqlite limitations
 pub struct RustDatabasePool {
     connections: Arc<DashMap<PathBuf, Arc<Mutex<ConnectionWrapper>>>>,
     query_cache: Arc<DashMap<String, CacheEntry>>,
@@ -77,8 +75,8 @@ pub struct RustDatabasePool {
     #[allow(dead_code)] // Reserved for future connection pooling implementation
     max_connections: usize,
     stats: Arc<RwLock<PoolStatistics>>,
-    game_table: Arc<RwLock<String>>,  // Dynamic table name support
-    db_paths: Arc<RwLock<Vec<PathBuf>>>,  // Support multiple database files
+    game_table: Arc<RwLock<String>>,     // Dynamic table name support
+    db_paths: Arc<RwLock<Vec<PathBuf>>>, // Support multiple database files
 }
 
 /// Statistics for monitoring pool performance
@@ -95,13 +93,21 @@ struct PoolStatistics {
 impl RustDatabasePool {
     #[new]
     #[pyo3(signature = (max_connections=10, cache_ttl_seconds=300, game_table=None))]
-    pub fn new(max_connections: Option<usize>, cache_ttl_seconds: Option<u64>, game_table: Option<String>) -> Self {
+    pub fn new(
+        max_connections: Option<usize>,
+        cache_ttl_seconds: Option<u64>,
+        game_table: Option<String>,
+    ) -> Self {
         let max_conn = max_connections.unwrap_or(10);
         let ttl = Duration::from_secs(cache_ttl_seconds.unwrap_or(300));
         let table = game_table.unwrap_or_else(|| "Fallout4".to_string());
 
-        info!("Initializing RustDatabasePool with max_connections={}, cache_ttl={}s, game_table={}",
-              max_conn, cache_ttl_seconds.unwrap_or(300), table);
+        info!(
+            "Initializing RustDatabasePool with max_connections={}, cache_ttl={}s, game_table={}",
+            max_conn,
+            cache_ttl_seconds.unwrap_or(300),
+            table
+        );
 
         Self {
             connections: Arc::new(DashMap::new()),
@@ -143,12 +149,13 @@ impl RustDatabasePool {
                                 s.total_connections += 1;
                                 s.active_connections += 1;
                             }
-                        },
+                        }
                         Err(e) => {
                             error!("Failed to open database {:?}: {}", path, e);
-                            return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                                format!("Failed to open database {:?}: {}", path, e)
-                            ));
+                            return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                                "Failed to open database {:?}: {}",
+                                path, e
+                            )));
                         }
                     }
                 } else {
@@ -173,12 +180,10 @@ impl RustDatabasePool {
         _py: Python<'_>,
         formid: String,
         plugin: String,
-        table: Option<String>
+        table: Option<String>,
     ) -> PyResult<Option<String>> {
         // Use provided table or fallback to instance's game_table
-        let game_table = table.unwrap_or_else(|| {
-            self.game_table.read().unwrap().clone()
-        });
+        let game_table = table.unwrap_or_else(|| self.game_table.read().unwrap().clone());
 
         let cache_key = format!("{}:{}:{}", game_table, formid, plugin);
 
@@ -225,22 +230,22 @@ impl RustDatabasePool {
 
                 let result = tokio::task::spawn_blocking(move || {
                     let conn = conn_arc.lock().unwrap();
-                    conn.conn.query_row(
-                        &query_clone,
-                        params![formid_clone, plugin_clone],
-                        |row| row.get::<_, String>(0)
-                    ).ok()
-                }).await.map_err(|e| {
+                    conn.conn
+                        .query_row(&query_clone, params![formid_clone, plugin_clone], |row| {
+                            row.get::<_, String>(0)
+                        })
+                        .ok()
+                })
+                .await
+                .map_err(|e| {
                     error!("Database query task failed: {}", e);
                     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
                 })?;
 
                 if let Some(value) = result {
                     // Cache the result with TTL
-                    query_cache.insert(
-                        cache_key.clone(),
-                        CacheEntry::new(value.clone(), cache_ttl)
-                    );
+                    query_cache
+                        .insert(cache_key.clone(), CacheEntry::new(value.clone(), cache_ttl));
                     debug!("Found FormID {} in database {:?}", formid, db_path);
                     return Ok(Some(value));
                 }
@@ -259,12 +264,10 @@ impl RustDatabasePool {
         _py: Python<'_>,
         formid_plugin_pairs: &Bound<'_, PyList>,
         table: Option<String>,
-        batch_size: Option<usize>
+        batch_size: Option<usize>,
     ) -> PyResult<HashMap<String, String>> {
         let batch_size = batch_size.unwrap_or(100);
-        let game_table = table.unwrap_or_else(|| {
-            self.game_table.read().unwrap().clone()
-        });
+        let game_table = table.unwrap_or_else(|| self.game_table.read().unwrap().clone());
 
         // Parse Python list of tuples
         let mut pairs: Vec<(String, String)> = Vec::new();
@@ -273,7 +276,10 @@ impl RustDatabasePool {
             pairs.push(tuple);
         }
 
-        info!("Starting batch lookup for {} FormID/plugin pairs", pairs.len());
+        info!(
+            "Starting batch lookup for {} FormID/plugin pairs",
+            pairs.len()
+        );
 
         let connections = self.connections.clone();
         let query_cache = self.query_cache.clone();
@@ -318,7 +324,8 @@ impl RustDatabasePool {
             // Process uncached pairs in batches
             for batch in uncached_pairs.chunks(batch_size) {
                 // Build optimized batch query with COLLATE nocase for each field
-                let conditions = batch.iter()
+                let conditions = batch
+                    .iter()
                     .map(|_| "(formid=? COLLATE nocase AND plugin=? COLLATE nocase)")
                     .collect::<Vec<_>>()
                     .join(" OR ");
@@ -330,7 +337,8 @@ impl RustDatabasePool {
                 );
 
                 // Flatten parameters
-                let params: Vec<String> = batch.iter()
+                let params: Vec<String> = batch
+                    .iter()
                     .flat_map(|(f, p)| vec![f.clone(), p.clone()])
                     .collect();
 
@@ -348,9 +356,8 @@ impl RustDatabasePool {
                         // Execute query directly (no statement caching for thread safety)
                         match conn.conn.prepare(&query_clone) {
                             Ok(mut stmt) => {
-                                let param_refs: Vec<&dyn ToSql> = params_clone.iter()
-                                    .map(|s| s as &dyn ToSql)
-                                    .collect();
+                                let param_refs: Vec<&dyn ToSql> =
+                                    params_clone.iter().map(|s| s as &dyn ToSql).collect();
 
                                 match stmt.query(&param_refs[..]) {
                                     Ok(mut rows) => {
@@ -358,24 +365,29 @@ impl RustDatabasePool {
                                             if let (Ok(formid), Ok(plugin), Ok(entry)) = (
                                                 row.get::<_, String>(0),
                                                 row.get::<_, String>(1),
-                                                row.get::<_, String>(2)
+                                                row.get::<_, String>(2),
                                             ) {
                                                 let key = format!("{}:{}", formid, plugin);
                                                 batch_res.insert(key, entry);
                                             }
                                         }
-                                    },
+                                    }
                                     Err(e) => {
-                                        error!("Batch query execution error in {:?}: {}", db_path, e);
+                                        error!(
+                                            "Batch query execution error in {:?}: {}",
+                                            db_path, e
+                                        );
                                     }
                                 }
-                            },
+                            }
                             Err(e) => {
                                 error!("Failed to prepare batch query in {:?}: {}", db_path, e);
                             }
                         }
                         batch_res
-                    }).await.unwrap_or_else(|e| {
+                    })
+                    .await
+                    .unwrap_or_else(|e| {
                         error!("Batch query task panicked: {}", e);
                         HashMap::new()
                     });
@@ -385,10 +397,8 @@ impl RustDatabasePool {
                         let parts: Vec<&str> = key.split(':').collect();
                         if parts.len() == 2 {
                             let cache_key = format!("{}:{}:{}", game_table, parts[0], parts[1]);
-                            query_cache.insert(
-                                cache_key,
-                                CacheEntry::new(value.clone(), cache_ttl)
-                            );
+                            query_cache
+                                .insert(cache_key, CacheEntry::new(value.clone(), cache_ttl));
                             results.insert(key, value);
                         }
                     }
@@ -407,7 +417,7 @@ impl RustDatabasePool {
         &self,
         py: Python<'_>,
         formid_plugin_pairs: &Bound<'_, PyList>,
-        table: Option<String>
+        table: Option<String>,
     ) -> PyResult<HashMap<(String, String), String>> {
         // Convert to the format expected by get_entries_batch
         let result = self.py_get_entries_batch(py, formid_plugin_pairs, table, Some(100))?;
@@ -475,7 +485,9 @@ impl RustDatabasePool {
     /// Get pool statistics as a dictionary
     #[pyo3(name = "get_stats")]
     pub fn py_get_stats(&self) -> PyResult<HashMap<String, u64>> {
-        let stats = self.stats.read()
+        let stats = self
+            .stats
+            .read()
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
         let mut result = HashMap::new();
@@ -532,9 +544,9 @@ impl RustDatabasePool {
                         let _ = conn.conn.execute("VACUUM", []);
                         let _ = conn.conn.execute("ANALYZE", []);
                     }
-                }).await.map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
-                })?;
+                })
+                .await
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
             }
             Ok(())
         })

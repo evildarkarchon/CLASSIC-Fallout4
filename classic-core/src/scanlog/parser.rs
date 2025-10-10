@@ -7,25 +7,40 @@
 //! - Smart caching for repeated patterns
 //! - Expected 15-30x improvement over Python implementation
 
+use dashmap::DashMap;
+use memchr::{memchr, memmem};
+use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use rayon::prelude::*;
 use regex::Regex;
-use std::sync::Arc;
-use once_cell::sync::Lazy;
-use dashmap::DashMap;
-use memchr::{memchr, memmem};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Pre-compiled regex patterns for common crash log patterns
 static COMMON_PATTERNS: Lazy<HashMap<&'static str, Regex>> = Lazy::new(|| {
     let mut patterns = HashMap::new();
-    patterns.insert("error", Regex::new(r"(?i)\b(error|exception|crash|fault|violation)\b").unwrap());
-    patterns.insert("formid", Regex::new(r"(?i)\b(?:form\s*id|formid)[:\s]+(?:0x)?([0-9a-f]{8})\b").unwrap());
-    patterns.insert("plugin", Regex::new(r"(?i)\[([0-9a-f]{2})\]\s+(.+\.es[lmp])").unwrap());
+    patterns.insert(
+        "error",
+        Regex::new(r"(?i)\b(error|exception|crash|fault|violation)\b").unwrap(),
+    );
+    patterns.insert(
+        "formid",
+        Regex::new(r"(?i)\b(?:form\s*id|formid)[:\s]+(?:0x)?([0-9a-f]{8})\b").unwrap(),
+    );
+    patterns.insert(
+        "plugin",
+        Regex::new(r"(?i)\[([0-9a-f]{2})\]\s+(.+\.es[lmp])").unwrap(),
+    );
     patterns.insert("address", Regex::new(r"0x[0-9A-Fa-f]{8,16}").unwrap());
     patterns.insert("module", Regex::new(r"(\w+\.dll)\s+v?([0-9.]+)?").unwrap());
-    patterns.insert("stack_frame", Regex::new(r"\[([0-9]+)\]\s+0x[0-9A-Fa-f]+").unwrap());
-    patterns.insert("register", Regex::new(r"(RAX|RBX|RCX|RDX|RSI|RDI|RBP|RSP|R[0-9]{1,2})\s*:\s*0x[0-9A-Fa-f]+").unwrap());
+    patterns.insert(
+        "stack_frame",
+        Regex::new(r"\[([0-9]+)\]\s+0x[0-9A-Fa-f]+").unwrap(),
+    );
+    patterns.insert(
+        "register",
+        Regex::new(r"(RAX|RBX|RCX|RDX|RSI|RDI|RBP|RSP|R[0-9]{1,2})\s*:\s*0x[0-9A-Fa-f]+").unwrap(),
+    );
     patterns
 });
 
@@ -83,8 +98,9 @@ impl LogParser {
 
     /// Add a custom regex pattern for matching
     pub fn add_pattern(&self, name: String, pattern: String) -> PyResult<()> {
-        let regex = Regex::new(&pattern)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid regex: {}", e)))?;
+        let regex = Regex::new(&pattern).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid regex: {}", e))
+        })?;
         self.custom_patterns.insert(name, regex);
         Ok(())
     }
@@ -119,7 +135,14 @@ impl LogParser {
             let (start_boundary, end_boundary) = &self.segment_boundaries[current_boundary_idx];
 
             // Use SIMD-optimized string search when possible
-            if self.fast_contains(line, if collecting { end_boundary } else { start_boundary }) {
+            if self.fast_contains(
+                line,
+                if collecting {
+                    end_boundary
+                } else {
+                    start_boundary
+                },
+            ) {
                 if collecting {
                     // End of current segment
                     if !current_segment.is_empty() {
@@ -132,7 +155,8 @@ impl LogParser {
                     // Check if this line is also the start of the next segment
                     // (common case: "SYSTEM SPECS:" is end of previous, start of next)
                     if current_boundary_idx < self.segment_boundaries.len() {
-                        let (next_start, _next_end) = &self.segment_boundaries[current_boundary_idx];
+                        let (next_start, _next_end) =
+                            &self.segment_boundaries[current_boundary_idx];
                         if self.fast_contains(line, next_start) {
                             collecting = true;
                         }
@@ -164,7 +188,11 @@ impl LogParser {
     /// for pattern matching within known segments, but uses sequential parsing for
     /// boundary detection to ensure consistency.
     #[pyo3(name = "parse_segments_parallel", signature = (lines, chunk_size=None))]
-    pub fn parse_segments_parallel(&self, lines: Vec<String>, chunk_size: Option<usize>) -> Vec<Vec<String>> {
+    pub fn parse_segments_parallel(
+        &self,
+        lines: Vec<String>,
+        chunk_size: Option<usize>,
+    ) -> Vec<Vec<String>> {
         let chunk_size = chunk_size.unwrap_or(1000);
 
         if lines.len() < chunk_size {
@@ -184,7 +212,8 @@ impl LogParser {
     /// Find all pattern matches in parallel with caching
     pub fn find_patterns(&self, lines: Vec<String>) -> Vec<(usize, String, String)> {
         // Generate cache key from first few lines (for performance)
-        let cache_key = lines.iter()
+        let cache_key = lines
+            .iter()
             .take(5)
             .map(|s| s.as_str())
             .collect::<Vec<_>>()
@@ -201,9 +230,14 @@ impl LogParser {
 
     /// Find patterns in parallel chunks for better performance
     #[pyo3(name = "find_patterns_chunked", signature = (lines, chunk_size=None))]
-    pub fn find_patterns_chunked(&self, lines: Vec<String>, chunk_size: Option<usize>) -> Vec<(usize, String, String)> {
+    pub fn find_patterns_chunked(
+        &self,
+        lines: Vec<String>,
+        chunk_size: Option<usize>,
+    ) -> Vec<(usize, String, String)> {
         // Generate cache key for caching
-        let cache_key = lines.iter()
+        let cache_key = lines
+            .iter()
             .take(5)
             .map(|s| s.as_str())
             .collect::<Vec<_>>()
@@ -218,7 +252,8 @@ impl LogParser {
             .par_iter()
             .enumerate()
             .flat_map(|(chunk_idx, chunk)| {
-                chunk.iter()
+                chunk
+                    .iter()
                     .enumerate()
                     .flat_map(|(idx, line)| {
                         let line_num = chunk_idx * chunk_size + idx;
@@ -227,14 +262,22 @@ impl LogParser {
                         // Check compiled patterns
                         for pattern in patterns.iter() {
                             if let Some(mat) = pattern.find(line) {
-                                matches.push((line_num, pattern.as_str().to_string(), mat.as_str().to_string()));
+                                matches.push((
+                                    line_num,
+                                    pattern.as_str().to_string(),
+                                    mat.as_str().to_string(),
+                                ));
                             }
                         }
 
                         // Check custom patterns
                         for entry in custom_patterns.iter() {
                             if let Some(mat) = entry.value().find(line) {
-                                matches.push((line_num, entry.key().clone(), mat.as_str().to_string()));
+                                matches.push((
+                                    line_num,
+                                    entry.key().clone(),
+                                    mat.as_str().to_string(),
+                                ));
                             }
                         }
 
@@ -254,13 +297,22 @@ impl LogParser {
 
     /// Extract section from log (Python-exposed method)
     #[pyo3(name = "extract_section")]
-    pub fn py_extract_section(&self, lines: Vec<String>, start_marker: String, end_marker: String) -> Option<Vec<String>> {
+    pub fn py_extract_section(
+        &self,
+        lines: Vec<String>,
+        start_marker: String,
+        end_marker: String,
+    ) -> Option<Vec<String>> {
         self.extract_section(lines, start_marker, end_marker)
     }
 
     /// Extract multiple sections batch (Python-exposed method)
     #[pyo3(name = "extract_sections_batch")]
-    pub fn py_extract_sections_batch(&self, lines: Vec<String>, markers: Vec<(String, String)>) -> Vec<Option<Vec<String>>> {
+    pub fn py_extract_sections_batch(
+        &self,
+        lines: Vec<String>,
+        markers: Vec<(String, String)>,
+    ) -> Vec<Option<Vec<String>>> {
         self.extract_sections_batch(lines, markers)
     }
 
@@ -299,7 +351,8 @@ impl LogParser {
             ("stack_dump", "STACK:", "EOF"),
         ];
 
-        sections.par_iter()
+        sections
+            .par_iter()
             .filter_map(|(name, start, end)| {
                 self.extract_section(lines.clone(), start.to_string(), end.to_string())
                     .map(|section| (name.to_string(), section))
@@ -324,14 +377,20 @@ impl LogParser {
         // Single pass for all header info
         for line in lines.iter().take(50) {
             // Game version detection
-            if line.starts_with("Fallout 4 v") || line.starts_with("Skyrim Special Edition v")
-                || line.starts_with("Skyrim SE v") || line.starts_with("Skyrim VR v") {
+            if line.starts_with("Fallout 4 v")
+                || line.starts_with("Skyrim Special Edition v")
+                || line.starts_with("Skyrim SE v")
+                || line.starts_with("Skyrim VR v")
+            {
                 game_version = line.trim().to_string();
             }
 
             // Crash generator detection
-            if line.contains("Crash Log") || line.contains("Buffout")
-                || line.contains("Crashgen") || line.contains("Trainwreck") {
+            if line.contains("Crash Log")
+                || line.contains("Buffout")
+                || line.contains("Crashgen")
+                || line.contains("Trainwreck")
+            {
                 crashgen_version = line.trim().to_string();
             }
 
@@ -357,7 +416,8 @@ impl LogParser {
     #[pyo3(name = "get_segment_sizes")]
     pub fn get_segment_sizes(&self, lines: Vec<String>) -> HashMap<String, usize> {
         let segments = self.parse_all_sections(lines);
-        segments.into_iter()
+        segments
+            .into_iter()
             .map(|(name, section)| (name, section.len()))
             .collect()
     }
@@ -368,7 +428,10 @@ impl LogParser {
         stats.insert("segment_cache_size".to_string(), self.segment_cache.len());
         stats.insert("pattern_cache_size".to_string(), self.pattern_cache.len());
         stats.insert("custom_patterns".to_string(), self.custom_patterns.len());
-        stats.insert("compiled_patterns".to_string(), self.compiled_patterns.len());
+        stats.insert(
+            "compiled_patterns".to_string(),
+            self.compiled_patterns.len(),
+        );
         stats
     }
 
@@ -377,9 +440,11 @@ impl LogParser {
     pub fn extract_formids(&self, lines: Vec<String>) -> Vec<String> {
         let formid_pattern = &COMMON_PATTERNS["formid"];
 
-        lines.par_iter()
+        lines
+            .par_iter()
             .flat_map(|line| {
-                formid_pattern.captures_iter(line)
+                formid_pattern
+                    .captures_iter(line)
                     .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
                     .collect::<Vec<_>>()
             })
@@ -391,9 +456,11 @@ impl LogParser {
     pub fn extract_plugins(&self, lines: Vec<String>) -> Vec<(String, String)> {
         let plugin_pattern = &COMMON_PATTERNS["plugin"];
 
-        lines.par_iter()
+        lines
+            .par_iter()
             .flat_map(|line| {
-                plugin_pattern.captures_iter(line)
+                plugin_pattern
+                    .captures_iter(line)
                     .filter_map(|cap| {
                         if cap.len() >= 3 {
                             Some((cap[1].to_string(), cap[2].to_string()))
@@ -411,9 +478,11 @@ impl LogParser {
     pub fn extract_addresses(&self, lines: Vec<String>) -> Vec<String> {
         let address_pattern = &COMMON_PATTERNS["address"];
 
-        lines.par_iter()
+        lines
+            .par_iter()
             .flat_map(|line| {
-                address_pattern.find_iter(line)
+                address_pattern
+                    .find_iter(line)
                     .map(|mat| mat.as_str().to_string())
                     .collect::<Vec<_>>()
             })
@@ -425,7 +494,8 @@ impl LogParser {
     pub fn find_errors(&self, lines: Vec<String>) -> Vec<(usize, String)> {
         let error_pattern = &COMMON_PATTERNS["error"];
 
-        lines.par_iter()
+        lines
+            .par_iter()
             .enumerate()
             .filter_map(|(idx, line)| {
                 if error_pattern.is_match(line) {
@@ -502,14 +572,21 @@ impl LogParser {
     }
 
     /// Extract specific section from log with SIMD-optimized search
-    fn extract_section(&self, lines: Vec<String>, start_marker: String, end_marker: String) -> Option<Vec<String>> {
+    fn extract_section(
+        &self,
+        lines: Vec<String>,
+        start_marker: String,
+        end_marker: String,
+    ) -> Option<Vec<String>> {
         // Find start position using SIMD search
-        let start_pos = lines.par_iter()
+        let start_pos = lines
+            .par_iter()
             .position_any(|line| self.fast_contains(line, &start_marker))
-            .map(|pos| pos + 1)?;  // Skip the marker line
+            .map(|pos| pos + 1)?; // Skip the marker line
 
         // Find end position
-        let end_pos = lines[start_pos..].par_iter()
+        let end_pos = lines[start_pos..]
+            .par_iter()
             .position_any(|line| self.fast_contains(line, &end_marker))
             .map(|pos| start_pos + pos)
             .unwrap_or(lines.len());
@@ -522,8 +599,13 @@ impl LogParser {
     }
 
     /// Extract multiple sections in parallel
-    fn extract_sections_batch(&self, lines: Vec<String>, markers: Vec<(String, String)>) -> Vec<Option<Vec<String>>> {
-        markers.par_iter()
+    fn extract_sections_batch(
+        &self,
+        lines: Vec<String>,
+        markers: Vec<(String, String)>,
+    ) -> Vec<Option<Vec<String>>> {
+        markers
+            .par_iter()
             .map(|(start, end)| self.extract_section(lines.clone(), start.clone(), end.clone()))
             .collect()
     }
@@ -533,8 +615,9 @@ impl LogParser {
         let mut header_info = HashMap::new();
 
         // Use parallel search for common header patterns
-        let results: Vec<_> = lines.par_iter()
-            .take(50)  // Headers are usually in the first 50 lines
+        let results: Vec<_> = lines
+            .par_iter()
+            .take(50) // Headers are usually in the first 50 lines
             .filter_map(|line| {
                 // Game version
                 if line.starts_with("Fallout 4 v") || line.starts_with("Skyrim SE v") {
@@ -629,7 +712,7 @@ mod tests {
         let section = parser.extract_section(
             log_lines,
             "SYSTEM SPECS:".to_string(),
-            "PROBABLE CALL STACK:".to_string()
+            "PROBABLE CALL STACK:".to_string(),
         );
         assert!(section.is_some());
         let section = section.unwrap();
@@ -714,11 +797,22 @@ mod tests {
         let segments_parallel = parser.parse_segments_parallel(large_log.clone(), Some(1000));
         let segments_sequential = parser.parse_segments(large_log);
 
-        assert!(segments_parallel.len() > 0, "Should find at least one segment");
-        assert_eq!(segments_parallel.len(), segments_sequential.len(), "Parallel must match sequential");
+        assert!(
+            segments_parallel.len() > 0,
+            "Should find at least one segment"
+        );
+        assert_eq!(
+            segments_parallel.len(),
+            segments_sequential.len(),
+            "Parallel must match sequential"
+        );
 
         // Verify content is identical
-        for (i, (par, seq)) in segments_parallel.iter().zip(segments_sequential.iter()).enumerate() {
+        for (i, (par, seq)) in segments_parallel
+            .iter()
+            .zip(segments_sequential.iter())
+            .enumerate()
+        {
             assert_eq!(par.len(), seq.len(), "Segment {} length mismatch", i);
             assert_eq!(par, seq, "Segment {} content mismatch", i);
         }

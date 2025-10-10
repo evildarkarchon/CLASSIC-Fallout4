@@ -91,7 +91,10 @@ mod tests {
         assert!(args.move_unsolved);
         assert_eq!(args.ini_path.unwrap(), PathBuf::from("C:\\Ini"));
         assert_eq!(args.scan_path.unwrap(), PathBuf::from("D:\\Logs"));
-        assert_eq!(args.mods_folder_path.unwrap(), PathBuf::from("C:\\MO2\\mods"));
+        assert_eq!(
+            args.mods_folder_path.unwrap(),
+            PathBuf::from("C:\\MO2\\mods")
+        );
         assert!(args.simplify_logs);
     }
 

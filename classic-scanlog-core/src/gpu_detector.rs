@@ -118,7 +118,7 @@ impl GpuDetector {
                     gpu_info.primary = "Nvidia".to_string();
                 } else if line.contains("Intel") {
                     gpu_info.manufacturer = "Intel".to_string();
-                    gpu_info.rival = None;  // Intel integrated graphics
+                    gpu_info.rival = None; // Intel integrated graphics
                     gpu_info.primary = "Intel".to_string();
                 }
 
@@ -171,9 +171,7 @@ mod tests {
 
     #[test]
     fn test_amd_gpu_detection() {
-        let system_lines = vec![
-            "GPU #1: AMD Radeon RX 6800 XT".to_string(),
-        ];
+        let system_lines = vec!["GPU #1: AMD Radeon RX 6800 XT".to_string()];
 
         let gpu_info = GpuDetector::get_gpu_info(&system_lines);
 
@@ -184,9 +182,7 @@ mod tests {
 
     #[test]
     fn test_nvidia_gpu_detection() {
-        let system_lines = vec![
-            "GPU #1: Nvidia GeForce RTX 3080".to_string(),
-        ];
+        let system_lines = vec!["GPU #1: Nvidia GeForce RTX 3080".to_string()];
 
         let gpu_info = GpuDetector::get_gpu_info(&system_lines);
 
@@ -197,9 +193,7 @@ mod tests {
 
     #[test]
     fn test_intel_gpu_detection() {
-        let system_lines = vec![
-            "GPU #1: Intel UHD Graphics 630".to_string(),
-        ];
+        let system_lines = vec!["GPU #1: Intel UHD Graphics 630".to_string()];
 
         let gpu_info = GpuDetector::get_gpu_info(&system_lines);
 
@@ -219,14 +213,15 @@ mod tests {
 
         assert_eq!(gpu_info.manufacturer, "Nvidia");
         assert_eq!(gpu_info.primary, "Nvidia GeForce RTX 3080");
-        assert_eq!(gpu_info.secondary, Some("Intel UHD Graphics 630".to_string()));
+        assert_eq!(
+            gpu_info.secondary,
+            Some("Intel UHD Graphics 630".to_string())
+        );
     }
 
     #[test]
     fn test_unknown_gpu() {
-        let system_lines = vec![
-            "Some other line".to_string(),
-        ];
+        let system_lines = vec!["Some other line".to_string()];
 
         let gpu_info = GpuDetector::get_gpu_info(&system_lines);
 

@@ -4,9 +4,9 @@
 //! while leveraging Rust's performance optimizations.
 
 use crate::error::{Result, ScanLogError};
+use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use rayon::prelude::*;
 
 /// Convert dictionary keys to lowercase
 fn convert_to_lowercase(data: &HashMap<String, String>) -> HashMap<String, String> {
@@ -18,15 +18,17 @@ fn convert_to_lowercase(data: &HashMap<String, String>) -> HashMap<String, Strin
 /// Validate that a mod has a warning
 fn validate_warning(mod_name: &str, warning: &str) -> Result<()> {
     if warning.is_empty() {
-        return Err(ScanLogError::InvalidInput(
-            format!("ERROR: {} has no warning in the database!", mod_name)
-        ));
+        return Err(ScanLogError::InvalidInput(format!(
+            "ERROR: {} has no warning in the database!",
+            mod_name
+        )));
     }
     Ok(())
 }
 
 /// Detect single mods based on YAML mappings and crash log plugins
-pub fn detect_mods_single(yaml_dict: HashMap<String, String>,
+pub fn detect_mods_single(
+    yaml_dict: HashMap<String, String>,
     crashlog_plugins: HashMap<String, String>,
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
@@ -84,7 +86,10 @@ pub fn detect_mods_single(yaml_dict: HashMap<String, String>,
         if !warning_lines.is_empty() {
             // First line (mod name) goes on the same line as FOUND header
             let mod_name_display = warning_lines[0].trim();
-            lines.push(format!("**[!] FOUND : {} {}**\n\n", plugin_list, mod_name_display));
+            lines.push(format!(
+                "**[!] FOUND : {} {}**\n\n",
+                plugin_list, mod_name_display
+            ));
 
             // Remaining lines are indented with double newlines for Qt compatibility
             for line in &warning_lines[1..] {
@@ -103,7 +108,8 @@ pub fn detect_mods_single(yaml_dict: HashMap<String, String>,
 }
 
 /// Detect mod conflicts or combinations
-pub fn detect_mods_double(yaml_dict: HashMap<String, String>,
+pub fn detect_mods_double(
+    yaml_dict: HashMap<String, String>,
     crashlog_plugins: HashMap<String, String>,
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
@@ -162,26 +168,20 @@ pub fn detect_mods_double(yaml_dict: HashMap<String, String>,
 }
 
 /// Detect important mods and check GPU compatibility
-pub fn detect_mods_important(yaml_dict: HashMap<String, String>,
+pub fn detect_mods_important(
+    yaml_dict: HashMap<String, String>,
     crashlog_plugins: HashMap<String, String>,
     gpu_rival: Option<&str>,
     xse_modules: HashSet<String>,
 ) -> Result<Vec<String>> {
-    let mut lines = vec![
-        "### Checking for Important Mods\n\n".to_string(),
-    ];
+    let mut lines = vec!["### Checking for Important Mods\n\n".to_string()];
 
     // Convert plugin names to lowercase once
-    let plugin_names_lower: Vec<String> = crashlog_plugins
-        .keys()
-        .map(|k| k.to_lowercase())
-        .collect();
+    let plugin_names_lower: Vec<String> =
+        crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
 
     // Add XSE module names (DLL files) to the search space
-    let module_names_lower: Vec<String> = xse_modules
-        .iter()
-        .map(|m| m.to_lowercase())
-        .collect();
+    let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
 
     let mut all_names = plugin_names_lower;
     all_names.extend(module_names_lower);
@@ -292,7 +292,10 @@ pub fn detect_mods_batch(
 
                     if !warning_lines.is_empty() {
                         let mod_name_display = warning_lines[0].trim();
-                        lines.push(format!("**[!] FOUND : {} {}**\n\n", plugin_list, mod_name_display));
+                        lines.push(format!(
+                            "**[!] FOUND : {} {}**\n\n",
+                            plugin_list, mod_name_display
+                        ));
 
                         for line in &warning_lines[1..] {
                             if !line.trim().is_empty() {

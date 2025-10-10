@@ -3,10 +3,10 @@
 //! This module provides a comprehensive error handling system that maps
 //! Rust errors to appropriate Python exceptions for seamless integration.
 
-use pyo3::prelude::*;
 use pyo3::exceptions::{
-    PyIOError, PyValueError, PyRuntimeError, PyPermissionError, PyFileNotFoundError, PyTimeoutError
+    PyFileNotFoundError, PyIOError, PyPermissionError, PyRuntimeError, PyTimeoutError, PyValueError,
 };
+use pyo3::prelude::*;
 use thiserror::Error;
 
 /// Core error types for the CLASSIC Rust extensions
@@ -14,23 +14,39 @@ use thiserror::Error;
 pub enum ClassicError {
     /// I/O related errors
     #[error("I/O error: {message}")]
-    Io { message: String, source: Option<Box<dyn std::error::Error + Send + Sync>> },
+    Io {
+        message: String,
+        source: Option<Box<dyn std::error::Error + Send + Sync>>,
+    },
 
     /// Path-related errors
     #[error("Path error: {message}")]
-    Path { message: String, path: Option<String> },
+    Path {
+        message: String,
+        path: Option<String>,
+    },
 
     /// Validation errors
     #[error("Validation error: {message}")]
-    Validation { message: String, field: Option<String> },
+    Validation {
+        message: String,
+        field: Option<String>,
+    },
 
     /// Parsing errors
     #[error("Parse error: {message} at position {position:?}")]
-    Parse { message: String, position: Option<usize>, context: Option<String> },
+    Parse {
+        message: String,
+        position: Option<usize>,
+        context: Option<String>,
+    },
 
     /// Database errors
     #[error("Database error: {message}")]
-    Database { message: String, query: Option<String> },
+    Database {
+        message: String,
+        query: Option<String>,
+    },
 
     /// Cache errors
     #[error("Cache error: {message}")]
@@ -38,7 +54,10 @@ pub enum ClassicError {
 
     /// Encoding errors
     #[error("Encoding error: {message}")]
-    Encoding { message: String, encoding: Option<String> },
+    Encoding {
+        message: String,
+        encoding: Option<String>,
+    },
 
     /// Timeout errors
     #[error("Operation timed out after {duration_ms}ms: {operation}")]
@@ -46,15 +65,24 @@ pub enum ClassicError {
 
     /// Permission errors
     #[error("Permission denied: {message}")]
-    Permission { message: String, resource: Option<String> },
+    Permission {
+        message: String,
+        resource: Option<String>,
+    },
 
     /// Configuration errors
     #[error("Configuration error: {message}")]
-    Configuration { message: String, key: Option<String> },
+    Configuration {
+        message: String,
+        key: Option<String>,
+    },
 
     /// Processing errors
     #[error("Processing error: {message}")]
-    Processing { message: String, stage: Option<String> },
+    Processing {
+        message: String,
+        stage: Option<String>,
+    },
 
     /// Resource not found
     #[error("Resource not found: {resource}")]
@@ -62,16 +90,26 @@ pub enum ClassicError {
 
     /// Invalid state
     #[error("Invalid state: {message}")]
-    InvalidState { message: String, expected: Option<String>, actual: Option<String> },
+    InvalidState {
+        message: String,
+        expected: Option<String>,
+        actual: Option<String>,
+    },
 
     /// Generic error with context
     #[error("{message}")]
-    Generic { message: String, details: Option<String> },
+    Generic {
+        message: String,
+        details: Option<String>,
+    },
 }
 
 impl ClassicError {
     /// Create an I/O error with optional source
-    pub fn io<E: std::error::Error + Send + Sync + 'static>(message: impl Into<String>, source: Option<E>) -> Self {
+    pub fn io<E: std::error::Error + Send + Sync + 'static>(
+        message: impl Into<String>,
+        source: Option<E>,
+    ) -> Self {
         ClassicError::Io {
             message: message.into(),
             source: source.map(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>),
@@ -95,7 +133,11 @@ impl ClassicError {
     }
 
     /// Create a parse error
-    pub fn parse(message: impl Into<String>, position: Option<usize>, context: Option<impl Into<String>>) -> Self {
+    pub fn parse(
+        message: impl Into<String>,
+        position: Option<usize>,
+        context: Option<impl Into<String>>,
+    ) -> Self {
         ClassicError::Parse {
             message: message.into(),
             position,
@@ -146,21 +188,17 @@ impl ClassicError {
     pub fn with_context(self, context: impl Into<String>) -> Self {
         let context_msg = context.into();
         match self {
-            ClassicError::Generic { message, details } => {
-                ClassicError::Generic {
-                    message,
-                    details: Some(match details {
-                        Some(d) => format!("{} | Context: {}", d, context_msg),
-                        None => context_msg,
-                    }),
-                }
-            }
-            other => {
-                ClassicError::Generic {
-                    message: other.to_string(),
-                    details: Some(context_msg),
-                }
-            }
+            ClassicError::Generic { message, details } => ClassicError::Generic {
+                message,
+                details: Some(match details {
+                    Some(d) => format!("{} | Context: {}", d, context_msg),
+                    None => context_msg,
+                }),
+            },
+            other => ClassicError::Generic {
+                message: other.to_string(),
+                details: Some(context_msg),
+            },
         }
     }
 }
@@ -184,9 +222,15 @@ impl From<ClassicError> for PyErr {
                 };
                 PyValueError::new_err(msg)
             }
-            ClassicError::Parse { message, position, context } => {
+            ClassicError::Parse {
+                message,
+                position,
+                context,
+            } => {
                 let msg = match (position, context) {
-                    (Some(pos), Some(ctx)) => format!("{} at position {} in: {}", message, pos, ctx),
+                    (Some(pos), Some(ctx)) => {
+                        format!("{} at position {} in: {}", message, pos, ctx)
+                    }
                     (Some(pos), None) => format!("{} at position {}", message, pos),
                     (None, Some(ctx)) => format!("{} in: {}", message, ctx),
                     (None, None) => message,
@@ -208,9 +252,13 @@ impl From<ClassicError> for PyErr {
                 };
                 PyValueError::new_err(msg)
             }
-            ClassicError::Timeout { operation, duration_ms } => {
-                PyTimeoutError::new_err(format!("Operation '{}' timed out after {}ms", operation, duration_ms))
-            }
+            ClassicError::Timeout {
+                operation,
+                duration_ms,
+            } => PyTimeoutError::new_err(format!(
+                "Operation '{}' timed out after {}ms",
+                operation, duration_ms
+            )),
             ClassicError::Permission { message, resource } => {
                 let msg = match resource {
                     Some(r) => format!("{}: {}", message, r),
@@ -235,9 +283,15 @@ impl From<ClassicError> for PyErr {
             ClassicError::NotFound { resource } => {
                 PyFileNotFoundError::new_err(format!("Resource not found: {}", resource))
             }
-            ClassicError::InvalidState { message, expected, actual } => {
+            ClassicError::InvalidState {
+                message,
+                expected,
+                actual,
+            } => {
                 let msg = match (expected, actual) {
-                    (Some(exp), Some(act)) => format!("{} | Expected: {}, Actual: {}", message, exp, act),
+                    (Some(exp), Some(act)) => {
+                        format!("{} | Expected: {}, Actual: {}", message, exp, act)
+                    }
                     _ => message,
                 };
                 PyRuntimeError::new_err(msg)
@@ -291,7 +345,9 @@ impl From<std::io::Error> for ClassicError {
         use std::io::ErrorKind;
         match err.kind() {
             ErrorKind::NotFound => ClassicError::not_found(err.to_string()),
-            ErrorKind::PermissionDenied => ClassicError::permission(err.to_string(), None::<String>),
+            ErrorKind::PermissionDenied => {
+                ClassicError::permission(err.to_string(), None::<String>)
+            }
             ErrorKind::TimedOut => ClassicError::timeout("I/O operation", 0),
             _ => ClassicError::io(err.to_string(), Some(err)),
         }

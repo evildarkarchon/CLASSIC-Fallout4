@@ -1,9 +1,9 @@
 //! Pattern matching engine with multi-pattern optimization
 
+use crate::error::{Result, ScanLogError};
 use aho_corasick::{AhoCorasick, Match};
 use dashmap::DashMap;
 use std::sync::Arc;
-use crate::error::{Result, ScanLogError};
 
 /// Multi-pattern matcher using Aho-Corasick algorithm
 pub struct PatternMatcher {
@@ -33,7 +33,8 @@ impl PatternMatcher {
             return cached.clone();
         }
 
-        let matches: Vec<(usize, String)> = self.matcher
+        let matches: Vec<(usize, String)> = self
+            .matcher
             .find_iter(text)
             .map(|m: Match| {
                 let pattern_idx = m.pattern().as_usize();

@@ -109,12 +109,10 @@ impl YamlOperations {
 
     /// Parse YAML content from a string
     pub fn parse_yaml(&self, content: &str) -> Result<Yaml, YamlError> {
-        let docs = YamlLoader::load_from_str(content)
-            .map_err(|e| YamlError::ParseError(e.to_string()))?;
+        let docs =
+            YamlLoader::load_from_str(content).map_err(|e| YamlError::ParseError(e.to_string()))?;
 
-        docs.first()
-            .cloned()
-            .ok_or(YamlError::EmptyDocument)
+        docs.first().cloned().ok_or(YamlError::EmptyDocument)
     }
 
     /// Convert YAML to string
@@ -154,10 +152,7 @@ impl YamlOperations {
         let docs = YamlLoader::load_from_str(&content)
             .map_err(|e| YamlError::ParseError(e.to_string()))?;
 
-        let yaml = docs
-            .first()
-            .cloned()
-            .ok_or(YamlError::EmptyDocument)?;
+        let yaml = docs.first().cloned().ok_or(YamlError::EmptyDocument)?;
 
         // Update cache
         if self.cache_enabled {
@@ -319,7 +314,10 @@ mod tests {
     fn test_dump_yaml() {
         let ops = YamlOperations::new();
         let mut hash = yaml_rust2::yaml::Hash::new();
-        hash.insert(Yaml::String("name".to_string()), Yaml::String("test".to_string()));
+        hash.insert(
+            Yaml::String("name".to_string()),
+            Yaml::String("test".to_string()),
+        );
         hash.insert(Yaml::String("value".to_string()), Yaml::Integer(123));
 
         let yaml = Yaml::Hash(hash);
@@ -354,7 +352,9 @@ mod tests {
         "#;
 
         let yaml = ops.parse_yaml(yaml_str).unwrap();
-        let new_yaml = ops.set_setting(&yaml, "settings.debug", Yaml::Boolean(true)).unwrap();
+        let new_yaml = ops
+            .set_setting(&yaml, "settings.debug", Yaml::Boolean(true))
+            .unwrap();
         let value = ops.get_setting(&new_yaml, "settings.debug");
         assert_eq!(value.unwrap(), Yaml::Boolean(true));
     }

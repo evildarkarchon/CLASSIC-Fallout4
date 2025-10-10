@@ -13,32 +13,36 @@
 
 // Re-export all public modules
 pub mod error;
-pub mod parser;
+pub mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
+pub mod gpu_detector;
+pub mod mod_detector;
+pub mod orchestrator;
+pub mod parser;
 pub mod patterns;
 pub mod plugin_analyzer;
 pub mod record_scanner;
-pub mod mod_detector;
-pub mod suspect_scanner;
-pub mod settings_validator;
-pub mod gpu_detector;
-pub mod fcx_handler;
-pub mod orchestrator;
 pub mod report;
+pub mod settings_validator;
+pub mod suspect_scanner;
 
 // Re-export key types for convenience
 pub use error::ScanLogError;
-pub use parser::LogParser;
-pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
-pub use formid_analyzer::{FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch};
-pub use patterns::PatternMatcher;
-pub use plugin_analyzer::{PluginAnalyzer, detect_plugins_batch, contains_plugin};
-pub use record_scanner::{RecordScanner, scan_records_batch, contains_record};
-pub use mod_detector::{detect_mods_single, detect_mods_double, detect_mods_important, detect_mods_batch};
-pub use suspect_scanner::SuspectScanner;
-pub use settings_validator::SettingsValidator;
-pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
 pub use fcx_handler::FcxModeHandler;
-pub use orchestrator::{OrchestratorCore, AnalysisConfig, AnalysisResult};
-pub use report::{ReportFragment, ReportComposer, ReportGenerator, StringPool};
+pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
+pub use formid_analyzer::{
+    extract_formids_batch, is_valid_formid, validate_formids_batch, FormIDAnalyzerCore,
+};
+pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
+pub use mod_detector::{
+    detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
+};
+pub use orchestrator::{AnalysisConfig, AnalysisResult, OrchestratorCore};
+pub use parser::LogParser;
+pub use patterns::PatternMatcher;
+pub use plugin_analyzer::{contains_plugin, detect_plugins_batch, PluginAnalyzer};
+pub use record_scanner::{contains_record, scan_records_batch, RecordScanner};
+pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
+pub use settings_validator::SettingsValidator;
+pub use suspect_scanner::SuspectScanner;

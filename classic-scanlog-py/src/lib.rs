@@ -30,7 +30,7 @@ pub mod suspect_scanner;
 pub use fcx_handler::PyFcxModeHandler;
 pub use formid::{PyFormIDAnalyzer, PyRustFormIDAnalyzer};
 pub use formid_analyzer::{
-    PyFormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
+    extract_formids_batch, is_valid_formid, validate_formids_batch, PyFormIDAnalyzerCore,
 };
 pub use gpu_detector::{PyGpuDetector, PyGpuInfo, PyGpuVendor};
 pub use mod_detector::{
@@ -42,8 +42,7 @@ pub use patterns::PyPatternMatcher;
 pub use plugin_analyzer::{contains_plugin, detect_plugins_batch, PyPluginAnalyzer};
 pub use record_scanner::{contains_record, scan_records_batch, PyRecordScanner};
 pub use report::{
-    PyParallelReportProcessor, PyReportComposer, PyReportFragment, PyReportGenerator,
-    PyStringPool,
+    PyParallelReportProcessor, PyReportComposer, PyReportFragment, PyReportGenerator, PyStringPool,
 };
 pub use settings_validator::PySettingsValidator;
 pub use suspect_scanner::PySuspectScanner;

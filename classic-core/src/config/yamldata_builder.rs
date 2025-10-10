@@ -96,12 +96,7 @@ pub struct YamlData {
 impl YamlData {
     #[new]
     #[pyo3(signature = (yaml_dirs, game, vr_mode))]
-    fn new(
-        py: Python<'_>,
-        yaml_dirs: Vec<PathBuf>,
-        game: String,
-        vr_mode: bool,
-    ) -> PyResult<Self> {
+    fn new(py: Python<'_>, yaml_dirs: Vec<PathBuf>, game: String, vr_mode: bool) -> PyResult<Self> {
         // Create RustYamlOperations through Python interface
         let yaml_module = py.import("classic_core.yaml")?;
         let yaml_ops_class = yaml_module.getattr("RustYamlOperations")?;
@@ -137,7 +132,7 @@ impl YamlData {
         // Validate input
         if yaml_dirs.len() < 3 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "yaml_dirs must contain at least 3 directories (main, game, ignore)"
+                "yaml_dirs must contain at least 3 directories (main, game, ignore)",
             ));
         }
 
@@ -149,9 +144,10 @@ impl YamlData {
         // Verify files exist before loading
         for path in [&main_yaml, &game_yaml, &ignore_yaml] {
             if !path.exists() {
-                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                    format!("YAML file not found: {}", path.display())
-                ));
+                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                    "YAML file not found: {}",
+                    path.display()
+                )));
             }
         }
 
@@ -165,44 +161,62 @@ impl YamlData {
             // Spawn parallel tasks to load each YAML file
             let main_path = main_yaml.clone();
             set.spawn(async move {
-                tokio::fs::read_to_string(&main_path)
-                    .await
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                        format!("Failed to read main YAML: {}", e)
+                tokio::fs::read_to_string(&main_path).await.map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                        "Failed to read main YAML: {}",
+                        e
                     ))
+                })
             });
 
             let game_path = game_yaml.clone();
             set.spawn(async move {
-                tokio::fs::read_to_string(&game_path)
-                    .await
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                        format!("Failed to read game YAML: {}", e)
+                tokio::fs::read_to_string(&game_path).await.map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                        "Failed to read game YAML: {}",
+                        e
                     ))
+                })
             });
 
             let ignore_path = ignore_yaml.clone();
             set.spawn(async move {
-                tokio::fs::read_to_string(&ignore_path)
-                    .await
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                        format!("Failed to read ignore YAML: {}", e)
+                tokio::fs::read_to_string(&ignore_path).await.map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                        "Failed to read ignore YAML: {}",
+                        e
                     ))
+                })
             });
 
             // Wait for all three files to load and unwrap results
-            let r1 = set.join_next().await
-                .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed"))?
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e)))?
-                ?;
-            let r2 = set.join_next().await
-                .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed"))?
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e)))?
-                ?;
-            let r3 = set.join_next().await
-                .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed"))?
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e)))?
-                ?;
+            let r1 = set
+                .join_next()
+                .await
+                .ok_or_else(|| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed")
+                })?
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e))
+                })??;
+            let r2 = set
+                .join_next()
+                .await
+                .ok_or_else(|| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed")
+                })?
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e))
+                })??;
+            let r3 = set
+                .join_next()
+                .await
+                .ok_or_else(|| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Task join failed")
+                })?
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Join error: {}", e))
+                })??;
 
             Ok::<_, PyErr>((r1, r2, r3))
         })?;
@@ -216,15 +230,17 @@ impl YamlData {
         let vr_suffix = if vr_mode { "VR" } else { "" };
 
         // Helper to get nested value safely
-        let get_value = |data: &Py<PyAny>, key_path: &str, default_py: &Py<PyAny>| -> PyResult<Py<PyAny>> {
-            let result = yaml_ops_py.call_method1(py, "get_setting", (data.clone_ref(py), key_path))?;
-            // Check if it's None
-            if result.bind(py).is_none() {
-                Ok(default_py.clone_ref(py))
-            } else {
-                Ok(result)
-            }
-        };
+        let get_value =
+            |data: &Py<PyAny>, key_path: &str, default_py: &Py<PyAny>| -> PyResult<Py<PyAny>> {
+                let result =
+                    yaml_ops_py.call_method1(py, "get_setting", (data.clone_ref(py), key_path))?;
+                // Check if it's None
+                if result.bind(py).is_none() {
+                    Ok(default_py.clone_ref(py))
+                } else {
+                    Ok(result)
+                }
+            };
 
         // Create default values
         let empty_list = PyList::empty(py).unbind().into();
@@ -236,32 +252,59 @@ impl YamlData {
             // Main YAML values
             classic_version: get_value(&main_data, "CLASSIC_Info.version", &empty_string)?
                 .extract(py)?,
-            classic_version_date: get_value(&main_data, "CLASSIC_Info.version_date", &empty_string)?
-                .extract(py)?,
+            classic_version_date: get_value(
+                &main_data,
+                "CLASSIC_Info.version_date",
+                &empty_string,
+            )?
+            .extract(py)?,
             classic_records_list: get_value(&main_data, "catch_log_records", &empty_list)?
                 .extract(py)?,
-            autoscan_text: get_value(&main_data, &format!("CLASSIC_Interface.autoscan_text_{}", game), &empty_string)?
-                .extract(py)?,
+            autoscan_text: get_value(
+                &main_data,
+                &format!("CLASSIC_Interface.autoscan_text_{}", game),
+                &empty_string,
+            )?
+            .extract(py)?,
 
             // Game YAML values
-            classic_game_hints: get_value(&game_data, "Game_Hints", &empty_list)?
-                .extract(py)?,
-            crashgen_name: get_value(&game_data, &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix), &empty_string)?
-                .extract(py)?,
-            crashgen_latest_og: get_value(&game_data, "Game_Info.CRASHGEN_LatestVer", &empty_string)?
-                .extract(py)?,
-            crashgen_latest_vr: get_value(&game_data, "GameVR_Info.CRASHGEN_LatestVer", &empty_string)?
-                .extract(py)?,
+            classic_game_hints: get_value(&game_data, "Game_Hints", &empty_list)?.extract(py)?,
+            crashgen_name: get_value(
+                &game_data,
+                &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix),
+                &empty_string,
+            )?
+            .extract(py)?,
+            crashgen_latest_og: get_value(
+                &game_data,
+                "Game_Info.CRASHGEN_LatestVer",
+                &empty_string,
+            )?
+            .extract(py)?,
+            crashgen_latest_vr: get_value(
+                &game_data,
+                "GameVR_Info.CRASHGEN_LatestVer",
+                &empty_string,
+            )?
+            .extract(py)?,
             crashgen_ignore: {
-                let list_val = get_value(&game_data, &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix), &empty_list)?;
+                let list_val = get_value(
+                    &game_data,
+                    &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix),
+                    &empty_list,
+                )?;
                 // Convert list to set safely using PySet
                 let bound_val = list_val.bind(py);
                 let py_list = bound_val.downcast::<PyList>()?;
                 let py_set = PySet::new(py, py_list.iter())?;
                 py_set.unbind().into()
             },
-            warn_noplugins: get_value(&game_data, "Warnings_CRASHGEN.Warn_NOPlugins", &empty_string)?
-                .extract(py)?,
+            warn_noplugins: get_value(
+                &game_data,
+                "Warnings_CRASHGEN.Warn_NOPlugins",
+                &empty_string,
+            )?
+            .extract(py)?,
             warn_outdated: get_value(&game_data, "Warnings_CRASHGEN.Warn_Outdated", &empty_string)?
                 .extract(py)?,
             xse_acronym: get_value(&game_data, "Game_Info.XSE_Acronym", &empty_string)?
@@ -274,18 +317,13 @@ impl YamlData {
                 .extract(py)?,
             suspects_stack_list: get_value(&game_data, "Crashlog_Stack_Check", &empty_dict)?
                 .extract(py)?,
-            game_mods_conf: get_value(&game_data, "Mods_CONF", &empty_dict)?
-                .extract(py)?,
-            game_mods_core: get_value(&game_data, "Mods_CORE", &empty_dict)?
-                .extract(py)?,
+            game_mods_conf: get_value(&game_data, "Mods_CONF", &empty_dict)?.extract(py)?,
+            game_mods_core: get_value(&game_data, "Mods_CORE", &empty_dict)?.extract(py)?,
             game_mods_core_folon: get_value(&game_data, "Mods_CORE_FOLON", &empty_dict)?
                 .extract(py)?,
-            game_mods_freq: get_value(&game_data, "Mods_FREQ", &empty_dict)?
-                .extract(py)?,
-            game_mods_opc2: get_value(&game_data, "Mods_OPC2", &empty_dict)?
-                .extract(py)?,
-            game_mods_solu: get_value(&game_data, "Mods_SOLU", &empty_dict)?
-                .extract(py)?,
+            game_mods_freq: get_value(&game_data, "Mods_FREQ", &empty_dict)?.extract(py)?,
+            game_mods_opc2: get_value(&game_data, "Mods_OPC2", &empty_dict)?.extract(py)?,
+            game_mods_solu: get_value(&game_data, "Mods_SOLU", &empty_dict)?.extract(py)?,
             game_version: get_value(&game_data, "Game_Info.GameVersion", &empty_string)?
                 .extract(py)?,
             game_version_new: get_value(&game_data, "Game_Info.GameVersionNEW", &empty_string)?
@@ -294,8 +332,12 @@ impl YamlData {
                 .extract(py)?,
 
             // Ignore YAML values
-            ignore_list: get_value(&ignore_data, &format!("CLASSIC_Ignore_{}", game), &empty_list)?
-                .extract(py)?,
+            ignore_list: get_value(
+                &ignore_data,
+                &format!("CLASSIC_Ignore_{}", game),
+                &empty_list,
+            )?
+            .extract(py)?,
         })
     }
 }
