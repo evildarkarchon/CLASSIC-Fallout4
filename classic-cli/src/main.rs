@@ -41,7 +41,7 @@ async fn run() -> Result<()> {
 
     // Load or create configuration
     output.print_info("Loading configuration...");
-    let config = CliConfig::load_or_create(&config_path, &args)
+    let config = config::load_or_create_config(&config_path, &args)
         .await
         .context("Failed to load configuration")?;
 

@@ -1,0 +1,56 @@
+[package]
+name = "classic-tui"
+version = "0.1.0"
+edition = "2021"
+authors = ["CLASSIC Team"]
+description = "CLASSIC Terminal User Interface - High-performance TUI for crash log analysis"
+license = "MIT"
+
+[[bin]]
+name = "classic-tui"
+path = "src/main.rs"
+
+[dependencies]
+# TUI Framework
+ratatui = "0.29.0"
+crossterm = "0.29.0"
+
+# Async runtime
+tokio = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Business logic crates (NO PyO3 overhead - direct Rust access)
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+classic-database-core = { path = "../classic-database-core" }
+classic-yaml-core = { path = "../classic-yaml-core" }
+classic-config-core = { path = "../classic-config-core" }
+classic-shared = { path = "../classic-shared" }
+
+# TUI utilities
+tui-input = "0.14.0"
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true

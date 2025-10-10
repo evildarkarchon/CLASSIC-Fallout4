@@ -11,7 +11,7 @@ pub mod output;
 
 // Re-export commonly used types
 pub use args::CliArgs;
-pub use config::{CliConfig, PathConfig};
-pub use error::{CliError, print_error_detail};
+pub use config::{load_or_create_config, CliConfig, PathConfig};
+pub use error::{print_error_detail, CliError};
 pub use executor::ScanExecutor;
 pub use output::{OutputFormatter, ScanStats};

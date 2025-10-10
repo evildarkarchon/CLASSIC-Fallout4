@@ -1,4 +1,6 @@
-use classic_cli::{CliArgs, CliConfig, OutputFormatter, PathConfig, ScanStats};
+use classic_cli::{
+    load_or_create_config, CliArgs, CliConfig, OutputFormatter, PathConfig, ScanStats,
+};
 use std::path::PathBuf;
 use tempfile::tempdir;
 use tokio::fs;
@@ -54,9 +56,7 @@ mod config_integration {
         };
 
         // Load config with CLI args
-        let loaded = CliConfig::load_or_create(&config_path, &args)
-            .await
-            .unwrap();
+        let loaded = load_or_create_config(&config_path, &args).await.unwrap();
 
         // Verify CLI arg took precedence
         assert!(loaded.fcx_mode);

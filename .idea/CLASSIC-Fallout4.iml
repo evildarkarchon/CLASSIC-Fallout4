@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/classic-cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-cli/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-config-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-config-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-database-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-database-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-file-io-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-file-io-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-scanlog-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-scanlog-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-shared/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-shared/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-tui/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-yaml-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-yaml-py/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/classic-core/target" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
     <orderEntry type="jdk" jdkName="Python 3.13 virtualenv at C:\Users\evild\PycharmProjects\CLASSIC-Fallout4\.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

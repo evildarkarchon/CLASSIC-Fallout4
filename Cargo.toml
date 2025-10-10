@@ -22,6 +22,7 @@ members = [
 
     # Native Applications
     "classic-cli",
+    "classic-tui",
 ]
 resolver = "2"
 
@@ -75,6 +76,8 @@ serde_json = "1.0"
 # Logging
 log = "0.4"
 env_logger = "0.11"
+tracing = "0.1"
+tracing-subscriber = "0.3"
 
 # Testing
 tempfile = "3.18"

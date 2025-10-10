@@ -10,8 +10,11 @@
 //! This crate uses the shared global Tokio runtime from classic-shared.
 //! All async operations use `classic_shared::get_runtime().block_on()`.
 
+pub mod config;
 pub mod yamldata;
-pub use yamldata::{YamlDataCore, ConfigError};
+
+pub use config::{ClassicConfig, PathConfig};
+pub use yamldata::{ConfigError, YamlDataCore};
 
 // Re-export get_runtime from classic-shared for convenience
 pub use classic_shared::get_runtime;
