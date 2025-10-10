@@ -285,6 +285,11 @@ impl ReportComposer {
         result
     }
 
+    /// Get the number of fragments
+    pub fn fragment_count(&self) -> usize {
+        self.fragments.len()
+    }
+
     /// Process fragments in parallel with a transformation function
     pub fn process_fragments_parallel<F>(&mut self, transform: F)
     where

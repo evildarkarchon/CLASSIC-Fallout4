@@ -4,10 +4,11 @@
 //! functionality using pure Rust data structures.
 
 use crate::error::Result;
+use crate::mod_detector;
 use classic_database_core::DatabasePool;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use rayon::prelude::*;
 use std::sync::Arc;
 use linked_hash_map::LinkedHashMap;
@@ -24,10 +25,11 @@ pub struct FormIDAnalyzerCore {
     crashgen_name: String,
     // Database pool for FormID lookups (from classic-database-core)
     db_pool: Option<Arc<DatabasePool>>,
-    // Important mods lists for priority matching
-    important_mods: Vec<String>,
-    mods_single: Vec<String>,
-    mods_double: Vec<String>,
+    // Mod detection dictionaries (from YAML configuration)
+    // These are used by the mod_detector module functions
+    important_mods: HashMap<String, String>,  // game_mods_core
+    mods_single: HashMap<String, String>,     // game_mods_freq, _solu, _opc2
+    mods_double: HashMap<String, String>,     // game_mods_conf (conflicts)
 }
 
 impl FormIDAnalyzerCore {
@@ -36,9 +38,9 @@ impl FormIDAnalyzerCore {
         db_pool: Option<Arc<DatabasePool>>,
         show_formid_values: bool,
         crashgen_name: String,
-        important_mods: Vec<String>,
-        mods_single: Vec<String>,
-        mods_double: Vec<String>,
+        important_mods: HashMap<String, String>,
+        mods_single: HashMap<String, String>,
+        mods_double: HashMap<String, String>,
     ) -> Result<Self> {
         Ok(Self {
             show_formid_values,
@@ -153,6 +155,40 @@ impl FormIDAnalyzerCore {
         } else {
             None
         }
+    }
+
+    /// Detect single mods (delegates to mod_detector::detect_mods_single)
+    /// Uses the mods_single dictionary for detection
+    pub fn detect_mods_single_basic(
+        &self,
+        crashlog_plugins: &HashMap<String, String>,
+    ) -> Result<Vec<String>> {
+        mod_detector::detect_mods_single(self.mods_single.clone(), crashlog_plugins.clone())
+    }
+
+    /// Detect mod conflicts (delegates to mod_detector::detect_mods_double)
+    /// Uses the mods_double dictionary for conflict detection
+    pub fn detect_mods_conflicts(
+        &self,
+        crashlog_plugins: &HashMap<String, String>,
+    ) -> Result<Vec<String>> {
+        mod_detector::detect_mods_double(self.mods_double.clone(), crashlog_plugins.clone())
+    }
+
+    /// Detect important mods (delegates to mod_detector::detect_mods_important)
+    /// Uses the important_mods dictionary for detection
+    pub fn detect_mods_important_basic(
+        &self,
+        crashlog_plugins: &HashMap<String, String>,
+        gpu_rival: Option<&str>,
+        xse_modules: &HashSet<String>,
+    ) -> Result<Vec<String>> {
+        mod_detector::detect_mods_important(
+            self.important_mods.clone(),
+            crashlog_plugins.clone(),
+            gpu_rival,
+            xse_modules.clone(),
+        )
     }
 }
 

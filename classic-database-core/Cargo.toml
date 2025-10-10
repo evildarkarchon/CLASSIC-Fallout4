@@ -8,7 +8,7 @@ description = "Pure Rust database operations for CLASSIC (no PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+crate-type = ["rlib"] # Pure Rust library only - no PyO3
 
 [dependencies]
 # CLASSIC shared utilities
@@ -23,6 +23,7 @@ tokio = { workspace = true, features = ["full"] }
 # Caching and concurrency
 dashmap = { workspace = true }
 parking_lot = { workspace = true }
+num_cpus = { workspace = true }
 
 # Error handling
 anyhow = { workspace = true }

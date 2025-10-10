@@ -10,16 +10,13 @@
 //! - Dynamic table name support for different games
 
 use dashmap::DashMap;
-use rusqlite::{Connection, params, ToSql};
+use log::{debug, error, info, warn};
+use rusqlite::{params, Connection, ToSql};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use log::{debug, error, warn, info};
-
-// Use the global runtime from classic-shared (ONE RUNTIME RULE)
-use classic_shared::get_runtime;
 
 /// Database errors
 #[derive(Debug, Error)]
@@ -71,10 +68,8 @@ struct ConnectionWrapper {
 impl ConnectionWrapper {
     fn new(path: &Path) -> Result<Self, DatabaseError> {
         // Open database in read-only mode with SQLITE_OPEN_READ_ONLY flag
-        let conn = Connection::open_with_flags(
-            path,
-            rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY
-        ).map_err(|e| DatabaseError::OpenError(format!("{:?}: {}", path, e)))?;
+        let conn = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(|e| DatabaseError::OpenError(format!("{:?}: {}", path, e)))?;
 
         // Read-only optimizations (non-modifying PRAGMAs)
         conn.pragma_update(None, "cache_size", 10000)?;
@@ -100,23 +95,45 @@ pub struct DatabasePool {
     connections: Arc<DashMap<PathBuf, Arc<Mutex<ConnectionWrapper>>>>,
     query_cache: Arc<DashMap<String, CacheEntry>>,
     cache_ttl: Arc<RwLock<Duration>>,
-    max_connections: usize,
+    max_connections: Arc<RwLock<Option<usize>>>,
     stats: Arc<RwLock<PoolStatistics>>,
     game_table: Arc<RwLock<String>>,
     db_paths: Arc<RwLock<Vec<PathBuf>>>,
 }
 
 impl DatabasePool {
-    /// Create a new database pool
-    pub fn new(max_connections: usize, cache_ttl: Duration, game_table: String) -> Self {
-        info!("Initializing DatabasePool with max_connections={}, cache_ttl={:?}, game_table={}",
-              max_connections, cache_ttl, game_table);
+    /// Calculate optimal max_connections based on system resources
+    fn calculate_max_connections() -> usize {
+        // Base on available CPU cores with reasonable bounds
+        let cpus = num_cpus::get();
+        let optimal = cpus * 2; // 2 connections per CPU core
+
+        // Clamp between 4 and 32 to avoid extremes
+        optimal.clamp(4, 32)
+    }
+
+    /// Create a new database pool with optional max_connections
+    /// If max_connections is None, it will be calculated dynamically based on CPU cores
+    pub fn new(max_connections: Option<usize>, cache_ttl: Duration, game_table: String) -> Self {
+        let max_conn = max_connections.unwrap_or_else(Self::calculate_max_connections);
+
+        info!(
+            "Initializing DatabasePool with max_connections={} ({}), cache_ttl={:?}, game_table={}",
+            max_conn,
+            if max_connections.is_some() {
+                "explicit"
+            } else {
+                "auto-calculated"
+            },
+            cache_ttl,
+            game_table
+        );
 
         Self {
             connections: Arc::new(DashMap::new()),
             query_cache: Arc::new(DashMap::new()),
             cache_ttl: Arc::new(RwLock::new(cache_ttl)),
-            max_connections,
+            max_connections: Arc::new(RwLock::new(Some(max_conn))),
             stats: Arc::new(RwLock::new(PoolStatistics::default())),
             game_table: Arc::new(RwLock::new(game_table)),
             db_paths: Arc::new(RwLock::new(Vec::new())),
@@ -165,11 +182,11 @@ impl DatabasePool {
         &self,
         formid: &str,
         plugin: &str,
-        table: Option<&str>
+        table: Option<&str>,
     ) -> Result<Option<String>, DatabaseError> {
         let game_table = match table {
             Some(t) => t.to_string(),
-            None => self.game_table.read().unwrap().clone()
+            None => self.game_table.read().unwrap().clone(),
         };
 
         let cache_key = format!("{}:{}:{}", game_table, formid, plugin);
@@ -217,18 +234,17 @@ impl DatabasePool {
 
             let result = tokio::task::spawn_blocking(move || {
                 let conn = conn_arc.lock().unwrap();
-                conn.conn.query_row(
-                    &query_clone,
-                    params![formid_clone, plugin_clone],
-                    |row| row.get::<_, String>(0)
-                ).ok()
-            }).await.map_err(|e| DatabaseError::JoinError(e.to_string()))?;
+                conn.conn
+                    .query_row(&query_clone, params![formid_clone, plugin_clone], |row| {
+                        row.get::<_, String>(0)
+                    })
+                    .ok()
+            })
+            .await
+            .map_err(|e| DatabaseError::JoinError(e.to_string()))?;
 
             if let Some(value) = result {
-                query_cache.insert(
-                    cache_key.clone(),
-                    CacheEntry::new(value.clone(), cache_ttl)
-                );
+                query_cache.insert(cache_key.clone(), CacheEntry::new(value.clone(), cache_ttl));
                 debug!("Found FormID {} in database {:?}", formid, db_path);
                 return Ok(Some(value));
             }
@@ -243,14 +259,17 @@ impl DatabasePool {
         &self,
         formid_plugin_pairs: Vec<(String, String)>,
         table: Option<&str>,
-        batch_size: usize
+        batch_size: usize,
     ) -> Result<HashMap<String, String>, DatabaseError> {
         let game_table = match table {
             Some(t) => t.to_string(),
-            None => self.game_table.read().unwrap().clone()
+            None => self.game_table.read().unwrap().clone(),
         };
 
-        info!("Starting batch lookup for {} FormID/plugin pairs", formid_plugin_pairs.len());
+        info!(
+            "Starting batch lookup for {} FormID/plugin pairs",
+            formid_plugin_pairs.len()
+        );
 
         let connections = self.connections.clone();
         let query_cache = self.query_cache.clone();
@@ -293,7 +312,8 @@ impl DatabasePool {
 
         // Process uncached pairs in batches
         for batch in uncached_pairs.chunks(batch_size) {
-            let conditions = batch.iter()
+            let conditions = batch
+                .iter()
                 .map(|_| "(formid=? COLLATE nocase AND plugin=? COLLATE nocase)")
                 .collect::<Vec<_>>()
                 .join(" OR ");
@@ -303,7 +323,8 @@ impl DatabasePool {
                 game_table, conditions
             );
 
-            let params: Vec<String> = batch.iter()
+            let params: Vec<String> = batch
+                .iter()
                 .flat_map(|(f, p)| vec![f.clone(), p.clone()])
                 .collect();
 
@@ -319,9 +340,8 @@ impl DatabasePool {
 
                     match conn.conn.prepare(&query_clone) {
                         Ok(mut stmt) => {
-                            let param_refs: Vec<&dyn ToSql> = params_clone.iter()
-                                .map(|s| s as &dyn ToSql)
-                                .collect();
+                            let param_refs: Vec<&dyn ToSql> =
+                                params_clone.iter().map(|s| s as &dyn ToSql).collect();
 
                             match stmt.query(&param_refs[..]) {
                                 Ok(mut rows) => {
@@ -329,34 +349,33 @@ impl DatabasePool {
                                         if let (Ok(formid), Ok(plugin), Ok(entry)) = (
                                             row.get::<_, String>(0),
                                             row.get::<_, String>(1),
-                                            row.get::<_, String>(2)
+                                            row.get::<_, String>(2),
                                         ) {
                                             let key = format!("{}:{}", formid, plugin);
                                             batch_res.insert(key, entry);
                                         }
                                     }
-                                },
+                                }
                                 Err(e) => {
                                     error!("Batch query execution error in {:?}: {}", db_path, e);
                                 }
                             }
-                        },
+                        }
                         Err(e) => {
                             error!("Failed to prepare batch query in {:?}: {}", db_path, e);
                         }
                     }
                     batch_res
-                }).await.map_err(|e| DatabaseError::JoinError(e.to_string()))?;
+                })
+                .await
+                .map_err(|e| DatabaseError::JoinError(e.to_string()))?;
 
                 // Cache and collect results
                 for (key, value) in batch_results {
                     let parts: Vec<&str> = key.split(':').collect();
                     if parts.len() == 2 {
                         let cache_key = format!("{}:{}:{}", game_table, parts[0], parts[1]);
-                        query_cache.insert(
-                            cache_key,
-                            CacheEntry::new(value.clone(), cache_ttl)
-                        );
+                        query_cache.insert(cache_key, CacheEntry::new(value.clone(), cache_ttl));
                         results.insert(key, value);
                     }
                 }
@@ -407,9 +426,30 @@ impl DatabasePool {
         }
     }
 
+    /// Get current max_connections setting
+    pub fn get_max_connections(&self) -> Option<usize> {
+        self.max_connections.read().ok().and_then(|guard| *guard)
+    }
+
+    /// Set max_connections (for runtime adjustment)
+    pub fn set_max_connections(&self, max_conn: usize) {
+        if let Ok(mut max_connections) = self.max_connections.write() {
+            info!("Updating max_connections to: {}", max_conn);
+            *max_connections = Some(max_conn);
+        }
+    }
+
+    /// Recalculate max_connections based on current system resources
+    pub fn recalculate_max_connections(&self) {
+        let new_max = Self::calculate_max_connections();
+        self.set_max_connections(new_max);
+    }
+
     /// Get pool statistics
     pub fn get_stats(&self) -> Result<PoolStatistics, DatabaseError> {
-        let stats = self.stats.read()
+        let stats = self
+            .stats
+            .read()
             .map_err(|e| DatabaseError::QueryError(e.to_string()))?;
         Ok(stats.clone())
     }
@@ -441,7 +481,9 @@ impl DatabasePool {
                     let _ = conn.conn.execute("VACUUM", []);
                     let _ = conn.conn.execute("ANALYZE", []);
                 }
-            }).await.map_err(|e| DatabaseError::JoinError(e.to_string()))?;
+            })
+            .await
+            .map_err(|e| DatabaseError::JoinError(e.to_string()))?;
         }
         Ok(())
     }
@@ -456,20 +498,34 @@ mod tests {
     fn test_cache_entry_expiry() {
         let entry = CacheEntry::new("test".to_string(), Duration::from_millis(10));
         assert!(!entry.is_expired());
-        
+
         std::thread::sleep(Duration::from_millis(20));
         assert!(entry.is_expired());
     }
 
     #[test]
     fn test_pool_creation() {
-        let pool = DatabasePool::new(
-            10,
-            Duration::from_secs(300),
-            "Fallout4".to_string()
-        );
-        
+        let pool = DatabasePool::new(Some(10), Duration::from_secs(300), "Fallout4".to_string());
+
         assert_eq!(pool.get_game_table(), "Fallout4");
         assert_eq!(pool.cache_size(), 0);
+    }
+
+    #[test]
+    fn test_pool_auto_max_connections() {
+        let pool = DatabasePool::new(None, Duration::from_secs(300), "Fallout4".to_string());
+
+        assert_eq!(pool.get_game_table(), "Fallout4");
+        assert_eq!(pool.cache_size(), 0);
+
+        // Verify max_connections was calculated
+        let max_conn = pool.max_connections.read().unwrap();
+        assert!(max_conn.is_some());
+        let conn = max_conn.unwrap();
+        assert!(
+            conn >= 4 && conn <= 32,
+            "max_connections should be between 4 and 32, got {}",
+            conn
+        );
     }
 }

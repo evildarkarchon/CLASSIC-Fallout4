@@ -2,6 +2,7 @@
 
 use classic_scanlog_core::FormIDAnalyzerCore;
 use pyo3::prelude::*;
+use std::collections::HashMap;
 
 /// Python wrapper for FormIDAnalyzerCore
 #[pyclass(name = "FormIDAnalyzerCore")]
@@ -12,13 +13,13 @@ pub struct PyFormIDAnalyzerCore {
 #[pymethods]
 impl PyFormIDAnalyzerCore {
     #[new]
-    #[pyo3(signature = (show_formid_values=false, crashgen_name="".to_string(), important_mods=vec![], mods_single=vec![], mods_double=vec![]))]
+    #[pyo3(signature = (show_formid_values=false, crashgen_name="".to_string(), important_mods=HashMap::new(), mods_single=HashMap::new(), mods_double=HashMap::new()))]
     pub fn new(
         show_formid_values: bool,
         crashgen_name: String,
-        important_mods: Vec<String>,
-        mods_single: Vec<String>,
-        mods_double: Vec<String>,
+        important_mods: HashMap<String, String>,
+        mods_single: HashMap<String, String>,
+        mods_double: HashMap<String, String>,
     ) -> PyResult<Self> {
         let inner = FormIDAnalyzerCore::new(
             None,  // db_pool not exposed to Python API (would need wrapper)

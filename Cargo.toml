@@ -39,6 +39,7 @@ dashmap = "6.1"
 parking_lot = "0.12"
 rayon = "1.10"
 crossbeam = "0.8"
+num_cpus = "1.16"
 
 # YAML
 yaml-rust2 = "0.10.4"

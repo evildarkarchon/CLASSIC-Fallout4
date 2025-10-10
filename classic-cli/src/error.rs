@@ -2,6 +2,7 @@ use std::fmt;
 
 /// CLI-specific error types with user-friendly messages
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum CliError {
     /// Configuration file error
     ConfigError(String),
@@ -41,7 +42,11 @@ impl fmt::Display for CliError {
                 write!(f, "Scan Error: {}\n\nTip: Check that crash logs are accessible and not corrupted.", msg)
             }
             CliError::IoError(msg) => {
-                write!(f, "I/O Error: {}\n\nTip: Check file permissions and disk space.", msg)
+                write!(
+                    f,
+                    "I/O Error: {}\n\nTip: Check file permissions and disk space.",
+                    msg
+                )
             }
         }
     }
@@ -75,6 +80,7 @@ impl From<anyhow::Error> for CliError {
 }
 
 /// Helper function to print detailed error with context
+#[allow(dead_code)]
 pub fn print_error_detail(error: &CliError) {
     use console::Style;
 

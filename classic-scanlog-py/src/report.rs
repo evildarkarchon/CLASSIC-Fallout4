@@ -1,6 +1,6 @@
 //! Python bindings for report generation - Thin wrapper over classic-scanlog-core
 
-use classic_scanlog_core::{ParallelReportProcessor, ReportComposer, ReportFragment, ReportGenerator, StringPool};
+use classic_scanlog_core::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 use pyo3::prelude::*;
 
 /// Python wrapper for StringPool
@@ -147,7 +147,7 @@ impl PyReportComposer {
 
     /// Get number of fragments
     pub fn fragment_count(&self) -> usize {
-        self.inner.fragments().len()
+        self.inner.fragment_count()
     }
 }
 
