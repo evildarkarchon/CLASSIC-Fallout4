@@ -27,6 +27,7 @@ pub struct ScanButton {
     scan_type: ScanType,
     state: ButtonState,
     shortcut: String,
+    dirty: bool, // Track if widget needs redraw
 }
 
 impl ScanButton {
@@ -37,6 +38,7 @@ impl ScanButton {
             scan_type,
             state: ButtonState::Idle,
             shortcut: shortcut.into(),
+            dirty: true, // Start dirty to force initial render
         }
     }
 
@@ -48,33 +50,62 @@ impl ScanButton {
     /// Start scanning
     pub fn start_scan(&mut self) {
         self.state = ButtonState::Scanning { progress: 0.0 };
+        self.dirty = true; // Mark dirty on state change
     }
 
     /// Update scan progress (0.0 to 1.0)
     pub fn update_progress(&mut self, progress: f64) {
         if let ButtonState::Scanning { progress: p } = &mut self.state {
-            *p = progress.clamp(0.0, 1.0);
+            let new_progress = progress.clamp(0.0, 1.0);
+            if (*p - new_progress).abs() > 0.01 {
+                // Only mark dirty if progress changed by >1%
+                *p = new_progress;
+                self.dirty = true;
+            }
         }
     }
 
     /// Mark scan as completed
     pub fn complete(&mut self) {
         self.state = ButtonState::Completed;
+        self.dirty = true; // Mark dirty on state change
     }
 
     /// Mark scan as failed with error
     pub fn error(&mut self, message: impl Into<String>) {
         self.state = ButtonState::Error(message.into());
+        self.dirty = true; // Mark dirty on state change
     }
 
     /// Reset to idle state
     pub fn reset(&mut self) {
         self.state = ButtonState::Idle;
+        self.dirty = true; // Mark dirty on state change
     }
 
     /// Check if currently scanning
     pub fn is_scanning(&self) -> bool {
         matches!(self.state, ButtonState::Scanning { .. })
+    }
+
+    /// Get current button state (for testing)
+    pub fn state(&self) -> &ButtonState {
+        &self.state
+    }
+
+    /// Check if widget needs redraw
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    /// Mark widget as clean after rendering
+    pub fn mark_clean(&mut self) {
+        self.dirty = false;
+    }
+
+    /// Force widget to be dirty (useful for external state changes)
+    pub fn mark_dirty(&mut self) {
+        self.dirty = true;
     }
 
     /// Render the scan button widget

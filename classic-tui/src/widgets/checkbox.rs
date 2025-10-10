@@ -11,6 +11,7 @@ pub struct Checkbox {
     label: String,
     checked: bool,
     focused: bool,
+    dirty: bool, // Track if widget needs redraw
 }
 
 impl Checkbox {
@@ -20,6 +21,7 @@ impl Checkbox {
             label: label.into(),
             checked,
             focused: false,
+            dirty: true, // Start dirty to force initial render
         }
     }
 
@@ -30,22 +32,44 @@ impl Checkbox {
 
     /// Set the checked state
     pub fn set_checked(&mut self, checked: bool) {
-        self.checked = checked;
+        if self.checked != checked {
+            self.checked = checked;
+            self.dirty = true; // Mark dirty on state change
+        }
     }
 
     /// Toggle the checked state
     pub fn toggle(&mut self) {
         self.checked = !self.checked;
+        self.dirty = true; // Mark dirty on state change
     }
 
     /// Set the focused state
     pub fn set_focused(&mut self, focused: bool) {
-        self.focused = focused;
+        if self.focused != focused {
+            self.focused = focused;
+            self.dirty = true; // Mark dirty on focus change (affects styling)
+        }
     }
 
     /// Check if focused
     pub fn is_focused(&self) -> bool {
         self.focused
+    }
+
+    /// Check if widget needs redraw
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    /// Mark widget as clean after rendering
+    pub fn mark_clean(&mut self) {
+        self.dirty = false;
+    }
+
+    /// Force widget to be dirty (useful for external state changes)
+    pub fn mark_dirty(&mut self) {
+        self.dirty = true;
     }
 
     /// Render the checkbox widget

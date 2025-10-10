@@ -12,6 +12,7 @@ pub struct FolderSelector {
     label: String,
     value: Option<PathBuf>,
     focused: bool,
+    dirty: bool, // Track if widget needs redraw
 }
 
 impl FolderSelector {
@@ -21,12 +22,16 @@ impl FolderSelector {
             label: label.into(),
             value: None,
             focused: false,
+            dirty: true, // Start dirty to force initial render
         }
     }
 
     /// Set the folder path
     pub fn set_value(&mut self, path: PathBuf) {
-        self.value = Some(path);
+        if self.value.as_ref() != Some(&path) {
+            self.value = Some(path);
+            self.dirty = true; // Mark dirty on value change
+        }
     }
 
     /// Get the current path
@@ -36,7 +41,10 @@ impl FolderSelector {
 
     /// Set focus state
     pub fn set_focused(&mut self, focused: bool) {
-        self.focused = focused;
+        if self.focused != focused {
+            self.focused = focused;
+            self.dirty = true; // Mark dirty on focus change (affects border color)
+        }
     }
 
     /// Check if the current path is valid (exists and is a directory)
@@ -45,6 +53,26 @@ impl FolderSelector {
             .as_ref()
             .map(|p| p.exists() && p.is_dir())
             .unwrap_or(false)
+    }
+
+    /// Check if this widget has focus
+    pub fn is_focused(&self) -> bool {
+        self.focused
+    }
+
+    /// Check if widget needs redraw
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    /// Mark widget as clean after rendering
+    pub fn mark_clean(&mut self) {
+        self.dirty = false;
+    }
+
+    /// Force widget to be dirty (useful for external state changes)
+    pub fn mark_dirty(&mut self) {
+        self.dirty = true;
     }
 
     /// Render the folder selector widget

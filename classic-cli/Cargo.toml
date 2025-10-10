@@ -45,6 +45,13 @@ hashlink = "0.10"
 
 [dev-dependencies]
 tempfile = { workspace = true }
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+proptest = "1.5"
+mockall = "0.13"
+
+[[bench]]
+name = "cli_benchmarks"
+harness = false
 
 [profile.release]
 opt-level = 3

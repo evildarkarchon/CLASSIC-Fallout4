@@ -12,6 +12,7 @@ pub struct OutputViewer {
     scroll_offset: usize,
     search_query: Option<String>,
     max_lines: usize,
+    dirty: bool, // Track if widget needs redraw
 }
 
 impl OutputViewer {
@@ -22,6 +23,7 @@ impl OutputViewer {
             scroll_offset: 0,
             search_query: None,
             max_lines: 10000, // Limit to prevent memory issues
+            dirty: true,      // Start dirty to force initial render
         }
     }
 
@@ -39,38 +41,83 @@ impl OutputViewer {
 
         // Auto-scroll to bottom
         self.scroll_offset = self.lines.len().saturating_sub(1);
+        self.dirty = true; // Mark dirty on content change
     }
 
     /// Clear all output
     pub fn clear(&mut self) {
         self.lines.clear();
         self.scroll_offset = 0;
+        self.dirty = true; // Mark dirty on content change
     }
 
     /// Scroll up by the specified number of lines
     pub fn scroll_up(&mut self, lines: usize) {
+        let old_offset = self.scroll_offset;
         self.scroll_offset = self.scroll_offset.saturating_sub(lines);
+        if old_offset != self.scroll_offset {
+            self.dirty = true; // Only mark dirty if scroll actually changed
+        }
     }
 
     /// Scroll down by the specified number of lines
     pub fn scroll_down(&mut self, lines: usize, visible_lines: usize) {
+        let old_offset = self.scroll_offset;
         let max_scroll = self.lines.len().saturating_sub(visible_lines);
         self.scroll_offset = (self.scroll_offset + lines).min(max_scroll);
+        if old_offset != self.scroll_offset {
+            self.dirty = true; // Only mark dirty if scroll actually changed
+        }
     }
 
     /// Set search query (not yet implemented in rendering)
     pub fn search(&mut self, query: String) {
         self.search_query = Some(query);
+        self.dirty = true; // Mark dirty on search change
     }
 
     /// Clear search query
     pub fn clear_search(&mut self) {
         self.search_query = None;
+        self.dirty = true; // Mark dirty on search change
     }
 
     /// Get the current number of lines
     pub fn line_count(&self) -> usize {
         self.lines.len()
+    }
+
+    /// Scroll to the top of the output
+    pub fn scroll_to_top(&mut self) {
+        let old_offset = self.scroll_offset;
+        self.scroll_offset = 0;
+        if old_offset != self.scroll_offset {
+            self.dirty = true;
+        }
+    }
+
+    /// Scroll to the bottom of the output
+    pub fn scroll_to_bottom(&mut self) {
+        let old_offset = self.scroll_offset;
+        self.scroll_offset = self.lines.len().saturating_sub(1);
+        if old_offset != self.scroll_offset {
+            self.dirty = true;
+        }
+    }
+
+    /// Check if widget needs redraw
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    /// Mark widget as clean after rendering
+    pub fn mark_clean(&mut self) {
+        self.dirty = false;
+    }
+
+    /// Force widget to be dirty (useful for external state changes)
+    pub fn mark_dirty(&mut self) {
+        self.dirty = true;
     }
 
     /// Render the output viewer widget

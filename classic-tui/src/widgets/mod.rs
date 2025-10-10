@@ -4,4 +4,4 @@ pub mod output_viewer;
 pub mod scan_button;
 pub mod status_bar;
 
-pub use checkbox::*;
+pub use checkbox::Checkbox;

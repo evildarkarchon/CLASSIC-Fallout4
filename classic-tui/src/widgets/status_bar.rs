@@ -9,6 +9,7 @@ use ratatui::{
 pub struct StatusBar {
     message: String,
     key_hints: String,
+    dirty: bool, // Track if widget needs redraw
 }
 
 impl StatusBar {
@@ -17,22 +18,49 @@ impl StatusBar {
         Self {
             message: String::new(),
             key_hints: " F1 Help | F5 Crash Scan | F6 Game Scan | Q Quit ".to_string(),
+            dirty: true, // Start dirty to force initial render
         }
     }
 
     /// Set the status message
     pub fn set_message(&mut self, message: impl Into<String>) {
-        self.message = message.into();
+        let new_message = message.into();
+        if self.message != new_message {
+            self.message = new_message;
+            self.dirty = true; // Mark dirty on message change
+        }
     }
 
     /// Clear the status message
     pub fn clear_message(&mut self) {
-        self.message.clear();
+        if !self.message.is_empty() {
+            self.message.clear();
+            self.dirty = true; // Mark dirty on message clear
+        }
     }
 
     /// Set the key hints
     pub fn set_key_hints(&mut self, hints: impl Into<String>) {
-        self.key_hints = hints.into();
+        let new_hints = hints.into();
+        if self.key_hints != new_hints {
+            self.key_hints = new_hints;
+            self.dirty = true; // Mark dirty on hints change
+        }
+    }
+
+    /// Check if widget needs redraw
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    /// Mark widget as clean after rendering
+    pub fn mark_clean(&mut self) {
+        self.dirty = false;
+    }
+
+    /// Force widget to be dirty (useful for external state changes)
+    pub fn mark_dirty(&mut self) {
+        self.dirty = true;
     }
 
     /// Render the status bar widget
