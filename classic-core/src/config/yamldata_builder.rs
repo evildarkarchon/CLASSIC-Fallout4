@@ -15,10 +15,91 @@ use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::path::PathBuf;
 use tokio::task::JoinSet;
 
-/// Rust equivalent of ClassicScanLogsInfo
+/// ```
+/// A data structure representing various YAML configuration and metadata settings used
+/// for game configurations, plugin management, warnings, and mod databases.
 ///
-/// This struct mirrors the Python dataclass fields exactly to ensure
-/// API compatibility when used from Python code.
+/// This structure is exposed to Python as a class using the `pyo3` crate.
+///```
+/// ## Fields
+///
+/// ### Game Configuration
+/// - `classic_game_hints`:
+///   - List of hints related to the classic game. Exposed as a `Py<PyList>`.
+/// - `classic_records_list`:
+///   - List of records for classic game versions. Exposed as a `Py<PyList>`.
+/// - `classic_version`:
+///   - The version of the classic game stored as a `String`.
+/// - `classic_version_date`:
+///   - Release date for the classic game version stored as a `String`.
+///
+/// ### Crashgen Configuration
+/// - `crashgen_name`:
+///   - The name associated with the crash generation setup stored as a `String`.
+/// - `crashgen_latest_og`:
+///   - Latest crash generation identifier for the original game stored as a `String`.
+/// - `crashgen_latest_vr`:
+///   - Latest crash generation identifier for the VR version stored as a `String`.
+/// - `crashgen_ignore`:
+///   - A Python object associated with crashgen ignore configuration. Exposed as `Py<PyAny>`.
+///
+/// ### Warnings
+/// - `warn_noplugins`:
+///   - Warning message for missing plugins stored as a `String`.
+/// - `warn_outdated`:
+///   - Warning message for outdated configurations stored as a `String`.
+///
+/// ### XSE Configuration
+/// - `xse_acronym`:
+///   - Acronym for the XSE configuration stored as a `String`.
+///
+/// ### Ignore Lists
+/// - `game_ignore_plugins`:
+///   - List of ignored plugins for the game stored as a `Py<PyList>`.
+/// - `game_ignore_records`:
+///   - List of ignored records for the game stored as a `Py<PyList>`.
+/// - `ignore_list`:
+///   - A general-purpose ignore list stored as a `Py<PyList>`.
+///
+/// ### Suspect Patterns
+/// - `suspects_error_list`:
+///   - A dictionary of suspect error patterns stored as a `Py<PyDict>`.
+/// - `suspects_stack_list`:
+///   - A dictionary of suspect stack patterns stored as a `Py<PyDict>`.
+///
+/// ### Mod Databases
+/// - `game_mods_conf`:
+///   - Configuration for game mods stored as a `Py<PyDict>`.
+/// - `game_mods_core`:
+///   - Core mods configuration stored as a `Py<PyDict>`.
+/// - `game_mods_core_folon`:
+///   - FOLON mod-specific core configuration stored as a `Py<PyDict>`.
+/// - `game_mods_freq`:
+///   - Frequently used mods stored as a `Py<PyDict>`.
+/// - `game_mods_opc2`:
+///   - Optional configuration #2 for mods stored as a `Py<PyDict>`.
+/// - `game_mods_solu`:
+///   - Solution-specific mods configuration stored as a `Py<PyDict>`.
+///
+/// ### UI Configuration
+/// - `autoscan_text`:
+///   - Text to be displayed in the autoscan section stored as a `String`.
+///
+/// ### Game Versions
+/// - `game_version`:
+///   - Current game version stored as a `String`. Typically converted to `Version` in Python.
+/// - `game_version_new`:
+///   - A new game version for potential updates stored as a `String`.
+/// - `game_version_vr`:
+///   - The version of the game associated with VR compatibility stored as a `String`.
+///
+/// ## Python Bindings
+/// All the fields in this struct are exposed to Python through the `#[pyo3(get)]` attribute,
+/// allowing them to be accessed as read-only properties in Python. Complex data types like
+/// `Py<PyList>` and `Py<PyDict>` are directly interoperable with Python lists and dictionaries.
+///
+/// This struct acts as a bridge for transferring configuration data from Rust to Python
+/// when utilizing the `pyo3` ecosystem.
 #[pyclass]
 pub struct YamlData {
     // Game configuration
@@ -118,10 +199,56 @@ impl YamlData {
 }
 
 impl YamlData {
-    /// Load all configuration from YAML files in parallel
+    /// ```rust
+    /// Loads and parses data from multiple YAML files required for the application.
     ///
-    /// This is the core performance optimization - loading multiple YAML files
-    /// in parallel using Tokio's async runtime.
+    /// This function validates the input directories, locates specific YAML files,
+    /// reads their contents asynchronously, and parses the data using a Python helper object.
+    ///```
+    /// # Arguments
+    ///
+    /// * `py` - The Python interpreter GIL token.
+    /// * `yaml_ops_py` - A Python object providing methods to parse YAML and extract values.
+    /// * `yaml_dirs` - A vector of directories where YAML files are located. Must contain at least
+    ///   three directories:
+    ///     1. Main directory containing "CLASSIC Main.yaml"
+    ///     2. Game-specific directory containing "CLASSIC <game>.yaml"
+    ///     3. Directory containing ignore configurations in "CLASSIC_Ignore.yaml".
+    /// * `game` - A string specifying the game identifier (used to locate game-specific YAML).
+    /// * `vr_mode` - A boolean flag indicating whether VR-specific values should be used.
+    ///
+    /// # Returns
+    ///
+    /// Returns an instance of the caller type (`Self`) which contains:
+    /// - Parsed data from the main YAML file.
+    /// - Game-specific settings and metadata.
+    /// - Ignored entries for processing, informed by the ignore YAML.
+    ///
+    /// The function extracts multiple nested values in a safe and validated way, providing
+    /// sensible defaults if specific keys are missing.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error in the following cases:
+    /// * `yaml_dirs` contains fewer than 3 directories.
+    /// * Any of the required YAML files (`CLASSIC Main.yaml`, `CLASSIC <game>.yaml`,
+    ///   or `CLASSIC Ignore.yaml`) are missing.
+    /// * Reading any YAML file fails (e.g., due to I/O issues).
+    /// * Parsing YAML content using the `py` helper fails.
+    /// * Extracting specific settings encounters runtime problems.
+    ///
+    /// # Notes
+    ///
+    /// This function uses asynchronous I/O (via Tokio and `JoinSet`) to read files
+    /// in parallel for better performance. However, parsing and some validation steps
+    /// occur synchronously after the I/O completes. 
+    ///
+    /// Nested value extractions, such as `get_setting`, rely on the Python operations
+    /// bound to the `yaml_ops_py` object passed as an argument. Defaults are provided
+    /// via empty strings, lists, or dictionaries when keys are missing.
+    ///
+    /// Fields such as `game_mods_conf`, `game_mods_core`, or `crashgen_ignore` are
+    /// processed further into Python objects (e.g., sets) when necessary.
     fn load_from_yaml_files(
         py: Python<'_>,
         yaml_ops_py: Py<PyAny>,
@@ -139,7 +266,7 @@ impl YamlData {
         // Construct file paths
         let main_yaml = yaml_dirs[0].join("CLASSIC Main.yaml");
         let game_yaml = yaml_dirs[1].join(format!("CLASSIC {}.yaml", game));
-        let ignore_yaml = yaml_dirs[2].join("CLASSIC_Ignore.yaml");
+        let ignore_yaml = yaml_dirs[2].join("CLASSIC Ignore.yaml");
 
         // Verify files exist before loading
         for path in [&main_yaml, &game_yaml, &ignore_yaml] {
@@ -342,7 +469,30 @@ impl YamlData {
     }
 }
 
-/// Python API function to create YamlData
+/// ```
+/// A Python-exposed function to create a `YamlData` instance.
+///
+/// This function wraps the `YamlData::new` constructor, allowing Python code 
+/// to create a `YamlData` object by providing the required arguments.
+///```
+/// # Arguments
+///
+/// * `py` - A reference to the Python interpreter, automatically provided by PyO3.
+/// * `yaml_dirs` - A vector of paths (`Vec<PathBuf>`) pointing to the directories 
+///   containing YAML files necessary for the `YamlData` object.
+/// * `game` - A `String` representing the name of the game related to the YAML data.
+/// * `vr_mode` - A `bool` flag that specifies whether the game is in VR (Virtual Reality) mode.
+///
+/// # Returns
+///
+/// Returns a `YamlData` instance wrapped in a `PyResult`, or an error if the creation fails.
+///
+/// # Examples
+///
+/// ```python
+/// from your_module import create_yamldata
+/// yamldata = create_yamldata(["path/to/yaml_dir"], "example_game", vr_mode=True)
+/// ```
 #[pyfunction]
 #[pyo3(signature = (yaml_dirs, game, vr_mode))]
 pub fn create_yamldata(

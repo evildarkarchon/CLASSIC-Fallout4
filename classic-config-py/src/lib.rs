@@ -3,6 +3,81 @@
 //! This crate provides thin PyO3 bindings for classic-config-core.
 //! It contains ONLY type conversions and Python wrappers - all business
 //! logic is in classic-config-core.
+//!
+//! ## Complete Usage Example
+//!
+//! ```python
+//! from classic_core import config
+//! from pathlib import Path
+//!
+//! # Load all configuration from YAML files
+//! yaml_dirs = [
+//!     Path("YAML/Main"),
+//!     Path("YAML/Games"),
+//!     Path("YAML/Ignore"),
+//! ]
+//!
+//! yamldata = config.YamlData(yaml_dirs, "Fallout4", False)
+//!
+//! # Access game configuration
+//! print(f"Game: {yamldata.crashgen_name}")
+//! print(f"Version: {yamldata.game_version}")
+//! print(f"XSE: {yamldata.xse_acronym}")  # "F4SE"
+//!
+//! # Access ignore lists for filtering
+//! ignore_plugins = yamldata.game_ignore_plugins  # ["Fallout4.esm", ...]
+//! ignore_records = yamldata.game_ignore_records  # ["System", ...]
+//! ignore_list = yamldata.ignore_list  # User-defined ignores
+//!
+//! # Access mod detection databases
+//! core_mods = yamldata.game_mods_core  # Essential mods
+//! freq_mods = yamldata.game_mods_freq  # Frequently problematic mods
+//! conf_mods = yamldata.game_mods_conf  # Conflicting mod pairs
+//! solu_mods = yamldata.game_mods_solu  # Solution mods
+//!
+//! # Access suspect pattern dictionaries
+//! error_patterns = yamldata.suspects_error_list  # Error message patterns
+//! stack_patterns = yamldata.suspects_stack_list  # Stack trace patterns
+//!
+//! # Access CLASSIC metadata
+//! print(f"CLASSIC Version: {yamldata.classic_version}")
+//! print(f"Date: {yamldata.classic_version_date}")
+//!
+//! # Functional API (alternative to class instantiation)
+//! yamldata2 = config.create_yamldata(yaml_dirs, "Skyrim", False)
+//! ```
+//!
+//! ## Performance Characteristics
+//!
+//! - **YAML loading**: Uses yaml-rust2 (15-30x faster than ruamel.yaml)
+//! - **Async I/O**: Non-blocking file loading with Tokio
+//! - **Single load**: Configuration loaded once, cached for lifetime of object
+//! - **Memory efficient**: Rust data structures with minimal Python overhead
+//!
+//! ## Thread Safety
+//!
+//! YamlData instances are immutable after creation and thread-safe. They can be
+//! shared across Python threads without additional synchronization.
+//!
+//! ```python
+//! from classic_core import config
+//! from threading import Thread
+//! from pathlib import Path
+//!
+//! # Load configuration once
+//! yamldata = config.YamlData([Path("YAML/Main")], "Fallout4", False)
+//!
+//! def worker(thread_id):
+//!     # Safe to access from multiple threads
+//!     mods = yamldata.game_mods_freq
+//!     print(f"Thread {thread_id}: {len(mods)} mods")
+//!
+//! threads = [Thread(target=worker, args=(i,)) for i in range(10)]
+//! for t in threads:
+//!     t.start()
+//! for t in threads:
+//!     t.join()
+//! ```
 
 use classic_config_core::{ConfigError, YamlDataCore};
 use classic_shared::get_runtime;

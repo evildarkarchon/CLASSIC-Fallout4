@@ -16,7 +16,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from CLASSIC_ScanLogs import ClassicScanLogs
+from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.Constants import YAML
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
@@ -33,7 +33,7 @@ class TuiScanHandler:
     Attributes:
         output_callback (Callable[[str], None] | None): Function used to send output messages
             during scan operations.
-        scanner (ClassicScanLogs | None): Instance of the crash log scanner used for scanning
+        scanner (ClassicScanLogsInfo | None): Instance of the crash log scanner used for scanning
             operations.
         current_task (asyncio.Task | None): The currently running task for a scan operation.
         is_scanning (bool): Indicates whether a scan is currently in progress.
@@ -46,7 +46,7 @@ class TuiScanHandler:
             output_callback: Function to call with output messages
         """
         self.output_callback = output_callback
-        self.scanner: ClassicScanLogs | None = None
+        self.scanner: ClassicScanLogsInfo | None = None
         self.current_task: asyncio.Task | None = None
         self.is_scanning = False
         self._scan_lock = asyncio.Lock()
@@ -117,9 +117,9 @@ class TuiScanHandler:
             self._send_output(f"⚠️ Could not update scan folder setting: {e}")
             return True, None  # Continue with default folder
 
-    async def _process_scan_results(self, results: list, scanner: ClassicScanLogs) -> None:
+    async def _process_scan_results(self, results: list, scanner: ClassicScanLogsInfo) -> None:
         """Process scan results and write reports."""
-        from CLASSIC_ScanLogs import write_report_to_file_async
+        from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file_async
 
         for i, result in enumerate(results):
             if isinstance(result, BaseException):
@@ -128,7 +128,7 @@ class TuiScanHandler:
                 crashlog_file, autoscan_report, trigger_scan_failed, _local_stats = result
                 await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, scanner)
 
-    async def _run_orchestrator_scan(self, scanner: ClassicScanLogs) -> None:
+    async def _run_orchestrator_scan(self, scanner: ClassicScanLogsInfo) -> None:
         """Run the scan using OrchestratorCore."""
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
@@ -176,7 +176,7 @@ class TuiScanHandler:
             self._send_output("🔍 Starting crash logs scan...")
 
             # Initialize scanner and message handler
-            self.scanner = ClassicScanLogs()
+            self.scanner = ClassicScanLogsInfo()
             init_message_handler(parent=None, is_gui_mode=False)
 
             # Setup custom folder if provided
@@ -234,14 +234,19 @@ class TuiScanHandler:
         try:
             self._send_output("🔍 Starting game files scan...")
 
-            # Import game scanner
-            from CLASSIC_ScanGame import main as scan_game_main
+            # Import game scanner functions
+            from ClassicLib.ScanGame import generate_game_combined_result, generate_mods_combined_result, manage_game_files
+            from ClassicLib import msg_info
 
             # Initialize message handler for TUI mode
             init_message_handler(parent=None, is_gui_mode=False)
 
             # Run the game scan
-            await asyncio.to_thread(scan_game_main)
+            await asyncio.to_thread(lambda: (
+                msg_info(generate_game_combined_result()),
+                msg_info(generate_mods_combined_result()),
+                manage_game_files("Backup ENB")
+            ))
 
             self._send_output("✅ Game files scan completed successfully")
 

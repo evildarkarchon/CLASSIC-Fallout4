@@ -31,7 +31,51 @@ use super::encoding::EncodingDetector;
 // Use the global runtime from lib.rs (ONE RUNTIME RULE)
 use crate::get_runtime;
 
-/// High-performance file I/O core with caching and encoding detection
+/// ```rust
+/// A class representing the core functionalities of a file I/O system in Rust, with support for 
+/// multi-level caching, concurrency control, and encoding detection. This struct is primarily used 
+/// for efficient file reading and metadata management.
+///```
+/// # Fields
+///
+/// * `encoding_detector` - An `Arc<EncodingDetector>` used to detect the encoding of text files. 
+///   It ensures thread-safe access and is shared across multiple instances.
+///
+/// * `read_cache` - An `Arc<RwLock<LruCache<PathBuf, String>>>` that serves as a cache for text file 
+///   contents. It uses a Least Recently Used (LRU) caching strategy to store file content and 
+///   avoid redundant reads for frequently accessed files.
+///
+/// * `path_cache` - An `Arc<DashMap<String, PathBuf>>` that maps file path strings to `PathBuf` 
+///   objects. This reduces the overhead of converting between string paths and `PathBuf` objects.
+///
+/// * `metadata_cache` - An `Arc<DashMap<PathBuf, FileMetadata>>` that stores metadata associated 
+///   with files. This cache provides efficient lookups of file metadata, such as size, modification 
+///   time, and permissions.
+///
+/// * `dds_cache` - An `Arc<RwLock<LruCache<PathBuf, DDSHeader>>>` that caches DDS (DirectDraw 
+///   Surface) headers for files. This is useful for applications that require frequent access to 
+///   DDS image metadata.
+///
+/// * `io_semaphore` - An `Arc<Semaphore>` that controls the maximum number of concurrent I/O 
+///   operations. This is especially important to prevent excessive resource usage when reading or 
+///   writing files in a multi-threaded environment.
+///
+/// * `default_encoding` - A `String` specifying the default encoding to be used when reading files. 
+///   This can serve as a fallback encoding in cases where the encoding cannot be determined.
+///
+/// * `default_errors` - A `String` reserved for handling error modes in the future. It is currently 
+///   unused but intended to provide flexibility for managing error-handling configurations later.
+///
+/// # Notes
+///
+/// This struct is designed to be thread-safe and efficient, leveraging Rust's concurrency primitives 
+/// such as `Arc`, `RwLock`, and `DashMap`. It is suitable for applications that require high-performance 
+/// file I/O operations and frequent access to cached data.
+///
+/// # Example Usage
+///
+/// This class can be used as a core component in higher-level abstractions for file I/O operations, 
+/// ensuring efficient data access and enhanced concurrency in Rust applications.
 #[pyclass]
 pub struct RustFileIOCore {
     encoding_detector: Arc<EncodingDetector>,

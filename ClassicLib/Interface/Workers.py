@@ -9,7 +9,7 @@ import asyncio
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from CLASSIC_ScanGame import write_combined_results
+from ClassicLib.ScanGame import write_combined_results
 from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.Update import UpdateCheckError, is_latest_version
@@ -70,11 +70,12 @@ class CrashLogsScanWorker(QObject):
         logger.debug("Starting crash logs scan with non-blocking async")
 
         # Import here to avoid circular dependency
-        from CLASSIC_ScanLogs import ClassicScanLogs, crashlogs_scan_async_pure
+        from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
+        from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan_async_pure
         from ClassicLib.ScanLog import FCXModeHandler
 
         # Initialize scanner
-        scanner = ClassicScanLogs()
+        scanner = ScanLogsExecutor()
         FCXModeHandler.reset_fcx_checks()
 
         # Create a new event loop for this thread

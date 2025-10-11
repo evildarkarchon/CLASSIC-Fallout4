@@ -9,9 +9,15 @@ from __future__ import annotations
 
 import asyncio
 import struct
+import time
 from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
+
+# Fix for Python 3.8+ compatibility with pyffi
+# time.clock() was removed in Python 3.8, replace with time.perf_counter()
+if not hasattr(time, 'clock'):
+    time.clock = time.perf_counter
 
 # Try to import optional DDS libraries
 try:

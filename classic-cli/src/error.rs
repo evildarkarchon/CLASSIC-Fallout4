@@ -98,7 +98,49 @@ impl From<anyhow::Error> for CliError {
     }
 }
 
-/// Helper function to print detailed error with context
+/// Prints detailed error information and troubleshooting tips to the standard error output.
+///
+/// This function formats the error message with a red and bold "ERROR:" header
+/// and includes appropriate troubleshooting suggestions based on the type of error encountered.
+/// It makes use of the `console::Style` crate to apply styles to the output for better readability.
+///
+/// ## Parameters
+/// - `error`: A reference to the `CliError` enum that represents the error to be displayed.
+///
+/// ## Error-Specific Troubleshooting
+///
+/// Depending on the variant of the `CliError`, the following troubleshooting tips are displayed:
+///
+/// - **ConfigError**:
+///   1. Verify that the `Settings.yaml` file uses proper syntax.
+///   2. Ensure the file is encoded in UTF-8 format.
+///   3. Run the application with default settings by deleting the configuration file to regenerate it.
+///
+/// - **YamlError**:
+///   1. Ensure the directory structure for YAML files is correct:
+///      - YAML/Main/CLASSIC Main.yaml
+///      - YAML/Games/CLASSIC Fallout4.yaml
+///      - YAML/Ignore/CLASSIC Ignore.yaml
+///   2. Verify that all required YAML files are present.
+///   3. Check the syntax of each YAML file.
+///
+/// - **DirectoryNotFound**:
+///   1. Use the `--scan-path` option to specify a custom crash log directory.
+///   2. Confirm that the directory `Documents/My Games/Fallout4/Crash Logs` exists.
+///   3. Ensure the game has been run at least once to generate the appropriate files.
+///
+/// - **NoCrashLogs**:
+///   1. Check if crash logs exist in the specified scan directory.
+///   2. Verify that the files start with the prefix `crash-`.
+///   3. Ensure the files have `.log` or `.txt` extensions.
+///
+/// - **Other Errors**:
+///   For errors not explicitly listed above, no additional troubleshooting tips are displayed.
+///
+/// ## Notes
+/// - The function outputs the error message and tips to the standard error stream (`eprintln!`).
+/// - Uses `console::Style` to apply ANSI text styles for better distinction between error messages
+///   and troubleshooting hints.
 #[allow(dead_code)]
 pub fn print_error_detail(error: &CliError) {
     use console::Style;

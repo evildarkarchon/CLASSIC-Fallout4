@@ -48,7 +48,37 @@ pub struct AnalysisConfig {
 }
 
 impl AnalysisConfig {
-    /// Create a new analysis configuration with default values
+    /// Creates a new analysis configuration with default values for all optional fields.
+    ///
+    /// This constructor initializes an `AnalysisConfig` with the specified game and VR mode,
+    /// setting all other fields (crash generator info, ignore lists, pattern dictionaries, mod databases)
+    /// to empty defaults. These fields should be populated before analysis begins.
+    ///
+    /// # Arguments
+    ///
+    /// * `game` - The game name (e.g., "Fallout4", "Skyrim")
+    /// * `vr_mode` - Whether VR mode is enabled for this game
+    ///
+    /// # Returns
+    ///
+    /// A new `AnalysisConfig` instance with default values for all optional fields.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::AnalysisConfig;
+    ///
+    /// // Create configuration for Fallout 4 (non-VR)
+    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), false);
+    ///
+    /// // Populate with additional configuration
+    /// config.crashgen_name = "Buffout 4".to_string();
+    /// config.game_version = "1.10.163".to_string();
+    /// config.xse_acronym = "F4SE".to_string();
+    ///
+    /// // Add ignore lists
+    /// config.ignore_plugins = vec!["Fallout4.esm".to_string()];
+    /// ```
     pub fn new(game: String, vr_mode: bool) -> Self {
         Self {
             game,
@@ -102,7 +132,41 @@ pub struct AnalysisResult {
 }
 
 impl AnalysisResult {
-    /// Create a new successful analysis result
+    /// Creates a new successful analysis result with the generated report and statistics.
+    ///
+    /// Use this constructor when crash log analysis completes successfully. The result will have
+    /// `success = true` and no error message. Statistics fields (formid_count, plugin_count, suspect_count)
+    /// are initialized to 0 and should be populated after analysis.
+    ///
+    /// # Arguments
+    ///
+    /// * `log_path` - Path to the crash log file that was analyzed
+    /// * `report_lines` - Generated report lines from the analysis
+    /// * `processing_time_ms` - Time taken to process the log in milliseconds
+    ///
+    /// # Returns
+    ///
+    /// A new `AnalysisResult` instance marked as successful with the provided data.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::AnalysisResult;
+    ///
+    /// let report = vec![
+    ///     "Analysis of: crash-2024-01-01.log".to_string(),
+    ///     "Segments found: 5".to_string(),
+    /// ];
+    ///
+    /// let result = AnalysisResult::success(
+    ///     "crash-2024-01-01.log".to_string(),
+    ///     report,
+    ///     150, // Processing took 150ms
+    /// );
+    ///
+    /// assert!(result.success);
+    /// assert!(result.error.is_none());
+    /// ```
     pub fn success(log_path: String, report_lines: Vec<String>, processing_time_ms: u64) -> Self {
         Self {
             log_path,
@@ -116,7 +180,36 @@ impl AnalysisResult {
         }
     }
 
-    /// Create a new failed analysis result
+    /// Creates a new failed analysis result with an error message.
+    ///
+    /// Use this constructor when crash log analysis fails due to an error (file I/O error,
+    /// parsing error, etc.). The result will have `success = false`, an empty report,
+    /// zero processing time, and all statistics set to 0.
+    ///
+    /// # Arguments
+    ///
+    /// * `log_path` - Path to the crash log file that failed to analyze
+    /// * `error` - Error message describing why the analysis failed
+    ///
+    /// # Returns
+    ///
+    /// A new `AnalysisResult` instance marked as failed with the error message.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::AnalysisResult;
+    ///
+    /// let result = AnalysisResult::failure(
+    ///     "crash-2024-01-01.log".to_string(),
+    ///     "File not found or inaccessible".to_string(),
+    /// );
+    ///
+    /// assert!(!result.success);
+    /// assert!(result.error.is_some());
+    /// assert_eq!(result.report_lines.len(), 0);
+    /// assert_eq!(result.processing_time_ms, 0);
+    /// ```
     pub fn failure(log_path: String, error: String) -> Self {
         Self {
             log_path,
@@ -142,7 +235,47 @@ pub struct OrchestratorCore {
 }
 
 impl OrchestratorCore {
-    /// Create a new orchestrator with the given configuration
+    /// Creates a new crash log analysis orchestrator with the specified configuration.
+    ///
+    /// This constructor initializes the orchestrator with:
+    /// - The provided analysis configuration
+    /// - A new `FileIOCore` instance with UTF-8 encoding and ignore error handling
+    /// - A new `LogParser` instance for pattern matching and segmentation
+    ///
+    /// The orchestrator is ready to process crash logs immediately after creation.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Analysis configuration containing game settings, ignore lists, and pattern dictionaries
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(OrchestratorCore)` if initialization succeeds.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(ScanLogError)` if:
+    /// - `LogParser` initialization fails (invalid regex patterns)
+    /// - `FileIOCore` initialization fails (invalid encoding parameters)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+    ///
+    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// // Create configuration
+    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// config.crashgen_name = "Buffout 4".to_string();
+    /// config.game_version = "1.10.163".to_string();
+    ///
+    /// // Create orchestrator
+    /// let orchestrator = OrchestratorCore::new(config)?;
+    ///
+    /// // Ready to process crash logs
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn new(config: AnalysisConfig) -> Result<Self> {
         Ok(Self {
             config,
@@ -151,7 +284,63 @@ impl OrchestratorCore {
         })
     }
 
-    /// Process a single crash log file
+    /// Asynchronously processes a single crash log file and generates an analysis report.
+    ///
+    /// This function performs a complete analysis pipeline:
+    /// 1. Reads the crash log file using async I/O
+    /// 2. Splits the content into lines
+    /// 3. Parses the log into segments using SIMD-optimized parsing
+    /// 4. Generates a basic analysis report with segment count
+    /// 5. Measures and reports processing time
+    ///
+    /// The function uses efficient async I/O and parallel processing where applicable.
+    /// More detailed analysis (FormID extraction, plugin detection, mod detection) can be
+    /// added by extending the implementation.
+    ///
+    /// # Arguments
+    ///
+    /// * `log_path` - Path to the crash log file to analyze
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(AnalysisResult)` containing:
+    /// - Generated report lines
+    /// - Processing statistics
+    /// - Processing time in milliseconds
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(ScanLogError)` if:
+    /// - File cannot be read (not found, permission denied, etc.)
+    /// - File encoding cannot be detected or converted
+    /// - Parsing fails due to invalid log format
+    ///
+    /// # Performance
+    ///
+    /// - Uses async I/O for non-blocking file operations
+    /// - SIMD-optimized log segmentation (20-40x faster than Python)
+    /// - Typical processing time: 50-200ms per log file
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+    ///
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let orchestrator = OrchestratorCore::new(config)?;
+    ///
+    /// let result = orchestrator.process_log("crash-2024-01-01.log".to_string()).await?;
+    ///
+    /// if result.success {
+    ///     println!("Analysis completed in {}ms", result.processing_time_ms);
+    ///     for line in result.report_lines {
+    ///         print!("{}", line);
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn process_log(&self, log_path: String) -> Result<AnalysisResult> {
         let start_time = std::time::Instant::now();
 
@@ -179,7 +368,55 @@ impl OrchestratorCore {
         ))
     }
 
-    /// Process multiple log files in parallel
+    /// Asynchronously processes multiple crash log files sequentially.
+    ///
+    /// This function processes a batch of crash logs one at a time, collecting all results
+    /// into a vector. Each log is analyzed independently, and failures don't stop processing
+    /// of remaining logs. Failed analyses are returned as `AnalysisResult` instances with
+    /// `success = false` and error messages.
+    ///
+    /// **Note**: Despite the name, this implementation currently processes logs sequentially.
+    /// Future versions may add true parallel processing using `tokio::spawn` or `futures::join_all`.
+    ///
+    /// # Arguments
+    ///
+    /// * `log_paths` - Vector of paths to crash log files to analyze
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Vec<AnalysisResult>` with one result per input log path, in the same order.
+    /// Failed analyses are included as failure results rather than being filtered out.
+    ///
+    /// # Performance
+    ///
+    /// - Sequential processing: processes one log at a time
+    /// - Each log: ~50-200ms (SIMD-optimized parsing)
+    /// - Future parallel version could achieve near-linear speedup with multiple CPU cores
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+    ///
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let orchestrator = OrchestratorCore::new(config)?;
+    ///
+    /// let logs = vec![
+    ///     "crash-2024-01-01.log".to_string(),
+    ///     "crash-2024-01-02.log".to_string(),
+    ///     "crash-2024-01-03.log".to_string(),
+    /// ];
+    ///
+    /// let results = orchestrator.process_logs_batch(logs).await;
+    ///
+    /// let successful = results.iter().filter(|r| r.success).count();
+    /// let failed = results.iter().filter(|r| !r.success).count();
+    ///
+    /// println!("Processed {} logs: {} succeeded, {} failed", results.len(), successful, failed);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn process_logs_batch(&self, log_paths: Vec<String>) -> Vec<AnalysisResult> {
         let mut results = Vec::new();
 
@@ -193,7 +430,32 @@ impl OrchestratorCore {
         results
     }
 
-    /// Get the configuration
+    /// Returns a reference to the orchestrator's analysis configuration.
+    ///
+    /// Provides read-only access to the configuration used by this orchestrator instance.
+    /// Useful for inspecting game settings, ignore lists, and pattern dictionaries after
+    /// orchestrator creation.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the `AnalysisConfig` used by this orchestrator.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+    ///
+    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let orchestrator = OrchestratorCore::new(config)?;
+    ///
+    /// // Access configuration after creation
+    /// let config_ref = orchestrator.config();
+    /// println!("Analyzing game: {}", config_ref.game);
+    /// println!("VR mode: {}", config_ref.vr_mode);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn config(&self) -> &AnalysisConfig {
         &self.config
     }

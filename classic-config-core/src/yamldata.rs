@@ -11,11 +11,58 @@ use std::path::PathBuf;
 use tokio::task::JoinSet;
 use yaml_rust2::{Yaml, YamlLoader};
 
-/// Pure Rust configuration data structure
+/// The `YamlDataCore` structure represents the core data configuration for YAML-based game settings and diagnostics.
+/// It stores various pieces of information related to game configurations, crash generation, warnings, mod databases,
+/// ignore lists, suspect patterns, and UI settings. This struct is primarily used for managing and organizing relevant
+/// data extracted from or utilized by a game configuration system.
 ///
-/// This struct contains all configuration data extracted from YAML files.
-/// All fields use standard Rust types (String, Vec, HashMap) instead of
-/// Python-specific types, making it usable in pure Rust contexts (CLI/TUI).
+/// # Fields
+///
+/// * `classic_game_hints` - A `Vec<String>` containing hints or tips for the classic game configuration.
+/// * `classic_records_list` - A `Vec<String>` storing a list of records related to the classic version.
+/// * `classic_version` - A `String` specifying the version number of the classic game.
+/// * `classic_version_date` - A `String` specifying the release or update date of the classic game version.
+///
+/// * `crashgen_name` - A `String` identifier for the crash generation configuration.
+/// * `crashgen_latest_og` - A `String` representing the latest original generation crash identifier.
+/// * `crashgen_latest_vr` - A `String` representing the latest VR (virtual reality) generation crash identifier.
+/// * `crashgen_ignore` - A `Vec<String>` converted from a Python set that lists items to be ignored during crash generation.
+///
+/// * `warn_noplugins` - A `String` containing a warning message for cases where no plugins are active or available.
+/// * `warn_outdated` - A `String` holding a warning message indicating the game version or configuration is outdated.
+///
+/// * `xse_acronym` - A `String` holding the acronym for the XSE (XML Scripting Engine) configuration setting.
+///
+/// * `game_ignore_plugins` - A `Vec<String>` that lists plugins to be ignored in the current game configuration.
+/// * `game_ignore_records` - A `Vec<String>` containing records to be ignored.
+/// * `ignore_list` - A `Vec<String>` listing entries to be collectively ignored.
+///
+/// * `suspects_error_list` - A `HashMap<String, String>` containing suspect error patterns mapped to descriptive explanations or identifiers.
+/// * `suspects_stack_list` - A `HashMap<String, String>` mapping suspect stack traces to their corresponding cleanup or diagnostic messages.
+///
+/// * `game_mods_conf` - A `HashMap<String, String>` holding configuration settings for game modification databases.
+/// * `game_mods_core` - A `HashMap<String, String>` storing core mod databases information.
+/// * `game_mods_core_folon` - A `HashMap<String, String>` specific to the `Folon` core mod configuration.
+/// * `game_mods_freq` - A `HashMap<String, String>` containing frequently used game mod entries.
+/// * `game_mods_opc2` - A `HashMap<String, String>` for a specific feature or mod database identified as `opc2`.
+/// * `game_mods_solu` - A `HashMap<String, String>` representing solution-related game mod configurations.
+///
+/// * `autoscan_text` - A `String` defining the text used in the "autoscan" UI component.
+///
+/// * `game_version` - A `String` holding the current game version.
+/// * `game_version_new` - A `String` indicating a newer version of the game, if available.
+/// * `game_version_vr` - A `String` specifying the version of the game for VR (virtual reality).
+///
+/// # Derivation Attributes
+///
+/// * `Debug` - Enables debug formatting for instances of the struct, primarily for debugging purposes.
+/// * `Clone` - Allows instances of the struct to be cloned, creating deep copies of all field values.
+///
+/// # Usage
+///
+/// This struct is typically used for storing and managing a large amount of configuration data required
+/// for game diagnostics, crash handling, plugin management, version tracking, and UI updates. Its design
+/// allows seamless integration with YAML configuration files, enabling structured data parsing and validation.
 #[derive(Debug, Clone)]
 pub struct YamlDataCore {
     // Game configuration

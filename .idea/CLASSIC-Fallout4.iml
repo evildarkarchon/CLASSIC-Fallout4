@@ -24,8 +24,9 @@
       <sourceFolder url="file://$MODULE_DIR$/classic-yaml-py/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/classic-core/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.13 virtualenv at C:\Users\evild\PycharmProjects\CLASSIC-Fallout4\.venv" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="uv (CLASSIC-Fallout4)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

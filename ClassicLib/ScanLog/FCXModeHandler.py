@@ -57,7 +57,7 @@ class FCXModeHandlerFragments:
         """
         if self.fcx_mode:
             try:
-                from CLASSIC_ScanGame import game_combined_result as scan_game_files
+                from ClassicLib.ScanGame import generate_game_combined_result as scan_game_files
             except ImportError:
                 # Fallback if the function doesn't exist
                 def scan_game_files() -> str:

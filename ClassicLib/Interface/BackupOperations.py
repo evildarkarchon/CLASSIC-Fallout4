@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
-from CLASSIC_ScanGame import game_files_manage
+from ClassicLib.ScanGame import manage_game_files
 from ClassicLib.Interface.UIHelpers import ENABLED_BUTTON_STYLE, create_separator
 
 if TYPE_CHECKING:
@@ -166,7 +166,7 @@ class BackupOperationsMixin:
 
             backup_type: str = parts[1]
             # Perform file operation
-            game_files_manage(selected_list, selected_mode)
+            manage_game_files(selected_list, selected_mode)
 
             # Update UI based on operation performed
             if selected_mode == "BACKUP":

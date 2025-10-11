@@ -18,7 +18,57 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 use thiserror::Error;
 
-/// Database errors
+/// Represents various errors that can occur when working with a database.
+///
+/// This enumeration uses the `thiserror` crate to provide descriptive error messages
+/// and support for error composition. Each variant corresponds to a specific type of
+/// database-related failure, making it easier to handle and debug issues.
+/// # Variants
+///
+/// * `OpenError(String)`  
+///   Occurs when the database file fails to open. Contains a string providing details
+///   about the specific cause of the failure.
+///
+/// * `QueryError(String)`  
+///   Represents an error that occurs while executing a database query. The associated
+///   string describes the nature of the failure.
+///
+/// * `NotFound(String)`  
+///   Indicates that a specified database file could not be found. The string value
+///   provides additional context or the name of the missing file.
+///
+/// * `IoError(std::io::Error)`  
+///   Wraps a standard I/O error that might occur during database file operations or
+///   any related I/O tasks.
+///
+/// * `RusqliteError(rusqlite::Error)`  
+///   Represents an error originating from the `rusqlite` library, which is used for
+///   database query handling. Includes the original `rusqlite::Error` for further details.
+///
+/// * `JoinError(String)`  
+///   Indicates an error related to task joining, such as when executing database
+///   operations in an asynchronous context. The associated string provides the details
+///   of the issue.
+///
+/// # Example
+///
+/// ```rust
+/// use your_crate::DatabaseError;
+/// use std::io;
+///
+/// fn example_function() -> Result<(), DatabaseError> {
+///     // Simulating an error case
+///     Err(DatabaseError::OpenError("Unable to open db file".to_string()))
+/// }
+///
+/// match example_function() {
+///     Ok(_) => println!("Database operation successful"),
+///     Err(e) => println!("Database operation failed: {}", e),
+/// }
+/// ```
+///
+/// This enum can be used with the `thiserror`'s `#[error]` attribute to seamlessly convert
+/// these errors into formatted error messages.
 #[derive(Debug, Error)]
 pub enum DatabaseError {
     #[error("Failed to open database: {0}")]
@@ -66,6 +116,42 @@ struct ConnectionWrapper {
 }
 
 impl ConnectionWrapper {
+    /// Creates a new instance of the database in read-only mode, with specific optimizations.
+    /// # Arguments
+    ///
+    /// * `path` - A reference to the path of the database file.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Self)` containing the newly created database instance if the connection is successful.
+    /// * `Err(DatabaseError)` if there is an error opening the database or setting the pragmas.
+    ///
+    /// # Errors
+    ///
+    /// This function will return a `DatabaseError::OpenError` if there is a failure to open the provided database path.
+    ///
+    /// # Behavior
+    ///
+    /// * The database connection is opened in read-only mode using the `SQLITE_OPEN_READ_ONLY` flag.
+    /// * Executes non-modifying PRAGMAs for optimization:
+    ///     - Sets the cache size to 10,000 pages using `PRAGMA cache_size`.
+    ///     - Configures the temporary storage to use memory via `PRAGMA temp_store = MEMORY`.
+    ///     - Configures the memory-mapped I/O size to 30,000,000 bytes via `PRAGMA mmap_size`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use std::path::Path;
+    /// use your_crate::{Database, DatabaseError};
+    ///
+    /// let db_path = Path::new("example.db");
+    /// let database = Database::new(db_path);
+    ///
+    /// match database {
+    ///     Ok(db) => println!("Database opened successfully in read-only mode."),
+    ///     Err(e) => eprintln!("Failed to open database: {:?}", e),
+    /// }
+    /// ```
     fn new(path: &Path) -> Result<Self, DatabaseError> {
         // Open database in read-only mode with SQLITE_OPEN_READ_ONLY flag
         let conn = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
@@ -90,7 +176,71 @@ pub struct PoolStatistics {
     pub active_connections: u64,
 }
 
-/// High-performance database pool with TTL caching (Pure Rust)
+/// `DatabasePool` represents a pool of database connections and provides mechanisms
+/// to manage, cache, and track statistics of these connections.
+///
+/// This struct encapsulates several key components associated with the management
+/// of database connections, caching for query efficiency, and configuration settings
+/// for the database system.
+/// ### Fields:
+///
+/// - `connections`: 
+///   An `Arc` of a `DashMap` that maps paths (`PathBuf`) to a thread-safe (via `Arc<Mutex<...>>`) 
+///   `ConnectionWrapper` object. This is used to manage the actual database connections, 
+///   ensuring thread-safe sharing among multiple consumers.
+///
+/// - `query_cache`: 
+///   An `Arc` of a `DashMap` mapping query strings (`String`) to `CacheEntry` objects. 
+///   The cache is used to store query results or metadata for improving performance
+///   by avoiding repeated queries for the same data set.
+///
+/// - `cache_ttl`: 
+///   An `Arc` of an `RwLock` that holds a `Duration` representing the "time-to-live" value for cache entries. 
+///   This ensures that cached queries are refreshed periodically.
+///
+/// - `max_connections`: 
+///   An `Arc` of an `RwLock` containing an optional `usize`. This limits the maximum number 
+///   of connections that can be maintained in the pool. If `None`, no connection limit is enforced.
+///
+/// - `stats`: 
+///   An `Arc` of an `RwLock` holding `PoolStatistics`, which keeps track of various metrics/statistics 
+///   related to connection pool usage, e.g., number of active connections, queries performed, etc.
+///
+/// - `game_table`: 
+///   An `Arc` of an `RwLock` containing a `String` representing the name of the central 
+///   table being accessed in the database for game-related operations.
+///
+/// - `db_paths`: 
+///   An `Arc` of an `RwLock` pointing to a vector of `PathBuf` objects, each representing a 
+///   potential file path to database files. This serves as a configuration for available database files.
+///
+/// ### Thread Safety:
+/// The use of `Arc` and various synchronization primitives (`Mutex`, `RwLock`, etc.) ensures that 
+/// this struct can be safely shared and accessed across multiple threads, making it suitable for 
+/// concurrent environments.
+///
+/// ### Potential Use Cases:
+/// - Centralized management of database connections in a multithreaded application.
+/// - Caching frequently accessed queries to reduce database load and improve query performance.
+/// - Tracking performance and usage statistics for optimized database interaction.
+///
+/// ### Example:
+/// ```rust
+/// use std::sync::Arc;
+/// use dashmap::DashMap;
+/// use std::time::Duration;
+/// use std::path::PathBuf;
+///
+/// let pool = DatabasePool {
+///     connections: Arc::new(DashMap::new()),
+///     query_cache: Arc::new(DashMap::new()),
+///     cache_ttl: Arc::new(RwLock::new(Duration::from_secs(300))),
+///     max_connections: Arc::new(RwLock::new(Some(100))),
+///     stats: Arc::new(RwLock::new(PoolStatistics::default())),
+///     game_table: Arc::new(RwLock::new(String::from("games"))),
+///     db_paths: Arc::new(RwLock::new(vec![PathBuf::from("./my_database.db")])),
+/// };
+/// ```
 pub struct DatabasePool {
     connections: Arc<DashMap<PathBuf, Arc<Mutex<ConnectionWrapper>>>>,
     query_cache: Arc<DashMap<String, CacheEntry>>,
@@ -102,7 +252,22 @@ pub struct DatabasePool {
 }
 
 impl DatabasePool {
-    /// Calculate optimal max_connections based on system resources
+    /// Calculates the optimal number of maximum connections.
+    ///
+    /// This function determines the maximum number of connections that can be handled
+    /// simultaneously based on the number of available CPU cores. It calculates the
+    /// optimal number as twice the number of CPU cores and ensures that the value
+    /// lies within a reasonable range by clamping it between 4 (minimum) and 32 (maximum).
+    /// # Returns
+    /// - `usize`: The calculated maximum number of connections.
+    ///
+    /// # Example
+    /// ```
+    /// let max_connections = calculate_max_connections();
+    /// println!("Max connections: {}", max_connections);
+    /// ```
+    ///
+    /// The result will vary depending on the number of CPU cores detected by the system.
     fn calculate_max_connections() -> usize {
         // Base on available CPU cores with reasonable bounds
         let cpus = num_cpus::get();
@@ -140,7 +305,51 @@ impl DatabasePool {
         }
     }
 
-    /// Initialize database connections for given paths
+    /// Asynchronously initializes database connections for the given database paths.
+    ///
+    /// This function ensures that only valid database paths are processed. If a database
+    /// file exists and is not already connected, a new database connection is created and
+    /// added to the internal connection cache. If a path is already connected, the function
+    /// skips creating a new connection. Invalid or non-existent paths are ignored, and a
+    /// warning is logged for each.
+    ///
+    /// The function also updates internal statistics, such as the total and active connection
+    /// counts, whenever a new connection is established. Finally, it writes the list of valid
+    /// database paths to the internal storage.
+    /// # Parameters
+    /// - `db_paths`: A vector of `PathBuf` representing file paths for the databases to initialize.
+    ///
+    /// # Returns
+    /// - `Ok(())`: If all database initialization steps completed successfully.
+    /// - `Err(DatabaseError)`: If an error occurred while attempting to create a new database connection.
+    ///
+    /// # Behavior
+    /// - Logs a warning for paths that do not exist.
+    /// - Logs a debug message for paths that are already connected.
+    /// - Logs an info message for successfully opened database connections.
+    /// - Updates the internal list of database paths and connection statistics.
+    ///
+    /// # Concurrency
+    /// This function uses:
+    /// - An internal `Arc` and `Mutex` to manage the shared database connection cache.
+    /// - A `RwLock` for safely updating the statistics and database path storage in a thread-safe manner.
+    ///
+    /// # Example
+    /// ```rust
+    /// use tokio::runtime::Runtime;
+    /// use std::path::PathBuf;
+    ///
+    /// let runtime = Runtime::new().unwrap();
+    /// let manager = DatabaseManager::new(); // Hypothetical struct containing the `initialize` method.
+    ///
+    /// let db_paths = vec![PathBuf::from("/path/to/db1"), PathBuf::from("/path/to/db2")];
+    ///
+    /// runtime.block_on(async {
+    ///     if let Err(e) = manager.initialize(db_paths).await {
+    ///         eprintln!("Failed to initialize databases: {:?}", e);
+    ///     }
+    /// });
+    /// ```
     pub async fn initialize(&self, db_paths: Vec<PathBuf>) -> Result<(), DatabaseError> {
         let connections = self.connections.clone();
         let stats = self.stats.clone();
@@ -177,7 +386,78 @@ impl DatabasePool {
         Ok(())
     }
 
-    /// Get FormID entry from database (optimized for CLASSIC's use case)
+    /// Retrieves an entry from a database or cache based on a `formid`, `plugin`, and an optional `table` name.
+    ///
+    /// This method checks a local cache first for the requested `formid` and `plugin`. If the requested data is
+    /// not found in the cache or if the cached data is expired, it proceeds by querying each connected
+    /// database in order (main database first, followed by local databases). The response is cached for future use
+    /// based on a configured Time-To-Live (TTL).
+    /// # Parameters
+    /// - `formid`: A reference to the unique identifier of the form being queried (case insensitive).
+    /// - `plugin`: A reference to the plugin associated with the form.
+    /// - `table`: An optional reference to the database table for the query. If `None`, a default table is used,
+    ///   derived from the object's internal state.
+    ///
+    /// # Returns
+    /// Returns `Ok(Some(String))` containing the entry value if the form is found in the cache or any connected
+    /// database. Returns `Ok(None)` if the form is not found. In case of errors during database access or 
+    /// execution, returns `Err(DatabaseError)`.
+    ///
+    /// # Behavior
+    /// 1. **Cache Check**:
+    ///    - First, the method checks if the requested entry is available in the local cache.
+    ///    - If found and not expired, the value is returned immediately as a cache hit.
+    ///    - If expired, the cache entry is removed, and the method proceeds to query the databases.
+    ///    
+    /// 2. **Statistics Tracking**:
+    ///    - Updates cache hit and miss statistics based on whether the entry was found in the cache or not.
+    ///    - Tracks the total number of queries performed.
+    ///
+    /// 3. **Database Query**:
+    ///    - Queries the provided table (or the default table if `table` is `None`) in each connected database (main database first).
+    ///    - If the entry is found, it is cached and returned immediately.
+    ///
+    /// 4. **Cache Insertion**:
+    ///    - If the entry is successfully retrieved from a database, it is inserted into the cache with the configured TTL.
+    ///
+    /// 5. **Failure Handling**:
+    ///    - If the form is not found in any database, logs a debug statement and returns `Ok(None)`.
+    ///    - Handles potential errors arising during spawning of blocking tasks or database query executions.
+    ///
+    /// # Example Usage
+    /// ```rust
+    /// let formid = "123456";
+    /// let plugin = "example_plugin";
+    /// let table = Some("example_table");
+    ///
+    /// match database.get_entry(formid, plugin, table).await {
+    ///     Ok(Some(entry)) => {
+    ///         println!("Found entry: {}", entry);
+    ///     },
+    ///     Ok(None) => {
+    ///         println!("Entry not found.");
+    ///     },
+    ///     Err(e) => {
+    ///         eprintln!("Error retrieving entry: {:?}", e);
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    /// This method can return a `DatabaseError` if any of the following occur:
+    /// - Failed to spawn a blocking thread for database queries.
+    /// - Errors while querying the database (e.g., SQL syntax error, database connection failure).
+    ///
+    /// # Notes
+    /// - The method uses a non-blocking approach to handle potentially long-running database queries.
+    /// - The cache is accessed concurrently using internal synchronization to maintain thread safety.
+    ///
+    /// # Debug Logs
+    /// The method logs debug information for debugging purposes, including:
+    /// - Cache hits or misses.
+    /// - Cache expiration events.
+    /// - Successful database queries and the source database files.
+    /// - Failed queries or absent entries.
     pub async fn get_entry(
         &self,
         formid: &str,
@@ -254,7 +534,71 @@ impl DatabasePool {
         Ok(None)
     }
 
-    /// Batch lookup for FormID entries
+    /// Retrieves a batch of entries from the database for the specified FormID/plugin pairs.
+    ///
+    /// This method performs an asynchronous batch lookup for a collection of FormID and plugin pairs.
+    /// It prioritizes retrieving data from a query cache with a time-to-live (TTL) mechanism. If the requested entries are not
+    /// cached or their cache entries have expired, it queries the database in configurable batch sizes to fetch the missing data,
+    /// stores it in the cache, and returns the aggregated results.
+    /// # Parameters
+    /// - `formid_plugin_pairs`: A `Vec` of `(String, String)` tuples where each tuple contains a FormID and a plugin name to query.
+    /// - `table`: An optional reference to a `str` specifying the database table name to use. If `None`, the default game table
+    ///   configured in `self.game_table` is used.
+    /// - `batch_size`: Specifies the number of FormID/plugin pairs to process in a single database query batch.
+    ///
+    /// # Returns
+    /// Returns a `Result` wrapping a `HashMap` where the key is a composite of `FormID:Plugin` and the value is the associated database entry string.
+    /// In the event of an error during execution, the function returns a `DatabaseError`.
+    ///
+    /// # Behavior and Process:
+    /// 1. **Cache Check**:
+    ///     - The method first checks if any of the FormID/plugin combinations exist in the query cache.
+    ///     - Entries that are found in the cache and are not expired are added to the `results`.
+    ///     - Expired cache entries are removed, and missing entries are added to an "uncached pairs" list for further database querying.
+    ///
+    /// 2. **Database Querying**:
+    ///     - If there are uncached pairs, they are grouped into batches of `batch_size`.
+    ///     - For each batch, an SQL query is executed to fetch the missing entries using the provided or default table name.
+    ///     - The queried results are parsed, cached for future lookups, and added to the final `results` map.
+    ///
+    /// 3. **Thread-Safe Metrics Tracking**:
+    ///     - During execution, cache hit, cache miss, and total query statistics are updated in a thread-safe manner.
+    ///
+    /// 4. **Error Handling**:
+    ///     - If an error occurs while preparing or executing a database query, the error is logged, and the process continues for other connections.
+    ///     - If a failure occurs in spawning or awaiting batch jobs via `tokio::task::spawn_blocking`, a `DatabaseError::JoinError` is returned.
+    ///
+    /// # Logs:
+    /// - The function logs the start and completion of the batch lookup process, including the count of FormID/plugin pairs processed and results found.
+    /// - Errors or failures encountered during database querying are logged with context.
+    ///
+    /// # Examples:
+    /// ```rust
+    /// let formid_plugin_pairs = vec![("123".to_string(), "plugin1.esp".to_string())];
+    /// let results = my_service
+    ///     .get_entries_batch(formid_plugin_pairs, Some("my_table"), 100)
+    ///     .await;
+    ///
+    /// match results {
+    ///     Ok(data) => {
+    ///         for (key, value) in data {
+    ///             println!("FormID:Plugin => {} with Entry {}", key, value);
+    ///         }
+    ///     }
+    ///     Err(err) => {
+    ///         eprintln!("Error occurred: {:?}", err);
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// # Errors:
+    /// - Returns `DatabaseError::JoinError` if there is an issue with the asynchronous task execution.
+    /// - Any database-related errors (e.g., query preparation or execution failures) are logged but do not stop the execution of other queries.
+    ///
+    /// # Notes:
+    /// - The method assumes the `connections` structure holds database connection handles.
+    /// - Queries utilize a case-insensitive collation setting (`COLLATE nocase`).
+    /// - This function is thread-safe, making use of properly synchronized structures for cache, statistics, and connection accesses.
     pub async fn get_entries_batch(
         &self,
         formid_plugin_pairs: Vec<(String, String)>,
@@ -386,7 +730,31 @@ impl DatabasePool {
         Ok(results)
     }
 
-    /// Set the game table name dynamically
+    /// Sets the game table value in a thread-safe manner.
+    ///
+    /// This method updates the shared `game_table` with the provided table name,
+    /// if a lock to the `RwLock` can be successfully acquired. Once the lock is
+    /// obtained, the new table name replaces the current one. The update is logged
+    /// for debugging or informational purposes.
+    /// # Parameters
+    /// - `table`: A `String` representing the new game table name to set.
+    ///
+    /// # Behavior
+    /// - Acquires a write lock on the internal `RwLock<String>` holding the game table value.
+    /// - Logs the operation using the `info!` macro.
+    /// - Sets the value of `game_table` to the given `table` string, if the lock is acquired successfully.
+    ///
+    /// # Notes
+    /// - If the `RwLock` is poisoned or cannot be locked for write access, the method will silently fail
+    ///   and no changes will be made to the game table.
+    /// - Ensure that logging is properly configured in the application to capture output from the 
+    ///   `info!` macro.
+    ///
+    /// # Example
+    /// ```rust
+    /// let game_state = GameState::new();
+    /// game_state.set_game_table(String::from("NewTable"));
+    /// ```
     pub fn set_game_table(&self, table: String) {
         if let Ok(mut game_table) = self.game_table.write() {
             info!("Setting game table to: {}", table);
@@ -471,7 +839,40 @@ impl DatabasePool {
         Ok(())
     }
 
-    /// Optimize database connections (VACUUM and ANALYZE)
+    /// Optimizes all the database connections in the connection pool by executing
+    /// `VACUUM` and `ANALYZE` SQL commands on each connection.
+    ///
+    /// This function iterates through the available connections in the connection pool,
+    /// and for each connection, it performs database maintenance tasks in a background
+    /// thread using `tokio::task::spawn_blocking`. Both `VACUUM` and `ANALYZE` are executed
+    /// on the database, aiming to optimize database performance by reclaiming storage space
+    /// and updating query planner statistics, respectively.
+    /// # Errors
+    /// - Returns a `DatabaseError::JoinError` if the background thread fails to execute or join.
+    /// - Database locks (`Mutex`) are handled while ensuring that multiple threads do not
+    ///   access the same connection simultaneously.
+    ///
+    /// # Example
+    /// ```rust
+    /// use my_crate::DatabasePool;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let pool = DatabasePool::new();
+    ///     pool.optimize().await?;
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Notes
+    /// - This function assumes that the `connections` pool is thread-safe and that 
+    ///   `self.connections` provides an iterator over connection entries.
+    /// - The `spawn_blocking` ensures that CPU-intensive tasks do not block the async runtime's thread pool.
+    ///
+    /// # Returns
+    /// - If successful, returns `Ok(())`.
+    /// - If an error occurs during thread synchronization or execution of SQL statements, the
+    ///   appropriate `DatabaseError` is returned.
     pub async fn optimize(&self) -> Result<(), DatabaseError> {
         for entry in self.connections.iter() {
             let conn_arc = entry.value().clone();

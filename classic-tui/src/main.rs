@@ -29,7 +29,10 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     // Load configuration
-    let config = ClassicConfig::load_or_default().await?;
+    let mut config = ClassicConfig::load_or_default().await?;
+
+    // Load paths from Local.yaml
+    config.load_local_yaml_paths("Fallout4").await?;
 
     // Create application
     let mut app = App::with_config(config);

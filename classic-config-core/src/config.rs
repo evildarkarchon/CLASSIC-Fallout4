@@ -41,7 +41,36 @@ pub struct ClassicConfig {
     pub paths: PathConfig,
 }
 
-/// Path configuration
+/// Configuration structure for defining various file system paths related to a game.
+///
+/// The `PathConfig` struct contains paths to important directories or files
+/// required for managing the game's configuration, mods, documents, and related
+/// resources.
+///
+/// # Fields
+///
+/// * `ini_folder` - An optional path to the folder containing INI configuration files. 
+///   Typically, this corresponds to the game's documents folder.
+///
+/// * `scan_custom` - An optional path to a custom folder location to scan for additional resources. 
+///   This is helpful for specifying user-defined locations outside standard directories.
+///
+/// * `mods_folder` - An optional path to the folder containing mods for the game. This is the directory 
+///   where custom modifications for the game are stored or loaded from.
+///
+/// * `game_root` - The path to the root directory of the game installation. It serves as the main location
+///   for the game's necessary files and executables.
+///
+/// * `docs_root` - An optional path to the game's documents root directory. This path is typically defined in a separate
+///   `Local.yaml` configuration file. It may contain user data, save files, or other associated documents.
+///
+/// # Note
+///
+/// All paths represented in this structure use [`PathBuf`], which provides an owned, mutable path
+/// representation that's platform-independent.
+///
+/// This struct is serializable and deserializable using the `Serialize` and `Deserialize` traits 
+/// (from [serde](https://serde.rs/)) and supports cloning and debugging with the respective traits.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PathConfig {
     /// Path to INI folder (game documents folder)
@@ -55,6 +84,9 @@ pub struct PathConfig {
 
     /// Path to game root directory
     pub game_root: PathBuf,
+
+    /// Path to game documents root directory (from Local.yaml)
+    pub docs_root: Option<PathBuf>,
 }
 
 impl Default for ClassicConfig {
@@ -80,6 +112,7 @@ impl Default for PathConfig {
             game_root: PathBuf::from(
                 "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4",
             ),
+            docs_root: None,
         }
     }
 }
@@ -124,6 +157,7 @@ impl ClassicConfig {
                 .as_str()
                 .map(PathBuf::from)
                 .unwrap_or_else(|| PathConfig::default().game_root),
+            docs_root: paths_yaml["docs_root"].as_str().map(PathBuf::from),
         };
 
         Ok(Self {
@@ -190,6 +224,12 @@ impl ClassicConfig {
             Yaml::String("game_root".to_string()),
             Yaml::String(self.paths.game_root.to_string_lossy().to_string()),
         );
+        if let Some(ref docs_root) = self.paths.docs_root {
+            paths.insert(
+                Yaml::String("docs_root".to_string()),
+                Yaml::String(docs_root.to_string_lossy().to_string()),
+            );
+        }
 
         root.insert(Yaml::String("paths".to_string()), Yaml::Hash(paths));
 
@@ -288,6 +328,53 @@ impl ClassicConfig {
 
         Ok(())
     }
+
+    /// Load paths from Local.yaml file
+    ///
+    /// Reads the Local.yaml file and populates game_root and docs_root paths.
+    /// The Local.yaml file is expected to be at: CLASSIC Data/CLASSIC {game} Local.yaml
+    ///
+    /// # Arguments
+    /// * `game` - Game name (e.g., "Fallout4", "Skyrim")
+    ///
+    /// # Returns
+    /// * `Ok(())` - Successfully loaded paths
+    /// * `Err(anyhow::Error)` - Failed to load or parse Local.yaml
+    ///
+    /// # Note
+    /// This function updates the config in place. If Local.yaml doesn't exist,
+    /// this is not an error - the config will retain its current paths.
+    pub async fn load_local_yaml_paths(&mut self, game: &str) -> Result<()> {
+        let local_yaml_path = PathBuf::from(format!("CLASSIC Data/CLASSIC {} Local.yaml", game));
+
+        // If Local.yaml doesn't exist, that's okay - just return without error
+        if !local_yaml_path.exists() {
+            return Ok(());
+        }
+
+        let content = fs::read_to_string(&local_yaml_path)
+            .await
+            .context(format!(
+                "Failed to read Local.yaml file: {}",
+                local_yaml_path.display()
+            ))?;
+
+        let docs =
+            YamlLoader::load_from_str(&content).context("Failed to parse Local.yaml configuration")?;
+
+        let doc = docs.first().context("Local.yaml file is empty")?;
+
+        // Extract paths from Game_Info section
+        if let Some(game_root_str) = doc["Game_Info"]["Root_Folder_Game"].as_str() {
+            self.paths.game_root = PathBuf::from(game_root_str);
+        }
+
+        if let Some(docs_root_str) = doc["Game_Info"]["Root_Folder_Docs"].as_str() {
+            self.paths.docs_root = Some(PathBuf::from(docs_root_str));
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -341,6 +428,7 @@ mod tests {
                 scan_custom: Some(PathBuf::from("D:\\Logs")),
                 mods_folder: Some(PathBuf::from("C:\\Mods")),
                 game_root: PathBuf::from("C:\\Game"),
+                docs_root: Some(PathBuf::from("C:\\Docs")),
             },
         };
 
@@ -357,6 +445,7 @@ mod tests {
         assert_eq!(restored.paths.scan_custom, config.paths.scan_custom);
         assert_eq!(restored.paths.mods_folder, config.paths.mods_folder);
         assert_eq!(restored.paths.game_root, config.paths.game_root);
+        assert_eq!(restored.paths.docs_root, config.paths.docs_root);
     }
 
     #[tokio::test]
@@ -389,6 +478,7 @@ mod tests {
                 scan_custom: None,
                 mods_folder: None,
                 game_root: PathBuf::from("C:\\Game"),
+                docs_root: None,
             },
         };
 
@@ -399,6 +489,7 @@ mod tests {
         assert!(loaded.paths.scan_custom.is_none());
         assert!(loaded.paths.mods_folder.is_none());
         assert_eq!(loaded.paths.game_root, PathBuf::from("C:\\Game"));
+        assert!(loaded.paths.docs_root.is_none());
     }
 
     #[test]
