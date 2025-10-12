@@ -1,6 +1,7 @@
 use crate::app::ScanResults;
 use crate::events::ScanMessage;
 use anyhow::{Context, Result};
+use classic_file_io_core::LogCollector;
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use std::path::PathBuf;
 use tokio::sync::mpsc;
@@ -46,19 +47,35 @@ impl ScanHandler {
         let orchestrator =
             OrchestratorCore::new(config).context("Failed to create orchestrator")?;
 
-        // Determine scan directory
-        let scan_dir = self.scan_path.clone().unwrap_or_else(|| {
-            PathBuf::from("C:\\Users\\Username\\Documents\\My Games\\Fallout4\\F4SE\\Crash Logs")
-        });
+        // Use LogCollector to organize and collect logs
+        let base_folder = std::env::current_dir().unwrap_or_default();
+        let xse_folder = Self::find_xse_folder();
+
+        tx.send(ScanMessage::output(
+            "Collecting crash logs from multiple locations...".to_string(),
+        ))
+        .await?;
+
+        let collector = LogCollector::new(
+            base_folder.clone(),
+            xse_folder.clone(),
+            self.scan_path.clone(),
+        );
+
+        // This copies logs from XSE folder and moves logs from working dir
+        let log_files = collector
+            .collect_all()
+            .await
+            .context("Failed to collect crash logs")?;
+
+        let crash_log_dir = collector.crash_logs_dir().to_path_buf();
 
         tx.send(ScanMessage::output(format!(
-            "Scanning directory: {}",
-            scan_dir.display()
+            "Organized crash logs in: {}",
+            crash_log_dir.display()
         )))
         .await?;
 
-        // Find crash log files
-        let log_files = find_crash_logs(&scan_dir).await?;
         let total_logs = log_files.len();
 
         if total_logs == 0 {
@@ -167,40 +184,16 @@ impl ScanHandler {
         tx.send(ScanMessage::completed(results)).await?;
         Ok(())
     }
-}
 
-/// Find crash log files in the specified directory
-async fn find_crash_logs(dir: &PathBuf) -> Result<Vec<PathBuf>> {
-    use tokio::fs;
-
-    if !dir.exists() {
-        anyhow::bail!("Scan directory does not exist: {}", dir.display());
+    /// Find the XSE folder (where game stores crash logs)
+    ///
+    /// This is typically My Games/Fallout4/F4SE or similar
+    fn find_xse_folder() -> Option<PathBuf> {
+        // Try common location
+        dirs::document_dir()
+            .map(|d| d.join("My Games").join("Fallout4").join("F4SE"))
+            .filter(|p| p.exists())
     }
-
-    let mut logs = Vec::new();
-    let mut entries = fs::read_dir(dir).await?;
-
-    while let Some(entry) = entries.next_entry().await? {
-        let path = entry.path();
-        if path.is_file() {
-            if let Some(ext) = path.extension() {
-                // Look for .log or .txt files
-                if ext == "log" || ext == "txt" {
-                    logs.push(path);
-                }
-            }
-        }
-    }
-
-    // Sort by modification time (newest first)
-    logs.sort_by_key(|p| {
-        std::fs::metadata(p)
-            .and_then(|m| m.modified())
-            .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
-    });
-    logs.reverse();
-
-    Ok(logs)
 }
 
 impl Default for ScanHandler {
@@ -331,39 +324,4 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn test_find_crash_logs() {
-        let temp_dir = tempdir().unwrap();
-        let scan_path = temp_dir.path().to_path_buf();
-
-        // Create various file types
-        fs::write(scan_path.join("crash1.log"), "test")
-            .await
-            .unwrap();
-        fs::write(scan_path.join("crash2.txt"), "test")
-            .await
-            .unwrap();
-        fs::write(scan_path.join("readme.md"), "test")
-            .await
-            .unwrap();
-        fs::write(scan_path.join("data.json"), "test")
-            .await
-            .unwrap();
-
-        let logs = find_crash_logs(&scan_path).await.unwrap();
-
-        // Should find only .log and .txt files
-        assert_eq!(logs.len(), 2);
-        assert!(logs.iter().all(
-            |p| p.extension() == Some("log".as_ref()) || p.extension() == Some("txt".as_ref())
-        ));
-    }
-
-    #[tokio::test]
-    async fn test_find_crash_logs_nonexistent_dir() {
-        let nonexistent = PathBuf::from("/nonexistent/directory");
-        let result = find_crash_logs(&nonexistent).await;
-
-        assert!(result.is_err(), "Should fail with nonexistent directory");
-    }
 }

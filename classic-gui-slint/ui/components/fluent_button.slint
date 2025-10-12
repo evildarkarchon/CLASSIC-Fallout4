@@ -1,0 +1,63 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+
+// FluentButton - Fluent Design System button component
+// Supports primary (accent) and secondary (neutral) styles with proper states
+export component FluentButton inherits Rectangle {
+    // Properties
+    in property<string> text <=> label.text;
+    in property<bool> primary: false;
+    in property<bool> enabled: true;
+
+    // Callback
+    callback clicked <=> touch.clicked;
+
+    // Styling
+    background: root.primary ? FluentDark.accent : FluentDark.layer3;
+    border-radius: FluentDark.radius-sm;
+    min-height: FluentDark.button-height;
+    // Remove min-width to allow buttons to shrink with window
+    horizontal-stretch: 1;
+
+    // Touch area for interactions
+    touch := TouchArea {
+        enabled: root.enabled;
+    }
+
+    // Animate background color changes
+    animate background {
+        duration: FluentDark.animation-fast;
+        easing: ease-in-out;
+    }
+
+    // State management
+    states [
+        hover when touch.has-hover && root.enabled: {
+            background: root.primary ? FluentDark.accent-hover : FluentDark.hover;
+        }
+        pressed when touch.pressed && root.enabled: {
+            background: root.primary ? FluentDark.accent-pressed : FluentDark.pressed;
+        }
+        disabled when !root.enabled: {
+            background: FluentDark.disabled;
+            opacity: 0.5;
+        }
+    ]
+
+    // Text label
+    HorizontalLayout {
+        padding-left: FluentDark.spacing-sm;
+        padding-right: FluentDark.spacing-sm;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        alignment: center;
+
+        label := Text {
+            color: root.primary ? FluentDark.text-on-accent : FluentDark.text-primary;
+            font-size: root.primary ? FluentDark.font-size-base : FluentDark.font-size-sm;
+            font-weight: FluentDark.font-weight-semibold;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            overflow: elide;  // Truncate text with ellipsis if too long
+        }
+    }
+}

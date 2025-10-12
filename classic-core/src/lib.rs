@@ -19,7 +19,7 @@
 //! - **classic-database-py**: Python bindings for database-core
 //! - **classic-file-io-py**: Python bindings for file-io-core
 //! - **classic-scanlog-py**: Python bindings for scanlog-core
-//! - **classic-config-py**: Python bindings for config-core
+//! - **classic-config-py**: Python bindings for classic-config-core
 //!
 //! ### Facade Layer
 //! - **classic-core** (this crate): Re-exports all Python bindings for backward compatibility

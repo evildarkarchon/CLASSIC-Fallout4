@@ -21,7 +21,7 @@ RESET = "\033[0m"
 STUB_FILES = [
     "classic-core/classic_core.pyi",
     "classic-scanlog/classic_scanlog.pyi",
-    "config-core/classic_config.pyi",
+    "classic-config-core/classic_config.pyi",
     "classic-database/classic_database.pyi",
     "classic-file-io/classic_file_io.pyi",
     "classic-yaml/classic_yaml.pyi",

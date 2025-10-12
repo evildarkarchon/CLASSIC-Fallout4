@@ -1,0 +1,37 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+
+// ProgressSpinner - Circular loading indicator with Fluent Design styling
+// Uses a rotating Text element with Unicode spinner character
+export component ProgressSpinner inherits Rectangle {
+    // Properties
+    in property<bool> active: true;
+    in property<length> size: 32px;
+
+    width: root.size;
+    height: root.size;
+    background: transparent;
+
+    // Spinning arc using Text element (rotation is only supported on Text/Image)
+    Text {
+        text: "◐";  // Unicode half-circle spinner character
+        color: FluentDark.accent;
+        font-size: root.size;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: root.size;
+        height: root.size;
+
+        // Continuous rotation animation
+        animate rotation-angle {
+            duration: 800ms;
+            easing: linear;
+            iteration-count: -1;  // Infinite loop
+        }
+
+        states [
+            spinning when root.active: {
+                rotation-angle: 360deg;
+            }
+        ]
+    }
+}

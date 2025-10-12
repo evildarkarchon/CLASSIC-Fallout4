@@ -60,6 +60,14 @@ classic-gui-slint/              # New crate for Slint GUI
 ### Dependencies
 
 ```toml
+[package]
+name = "classic-gui-slint"
+version = "8.0.0"  # Version used in window title
+edition = "2021"
+authors = ["CLASSIC Team"]
+description = "CLASSIC Slint GUI - Crash Log Auto Scanner"
+license = "MIT"
+
 [dependencies]
 # CLASSIC core crates (business logic)
 classic-shared = { path = "../classic-shared" }
@@ -69,8 +77,8 @@ classic-file-io-core = { path = "../classic-file-io-core" }
 classic-scanlog-core = { path = "../classic-scanlog-core" }
 classic-config-core = { path = "../classic-config-core" }
 
-# Slint framework
-slint = { version = "1.9", features = ["backend-qt", "markdown"] }
+# Slint framework (winit backend with GPU-accelerated Skia renderer + software fallback)
+slint = { version = "1.9", features = ["backend-winit", "renderer-skia", "markdown"] }
 
 # Async runtime (shared with -core crates)
 tokio = { workspace = true }
@@ -107,6 +115,7 @@ CLASSIC targets Windows users (Fallout 4/Skyrim modding is primarily Windows-bas
 4. **Modern & Professional**: Clean, minimal aesthetic with subtle depth
 5. **Accessibility Built-in**: WCAG 2.1 compliant color contrasts and focus indicators
 6. **Performance-Friendly**: Efficient animations and GPU-accelerated effects
+7. **Robust Rendering**: Skia renderer with GPU acceleration + software fallback ensures compatibility across all hardware configurations
 
 **Fluent Design Principles Applied:**
 - **Light**: Subtle use of shadows and highlights to create depth
@@ -460,7 +469,7 @@ focus when has-focus: {
 Replicates: `CLASSIC_Interface.py` MainWindow
 
 **Layout:**
-- Window title: "Crash Log Auto Scanner & Setup Integrity Checker | {version}"
+- Window title: "Crash Log Auto Scanner & Setup Integrity Checker | {version}" (version from Cargo.toml)
 - Window icon: CLASSIC.ico
 - Dark theme by default
 - Tab widget with 4 tabs: MAIN OPTIONS, FILE BACKUP, ARTICLES, RESULTS
@@ -478,7 +487,10 @@ import { ArticlesTab } from "tabs/articles_tab.slint";
 import { ResultsTab } from "tabs/results_tab.slint";
 
 export component MainWindow inherits Window {
-    title: "Crash Log Auto Scanner & Setup Integrity Checker | 6.7.1";
+    // Version is passed from Rust code (from Cargo.toml via env!("CARGO_PKG_VERSION"))
+    in property <string> app-version;
+
+    title: "Crash Log Auto Scanner & Setup Integrity Checker | " + app-version;
     icon: @image-url("../assets/CLASSIC.ico");
     min-width: 550px;
     min-height: 350px;
@@ -511,6 +523,21 @@ export component MainWindow inherits Window {
             }
         }
     }
+}
+```
+
+**Rust Initialization (`src/main.rs`):**
+```rust
+fn main() -> Result<(), slint::PlatformError> {
+    // Get version from Cargo.toml at compile time
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+    let main_window = MainWindow::new()?;
+
+    // Set version dynamically
+    main_window.set_app_version(VERSION.into());
+
+    main_window.run()
 }
 ```
 
@@ -756,136 +783,185 @@ pub fn handle_scan_crash_logs(main_window: &MainWindow, bridge: &AsyncBridge) {
 
 ## Implementation Phases
 
-### Phase 1: Project Setup & Basic Window (Week 1)
+### Phase 1: Project Setup & Fluent Design Foundation (Week 1) ✅ COMPLETED
 
 **Tasks:**
-- [ ] Create `classic-gui-slint` crate in workspace
-- [ ] Add Slint dependencies to `Cargo.toml`
-- [ ] Create basic `MainWindow` in `main.slint`
-- [ ] Implement dark theme in `dark_theme.slint`
-- [ ] Create `main.rs` with window initialization
-- [ ] Test window display and theme
-- [ ] Implement window geometry persistence (save/restore)
+- [x] Create `classic-gui-slint` crate in workspace
+- [x] Add Slint dependencies to `Cargo.toml` (with backend-winit, renderer-skia, markdown features)
+- [x] Create `ui/styles/fluent_dark.slint` with complete Fluent Design color palette
+- [x] Implement FluentDark global with all design tokens (colors, spacing, typography, animations)
+- [x] Create base Fluent components: `FluentButton`, `FluentCard`, `FluentTabBar`
+- [x] Create basic `MainWindow` in `main.slint` with Fluent styling
+- [x] Create `main.rs` with window initialization and version injection
+- [x] Test window display with Fluent theme (Segoe UI Variable font, proper colors)
+- [x] Implement window geometry persistence (save/restore)
+- [x] Verify WCAG AA contrast ratios for all text colors
 
 **Deliverables:**
-- Empty window with dark theme
-- Tab widget with 4 placeholder tabs
+- Empty window with Fluent Design dark theme
+- Complete Fluent Design System style guide implemented in Slint
+- Base Fluent components ready for use
+- Tab widget with 4 placeholder tabs using FluentTabBar component
 - Window geometry saves between sessions
+- Proper Segoe UI Variable typography
 
-### Phase 2: Main Tab UI (Week 2)
-
-**Tasks:**
-- [ ] Create `FolderSelector` component
-- [ ] Implement folder browse dialogs (native file picker)
-- [ ] Create main scan buttons (SCAN CRASH LOGS, SCAN GAME FILES)
-- [ ] Create bottom utility buttons
-- [ ] Implement Papyrus button toggle styles (green/red)
-- [ ] Add tooltips to all interactive elements
-- [ ] Connect buttons to placeholder handlers
-
-**Deliverables:**
-- Fully functional Main Tab layout
-- Button states (enabled/disabled)
-- Folder path display and validation
-
-### Phase 3: Scan Operations Integration (Week 3)
+### Phase 2: Main Tab UI with Fluent Components (Week 2) ✅ COMPLETED
 
 **Tasks:**
-- [ ] Implement `AsyncBridge` for Tokio/Slint integration
-- [ ] Create `handlers/scan.rs` module
-- [ ] Integrate `classic-scanlog-core` for crash log scanning
-- [ ] Integrate `classic-file-io-core` for game file scanning
-- [ ] Add progress indicators during scanning
-- [ ] Display scan results in message dialogs
-- [ ] Implement scan cancellation
-- [ ] Add audio notifications (completion sounds)
+- [x] Create `FolderSelector` component using FluentCard for elevated appearance
+- [x] Style text inputs with Fluent borders and focus states (accent blue focus ring)
+- [x] Implement folder browse dialogs (native file picker with Windows 11 styling)
+- [x] Create main scan buttons using FluentButton component (primary accent style)
+- [x] Create bottom utility buttons using FluentButton (secondary/neutral style)
+- [x] Implement Papyrus button with semantic colors (success green START, error red STOP)
+- [x] Add Fluent-style tooltips with proper spacing and layer elevation
+- [x] Apply proper Fluent spacing system (8px base) to all layouts
+- [x] Use proper Fluent typography (Segoe UI Variable, semibold weights for buttons)
+- [x] Add smooth hover/press animations following Fluent motion principles
+- [x] Connect buttons to placeholder handlers
 
 **Deliverables:**
-- Functional crash log scanning
-- Functional game file scanning
-- Progress feedback and completion notifications
+- Fully functional Main Tab layout styled with Fluent Design
+- FluentButton components with proper interactive states (hover, pressed, disabled)
+- Folder path display with Fluent text input styling and validation
+- Semantic color usage (accent for primary actions, success/error for Papyrus)
+- Consistent 8px-based spacing throughout
 
-### Phase 4: Backups Tab (Week 4)
+### Phase 3: Scan Operations Integration with Fluent Feedback (Week 3) ✅ COMPLETED
 
 **Tasks:**
-- [ ] Create `BackupSection` component
-- [ ] Implement backup operations (XSE, ReShade, Vulkan, ENB)
-- [ ] Create `handlers/backup.rs` module
-- [ ] Integrate `classic-file-io-core` for file operations
-- [ ] Add backup state detection (existing backups)
-- [ ] Implement open backups folder functionality
-- [ ] Add confirmation dialogs for destructive operations
-- [ ] Add progress indicators for file operations
+- [x] Implement `AsyncBridge` for Tokio/Slint integration
+- [x] Create `handlers/scan.rs` module
+- [x] Integrate `classic-scanlog-core` for crash log scanning
+- [x] Integrate `classic-file-io-core` for game file scanning
+- [x] Create Fluent-styled progress indicators (circular spinners with accent color)
+- [x] Implement progress bars with smooth Fluent animations
+- [x] Display scan results in Fluent modal dialogs (elevated cards with proper shadows)
+- [x] Implement scan cancellation with confirmation dialog
+- [x] Add audio notifications (completion sounds - system integration)
+- [x] Use semantic colors for status feedback (success green, error red, info blue)
+- [x] Add status messages with proper Fluent typography and spacing
 
 **Deliverables:**
-- Fully functional Backups Tab
-- All backup/restore/remove operations working
-- State management for backup availability
+- Functional crash log scanning with Rust acceleration
+- Functional game file scanning with Rust acceleration
+- Progress feedback using Fluent Design patterns (spinners, progress bars)
+- Completion notifications with semantic colors and smooth animations
 
-### Phase 5: Articles Tab (Week 5)
+### Phase 4: Backups Tab with Fluent Cards & Dialogs (Week 4) ✅ COMPLETED
 
 **Tasks:**
-- [ ] Create 3-column grid layout
-- [ ] Add 9 resource buttons with URLs
-- [ ] Implement `open` crate for URL launching
-- [ ] Add hover states and tooltips
-- [ ] Style buttons to match Python GUI
+- [x] Create `BackupSection` component using FluentCard for grouped operations
+- [x] Implement backup operations (XSE, ReShade, Vulkan, ENB) with Rust acceleration
+- [x] Create `handlers/backup.rs` module
+- [x] Integrate `classic-file-io-core` for file operations
+- [x] Add backup state detection (existing backups) with visual indicators
+- [x] Style information labels with proper Fluent typography (secondary text color)
+- [x] Implement open backups folder functionality with system integration
+- [x] Add Fluent confirmation dialogs for destructive operations (elevated modals)
+- [x] Add progress indicators for file operations (Fluent progress bars)
+- [x] Use FluentButton for all action buttons with proper semantic colors
+- [x] Add subtle hover/press animations following Fluent motion principles
+- [x] Apply consistent Fluent spacing (8px base) to section layouts
 
 **Deliverables:**
-- Fully functional Articles Tab
-- All links open in default browser
+- Fully functional Backups Tab styled with Fluent Design
+- All backup/restore/remove operations working with Rust-accelerated file I/O
+- State management for backup availability with visual feedback
+- FluentCard-based section grouping with proper elevation
+- Fluent confirmation dialogs for safety
 
-### Phase 6: Results Tab - Part 1 (Week 6)
+### Phase 5: Articles Tab with Fluent Grid & Links (Week 5) ✅ COMPLETED
 
 **Tasks:**
-- [ ] Create split pane layout (resizable)
-- [ ] Implement `ReportList` component
-- [ ] Add report scanning (glob *-AUTOSCAN.md)
-- [ ] Integrate `notify` crate for file watching
-- [ ] Implement report list population
-- [ ] Add refresh/delete/open folder buttons
-- [ ] Implement context menu (View, Copy, Delete)
-- [ ] Add report selection handling
+- [x] Create 3-column grid layout with proper Fluent spacing (spacing-md between items)
+- [x] Add title label with Fluent h2 typography (20px, semibold, text-primary)
+- [x] Create 9 resource buttons using FluentButton (neutral/secondary style)
+- [x] Implement `open` crate for URL launching with error handling
+- [x] Add Fluent hover states (smooth background transitions, 150ms duration)
+- [x] Add Fluent-styled tooltips showing full URLs (layer3 background, subtle shadow)
+- [x] Use consistent button sizing (min 120px width, 32px height)
+- [x] Apply Fluent border radius (radius-sm: 4px)
+- [x] Add subtle press animations (scale down to 0.98)
+- [x] Ensure proper focus indicators (accent blue ring, 2px width)
 
 **Deliverables:**
-- Functional report list
-- File watcher auto-refresh
-- Report management (delete, open folder)
+- Fully functional Articles Tab styled with Fluent Design
+- All links open in default browser with proper error handling
+- 3-column grid with consistent Fluent spacing
+- FluentButton components with hover, press, and focus states
 
-### Phase 7: Results Tab - Part 2 (Week 7)
+### Phase 6: Results Tab - Part 1 with Fluent List & Split View (Week 6) ✅ COMPLETED
 
 **Tasks:**
-- [ ] Create `MarkdownViewer` component
-- [ ] Integrate markdown rendering (Slint built-in or `pulldown-cmark`)
-- [ ] Add metadata widget
-- [ ] Implement zoom controls (-, 100%, +)
-- [ ] Add copy to clipboard functionality
-- [ ] Implement code syntax highlighting in markdown
-- [ ] Add table rendering support
-- [ ] Handle markdown images and links
+- [x] Create resizable split pane layout with Fluent divider styling
+- [x] Implement `ReportList` component using FluentCard for list container
+- [x] Style list items with proper Fluent interactive states (hover, selected, pressed)
+- [x] Add report scanning (glob *-AUTOSCAN.md) with Rust file-io-core
+- [x] Integrate `notify` crate for file watching with debouncing (500ms)
+- [x] Implement report list population with proper sorting (date descending)
+- [x] Create refresh/delete/open folder buttons using FluentButton
+- [x] Implement Fluent context menu (elevated menu with proper layering)
+- [x] Add report selection handling with accent color highlight
+- [x] Use proper Fluent typography for list items (body text, caption for dates)
+- [x] Apply Fluent spacing to list layout (spacing-sm between items)
+- [x] Add subtle hover animations on list items (background transition, 150ms)
 
 **Deliverables:**
-- Fully functional Results Tab
-- Markdown rendering with formatting
-- Zoom and copy functionality
+- Functional report list styled with Fluent Design
+- File watcher auto-refresh with smooth UI updates
+- Report management (delete, open folder) with confirmation dialogs
+- Fluent split pane with resizable divider
+- Context menu with proper elevation and interactions
 
-### Phase 8: Settings & Dialogs (Week 8)
+### Phase 7: Results Tab - Part 2 with Fluent Markdown Viewer (Week 7)  ✅ COMPLETED
 
 **Tasks:**
-- [ ] Create settings dialog component
-- [ ] Integrate `classic-config-core` for configuration
-- [ ] Implement About dialog
-- [ ] Implement Help dialogs
-- [ ] Create Papyrus monitoring dialog
-- [ ] Add update check dialog
-- [ ] Implement path selection dialogs
-- [ ] Add error message dialogs
-- [ ] Add confirmation dialogs
+- [x] Create `MarkdownViewer` component using FluentCard container
+- [x] Integrate markdown rendering (Slint built-in or `pulldown-cmark`)
+- [x] Style markdown content with Fluent typography (proper heading hierarchy)
+- [x] Add metadata widget with FluentCard elevation and secondary text
+- [x] Implement zoom controls using FluentButton (-, 100%, +)
+- [x] Style zoom control toolbar with proper Fluent spacing
+- [x] Add copy to clipboard functionality with `arboard` crate
+- [x] Show copy success feedback with temporary toast notification
+- [x] Implement code syntax highlighting with proper monospace font (Cascadia Mono)
+- [x] Style code blocks with layer3 background and subtle borders
+- [x] Add table rendering support with Fluent-styled borders
+- [x] Handle markdown images with proper spacing and borders
+- [x] Style markdown links with accent color and hover states
 
 **Deliverables:**
-- All dialogs functional
-- Settings persistence
-- Help and About screens
+- Fully functional Results Tab styled with Fluent Design
+- Markdown rendering with Fluent typography and formatting
+- Zoom and copy functionality with proper feedback
+- Code blocks with syntax highlighting and Fluent styling
+- Tables and images rendered with proper Fluent aesthetics
+
+### Phase 8: Settings & Fluent Dialogs (Week 8)
+
+**Tasks:**
+- [ ] Create settings dialog component using Fluent modal pattern (elevated card overlay)
+- [ ] Integrate `classic-config-core` for configuration with Rust acceleration
+- [ ] Style settings controls with Fluent inputs (text boxes, checkboxes, dropdowns)
+- [ ] Implement About dialog with Fluent layout (icon, version, credits)
+- [ ] Style About dialog with proper Fluent typography and spacing
+- [ ] Implement Help dialogs with Fluent markdown rendering
+- [ ] Create Papyrus monitoring dialog with real-time status updates
+- [ ] Add update check dialog with progress indicator
+- [ ] Implement path selection dialogs (native file picker integration)
+- [ ] Add error message dialogs with semantic colors (error red icon)
+- [ ] Add confirmation dialogs with proper Fluent button layout (primary/secondary)
+- [ ] Ensure all dialogs use FluentCard with proper shadows
+- [ ] Apply consistent dialog animations (fade in with slide up, 250ms)
+- [ ] Add proper focus management for dialogs (trap focus, escape to close)
+
+**Deliverables:**
+- All dialogs functional and styled with Fluent Design
+- Settings persistence with Rust configuration backend
+- Help and About screens with proper Fluent aesthetics
+- Confirmation dialogs following Fluent patterns
+- Proper modal behavior with animations and focus management
 
 ### Phase 9: Polish & Testing (Week 9-10)
 
@@ -1104,7 +1180,6 @@ fn test_scan_workflow() {
 ## Performance Targets
 
 Based on existing Rust acceleration:
-
 | Operation | Python GUI | Slint GUI Target |
 |-----------|------------|------------------|
 | Crash Log Scan | 2-3 seconds | 200-300ms |

@@ -87,15 +87,18 @@ use pyo3::prelude::*;
 mod core;
 mod dds;
 mod encoding;
+mod log_collector;
 
 pub use core::PyFileIOCore;
 pub use encoding::PyEncodingDetector;
+pub use log_collector::PyLogCollector;
 
 /// Python module for file I/O operations
 #[pymodule]
 fn classic_file_io(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyFileIOCore>()?;
     m.add_class::<PyEncodingDetector>()?;
+    m.add_class::<PyLogCollector>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

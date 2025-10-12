@@ -31,6 +31,9 @@ fn to_pyerr(err: classic_file_io_core::FileIOError) -> PyErr {
         classic_file_io_core::FileIOError::CacheError(s) => {
             PyRuntimeError::new_err(format!("Cache error: {}", s))
         }
+        classic_file_io_core::FileIOError::Io(s) => {
+            PyIOError::new_err(format!("I/O error: {}", s))
+        }
     }
 }
 

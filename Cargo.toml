@@ -23,6 +23,7 @@ members = [
     # Native Applications
     "classic-cli",
     "classic-tui",
+    "classic-gui-slint",
 ]
 resolver = "2"
 
@@ -59,6 +60,7 @@ encoding_rs = "0.8"
 memmap2 = "0.9"
 walkdir = "2.5"
 ddsfile = "0.5"
+dirs = "5.0"
 
 # Parsing
 regex = "1.11"
@@ -78,6 +80,9 @@ log = "0.4"
 env_logger = "0.11"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+
+# GUI (Slint)
+slint = "1.13"
 
 # Testing
 tempfile = "3.18"

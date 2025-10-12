@@ -1,0 +1,64 @@
+[package]
+name = "classic-gui-slint"
+version = "8.0.0"
+edition = "2021"
+authors = ["CLASSIC Team"]
+description = "CLASSIC Slint GUI - Crash Log Auto Scanner & Setup Integrity Checker"
+license = "MIT"
+
+[[bin]]
+name = "classic-gui"
+path = "src/main.rs"
+
+[dependencies]
+# CLASSIC core crates (business logic)
+classic-shared = { path = "../classic-shared", features = ["gui-bridge"] }
+classic-yaml-core = { path = "../classic-yaml-core" }
+classic-database-core = { path = "../classic-database-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+classic-config-core = { path = "../classic-config-core" }  # Provides YamlSource enum
+
+# Slint framework with winit backend and Skia renderer
+# Note: Using latest stable version (1.13.1) for best features and fixes
+slint = { version = "1.13", features = ["backend-winit", "renderer-skia"] }
+
+# Async runtime (shared with -core crates via workspace)
+tokio = { workspace = true }
+
+# YAML parsing
+yaml-rust2 = { workspace = true }
+
+# Utilities
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = "0.3"
+parking_lot = { workspace = true }  # For RwLock in AppState
+chrono = "0.4"  # Date/time formatting
+
+# File system operations
+notify = "6.1"
+walkdir = "2.4"
+
+# Markdown rendering
+pulldown-cmark = "0.12"
+
+# Clipboard support
+arboard = "3.4"
+
+# System integration
+open = "5.0"
+dirs = "5.0"
+rfd = "0.15"  # Native file dialogs
+
+# Serialization for settings persistence
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Platform-specific
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+
+[build-dependencies]
+slint-build = "1.13"

@@ -1,0 +1,112 @@
+import { FluentDark, Typography } from "../styles/fluent_dark.slint";
+import { FluentButton } from "../components/fluent_button.slint";
+
+// ArticlesTab - Useful resources and links tab
+// Provides quick access to community resources and documentation
+export component ArticlesTab inherits Rectangle {
+    background: FluentDark.background;
+
+    // Callback for opening URLs
+    callback open-url(string);
+
+    VerticalLayout {
+        padding: FluentDark.spacing-md;
+        spacing: FluentDark.spacing-md;
+        alignment: start;
+
+        // Title label with Fluent h2 typography
+        title := Text {
+            text: "USEFUL RESOURCES & LINKS";
+            color: FluentDark.text-primary;
+            font-size: Typography.h2;  // 20px
+            font-weight: FluentDark.font-weight-semibold;
+            horizontal-alignment: center;
+        }
+
+        // 3-column grid layout with resource buttons
+        GridLayout {
+            spacing: FluentDark.spacing-md;  // 16px between buttons
+            padding: 0px;
+
+            // Row 0 - First 3 buttons
+            Row {
+                FluentButton {
+                    text: "BUFFOUT 4 INSTALLATION";
+                    primary: false;  // Secondary/neutral style
+                    clicked => {
+                        root.open-url("https://www.nexusmods.com/fallout4/articles/3115");
+                    }
+                }
+                FluentButton {
+                    text: "FALLOUT 4 SETUP TIPS";
+                    primary: false;
+                    clicked => {
+                        root.open-url("https://www.nexusmods.com/fallout4/articles/4141");
+                    }
+                }
+                FluentButton {
+                    text: "IMPORTANT PATCHES LIST";
+                    primary: false;
+                    clicked => {
+                        root.open-url("https://www.nexusmods.com/fallout4/articles/3769");
+                    }
+                }
+            }
+
+            // Row 1 - Next 3 buttons
+            Row {
+                FluentButton {
+                    text: "BUFFOUT 4 NEXUS";
+                    primary: false;
+                    clicked => {
+                        root.open-url("https://www.nexusmods.com/fallout4/mods/47359");
+                    }
+                }
+                FluentButton {
+                    text: "CLASSIC NEXUS";
+                    primary: false;
+                    clicked => {
+                        root.open-url("https://www.nexusmods.com/fallout4/mods/56255");
+                    }
+                }
+                FluentButton {
+                    text: "CLASSIC GITHUB";
+                    primary: false;
+                    clicked => {
+                        root.open-url("https://github.com/evildarkarchon/CLASSIC-Fallout4");
+                    }
+                }
+            }
+
+            // Row 2 - Last 3 buttons
+            Row {
+                FluentButton {
+                    text: "DDS TEXTURE SCANNER";
+                    primary: false;
+                    clicked => {
+                        root.open-url("https://www.nexusmods.com/fallout4/mods/71588");
+                    }
+                }
+                FluentButton {
+                    text: "BETHINI PIE";
+                    primary: false;
+                    clicked => {
+                        root.open-url("https://www.nexusmods.com/site/mods/631");
+                    }
+                }
+                FluentButton {
+                    text: "WRYE BASH";
+                    primary: false;
+                    clicked => {
+                        root.open-url("https://www.nexusmods.com/fallout4/mods/20032");
+                    }
+                }
+            }
+        }
+
+        // Spacer to push content to top
+        Rectangle {
+            vertical-stretch: 1;
+        }
+    }
+}

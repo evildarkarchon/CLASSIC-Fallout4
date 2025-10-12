@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use classic_config_core::YamlDataCore;
-use classic_file_io_core::FileIOCore;
+use classic_file_io_core::{FileIOCore, LogCollector};
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 use std::path::{Path, PathBuf};
 
@@ -33,25 +33,33 @@ impl ScanExecutor {
     pub async fn execute_scan(&self, output: &OutputFormatter) -> Result<(ScanStats, PathBuf)> {
         output.print_info("Initializing scan...");
 
-        // Find crash log directory
-        let crash_log_dir = self.find_crash_log_directory()?;
+        // Use LogCollector to organize and collect logs
+        let base_folder = std::env::current_dir().unwrap_or_default();
+        let xse_folder = self.find_xse_folder();
+
+        output.print_info("Collecting crash logs from multiple locations...");
+
+        let collector = LogCollector::new(
+            base_folder.clone(),
+            xse_folder.clone(),
+            self.config.paths.scan_custom.clone(),
+        );
+
+        // This copies logs from XSE folder and moves logs from working dir
+        let log_files = collector
+            .collect_all()
+            .await
+            .context("Failed to collect crash logs")?;
+
+        let crash_log_dir = collector.crash_logs_dir().to_path_buf();
+
         output.print_success(&format!(
-            "Found crash log directory: {}",
+            "Organized crash logs in: {}",
             crash_log_dir.display()
         ));
 
-        // Find all crash log files using FileIOCore
-        let log_files = self
-            .file_io
-            .walk_directory(
-                &crash_log_dir,
-                Some(r"^crash-.*\.(log|txt)$"),
-                Some(1), // Only search in current directory, not subdirectories
-            )
-            .context("Failed to search for crash logs")?;
-
         output.print_success(&format!(
-            "Found {} crash logs in scan directory",
+            "Found {} crash logs ready for analysis",
             log_files.len()
         ));
 
@@ -111,33 +119,26 @@ impl ScanExecutor {
         Ok((stats, crash_log_dir))
     }
 
-    /// Find the crash log directory based on configuration
-    fn find_crash_log_directory(&self) -> Result<PathBuf> {
-        // Check for custom scan path first
-        if let Some(ref custom_path) = self.config.paths.scan_custom {
-            if custom_path.exists() {
-                return Ok(custom_path.clone());
-            }
-        }
-
-        // Try to find default crash log directory in game documents
+    /// Find the XSE folder (where game stores crash logs)
+    ///
+    /// This is typically My Games/Fallout4/F4SE or similar
+    fn find_xse_folder(&self) -> Option<PathBuf> {
+        // Try to find XSE folder from ini folder path
         if let Some(ref ini_folder) = self.config.paths.ini_folder {
-            let crash_logs = ini_folder
+            let xse_folder = ini_folder
                 .parent()
-                .and_then(|p| Some(p.join("Fallout 4").join("Crash Logs")))
+                .and_then(|p| Some(p.join("Fallout 4").join("F4SE")))
                 .filter(|p| p.exists());
 
-            if let Some(logs_dir) = crash_logs {
-                return Ok(logs_dir);
+            if xse_folder.is_some() {
+                return xse_folder;
             }
         }
 
         // Fallback to common location
-        let default_path = dirs::document_dir()
-            .map(|d| d.join("My Games").join("Fallout4").join("Crash Logs"))
-            .filter(|p| p.exists());
-
-        default_path.ok_or_else(|| anyhow::anyhow!("Could not find crash log directory"))
+        dirs::document_dir()
+            .map(|d| d.join("My Games").join("Fallout4").join("F4SE"))
+            .filter(|p| p.exists())
     }
 
     /// Build AnalysisConfig from YamlDataCore

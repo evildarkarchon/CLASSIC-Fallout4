@@ -25,4 +25,10 @@ pub enum FileIOError {
 
     #[error("Cache error: {0}")]
     CacheError(String),
+
+    #[error("I/O operation failed: {0}")]
+    Io(String),
 }
+
+/// Result type alias for file I/O operations
+pub type Result<T> = std::result::Result<T, FileIOError>;

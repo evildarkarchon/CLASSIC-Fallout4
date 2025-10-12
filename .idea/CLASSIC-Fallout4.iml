@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="Python" name="Python facet">
+      <configuration sdkName="uv (CLASSIC-Fallout4)" />
+    </facet>
+  </component>
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/classic-cli/benches" isTestSource="true" />
@@ -22,12 +27,14 @@
       <sourceFolder url="file://$MODULE_DIR$/classic-tui/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/classic-yaml-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/classic-yaml-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/classic-gui-slint/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/classic-core/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
     <orderEntry type="jdk" jdkName="uv (CLASSIC-Fallout4)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="uv (CLASSIC-Fallout4) interpreter library" level="application" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="GOOGLE" />

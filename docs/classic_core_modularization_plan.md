@@ -537,4 +537,4 @@ classic-shared = { path = "../classic-shared" }
 - [Rust Full Backend Migration Plan](rust_full_backend_migration_plan.md)
 - [PyO3 0.26 Migration Guide](pyo3_0.26_migration_guide.md)
 - [ONE RUNTIME RULE](../classic-rust/src/lib.rs#L24-L38)
-- [Successful classic-config Implementation](../config-core/)
+- [Successful classic-config Implementation](../classic-config-core/)

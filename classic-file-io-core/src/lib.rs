@@ -11,13 +11,16 @@
 //! - Parallel directory traversal
 //! - Multi-level caching
 //! - Encoding detection
+//! - Log collection and organization
 
 pub mod core;
 pub mod dds;
 pub mod encoding;
 pub mod error;
+pub mod log_collection;
 
 pub use core::FileIOCore;
 pub use dds::DDSHeader;
 pub use encoding::EncodingDetector;
 pub use error::FileIOError;
+pub use log_collection::{LogCollector, CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN};

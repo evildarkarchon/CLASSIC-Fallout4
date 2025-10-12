@@ -20,7 +20,7 @@ Rust Crate Structure → Python Modules:
 - classic-scanlog-py (bindings) → classic_scanlog.pyd
   - Depends on: classic-scanlog-core (business logic)
 - classic-config-py (bindings) → classic_config.pyd
-  - Depends on: config-core (business logic)
+  - Depends on: classic-config-core (business logic)
 - classic-core (facade) → classic_core.pyd
   - Re-exports Phase 1 components for Python
 

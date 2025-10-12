@@ -12,6 +12,160 @@ use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 // Import the LinkedHashMap type that yaml-rust2 uses
 type LinkedHashMap<K, V> = hashlink::LinkedHashMap<K, V>;
 
+/// YAML file source identifier - mirrors Python's YAML enum
+///
+/// This enum provides a single source of truth for YAML file locations
+/// throughout the application, similar to Python's `ClassicLib.Constants.YAML`.
+///
+/// # Examples
+/// ```rust,no_run
+/// use classic_config_core::YamlSource;
+///
+/// let path = YamlSource::Game.path("Fallout4");
+/// // Returns: "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+///
+/// let local_path = YamlSource::GameLocal.path("Skyrim");
+/// // Returns: "CLASSIC Data/CLASSIC Skyrim Local.yaml"
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum YamlSource {
+    /// Main database: CLASSIC Data/databases/CLASSIC Main.yaml
+    Main,
+
+    /// User settings: CLASSIC Settings.yaml
+    Settings,
+
+    /// Ignore list: CLASSIC Ignore.yaml
+    Ignore,
+
+    /// Game database: CLASSIC Data/databases/CLASSIC {game}.yaml
+    Game,
+
+    /// Game local config: CLASSIC Data/CLASSIC {game} Local.yaml
+    GameLocal,
+
+    /// Test settings: tests/test_settings.yaml
+    Test,
+
+    /// Cache: User config dir/CLASSIC-Fallout4/cache.yaml
+    Cache,
+}
+
+impl YamlSource {
+    /// Get the file path for this YAML source
+    ///
+    /// # Arguments
+    /// * `game` - Game name (e.g., "Fallout4", "Skyrim"). Required for `Game` and `GameLocal` sources.
+    ///
+    /// # Returns
+    /// PathBuf to the YAML file
+    ///
+    /// # Panics
+    /// Panics if `game` is empty for `Game` or `GameLocal` sources
+    pub fn path(&self, game: &str) -> PathBuf {
+        match self {
+            Self::Main => PathBuf::from("CLASSIC Data/databases/CLASSIC Main.yaml"),
+            Self::Settings => PathBuf::from("CLASSIC Settings.yaml"),
+            Self::Ignore => PathBuf::from("CLASSIC Ignore.yaml"),
+            Self::Game => {
+                assert!(!game.is_empty(), "Game name required for YamlSource::Game");
+                PathBuf::from(format!("CLASSIC Data/databases/CLASSIC {}.yaml", game))
+            }
+            Self::GameLocal => {
+                assert!(!game.is_empty(), "Game name required for YamlSource::GameLocal");
+                PathBuf::from(format!("CLASSIC Data/CLASSIC {} Local.yaml", game))
+            }
+            Self::Test => PathBuf::from("tests/test_settings.yaml"),
+            Self::Cache => {
+                // TODO: Get actual user config directory
+                PathBuf::from("CLASSIC-Fallout4/cache.yaml")
+            }
+        }
+    }
+
+    /// Get the display name for this YAML source
+    ///
+    /// Note: For Game and GameLocal, this returns a generic name.
+    /// Use `display_name_with_game()` to get the actual file name with game substitution.
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Self::Main => "Main Database",
+            Self::Settings => "Settings",
+            Self::Ignore => "Ignore List",
+            Self::Game => "Game Database",
+            Self::GameLocal => "Game Local Config",
+            Self::Test => "Test Settings",
+            Self::Cache => "Cache",
+        }
+    }
+
+    /// Get the display name with game substitution (for Game and GameLocal sources)
+    ///
+    /// # Arguments
+    /// * `game` - Game name (e.g., "Fallout4", "Skyrim")
+    ///
+    /// # Examples
+    /// ```
+    /// use classic_config_core::YamlSource;
+    ///
+    /// assert_eq!(YamlSource::Game.display_name_with_game("Fallout4"), "Fallout4 Database");
+    /// assert_eq!(YamlSource::GameLocal.display_name_with_game("Skyrim"), "Skyrim Local Config");
+    /// ```
+    pub fn display_name_with_game(&self, game: &str) -> String {
+        match self {
+            Self::Main => "Main Database".to_string(),
+            Self::Settings => "Settings".to_string(),
+            Self::Ignore => "Ignore List".to_string(),
+            Self::Game => format!("{} Database", game),
+            Self::GameLocal => format!("{} Local Config", game),
+            Self::Test => "Test Settings".to_string(),
+            Self::Cache => "Cache".to_string(),
+        }
+    }
+
+    /// Load and parse YAML file from this source
+    ///
+    /// # Arguments
+    /// * `game` - Game name (required for Game/GameLocal sources, empty string for others)
+    ///
+    /// # Returns
+    /// * `Ok(Yaml)` - Parsed YAML document
+    /// * `Err(anyhow::Error)` - Failed to read or parse
+    ///
+    /// # Examples
+    /// ```rust,no_run
+    /// use classic_config_core::YamlSource;
+    ///
+    /// // Load game-specific YAML
+    /// let yaml = YamlSource::Game.load("Fallout4").await?;
+    ///
+    /// // Load non-game YAML (game parameter ignored)
+    /// let settings = YamlSource::Settings.load("").await?;
+    /// ```
+    pub async fn load(&self, game: &str) -> Result<Yaml> {
+        let path = self.path(game);
+        let display = if game.is_empty() {
+            self.display_name().to_string()
+        } else {
+            self.display_name_with_game(game)
+        };
+
+        let content = fs::read_to_string(&path)
+            .await
+            .with_context(|| format!("Failed to read {}: {}", display, path.display()))?;
+
+        let docs = YamlLoader::load_from_str(&content)
+            .with_context(|| format!("Failed to parse {}: {}", display, path.display()))?;
+
+        let doc = docs
+            .first()
+            .cloned()
+            .ok_or_else(|| anyhow::anyhow!("{} file is empty: {}", display, path.display()))?;
+
+        Ok(doc)
+    }
+}
+
 /// Unified configuration structure for CLI and TUI applications
 ///
 /// This represents user preferences and settings that are shared

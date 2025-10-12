@@ -1,0 +1,189 @@
+import { FluentDark } from "styles/fluent_dark.slint";
+import { FluentTabBar } from "components/fluent_tab_bar.slint";
+import { MainTab } from "tabs/main_tab.slint";
+import { BackupsTab } from "tabs/backups_tab.slint";
+import { ArticlesTab } from "tabs/articles_tab.slint";
+import { ResultsTab } from "tabs/results_tab.slint";
+import { ReportData } from "components/report_list.slint";
+import { MarkdownMetadata } from "components/markdown_viewer.slint";
+
+// MainWindow - Primary application window with Fluent Design dark theme
+export component MainWindow inherits Window {
+    // Properties - version is injected from Rust code
+    in property <string> app-version;
+
+    // Main tab properties (exposed to Rust)
+    in-out property <string> mods-folder-path: "";
+    in-out property <string> scan-folder-path: "";
+    in-out property <bool> scan-in-progress: false;
+    in-out property <bool> papyrus-monitoring: false;
+
+    // Backup tab properties (exposed to Rust)
+    in-out property <bool> operation-in-progress: false;
+    in-out property <bool> xse-backup-exists: false;
+    in-out property <bool> reshade-backup-exists: false;
+    in-out property <bool> vulkan-backup-exists: false;
+    in-out property <bool> enb-backup-exists: false;
+
+    // Results tab properties (exposed to Rust)
+    in-out property <[ReportData]> reports-list: [];
+    in-out property <int> selected-report-index: -1;
+    in-out property <string> selected-report-path: "";
+    in-out property <string> markdown-content: "";
+    in-out property <MarkdownMetadata> markdown-metadata: {
+        filename: "",
+        file-size: "",
+        display-date: ""
+    };
+    in-out property <int> zoom-level: 100;
+
+    // Dialog properties (exposed to Rust)
+    in-out property <bool> show-error-dialog: false;
+    in-out property <string> error-title: "Error";
+    in-out property <string> error-message: "";
+    in-out property <bool> show-success-dialog: false;
+    in-out property <string> success-title: "Success";
+    in-out property <string> success-message: "";
+
+    // Window configuration
+    title: "Crash Log Auto Scanner & Setup Integrity Checker | " + app-version;
+    icon: @image-url("../assets/CLASSIC.ico");
+    background: FluentDark.background;
+
+    // Window size constraints
+    min-width: 550px;
+    min-height: 350px;
+    preferred-width: 650px;
+    preferred-height: 350px;
+
+    // Callbacks for window lifecycle
+    callback window-closed();
+
+    // Main tab callbacks (forwarded to Rust)
+    callback browse-mods-folder();
+    callback browse-scan-folder();
+    callback scan-crash-logs();
+    callback scan-game-files();
+    callback show-about();
+    callback show-help();
+    callback open-settings();
+    callback open-crash-logs-folder();
+    callback check-updates();
+    callback toggle-papyrus();
+    callback exit-app();
+
+    // Backup tab callbacks (forwarded to Rust)
+    callback backup-xse();
+    callback restore-xse();
+    callback remove-xse();
+    callback backup-reshade();
+    callback restore-reshade();
+    callback remove-reshade();
+    callback backup-vulkan();
+    callback restore-vulkan();
+    callback remove-vulkan();
+    callback backup-enb();
+    callback restore-enb();
+    callback remove-enb();
+    callback open-backups-folder();
+
+    // Articles tab callbacks (forwarded to Rust)
+    callback open-url(string);
+
+    // Results tab callbacks (forwarded to Rust)
+    callback refresh-reports();
+    callback delete-report();
+    callback open-reports-folder();
+    callback report-selected(string);
+    callback copy-to-clipboard();
+    callback zoom-in();
+    callback zoom-out();
+    callback zoom-reset();
+
+    // Main layout
+    VerticalLayout {
+        padding: 0px;
+        spacing: 0px;
+
+        // Tab bar
+        tab-bar := FluentTabBar {
+            tabs: ["MAIN OPTIONS", "FILE BACKUP", "ARTICLES", "RESULTS"];
+            current-tab: 0;
+        }
+
+        // Tab content area
+        Rectangle {
+            background: FluentDark.background;
+
+            // Tab content switcher
+            if tab-bar.current-tab == 0: MainTab {
+                mods-folder-path <=> root.mods-folder-path;
+                scan-folder-path <=> root.scan-folder-path;
+                scan-in-progress <=> root.scan-in-progress;
+                papyrus-monitoring <=> root.papyrus-monitoring;
+
+                // Dialog properties
+                show-error-dialog <=> root.show-error-dialog;
+                error-title <=> root.error-title;
+                error-message <=> root.error-message;
+                show-success-dialog <=> root.show-success-dialog;
+                success-title <=> root.success-title;
+                success-message <=> root.success-message;
+
+                browse-mods-folder => { root.browse-mods-folder(); }
+                browse-scan-folder => { root.browse-scan-folder(); }
+                scan-crash-logs => { root.scan-crash-logs(); }
+                scan-game-files => { root.scan-game-files(); }
+                show-about => { root.show-about(); }
+                show-help => { root.show-help(); }
+                open-settings => { root.open-settings(); }
+                open-crash-logs-folder => { root.open-crash-logs-folder(); }
+                check-updates => { root.check-updates(); }
+                toggle-papyrus => { root.toggle-papyrus(); }
+                exit-app => { root.exit-app(); }
+            }
+            if tab-bar.current-tab == 1: BackupsTab {
+                operation-in-progress <=> root.operation-in-progress;
+                xse-backup-exists <=> root.xse-backup-exists;
+                reshade-backup-exists <=> root.reshade-backup-exists;
+                vulkan-backup-exists <=> root.vulkan-backup-exists;
+                enb-backup-exists <=> root.enb-backup-exists;
+
+                // Forward callbacks to Rust
+                backup-xse => { root.backup-xse(); }
+                restore-xse => { root.restore-xse(); }
+                remove-xse => { root.remove-xse(); }
+                backup-reshade => { root.backup-reshade(); }
+                restore-reshade => { root.restore-reshade(); }
+                remove-reshade => { root.remove-reshade(); }
+                backup-vulkan => { root.backup-vulkan(); }
+                restore-vulkan => { root.restore-vulkan(); }
+                remove-vulkan => { root.remove-vulkan(); }
+                backup-enb => { root.backup-enb(); }
+                restore-enb => { root.restore-enb(); }
+                remove-enb => { root.remove-enb(); }
+                open-backups-folder => { root.open-backups-folder(); }
+            }
+            if tab-bar.current-tab == 2: ArticlesTab {
+                open-url(url) => { root.open-url(url); }
+            }
+            if tab-bar.current-tab == 3: ResultsTab {
+                reports: root.reports-list;
+                selected-report-index: root.selected-report-index;
+                selected-report-path: root.selected-report-path;
+                markdown-content <=> root.markdown-content;
+                markdown-metadata <=> root.markdown-metadata;
+                zoom-level <=> root.zoom-level;
+
+                refresh-reports => { root.refresh-reports(); }
+                delete-report => { root.delete-report(); }
+                open-reports-folder => { root.open-reports-folder(); }
+                report-selected(path) => { root.report-selected(path); }
+                copy-to-clipboard => { root.copy-to-clipboard(); }
+                zoom-in => { root.zoom-in(); }
+                zoom-out => { root.zoom-out(); }
+                zoom-reset => { root.zoom-reset(); }
+            }
+        }
+    }
+}

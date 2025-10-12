@@ -130,7 +130,7 @@ def detect_rust_components() -> dict[str, bool]:
     except Exception as e:
         logger.error(f"Error detecting Rust components: {e}")
 
-    # Check config-core (standalone module)
+    # Check classic-config-core (standalone module)
     try:
         import classic_config
         logger.info(f"classic_config module loaded (version: {getattr(classic_config, '__version__', 'unknown')})")

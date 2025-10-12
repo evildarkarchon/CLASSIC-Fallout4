@@ -161,7 +161,7 @@ def test_stub_file_locations():
     print("Testing stub file locations...")
 
     classic_core_stub = Path("classic-core/classic_core.pyi")
-    classic_config_stub = Path("config-core/classic_config.pyi")
+    classic_config_stub = Path("classic-config-core/classic_config.pyi")
     classic_scanlog_stub = Path("classic-scanlog/classic_scanlog.pyi")
 
     assert classic_core_stub.exists(), f"Missing: {classic_core_stub}"
@@ -177,7 +177,7 @@ def test_stub_file_syntax():
 
     stub_files = [
         Path("classic-core/classic_core.pyi"),
-        Path("config-core/classic_config.pyi"),
+        Path("classic-config-core/classic_config.pyi"),
         Path("classic-scanlog/classic_scanlog.pyi"),
     ]
 

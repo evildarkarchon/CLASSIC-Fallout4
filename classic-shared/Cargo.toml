@@ -36,6 +36,13 @@ smartstring = { workspace = true }
 # Logging
 log = { workspace = true }
 
+# GUI bridge (optional - only for Slint GUI applications)
+slint = { workspace = true, optional = true }
+
+[features]
+# Enable AsyncBridge for Slint GUI applications
+gui-bridge = ["slint"]
+
 [profile.release]
 # Inherits from workspace
 

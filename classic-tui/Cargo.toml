@@ -33,6 +33,9 @@ classic-shared = { path = "../classic-shared" }
 # TUI utilities
 tui-input = "0.14.0"
 
+# System directories
+dirs = { workspace = true }
+
 # Logging
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

@@ -13,11 +13,18 @@ pub mod path;
 pub mod performance;
 pub mod strings;
 
+// GUI bridge module (optional, enabled with "gui-bridge" feature)
+#[cfg(feature = "gui-bridge")]
+pub mod async_bridge;
+
 // Re-export key types
 pub use errors::{ClassicError, ClassicResult, IntoClassicError};
 pub use path::PathHandler;
 pub use performance::RustPerformanceMonitor;
 pub use strings::StringProcessor;
+
+#[cfg(feature = "gui-bridge")]
+pub use async_bridge::AsyncBridge;
 
 /// Shared tokio runtime for all async operations (ONE RUNTIME RULE)
 ///

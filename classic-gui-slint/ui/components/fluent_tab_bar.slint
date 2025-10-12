@@ -1,0 +1,89 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+
+// FluentTabBar - Modern tab bar with accent underline
+// Follows Fluent Design System tab patterns
+export component FluentTab inherits Rectangle {
+    // Properties
+    in property<string> title;
+    in property<bool> selected: false;
+
+    // Callback
+    callback clicked <=> touch.clicked;
+
+    // Styling
+    background: root.selected ? FluentDark.layer2 : transparent;
+    min-height: FluentDark.tab-height;
+    min-width: 120px;
+
+    // Touch area
+    touch := TouchArea {}
+
+    // Animate background color changes
+    animate background {
+        duration: FluentDark.animation-fast;
+        easing: ease-in-out;
+    }
+
+    // State management
+    states [
+        hover when touch.has-hover && !root.selected: {
+            background: FluentDark.hover;
+        }
+    ]
+
+    // Layout
+    VerticalLayout {
+        padding-left: FluentDark.spacing-lg;
+        padding-right: FluentDark.spacing-lg;
+        padding-top: 12px;
+        padding-bottom: 0px;
+        spacing: 6px;
+        alignment: center;
+
+        // Tab text
+        Text {
+            text: root.title;
+            color: root.selected ? FluentDark.text-primary : FluentDark.text-secondary;
+            font-size: FluentDark.font-size-base;
+            font-weight: root.selected ? FluentDark.font-weight-semibold : FluentDark.font-weight-regular;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+
+        // Accent underline for selected tab
+        Rectangle {
+            height: 2px;
+            background: root.selected ? FluentDark.accent : transparent;
+
+            // Animate accent underline
+            animate background {
+                duration: FluentDark.animation-normal;
+                easing: ease-in-out;
+            }
+        }
+    }
+}
+
+// FluentTabBar - Container for multiple tabs
+export component FluentTabBar inherits Rectangle {
+    // Properties
+    in-out property<int> current-tab: 0;
+    in property<[string]> tabs: [];
+
+    // Styling
+    background: FluentDark.layer1;
+    height: FluentDark.tab-height;
+
+    // Layout
+    HorizontalLayout {
+        spacing: 0;
+
+        for tab[index] in root.tabs: FluentTab {
+            title: tab;
+            selected: index == root.current-tab;
+            clicked => {
+                root.current-tab = index;
+            }
+        }
+    }
+}

@@ -1,0 +1,60 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+
+// FolderBrowseButton - Small button for folder selection
+// Compact variant of FluentButton optimized for inline use with text inputs
+export component FolderBrowseButton inherits Rectangle {
+    // Properties
+    in property<bool> enabled: true;
+
+    // Callback
+    callback clicked <=> touch.clicked;
+
+    // Styling
+    background: FluentDark.accent;
+    border-radius: FluentDark.radius-sm;
+    height: 28px;
+    width: 80px;
+
+    // Touch area for interactions
+    touch := TouchArea {
+        enabled: root.enabled;
+    }
+
+    // Animate background color changes
+    animate background {
+        duration: FluentDark.animation-fast;
+        easing: ease-in-out;
+    }
+
+    // State management
+    states [
+        hover when touch.has-hover && root.enabled: {
+            background: FluentDark.accent-hover;
+        }
+        pressed when touch.pressed && root.enabled: {
+            background: FluentDark.accent-pressed;
+        }
+        disabled when !root.enabled: {
+            background: FluentDark.disabled;
+            opacity: 0.5;
+        }
+    ]
+
+    // Text label
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        alignment: center;
+
+        Text {
+            text: "Browse";
+            color: FluentDark.text-on-accent;
+            font-size: FluentDark.font-size-sm;
+            font-weight: FluentDark.font-weight-semibold;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}

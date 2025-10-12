@@ -13,7 +13,7 @@
 pub mod config;
 pub mod yamldata;
 
-pub use config::{ClassicConfig, PathConfig};
+pub use config::{ClassicConfig, PathConfig, YamlSource};
 pub use yamldata::{ConfigError, YamlDataCore};
 
 // Re-export get_runtime from classic-shared for convenience

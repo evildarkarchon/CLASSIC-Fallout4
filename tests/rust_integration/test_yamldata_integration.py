@@ -1,5 +1,5 @@
 """
-Integration tests for config-core YamlData.
+Integration tests for classic-config-core YamlData.
 
 Tests verify:
 - YamlData can be instantiated with real YAML files

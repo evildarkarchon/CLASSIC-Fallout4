@@ -1,0 +1,75 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+
+// SplitPane - Horizontal resizable split pane with Fluent styling
+// Allows users to resize left and right panels by dragging the divider
+export component SplitPane inherits Rectangle {
+    // Properties
+    in property <length> left-min-width: 200px;
+    in property <length> right-min-width: 300px;
+    in-out property <length> split-position: 300px;  // Initial split position (about 30% of 1000px)
+
+    // Callbacks
+    callback split-position-changed(length);
+
+    background: FluentDark.background;
+
+    HorizontalLayout {
+        spacing: 0;
+
+        // Left panel
+        left-container := Rectangle {
+            width: max(root.split-position, root.left-min-width);
+            background: transparent;
+
+            @children
+        }
+
+        // Resizable divider
+        divider := Rectangle {
+            width: 4px;
+            background: FluentDark.border-subtle;
+
+            // Hover state
+            states [
+                hover when divider-touch.has-hover: {
+                    background: FluentDark.border;
+                }
+                pressed when divider-touch.pressed: {
+                    background: FluentDark.accent;
+                }
+            ]
+
+            // Animate background color
+            animate background {
+                duration: FluentDark.animation-fast;
+                easing: ease-in-out;
+            }
+
+            // Touch area for dragging
+            divider-touch := TouchArea {
+                mouse-cursor: ew-resize;
+
+                moved => {
+                    if (self.pressed) {
+                        // Calculate new split position
+                        root.split-position = max(
+                            root.left-min-width,
+                            min(
+                                root.width - root.right-min-width - 4px,
+                                self.mouse-x - self.pressed-x + root.split-position
+                            )
+                        );
+                        root.split-position-changed(root.split-position);
+                    }
+                }
+            }
+        }
+
+        // Right panel (takes remaining space)
+        right-container := Rectangle {
+            horizontal-stretch: 1;
+            min-width: root.right-min-width;
+            background: transparent;
+        }
+    }
+}
