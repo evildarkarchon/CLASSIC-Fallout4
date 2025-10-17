@@ -12,3 +12,4 @@ pub mod papyrus;
 pub mod results;
 pub mod scan;
 pub mod settings;
+pub mod settings_dialog;

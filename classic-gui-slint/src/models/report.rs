@@ -1,4 +1,5 @@
 // Report data models for Results Tab
+#![allow(dead_code)]
 //
 // This module provides data structures for representing scan reports
 // in the UI, with formatting helpers for display.

@@ -3,7 +3,7 @@
 //! Handles URL opening for resource links in the Articles tab.
 
 use anyhow::{Context, Result};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 /// Opens a URL in the default browser.
 ///

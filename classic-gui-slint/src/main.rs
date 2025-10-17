@@ -9,7 +9,7 @@ mod handlers;
 mod models;
 
 use anyhow::Result;
-use app_state::{AppState, SharedAppState};
+use app_state::AppState;
 use classic_shared::AsyncBridge;
 use geometry::WindowGeometry;
 use slint::{PhysicalPosition, PhysicalSize};
@@ -577,10 +577,10 @@ fn main() -> Result<(), slint::PlatformError> {
     // Delete report callback
     main_window.on_delete_report({
         let window_weak = main_window.as_weak();
-        let state = app_state.clone();
+        let _state = app_state.clone();
         move || {
             let window = window_weak.clone();
-            let state = state.clone();
+            let _state = _state.clone();
 
             // Get currently selected report path
             if let Some(w) = window.upgrade() {
@@ -780,6 +780,218 @@ fn main() -> Result<(), slint::PlatformError> {
     main_window.on_exit_app(|| {
         tracing::info!("Exit clicked");
         std::process::exit(0);
+    });
+
+    // ========================================
+    // DIALOG CALLBACKS
+    // ========================================
+
+    // Settings dialog callbacks
+    main_window.on_settings_save({
+        let window_weak = main_window.as_weak();
+        let _state = app_state.clone();
+        move || {
+            tracing::info!("Saving settings...");
+            let window = window_weak.clone();
+            let _state = _state.clone();
+
+            // TODO: Gather settings from UI and save to AppState
+            // For now, just close the dialog
+            slint::spawn_local(async move {
+                // Load settings from UI properties
+                if let Some(w) = window.upgrade() {
+                    // TODO: Use SettingsData::from_app_state pattern
+                    // For now just close
+                    w.set_show_settings_dialog(false);
+                    tracing::info!("Settings dialog closed (save functionality pending)");
+                }
+            }).unwrap();
+        }
+    });
+
+    main_window.on_settings_cancel({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Settings cancelled");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_settings_dialog(false);
+            }
+        }
+    });
+
+    main_window.on_settings_browse_path({
+        let _window_weak = main_window.as_weak();
+        move |path_type| {
+            let path_type_str = path_type.to_string();
+            tracing::debug!("Browse settings path: {}", path_type_str);
+
+            // TODO: Call rfd file picker for the specific path type
+            // handlers::settings_dialog::browse_settings_path(&path_type_str, current_path)
+            tracing::warn!("Settings path browsing not yet implemented");
+        }
+    });
+
+    // About dialog callbacks
+    main_window.on_about_close({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("About dialog closed");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_about_dialog(false);
+            }
+        }
+    });
+
+    main_window.on_about_open_github(|| {
+        tracing::info!("Opening GitHub page...");
+        if let Err(e) = handlers::articles::handle_open_url("https://github.com/evildarkarchon/CLASSIC-Fallout4") {
+            tracing::error!("Failed to open GitHub: {}", e);
+        }
+    });
+
+    main_window.on_about_open_nexus(|| {
+        tracing::info!("Opening Nexus Mods page...");
+        if let Err(e) = handlers::articles::handle_open_url("https://www.nexusmods.com/fallout4/mods/56255") {
+            tracing::error!("Failed to open Nexus Mods: {}", e);
+        }
+    });
+
+    // Update dialog callbacks
+    main_window.on_update_close({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Update dialog closed");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_update_dialog(false);
+            }
+        }
+    });
+
+    main_window.on_update_download({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::info!("Opening download page...");
+            // Get the latest version URL (GitHub releases)
+            if let Err(e) = handlers::articles::handle_open_url("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest") {
+                tracing::error!("Failed to open download page: {}", e);
+            }
+
+            // Close dialog
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_update_dialog(false);
+            }
+        }
+    });
+
+    main_window.on_update_skip({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Update skipped");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_update_dialog(false);
+            }
+        }
+    });
+
+    // Papyrus dialog callbacks
+    main_window.on_papyrus_close({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Papyrus dialog closed");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_papyrus_dialog(false);
+            }
+        }
+    });
+
+    main_window.on_papyrus_start_monitoring({
+        let window_weak = main_window.as_weak();
+        let state = app_state.clone();
+        move || {
+            tracing::info!("Starting Papyrus monitoring...");
+            let window = window_weak.clone();
+            let state = state.clone();
+
+            slint::spawn_local(async move {
+                match handlers::papyrus::start_monitoring(state).await {
+                    Ok(()) => {
+                        if let Some(w) = window.upgrade() {
+                            w.set_papyrus_monitoring(true);
+                            tracing::info!("Papyrus monitoring started successfully");
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to start Papyrus monitoring: {}", e);
+                        if let Some(w) = window.upgrade() {
+                            w.set_error_title("Monitoring Error".into());
+                            w.set_error_message(format!("Failed to start monitoring:\n\n{}", e).into());
+                            w.set_show_error_dialog(true);
+                        }
+                    }
+                }
+            }).unwrap();
+        }
+    });
+
+    main_window.on_papyrus_stop_monitoring({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::info!("Stopping Papyrus monitoring...");
+            let window = window_weak.clone();
+
+            slint::spawn_local(async move {
+                match handlers::papyrus::stop_monitoring().await {
+                    Ok(()) => {
+                        if let Some(w) = window.upgrade() {
+                            w.set_papyrus_monitoring(false);
+                            tracing::info!("Papyrus monitoring stopped successfully");
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to stop Papyrus monitoring: {}", e);
+                    }
+                }
+            }).unwrap();
+        }
+    });
+
+    main_window.on_papyrus_clear_stats({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Clearing Papyrus stats...");
+            handlers::papyrus::clear_papyrus_stats();
+
+            // Reset UI counters
+            if let Some(w) = window_weak.upgrade() {
+                w.set_papyrus_error_count(0);
+                w.set_papyrus_warning_count(0);
+                w.set_papyrus_info_count(0);
+                w.set_papyrus_log_content("".into());
+                tracing::info!("Papyrus stats cleared");
+            }
+        }
+    });
+
+    // Confirmation dialog callbacks
+    main_window.on_confirmation_confirmed({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Confirmation: User confirmed action");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_confirmation_dialog(false);
+                // TODO: Trigger the actual action based on context
+            }
+        }
+    });
+
+    main_window.on_confirmation_cancelled({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Confirmation: User cancelled action");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_confirmation_dialog(false);
+            }
+        }
     });
 
     // Run the application

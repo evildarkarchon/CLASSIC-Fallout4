@@ -253,7 +253,7 @@ fn get_config_path() -> Result<PathBuf> {
 ///     }
 /// }
 /// ```
-fn find_yaml_directories(config: &CliConfig) -> Result<Vec<PathBuf>> {
+fn find_yaml_directories(_config: &CliConfig) -> Result<Vec<PathBuf>> {
     // Try executable directory first
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {

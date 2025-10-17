@@ -15,6 +15,7 @@ pub struct MarkdownContent {
     pub text: String,
 
     /// Original markdown source (for clipboard copy)
+    #[allow(dead_code)]
     pub source: String,
 
     /// File metadata

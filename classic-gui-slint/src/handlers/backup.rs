@@ -1,7 +1,6 @@
 // Backup operations handler for game file backups
 use anyhow::{anyhow, Context, Result};
 use classic_config_core::YamlSource;
-use classic_shared::get_runtime;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use yaml_rust2::Yaml;
@@ -67,11 +66,14 @@ impl BackupOperation {
 pub struct BackupResult {
     pub success: bool,
     pub message: String,
+    #[allow(dead_code)]
     pub files_processed: usize,
+    #[allow(dead_code)]
     pub errors: Vec<String>,
 }
 
 impl BackupResult {
+    #[allow(dead_code)]
     pub fn success(message: String, files_processed: usize) -> Self {
         Self {
             success: true,

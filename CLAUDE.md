@@ -661,10 +661,10 @@ crate-type = ["rlib"]  # Only rlib
 3. Be installed as a separate Python module
 
 **Example**:
-- ✅ `classic_config` - standalone module with YamlData
-- ✅ `classic_scanlog` - standalone module with RustOrchestrator, AnalysisConfig, AnalysisResult
-- ✅ `classic_core` - standalone module re-exporting from other crates
-- ❌ `classic-yaml` as rlib-only - classes not accessible (but re-exported through classic_core)
+- ✅ `classic_config-py` - standalone module with YamlData
+- ✅ `classic_scanlog-py` - standalone module with RustOrchestrator, AnalysisConfig, AnalysisResult
+- ✅ `classic_core-py` - standalone module re-exporting from other crates
+- ✅ `classic-yaml-py` - standalone module with PyYamlOperations
 
 ### Common Issues
 1. **Module not found**: Use build method 1 (recommended) to update .pyd

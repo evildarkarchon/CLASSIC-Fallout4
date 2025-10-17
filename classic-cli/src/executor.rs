@@ -272,7 +272,7 @@ mod tests {
     fn test_executor_creation() {
         let config = CliConfig::default();
         let yaml_data = create_test_yaml_data();
-        let executor = ScanExecutor::new(config, yaml_data);
+        let _executor = ScanExecutor::new(config, yaml_data);
         assert!(true); // Just verify creation works
     }
 

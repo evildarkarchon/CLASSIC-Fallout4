@@ -137,6 +137,7 @@ mod yaml_round_trip_integration {
                 scan_custom: Some(PathBuf::from("D:\\Logs (2024)")),
                 mods_folder: Some(PathBuf::from("C:\\Mods - Collection #1")),
                 game_root: PathBuf::from("C:\\Game"),
+                docs_root: None,
             },
         };
 
@@ -204,6 +205,7 @@ mod yaml_round_trip_integration {
                 scan_custom: None,
                 mods_folder: None,
                 game_root: PathBuf::from("C:\\Game"),
+                docs_root: None,
             },
         };
 
@@ -252,7 +254,7 @@ mod output_integration {
 
     #[test]
     fn test_output_formatter_creation() {
-        let formatter = OutputFormatter::new();
+        let _formatter = OutputFormatter::new();
         // Just verify it can be created without panicking
         assert!(true);
     }

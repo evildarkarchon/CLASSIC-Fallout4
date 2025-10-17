@@ -1,0 +1,169 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+import { FluentButton } from "fluent_button.slint";
+
+// ConfirmationDialog - Dialog for confirming destructive or important actions
+// Provides warning styling and Yes/No buttons with customizable messages
+export component ConfirmationDialog inherits Rectangle {
+    // Properties
+    in property<string> title: "Confirm Action";
+    in property<string> message: "Are you sure you want to proceed?";
+    in property<bool> show: false;
+    in property<string> confirm-text: "Yes";
+    in property<string> cancel-text: "No";
+    in property<bool> is-danger: false;  // Red warning style for destructive actions
+
+    // Callbacks
+    callback confirmed();
+    callback cancelled();
+
+    // Only visible when show is true
+    visible: root.show;
+
+    // Full screen overlay
+    width: 100%;
+    height: 100%;
+
+    // Semi-transparent backdrop
+    background: #00000080;
+
+    // Animate fade in/out
+    animate opacity {
+        duration: FluentDark.animation-normal;
+        easing: ease-in-out;
+    }
+
+    states [
+        visible when root.show: {
+            opacity: 1;
+        }
+        hidden when !root.show: {
+            opacity: 0;
+        }
+    ]
+
+    // Focus scope for keyboard handling
+    FocusScope {
+        enabled: root.show;
+
+        // Handle Escape key to cancel
+        key-pressed(event) => {
+            if (event.text == "\u{001b}") {
+                root.cancelled();
+                return accept;
+            }
+            return reject;
+        }
+
+        // Center the dialog card
+        VerticalLayout {
+            alignment: center;
+
+            HorizontalLayout {
+                alignment: center;
+
+                // Confirmation dialog card
+                Rectangle {
+                background: FluentDark.layer2;
+                border-radius: FluentDark.radius-lg;
+                border-width: 2px;
+                border-color: root.is-danger ? FluentDark.error : FluentDark.warning;
+                min-width: 400px;
+                max-width: 600px;
+                min-height: 150px;
+
+                // Elevated shadow with warning/danger tint
+                drop-shadow-blur: FluentDark.shadow-lg;
+                drop-shadow-color: root.is-danger ? #ed2d2d40 : #faa91940;
+                drop-shadow-offset-y: 8px;
+
+                // Animate scale in/out
+                animate y {
+                    duration: FluentDark.animation-normal;
+                    easing: cubic-bezier(0.1, 0.9, 0.2, 1);
+                }
+
+                VerticalLayout {
+                    padding: FluentDark.spacing-lg;
+                    spacing: FluentDark.spacing-md;
+
+                    // Title with warning icon
+                    HorizontalLayout {
+                        spacing: FluentDark.spacing-sm;
+
+                        // Warning icon (triangle with !)
+                        Rectangle {
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 12px;
+                            background: root.is-danger ? FluentDark.error : FluentDark.warning;
+
+                            Text {
+                                text: "!";
+                                color: root.is-danger ? #ffffff : #000000;
+                                font-size: 16px;
+                                font-weight: FluentDark.font-weight-bold;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        Text {
+                            text: root.title;
+                            color: root.is-danger ? FluentDark.error : FluentDark.warning;
+                            font-size: FluentDark.font-size-xl;
+                            font-weight: FluentDark.font-weight-semibold;
+                            horizontal-alignment: left;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    // Confirmation message
+                    Text {
+                        text: root.message;
+                        color: FluentDark.text-secondary;
+                        font-size: FluentDark.font-size-base;
+                        font-weight: FluentDark.font-weight-regular;
+                        horizontal-alignment: left;
+                        wrap: word-wrap;
+                    }
+
+                    // Spacer
+                    Rectangle {
+                        background: transparent;
+                    }
+
+                    // Button row (Cancel on left, Confirm on right)
+                    HorizontalLayout {
+                        spacing: FluentDark.spacing-sm;
+                        alignment: end;
+
+                        FluentButton {
+                            text: root.cancel-text;
+                            primary: false;
+                            clicked => {
+                                root.cancelled();
+                            }
+                        }
+
+                        FluentButton {
+                            text: root.confirm-text;
+                            primary: true;
+                            // Could use danger styling here if we add it to FluentButton
+                            clicked => {
+                                root.confirmed();
+                            }
+                        }
+                    }
+                }
+            }
+        }  // End HorizontalLayout (center)
+    }  // End VerticalLayout (center)
+
+    // Handle click outside to cancel
+    TouchArea {
+            clicked => {
+                root.cancelled();
+            }
+        }
+    }  // End FocusScope
+}

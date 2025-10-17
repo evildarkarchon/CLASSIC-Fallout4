@@ -11,7 +11,6 @@ use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
-use std::sync::Arc;
 use std::time::Duration;
 use walkdir::WalkDir;
 
@@ -174,6 +173,7 @@ pub fn open_reports_folder(state: SharedAppState) -> Result<()> {
 /// File watcher for auto-refresh functionality
 ///
 /// Monitors report directories for changes and triggers refresh callbacks.
+#[allow(dead_code)]
 pub struct ReportWatcher {
     _watcher: RecommendedWatcher,
     receiver: Receiver<notify::Result<Event>>,
@@ -190,6 +190,7 @@ impl ReportWatcher {
     /// # Returns
     /// * `Ok(ReportWatcher)` - File watcher ready to receive events
     /// * `Err(anyhow::Error)` - Failed to create watcher
+    #[allow(dead_code)]
     pub fn new(state: SharedAppState) -> Result<Self> {
         let (tx, receiver) = channel();
 
@@ -237,6 +238,7 @@ impl ReportWatcher {
     /// Check for file system events (non-blocking)
     ///
     /// Returns true if there were any relevant changes (file creation, modification, deletion)
+    #[allow(dead_code)]
     pub fn check_for_changes(&self) -> bool {
         let mut has_changes = false;
 
@@ -261,6 +263,7 @@ impl ReportWatcher {
 /// Debounced refresh helper
 ///
 /// Prevents rapid successive refreshes by tracking the last refresh time
+#[allow(dead_code)]
 pub struct RefreshDebouncer {
     last_refresh: std::time::Instant,
     debounce_duration: Duration,
@@ -268,6 +271,7 @@ pub struct RefreshDebouncer {
 
 impl RefreshDebouncer {
     /// Create a new debouncer with specified debounce duration
+    #[allow(dead_code)]
     pub fn new(debounce_duration: Duration) -> Self {
         Self {
             last_refresh: std::time::Instant::now() - debounce_duration,  // Allow immediate first refresh
@@ -278,6 +282,7 @@ impl RefreshDebouncer {
     /// Check if enough time has passed since last refresh
     ///
     /// Returns true if a refresh should be performed
+    #[allow(dead_code)]
     pub fn should_refresh(&mut self) -> bool {
         let elapsed = self.last_refresh.elapsed();
         if elapsed >= self.debounce_duration {

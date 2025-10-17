@@ -52,6 +52,7 @@ pub fn browse_scan_folder() -> Result<Option<PathBuf>> {
 ///
 /// # Returns
 /// Returns true if the path exists and is a directory
+#[allow(dead_code)]
 pub fn validate_folder_path(path: &str) -> bool {
     if path.is_empty() {
         return true; // Empty paths are valid (optional fields)

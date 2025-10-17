@@ -48,6 +48,7 @@ pub fn copy_to_clipboard(text: &str) -> Result<()> {
 /// # Returns
 /// * `Ok(())` - Clipboard successfully cleared
 /// * `Err(anyhow::Error)` - Failed to access or clear clipboard
+#[allow(dead_code)]
 pub fn clear_clipboard() -> Result<()> {
     tracing::debug!("Clearing clipboard");
 
@@ -68,6 +69,7 @@ pub fn clear_clipboard() -> Result<()> {
 /// # Returns
 /// * `Ok(String)` - Text content from clipboard
 /// * `Err(anyhow::Error)` - Failed to access clipboard or read text
+#[allow(dead_code)]
 pub fn get_clipboard_text() -> Result<String> {
     tracing::debug!("Reading clipboard text");
 

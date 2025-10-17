@@ -54,6 +54,7 @@ fn bench_yaml_serialization(c: &mut Criterion) {
                     scan_custom: Some(PathBuf::from("C:\\Test\\Logs")),
                     mods_folder: Some(PathBuf::from("C:\\Test\\Mods")),
                     game_root: PathBuf::from("C:\\Test\\Game"),
+                    docs_root: None,
                 },
             };
 

@@ -3,7 +3,7 @@
 //! This module provides the main orchestration layer that coordinates all analysis
 //! components into a unified pipeline for processing crash logs.
 
-use crate::error::{Result, ScanLogError};
+use crate::error::Result;
 use crate::parser::LogParser;
 use classic_file_io_core::FileIOCore;
 use std::collections::HashMap;

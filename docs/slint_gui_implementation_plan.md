@@ -938,23 +938,23 @@ pub fn handle_scan_crash_logs(main_window: &MainWindow, bridge: &AsyncBridge) {
 - Code blocks with syntax highlighting and Fluent styling
 - Tables and images rendered with proper Fluent aesthetics
 
-### Phase 8: Settings & Fluent Dialogs (Week 8)
+### Phase 8: Settings & Fluent Dialogs (Week 8)  ✅ COMPLETED
 
 **Tasks:**
-- [ ] Create settings dialog component using Fluent modal pattern (elevated card overlay)
-- [ ] Integrate `classic-config-core` for configuration with Rust acceleration
-- [ ] Style settings controls with Fluent inputs (text boxes, checkboxes, dropdowns)
-- [ ] Implement About dialog with Fluent layout (icon, version, credits)
-- [ ] Style About dialog with proper Fluent typography and spacing
-- [ ] Implement Help dialogs with Fluent markdown rendering
-- [ ] Create Papyrus monitoring dialog with real-time status updates
-- [ ] Add update check dialog with progress indicator
-- [ ] Implement path selection dialogs (native file picker integration)
-- [ ] Add error message dialogs with semantic colors (error red icon)
-- [ ] Add confirmation dialogs with proper Fluent button layout (primary/secondary)
-- [ ] Ensure all dialogs use FluentCard with proper shadows
-- [ ] Apply consistent dialog animations (fade in with slide up, 250ms)
-- [ ] Add proper focus management for dialogs (trap focus, escape to close)
+- [x] Create settings dialog component using Fluent modal pattern (elevated card overlay)
+- [x] Integrate `classic-config-core` for configuration with Rust acceleration
+- [x] Style settings controls with Fluent inputs (text boxes, checkboxes, dropdowns)
+- [x] Implement About dialog with Fluent layout (icon, version, credits)
+- [x] Style About dialog with proper Fluent typography and spacing
+- [x] Implement Help dialogs with Fluent markdown rendering
+- [x] Create Papyrus monitoring dialog with real-time status updates
+- [x] Add update check dialog with progress indicator
+- [x] Implement path selection dialogs (native file picker integration)
+- [x] Add error message dialogs with semantic colors (error red icon)
+- [x] Add confirmation dialogs with proper Fluent button layout (primary/secondary)
+- [x] Ensure all dialogs use FluentCard with proper shadows
+- [x] Apply consistent dialog animations (fade in with slide up, 250ms)
+- [x] Add proper focus management for dialogs (trap focus, escape to close)
 
 **Deliverables:**
 - All dialogs functional and styled with Fluent Design

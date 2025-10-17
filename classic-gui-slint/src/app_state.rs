@@ -123,6 +123,7 @@ impl AppState {
     }
 
     /// Get the INI folder path
+    #[allow(dead_code)]
     pub fn ini_folder(&self) -> Option<&PathBuf> {
         self.config.paths.ini_folder.as_ref()
     }
@@ -137,32 +138,91 @@ impl AppState {
         self.scan_folder = Some(path);
     }
 
+    /// Set FCX mode setting
+    #[allow(dead_code)]
+    pub fn set_fcx_mode(&mut self, enabled: bool) {
+        self.config.fcx_mode = enabled;
+    }
+
+    /// Set show FormID values setting
+    #[allow(dead_code)]
+    pub fn set_show_formid_values(&mut self, enabled: bool) {
+        self.config.show_formid_values = enabled;
+    }
+
+    /// Set stat logging setting
+    #[allow(dead_code)]
+    pub fn set_stat_logging(&mut self, enabled: bool) {
+        self.config.stat_logging = enabled;
+    }
+
+    /// Set move unsolved logs setting
+    #[allow(dead_code)]
+    pub fn set_move_unsolved_logs(&mut self, enabled: bool) {
+        self.config.move_unsolved_logs = enabled;
+    }
+
+    /// Set simplify logs setting
+    #[allow(dead_code)]
+    pub fn set_simplify_logs(&mut self, enabled: bool) {
+        self.config.simplify_logs = enabled;
+    }
+
+    /// Set update check setting
+    #[allow(dead_code)]
+    pub fn set_update_check(&mut self, enabled: bool) {
+        self.config.update_check = enabled;
+    }
+
+    /// Set game root path
+    #[allow(dead_code)]
+    pub fn set_game_root(&mut self, path: PathBuf) {
+        self.config.paths.game_root = path;
+    }
+
+    /// Set docs root path
+    #[allow(dead_code)]
+    pub fn set_docs_root(&mut self, path: Option<PathBuf>) {
+        self.config.paths.docs_root = path;
+    }
+
+    /// Set INI folder path
+    #[allow(dead_code)]
+    pub fn set_ini_folder(&mut self, path: Option<PathBuf>) {
+        self.config.paths.ini_folder = path;
+    }
+
     /// Get FCX mode setting
     pub fn fcx_mode(&self) -> bool {
         self.config.fcx_mode
     }
 
     /// Get show FormID values setting
+    #[allow(dead_code)]
     pub fn show_formid_values(&self) -> bool {
         self.config.show_formid_values
     }
 
     /// Get stat logging setting
+    #[allow(dead_code)]
     pub fn stat_logging(&self) -> bool {
         self.config.stat_logging
     }
 
     /// Get move unsolved logs setting
+    #[allow(dead_code)]
     pub fn move_unsolved_logs(&self) -> bool {
         self.config.move_unsolved_logs
     }
 
     /// Get simplify logs setting
+    #[allow(dead_code)]
     pub fn simplify_logs(&self) -> bool {
         self.config.simplify_logs
     }
 
     /// Get update check setting
+    #[allow(dead_code)]
     pub fn update_check(&self) -> bool {
         self.config.update_check
     }
@@ -172,11 +232,13 @@ impl AppState {
     /// # Returns
     /// * `Ok(())` - All paths are valid
     /// * `Err(anyhow::Error)` - One or more paths are invalid
+    #[allow(dead_code)]
     pub fn validate_paths(&self) -> Result<()> {
         self.config.validate_paths()
     }
 
     /// Save current configuration to YAML file
+    #[allow(dead_code)]
     pub async fn save_config(&self) -> Result<()> {
         let config_path = self.config.get_config_path();
         self.config
@@ -188,6 +250,7 @@ impl AppState {
     /// Reload configuration from disk
     ///
     /// This is useful if configuration was modified externally.
+    #[allow(dead_code)]
     pub async fn reload(&mut self) -> Result<()> {
         self.config = ClassicConfig::load_or_default().await?;
         self.config.load_local_yaml_paths(&self.game).await?;
@@ -205,6 +268,7 @@ impl AppState {
     /// ```rust,no_run
     /// let yaml = state.load_yaml(YamlSource::Game).await?;
     /// ```
+    #[allow(dead_code)]
     pub async fn load_yaml(&self, source: YamlSource) -> Result<yaml_rust2::Yaml> {
         source.load(&self.game).await
     }

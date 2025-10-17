@@ -7,6 +7,13 @@ import { ResultsTab } from "tabs/results_tab.slint";
 import { ReportData } from "components/report_list.slint";
 import { MarkdownMetadata } from "components/markdown_viewer.slint";
 
+// Dialog components
+import { SettingsDialog } from "dialogs/settings_dialog.slint";
+import { AboutDialog } from "dialogs/about_dialog.slint";
+import { UpdateDialog } from "dialogs/update_dialog.slint";
+import { PapyrusDialog } from "dialogs/papyrus_dialog.slint";
+import { ConfirmationDialog } from "components/confirmation_dialog.slint";
+
 // MainWindow - Primary application window with Fluent Design dark theme
 export component MainWindow inherits Window {
     // Properties - version is injected from Rust code
@@ -44,6 +51,49 @@ export component MainWindow inherits Window {
     in-out property <bool> show-success-dialog: false;
     in-out property <string> success-title: "Success";
     in-out property <string> success-message: "";
+
+    // Settings dialog properties
+    in-out property <bool> show-settings-dialog: false;
+    in-out property <bool> settings-fcx-mode: false;
+    in-out property <bool> settings-show-formid-values: false;
+    in-out property <bool> settings-stat-logging: false;
+    in-out property <bool> settings-update-check: true;
+    in-out property <bool> settings-move-unsolved-logs: false;
+    in-out property <bool> settings-simplify-logs: false;
+    in-out property <string> settings-game-root: "";
+    in-out property <string> settings-docs-root: "";
+    in-out property <string> settings-ini-folder: "";
+    in-out property <string> settings-mods-folder: "";
+    in-out property <string> settings-scan-custom: "";
+
+    // About dialog properties
+    in-out property <bool> show-about-dialog: false;
+
+    // Update dialog properties
+    in-out property <bool> show-update-dialog: false;
+    in-out property <bool> update-checking: false;
+    in-out property <bool> update-available: false;
+    in-out property <string> update-current-version: "";
+    in-out property <string> update-latest-version: "";
+    in-out property <string> update-release-notes: "";
+    in-out property <string> update-error-message: "";
+    in-out property <bool> update-dont-check-again: false;
+
+    // Papyrus dialog properties
+    in-out property <bool> show-papyrus-dialog: false;
+    in-out property <string> papyrus-log-path: "";
+    in-out property <int> papyrus-error-count: 0;
+    in-out property <int> papyrus-warning-count: 0;
+    in-out property <int> papyrus-info-count: 0;
+    in-out property <string> papyrus-log-content: "";
+
+    // Confirmation dialog properties
+    in-out property <bool> show-confirmation-dialog: false;
+    in-out property <string> confirmation-title: "Confirm Action";
+    in-out property <string> confirmation-message: "Are you sure?";
+    in-out property <string> confirmation-confirm-text: "Yes";
+    in-out property <string> confirmation-cancel-text: "No";
+    in-out property <bool> confirmation-is-danger: false;
 
     // Window configuration
     title: "Crash Log Auto Scanner & Setup Integrity Checker | " + app-version;
@@ -99,6 +149,31 @@ export component MainWindow inherits Window {
     callback zoom-in();
     callback zoom-out();
     callback zoom-reset();
+
+    // Settings dialog callbacks
+    callback settings-save();
+    callback settings-cancel();
+    callback settings-browse-path(string /* path-type */);
+
+    // About dialog callbacks
+    callback about-close();
+    callback about-open-github();
+    callback about-open-nexus();
+
+    // Update dialog callbacks
+    callback update-close();
+    callback update-download();
+    callback update-skip();
+
+    // Papyrus dialog callbacks
+    callback papyrus-close();
+    callback papyrus-start-monitoring();
+    callback papyrus-stop-monitoring();
+    callback papyrus-clear-stats();
+
+    // Confirmation dialog callbacks
+    callback confirmation-confirmed();
+    callback confirmation-cancelled();
 
     // Main layout
     VerticalLayout {
@@ -185,5 +260,82 @@ export component MainWindow inherits Window {
                 zoom-reset => { root.zoom-reset(); }
             }
         }
+    }
+
+    // Dialog overlays (rendered on top of main content)
+
+    // Settings Dialog
+    SettingsDialog {
+        show <=> root.show-settings-dialog;
+        fcx-mode <=> root.settings-fcx-mode;
+        show-formid-values <=> root.settings-show-formid-values;
+        stat-logging <=> root.settings-stat-logging;
+        update-check <=> root.settings-update-check;
+        move-unsolved-logs <=> root.settings-move-unsolved-logs;
+        simplify-logs <=> root.settings-simplify-logs;
+        game-root <=> root.settings-game-root;
+        docs-root <=> root.settings-docs-root;
+        ini-folder <=> root.settings-ini-folder;
+        mods-folder <=> root.settings-mods-folder;
+        scan-custom <=> root.settings-scan-custom;
+
+        save-clicked => { root.settings-save(); }
+        cancel-clicked => { root.settings-cancel(); }
+        browse-path(path-type) => { root.settings-browse-path(path-type); }
+    }
+
+    // About Dialog
+    AboutDialog {
+        show <=> root.show-about-dialog;
+        app-version: root.app-version;
+
+        close-clicked => { root.about-close(); }
+        open-github => { root.about-open-github(); }
+        open-nexus => { root.about-open-nexus(); }
+    }
+
+    // Update Dialog
+    UpdateDialog {
+        show <=> root.show-update-dialog;
+        checking <=> root.update-checking;
+        update-available <=> root.update-available;
+        current-version <=> root.update-current-version;
+        latest-version <=> root.update-latest-version;
+        release-notes <=> root.update-release-notes;
+        error-message <=> root.update-error-message;
+        dont-check-again <=> root.update-dont-check-again;
+
+        close-clicked => { root.update-close(); }
+        download-clicked => { root.update-download(); }
+        skip-clicked => { root.update-skip(); }
+    }
+
+    // Papyrus Dialog
+    PapyrusDialog {
+        show <=> root.show-papyrus-dialog;
+        monitoring <=> root.papyrus-monitoring;
+        log-path <=> root.papyrus-log-path;
+        error-count <=> root.papyrus-error-count;
+        warning-count <=> root.papyrus-warning-count;
+        info-count <=> root.papyrus-info-count;
+        log-content <=> root.papyrus-log-content;
+
+        close-clicked => { root.papyrus-close(); }
+        start-monitoring => { root.papyrus-start-monitoring(); }
+        stop-monitoring => { root.papyrus-stop-monitoring(); }
+        clear-stats => { root.papyrus-clear-stats(); }
+    }
+
+    // Confirmation Dialog
+    ConfirmationDialog {
+        show <=> root.show-confirmation-dialog;
+        title <=> root.confirmation-title;
+        message <=> root.confirmation-message;
+        confirm-text <=> root.confirmation-confirm-text;
+        cancel-text <=> root.confirmation-cancel-text;
+        is-danger <=> root.confirmation-is-danger;
+
+        confirmed => { root.confirmation-confirmed(); }
+        cancelled => { root.confirmation-cancelled(); }
     }
 }

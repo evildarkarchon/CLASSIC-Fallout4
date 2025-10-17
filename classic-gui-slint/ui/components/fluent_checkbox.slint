@@ -1,0 +1,109 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+
+// FluentCheckbox - Checkbox component with Fluent Design styling
+// Provides interactive checked/unchecked states with smooth animations
+export component FluentCheckbox inherits Rectangle {
+    // Properties
+    in property<string> text: "Checkbox";
+    in-out property<bool> checked: false;
+    in property<bool> enabled: true;
+
+    // Callbacks
+    callback toggled();
+
+    // Layout
+    horizontal-stretch: 0;
+    vertical-stretch: 0;
+    height: 32px;
+
+    // Main layout
+    HorizontalLayout {
+        spacing: FluentDark.spacing-sm;
+        padding: 0px;
+
+        // Checkbox box
+        checkbox-box := Rectangle {
+            width: 20px;
+            height: 20px;
+            border-radius: FluentDark.radius-sm;
+            border-width: 2px;
+            border-color: root.enabled ? FluentDark.border : FluentDark.border-subtle;
+            background: root.checked ? FluentDark.accent : FluentDark.layer3;
+
+            // Animate background and border
+            animate background {
+                duration: FluentDark.animation-fast;
+                easing: ease-in-out;
+            }
+            animate border-color {
+                duration: FluentDark.animation-fast;
+                easing: ease-in-out;
+            }
+
+            // Interactive states
+            states [
+                hover when touch-area.has-hover && root.enabled: {
+                    border-color: FluentDark.accent-hover;
+                    background: root.checked ? FluentDark.accent-hover : FluentDark.hover;
+                }
+                pressed when touch-area.pressed && root.enabled: {
+                    border-color: FluentDark.accent-pressed;
+                    background: root.checked ? FluentDark.accent-pressed : FluentDark.pressed;
+                }
+                disabled when !root.enabled: {
+                    opacity: 0.5;
+                }
+            ]
+
+            // Checkmark (only visible when checked)
+            if root.checked: Rectangle {
+                width: 12px;
+                height: 12px;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+
+                // Checkmark icon using Unicode ✓
+                Text {
+                    text: "✓";
+                    color: FluentDark.text-on-accent;
+                    font-size: 14px;
+                    font-weight: FluentDark.font-weight-bold;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+
+                // Fade in animation
+                animate opacity {
+                    duration: FluentDark.animation-fast;
+                    easing: ease-in-out;
+                }
+            }
+
+            // Touch area for interaction
+            touch-area := TouchArea {
+                clicked => {
+                    if root.enabled {
+                        root.checked = !root.checked;
+                        root.toggled();
+                    }
+                }
+            }
+        }
+
+        // Label text
+        Text {
+            text: root.text;
+            color: root.enabled ? FluentDark.text-primary : FluentDark.text-tertiary;
+            font-size: FluentDark.font-size-base;
+            font-weight: FluentDark.font-weight-regular;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+
+            // Animate color on disable
+            animate color {
+                duration: FluentDark.animation-fast;
+                easing: ease-in-out;
+            }
+        }
+    }
+}

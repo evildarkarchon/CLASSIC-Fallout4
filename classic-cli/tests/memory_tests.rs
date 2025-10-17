@@ -1,4 +1,4 @@
-use classic_cli::CliConfig;
+use classic_cli::{load_or_create_config, CliConfig};
 use std::path::PathBuf;
 use tempfile::tempdir;
 
@@ -40,7 +40,7 @@ async fn test_no_memory_leak_in_repeated_saves() {
 
     // Verify file still accessible (not corrupted)
     let loaded = CliConfig::load_from_yaml(&config_path).await.unwrap();
-    assert!(loaded.fcx_mode); // Last save was i=999 (odd)
+    assert!(!loaded.fcx_mode); // Last save was i=999 (odd, so 999 % 2 == 1, fcx_mode = false)
 }
 
 #[test]
@@ -68,8 +68,6 @@ async fn test_config_merge_no_accumulation() {
 
     // Simulate 1000 load + merge cycles
     for _ in 0..1000 {
-        let mut loaded = CliConfig::load_from_yaml(&config_path).await.unwrap();
-
         let args = CliArgs {
             fcx_mode: true,
             show_fid_values: false,
@@ -81,7 +79,7 @@ async fn test_config_merge_no_accumulation() {
             simplify_logs: false,
         };
 
-        loaded.merge_cli_args(&args);
+        let _loaded = load_or_create_config(&config_path, &args).await.unwrap();
         // Config should be dropped here
     }
 }

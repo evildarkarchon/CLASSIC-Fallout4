@@ -1,0 +1,402 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+import { FluentButton } from "../components/fluent_button.slint";
+import { FluentCheckbox } from "../components/fluent_checkbox.slint";
+import { FluentTextInput } from "../components/fluent_text_input.slint";
+import { FluentTabBar } from "../components/fluent_tab_bar.slint";
+
+// SettingsDialog - Comprehensive settings dialog with tabbed interface
+// Provides configuration for all CLASSIC settings with live validation
+export component SettingsDialog inherits Rectangle {
+    // Properties - Configuration values
+    in-out property<bool> show: false;
+
+    // General settings
+    in-out property<bool> fcx-mode: false;
+    in-out property<bool> show-formid-values: false;
+    in-out property<bool> stat-logging: false;
+    in-out property<bool> update-check: true;
+
+    // Advanced settings
+    in-out property<bool> move-unsolved-logs: false;
+    in-out property<bool> simplify-logs: false;
+
+    // Path settings
+    in-out property<string> game-root: "";
+    in-out property<string> docs-root: "";
+    in-out property<string> ini-folder: "";
+    in-out property<string> mods-folder: "";
+    in-out property<string> scan-custom: "";
+
+    // Callbacks
+    callback save-clicked();
+    callback cancel-clicked();
+    callback browse-path(string /* path-type */);
+
+    // Only visible when show is true
+    visible: root.show;
+
+    // Full screen overlay
+    width: 100%;
+    height: 100%;
+
+    // Semi-transparent backdrop
+    background: #00000080;
+
+    // Animate fade in/out
+    animate opacity {
+        duration: FluentDark.animation-normal;
+        easing: ease-in-out;
+    }
+
+    states [
+        visible when root.show: {
+            opacity: 1;
+        }
+        hidden when !root.show: {
+            opacity: 0;
+        }
+    ]
+
+    // Focus scope for keyboard handling
+    FocusScope {
+        enabled: root.show;
+
+        // Handle Escape key to close dialog
+        key-pressed(event) => {
+            if (event.text == "\u{001b}") {
+                root.cancel-clicked();
+                return accept;
+            }
+            return reject;
+        }
+
+        // Center the dialog
+        VerticalLayout {
+            alignment: center;
+
+            HorizontalLayout {
+                alignment: center;
+
+                // Settings dialog card
+                Rectangle {
+                background: FluentDark.layer2;
+                border-radius: FluentDark.radius-lg;
+                border-width: 1px;
+                border-color: FluentDark.border;
+                min-width: 600px;
+                max-width: 800px;
+                height: 500px;
+
+                // Elevated shadow
+                drop-shadow-blur: FluentDark.shadow-lg;
+                drop-shadow-color: #00000060;
+                drop-shadow-offset-y: 8px;
+
+                // Animate scale in/out
+                animate y {
+                    duration: FluentDark.animation-normal;
+                    easing: cubic-bezier(0.1, 0.9, 0.2, 1);
+                }
+
+                VerticalLayout {
+                    padding: 0px;
+                    spacing: 0px;
+
+                    // Title bar
+                    Rectangle {
+                        background: FluentDark.layer1;
+                        height: 48px;
+                        border-radius: FluentDark.radius-lg;
+
+                        HorizontalLayout {
+                            padding: FluentDark.spacing-md;
+                            spacing: FluentDark.spacing-sm;
+
+                            Text {
+                                text: "Settings";
+                                color: FluentDark.text-primary;
+                                font-size: FluentDark.font-size-xl;
+                                font-weight: FluentDark.font-weight-semibold;
+                                vertical-alignment: center;
+                                horizontal-stretch: 1;
+                            }
+                        }
+                    }
+
+                    // Tab bar
+                    tab-bar := FluentTabBar {
+                        tabs: ["General", "Paths", "Advanced"];
+                        current-tab: 0;
+                    }
+
+                    // Tab content area (scrollable)
+                    Flickable {
+                        width: 100%;
+                        viewport-height: 600px;
+
+                        VerticalLayout {
+                            padding: FluentDark.spacing-lg;
+                            spacing: FluentDark.spacing-md;
+
+                            // GENERAL TAB
+                            if tab-bar.current-tab == 0: VerticalLayout {
+                                spacing: FluentDark.spacing-md;
+
+                                Text {
+                                    text: "Scan Options";
+                                    color: FluentDark.text-primary;
+                                    font-size: FluentDark.font-size-lg;
+                                    font-weight: FluentDark.font-weight-semibold;
+                                }
+
+                                FluentCheckbox {
+                                    text: "FCX Mode - Enhanced FormID Analysis";
+                                    checked <=> root.fcx-mode;
+                                }
+
+                                FluentCheckbox {
+                                    text: "Show FormID Values in Reports";
+                                    checked <=> root.show-formid-values;
+                                }
+
+                                FluentCheckbox {
+                                    text: "Enable Statistical Logging";
+                                    checked <=> root.stat-logging;
+                                }
+
+                                Rectangle {
+                                    height: FluentDark.spacing-sm;
+                                    background: transparent;
+                                }
+
+                                Text {
+                                    text: "Updates & Notifications";
+                                    color: FluentDark.text-primary;
+                                    font-size: FluentDark.font-size-lg;
+                                    font-weight: FluentDark.font-weight-semibold;
+                                }
+
+                                FluentCheckbox {
+                                    text: "Check for Updates at Startup";
+                                    checked <=> root.update-check;
+                                }
+
+                                // Info text
+                                Text {
+                                    text: "FCX Mode provides deeper FormID analysis and more detailed crash reports. Enable this for advanced troubleshooting.";
+                                    color: FluentDark.text-tertiary;
+                                    font-size: FluentDark.font-size-sm;
+                                    wrap: word-wrap;
+                                }
+                            }
+
+                            // PATHS TAB
+                            if tab-bar.current-tab == 1: VerticalLayout {
+                                spacing: FluentDark.spacing-md;
+
+                                Text {
+                                    text: "Game Paths";
+                                    color: FluentDark.text-primary;
+                                    font-size: FluentDark.font-size-lg;
+                                    font-weight: FluentDark.font-weight-semibold;
+                                }
+
+                                HorizontalLayout {
+                                    spacing: FluentDark.spacing-sm;
+
+                                    FluentTextInput {
+                                        label: "Game Root Directory";
+                                        text <=> root.game-root;
+                                        placeholder: "e.g., C:\\Program Files\\Steam\\steamapps\\common\\Fallout 4";
+                                        horizontal-stretch: 1;
+                                    }
+
+                                    FluentButton {
+                                        text: "Browse";
+                                        primary: false;
+                                        clicked => {
+                                            root.browse-path("game-root");
+                                        }
+                                    }
+                                }
+
+                                HorizontalLayout {
+                                    spacing: FluentDark.spacing-sm;
+
+                                    FluentTextInput {
+                                        label: "Documents Root (Optional)";
+                                        text <=> root.docs-root;
+                                        placeholder: "e.g., C:\\Users\\YourName\\Documents\\My Games\\Fallout4";
+                                        horizontal-stretch: 1;
+                                    }
+
+                                    FluentButton {
+                                        text: "Browse";
+                                        primary: false;
+                                        clicked => {
+                                            root.browse-path("docs-root");
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    height: FluentDark.spacing-sm;
+                                    background: transparent;
+                                }
+
+                                Text {
+                                    text: "Optional Paths";
+                                    color: FluentDark.text-primary;
+                                    font-size: FluentDark.font-size-lg;
+                                    font-weight: FluentDark.font-weight-semibold;
+                                }
+
+                                HorizontalLayout {
+                                    spacing: FluentDark.spacing-sm;
+
+                                    FluentTextInput {
+                                        label: "INI Folder (Optional)";
+                                        text <=> root.ini-folder;
+                                        placeholder: "Leave empty to use game documents folder";
+                                        horizontal-stretch: 1;
+                                    }
+
+                                    FluentButton {
+                                        text: "Browse";
+                                        primary: false;
+                                        clicked => {
+                                            root.browse-path("ini-folder");
+                                        }
+                                    }
+                                }
+
+                                HorizontalLayout {
+                                    spacing: FluentDark.spacing-sm;
+
+                                    FluentTextInput {
+                                        label: "Mods Folder (Optional)";
+                                        text <=> root.mods-folder;
+                                        placeholder: "e.g., Mod Organizer 2 mods folder";
+                                        horizontal-stretch: 1;
+                                    }
+
+                                    FluentButton {
+                                        text: "Browse";
+                                        primary: false;
+                                        clicked => {
+                                            root.browse-path("mods-folder");
+                                        }
+                                    }
+                                }
+
+                                HorizontalLayout {
+                                    spacing: FluentDark.spacing-sm;
+
+                                    FluentTextInput {
+                                        label: "Custom Scan Folder (Optional)";
+                                        text <=> root.scan-custom;
+                                        placeholder: "Additional folder to scan for crash logs";
+                                        horizontal-stretch: 1;
+                                    }
+
+                                    FluentButton {
+                                        text: "Browse";
+                                        primary: false;
+                                        clicked => {
+                                            root.browse-path("scan-custom");
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ADVANCED TAB
+                            if tab-bar.current-tab == 2: VerticalLayout {
+                                spacing: FluentDark.spacing-md;
+
+                                Text {
+                                    text: "Advanced Options";
+                                    color: FluentDark.text-primary;
+                                    font-size: FluentDark.font-size-lg;
+                                    font-weight: FluentDark.font-weight-semibold;
+                                }
+
+                                FluentCheckbox {
+                                    text: "Move Unsolved Logs to Subfolder";
+                                    checked <=> root.move-unsolved-logs;
+                                }
+
+                                FluentCheckbox {
+                                    text: "Simplify Logs (May Remove Important Info)";
+                                    checked <=> root.simplify-logs;
+                                }
+
+                                // Warning text
+                                Text {
+                                    text: "⚠ Warning: Simplifying logs may remove details needed for troubleshooting. Only enable if you understand the implications.";
+                                    color: FluentDark.warning;
+                                    font-size: FluentDark.font-size-sm;
+                                    wrap: word-wrap;
+                                }
+
+                                Rectangle {
+                                    height: FluentDark.spacing-sm;
+                                    background: transparent;
+                                }
+
+                                Text {
+                                    text: "About Advanced Options";
+                                    color: FluentDark.text-primary;
+                                    font-size: FluentDark.font-size-lg;
+                                    font-weight: FluentDark.font-weight-semibold;
+                                }
+
+                                Text {
+                                    text: "• Move Unsolved Logs: Automatically organizes logs that couldn't be fully analyzed into a separate folder.\n\n• Simplify Logs: Reduces log verbosity, but may make debugging more difficult.";
+                                    color: FluentDark.text-tertiary;
+                                    font-size: FluentDark.font-size-sm;
+                                    wrap: word-wrap;
+                                }
+                            }
+                        }
+                    }
+
+                    // Bottom button bar
+                    Rectangle {
+                        background: FluentDark.layer1;
+                        height: 56px;
+
+                        HorizontalLayout {
+                            padding: FluentDark.spacing-md;
+                            spacing: FluentDark.spacing-sm;
+                            alignment: end;
+
+                            FluentButton {
+                                text: "Cancel";
+                                primary: false;
+                                clicked => {
+                                    root.cancel-clicked();
+                                }
+                            }
+
+                            FluentButton {
+                                text: "Save";
+                                primary: true;
+                                clicked => {
+                                    root.save-clicked();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }  // End HorizontalLayout (center)
+    }  // End VerticalLayout (center)
+
+    // Handle click outside to cancel
+    TouchArea {
+            clicked => {
+                root.cancel-clicked();
+            }
+        }
+    }  // End FocusScope
+}

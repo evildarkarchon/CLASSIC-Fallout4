@@ -2,7 +2,6 @@
 use anyhow::{Context, Result};
 use classic_file_io_core::LogCollector;
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
-use std::path::PathBuf;
 
 use crate::app_state::SharedAppState;
 
@@ -12,6 +11,7 @@ pub struct ScanResult {
     pub success: bool,
     pub message: String,
     pub details: Vec<String>,
+    #[allow(dead_code)]
     pub processing_time_ms: u64,
 }
 
