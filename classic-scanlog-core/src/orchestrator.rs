@@ -7,6 +7,7 @@ use crate::error::Result;
 use crate::parser::LogParser;
 use classic_file_io_core::FileIOCore;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Analysis configuration
 ///
@@ -348,8 +349,8 @@ impl OrchestratorCore {
         use std::path::Path;
         let log_content = self.file_io.read_file(Path::new(&log_path)).await?;
 
-        // Convert to lines for parser
-        let lines: Vec<String> = log_content.lines().map(|s| s.to_string()).collect();
+        // Convert to lines for parser (using Arc<str> for efficient memory sharing)
+        let lines: Vec<Arc<str>> = log_content.lines().map(|s| Arc::from(s)).collect();
 
         // Parse log into segments
         let segments = self.parser.parse_segments(&lines);
@@ -418,16 +419,31 @@ impl OrchestratorCore {
     /// # }
     /// ```
     pub async fn process_logs_batch(&self, log_paths: Vec<String>) -> Vec<AnalysisResult> {
-        let mut results = Vec::new();
+        // Optimization 1.8: Bounded parallel processing instead of sequential
+        // Expected impact: 3-4x faster for multiple logs (CPU core count dependent)
+        use futures::stream::{self, StreamExt};
 
-        for log_path in log_paths {
-            match self.process_log(log_path.clone()).await {
-                Ok(result) => results.push(result),
-                Err(e) => results.push(AnalysisResult::failure(log_path, e.to_string())),
-            }
-        }
+        // Adaptive concurrency: start with CPU count, scale based on batch size
+        let num_cpus = num_cpus::get();
+        let max_concurrent = if log_paths.len() < num_cpus {
+            log_paths.len()  // Small batch: process all concurrently
+        } else {
+            num_cpus.max(4)  // Large batch: use CPU count (min 4 for good throughput)
+        };
 
-        results
+        stream::iter(log_paths)
+            .map(|log_path| {
+                let log_path_clone = log_path.clone();
+                async move {
+                    match self.process_log(log_path.clone()).await {
+                        Ok(result) => result,
+                        Err(e) => AnalysisResult::failure(log_path_clone, e.to_string()),
+                    }
+                }
+            })
+            .buffer_unordered(max_concurrent)  // ✅ Bounded parallelism
+            .collect()
+            .await
     }
 
     /// Returns a reference to the orchestrator's analysis configuration.

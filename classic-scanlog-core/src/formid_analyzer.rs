@@ -6,10 +6,10 @@
 use crate::error::Result;
 use crate::mod_detector;
 use classic_database_core::DatabasePool;
-use linked_hash_map::LinkedHashMap;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
+use rustc_hash::FxHashMap;  // Optimization 1.2: Faster hasher for FormID counting
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -234,7 +234,7 @@ impl FormIDAnalyzerCore {
     /// ```
     pub async fn formid_match(
         &self,
-        formids_matches: Vec<String>,
+        mut formids_matches: Vec<String>,  // Optimization 1.2: Make mutable for in-place sort
         crashlog_plugins: &HashMap<String, String>,
     ) -> Result<Vec<String>> {
         if formids_matches.is_empty() {
@@ -245,18 +245,28 @@ impl FormIDAnalyzerCore {
 
         let mut lines = Vec::new();
 
-        // Count occurrences and sort - matching Python's Counter(sorted(formids_matches))
-        let mut sorted_formids = formids_matches.clone();
-        sorted_formids.sort();
+        // Optimization 1.2: Count occurrences with FxHashMap (faster than LinkedHashMap)
+        // Avoid unnecessary clone by sorting in-place and counting with faster hasher
+        formids_matches.sort();  // ✅ Sort in-place (no clone needed)
 
-        // Use LinkedHashMap to preserve insertion order like Python's dict
-        let mut formids_found: LinkedHashMap<String, usize> = LinkedHashMap::new();
-        for formid in sorted_formids {
-            *formids_found.entry(formid).or_insert(0) += 1;
+        // Use FxHashMap for faster counting (optimized for short string keys like FormIDs)
+        let mut formids_found: FxHashMap<&str, usize> = FxHashMap::default();
+        for formid in formids_matches.iter() {
+            *formids_found.entry(formid.as_str()).or_insert(0) += 1;  // ✅ No String allocation
         }
 
-        // Process each FormID exactly as Python does
-        for (formid_full, count) in formids_found.iter() {
+        // Sort by key for deterministic output
+        let mut sorted_entries: Vec<_> = formids_found.into_iter().collect();
+        sorted_entries.sort_by_key(|(k, _)| *k);
+
+        // Pre-build reverse index: prefix -> plugin (O(m) preprocessing for O(1) lookups)
+        let prefix_to_plugin: HashMap<&str, &str> = crashlog_plugins
+            .iter()
+            .map(|(plugin, prefix)| (prefix.as_str(), plugin.as_str()))
+            .collect();
+
+        // Process each FormID with O(1) plugin lookup
+        for (formid_full, count) in sorted_entries {
             let parts: Vec<&str> = formid_full.splitn(2, ": ").collect();
             if parts.len() < 2 {
                 continue;
@@ -269,32 +279,29 @@ impl FormIDAnalyzerCore {
             let formid_prefix = &formid_value[..2];
             let formid_suffix = &formid_value[2..];
 
-            // Find matching plugin
-            for (plugin, plugin_id) in crashlog_plugins.iter() {
-                if plugin_id == formid_prefix {
-                    // Perform database lookup if available
-                    if self.show_formid_values {
-                        if let Some(ref pool) = self.db_pool {
-                            if let Ok(Some(description)) =
-                                pool.get_entry(formid_suffix, plugin, None).await
-                            {
-                                lines.push(format!(
-                                    "- {} | [{}] | {} | {}\n",
-                                    formid_full, plugin, description, count
-                                ));
-                            } else {
-                                lines.push(format!(
-                                    "- {} | [{}] | {}\n",
-                                    formid_full, plugin, count
-                                ));
-                            }
+            // Fast O(1) lookup instead of O(m) linear search
+            if let Some(&plugin) = prefix_to_plugin.get(formid_prefix) {
+                // Perform database lookup if available
+                if self.show_formid_values {
+                    if let Some(ref pool) = self.db_pool {
+                        if let Ok(Some(description)) =
+                            pool.get_entry(formid_suffix, plugin, None).await
+                        {
+                            lines.push(format!(
+                                "- {} | [{}] | {} | {}\n",
+                                formid_full, plugin, description, count
+                            ));
                         } else {
-                            lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
+                            lines.push(format!(
+                                "- {} | [{}] | {}\n",
+                                formid_full, plugin, count
+                            ));
                         }
                     } else {
                         lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
                     }
-                    break;
+                } else {
+                    lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
                 }
             }
         }

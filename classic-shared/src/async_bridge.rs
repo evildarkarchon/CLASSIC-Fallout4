@@ -28,6 +28,22 @@
 #[cfg(feature = "gui-bridge")]
 use std::future::Future;
 
+#[cfg(feature = "gui-bridge")]
+use once_cell::sync::Lazy;
+#[cfg(feature = "gui-bridge")]
+use rayon::ThreadPool;
+
+// Optimization 5.1: Shared thread pool for all async bridge operations
+// Expected impact: 30-50% faster UI operations, 2-5ms latency reduction
+#[cfg(feature = "gui-bridge")]
+static BRIDGE_POOL: Lazy<ThreadPool> = Lazy::new(|| {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num_cpus::get())
+        .thread_name(|i| format!("async-bridge-{}", i))
+        .build()
+        .expect("Failed to create async bridge thread pool")
+});
+
 /// Async bridge for coordinating between Slint event loop and Tokio runtime
 ///
 /// This struct provides static methods for executing async operations from UI callbacks
@@ -126,7 +142,9 @@ impl AsyncBridge {
         R: Send + 'static,
         C: FnOnce(R) + Send + 'static,
     {
-        std::thread::spawn(move || {
+        // Optimization 5.1: Use shared thread pool instead of spawning new thread each time
+        // Expected impact: 30-50% faster UI operations, 2-5ms latency reduction
+        BRIDGE_POOL.spawn(move || {
             // Execute async operation on shared Tokio runtime (ONE RUNTIME RULE)
             let result = crate::get_runtime().block_on(operation);
 
@@ -161,7 +179,8 @@ impl AsyncBridge {
     where
         F: Future<Output = ()> + Send + 'static,
     {
-        std::thread::spawn(move || {
+        // Optimization 5.1: Use shared thread pool
+        BRIDGE_POOL.spawn(move || {
             crate::get_runtime().block_on(operation);
         });
     }

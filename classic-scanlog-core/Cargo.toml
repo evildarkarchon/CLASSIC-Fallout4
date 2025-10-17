@@ -25,6 +25,7 @@ aho-corasick = { workspace = true }
 # Parallel processing
 rayon = { workspace = true }
 crossbeam = { workspace = true }
+num_cpus = { workspace = true }  # Optimization 1.8: For adaptive concurrency
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }
@@ -36,6 +37,7 @@ parking_lot = { workspace = true }
 once_cell = { workspace = true }
 lru = { workspace = true }
 linked-hash-map = { workspace = true }
+rustc-hash = { workspace = true }  # Optimization 1.2: Fast hasher for FormID counting
 
 # Database operations
 rusqlite = { workspace = true }

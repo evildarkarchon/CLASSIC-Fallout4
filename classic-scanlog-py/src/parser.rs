@@ -22,7 +22,7 @@ impl PyLogParser {
     /// Add a custom regex pattern for matching
     pub fn add_pattern(&self, name: String, pattern: String) -> PyResult<()> {
         self.inner
-            .add_pattern(name, pattern)
+            .add_pattern(&name, &pattern)
             .map_err(crate::to_pyerr)
     }
 

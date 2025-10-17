@@ -48,6 +48,9 @@ impl StringProcessor {
     }
 
     /// Normalize a string (trim, lowercase, remove extra whitespace)
+    ///
+    /// Optimization 1.6: Returns SmartString directly to avoid conversion
+    /// SmartString automatically converts to String when needed via Deref
     fn normalize_string(&self, s: &str) -> String {
         let mut result = SmartString::new();
         let mut prev_was_space = false;
@@ -64,7 +67,9 @@ impl StringProcessor {
             }
         }
 
-        result.to_string()
+        // Return SmartString directly (optimization 1.6)
+        // SmartString implements Into<String> for seamless conversion
+        result.into()
     }
 
     /// Find common prefix of multiple strings

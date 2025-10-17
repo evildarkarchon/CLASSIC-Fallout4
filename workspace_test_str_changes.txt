@@ -1,0 +1,284 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   f:\Python Projects\CLASSIC-Fallout4\classic-shared\Cargo.toml
+workspace: f:\Python Projects\CLASSIC-Fallout4\Cargo.toml
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   f:\Python Projects\CLASSIC-Fallout4\classic-scanlog-core\Cargo.toml
+workspace: f:\Python Projects\CLASSIC-Fallout4\Cargo.toml
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   f:\Python Projects\CLASSIC-Fallout4\classic-config-core\Cargo.toml
+workspace: f:\Python Projects\CLASSIC-Fallout4\Cargo.toml
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   f:\Python Projects\CLASSIC-Fallout4\classic-scanlog-py\Cargo.toml
+workspace: f:\Python Projects\CLASSIC-Fallout4\Cargo.toml
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   f:\Python Projects\CLASSIC-Fallout4\classic-config-py\Cargo.toml
+workspace: f:\Python Projects\CLASSIC-Fallout4\Cargo.toml
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   f:\Python Projects\CLASSIC-Fallout4\classic-core\Cargo.toml
+workspace: f:\Python Projects\CLASSIC-Fallout4\Cargo.toml
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   f:\Python Projects\CLASSIC-Fallout4\classic-cli\Cargo.toml
+workspace: f:\Python Projects\CLASSIC-Fallout4\Cargo.toml
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   f:\Python Projects\CLASSIC-Fallout4\classic-tui\Cargo.toml
+workspace: f:\Python Projects\CLASSIC-Fallout4\Cargo.toml
+   Compiling pyo3-build-config v0.26.0
+   Compiling pyo3-macros-backend v0.26.0
+   Compiling pyo3-ffi v0.26.0
+   Compiling pyo3 v0.26.0
+   Compiling pyo3-macros v0.26.0
+   Compiling classic-shared v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-shared)
+   Compiling classic-database-core v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-database-core)
+   Compiling classic-yaml-core v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-yaml-core)
+   Compiling classic-file-io-core v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-file-io-core)
+   Compiling classic-config-core v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-config-core)
+   Compiling classic-scanlog-core v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-scanlog-core)
+   Compiling classic-database-py v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-database-py)
+   Compiling classic-yaml-py v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-yaml-py)
+   Compiling classic-config-py v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-config-py)
+   Compiling classic-file-io-py v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-file-io-py)
+   Compiling classic-scanlog-py v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-scanlog-py)
+   Compiling classic-tui v0.1.0 (F:\Python Projects\CLASSIC-Fallout4\classic-tui)
+   Compiling classic-cli v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-cli)
+warning: unused variable: `app`
+   --> classic-tui\src\ui\papyrus_screen.rs:120:44
+    |
+120 | fn render_stats(f: &mut Frame, area: Rect, app: &App) {
+    |                                            ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused import: `std::collections::HashMap`
+ --> classic-scanlog-py\src\orchestrator.rs:6:5
+  |
+6 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `std::collections::HashMap`
+ --> classic-scanlog-py\src\record_scanner.rs:5:5
+  |
+5 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `inner` is never read
+  --> classic-scanlog-py\src\gpu_detector.rs:88:5
+   |
+87 | pub struct PyGpuDetector {
+   |            ------------- field in this struct
+88 |     inner: GpuDetector,
+   |     ^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: `classic-scanlog-py` (lib test) generated 3 warnings (3 duplicates)
+warning: `classic-tui` (lib test) generated 1 warning
+warning: `classic-scanlog-py` (lib) generated 3 warnings (run `cargo fix --lib -p classic-scanlog-py` to apply 2 suggestions)
+   Compiling classic-core v8.0.0 (F:\Python Projects\CLASSIC-Fallout4\classic-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 20.60s
+     Running unittests src\lib.rs (target\debug\deps\classic_cli-3512b1e271603062.exe)
+
+running 22 tests
+test config::tests::test_default_config ... ok
+test config::tests::test_merge_cli_args_only_some_values ... ok
+test error::tests::test_no_crash_logs_error ... ok
+test config::tests::test_merge_cli_args ... ok
+test args::tests::test_cli_args_parsing ... ok
+test args::tests::test_cli_args_path_options ... ok
+test args::tests::test_cli_args_windows_paths_with_spaces ... ok
+test args::tests::test_cli_args_all_options ... ok
+test error::tests::test_io_error_conversion ... ok
+test args::tests::test_cli_args_no_options ... ok
+test executor::tests::test_collect_statistics_empty ... ok
+test args::tests::test_cli_args_mixed_options ... ok
+test executor::tests::test_collect_statistics_with_results ... ok
+test args::tests::test_cli_args_boolean_flags ... ok
+test error::tests::test_error_display ... ok
+test executor::tests::test_executor_creation ... ok
+test output::tests::test_scan_stats_default ... ok
+test output::tests::test_output_formatter_creation ... ok
+test config::tests::test_load_or_create_no_file ... ok
+test executor::tests::test_build_analysis_config ... ok
+test config::tests::test_load_or_create_with_existing_file ... ok
+test config::tests::test_save_and_load_yaml ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_config_core-6dbf5472fa3fd540.exe)
+
+running 7 tests
+test config::tests::test_default_config ... ok
+test config::tests::test_path_config_default ... ok
+test config::tests::test_load_or_default_no_file ... ok
+test config::tests::test_yaml_round_trip ... ok
+test config::tests::test_save_creates_parent_directory ... ok
+test config::tests::test_save_and_load_yaml ... ok
+test config::tests::test_yaml_empty_paths ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_config-7d2518d1cb44108f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_core-0c82c407510db664.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_database_core-4be046f3c6d35914.exe)
+
+running 3 tests
+test pool::tests::test_pool_auto_max_connections ... ok
+test pool::tests::test_pool_creation ... ok
+test pool::tests::test_cache_entry_expiry ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_database-fdde7f2ec4f250ef.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_file_io_core-1f8b4a0913b8cb33.exe)
+
+running 8 tests
+test dds::tests::test_invalid_dds_header ... ok
+test dds::tests::test_bc_dimension_validation ... ok
+test dds::tests::test_power_of_2_dimensions ... ok
+test dds::tests::test_dds_header_parsing ... ok
+test log_collection::tests::test_ensure_directories ... ok
+test log_collection::tests::test_move_files ... ok
+test log_collection::tests::test_copy_files ... ok
+test log_collection::tests::test_collect_all ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_file_io-54b52d9e8c52e8af.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_scanlog_core-df4c669176e5b285.exe)
+
+running 26 tests
+test fcx_handler::tests::test_fcx_convenience_constructors ... ok
+test fcx_handler::tests::test_fcx_reset ... ok
+test fcx_handler::tests::test_fcx_disabled_messages ... ok
+test gpu_detector::tests::test_intel_gpu_detection ... ok
+test gpu_detector::tests::test_dual_gpu_detection ... ok
+test gpu_detector::tests::test_amd_gpu_detection ... ok
+test fcx_handler::tests::test_fcx_enabled_messages ... ok
+test fcx_handler::tests::test_fcx_has_results ... ok
+test gpu_detector::tests::test_nvidia_gpu_detection ... ok
+test fcx_handler::tests::test_fcx_with_results ... ok
+test report::tests::test_report_fragment ... ok
+test gpu_detector::tests::test_unknown_gpu ... ok
+test settings_validator::tests::test_achievements_validation ... ok
+test gpu_detector::tests::test_batch_processing ... ok
+test suspect_scanner::tests::test_check_dll_crash ... ok
+test report::tests::test_report_composer ... ok
+test settings_validator::tests::test_archive_limit_warning ... ok
+test report::tests::test_string_pool ... ok
+test settings_validator::tests::test_memory_management_xcell_conflict ... ok
+test suspect_scanner::tests::test_occurrence_count ... ok
+test suspect_scanner::tests::test_signal_processing ... ok
+test suspect_scanner::tests::test_suspect_scan_mainerror ... ok
+test parser::tests::test_parser_creation ... ok
+test parser::tests::test_segment_parsing ... ok
+test parser::tests::test_section_extraction ... ok
+test parser::tests::test_extract_formids ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_scanlog-baab5a3ed62d97ad.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_shared-922197654e0f6637.exe)
+
+running 5 tests
+test async_bridge::tests::test_async_bridge_exists ... ok
+test errors::tests::test_error_creation ... ok
+test errors::tests::test_error_with_context ... ok
+test performance::tests::test_timed_macro ... ok
+test performance::tests::test_timer ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_tui-87a5f826edc4a539.exe)
+
+running 44 tests
+test app::tests::test_app_creation ... ok
+test app::tests::test_scroll_operations ... ok
+test events::tests::test_scan_message_progress_clamping ... ok
+test handlers::input_handler::tests::test_ctrl_o_settings ... ok
+test handlers::input_handler::tests::test_game_scan_keys ... ok
+test app::tests::test_folder_path_updates ... ok
+test events::tests::test_scan_message_constructors ... ok
+test app::tests::test_output_management ... ok
+test handlers::input_handler::tests::test_crash_scan_keys ... ok
+test handlers::input_handler::tests::test_ctrl_c_quit ... ok
+test handlers::input_handler::tests::test_ctrl_l_clear ... ok
+test handlers::input_handler::tests::test_esc_from_help_screen ... ok
+test handlers::input_handler::tests::test_help_key ... ok
+test handlers::input_handler::tests::test_papyrus_toggle ... ok
+test handlers::input_handler::tests::test_scroll_keys ... ok
+test app::tests::test_scan_state_transitions ... ok
+test handlers::input_handler::tests::test_quit_key ... ok
+test app::tests::test_screen_switching ... ok
+test handlers::input_handler::tests::test_scan_blocked_when_already_scanning ... ok
+test handlers::scan_handler::tests::test_game_scan_handler ... ok
+test ui::papyrus_screen::tests::test_papyrus_stats_status_color ... ok
+test ui::layout::tests::test_folder_section_layout ... ok
+test ui::papyrus_screen::tests::test_papyrus_stats_creation ... ok
+test ui::papyrus_screen::tests::test_papyrus_stats_status_symbol ... ok
+test ui::main_screen::tests::test_output_viewer_with_content ... ok
+test ui::main_screen::tests::test_output_viewer_empty ... ok
+test ui::layout::tests::test_button_row_layout ... ok
+test ui::settings_screen_interactive::tests::test_settings_state_navigation ... ok
+test ui::settings_screen_interactive::tests::test_toggle_focused ... ok
+test ui::layout::tests::test_centered_rect ... ok
+test ui::layout::tests::test_main_screen_layout ... ok
+test widgets::checkbox::tests::test_checkbox_creation ... ok
+test widgets::checkbox::tests::test_checkbox_set_checked ... ok
+test widgets::checkbox::tests::test_checkbox_toggle ... ok
+test ui::settings_screen_interactive::tests::test_setting_item_navigation ... ok
+test widgets::checkbox::tests::test_checkbox_focus ... ok
+test ui::main_screen::tests::test_button_section_scanning_state ... ok
+test ui::help_screen::tests::test_render_help_screen ... ok
+test ui::settings_screen::tests::test_render_settings_screen ... ok
+test ui::papyrus_screen::tests::test_render_papyrus_screen ... ok
+test ui::main_screen::tests::test_render_main_screen ... ok
+test ui::settings_screen_interactive::tests::test_render_settings_screen ... ok
+test handlers::scan_handler::tests::test_crash_scan_handler_no_logs ... ok
+test handlers::scan_handler::tests::test_crash_scan_handler_with_logs ... ok
+
+test result: ok. 44 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_yaml_core-846b8e8eda5062a5.exe)
+
+running 6 tests
+test tests::test_dump_yaml ... ok
+test tests::test_set_setting ... ok
+test tests::test_get_settings_batch ... ok
+test tests::test_get_setting ... ok
+test tests::test_parse_yaml ... ok
+test tests::test_set_settings_batch ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\classic_yaml-a8241b800c99765e.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

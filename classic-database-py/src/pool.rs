@@ -112,7 +112,7 @@ impl PyDatabasePool {
     /// Set the game table name dynamically
     #[pyo3(name = "set_game_table")]
     pub fn py_set_game_table(&self, table: String) {
-        self.inner.set_game_table(table);
+        self.inner.set_game_table(&table);
     }
 
     /// Get the current game table name
