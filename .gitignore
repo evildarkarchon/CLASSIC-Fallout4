@@ -57,7 +57,14 @@ temp_rust_build/
 # But do ignore build artifacts in other locations
 classic-rust/target/
 dist-rust/
-classic_core/
+# Stale module directories that shadow installed packages
+/classic_core/
+/classic_scanlog/
+/classic_config/
+/classic_file_io/
+/classic_database/
+/classic_yaml/
+/classic_shared/
 *.whl
 # Keep specific DLLs in rust_extensions/
 *.dll

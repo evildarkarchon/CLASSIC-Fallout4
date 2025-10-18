@@ -30,7 +30,7 @@ class ScanLogsExecutor:
     separated from CLI-specific code for better testability and modularity.
     """
 
-    def __init__(self, config: ScanConfig | None = None) -> None:
+    def __init__(self, config: ScanConfig | None = None, eager_load: bool = False) -> None:
         """
         Initializes the crash log scan process by setting up configuration, retrieving crash log files,
         and applying settings for crash log reformatting. It also initializes database availability
@@ -39,6 +39,9 @@ class ScanLogsExecutor:
         Args:
             config (ScanConfig | None): Optional ScanConfig object containing scan-specific settings.
                 If not provided, the configuration will be loaded from default settings.
+            eager_load (bool): If True, eagerly loads YAML data and warms up database pool.
+                This eliminates the freeze on first scan but increases initialization time.
+                Default False for backward compatibility.
 
         Raises:
             None
@@ -55,8 +58,9 @@ class ScanLogsExecutor:
         # Reformatting now happens inline during processing for zero-delay startup
         logger.debug("Reformatting will happen inline during log processing")
 
-        # Defer yamldata initialization to execute_scan for faster startup
+        # Defer yamldata initialization to execute_scan for faster startup (unless eager_load is True)
         self.yamldata: ClassicScanLogsInfo | None = None
+        self._eager_load = eager_load
 
         # Set up database availability
         self.config.formid_db_exists = any(db.is_file() for db in DB_PATHS)
@@ -66,6 +70,35 @@ class ScanLogsExecutor:
         self.statistics.total_files = len(self.crashlog_list)
 
         logger.debug(f"Initiated crash log scan for {len(self.crashlog_list)} files")
+
+    async def warm_up(self) -> None:
+        """
+        Proactively warm up resources to eliminate freeze on first scan.
+
+        This method should be called after initialization to pre-load YAML data
+        and warm up the database connection pool. This trades initialization time
+        for smooth scanning performance without UI freezes.
+
+        Safe to call multiple times - will skip if already warmed up.
+        """
+        if self.yamldata is not None:
+            logger.debug("Resources already warmed up, skipping")
+            return
+
+        logger.info("Warming up scan resources...")
+
+        # Pre-load YAML data
+        self.yamldata = await ClassicScanLogsInfo.create_async()
+        logger.debug("Pre-loaded ClassicScanLogsInfo")
+
+        # Warm up database pool if database exists
+        if self.config.formid_db_exists:
+            from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
+            pool_manager = DatabasePoolManager()
+            await pool_manager.get_pool()
+            logger.debug("Warmed up database connection pool")
+
+        logger.info("Resource warm-up complete - scanning will be smooth")
 
     @staticmethod
     def _load_config_from_settings() -> ScanConfig:
@@ -114,7 +147,10 @@ class ScanLogsExecutor:
         logger.info("Starting crash log scan execution")
 
         # Initialize yamldata here using async factory (no AsyncBridge overhead)
+        # If eager_load was set, warm_up() should have been called already
         if self.yamldata is None:
+            if self._eager_load:
+                logger.warning("Eager load requested but warm_up() was not called - loading now")
             self.yamldata = await ClassicScanLogsInfo.create_async()
             logger.debug("Initialized ClassicScanLogsInfo (async, no blocking)")
 
@@ -136,6 +172,17 @@ class ScanLogsExecutor:
             max_concurrent = min(self.config.max_concurrent, len(self.crashlog_list))
             semaphore = asyncio.Semaphore(max_concurrent)
 
+            def process_sync(log_path: Path) -> tuple[Path, list[str], bool, Counter[str]]:
+                """Sync wrapper that runs async processing in its own event loop."""
+                # Create new event loop for this thread
+                thread_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(thread_loop)
+                try:
+                    return thread_loop.run_until_complete(self._process_crashlog_async(log_path, orchestrator))
+                finally:
+                    thread_loop.close()
+                    asyncio.set_event_loop(None)
+
             async def process_with_limit(log_path: Path) -> tuple[Path, list[str], bool, Counter[str]]:
                 """
                 Processes a crash log file asynchronously while respecting a semaphore limit.
@@ -149,7 +196,11 @@ class ScanLogsExecutor:
                     or result, and a counter of occurrences for specific elements in the log.
                 """
                 async with semaphore:
-                    return await self._process_crashlog_async(log_path, orchestrator)
+                    # Run entire log processing in thread pool since Rust blocks
+                    # Each thread gets its own event loop to run the async processing
+                    # This allows true parallel processing - GIL released during Rust operations
+                    loop = asyncio.get_running_loop()
+                    return await loop.run_in_executor(None, process_sync, log_path)
 
             # Create tasks for all crash logs
             tasks = [asyncio.create_task(process_with_limit(log)) for log in self.crashlog_list]

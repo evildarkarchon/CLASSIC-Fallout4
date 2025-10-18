@@ -201,7 +201,7 @@ class OrchestratorCore:
         # Generate report header
         composer.add(self.report_generator.generate_header(crashlog_file.name))
 
-        # Parse crash log segments
+        # Parse crash log segments (direct call - we're in a thread pool thread)
         (crashlog_gameversion, crashlog_crashgen, crashlog_mainerror, segments) = find_segments(
             crash_data, self.yamldata.crashgen_name, self.yamldata.xse_acronym, self.game_root_name or ""
         )

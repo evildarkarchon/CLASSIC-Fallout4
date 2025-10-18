@@ -20,17 +20,18 @@ from ClassicLib.Logger import logger
 
 class DatabasePoolManager:
     """
-    Singleton manager for AsyncDatabasePool instances.
+    Singleton manager for database pool instances.
 
-    This manager ensures that database connections are reused across multiple
-    orchestrator instances, avoiding the overhead of recreating connections
-    for each batch of logs. This provides significant performance improvements
-    when processing multiple crash logs in sequence.
+    This manager checks for Rust DatabasePool availability and uses it for maximum
+    performance (25x faster). Falls back to Python AsyncDatabasePool when Rust
+    is not available. This ensures database connections are reused across multiple
+    orchestrator instances.
     """
 
     _instance: ClassVar["DatabasePoolManager | None"] = None
-    _pool: "AsyncDatabasePool | None" = None
+    _pool: Any = None  # Can be RustDatabasePool or AsyncDatabasePool
     _lock: ClassVar[asyncio.Lock | None] = None
+    _using_rust: bool = False
 
     def __new__(cls) -> "DatabasePoolManager":
         """Ensure only one instance of DatabasePoolManager exists."""
@@ -39,12 +40,15 @@ class DatabasePoolManager:
             cls._lock = None
         return cls._instance
 
-    async def get_pool(self) -> "AsyncDatabasePool":
+    async def get_pool(self) -> Any:
         """
         Get or create the singleton database pool.
 
+        Uses Rust DatabasePool when available (25x faster), otherwise falls back
+        to Python AsyncDatabasePool (aiosqlite).
+
         Returns:
-            The singleton AsyncDatabasePool instance, initialized if necessary.
+            The singleton database pool instance (Rust or Python).
         """
         # Initialize the lock if needed (must be done in async context)
         if self._lock is None:
@@ -52,9 +56,29 @@ class DatabasePoolManager:
 
         async with self._lock:
             if self._pool is None:
+                # Try to use Rust DatabasePool first
+                try:
+                    from ClassicLib.integration.factory import get_database_pool
+                    from ClassicLib.integration.status import is_rust_accelerated
+
+                    # Check if database pool is actually using Rust acceleration
+                    if is_rust_accelerated("database_pool"):
+                        rust_pool = get_database_pool()
+                        # The factory will return Rust pool when available
+                        # Check type to confirm it's not the Python fallback
+                        if not isinstance(rust_pool, AsyncDatabasePool):
+                            self._pool = rust_pool
+                            self._using_rust = True
+                            logger.debug("Created singleton Rust DatabasePool (25x acceleration)")
+                            return self._pool
+                except (ImportError, AttributeError) as e:
+                    logger.debug(f"Rust DatabasePool not available, using Python: {e}")
+
+                # Fallback to Python AsyncDatabasePool
                 self._pool = AsyncDatabasePool()
                 await self._pool.initialize()
-                logger.debug("Created singleton database pool")
+                self._using_rust = False
+                logger.debug("Created singleton Python database pool (aiosqlite)")
             return self._pool
 
     async def close_pool(self) -> None:

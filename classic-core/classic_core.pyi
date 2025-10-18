@@ -525,6 +525,90 @@ class file_io:
             """
             ...
 
+    class PyLogCollector:
+        """Log file collector and organizer.
+
+        Manages crash log files from multiple locations:
+        - Copies logs from XSE folder (My Games) to Crash Logs
+        - Moves logs from working directory to Crash Logs
+        - Collects logs from custom scan directories
+
+        Provides 10x faster file operations through Rust acceleration.
+        """
+
+        def __init__(
+            self,
+            base_folder: str | Path,
+            xse_folder: Optional[str | Path] = None,
+            custom_folder: Optional[str | Path] = None
+        ) -> None:
+            """Create a new LogCollector.
+
+            Args:
+                base_folder: Working directory where Crash Logs folder will be created
+                xse_folder: Optional path to game's XSE folder (e.g., My Games/Fallout4/F4SE)
+                custom_folder: Optional path to custom scan directory
+            """
+            ...
+
+        def collect_all(self) -> list[str]:
+            """Execute full log collection workflow.
+
+            Performs all log collection steps:
+            1. Ensure directory structure exists
+            2. Move logs from base folder to Crash Logs
+            3. Copy logs from XSE folder to Crash Logs
+            4. Collect all crash log paths for processing
+
+            Returns:
+                List of paths to all crash log files ready for processing
+            """
+            ...
+
+        def move_from_base_folder(self) -> int:
+            """Move crash logs and AUTOSCAN reports from base folder to Crash Logs directory.
+
+            Returns:
+                Number of files moved
+            """
+            ...
+
+        def copy_from_xse_folder(self) -> int:
+            """Copy crash logs from game's XSE folder to Crash Logs.
+
+            Returns:
+                Number of files copied
+            """
+            ...
+
+        def collect_crash_logs(self) -> list[str]:
+            """Collect all crash log file paths for processing.
+
+            Searches for crash-*.log files in:
+            - Crash Logs directory (after moving/copying operations)
+            - Custom scan folder (if configured)
+
+            Returns:
+                List of paths to all crash log files found
+            """
+            ...
+
+        def crash_logs_dir(self) -> str:
+            """Get the path to the Crash Logs directory.
+
+            Returns:
+                Path to Crash Logs directory as a string
+            """
+            ...
+
+        def pastebin_dir(self) -> str:
+            """Get the path to the Pastebin subdirectory.
+
+            Returns:
+                Path to Pastebin directory as a string
+            """
+            ...
+
 # =============================================================================
 # scanlog Submodule (from classic-scanlog-py)
 # =============================================================================

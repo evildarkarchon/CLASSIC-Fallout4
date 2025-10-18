@@ -136,7 +136,10 @@ class SetupCoordinator:
         """
         from ClassicLib.YamlSettingsCache import yaml_cache
 
-        # Initialize message handler first
+        # Configure logging first - required for both CLI and GUI modes
+        configure_logging(logger)
+
+        # Initialize message handler
         # Note: init_message_handler will replace any existing handler
         # In GUI mode, the MainWindow should initialize its own handler with itself as parent
         init_message_handler(parent=parent, is_gui_mode=is_gui)

@@ -28,6 +28,7 @@ class YamlFileOperations:
     def __init__(self, io_core: FileIOCore | None = None) -> None:
         """Initialize with FileIOCore instance."""
         self.io_core = io_core or FileIOCore()
+        self._file_cache: dict[str, dict[str, Any]] = {}
 
         # Try to get Rust YAML operations for static database files only
         # User-editable files will use Python to preserve comments
@@ -58,6 +59,7 @@ class YamlFileOperations:
         for store in self.STATIC_YAML_STORES:
             try:
                 store_path = self.get_path_for_store(store)
+
                 # Exact path match
                 if file_path == store_path:
                     return True
@@ -174,19 +176,27 @@ class YamlFileOperations:
             logger.error(f"Failed to dump YAML content: {e}")
             raise
 
-    async def load_yaml_file(self, file_path: Path) -> dict[str, Any]:
+    async def load_yaml_file(self, file_path: Path, use_cache: bool = True) -> dict[str, Any]:
         """
-        Load and parse a YAML file.
+        Load and parse a YAML file with file-level caching.
 
         Uses Rust acceleration for static/read-only files (Main, Game databases).
         Uses Python (ruamel.yaml) for user-editable files to preserve comments.
 
         Args:
             file_path: Path to YAML file
+            use_cache: Whether to use file-level caching (default True)
 
         Returns:
             Parsed YAML data
         """
+        # Check cache first if enabled
+        file_key = str(file_path)
+        if use_cache and hasattr(self, '_file_cache'):
+            if file_key in self._file_cache:
+                logger.debug(f"Loaded {file_path.name} from cache")
+                return self._file_cache[file_key]
+
         try:
             # Determine if this is a static (read-only) file that can use Rust acceleration
             use_rust = self._should_use_rust_for_file(file_path)
@@ -195,21 +205,37 @@ class YamlFileOperations:
                 try:
                     result = self.rust_yaml.load_yaml_file(str(file_path))
                     logger.debug(f"Loaded {file_path.name} with Rust acceleration")
-                    return result if isinstance(result, dict) else {}
+                    data = result if isinstance(result, dict) else {}
                 except Exception as e:
                     logger.debug(f"Rust YAML loading failed for {file_path.name}, falling back to Python: {e}")
+                    # Fall through to Python loading
+                    content = await self.io_core.read_file(file_path)
+                    if not content:
+                        logger.warning(f"Empty YAML file: {file_path}")
+                        return {}
+                    preserve_comments = not use_rust
+                    logger.debug(f"Loaded {file_path.name} with Python (preserve_comments={preserve_comments})")
+                    data = await self.parse_yaml_content(content, preserve_comments=preserve_comments)
+            else:
+                # Use Python implementation (preserves comments for user-editable files)
+                content = await self.io_core.read_file(file_path)
 
-            # Use Python implementation (preserves comments for user-editable files)
-            content = await self.io_core.read_file(file_path)
+                if not content:
+                    logger.warning(f"Empty YAML file: {file_path}")
+                    return {}
 
-            if not content:
-                logger.warning(f"Empty YAML file: {file_path}")
-                return {}
+                # Only preserve comments for user-editable files (use_rust=False)
+                preserve_comments = not use_rust
+                logger.debug(f"Loaded {file_path.name} with Python (preserve_comments={preserve_comments})")
+                data = await self.parse_yaml_content(content, preserve_comments=preserve_comments)
 
-            # Only preserve comments for user-editable files (use_rust=False)
-            preserve_comments = not use_rust
-            logger.debug(f"Loaded {file_path.name} with Python (preserve_comments={preserve_comments})")
-            return await self.parse_yaml_content(content, preserve_comments=preserve_comments)
+            # Cache the result if caching is enabled
+            if use_cache:
+                if not hasattr(self, '_file_cache'):
+                    self._file_cache: dict[str, dict[str, Any]] = {}
+                self._file_cache[file_key] = data
+
+            return data
 
         except FileNotFoundError:
             logger.debug(f"YAML file not found: {file_path}")

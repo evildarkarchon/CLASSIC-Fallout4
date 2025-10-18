@@ -12,9 +12,10 @@ import asyncio
 from typing import Any, ClassVar
 
 try:
-    from classic_core.database import RustDatabasePool
+    import classic_core
+    RustDatabasePool = classic_core.database.RustDatabasePool
     RUST_AVAILABLE = True
-except ImportError:
+except (ImportError, AttributeError):
     RUST_AVAILABLE = False
     RustDatabasePool = None
 
@@ -117,7 +118,8 @@ class RustAsyncDatabasePool:
         """
         Initialize database connections.
 
-        This method initializes connections to all databases defined in DB_PATHS.
+        Direct call since we're in a thread pool thread.
+        Rust releases GIL so other threads can run.
         """
         if self._initialized:
             return
@@ -126,12 +128,8 @@ class RustAsyncDatabasePool:
         db_paths_str = [str(path) for path in DB_PATHS if path.is_file()]
 
         if db_paths_str:
-            # Initialize connections in Rust
-            await asyncio.get_event_loop().run_in_executor(
-                None,
-                self._rust_pool.initialize,
-                db_paths_str
-            )
+            # Direct call - Rust releases GIL
+            self._rust_pool.initialize(db_paths_str)
             logger.debug(f"Initialized {len(db_paths_str)} database connections in Rust pool")
 
         self._initialized = True
@@ -141,10 +139,8 @@ class RustAsyncDatabasePool:
         if not self._initialized:
             return
 
-        await asyncio.get_event_loop().run_in_executor(
-            None,
-            self._rust_pool.close
-        )
+        # Direct call - we're in a thread pool thread
+        self._rust_pool.close()
         self._initialized = False
         logger.debug("Closed Rust database pool connections")
 
@@ -164,13 +160,10 @@ class RustAsyncDatabasePool:
 
         game_table = GlobalRegistry.get_game()
 
-        result = await asyncio.get_event_loop().run_in_executor(
-            None,
-            self._rust_pool.get_entry,
-            formid,
-            plugin,
-            game_table
-        )
+        # Direct call - Rust releases GIL and runs async internally
+        # No thread pool needed since Rust has its own async runtime (Tokio)
+        # This allows multiple operations to run in parallel via GIL release
+        result = self._rust_pool.get_entry(formid, plugin, game_table)
 
         return result
 
@@ -197,21 +190,14 @@ class RustAsyncDatabasePool:
 
         game_table = GlobalRegistry.get_game()
 
-        # Use the new batch_lookup method which returns the correct format
+        # Direct call - we're in a thread pool thread, Rust releases GIL
         try:
             # Try the new batch_lookup method first
-            rust_results = await asyncio.get_event_loop().run_in_executor(
-                None,
-                self._rust_pool.batch_lookup,
-                formid_plugin_pairs,
-                game_table
-            )
+            rust_results = self._rust_pool.batch_lookup(formid_plugin_pairs, game_table)
             return rust_results
         except AttributeError:
             # Fall back to get_entries_batch if batch_lookup doesn't exist
-            rust_results = await asyncio.get_event_loop().run_in_executor(
-                None,
-                self._rust_pool.get_entries_batch,
+            rust_results = self._rust_pool.get_entries_batch(
                 formid_plugin_pairs,
                 game_table,
                 batch_size
@@ -236,11 +222,7 @@ class RustAsyncDatabasePool:
         Returns:
             Number of entries cleared.
         """
-        return await asyncio.get_event_loop().run_in_executor(
-            None,
-            self._rust_pool.clear_cache,
-            expired_only
-        )
+        return self._rust_pool.clear_cache(expired_only)
 
     async def set_cache_ttl(self, seconds: int) -> None:
         """
@@ -249,11 +231,7 @@ class RustAsyncDatabasePool:
         Args:
             seconds: New TTL value in seconds.
         """
-        await asyncio.get_event_loop().run_in_executor(
-            None,
-            self._rust_pool.set_cache_ttl,
-            seconds
-        )
+        self._rust_pool.set_cache_ttl(seconds)
 
     async def get_stats(self) -> dict[str, Any]:
         """
@@ -262,17 +240,11 @@ class RustAsyncDatabasePool:
         Returns:
             Dictionary containing pool statistics.
         """
-        return await asyncio.get_event_loop().run_in_executor(
-            None,
-            self._rust_pool.get_stats
-        )
+        return self._rust_pool.get_stats()
 
     async def optimize(self) -> None:
         """Optimize database connections (VACUUM and ANALYZE)."""
-        await asyncio.get_event_loop().run_in_executor(
-            None,
-            self._rust_pool.optimize
-        )
+        self._rust_pool.optimize()
 
     def set_game_table(self, table: str) -> None:
         """

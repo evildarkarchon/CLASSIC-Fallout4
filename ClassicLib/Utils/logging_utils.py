@@ -24,6 +24,9 @@ def configure_logging(classic_logger: Logger) -> None:
     log handlers. The function ensures a detailed log file is created with debug-level messages,
     and a console handler is set for warning-level and higher messages.
 
+    This function also configures the root logger to ensure all child loggers (created with
+    logging.getLogger(__name__)) properly propagate their messages to the log file.
+
     Args:
         classic_logger: The logger instance to configure, typically an instance of `logging.Logger`.
     """
@@ -31,11 +34,17 @@ def configure_logging(classic_logger: Logger) -> None:
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     date_format = "%Y-%m-%d %H:%M:%S"
 
-    # Remove any existing handlers
+    # Remove any existing handlers from both the specific logger and root logger
     classic_logger.handlers = []
+    logging.root.handlers = []
 
-    # Set base log level
+    # Set base log level for both specific and root logger
     classic_logger.setLevel(logging.DEBUG)
+    logging.root.setLevel(logging.DEBUG)
+
+    # Disable propagation for the CLASSIC logger to avoid duplicate messages
+    # (since it has its own handlers and doesn't need to propagate to root)
+    classic_logger.propagate = False
 
     # Create file handler for debug logs
     try:
@@ -52,7 +61,11 @@ def configure_logging(classic_logger: Logger) -> None:
         file_handler.setLevel(logging.DEBUG)
         file_formatter = logging.Formatter(log_format, date_format)
         file_handler.setFormatter(file_formatter)
+
+        # Add handler to both specific logger and root logger
+        # This ensures all child loggers (created with getLogger(__name__)) also log to file
         classic_logger.addHandler(file_handler)
+        logging.root.addHandler(file_handler)
     except Exception as e:  # noqa: BLE001
         # If file logging fails, continue with console only
         print(f"Warning: Could not set up file logging: {e}", file=sys.stderr)
@@ -62,7 +75,11 @@ def configure_logging(classic_logger: Logger) -> None:
     console_handler.setLevel(logging.WARNING)
     console_formatter = logging.Formatter("%(levelname)s: %(message)s")
     console_handler.setFormatter(console_formatter)
+
+    # Add console handler to both specific logger and root logger
     classic_logger.addHandler(console_handler)
+    logging.root.addHandler(console_handler)
 
     # Log initial message
     classic_logger.debug("Logging configured successfully")
+    logging.root.debug("Root logger configured successfully")

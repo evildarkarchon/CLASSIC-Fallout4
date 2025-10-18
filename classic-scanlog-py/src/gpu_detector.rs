@@ -85,6 +85,7 @@ impl PyGpuInfo {
 /// Python wrapper for GpuDetector
 #[pyclass(name = "GpuDetector")]
 pub struct PyGpuDetector {
+    #[allow(dead_code)]
     inner: GpuDetector,
 }
 

@@ -96,9 +96,21 @@ pub use log_collector::PyLogCollector;
 /// Python module for file I/O operations
 #[pymodule]
 fn classic_file_io(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    register_file_io_module(m)?;
+    Ok(())
+}
+
+/// Public registration function for use by facade modules
+/// This allows classic-core to include all file_io components in its submodule
+pub fn register_file_io_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Add version and debug marker
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    m.add("__debug_registered__", true)?;
+
+    // Add all classes - CRITICAL: PyLogCollector must be added!
     m.add_class::<PyFileIOCore>()?;
     m.add_class::<PyEncodingDetector>()?;
-    m.add_class::<PyLogCollector>()?;
-    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    m.add_class::<PyLogCollector>()?;  // This MUST add PyLogCollector to the module
+
     Ok(())
 }

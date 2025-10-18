@@ -14,7 +14,11 @@ use std::time::Duration;
 use classic_shared::{get_runtime, without_gil};
 
 /// Python-facing database pool wrapper
-#[pyclass(name = "RustDatabasePool", unsendable)]
+///
+/// This wrapper is Send-safe because the inner DatabasePool uses Arc, DashMap,
+/// Mutex, and RwLock - all of which are Send + Sync. Removing `unsendable`
+/// allows Python's GC to safely drop this object on any thread.
+#[pyclass(name = "RustDatabasePool")]
 pub struct PyDatabasePool {
     inner: DatabasePool,
 }

@@ -3,7 +3,6 @@
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 use classic_shared::{get_runtime, without_gil};
 use pyo3::prelude::*;
-use std::collections::HashMap;
 
 /// Python wrapper for AnalysisConfig
 #[pyclass(name = "AnalysisConfig")]

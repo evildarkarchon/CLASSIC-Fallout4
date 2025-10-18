@@ -2,7 +2,6 @@
 
 use classic_scanlog_core::RecordScanner;
 use pyo3::prelude::*;
-use std::collections::HashMap;
 
 /// Python wrapper for RecordScanner
 #[pyclass(name = "RecordScanner")]

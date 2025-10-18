@@ -58,7 +58,10 @@ pub use classic_yaml::PyYamlOperations as RustYamlOperations;
 
 pub use classic_database::PyDatabasePool as RustDatabasePool;
 
-pub use classic_file_io::{PyEncodingDetector as EncodingDetector, PyFileIOCore as RustFileIOCore};
+pub use classic_file_io::{
+    PyEncodingDetector as EncodingDetector, PyFileIOCore as RustFileIOCore,
+    PyLogCollector as LogCollector, PyLogCollector, // Import both aliased and original
+};
 
 pub use classic_scanlog::{
     contains_plugin, contains_record, detect_mods_batch, detect_mods_double, detect_mods_important,
@@ -238,10 +241,10 @@ fn classic_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     database_module.add_class::<RustDatabasePool>()?;
     m.add_submodule(&database_module)?;
 
-    // Register file_io submodule (from classic-file-io)
+    // Register file_io submodule (from classic-file-io-py)
+    // Use the registration function to include all components (matching scanlog pattern)
     let file_io_module = PyModule::new(m.py(), "file_io")?;
-    file_io_module.add_class::<RustFileIOCore>()?;
-    file_io_module.add_class::<EncodingDetector>()?;
+    classic_file_io::register_file_io_module(&file_io_module)?;
     m.add_submodule(&file_io_module)?;
 
     // Register YAML submodule (from classic-yaml)

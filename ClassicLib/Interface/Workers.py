@@ -56,26 +56,24 @@ class CrashLogsScanWorker(QObject):
     @staticmethod
     def _perform_crash_logs_scan() -> None:
         """
-        Performs a crash logs scan using non-blocking asynchronous operations.
+        Performs a crash logs scan using fully asynchronous operations.
 
-        This method initializes the necessary scanning tool and sets up an asynchronous
-        event loop for execution, allowing periodic yielding to avoid blocking the main
-        thread. The function ensures that logs are scanned efficiently and any cross-thread
-        signals in the hosting framework are handled adequately. The event loop is carefully
-        managed, and resources are cleaned up after execution.
+        This method runs the scan in a dedicated asyncio event loop without chunking.
+        Since all blocking operations now use asyncio.to_thread(), the event loop
+        remains responsive and can run tasks concurrently.
 
         Raises:
             Exception: Propagates exceptions from the main coroutine task if they occur.
         """
-        logger.debug("Starting crash logs scan with non-blocking async")
+        logger.debug("Starting crash logs scan with pure async (no chunking)")
 
         # Import here to avoid circular dependency
         from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
         from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan_async_pure
         from ClassicLib.ScanLog import FCXModeHandler
 
-        # Initialize scanner
-        scanner = ScanLogsExecutor()
+        # Initialize scanner with eager_load flag for proactive warm-up
+        scanner = ScanLogsExecutor(eager_load=True)
         FCXModeHandler.reset_fcx_checks()
 
         # Create a new event loop for this thread
@@ -83,25 +81,16 @@ class CrashLogsScanWorker(QObject):
         asyncio.set_event_loop(loop)
 
         try:
-            # Create the main coroutine as a task
-            main_task = loop.create_task(crashlogs_scan_async_pure(scanner))
+            # Proactively warm up resources to eliminate freeze on first scan
+            # This pre-loads YAML data and warms up the database pool
+            logger.debug("Warming up scan resources...")
+            loop.run_until_complete(scanner.warm_up())
+            logger.debug("Resource warm-up complete - scanning will be smooth")
 
-            # Run the event loop in small chunks to allow Qt processing
-            while not main_task.done():
-                # Run the event loop for a short time
-                # This allows async work to progress while yielding periodically
-                # noinspection PyTypeChecker
-                loop.call_soon(loop.stop)  # Schedule stop after one iteration
-                loop.run_forever()  # Run until stop is called
-
-                # Brief yield to allow Qt's cross-thread signal delivery
-                # Without this, signals queue up until the entire operation completes
-                import time
-
-                time.sleep(0.001)  # 1ms is enough for thread switching
-
-            # Get the result (or raise any exception that occurred)
-            main_task.result()
+            # Run the main scan - event loop stays running continuously
+            # All blocking operations use asyncio.to_thread(), so the loop never blocks
+            # This enables true concurrent processing of crash logs
+            loop.run_until_complete(crashlogs_scan_async_pure(scanner))
 
         finally:
             # Clean up the event loop

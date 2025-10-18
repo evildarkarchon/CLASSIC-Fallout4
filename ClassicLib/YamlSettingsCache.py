@@ -197,8 +197,26 @@ class YamlSettingsCache:
         return self._bridge.run_async(self._async_core.batch_get_settings(requests))
 
     def prefetch_all_settings(self) -> None:
-        """Prefetch common settings into cache for better performance."""
-        # Prefetch not implemented - just pass for now
+        """
+        Prefetch common YAML stores into cache for better performance.
+
+        This loads Main, Game, and Settings YAML files during initialization
+        to avoid repeated file I/O during scanning.
+        """
+        from ClassicLib.Constants import YAML
+
+        # Load the three main YAML stores into file cache
+        stores_to_prefetch = [YAML.Main, YAML.Settings, YAML.Game]
+
+        for store in stores_to_prefetch:
+            try:
+                file_path = self._async_core.file_ops.get_path_for_store(store)
+                # Trigger file load which will cache it
+                self._bridge.run_async(self._async_core.file_ops.load_yaml_file(file_path, use_cache=True))
+            except Exception as e:
+                # Log but don't fail - some stores might not exist
+                from ClassicLib.Logger import logger
+                logger.debug(f"Could not prefetch {store}: {e}")
 
     def get_metrics(self) -> dict[str, int]:
         """

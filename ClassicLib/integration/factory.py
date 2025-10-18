@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from typing import TYPE_CHECKING, Any
 
 from .config import DISABLE_RUST_ENV_VAR
@@ -36,9 +37,16 @@ def _is_rust_disabled() -> bool:
     return os.environ.get(DISABLE_RUST_ENV_VAR, "").lower() in ("1", "true", "yes")
 
 
+# Cache for FileIO singleton
+_file_io_instance: Any = None
+_file_io_lock = threading.Lock()
+
+
 def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
     """
-    Get the best available file I/O implementation.
+    Get the best available file I/O implementation (singleton).
+
+    Returns the same instance on subsequent calls for efficiency.
 
     Args:
         encoding: Text encoding to use
@@ -47,20 +55,34 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
     Returns:
         RustFileIO if available, otherwise FileIOCore
     """
-    components = _get_components()
+    global _file_io_instance
 
-    if not _is_rust_disabled() and components.get("file_io_core", False):
-        try:
-            from ClassicLib.rust.file_io_rust import RustFileIOCore
-            logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
-            return RustFileIOCore(encoding, errors)
-        except ImportError as e:
-            logger.warning(f"Failed to import Rust FileIOCore: {e}")
+    # Fast path - instance already exists
+    if _file_io_instance is not None:
+        return _file_io_instance
 
-    # Fall back to Python implementation
-    from ClassicLib.python.file_io_py import FileIOCore
-    logger.debug("Using Python FileIOCore implementation")
-    return FileIOCore(encoding, errors)
+    # Slow path - need to create instance
+    with _file_io_lock:
+        # Double-check pattern
+        if _file_io_instance is not None:
+            return _file_io_instance
+
+        components = _get_components()
+
+        if not _is_rust_disabled() and components.get("file_io_core", False):
+            try:
+                from ClassicLib.rust.file_io_rust import RustFileIOCore
+                logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
+                _file_io_instance = RustFileIOCore(encoding, errors)
+                return _file_io_instance
+            except ImportError as e:
+                logger.warning(f"Failed to import Rust FileIOCore: {e}")
+
+        # Fall back to Python implementation
+        from ClassicLib.python.file_io_py import FileIOCore
+        logger.debug("Using Python FileIOCore implementation")
+        _file_io_instance = FileIOCore(encoding, errors)
+        return _file_io_instance
 
 
 def get_parser() -> Any:
