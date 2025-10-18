@@ -192,4 +192,4 @@ class RustFormIDAnalyzer:
     @property
     def is_rust_accelerated(self) -> bool:
         """Check if using Rust acceleration."""
-        return self._use_rust
+        return self._use_rust or self._use_rust_core

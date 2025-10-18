@@ -673,10 +673,13 @@ impl DatabasePool {
                 query.push_str("(formid=? COLLATE nocase AND plugin=? COLLATE nocase)");
             }
 
-            let params: Vec<String> = batch
-                .iter()
-                .flat_map(|(f, p)| vec![f.clone(), p.clone()])
-                .collect();
+            // Optimization 4.3: Pre-allocate params vector with exact capacity
+            // Avoids intermediate Vec allocation and clones
+            let mut params = Vec::with_capacity(batch.len() * 2);
+            for (formid, plugin) in batch.iter() {
+                params.push(formid.clone());
+                params.push(plugin.clone());
+            }
 
             for entry in connections.iter() {
                 let db_path = entry.key().clone();

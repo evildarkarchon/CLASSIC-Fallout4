@@ -158,12 +158,15 @@ class TestMemorySafetyStress:
             size_mb = random.uniform(5, 10)
             large_log = generator.generate_large_log(size_mb)
 
-            # Parse it (causes Rust allocation)
-            result = parser.parse(large_log)
+            # Parse it (causes Rust allocation) using find_segments
+            lines = large_log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
 
             # Explicitly delete to trigger deallocation
             del large_log
-            del result
+            del segments
 
             # Force Python GC every 10 cycles
             if cycle % 10 == 0:
@@ -204,16 +207,18 @@ class TestMemorySafetyStress:
                 for op in range(num_ops):
                     # Generate and parse synthetic data
                     if op % 2 == 0:
-                        # Parse log
+                        # Parse log using find_segments
                         log = generator.generate_large_log(random.uniform(0.5, 2))
-                        result = parser.parse(log)
-                        del result
+                        lines = log.splitlines()
+                        game_ver, crashgen_ver, error, segments = parser.find_segments(
+                            lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                        )
+                        del segments
                     else:
-                        # Analyze FormIDs
+                        # Analyze FormIDs using extract_formids
                         formids = generator.generate_formid_batch(random.randint(100, 1000))
-                        for formid in formids:
-                            result = analyzer.analyze(formid)
-                            del result
+                        results = analyzer.extract_formids(formids)
+                        del results
 
                     # Periodic cleanup
                     if op % 10 == 0:
@@ -260,17 +265,20 @@ class TestMemorySafetyStress:
         for i in range(100):
             # Create synthetic data
             data = generator.generate_large_log(1)
-            result = parser.parse(data)
+            lines = data.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
 
             # Create weak reference to result
             try:
-                weak_refs.append(weakref.ref(result))
+                weak_refs.append(weakref.ref(segments))
             except TypeError:
                 # Some types don't support weak references
                 pass
 
             # Delete strong reference
-            del result
+            del segments
             del data
 
         # Force garbage collection
@@ -301,8 +309,11 @@ class TestMemorySafetyStress:
         for i in range(10000):
             # Very small synthetic data (< 1KB)
             tiny_log = f"Line {i}: FormID: {i:08X}"
-            result = parser.parse(tiny_log)
-            small_results.append(result)
+            lines = tiny_log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
+            small_results.append(segments)
 
             # Delete some to create fragmentation
             if i % 3 == 0 and small_results:
@@ -310,7 +321,10 @@ class TestMemorySafetyStress:
 
         # Now try large allocation
         large_log = generator.generate_large_log(10)
-        large_result = parser.parse(large_log)
+        lines = large_log.splitlines()
+        game_ver, crashgen_ver, error, large_result = parser.find_segments(
+            lines, "Buffout 4", "F4SE", "Fallout4.exe"
+        )
 
         # Should succeed without excessive memory use
         current_memory = monitor.sample()
@@ -333,8 +347,11 @@ class TestMemorySafetyStress:
         try:
             # Create 100MB synthetic log
             huge_log = generator.generate_large_log(100)
-            result = parser.parse(huge_log)
-            del result
+            lines = huge_log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
+            del segments
             del huge_log
         except MemoryError:
             # Expected - should handle gracefully
@@ -349,8 +366,11 @@ class TestMemorySafetyStress:
 
         # Should still be able to work after near-OOM
         small_log = "Test after OOM"
-        result = parser.parse(small_log)
-        assert result is not None
+        lines = small_log.splitlines()
+        game_ver, crashgen_ver, error, segments = parser.find_segments(
+            lines, "Buffout 4", "F4SE", "Fallout4.exe"
+        )
+        assert segments is not None
 
     def test_cyclic_reference_detection(self):
         """Test that cyclic references don't cause memory leaks."""
@@ -419,8 +439,11 @@ class TestMemorySafetyStress:
             Error in {repeated_plugin} at FormID {repeated_formid}
             """ * 10
 
-            result = parser.parse(log)
-            del result
+            lines = log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
+            del segments
 
         # Memory usage should be reasonable due to string interning
         current_memory = monitor.sample()
@@ -451,8 +474,11 @@ class TestMemorySafetyStress:
 
         for malformed in malformed_inputs:
             try:
-                result = parser.parse(malformed)
-                del result
+                lines = malformed.splitlines() if isinstance(malformed, str) else [malformed]
+                game_ver, crashgen_ver, error, segments = parser.find_segments(
+                    lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                )
+                del segments
             except Exception:
                 # Expected - Rust might panic or return error
                 pass
@@ -480,10 +506,13 @@ class TestMemorySafetyStress:
 
             parser = get_parser()
             log = generator.generate_large_log(size_mb)
-            result = parser.parse(log)
+            lines = log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
 
             # Return size of result
-            return len(str(result)) if result else 0
+            return len(str(segments)) if segments else 0
 
         # Monitor main process memory
         monitor = MemoryMonitor()
@@ -523,8 +552,11 @@ class TestMemorySafetyStress:
             # Gradually increase memory pressure
             size_mb = i * 0.5
             log = generator.generate_large_log(size_mb)
-            result = parser.parse(log)
-            allocations.append(result)
+            lines = log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
+            allocations.append(segments)
 
             # Get current memory usage
             current, peak = tracemalloc.get_traced_memory()

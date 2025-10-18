@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 // Use the global runtime from classic-shared (ONE RUNTIME RULE)
-use classic_shared::get_runtime;
+use classic_shared::{get_runtime, without_gil};
 
 /// Python-facing database pool wrapper
 #[pyclass(name = "RustDatabasePool", unsendable)]
@@ -37,41 +37,54 @@ impl PyDatabasePool {
     }
 
     /// Initialize database connections for given paths
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "initialize")]
-    pub fn py_initialize(&self, _py: Python<'_>, db_paths: Vec<String>) -> PyResult<()> {
+    pub fn py_initialize(&self, py: Python<'_>, db_paths: Vec<String>) -> PyResult<()> {
         let paths: Vec<PathBuf> = db_paths.into_iter().map(PathBuf::from).collect();
 
-        get_runtime().block_on(async { self.inner.initialize(paths).await.map_err(to_pyerr) })
+        // Release GIL during database initialization
+        without_gil(py, || {
+            get_runtime().block_on(async { self.inner.initialize(paths).await.map_err(to_pyerr) })
+        })
     }
 
     /// Get FormID entry from database
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "get_entry", signature = (formid, plugin, table=None))]
     pub fn py_get_entry(
         &self,
-        _py: Python<'_>,
+        py: Python<'_>,
         formid: String,
         plugin: String,
         table: Option<String>,
     ) -> PyResult<Option<String>> {
-        get_runtime().block_on(async {
-            self.inner
-                .get_entry(&formid, &plugin, table.as_deref())
-                .await
-                .map_err(to_pyerr)
+        // Release GIL during database query
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner
+                    .get_entry(&formid, &plugin, table.as_deref())
+                    .await
+                    .map_err(to_pyerr)
+            })
         })
     }
 
     /// Batch lookup for FormID entries
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "get_entries_batch", signature = (formid_plugin_pairs, table=None, batch_size=None))]
     pub fn py_get_entries_batch(
         &self,
-        _py: Python<'_>,
+        py: Python<'_>,
         formid_plugin_pairs: &Bound<'_, PyList>,
         table: Option<String>,
         batch_size: Option<usize>,
     ) -> PyResult<HashMap<String, String>> {
-        // Parse Python list of tuples
-        let mut pairs: Vec<(String, String)> = Vec::new();
+        // Parse Python list of tuples (requires GIL)
+        let len = formid_plugin_pairs.len();
+        let mut pairs: Vec<(String, String)> = Vec::with_capacity(len);
         for item in formid_plugin_pairs.iter() {
             let tuple = item.extract::<(String, String)>()?;
             pairs.push(tuple);
@@ -79,11 +92,14 @@ impl PyDatabasePool {
 
         let batch_sz = batch_size.unwrap_or(100);
 
-        get_runtime().block_on(async {
-            self.inner
-                .get_entries_batch(pairs, table.as_deref(), batch_sz)
-                .await
-                .map_err(to_pyerr)
+        // Release GIL during database query
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner
+                    .get_entries_batch(pairs, table.as_deref(), batch_sz)
+                    .await
+                    .map_err(to_pyerr)
+            })
         })
     }
 
@@ -175,15 +191,25 @@ impl PyDatabasePool {
     }
 
     /// Close all connections and clear caches
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "close")]
-    pub fn py_close(&self, _py: Python<'_>) -> PyResult<()> {
-        get_runtime().block_on(async { self.inner.close().await.map_err(to_pyerr) })
+    pub fn py_close(&self, py: Python<'_>) -> PyResult<()> {
+        // Release GIL during cleanup
+        without_gil(py, || {
+            get_runtime().block_on(async { self.inner.close().await.map_err(to_pyerr) })
+        })
     }
 
     /// Optimize database connections (VACUUM and ANALYZE)
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "optimize")]
-    pub fn py_optimize(&self, _py: Python<'_>) -> PyResult<()> {
-        get_runtime().block_on(async { self.inner.optimize().await.map_err(to_pyerr) })
+    pub fn py_optimize(&self, py: Python<'_>) -> PyResult<()> {
+        // Release GIL during optimization (can be slow)
+        without_gil(py, || {
+            get_runtime().block_on(async { self.inner.optimize().await.map_err(to_pyerr) })
+        })
     }
 }
 

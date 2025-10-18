@@ -33,6 +33,7 @@ num_cpus = { workspace = true }  # Optimization 5.1: For thread pool sizing
 # String optimization
 string_cache = { workspace = true }
 smartstring = { workspace = true }
+lasso = { workspace = true }  # Optimization 3.1: Fast string interning
 
 # Logging
 log = { workspace = true }

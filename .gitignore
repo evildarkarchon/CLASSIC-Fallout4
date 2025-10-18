@@ -127,3 +127,4 @@ check_output.txt
 build_output.txt
 *.egg-info
 MANIFEST.txt
+.hypothesis/

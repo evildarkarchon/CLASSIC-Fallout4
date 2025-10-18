@@ -636,3 +636,56 @@ def resource_exhaustion_simulator():
             self.memory_allocated = max(0, self.memory_allocated - size_bytes)
 
     return ResourceSimulator()
+
+
+@pytest.fixture
+def mock_yamldata_python_only():
+    """
+    Mock yamldata that DISABLES Rust acceleration (forces Python fallback).
+
+    Use this fixture ONLY for stress tests or unit tests that use complex mocking patterns
+    that don't work with PyO3 type conversion.
+
+    For Rust integration tests, DO NOT use this fixture - use proper test data instead.
+    """
+    import os
+
+    # Disable Rust to avoid PyO3 type conversion issues with Mock objects
+    original_value = os.environ.get("CLASSIC_DISABLE_RUST")
+    os.environ["CLASSIC_DISABLE_RUST"] = "1"
+
+    # Create a simple mock that works with Python fallback
+    mock = Mock()
+    # Add common attributes that yamldata should have
+    mock.game_path = "C:\\Games\\Fallout4"
+    mock.docs_path = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"
+    mock.plugins = {}
+    mock.settings = {}
+
+    yield mock
+
+    # Restore original environment variable state
+    if original_value is None:
+        os.environ.pop("CLASSIC_DISABLE_RUST", None)
+    else:
+        os.environ["CLASSIC_DISABLE_RUST"] = original_value
+
+
+@pytest.fixture
+def mock_yamldata():
+    """
+    Mock yamldata that works with Rust components.
+
+    This is a simple Mock object. For Rust integration tests, this will likely cause
+    PyO3 type conversion errors. In that case, use actual test data or mock_yamldata_python_only.
+    """
+    # Create a simple mock WITHOUT disabling Rust
+    # This allows Rust integration tests to run with Rust enabled
+    mock = Mock()
+    # Add common attributes
+    mock.game_path = "C:\\Games\\Fallout4"
+    mock.docs_path = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"
+    mock.plugins = {}
+    mock.settings = {}
+
+    return mock

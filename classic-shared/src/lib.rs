@@ -78,6 +78,45 @@ pub fn get_runtime() -> &'static Runtime {
     &RUNTIME
 }
 
+/// Helper to run a function without the GIL (PyO3 0.26 compatible)
+///
+/// This provides a convenient way to release the GIL during CPU-intensive or blocking operations.
+/// In PyO3 0.26, `Python::detach()` itself takes a closure and handles GIL release/reacquire.
+///
+/// # Examples
+/// ```rust,no_run
+/// use classic_shared::without_gil;
+/// use pyo3::prelude::*;
+///
+/// pub fn expensive_operation(py: Python<'_>, data: Vec<u8>) -> PyResult<String> {
+///     // Release GIL during long-running computation
+///     without_gil(py, || {
+///         // This code runs without holding the GIL
+///         process_data(data)
+///     })
+/// }
+/// ```
+///
+/// # When to use
+/// - I/O operations (file reading, network, database queries)
+/// - CPU-intensive calculations
+/// - Blocking operations that don't need Python access
+/// - Any operation that takes > 1ms
+///
+/// # When NOT to use
+/// - Operations that need to call Python code
+/// - Very fast operations (< 1ms) where overhead isn't worth it
+/// - When you need to access Python objects during execution
+#[inline]
+pub fn without_gil<F, R>(py: Python<'_>, f: F) -> R
+where
+    F: FnOnce() -> R + Send,
+    R: Send,
+{
+    // PyO3 0.26: detach() takes a closure
+    py.detach(f)
+}
+
 /// Python module initialization
 #[pymodule]
 fn classic_shared(m: &Bound<'_, PyModule>) -> PyResult<()> {

@@ -159,9 +159,12 @@ class TestConcurrentOperationsStress:
             """Parse a single log."""
             start = time.time()
             try:
-                result = await asyncio.to_thread(parser.parse, log)
+                lines = log.splitlines()
+                game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
+                    parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                )
                 metrics.record_operation(time.time() - start)
-                return result
+                return segments
             except Exception as e:
                 metrics.record_error(e)
                 raise
@@ -191,14 +194,13 @@ class TestConcurrentOperationsStress:
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(30)
-    async def test_mixed_operations_stress(self, metrics, generator):
+    async def test_mixed_operations_stress(self, metrics, generator, mock_yamldata_python_only):
         """Stress test with mixed operation types."""
         from ClassicLib.integration.factory import get_parser, get_formid_analyzer
         from ClassicLib.FileIOCore import FileIOCore
 
         parser = get_parser()
-        mock_yamldata = MagicMock()
-        analyzer = get_formid_analyzer(mock_yamldata, True, False)
+        analyzer = get_formid_analyzer(mock_yamldata_python_only, True, False)
         io_core = FileIOCore()
 
         # Generate test data
@@ -210,11 +212,13 @@ class TestConcurrentOperationsStress:
             operations = []
 
             # Parse log
-            operations.append(asyncio.to_thread(parser.parse, log))
+            log_lines = log.splitlines()
+            operations.append(asyncio.to_thread(
+                parser.find_segments, log_lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            ))
 
-            # Analyze FormIDs
-            for formid in formids[:10]:
-                operations.append(asyncio.to_thread(analyzer.analyze, formid))
+            # Analyze FormIDs - use extract_formids instead of analyze for batch
+            operations.append(asyncio.to_thread(analyzer.extract_formids, formids[:10]))
 
             # File operations
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -274,7 +278,10 @@ class TestConcurrentOperationsStress:
                 log = generator.generate_typical_crash_log()
                 start = time.time()
                 try:
-                    await asyncio.to_thread(parser.parse, log)
+                    lines = log.splitlines()
+                    await asyncio.to_thread(
+                        parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                    )
                     metrics.record_operation(time.time() - start)
                 except Exception as e:
                     metrics.record_error(e)
@@ -324,11 +331,14 @@ class TestMemoryLeakDetection:
         # Perform many parsing operations
         for i in range(100):
             log = generator.generate_typical_crash_log()
-            result = parser.parse(log)
+            lines = log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
 
             # Explicitly delete to encourage cleanup
             del log
-            del result
+            del segments
 
             # Periodic garbage collection
             if i % 20 == 0:
@@ -416,18 +426,21 @@ class TestMemoryLeakDetection:
 
         for i in range(50):
             log = generator.generate_typical_crash_log()
-            result = parser.parse(log)
+            lines = log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
 
             # Try to track result
             try:
-                ref = weakref.ref(result)
+                ref = weakref.ref(segments)
                 tracked_objects.append(ref)
             except TypeError:
                 # Some objects don't support weak references
                 pass
 
             del log
-            del result
+            del segments
 
         # Force cleanup
         gc.collect()
@@ -450,24 +463,25 @@ class TestThreadSafetyValidation:
 
     def test_singleton_thread_safety(self):
         """Test that singletons are thread-safe."""
-        from ClassicLib.GlobalRegistry import GlobalRegistry
-        from ClassicLib.MessageHandler.MessageHandler import MessageHandler
+        from ClassicLib.MessageHandler.handler import MessageHandler
         from ClassicLib.AsyncBridge import AsyncBridge
 
-        # Clear singletons
-        for cls in [GlobalRegistry, MessageHandler, AsyncBridge]:
-            if hasattr(cls, "_instance"):
-                delattr(cls, "_instance")
+        # Clear AsyncBridge instances (GlobalRegistry and MessageHandler are not singletons anymore)
+        with AsyncBridge._lock:
+            for instance in AsyncBridge._instances.values():
+                try:
+                    instance.shutdown()
+                except Exception:
+                    pass
+            AsyncBridge._instances.clear()
 
         instances = {
-            "GlobalRegistry": [],
             "MessageHandler": [],
             "AsyncBridge": []
         }
 
         def get_instances():
             """Get singleton instances from thread."""
-            instances["GlobalRegistry"].append(GlobalRegistry())
             instances["MessageHandler"].append(MessageHandler())
             instances["AsyncBridge"].append(AsyncBridge.get_instance())
 
@@ -490,13 +504,7 @@ class TestThreadSafetyValidation:
 
     def test_concurrent_data_modification(self):
         """Test thread safety when modifying shared data."""
-        from ClassicLib.GlobalRegistry import GlobalRegistry
-
-        # Clear singleton
-        if hasattr(GlobalRegistry, "_instance"):
-            delattr(GlobalRegistry, "_instance")
-
-        registry = GlobalRegistry()
+        # GlobalRegistry is now module-level, not a singleton class
         counter = {"value": 0}
         lock = threading.Lock()
 
@@ -531,9 +539,14 @@ class TestThreadSafetyValidation:
         """Test AsyncBridge concurrency limits are enforced."""
         from ClassicLib.AsyncBridge import AsyncBridge
 
-        # Clear singleton
-        if hasattr(AsyncBridge, "_instance"):
-            delattr(AsyncBridge, "_instance")
+        # Clear AsyncBridge instances
+        with AsyncBridge._lock:
+            for instance in AsyncBridge._instances.values():
+                try:
+                    instance.shutdown()
+                except Exception:
+                    pass
+            AsyncBridge._instances.clear()
 
         bridge = AsyncBridge.get_instance()
 

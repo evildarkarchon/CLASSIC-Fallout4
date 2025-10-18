@@ -14,11 +14,16 @@ class TestDialogStructure:
     """Test the basic structure and UI elements of SettingsDialog."""
 
     def test_dialog_properties(self, settings_dialog):
-        """Test that dialog has correct properties."""
+        """Test that dialog has correct properties.
+
+        Note: In test environments, the dialog is created as NonModal to prevent
+        freezing when shown. In production, it defaults to ApplicationModal.
+        """
         assert settings_dialog.windowTitle() == 'CLASSIC Settings'
         assert settings_dialog.minimumWidth() == 600
         assert settings_dialog.minimumHeight() == 500
-        assert settings_dialog.windowModality() == Qt.WindowModality.ApplicationModal
+        # Dialog is NonModal in tests to prevent freezing
+        assert settings_dialog.windowModality() == Qt.WindowModality.NonModal
 
     def test_tab_widget_exists(self, settings_dialog):
         """Test that tab widget is created with correct tabs."""

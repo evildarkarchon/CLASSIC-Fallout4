@@ -38,6 +38,7 @@ once_cell = { workspace = true }
 lru = { workspace = true }
 linked-hash-map = { workspace = true }
 rustc-hash = { workspace = true }  # Optimization 1.2: Fast hasher for FormID counting
+xxhash-rust = { workspace = true }  # Optimization 4.1: Fast hashing for cache keys
 
 # Database operations
 rusqlite = { workspace = true }

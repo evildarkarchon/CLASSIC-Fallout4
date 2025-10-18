@@ -29,8 +29,8 @@ from .stress_test_fixtures import (
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.FileIOCore import FileIOCore
-from ClassicLib.GlobalRegistry import GlobalRegistry
-from ClassicLib.MessageHandler.MessageHandler import MessageHandler
+from ClassicLib import GlobalRegistry
+from ClassicLib.MessageHandler import MessageHandler
 from ClassicLib.YamlSettingsCache import yaml_cache
 
 

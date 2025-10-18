@@ -32,7 +32,7 @@ from .stress_test_fixtures import (
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.FileIOCore import FileIOCore
-from ClassicLib.MessageHandler.MessageHandler import MessageHandler
+from ClassicLib.MessageHandler import MessageHandler
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.YamlSettingsCache import yaml_cache
 

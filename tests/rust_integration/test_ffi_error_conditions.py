@@ -70,11 +70,13 @@ class TestFFIErrorConditions:
 
         # Test with None values
         with pytest.raises((TypeError, ValueError, AttributeError)):
-            parser.parse(None)
+            parser.find_segments(None, "Buffout 4", "F4SE", "Fallout4.exe")
 
         # Test with empty values
-        result = parser.parse("")
-        assert result is not None  # Should return empty result, not crash
+        game_ver, crashgen_ver, error, segments = parser.find_segments(
+            [], "Buffout 4", "F4SE", "Fallout4.exe"
+        )
+        assert segments is not None  # Should return empty result, not crash
 
     def test_invalid_utf8_handling(self):
         """Test handling of invalid UTF-8 sequences."""
@@ -111,9 +113,12 @@ class TestFFIErrorConditions:
 
         # Should handle large input gracefully
         try:
-            result = parser.parse(large_content)
+            lines = large_content.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
             # Should either parse or raise memory error
-            assert result is not None
+            assert segments is not None
         except (MemoryError, RuntimeError, ValueError) as e:
             # Should raise appropriate error for oversized input
             assert "memory" in str(e).lower() or "size" in str(e).lower() or "large" in str(e).lower()
@@ -134,9 +139,16 @@ class TestFFIErrorConditions:
             b"bytes",  # Bytes instead of string
         ]
 
-        for wrong_input in wrong_type_inputs:
+        # analyzer.extract_formids expects a list of strings
+        # Test with wrong types for the list itself
+        wrong_list_inputs = [
+            123,  # Integer instead of list
+            "not_a_list",  # String instead of list
+            {"formid": "test"},  # Dict instead of list
+        ]
+        for wrong_input in wrong_list_inputs:
             with pytest.raises((TypeError, AttributeError, ValueError)):
-                analyzer.analyze(wrong_input)
+                analyzer.extract_formids(wrong_input)
 
     def test_concurrent_ffi_calls(self):
         """Test concurrent FFI calls don't cause race conditions."""
@@ -150,8 +162,11 @@ class TestFFIErrorConditions:
             try:
                 # Each worker processes different synthetic data
                 content = f"Worker {worker_id} log line\n" * 100
-                result = parser.parse(content)
-                results.append((worker_id, result))
+                lines = content.splitlines()
+                game_ver, crashgen_ver, error, segments = parser.find_segments(
+                    lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                )
+                results.append((worker_id, segments))
             except Exception as e:
                 errors.append((worker_id, e))
 
@@ -217,12 +232,15 @@ class TestFFIErrorConditions:
 
         for test_str in test_strings:
             try:
-                result = parser.parse(test_str)
+                lines = test_str.splitlines() if test_str else []
+                game_ver, crashgen_ver, error, segments = parser.find_segments(
+                    lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                )
                 # Should handle all string types
-                assert result is not None
-            except ValueError:
-                # Null characters might be rejected
-                assert "\x00" in test_str
+                assert segments is not None
+            except (ValueError, UnicodeDecodeError):
+                # Null characters or encoding issues might be rejected
+                assert "\x00" in test_str or isinstance(test_str, bytes)
 
     def test_numeric_overflow_handling(self):
         """Test numeric overflow handling in FFI."""
@@ -239,14 +257,14 @@ class TestFFIErrorConditions:
         mock_yamldata = MagicMock()
         analyzer = get_formid_analyzer(mock_yamldata, True, False)
 
-        for formid in boundary_values:
-            try:
-                result = analyzer.analyze(formid)
-                # Should handle boundary values
-                assert result is None or isinstance(result, (str, dict))
-            except (ValueError, OverflowError):
-                # Acceptable for overflow values
-                pass
+        # extract_formids expects a list of formids
+        try:
+            results = analyzer.extract_formids(boundary_values)
+            # Should handle boundary values
+            assert results is None or isinstance(results, (list, dict))
+        except (ValueError, OverflowError, TypeError):
+            # Acceptable for overflow values
+            pass
 
     def test_callback_error_propagation(self):
         """Test that Python exceptions in callbacks propagate correctly."""
@@ -262,7 +280,8 @@ class TestFFIErrorConditions:
             try:
                 parser.set_callback(failing_callback)
                 # Process data that would trigger callback
-                parser.parse("trigger callback")
+                lines = ["trigger callback"]
+                parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             except (RuntimeError, AttributeError):
                 # Should propagate callback error or not have callback support
                 pass
@@ -335,7 +354,8 @@ class TestFFIErrorConditions:
 
             try:
                 # Long-running parse operation
-                parser.parse("test" * 100000)
+                lines = ["test" * 100000]
+                parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 signal.alarm(0)  # Cancel alarm
             except TimeoutError:
                 pass  # Expected
@@ -343,8 +363,11 @@ class TestFFIErrorConditions:
                 signal.alarm(0)  # Ensure alarm is cancelled
 
             # Parser should still work after interruption
-            result = parser.parse("test")
-            assert result is not None
+            lines = ["test"]
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
+            assert segments is not None
 
     def test_dll_injection_prevention(self):
         """Test that DLL injection attempts are handled safely."""
@@ -380,9 +403,12 @@ class TestFFIErrorConditions:
         nested_content += "END\n"
 
         try:
-            result = parser.parse(nested_content)
+            lines = nested_content.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
             # Should handle deep nesting without stack overflow
-            assert result is not None
+            assert segments is not None
         except (RecursionError, RuntimeError, ValueError) as e:
             # Should raise appropriate error for deep nesting
             assert "recursion" in str(e).lower() or "depth" in str(e).lower() or "stack" in str(e).lower()

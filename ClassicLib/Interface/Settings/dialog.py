@@ -51,13 +51,20 @@ class SettingsDialog(QDialog):
         "ini_folder_path": "INI Folder Path",
     }
 
-    def __init__(self, parent: QWidget | None = None, yaml_store: YAML = YAML.Settings) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        yaml_store: YAML = YAML.Settings,
+        modal: bool = True,
+    ) -> None:
         """
         Initialize the settings dialog.
 
         Args:
             parent: Parent widget for the dialog
             yaml_store: YAML store to use for settings (defaults to YAML.Settings)
+            modal: Whether the dialog should be modal (defaults to True).
+                   Set to False in test environments to prevent freezing.
         """
         super().__init__(parent)
         self.yaml_store = yaml_store
@@ -65,7 +72,7 @@ class SettingsDialog(QDialog):
         # Set dialog properties
         self.setWindowTitle("CLASSIC Settings")
         self.setMinimumSize(600, 500)
-        self.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal if modal else Qt.WindowModality.NonModal)
 
         # Apply dark mode styling
         self.setStyleSheet(DARK_MODE)

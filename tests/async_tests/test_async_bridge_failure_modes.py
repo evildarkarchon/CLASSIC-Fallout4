@@ -4,13 +4,14 @@ This module tests AsyncBridge's behavior under various failure conditions,
 including error propagation, concurrent operation limits, and fallback mechanisms.
 """
 
-import pytest
 import asyncio
+import pytest
 import threading
 import time
-from unittest.mock import MagicMock, Mock, patch, AsyncMock
-from typing import Any
+import warnings
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from ClassicLib.AsyncBridge import AsyncBridge
 
@@ -24,11 +25,17 @@ class TestAsyncBridgeFailureModes:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         """Reset AsyncBridge singleton before each test."""
-        # Clear singleton to ensure clean state
-        if hasattr(AsyncBridge, "_instance"):
-            delattr(AsyncBridge, "_instance")
-        if hasattr(AsyncBridge, "_lock"):
-            delattr(AsyncBridge, "_lock")
+        # Clear all instances to ensure clean state
+        # DO NOT delete class variables like _lock - they must persist
+        with AsyncBridge._lock:
+            # Shutdown existing instances
+            for instance in AsyncBridge._instances.values():
+                try:
+                    instance.shutdown()
+                except Exception:
+                    pass
+            # Clear the instances dict
+            AsyncBridge._instances.clear()
 
     def test_fallback_when_rust_unavailable(self) -> None:
         """Test fallback mechanism when Rust acceleration is unavailable."""

@@ -1,8 +1,15 @@
 //! Python bindings for LogParser - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::LogParser;
+use classic_shared::without_gil;
 use pyo3::prelude::*;
 use std::collections::HashMap;
+use std::sync::Arc;
+
+/// Helper to convert Vec<String> to Vec<Arc<str>> for core library
+fn to_arc_str_vec(strings: &[String]) -> Vec<Arc<str>> {
+    strings.iter().map(|s| Arc::from(s.as_str())).collect()
+}
 
 /// Python-facing log parser wrapper
 #[pyclass(name = "LogParser")]
@@ -32,33 +39,70 @@ impl PyLogParser {
     }
 
     /// Parse log into segments using SIMD-optimized boundary detection
-    pub fn parse_segments(&self, lines: Vec<String>) -> Vec<Vec<String>> {
-        self.inner.parse_segments(&lines)
+    ///
+    /// For large logs (>1000 lines), this releases the GIL to allow other Python threads to run.
+    pub fn parse_segments(&self, py: Python<'_>, lines: Vec<String>) -> Vec<Vec<String>> {
+        let arc_lines = to_arc_str_vec(&lines);
+
+        // Release GIL for large parsing operations
+        let result = if lines.len() > 1000 {
+            without_gil(py, || self.inner.parse_segments(&arc_lines))
+        } else {
+            // Keep GIL for small operations (overhead not worth it)
+            self.inner.parse_segments(&arc_lines)
+        };
+
+        // Convert result back to Vec<Vec<String>>
+        result.into_iter()
+            .map(|segment| segment.into_iter().map(|s| s.to_string()).collect())
+            .collect()
     }
 
     /// Parse segments in parallel for large logs
+    ///
+    /// This operation always releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "parse_segments_parallel", signature = (lines, chunk_size=None))]
     pub fn parse_segments_parallel(
         &self,
+        py: Python<'_>,
         lines: Vec<String>,
         chunk_size: Option<usize>,
     ) -> Vec<Vec<String>> {
-        self.inner.parse_segments_parallel(&lines, chunk_size)
+        let arc_lines = to_arc_str_vec(&lines);
+
+        // Always release GIL for parallel operations
+        let result = without_gil(py, || self.inner.parse_segments_parallel(&arc_lines, chunk_size));
+
+        // Convert result back to Vec<Vec<String>>
+        result.into_iter()
+            .map(|segment| segment.into_iter().map(|s| s.to_string()).collect())
+            .collect()
     }
 
     /// Find all pattern matches in parallel with caching
-    pub fn find_patterns(&self, lines: Vec<String>) -> Vec<(usize, String, String)> {
-        self.inner.find_patterns(&lines)
+    ///
+    /// For large logs (>1000 lines), this releases the GIL to allow other Python threads to run.
+    pub fn find_patterns(&self, py: Python<'_>, lines: Vec<String>) -> Vec<(usize, String, String)> {
+        // Release GIL for large pattern matching
+        if lines.len() > 1000 {
+            without_gil(py, || self.inner.find_patterns(&lines))
+        } else {
+            self.inner.find_patterns(&lines)
+        }
     }
 
     /// Find patterns in parallel chunks for better performance
+    ///
+    /// This operation always releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "find_patterns_chunked", signature = (lines, chunk_size=None))]
     pub fn find_patterns_chunked(
         &self,
+        py: Python<'_>,
         lines: Vec<String>,
         chunk_size: Option<usize>,
     ) -> Vec<(usize, String, String)> {
-        self.inner.find_patterns_chunked(&lines, chunk_size)
+        // Always release GIL for chunked/parallel operations
+        without_gil(py, || self.inner.find_patterns_chunked(&lines, chunk_size))
     }
 
     /// Extract section from log (Python-exposed method)
@@ -154,6 +198,7 @@ impl PyLogParser {
     /// Benchmark parsing performance on given data
     #[pyo3(name = "benchmark")]
     pub fn benchmark(&self, lines: Vec<String>, iterations: usize) -> HashMap<String, f64> {
-        self.inner.benchmark(&lines, iterations)
+        let arc_lines = to_arc_str_vec(&lines);
+        self.inner.benchmark(&arc_lines, iterations)
     }
 }

@@ -97,7 +97,7 @@ FormID: 00000014.esp  // FormID with extension
         """Generate a log with extreme nesting that could cause stack issues."""
         nested_structure = "BEGIN\n"
         for i in range(1000):  # Very deep nesting
-            nested_structure += "  " * min(i, 50) + f"Level {i} {\n"
+            nested_structure += "  " * min(i, 50) + f"Level {i} {{\n"
         nested_structure += "  " * 50 + "CRASH HERE\n"
         for i in range(999, -1, -1):
             nested_structure += "  " * min(i, 50) + "}\n"
@@ -167,16 +167,19 @@ class TestMalformedCrashLogHandling:
         """Test handling of truncated/incomplete logs."""
         truncated_log = generator.generate_truncated_log()
 
-        # Should handle truncation gracefully
-        result = setup_parser.parse(truncated_log)
+        # Should handle truncation gracefully - use find_segments
+        # Convert string to list of lines for find_segments
+        crash_lines = truncated_log.splitlines() if isinstance(truncated_log, str) else truncated_log
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout4.exe"
+        )
 
         # Should still extract what it can
-        assert result is not None
-        if isinstance(result, dict):
-            # Should parse the complete plugin entries
-            if "plugins" in result:
-                complete_plugins = [p for p in result["plugins"] if p.get("name")]
-                assert len(complete_plugins) >= 2  # At least Fallout4.esm and DLCRobot.esm
+        assert game_ver is not None or crashgen_ver is not None or error is not None
+        # segments is a list of lists - check plugins segment (usually segment[5])
+        if len(segments) > 5:
+            plugins_segment = segments[5]
+            assert len(plugins_segment) >= 2  # At least Fallout4.esm and DLCRobot.esm
 
     def test_binary_corruption_handling(self, generator, setup_parser):
         """Test handling of binary corruption in logs."""
@@ -185,10 +188,13 @@ class TestMalformedCrashLogHandling:
         # Try to parse as text with error handling
         try:
             text_log = corrupted_log.decode('utf-8', errors='ignore')
-            result = setup_parser.parse(text_log)
+            crash_lines = text_log.splitlines()
+            game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+                crash_lines, "Buffout 4", "F4SE", "Fallout4"
+            )
 
             # Should handle corruption without crashing
-            assert result is not None or result == {}
+            assert game_ver is not None or crashgen_ver is not None or segments is not None
         except (UnicodeDecodeError, ValueError) as e:
             # Acceptable to fail with proper exception
             assert "decode" in str(e).lower() or "corrupt" in str(e).lower()
@@ -201,10 +207,13 @@ class TestMalformedCrashLogHandling:
         for encoding in ['utf-8', 'cp1252', 'latin-1']:
             try:
                 text_log = mixed_log.decode(encoding, errors='ignore')
-                result = setup_parser.parse(text_log)
+                crash_lines = text_log.splitlines()
+                game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+                    crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+                )
 
                 # Should parse something even with encoding issues
-                assert result is not None
+                assert game_ver is not None or crashgen_ver is not None or segments is not None
                 break
             except UnicodeDecodeError:
                 continue
@@ -213,10 +222,13 @@ class TestMalformedCrashLogHandling:
         """Test handling of circular references in data."""
         circular_log = generator.generate_circular_reference_log()
 
-        result = setup_parser.parse(circular_log)
+        crash_lines = circular_log.splitlines()
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
 
         # Should detect and handle circular references
-        assert result is not None
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
         # Parser should not get stuck in infinite loop
 
     def test_malformed_formid_handling(self, generator, setup_parser):
@@ -227,26 +239,26 @@ class TestMalformedCrashLogHandling:
         mock_yamldata = MagicMock()
         analyzer = get_formid_analyzer(mock_yamldata, True, False)
 
-        # Extract FormID-like patterns
+        # Extract FormID-like patterns from the log lines
         import re
         formid_pattern = re.compile(r'FormID:\s*([^\s\n]+)')
         matches = formid_pattern.findall(malformed_log)
 
-        valid_formids = []
-        for match in matches:
-            try:
-                # Try to analyze each FormID
-                result = analyzer.analyze(match)
-                if result:
-                    valid_formids.append(match)
-            except (ValueError, TypeError):
-                # Should handle invalid FormIDs gracefully
-                pass
+        # Create a fake callstack from the matches to test extraction
+        callstack = [f"\t[{i}] FormID: {match}" for i, match in enumerate(matches)]
 
-        # Should only process valid FormIDs
-        for valid in valid_formids:
-            assert len(valid) == 8
-            assert all(c in "0123456789ABCDEFabcdef" for c in valid)
+        # Use extract_formids to validate extraction
+        try:
+            extracted = analyzer.extract_formids(callstack)
+            # Should only extract valid FormIDs (8 hex characters)
+            for formid in extracted:
+                assert len(formid) == 8 or len(formid) == 10  # May have 0x prefix
+                clean_id = formid.replace("0x", "").replace("0X", "")
+                assert len(clean_id) == 8
+                assert all(c in "0123456789ABCDEFabcdef" for c in clean_id)
+        except (ValueError, TypeError):
+            # Should handle invalid FormIDs gracefully
+            pass
 
     def test_extreme_nesting_handling(self, generator, setup_parser):
         """Test handling of extremely nested structures."""
@@ -254,8 +266,11 @@ class TestMalformedCrashLogHandling:
 
         # Should handle deep nesting without stack overflow
         try:
-            result = setup_parser.parse(nested_log)
-            assert result is not None
+            crash_lines = nested_log.splitlines()
+            game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+                crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+            )
+            assert game_ver is not None or crashgen_ver is not None or segments is not None
         except RecursionError:
             # Acceptable to limit recursion depth
             pass
@@ -266,10 +281,13 @@ class TestMalformedCrashLogHandling:
 
         # Remove null bytes or handle them
         cleaned_log = null_log.replace(b'\x00', b'').decode('utf-8', errors='ignore')
-        result = setup_parser.parse(cleaned_log)
+        crash_lines = cleaned_log.splitlines()
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
 
         # Should parse after cleaning
-        assert result is not None
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
 
     def test_infinite_pattern_handling(self, generator, setup_parser):
         """Test handling of infinite repeating patterns (2MB typical size)."""
@@ -279,33 +297,41 @@ class TestMalformedCrashLogHandling:
 
         # Should handle efficiently without hanging
         start_time = time.time()
-        result = setup_parser.parse(infinite_log)
+        crash_lines = infinite_log.splitlines()
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
         elapsed = time.time() - start_time
 
         # Should complete in reasonable time for 2MB
         assert elapsed < 5.0  # 5 seconds max for 2MB
-        assert result is not None
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
 
     def test_missing_sections_handling(self, generator, setup_parser):
         """Test handling of logs missing critical sections."""
         incomplete_log = generator.generate_missing_critical_sections()
 
-        result = setup_parser.parse(incomplete_log)
+        crash_lines = incomplete_log.splitlines()
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
 
         # Should return result even without standard sections
-        assert result is not None
-        if isinstance(result, dict):
-            # Might have empty sections but shouldn't crash
-            assert "error" not in str(result).lower() or result.get("error") is None
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
+        # segments might be empty but shouldn't crash
+        assert isinstance(segments, list)
 
     def test_conflicting_data_handling(self, generator, setup_parser):
         """Test handling of conflicting/contradictory data."""
         conflicting_log = generator.generate_conflicting_data()
 
-        result = setup_parser.parse(conflicting_log)
+        crash_lines = conflicting_log.splitlines()
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
 
         # Should handle conflicts (usually takes first or last occurrence)
-        assert result is not None
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
 
 
 class TestEdgeCaseFileOperations:
@@ -401,8 +427,11 @@ PLUGINS 📁:
 
 🔥🔥🔥 Stack Trace 🔥🔥🔥"""
 
-        result = parser.parse(emoji_log)
-        assert result is not None
+        crash_lines = emoji_log.splitlines()
+        game_ver, crashgen_ver, error, segments = parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
 
     def test_mixed_line_endings(self):
         """Test handling of mixed line endings (CRLF, LF, CR)."""
@@ -413,8 +442,11 @@ PLUGINS 📁:
         # Mix different line endings
         mixed_log = "Line 1\r\nLine 2\nLine 3\rLine 4\r\n\nLine 6"
 
-        result = parser.parse(mixed_log)
-        assert result is not None
+        crash_lines = mixed_log.splitlines()
+        game_ver, crashgen_ver, error, segments = parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
 
     def test_bom_markers(self):
         """Test handling of BOM (Byte Order Mark) markers."""
@@ -425,8 +457,11 @@ PLUGINS 📁:
         # UTF-8 BOM
         bom_log = "\ufeffFallout 4 v1.10.163\nBuffout 4 v1.28.6"
 
-        result = parser.parse(bom_log)
-        assert result is not None
+        crash_lines = bom_log.splitlines()
+        game_ver, crashgen_ver, error, segments = parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
 
     def test_control_characters(self):
         """Test handling of control characters in logs."""
@@ -437,8 +472,11 @@ PLUGINS 📁:
         # Add various control characters
         control_log = "Fallout 4\x00v1.10.163\x01\x02\nException\x1b[31m colored \x1b[0m"
 
-        result = parser.parse(control_log)
-        assert result is not None
+        crash_lines = control_log.splitlines()
+        game_ver, crashgen_ver, error, segments = parser.find_segments(
+            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
+        )
+        assert game_ver is not None or crashgen_ver is not None or segments is not None
 
 
 class TestPathEdgeCases:

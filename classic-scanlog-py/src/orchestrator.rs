@@ -1,7 +1,7 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
-use classic_shared::get_runtime;
+use classic_shared::{get_runtime, without_gil};
 use pyo3::prelude::*;
 use std::collections::HashMap;
 
@@ -177,19 +177,27 @@ impl PyRustOrchestrator {
     }
 
     /// Analyze a single crash log file
-    pub fn process_log(&self, log_path: String) -> PyResult<PyAnalysisResult> {
-        // Use shared runtime to run async method
-        let result = get_runtime()
-            .block_on(async { self.inner.process_log(log_path).await })
-            .map_err(crate::to_pyerr)?;
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    pub fn process_log(&self, py: Python<'_>, log_path: String) -> PyResult<PyAnalysisResult> {
+        // Release GIL during log processing
+        let result = without_gil(py, || {
+            get_runtime()
+                .block_on(async { self.inner.process_log(log_path).await })
+                .map_err(crate::to_pyerr)
+        })?;
         Ok(PyAnalysisResult { inner: result })
     }
 
     /// Analyze multiple crash logs in parallel
-    pub fn process_logs_batch(&self, log_paths: Vec<String>) -> PyResult<Vec<PyAnalysisResult>> {
-        // Use shared runtime to run async method
-        let results =
-            get_runtime().block_on(async { self.inner.process_logs_batch(log_paths).await });
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// The batch processing itself uses Rust parallelism for optimal performance.
+    pub fn process_logs_batch(&self, py: Python<'_>, log_paths: Vec<String>) -> PyResult<Vec<PyAnalysisResult>> {
+        // Release GIL during parallel batch processing
+        let results = without_gil(py, || {
+            get_runtime().block_on(async { self.inner.process_logs_batch(log_paths).await })
+        });
         Ok(results
             .into_iter()
             .map(|r| PyAnalysisResult { inner: r })

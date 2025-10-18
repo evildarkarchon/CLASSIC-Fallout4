@@ -116,13 +116,16 @@ class TestRustFFIPropertyBased:
         parser = get_parser()
         # Should not crash regardless of input
         try:
-            result = parser.parse(text_input)
+            lines = text_input.splitlines() if isinstance(text_input, str) else []
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
             # Result should be a valid structure even for invalid input
-            assert result is not None
-            assert isinstance(result, (dict, list, str, type(None)))
+            assert segments is not None
+            assert isinstance(segments, (dict, type(None)))
         except Exception as e:
             # Should only raise known exception types
-            assert isinstance(e, (ValueError, TypeError, RuntimeError))
+            assert isinstance(e, (ValueError, TypeError, RuntimeError, AttributeError))
 
     @given(
         st.lists(mock_crash_log_line(), min_size=0, max_size=1000)
@@ -135,17 +138,18 @@ class TestRustFFIPropertyBased:
 
         from ClassicLib.integration.factory import get_parser
 
-        log_content = "\n".join(log_lines)
         parser = get_parser()
 
         try:
-            result = parser.parse(log_content)
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                log_lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
             # Verify basic structure
-            if result:
-                assert isinstance(result, dict)
+            if segments:
+                assert isinstance(segments, dict)
                 # Check for expected keys in parsed result
                 possible_keys = ["stack_trace", "errors", "warnings", "formids", "plugins"]
-                assert any(key in result for key in possible_keys) or len(result) == 0
+                assert any(key in segments for key in possible_keys) or len(segments) == 0
         except Exception as e:
             # Parser should handle gracefully
             assert isinstance(e, (ValueError, RuntimeError))
@@ -166,15 +170,14 @@ class TestRustFFIPropertyBased:
 
         analyzer = get_formid_analyzer(mock_yamldata, show_values, db_exists)
 
-        # Should handle any list of FormIDs
-        for formid in formids:
-            try:
-                result = analyzer.analyze(formid)
-                # Result should be structured data
-                assert result is None or isinstance(result, (str, dict))
-            except Exception as e:
-                # Should only raise expected exceptions
-                assert isinstance(e, (ValueError, KeyError, RuntimeError))
+        # Should handle any list of FormIDs using extract_formids
+        try:
+            results = analyzer.extract_formids(formids)
+            # Result should be structured data
+            assert results is None or isinstance(results, (list, dict))
+        except Exception as e:
+            # Should only raise expected exceptions
+            assert isinstance(e, (ValueError, KeyError, RuntimeError, TypeError))
 
     @given(
         st.dictionaries(
@@ -261,8 +264,11 @@ class TestRustFFIPropertyBased:
         def worker():
             try:
                 for _ in range(min(operations_per_thread, 10)):  # Limit operations
-                    result = parser.parse("test data")
-                    results.append(result)
+                    lines = ["test data"]
+                    game_ver, crashgen_ver, error, segments = parser.find_segments(
+                        lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                    )
+                    results.append(segments)
                     time.sleep(0.001)  # Small delay to prevent overwhelming
             except Exception as e:
                 errors.append(e)

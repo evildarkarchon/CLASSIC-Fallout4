@@ -204,11 +204,15 @@ class TestLogParsingPerformance:
         logs = [generator.generate_crash_log(0.5, "simple") for _ in range(5)]
 
         # Warm up
-        parser.parse(logs[0][:100])
+        warm_lines = logs[0][:100].splitlines()
+        parser.find_segments(warm_lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
         # Measure performance
         for i, log in enumerate(logs):
-            _, elapsed = metrics.measure(f"parse_small_{i}", parser.parse, log)
+            def parse_log():
+                lines = log.splitlines()
+                return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, elapsed = metrics.measure(f"parse_small_{i}", parse_log)
 
         stats = metrics.get_statistics("parse_small_0")
 
@@ -235,7 +239,10 @@ class TestLogParsingPerformance:
 
         # Measure performance
         for i, log in enumerate(logs):
-            _, elapsed = metrics.measure(f"parse_medium_{i}", parser.parse, log)
+            def parse_log():
+                lines = log.splitlines()
+                return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, elapsed = metrics.measure(f"parse_medium_{i}", parse_log)
 
         # Calculate statistics
         all_measurements = []
@@ -266,7 +273,10 @@ class TestLogParsingPerformance:
         complex_log = generator.generate_crash_log(2.0, "high")
 
         # Measure parsing
-        _, elapsed = metrics.measure("parse_complex", parser.parse, complex_log)
+        def parse_complex():
+            lines = complex_log.splitlines()
+            return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+        _, elapsed = metrics.measure("parse_complex", parse_complex)
 
         # Performance expectations
         if using_rust:
@@ -291,7 +301,10 @@ class TestLogParsingPerformance:
 
         for size in sizes:
             log = generator.generate_crash_log(size, "medium")
-            _, elapsed = metrics.measure(f"scale_{size}MB", parser.parse, log)
+            def parse_log():
+                lines = log.splitlines()
+                return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, elapsed = metrics.measure(f"scale_{size}MB", parse_log)
             times.append(elapsed)
 
         # Check scaling behavior
@@ -334,13 +347,9 @@ class TestFormIDAnalysisPerformance:
         # Generate 1000 FormIDs
         formids = generator.generate_formid_list(1000)
 
-        # Warm up
-        analyzer.analyze(formids[0])
-
-        # Measure batch analysis
+        # Measure batch analysis using extract_formids
         start = time.perf_counter()
-        for formid in formids:
-            analyzer.analyze(formid)
+        analyzer.extract_formids(formids)
         elapsed = time.perf_counter() - start
 
         # Calculate per-FormID time
@@ -374,9 +383,9 @@ class TestFormIDAnalysisPerformance:
             formids.append(f"FE000{i:03X}")  # Light plugins
             formids.append(f"{random.randint(0x01, 0x7F)}{i:06X}")  # Regular plugins
 
-        # Measure pattern matching
+        # Measure pattern matching using extract_formids
         _, elapsed = metrics.measure("pattern_match",
-                                    lambda: [analyzer.analyze(f) for f in formids])
+                                    lambda: analyzer.extract_formids(formids))
 
         print(f"\nPattern matching {len(formids)} FormIDs: {elapsed:.3f}s")
 
@@ -583,11 +592,14 @@ class TestMemoryPerformance:
         # Process multiple large logs
         for i in range(5):
             log = generator.generate_crash_log(2.0, "high")
-            result = parser.parse(log)
+            lines = log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
 
             # Explicitly clean up
             del log
-            del result
+            del segments
 
             if i % 2 == 0:
                 gc.collect()
@@ -615,18 +627,21 @@ class TestMemoryPerformance:
 
         for i in range(10):
             log = generator.generate_crash_log(0.5, "simple")
-            result = parser.parse(log)
+            lines = log.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
 
             # Try to track the result
             try:
-                ref = weakref.ref(result)
+                ref = weakref.ref(segments)
                 tracked_objects.append(ref)
             except TypeError:
                 # Some objects don't support weak references
                 pass
 
             del log
-            del result
+            del segments
 
         # Force cleanup
         gc.collect()
@@ -671,7 +686,10 @@ class TestRegressionBaselines:
 
         # Test 1MB parsing
         log_1mb = generator.generate_crash_log(1.0, "medium")
-        _, elapsed = metrics.measure("parse_1mb", parser.parse, log_1mb)
+        def parse_1mb():
+            lines = log_1mb.splitlines()
+            return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+        _, elapsed = metrics.measure("parse_1mb", parse_1mb)
 
         # Check for regression
         if not metrics.check_regression("parse_1mb", threshold=2.0):
@@ -689,12 +707,11 @@ class TestRegressionBaselines:
         mock_yamldata = MagicMock()
         analyzer = get_formid_analyzer(mock_yamldata, True, False)
 
-        # Test 1000 FormIDs
+        # Test 1000 FormIDs using extract_formids
         formids = generator.generate_formid_list(1000)
 
         start = time.perf_counter()
-        for formid in formids:
-            analyzer.analyze(formid)
+        analyzer.extract_formids(formids)
         elapsed = time.perf_counter() - start
 
         metrics.measurements["formid_1000"] = [elapsed]

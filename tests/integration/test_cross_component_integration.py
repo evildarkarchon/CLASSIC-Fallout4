@@ -71,11 +71,15 @@ class TestGUIToRustIntegration:
         from ClassicLib.integration.factory import get_parser
         from ClassicLib.MessageHandler.MessageHandler import MessageHandler
 
-        # Clear singletons
-        if hasattr(MessageHandler, "_instance"):
-            delattr(MessageHandler, "_instance")
-        if hasattr(AsyncBridge, "_instance"):
-            delattr(AsyncBridge, "_instance")
+        # Clear AsyncBridge singleton instances properly
+        # Note: MessageHandler is not a singleton anymore, no cleanup needed
+        with AsyncBridge._lock:
+            for instance in AsyncBridge._instances.values():
+                try:
+                    instance.shutdown()
+                except Exception:
+                    pass
+            AsyncBridge._instances.clear()
 
         bridge = AsyncBridge.get_instance()
         msg_handler = MessageHandler()
@@ -96,8 +100,12 @@ class TestGUIToRustIntegration:
                 # Simulate GUI triggering scan
                 async def gui_scan_operation():
                     # GUI would call parser through AsyncBridge
-                    result = await asyncio.to_thread(parser.parse, crash_log)
-                    return result
+                    # Use find_segments which is the actual API
+                    lines = crash_log.splitlines()
+                    game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
+                        parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                    )
+                    return segments
 
                 # Run through bridge (as GUI would)
                 result = bridge.run_async(gui_scan_operation())
@@ -126,14 +134,17 @@ class TestGUIToRustIntegration:
 
         # Simulate GUI flow
         async def complete_gui_flow():
-            # Step 1: Parse log
-            parsed = await asyncio.to_thread(parser.parse, crash_log)
+            # Step 1: Parse log using find_segments
+            lines = crash_log.splitlines()
+            game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
+                parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
 
             # Step 2: Generate report
             report_data = {
                 "crash_address": "0x7FF6EF4C3512",
                 "exception": "EXCEPTION_ACCESS_VIOLATION",
-                "plugins": parsed.get("plugins", []) if isinstance(parsed, dict) else [],
+                "plugins": segments.get("plugins", []) if isinstance(segments, dict) else [],
                 "formids": ["00000014", "FE000800"],
             }
 
@@ -160,13 +171,16 @@ class TestGUIToRustIntegration:
         async def concurrent_scans():
             tasks = []
             for i, log in enumerate(logs):
+                lines = log.splitlines()
                 task = asyncio.create_task(
-                    asyncio.to_thread(parser.parse, log)
+                    asyncio.to_thread(parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 )
                 tasks.append(task)
 
+            # Gather returns tuples of (game_ver, crashgen_ver, error, segments)
             results = await asyncio.gather(*tasks)
-            return results
+            # Extract just the segments
+            return [r[3] for r in results]
 
         results = bridge.run_async(concurrent_scans())
 
@@ -264,9 +278,7 @@ class TestTUIAsyncIntegration:
         """Test TUI updating UI components asynchronously."""
         from ClassicLib.MessageHandler.MessageHandler import MessageHandler
 
-        # Clear singleton
-        if hasattr(MessageHandler, "_instance"):
-            delattr(MessageHandler, "_instance")
+        # Note: MessageHandler is not a singleton anymore, no cleanup needed
 
         msg_handler = MessageHandler()
         messages_received = []
@@ -330,10 +342,13 @@ class TestCLIBatchProcessing:
                 results = []
                 for log_path in log_files:
                     content = log_path.read_text()
-                    result = await asyncio.to_thread(parser.parse, content)
+                    lines = content.splitlines()
+                    game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
+                        parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                    )
                     results.append({
                         "file": log_path.name,
-                        "result": result
+                        "result": segments
                     })
                 return results
 
@@ -390,7 +405,11 @@ class TestCLIBatchProcessing:
 
         # Process in parallel using ThreadPoolExecutor
         def process_log(log_content):
-            return parser.parse(log_content)
+            lines = log_content.splitlines()
+            game_ver, crashgen_ver, error, segments = parser.find_segments(
+                lines, "Buffout 4", "F4SE", "Fallout4.exe"
+            )
+            return segments
 
         start_time = time.time()
 
@@ -418,11 +437,8 @@ class TestComponentCommunication:
         from ClassicLib.MessageHandler.MessageHandler import MessageHandler
         from ClassicLib.GlobalRegistry import GlobalRegistry
 
-        # Clear singletons
-        if hasattr(MessageHandler, "_instance"):
-            delattr(MessageHandler, "_instance")
-        if hasattr(GlobalRegistry, "_instance"):
-            delattr(GlobalRegistry, "_instance")
+        # Note: MessageHandler is not a singleton anymore, no cleanup needed
+        # Note: GlobalRegistry is module-level now, no cleanup needed
 
         msg_handler = MessageHandler()
         registry = GlobalRegistry()
@@ -475,9 +491,7 @@ class TestComponentCommunication:
 
         bridge = AsyncBridge.get_instance()
 
-        # Clear singleton
-        if hasattr(MessageHandler, "_instance"):
-            delattr(MessageHandler, "_instance")
+        # Note: MessageHandler is not a singleton anymore, no cleanup needed
 
         msg_handler = MessageHandler()
         error_messages = []
@@ -538,9 +552,7 @@ class TestComponentCommunication:
         """Test shared state consistency across components."""
         from ClassicLib.GlobalRegistry import GlobalRegistry
 
-        # Clear singleton
-        if hasattr(GlobalRegistry, "_instance"):
-            delattr(GlobalRegistry, "_instance")
+        # Note: GlobalRegistry is module-level now, no cleanup needed
 
         registry = GlobalRegistry()
 
@@ -649,9 +661,7 @@ class TestResourceManagement:
         """Test concurrent access to shared resources."""
         from ClassicLib.GlobalRegistry import GlobalRegistry
 
-        # Clear singleton
-        if hasattr(GlobalRegistry, "_instance"):
-            delattr(GlobalRegistry, "_instance")
+        # Note: GlobalRegistry is module-level now, no cleanup needed
 
         registry = GlobalRegistry()
 

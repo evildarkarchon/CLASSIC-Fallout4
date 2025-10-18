@@ -32,7 +32,11 @@ def app(qapp):
 
 @pytest.fixture
 def settings_dialog(app):
-    """Create a SettingsDialog instance for testing."""
+    """Create a SettingsDialog instance for testing.
+
+    The dialog is created as non-modal to prevent freezing when shown during tests.
+    This allows tests to safely call show() without the dialog blocking or freezing.
+    """
     # Initialize message handler for GUI mode
     handler = init_message_handler(parent=None, is_gui_mode=True)
 
@@ -40,7 +44,8 @@ def settings_dialog(app):
     # This prevents blocking dialogs during tests
     handler.message_signal = MagicMock()
 
-    dialog = SettingsDialog(yaml_store=YAML.TEST)
+    # Create dialog as NON-MODAL to prevent freezing in tests
+    dialog = SettingsDialog(yaml_store=YAML.TEST, modal=False)
     yield dialog
     dialog.close()
 

@@ -4,7 +4,7 @@
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
 use classic_file_io_core::FileIOCore;
-use classic_shared::get_runtime;
+use classic_shared::{get_runtime, without_gil};
 use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -54,76 +54,124 @@ impl PyFileIOCore {
     }
 
     /// Read a file with encoding detection
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "read_file")]
-    pub fn py_read_file(&self, _py: Python<'_>, path: String) -> PyResult<String> {
+    pub fn py_read_file(&self, py: Python<'_>, path: String) -> PyResult<String> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async { self.inner.read_file(&path_buf).await.map_err(to_pyerr) })
+
+        // Release GIL during I/O operation for better Python concurrency
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner.read_file(&path_buf).await.map_err(to_pyerr)
+            })
+        })
     }
 
     /// Write a file
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "write_file")]
-    pub fn py_write_file(&self, _py: Python<'_>, path: String, content: String) -> PyResult<()> {
+    pub fn py_write_file(&self, py: Python<'_>, path: String, content: String) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async {
-            self.inner
-                .write_file(&path_buf, &content)
-                .await
-                .map_err(to_pyerr)
+
+        // Release GIL during I/O operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner
+                    .write_file(&path_buf, &content)
+                    .await
+                    .map_err(to_pyerr)
+            })
         })
     }
 
     /// Read file lines with automatic encoding detection
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "read_lines")]
-    pub fn py_read_lines(&self, _py: Python<'_>, path: String) -> PyResult<Vec<String>> {
+    pub fn py_read_lines(&self, py: Python<'_>, path: String) -> PyResult<Vec<String>> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async { self.inner.read_lines(&path_buf).await.map_err(to_pyerr) })
+
+        // Release GIL during I/O operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner.read_lines(&path_buf).await.map_err(to_pyerr)
+            })
+        })
     }
 
     /// Read file as bytes
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "read_bytes")]
-    pub fn py_read_bytes(&self, _py: Python<'_>, path: String) -> PyResult<Vec<u8>> {
+    pub fn py_read_bytes(&self, py: Python<'_>, path: String) -> PyResult<Vec<u8>> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async { self.inner.read_bytes(&path_buf).await.map_err(to_pyerr) })
+
+        // Release GIL during I/O operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner.read_bytes(&path_buf).await.map_err(to_pyerr)
+            })
+        })
     }
 
     /// Write lines to file
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "write_lines")]
     pub fn py_write_lines(
         &self,
-        _py: Python<'_>,
+        py: Python<'_>,
         path: String,
         lines: Vec<String>,
     ) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async {
-            self.inner
-                .write_lines(&path_buf, lines)
-                .await
-                .map_err(to_pyerr)
+
+        // Release GIL during I/O operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner
+                    .write_lines(&path_buf, lines)
+                    .await
+                    .map_err(to_pyerr)
+            })
         })
     }
 
     /// Write bytes to file
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "write_bytes")]
-    pub fn py_write_bytes(&self, _py: Python<'_>, path: String, content: Vec<u8>) -> PyResult<()> {
+    pub fn py_write_bytes(&self, py: Python<'_>, path: String, content: Vec<u8>) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async {
-            self.inner
-                .write_bytes(&path_buf, content)
-                .await
-                .map_err(to_pyerr)
+
+        // Release GIL during I/O operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner
+                    .write_bytes(&path_buf, content)
+                    .await
+                    .map_err(to_pyerr)
+            })
         })
     }
 
     /// Append content to file
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "append_file")]
-    pub fn py_append_file(&self, _py: Python<'_>, path: String, content: String) -> PyResult<()> {
+    pub fn py_append_file(&self, py: Python<'_>, path: String, content: String) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async {
-            self.inner
-                .append_file(&path_buf, &content)
-                .await
-                .map_err(to_pyerr)
+
+        // Release GIL during I/O operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner
+                    .append_file(&path_buf, &content)
+                    .await
+                    .map_err(to_pyerr)
+            })
         })
     }
 
@@ -185,22 +233,6 @@ impl PyFileIOCore {
         Ok(dict.unbind())
     }
 
-    /// Memory-mapped file reading for large files
-    pub fn py_read_file_mmap(
-        &self,
-        _py: Python<'_>,
-        path: String,
-        encoding: Option<String>,
-    ) -> PyResult<String> {
-        let path_buf = PathBuf::from(path);
-        get_runtime().block_on(async {
-            self.inner
-                .read_file_mmap(&path_buf, encoding.as_deref())
-                .await
-                .map_err(to_pyerr)
-        })
-    }
-
     /// Parallel directory traversal
     pub fn py_walk_directory(
         &self,
@@ -225,6 +257,8 @@ impl PyFileIOCore {
     }
 
     /// Batch file reading with concurrency control
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     pub fn py_read_multiple_files(
         &self,
         py: Python<'_>,
@@ -232,10 +266,12 @@ impl PyFileIOCore {
     ) -> PyResult<Py<PyDict>> {
         let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
 
-        let results =
-            get_runtime().block_on(async { self.inner.read_multiple_files(path_bufs).await });
+        // Release GIL during batch I/O operation
+        let results = without_gil(py, || {
+            get_runtime().block_on(async { self.inner.read_multiple_files(path_bufs).await })
+        });
 
-        // Convert to Python dict
+        // Convert to Python dict (requires GIL)
         let dict = PyDict::new(py);
         for (path, result) in results {
             let path_str = path.to_string_lossy().to_string();
@@ -252,9 +288,11 @@ impl PyFileIOCore {
     }
 
     /// Write multiple files with concurrency control
+    ///
+    /// This operation releases the GIL to allow other Python threads to run concurrently.
     pub fn py_write_multiple_files(
         &self,
-        _py: Python<'_>,
+        py: Python<'_>,
         files: HashMap<String, String>,
     ) -> PyResult<()> {
         let file_pairs: Vec<(PathBuf, String)> = files
@@ -262,21 +300,24 @@ impl PyFileIOCore {
             .map(|(path, content)| (PathBuf::from(path), content))
             .collect();
 
-        get_runtime().block_on(async {
-            let results = self.inner.write_multiple_files(file_pairs).await;
+        // Release GIL during batch I/O operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                let results = self.inner.write_multiple_files(file_pairs).await;
 
-            // Check for errors
-            for (path, result) in results {
-                if let Err(e) = result {
-                    return Err(PyIOError::new_err(format!(
-                        "Failed to write {}: {}",
-                        path.display(),
-                        e
-                    )));
+                // Check for errors
+                for (path, result) in results {
+                    if let Err(e) = result {
+                        return Err(PyIOError::new_err(format!(
+                            "Failed to write {}: {}",
+                            path.display(),
+                            e
+                        )));
+                    }
                 }
-            }
 
-            Ok(())
+                Ok(())
+            })
         })
     }
 }

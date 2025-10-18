@@ -49,6 +49,7 @@ yaml-rust2 = "0.10.4"
 # Strings & errors
 string_cache = "0.9.0"
 smartstring = "1.0"
+lasso = { version = "0.7", features = ["multi-threaded"] }  # Fast string interning (optimization 3.1)
 thiserror = "2.0"
 anyhow = "1.0"
 
@@ -72,6 +73,9 @@ lru = "0.16.1"
 linked-hash-map = "0.5"
 quick_cache = "0.6"  # Lock-free concurrent cache (optimization 1.3)
 rustc-hash = "2.1"  # Fast hasher for short strings (optimization 1.2)
+
+# Hashing
+xxhash-rust = { version = "0.8", features = ["xxh3"] }  # Fast non-cryptographic hash (optimization 4.1)
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
