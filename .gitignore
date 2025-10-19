@@ -139,3 +139,4 @@ cprofile.bin
 cprofile*.txt
 *.db-shm
 *.db-wal
+/rust_extensions/

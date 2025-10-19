@@ -157,4 +157,37 @@ QPushButton:pressed {
 QLabel {
     color: #ffffff;
 }
+
+/* CheckBox Styling */
+QCheckBox {
+    color: #ffffff;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #5c5c5c;
+    border-radius: 3px;
+    background-color: #3c3c3c;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #0078d4;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #0078d4;
+    border-color: #0078d4;
+}
+
+QCheckBox::indicator:unchecked {
+    background-color: #3c3c3c;
+    border-color: #5c5c5c;
+}
+
+QCheckBox::indicator:disabled {
+    background-color: #2b2b2b;
+    border-color: #444444;
+}
     """

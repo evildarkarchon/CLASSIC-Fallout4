@@ -504,13 +504,12 @@ class ResourceLoader:
         except Exception as e:
             logger.warning(f"Could not save to Local.yaml: {e}")
 
-        # Suggest environment variable for faster future runs
-        if path_type == "GamePath":
-            env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_PATH"
-        else:
-            env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_DOCS"
-
-        msg_info(f"💡 For faster startup (especially with uvx), set environment variable:\n   {env_var}={path}")
+        # Suggest environment variable for faster future runs (disabled - too noisy)
+        # if path_type == "GamePath":
+        #     env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_PATH"
+        # else:
+        #     env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_DOCS"
+        # msg_info(f"💡 For faster startup (especially with uvx), set environment variable:\n   {env_var}={path}")
 
     @staticmethod
     def load_rust_extension() -> bool:
