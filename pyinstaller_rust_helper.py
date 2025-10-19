@@ -54,7 +54,7 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
     Find Rust extensions for bundling in PyInstaller.
 
     Checks in order:
-    1. Local rust_extensions/ directory (created by build_all.ps1)
+    1. Local rust_extensions/ directory (created by build_all.ps1 - flattened structure)
     2. Site-packages (installed via pip/uv)
 
     Args:
@@ -70,29 +70,28 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
     datas = []
     modules_found = []
 
-    # Check local directory first (from build_all.ps1)
+    # Check local directory first (from build_all.ps1 - flattened structure)
     local_rust_dir = project_root / "rust_extensions"
     if local_rust_dir.exists():
-        print(f"✓ Found Rust extensions in local build directory: {local_rust_dir}")
+        print(f"✓ Found Rust extensions in local build directory (flattened): {local_rust_dir}")
 
         for module_name in RUST_MODULES:
-            module_dir = local_rust_dir / module_name
-            if module_dir.exists():
-                # Add all .pyd files
-                pyd_files = list(module_dir.glob("*.pyd"))
-                if pyd_files:
-                    modules_found.append(module_name)
-                    for pyd_file in pyd_files:
-                        binaries.append((str(pyd_file), module_name))
-                        print(f"  - {module_name}: {pyd_file.name}")
+            # In flattened structure, .pyd files are directly in rust_extensions/
+            # Look for {module_name}.pyd (e.g., classic_core.pyd)
+            pyd_file = local_rust_dir / f"{module_name}.pyd"
+            if pyd_file.exists():
+                modules_found.append(module_name)
+                binaries.append((str(pyd_file), module_name))
+                print(f"  - {module_name}: {pyd_file.name}")
 
-                # Add __init__.py if it exists
-                init_file = module_dir / "__init__.py"
+                # Check for corresponding __init__.py (stored as {module_name}__init__.py)
+                init_file = local_rust_dir / f"{module_name}__init__.py"
                 if init_file.exists():
                     datas.append((str(init_file), module_name))
 
-                # Add .pyi stub files if they exist
-                for pyi_file in module_dir.glob("*.pyi"):
+                # Check for .pyi stub files
+                pyi_file = local_rust_dir / f"{module_name}.pyi"
+                if pyi_file.exists():
                     datas.append((str(pyi_file), module_name))
 
         # Add MANIFEST.txt if it exists

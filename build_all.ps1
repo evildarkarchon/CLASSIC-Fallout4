@@ -1,16 +1,106 @@
 # PowerShell build script for CLASSIC-Fallout4 PyInstaller executables
 # This script builds all versions with proper data bundling and error handling
 # Note: UPX compression is disabled to avoid antivirus false positives
+#
+# Parameters:
+#   -BuildTest           : Also build the test executable
+#   -NoClean            : Skip cleaning previous builds
+#   -AutoCleanShadowing : Automatically delete shadowing directories without prompting
 
 param(
     [switch]$BuildTest = $false,
-    [switch]$NoClean = $false
+    [switch]$NoClean = $false,
+    [switch]$AutoCleanShadowing = $false  # Automatically clean shadowing directories without prompting
 )
 
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "CLASSIC-Fallout4 Build Script (PowerShell)" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
+
+# Clean up any shadowing directories in project root that could interfere with imports
+# These directories can be created by accidental wheel extractions or build artifacts
+$ShadowingDirs = @(
+    "classic_shared",
+    "classic_yaml",
+    "classic_database",
+    "classic_file_io",
+    "classic_scanlog",
+    "classic_config",
+    "classic_core"
+)
+
+$foundShadowingDirs = @()
+foreach ($dirName in $ShadowingDirs) {
+    $dirPath = Join-Path $PSScriptRoot $dirName
+    if (Test-Path $dirPath -PathType Container) {
+        $foundShadowingDirs += @{Path = $dirPath; Name = $dirName}
+    }
+}
+
+if ($foundShadowingDirs.Count -gt 0) {
+    Write-Host "============================================================" -ForegroundColor Yellow
+    Write-Host "WARNING: Found directories that could shadow Rust modules!" -ForegroundColor Yellow
+    Write-Host "============================================================" -ForegroundColor Yellow
+    foreach ($dir in $foundShadowingDirs) {
+        $isEmpty = (Get-ChildItem -Path $dir.Path -Force | Measure-Object).Count -eq 0
+        if ($isEmpty) {
+            Write-Host "  - $($dir.Name) (empty)" -ForegroundColor Cyan
+        } else {
+            Write-Host "  - $($dir.Name) (contains files)" -ForegroundColor Yellow
+        }
+    }
+    Write-Host ""
+    Write-Host "These directories can prevent Python from finding the installed Rust modules." -ForegroundColor Yellow
+    Write-Host "They are likely build artifacts or accidental wheel extractions." -ForegroundColor Yellow
+    Write-Host ""
+
+    if ($AutoCleanShadowing) {
+        Write-Host "Auto-cleanup enabled - deleting all shadowing directories..." -ForegroundColor Cyan
+        $response = "Y"
+    } else {
+        $response = Read-Host "Delete these directories? [Y]es / [N]o / [E]mpty only (default: E)"
+        if ([string]::IsNullOrWhiteSpace($response)) { $response = "E" }
+    }
+
+    switch ($response.ToUpper()) {
+        "Y" {
+            foreach ($dir in $foundShadowingDirs) {
+                Write-Host "  Deleting $($dir.Name)..." -ForegroundColor Cyan
+                Remove-Item -Path $dir.Path -Recurse -Force
+            }
+            Write-Host "Cleanup complete!" -ForegroundColor Green
+        }
+        "E" {
+            $deletedCount = 0
+            foreach ($dir in $foundShadowingDirs) {
+                $isEmpty = (Get-ChildItem -Path $dir.Path -Force | Measure-Object).Count -eq 0
+                if ($isEmpty) {
+                    Write-Host "  Deleting empty directory $($dir.Name)..." -ForegroundColor Cyan
+                    Remove-Item -Path $dir.Path -Recurse -Force
+                    $deletedCount++
+                } else {
+                    Write-Host "  Skipping non-empty directory $($dir.Name)" -ForegroundColor Yellow
+                }
+            }
+            if ($deletedCount -gt 0) {
+                Write-Host "Deleted $deletedCount empty directories" -ForegroundColor Green
+            }
+            $remaining = $foundShadowingDirs.Count - $deletedCount
+            if ($remaining -gt 0) {
+                Write-Host "WARNING: $remaining non-empty directories remain - these may cause import issues!" -ForegroundColor Yellow
+            }
+        }
+        "N" {
+            Write-Host "Skipping cleanup - continuing with build..." -ForegroundColor Yellow
+            Write-Host "WARNING: These directories may cause import issues!" -ForegroundColor Yellow
+        }
+        default {
+            Write-Host "Invalid response - skipping cleanup..." -ForegroundColor Yellow
+        }
+    }
+    Write-Host ""
+}
 
 # Determine Python command - check for uv, otherwise use system Python
 if (Get-Command uv -ErrorAction SilentlyContinue) {
@@ -82,7 +172,7 @@ if (Test-Path "classic-core") {
         }
         New-Item -ItemType Directory -Path $rustExtDir | Out-Null
 
-        # Extract each module's .pyd from its wheel
+        # Extract each module's .pyd from its wheel (flattened structure)
         $extractedModules = @()
         foreach ($module in $RustModules) {
             $wheel = Get-ChildItem -Path "dist-rust\$($module.Name)-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
@@ -92,17 +182,29 @@ if (Test-Path "classic-core") {
                 # Extract wheel (it's just a zip file)
                 Expand-Archive -Path $wheel.FullName -DestinationPath $tempDir -Force
 
-                # Find and copy the module directory
+                # Find the module directory
                 $moduleDir = Get-ChildItem -Path $tempDir -Directory -Filter $module.Name -Recurse | Select-Object -First 1
                 if ($moduleDir) {
-                    # Copy the entire module directory
-                    $destPath = Join-Path $rustExtDir $module.Name
-                    Copy-Item -Path $moduleDir.FullName -Destination $destPath -Recurse -Force
-
-                    # Track extracted files
-                    $pydFiles = Get-ChildItem -Path $destPath -Filter "*.pyd" -Recurse
+                    # Copy .pyd files directly to rust_extensions/ (flattened)
+                    $pydFiles = Get-ChildItem -Path $moduleDir.FullName -Filter "*.pyd" -Recurse
                     foreach ($pyd in $pydFiles) {
+                        $destFile = Join-Path $rustExtDir $pyd.Name
+                        Copy-Item -Path $pyd.FullName -Destination $destFile -Force
                         $extractedModules += @{Module = $module.Name; File = $pyd.Name}
+                    }
+
+                    # Copy __init__.py if it exists (directly to rust_extensions/)
+                    $initFile = Get-ChildItem -Path $moduleDir.FullName -Filter "__init__.py" -Recurse | Select-Object -First 1
+                    if ($initFile) {
+                        $destInit = Join-Path $rustExtDir "$($module.Name)__init__.py"
+                        Copy-Item -Path $initFile.FullName -Destination $destInit -Force
+                    }
+
+                    # Copy .pyi files if they exist (directly to rust_extensions/)
+                    $pyiFiles = Get-ChildItem -Path $moduleDir.FullName -Filter "*.pyi" -Recurse
+                    foreach ($pyi in $pyiFiles) {
+                        $destPyi = Join-Path $rustExtDir $pyi.Name
+                        Copy-Item -Path $pyi.FullName -Destination $destPyi -Force
                     }
                 }
                 else {
@@ -119,19 +221,20 @@ if (Test-Path "classic-core") {
 
         # Display extracted modules
         if ($extractedModules.Count -gt 0) {
-            Write-Host "Extracted Rust Python modules (.pyd files):" -ForegroundColor Green
+            Write-Host "Extracted Rust Python modules (.pyd files - flattened):" -ForegroundColor Green
             foreach ($ext in $extractedModules) {
                 Write-Host "  - $($ext.Module): $($ext.File)" -ForegroundColor White
             }
             Write-Host ""
-            Write-Host "Note: These .pyd files are from *-py crates (PyO3 bindings)" -ForegroundColor Yellow
-            Write-Host "The *-core crates provide pure Rust business logic for CLI/TUI" -ForegroundColor Yellow
+            Write-Host "Note: Files are extracted directly to rust_extensions/ (no subdirectories)" -ForegroundColor Yellow
+            Write-Host "This prevents shadowing the actual classic_core module in site-packages" -ForegroundColor Yellow
 
             # Create manifest file
             $manifestContent = @"
 Rust extensions built on $(Get-Date)
 
 Architecture: Separated *-core (business logic) + *-py (PyO3 bindings)
+Structure: Flattened (no subdirectories to avoid module shadowing)
 
 Modules:
 $($extractedModules | ForEach-Object { "$($_.Module): $($_.File)" } | Out-String)
@@ -142,7 +245,7 @@ $($extractedModules | ForEach-Object { "$($_.Module): $($_.File)" } | Out-String
             Write-Host "WARNING: No Rust extensions extracted!" -ForegroundColor Red
         }
 
-        Write-Host "Rust extensions ready in $rustExtDir/" -ForegroundColor Green
+        Write-Host "Rust extensions ready in $rustExtDir/ (flattened structure)" -ForegroundColor Green
     }
     else {
         Write-Host "WARNING: Some Rust modules failed to build!" -ForegroundColor Red
@@ -157,8 +260,8 @@ else {
 
     $rustExtDir = "rust_extensions"
     if (Test-Path $rustExtDir) {
-        Write-Host "Found pre-built Rust extensions in $rustExtDir/" -ForegroundColor Green
-        Get-ChildItem -Path $rustExtDir -Filter "*.pyd" -Recurse | ForEach-Object {
+        Write-Host "Found pre-built Rust extensions in $rustExtDir/ (flattened)" -ForegroundColor Green
+        Get-ChildItem -Path $rustExtDir -Filter "*.pyd" | ForEach-Object {
             Write-Host "  - $($_.Name)" -ForegroundColor White
         }
     }

@@ -7,6 +7,47 @@ echo CLASSIC-Fallout4 Build Script
 echo ============================================================
 echo.
 
+REM Clean up shadowing directories that could interfere with imports
+REM These can be created by accidental wheel extractions or build artifacts
+set FOUND_SHADOWING=0
+for %%D in (classic_shared classic_yaml classic_database classic_file_io classic_scanlog classic_config classic_core) do (
+    if exist "%%D" (
+        set FOUND_SHADOWING=1
+    )
+)
+
+if %FOUND_SHADOWING%==1 (
+    echo ============================================================
+    echo WARNING: Found directories that could shadow Rust modules!
+    echo ============================================================
+    for %%D in (classic_shared classic_yaml classic_database classic_file_io classic_scanlog classic_config classic_core) do (
+        if exist "%%D" (
+            echo   - %%D
+        )
+    )
+    echo.
+    echo These directories can prevent Python from finding the installed Rust modules.
+    echo They are likely build artifacts or accidental wheel extractions.
+    echo.
+
+    set /p CLEANUP_CHOICE="Delete these directories? [Y/N] (default: Y): "
+    if "%CLEANUP_CHOICE%"=="" set CLEANUP_CHOICE=Y
+
+    if /i "%CLEANUP_CHOICE%"=="Y" (
+        echo Cleaning up shadowing directories...
+        for %%D in (classic_shared classic_yaml classic_database classic_file_io classic_scanlog classic_config classic_core) do (
+            if exist "%%D" (
+                echo   Deleting %%D...
+                rmdir /s /q "%%D"
+            )
+        )
+        echo Cleanup complete!
+    ) else (
+        echo Skipping cleanup - WARNING: These directories may cause import issues!
+    )
+    echo.
+)
+
 REM Check if uv is available
 where uv >nul 2>1
 if %errorlevel% equ 0 (
