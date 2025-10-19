@@ -2,6 +2,7 @@
 
 import os
 import sys
+import traceback
 from typing import ClassVar
 
 from textual.app import ComposeResult
@@ -14,6 +15,7 @@ from textual.widgets import Button, Checkbox, Label
 
 from ClassicLib.Constants import YAML
 from ClassicLib.TUI.input_validator import InputValidator
+from ClassicLib.TUI.widgets.dialogs.error_dialog import ErrorDialog
 from ClassicLib.TUI.widgets.folder_selector import FolderSelector
 from ClassicLib.TUI.widgets.output_viewer import OutputViewer
 from ClassicLib.TUI.widgets.scan_buttons import ScanButton
@@ -166,7 +168,26 @@ class MainScreen(Screen):
         from ClassicLib.TUI.handlers.scan_handler import TuiScanHandler
 
         handler = TuiScanHandler(output_callback=output.append_output)
-        await handler.perform_crash_scan()
+
+        try:
+            success = await handler.perform_crash_scan()
+            if not success:
+                # Show error dialog if scan failed
+                await self.app.push_screen(
+                    ErrorDialog(
+                        title="Crash Log Scan Failed",
+                        message="The crash log scan did not complete successfully. Check the output for details.",
+                    )
+                )
+        except Exception as e:
+            # Show detailed error dialog for unexpected exceptions
+            await self.app.push_screen(
+                ErrorDialog(
+                    title="Crash Log Scan Error",
+                    message=f"An unexpected error occurred during crash log scanning:\n\n{e!s}",
+                    details=traceback.format_exc(),
+                )
+            )
 
     async def perform_game_scan(self) -> None:
         """Perform game files scan."""
@@ -178,7 +199,26 @@ class MainScreen(Screen):
         from ClassicLib.TUI.handlers.scan_handler import TuiScanHandler
 
         handler = TuiScanHandler(output_callback=output.append_output)
-        await handler.perform_game_scan()
+
+        try:
+            success = await handler.perform_game_scan()
+            if not success:
+                # Show error dialog if scan failed
+                await self.app.push_screen(
+                    ErrorDialog(
+                        title="Game Files Scan Failed",
+                        message="The game files scan did not complete successfully. Check the output for details.",
+                    )
+                )
+        except Exception as e:
+            # Show detailed error dialog for unexpected exceptions
+            await self.app.push_screen(
+                ErrorDialog(
+                    title="Game Files Scan Error",
+                    message=f"An unexpected error occurred during game files scanning:\n\n{e!s}",
+                    details=traceback.format_exc(),
+                )
+            )
 
     async def toggle_papyrus_monitor(self) -> None:
         """Toggle Papyrus monitoring."""

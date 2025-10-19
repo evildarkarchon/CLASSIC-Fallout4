@@ -1,5 +1,6 @@
 """Error dialog widget for displaying errors."""
 
+import pyperclip
 from collections.abc import Callable
 
 from textual.app import ComposeResult
@@ -46,9 +47,13 @@ class ErrorDialog(ModalScreen):
     }
 
     ErrorDialog Button {
-        align: center middle;
         margin-top: 1;
-        min-width: 12;
+        min-width: 20;
+    }
+
+    ErrorDialog .button-group {
+        align: center middle;
+        height: auto;
     }
     """
 
@@ -72,6 +77,7 @@ class ErrorDialog(ModalScreen):
         self.message = message
         self.details = details
         self.close_callback = close_callback
+        self.copy_success = False
 
     def compose(self) -> ComposeResult:
         """Compose the dialog layout."""
@@ -80,13 +86,43 @@ class ErrorDialog(ModalScreen):
             yield Label(self.message, classes="error-message")
             if self.details:
                 yield Label(self.details, classes="error-details")
-            yield Button("Close", variant="error", id="close")
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:  # noqa: ARG002
+            # Button group
+            from textual.containers import Horizontal
+            with Horizontal(classes="button-group"):
+                if self.details:
+                    yield Button("Copy to Clipboard", variant="primary", id="copy")
+                yield Button("Close", variant="error", id="close")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button press events."""
-        if self.close_callback:
-            self.close_callback()
-        self.dismiss()
+        if event.button.id == "copy":
+            self._copy_to_clipboard()
+        elif event.button.id == "close":
+            if self.close_callback:
+                self.close_callback()
+            self.dismiss()
+
+    def _copy_to_clipboard(self) -> None:
+        """Copy error details to clipboard."""
+        try:
+            full_text = f"{self.title}\n\n{self.message}"
+            if self.details:
+                full_text += f"\n\nDetails:\n{self.details}"
+
+            pyperclip.copy(full_text)
+            self.copy_success = True
+
+            # Update button text to show confirmation
+            copy_button = self.query_one("#copy", Button)
+            original_label = copy_button.label
+            copy_button.label = "✓ Copied!"
+
+            # Reset button text after 2 seconds
+            self.set_timer(2.0, lambda: setattr(copy_button, "label", original_label))
+        except Exception as e:
+            # If pyperclip fails, show error in the message
+            self.notify(f"Failed to copy to clipboard: {e}", severity="error")
 
     def on_key(self, event) -> None:  # noqa: ANN001
         """Handle keyboard events."""

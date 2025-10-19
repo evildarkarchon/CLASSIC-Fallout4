@@ -171,7 +171,9 @@ def _check_xse_installation(
 
     """
     if not isinstance(log_file, str | Path):
-        messages.append(f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC Local.yaml!\n-----\n")
+        from ClassicLib import GlobalRegistry
+        game_name = GlobalRegistry.get_game()
+        messages.append(f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
         return
 
     log_path: Path = Path(cast("str", log_file))

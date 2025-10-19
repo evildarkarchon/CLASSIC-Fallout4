@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QThread
+from PySide6.QtCore import QThread, Slot
 from PySide6.QtWidgets import QMessageBox
 
+from ClassicLib.Interface.Dialogs import CustomErrorDialog
 from ClassicLib.Interface.ThreadManager import ThreadType
 from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorker
 from ClassicLib.Logger import logger
@@ -99,6 +100,7 @@ class ScanOperationsMixin:
         # Connect signals
         self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit)  # type: ignore
         self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
+        self.crash_logs_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore
 
         self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
         self.crash_logs_worker.finished.connect(self.crash_logs_thread.quit)  # type: ignore
@@ -152,6 +154,7 @@ class ScanOperationsMixin:
 
         # Connect signals
         self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
+        self.game_files_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore
 
         self.game_files_thread.started.connect(self.game_files_worker.run)
         self.game_files_worker.finished.connect(self.game_files_thread.quit)  # type: ignore
@@ -301,3 +304,29 @@ class ScanOperationsMixin:
         except (AttributeError, ImportError, KeyError) as e:
             # Don't let tab switching errors break the scan completion
             logger.debug(f"Could not switch to Results tab: {e}")
+
+    @Slot(str, str, str)
+    def _show_scan_error_dialog(self, title: str, message: str, details: str) -> None:
+        """
+        Display an error dialog with scan failure details and copy-to-clipboard functionality.
+
+        This method is called when a scan operation encounters an error.
+        It displays a CustomErrorDialog with the error information, including
+        an optional detailed text section with traceback information that can
+        be copied to the clipboard for easy reporting.
+
+        Args:
+            title: The title of the error dialog
+            message: The main error message to display
+            details: Detailed error information (e.g., traceback)
+        """
+        logger.debug(f"Showing error dialog: {title}")
+
+        # Create and show custom error dialog with copy functionality
+        error_dialog = CustomErrorDialog(
+            title=title,
+            message=message,
+            details=details,
+            parent=self,  # type: ignore[arg-type]
+        )
+        error_dialog.exec()

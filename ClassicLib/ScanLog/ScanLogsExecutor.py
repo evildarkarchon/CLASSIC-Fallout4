@@ -165,6 +165,12 @@ class ScanLogsExecutor:
 
         msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
 
+        # Ensure game paths are generated before creating orchestrator
+        # This is required for FCX mode checks which need Game_Folder_Scripts and other inferred paths
+        from ClassicLib.GamePath import game_generate_paths, game_path_find
+        game_path_find()
+        game_generate_paths()
+
         # Create async orchestrator with context manager for proper resource management
         # Reformatting happens inline during processing - no blocking preload
         async with OrchestratorCore(

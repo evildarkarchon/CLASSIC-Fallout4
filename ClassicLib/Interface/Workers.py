@@ -6,6 +6,7 @@ to perform long-running operations without blocking the GUI.
 """
 
 import asyncio
+import traceback
 
 from PySide6.QtCore import QObject, Signal, Slot
 
@@ -19,13 +20,19 @@ from ClassicLib.YamlSettingsCache import classic_settings
 class CrashLogsScanWorker(QObject):
     """
     CrashLogsScanWorker is a QObject-based worker class responsible for scanning crash logs and emitting signals based on the scan's outcome.
-    Methods:
-        run(): Executes the crash logs scan and emits appropriate signals based on the outcome.
+
+    Signals:
+        finished: Emitted when the scan completes (success or failure)
+        notify_sound_signal: Emitted when scan completes successfully
+        error_sound_signal: Emitted when an error occurs (for audio notification)
+        error_occurred: Emitted with error details (title, message, details) for dialog display
+        custom_sound_signal: Emitted with a path to a custom sound to play
     """
 
     finished: Signal = Signal()
     notify_sound_signal: Signal = Signal()
     error_sound_signal: Signal = Signal()
+    error_occurred: Signal = Signal(str, str, str)  # (title, message, details)
     custom_sound_signal: Signal = Signal(str)  # In case a custom sound needs to be played
 
     # noinspection PyBroadException
@@ -130,6 +137,9 @@ class CrashLogsScanWorker(QObject):
         """
         Handles errors during the scan process based on user settings.
 
+        Emits error details for dialog display and optionally plays error sound.
+        Always emits error_occurred signal for user feedback.
+
         Args:
             error: The exception that occurred during scanning
 
@@ -138,6 +148,15 @@ class CrashLogsScanWorker(QObject):
         """
         logger.error(f"Crash logs scan failed: {error!s}")
 
+        # Prepare error details for dialog
+        title = "Crash Log Scan Failed"
+        message = f"An error occurred during crash log scanning:\n\n{error!s}"
+        details = traceback.format_exc()
+
+        # Always emit error details for dialog display
+        self.error_occurred.emit(title, message, details)  # type: ignore
+
+        # Handle audio notification based on user settings
         audio_notifications_enabled: bool | None = classic_settings(bool, "Audio Notifications")
         if audio_notifications_enabled:
             self.error_sound_signal.emit()  # type: ignore
@@ -156,13 +175,15 @@ class GameFilesScanWorker(QObject):
     Signals:
         scan_finished: Emitted when the scanning process completes (success or failure)
         play_success_sound: Emitted when processing completes successfully
-        play_error_sound: Emitted when an error occurs during processing
+        play_error_sound: Emitted when an error occurs (for audio notification)
+        error_occurred: Emitted with error details (title, message, details) for dialog display
         play_custom_sound: Emitted with a path to a custom sound to play
     """
 
     scan_finished: Signal = Signal()
     play_success_sound: Signal = Signal()
     play_error_sound: Signal = Signal()
+    error_occurred: Signal = Signal(str, str, str)  # (title, message, details)
     play_custom_sound: Signal = Signal(str)
 
     @Slot()
@@ -192,7 +213,29 @@ class GameFilesScanWorker(QObject):
         self.play_success_sound.emit()  # type: ignore
 
     def _handle_error(self, error: Exception) -> None:
-        """Handle exceptions based on user audio notification settings."""
+        """
+        Handle exceptions during game files scanning.
+
+        Emits error details for dialog display and optionally plays error sound.
+        Always emits error_occurred signal for user feedback.
+
+        Args:
+            error: The exception that occurred during processing
+
+        Raises:
+            Exception: Re-raises the exception if audio notifications are disabled
+        """
+        logger.error(f"Game files scan failed: {error!s}")
+
+        # Prepare error details for dialog
+        title = "Game Files Scan Failed"
+        message = f"An error occurred while processing game files:\n\n{error!s}"
+        details = traceback.format_exc()
+
+        # Always emit error details for dialog display
+        self.error_occurred.emit(title, message, details)  # type: ignore
+
+        # Handle audio notification based on user settings
         if classic_settings(bool, "Audio Notifications"):
             self.play_error_sound.emit()  # type: ignore
         else:

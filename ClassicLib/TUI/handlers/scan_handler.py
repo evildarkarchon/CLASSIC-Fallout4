@@ -132,6 +132,12 @@ class TuiScanHandler:
         """Run the scan using OrchestratorCore."""
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
+        # Ensure game paths are generated before creating orchestrator
+        # This is required for FCX mode checks which need Game_Folder_Scripts and other inferred paths
+        from ClassicLib.GamePath import game_generate_paths, game_path_find
+        game_path_find()
+        game_generate_paths()
+
         async with OrchestratorCore(
             scanner.yamldata,
             scanner.fcx_mode,
