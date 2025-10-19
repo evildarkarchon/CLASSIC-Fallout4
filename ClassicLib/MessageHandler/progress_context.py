@@ -81,6 +81,10 @@ class ProgressContext:
         self._progress_bar: TqdmProgress | CLIProgressBar | QProgressDialog | None = None
         self._using_qt_signals = False
 
+        # Throttling for Qt signals to reduce cross-thread overhead
+        self._last_update_time = 0.0
+        self._update_interval = 0.05  # 50ms between updates (20 updates/sec max)
+
     def __enter__(self) -> ProgressContext:
         """
         Context manager for establishing and managing a progress interface.
@@ -170,6 +174,8 @@ class ProgressContext:
         the description. This method handles the progress bar and Qt signals
         depending on the configuration of the object.
 
+        Throttles Qt signal emissions to reduce cross-thread overhead in GUI mode.
+
         Args:
             n (int): The number by which the current progress should be incremented.
                 Defaults to 1.
@@ -179,7 +185,18 @@ class ProgressContext:
         self.current += n
 
         if self._using_qt_signals:
-            self.handler.progress_signal.emit(self.current, description or "")
+            # Throttle Qt signals to reduce overhead - only emit at most every 50ms
+            import time
+            current_time = time.time()
+            time_since_last = current_time - self._last_update_time
+
+            # Always emit for last item or if enough time has passed
+            is_last_item = self.total is not None and self.current >= self.total
+            should_emit = is_last_item or time_since_last >= self._update_interval
+
+            if should_emit:
+                self.handler.progress_signal.emit(self.current, description or "")
+                self._last_update_time = current_time
         elif self._progress_bar is not None:
             if HAS_QT and isinstance(self._progress_bar, QProgressDialog):
                 self._progress_bar.setValue(self.current)

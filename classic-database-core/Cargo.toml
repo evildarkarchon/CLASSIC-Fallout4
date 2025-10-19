@@ -14,8 +14,8 @@ crate-type = ["rlib"] # Pure Rust library only - no PyO3
 # CLASSIC shared utilities
 classic-shared = { path = "../classic-shared" }
 
-# Database
-rusqlite = { workspace = true }
+# Database (sqlx for true async support)
+sqlx = { workspace = true }
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }

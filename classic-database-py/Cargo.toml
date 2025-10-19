@@ -17,6 +17,7 @@ classic-database-core = { path = "../classic-database-core" }
 
 # PyO3 bindings
 pyo3 = { workspace = true, features = ["extension-module"] }
+pyo3-async-runtimes = { version = "0.26", features = ["tokio-runtime"] }
 
 # Shared utilities
 classic-shared = { path = "../classic-shared" }
@@ -24,7 +25,6 @@ classic-shared = { path = "../classic-shared" }
 [dev-dependencies]
 tempfile = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module"] }
-rusqlite = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

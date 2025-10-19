@@ -146,16 +146,13 @@ async def main() -> None:
     coordinator = SetupCoordinator()
     coordinator.initialize_application(is_gui=False)
 
-    # Disable progress bars in CLI mode (TUI has its own progress handling)
-    yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Disable CLI Progress", True)
-
     # Parse command line arguments and create configuration
     args: Namespace = parse_arguments()
     config: ScanConfig = create_config_from_args(args)
 
     # Create executor and run scan using native async
     executor = ScanLogsExecutor(config)
-    result: ScanResult = await executor.scan()  # ✅ Direct async, no AsyncBridge
+    result: ScanResult = await executor.execute_scan()  # ✅ Direct async, no AsyncBridge
 
     # Display results summary
     msg_info(executor.generate_summary(result))

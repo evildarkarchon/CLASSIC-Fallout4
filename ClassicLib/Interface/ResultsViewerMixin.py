@@ -117,6 +117,10 @@ class ResultsViewerMixin:
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self.refresh_reports_list)
 
+        # Initialize file watching state
+        self._file_watching_paused = False
+        self._refresh_pending = False
+
         # Initialize current report path
         self.current_report_path = None
 
@@ -557,8 +561,13 @@ class ResultsViewerMixin:
         """Handle directory change notifications from file watcher."""
         logger.debug(f"Directory changed: {path}")
 
+        # Skip if file watching is paused (e.g., during scan)
+        if self._file_watching_paused:
+            logger.debug("File watching paused, ignoring directory change")
+            return
+
         # Debounce rapid changes
-        if hasattr(self, "_refresh_pending") and self._refresh_pending:
+        if self._refresh_pending:
             return
 
         self._refresh_pending = True
@@ -568,6 +577,29 @@ class ResultsViewerMixin:
         """Debounced refresh to avoid rapid updates."""
         self._refresh_pending = False
         self.refresh_reports_list()
+
+    def _pause_file_watching(self) -> None:
+        """
+        Pause file watching during scans to prevent I/O bottleneck.
+
+        During a scan, each new report triggers a directory change event,
+        which causes refresh_reports_list() to read ALL existing reports.
+        With 754 reports, this causes 48,000+ file reads during a single scan!
+
+        This method pauses the file watcher to eliminate this bottleneck.
+        """
+        self._file_watching_paused = True
+        logger.debug("File watching paused")
+
+    def _resume_file_watching(self) -> None:
+        """
+        Resume file watching after scan completion.
+
+        The caller should trigger a single refresh after resuming to show
+        all new reports created during the scan.
+        """
+        self._file_watching_paused = False
+        logger.debug("File watching resumed")
 
     def _setup_auto_refresh(self) -> None:
         """Setup auto-refresh based on settings."""

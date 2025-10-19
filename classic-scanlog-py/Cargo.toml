@@ -37,7 +37,6 @@ rayon = { workspace = true }
 [dev-dependencies]
 tempfile = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module", "auto-initialize"] }
-rusqlite = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

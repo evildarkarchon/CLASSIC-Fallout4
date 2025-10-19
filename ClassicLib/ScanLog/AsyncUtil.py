@@ -63,22 +63,26 @@ class DatabasePoolManager:
 
                     # Check if database pool is actually using Rust acceleration
                     if is_rust_accelerated("database_pool"):
-                        rust_pool = get_database_pool()
+                        # Match max_connections to max_concurrent for optimal performance
+                        # Default scan config has max_concurrent=50, so use 50 connections
+                        # This prevents connection contention during concurrent scans
+                        rust_pool = get_database_pool(max_connections=50, cache_ttl_seconds=300)
                         # The factory will return Rust pool when available
                         # Check type to confirm it's not the Python fallback
                         if not isinstance(rust_pool, AsyncDatabasePool):
                             self._pool = rust_pool
                             self._using_rust = True
-                            logger.debug("Created singleton Rust DatabasePool (25x acceleration)")
+                            logger.debug("Created singleton Rust DatabasePool (25x acceleration, 50 connections)")
                             return self._pool
                 except (ImportError, AttributeError) as e:
                     logger.debug(f"Rust DatabasePool not available, using Python: {e}")
 
-                # Fallback to Python AsyncDatabasePool
-                self._pool = AsyncDatabasePool()
+                # Fallback to Python AsyncDatabasePool with increased connection limit
+                # Match max_concurrent=50 to prevent connection contention
+                self._pool = AsyncDatabasePool(max_connections=50)
                 await self._pool.initialize()
                 self._using_rust = False
-                logger.debug("Created singleton Python database pool (aiosqlite)")
+                logger.debug("Created singleton Python database pool (aiosqlite, 50 connections)")
             return self._pool
 
     async def close_pool(self) -> None:

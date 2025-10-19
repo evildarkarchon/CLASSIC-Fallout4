@@ -92,6 +92,7 @@ impl FileMetadata {
 /// - Reading and writing files with automatic encoding detection and caching.
 /// - Maintaining metadata and path information for efficient file management.
 /// - Performing concurrent file operations with rate-limiting.
+#[derive(Clone)]
 pub struct FileIOCore {
     encoding_detector: Arc<EncodingDetector>,
     // Multi-level caching

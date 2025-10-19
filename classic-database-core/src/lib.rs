@@ -5,12 +5,13 @@
 //! in classic-database-py.
 //!
 //! ## Features
-//! - Connection pooling with rusqlite
+//! - TRUE ASYNC connection pooling with sqlx
+//! - WAL mode for concurrent reads
 //! - TTL-based smart caching
 //! - Batch query optimization
 //! - FormID-specific operations
 //! - Multiple database file support
 
-mod pool;
+mod pool_sqlx;
 
-pub use pool::{CacheEntry, DatabaseError, DatabasePool, PoolStatistics};
+pub use pool_sqlx::{CacheEntry, DatabaseError, DatabasePool, PoolStatistics};

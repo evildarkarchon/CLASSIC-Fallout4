@@ -144,7 +144,13 @@ class ScanLogsExecutor:
             asyncio.CancelledError: If the asynchronous task is cancelled during execution.
 
         """
+        import time
+
         logger.info("Starting crash log scan execution")
+
+        # Initialize timing accumulators for profiling
+        total_write_time = 0.0
+        total_processing_time = 0.0
 
         # Initialize yamldata here using async factory (no AsyncBridge overhead)
         # If eager_load was set, warm_up() should have been called already
@@ -172,20 +178,11 @@ class ScanLogsExecutor:
             max_concurrent = min(self.config.max_concurrent, len(self.crashlog_list))
             semaphore = asyncio.Semaphore(max_concurrent)
 
-            def process_sync(log_path: Path) -> tuple[Path, list[str], bool, Counter[str]]:
-                """Sync wrapper that runs async processing in its own event loop."""
-                # Create new event loop for this thread
-                thread_loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(thread_loop)
-                try:
-                    return thread_loop.run_until_complete(self._process_crashlog_async(log_path, orchestrator))
-                finally:
-                    thread_loop.close()
-                    asyncio.set_event_loop(None)
-
             async def process_with_limit(log_path: Path) -> tuple[Path, list[str], bool, Counter[str]]:
                 """
                 Processes a crash log file asynchronously while respecting a semaphore limit.
+
+                True async - Rust methods return coroutines, no blocking!
 
                 Args:
                     log_path (Path): Path to the log file to be processed.
@@ -196,11 +193,9 @@ class ScanLogsExecutor:
                     or result, and a counter of occurrences for specific elements in the log.
                 """
                 async with semaphore:
-                    # Run entire log processing in thread pool since Rust blocks
-                    # Each thread gets its own event loop to run the async processing
-                    # This allows true parallel processing - GIL released during Rust operations
-                    loop = asyncio.get_running_loop()
-                    return await loop.run_in_executor(None, process_sync, log_path)
+                    # Direct async call - Rust returns coroutines, no thread pool needed!
+                    # Multiple operations run concurrently via Python's event loop
+                    return await self._process_crashlog_async(log_path, orchestrator)
 
             # Create tasks for all crash logs
             tasks = [asyncio.create_task(process_with_limit(log)) for log in self.crashlog_list]
@@ -213,7 +208,11 @@ class ScanLogsExecutor:
                 # Process tasks as they complete for real-time progress updates
                 for task in asyncio.as_completed(tasks):
                     try:
+                        # Time the task completion (processing time)
+                        task_start = time.perf_counter()
                         task_result = await task
+                        task_time = time.perf_counter() - task_start
+                        total_processing_time += task_time
 
                         # Unpack result - the first element is always the log file path
                         crashlog_file, autoscan_report, trigger_scan_failed, local_stats = task_result
@@ -228,7 +227,10 @@ class ScanLogsExecutor:
                         # Write report using utils function
                         from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file_async
 
+                        write_start = time.perf_counter()
                         await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, self)
+                        write_time = time.perf_counter() - write_start
+                        total_write_time += write_time
 
                         # Track failed scans
                         if trigger_scan_failed:
@@ -236,9 +238,6 @@ class ScanLogsExecutor:
 
                         completed += 1
                         progress.update(1, f"Processed: {crashlog_file.name}")
-
-                        # Yield to allow Qt signals to be processed
-                        await asyncio.sleep(0)
 
                     except (RuntimeError, ImportError, OSError, asyncio.CancelledError) as e:
                         # Handle specific exceptions that can occur during async processing
@@ -250,13 +249,18 @@ class ScanLogsExecutor:
                         # Update progress even on error
                         progress.update(1, "Failed: Error during processing")
 
-                        # Yield even on error
-                        await asyncio.sleep(0)
-
         # Update final scan time
         result.scan_time = self.statistics.get_scan_duration()
 
+        # Log aggregate timing breakdown
         logger.info(f"Completed crash log scan execution in {result.scan_time:.2f} seconds")
+        logger.debug(
+            f"Aggregate timing breakdown: "
+            f"total_processing={total_processing_time:.2f}s, "
+            f"total_writing={total_write_time:.2f}s, "
+            f"avg_per_log={(total_processing_time + total_write_time) / max(completed, 1):.3f}s"
+        )
+
         return result
 
     @staticmethod

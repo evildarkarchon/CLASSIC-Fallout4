@@ -6,12 +6,10 @@
 use classic_database_core::{DatabaseError, DatabasePool};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
+use pyo3_async_runtimes::tokio::future_into_py;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
-
-// Use the global runtime from classic-shared (ONE RUNTIME RULE)
-use classic_shared::{get_runtime, without_gil};
 
 /// Python-facing database pool wrapper
 ///
@@ -42,50 +40,57 @@ impl PyDatabasePool {
 
     /// Initialize database connections for given paths
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "initialize")]
-    pub fn py_initialize(&self, py: Python<'_>, db_paths: Vec<String>) -> PyResult<()> {
+    pub fn py_initialize<'py>(
+        &self,
+        py: Python<'py>,
+        db_paths: Vec<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let paths: Vec<PathBuf> = db_paths.into_iter().map(PathBuf::from).collect();
 
-        // Release GIL during database initialization
-        without_gil(py, || {
-            get_runtime().block_on(async { self.inner.initialize(paths).await.map_err(to_pyerr) })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner.initialize(paths).await.map_err(to_pyerr)
         })
     }
 
     /// Get FormID entry from database
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "get_entry", signature = (formid, plugin, table=None))]
-    pub fn py_get_entry(
+    pub fn py_get_entry<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         formid: String,
         plugin: String,
         table: Option<String>,
-    ) -> PyResult<Option<String>> {
-        // Release GIL during database query
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner
-                    .get_entry(&formid, &plugin, table.as_deref())
-                    .await
-                    .map_err(to_pyerr)
-            })
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
+
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner
+                .get_entry(&formid, &plugin, table.as_deref())
+                .await
+                .map_err(to_pyerr)
         })
     }
 
     /// Batch lookup for FormID entries
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "get_entries_batch", signature = (formid_plugin_pairs, table=None, batch_size=None))]
-    pub fn py_get_entries_batch(
+    pub fn py_get_entries_batch<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         formid_plugin_pairs: &Bound<'_, PyList>,
         table: Option<String>,
         batch_size: Option<usize>,
-    ) -> PyResult<HashMap<String, String>> {
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
+
         // Parse Python list of tuples (requires GIL)
         let len = formid_plugin_pairs.len();
         let mut pairs: Vec<(String, String)> = Vec::with_capacity(len);
@@ -96,37 +101,53 @@ impl PyDatabasePool {
 
         let batch_sz = batch_size.unwrap_or(100);
 
-        // Release GIL during database query
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner
-                    .get_entries_batch(pairs, table.as_deref(), batch_sz)
-                    .await
-                    .map_err(to_pyerr)
-            })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner
+                .get_entries_batch(pairs, table.as_deref(), batch_sz)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
     /// Alternative batch lookup method (for backward compatibility)
+    ///
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "batch_lookup", signature = (formid_plugin_pairs, table=None))]
-    pub fn py_batch_lookup(
+    pub fn py_batch_lookup<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         formid_plugin_pairs: &Bound<'_, PyList>,
         table: Option<String>,
-    ) -> PyResult<HashMap<(String, String), String>> {
-        let result = self.py_get_entries_batch(py, formid_plugin_pairs, table, Some(100))?;
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
 
-        // Convert format
-        let mut converted_result = HashMap::new();
-        for (key, value) in result {
-            let parts: Vec<&str> = key.split(':').collect();
-            if parts.len() == 2 {
-                converted_result.insert((parts[0].to_string(), parts[1].to_string()), value);
-            }
+        // Parse Python list of tuples (requires GIL)
+        let len = formid_plugin_pairs.len();
+        let mut pairs: Vec<(String, String)> = Vec::with_capacity(len);
+        for item in formid_plugin_pairs.iter() {
+            let tuple = item.extract::<(String, String)>()?;
+            pairs.push(tuple);
         }
 
-        Ok(converted_result)
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            let result = inner
+                .get_entries_batch(pairs, table.as_deref(), 100)
+                .await
+                .map_err(to_pyerr)?;
+
+            // Convert format from "formid:plugin" -> (formid, plugin)
+            let mut converted_result = HashMap::new();
+            for (key, value) in result {
+                let parts: Vec<&str> = key.split(':').collect();
+                if parts.len() == 2 {
+                    converted_result.insert((parts[0].to_string(), parts[1].to_string()), value);
+                }
+            }
+
+            Ok(converted_result)
+        })
     }
 
     /// Set the game table name dynamically
@@ -182,7 +203,6 @@ impl PyDatabasePool {
         result.insert("cache_misses".to_string(), stats.cache_misses);
         result.insert("total_connections".to_string(), stats.total_connections);
         result.insert("active_connections".to_string(), stats.active_connections);
-        result.insert("cache_size".to_string(), self.inner.cache_size() as u64);
 
         if stats.total_queries > 0 {
             let hit_rate = (stats.cache_hits as f64 / stats.total_queries as f64) * 100.0;
@@ -192,28 +212,6 @@ impl PyDatabasePool {
         }
 
         Ok(result)
-    }
-
-    /// Close all connections and clear caches
-    ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
-    #[pyo3(name = "close")]
-    pub fn py_close(&self, py: Python<'_>) -> PyResult<()> {
-        // Release GIL during cleanup
-        without_gil(py, || {
-            get_runtime().block_on(async { self.inner.close().await.map_err(to_pyerr) })
-        })
-    }
-
-    /// Optimize database connections (VACUUM and ANALYZE)
-    ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
-    #[pyo3(name = "optimize")]
-    pub fn py_optimize(&self, py: Python<'_>) -> PyResult<()> {
-        // Release GIL during optimization (can be slow)
-        without_gil(py, || {
-            get_runtime().block_on(async { self.inner.optimize().await.map_err(to_pyerr) })
-        })
     }
 }
 
@@ -229,11 +227,8 @@ fn to_pyerr(err: DatabaseError) -> PyErr {
         }
         DatabaseError::NotFound(msg) => PyErr::new::<pyo3::exceptions::PyFileNotFoundError, _>(msg),
         DatabaseError::IoError(e) => PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()),
-        DatabaseError::RusqliteError(e) => {
+        DatabaseError::SqlxError(e) => {
             PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Database error: {}", e))
-        }
-        DatabaseError::JoinError(msg) => {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Task error: {}", msg))
         }
     }
 }

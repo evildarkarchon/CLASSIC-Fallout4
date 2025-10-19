@@ -12,6 +12,7 @@ crate-type = ["cdylib", "rlib"]  # Python extension + Rust library
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-shared = { path = "../classic-shared" }
 pyo3 = { workspace = true }
+pyo3-async-runtimes = { version = "0.26", features = ["tokio-runtime"] }
 log = { workspace = true }
 
 [dev-dependencies]

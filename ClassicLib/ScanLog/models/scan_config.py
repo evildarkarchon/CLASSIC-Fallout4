@@ -47,7 +47,8 @@ class ScanConfig:
     custom_paths: dict[str, Path] = field(default_factory=dict)
 
     # Performance settings
-    max_concurrent: int = 10
+    # Increased from 10 to 50 for true async Rust operations (no thread blocking)
+    max_concurrent: int = 50
 
     # Internal settings (typically set by system, not user)
     formid_db_exists: bool = True

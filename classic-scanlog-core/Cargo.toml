@@ -40,9 +40,6 @@ linked-hash-map = { workspace = true }
 rustc-hash = { workspace = true }  # Optimization 1.2: Fast hasher for FormID counting
 xxhash-rust = { workspace = true }  # Optimization 4.1: Fast hashing for cache keys
 
-# Database operations
-rusqlite = { workspace = true }
-
 # String optimization
 string_cache = { workspace = true }
 smartstring = { workspace = true }
@@ -63,7 +60,6 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
-rusqlite = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

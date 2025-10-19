@@ -56,48 +56,71 @@ class CrashLogsScanWorker(QObject):
     @staticmethod
     def _perform_crash_logs_scan() -> None:
         """
-        Performs a crash logs scan using fully asynchronous operations.
+        Performs a crash logs scan with pure async event loop.
 
-        This method runs the scan in a dedicated asyncio event loop without chunking.
-        Since all blocking operations now use asyncio.to_thread(), the event loop
-        remains responsive and can run tasks concurrently.
+        Runs the scan in a clean asyncio event loop without Qt overhead.
+        Qt automatically handles cross-thread signals via queued connections.
 
         Raises:
-            Exception: Propagates exceptions from the main coroutine task if they occur.
+            Exception: Propagates exceptions from the async tasks if they occur.
         """
-        logger.debug("Starting crash logs scan with pure async (no chunking)")
+        import time
+        from datetime import datetime
+
+        # Dual timer verification (perf_counter vs wall clock)
+        perf_start = time.perf_counter()
+        wall_start = time.time()
+        start_datetime = datetime.now()
+
+        logger.debug(f"Starting crash logs scan at {start_datetime.strftime('%H:%M:%S.%f')[:-3]}")
 
         # Import here to avoid circular dependency
         from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
         from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan_async_pure
         from ClassicLib.ScanLog import FCXModeHandler
 
+        init_start = time.perf_counter()
         # Initialize scanner with eager_load flag for proactive warm-up
         scanner = ScanLogsExecutor(eager_load=True)
         FCXModeHandler.reset_fcx_checks()
+        logger.debug(f"Scanner initialization took {(time.perf_counter() - init_start)*1000:.0f}ms")
 
-        # Create a new event loop for this thread
+        # Create event loop for this worker thread
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        try:
-            # Proactively warm up resources to eliminate freeze on first scan
-            # This pre-loads YAML data and warms up the database pool
+        async def run_scan() -> None:
+            """Run scan with pure async - no Qt overhead."""
+            # Warm up resources first
+            warmup_start = time.perf_counter()
             logger.debug("Warming up scan resources...")
-            loop.run_until_complete(scanner.warm_up())
-            logger.debug("Resource warm-up complete - scanning will be smooth")
+            await scanner.warm_up()
+            logger.debug(f"Resource warm-up complete - took {(time.perf_counter() - warmup_start)*1000:.0f}ms")
 
-            # Run the main scan - event loop stays running continuously
-            # All blocking operations use asyncio.to_thread(), so the loop never blocks
-            # This enables true concurrent processing of crash logs
-            loop.run_until_complete(crashlogs_scan_async_pure(scanner))
+            # Run the scan
+            scan_start = time.perf_counter()
+            await crashlogs_scan_async_pure(scanner)
+            logger.debug(f"Actual scan took {time.perf_counter() - scan_start:.2f}s")
 
+        try:
+            # Run scan - pure async, no Qt event processing overhead
+            loop.run_until_complete(run_scan())
+
+            # Calculate timings with both methods for verification
+            perf_elapsed = time.perf_counter() - perf_start
+            wall_elapsed = time.time() - wall_start
+            end_datetime = datetime.now()
+            datetime_elapsed = (end_datetime - start_datetime).total_seconds()
+
+            logger.info(
+                f"Scan completed - perf_counter: {perf_elapsed:.2f}s, "
+                f"wall_clock: {wall_elapsed:.2f}s, "
+                f"datetime: {datetime_elapsed:.2f}s"
+            )
         finally:
-            # Clean up the event loop
+            # Clean up event loop
             loop.close()
             asyncio.set_event_loop(None)
-
-        logger.debug("Crash logs scan completed successfully")
 
     def _play_success_notification(self) -> None:
         """Plays a notification sound for successful scan."""

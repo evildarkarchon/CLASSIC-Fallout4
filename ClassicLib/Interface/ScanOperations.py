@@ -109,6 +109,12 @@ class ScanOperationsMixin:
         # Disable buttons and update text
         self.disable_scan_buttons()
 
+        # Pause file watching during scan to prevent 60+ refreshes reading ALL reports
+        # This prevents the massive I/O bottleneck discovered via cProfile
+        if hasattr(self, "file_watcher") and hasattr(self, "_pause_file_watching"):
+            self._pause_file_watching()
+            logger.debug("Paused file watching during scan to avoid I/O bottleneck")
+
         # Start through thread manager
         self.thread_manager.start_thread(ThreadType.CRASH_LOGS_SCAN)
 
@@ -216,6 +222,16 @@ class ScanOperationsMixin:
             self._scan_mutex.unlock()
 
         self.enable_scan_buttons()  # noinspection PyUnresolvedReferences
+
+        # Resume file watching and do final refresh
+        if hasattr(self, "file_watcher") and hasattr(self, "_resume_file_watching"):
+            self._resume_file_watching()
+            logger.debug("Resumed file watching after scan completion")
+
+            # Do a single final refresh to show all new reports
+            if hasattr(self, "refresh_reports_list"):
+                self.refresh_reports_list()
+                logger.debug("Performed final refresh after scan completion")
 
         # Switch to Results tab if configured and available
         self._switch_to_results_tab_if_enabled()

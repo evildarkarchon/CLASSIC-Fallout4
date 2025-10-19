@@ -118,8 +118,7 @@ class RustAsyncDatabasePool:
         """
         Initialize database connections.
 
-        Direct call since we're in a thread pool thread.
-        Rust releases GIL so other threads can run.
+        Now uses true async - Rust returns Python coroutine.
         """
         if self._initialized:
             return
@@ -128,8 +127,8 @@ class RustAsyncDatabasePool:
         db_paths_str = [str(path) for path in DB_PATHS if path.is_file()]
 
         if db_paths_str:
-            # Direct call - Rust releases GIL
-            self._rust_pool.initialize(db_paths_str)
+            # Await Rust coroutine - true async, no blocking!
+            await self._rust_pool.initialize(db_paths_str)
             logger.debug(f"Initialized {len(db_paths_str)} database connections in Rust pool")
 
         self._initialized = True
@@ -139,8 +138,8 @@ class RustAsyncDatabasePool:
         if not self._initialized:
             return
 
-        # Direct call - we're in a thread pool thread
-        self._rust_pool.close()
+        # Await Rust coroutine - true async, no blocking!
+        await self._rust_pool.close()
         self._initialized = False
         logger.debug("Closed Rust database pool connections")
 
@@ -160,10 +159,9 @@ class RustAsyncDatabasePool:
 
         game_table = GlobalRegistry.get_game()
 
-        # Direct call - Rust releases GIL and runs async internally
-        # No thread pool needed since Rust has its own async runtime (Tokio)
-        # This allows multiple operations to run in parallel via GIL release
-        result = self._rust_pool.get_entry(formid, plugin, game_table)
+        # Await Rust coroutine - true async, no blocking!
+        # Multiple operations can run concurrently via Python's event loop
+        result = await self._rust_pool.get_entry(formid, plugin, game_table)
 
         return result
 
@@ -190,14 +188,14 @@ class RustAsyncDatabasePool:
 
         game_table = GlobalRegistry.get_game()
 
-        # Direct call - we're in a thread pool thread, Rust releases GIL
+        # Await Rust coroutine - true async, no blocking!
         try:
             # Try the new batch_lookup method first
-            rust_results = self._rust_pool.batch_lookup(formid_plugin_pairs, game_table)
+            rust_results = await self._rust_pool.batch_lookup(formid_plugin_pairs, game_table)
             return rust_results
         except AttributeError:
             # Fall back to get_entries_batch if batch_lookup doesn't exist
-            rust_results = self._rust_pool.get_entries_batch(
+            rust_results = await self._rust_pool.get_entries_batch(
                 formid_plugin_pairs,
                 game_table,
                 batch_size
@@ -244,7 +242,7 @@ class RustAsyncDatabasePool:
 
     async def optimize(self) -> None:
         """Optimize database connections (VACUUM and ANALYZE)."""
-        self._rust_pool.optimize()
+        await self._rust_pool.optimize()
 
     def set_game_table(self, table: str) -> None:
         """

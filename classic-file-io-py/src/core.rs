@@ -4,10 +4,11 @@
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
 use classic_file_io_core::FileIOCore;
-use classic_shared::{get_runtime, without_gil};
+use classic_shared::get_runtime;
 use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
+use pyo3_async_runtimes::tokio::future_into_py;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -55,123 +56,131 @@ impl PyFileIOCore {
 
     /// Read a file with encoding detection
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_file")]
-    pub fn py_read_file(&self, py: Python<'_>, path: String) -> PyResult<String> {
+    pub fn py_read_file<'py>(&self, py: Python<'py>, path: String) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let path_buf = PathBuf::from(path);
 
-        // Release GIL during I/O operation for better Python concurrency
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner.read_file(&path_buf).await.map_err(to_pyerr)
-            })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner.read_file(&path_buf).await.map_err(to_pyerr)
         })
     }
 
     /// Write a file
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "write_file")]
-    pub fn py_write_file(&self, py: Python<'_>, path: String, content: String) -> PyResult<()> {
+    pub fn py_write_file<'py>(
+        &self,
+        py: Python<'py>,
+        path: String,
+        content: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let path_buf = PathBuf::from(path);
 
-        // Release GIL during I/O operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner
-                    .write_file(&path_buf, &content)
-                    .await
-                    .map_err(to_pyerr)
-            })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner
+                .write_file(&path_buf, &content)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
     /// Read file lines with automatic encoding detection
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_lines")]
-    pub fn py_read_lines(&self, py: Python<'_>, path: String) -> PyResult<Vec<String>> {
+    pub fn py_read_lines<'py>(&self, py: Python<'py>, path: String) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let path_buf = PathBuf::from(path);
 
-        // Release GIL during I/O operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner.read_lines(&path_buf).await.map_err(to_pyerr)
-            })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner.read_lines(&path_buf).await.map_err(to_pyerr)
         })
     }
 
     /// Read file as bytes
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_bytes")]
-    pub fn py_read_bytes(&self, py: Python<'_>, path: String) -> PyResult<Vec<u8>> {
+    pub fn py_read_bytes<'py>(&self, py: Python<'py>, path: String) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let path_buf = PathBuf::from(path);
 
-        // Release GIL during I/O operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner.read_bytes(&path_buf).await.map_err(to_pyerr)
-            })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner.read_bytes(&path_buf).await.map_err(to_pyerr)
         })
     }
 
     /// Write lines to file
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "write_lines")]
-    pub fn py_write_lines(
+    pub fn py_write_lines<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         path: String,
         lines: Vec<String>,
-    ) -> PyResult<()> {
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let path_buf = PathBuf::from(path);
 
-        // Release GIL during I/O operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner
-                    .write_lines(&path_buf, lines)
-                    .await
-                    .map_err(to_pyerr)
-            })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner
+                .write_lines(&path_buf, lines)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
     /// Write bytes to file
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "write_bytes")]
-    pub fn py_write_bytes(&self, py: Python<'_>, path: String, content: Vec<u8>) -> PyResult<()> {
+    pub fn py_write_bytes<'py>(
+        &self,
+        py: Python<'py>,
+        path: String,
+        content: Vec<u8>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let path_buf = PathBuf::from(path);
 
-        // Release GIL during I/O operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner
-                    .write_bytes(&path_buf, content)
-                    .await
-                    .map_err(to_pyerr)
-            })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner
+                .write_bytes(&path_buf, content)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
     /// Append content to file
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
+    /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "append_file")]
-    pub fn py_append_file(&self, py: Python<'_>, path: String, content: String) -> PyResult<()> {
+    pub fn py_append_file<'py>(
+        &self,
+        py: Python<'py>,
+        path: String,
+        content: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let path_buf = PathBuf::from(path);
 
-        // Release GIL during I/O operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner
-                    .append_file(&path_buf, &content)
-                    .await
-                    .map_err(to_pyerr)
-            })
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            inner
+                .append_file(&path_buf, &content)
+                .await
+                .map_err(to_pyerr)
         })
     }
 
@@ -258,66 +267,68 @@ impl PyFileIOCore {
 
     /// Batch file reading with concurrency control
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
-    pub fn py_read_multiple_files(
+    /// Returns a Python coroutine - use with await in Python.
+    pub fn py_read_multiple_files<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         paths: Vec<String>,
-    ) -> PyResult<Py<PyDict>> {
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
 
-        // Release GIL during batch I/O operation
-        let results = without_gil(py, || {
-            get_runtime().block_on(async { self.inner.read_multiple_files(path_bufs).await })
-        });
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            let results = inner.read_multiple_files(path_bufs).await;
 
-        // Convert to Python dict (requires GIL)
-        let dict = PyDict::new(py);
-        for (path, result) in results {
-            let path_str = path.to_string_lossy().to_string();
-            match result {
-                Ok(content) => dict.set_item(path_str, content)?,
-                Err(e) => {
-                    log::error!("Error reading {}: {}", path_str, e);
-                    dict.set_item(path_str, "")?;
+            // Convert to HashMap for Python (PyO3 handles the conversion)
+            let mut result_map = HashMap::new();
+            for (path, result) in results {
+                let path_str = path.to_string_lossy().to_string();
+                match result {
+                    Ok(content) => {
+                        result_map.insert(path_str, content);
+                    }
+                    Err(e) => {
+                        log::error!("Error reading {}: {}", path_str, e);
+                        result_map.insert(path_str, String::new());
+                    }
                 }
             }
-        }
 
-        Ok(dict.unbind())
+            Ok(result_map)
+        })
     }
 
     /// Write multiple files with concurrency control
     ///
-    /// This operation releases the GIL to allow other Python threads to run concurrently.
-    pub fn py_write_multiple_files(
+    /// Returns a Python coroutine - use with await in Python.
+    pub fn py_write_multiple_files<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         files: HashMap<String, String>,
-    ) -> PyResult<()> {
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
         let file_pairs: Vec<(PathBuf, String)> = files
             .into_iter()
             .map(|(path, content)| (PathBuf::from(path), content))
             .collect();
 
-        // Release GIL during batch I/O operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                let results = self.inner.write_multiple_files(file_pairs).await;
+        // Returns Python coroutine immediately - no blocking!
+        future_into_py(py, async move {
+            let results = inner.write_multiple_files(file_pairs).await;
 
-                // Check for errors
-                for (path, result) in results {
-                    if let Err(e) = result {
-                        return Err(PyIOError::new_err(format!(
-                            "Failed to write {}: {}",
-                            path.display(),
-                            e
-                        )));
-                    }
+            // Check for errors
+            for (path, result) in results {
+                if let Err(e) = result {
+                    return Err(PyIOError::new_err(format!(
+                        "Failed to write {}: {}",
+                        path.display(),
+                        e
+                    )));
                 }
+            }
 
-                Ok(())
-            })
+            Ok(())
         })
     }
 }

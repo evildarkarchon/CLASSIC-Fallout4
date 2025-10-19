@@ -108,8 +108,8 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                # Run Rust in thread pool to avoid blocking event loop
-                return await asyncio.to_thread(self._rust_core.read_file, str(path))
+                # Await Rust coroutine - true async, no blocking!
+                return await self._rust_core.read_file(str(path))
             except Exception as e:
                 logger.debug(f"Rust read_file failed, falling back: {e}")
 
@@ -133,7 +133,7 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                return await asyncio.to_thread(self._rust_core.read_lines, str(path))
+                return await self._rust_core.read_lines(str(path))
             except Exception as e:
                 logger.debug(f"Rust read_lines failed, falling back: {e}")
 
@@ -155,7 +155,7 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                result = await asyncio.to_thread(self._rust_core.read_bytes, str(path))
+                result = await self._rust_core.read_bytes(str(path))
                 return bytes(result)
             except Exception as e:
                 logger.debug(f"Rust read_bytes failed, falling back: {e}")
@@ -180,7 +180,7 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                await asyncio.to_thread(self._rust_core.write_file, str(path), content)
+                await self._rust_core.write_file(str(path), content)
                 return
             except Exception as e:
                 logger.debug(f"Rust write_file failed, falling back: {e}")
@@ -202,7 +202,7 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                await asyncio.to_thread(self._rust_core.write_lines, str(path), lines)
+                await self._rust_core.write_lines(str(path), lines)
                 return
             except Exception as e:
                 logger.debug(f"Rust write_lines failed, falling back: {e}")
@@ -225,7 +225,7 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                await asyncio.to_thread(self._rust_core.write_bytes, str(path), list(content))
+                await self._rust_core.write_bytes(str(path), list(content))
                 return
             except Exception as e:
                 logger.debug(f"Rust write_bytes failed, falling back: {e}")
@@ -247,7 +247,7 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                await asyncio.to_thread(self._rust_core.append_file, str(path), content)
+                await self._rust_core.append_file(str(path), content)
                 return
             except Exception as e:
                 logger.debug(f"Rust append_file failed, falling back: {e}")
@@ -417,7 +417,7 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 str_paths = [str(p) for p in paths]
-                result = await asyncio.to_thread(self._rust_core.read_multiple_files, str_paths)
+                result = await self._rust_core.read_multiple_files(str_paths)
                 # Convert paths to filenames for compatibility
                 return {Path(k).name: v for k, v in result.items()}
             except Exception as e:
@@ -447,7 +447,7 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 str_files = {str(k): v for k, v in files.items()}
-                await asyncio.to_thread(self._rust_core.write_multiple_files, str_files)
+                await self._rust_core.write_multiple_files(str_files)
                 return
             except Exception as e:
                 logger.debug(f"Rust write_multiple_files failed: {e}")

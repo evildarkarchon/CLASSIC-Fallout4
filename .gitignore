@@ -135,3 +135,7 @@ build_output.txt
 *.egg-info
 MANIFEST.txt
 .hypothesis/
+cprofile.bin
+cprofile*.txt
+*.db-shm
+*.db-wal

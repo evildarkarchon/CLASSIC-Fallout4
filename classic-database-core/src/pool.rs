@@ -241,6 +241,7 @@ pub struct PoolStatistics {
 ///     db_paths: Arc::new(RwLock::new(vec![PathBuf::from("./my_database.db")])),
 /// };
 /// ```
+#[derive(Clone)]
 pub struct DatabasePool {
     connections: Arc<DashMap<PathBuf, Arc<Mutex<ConnectionWrapper>>>>,
     query_cache: Arc<DashMap<String, CacheEntry>>,
@@ -367,7 +368,8 @@ impl DatabasePool {
                 let conn = ConnectionWrapper::new(&path)?;
                 connections.insert(path.clone(), Arc::new(Mutex::new(conn)));
                 valid_paths.push(path.clone());
-                info!("Successfully opened database connection: {:?}", path);
+
+                info!("Successfully opened database: {:?}", path);
 
                 if let Ok(mut s) = stats.write() {
                     s.total_connections += 1;

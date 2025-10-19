@@ -55,6 +55,7 @@ anyhow = "1.0"
 
 # Database
 rusqlite = { version = "0.37.0", features = ["bundled", "backup"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 
 # File I/O
 encoding_rs = "0.8"
