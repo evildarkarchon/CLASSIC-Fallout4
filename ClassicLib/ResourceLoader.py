@@ -22,15 +22,38 @@ class ResourceLoader:
     """Handles loading of bundled resource files."""
 
     @staticmethod
-    def _check_frozen_state() -> Path | None:
-        """Check if running as PyInstaller frozen executable and return data directory.
+    def _check_executable_directory() -> Path | None:
+        """Check for CLASSIC Data next to the executable.
 
-        When running as a frozen executable, PyInstaller extracts bundled data files
-        to a temporary directory accessible via sys._MEIPASS. This method checks for
-        that condition and returns the path to the bundled CLASSIC Data directory.
+        For frozen executables (PyInstaller), this checks for CLASSIC Data
+        in the same directory as the .exe file. This is the primary location
+        for production deployments.
 
         Returns:
-            Path to CLASSIC Data in frozen bundle, or None if not frozen
+            Path to CLASSIC Data next to executable, or None if not found
+        """
+        if getattr(sys, 'frozen', False):
+            # Get directory containing the executable
+            exe_dir = Path(sys.executable).parent
+            data_dir = exe_dir / "CLASSIC Data"
+
+            if data_dir.exists():
+                logger.debug(f"Using CLASSIC Data from executable directory: {data_dir}")
+                return data_dir
+            else:
+                logger.debug(f"CLASSIC Data not found next to executable: {exe_dir}")
+
+        return None
+
+    @staticmethod
+    def _check_frozen_bundle() -> Path | None:
+        """Check PyInstaller frozen bundle for CLASSIC Data (YAML configs only).
+
+        This is a fallback for bundled YAML configuration files extracted to
+        sys._MEIPASS. Note: Database files are NOT bundled, only configs.
+
+        Returns:
+            Path to CLASSIC Data in frozen bundle, or None if not found
         """
         # Check if we're running as a PyInstaller frozen executable
         if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -39,10 +62,8 @@ class ResourceLoader:
             data_dir = bundle_dir / "CLASSIC Data"
 
             if data_dir.exists():
-                logger.debug(f"Running as frozen executable, using bundled CLASSIC Data: {data_dir}")
+                logger.debug(f"Using bundled CLASSIC Data from temp extraction: {data_dir}")
                 return data_dir
-            # Log warning but continue to other strategies
-            logger.warning(f"Frozen executable detected but CLASSIC Data not found in bundle: {bundle_dir}")
 
         return None
 
@@ -221,25 +242,26 @@ class ResourceLoader:
         """
         Get the path to the CLASSIC Data directory.
 
-        Tries multiple strategies:
-        1. Check PyInstaller frozen bundle
-        2. Check GlobalRegistry LOCAL_DIR
-        3. Check relative to package installation using importlib.metadata
-        4. Check relative to module for source installations
-        5. Check current working directory
-        6. Create in user app data directory as last resort
+        Tries multiple strategies in priority order:
+        1. Check next to executable (for frozen/PyInstaller apps)
+        2. Check GlobalRegistry LOCAL_DIR (user override)
+        3. Check relative to module for source installations
+        4. Check current working directory
+        5. Check frozen bundle (for bundled YAML configs only)
+        6. Check package installation
+        7. Create in user app data directory as last resort
 
         Returns:
             Path to the CLASSIC Data directory
         """
         # Try each strategy in order
-        # PyInstaller frozen state is checked first for fastest resolution
         strategies = [
-            ResourceLoader._check_frozen_state,  # Check PyInstaller bundle first
-            ResourceLoader._check_local_dir,
-            ResourceLoader._check_package_installation,
-            ResourceLoader._check_source_installation,
-            ResourceLoader._check_current_directory,
+            ResourceLoader._check_executable_directory,  # Check next to .exe first (production)
+            ResourceLoader._check_local_dir,            # Check user override
+            ResourceLoader._check_source_installation,  # Check source directory (development)
+            ResourceLoader._check_current_directory,    # Check current working directory
+            ResourceLoader._check_frozen_bundle,        # Check bundled configs (fallback)
+            ResourceLoader._check_package_installation, # Check installed package
         ]
 
         for strategy in strategies:
@@ -261,12 +283,17 @@ class ResourceLoader:
         """
         try:
             # List of essential files to extract
+            # NOTE: Database files (.db) are NOT extracted from package.
+            # They must be present in the user's local CLASSIC Data directory to allow:
+            # - Write access for WAL mode (performance)
+            # - Database updates without recompiling
+            # - Clear user responsibility for file permissions
             essential_files = [
                 "databases/CLASSIC Main.yaml",
                 "databases/CLASSIC Fallout4.yaml",
                 "databases/CLASSIC Skyrim.yaml",
-                "databases/Fallout4 FormIDs Main.db",
-                "databases/Fallout4 FID Mods.txt",
+                "databases/Fallout4 FID Mods.txt",  # Text file, not a database
+                # Databases NOT extracted: Fallout4 FormIDs Main.db, etc.
             ]
 
             # Get package files if not provided

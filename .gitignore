@@ -137,6 +137,6 @@ MANIFEST.txt
 .hypothesis/
 cprofile.bin
 cprofile*.txt
-*.db-shm
-*.db-wal
 /rust_extensions/
+CLASSIC Data/databases/Fallout4 FormIDs Main.db-shm
+CLASSIC Data/databases/Fallout4 FormIDs Main.db-wal

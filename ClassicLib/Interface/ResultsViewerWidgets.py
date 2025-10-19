@@ -310,16 +310,23 @@ class MarkdownViewer(QTextBrowser):
             border-bottom: 2px solid #4CAF50;
             padding-bottom: 5px;
             margin-top: 20px;
+            margin-bottom: 12px;
         }
         h2 {
             color: #81C784;
             border-bottom: 1px solid #81C784;
             padding-bottom: 3px;
-            margin-top: 15px;
+            margin-top: 18px;
+            margin-bottom: 10px;
         }
         h3 {
             color: #A5D6A7;
-            margin-top: 10px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        h4, h5, h6 {
+            margin-top: 12px;
+            margin-bottom: 6px;
         }
         code {
             background-color: #1e1e1e;
@@ -328,23 +335,34 @@ class MarkdownViewer(QTextBrowser):
             font-family: 'Consolas', 'Courier New', monospace;
             color: #ce9178;
         }
+        p {
+            margin-top: 6px;
+            margin-bottom: 8px;
+        }
         pre {
             background-color: #1e1e1e;
             padding: 10px;
             border-radius: 5px;
             overflow-x: auto;
+            margin-top: 8px;
+            margin-bottom: 12px;
         }
         blockquote {
             border-left: 4px solid #4CAF50;
             padding-left: 10px;
             color: #b0b0b0;
             font-style: italic;
+            margin-top: 8px;
+            margin-bottom: 8px;
         }
         ul, ol {
             padding-left: 20px;
+            margin-top: 6px;
+            margin-bottom: 12px;
         }
         li {
             margin: 5px 0;
+            line-height: 1.6;
         }
         a {
             color: #64B5F6;
@@ -399,11 +417,58 @@ class MarkdownViewer(QTextBrowser):
         # Process markdown for better display
         processed = self._process_markdown(markdown)
 
-        # Use Qt's built-in markdown support
-        super().setMarkdown(processed)
+        # Convert markdown to HTML using Qt's converter for better CSS control
+        html = self._markdown_to_html(processed)
+
+        # Use HTML rendering instead of markdown for better CSS support
+        self.setHtml(html)
 
         # Scroll to top
         self.moveCursor(QTextCursor.MoveOperation.Start)
+
+    def _markdown_to_html(self, markdown: str) -> str:
+        """
+        Convert markdown to HTML using Qt's converter and add spacing.
+
+        Args:
+            markdown: The markdown text to convert.
+
+        Returns:
+            HTML string with proper spacing.
+        """
+        from PySide6.QtGui import QTextDocument
+
+        # Create a temporary document to convert markdown to HTML
+        temp_doc = QTextDocument()
+        temp_doc.setMarkdown(markdown)
+        html = temp_doc.toHtml()
+
+        # Add extra spacing to section headings in the HTML
+        import re
+
+        # Add margin-top to section headings that come after content
+        # This ensures visual separation between sections
+        html = re.sub(
+            r'(<h[123][^>]*>)',
+            r'<div style="margin-top: 20px;"></div>\1',
+            html
+        )
+
+        # Add spacing after lists
+        html = re.sub(
+            r'(</ul>|</ol>)',
+            r'\1<div style="margin-bottom: 12px;"></div>',
+            html
+        )
+
+        # Add spacing after code blocks
+        html = re.sub(
+            r'(</pre>)',
+            r'\1<div style="margin-bottom: 12px;"></div>',
+            html
+        )
+
+        return html
 
     @staticmethod
     def _process_markdown(markdown: str) -> str:
@@ -437,6 +502,9 @@ class MarkdownViewer(QTextBrowser):
             wrap_multiline_content,
             processed
         )
+
+        # Note: Spacing is now handled by HTML rendering in _markdown_to_html()
+        # No need for aggressive newline injection
 
         # Highlight error messages
         # noinspection RegExpRedundantEscape

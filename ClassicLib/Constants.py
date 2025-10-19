@@ -65,11 +65,23 @@ SETTINGS_IGNORE_NONE = {
 # Define paths for both Main and Local databases
 # Changed to a function to avoid circular import at module level
 def get_db_paths():
-    """Get database paths based on current game. Import GlobalRegistry lazily."""
+    """Get absolute database paths based on current game.
+
+    Returns absolute paths by resolving relative to CLASSIC Data directory
+    found by ResourceLoader. This ensures databases work correctly whether
+    running from source, installed package, or frozen executable.
+    """
     from ClassicLib import GlobalRegistry
+    from ClassicLib.ResourceLoader import ResourceLoader
+
+    # Get the CLASSIC Data directory (handles all installation types)
+    data_dir = ResourceLoader.get_data_directory()
+
+    # Return absolute paths to database files
+    game = GlobalRegistry.get_game()
     return (
-        Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Main.db"),
-        Path(f"CLASSIC Data/databases/{GlobalRegistry.get_game()} FormIDs Local.db"),
+        data_dir / "databases" / f"{game} FormIDs Main.db",
+        data_dir / "databases" / f"{game} FormIDs Local.db",
     )
 
 # For backward compatibility, create a property-like object

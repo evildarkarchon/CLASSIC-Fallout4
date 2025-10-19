@@ -74,25 +74,11 @@ hiddenimports += [
     'importlib.resources',
 ]
 
-# Bundle CLASSIC Data directory with all its contents
-classic_data_path = PROJECT_ROOT / "CLASSIC Data"
-if classic_data_path.exists():
-    # Add the entire CLASSIC Data directory tree
-    datas.append((str(classic_data_path), "CLASSIC Data"))
-else:
-    print(f"WARNING: CLASSIC Data directory not found at {classic_data_path}")
-    print("The test executable will not have bundled data files!")
-
-# Add any additional data files
-additional_files = [
-    "README.md",
-    "LICENSE",
-]
-
-for file in additional_files:
-    file_path = PROJECT_ROOT / file
-    if file_path.exists():
-        datas.append((str(file_path), "."))
+# NOTE: CLASSIC Data is NOT bundled in the executable
+# The distribution zip includes CLASSIC Data folder alongside the executable
+# This keeps the executable smaller and allows easy updates to data files
+# README.md and LICENSE are also provided in the distribution zip
+print("INFO: CLASSIC Data will NOT be bundled (provided in distribution zip)")
 
 a = Analysis(
     ['CLASSIC_Interface.py'],

@@ -20,13 +20,10 @@ PROJECT_ROOT = Path(SPECPATH).resolve()
 import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
-CLASSIC_DATA_PATH = PROJECT_ROOT / "CLASSIC Data"
-
-# Verify data directory exists
-if not CLASSIC_DATA_PATH.exists():
-    print(f"Warning: CLASSIC Data directory not found at {CLASSIC_DATA_PATH}")
-    print("Creating empty directory for build...")
-    CLASSIC_DATA_PATH.mkdir(exist_ok=True)
+# NOTE: CLASSIC Data is NOT bundled in the executable
+# The distribution zip includes CLASSIC Data folder alongside the executable
+# This keeps the executable smaller and allows easy updates to data files
+print("INFO: CLASSIC Data will NOT be bundled (provided in distribution zip)")
 
 # Bundle Rust extensions - checks local build directory first, then site-packages
 from pyinstaller_rust_helper import find_rust_extensions
@@ -182,7 +179,6 @@ print("\n" + "=" * 60)
 print("Building CLASSIC GUI (Single File)")
 print("=" * 60)
 print(f"Project Root: {PROJECT_ROOT}")
-print(f"Data Path: {CLASSIC_DATA_PATH}")
-print(f"Data exists: {CLASSIC_DATA_PATH.exists()}")
 print(f"Output: dist/CLASSIC-GUI-OneFile.exe")
+print("Note: CLASSIC Data must be provided in distribution zip")
 print("=" * 60 + "\n")
