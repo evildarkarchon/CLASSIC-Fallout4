@@ -15,6 +15,8 @@ pub struct SettingsData {
     pub show_formid_values: bool,
     pub stat_logging: bool,
     pub update_check: bool,
+    pub vr_mode: bool,
+    pub auto_switch_to_results: bool,
 
     // Advanced settings
     pub move_unsolved_logs: bool,
@@ -47,6 +49,8 @@ impl SettingsData {
             show_formid_values: state_guard.show_formid_values(),
             stat_logging: state_guard.stat_logging(),
             update_check: state_guard.update_check(),
+            vr_mode: state_guard.vr_mode(),
+            auto_switch_to_results: state_guard.auto_switch_to_results(),
             move_unsolved_logs: state_guard.move_unsolved_logs(),
             simplify_logs: state_guard.simplify_logs(),
             game_root: state_guard.game_root().to_string_lossy().to_string(),
@@ -99,6 +103,12 @@ impl SettingsData {
 
             tracing::debug!("  Update Check: {}", self.update_check);
             state_guard.set_update_check(self.update_check);
+
+            tracing::debug!("  VR Mode: {}", self.vr_mode);
+            state_guard.set_vr_mode(self.vr_mode);
+
+            tracing::debug!("  Auto-Switch to Results: {}", self.auto_switch_to_results);
+            state_guard.set_auto_switch_to_results(self.auto_switch_to_results);
 
             tracing::debug!("  Move Unsolved Logs: {}", self.move_unsolved_logs);
             state_guard.set_move_unsolved_logs(self.move_unsolved_logs);
@@ -284,6 +294,8 @@ mod tests {
             show_formid_values: false,
             stat_logging: true,
             update_check: true,
+            vr_mode: false,
+            auto_switch_to_results: true,
             move_unsolved_logs: false,
             simplify_logs: false,
             game_root: "".to_string(),
@@ -313,6 +325,8 @@ mod tests {
             show_formid_values: false,
             stat_logging: false,
             update_check: true,
+            vr_mode: false,
+            auto_switch_to_results: true,
             move_unsolved_logs: false,
             simplify_logs: false,
             game_root: "C:\\NonExistentPath\\Game".to_string(),

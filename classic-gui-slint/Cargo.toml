@@ -56,9 +56,16 @@ rfd = "0.15"  # Native file dialogs
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
+# Update checking
+semver = "1.0"  # Version comparison
+reqwest = { version = "0.12", features = ["json"] }  # GitHub API
+
 # Platform-specific
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
 
 [build-dependencies]
 slint-build = "1.13"
+
+[dev-dependencies]
+tempfile = "3.22"

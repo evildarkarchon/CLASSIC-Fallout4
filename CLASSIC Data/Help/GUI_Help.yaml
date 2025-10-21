@@ -1,0 +1,552 @@
+# CLASSIC GUI Context-Sensitive Help System
+# Schema: See docs/help_system_schema.md
+
+help:
+  main:
+    scan_crash_logs:
+      title: "Scan Crash Logs"
+      shortcut: "Ctrl+L"
+      content: |
+        # Scan Crash Logs
+
+        Analyzes crash logs from your game directory and generates detailed reports.
+
+        ## What it does:
+        1. **Finds crash logs** in your game's XSE folder (e.g., My Games/Fallout4/F4SE)
+        2. **Copies logs** to the Crash Logs folder for processing
+        3. **Analyzes** each log for common issues, including:
+           - Plugin conflicts
+           - Memory errors
+           - Missing files
+           - Corrupted data
+        4. **Generates** markdown reports in the Reports folder
+
+        ## Requirements:
+        - Game root path configured in Settings
+        - At least one crash log present in XSE folder or custom scan location
+
+        ## Results:
+        After scanning, the Results tab will show all generated reports.
+        If "Auto-Switch to Results Tab" is enabled (Settings), you'll be taken there automatically.
+
+      related:
+        - category: "results"
+          topic: "view_report"
+        - category: "settings"
+          topic: "game_paths"
+        - category: "settings"
+          topic: "auto_switch"
+
+    scan_game_files:
+      title: "Scan Game Files"
+      shortcut: "Ctrl+G"
+      content: |
+        # Scan Game Files
+
+        Performs integrity checks on your game installation to identify potential issues.
+
+        ## What it scans:
+        - **Plugin files** (.esp, .esm, .esl) - Counts and validates mod plugins
+        - **Texture files** (.dds) - Checks for texture presence
+        - **Game executables** - Verifies core game files
+
+        ## Current Features:
+        - File counting and categorization
+        - Directory structure validation
+        - Basic file type checking
+
+        ## Future Updates:
+        Full integrity checking with CRC validation and corruption detection coming soon!
+
+        ## Use Cases:
+        - Verify game installation after updates
+        - Check for missing or corrupted files
+        - Audit mod installation
+
+      related:
+        - category: "settings"
+          topic: "game_paths"
+
+    papyrus_monitoring:
+      title: "Papyrus Log Monitoring"
+      content: |
+        # Papyrus Log Monitoring
+
+        Real-time monitoring of Papyrus script logs during gameplay.
+
+        ## What it tracks:
+        - **Errors**: Script errors and failures
+        - **Warnings**: Potential issues
+        - **Info**: General script information
+        - **Stack Dumps**: Call stack traces
+        - **Suspended Stacks**: Script suspension events
+
+        ## How it works:
+        1. Click "Toggle Papyrus" to start monitoring
+        2. The system watches the Papyrus log file (tail -f style)
+        3. Only **new data** from current session is tracked
+        4. Statistics update in real-time
+        5. Click again to stop monitoring
+
+        ## Important:
+        - Monitoring only captures data from the **current session**
+        - Historical data from previous sessions is ignored
+        - This prevents false positives from old crashes
+
+        ## Viewing Details:
+        Click the statistics badge to open the Papyrus Dialog and see:
+        - Full log content
+        - Detailed statistics
+        - Log file location
+
+      related:
+        - category: "main"
+          topic: "scan_crash_logs"
+
+  backups:
+    backup_overview:
+      title: "File Backup System"
+      content: |
+        # File Backup System
+
+        Create, restore, and manage backups of important game files.
+
+        ## Supported File Categories:
+
+        ### Script Extender (XSE)
+        - **F4SE** (Fallout 4 Script Extender)
+        - **SKSE** (Skyrim Script Extender)
+        Includes executables, DLLs, and plugin folders
+
+        ### Graphics Enhancements
+        - **ReShade**: Post-processing shader framework
+        - **Vulkan**: Vulkan runtime libraries
+        - **ENB**: ENBSeries graphics modification
+
+        ## Operations:
+
+        ### Backup
+        Creates a timestamped backup of files in `Backups/` folder
+
+        ### Restore
+        Restores files from most recent backup
+
+        ### Remove
+        Deletes backup files from disk
+
+        ## Best Practices:
+        - **Backup before updates**: Game or mod updates can break files
+        - **Backup before troubleshooting**: Safe to revert if changes don't help
+        - **Regular backups**: Keep backups of known-good configurations
+
+        ## Backup Location:
+        All backups are stored in the `Backups/` folder in your CLASSIC directory.
+
+      related:
+        - category: "backups"
+          topic: "backup_xse"
+        - category: "backups"
+          topic: "backup_reshade"
+        - category: "backups"
+          topic: "backup_vulkan"
+        - category: "backups"
+          topic: "backup_enb"
+
+    backup_xse:
+      title: "Script Extender Backup"
+      content: |
+        # Script Extender Backup
+
+        Backs up your Script Extender (F4SE/SKSE) installation.
+
+        ## Files Backed Up:
+
+        ### Executables
+        - `f4se_loader.exe` / `skse_loader.exe`
+        - `f4se_steam_loader.dll` / `skse_steam_loader.dll`
+
+        ### Plugins
+        - All DLL files in `f4se/` or `skse/` folders
+        - All plugin configuration files
+
+        ## Why Backup XSE?
+
+        ### Game Updates
+        Steam updates can break Script Extender compatibility
+
+        ### Mod Updates
+        Some mods require specific XSE versions
+
+        ### Troubleshooting
+        Restore a known-good version when debugging issues
+
+        ## Restoration:
+        Click "Restore" to copy files back from backup to game directory.
+
+      related:
+        - category: "backups"
+          topic: "backup_overview"
+
+    backup_reshade:
+      title: "ReShade Backup"
+      content: |
+        # ReShade Backup
+
+        Backs up ReShade post-processing framework files.
+
+        ## Files Backed Up:
+        - `d3d11.dll` / `dxgi.dll` (ReShade DLLs)
+        - `ReShade.ini` (ReShade configuration)
+        - `reshade-shaders/` folder (shader files)
+
+        ## Use Cases:
+        - Before updating ReShade to new version
+        - Before game updates that might conflict
+        - When testing different shader configurations
+
+      related:
+        - category: "backups"
+          topic: "backup_overview"
+
+    backup_vulkan:
+      title: "Vulkan Runtime Backup"
+      content: |
+        # Vulkan Runtime Backup
+
+        Backs up Vulkan graphics runtime files.
+
+        ## Files Backed Up:
+        - `vulkan-1.dll` (Vulkan runtime)
+        - Related Vulkan configuration files
+
+        ## Use Cases:
+        - Before graphics driver updates
+        - When troubleshooting rendering issues
+        - Before game updates
+
+      related:
+        - category: "backups"
+          topic: "backup_overview"
+
+    backup_enb:
+      title: "ENB Backup"
+      content: |
+        # ENB Backup
+
+        Backs up ENBSeries graphics modification files.
+
+        ## Files Backed Up:
+        - `d3d11.dll` (ENB DLL)
+        - `enblocal.ini` (ENB configuration)
+        - `enbseries.ini` (ENB settings)
+        - Additional ENB configuration files
+
+        ## Use Cases:
+        - Before switching ENB presets
+        - Before game updates
+        - When testing ENB configurations
+
+        ## Note:
+        ENB and ReShade both modify `d3d11.dll` - they cannot be used simultaneously!
+
+      related:
+        - category: "backups"
+          topic: "backup_overview"
+        - category: "backups"
+          topic: "backup_reshade"
+
+  results:
+    view_report:
+      title: "View Report"
+      content: |
+        # View Crash Report
+
+        Display and analyze detailed crash reports generated by the scanner.
+
+        ## Report Contents:
+
+        ### Summary Section
+        - **Crash Type**: The type of crash detected
+        - **Probable Cause**: Most likely reason for the crash
+        - **Crash Time**: When the crash occurred
+
+        ### Stack Trace
+        Technical details about the crash location in game code
+
+        ### Loaded Plugins
+        List of all mods loaded when the crash occurred
+
+        ### Recommendations
+        - Suggested fixes
+        - Known issues with similar symptoms
+        - Links to relevant resources
+
+        ## Actions:
+
+        ### Copy to Clipboard
+        Copy the entire report for sharing or pasting into mod forums
+
+        ### Zoom
+        - **Zoom In**: Increase text size for readability
+        - **Zoom Out**: Decrease text size
+        - **Reset Zoom**: Return to default size
+
+        ### Delete
+        Permanently remove the report from disk
+
+        ## Markdown Rendering:
+        Reports use Markdown formatting for better readability:
+        - **Bold** for important information
+        - *Italic* for emphasis
+        - Code blocks for technical details
+        - Lists for structured data
+
+      related:
+        - category: "main"
+          topic: "scan_crash_logs"
+        - category: "results"
+          topic: "delete_report"
+
+    delete_report:
+      title: "Delete Report"
+      content: |
+        # Delete Report
+
+        Permanently delete a crash report from your disk.
+
+        ## Warning:
+        **This action cannot be undone!**
+
+        The report file will be deleted from the Reports folder immediately.
+
+        ## Confirmation:
+        Before deletion, you will see a confirmation dialog to prevent accidental deletions.
+
+        ## Use Cases:
+        - Remove old reports after fixing issues
+        - Clean up resolved crashes
+        - Free up disk space
+
+        ## Alternative:
+        If you want to keep reports but organize them, manually move them to a subfolder in the Reports directory.
+
+      related:
+        - category: "results"
+          topic: "view_report"
+
+    refresh_reports:
+      title: "Refresh Reports List"
+      content: |
+        # Refresh Reports List
+
+        Reload the list of reports from the Reports folder.
+
+        ## When to Use:
+        - After manually adding/removing reports from Reports folder
+        - If the list seems out of sync with disk
+        - After scanning (though this happens automatically)
+
+        ## Auto-Refresh:
+        The reports list automatically refreshes after:
+        - Completing a crash log scan
+        - Deleting a report
+        - Completing a game files scan
+
+      related:
+        - category: "results"
+          topic: "view_report"
+        - category: "main"
+          topic: "scan_crash_logs"
+
+  settings:
+    game_paths:
+      title: "Game Paths Configuration"
+      content: |
+        # Game Paths Configuration
+
+        Configure paths to your game installation and related folders.
+
+        ## Required Paths:
+
+        ### Game Root
+        The main game installation folder (e.g., `C:/Steam/steamapps/common/Fallout 4`)
+
+        **Used for:**
+        - Finding game files to scan
+        - Locating Data folder for plugins
+        - Backup operations
+
+        ### Documents Root
+        Your My Games folder (e.g., `C:/Users/YourName/Documents`)
+
+        **Used for:**
+        - Locating game-specific documents (e.g., My Games/Fallout4)
+        - Finding Papyrus logs
+        - Accessing INI files
+
+        ## Optional Paths:
+
+        ### INI Folder
+        Custom location for .ini configuration files
+
+        **Default:** Auto-detected from Documents Root
+        **Custom:** Useful if using INI managers or custom locations
+
+        ### Mods Folder
+        Custom mod manager folder (e.g., Mod Organizer 2 mods directory)
+
+        **Used for:**
+        - Additional plugin scanning
+        - Mod-specific analysis
+
+        ### Custom Scan Folder
+        Additional folder to scan for crash logs
+
+        **Use Cases:**
+        - Custom crash log locations
+        - Network shared folders
+        - Backup crash log archives
+
+        ## Path Validation:
+        Paths are validated when saved. Invalid paths will show an error.
+
+      related:
+        - category: "main"
+          topic: "scan_crash_logs"
+        - category: "main"
+          topic: "scan_game_files"
+
+    auto_switch:
+      title: "Auto-Switch to Results Tab"
+      content: |
+        # Auto-Switch to Results Tab
+
+        Automatically switch to the Results tab after a successful scan completes.
+
+        ## Behavior:
+
+        ### Enabled (Default)
+        After scanning crash logs or game files:
+        1. Scan completes successfully
+        2. Results list refreshes automatically
+        3. **Results tab opens automatically**
+        4. Success dialog appears
+
+        You can immediately view the new/updated reports.
+
+        ### Disabled
+        After scanning:
+        1. Scan completes successfully
+        2. Results list refreshes automatically
+        3. **Stay on current tab**
+        4. Success dialog appears
+
+        You manually switch to Results tab when ready.
+
+        ## Use Cases:
+
+        ### Enable if:
+        - You want immediate access to scan results
+        - You primarily use CLASSIC for crash analysis
+        - You prefer automatic workflows
+
+        ### Disable if:
+        - You scan multiple times in succession
+        - You prefer to manually navigate tabs
+        - You want to stay on the Main tab
+
+        ## Related Settings:
+        This setting is saved in your CLASSIC configuration and persists between sessions.
+
+      related:
+        - category: "results"
+          topic: "view_report"
+        - category: "main"
+          topic: "scan_crash_logs"
+
+    fcx_mode:
+      title: "FCX Mode (File Check eXtended)"
+      content: |
+        # FCX Mode - File Check eXtended
+
+        Enables extended scans and actions that only make sense when analyzing your own crashes.
+
+        ## What is FCX Mode?
+        FCX (File Check eXtended) is an extended analysis mode that performs deeper checks
+        on your local game installation. These checks only work when you're analyzing
+        **your own crash logs** (not someone else's).
+
+        ## When FCX is Enabled:
+        - **File existence checks**: Verifies that plugins/files mentioned in crash logs actually exist
+        - **Detailed file analysis**: Deep scans of local game files
+        - **Installation validation**: Checks mod installation integrity
+        - **Direct file access**: Reads and analyzes files on your system
+
+        ## When FCX is Disabled:
+        - **Basic analysis only**: Analyzes crash log content without file system checks
+        - **Remote analysis friendly**: Suitable for analyzing logs from other users
+        - **Faster scanning**: Skips file system operations
+
+        ## Use Cases:
+
+        ### Enable FCX if:
+        - You're scanning **your own** crash logs
+        - You want detailed file validation
+        - You want to verify mod installations
+        - You have the actual game files on your system
+
+        ### Disable FCX if:
+        - You're analyzing **someone else's** crash logs
+        - You don't have the game installed locally
+        - You want faster analysis
+        - You're doing remote troubleshooting
+
+        ## Example Difference:
+
+        ### FCX Disabled:
+        "Crash caused by missing plugin: MissingMod.esp"
+
+        ### FCX Enabled:
+        "Crash caused by missing plugin: MissingMod.esp
+        ✓ Verified: File does not exist in Data folder
+        ✓ Checked: Not in Mod Organizer 2 mods folder
+        → Recommendation: Install missing mod or remove from load order"
+
+      related:
+        - category: "settings"
+          topic: "game_paths"
+        - category: "main"
+          topic: "scan_crash_logs"
+
+    show_formid_values:
+      title: "Show FormID Values"
+      content: |
+        # Show FormID Values
+
+        Display raw FormID values in crash reports.
+
+        ## What are FormIDs?
+        FormIDs are unique hexadecimal identifiers for game objects
+        (e.g., `0x0014EB70` for a specific weapon).
+
+        ## When to Enable:
+        - You're a mod developer debugging issues
+        - You need to cross-reference with xEdit/Creation Kit
+        - You're providing detailed bug reports
+
+        ## When to Disable:
+        - You're a regular user (default)
+        - You find hex values confusing
+        - You prefer human-readable names only
+
+        ## Example:
+
+        ### Disabled (Default):
+        `Weapon: Combat Rifle`
+
+        ### Enabled:
+        `Weapon: Combat Rifle (FormID: 0x0014EB70)`
+
+      related:
+        - category: "results"
+          topic: "view_report"

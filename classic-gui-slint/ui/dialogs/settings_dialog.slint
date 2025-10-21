@@ -15,6 +15,8 @@ export component SettingsDialog inherits Rectangle {
     in-out property<bool> show-formid-values: false;
     in-out property<bool> stat-logging: false;
     in-out property<bool> update-check: true;
+    in-out property<bool> vr-mode: false;
+    in-out property<bool> auto-switch-to-results: true;
 
     // Advanced settings
     in-out property<bool> move-unsolved-logs: false;
@@ -162,6 +164,16 @@ export component SettingsDialog inherits Rectangle {
                                 FluentCheckbox {
                                     text: "Enable Statistical Logging";
                                     checked <=> root.stat-logging;
+                                }
+
+                                FluentCheckbox {
+                                    text: "VR Mode (for VR versions of games)";
+                                    checked <=> root.vr-mode;
+                                }
+
+                                FluentCheckbox {
+                                    text: "Auto-Switch to Results Tab After Scan";
+                                    checked <=> root.auto-switch-to-results;
                                 }
 
                                 Rectangle {

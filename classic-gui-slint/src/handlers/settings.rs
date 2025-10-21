@@ -48,17 +48,6 @@ pub fn show_help() -> Result<()> {
     Ok(())
 }
 
-/// Opens the Settings dialog
-pub fn open_settings() -> Result<()> {
-    tracing::info!("Opening Settings dialog...");
-
-    // TODO: Phase 8 - Implement Settings dialog
-    // Integrate with classic-config-core for configuration
-
-    tracing::debug!("Settings dialog opened (placeholder)");
-    Ok(())
-}
-
 /// Opens the crash logs folder in the system file explorer
 pub fn open_crash_logs_folder(state: SharedAppState) -> Result<()> {
     tracing::info!("Opening crash logs folder...");
@@ -78,19 +67,5 @@ pub fn open_crash_logs_folder(state: SharedAppState) -> Result<()> {
         anyhow::bail!("Crash logs folder path not configured");
     }
 
-    Ok(())
-}
-
-/// Checks for CLASSIC updates
-pub async fn check_updates() -> Result<()> {
-    tracing::info!("Checking for updates...");
-
-    // TODO: Phase 8 - Implement update checking
-    // 1. Show progress indicator
-    // 2. Check GitHub API for latest release
-    // 3. Compare with current version
-    // 4. Display update dialog if available
-
-    tracing::debug!("Update check completed (placeholder)");
     Ok(())
 }

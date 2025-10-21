@@ -2,8 +2,48 @@
 use anyhow::{Context, Result};
 use classic_file_io_core::LogCollector;
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+use std::sync::Mutex;
 
 use crate::app_state::SharedAppState;
+
+/// Global scan lock to prevent duplicate scan operations
+///
+/// This mutex ensures that only one scan operation can run at a time,
+/// preventing resource conflicts and race conditions.
+static SCAN_LOCK: Mutex<bool> = Mutex::new(false);
+
+/// Scan lock guard - automatically releases lock when dropped
+///
+/// This RAII guard ensures the scan lock is always released,
+/// even if the scan operation panics or returns early.
+struct ScanLockGuard;
+
+impl Drop for ScanLockGuard {
+    fn drop(&mut self) {
+        if let Ok(mut lock) = SCAN_LOCK.lock() {
+            *lock = false;
+            tracing::debug!("Scan lock released");
+        }
+    }
+}
+
+/// Attempt to acquire the scan lock
+///
+/// # Returns
+/// * `Ok(ScanLockGuard)` - Lock acquired successfully
+/// * `Err(anyhow::Error)` - Another scan is already in progress
+fn acquire_scan_lock() -> Result<ScanLockGuard> {
+    let mut lock = SCAN_LOCK.lock()
+        .map_err(|e| anyhow::anyhow!("Scan lock poisoned: {}", e))?;
+
+    if *lock {
+        anyhow::bail!("A scan operation is already in progress. Please wait for it to complete.");
+    }
+
+    *lock = true;
+    tracing::debug!("Scan lock acquired");
+    Ok(ScanLockGuard)
+}
 
 /// Result of a scan operation
 #[derive(Debug)]
@@ -20,6 +60,10 @@ pub struct ScanResult {
 /// Scans crash logs in the game directory using classic-scanlog-core
 pub async fn handle_scan_crash_logs(state: SharedAppState) -> Result<ScanResult> {
     tracing::info!("Starting crash logs scan...");
+
+    // Acquire scan lock to prevent duplicate operations
+    let _lock_guard = acquire_scan_lock()?;
+
     let start_time = std::time::Instant::now();
 
     // Load configuration from AppState
@@ -85,6 +129,10 @@ pub async fn handle_scan_crash_logs(state: SharedAppState) -> Result<ScanResult>
 /// Scans game files for issues using classic-file-io-core
 pub async fn handle_scan_game_files(state: SharedAppState) -> Result<ScanResult> {
     tracing::info!("Starting game files scan...");
+
+    // Acquire scan lock to prevent duplicate operations
+    let _lock_guard = acquire_scan_lock()?;
+
     let start_time = std::time::Instant::now();
 
     // Get game root from AppState

@@ -6,10 +6,13 @@ export component ErrorDialog inherits Rectangle {
     // Properties
     in property<string> title: "Error";
     in property<string> message: "";
+    in property<string> details: "";  // Traceback/stack trace details
     in property<bool> show: false;
+    in-out property<bool> details-expanded: false;  // Toggle for traceback section
 
-    // Callback
+    // Callbacks
     callback ok-clicked();
+    callback copy-to-clipboard();
 
     // Only visible when show is true
     visible: root.show;
@@ -109,15 +112,89 @@ export component ErrorDialog inherits Rectangle {
                         wrap: word-wrap;
                     }
 
+                    // Collapsible details section (only if details provided)
+                    if root.details != "": VerticalLayout {
+                        spacing: FluentDark.spacing-sm;
+
+                        // Details header (clickable to expand/collapse)
+                        Rectangle {
+                            height: 32px;
+                            background: details-touch.has-hover ? FluentDark.layer3 : transparent;
+                            border-radius: FluentDark.radius-sm;
+
+                            HorizontalLayout {
+                                padding-left: FluentDark.spacing-sm;
+                                padding-right: FluentDark.spacing-sm;
+                                spacing: FluentDark.spacing-xs;
+
+                                // Expand/collapse arrow
+                                Text {
+                                    text: root.details-expanded ? "▼" : "▶";
+                                    color: FluentDark.text-secondary;
+                                    font-size: 12px;
+                                    vertical-alignment: center;
+                                    width: 16px;
+                                }
+
+                                Text {
+                                    text: "Details";
+                                    color: FluentDark.text-secondary;
+                                    font-size: FluentDark.font-size-sm;
+                                    font-weight: FluentDark.font-weight-semibold;
+                                    vertical-alignment: center;
+                                }
+
+                                details-touch := TouchArea {
+                                    clicked => {
+                                        root.details-expanded = !root.details-expanded;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Details content (only when expanded)
+                        if root.details-expanded: Rectangle {
+                            background: FluentDark.layer1;
+                            border-radius: FluentDark.radius-sm;
+                            border-width: 1px;
+                            border-color: FluentDark.border;
+                            max-height: 200px;
+
+                            Flickable {
+                                viewport-height: details-text.preferred-height;
+
+                                details-text := Text {
+                                    x: FluentDark.spacing-sm;
+                                    y: FluentDark.spacing-sm;
+                                    width: parent.width - 2 * FluentDark.spacing-sm;
+                                    text: root.details;
+                                    color: FluentDark.text-secondary;
+                                    font-size: 12px;
+                                    font-family: "Consolas";  // Monospace for stack traces
+                                    wrap: word-wrap;
+                                }
+                            }
+                        }
+                    }
+
                     // Spacer
                     Rectangle {
                         background: transparent;
                     }
 
-                    // OK button
+                    // Action buttons
                     HorizontalLayout {
                         spacing: FluentDark.spacing-sm;
                         alignment: end;
+
+                        // Copy button (only if details provided)
+                        if root.details != "": FluentButton {
+                            text: "Copy to Clipboard";
+                            primary: false;
+                            clicked => {
+                                root.copy-to-clipboard();
+                            }
+                        }
 
                         FluentButton {
                             text: "OK";

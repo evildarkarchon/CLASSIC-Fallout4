@@ -11,6 +11,8 @@ export component PapyrusDialog inherits Rectangle {
     in property<int> error-count: 0;
     in property<int> warning-count: 0;
     in property<int> info-count: 0;
+    in property<int> dumps-count: 0;   // NEW: Stack dumps count
+    in property<int> stacks-count: 0;  // NEW: Stack frames count
     in property<string> log-content: "";
 
     // Callbacks
@@ -18,9 +20,19 @@ export component PapyrusDialog inherits Rectangle {
     callback start-monitoring();
     callback stop-monitoring();
     callback clear-stats();
+    callback update-stats();  // NEW: Periodically polls and updates stats from Rust
 
     // Only visible when show is true
     visible: root.show;
+
+    // Stats update timer (runs every second when monitoring is active)
+    stats-timer := Timer {
+        interval: 1000ms;
+        running: root.monitoring;
+        triggered => {
+            root.update-stats();
+        }
+    }
 
     // Full screen overlay
     width: 100%;
@@ -252,6 +264,75 @@ export component PapyrusDialog inherits Rectangle {
                                         horizontal-alignment: center;
                                     }
                                 }
+                            }
+                        }
+
+                        // Dumps and Stacks statistics (second row)
+                        HorizontalLayout {
+                            spacing: FluentDark.spacing-sm;
+
+                            // Dumps card
+                            Rectangle {
+                                background: FluentDark.layer3;
+                                border-radius: FluentDark.radius-md;
+                                border-width: 1px;
+                                border-color: FluentDark.text-secondary;
+                                horizontal-stretch: 1;
+
+                                VerticalLayout {
+                                    padding: FluentDark.spacing-md;
+                                    spacing: FluentDark.spacing-xs;
+
+                                    Text {
+                                        text: "Dumps";
+                                        color: FluentDark.text-secondary;
+                                        font-size: FluentDark.font-size-sm;
+                                        horizontal-alignment: center;
+                                    }
+
+                                    Text {
+                                        text: root.dumps-count;
+                                        color: FluentDark.accent;
+                                        font-size: FluentDark.font-size-2xl;
+                                        font-weight: FluentDark.font-weight-bold;
+                                        horizontal-alignment: center;
+                                    }
+                                }
+                            }
+
+                            // Stacks card
+                            Rectangle {
+                                background: FluentDark.layer3;
+                                border-radius: FluentDark.radius-md;
+                                border-width: 1px;
+                                border-color: FluentDark.text-secondary;
+                                horizontal-stretch: 1;
+
+                                VerticalLayout {
+                                    padding: FluentDark.spacing-md;
+                                    spacing: FluentDark.spacing-xs;
+
+                                    Text {
+                                        text: "Stacks";
+                                        color: FluentDark.text-secondary;
+                                        font-size: FluentDark.font-size-sm;
+                                        horizontal-alignment: center;
+                                    }
+
+                                    Text {
+                                        text: root.stacks-count;
+                                        color: FluentDark.accent;
+                                        font-size: FluentDark.font-size-2xl;
+                                        font-weight: FluentDark.font-weight-bold;
+                                        horizontal-alignment: center;
+                                    }
+                                }
+                            }
+
+                            // Spacer to align with above row (since we only have 2 cards here)
+                            Rectangle {
+                                horizontal-stretch: 1;
+                                background: transparent;
                             }
                         }
 

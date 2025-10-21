@@ -191,6 +191,12 @@ pub struct ClassicConfig {
     /// Check for updates at startup
     pub update_check: bool,
 
+    /// Enable VR mode (for VR-specific game configurations)
+    pub vr_mode: bool,
+
+    /// Automatically switch to Results tab after scan completion
+    pub auto_switch_to_results: bool,
+
     /// Path configuration
     pub paths: PathConfig,
 }
@@ -252,6 +258,8 @@ impl Default for ClassicConfig {
             move_unsolved_logs: false,
             simplify_logs: false,
             update_check: true,
+            vr_mode: false,
+            auto_switch_to_results: true,  // Enable by default for better UX
             paths: PathConfig::default(),
         }
     }
@@ -301,6 +309,8 @@ impl ClassicConfig {
         let move_unsolved_logs = yaml["move_unsolved_logs"].as_bool().unwrap_or(false);
         let simplify_logs = yaml["simplify_logs"].as_bool().unwrap_or(false);
         let update_check = yaml["update_check"].as_bool().unwrap_or(true);
+        let vr_mode = yaml["vr_mode"].as_bool().unwrap_or(false);
+        let auto_switch_to_results = yaml["auto_switch_to_results"].as_bool().unwrap_or(true);
 
         let paths_yaml = &yaml["paths"];
         let paths = PathConfig {
@@ -321,6 +331,8 @@ impl ClassicConfig {
             move_unsolved_logs,
             simplify_logs,
             update_check,
+            vr_mode,
+            auto_switch_to_results,
             paths,
         })
     }
@@ -352,6 +364,14 @@ impl ClassicConfig {
         root.insert(
             Yaml::String("update_check".to_string()),
             Yaml::Boolean(self.update_check),
+        );
+        root.insert(
+            Yaml::String("vr_mode".to_string()),
+            Yaml::Boolean(self.vr_mode),
+        );
+        root.insert(
+            Yaml::String("auto_switch_to_results".to_string()),
+            Yaml::Boolean(self.auto_switch_to_results),
         );
 
         // Build paths hash
@@ -545,6 +565,7 @@ mod tests {
         assert!(!config.move_unsolved_logs);
         assert!(!config.simplify_logs);
         assert!(config.update_check);
+        assert!(!config.vr_mode);
     }
 
     #[tokio::test]
@@ -577,6 +598,7 @@ mod tests {
             move_unsolved_logs: false,
             simplify_logs: true,
             update_check: false,
+            vr_mode: true,
             paths: PathConfig {
                 ini_folder: Some(PathBuf::from("C:\\Ini")),
                 scan_custom: Some(PathBuf::from("D:\\Logs")),
@@ -595,6 +617,7 @@ mod tests {
         assert_eq!(restored.move_unsolved_logs, config.move_unsolved_logs);
         assert_eq!(restored.simplify_logs, config.simplify_logs);
         assert_eq!(restored.update_check, config.update_check);
+        assert_eq!(restored.vr_mode, config.vr_mode);
         assert_eq!(restored.paths.ini_folder, config.paths.ini_folder);
         assert_eq!(restored.paths.scan_custom, config.paths.scan_custom);
         assert_eq!(restored.paths.mods_folder, config.paths.mods_folder);
@@ -627,6 +650,7 @@ mod tests {
             move_unsolved_logs: false,
             simplify_logs: false,
             update_check: true,
+            vr_mode: false,
             paths: PathConfig {
                 ini_folder: None,
                 scan_custom: None,

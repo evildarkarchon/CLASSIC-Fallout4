@@ -83,6 +83,59 @@ fn main() -> Result<(), slint::PlatformError> {
                                 w.set_scan_folder_path(scan_folder.to_string_lossy().to_string().into());
                                 tracing::debug!("Loaded scan folder from config: {}", scan_folder.display());
                             }
+
+                            // Check for updates if enabled in settings
+                            if state_guard.update_check() {
+                                tracing::info!("Automatic update check enabled");
+                                let window_for_update = w.as_weak();
+                                let version = w.get_app_version().to_string();
+
+                                // Spawn async task for update check
+                                slint::spawn_local(async move {
+                                    // Load update preferences
+                                    match handlers::update_check::UpdatePreferences::load().await {
+                                        Ok(prefs) => {
+                                            if prefs.dont_check_again {
+                                                tracing::info!("Update checking disabled by user preference");
+                                                return;
+                                            }
+
+                                            // Check for updates
+                                            match handlers::update_check::check_for_updates(&version).await {
+                                                Ok(Some(info)) => {
+                                                    // Check if this version was skipped
+                                                    if prefs.should_skip(&info.version) {
+                                                        tracing::info!("Skipping previously dismissed update: {}", info.version);
+                                                        return;
+                                                    }
+
+                                                    // Show update dialog
+                                                    if let Some(w) = window_for_update.upgrade() {
+                                                        tracing::info!("Update available on startup: {}", info.version);
+                                                        w.set_update_available(true);
+                                                        w.set_update_current_version(version.into());
+                                                        w.set_update_latest_version(info.version.into());
+                                                        w.set_update_release_notes(info.release_notes.into());
+                                                        w.set_update_error_message("".into());
+                                                        w.set_show_update_dialog(true);
+                                                    }
+                                                }
+                                                Ok(None) => {
+                                                    tracing::info!("No update available on startup");
+                                                }
+                                                Err(e) => {
+                                                    tracing::warn!("Automatic update check failed: {}", e);
+                                                }
+                                            }
+                                        }
+                                        Err(e) => {
+                                            tracing::warn!("Failed to load update preferences: {}", e);
+                                        }
+                                    }
+                                }).unwrap();
+                            } else {
+                                tracing::debug!("Automatic update check disabled in settings");
+                            }
                         }
                     }
                     Err(e) => {
@@ -176,12 +229,27 @@ fn main() -> Result<(), slint::PlatformError> {
                     w.set_scan_in_progress(true);
                 }
 
-                match handlers::scan::handle_scan_crash_logs(state).await {
+                match handlers::scan::handle_scan_crash_logs(state.clone()).await {
                     Ok(scan_result) => {
                         if let Some(w) = window.upgrade() {
                             w.set_scan_in_progress(false);
 
+                            // Auto-refresh results list to show new/updated reports
+                            w.invoke_refresh_reports();
+                            tracing::debug!("Auto-refreshed results list after scan completion");
+
                             if scan_result.success {
+                                // Auto-switch to Results tab if setting is enabled
+                                let auto_switch = {
+                                    let state_guard = state.read();
+                                    state_guard.auto_switch_to_results()
+                                };
+
+                                if auto_switch {
+                                    w.set_current_tab(3);  // Tab 3 = Results
+                                    tracing::debug!("Auto-switched to Results tab after successful scan");
+                                }
+
                                 // Show success dialog
                                 w.set_success_title("Crash Logs Scan Complete".into());
                                 let message = format!(
@@ -210,6 +278,11 @@ fn main() -> Result<(), slint::PlatformError> {
                         tracing::error!("Crash logs scan failed: {}", e);
                         if let Some(w) = window.upgrade() {
                             w.set_scan_in_progress(false);
+
+                            // Auto-refresh even on error (partial results may exist)
+                            w.invoke_refresh_reports();
+                            tracing::debug!("Auto-refreshed results list after scan error");
+
                             w.set_error_title("Crash Logs Scan Error".into());
                             w.set_error_message(format!("Failed to scan crash logs:\n\n{}", e).into());
                             w.set_show_error_dialog(true);
@@ -234,12 +307,27 @@ fn main() -> Result<(), slint::PlatformError> {
                     w.set_scan_in_progress(true);
                 }
 
-                match handlers::scan::handle_scan_game_files(state).await {
+                match handlers::scan::handle_scan_game_files(state.clone()).await {
                     Ok(scan_result) => {
                         if let Some(w) = window.upgrade() {
                             w.set_scan_in_progress(false);
 
+                            // Auto-refresh results list to show new/updated reports
+                            w.invoke_refresh_reports();
+                            tracing::debug!("Auto-refreshed results list after scan completion");
+
                             if scan_result.success {
+                                // Auto-switch to Results tab if setting is enabled
+                                let auto_switch = {
+                                    let state_guard = state.read();
+                                    state_guard.auto_switch_to_results()
+                                };
+
+                                if auto_switch {
+                                    w.set_current_tab(3);  // Tab 3 = Results
+                                    tracing::debug!("Auto-switched to Results tab after successful scan");
+                                }
+
                                 // Show success dialog
                                 w.set_success_title("Game Files Scan Complete".into());
                                 let message = format!(
@@ -268,6 +356,11 @@ fn main() -> Result<(), slint::PlatformError> {
                         tracing::error!("Game files scan failed: {}", e);
                         if let Some(w) = window.upgrade() {
                             w.set_scan_in_progress(false);
+
+                            // Auto-refresh even on error (partial results may exist)
+                            w.invoke_refresh_reports();
+                            tracing::debug!("Auto-refreshed results list after scan error");
+
                             w.set_error_title("Game Files Scan Error".into());
                             w.set_error_message(format!("Failed to scan game files:\n\n{}", e).into());
                             w.set_show_error_dialog(true);
@@ -293,10 +386,36 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     });
 
-    main_window.on_open_settings(|| {
-        tracing::debug!("Open settings clicked");
-        if let Err(e) = handlers::settings::open_settings() {
-            tracing::error!("Failed to open Settings: {}", e);
+    main_window.on_open_settings({
+        let window_weak = main_window.as_weak();
+        let state = app_state.clone();
+        move || {
+            tracing::debug!("Open settings clicked");
+
+            if let Some(w) = window_weak.upgrade() {
+                // Load current settings from AppState
+                let settings = handlers::settings_dialog::SettingsData::from_app_state(state.clone());
+
+                // Populate UI with current settings
+                w.set_settings_fcx_mode(settings.fcx_mode);
+                w.set_settings_show_formid_values(settings.show_formid_values);
+                w.set_settings_stat_logging(settings.stat_logging);
+                w.set_settings_update_check(settings.update_check);
+                w.set_settings_vr_mode(settings.vr_mode);
+                w.set_settings_auto_switch_to_results(settings.auto_switch_to_results);
+                w.set_settings_move_unsolved_logs(settings.move_unsolved_logs);
+                w.set_settings_simplify_logs(settings.simplify_logs);
+                w.set_settings_game_root(settings.game_root.into());
+                w.set_settings_docs_root(settings.docs_root.into());
+                w.set_settings_ini_folder(settings.ini_folder.into());
+                w.set_settings_mods_folder(settings.mods_folder.into());
+                w.set_settings_scan_custom(settings.scan_custom.into());
+
+                // Show the dialog
+                w.set_show_settings_dialog(true);
+
+                tracing::info!("Settings dialog opened with current configuration");
+            }
         }
     });
 
@@ -311,14 +430,54 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     main_window.on_check_updates({
+        let window_weak = main_window.as_weak();
         move || {
             tracing::debug!("Check updates clicked");
+            let window = window_weak.clone();
 
             // Spawn async task for update check
             slint::spawn_local(async move {
-                if let Err(e) = handlers::settings::check_updates().await {
-                    tracing::error!("Update check failed: {}", e);
-                    // TODO: Show error dialog
+                if let Some(w) = window.upgrade() {
+                    // Set checking state
+                    w.set_update_checking(true);
+
+                    // Get current version from app
+                    let current_version = w.get_app_version().to_string();
+
+                    match handlers::update_check::check_for_updates(&current_version).await {
+                        Ok(Some(info)) => {
+                            // Update available
+                            tracing::info!("Update available: {} -> {}", current_version, info.version);
+
+                            w.set_update_checking(false);
+                            w.set_update_available(true);
+                            w.set_update_current_version(current_version.into());
+                            w.set_update_latest_version(info.version.into());
+                            w.set_update_release_notes(info.release_notes.into());
+                            w.set_update_error_message("".into());
+                            w.set_show_update_dialog(true);
+                        }
+                        Ok(None) => {
+                            // No update available
+                            tracing::info!("No update available (current: {})", current_version);
+
+                            w.set_update_checking(false);
+                            w.set_success_title("No Updates Available".into());
+                            w.set_success_message(format!("You are using the latest version ({})", current_version).into());
+                            w.set_show_success_dialog(true);
+                        }
+                        Err(e) => {
+                            // Update check failed
+                            tracing::error!("Update check failed: {}", e);
+
+                            w.set_update_checking(false);
+                            w.set_update_available(false);
+                            w.set_update_error_message(format!("Failed to check for updates:\n\n{}", e).into());
+
+                            // Show error in update dialog for context
+                            w.set_show_update_dialog(true);
+                        }
+                    }
                 }
             }).unwrap();
         }
@@ -782,6 +941,39 @@ fn main() -> Result<(), slint::PlatformError> {
         std::process::exit(0);
     });
 
+    // Copy error to clipboard
+    main_window.on_copy_error_to_clipboard({
+        let window_weak = main_window.as_weak();
+        move || {
+            if let Some(w) = window_weak.upgrade() {
+                let title = w.get_error_title().to_string();
+                let message = w.get_error_message().to_string();
+                let details = w.get_error_details().to_string();
+
+                // Format: Title\n\nMessage\n\nDetails:\n\nTraceback
+                let formatted = if !details.is_empty() {
+                    format!("{}\n\n{}\n\nDetails:\n\n{}", title, message, details)
+                } else {
+                    format!("{}\n\n{}", title, message)
+                };
+
+                // Copy to clipboard
+                match arboard::Clipboard::new() {
+                    Ok(mut clipboard) => {
+                        if let Err(e) = clipboard.set_text(&formatted) {
+                            tracing::error!("Failed to copy to clipboard: {}", e);
+                        } else {
+                            tracing::debug!("Error details copied to clipboard");
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to access clipboard: {}", e);
+                    }
+                }
+            }
+        }
+    });
+
     // ========================================
     // DIALOG CALLBACKS
     // ========================================
@@ -789,21 +981,61 @@ fn main() -> Result<(), slint::PlatformError> {
     // Settings dialog callbacks
     main_window.on_settings_save({
         let window_weak = main_window.as_weak();
-        let _state = app_state.clone();
+        let state = app_state.clone();
         move || {
             tracing::info!("Saving settings...");
             let window = window_weak.clone();
-            let _state = _state.clone();
+            let state = state.clone();
 
-            // TODO: Gather settings from UI and save to AppState
-            // For now, just close the dialog
+            // Spawn async task to save settings
             slint::spawn_local(async move {
-                // Load settings from UI properties
                 if let Some(w) = window.upgrade() {
-                    // TODO: Use SettingsData::from_app_state pattern
-                    // For now just close
-                    w.set_show_settings_dialog(false);
-                    tracing::info!("Settings dialog closed (save functionality pending)");
+                    // Gather settings from UI
+                    let settings = handlers::settings_dialog::SettingsData {
+                        fcx_mode: w.get_settings_fcx_mode(),
+                        show_formid_values: w.get_settings_show_formid_values(),
+                        stat_logging: w.get_settings_stat_logging(),
+                        update_check: w.get_settings_update_check(),
+                        vr_mode: w.get_settings_vr_mode(),
+                        auto_switch_to_results: w.get_settings_auto_switch_to_results(),
+                        move_unsolved_logs: w.get_settings_move_unsolved_logs(),
+                        simplify_logs: w.get_settings_simplify_logs(),
+                        game_root: w.get_settings_game_root().to_string(),
+                        docs_root: w.get_settings_docs_root().to_string(),
+                        ini_folder: w.get_settings_ini_folder().to_string(),
+                        mods_folder: w.get_settings_mods_folder().to_string(),
+                        scan_custom: w.get_settings_scan_custom().to_string(),
+                    };
+
+                    // Validate settings
+                    match settings.validate() {
+                        Ok(()) => {
+                            // Save to AppState and YAML
+                            match settings.save_to_app_state(state).await {
+                                Ok(()) => {
+                                    tracing::info!("Settings saved successfully");
+                                    w.set_show_settings_dialog(false);
+
+                                    // Show success message
+                                    w.set_success_title("Settings Saved".into());
+                                    w.set_success_message("Your settings have been saved successfully.".into());
+                                    w.set_show_success_dialog(true);
+                                }
+                                Err(e) => {
+                                    tracing::error!("Failed to save settings: {}", e);
+                                    w.set_error_title("Save Failed".into());
+                                    w.set_error_message(format!("Failed to save settings:\n\n{}", e).into());
+                                    w.set_show_error_dialog(true);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            tracing::warn!("Settings validation failed: {}", e);
+                            w.set_error_title("Invalid Settings".into());
+                            w.set_error_message(format!("Settings validation failed:\n\n{}", e).into());
+                            w.set_show_error_dialog(true);
+                        }
+                    }
                 }
             }).unwrap();
         }
@@ -820,14 +1052,49 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     main_window.on_settings_browse_path({
-        let _window_weak = main_window.as_weak();
+        let window_weak = main_window.as_weak();
         move |path_type| {
             let path_type_str = path_type.to_string();
             tracing::debug!("Browse settings path: {}", path_type_str);
 
-            // TODO: Call rfd file picker for the specific path type
-            // handlers::settings_dialog::browse_settings_path(&path_type_str, current_path)
-            tracing::warn!("Settings path browsing not yet implemented");
+            if let Some(w) = window_weak.upgrade() {
+                // Get current path from UI based on path type
+                let current_path = match path_type_str.as_str() {
+                    "game-root" => w.get_settings_game_root(),
+                    "docs-root" => w.get_settings_docs_root(),
+                    "ini-folder" => w.get_settings_ini_folder(),
+                    "mods-folder" => w.get_settings_mods_folder(),
+                    "scan-custom" => w.get_settings_scan_custom(),
+                    _ => slint::SharedString::from(""),
+                };
+
+                // Call file picker
+                match handlers::settings_dialog::browse_settings_path(&path_type_str, current_path.as_str()) {
+                    Ok(Some(path)) => {
+                        let path_str = path.to_string_lossy().to_string();
+                        tracing::info!("Path selected for {}: {}", path_type_str, path_str);
+
+                        // Update UI with selected path
+                        match path_type_str.as_str() {
+                            "game-root" => w.set_settings_game_root(path_str.into()),
+                            "docs-root" => w.set_settings_docs_root(path_str.into()),
+                            "ini-folder" => w.set_settings_ini_folder(path_str.into()),
+                            "mods-folder" => w.set_settings_mods_folder(path_str.into()),
+                            "scan-custom" => w.set_settings_scan_custom(path_str.into()),
+                            _ => {}
+                        }
+                    }
+                    Ok(None) => {
+                        tracing::debug!("Path selection cancelled for {}", path_type_str);
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to browse for {}: {}", path_type_str, e);
+                        w.set_error_title("Path Selection Error".into());
+                        w.set_error_message(format!("Failed to open file picker:\n\n{}", e).into());
+                        w.set_show_error_dialog(true);
+                    }
+                }
+            }
         }
     });
 
@@ -887,9 +1154,42 @@ fn main() -> Result<(), slint::PlatformError> {
         let window_weak = main_window.as_weak();
         move || {
             tracing::debug!("Update skipped");
-            if let Some(w) = window_weak.upgrade() {
-                w.set_show_update_dialog(false);
-            }
+            let window = window_weak.clone();
+
+            // Spawn async task to save preferences
+            slint::spawn_local(async move {
+                if let Some(w) = window.upgrade() {
+                    let latest_version = w.get_update_latest_version().to_string();
+                    let dont_check_again = w.get_update_dont_check_again();
+
+                    // Load current preferences
+                    match handlers::update_check::UpdatePreferences::load().await {
+                        Ok(mut prefs) => {
+                            // Save skipped version
+                            prefs.skip_version(latest_version.clone());
+
+                            // Save "don't check again" if checkbox was checked
+                            if dont_check_again {
+                                prefs.set_dont_check_again(true);
+                                tracing::info!("User opted to disable update checking");
+                            } else {
+                                tracing::info!("User skipped version: {}", latest_version);
+                            }
+
+                            // Persist preferences
+                            if let Err(e) = prefs.save().await {
+                                tracing::error!("Failed to save update preferences: {}", e);
+                            }
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to load update preferences: {}", e);
+                        }
+                    }
+
+                    // Close dialog
+                    w.set_show_update_dialog(false);
+                }
+            }).unwrap();
         }
     });
 
@@ -966,8 +1266,31 @@ fn main() -> Result<(), slint::PlatformError> {
                 w.set_papyrus_error_count(0);
                 w.set_papyrus_warning_count(0);
                 w.set_papyrus_info_count(0);
+                w.set_papyrus_dumps_count(0);   // NEW
+                w.set_papyrus_stacks_count(0);  // NEW
                 w.set_papyrus_log_content("".into());
                 tracing::info!("Papyrus stats cleared");
+            }
+        }
+    });
+
+    main_window.on_papyrus_update_stats({
+        let window_weak = main_window.as_weak();
+        move || {
+            // Get current stats from Rust
+            let stats = handlers::papyrus::get_papyrus_stats();
+
+            // Update UI
+            if let Some(w) = window_weak.upgrade() {
+                w.set_papyrus_error_count(stats.errors);
+                w.set_papyrus_warning_count(stats.warnings);
+                w.set_papyrus_info_count(stats.info);
+                w.set_papyrus_dumps_count(stats.dumps);   // NEW
+                w.set_papyrus_stacks_count(stats.stacks); // NEW
+
+                // Update log content with recent entries
+                let log_text = stats.recent_entries.join("\n");
+                w.set_papyrus_log_content(log_text.into());
             }
         }
     });
@@ -991,6 +1314,244 @@ fn main() -> Result<(), slint::PlatformError> {
             if let Some(w) = window_weak.upgrade() {
                 w.set_show_confirmation_dialog(false);
             }
+        }
+    });
+
+    // Help dialog callbacks
+    main_window.on_help_close({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Help: User closed help dialog");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_help_dialog(false);
+            }
+        }
+    });
+
+    main_window.on_help_show_topic({
+        let window_weak = main_window.as_weak();
+        move |category, topic| {
+            tracing::debug!("Help: Loading topic {}/{}", category, topic);
+            let window = window_weak.clone();
+            let category_str = category.to_string();
+            let topic_str = topic.to_string();
+
+            // Spawn async task to load help topic
+            slint::spawn_local(async move {
+                match handlers::help::get_help_topic(&category_str, &topic_str).await {
+                    Ok(help_topic) => {
+                        if let Some(w) = window.upgrade() {
+                            // Log before moving values
+                            tracing::info!("Help topic loaded: {}", help_topic.title);
+                            tracing::debug!(
+                                "Help topic has {} related topics",
+                                help_topic.related.len()
+                            );
+
+                            // Set help dialog properties
+                            w.set_help_title(help_topic.title.into());
+                            w.set_help_content(help_topic.content.into());
+
+                            // Convert related topics to Slint format
+                            let related_topics: Vec<RelatedTopicData> = help_topic
+                                .related
+                                .into_iter()
+                                .map(|rt| RelatedTopicData {
+                                    category: rt.category.into(),
+                                    topic: rt.topic.into(),
+                                    display: rt.display.into(),
+                                })
+                                .collect();
+
+                            w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(related_topics)));
+
+                            // Show the dialog
+                            w.set_show_help_dialog(true);
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to load help topic {}/{}: {}", category_str, topic_str, e);
+                        if let Some(w) = window.upgrade() {
+                            // Show error in dialog
+                            w.set_error_title("Help Error".into());
+                            w.set_error_message(format!("Failed to load help topic:\n\n{}", e).into());
+                            w.set_show_error_dialog(true);
+                        }
+                    }
+                }
+            }).unwrap();
+        }
+    });
+
+    main_window.on_show_context_help({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("F1 pressed - showing context-sensitive help");
+            let window = window_weak.clone();
+
+            // Get current tab to determine context
+            let (category, topic) = if let Some(w) = window.upgrade() {
+                let current_tab = w.get_current_tab();
+                match current_tab {
+                    0 => ("main", "scan_crash_logs"),      // Main tab
+                    1 => ("backups", "backup_overview"),   // Backups tab
+                    3 => ("results", "view_report"),       // Results tab
+                    _ => ("main", "scan_crash_logs"),      // Default to main
+                }
+            } else {
+                return;
+            };
+
+            // Spawn async task to load help topic
+            slint::spawn_local(async move {
+                match handlers::help::get_help_topic(category, topic).await {
+                    Ok(help_topic) => {
+                        if let Some(w) = window.upgrade() {
+                            tracing::info!("F1 Help: Loaded {}/{}", category, topic);
+
+                            // Set help dialog properties
+                            w.set_help_title(help_topic.title.into());
+                            w.set_help_content(help_topic.content.into());
+
+                            // Convert related topics to Slint format
+                            let related_topics: Vec<RelatedTopicData> = help_topic
+                                .related
+                                .into_iter()
+                                .map(|rt| RelatedTopicData {
+                                    category: rt.category.into(),
+                                    topic: rt.topic.into(),
+                                    display: rt.display.into(),
+                                })
+                                .collect();
+
+                            w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(related_topics)));
+
+                            // Show the dialog
+                            w.set_show_help_dialog(true);
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to load context help: {}", e);
+                        // Silently fail - don't show error for F1
+                    }
+                }
+            }).unwrap();
+        }
+    });
+
+    // Pastebin dialog callbacks
+    main_window.on_pastebin_cancel({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Pastebin: User cancelled");
+            if let Some(w) = window_weak.upgrade() {
+                w.set_show_pastebin_dialog(false);
+                w.set_pastebin_url_input("".into());  // Clear input
+            }
+        }
+    });
+
+    main_window.on_pastebin_open({
+        let window_weak = main_window.as_weak();
+        move || {
+            tracing::debug!("Pastebin: User clicked Open");
+            let window = window_weak.clone();
+
+            // Get URL from input
+            let url = if let Some(w) = window.upgrade() {
+                w.get_pastebin_url_input().to_string()
+            } else {
+                return;
+            };
+
+            if url.is_empty() {
+                tracing::warn!("Pastebin URL is empty");
+                return;
+            }
+
+            // Spawn async task to download from Pastebin
+            slint::spawn_local(async move {
+                // Set loading state
+                if let Some(w) = window.upgrade() {
+                    w.set_pastebin_loading(true);
+                }
+
+                match handlers::pastebin::download_from_pastebin(&url).await {
+                    Ok(content) => {
+                        tracing::info!("Successfully downloaded {} bytes from Pastebin", content.len());
+
+                        // Save to Crash Logs folder for scanning
+                        let crashlogs_dir = std::path::PathBuf::from("Crash Logs");
+                        if !crashlogs_dir.exists() {
+                            if let Err(e) = std::fs::create_dir_all(&crashlogs_dir) {
+                                tracing::error!("Failed to create Crash Logs directory: {}", e);
+                                if let Some(w) = window.upgrade() {
+                                    w.set_pastebin_loading(false);
+                                    w.set_error_title("Save Failed".into());
+                                    w.set_error_message(format!("Failed to create Crash Logs directory:\n\n{}", e).into());
+                                    w.set_show_error_dialog(true);
+                                }
+                                return;
+                            }
+                        }
+
+                        // Generate filename with timestamp
+                        let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
+                        let filename = format!("crash-{}.log", timestamp);
+                        let file_path = crashlogs_dir.join(&filename);
+
+                        // Write content to crash log file
+                        match tokio::fs::write(&file_path, &content).await {
+                            Ok(_) => {
+                                tracing::info!("Saved Pastebin crash log to: {}", file_path.display());
+
+                                if let Some(w) = window.upgrade() {
+                                    // Close Pastebin dialog
+                                    w.set_pastebin_loading(false);
+                                    w.set_show_pastebin_dialog(false);
+                                    w.set_pastebin_url_input("".into());
+
+                                    // Show success message and offer to scan
+                                    w.set_success_title("Crash Log Downloaded".into());
+                                    w.set_success_message(
+                                        format!(
+                                            "Successfully downloaded crash log from Pastebin.\n\nFile: {}\nSize: {} bytes\n\nThe crash log has been saved to the Crash Logs folder.\nYou can now scan it using the 'Scan Crash Logs' button.",
+                                            filename,
+                                            content.len()
+                                        ).into()
+                                    );
+                                    w.set_show_success_dialog(true);
+
+                                    tracing::info!("Pastebin crash log ready for scanning");
+                                }
+                            }
+                            Err(e) => {
+                                tracing::error!("Failed to save Pastebin content: {}", e);
+                                if let Some(w) = window.upgrade() {
+                                    w.set_pastebin_loading(false);
+                                    w.set_error_title("Save Failed".into());
+                                    w.set_error_message(format!("Failed to save crash log:\n\n{}", e).into());
+                                    w.set_show_error_dialog(true);
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to download from Pastebin: {}", e);
+
+                        if let Some(w) = window.upgrade() {
+                            w.set_pastebin_loading(false);
+
+                            // Show error dialog
+                            w.set_error_title("Pastebin Download Failed".into());
+                            w.set_error_message(
+                                format!("Failed to download crash log from Pastebin:\n\n{}", e).into()
+                            );
+                            w.set_show_error_dialog(true);
+                        }
+                    }
+                }
+            }).unwrap();
         }
     });
 

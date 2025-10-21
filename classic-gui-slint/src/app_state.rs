@@ -174,6 +174,18 @@ impl AppState {
         self.config.update_check = enabled;
     }
 
+    /// Set VR mode setting
+    #[allow(dead_code)]
+    pub fn set_vr_mode(&mut self, enabled: bool) {
+        self.config.vr_mode = enabled;
+    }
+
+    /// Set auto-switch to results tab setting
+    #[allow(dead_code)]
+    pub fn set_auto_switch_to_results(&mut self, enabled: bool) {
+        self.config.auto_switch_to_results = enabled;
+    }
+
     /// Set game root path
     #[allow(dead_code)]
     pub fn set_game_root(&mut self, path: PathBuf) {
@@ -225,6 +237,18 @@ impl AppState {
     #[allow(dead_code)]
     pub fn update_check(&self) -> bool {
         self.config.update_check
+    }
+
+    /// Get VR mode setting
+    #[allow(dead_code)]
+    pub fn vr_mode(&self) -> bool {
+        self.config.vr_mode
+    }
+
+    /// Get auto-switch to results tab setting
+    #[allow(dead_code)]
+    pub fn auto_switch_to_results(&self) -> bool {
+        self.config.auto_switch_to_results
     }
 
     /// Validate that all required paths exist

@@ -1,0 +1,214 @@
+import { FluentDark } from "../styles/fluent_dark.slint";
+import { FluentButton } from "../components/fluent_button.slint";
+
+// PastebinDialog - Input dialog for Pastebin URLs
+// Allows users to paste a Pastebin URL to download and view crash logs
+export component PastebinDialog inherits Rectangle {
+    // Properties
+    in property<bool> show: false;
+    in-out property<string> url-input: "";
+    in property<bool> is-loading: false;
+
+    // Callbacks
+    callback open-clicked();
+    callback cancel-clicked();
+
+    // Only visible when show is true
+    visible: root.show;
+
+    // Full screen overlay
+    width: 100%;
+    height: 100%;
+
+    // Semi-transparent backdrop
+    background: #00000080;
+
+    // Animate fade in/out
+    animate opacity {
+        duration: FluentDark.animation-normal;
+        easing: ease-in-out;
+    }
+
+    states [
+        visible when root.show: {
+            opacity: 1;
+        }
+        hidden when !root.show: {
+            opacity: 0;
+        }
+    ]
+
+    // Center the dialog card
+    VerticalLayout {
+        alignment: center;
+
+        HorizontalLayout {
+            alignment: center;
+
+            // Dialog card
+            Rectangle {
+                background: FluentDark.layer2;
+                border-radius: FluentDark.radius-lg;
+                border-width: 1px;
+                border-color: FluentDark.border;
+                min-width: 500px;
+                max-width: 600px;
+
+                // Elevated shadow
+                drop-shadow-blur: FluentDark.shadow-lg;
+                drop-shadow-color: FluentDark.shadow-color;
+                drop-shadow-offset-y: 8px;
+
+                VerticalLayout {
+                    padding: FluentDark.spacing-lg;
+                    spacing: FluentDark.spacing-md;
+
+                    // Header
+                    HorizontalLayout {
+                        spacing: FluentDark.spacing-md;
+
+                        // Pastebin icon
+                        Rectangle {
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 16px;
+                            background: FluentDark.accent;
+
+                            Text {
+                                text: "📋";
+                                font-size: 18px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        // Title
+                        Text {
+                            text: "Open Pastebin URL";
+                            color: FluentDark.text-primary;
+                            font-size: FluentDark.font-size-xl;
+                            font-weight: FluentDark.font-weight-semibold;
+                            horizontal-alignment: left;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                    }
+
+                    // Separator
+                    Rectangle {
+                        height: 1px;
+                        background: FluentDark.border;
+                    }
+
+                    // Description
+                    Text {
+                        text: "Enter a Pastebin URL containing a crash log to download and analyze it.";
+                        color: FluentDark.text-secondary;
+                        font-size: FluentDark.font-size-base;
+                        wrap: word-wrap;
+                    }
+
+                    // URL input field
+                    Rectangle {
+                        height: FluentDark.input-height + 8px;
+                        background: FluentDark.layer1;
+                        border-radius: FluentDark.radius-sm;
+                        border-width: 1px;
+                        border-color: url-input-focus.has-focus ? FluentDark.focus-border : FluentDark.border;
+
+                        HorizontalLayout {
+                            padding-left: FluentDark.spacing-sm;
+                            padding-right: FluentDark.spacing-sm;
+
+                            url-input-field := TextInput {
+                                text <=> root.url-input;
+                                color: FluentDark.text-primary;
+                                font-size: FluentDark.font-size-base;
+                                horizontal-alignment: left;
+                                vertical-alignment: center;
+                                enabled: !root.is-loading;
+
+                                url-input-focus := FocusScope {
+                                    // Track focus for border styling
+                                }
+                            }
+                        }
+
+                        // Animate border color
+                        animate border-color {
+                            duration: FluentDark.animation-fast;
+                            easing: ease-in-out;
+                        }
+                    }
+
+                    // Examples section
+                    VerticalLayout {
+                        spacing: FluentDark.spacing-xs;
+
+                        Text {
+                            text: "Supported formats:";
+                            color: FluentDark.text-tertiary;
+                            font-size: FluentDark.font-size-sm;
+                        }
+
+                        Text {
+                            text: "• https://pastebin.com/ABC123";
+                            color: FluentDark.text-tertiary;
+                            font-size: FluentDark.font-size-sm;
+                            font-family: FluentDark.font-family-mono;
+                        }
+
+                        Text {
+                            text: "• https://pastebin.com/raw/ABC123";
+                            color: FluentDark.text-tertiary;
+                            font-size: FluentDark.font-size-sm;
+                            font-family: FluentDark.font-family-mono;
+                        }
+                    }
+
+                    // Loading indicator (only visible when loading)
+                    if root.is-loading: Rectangle {
+                        height: 32px;
+                        background: FluentDark.layer3;
+                        border-radius: FluentDark.radius-sm;
+
+                        HorizontalLayout {
+                            padding: FluentDark.spacing-sm;
+                            alignment: center;
+
+                            Text {
+                                text: "Downloading from Pastebin...";
+                                color: FluentDark.text-secondary;
+                                font-size: FluentDark.font-size-sm;
+                            }
+                        }
+                    }
+
+                    // Button row
+                    HorizontalLayout {
+                        spacing: FluentDark.spacing-sm;
+                        alignment: end;
+
+                        FluentButton {
+                            text: "Cancel";
+                            primary: false;
+                            enabled: !root.is-loading;
+                            clicked => {
+                                root.cancel-clicked();
+                            }
+                        }
+
+                        FluentButton {
+                            text: root.is-loading ? "Opening..." : "Open";
+                            primary: true;
+                            enabled: root.url-input != "" && !root.is-loading;
+                            clicked => {
+                                root.open-clicked();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

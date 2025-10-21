@@ -116,7 +116,7 @@ fn bench_config_merge(c: &mut Criterion) {
             let config_path = temp_dir.path().join("merge.yaml");
 
             // Create base config
-            let mut config = CliConfig::default();
+            let config = CliConfig::default();
             config.save_to_yaml(&config_path).await.unwrap();
 
             // Simulate CLI args override

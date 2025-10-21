@@ -13,11 +13,16 @@ import { AboutDialog } from "dialogs/about_dialog.slint";
 import { UpdateDialog } from "dialogs/update_dialog.slint";
 import { PapyrusDialog } from "dialogs/papyrus_dialog.slint";
 import { ConfirmationDialog } from "components/confirmation_dialog.slint";
+import { HelpDialog, RelatedTopicData } from "dialogs/help_dialog.slint";
+import { PastebinDialog } from "dialogs/pastebin_dialog.slint";
 
 // MainWindow - Primary application window with Fluent Design dark theme
 export component MainWindow inherits Window {
     // Properties - version is injected from Rust code
     in property <string> app-version;
+
+    // Tab control
+    in-out property <int> current-tab: 0;
 
     // Main tab properties (exposed to Rust)
     in-out property <string> mods-folder-path: "";
@@ -48,6 +53,7 @@ export component MainWindow inherits Window {
     in-out property <bool> show-error-dialog: false;
     in-out property <string> error-title: "Error";
     in-out property <string> error-message: "";
+    in-out property <string> error-details: "";  // Traceback/stack trace
     in-out property <bool> show-success-dialog: false;
     in-out property <string> success-title: "Success";
     in-out property <string> success-message: "";
@@ -58,6 +64,8 @@ export component MainWindow inherits Window {
     in-out property <bool> settings-show-formid-values: false;
     in-out property <bool> settings-stat-logging: false;
     in-out property <bool> settings-update-check: true;
+    in-out property <bool> settings-vr-mode: false;
+    in-out property <bool> settings-auto-switch-to-results: true;
     in-out property <bool> settings-move-unsolved-logs: false;
     in-out property <bool> settings-simplify-logs: false;
     in-out property <string> settings-game-root: "";
@@ -85,6 +93,8 @@ export component MainWindow inherits Window {
     in-out property <int> papyrus-error-count: 0;
     in-out property <int> papyrus-warning-count: 0;
     in-out property <int> papyrus-info-count: 0;
+    in-out property <int> papyrus-dumps-count: 0;   // NEW
+    in-out property <int> papyrus-stacks-count: 0;  // NEW
     in-out property <string> papyrus-log-content: "";
 
     // Confirmation dialog properties
@@ -94,6 +104,17 @@ export component MainWindow inherits Window {
     in-out property <string> confirmation-confirm-text: "Yes";
     in-out property <string> confirmation-cancel-text: "No";
     in-out property <bool> confirmation-is-danger: false;
+
+    // Help dialog properties
+    in-out property <bool> show-help-dialog: false;
+    in-out property <string> help-title: "Help";
+    in-out property <string> help-content: "";
+    in-out property <[RelatedTopicData]> help-related-topics: [];
+
+    // Pastebin dialog properties
+    in-out property <bool> show-pastebin-dialog: false;
+    in-out property <string> pastebin-url-input: "";
+    in-out property <bool> pastebin-loading: false;
 
     // Window configuration
     title: "Crash Log Auto Scanner & Setup Integrity Checker | " + app-version;
@@ -121,6 +142,7 @@ export component MainWindow inherits Window {
     callback check-updates();
     callback toggle-papyrus();
     callback exit-app();
+    callback copy-error-to-clipboard();
 
     // Backup tab callbacks (forwarded to Rust)
     callback backup-xse();
@@ -170,10 +192,32 @@ export component MainWindow inherits Window {
     callback papyrus-start-monitoring();
     callback papyrus-stop-monitoring();
     callback papyrus-clear-stats();
+    callback papyrus-update-stats();  // NEW: Update stats from Rust
 
     // Confirmation dialog callbacks
     callback confirmation-confirmed();
     callback confirmation-cancelled();
+
+    // Help dialog callbacks
+    callback help-close();
+    callback help-show-topic(/* category */ string, /* topic */ string);
+    callback show-context-help();  // F1 key handler
+
+    // Pastebin dialog callbacks
+    callback pastebin-open();
+    callback pastebin-cancel();
+
+    // Keyboard event handling for F1 help
+    FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.F1) {
+                // F1 pressed - show context-sensitive help
+                root.show-context-help();
+                return accept;
+            }
+            return reject;
+        }
+    }
 
     // Main layout
     VerticalLayout {
@@ -183,7 +227,7 @@ export component MainWindow inherits Window {
         // Tab bar
         tab-bar := FluentTabBar {
             tabs: ["MAIN OPTIONS", "FILE BACKUP", "ARTICLES", "RESULTS"];
-            current-tab: 0;
+            current-tab <=> root.current-tab;
         }
 
         // Tab content area
@@ -201,6 +245,7 @@ export component MainWindow inherits Window {
                 show-error-dialog <=> root.show-error-dialog;
                 error-title <=> root.error-title;
                 error-message <=> root.error-message;
+                error-details <=> root.error-details;
                 show-success-dialog <=> root.show-success-dialog;
                 success-title <=> root.success-title;
                 success-message <=> root.success-message;
@@ -216,6 +261,7 @@ export component MainWindow inherits Window {
                 check-updates => { root.check-updates(); }
                 toggle-papyrus => { root.toggle-papyrus(); }
                 exit-app => { root.exit-app(); }
+                copy-error-to-clipboard => { root.copy-error-to-clipboard(); }
             }
             if tab-bar.current-tab == 1: BackupsTab {
                 operation-in-progress <=> root.operation-in-progress;
@@ -271,6 +317,8 @@ export component MainWindow inherits Window {
         show-formid-values <=> root.settings-show-formid-values;
         stat-logging <=> root.settings-stat-logging;
         update-check <=> root.settings-update-check;
+        vr-mode <=> root.settings-vr-mode;
+        auto-switch-to-results <=> root.settings-auto-switch-to-results;
         move-unsolved-logs <=> root.settings-move-unsolved-logs;
         simplify-logs <=> root.settings-simplify-logs;
         game-root <=> root.settings-game-root;
@@ -318,12 +366,15 @@ export component MainWindow inherits Window {
         error-count <=> root.papyrus-error-count;
         warning-count <=> root.papyrus-warning-count;
         info-count <=> root.papyrus-info-count;
+        dumps-count <=> root.papyrus-dumps-count;     // NEW
+        stacks-count <=> root.papyrus-stacks-count;   // NEW
         log-content <=> root.papyrus-log-content;
 
         close-clicked => { root.papyrus-close(); }
         start-monitoring => { root.papyrus-start-monitoring(); }
         stop-monitoring => { root.papyrus-stop-monitoring(); }
         clear-stats => { root.papyrus-clear-stats(); }
+        update-stats => { root.papyrus-update-stats(); }  // NEW
     }
 
     // Confirmation Dialog
@@ -337,5 +388,26 @@ export component MainWindow inherits Window {
 
         confirmed => { root.confirmation-confirmed(); }
         cancelled => { root.confirmation-cancelled(); }
+    }
+
+    // Help Dialog
+    HelpDialog {
+        show <=> root.show-help-dialog;
+        title <=> root.help-title;
+        content <=> root.help-content;
+        related-topics <=> root.help-related-topics;
+
+        close-clicked => { root.help-close(); }
+        related-topic-clicked(category, topic) => { root.help-show-topic(category, topic); }
+    }
+
+    // Pastebin Dialog
+    PastebinDialog {
+        show <=> root.show-pastebin-dialog;
+        url-input <=> root.pastebin-url-input;
+        is-loading <=> root.pastebin-loading;
+
+        open-clicked => { root.pastebin-open(); }
+        cancel-clicked => { root.pastebin-cancel(); }
     }
 }

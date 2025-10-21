@@ -18,6 +18,7 @@ export component MainTab inherits Rectangle {
     in-out property<bool> show-error-dialog: false;
     in-out property<string> error-title: "Error";
     in-out property<string> error-message: "";
+    in-out property<string> error-details: "";
 
     in-out property<bool> show-success-dialog: false;
     in-out property<string> success-title: "Success";
@@ -35,6 +36,7 @@ export component MainTab inherits Rectangle {
     callback check-updates();
     callback toggle-papyrus();
     callback exit-app();
+    callback copy-error-to-clipboard();
 
     background: FluentDark.background;
 
@@ -226,8 +228,12 @@ export component MainTab inherits Rectangle {
         show <=> root.show-error-dialog;
         title <=> root.error-title;
         message <=> root.error-message;
+        details <=> root.error-details;
         ok-clicked => {
             root.show-error-dialog = false;
+        }
+        copy-to-clipboard => {
+            root.copy-error-to-clipboard();
         }
     }
 

@@ -12,12 +12,17 @@ static MONITORING_ACTIVE: AtomicBool = AtomicBool::new(false);
 /// Global file watcher handle (needs to be kept alive)
 static WATCHER: Mutex<Option<RecommendedWatcher>> = Mutex::new(None);
 
+/// File position tracker for tail -f behavior (tracks last read position)
+static FILE_POSITION: Mutex<u64> = Mutex::new(0);
+
 /// Statistics for Papyrus log monitoring
 #[derive(Debug, Clone, Default)]
 pub struct PapyrusStats {
     pub errors: i32,
     pub warnings: i32,
     pub info: i32,
+    pub dumps: i32,      // NEW: Stack dumps count
+    pub stacks: i32,     // NEW: Stack frames count
     pub recent_entries: Vec<String>,
 }
 
@@ -26,17 +31,47 @@ impl PapyrusStats {
         self.errors = 0;
         self.warnings = 0;
         self.info = 0;
+        self.dumps = 0;
+        self.stacks = 0;
         self.recent_entries.clear();
     }
 
+    /// Calculate dumps-to-stacks ratio
+    ///
+    /// Returns the ratio of dumps to stacks as a percentage.
+    /// Returns 0.0 if there are no stacks to avoid division by zero.
+    pub fn dumps_to_stacks_ratio(&self) -> f32 {
+        if self.stacks == 0 {
+            return 0.0;
+        }
+        (self.dumps as f32 / self.stacks as f32) * 100.0
+    }
+
     pub fn add_entry(&mut self, line: &str) {
+        let line_lower = line.to_lowercase();
+
         // Parse log entry for severity
-        if line.contains("error") || line.contains("ERROR") {
+        if line_lower.contains("error") {
             self.errors += 1;
-        } else if line.contains("warning") || line.contains("WARNING") {
+        } else if line_lower.contains("warning") {
             self.warnings += 1;
         } else {
             self.info += 1;
+        }
+
+        // Parse for dumps and stacks
+        // Papyrus dumps typically contain "stack dump" or "dumping stack"
+        if line_lower.contains("stack dump") || line_lower.contains("dumping stack") {
+            self.dumps += 1;
+        }
+
+        // Papyrus stack frames typically start with indentation and contain function names
+        // Example: "  [None].Game.GetFormFromFile() - "<native>" Line ?"
+        // or start with numbers like "[09/22/2024 - 01:23:45PM] "
+        if line_lower.contains("stack frame") ||
+           (line.trim_start().starts_with('[') && line.contains(").") && line.contains("() -")) ||
+           line.trim_start().starts_with("  [") {
+            self.stacks += 1;
         }
 
         // Keep only last 100 entries
@@ -52,6 +87,8 @@ static STATS: Mutex<PapyrusStats> = Mutex::new(PapyrusStats {
     errors: 0,
     warnings: 0,
     info: 0,
+    dumps: 0,
+    stacks: 0,
     recent_entries: Vec::new(),
 });
 
@@ -111,6 +148,14 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
     // Clear previous statistics
     STATS.lock().clear();
 
+    // Initialize file position to current end of file (skip historical data)
+    // This ensures we only process NEW log entries from THIS monitoring session
+    let initial_position = std::fs::metadata(&papyrus_log_path)
+        .context("Failed to read log file metadata")?
+        .len();
+    *FILE_POSITION.lock() = initial_position;
+    tracing::info!("Starting monitoring at file position: {} bytes (skipping historical data)", initial_position);
+
     // Create file watcher
     let (tx, rx) = channel();
     let mut watcher = notify::recommended_watcher(tx)
@@ -139,19 +184,61 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
                         if event.paths.iter().any(|p| p.file_name() == papyrus_log_path.file_name()) {
                             tracing::debug!("Papyrus log modified");
 
-                            // Read and process new log entries
-                            if let Ok(content) = std::fs::read_to_string(&papyrus_log_path) {
-                                // Process only the last few lines (new entries)
-                                let lines: Vec<&str> = content.lines().collect();
-                                if let Some(last_line) = lines.last() {
-                                    let mut stats = STATS.lock();
-                                    stats.add_entry(last_line);
-                                    tracing::trace!(
-                                        "Stats updated: E={} W={} I={}",
-                                        stats.errors,
-                                        stats.warnings,
-                                        stats.info
-                                    );
+                            // Read only NEW log entries (tail -f behavior)
+                            match std::fs::File::open(&papyrus_log_path) {
+                                Ok(mut file) => {
+                                    use std::io::{BufRead, BufReader, Seek, SeekFrom};
+
+                                    // Get current file position
+                                    let last_position = *FILE_POSITION.lock();
+
+                                    // Seek to last read position
+                                    if let Err(e) = file.seek(SeekFrom::Start(last_position)) {
+                                        tracing::error!("Failed to seek to position {}: {}", last_position, e);
+                                        continue;
+                                    }
+
+                                    // Read all new lines from last position to end
+                                    let reader = BufReader::new(file);
+                                    let mut new_lines_count = 0;
+
+                                    for line_result in reader.lines() {
+                                        match line_result {
+                                            Ok(line) => {
+                                                // Process this new line
+                                                let mut stats = STATS.lock();
+                                                stats.add_entry(&line);
+                                                new_lines_count += 1;
+                                            }
+                                            Err(e) => {
+                                                tracing::warn!("Failed to read line: {}", e);
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    // Update file position to current end
+                                    if let Ok(metadata) = std::fs::metadata(&papyrus_log_path) {
+                                        let new_position = metadata.len();
+                                        *FILE_POSITION.lock() = new_position;
+
+                                        if new_lines_count > 0 {
+                                            let stats = STATS.lock();
+                                            tracing::debug!(
+                                                "Processed {} new lines. Stats: E={} W={} I={} D={} S={} Ratio={:.2}%",
+                                                new_lines_count,
+                                                stats.errors,
+                                                stats.warnings,
+                                                stats.info,
+                                                stats.dumps,
+                                                stats.stacks,
+                                                stats.dumps_to_stacks_ratio()
+                                            );
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    tracing::error!("Failed to open log file: {}", e);
                                 }
                             }
                         }
@@ -183,6 +270,9 @@ pub async fn stop_monitoring() -> Result<()> {
     // Remove the watcher (this will stop watching)
     *WATCHER.lock() = None;
 
+    // Reset file position for next session
+    *FILE_POSITION.lock() = 0;
+
     tracing::info!("Papyrus monitoring stopped");
     Ok(())
 }
@@ -191,4 +281,11 @@ pub async fn stop_monitoring() -> Result<()> {
 pub fn clear_papyrus_stats() {
     STATS.lock().clear();
     tracing::info!("Papyrus statistics cleared");
+}
+
+/// Get current Papyrus monitoring statistics
+///
+/// Returns a clone of the current statistics
+pub fn get_papyrus_stats() -> PapyrusStats {
+    STATS.lock().clone()
 }
