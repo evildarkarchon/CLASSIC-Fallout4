@@ -23,7 +23,7 @@ CLASSIC_Info:
       VR Mode: false
 
     # FCX - File Check Xtended | Set to true if you want CLASSIC to check the integrity of your game files and core mods.
-      FCX Mode: true
+      FCX Mode: false
 
     # Set to true if you want CLASSIC to remove some unnecessary lines and redundant information from your crash log files.
     # CAUTION: Changes will be permanent for each crash log you scan after. May hide info useful for debugger programs.
@@ -57,14 +57,10 @@ CLASSIC_Info:
       SCAN Custom Path:
 
     # Toggle audio notifications for when CLASSIC finishes scanning your crash logs and mod files.
-      Audio Notifications: true
+      Audio Notifications: false
 
     # Set the source where CLASSIC will check for updates. (Nexus | GitHub)
-      Update Source: Both
-
-    # Enable or disable the use of an asynchronous pipeline for processing. This setting should not be changed and is primarily for testing purposes.
-    # If you are not a developer or do not know what this means, leave it as is.
-      Use Async Pipeline: true
+      Update Source: GitHub
 
     # Set to true if you want CLASSIC to disable progress bars when running in command line mode.
     # This can be useful for cleaner output when running CLASSIC in scripts or automated environments.

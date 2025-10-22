@@ -300,20 +300,31 @@ class CrashgenChecker:
                 ])
                 continue
 
+            # Check if this is an X-Cell related setting
+            is_xcell_setting = "X-Cell" in setting["reason"]
+
             # Check if condition is met and setting needs changing
             if setting["condition"] and current_value != setting["desired_value"]:
-                self.message_list.extend([
-                    f"# ❌ CAUTION : {setting['description']}, but {setting['name']} parameter is set to {current_value} #\n",
-                    f"    Auto Scanner will change this parameter to {setting['desired_value']} {setting['reason']}.\n-----\n",
-                ])
-                # Apply the change
-                mod_toml_config(
-                    cast("Path", self.config_file),
-                    cast("str", setting["section"]),
-                    cast("str", setting["key"]),
-                    cast("str | bool | int | None", setting["desired_value"]),
-                )
-                logger.info(f"Changed {setting['name']} from {current_value} to {setting['desired_value']}")
+                if is_xcell_setting:
+                    # For X-Cell settings, only warn - don't auto-modify
+                    self.message_list.extend([
+                        f"# ❌ CAUTION : {setting['description']}, but {setting['name']} parameter is set to {current_value} #\n",
+                        f" FIX: Open {self.crashgen_name}'s TOML file and change {setting['name']} to {setting['desired_value']} {setting['reason']}.\n-----\n",
+                    ])
+                else:
+                    # For non-X-Cell settings, auto-modify as before
+                    self.message_list.extend([
+                        f"# ❌ CAUTION : {setting['description']}, but {setting['name']} parameter is set to {current_value} #\n",
+                        f"    Auto Scanner will change this parameter to {setting['desired_value']} {setting['reason']}.\n-----\n",
+                    ])
+                    # Apply the change
+                    mod_toml_config(
+                        cast("Path", self.config_file),
+                        cast("str", setting["section"]),
+                        cast("str", setting["key"]),
+                        cast("str | bool | int | None", setting["desired_value"]),
+                    )
+                    logger.info(f"Changed {setting['name']} from {current_value} to {setting['desired_value']}")
             else:
                 # Setting is already correctly configured
                 self.message_list.append(
