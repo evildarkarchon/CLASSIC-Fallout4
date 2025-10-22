@@ -136,11 +136,14 @@ impl YamlSource {
     /// ```rust,no_run
     /// use classic_config_core::YamlSource;
     ///
+    /// # async fn example() -> anyhow::Result<()> {
     /// // Load game-specific YAML
     /// let yaml = YamlSource::Game.load("Fallout4").await?;
     ///
     /// // Load non-game YAML (game parameter ignored)
     /// let settings = YamlSource::Settings.load("").await?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn load(&self, game: &str) -> Result<Yaml> {
         let path = self.path(game);
@@ -599,6 +602,7 @@ mod tests {
             simplify_logs: true,
             update_check: false,
             vr_mode: true,
+            auto_switch_to_results: false,
             paths: PathConfig {
                 ini_folder: Some(PathBuf::from("C:\\Ini")),
                 scan_custom: Some(PathBuf::from("D:\\Logs")),
@@ -618,6 +622,7 @@ mod tests {
         assert_eq!(restored.simplify_logs, config.simplify_logs);
         assert_eq!(restored.update_check, config.update_check);
         assert_eq!(restored.vr_mode, config.vr_mode);
+        assert_eq!(restored.auto_switch_to_results, config.auto_switch_to_results);
         assert_eq!(restored.paths.ini_folder, config.paths.ini_folder);
         assert_eq!(restored.paths.scan_custom, config.paths.scan_custom);
         assert_eq!(restored.paths.mods_folder, config.paths.mods_folder);
@@ -651,6 +656,7 @@ mod tests {
             simplify_logs: false,
             update_check: true,
             vr_mode: false,
+            auto_switch_to_results: true,
             paths: PathConfig {
                 ini_folder: None,
                 scan_custom: None,

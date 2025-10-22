@@ -49,6 +49,8 @@ fn bench_yaml_serialization(c: &mut Criterion) {
                 move_unsolved_logs: true,
                 simplify_logs: false,
                 update_check: true,
+                vr_mode: false,
+                auto_switch_to_results: true,
                 paths: PathConfig {
                     ini_folder: Some(PathBuf::from("C:\\Test\\INI")),
                     scan_custom: Some(PathBuf::from("C:\\Test\\Logs")),

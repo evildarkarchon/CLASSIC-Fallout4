@@ -132,6 +132,8 @@ mod yaml_round_trip_integration {
             move_unsolved_logs: false,
             simplify_logs: false,
             update_check: true,
+            vr_mode: false,
+            auto_switch_to_results: true,
             paths: classic_cli::PathConfig {
                 ini_folder: Some(PathBuf::from("C:\\Users\\Test & User\\Documents")),
                 scan_custom: Some(PathBuf::from("D:\\Logs (2024)")),
@@ -172,6 +174,8 @@ mod yaml_round_trip_integration {
                 move_unsolved_logs: move_unsolved,
                 simplify_logs: simplify,
                 update_check: update,
+                vr_mode: false,
+                auto_switch_to_results: true,
                 paths: PathConfig::default(),
             };
 
@@ -200,6 +204,8 @@ mod yaml_round_trip_integration {
             move_unsolved_logs: false,
             simplify_logs: false,
             update_check: true,
+            vr_mode: false,
+            auto_switch_to_results: true,
             paths: PathConfig {
                 ini_folder: None,
                 scan_custom: None,

@@ -209,6 +209,8 @@ mod tests {
             move_unsolved_logs: false,
             simplify_logs: false,
             update_check: true,
+            vr_mode: false,
+            auto_switch_to_results: true,
             paths: PathConfig::default(),
         };
 
