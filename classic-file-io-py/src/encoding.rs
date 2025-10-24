@@ -11,6 +11,8 @@ pub struct PyEncodingDetector {
 
 #[pymethods]
 impl PyEncodingDetector {
+    /// Create a new instance
+
     #[new]
     pub fn new() -> Self {
         Self {

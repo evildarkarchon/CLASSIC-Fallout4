@@ -11,10 +11,15 @@ use std::io::Cursor;
 /// DDS file header information for validation
 #[derive(Clone, Debug)]
 pub struct DDSHeader {
+    /// Texture width in pixels
     pub width: u32,
+    /// Texture height in pixels
     pub height: u32,
+    /// Texture depth (for 3D textures)
     pub depth: u32,
+    /// Number of mipmap levels
     pub mipmap_count: u32,
+    /// Texture compression format (e.g., "BC7", "DXT5")
     pub format: String,
 }
 

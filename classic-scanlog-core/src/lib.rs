@@ -19,6 +19,7 @@ pub mod formid_analyzer;
 pub mod gpu_detector;
 pub mod mod_detector;
 pub mod orchestrator;
+pub mod papyrus;
 pub mod parser;
 pub mod patterns;
 pub mod plugin_analyzer;
@@ -39,6 +40,7 @@ pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
 };
 pub use orchestrator::{AnalysisConfig, AnalysisResult, OrchestratorCore};
+pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};
 pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};
 pub use patterns::PatternMatcher;
 pub use plugin_analyzer::{contains_plugin, detect_plugins_batch, PluginAnalyzer};

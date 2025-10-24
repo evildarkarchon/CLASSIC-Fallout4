@@ -23,6 +23,27 @@ pub struct PyDatabasePool {
 
 #[pymethods]
 impl PyDatabasePool {
+    /// Create a new PyDatabasePool instance
+    ///
+    /// # Arguments
+    ///
+    /// * `max_connections` - Optional maximum number of database connections (defaults to auto-calculated)
+    /// * `cache_ttl_seconds` - Optional cache TTL in seconds (defaults to 300)
+    /// * `game_table` - Optional game table name (defaults to "Fallout4")
+    ///
+    /// # Returns
+    ///
+    /// A new `PyDatabasePool` instance with the specified configuration
+    ///
+    /// # Example
+    ///
+    /// ```python
+    /// # Create with defaults
+    /// pool = RustDatabasePool()
+    ///
+    /// # Create with custom settings
+    /// pool = RustDatabasePool(max_connections=50, cache_ttl_seconds=600, game_table="Skyrim")
+    /// ```
     #[new]
     #[pyo3(signature = (max_connections=None, cache_ttl_seconds=300, game_table=None))]
     pub fn new(

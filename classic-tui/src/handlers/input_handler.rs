@@ -4,6 +4,11 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 /// Handle keyboard input events
 pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
+    // If folder picker is active, handle picker-specific keys first
+    if app.is_folder_picker_active() {
+        return handle_folder_picker_keys(key);
+    }
+
     // Global key bindings (work on all screens)
     if key.code == KeyCode::Char('q') || key.code == KeyCode::Char('Q') {
         return Some(UiMessage::Quit);
@@ -28,6 +33,24 @@ fn handle_main_screen_keys(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
     match key.code {
         // F1 - Help
         KeyCode::F(1) => Some(UiMessage::ShowHelpScreen),
+
+        // F2 - Staging folder picker
+        KeyCode::F(2) | KeyCode::Char('s') | KeyCode::Char('S') => {
+            if !app.is_scanning() {
+                Some(UiMessage::OpenStagingPicker)
+            } else {
+                None
+            }
+        }
+
+        // F3 - Custom folder picker
+        KeyCode::F(3) | KeyCode::Char('c') | KeyCode::Char('C') => {
+            if !app.is_scanning() {
+                Some(UiMessage::OpenCustomPicker)
+            } else {
+                None
+            }
+        }
 
         // F5 or 'r' - Crash scan
         KeyCode::F(5) | KeyCode::Char('r') | KeyCode::Char('R') => {
@@ -138,6 +161,38 @@ fn handle_papyrus_screen_keys(key: KeyEvent) -> Option<UiMessage> {
         KeyCode::F(7) | KeyCode::Char('p') | KeyCode::Char('P') => {
             Some(UiMessage::TogglePapyrusMonitor)
         }
+        _ => None,
+    }
+}
+
+/// Handle keys when folder picker is active
+fn handle_folder_picker_keys(key: KeyEvent) -> Option<UiMessage> {
+    match key.code {
+        // Esc - Close folder picker
+        KeyCode::Esc => Some(UiMessage::CloseFolderPicker),
+
+        // Up arrow - Move selection up
+        KeyCode::Up => Some(UiMessage::FolderPickerUp),
+
+        // Down arrow - Move selection down
+        KeyCode::Down => Some(UiMessage::FolderPickerDown),
+
+        // Enter - Enter selected directory or confirm selection
+        KeyCode::Enter => {
+            // If Shift+Enter, select folder; otherwise enter directory
+            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                Some(UiMessage::SelectFolder)
+            } else {
+                Some(UiMessage::FolderPickerEnter)
+            }
+        }
+
+        // Backspace - Go to parent directory
+        KeyCode::Backspace => Some(UiMessage::FolderPickerParent),
+
+        // Space - Select current folder
+        KeyCode::Char(' ') => Some(UiMessage::SelectFolder),
+
         _ => None,
     }
 }

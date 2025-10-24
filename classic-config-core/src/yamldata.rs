@@ -66,47 +66,73 @@ use yaml_rust2::{Yaml, YamlLoader};
 #[derive(Debug, Clone)]
 pub struct YamlDataCore {
     // Game configuration
+    /// Hints or tips for the classic game configuration
     pub classic_game_hints: Vec<String>,
+    /// List of records related to the classic version
     pub classic_records_list: Vec<String>,
+    /// Version number of the classic game
     pub classic_version: String,
+    /// Release or update date of the classic game version
     pub classic_version_date: String,
 
     // Crashgen configuration
+    /// Identifier for the crash generation configuration
     pub crashgen_name: String,
+    /// Latest original generation crash identifier
     pub crashgen_latest_og: String,
+    /// Latest VR (virtual reality) generation crash identifier
     pub crashgen_latest_vr: String,
+    /// Items to be ignored during crash generation
     pub crashgen_ignore: Vec<String>, // Converted from Python set
 
     // Warnings
+    /// Warning message for cases where no plugins are active or available
     pub warn_noplugins: String,
+    /// Warning message indicating the game version or configuration is outdated
     pub warn_outdated: String,
 
     // XSE configuration
+    /// Acronym for the XSE (XML Scripting Engine) configuration setting
     pub xse_acronym: String,
 
     // Ignore lists
+    /// Plugins to be ignored in the current game configuration
     pub game_ignore_plugins: Vec<String>,
+    /// Records to be ignored
     pub game_ignore_records: Vec<String>,
+    /// Entries to be collectively ignored
     pub ignore_list: Vec<String>,
 
     // Suspect patterns
+    /// Suspect error patterns mapped to descriptive explanations or identifiers
     pub suspects_error_list: HashMap<String, String>,
+    /// Suspect stack traces mapped to their corresponding cleanup or diagnostic messages
     pub suspects_stack_list: HashMap<String, String>,
 
     // Mod databases
+    /// Configuration settings for game modification databases
     pub game_mods_conf: HashMap<String, String>,
+    /// Core mod databases information
     pub game_mods_core: HashMap<String, String>,
+    /// Folon core mod configuration
     pub game_mods_core_folon: HashMap<String, String>,
+    /// Frequently used game mod entries
     pub game_mods_freq: HashMap<String, String>,
+    /// Specific feature or mod database identified as opc2
     pub game_mods_opc2: HashMap<String, String>,
+    /// Solution-related game mod configurations
     pub game_mods_solu: HashMap<String, String>,
 
     // UI configuration
+    /// Text used in the autoscan UI component
     pub autoscan_text: String,
 
     // Game versions (stored as strings)
+    /// Current game version
     pub game_version: String,
+    /// Newer version of the game, if available
     pub game_version_new: String,
+    /// Version of the game for VR (virtual reality)
     pub game_version_vr: String,
 }
 
@@ -349,15 +375,19 @@ impl YamlDataCore {
 /// Configuration error types
 #[derive(Debug, thiserror::Error)]
 pub enum ConfigError {
+    /// Invalid input parameters provided to configuration loading
     #[error("Invalid input: {0}")]
     InvalidInput(String),
 
+    /// I/O error occurred while reading configuration files
     #[error("IO error: {0}")]
     IOError(String),
 
+    /// Error parsing YAML configuration content
     #[error("Parse error: {0}")]
     ParseError(String),
 
+    /// Runtime error during configuration processing
     #[error("Runtime error: {0}")]
     RuntimeError(String),
 }

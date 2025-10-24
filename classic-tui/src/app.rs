@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 // Forward declare SettingsState to avoid circular dependency
 pub use crate::ui::SettingsState;
+use crate::widgets::FolderPickerState;
 
 /// Application state for the TUI
 pub struct App {
@@ -27,6 +28,10 @@ pub struct App {
     pub check_updates: bool,
     /// Settings screen state
     pub settings_state: SettingsState,
+    /// Staging folder picker state
+    pub staging_picker: Option<FolderPickerState>,
+    /// Custom folder picker state
+    pub custom_picker: Option<FolderPickerState>,
 }
 
 /// UI state representing which screen is active
@@ -82,6 +87,8 @@ impl App {
             scroll_offset: 0,
             check_updates: true,
             settings_state: SettingsState::new(),
+            staging_picker: None,
+            custom_picker: None,
         }
     }
 
@@ -199,6 +206,43 @@ impl App {
         let config_path = self.config.get_config_path();
         self.config.save_to_yaml(&config_path).await?;
         Ok(())
+    }
+
+    /// Open staging folder picker
+    pub fn open_staging_picker(&mut self) {
+        let mut picker = FolderPickerState::new(self.staging_folder.clone());
+        picker.activate();
+        self.staging_picker = Some(picker);
+    }
+
+    /// Open custom folder picker
+    pub fn open_custom_picker(&mut self) {
+        let mut picker = FolderPickerState::new(self.custom_folder.clone());
+        picker.activate();
+        self.custom_picker = Some(picker);
+    }
+
+    /// Close staging folder picker
+    pub fn close_staging_picker(&mut self) {
+        self.staging_picker = None;
+    }
+
+    /// Close custom folder picker
+    pub fn close_custom_picker(&mut self) {
+        self.custom_picker = None;
+    }
+
+    /// Check if any folder picker is active
+    pub fn is_folder_picker_active(&self) -> bool {
+        self.staging_picker
+            .as_ref()
+            .map(|p| p.is_active())
+            .unwrap_or(false)
+            || self
+                .custom_picker
+                .as_ref()
+                .map(|p| p.is_active())
+                .unwrap_or(false)
     }
 }
 

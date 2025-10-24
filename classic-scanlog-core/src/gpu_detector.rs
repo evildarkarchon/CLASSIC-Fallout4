@@ -10,13 +10,18 @@ use std::collections::HashMap;
 /// GPU vendor enumeration
 #[derive(Clone, Debug, PartialEq)]
 pub enum GpuVendor {
+    /// AMD (Advanced Micro Devices) graphics cards
     AMD,
+    /// Nvidia graphics cards
     Nvidia,
+    /// Intel integrated graphics
     Intel,
+    /// Unknown or unrecognized vendor
     Unknown,
 }
 
 impl GpuVendor {
+    /// Convert GPU vendor to string representation
     pub fn as_str(&self) -> &'static str {
         match self {
             GpuVendor::AMD => "AMD",
@@ -56,6 +61,7 @@ impl Default for GpuInfo {
 }
 
 impl GpuInfo {
+    /// Create a new GpuInfo instance with default "Unknown" values
     pub fn new() -> Self {
         Self {
             primary: "Unknown".to_string(),
@@ -91,6 +97,7 @@ impl std::fmt::Display for GpuInfo {
 pub struct GpuDetector;
 
 impl GpuDetector {
+    /// Create a new GPU detector instance
     pub fn new() -> Self {
         Self
     }

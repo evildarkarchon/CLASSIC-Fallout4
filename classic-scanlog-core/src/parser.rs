@@ -219,7 +219,10 @@ impl LogParser {
         let mut snapshot = self.custom_patterns_snapshot.write();
         snapshot.clear();
         for entry in self.custom_patterns.iter() {
-            snapshot.push((Arc::from(entry.key().as_str()), Arc::new(entry.value().clone())));
+            snapshot.push((
+                Arc::from(entry.key().as_str()),
+                Arc::new(entry.value().clone()),
+            ));
         }
 
         Ok(())
@@ -804,8 +807,14 @@ impl LogParser {
     /// Get performance statistics
     pub fn get_stats(&self) -> HashMap<String, usize> {
         let mut stats = HashMap::new();
-        stats.insert("segment_cache_size".to_string(), self.segment_cache.read().len());
-        stats.insert("pattern_cache_size".to_string(), self.pattern_cache.read().len());
+        stats.insert(
+            "segment_cache_size".to_string(),
+            self.segment_cache.read().len(),
+        );
+        stats.insert(
+            "pattern_cache_size".to_string(),
+            self.pattern_cache.read().len(),
+        );
         stats.insert("custom_patterns".to_string(), self.custom_patterns.len());
         stats.insert(
             "compiled_patterns".to_string(),
@@ -1276,6 +1285,43 @@ impl<I> StreamingIteratorParser<I>
 where
     I: Iterator<Item = String>,
 {
+    /// Creates a new streaming iterator parser that wraps the provided iterator.
+    ///
+    /// This constructor takes any iterator that yields `String` values and wraps it
+    /// to provide streaming log parsing capabilities. The parser processes lines
+    /// one at a time without buffering, making it suitable for very large logs
+    /// that exceed available memory.
+    ///
+    /// # Arguments
+    ///
+    /// * `inner` - An iterator that yields log lines as `String` values
+    ///
+    /// # Returns
+    ///
+    /// A new `StreamingIteratorParser` instance that can be used to process
+    /// the log data line-by-line.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::parser::StreamingIteratorParser;
+    /// use std::fs::File;
+    /// use std::io::{BufRead, BufReader};
+    ///
+    /// # fn example() -> std::io::Result<()> {
+    /// let file = File::open("crash.log")?;
+    /// let reader = BufReader::new(file);
+    /// let parser = StreamingIteratorParser::new(
+    ///     reader.lines().map(|l| l.unwrap())
+    /// );
+    ///
+    /// for line in parser {
+    ///     // Process each line with minimal memory usage
+    ///     println!("{}", line);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn new(inner: I) -> Self {
         Self { inner }
     }

@@ -1,15 +1,16 @@
 use crate::app::{App, ScanState};
 use crate::ui::layout::TuiLayout;
+use crate::widgets::FolderPicker;
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, Paragraph, Wrap},
     Frame,
 };
 
 /// Render the main screen
-pub fn render_main_screen(f: &mut Frame, app: &App) {
+pub fn render_main_screen(f: &mut Frame, app: &mut App) {
     let (header_area, folder_area, button_area, output_area, status_area) =
         TuiLayout::main_screen(f.area());
 
@@ -18,6 +19,18 @@ pub fn render_main_screen(f: &mut Frame, app: &App) {
     render_button_section(f, button_area, app);
     render_output_viewer(f, output_area, app);
     render_status_bar(f, status_area, app);
+
+    // Render folder picker overlay if active
+    if let Some(ref mut picker) = app.staging_picker {
+        if picker.is_active() {
+            render_folder_picker_overlay(f, picker, "Select Staging Mods Folder");
+        }
+    }
+    if let Some(ref mut picker) = app.custom_picker {
+        if picker.is_active() {
+            render_folder_picker_overlay(f, picker, "Select Custom Scan Folder");
+        }
+    }
 }
 
 /// Render the header with title
@@ -219,13 +232,18 @@ fn render_output_viewer(f: &mut Frame, area: Rect, app: &App) {
 
 /// Render the status bar with key hints
 fn render_status_bar(f: &mut Frame, area: Rect, app: &App) {
-    let key_hints = match app.ui_state {
-        crate::app::UiState::MainScreen => {
-            " F1 Help | F5 Crash Scan | F6 Game Scan | F7 Papyrus | Ctrl+L Clear | Q Quit "
+    // If folder picker is active, show picker-specific hints
+    let key_hints = if app.is_folder_picker_active() {
+        " ↑↓ Navigate | Enter Open Dir | Space/Shift+Enter Select | Backspace Parent | ESC Cancel "
+    } else {
+        match app.ui_state {
+            crate::app::UiState::MainScreen => {
+                " F1 Help | F2 Staging | F3 Custom | F5 Crash | F6 Game | F7 Papyrus | Q Quit "
+            }
+            crate::app::UiState::HelpScreen => " ESC Back | Q Quit ",
+            crate::app::UiState::SettingsScreen => " ESC Back | Enter Save | Q Quit ",
+            crate::app::UiState::PapyrusScreen => " ESC Back | F7 Stop | Q Quit ",
         }
-        crate::app::UiState::HelpScreen => " ESC Back | Q Quit ",
-        crate::app::UiState::SettingsScreen => " ESC Back | Enter Save | Q Quit ",
-        crate::app::UiState::PapyrusScreen => " ESC Back | F7 Stop | Q Quit ",
     };
 
     let status_text = if app.is_scanning() {
@@ -247,6 +265,40 @@ fn render_status_bar(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(status_widget, area);
 }
 
+/// Render folder picker as a centered overlay
+fn render_folder_picker_overlay(
+    f: &mut Frame,
+    picker: &mut crate::widgets::FolderPickerState,
+    title: &str,
+) {
+    // Calculate centered area (80% width, 70% height)
+    let area = f.area();
+    let popup_width = (area.width * 80) / 100;
+    let popup_height = (area.height * 70) / 100;
+
+    let popup_area = Rect {
+        x: (area.width - popup_width) / 2,
+        y: (area.height - popup_height) / 2,
+        width: popup_width,
+        height: popup_height,
+    };
+
+    // Clear the area behind the popup
+    f.render_widget(Clear, popup_area);
+
+    // Render the folder picker
+    let picker_widget = FolderPicker::new(title)
+        .border_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .selected_style(
+            Style::default()
+                .fg(Color::Black)
+                .bg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
+
+    picker_widget.render(f, popup_area, picker);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -258,11 +310,11 @@ mod tests {
         let backend = TestBackend::new(100, 40);
         let mut terminal = Terminal::new(backend).unwrap();
 
-        let app = App::new();
+        let mut app = App::new();
 
         terminal
             .draw(|f| {
-                render_main_screen(f, &app);
+                render_main_screen(f, &mut app);
             })
             .unwrap();
 

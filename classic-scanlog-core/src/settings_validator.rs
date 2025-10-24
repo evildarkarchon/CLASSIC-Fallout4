@@ -20,6 +20,31 @@ pub struct SettingsValidator {
 }
 
 impl SettingsValidator {
+    /// Creates a new settings validator for crash generator configuration.
+    ///
+    /// This constructor initializes a validator that can check crash generator
+    /// settings for common misconfigurations and compatibility issues with
+    /// installed mods like X-Cell, ScrapHeap, and Achievements mods.
+    ///
+    /// # Arguments
+    ///
+    /// * `crashgen_name` - The name of the crash generator (e.g., "Buffout 4")
+    /// * `crashgen_ignore` - List of setting names to ignore during validation
+    ///
+    /// # Returns
+    ///
+    /// A new `SettingsValidator` instance ready to validate crash generator settings.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::settings_validator::SettingsValidator;
+    ///
+    /// let validator = SettingsValidator::new(
+    ///     "Buffout 4".to_string(),
+    ///     vec!["SomeIgnoredSetting".to_string()]
+    /// );
+    /// ```
     pub fn new(crashgen_name: String, crashgen_ignore: Vec<String>) -> Self {
         Self {
             crashgen_name,
@@ -257,7 +282,10 @@ impl SettingsValidator {
                 Self::add_warning(
                     lines,
                     "X-Cell is installed, but MemoryManager parameter is set to TRUE",
-                    &format!("Open {}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.", self.crashgen_name),
+                    &format!(
+                        "Open {}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.",
+                        self.crashgen_name
+                    ),
                     separator,
                 );
             }
@@ -296,15 +324,24 @@ impl SettingsValidator {
             (false, true, false) => {
                 Self::add_success(
                     lines,
-                    &format!("Memory Manager parameter is correctly configured for use with X-Cell in your {} settings!", self.crashgen_name),
+                    &format!(
+                        "Memory Manager parameter is correctly configured for use with X-Cell in your {} settings!",
+                        self.crashgen_name
+                    ),
                     separator,
                 );
             }
             (false, false, true) => {
                 Self::add_warning(
                     lines,
-                    &format!("The Baka ScrapHeap Mod is installed, but is redundant with {}", self.crashgen_name),
-                    &format!("Uninstall the Baka ScrapHeap Mod and open {}'s TOML file and change MemoryManager to TRUE, this improves performance.", self.crashgen_name),
+                    &format!(
+                        "The Baka ScrapHeap Mod is installed, but is redundant with {}",
+                        self.crashgen_name
+                    ),
+                    &format!(
+                        "Uninstall the Baka ScrapHeap Mod and open {}'s TOML file and change MemoryManager to TRUE, this improves performance.",
+                        self.crashgen_name
+                    ),
                     separator,
                 );
             }
@@ -335,14 +372,23 @@ impl SettingsValidator {
             if setting_enabled {
                 Self::add_warning(
                     lines,
-                    &format!("X-Cell is installed, but {} parameter is set to TRUE", setting_key),
-                    &format!("Open {}'s TOML file and change {} to FALSE, this prevents conflicts with X-Cell.", self.crashgen_name, setting_key),
+                    &format!(
+                        "X-Cell is installed, but {} parameter is set to TRUE",
+                        setting_key
+                    ),
+                    &format!(
+                        "Open {}'s TOML file and change {} to FALSE, this prevents conflicts with X-Cell.",
+                        self.crashgen_name, setting_key
+                    ),
                     separator,
                 );
             } else {
                 Self::add_success(
                     lines,
-                    &format!("{} parameter is correctly configured for use with X-Cell in your {} settings!", display_name, self.crashgen_name),
+                    &format!(
+                        "{} parameter is correctly configured for use with X-Cell in your {} settings!",
+                        display_name, self.crashgen_name
+                    ),
                     separator,
                 );
             }

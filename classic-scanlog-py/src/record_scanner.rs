@@ -11,6 +11,8 @@ pub struct PyRecordScanner {
 
 #[pymethods]
 impl PyRecordScanner {
+    /// Create a new instance
+
     #[new]
     pub fn new(
         target_records: Vec<String>,

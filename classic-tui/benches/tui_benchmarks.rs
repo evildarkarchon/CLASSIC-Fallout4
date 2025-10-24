@@ -1,5 +1,10 @@
+//! Performance benchmarks for TUI widgets.
+//!
+//! This benchmark suite measures the performance of widget creation, state mutations,
+//! and dirty tracking optimizations to ensure the TUI remains responsive.
+
 use classic_tui::widgets::Checkbox;
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 /// Benchmark widget creation
 fn bench_widget_creation(c: &mut Criterion) {
@@ -22,7 +27,6 @@ fn bench_widget_mutations(c: &mut Criterion) {
     });
 }
 
-
 /// Benchmark dirty tracking optimization effectiveness
 fn bench_dirty_tracking(c: &mut Criterion) {
     c.bench_function("dirty_tracking_checkbox", |b| {
@@ -41,6 +45,7 @@ fn bench_dirty_tracking(c: &mut Criterion) {
         })
     });
 }
+
 
 criterion_group!(
     benches,

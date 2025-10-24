@@ -2,6 +2,48 @@
 
 This document outlines a phased approach to bring the Rust TUI (`classic-tui`) to feature parity with the Python GUI (`CLASSIC_Interface.py`).
 
+**IMPORTANT**: The Rust TUI is a **pure Rust application** that uses only the `-core` crates (business logic). It does NOT depend on Python or PyO3 bindings. If functionality is needed that doesn't exist in a `-core` crate yet, it must be implemented in Rust first before being used in the TUI.
+
+## Architectural Overview
+
+### Pure Rust Design Principles
+
+The Rust TUI follows a fundamentally different architecture from the Python GUI:
+
+**Python GUI Architecture:**
+```
+Python Application → PyO3 Bindings (-py crates) → Business Logic (-core crates)
+```
+
+**Rust TUI Architecture:**
+```
+Rust TUI → Business Logic (-core crates directly)
+```
+
+### Key Advantages
+
+1. **No FFI Overhead**: Direct Rust function calls, no Python-Rust boundary crossing
+2. **No Python Runtime**: Runs completely standalone, no Python installation required
+3. **Better Performance**: No GIL, no type conversions, no PyO3 overhead
+4. **Smaller Binary**: No Python interpreter bundled
+5. **Better Error Messages**: Native Rust error handling throughout
+
+### Implementation Guidelines
+
+**✅ DO:**
+- Use `-core` crates directly (`classic-scanlog-core`, `classic-file-io-core`, etc.)
+- Implement missing functionality in appropriate `-core` crate first
+- Share Tokio runtime via `classic-shared::get_runtime()`
+- Follow Rust 2024 patterns and idioms
+- Use proper async/await patterns throughout
+
+**❌ DON'T:**
+- Import any Python code or PyO3 bindings
+- Reference `ClassicLib.*` modules (those are Python-only)
+- Use `-py` crates (those are PyO3 bindings for Python)
+- Try to "port" Python code directly (redesign in idiomatic Rust instead)
+- Block the UI thread with long-running operations
+
 ## Current State Assessment
 
 ### Python GUI Features (Complete Reference)
@@ -63,7 +105,7 @@ This document outlines a phased approach to bring the Rust TUI (`classic-tui`) t
    - ✅ Output viewer with scrolling
    - ✅ Progress indicators
    - ⚠️ Folder pickers (scaffolded but not functional)
-   - ❌ Audio notifications
+   - ❌ Audio notifications (skip, not wanted in TUI)
    - ❌ Advanced error display
 
 2. **Settings Screen**
@@ -108,54 +150,63 @@ This document outlines a phased approach to bring the Rust TUI (`classic-tui`) t
 - [ ] **Connect folder pickers to app state**
   - Update staging folder on selection
   - Update custom scan folder on selection
-  - Persist to YAML configuration
+  - Persist to YAML configuration using `classic-yaml-core`
+  - Use `classic-config-core::ClassicConfig` for configuration management
   - Files: `classic-tui/src/handlers/folder_handler.rs`
 
 - [ ] **Add folder validation**
-  - Use `ClassicLib.ScanLog.Util.is_valid_custom_scan_path`
-  - Display validation errors
+  - **REQUIRES**: Path validation logic in `classic-file-io-core` or `classic-scanlog-core`
+  - Implement Rust equivalent of path validation (check if directory exists, is readable, etc.)
+  - Display validation errors in TUI
   - Prevent invalid selections
   - Files: `classic-tui/src/validators/path_validator.rs`
 
 #### 1.2 Papyrus Monitoring (Priority: HIGH)
 - [ ] **Implement real-time log monitoring**
-  - Port `PapyrusMonitorWorker` logic to Rust
-  - Use `classic_scanlog_core::papyrus` module
-  - Implement async file watching
-  - Files: `classic-tui/src/handlers/papyrus_handler.rs`
+  - **REQUIRES**: Papyrus monitoring functionality in `classic-scanlog-core`
+  - If not available, implement Papyrus log parsing and monitoring in `classic-scanlog-core` first
+  - Use `notify` crate for async file watching
+  - Integrate with Tokio runtime from `classic-shared`
+  - Files: `classic-scanlog-core/src/papyrus.rs` (if new), `classic-tui/src/handlers/papyrus_handler.rs`
 
 - [ ] **Connect stats calculation**
-  - Parse dumps, stacks, warnings, errors
+  - Parse dumps, stacks, warnings, errors from Papyrus logs
   - Calculate error/warning ratio
   - Update timestamp on changes
-  - Files: `classic-tui/src/ui/papyrus_screen.rs`
+  - Use stats calculation from `classic-scanlog-core` if available
+  - Files: `classic-tui/src/handlers/papyrus_handler.rs`, `classic-tui/src/ui/papyrus_screen.rs`
 
 - [ ] **Add real-time stats display**
-  - Color-coded status indicators
-  - Auto-refresh display
-  - Scrollable log output
+  - Color-coded status indicators (green/yellow/red based on error rate)
+  - Auto-refresh display on file changes
+  - Scrollable log output with syntax highlighting
   - Files: `classic-tui/src/ui/papyrus_screen.rs`
 
 #### 1.3 Scan Operations Enhancement (Priority: MEDIUM)
 - [ ] **Implement proper scan handlers**
-  - Use `classic_scanlog_core` for crash log scanning
-  - Use game file scanning from `classic-file-io-core`
-  - Emit progress updates to UI
-  - Handle errors gracefully
+  - Use `classic-scanlog-core::orchestrator` for crash log scanning orchestration
+  - Use `classic-scanlog-core::parser` for log parsing
+  - Use `classic-file-io-core` for file I/O operations
+  - Use `classic-database-core` for FormID lookups
+  - Emit progress updates to UI via channels or callbacks
+  - Handle errors gracefully with proper error types
   - Files: `classic-tui/src/handlers/scan_handler.rs`
 
 - [ ] **Add scan results display**
-  - Show summary statistics
-  - Display matched patterns
-  - Show resolved FormIDs
-  - List suspects
+  - Show summary statistics (files scanned, patterns matched)
+  - Display matched patterns with context
+  - Show resolved FormIDs from database lookups
+  - List suspect mods/plugins
+  - Format output similar to Python GUI reports
   - Files: `classic-tui/src/ui/results_screen.rs`
 
 - [ ] **Implement error handling**
-  - Display detailed error messages
-  - Show error context
-  - Offer retry options
-  - Files: `classic-tui/src/ui/error_dialog.rs`
+  - Create error dialog widget for TUI
+  - Display detailed error messages from `classic-shared::errors`
+  - Show error context (file path, operation, etc.)
+  - Offer retry options where applicable
+  - Allow copying error details to clipboard
+  - Files: `classic-tui/src/ui/error_dialog.rs`, `classic-tui/src/widgets/error_dialog.rs`
 
 ### Phase 2: Backup Operations (New Feature)
 **Goal:** Add complete backup/restore functionality matching Python GUI.
@@ -174,23 +225,28 @@ This document outlines a phased approach to bring the Rust TUI (`classic-tui`) t
   - Files: `classic-tui/src/ui/backup_screen.rs`
 
 #### 2.2 Backup Operations Logic
-- [ ] **Port backup functionality**
-  - Use `ClassicLib.ScanGame.manage_game_files` logic
-  - Implement backup creation
-  - Implement restore from backup
-  - Implement backup removal
-  - Files: `classic-tui/src/handlers/backup_handler.rs`
+- [ ] **Implement backup functionality in Rust**
+  - **REQUIRES**: Backup/restore logic in `classic-file-io-core` or new module
+  - If not available, implement in `classic-file-io-core::backup` module:
+    - Backup creation (copy files to backup directory with timestamps)
+    - Restore from backup (copy files back to original location)
+    - Backup removal (delete backup directory)
+    - Backup validation (check integrity before restore)
+  - Handle XSE, ReShade, Vulkan, and ENB file patterns
+  - Files: `classic-file-io-core/src/backup.rs` (if new), `classic-tui/src/handlers/backup_handler.rs`
 
 - [ ] **Add backup existence checking**
   - Scan backup directories on startup
-  - Enable/disable restore buttons
-  - Update UI state
+  - Check for valid backups of each type (XSE, ReShade, Vulkan, ENB)
+  - Enable/disable restore buttons based on availability
+  - Update UI state with backup status
   - Files: `classic-tui/src/handlers/backup_handler.rs`
 
 - [ ] **Implement operation feedback**
-  - Progress indicators for large operations
-  - Success/failure messages
-  - Confirmation dialogs
+  - Progress indicators for large file operations
+  - Success/failure messages with details
+  - Confirmation dialogs before destructive operations
+  - Use async operations to avoid blocking UI
   - Files: `classic-tui/src/ui/backup_screen.rs`
 
 ### Phase 3: Results Viewer (Complex Feature)
@@ -316,29 +372,36 @@ This document outlines a phased approach to bring the Rust TUI (`classic-tui`) t
 
 #### 6.1 Update Checking
 - [ ] **Implement update checker**
-  - Port `UpdateManager` logic
-  - GitHub API integration
-  - Version comparison
+  - **REQUIRES**: Update checking logic in Rust
+  - Use `reqwest` crate for GitHub API calls
+  - Implement version comparison logic
+  - Check latest release from GitHub repository
+  - Parse version strings and compare with current version
   - Files: `classic-tui/src/handlers/update_handler.rs`
 
 - [ ] **Add update notification UI**
-  - Non-intrusive notification
-  - Show update details
-  - Open release page option
+  - Non-intrusive notification banner or popup
+  - Show update details (version, release notes summary)
+  - Open release page in browser option (use `open` crate)
+  - Dismiss notification capability
   - Files: `classic-tui/src/ui/update_notification.rs`
 
 #### 6.2 Enhanced Error Dialogs
 - [ ] **Create error dialog widget**
-  - Port `CustomErrorDialog` design
-  - Show error title, message, details
-  - Copy to clipboard support
+  - Design TUI-appropriate error dialog layout
+  - Show error title, message, and detailed information
+  - Stack trace display when available
+  - Copy to clipboard support (press 'C' to copy)
+  - Scrollable error details for long messages
+  - Color-coded severity (error=red, warning=yellow, info=blue)
   - Files: `classic-tui/src/widgets/error_dialog.rs`
 
 - [ ] **Add clipboard integration**
-  - Copy error text
-  - Copy report content
-  - System clipboard support
-  - Use `clipboard` crate
+  - Copy error text with full context
+  - Copy report content to clipboard
+  - System clipboard support using `clipboard` or `arboard` crate
+  - Visual confirmation when copied
+  - Fallback message if clipboard unavailable
   - Files: `classic-tui/src/handlers/clipboard_handler.rs`
 
 #### 6.3 Configuration Persistence
@@ -401,6 +464,21 @@ This document outlines a phased approach to bring the Rust TUI (`classic-tui`) t
   - Layout calculations
   - Files: `classic-tui/tests/ui/`
 
+#### 7.4 Documentation Audit
+- [ ] **Document all existing code**
+  - Audit all existing `classic-tui` source files for missing documentation
+  - Add `///` doc comments to all public items (structs, enums, functions, fields, variants)
+  - Follow [Rust Documentation Standards](../CLAUDE.md#rust-documentation-standards)
+  - Verify zero documentation warnings: `cargo check -p classic-tui 2>&1 | grep "missing documentation"`
+  - **CRITICAL**: This is a required task - all existing code must be documented before 1.0 release
+  - Files: All files in `classic-tui/src/`
+
+- [ ] **Add crate-level documentation**
+  - Add comprehensive `//!` documentation to `main.rs` and `lib.rs`
+  - Document module purposes in each `mod.rs`
+  - Include usage examples where appropriate
+  - Files: `classic-tui/src/main.rs`, `classic-tui/src/lib.rs`, all `mod.rs` files
+
 ## Implementation Priority Matrix
 
 ### Critical Path (Must Have for 1.0)
@@ -411,9 +489,10 @@ This document outlines a phased approach to bring the Rust TUI (`classic-tui`) t
 5. ✅ Results viewer foundation (Phase 3.1, 3.2)
 
 ### High Priority (Should Have for 1.0)
-1. Settings enhancement (Phase 4)
-2. Error dialogs (Phase 6.2)
-3. File watching (Phase 3.3)
+1. Documentation audit for all existing code (Phase 7.4) - **REQUIRED**
+2. Settings enhancement (Phase 4)
+3. Error dialogs (Phase 6.2)
+4. File watching (Phase 3.3)
 
 ### Medium Priority (Nice to Have)
 1. Articles screen (Phase 5)
@@ -427,23 +506,54 @@ This document outlines a phased approach to bring the Rust TUI (`classic-tui`) t
 
 ## Technical Dependencies
 
-### Rust Crates Needed
-- ✅ `ratatui` - Terminal UI framework (already included)
-- ✅ `crossterm` - Terminal control (already included)
-- ✅ `tokio` - Async runtime (already included)
-- ✅ `classic-*-core` - Business logic crates (already available)
-- [ ] `notify` - File system watching (NEW)
-- [ ] `clipboard` - System clipboard access (NEW)
-- [ ] `open` - Open URLs in browser (NEW)
-- [ ] `reqwest` - HTTP client for update checks (NEW)
-- [ ] `pulldown-cmark` - Markdown parsing for articles (NEW)
+### Architecture Notes
+**The Rust TUI is a pure Rust application** that:
+- Uses ONLY the `-core` crates (business logic) - NO Python or PyO3
+- Accesses business logic directly without FFI overhead
+- Can run completely standalone without Python installation
+- Shares the global Tokio runtime via `classic-shared::get_runtime()`
 
-### Integration Points
-- ✅ `classic_scanlog_core` - Log parsing
-- ✅ `classic_file_io_core` - File I/O
-- ✅ `classic_database_core` - FormID lookups
-- ✅ `classic_yaml_core` - Configuration
-- ✅ `classic_config_core` - Settings management
+**If functionality is missing from `-core` crates:**
+1. Implement it in the appropriate `-core` crate first (e.g., `classic-scanlog-core`, `classic-file-io-core`)
+2. Ensure it follows pure Rust patterns (no PyO3 dependencies)
+3. Document the new functionality following Rust Documentation Standards
+4. Then integrate it into the TUI
+
+### Rust Crates Needed
+**Already Available:**
+- ✅ `ratatui` - Terminal UI framework
+- ✅ `crossterm` - Terminal control
+- ✅ `tokio` - Async runtime (shared via `classic-shared`)
+- ✅ `classic-scanlog-core` - Log parsing, pattern matching, FormID analysis
+- ✅ `classic-file-io-core` - File I/O, encoding detection, DDS parsing
+- ✅ `classic-database-core` - SQLite connection pooling, FormID lookups
+- ✅ `classic-yaml-core` - YAML operations (yaml-rust2)
+- ✅ `classic-config-core` - Configuration management
+- ✅ `classic-shared` - Runtime, errors, utilities
+
+**To Be Added:**
+- [ ] `notify` - File system watching for Papyrus monitor and results viewer
+- [ ] `arboard` - System clipboard access (more reliable than `clipboard` crate)
+- [ ] `open` - Open URLs in browser for articles
+- [ ] `reqwest` - HTTP client for update checks (with rustls-tls feature)
+- [ ] `pulldown-cmark` - Markdown parsing for articles viewer
+
+**May Need Implementation in `-core` crates:**
+- [ ] Path validation in `classic-file-io-core` or `classic-scanlog-core`
+- [ ] Papyrus log monitoring in `classic-scanlog-core::papyrus`
+- [ ] Backup/restore operations in `classic-file-io-core::backup`
+
+### Integration Points (Pure Rust)
+- ✅ `classic-scanlog-core::orchestrator` - Log scanning orchestration
+- ✅ `classic-scanlog-core::parser` - Log parsing
+- ✅ `classic-scanlog-core::formid` - FormID analysis
+- ✅ `classic-scanlog-core::patterns` - Pattern matching
+- ✅ `classic-file-io-core::core` - File I/O operations
+- ✅ `classic-file-io-core::encoding` - Encoding detection
+- ✅ `classic-database-core::pool_sqlx` - Database pool management
+- ✅ `classic-yaml-core` - YAML operations
+- ✅ `classic-config-core::ClassicConfig` - Configuration management
+- ✅ `classic-shared::runtime::get_runtime()` - Shared async runtime
 
 ## Success Metrics
 
@@ -462,10 +572,34 @@ This document outlines a phased approach to bring the Rust TUI (`classic-tui`) t
 ### Code Quality
 - **80%+** test coverage for new code
 - **Zero** compiler warnings
-- **Comprehensive** inline documentation
+- **Complete documentation** for all public items following [Rust Documentation Standards](../CLAUDE.md#rust-documentation-standards)
+  - All `pub struct`, `pub enum`, `pub fn`, `pub mod` must have `///` doc comments
+  - All public struct fields and enum variants must be documented
+  - **CRITICAL**: All existing code that remains must be documented to these standards
+  - Missing documentation warnings are treated as errors
 - **Clean** architecture following Rust best practices
 
 ## Notes
+
+### Documentation Requirements (CRITICAL)
+
+**All existing code that remains in `classic-tui` must be fully documented** according to the [Rust Documentation Standards](../CLAUDE.md#rust-documentation-standards) defined in CLAUDE.md. This is a **non-negotiable requirement** for the 1.0 release.
+
+**Key requirements:**
+- All `pub struct`, `pub enum`, `pub fn`, `pub mod` must have `///` doc comments
+- All public struct fields and enum variants must be documented
+- Crate-level (`//!`) documentation required in `main.rs`, `lib.rs`, and module files
+- Follow Rust API Guidelines for documentation style
+- Missing documentation warnings are treated as errors
+- Verify with: `cargo check -p classic-tui 2>&1 | grep "missing documentation"`
+
+**Why this matters:**
+- Maintains code quality standards across the entire CLASSIC project
+- Ensures maintainability for future contributors
+- Provides in-editor documentation via rust-analyzer
+- Required for professional-grade Rust projects
+
+See [Phase 7.4: Documentation Audit](#74-documentation-audit) for implementation details.
 
 ### Differences from Python GUI (Intentional)
 1. **TUI-specific adaptations:**

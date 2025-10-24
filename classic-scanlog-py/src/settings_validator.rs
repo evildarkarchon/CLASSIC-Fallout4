@@ -12,6 +12,8 @@ pub struct PySettingsValidator {
 
 #[pymethods]
 impl PySettingsValidator {
+    /// Create a new instance
+
     #[new]
     pub fn new(crashgen_name: String, crashgen_ignore: Vec<String>) -> Self {
         Self {

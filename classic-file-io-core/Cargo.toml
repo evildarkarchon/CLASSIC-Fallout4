@@ -1,8 +1,8 @@
 [package]
 name = "classic-file-io-core"
 version = "8.0.0"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 authors = ["CLASSIC Development Team"]
 description = "Pure Rust file I/O operations for CLASSIC (no PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
@@ -50,3 +50,6 @@ tempfile = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "warn"  # Allow unsafe for memory-mapped I/O (properly documented)
+missing_docs = "warn"   # Encourage documentation

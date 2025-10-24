@@ -115,9 +115,13 @@ impl Default for OutputFormatter {
 /// Scan statistics
 #[derive(Debug, Clone, Default)]
 pub struct ScanStats {
+    /// Number of log files that were scanned
     pub scanned_logs: usize,
+    /// Number of patterns that were matched during scanning
     pub patterns_matched: usize,
+    /// Number of FormIDs that were successfully resolved
     pub formids_resolved: usize,
+    /// Number of suspects that were identified
     pub suspects_identified: usize,
 }
 

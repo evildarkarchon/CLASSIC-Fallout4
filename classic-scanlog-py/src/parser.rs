@@ -19,6 +19,39 @@ pub struct PyLogParser {
 
 #[pymethods]
 impl PyLogParser {
+    /// Creates a new log parser with optional custom segment boundaries.
+    ///
+    /// This constructor initializes a parser that can analyze Bethesda game crash logs
+    /// using SIMD-optimized boundary detection and pattern matching. The parser supports
+    /// automatic GIL release for large operations and comprehensive caching.
+    ///
+    /// # Arguments
+    ///
+    /// * `custom_boundaries` - Optional list of (start_marker, end_marker) tuples defining
+    ///   custom log segment boundaries. If `None`, uses default boundaries for standard
+    ///   Fallout 4/Skyrim crash logs.
+    ///
+    /// # Returns
+    ///
+    /// A new `PyLogParser` instance ready to parse crash logs.
+    ///
+    /// # Errors
+    ///
+    /// Returns `PyErr` if the underlying core parser fails to initialize (e.g., invalid
+    /// boundary patterns or regex compilation errors).
+    ///
+    /// # Example
+    ///
+    /// ```python
+    /// # Python usage
+    /// from classic_core import LogParser
+    ///
+    /// # Default boundaries
+    /// parser = LogParser()
+    ///
+    /// # Custom boundaries
+    /// parser = LogParser([("START", "END"), ("BEGIN", "FINISH")])
+    /// ```
     #[new]
     #[pyo3(signature = (custom_boundaries=None))]
     pub fn new(custom_boundaries: Option<Vec<(String, String)>>) -> PyResult<Self> {
@@ -53,7 +86,8 @@ impl PyLogParser {
         };
 
         // Convert result back to Vec<Vec<String>>
-        result.into_iter()
+        result
+            .into_iter()
             .map(|segment| segment.into_iter().map(|s| s.to_string()).collect())
             .collect()
     }
@@ -71,10 +105,13 @@ impl PyLogParser {
         let arc_lines = to_arc_str_vec(&lines);
 
         // Always release GIL for parallel operations
-        let result = without_gil(py, || self.inner.parse_segments_parallel(&arc_lines, chunk_size));
+        let result = without_gil(py, || {
+            self.inner.parse_segments_parallel(&arc_lines, chunk_size)
+        });
 
         // Convert result back to Vec<Vec<String>>
-        result.into_iter()
+        result
+            .into_iter()
             .map(|segment| segment.into_iter().map(|s| s.to_string()).collect())
             .collect()
     }
@@ -82,7 +119,11 @@ impl PyLogParser {
     /// Find all pattern matches in parallel with caching
     ///
     /// For large logs (>1000 lines), this releases the GIL to allow other Python threads to run.
-    pub fn find_patterns(&self, py: Python<'_>, lines: Vec<String>) -> Vec<(usize, String, String)> {
+    pub fn find_patterns(
+        &self,
+        py: Python<'_>,
+        lines: Vec<String>,
+    ) -> Vec<(usize, String, String)> {
         // Release GIL for large pattern matching
         if lines.len() > 1000 {
             without_gil(py, || self.inner.find_patterns(&lines))

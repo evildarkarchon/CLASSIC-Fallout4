@@ -1,5 +1,10 @@
-// CLASSIC Slint GUI - Main Entry Point
-// Pure Rust GUI using Slint framework with Fluent Design System
+//! CLASSIC Slint GUI - Main Entry Point
+//!
+//! Pure Rust GUI using Slint framework with Fluent Design System for
+//! Fallout 4 and Skyrim crash log analysis.
+
+// Suppress documentation warnings for generated Slint code
+#![allow(missing_docs)]
 
 slint::include_modules!();
 

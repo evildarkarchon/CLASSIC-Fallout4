@@ -25,6 +25,7 @@ pub struct PerformanceMetrics {
 }
 
 impl PerformanceMetrics {
+    /// Creates a new `PerformanceMetrics` instance with empty metrics.
     pub fn new() -> Self {
         Self {
             timings: DashMap::new(),
@@ -94,11 +95,17 @@ impl PerformanceMetrics {
 /// Statistics for a single operation type
 #[derive(Clone, Debug)]
 pub struct OperationStats {
+    /// Number of times this operation was executed
     pub count: usize,
+    /// Total time spent on this operation
     pub total: Duration,
+    /// Average time per operation
     pub average: Duration,
+    /// Minimum time for a single operation
     pub min: Duration,
+    /// Maximum time for a single operation
     pub max: Duration,
+    /// Total bytes processed by this operation
     pub bytes_processed: u64,
 }
 
@@ -166,6 +173,7 @@ pub struct RustPerformanceMonitor;
 
 #[pymethods]
 impl RustPerformanceMonitor {
+    /// Creates a new `RustPerformanceMonitor` instance.
     #[new]
     pub fn new() -> Self {
         Self

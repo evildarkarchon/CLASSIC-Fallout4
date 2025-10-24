@@ -1,3 +1,8 @@
+//! CLASSIC CLI - Command Line Interface for crash log analysis
+//!
+//! High-performance CLI tool for batch processing Fallout 4 and Skyrim crash logs
+//! with Rust-accelerated analysis.
+
 mod args;
 mod config;
 mod error;

@@ -12,6 +12,23 @@ pub struct PyFormIDAnalyzerCore {
 
 #[pymethods]
 impl PyFormIDAnalyzerCore {
+    /// Creates a new FormID analyzer with the given configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `show_formid_values` - Whether to display FormID values in output
+    /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout 4")
+    /// * `important_mods` - Map of important mod names to their identifiers
+    /// * `mods_single` - Map of single-byte mod identifiers
+    /// * `mods_double` - Map of double-byte mod identifiers
+    ///
+    /// # Returns
+    ///
+    /// A new `PyFormIDAnalyzerCore` instance ready to analyze FormIDs.
+    ///
+    /// # Errors
+    ///
+    /// Returns `PyErr` if the underlying core analyzer fails to initialize.
     #[new]
     #[pyo3(signature = (show_formid_values=false, crashgen_name="".to_string(), important_mods=HashMap::new(), mods_single=HashMap::new(), mods_double=HashMap::new()))]
     pub fn new(

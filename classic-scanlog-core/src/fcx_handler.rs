@@ -21,6 +21,27 @@ pub struct FcxModeHandler {
 }
 
 impl FcxModeHandler {
+    /// Create a new FCX Mode Handler
+    ///
+    /// # Arguments
+    ///
+    /// * `fcx_mode` - Whether FCX mode should be enabled (true) or disabled (false)
+    ///
+    /// # Returns
+    ///
+    /// A new `FcxModeHandler` instance with the specified FCX mode state and empty check results
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use classic_scanlog_core::FcxModeHandler;
+    ///
+    /// // Create handler with FCX mode enabled
+    /// let handler = FcxModeHandler::new(true);
+    ///
+    /// // Create handler with FCX mode disabled  
+    /// let handler = FcxModeHandler::new(false);
+    /// ```
     pub fn new(fcx_mode: bool) -> Self {
         Self {
             fcx_mode,

@@ -32,9 +32,7 @@ fn to_pyerr(err: classic_file_io_core::FileIOError) -> PyErr {
         classic_file_io_core::FileIOError::CacheError(s) => {
             PyRuntimeError::new_err(format!("Cache error: {}", s))
         }
-        classic_file_io_core::FileIOError::Io(s) => {
-            PyIOError::new_err(format!("I/O error: {}", s))
-        }
+        classic_file_io_core::FileIOError::Io(s) => PyIOError::new_err(format!("I/O error: {}", s)),
     }
 }
 
@@ -46,6 +44,36 @@ pub struct PyFileIOCore {
 
 #[pymethods]
 impl PyFileIOCore {
+    /// Create a new PyFileIOCore instance with specified configuration
+    ///
+    /// This is a thin adapter that delegates all business logic to classic-file-io-core.
+    /// It only handles Python ↔ Rust type conversions and async runtime bridging.
+    ///
+    /// # Arguments
+    ///
+    /// * `encoding` - Default text encoding for file operations (default: "utf-8")
+    /// * `errors` - Error handling strategy for encoding issues (default: "ignore")
+    /// * `cache_size` - Maximum number of cached file contents (default: 100)
+    /// * `max_concurrent_io` - Maximum concurrent I/O operations (default: 50)
+    ///
+    /// # Returns
+    ///
+    /// A new `PyFileIOCore` instance configured with the specified parameters
+    ///
+    /// # Example
+    ///
+    /// ```python
+    /// # Create with defaults
+    /// file_io = RustFileIOCore()
+    ///
+    /// # Create with custom settings
+    /// file_io = RustFileIOCore(
+    ///     encoding="utf-8",
+    ///     errors="strict",
+    ///     cache_size=200,
+    ///     max_concurrent_io=100
+    /// )
+    /// ```
     #[new]
     #[pyo3(signature = (encoding="utf-8", errors="ignore", cache_size=100, max_concurrent_io=50))]
     pub fn new(encoding: &str, errors: &str, cache_size: usize, max_concurrent_io: usize) -> Self {
@@ -133,10 +161,7 @@ impl PyFileIOCore {
 
         // Returns Python coroutine immediately - no blocking!
         future_into_py(py, async move {
-            inner
-                .write_lines(&path_buf, lines)
-                .await
-                .map_err(to_pyerr)
+            inner.write_lines(&path_buf, lines).await.map_err(to_pyerr)
         })
     }
 

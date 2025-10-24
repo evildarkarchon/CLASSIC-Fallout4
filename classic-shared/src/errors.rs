@@ -250,91 +250,126 @@ pub enum ClassicError {
     /// I/O related errors
     #[error("I/O error: {message}")]
     Io {
+        /// Description of the I/O error
         message: String,
+        /// Optional underlying source error
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
 
     /// Path-related errors
     #[error("Path error: {message}")]
     Path {
+        /// Description of the path error
         message: String,
+        /// Optional path that caused the error
         path: Option<String>,
     },
 
     /// Validation errors
     #[error("Validation error: {message}")]
     Validation {
+        /// Description of the validation failure
         message: String,
+        /// Optional name of the field that failed validation
         field: Option<String>,
     },
 
     /// Parsing errors
     #[error("Parse error: {message} at position {position:?}")]
     Parse {
+        /// Description of the parse error
         message: String,
+        /// Optional position in the input where the error occurred
         position: Option<usize>,
+        /// Optional additional context about the error
         context: Option<String>,
     },
 
     /// Database errors
     #[error("Database error: {message}")]
     Database {
+        /// Description of the database error
         message: String,
+        /// Optional SQL or database query that caused the error
         query: Option<String>,
     },
 
     /// Cache errors
     #[error("Cache error: {message}")]
-    Cache { message: String },
+    Cache {
+        /// Description of the cache error
+        message: String,
+    },
 
     /// Encoding errors
     #[error("Encoding error: {message}")]
     Encoding {
+        /// Description of the encoding error
         message: String,
+        /// Optional encoding type that caused the issue
         encoding: Option<String>,
     },
 
     /// Timeout errors
     #[error("Operation timed out after {duration_ms}ms: {operation}")]
-    Timeout { operation: String, duration_ms: u64 },
+    Timeout {
+        /// Description of the operation that timed out
+        operation: String,
+        /// Timeout duration in milliseconds
+        duration_ms: u64,
+    },
 
     /// Permission errors
     #[error("Permission denied: {message}")]
     Permission {
+        /// Description of the permission error
         message: String,
+        /// Optional identifier of the resource for which access was denied
         resource: Option<String>,
     },
 
     /// Configuration errors
     #[error("Configuration error: {message}")]
     Configuration {
+        /// Description of the configuration error
         message: String,
+        /// Optional configuration key that caused the error
         key: Option<String>,
     },
 
     /// Processing errors
     #[error("Processing error: {message}")]
     Processing {
+        /// Description of the processing error
         message: String,
+        /// Optional stage of the process where the error occurred
         stage: Option<String>,
     },
 
     /// Resource not found
     #[error("Resource not found: {resource}")]
-    NotFound { resource: String },
+    NotFound {
+        /// Description of the missing resource
+        resource: String,
+    },
 
     /// Invalid state
     #[error("Invalid state: {message}")]
     InvalidState {
+        /// Description of the invalid state
         message: String,
+        /// Optional description of the expected state
         expected: Option<String>,
+        /// Optional description of the actual state encountered
         actual: Option<String>,
     },
 
     /// Generic error with context
     #[error("{message}")]
     Generic {
+        /// Description of the error
         message: String,
+        /// Optional additional details or context about the error
         details: Option<String>,
     },
 }
@@ -407,10 +442,10 @@ impl ClassicError {
 
     /// Creates a new `ClassicError` instance representing a validation error.
     /// # Parameters
-    /// - `message`: An error message describing the validation issue. This can be any type 
+    /// - `message`: An error message describing the validation issue. This can be any type
     ///   that implements the `Into<String>` trait.
-    /// - `field`: An optional field name related to the validation error. This can be any type 
-    ///   that implements the `Into<String>` trait. If `None` is provided, the error will not 
+    /// - `field`: An optional field name related to the validation error. This can be any type
+    ///   that implements the `Into<String>` trait. If `None` is provided, the error will not
     ///   be associated with a specific field.
     ///
     /// # Returns
@@ -435,16 +470,16 @@ impl ClassicError {
     /// additional details about the error.
     /// # Parameters
     ///
-    /// - `message`: A message describing the parsing error. This can be any type that 
+    /// - `message`: A message describing the parsing error. This can be any type that
     ///   implements `Into<String>`.
-    /// - `position`: An optional `usize` indicating the position in the input where the 
+    /// - `position`: An optional `usize` indicating the position in the input where the
     ///   parsing error occurred. If `None`, the position is unspecified.
-    /// - `context`: An optional additional context for the error. This can be any type 
+    /// - `context`: An optional additional context for the error. This can be any type
     ///   that implements `Into<String>`. If `None`, no context is provided.
     ///
     /// # Returns
     ///
-    /// Returns an instance of `ClassicError::Parse` containing the specified message, 
+    /// Returns an instance of `ClassicError::Parse` containing the specified message,
     /// position, and context.
     ///
     /// # Example
@@ -453,7 +488,7 @@ impl ClassicError {
     /// let error = ClassicError::parse("Invalid syntax", Some(42), Some("while parsing a number"));
     /// ```
     ///
-    /// This creates a `ClassicError::Parse` error with the message "Invalid syntax", 
+    /// This creates a `ClassicError::Parse` error with the message "Invalid syntax",
     /// position `42`, and additional context "while parsing a number".
     pub fn parse(
         message: impl Into<String>,
@@ -552,13 +587,13 @@ impl ClassicError {
 
     /// Creates a new `ClassicError::Permission` error with a specified message and an optional resource.
     /// # Parameters
-    /// - `message`: The error message, which can be converted into a `String`. This provides details 
+    /// - `message`: The error message, which can be converted into a `String`. This provides details
     ///   about the permission error.
-    /// - `resource`: An optional parameter representing the resource related to the permission error. 
+    /// - `resource`: An optional parameter representing the resource related to the permission error.
     ///   This can also be converted into a `String`.
     ///
     /// # Returns
-    /// - Returns an instance of the `ClassicError` enum with the `Permission` variant initialized 
+    /// - Returns an instance of the `ClassicError` enum with the `Permission` variant initialized
     ///   with the given message and optional resource.
     ///
     /// # Example
@@ -575,7 +610,7 @@ impl ClassicError {
 
     /// Creates a new `ClassicError::NotFound` error instance for a specified resource.
     /// # Parameters
-    /// - `resource`: A value that implements the `Into<String>` trait, representing 
+    /// - `resource`: A value that implements the `Into<String>` trait, representing
     ///   the name or description of the resource that was not found.
     ///
     /// # Returns
@@ -709,9 +744,9 @@ impl From<ClassicError> for PyErr {
     /// use some_module::ClassicError;
     /// use some_module_to_convert::from;
     ///
-    /// let error = ClassicError::Io { 
+    /// let error = ClassicError::Io {
     ///     message: "File not found".to_string(),
-    ///     source: None 
+    ///     source: None
     /// };
     ///
     /// let py_error = from(error);
@@ -828,6 +863,34 @@ pub type ClassicResult<T> = Result<T, ClassicError>;
 
 /// Helper trait to convert standard errors to ClassicError
 pub trait IntoClassicError<T> {
+    /// Converts a `Result<T, E>` into a `ClassicResult<T>` by wrapping errors with context.
+    ///
+    /// This method transforms standard Rust errors into `ClassicError::Generic` variants,
+    /// adding contextual information to help with debugging and error reporting.
+    ///
+    /// # Parameters
+    ///
+    /// * `context` - A description of what operation failed. This becomes the error message,
+    ///   with the original error details preserved in the `details` field.
+    ///
+    /// # Returns
+    ///
+    /// A `ClassicResult<T>` where:
+    /// - `Ok(T)` is passed through unchanged
+    /// - `Err(E)` is converted to `ClassicError::Generic` with the provided context
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use classic_shared::{ClassicResult, IntoClassicError};
+    /// use std::fs;
+    ///
+    /// fn read_config() -> ClassicResult<String> {
+    ///     fs::read_to_string("config.yaml")
+    ///         .into_classic("Failed to read configuration file")?;
+    ///     Ok("config content".to_string())
+    /// }
+    /// ```
     fn into_classic(self, context: impl Into<String>) -> ClassicResult<T>;
 }
 
@@ -864,7 +927,7 @@ impl<T, E: std::error::Error + Send + Sync + 'static> IntoClassicError<T> for Re
     /// ```
     ///
     /// # Note
-    /// The function assumes that the error type `E` implements the `ToString` trait in order to convert 
+    /// The function assumes that the error type `E` implements the `ToString` trait in order to convert
     /// the error details into a string format.
     fn into_classic(self, context: impl Into<String>) -> ClassicResult<T> {
         self.map_err(|e| ClassicError::Generic {

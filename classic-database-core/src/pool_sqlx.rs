@@ -23,18 +23,23 @@ use thiserror::Error;
 /// Represents various errors that can occur when working with a database.
 #[derive(Debug, Error)]
 pub enum DatabaseError {
+    /// Failed to open or initialize a database connection
     #[error("Failed to open database: {0}")]
     OpenError(String),
 
+    /// Query execution encountered an error
     #[error("Query execution failed: {0}")]
     QueryError(String),
 
+    /// Database file does not exist at the specified path
     #[error("Database file not found: {0}")]
     NotFound(String),
 
+    /// I/O error occurred during file operations
     #[error("I/O error: {0}")]
     IoError(#[from] std::io::Error),
 
+    /// SQLx library error occurred
     #[error("Sqlx error: {0}")]
     SqlxError(#[from] sqlx::Error),
 }
@@ -42,11 +47,14 @@ pub enum DatabaseError {
 /// Cache entry with TTL support
 #[derive(Clone, Debug)]
 pub struct CacheEntry {
+    /// Cached value (typically a database query result)
     pub value: String,
+    /// Expiration timestamp for this cache entry
     pub expires_at: Instant,
 }
 
 impl CacheEntry {
+    /// Create a new cache entry with the given value and time-to-live duration
     pub fn new(value: String, ttl: Duration) -> Self {
         Self {
             value,
@@ -54,6 +62,7 @@ impl CacheEntry {
         }
     }
 
+    /// Check if this cache entry has expired
     pub fn is_expired(&self) -> bool {
         Instant::now() > self.expires_at
     }
@@ -62,23 +71,37 @@ impl CacheEntry {
 /// Statistics for monitoring pool performance
 #[derive(Default, Debug, Clone)]
 pub struct PoolStatistics {
+    /// Total number of queries executed
     pub total_queries: u64,
+    /// Number of queries served from cache
     pub cache_hits: u64,
+    /// Number of queries that required database access
     pub cache_misses: u64,
+    /// Total number of connections created
     pub total_connections: u64,
+    /// Number of currently active connections
     pub active_connections: u64,
 }
 
 /// Database pool with sqlx - true async support
+///
+/// Provides high-performance asynchronous database access with connection pooling,
+/// query caching, and FormID lookup optimization.
 #[derive(Clone)]
 pub struct DatabasePool {
-    // Map of database paths to sqlx connection pools
+    /// Map of database paths to sqlx connection pools
     pools: Arc<DashMap<PathBuf, SqlitePool>>,
+    /// Query result cache with TTL-based expiration
     query_cache: Arc<DashMap<String, CacheEntry>>,
+    /// Time-to-live duration for cached queries
     cache_ttl: Arc<RwLock<Duration>>,
+    /// Maximum number of connections per pool
     max_connections: Arc<RwLock<Option<usize>>>,
+    /// Performance statistics for monitoring
     stats: Arc<RwLock<PoolStatistics>>,
+    /// Active game table name (e.g., "Fallout4", "Skyrim")
     game_table: Arc<RwLock<String>>,
+    /// List of database file paths currently loaded
     db_paths: Arc<RwLock<Vec<PathBuf>>>,
 }
 
@@ -343,16 +366,28 @@ impl DatabasePool {
     }
 
     // Utility methods
+    /// Set the active game table name
+    ///
+    /// # Arguments
+    /// * `table` - Table name (e.g., "Fallout4", "Skyrim")
     pub fn set_game_table(&self, table: &str) {
         if let Ok(mut t) = self.game_table.write() {
             *t = table.to_string();
         }
     }
 
+    /// Get the current game table name
     pub fn get_game_table(&self) -> String {
         self.game_table.read().unwrap().clone()
     }
 
+    /// Clear the query cache
+    ///
+    /// # Arguments
+    /// * `expired_only` - If true, only remove expired entries; if false, clear all
+    ///
+    /// # Returns
+    /// Number of cache entries removed
     pub fn clear_cache(&self, expired_only: bool) -> usize {
         let initial_size = self.query_cache.len();
         if expired_only {
@@ -363,27 +398,38 @@ impl DatabasePool {
         initial_size - self.query_cache.len()
     }
 
+    /// Set the cache time-to-live duration
+    ///
+    /// # Arguments
+    /// * `ttl` - New TTL duration for cached queries
     pub fn set_cache_ttl(&self, ttl: Duration) {
         if let Ok(mut t) = self.cache_ttl.write() {
             *t = ttl;
         }
     }
 
+    /// Get the maximum number of connections per pool
     pub fn get_max_connections(&self) -> Option<usize> {
         self.max_connections.read().unwrap().clone()
     }
 
+    /// Set the maximum number of connections per pool
+    ///
+    /// # Arguments
+    /// * `max_connections` - New maximum connection count
     pub fn set_max_connections(&self, max_connections: usize) {
         if let Ok(mut m) = self.max_connections.write() {
             *m = Some(max_connections);
         }
     }
 
+    /// Recalculate optimal connection count based on current CPU cores
     pub fn recalculate_max_connections(&self) {
         let new_max = Self::calculate_max_connections();
         self.set_max_connections(new_max);
     }
 
+    /// Get current performance statistics
     pub fn get_stats(&self) -> Result<PoolStatistics, DatabaseError> {
         self.stats
             .read()
@@ -391,10 +437,12 @@ impl DatabasePool {
             .map_err(|e| DatabaseError::QueryError(format!("Failed to read stats: {}", e)))
     }
 
+    /// Check if any database pools are available
     pub fn is_available(&self) -> bool {
         !self.pools.is_empty()
     }
 
+    /// Get the current number of entries in the query cache
     pub fn cache_size(&self) -> usize {
         self.query_cache.len()
     }

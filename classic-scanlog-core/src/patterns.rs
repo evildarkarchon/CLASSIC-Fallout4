@@ -13,6 +13,43 @@ pub struct PatternMatcher {
 }
 
 impl PatternMatcher {
+    /// Creates a new pattern matcher with the specified patterns.
+    ///
+    /// This constructor initializes a `PatternMatcher` using the Aho-Corasick algorithm
+    /// for efficient multi-pattern matching. The matcher is configured for case-insensitive
+    /// ASCII matching and includes an internal cache for repeated matches.
+    ///
+    /// # Arguments
+    ///
+    /// * `patterns` - A vector of patterns to match against text. Patterns can include
+    ///   error messages, stack trace signatures, module names, or other identifiable
+    ///   strings from crash logs.
+    ///
+    /// # Returns
+    ///
+    /// A new `PatternMatcher` instance configured with the provided patterns, or an error
+    /// if pattern compilation fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ScanLogError::PatternError` if the Aho-Corasick automaton cannot be built
+    /// from the provided patterns (e.g., if patterns are malformed or exceed internal limits).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::patterns::PatternMatcher;
+    ///
+    /// let patterns = vec![
+    ///     "ACCESS_VIOLATION".to_string(),
+    ///     "EXCEPTION_STACK_OVERFLOW".to_string(),
+    ///     "EXCEPTION_BREAKPOINT".to_string(),
+    /// ];
+    ///
+    /// let matcher = PatternMatcher::new(patterns)?;
+    /// assert!(matcher.has_match("Unhandled exception: ACCESS_VIOLATION at 0x7FF123456"));
+    /// # Ok::<(), classic_scanlog_core::error::ScanLogError>(())
+    /// ```
     pub fn new(patterns: Vec<String>) -> Result<Self> {
         let matcher = AhoCorasick::builder()
             .ascii_case_insensitive(true)

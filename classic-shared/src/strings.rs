@@ -18,6 +18,7 @@ pub struct StringProcessor {
 
 #[pymethods]
 impl StringProcessor {
+    /// Creates a new `StringProcessor` with an empty string interner.
     #[new]
     pub fn new() -> Self {
         Self {

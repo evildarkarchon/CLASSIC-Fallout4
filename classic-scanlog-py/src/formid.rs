@@ -13,6 +13,8 @@ pub struct PyRustFormIDAnalyzer {
 
 #[pymethods]
 impl PyRustFormIDAnalyzer {
+    /// Create a new instance
+
     #[new]
     pub fn new() -> Self {
         Self {
@@ -64,6 +66,8 @@ pub struct PyFormIDAnalyzer {
 
 #[pymethods]
 impl PyFormIDAnalyzer {
+    /// Create a new instance
+
     #[new]
     pub fn new() -> Self {
         Self {

@@ -12,6 +12,8 @@ pub struct PySuspectScanner {
 
 #[pymethods]
 impl PySuspectScanner {
+    /// Create a new instance
+
     #[new]
     pub fn new(
         suspects_error_list: HashMap<String, String>,

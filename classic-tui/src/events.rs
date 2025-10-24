@@ -46,6 +46,22 @@ pub enum UiMessage {
     ToggleUpdateCheck,
     /// Save settings to disk
     SaveSettings,
+    /// Open staging folder picker
+    OpenStagingPicker,
+    /// Open custom folder picker
+    OpenCustomPicker,
+    /// Close active folder picker
+    CloseFolderPicker,
+    /// Select folder from active picker
+    SelectFolder,
+    /// Navigate folder picker up
+    FolderPickerUp,
+    /// Navigate folder picker down
+    FolderPickerDown,
+    /// Enter selected directory in folder picker
+    FolderPickerEnter,
+    /// Go to parent directory in folder picker
+    FolderPickerParent,
 }
 
 impl ScanMessage {

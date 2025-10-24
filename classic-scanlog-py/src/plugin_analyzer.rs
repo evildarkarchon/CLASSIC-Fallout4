@@ -12,6 +12,43 @@ pub struct PyPluginAnalyzer {
 
 #[pymethods]
 impl PyPluginAnalyzer {
+    /// Creates a new plugin analyzer for Bethesda game crash logs.
+    ///
+    /// This constructor initializes an analyzer that can scan crash logs for plugin references,
+    /// check plugin limits, match plugins against callstacks, and filter ignored plugins.
+    ///
+    /// # Arguments
+    ///
+    /// * `game_ignore_plugins` - List of game-specific plugins to ignore during analysis
+    /// * `ignore_list` - Additional custom plugins to ignore
+    /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout4", "Crash Logger")
+    /// * `game_version` - Base game version string (default: empty)
+    /// * `game_version_vr` - VR version string if applicable (default: empty)
+    /// * `game_version_new` - Next-gen/updated version string if applicable (default: empty)
+    ///
+    /// # Returns
+    ///
+    /// A new `PyPluginAnalyzer` instance ready to analyze crash logs.
+    ///
+    /// # Errors
+    ///
+    /// Returns `PyErr` if the underlying core analyzer fails to initialize.
+    ///
+    /// # Example
+    ///
+    /// ```python
+    /// # Python usage
+    /// from classic_core import PluginAnalyzer
+    ///
+    /// analyzer = PluginAnalyzer(
+    ///     game_ignore_plugins=["Fallout4.esm", "DLCRobot.esm"],
+    ///     ignore_list=["MyCustomPlugin.esp"],
+    ///     crashgen_name="Buffout4",
+    ///     game_version="1.10.163",
+    ///     game_version_vr="1.2.72",
+    ///     game_version_new="1.10.980"
+    /// )
+    /// ```
     #[new]
     #[pyo3(signature = (game_ignore_plugins, ignore_list, crashgen_name, game_version="".to_string(), game_version_vr="".to_string(), game_version_new="".to_string()))]
     pub fn new(

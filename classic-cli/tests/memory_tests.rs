@@ -1,4 +1,17 @@
-use classic_cli::{load_or_create_config, CliConfig};
+//! Memory leak detection and performance tests for CLASSIC CLI.
+//!
+//! This test suite focuses on identifying potential memory leaks and resource
+//! accumulation issues in long-running scenarios. Tests include:
+//!
+//! - Configuration load/save cycles
+//! - String buffer management
+//! - PathBuf allocation patterns
+//! - Resource cleanup on errors
+//! - Profiling markers for memory analysis tools
+//!
+//! Use `cargo test --test memory_tests -- --ignored` to run profiling tests.
+
+use classic_cli::{CliConfig, load_or_create_config};
 use std::path::PathBuf;
 use tempfile::tempdir;
 

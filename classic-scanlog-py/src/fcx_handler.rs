@@ -12,6 +12,8 @@ pub struct PyFcxModeHandler {
 
 #[pymethods]
 impl PyFcxModeHandler {
+    /// Create a new instance
+
     #[new]
     pub fn new(fcx_mode: bool) -> Self {
         Self {

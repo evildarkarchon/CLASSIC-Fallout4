@@ -210,27 +210,35 @@ static YAML_CACHE: Lazy<DashMap<PathBuf, CachedYaml>> = Lazy::new(DashMap::new);
 /// tools to clearly handle and report different failure scenarios.
 #[derive(Debug, Error)]
 pub enum YamlError {
+    /// Failed to parse YAML document
     #[error("Failed to parse YAML: {0}")]
     ParseError(String),
 
+    /// Failed to serialize YAML to string
     #[error("Failed to serialize YAML: {0}")]
     SerializeError(String),
 
+    /// I/O error during file operations
     #[error("I/O error: {0}")]
     IoError(#[from] std::io::Error),
 
+    /// YAML document is empty
     #[error("Empty YAML document")]
     EmptyDocument,
 
+    /// Invalid value encountered
     #[error("Invalid value: {0}")]
     InvalidValue(String),
 
+    /// Unresolved YAML alias reference
     #[error("Unresolved YAML alias")]
     UnresolvedAlias,
 
+    /// Invalid key path for nested access
     #[error("Invalid key path: {0}")]
     InvalidKeyPath(String),
 
+    /// Type conversion failed
     #[error("Type conversion error: {0}")]
     TypeConversionError(String),
 }
@@ -279,10 +287,15 @@ pub enum YamlError {
 /// ```
 #[derive(Debug, Clone)]
 pub struct YamlFormatConfig {
+    /// Preserve quotes around scalar values
     pub preserve_quotes: bool,
+    /// Maximum line width for wrapped text
     pub width: usize,
+    /// Number of spaces for indenting mappings (key-value pairs)
     pub indent_mapping: usize,
+    /// Number of spaces for indenting sequences (lists)
     pub indent_sequence: usize,
+    /// Additional offset for nested structures
     pub indent_offset: usize,
 }
 

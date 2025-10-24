@@ -6,6 +6,10 @@ use encoding_rs::{Encoding, UTF_8, WINDOWS_1252};
 pub struct EncodingDetector;
 
 impl EncodingDetector {
+    /// Creates a new `EncodingDetector` instance.
+    ///
+    /// This detector provides fast encoding detection for text files,
+    /// primarily checking for UTF-8 validity and falling back to Windows-1252.
     pub fn new() -> Self {
         Self
     }

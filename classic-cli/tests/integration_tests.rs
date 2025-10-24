@@ -1,5 +1,12 @@
+//! Integration tests for the CLASSIC CLI application.
+//!
+//! These tests verify that multiple components work together correctly,
+//! including configuration management, YAML serialization/deserialization,
+//! error handling, and output formatting. They use the internal API rather
+//! than testing the CLI binary directly.
+
 use classic_cli::{
-    load_or_create_config, CliArgs, CliConfig, OutputFormatter, PathConfig, ScanStats,
+    CliArgs, CliConfig, OutputFormatter, PathConfig, ScanStats, load_or_create_config,
 };
 use std::path::PathBuf;
 use tempfile::tempdir;

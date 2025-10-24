@@ -12,6 +12,7 @@ pub struct PyStringPool {
 
 #[pymethods]
 impl PyStringPool {
+    /// Create a new string pool for string interning
     #[new]
     pub fn new() -> Self {
         Self {
@@ -49,6 +50,7 @@ pub struct PyReportFragment {
 
 #[pymethods]
 impl PyReportFragment {
+    /// Create a new report fragment, optionally with initial lines
     #[new]
     #[pyo3(signature = (lines=None))]
     pub fn new(lines: Option<Vec<String>>) -> Self {
@@ -60,6 +62,7 @@ impl PyReportFragment {
         Self { inner }
     }
 
+    /// Create an empty report fragment
     #[staticmethod]
     pub fn empty() -> Self {
         Self {
@@ -67,6 +70,7 @@ impl PyReportFragment {
         }
     }
 
+    /// Create a report fragment from a list of lines
     #[staticmethod]
     pub fn from_lines(lines: Vec<String>) -> Self {
         Self {
@@ -112,6 +116,7 @@ pub struct PyReportComposer {
 
 #[pymethods]
 impl PyReportComposer {
+    /// Create a new report composer for assembling report fragments
     #[new]
     pub fn new() -> Self {
         Self {
@@ -159,6 +164,7 @@ pub struct PyReportGenerator {
 
 #[pymethods]
 impl PyReportGenerator {
+    /// Create a new report generator for creating standardized report sections
     #[new]
     pub fn new() -> Self {
         Self {
@@ -207,6 +213,7 @@ pub struct PyParallelReportProcessor;
 
 #[pymethods]
 impl PyParallelReportProcessor {
+    /// Create a new parallel report processor instance
     #[new]
     pub fn new() -> Self {
         Self

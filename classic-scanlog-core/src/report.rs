@@ -292,6 +292,25 @@ pub struct ReportGenerator {
 }
 
 impl ReportGenerator {
+    /// Creates a new report generator with the global string pool.
+    ///
+    /// The generator uses the shared `STRING_POOL` for efficient memory usage
+    /// through string interning. This allows multiple fragments to share
+    /// common strings like headers, formatting markers, and error messages.
+    ///
+    /// # Returns
+    ///
+    /// A new `ReportGenerator` instance ready to generate report fragments.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::report::ReportGenerator;
+    ///
+    /// let generator = ReportGenerator::new();
+    /// let header = generator.generate_header("crash.log", "v1.0");
+    /// assert!(!header.is_empty());
+    /// ```
     pub fn new() -> Self {
         Self {
             pool: STRING_POOL.clone(),

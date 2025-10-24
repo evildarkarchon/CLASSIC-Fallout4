@@ -5,6 +5,7 @@ use std::path::Path;
 use crate::args::CliArgs;
 
 // Re-export types from classic-config-core for convenience
+/// Type alias for ClassicConfig used in CLI context
 pub type CliConfig = ClassicConfig;
 #[allow(unused_imports)] // Re-exported in lib.rs for public API
 pub use classic_config_core::PathConfig;

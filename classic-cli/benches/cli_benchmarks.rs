@@ -1,3 +1,16 @@
+//! Benchmarks for CLASSIC CLI operations.
+//!
+//! This benchmark suite measures the performance of key CLI operations including:
+//! - Configuration creation, loading, and saving
+//! - YAML serialization/deserialization
+//! - Output formatting
+//! - Argument parsing and merging
+//! - Path validation
+//! - Memory allocation patterns
+//! - Cold start simulation (most critical metric)
+
+#![allow(missing_docs)] // Benchmark functions don't need individual documentation
+
 use classic_cli::{CliConfig, OutputFormatter, PathConfig, ScanStats};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::path::PathBuf;

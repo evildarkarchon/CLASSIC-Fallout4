@@ -10,8 +10,9 @@ use tracing::debug;
 
 use crate::error::{FileIOError, Result};
 
-/// File pattern constants
+/// File pattern for standard crash log files
 pub const CRASH_LOG_PATTERN: &str = "crash-*.log";
+/// File pattern for AUTOSCAN report files generated during crash analysis
 pub const CRASH_AUTOSCAN_PATTERN: &str = "crash-*-AUTOSCAN.md";
 
 /// Log collector for organizing crash logs from multiple sources
@@ -80,11 +81,12 @@ impl LogCollector {
     }
 
     /// Create a new LogCollector using the current directory as base
-    pub fn with_current_dir(
-        xse_folder: Option<PathBuf>,
-        custom_folder: Option<PathBuf>,
-    ) -> Self {
-        Self::new(std::env::current_dir().unwrap_or_default(), xse_folder, custom_folder)
+    pub fn with_current_dir(xse_folder: Option<PathBuf>, custom_folder: Option<PathBuf>) -> Self {
+        Self::new(
+            std::env::current_dir().unwrap_or_default(),
+            xse_folder,
+            custom_folder,
+        )
     }
 
     /// Ensure required directory structure exists
@@ -93,13 +95,15 @@ impl LogCollector {
     /// - {base_folder}/Crash Logs
     /// - {base_folder}/Crash Logs/Pastebin
     async fn ensure_directories(&self) -> Result<()> {
-        fs::create_dir_all(&self.crash_logs_dir).await.map_err(|e| {
-            FileIOError::Io(format!(
-                "Failed to create Crash Logs directory at {}: {}",
-                self.crash_logs_dir.display(),
-                e
-            ))
-        })?;
+        fs::create_dir_all(&self.crash_logs_dir)
+            .await
+            .map_err(|e| {
+                FileIOError::Io(format!(
+                    "Failed to create Crash Logs directory at {}: {}",
+                    self.crash_logs_dir.display(),
+                    e
+                ))
+            })?;
 
         fs::create_dir_all(&self.pastebin_dir).await.map_err(|e| {
             FileIOError::Io(format!(
@@ -143,12 +147,11 @@ impl LogCollector {
         let pattern_path = source_dir.join(pattern);
         let pattern_str = pattern_path.to_string_lossy();
 
-        for entry in glob::glob(&pattern_str).map_err(|e| {
-            FileIOError::Io(format!("Invalid glob pattern '{}': {}", pattern, e))
-        })? {
-            let source_path = entry.map_err(|e| {
-                FileIOError::Io(format!("Failed to read glob entry: {}", e))
-            })?;
+        for entry in glob::glob(&pattern_str)
+            .map_err(|e| FileIOError::Io(format!("Invalid glob pattern '{}': {}", pattern, e)))?
+        {
+            let source_path =
+                entry.map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
 
             if let Some(filename) = source_path.file_name() {
                 let target_path = target_dir.join(filename);
@@ -164,7 +167,11 @@ impl LogCollector {
                         ))
                     })?;
                     moved_count += 1;
-                    debug!("Moved: {} -> {}", source_path.display(), target_path.display());
+                    debug!(
+                        "Moved: {} -> {}",
+                        source_path.display(),
+                        target_path.display()
+                    );
                 }
             }
         }
@@ -203,12 +210,11 @@ impl LogCollector {
         let pattern_path = source_dir.join(pattern);
         let pattern_str = pattern_path.to_string_lossy();
 
-        for entry in glob::glob(&pattern_str).map_err(|e| {
-            FileIOError::Io(format!("Invalid glob pattern '{}': {}", pattern, e))
-        })? {
-            let source_path = entry.map_err(|e| {
-                FileIOError::Io(format!("Failed to read glob entry: {}", e))
-            })?;
+        for entry in glob::glob(&pattern_str)
+            .map_err(|e| FileIOError::Io(format!("Invalid glob pattern '{}': {}", pattern, e)))?
+        {
+            let source_path =
+                entry.map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
 
             if let Some(filename) = source_path.file_name() {
                 let target_path = target_dir.join(filename);
@@ -224,7 +230,11 @@ impl LogCollector {
                         ))
                     })?;
                     copied_count += 1;
-                    debug!("Copied: {} -> {}", source_path.display(), target_path.display());
+                    debug!(
+                        "Copied: {} -> {}",
+                        source_path.display(),
+                        target_path.display()
+                    );
                 }
             }
         }
@@ -245,7 +255,11 @@ impl LogCollector {
             .await?;
 
         let reports_moved = self
-            .move_files(&self.base_folder, &self.crash_logs_dir, CRASH_AUTOSCAN_PATTERN)
+            .move_files(
+                &self.base_folder,
+                &self.crash_logs_dir,
+                CRASH_AUTOSCAN_PATTERN,
+            )
             .await?;
 
         let total = logs_moved + reports_moved;
@@ -297,12 +311,11 @@ impl LogCollector {
             let pattern = self.crash_logs_dir.join("**").join(CRASH_LOG_PATTERN);
             let pattern_str = pattern.to_string_lossy();
 
-            for entry in glob::glob(&pattern_str).map_err(|e| {
-                FileIOError::Io(format!("Invalid glob pattern: {}", e))
-            })? {
-                let path = entry.map_err(|e| {
-                    FileIOError::Io(format!("Failed to read glob entry: {}", e))
-                })?;
+            for entry in glob::glob(&pattern_str)
+                .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
+            {
+                let path = entry
+                    .map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
                 crash_files.push(path);
             }
         }
@@ -313,9 +326,9 @@ impl LogCollector {
                 let pattern = custom_folder.join(CRASH_LOG_PATTERN);
                 let pattern_str = pattern.to_string_lossy();
 
-                for entry in glob::glob(&pattern_str).map_err(|e| {
-                    FileIOError::Io(format!("Invalid glob pattern: {}", e))
-                })? {
+                for entry in glob::glob(&pattern_str)
+                    .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
+                {
                     let path = entry.map_err(|e| {
                         FileIOError::Io(format!("Failed to read glob entry: {}", e))
                     })?;
@@ -421,7 +434,9 @@ mod tests {
 
         // Create a test crash log file
         let test_log = base.join("crash-2024-01-01-12-00-00.log");
-        tokio::fs::write(&test_log, b"test crash log").await.unwrap();
+        tokio::fs::write(&test_log, b"test crash log")
+            .await
+            .unwrap();
 
         let crash_logs = base.join("Crash Logs");
         tokio::fs::create_dir_all(&crash_logs).await.unwrap();

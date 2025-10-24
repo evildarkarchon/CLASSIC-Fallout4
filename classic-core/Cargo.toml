@@ -1,7 +1,7 @@
 [package]
 name = "classic-core"
 version = "8.0.0"
-edition = "2021"
+edition = "2024"
 authors = ["CLASSIC Development Team"]
 description = "High-performance Rust core for CLASSIC Fallout 4 crash log analyzer"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
@@ -59,3 +59,6 @@ inherits = "release"
 
 [lints.rust]
 deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation

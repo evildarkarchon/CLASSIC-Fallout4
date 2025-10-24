@@ -54,6 +54,42 @@ pub struct SuspectScanner {
 }
 
 impl SuspectScanner {
+    /// Creates a new suspect scanner with the given pattern lists.
+    ///
+    /// This constructor initializes a scanner that can detect known crash suspects
+    /// by matching patterns against crash log main errors and call stacks. The scanner
+    /// supports signal modifiers like `ME-REQ` (main error required), `ME-OPT` (main error
+    /// optional), `NOT` (callstack negative), and numeric occurrence counts.
+    ///
+    /// # Arguments
+    ///
+    /// * `suspects_error_list` - Map of error signatures to pattern strings for main error matching
+    /// * `suspects_stack_list` - Map of error signatures to pattern lists for call stack matching
+    ///
+    /// # Returns
+    ///
+    /// A new `SuspectScanner` instance ready to scan crash logs for suspects.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::suspect_scanner::SuspectScanner;
+    /// use std::collections::HashMap;
+    ///
+    /// let mut error_list = HashMap::new();
+    /// error_list.insert(
+    ///     "Critical | Memory Access Violation".to_string(),
+    ///     "ACCESS_VIOLATION".to_string()
+    /// );
+    ///
+    /// let mut stack_list = HashMap::new();
+    /// stack_list.insert(
+    ///     "High | Stack Overflow".to_string(),
+    ///     vec!["ME-REQ|EXCEPTION_STACK_OVERFLOW".to_string()]
+    /// );
+    ///
+    /// let scanner = SuspectScanner::new(error_list, stack_list);
+    /// ```
     pub fn new(
         suspects_error_list: HashMap<String, String>,
         suspects_stack_list: HashMap<String, Vec<String>>,

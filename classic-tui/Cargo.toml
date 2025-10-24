@@ -1,7 +1,7 @@
 [package]
 name = "classic-tui"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["CLASSIC Team"]
 description = "CLASSIC Terminal User Interface - High-performance TUI for crash log analysis"
 license = "MIT"
@@ -32,6 +32,9 @@ classic-shared = { path = "../classic-shared" }
 
 # TUI utilities
 tui-input = "0.14.0"
+
+# File system watching (cross-platform: Windows, Linux, macOS)
+notify = "7.0"
 
 # System directories
 dirs = { workspace = true }
@@ -64,3 +67,9 @@ panic = "abort"
 [profile.release-with-debug]
 inherits = "release"
 debug = true
+
+[lints.rust]
+rust_2024_compatibility = "warn"
+unsafe_code = "forbid"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+deprecated = "deny"

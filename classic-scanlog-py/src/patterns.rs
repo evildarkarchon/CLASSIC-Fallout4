@@ -11,6 +11,8 @@ pub struct PyPatternMatcher {
 
 #[pymethods]
 impl PyPatternMatcher {
+    /// Create a new instance
+
     #[new]
     pub fn new(patterns: Vec<String>) -> PyResult<Self> {
         let inner = PatternMatcher::new(patterns).map_err(crate::to_pyerr)?;

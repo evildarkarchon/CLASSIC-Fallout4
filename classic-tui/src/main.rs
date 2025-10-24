@@ -1,3 +1,8 @@
+  //! CLASSIC TUI - Terminal User Interface for crash log analysis
+//!
+//! Interactive terminal interface built with Ratatui/Crossterm for analyzing
+//! Fallout 4 and Skyrim crash logs.
+
 mod app;
 mod events;
 mod handlers;
@@ -193,6 +198,70 @@ async fn handle_ui_message(
             } else {
                 // Could add a success message to output
                 app.add_output("Settings saved successfully.".to_string());
+            }
+        }
+        UiMessage::OpenStagingPicker => {
+            app.open_staging_picker();
+        }
+        UiMessage::OpenCustomPicker => {
+            app.open_custom_picker();
+        }
+        UiMessage::CloseFolderPicker => {
+            app.close_staging_picker();
+            app.close_custom_picker();
+        }
+        UiMessage::SelectFolder => {
+            // Determine which picker is active and get the selected path
+            use handlers::folder_handler::{handle_folder_selection, FolderType};
+
+            if let Some(ref picker) = app.staging_picker {
+                if picker.is_active() {
+                    let selected_path = picker.get_selected_path();
+                    app.close_staging_picker();
+                    if let Err(e) =
+                        handle_folder_selection(app, FolderType::Staging, selected_path).await
+                    {
+                        app.add_output(format!("Error selecting folder: {}", e));
+                    }
+                }
+            } else if let Some(ref picker) = app.custom_picker {
+                if picker.is_active() {
+                    let selected_path = picker.get_selected_path();
+                    app.close_custom_picker();
+                    if let Err(e) =
+                        handle_folder_selection(app, FolderType::Custom, selected_path).await
+                    {
+                        app.add_output(format!("Error selecting folder: {}", e));
+                    }
+                }
+            }
+        }
+        UiMessage::FolderPickerUp => {
+            if let Some(ref mut picker) = app.staging_picker {
+                picker.move_up();
+            } else if let Some(ref mut picker) = app.custom_picker {
+                picker.move_up();
+            }
+        }
+        UiMessage::FolderPickerDown => {
+            if let Some(ref mut picker) = app.staging_picker {
+                picker.move_down();
+            } else if let Some(ref mut picker) = app.custom_picker {
+                picker.move_down();
+            }
+        }
+        UiMessage::FolderPickerEnter => {
+            if let Some(ref mut picker) = app.staging_picker {
+                picker.enter_selected();
+            } else if let Some(ref mut picker) = app.custom_picker {
+                picker.enter_selected();
+            }
+        }
+        UiMessage::FolderPickerParent => {
+            if let Some(ref mut picker) = app.staging_picker {
+                picker.go_up();
+            } else if let Some(ref mut picker) = app.custom_picker {
+                picker.go_up();
             }
         }
     }

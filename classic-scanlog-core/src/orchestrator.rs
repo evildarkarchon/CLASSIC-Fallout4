@@ -34,17 +34,23 @@ pub struct AnalysisConfig {
 
     /// Ignore lists (plugins, records, general)
     pub ignore_plugins: Vec<String>,
+    /// Records to ignore during analysis (e.g., FormIDs, record types)
     pub ignore_records: Vec<String>,
+    /// General items to ignore during analysis (catch-all ignore list)
     pub ignore_list: Vec<String>,
 
     /// Pattern dictionaries for suspect detection
     pub suspects_error: HashMap<String, String>,
+    /// Stack-based suspect patterns for crash analysis (e.g., function names, memory addresses)
     pub suspects_stack: HashMap<String, String>,
 
     /// Mod databases
     pub mods_core: HashMap<String, String>,
+    /// Frequently problematic mods database for crash analysis (e.g., known unstable mods, compatibility issues)
     pub mods_freq: HashMap<String, String>,
+    /// Mod conflict database for compatibility analysis (e.g., known mod conflicts, incompatible combinations)
     pub mods_conf: HashMap<String, String>,
+    /// Mod solutions database for providing fixes and workarounds (e.g., compatibility patches, configuration changes)
     pub mods_solu: HashMap<String, String>,
 }
 
@@ -426,9 +432,9 @@ impl OrchestratorCore {
         // Adaptive concurrency: start with CPU count, scale based on batch size
         let num_cpus = num_cpus::get();
         let max_concurrent = if log_paths.len() < num_cpus {
-            log_paths.len()  // Small batch: process all concurrently
+            log_paths.len() // Small batch: process all concurrently
         } else {
-            num_cpus.max(4)  // Large batch: use CPU count (min 4 for good throughput)
+            num_cpus.max(4) // Large batch: use CPU count (min 4 for good throughput)
         };
 
         stream::iter(log_paths)
@@ -441,7 +447,7 @@ impl OrchestratorCore {
                     }
                 }
             })
-            .buffer_unordered(max_concurrent)  // ✅ Bounded parallelism
+            .buffer_unordered(max_concurrent) // ✅ Bounded parallelism
             .collect()
             .await
     }
