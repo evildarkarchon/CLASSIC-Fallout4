@@ -80,6 +80,13 @@ async fn main() -> Result<()> {
         app.update_backup_status(status);
     }
 
+    // Check for updates on startup if enabled
+    if app.check_updates {
+        if let Ok(Some(update_info)) = handlers::update_handler::check_for_updates().await {
+            app.show_update_notification(crate::widgets::UpdateNotification::new(update_info));
+        }
+    }
+
     // Main event loop
     let result = run_app(
         &mut terminal,
@@ -200,9 +207,6 @@ async fn handle_ui_message(
         UiMessage::ShowSettingsScreen => {
             app.switch_screen(UiState::SettingsScreen);
         }
-        UiMessage::ShowPapyrusScreen => {
-            app.switch_screen(UiState::PapyrusScreen);
-        }
         UiMessage::ShowBackupScreen => {
             app.switch_screen(UiState::BackupScreen);
             // Refresh backup status when entering screen
@@ -290,10 +294,16 @@ async fn handle_ui_message(
             app.scroll_down(lines, 20);
         }
         UiMessage::UpdateStagingFolder(path) => {
-            app.set_staging_folder(path);
+            use handlers::folder_handler::{handle_folder_selection, FolderType};
+            if let Err(e) = handle_folder_selection(app, FolderType::Staging, path).await {
+                app.add_output(format!("Error updating staging folder: {}", e));
+            }
         }
         UiMessage::UpdateCustomFolder(path) => {
-            app.set_custom_folder(path);
+            use handlers::folder_handler::{handle_folder_selection, FolderType};
+            if let Err(e) = handle_folder_selection(app, FolderType::Custom, path).await {
+                app.add_output(format!("Error updating custom folder: {}", e));
+            }
         }
         UiMessage::ToggleUpdateCheck => {
             app.check_updates = !app.check_updates;
@@ -607,6 +617,39 @@ async fn handle_ui_message(
         }
         UiMessage::ScrollErrorDown(lines) => {
             app.scroll_error_down(lines);
+        }
+        UiMessage::CheckForUpdates => {
+            // Check for updates and show notification if available
+            match crate::handlers::update_handler::check_for_updates().await {
+                Ok(Some(update_info)) => {
+                    app.show_update_notification(crate::widgets::UpdateNotification::new(
+                        update_info,
+                    ));
+                    app.add_output("✓ Update available! Press U to view details.".to_string());
+                }
+                Ok(None) => {
+                    app.add_output("✓ You are on the latest version.".to_string());
+                }
+                Err(e) => {
+                    app.add_output(format!("✗ Failed to check for updates: {}", e));
+                }
+            }
+        }
+        UiMessage::ViewUpdateDetails => {
+            if let Some(notification) = &app.update_notification {
+                let url = notification.update_info.html_url.clone();
+                match crate::handlers::update_handler::open_release_page(&url) {
+                    Ok(()) => {
+                        app.add_output("✓ Opened release page in browser".to_string());
+                    }
+                    Err(e) => {
+                        app.add_output(format!("✗ Failed to open browser: {}", e));
+                    }
+                }
+            }
+        }
+        UiMessage::DismissUpdateNotification => {
+            app.dismiss_update_notification();
         }
     }
 

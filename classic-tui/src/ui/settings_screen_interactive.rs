@@ -331,6 +331,22 @@ impl SettingsState {
 
 /// Render the interactive settings screen
 pub fn render_settings_screen_interactive(f: &mut Frame, app: &mut App, state: &SettingsState) {
+    let mut working_area = f.area();
+
+    // Render update notification banner if visible (at top)
+    if let Some(ref notification) = app.update_notification {
+        if notification.is_visible() {
+            notification.render(f, working_area);
+            // Adjust working area to account for banner height
+            working_area = Rect {
+                x: working_area.x,
+                y: working_area.y + notification.height(),
+                width: working_area.width,
+                height: working_area.height.saturating_sub(notification.height()),
+            };
+        }
+    }
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -340,7 +356,7 @@ pub fn render_settings_screen_interactive(f: &mut Frame, app: &mut App, state: &
             Constraint::Length(5), // Description
             Constraint::Length(3), // Instructions
         ])
-        .split(f.area());
+        .split(working_area);
 
     // Header
     render_header(f, chunks[0]);
@@ -740,12 +756,12 @@ mod tests {
         let backend = TestBackend::new(100, 40);
         let mut terminal = Terminal::new(backend).unwrap();
 
-        let app = App::new();
+        let mut app = App::new();
         let state = SettingsState::new();
 
         terminal
             .draw(|f| {
-                render_settings_screen_interactive(f, &app, &state);
+                render_settings_screen_interactive(f, &mut app, &state);
             })
             .unwrap();
 

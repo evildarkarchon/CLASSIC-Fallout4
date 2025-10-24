@@ -9,13 +9,29 @@ use ratatui::{
 
 /// Render the results viewer screen with split-pane layout
 pub fn render_results_screen(f: &mut Frame, app: &App) {
+    let mut working_area = f.area();
+
+    // Render update notification banner if visible (at top)
+    if let Some(ref notification) = app.update_notification {
+        if notification.is_visible() {
+            notification.render(f, working_area);
+            // Adjust working area to account for banner height
+            working_area = Rect {
+                x: working_area.x,
+                y: working_area.y + notification.height(),
+                width: working_area.width,
+                height: working_area.height.saturating_sub(notification.height()),
+            };
+        }
+    }
+
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Percentage(30), // Report list on left
             Constraint::Percentage(70), // Report viewer on right
         ])
-        .split(f.area());
+        .split(working_area);
 
     render_report_list(f, chunks[0], app);
     render_report_viewer(f, chunks[1], app);

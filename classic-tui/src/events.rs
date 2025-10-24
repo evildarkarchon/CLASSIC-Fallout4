@@ -24,9 +24,6 @@ pub enum UiMessage {
     ShowHelpScreen,
     /// Switch to settings screen
     ShowSettingsScreen,
-    /// Switch to Papyrus screen
-    #[allow(dead_code)]
-    ShowPapyrusScreen,
     /// Switch to backup operations screen
     ShowBackupScreen,
     /// Switch to results viewer screen
@@ -80,10 +77,8 @@ pub enum UiMessage {
     /// Scroll output down
     ScrollDown(usize),
     /// Update staging folder path
-    #[allow(dead_code)]
     UpdateStagingFolder(std::path::PathBuf),
     /// Update custom scan folder path
-    #[allow(dead_code)]
     UpdateCustomFolder(std::path::PathBuf),
     /// Toggle update check
     #[allow(dead_code)]
@@ -133,6 +128,12 @@ pub enum UiMessage {
     ScrollErrorUp(usize),
     /// Scroll error dialog down
     ScrollErrorDown(usize),
+    /// Check for updates from GitHub
+    CheckForUpdates,
+    /// View update details (open release page in browser)
+    ViewUpdateDetails,
+    /// Dismiss update notification
+    DismissUpdateNotification,
 }
 
 impl ScanMessage {

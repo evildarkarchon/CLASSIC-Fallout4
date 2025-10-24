@@ -1,6 +1,6 @@
 use crate::app::App;
 use ratatui::{
-    layout::Alignment,
+    layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
@@ -9,6 +9,22 @@ use ratatui::{
 
 /// Render the settings screen
 pub fn render_settings_screen(f: &mut Frame, app: &App) {
+    let mut working_area = f.area();
+
+    // Render update notification banner if visible (at top)
+    if let Some(ref notification) = app.update_notification {
+        if notification.is_visible() {
+            notification.render(f, working_area);
+            // Adjust working area to account for banner height
+            working_area = Rect {
+                x: working_area.x,
+                y: working_area.y + notification.height(),
+                width: working_area.width,
+                height: working_area.height.saturating_sub(notification.height()),
+            };
+        }
+    }
+
     let settings_text = vec![
         Line::from(""),
         Line::from(vec![Span::styled(
@@ -131,7 +147,7 @@ pub fn render_settings_screen(f: &mut Frame, app: &App) {
                 .border_style(Style::default().fg(Color::Magenta)),
         );
 
-    f.render_widget(settings_widget, f.area());
+    f.render_widget(settings_widget, working_area);
 }
 
 #[cfg(test)]

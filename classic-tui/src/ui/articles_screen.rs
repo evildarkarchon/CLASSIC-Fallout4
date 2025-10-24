@@ -291,6 +291,22 @@ impl ArticlesState {
 
 /// Render the articles screen
 pub fn render_articles_screen(f: &mut Frame, app: &App, state: &ArticlesState) {
+    let mut working_area = f.area();
+
+    // Render update notification banner if visible (at top)
+    if let Some(ref notification) = app.update_notification {
+        if notification.is_visible() {
+            notification.render(f, working_area);
+            // Adjust working area to account for banner height
+            working_area = Rect {
+                x: working_area.x,
+                y: working_area.y + notification.height(),
+                width: working_area.width,
+                height: working_area.height.saturating_sub(notification.height()),
+            };
+        }
+    }
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -298,7 +314,7 @@ pub fn render_articles_screen(f: &mut Frame, app: &App, state: &ArticlesState) {
             Constraint::Min(10),   // Content area
             Constraint::Length(3), // Status bar
         ])
-        .split(f.area());
+        .split(working_area);
 
     // Header
     render_header(f, chunks[0]);

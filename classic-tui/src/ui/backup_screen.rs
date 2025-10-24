@@ -10,6 +10,22 @@ use ratatui::{
 
 /// Render the backup operations screen
 pub fn render_backup_screen(f: &mut Frame, app: &App) {
+    let mut working_area = f.area();
+
+    // Render update notification banner if visible (at top)
+    if let Some(ref notification) = app.update_notification {
+        if notification.is_visible() {
+            notification.render(f, working_area);
+            // Adjust working area to account for banner height
+            working_area = Rect {
+                x: working_area.x,
+                y: working_area.y + notification.height(),
+                width: working_area.width,
+                height: working_area.height.saturating_sub(notification.height()),
+            };
+        }
+    }
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -17,7 +33,7 @@ pub fn render_backup_screen(f: &mut Frame, app: &App) {
             Constraint::Min(20),    // Backup sections
             Constraint::Length(3),  // Status bar
         ])
-        .split(f.area());
+        .split(working_area);
 
     // Header
     render_header(f, chunks[0]);

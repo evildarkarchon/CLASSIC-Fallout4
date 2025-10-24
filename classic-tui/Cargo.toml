@@ -42,6 +42,12 @@ arboard = "3.4"
 # Date/time for error timestamps
 chrono = "0.4"
 
+# HTTP client for update checking (rustls-tls for cross-platform compatibility)
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+
+# Open URLs in system browser
+open = "5.0"
+
 # System directories
 dirs = { workspace = true }
 

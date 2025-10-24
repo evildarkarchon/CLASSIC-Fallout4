@@ -9,6 +9,13 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
         return handle_error_dialog_keys(key);
     }
 
+    // If update notification is visible, check for update-specific keys
+    if app.is_update_notification_visible() {
+        if let Some(msg) = handle_update_notification_keys(key) {
+            return Some(msg);
+        }
+    }
+
     // If folder picker is active, handle picker-specific keys first
     if app.is_folder_picker_active() {
         return handle_folder_picker_keys(key);
@@ -352,6 +359,20 @@ fn handle_error_dialog_keys(key: KeyEvent) -> Option<UiMessage> {
         // PageDown - Scroll error details down faster
         KeyCode::PageDown => Some(UiMessage::ScrollErrorDown(10)),
 
+        _ => None,
+    }
+}
+
+/// Handle keys when update notification is visible
+fn handle_update_notification_keys(key: KeyEvent) -> Option<UiMessage> {
+    match key.code {
+        // U - View update details (open in browser)
+        KeyCode::Char('u') | KeyCode::Char('U') => Some(UiMessage::ViewUpdateDetails),
+
+        // D - Dismiss notification
+        KeyCode::Char('d') | KeyCode::Char('D') => Some(UiMessage::DismissUpdateNotification),
+
+        // Any other key falls through to normal handling
         _ => None,
     }
 }

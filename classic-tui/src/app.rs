@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 // Forward declare SettingsState, PathItem, and ArticlesState to avoid circular dependency
 pub use crate::ui::{ArticlesState, PathItem, SettingsState};
-use crate::widgets::{ErrorDialog, FolderPickerState};
+use crate::widgets::{ErrorDialog, FolderPickerState, UpdateNotification};
 
 /// Application state for the TUI
 pub struct App {
@@ -65,6 +65,8 @@ pub struct App {
     pub search_active: bool,
     /// Error dialog for displaying errors with clipboard support
     pub error_dialog: Option<ErrorDialog>,
+    /// Update notification for displaying available updates
+    pub update_notification: Option<UpdateNotification>,
 }
 
 /// UI state representing which screen is active
@@ -152,6 +154,7 @@ impl App {
             current_match_index: 0,
             search_active: false,
             error_dialog: None,
+            update_notification: None,
         }
     }
 
@@ -404,6 +407,36 @@ impl App {
             let max_lines = 100;
             dialog.scroll_down(lines, max_lines);
         }
+    }
+
+    /// Show an update notification with the given information.
+    ///
+    /// # Arguments
+    ///
+    /// * `notification` - The update notification to show
+    pub fn show_update_notification(&mut self, notification: UpdateNotification) {
+        let mut notification = notification;
+        notification.show();
+        self.update_notification = Some(notification);
+    }
+
+    /// Dismiss the update notification.
+    pub fn dismiss_update_notification(&mut self) {
+        if let Some(notification) = &mut self.update_notification {
+            notification.hide();
+        }
+    }
+
+    /// Check if an update notification is currently visible.
+    ///
+    /// # Returns
+    ///
+    /// `true` if an update notification is visible, `false` otherwise
+    pub fn is_update_notification_visible(&self) -> bool {
+        self.update_notification
+            .as_ref()
+            .map(|n| n.is_visible())
+            .unwrap_or(false)
     }
 
     /// Update Papyrus statistics

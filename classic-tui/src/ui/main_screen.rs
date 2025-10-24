@@ -11,8 +11,24 @@ use ratatui::{
 
 /// Render the main screen
 pub fn render_main_screen(f: &mut Frame, app: &mut App) {
+    let mut working_area = f.area();
+
+    // Render update notification banner if visible (at top)
+    if let Some(ref notification) = app.update_notification {
+        if notification.is_visible() {
+            notification.render(f, working_area);
+            // Adjust working area to account for banner height
+            working_area = Rect {
+                x: working_area.x,
+                y: working_area.y + notification.height(),
+                width: working_area.width,
+                height: working_area.height.saturating_sub(notification.height()),
+            };
+        }
+    }
+
     let (header_area, folder_area, button_area, output_area, status_area) =
-        TuiLayout::main_screen(f.area());
+        TuiLayout::main_screen(working_area);
 
     render_header(f, header_area);
     render_folder_section(f, folder_area, app);
