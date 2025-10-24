@@ -5,9 +5,9 @@ use classic_scanlog_core::papyrus::PapyrusStats;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-// Forward declare SettingsState to avoid circular dependency
-pub use crate::ui::SettingsState;
-use crate::widgets::FolderPickerState;
+// Forward declare SettingsState, PathItem, and ArticlesState to avoid circular dependency
+pub use crate::ui::{ArticlesState, PathItem, SettingsState};
+use crate::widgets::{ErrorDialog, FolderPickerState};
 
 /// Application state for the TUI
 pub struct App {
@@ -31,10 +31,16 @@ pub struct App {
     pub check_updates: bool,
     /// Settings screen state
     pub settings_state: SettingsState,
+    /// Articles screen state
+    pub articles_state: ArticlesState,
     /// Staging folder picker state
     pub staging_picker: Option<FolderPickerState>,
     /// Custom folder picker state
     pub custom_picker: Option<FolderPickerState>,
+    /// Settings path picker state
+    pub settings_path_picker: Option<FolderPickerState>,
+    /// Which path is currently being edited (for settings path picker)
+    pub editing_path: Option<PathItem>,
     /// Papyrus monitoring statistics
     pub papyrus_stats: Option<PapyrusStats>,
     /// Recent Papyrus log lines for display
@@ -57,6 +63,8 @@ pub struct App {
     pub current_match_index: usize,
     /// Whether search mode is active
     pub search_active: bool,
+    /// Error dialog for displaying errors with clipboard support
+    pub error_dialog: Option<ErrorDialog>,
 }
 
 /// UI state representing which screen is active
@@ -74,6 +82,8 @@ pub enum UiState {
     BackupScreen,
     /// Results viewer screen
     ResultsScreen,
+    /// Articles/Resources screen
+    ArticlesScreen,
 }
 
 /// Scan state representing the current scan operation
@@ -125,8 +135,11 @@ impl App {
             scroll_offset: 0,
             check_updates: true,
             settings_state: SettingsState::new(),
+            articles_state: ArticlesState::new(),
             staging_picker: None,
             custom_picker: None,
+            settings_path_picker: None,
+            editing_path: None,
             papyrus_stats: None,
             papyrus_log_lines: Vec::new(),
             backup_status: HashMap::new(),
@@ -138,6 +151,7 @@ impl App {
             search_matches: Vec::new(),
             current_match_index: 0,
             search_active: false,
+            error_dialog: None,
         }
     }
 
@@ -257,6 +271,33 @@ impl App {
         Ok(())
     }
 
+    /// Reset General tab settings to defaults
+    pub fn reset_general_settings(&mut self) {
+        self.config.fcx_mode = false;
+        self.config.show_formid_values = false;
+        self.config.stat_logging = false;
+        self.config.move_unsolved_logs = false;
+        self.config.simplify_logs = false;
+        self.check_updates = true;
+    }
+
+    /// Reset Paths tab settings to defaults (keeps existing paths, marks as needing review)
+    pub fn reset_paths_settings(&mut self) {
+        // For paths, we don't reset to empty as that would break functionality
+        // Instead, we keep current values but could add a flag to indicate review needed
+        // This is safer than clearing critical paths
+    }
+
+    /// Reset Advanced tab settings to defaults
+    pub fn reset_advanced_settings(&mut self) {
+        // Advanced settings will be added to config in the future
+        // For now, this is a placeholder that would reset:
+        // - Thread count to auto (CPU cores)
+        // - Batch size to 100
+        // - Database pool size to 10
+        // - Log verbosity to Info
+    }
+
     /// Open staging folder picker
     pub fn open_staging_picker(&mut self) {
         let mut picker = FolderPickerState::new(self.staging_folder.clone());
@@ -281,6 +322,28 @@ impl App {
         self.custom_picker = None;
     }
 
+    /// Open settings path picker for a specific path item
+    pub fn open_settings_path_picker(&mut self, path_item: PathItem) {
+        // Get the current path value for the selected item
+        let current_path = match path_item {
+            PathItem::GameRoot => Some(self.config.paths.game_root.clone()),
+            PathItem::DocsRoot => self.config.paths.docs_root.clone(),
+            PathItem::ModsFolder => self.config.paths.mods_folder.clone(),
+            PathItem::CustomScan => self.config.paths.scan_custom.clone(),
+        };
+
+        let mut picker = FolderPickerState::new(current_path);
+        picker.activate();
+        self.settings_path_picker = Some(picker);
+        self.editing_path = Some(path_item);
+    }
+
+    /// Close settings path picker
+    pub fn close_settings_path_picker(&mut self) {
+        self.settings_path_picker = None;
+        self.editing_path = None;
+    }
+
     /// Check if any folder picker is active
     pub fn is_folder_picker_active(&self) -> bool {
         self.staging_picker
@@ -292,6 +355,55 @@ impl App {
                 .as_ref()
                 .map(|p| p.is_active())
                 .unwrap_or(false)
+            || self
+                .settings_path_picker
+                .as_ref()
+                .map(|p| p.is_active())
+                .unwrap_or(false)
+    }
+
+    /// Show an error dialog with the given information.
+    ///
+    /// # Arguments
+    ///
+    /// * `dialog` - The error dialog to show
+    pub fn show_error_dialog(&mut self, dialog: ErrorDialog) {
+        let mut dialog = dialog;
+        dialog.activate();
+        self.error_dialog = Some(dialog);
+    }
+
+    /// Close the error dialog if it's currently shown.
+    pub fn close_error_dialog(&mut self) {
+        self.error_dialog = None;
+    }
+
+    /// Check if an error dialog is currently active.
+    ///
+    /// # Returns
+    ///
+    /// `true` if an error dialog is visible, `false` otherwise
+    pub fn is_error_dialog_active(&self) -> bool {
+        self.error_dialog
+            .as_ref()
+            .map(|d| d.is_active())
+            .unwrap_or(false)
+    }
+
+    /// Scroll the error dialog up by the specified number of lines.
+    pub fn scroll_error_up(&mut self, lines: usize) {
+        if let Some(dialog) = &mut self.error_dialog {
+            dialog.scroll_up(lines);
+        }
+    }
+
+    /// Scroll the error dialog down by the specified number of lines.
+    pub fn scroll_error_down(&mut self, lines: usize) {
+        if let Some(dialog) = &mut self.error_dialog {
+            // Approximate max lines - in practice this would be calculated from terminal height
+            let max_lines = 100;
+            dialog.scroll_down(lines, max_lines);
+        }
     }
 
     /// Update Papyrus statistics

@@ -4,6 +4,11 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 /// Handle keyboard input events
 pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
+    // If error dialog is active, handle error dialog-specific keys first
+    if app.is_error_dialog_active() {
+        return handle_error_dialog_keys(key);
+    }
+
     // If folder picker is active, handle picker-specific keys first
     if app.is_folder_picker_active() {
         return handle_folder_picker_keys(key);
@@ -27,6 +32,7 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
         UiState::PapyrusScreen => handle_papyrus_screen_keys(key),
         UiState::BackupScreen => handle_backup_screen_keys(key),
         UiState::ResultsScreen => handle_results_screen_keys(app, key),
+        UiState::ArticlesScreen => handle_articles_screen_keys(app, key),
     }
 }
 
@@ -85,6 +91,9 @@ fn handle_main_screen_keys(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
         // F9 - Results viewer
         KeyCode::F(9) => Some(UiMessage::ShowResultsScreen),
 
+        // F10 - Articles/Resources
+        KeyCode::F(10) => Some(UiMessage::ShowArticlesScreen),
+
         // Ctrl+L - Clear output
         KeyCode::Char('l') | KeyCode::Char('L')
             if key.modifiers.contains(KeyModifiers::CONTROL) =>
@@ -120,45 +129,10 @@ fn handle_help_screen_keys(key: KeyEvent) -> Option<UiMessage> {
 
 /// Handle keys on the settings screen
 fn handle_settings_screen_keys(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
+    use crate::ui::SettingsTab;
+
     match key.code {
         KeyCode::Esc => Some(UiMessage::ShowMainScreen),
-
-        // Arrow keys for navigation
-        KeyCode::Up => {
-            app.settings_state.focus_prev();
-            None
-        }
-        KeyCode::Down => {
-            app.settings_state.focus_next();
-            None
-        }
-
-        // Space or Enter to toggle
-        KeyCode::Char(' ') | KeyCode::Enter => {
-            // Get the focused item before borrowing app mutably
-            let focused_item = app.settings_state.focused_item;
-            // Toggle the setting based on focused item
-            match focused_item {
-                crate::ui::SettingItem::FcxMode => app.config.fcx_mode = !app.config.fcx_mode,
-                crate::ui::SettingItem::ShowFormIdValues => {
-                    app.config.show_formid_values = !app.config.show_formid_values
-                }
-                crate::ui::SettingItem::StatLogging => {
-                    app.config.stat_logging = !app.config.stat_logging
-                }
-                crate::ui::SettingItem::MoveUnsolvedLogs => {
-                    app.config.move_unsolved_logs = !app.config.move_unsolved_logs
-                }
-                crate::ui::SettingItem::SimplifyLogs => {
-                    app.config.simplify_logs = !app.config.simplify_logs
-                }
-                crate::ui::SettingItem::CheckUpdates => app.check_updates = !app.check_updates,
-            }
-            None
-        }
-
-        // 'S' to save configuration
-        KeyCode::Char('s') | KeyCode::Char('S') => Some(UiMessage::SaveSettings),
 
         // Tab - Switch to next tab
         KeyCode::Tab if !key.modifiers.contains(KeyModifiers::SHIFT) => {
@@ -168,6 +142,80 @@ fn handle_settings_screen_keys(app: &mut App, key: KeyEvent) -> Option<UiMessage
         // Shift+Tab - Switch to previous tab
         KeyCode::BackTab | KeyCode::Tab if key.modifiers.contains(KeyModifiers::SHIFT) => {
             Some(UiMessage::PreviousSettingsTab)
+        }
+
+        // 'S' to save configuration
+        KeyCode::Char('s') | KeyCode::Char('S') => Some(UiMessage::SaveSettings),
+
+        // 'R' to reset current tab to defaults
+        KeyCode::Char('r') | KeyCode::Char('R') => Some(UiMessage::ResetCurrentTab),
+
+        // Arrow keys and Enter/Space - behavior depends on current tab
+        KeyCode::Up => {
+            match app.settings_state.current_tab {
+                SettingsTab::General => {
+                    app.settings_state.focus_prev();
+                }
+                SettingsTab::Paths => {
+                    app.settings_state.focus_prev_path();
+                }
+                SettingsTab::Advanced => {
+                    app.settings_state.focus_prev_advanced();
+                }
+            }
+            None
+        }
+        KeyCode::Down => {
+            match app.settings_state.current_tab {
+                SettingsTab::General => {
+                    app.settings_state.focus_next();
+                }
+                SettingsTab::Paths => {
+                    app.settings_state.focus_next_path();
+                }
+                SettingsTab::Advanced => {
+                    app.settings_state.focus_next_advanced();
+                }
+            }
+            None
+        }
+
+        // Space or Enter - action depends on current tab
+        KeyCode::Char(' ') | KeyCode::Enter | KeyCode::Char('e') | KeyCode::Char('E') => {
+            match app.settings_state.current_tab {
+                SettingsTab::General => {
+                    // Toggle the setting based on focused item
+                    let focused_item = app.settings_state.focused_item;
+                    match focused_item {
+                        crate::ui::SettingItem::FcxMode => {
+                            app.config.fcx_mode = !app.config.fcx_mode
+                        }
+                        crate::ui::SettingItem::ShowFormIdValues => {
+                            app.config.show_formid_values = !app.config.show_formid_values
+                        }
+                        crate::ui::SettingItem::StatLogging => {
+                            app.config.stat_logging = !app.config.stat_logging
+                        }
+                        crate::ui::SettingItem::MoveUnsolvedLogs => {
+                            app.config.move_unsolved_logs = !app.config.move_unsolved_logs
+                        }
+                        crate::ui::SettingItem::SimplifyLogs => {
+                            app.config.simplify_logs = !app.config.simplify_logs
+                        }
+                        crate::ui::SettingItem::CheckUpdates => {
+                            app.check_updates = !app.check_updates
+                        }
+                    }
+                }
+                SettingsTab::Paths => {
+                    // Open folder picker for the focused path
+                    return Some(UiMessage::OpenSettingsPathPicker);
+                }
+                SettingsTab::Advanced => {
+                    // TODO: Add editing for advanced settings when implemented
+                }
+            }
+            None
         }
 
         _ => None,
@@ -256,6 +304,53 @@ fn handle_results_screen_keys(app: &App, key: KeyEvent) -> Option<UiMessage> {
 
         // R - Refresh report list
         KeyCode::Char('r') | KeyCode::Char('R') => Some(UiMessage::RefreshReports),
+
+        _ => None,
+    }
+}
+
+/// Handle keys on the Articles/Resources screen
+fn handle_articles_screen_keys(_app: &App, key: KeyEvent) -> Option<UiMessage> {
+    match key.code {
+        // ESC - Return to main screen
+        KeyCode::Esc => Some(UiMessage::ShowMainScreen),
+
+        // Left/Right - Navigate categories
+        KeyCode::Left => Some(UiMessage::PreviousArticleCategory),
+        KeyCode::Right => Some(UiMessage::NextArticleCategory),
+
+        // Up/Down - Navigate articles in current category
+        KeyCode::Up => Some(UiMessage::PreviousArticle),
+        KeyCode::Down => Some(UiMessage::NextArticle),
+
+        // PageUp/PageDown - Scroll article content
+        KeyCode::PageUp => Some(UiMessage::ScrollArticleUp(10)),
+        KeyCode::PageDown => Some(UiMessage::ScrollArticleDown(10)),
+
+        _ => None,
+    }
+}
+
+/// Handle keys when error dialog is active
+fn handle_error_dialog_keys(key: KeyEvent) -> Option<UiMessage> {
+    match key.code {
+        // ESC - Close error dialog
+        KeyCode::Esc => Some(UiMessage::CloseErrorDialog),
+
+        // C or Ctrl+C - Copy error to clipboard
+        KeyCode::Char('c') | KeyCode::Char('C') => Some(UiMessage::CopyErrorToClipboard),
+
+        // Up arrow - Scroll error details up
+        KeyCode::Up => Some(UiMessage::ScrollErrorUp(1)),
+
+        // Down arrow - Scroll error details down
+        KeyCode::Down => Some(UiMessage::ScrollErrorDown(1)),
+
+        // PageUp - Scroll error details up faster
+        KeyCode::PageUp => Some(UiMessage::ScrollErrorUp(10)),
+
+        // PageDown - Scroll error details down faster
+        KeyCode::PageDown => Some(UiMessage::ScrollErrorDown(10)),
 
         _ => None,
     }

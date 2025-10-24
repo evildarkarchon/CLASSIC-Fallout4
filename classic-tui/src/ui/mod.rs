@@ -1,3 +1,5 @@
+/// Articles/Resources screen for help documentation
+pub mod articles_screen;
 /// Backup operations screen
 pub mod backup_screen;
 /// Help screen display and navigation
@@ -15,6 +17,7 @@ pub mod settings_screen;
 /// Interactive settings screen with live editing
 pub mod settings_screen_interactive;
 
+pub use articles_screen::*;
 pub use backup_screen::*;
 pub use help_screen::*;
 pub use main_screen::*;

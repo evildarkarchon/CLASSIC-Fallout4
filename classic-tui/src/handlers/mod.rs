@@ -1,5 +1,7 @@
 /// Backup operations handler
 pub mod backup_handler;
+/// Clipboard operations for copying text to system clipboard
+pub mod clipboard_handler;
 /// Folder selection handlers for managing directory pickers
 pub mod folder_handler;
 /// Input event handlers for keyboard and mouse interactions
@@ -10,6 +12,7 @@ pub mod papyrus_handler;
 pub mod scan_handler;
 
 pub use backup_handler::*;
+pub use clipboard_handler::*;
 pub use folder_handler::*;
 pub use input_handler::*;
 // Note: papyrus_handler types are used via module path to avoid name conflicts

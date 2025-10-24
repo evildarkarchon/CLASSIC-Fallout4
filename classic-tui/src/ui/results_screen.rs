@@ -19,6 +19,13 @@ pub fn render_results_screen(f: &mut Frame, app: &App) {
 
     render_report_list(f, chunks[0], app);
     render_report_viewer(f, chunks[1], app);
+
+    // Render error dialog overlay if active (should be last so it appears on top)
+    if let Some(ref dialog) = app.error_dialog {
+        if dialog.is_active() {
+            dialog.render(f, f.area());
+        }
+    }
 }
 
 /// Render the report list on the left pane

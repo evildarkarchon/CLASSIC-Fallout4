@@ -27,8 +27,8 @@ use std::io;
 use std::time::Duration;
 use tokio::sync::mpsc;
 use ui::{
-    render_backup_screen, render_help_screen, render_main_screen, render_papyrus_screen,
-    render_results_screen, render_settings_screen_interactive,
+    render_articles_screen, render_backup_screen, render_help_screen, render_main_screen,
+    render_papyrus_screen, render_results_screen, render_settings_screen_interactive,
 };
 
 #[tokio::main]
@@ -126,6 +126,10 @@ async fn run_app(
             UiState::PapyrusScreen => render_papyrus_screen(f, app),
             UiState::BackupScreen => render_backup_screen(f, app),
             UiState::ResultsScreen => render_results_screen(f, app),
+            UiState::ArticlesScreen => {
+                let state = &app.articles_state.clone();
+                render_articles_screen(f, app, state)
+            }
         })?;
 
         // Poll for keyboard events (non-blocking, 16ms = ~60 FPS)
@@ -212,6 +216,9 @@ async fn handle_ui_message(
             if let Err(e) = app.load_report_files().await {
                 app.add_output(format!("Error loading reports: {}", e));
             }
+        }
+        UiMessage::ShowArticlesScreen => {
+            app.switch_screen(UiState::ArticlesScreen);
         }
         UiMessage::StartCrashScan => {
             app.start_crash_scan();
@@ -301,6 +308,24 @@ async fn handle_ui_message(
                 app.add_output("Settings saved successfully.".to_string());
             }
         }
+        UiMessage::ResetCurrentTab => {
+            // Reset settings based on current tab
+            use crate::ui::SettingsTab;
+            match app.settings_state.current_tab {
+                SettingsTab::General => {
+                    app.reset_general_settings();
+                    app.add_output("General settings reset to defaults.".to_string());
+                }
+                SettingsTab::Paths => {
+                    app.reset_paths_settings();
+                    app.add_output("Path settings preserved (reset not applicable to paths).".to_string());
+                }
+                SettingsTab::Advanced => {
+                    app.reset_advanced_settings();
+                    app.add_output("Advanced settings reset to defaults (when implemented).".to_string());
+                }
+            }
+        }
         UiMessage::NextSettingsTab => {
             app.settings_state.next_tab();
         }
@@ -313,9 +338,14 @@ async fn handle_ui_message(
         UiMessage::OpenCustomPicker => {
             app.open_custom_picker();
         }
+        UiMessage::OpenSettingsPathPicker => {
+            let focused_path = app.settings_state.focused_path;
+            app.open_settings_path_picker(focused_path);
+        }
         UiMessage::CloseFolderPicker => {
             app.close_staging_picker();
             app.close_custom_picker();
+            app.close_settings_path_picker();
         }
         UiMessage::SelectFolder => {
             // Determine which picker is active and get the selected path
@@ -341,12 +371,40 @@ async fn handle_ui_message(
                         app.add_output(format!("Error selecting folder: {}", e));
                     }
                 }
+            } else if let Some(ref picker) = app.settings_path_picker {
+                if picker.is_active() {
+                    let selected_path = picker.get_selected_path();
+                    let editing_path = app.editing_path;
+                    app.close_settings_path_picker();
+
+                    // Update the appropriate config path
+                    if let Some(path_item) = editing_path {
+                        use crate::app::PathItem;
+                        match path_item {
+                            PathItem::GameRoot => {
+                                app.config.paths.game_root = selected_path;
+                            }
+                            PathItem::DocsRoot => {
+                                app.config.paths.docs_root = Some(selected_path);
+                            }
+                            PathItem::ModsFolder => {
+                                app.config.paths.mods_folder = Some(selected_path);
+                            }
+                            PathItem::CustomScan => {
+                                app.config.paths.scan_custom = Some(selected_path);
+                            }
+                        }
+                        app.add_output(format!("Updated {} path", path_item.label()));
+                    }
+                }
             }
         }
         UiMessage::FolderPickerUp => {
             if let Some(ref mut picker) = app.staging_picker {
                 picker.move_up();
             } else if let Some(ref mut picker) = app.custom_picker {
+                picker.move_up();
+            } else if let Some(ref mut picker) = app.settings_path_picker {
                 picker.move_up();
             }
         }
@@ -355,6 +413,8 @@ async fn handle_ui_message(
                 picker.move_down();
             } else if let Some(ref mut picker) = app.custom_picker {
                 picker.move_down();
+            } else if let Some(ref mut picker) = app.settings_path_picker {
+                picker.move_down();
             }
         }
         UiMessage::FolderPickerEnter => {
@@ -362,12 +422,16 @@ async fn handle_ui_message(
                 picker.enter_selected();
             } else if let Some(ref mut picker) = app.custom_picker {
                 picker.enter_selected();
+            } else if let Some(ref mut picker) = app.settings_path_picker {
+                picker.enter_selected();
             }
         }
         UiMessage::FolderPickerParent => {
             if let Some(ref mut picker) = app.staging_picker {
                 picker.go_up();
             } else if let Some(ref mut picker) = app.custom_picker {
+                picker.go_up();
+            } else if let Some(ref mut picker) = app.settings_path_picker {
                 picker.go_up();
             }
         }
@@ -493,6 +557,56 @@ async fn handle_ui_message(
         UiMessage::SearchPreviousMatch => {
             let visible_lines = 30; // TODO: Get actual terminal height
             app.previous_search_match(visible_lines);
+        }
+        UiMessage::NextArticleCategory => {
+            app.articles_state.next_category();
+            app.articles_state.selected_article_index = 0; // Reset to first article
+            app.articles_state.scroll_offset = 0; // Reset scroll
+        }
+        UiMessage::PreviousArticleCategory => {
+            app.articles_state.prev_category();
+            app.articles_state.selected_article_index = 0; // Reset to first article
+            app.articles_state.scroll_offset = 0; // Reset scroll
+        }
+        UiMessage::NextArticle => {
+            app.articles_state.next_article();
+            app.articles_state.scroll_offset = 0; // Reset scroll when changing articles
+        }
+        UiMessage::PreviousArticle => {
+            app.articles_state.prev_article();
+            app.articles_state.scroll_offset = 0; // Reset scroll when changing articles
+        }
+        UiMessage::ScrollArticleUp(lines) => {
+            app.articles_state.scroll_up(lines);
+        }
+        UiMessage::ScrollArticleDown(lines) => {
+            let visible_lines = 30; // TODO: Get actual terminal height
+            app.articles_state.scroll_down(lines, visible_lines);
+        }
+        UiMessage::ShowErrorDialog => {
+            // This is typically not called directly - errors show dialogs via app.show_error_dialog()
+        }
+        UiMessage::CloseErrorDialog => {
+            app.close_error_dialog();
+        }
+        UiMessage::CopyErrorToClipboard => {
+            if let Some(dialog) = &app.error_dialog {
+                let text = dialog.get_clipboard_text();
+                match crate::handlers::clipboard_handler::copy_to_clipboard(&text) {
+                    Ok(()) => {
+                        app.add_output("✓ Error details copied to clipboard".to_string());
+                    }
+                    Err(e) => {
+                        app.add_output(format!("✗ Failed to copy to clipboard: {}", e));
+                    }
+                }
+            }
+        }
+        UiMessage::ScrollErrorUp(lines) => {
+            app.scroll_error_up(lines);
+        }
+        UiMessage::ScrollErrorDown(lines) => {
+            app.scroll_error_down(lines);
         }
     }
 

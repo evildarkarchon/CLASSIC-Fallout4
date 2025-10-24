@@ -36,6 +36,12 @@ tui-input = "0.14.0"
 # File system watching (cross-platform: Windows, Linux, macOS)
 notify = "7.0"
 
+# Clipboard support (cross-platform)
+arboard = "3.4"
+
+# Date/time for error timestamps
+chrono = "0.4"
+
 # System directories
 dirs = { workspace = true }
 

@@ -25,11 +25,26 @@ pub enum UiMessage {
     /// Switch to settings screen
     ShowSettingsScreen,
     /// Switch to Papyrus screen
+    #[allow(dead_code)]
     ShowPapyrusScreen,
     /// Switch to backup operations screen
     ShowBackupScreen,
     /// Switch to results viewer screen
     ShowResultsScreen,
+    /// Switch to articles/resources screen
+    ShowArticlesScreen,
+    /// Navigate to next article category
+    NextArticleCategory,
+    /// Navigate to previous article category
+    PreviousArticleCategory,
+    /// Navigate to next article in list
+    NextArticle,
+    /// Navigate to previous article in list
+    PreviousArticle,
+    /// Scroll article viewer up
+    ScrollArticleUp(usize),
+    /// Scroll article viewer down
+    ScrollArticleDown(usize),
     /// Select next report in results list
     SelectNextReport,
     /// Select previous report in results list
@@ -65,13 +80,18 @@ pub enum UiMessage {
     /// Scroll output down
     ScrollDown(usize),
     /// Update staging folder path
+    #[allow(dead_code)]
     UpdateStagingFolder(std::path::PathBuf),
     /// Update custom scan folder path
+    #[allow(dead_code)]
     UpdateCustomFolder(std::path::PathBuf),
     /// Toggle update check
+    #[allow(dead_code)]
     ToggleUpdateCheck,
     /// Save settings to disk
     SaveSettings,
+    /// Reset current settings tab to defaults
+    ResetCurrentTab,
     /// Switch to next settings tab
     NextSettingsTab,
     /// Switch to previous settings tab
@@ -80,6 +100,8 @@ pub enum UiMessage {
     OpenStagingPicker,
     /// Open custom folder picker
     OpenCustomPicker,
+    /// Open settings path picker for currently focused path
+    OpenSettingsPathPicker,
     /// Close active folder picker
     CloseFolderPicker,
     /// Select folder from active picker
@@ -100,6 +122,17 @@ pub enum UiMessage {
     RemoveBackup(usize),
     /// Refresh backup status
     RefreshBackupStatus,
+    /// Show error dialog
+    #[allow(dead_code)]
+    ShowErrorDialog,
+    /// Close error dialog
+    CloseErrorDialog,
+    /// Copy error dialog content to clipboard
+    CopyErrorToClipboard,
+    /// Scroll error dialog up
+    ScrollErrorUp(usize),
+    /// Scroll error dialog down
+    ScrollErrorDown(usize),
 }
 
 impl ScanMessage {

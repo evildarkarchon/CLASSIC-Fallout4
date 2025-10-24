@@ -31,6 +31,24 @@ pub fn render_main_screen(f: &mut Frame, app: &mut App) {
             render_folder_picker_overlay(f, picker, "Select Custom Scan Folder");
         }
     }
+    if let Some(ref mut picker) = app.settings_path_picker {
+        if picker.is_active() {
+            // Determine title based on which path is being edited
+            let title = if let Some(path_item) = app.editing_path {
+                format!("Select {} Path", path_item.label())
+            } else {
+                "Select Path".to_string()
+            };
+            render_folder_picker_overlay(f, picker, &title);
+        }
+    }
+
+    // Render error dialog overlay if active (should be last so it appears on top)
+    if let Some(ref dialog) = app.error_dialog {
+        if dialog.is_active() {
+            dialog.render(f, f.area());
+        }
+    }
 }
 
 /// Render the header with title
@@ -238,13 +256,14 @@ fn render_status_bar(f: &mut Frame, area: Rect, app: &App) {
     } else {
         match app.ui_state {
             crate::app::UiState::MainScreen => {
-                " F1 Help | F2 Staging | F3 Custom | F5 Crash | F6 Game | F7 Papyrus | F8 Backup | F9 Results | Q Quit "
+                " F1 Help | F5 Crash | F6 Game | F7 Papyrus | F8 Backup | F9 Results | F10 Articles | Q Quit "
             }
             crate::app::UiState::HelpScreen => " ESC Back | Q Quit ",
-            crate::app::UiState::SettingsScreen => " ESC Back | Tab/Shift+Tab Tabs | ↑↓ Navigate | Space/Enter Toggle | S Save | Q Quit ",
+            crate::app::UiState::SettingsScreen => " ESC Back | Tab/Shift+Tab Tabs | ↑↓ Navigate | Space/Enter Toggle | R Reset | S Save | Q Quit ",
             crate::app::UiState::PapyrusScreen => " ESC Back | F7 Stop | Q Quit ",
             crate::app::UiState::BackupScreen => " ESC Back | 1-4 Backup | 5-8 Restore | Q Quit ",
             crate::app::UiState::ResultsScreen => " ESC Back | ↑↓ Select | PgUp/PgDn Scroll | / Search | n/N Navigate | Q Quit ",
+            crate::app::UiState::ArticlesScreen => " ESC Back | ←→ Category | ↑↓ Article | PgUp/PgDn Scroll | Q Quit ",
         }
     };
 
