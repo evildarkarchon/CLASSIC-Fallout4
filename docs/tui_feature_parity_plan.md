@@ -262,7 +262,7 @@ Rust TUI → Business Logic (-core crates directly)
 - [ ] **Implement report list**
   - Scan `Crash Logs/Reports/` directory
   - Display report filenames with timestamps
-  - Sort by date (newest first)
+  - Sort by filename in descending order (avoids parallel scanning metadata issues).
   - Keyboard navigation
   - Files: `classic-tui/src/widgets/report_list.rs`
 
@@ -280,7 +280,7 @@ Rust TUI → Business Logic (-core crates directly)
   - Navigate between matches (n/N keys)
   - Files: `classic-tui/src/widgets/report_viewer.rs`
 
-#### 3.3 File Watching (Advanced)
+#### 3.3 File Watching (Advanced) (Skip, too complex, stick with refresh after scan and manual refresh)
 - [ ] **Implement file watcher**
   - Monitor `Crash Logs/Reports/` directory
   - Detect new reports

@@ -26,6 +26,32 @@ pub enum UiMessage {
     ShowSettingsScreen,
     /// Switch to Papyrus screen
     ShowPapyrusScreen,
+    /// Switch to backup operations screen
+    ShowBackupScreen,
+    /// Switch to results viewer screen
+    ShowResultsScreen,
+    /// Select next report in results list
+    SelectNextReport,
+    /// Select previous report in results list
+    SelectPreviousReport,
+    /// Scroll report viewer up
+    ScrollReportUp(usize),
+    /// Scroll report viewer down
+    ScrollReportDown(usize),
+    /// Refresh report file list
+    RefreshReports,
+    /// Start search mode in report viewer
+    StartSearch,
+    /// Exit search mode
+    ExitSearch,
+    /// Add character to search query
+    SearchAddChar(char),
+    /// Remove last character from search query
+    SearchBackspace,
+    /// Navigate to next search match
+    SearchNextMatch,
+    /// Navigate to previous search match
+    SearchPreviousMatch,
     /// Start crash log scan
     StartCrashScan,
     /// Start game files scan
@@ -46,6 +72,10 @@ pub enum UiMessage {
     ToggleUpdateCheck,
     /// Save settings to disk
     SaveSettings,
+    /// Switch to next settings tab
+    NextSettingsTab,
+    /// Switch to previous settings tab
+    PreviousSettingsTab,
     /// Open staging folder picker
     OpenStagingPicker,
     /// Open custom folder picker
@@ -62,6 +92,14 @@ pub enum UiMessage {
     FolderPickerEnter,
     /// Go to parent directory in folder picker
     FolderPickerParent,
+    /// Create backup of specified type (XSE=0, ReShade=1, Vulkan=2, ENB=3)
+    CreateBackup(usize),
+    /// Restore backup of specified type
+    RestoreBackup(usize),
+    /// Remove backup of specified type
+    RemoveBackup(usize),
+    /// Refresh backup status
+    RefreshBackupStatus,
 }
 
 impl ScanMessage {

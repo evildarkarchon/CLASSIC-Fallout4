@@ -103,6 +103,7 @@ impl ScanHandler {
         let mut total_formids = 0;
         let mut _total_plugins = 0;
         let mut total_suspects = 0;
+        let scan_start = std::time::Instant::now();
 
         for (idx, log_path) in log_files.iter().enumerate() {
             let progress = (idx + 1) as f64 / total_logs as f64;
@@ -125,23 +126,57 @@ impl ScanHandler {
                     _total_plugins += result.plugin_count;
                     total_suspects += result.suspect_count;
 
-                    tx.send(ScanMessage::output(format!(
-                        "  ✓ Processed in {}ms - {} FormIDs, {} plugins, {} suspects",
-                        result.processing_time_ms,
-                        result.formid_count,
-                        result.plugin_count,
-                        result.suspect_count
-                    )))
-                    .await?;
+                    if result.success {
+                        tx.send(ScanMessage::output(format!(
+                            "  ✓ Processed in {}ms - {} FormIDs, {} plugins, {} suspects",
+                            result.processing_time_ms,
+                            result.formid_count,
+                            result.plugin_count,
+                            result.suspect_count
+                        )))
+                        .await?;
+
+                        // Display key report lines (patterns matched, suspects found)
+                        if !result.report_lines.is_empty() {
+                            // Find and display pattern matches and suspect lines
+                            for line in result.report_lines.iter().take(10) {
+                                // Only show lines with actual findings
+                                if line.contains("Pattern:") ||
+                                   line.contains("Suspect") ||
+                                   line.contains("CRITICAL") ||
+                                   line.contains("FormID:") {
+                                    tx.send(ScanMessage::output(format!("    {}", line)))
+                                        .await?;
+                                }
+                            }
+                        }
+                    } else {
+                        // Analysis failed
+                        let error_msg = result.error.as_deref().unwrap_or("Unknown error");
+                        tx.send(ScanMessage::output(format!(
+                            "  ✗ Analysis failed: {}",
+                            error_msg
+                        )))
+                        .await?;
+                    }
                 }
                 Err(e) => {
-                    tx.send(ScanMessage::output(format!("  ✗ Error: {}", e)))
+                    tx.send(ScanMessage::output(format!("  ✗ Processing error: {}", e)))
                         .await?;
                 }
             }
         }
 
-        // Send completion
+        // Send completion with simple summary
+        let scan_duration = scan_start.elapsed();
+
+        tx.send(ScanMessage::output(format!(
+            "\n✓ Scanned {} log(s) in {:.2}s",
+            total_logs,
+            scan_duration.as_secs_f64()
+        )))
+        .await?;
+
         let results = ScanResults {
             scanned_count: total_logs,
             patterns_matched: total_suspects,
@@ -150,10 +185,6 @@ impl ScanHandler {
         };
 
         tx.send(ScanMessage::completed(results)).await?;
-        tx.send(ScanMessage::output(
-            "\nCrash log scan completed successfully!".to_string(),
-        ))
-        .await?;
 
         Ok(())
     }

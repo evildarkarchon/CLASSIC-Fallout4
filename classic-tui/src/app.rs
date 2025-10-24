@@ -1,5 +1,8 @@
 use anyhow::Result;
 use classic_config_core::ClassicConfig;
+use classic_file_io_core::{BackupInfo, BackupType};
+use classic_scanlog_core::papyrus::PapyrusStats;
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 // Forward declare SettingsState to avoid circular dependency
@@ -32,6 +35,28 @@ pub struct App {
     pub staging_picker: Option<FolderPickerState>,
     /// Custom folder picker state
     pub custom_picker: Option<FolderPickerState>,
+    /// Papyrus monitoring statistics
+    pub papyrus_stats: Option<PapyrusStats>,
+    /// Recent Papyrus log lines for display
+    pub papyrus_log_lines: Vec<String>,
+    /// Backup status for all backup types
+    pub backup_status: HashMap<BackupType, BackupInfo>,
+    /// List of report file paths in Crash Logs/Reports/ directory
+    pub report_files: Vec<PathBuf>,
+    /// Currently selected report index
+    pub selected_report_index: usize,
+    /// Content of currently loaded report
+    pub current_report_content: Vec<String>,
+    /// Scroll offset for report viewer
+    pub report_scroll_offset: usize,
+    /// Search query string
+    pub search_query: String,
+    /// List of search match positions (line_index, column_start, column_end)
+    pub search_matches: Vec<(usize, usize, usize)>,
+    /// Current match index being viewed
+    pub current_match_index: usize,
+    /// Whether search mode is active
+    pub search_active: bool,
 }
 
 /// UI state representing which screen is active
@@ -45,6 +70,10 @@ pub enum UiState {
     SettingsScreen,
     /// Papyrus monitor screen
     PapyrusScreen,
+    /// Backup operations screen
+    BackupScreen,
+    /// Results viewer screen
+    ResultsScreen,
 }
 
 /// Scan state representing the current scan operation
@@ -52,14 +81,23 @@ pub enum UiState {
 pub enum ScanState {
     /// No scan is running
     Idle,
-    /// Crash log scan in progress
-    CrashScanning { progress: f64 },
-    /// Game files scan in progress
-    GameScanning { progress: f64 },
+    /// Crash log scan in progress with completion percentage (0.0 to 1.0)
+    CrashScanning {
+        /// Scan progress from 0.0 to 1.0
+        progress: f64,
+    },
+    /// Game files scan in progress with completion percentage (0.0 to 1.0)
+    GameScanning {
+        /// Scan progress from 0.0 to 1.0
+        progress: f64,
+    },
     /// Papyrus monitoring active
     PapyrusMonitoring,
-    /// Scan completed successfully
-    Completed { results: ScanResults },
+    /// Scan completed successfully with result summary
+    Completed {
+        /// Summary of scan results
+        results: ScanResults,
+    },
     /// Scan failed with error
     Error(String),
 }
@@ -89,6 +127,17 @@ impl App {
             settings_state: SettingsState::new(),
             staging_picker: None,
             custom_picker: None,
+            papyrus_stats: None,
+            papyrus_log_lines: Vec::new(),
+            backup_status: HashMap::new(),
+            report_files: Vec::new(),
+            selected_report_index: 0,
+            current_report_content: Vec::new(),
+            report_scroll_offset: 0,
+            search_query: String::new(),
+            search_matches: Vec::new(),
+            current_match_index: 0,
+            search_active: false,
         }
     }
 
@@ -243,6 +292,240 @@ impl App {
                 .as_ref()
                 .map(|p| p.is_active())
                 .unwrap_or(false)
+    }
+
+    /// Update Papyrus statistics
+    pub fn update_papyrus_stats(&mut self, stats: PapyrusStats) {
+        self.papyrus_stats = Some(stats);
+    }
+
+    /// Add new Papyrus log lines
+    pub fn add_papyrus_lines(&mut self, lines: Vec<String>) {
+        // Keep only the last 1000 lines to prevent unbounded growth
+        const MAX_LINES: usize = 1000;
+        self.papyrus_log_lines.extend(lines);
+        if self.papyrus_log_lines.len() > MAX_LINES {
+            let keep_from = self.papyrus_log_lines.len() - MAX_LINES;
+            self.papyrus_log_lines = self.papyrus_log_lines[keep_from..].to_vec();
+        }
+    }
+
+    /// Clear Papyrus monitoring data
+    pub fn clear_papyrus_data(&mut self) {
+        self.papyrus_stats = None;
+        self.papyrus_log_lines.clear();
+    }
+
+    /// Update backup status
+    pub fn update_backup_status(&mut self, status: HashMap<BackupType, BackupInfo>) {
+        self.backup_status = status;
+    }
+
+    /// Check if a backup exists for the given type
+    pub fn backup_exists(&self, backup_type: BackupType) -> bool {
+        self.backup_status
+            .get(&backup_type)
+            .map(|info| info.exists)
+            .unwrap_or(false)
+    }
+
+    /// Load report files from the Crash Logs/Reports/ directory
+    pub async fn load_report_files(&mut self) -> Result<()> {
+        use std::fs;
+
+        // Construct path to reports directory from docs_root
+        let reports_dir = if let Some(docs_root) = &self.config.paths.docs_root {
+            docs_root.join("Crash Logs").join("Reports")
+        } else {
+            // Fallback to default location if docs_root not available
+            return Ok(());
+        };
+
+        if !reports_dir.exists() {
+            self.report_files.clear();
+            return Ok(());
+        }
+
+        let mut files = Vec::new();
+
+        if let Ok(entries) = fs::read_dir(&reports_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_file() {
+                    // Check if it's a text file (has .txt or .log extension)
+                    if let Some(ext) = path.extension() {
+                        if ext == "txt" || ext == "log" {
+                            files.push(path);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort by filename in descending order (newest first)
+        files.sort_by(|a, b| {
+            b.file_name()
+                .cmp(&a.file_name())
+        });
+
+        self.report_files = files;
+        self.selected_report_index = 0;
+
+        // Load first report if available
+        if !self.report_files.is_empty() {
+            self.load_selected_report().await?;
+        }
+
+        Ok(())
+    }
+
+    /// Load the currently selected report
+    pub async fn load_selected_report(&mut self) -> Result<()> {
+        if self.selected_report_index >= self.report_files.len() {
+            self.current_report_content.clear();
+            return Ok(());
+        }
+
+        let report_path = &self.report_files[self.selected_report_index];
+
+        // Read file directly with tokio
+        match tokio::fs::read_to_string(report_path).await {
+            Ok(content) => {
+                self.current_report_content = content.lines().map(|s| s.to_string()).collect();
+                self.report_scroll_offset = 0;
+                Ok(())
+            }
+            Err(e) => {
+                self.current_report_content = vec![format!("Error loading report: {}", e)];
+                Ok(())
+            }
+        }
+    }
+
+    /// Select the next report in the list
+    pub async fn select_next_report(&mut self) -> Result<()> {
+        if !self.report_files.is_empty() && self.selected_report_index < self.report_files.len() - 1 {
+            self.selected_report_index += 1;
+            self.load_selected_report().await?;
+        }
+        Ok(())
+    }
+
+    /// Select the previous report in the list
+    pub async fn select_previous_report(&mut self) -> Result<()> {
+        if self.selected_report_index > 0 {
+            self.selected_report_index -= 1;
+            self.load_selected_report().await?;
+        }
+        Ok(())
+    }
+
+    /// Scroll the report viewer up
+    pub fn scroll_report_up(&mut self, lines: usize) {
+        self.report_scroll_offset = self.report_scroll_offset.saturating_sub(lines);
+    }
+
+    /// Scroll the report viewer down
+    pub fn scroll_report_down(&mut self, lines: usize, visible_lines: usize) {
+        let max_scroll = self.current_report_content.len().saturating_sub(visible_lines);
+        self.report_scroll_offset = (self.report_scroll_offset + lines).min(max_scroll);
+    }
+
+    /// Start search mode
+    pub fn start_search(&mut self) {
+        self.search_active = true;
+        self.search_query.clear();
+        self.search_matches.clear();
+        self.current_match_index = 0;
+    }
+
+    /// Exit search mode
+    pub fn exit_search(&mut self) {
+        self.search_active = false;
+        self.search_query.clear();
+        self.search_matches.clear();
+        self.current_match_index = 0;
+    }
+
+    /// Update search query and find all matches
+    pub fn search_in_report(&mut self, query: &str) {
+        self.search_query = query.to_lowercase();
+        self.search_matches.clear();
+        self.current_match_index = 0;
+
+        if self.search_query.is_empty() {
+            return;
+        }
+
+        // Find all matches (case-insensitive)
+        for (line_idx, line) in self.current_report_content.iter().enumerate() {
+            let line_lower = line.to_lowercase();
+            let mut start = 0;
+
+            while let Some(pos) = line_lower[start..].find(&self.search_query) {
+                let actual_pos = start + pos;
+                self.search_matches.push((
+                    line_idx,
+                    actual_pos,
+                    actual_pos + self.search_query.len(),
+                ));
+                start = actual_pos + 1;
+            }
+        }
+
+        // Scroll to first match if any
+        if !self.search_matches.is_empty() {
+            self.scroll_to_current_match(30); // TODO: Get actual visible lines
+        }
+    }
+
+    /// Navigate to next search match
+    pub fn next_search_match(&mut self, visible_lines: usize) {
+        if self.search_matches.is_empty() {
+            return;
+        }
+
+        self.current_match_index = (self.current_match_index + 1) % self.search_matches.len();
+        self.scroll_to_current_match(visible_lines);
+    }
+
+    /// Navigate to previous search match
+    pub fn previous_search_match(&mut self, visible_lines: usize) {
+        if self.search_matches.is_empty() {
+            return;
+        }
+
+        if self.current_match_index == 0 {
+            self.current_match_index = self.search_matches.len() - 1;
+        } else {
+            self.current_match_index -= 1;
+        }
+        self.scroll_to_current_match(visible_lines);
+    }
+
+    /// Scroll to make current match visible
+    fn scroll_to_current_match(&mut self, visible_lines: usize) {
+        if self.search_matches.is_empty() {
+            return;
+        }
+
+        let (line_idx, _, _) = self.search_matches[self.current_match_index];
+
+        // Center the match in the viewport if possible
+        let center_offset = visible_lines / 2;
+        self.report_scroll_offset = line_idx.saturating_sub(center_offset);
+    }
+
+    /// Add character to search query
+    pub fn add_search_char(&mut self, c: char) {
+        self.search_query.push(c.to_lowercase().next().unwrap_or(c));
+        self.search_in_report(&self.search_query.clone());
+    }
+
+    /// Remove last character from search query
+    pub fn backspace_search(&mut self) {
+        self.search_query.pop();
+        self.search_in_report(&self.search_query.clone());
     }
 }
 

@@ -8,6 +8,48 @@ use ratatui::{
     Frame,
 };
 
+/// Settings tabs
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SettingsTab {
+    General,
+    Paths,
+    Advanced,
+}
+
+impl SettingsTab {
+    /// Get all tabs in order
+    pub fn all() -> Vec<Self> {
+        vec![Self::General, Self::Paths, Self::Advanced]
+    }
+
+    /// Get the next tab
+    pub fn next(&self) -> Self {
+        match self {
+            Self::General => Self::Paths,
+            Self::Paths => Self::Advanced,
+            Self::Advanced => Self::General,
+        }
+    }
+
+    /// Get the previous tab
+    pub fn prev(&self) -> Self {
+        match self {
+            Self::General => Self::Advanced,
+            Self::Paths => Self::General,
+            Self::Advanced => Self::Paths,
+        }
+    }
+
+    /// Get the tab name
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::General => "General",
+            Self::Paths => "Paths",
+            Self::Advanced => "Advanced",
+        }
+    }
+}
+
 /// Setting items that can be focused
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SettingItem {
@@ -80,6 +122,8 @@ impl SettingItem {
 /// Settings screen state
 #[derive(Debug, Clone)]
 pub struct SettingsState {
+    /// Current settings tab
+    pub current_tab: SettingsTab,
     /// Currently focused setting item
     pub focused_item: SettingItem,
     /// Whether we're in edit mode
@@ -89,6 +133,7 @@ pub struct SettingsState {
 impl Default for SettingsState {
     fn default() -> Self {
         Self {
+            current_tab: SettingsTab::General,
             focused_item: SettingItem::FcxMode,
             editing: false,
         }
@@ -110,6 +155,16 @@ impl SettingsState {
     pub fn focus_prev(&mut self) {
         self.focused_item = self.focused_item.prev();
     }
+
+    /// Switch to next tab
+    pub fn next_tab(&mut self) {
+        self.current_tab = self.current_tab.next();
+    }
+
+    /// Switch to previous tab
+    pub fn prev_tab(&mut self) {
+        self.current_tab = self.current_tab.prev();
+    }
 }
 
 /// Render the interactive settings screen
@@ -118,7 +173,8 @@ pub fn render_settings_screen_interactive(f: &mut Frame, app: &App, state: &Sett
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // Header
-            Constraint::Min(10),   // Settings list
+            Constraint::Length(3), // Tab bar
+            Constraint::Min(10),   // Tab content
             Constraint::Length(5), // Description
             Constraint::Length(3), // Instructions
         ])
@@ -127,14 +183,21 @@ pub fn render_settings_screen_interactive(f: &mut Frame, app: &App, state: &Sett
     // Header
     render_header(f, chunks[0]);
 
-    // Settings list
-    render_settings_list(f, chunks[1], app, state);
+    // Tab bar
+    render_tab_bar(f, chunks[1], state);
+
+    // Tab content (render based on current tab)
+    match state.current_tab {
+        SettingsTab::General => render_general_tab(f, chunks[2], app, state),
+        SettingsTab::Paths => render_paths_tab(f, chunks[2], app, state),
+        SettingsTab::Advanced => render_advanced_tab(f, chunks[2], app, state),
+    }
 
     // Description
-    render_description(f, chunks[2], state);
+    render_description(f, chunks[3], state);
 
     // Instructions
-    render_instructions(f, chunks[3]);
+    render_instructions(f, chunks[4]);
 }
 
 fn render_header(f: &mut Frame, area: Rect) {
@@ -154,7 +217,36 @@ fn render_header(f: &mut Frame, area: Rect) {
     f.render_widget(header, area);
 }
 
-fn render_settings_list(f: &mut Frame, area: Rect, app: &App, state: &SettingsState) {
+fn render_tab_bar(f: &mut Frame, area: Rect, state: &SettingsState) {
+    let tabs = SettingsTab::all();
+    let mut tab_spans = Vec::new();
+
+    for (i, tab) in tabs.iter().enumerate() {
+        if i > 0 {
+            tab_spans.push(Span::raw(" │ "));
+        }
+
+        let is_active = *tab == state.current_tab;
+        let style = if is_active {
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+        } else {
+            Style::default().fg(Color::White)
+        };
+
+        tab_spans.push(Span::styled(format!(" {} ", tab.name()), style));
+    }
+
+    let tabs_line = Line::from(tab_spans);
+    let tabs_widget = Paragraph::new(tabs_line)
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::ALL));
+
+    f.render_widget(tabs_widget, area);
+}
+
+fn render_general_tab(f: &mut Frame, area: Rect, app: &App, state: &SettingsState) {
     let inner_area = Block::default()
         .borders(Borders::ALL)
         .title(" Options ")
@@ -243,6 +335,118 @@ fn render_instructions(f: &mut Frame, area: Rect) {
         );
 
     f.render_widget(instructions_widget, area);
+}
+
+fn render_paths_tab(f: &mut Frame, area: Rect, app: &App, _state: &SettingsState) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Path Settings ")
+        .border_style(Style::default().fg(Color::White));
+
+    let inner_area = block.inner(area);
+    f.render_widget(block, area);
+
+    // Display current paths
+    let lines = vec![
+        Line::from(vec![
+            Span::styled("Game Root:    ", Style::default().fg(Color::Cyan)),
+            Span::raw(app.config.paths.game_root.display().to_string()),
+        ]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Docs Root:    ", Style::default().fg(Color::Cyan)),
+            Span::raw(
+                app.config
+                    .paths
+                    .docs_root
+                    .as_ref()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|| "<Not Set>".to_string()),
+            ),
+        ]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Mods Folder:  ", Style::default().fg(Color::Cyan)),
+            Span::raw(
+                app.config
+                    .paths
+                    .mods_folder
+                    .as_ref()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|| "<Not Set>".to_string()),
+            ),
+        ]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Custom Scan:  ", Style::default().fg(Color::Cyan)),
+            Span::raw(
+                app.config
+                    .paths
+                    .scan_custom
+                    .as_ref()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|| "<Not Set>".to_string()),
+            ),
+        ]),
+        Line::from(""),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            "Press 'e' to edit paths (Coming Soon)",
+            Style::default().fg(Color::DarkGray),
+        )]),
+    ];
+
+    let paths_widget = Paragraph::new(lines);
+    f.render_widget(paths_widget, inner_area);
+}
+
+fn render_advanced_tab(f: &mut Frame, area: Rect, _app: &App, _state: &SettingsState) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Advanced Settings ")
+        .border_style(Style::default().fg(Color::White));
+
+    let inner_area = block.inner(area);
+    f.render_widget(block, area);
+
+    let lines = vec![
+        Line::from(vec![Span::styled(
+            "Performance Settings",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Thread Count:     ", Style::default().fg(Color::Cyan)),
+            Span::raw("Auto (4 cores)"),
+        ]),
+        Line::from(vec![
+            Span::styled("Batch Size:       ", Style::default().fg(Color::Cyan)),
+            Span::raw("1000"),
+        ]),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            "Database Settings",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Connection Pool:  ", Style::default().fg(Color::Cyan)),
+            Span::raw("10 connections"),
+        ]),
+        Line::from(""),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            "Advanced settings editing (Coming Soon)",
+            Style::default().fg(Color::DarkGray),
+        )]),
+    ];
+
+    let advanced_widget = Paragraph::new(lines);
+    f.render_widget(advanced_widget, inner_area);
 }
 
 #[cfg(test)]

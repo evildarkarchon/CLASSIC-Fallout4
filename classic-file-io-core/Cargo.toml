@@ -43,6 +43,9 @@ thiserror = { workspace = true }
 log = { workspace = true }
 tracing = { workspace = true }
 
+# Time handling
+chrono = "0.4"
+
 # NO PyO3 dependency!
 
 [dev-dependencies]

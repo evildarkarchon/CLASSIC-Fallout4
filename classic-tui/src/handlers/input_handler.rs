@@ -25,6 +25,8 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
         UiState::HelpScreen => handle_help_screen_keys(key),
         UiState::SettingsScreen => handle_settings_screen_keys(app, key),
         UiState::PapyrusScreen => handle_papyrus_screen_keys(key),
+        UiState::BackupScreen => handle_backup_screen_keys(key),
+        UiState::ResultsScreen => handle_results_screen_keys(app, key),
     }
 }
 
@@ -74,6 +76,14 @@ fn handle_main_screen_keys(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
         KeyCode::F(7) | KeyCode::Char('p') | KeyCode::Char('P') => {
             Some(UiMessage::TogglePapyrusMonitor)
         }
+
+        // F8 or 'b' - Backup operations
+        KeyCode::F(8) | KeyCode::Char('b') | KeyCode::Char('B') => {
+            Some(UiMessage::ShowBackupScreen)
+        }
+
+        // F9 - Results viewer
+        KeyCode::F(9) => Some(UiMessage::ShowResultsScreen),
 
         // Ctrl+L - Clear output
         KeyCode::Char('l') | KeyCode::Char('L')
@@ -150,6 +160,16 @@ fn handle_settings_screen_keys(app: &mut App, key: KeyEvent) -> Option<UiMessage
         // 'S' to save configuration
         KeyCode::Char('s') | KeyCode::Char('S') => Some(UiMessage::SaveSettings),
 
+        // Tab - Switch to next tab
+        KeyCode::Tab if !key.modifiers.contains(KeyModifiers::SHIFT) => {
+            Some(UiMessage::NextSettingsTab)
+        }
+
+        // Shift+Tab - Switch to previous tab
+        KeyCode::BackTab | KeyCode::Tab if key.modifiers.contains(KeyModifiers::SHIFT) => {
+            Some(UiMessage::PreviousSettingsTab)
+        }
+
         _ => None,
     }
 }
@@ -161,6 +181,82 @@ fn handle_papyrus_screen_keys(key: KeyEvent) -> Option<UiMessage> {
         KeyCode::F(7) | KeyCode::Char('p') | KeyCode::Char('P') => {
             Some(UiMessage::TogglePapyrusMonitor)
         }
+        _ => None,
+    }
+}
+
+/// Handle keys on the Backup screen
+fn handle_backup_screen_keys(key: KeyEvent) -> Option<UiMessage> {
+    match key.code {
+        // ESC - Return to main screen
+        KeyCode::Esc => Some(UiMessage::ShowMainScreen),
+
+        // Backup operations (1-4)
+        KeyCode::Char('1') => Some(UiMessage::CreateBackup(0)), // XSE
+        KeyCode::Char('2') => Some(UiMessage::CreateBackup(1)), // ReShade
+        KeyCode::Char('3') => Some(UiMessage::CreateBackup(2)), // Vulkan
+        KeyCode::Char('4') => Some(UiMessage::CreateBackup(3)), // ENB
+
+        // Restore operations (5-8)
+        KeyCode::Char('5') => Some(UiMessage::RestoreBackup(0)), // XSE
+        KeyCode::Char('6') => Some(UiMessage::RestoreBackup(1)), // ReShade
+        KeyCode::Char('7') => Some(UiMessage::RestoreBackup(2)), // Vulkan
+        KeyCode::Char('8') => Some(UiMessage::RestoreBackup(3)), // ENB
+
+        // Remove operations (9, 0, -, =)
+        KeyCode::Char('9') => Some(UiMessage::RemoveBackup(0)), // XSE
+        KeyCode::Char('0') => Some(UiMessage::RemoveBackup(1)), // ReShade
+        KeyCode::Char('-') => Some(UiMessage::RemoveBackup(2)), // Vulkan
+        KeyCode::Char('=') => Some(UiMessage::RemoveBackup(3)), // ENB
+
+        // R - Refresh backup status
+        KeyCode::Char('r') | KeyCode::Char('R') => Some(UiMessage::RefreshBackupStatus),
+
+        _ => None,
+    }
+}
+
+/// Handle keys on the Results screen
+fn handle_results_screen_keys(app: &App, key: KeyEvent) -> Option<UiMessage> {
+    // If search is active, handle search-specific keys
+    if app.search_active {
+        return match key.code {
+            // ESC - Exit search mode
+            KeyCode::Esc => Some(UiMessage::ExitSearch),
+
+            // Backspace - Remove character from search
+            KeyCode::Backspace => Some(UiMessage::SearchBackspace),
+
+            // n/N - Navigate matches
+            KeyCode::Char('n') => Some(UiMessage::SearchNextMatch),
+            KeyCode::Char('N') => Some(UiMessage::SearchPreviousMatch),
+
+            // Any printable character - Add to search
+            KeyCode::Char(c) if !c.is_control() => Some(UiMessage::SearchAddChar(c)),
+
+            _ => None,
+        };
+    }
+
+    // Normal mode (not searching)
+    match key.code {
+        // ESC - Return to main screen
+        KeyCode::Esc => Some(UiMessage::ShowMainScreen),
+
+        // Up/Down - Select reports
+        KeyCode::Up => Some(UiMessage::SelectPreviousReport),
+        KeyCode::Down => Some(UiMessage::SelectNextReport),
+
+        // PageUp/PageDown - Scroll report viewer
+        KeyCode::PageUp => Some(UiMessage::ScrollReportUp(10)),
+        KeyCode::PageDown => Some(UiMessage::ScrollReportDown(10)),
+
+        // / - Start search
+        KeyCode::Char('/') => Some(UiMessage::StartSearch),
+
+        // R - Refresh report list
+        KeyCode::Char('r') | KeyCode::Char('R') => Some(UiMessage::RefreshReports),
+
         _ => None,
     }
 }

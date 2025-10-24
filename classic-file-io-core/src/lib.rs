@@ -13,12 +13,14 @@
 //! - Encoding detection
 //! - Log collection and organization
 
+pub mod backup;
 pub mod core;
 pub mod dds;
 pub mod encoding;
 pub mod error;
 pub mod log_collection;
 
+pub use backup::{BackupInfo, BackupManager, BackupType};
 pub use core::FileIOCore;
 pub use dds::DDSHeader;
 pub use encoding::EncodingDetector;

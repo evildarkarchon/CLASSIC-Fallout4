@@ -238,11 +238,13 @@ fn render_status_bar(f: &mut Frame, area: Rect, app: &App) {
     } else {
         match app.ui_state {
             crate::app::UiState::MainScreen => {
-                " F1 Help | F2 Staging | F3 Custom | F5 Crash | F6 Game | F7 Papyrus | Q Quit "
+                " F1 Help | F2 Staging | F3 Custom | F5 Crash | F6 Game | F7 Papyrus | F8 Backup | F9 Results | Q Quit "
             }
             crate::app::UiState::HelpScreen => " ESC Back | Q Quit ",
-            crate::app::UiState::SettingsScreen => " ESC Back | Enter Save | Q Quit ",
+            crate::app::UiState::SettingsScreen => " ESC Back | Tab/Shift+Tab Tabs | ↑↓ Navigate | Space/Enter Toggle | S Save | Q Quit ",
             crate::app::UiState::PapyrusScreen => " ESC Back | F7 Stop | Q Quit ",
+            crate::app::UiState::BackupScreen => " ESC Back | 1-4 Backup | 5-8 Restore | Q Quit ",
+            crate::app::UiState::ResultsScreen => " ESC Back | ↑↓ Select | PgUp/PgDn Scroll | / Search | n/N Navigate | Q Quit ",
         }
     };
 

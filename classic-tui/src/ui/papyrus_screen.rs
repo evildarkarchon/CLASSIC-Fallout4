@@ -1,4 +1,5 @@
 use crate::app::App;
+use classic_scanlog_core::papyrus::PapyrusStats;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
@@ -7,51 +8,23 @@ use ratatui::{
     Frame,
 };
 
-/// Statistics from Papyrus log monitoring
-#[derive(Debug, Clone, Default)]
-pub struct PapyrusStats {
-    /// Number of stack dumps found
-    pub dumps: usize,
-    /// Number of stack traces found
-    pub stacks: usize,
-    /// Number of warnings found
-    pub warnings: usize,
-    /// Number of errors found
-    pub errors: usize,
-    /// Error/warning ratio
-    pub ratio: f64,
-    /// Last update timestamp
-    pub last_update: String,
+/// Helper to get status color based on severity level
+fn get_status_color(stats: &PapyrusStats) -> Color {
+    match stats.severity_level() {
+        "Critical" => Color::Red,
+        "Warning" => Color::Yellow,
+        "OK" => Color::Green,
+        _ => Color::White,
+    }
 }
 
-impl PapyrusStats {
-    /// Create new empty stats
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Get status color based on severity
-    pub fn get_status_color(&self) -> Color {
-        if self.errors > 10 {
-            Color::Red
-        } else if self.warnings > 20 {
-            Color::Yellow
-        } else {
-            Color::Green
-        }
-    }
-
-    /// Get status symbol
-    pub fn get_status_symbol(&self) -> &'static str {
-        if self.errors > 10 {
-            "[X]"
-        } else if self.warnings > 20 {
-            "[!]"
-        } else if self.dumps > 0 {
-            "[v]"
-        } else {
-            "[OK]"
-        }
+/// Helper to get status symbol based on severity
+fn get_status_symbol(stats: &PapyrusStats) -> &'static str {
+    match stats.severity_level() {
+        "Critical" => "[X]",
+        "Warning" => "[!]",
+        _ if stats.dumps > 0 => "[v]",
+        _ => "[OK]",
     }
 }
 
@@ -118,26 +91,65 @@ fn render_header(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn render_stats(f: &mut Frame, area: Rect, app: &App) {
-    // For now, show placeholder stats
-    // In a full implementation, these would come from app.papyrus_stats
-    let stats = PapyrusStats::new();
+    let stats_text = if let Some(ref stats) = app.papyrus_stats {
+        // Real statistics from monitoring
+        let status_color = get_status_color(stats);
+        let status_symbol = get_status_symbol(stats);
+        let severity = stats.severity_level();
+        let error_warning_ratio = stats.error_to_warning_ratio();
+        let dumps_stacks_ratio = stats.dumps_to_stacks_ratio();
 
-    let stats_text = vec![
-        Line::from(""),
-        Line::from(vec![
-            Span::styled("Status: ", Style::default().add_modifier(Modifier::BOLD)),
-            Span::styled(
-                stats.get_status_symbol(),
-                Style::default().fg(stats.get_status_color()),
-            ),
-        ]),
-        Line::from(""),
-        Line::from(format!("  Stack Dumps:  {}", stats.dumps)),
-        Line::from(format!("  Stack Traces: {}", stats.stacks)),
-        Line::from(format!("  Warnings:     {}", stats.warnings)),
-        Line::from(format!("  Errors:       {}", stats.errors)),
-        Line::from(format!("  Ratio:        {:.2}", stats.ratio)),
-    ];
+        vec![
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Status: ", Style::default().add_modifier(Modifier::BOLD)),
+                Span::styled(status_symbol, Style::default().fg(status_color)),
+                Span::raw(" "),
+                Span::styled(
+                    severity,
+                    Style::default()
+                        .fg(status_color)
+                        .add_modifier(Modifier::BOLD),
+                ),
+            ]),
+            Line::from(""),
+            Line::from(format!("  Stack Dumps:  {}", stats.dumps)),
+            Line::from(format!("  Stack Traces: {}", stats.stacks)),
+            Line::from(format!("  Warnings:     {}", stats.warnings)),
+            Line::from(format!("  Errors:       {}", stats.errors)),
+            Line::from(""),
+            Line::from(format!(
+                "  Error/Warning Ratio:  {:.2}",
+                error_warning_ratio
+            )),
+            Line::from(format!(
+                "  Dumps/Stacks Ratio:   {:.2}",
+                dumps_stacks_ratio
+            )),
+            Line::from(format!("  Lines Processed:      {}", stats.lines_processed)),
+        ]
+    } else {
+        // No stats yet - monitoring not started
+        vec![
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Status: ", Style::default().add_modifier(Modifier::BOLD)),
+                Span::styled("[--]", Style::default().fg(Color::DarkGray)),
+                Span::raw(" "),
+                Span::styled(
+                    "Not Started",
+                    Style::default()
+                        .fg(Color::DarkGray)
+                        .add_modifier(Modifier::BOLD),
+                ),
+            ]),
+            Line::from(""),
+            Line::from(Span::styled(
+                "  Press F7 or P to start monitoring",
+                Style::default().fg(Color::Cyan),
+            )),
+        ]
+    };
 
     let stats_widget = Paragraph::new(stats_text).alignment(Alignment::Left).block(
         Block::default()
@@ -150,33 +162,64 @@ fn render_stats(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn render_log_output(f: &mut Frame, area: Rect, app: &App) {
-    // Display output lines from app
-    let output_text: Vec<Line> = if app.output_lines.is_empty() {
+    // Display Papyrus log lines if monitoring is active
+    let output_text: Vec<Line> = if !app.papyrus_log_lines.is_empty() {
+        // Show real log lines from Papyrus monitoring
+        app.papyrus_log_lines
+            .iter()
+            .rev() // Show newest first
+            .take(area.height as usize - 2) // Account for borders
+            .rev() // Reverse back to chronological order
+            .map(|line| {
+                // Color-code based on content
+                if line.contains(" error: ") {
+                    Line::from(Span::styled(line.clone(), Style::default().fg(Color::Red)))
+                } else if line.contains(" warning: ") {
+                    Line::from(Span::styled(
+                        line.clone(),
+                        Style::default().fg(Color::Yellow),
+                    ))
+                } else if line.contains("Dumping Stacks") || line.contains("Dumping Stack") {
+                    Line::from(Span::styled(
+                        line.clone(),
+                        Style::default().fg(Color::Magenta),
+                    ))
+                } else {
+                    Line::from(line.clone())
+                }
+            })
+            .collect()
+    } else if matches!(app.scan_state, crate::app::ScanState::PapyrusMonitoring) {
+        // Monitoring is active but no lines yet
         vec![
             Line::from(""),
             Line::from(Span::styled(
-                "Papyrus log monitoring is not yet fully implemented.",
+                "Monitoring active - waiting for new log activity...",
+                Style::default().fg(Color::Cyan),
+            )),
+            Line::from(""),
+            Line::from("Log lines will appear here in real-time as they are written."),
+        ]
+    } else {
+        // Not monitoring yet
+        vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                "Papyrus monitoring monitors Papyrus.0.log in real-time.",
                 Style::default().fg(Color::Yellow),
             )),
             Line::from(""),
-            Line::from("This will monitor Papyrus.0.log in real-time for:"),
-            Line::from("  • Stack dumps"),
+            Line::from("It tracks:"),
+            Line::from("  • Stack dumps and traces"),
             Line::from("  • Error messages"),
             Line::from("  • Warning messages"),
-            Line::from("  • Performance issues"),
+            Line::from("  • Error/warning severity ratios"),
             Line::from(""),
             Line::from(Span::styled(
-                "Press F7 or P to toggle monitoring",
+                "Press F7 or P to start monitoring",
                 Style::default().fg(Color::Cyan),
             )),
         ]
-    } else {
-        app.output_lines
-            .iter()
-            .skip(app.scroll_offset)
-            .take(area.height as usize - 2) // Account for borders
-            .map(|line| Line::from(line.clone()))
-            .collect()
     };
 
     let output_widget = Paragraph::new(output_text).block(
@@ -219,50 +262,6 @@ mod tests {
     use ratatui::Terminal;
 
     #[test]
-    fn test_papyrus_stats_creation() {
-        let stats = PapyrusStats::new();
-        assert_eq!(stats.dumps, 0);
-        assert_eq!(stats.errors, 0);
-        assert_eq!(stats.warnings, 0);
-    }
-
-    #[test]
-    fn test_papyrus_stats_status_color() {
-        let mut stats = PapyrusStats::new();
-
-        // Green for normal
-        assert_eq!(stats.get_status_color(), Color::Green);
-
-        // Yellow for warnings
-        stats.warnings = 25;
-        assert_eq!(stats.get_status_color(), Color::Yellow);
-
-        // Red for errors
-        stats.errors = 15;
-        assert_eq!(stats.get_status_color(), Color::Red);
-    }
-
-    #[test]
-    fn test_papyrus_stats_status_symbol() {
-        let mut stats = PapyrusStats::new();
-
-        // OK for normal
-        assert_eq!(stats.get_status_symbol(), "[OK]");
-
-        // Check for dumps
-        stats.dumps = 1;
-        assert_eq!(stats.get_status_symbol(), "[v]");
-
-        // Warning symbol
-        stats.warnings = 25;
-        assert_eq!(stats.get_status_symbol(), "[!]");
-
-        // Error symbol (highest priority)
-        stats.errors = 15;
-        assert_eq!(stats.get_status_symbol(), "[X]");
-    }
-
-    #[test]
     fn test_render_papyrus_screen() {
         let backend = TestBackend::new(100, 40);
         let mut terminal = Terminal::new(backend).unwrap();
@@ -275,6 +274,33 @@ mod tests {
             })
             .unwrap();
 
-        // Should not panic
+        // Should not panic - rendering should work without stats
+    }
+
+    #[test]
+    fn test_render_with_stats() {
+        let backend = TestBackend::new(100, 40);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let mut app = App::new();
+        // Add some stats
+        let stats = PapyrusStats {
+            dumps: 5,
+            stacks: 10,
+            warnings: 3,
+            errors: 1,
+            last_modified: None,
+            lines_processed: 100,
+        };
+        app.update_papyrus_stats(stats);
+        app.add_papyrus_lines(vec!["Test line 1".to_string(), "Test line 2".to_string()]);
+
+        terminal
+            .draw(|f| {
+                render_papyrus_screen(f, &app);
+            })
+            .unwrap();
+
+        // Should render with stats
     }
 }
