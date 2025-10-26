@@ -11,8 +11,11 @@ use ratatui::{
 /// Settings tabs
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SettingsTab {
+    /// General settings (scan options, output options, update checking)
     General,
+    /// Path management settings (game root, documents, mods folder)
     Paths,
+    /// Advanced settings (thread count, batch size, database pool)
     Advanced,
 }
 
@@ -53,29 +56,43 @@ impl SettingsTab {
 /// Setting items that can be focused in General tab
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SettingItem {
+    /// Enable FCX mode for crash log analysis
     FcxMode,
+    /// Show FormID numeric values in output
     ShowFormIdValues,
+    /// Enable statistics logging during scans
     StatLogging,
+    /// Move unsolved crash logs to a separate directory
     MoveUnsolvedLogs,
+    /// Simplify crash logs by removing redundant information
     SimplifyLogs,
+    /// Check for updates on startup
     CheckUpdates,
 }
 
 /// Path items that can be focused in Paths tab
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PathItem {
+    /// Game installation root directory
     GameRoot,
+    /// Documents folder path (for My Games, saves, etc.)
     DocsRoot,
+    /// Mods staging folder path
     ModsFolder,
+    /// Custom scan folder path for additional log locations
     CustomScan,
 }
 
 /// Advanced settings items that can be focused in Advanced tab
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AdvancedItem {
+    /// Number of worker threads for parallel processing
     ThreadCount,
+    /// Number of files to process in each batch
     BatchSize,
+    /// Size of database connection pool
     DatabasePoolSize,
+    /// Verbosity level for logging output
     LogVerbosity,
 }
 

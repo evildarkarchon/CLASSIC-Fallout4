@@ -117,9 +117,13 @@ pub enum ScanState {
 /// Scan results summary
 #[derive(Debug, Clone)]
 pub struct ScanResults {
+    /// Number of crash log files scanned
     pub scanned_count: usize,
+    /// Number of patterns matched in the logs
     pub patterns_matched: usize,
+    /// Number of FormIDs successfully resolved from the database
     pub formids_resolved: usize,
+    /// Number of suspect mods/plugins identified
     pub suspects_count: usize,
 }
 

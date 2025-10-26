@@ -1,11 +1,44 @@
-  //! CLASSIC TUI - Terminal User Interface for crash log analysis
+//! CLASSIC TUI - Terminal User Interface for crash log analysis
 //!
-//! Interactive terminal interface built with Ratatui/Crossterm for analyzing
-//! Fallout 4 and Skyrim crash logs.
+//! A high-performance, pure Rust terminal interface for analyzing Fallout 4 and Skyrim crash logs.
+//! Built with [Ratatui](https://ratatui.rs/) for modern terminal rendering and
+//! [Crossterm](https://github.com/crossterm-rs/crossterm) for cross-platform terminal control.
+//!
+//! ## Features
+//!
+//! - **Interactive folder selection** - Navigate filesystem to select crash log directories
+//! - **Real-time Papyrus monitoring** - Watch Papyrus script logs for errors and warnings
+//! - **Comprehensive scanning** - Analyze crash logs and game files for issues
+//! - **Backup management** - Create, restore, and manage backups of XSE, ENB, ReShade, and Vulkan files
+//! - **Results viewer** - Browse and search through generated scan reports
+//! - **Articles/Resources** - Access help documentation with keyboard-driven navigation
+//! - **Settings management** - Configure paths, scan options, and advanced settings
+//! - **Update checking** - Automatic GitHub release checking with in-app notifications
+//! - **Session persistence** - Restore previous screen, scroll positions, and selections
+//!
+//! ## Architecture
+//!
+//! This TUI is a **pure Rust application** that uses only the `-core` crates (business logic).
+//! It does NOT depend on Python or PyO3 bindings, allowing for:
+//! - Zero FFI overhead
+//! - No Python runtime dependency
+//! - Smaller binary size
+//! - Better performance (no GIL, no type conversions)
+//! - SSH-friendly operation (no X11 required)
+//!
+//! ## Usage
+//!
+//! ```bash
+//! # Run the TUI application
+//! cargo run -p classic-tui
+//! ```
+//!
+//! Press `?` in the application for keyboard shortcuts help.
 
 mod app;
 mod events;
 mod handlers;
+mod state;
 mod ui;
 mod widgets;
 
@@ -52,8 +85,18 @@ async fn main() -> Result<()> {
     // Get game root path BEFORE creating app
     let game_root = config.paths.game_root.clone();
 
+    // Load session state
+    let mut session_manager = state::SessionManager::new()
+        .unwrap_or_else(|e| {
+            eprintln!("Failed to load session state: {}, using defaults", e);
+            state::SessionManager::with_defaults()
+        });
+
     // Create application
     let mut app = App::with_config(config);
+
+    // Restore session state to app
+    session_manager.restore_to_app(&mut app);
 
     // Setup terminal
     enable_raw_mode()?;
@@ -101,6 +144,12 @@ async fn main() -> Result<()> {
     )
     .await;
 
+    // Capture and save session state before quitting
+    session_manager.capture_from_app(&app);
+    if let Err(e) = session_manager.save() {
+        eprintln!("Failed to save session state: {}", e);
+    }
+
     // Restore terminal
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -139,8 +188,8 @@ async fn run_app(
             }
         })?;
 
-        // Poll for keyboard events (non-blocking, 16ms = ~60 FPS)
-        if event::poll(Duration::from_millis(16))? {
+        // Poll for keyboard events (non-blocking, 33ms = ~30 FPS)
+        if event::poll(Duration::from_millis(33))? {
             if let Event::Key(key) = event::read()? {
                 if let Some(msg) = handle_key_event(app, key) {
                     handle_ui_message(

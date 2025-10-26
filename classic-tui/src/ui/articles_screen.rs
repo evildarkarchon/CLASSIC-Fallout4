@@ -8,13 +8,47 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
     Frame,
 };
+use std::collections::HashMap;
+use std::sync::OnceLock;
+
+/// Global cache for pre-rendered markdown articles
+///
+/// This cache is initialized once on first access and contains all articles
+/// with their markdown pre-rendered. This avoids re-parsing markdown on every frame (~30 FPS).
+static RENDERED_ARTICLES_CACHE: OnceLock<HashMap<(ArticleCategory, usize), RenderedMarkdown>> =
+    OnceLock::new();
+
+/// Get the rendered articles cache, initializing it if necessary
+fn get_rendered_articles_cache() -> &'static HashMap<(ArticleCategory, usize), RenderedMarkdown> {
+    RENDERED_ARTICLES_CACHE.get_or_init(|| {
+        let mut cache = HashMap::new();
+
+        // Pre-render all articles
+        for article in get_all_articles() {
+            let key = (article.category, get_articles_by_category(article.category)
+                .iter()
+                .position(|a| a.title == article.title)
+                .unwrap_or(0));
+            // Create a new renderer for each article since render() consumes self
+            let renderer = MarkdownRenderer::new();
+            let rendered = renderer.render(article.content);
+            cache.insert(key, rendered);
+        }
+
+        cache
+    })
+}
 
 /// Article category
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ArticleCategory {
+    /// Installation and setup guides
     Installation,
+    /// Common issues and troubleshooting
     CommonIssues,
+    /// Advanced topics and configuration
     Advanced,
+    /// Keyboard shortcuts reference
     Shortcuts,
 }
 
@@ -63,8 +97,11 @@ impl ArticleCategory {
 /// Article content with lazy-rendered markdown
 #[derive(Debug, Clone)]
 pub struct Article {
+    /// Article title displayed in the list
     pub title: &'static str,
+    /// Markdown content of the article
     pub content: &'static str,
+    /// Category this article belongs to
     pub category: ArticleCategory,
     /// Cached rendered markdown (lazily initialized)
     rendered: Option<RenderedMarkdown>,
@@ -141,7 +178,7 @@ pub fn get_all_articles() -> Vec<Article> {
             "## Crash Reports Not Found\n\n\
             If CLASSIC can't find crash reports:\n\n\
             1. Check **Docs Root** path in Settings (`Ctrl+O`)\n\
-            2. Verify crash logs exist in `Documents/My Games/Fallout4/Crash Logs/`\n\
+            2. Verify crash logs exist in `Documents/My Games/Fallout4/F4SE/`\n\
             3. Run a game crash first to generate logs\n\
             4. Try setting a **Custom Scan** path\n\n\
             ### Requirements\n\n\
@@ -265,16 +302,12 @@ impl ArticlesState {
         Self::default()
     }
 
-    /// Get current article's URLs (renders markdown on-demand)
+    /// Get current article's URLs from pre-rendered cache
     pub fn get_current_urls(&self) -> Vec<String> {
-        let articles = get_articles_by_category(self.selected_category);
-        if let Some(mut article) = articles.into_iter().nth(self.selected_article_index) {
-            article
-                .get_rendered()
-                .urls
-                .iter()
-                .map(|u| u.url.clone())
-                .collect()
+        let cache = get_rendered_articles_cache();
+        let key = (self.selected_category, self.selected_article_index);
+        if let Some(rendered) = cache.get(&key) {
+            rendered.urls.iter().map(|u| u.url.clone()).collect()
         } else {
             Vec::new()
         }
@@ -524,9 +557,10 @@ fn render_article_viewer(f: &mut Frame, area: Rect, state: &ArticlesState) {
     let articles = get_articles_by_category(state.selected_category);
 
     let content = if let Some(article) = articles.get(state.selected_article_index) {
-        // Render markdown on-demand
-        let renderer = MarkdownRenderer::new();
-        let rendered = renderer.render(article.content);
+        // Get pre-rendered markdown from cache
+        let cache = get_rendered_articles_cache();
+        let key = (state.selected_category, state.selected_article_index);
+        let rendered = cache.get(&key).expect("Article not found in cache");
 
         // Take lines from scroll offset
         let lines: Vec<Line> = rendered
