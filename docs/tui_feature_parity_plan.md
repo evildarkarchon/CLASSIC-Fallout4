@@ -336,36 +336,38 @@ Rust TUI → Business Logic (-core crates directly)
   - Error handling for corrupted YAML
   - Files: `classic-tui/src/handlers/settings_handler.rs`
 
-### Phase 5: Articles/Resources Screen
+### Phase 5: Articles/Resources Screen ✅ **COMPLETE**
 **Goal:** Add help resources and documentation access.
 
-#### 5.1 Articles Screen UI
-- [ ] **Create articles browser screen**
-  - Add to `UiState` enum
-  - Categorized list layout
-  - Navigation (F10 key)
+#### 5.1 Articles Screen UI ✅
+- [x] **Create articles browser screen**
+  - ✅ Add to `UiState` enum
+  - ✅ Categorized list layout
+  - ✅ Navigation (F10 key)
   - Files: `classic-tui/src/ui/articles_screen.rs`
 
-- [ ] **Organize articles by category**
-  - Installation guides
-  - Common issues
-  - Advanced topics
-  - Keyboard shortcuts reference
+- [x] **Organize articles by category**
+  - ✅ Installation guides
+  - ✅ Common issues
+  - ✅ Advanced topics
+  - ✅ Keyboard shortcuts reference
   - Files: `classic-tui/src/ui/articles_screen.rs`
 
-#### 5.2 Article Content
-- [ ] **Implement article viewer**
-  - Markdown rendering in terminal
-  - Scrollable content
-  - Code block highlighting
-  - Files: `classic-tui/src/widgets/article_viewer.rs`
+#### 5.2 Article Content ✅
+- [x] **Implement article viewer**
+  - ✅ Markdown rendering in terminal with `pulldown-cmark`
+  - ✅ Scrollable content with PgUp/PgDn
+  - ✅ Code block highlighting and styling
+  - ✅ Proper markdown support (headings, bold, italic, lists)
+  - Files: `classic-tui/src/widgets/markdown_viewer.rs`, `classic-tui/src/ui/articles_screen.rs`
 
-- [ ] **Add external link support**
-  - Detect URLs in articles
-  - Open in system browser
-  - Confirmation before opening
-  - Use `open` crate
-  - Files: `classic-tui/src/handlers/article_handler.rs`
+- [x] **Add external link support**
+  - ✅ Detect URLs in markdown articles
+  - ✅ Open in system browser with `open` crate
+  - ✅ Tab/Shift+Tab to navigate links
+  - ✅ Enter to open selected link
+  - ✅ Error handling for failed browser launches
+  - Files: `classic-tui/src/handlers/input_handler.rs`, `classic-tui/src/main.rs`
 
 ### Phase 6: Advanced Features
 **Goal:** Add polish and quality-of-life features.
@@ -446,7 +448,6 @@ Rust TUI → Business Logic (-core crates directly)
   - Files: Various UI modules
 
 - [ ] **Optimize file operations**
-  - Use Rust acceleration throughout
   - Batch operations
   - Async I/O
   - Files: `classic-tui/src/handlers/`
@@ -495,8 +496,8 @@ Rust TUI → Business Logic (-core crates directly)
 4. File watching (Phase 3.3)
 
 ### Medium Priority (Nice to Have)
-1. Articles screen (Phase 5)
-2. Update checking (Phase 6.1)
+1. ✅ Articles screen (Phase 5) - **COMPLETE**
+2. ✅ Update checking (Phase 6.1) - **COMPLETE**
 3. UI polish (Phase 7.1)
 
 ### Low Priority (Future Enhancements)
@@ -533,10 +534,12 @@ Rust TUI → Business Logic (-core crates directly)
 
 **To Be Added:**
 - [ ] `notify` - File system watching for Papyrus monitor and results viewer
-- [ ] `arboard` - System clipboard access (more reliable than `clipboard` crate)
-- [ ] `open` - Open URLs in browser for articles
-- [ ] `reqwest` - HTTP client for update checks (with rustls-tls feature)
-- [ ] `pulldown-cmark` - Markdown parsing for articles viewer
+
+**Recently Added:**
+- [x] `arboard` - System clipboard access (more reliable than `clipboard` crate) ✅
+- [x] `open` - Open URLs in browser for articles ✅
+- [x] `reqwest` - HTTP client for update checks (with rustls-tls feature) ✅
+- [x] `pulldown-cmark` - Markdown parsing for articles viewer ✅
 
 **May Need Implementation in `-core` crates:**
 - [ ] Path validation in `classic-file-io-core` or `classic-scanlog-core`

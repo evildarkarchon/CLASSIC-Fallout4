@@ -334,6 +334,15 @@ fn handle_articles_screen_keys(_app: &App, key: KeyEvent) -> Option<UiMessage> {
         KeyCode::PageUp => Some(UiMessage::ScrollArticleUp(10)),
         KeyCode::PageDown => Some(UiMessage::ScrollArticleDown(10)),
 
+        // Tab - Navigate to next link in article
+        KeyCode::Tab => Some(UiMessage::NextArticleLink),
+
+        // Shift+Tab - Navigate to previous link in article
+        KeyCode::BackTab => Some(UiMessage::PreviousArticleLink),
+
+        // Enter - Open currently selected link in browser
+        KeyCode::Enter => Some(UiMessage::OpenArticleLink),
+
         _ => None,
     }
 }

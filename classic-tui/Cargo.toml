@@ -48,6 +48,9 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 # Open URLs in system browser
 open = "5.0"
 
+# Markdown parsing for articles
+pulldown-cmark = "0.12"
+
 # System directories
 dirs = { workspace = true }
 

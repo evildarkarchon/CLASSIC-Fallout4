@@ -593,6 +593,26 @@ async fn handle_ui_message(
             let visible_lines = 30; // TODO: Get actual terminal height
             app.articles_state.scroll_down(lines, visible_lines);
         }
+        UiMessage::NextArticleLink => {
+            app.articles_state.next_link();
+        }
+        UiMessage::PreviousArticleLink => {
+            app.articles_state.prev_link();
+        }
+        UiMessage::OpenArticleLink => {
+            if let Some(url) = app.articles_state.get_selected_link_url() {
+                if let Err(e) = open::that(&url) {
+                    tracing::error!("Failed to open link {}: {}", url, e);
+                    let dialog = crate::widgets::ErrorDialog::new(
+                        "Failed to Open Link",
+                        "Could not open URL in browser",
+                        Some(&format!("URL: {}\n\nError: {}", url, e)),
+                        crate::widgets::ErrorSeverity::Error,
+                    );
+                    app.show_error_dialog(dialog);
+                }
+            }
+        }
         UiMessage::ShowErrorDialog => {
             // This is typically not called directly - errors show dialogs via app.show_error_dialog()
         }

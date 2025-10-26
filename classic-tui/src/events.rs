@@ -42,6 +42,12 @@ pub enum UiMessage {
     ScrollArticleUp(usize),
     /// Scroll article viewer down
     ScrollArticleDown(usize),
+    /// Navigate to next link in article
+    NextArticleLink,
+    /// Navigate to previous link in article
+    PreviousArticleLink,
+    /// Open currently selected link in browser
+    OpenArticleLink,
     /// Select next report in results list
     SelectNextReport,
     /// Select previous report in results list

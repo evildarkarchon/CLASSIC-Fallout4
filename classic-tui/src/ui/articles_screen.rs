@@ -1,5 +1,6 @@
 /// Articles/Resources screen for help documentation and guides
 use crate::app::App;
+use crate::widgets::markdown_viewer::{MarkdownRenderer, RenderedMarkdown};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
@@ -59,12 +60,14 @@ impl ArticleCategory {
     }
 }
 
-/// Article content
+/// Article content with lazy-rendered markdown
 #[derive(Debug, Clone)]
 pub struct Article {
     pub title: &'static str,
     pub content: &'static str,
     pub category: ArticleCategory,
+    /// Cached rendered markdown (lazily initialized)
+    rendered: Option<RenderedMarkdown>,
 }
 
 impl Article {
@@ -78,7 +81,17 @@ impl Article {
             title,
             content,
             category,
+            rendered: None,
         }
+    }
+
+    /// Get or render the markdown content
+    pub fn get_rendered(&mut self) -> &RenderedMarkdown {
+        if self.rendered.is_none() {
+            let renderer = MarkdownRenderer::new();
+            self.rendered = Some(renderer.render(self.content));
+        }
+        self.rendered.as_ref().unwrap()
     }
 }
 
@@ -88,15 +101,22 @@ pub fn get_all_articles() -> Vec<Article> {
         // Installation articles
         Article::new(
             "Getting Started",
-            "CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) analyzes crash logs from Bethesda games.\n\n\
-            Quick Start:\n\
-            1. Configure paths in Settings (Ctrl+O)\n\
-            2. Press F5 to scan crash logs\n\
-            3. Press F9 to view results\n\n\
-            The TUI provides three interfaces:\n\
-            - Main screen: Scan operations\n\
-            - Settings: Configuration\n\
-            - Results: View analysis reports",
+            "# Getting Started with CLASSIC\n\n\
+            **CLASSIC** (Crash Log Auto Scanner & Setup Integrity Checker) analyzes crash logs from Bethesda games.\n\n\
+            ## Quick Start\n\n\
+            1. Configure paths in **Settings** (`Ctrl+O`)\n\
+            2. Press `F5` to scan crash logs\n\
+            3. Press `F9` to view results\n\n\
+            ## TUI Interfaces\n\n\
+            The TUI provides multiple screens:\n\n\
+            - **Main screen**: Scan operations and output\n\
+            - **Settings**: Configuration management\n\
+            - **Results**: View and search analysis reports\n\
+            - **Backup**: Manage XSE/ENB/ReShade backups\n\
+            - **Articles**: This help documentation\n\n\
+            ## External Resources\n\n\
+            - [GitHub Repository](https://github.com/evildarkarchon/CLASSIC-Fallout4)\n\
+            - [Nexus Mods Page](https://www.nexusmods.com/fallout4/mods/56255)",
             ArticleCategory::Installation,
         ),
         Article::new(
@@ -118,12 +138,17 @@ pub fn get_all_articles() -> Vec<Article> {
         // Common issues articles
         Article::new(
             "No Reports Found",
-            "If CLASSIC can't find crash reports:\n\n\
-            1. Check Docs Root path in Settings\n\
-            2. Verify crash logs exist in Documents/My Games/Fallout4/Crash Logs/\n\
+            "## Crash Reports Not Found\n\n\
+            If CLASSIC can't find crash reports:\n\n\
+            1. Check **Docs Root** path in Settings (`Ctrl+O`)\n\
+            2. Verify crash logs exist in `Documents/My Games/Fallout4/Crash Logs/`\n\
             3. Run a game crash first to generate logs\n\
-            4. Try setting a Custom Scan path\n\n\
-            Note: Crash logs are only generated if you have F4SE/Buffout 4 installed.",
+            4. Try setting a **Custom Scan** path\n\n\
+            ### Requirements\n\n\
+            **Important**: Crash logs are *only* generated if you have these installed:\n\n\
+            - [F4SE (Fallout 4 Script Extender)](https://f4se.silverlock.org/)\n\
+            - [Buffout 4](https://www.nexusmods.com/fallout4/mods/47359) or similar crash logger\n\n\
+            Without these tools, Fallout 4 will not generate detailed crash logs that CLASSIC can analyze.",
             ArticleCategory::CommonIssues,
         ),
         Article::new(
@@ -219,6 +244,8 @@ pub struct ArticlesState {
     pub selected_article_index: usize,
     /// Scroll offset for article content
     pub scroll_offset: usize,
+    /// Currently selected link index (None if no link selected)
+    pub selected_link_index: Option<usize>,
 }
 
 impl Default for ArticlesState {
@@ -227,6 +254,7 @@ impl Default for ArticlesState {
             selected_category: ArticleCategory::Installation,
             selected_article_index: 0,
             scroll_offset: 0,
+            selected_link_index: None,
         }
     }
 }
@@ -237,11 +265,27 @@ impl ArticlesState {
         Self::default()
     }
 
+    /// Get current article's URLs (renders markdown on-demand)
+    pub fn get_current_urls(&self) -> Vec<String> {
+        let articles = get_articles_by_category(self.selected_category);
+        if let Some(mut article) = articles.into_iter().nth(self.selected_article_index) {
+            article
+                .get_rendered()
+                .urls
+                .iter()
+                .map(|u| u.url.clone())
+                .collect()
+        } else {
+            Vec::new()
+        }
+    }
+
     /// Switch to next category
     pub fn next_category(&mut self) {
         self.selected_category = self.selected_category.next();
         self.selected_article_index = 0;
         self.scroll_offset = 0;
+        self.selected_link_index = None;
     }
 
     /// Switch to previous category
@@ -249,6 +293,7 @@ impl ArticlesState {
         self.selected_category = self.selected_category.prev();
         self.selected_article_index = 0;
         self.scroll_offset = 0;
+        self.selected_link_index = None;
     }
 
     /// Select next article
@@ -257,6 +302,7 @@ impl ArticlesState {
         if !articles.is_empty() {
             self.selected_article_index = (self.selected_article_index + 1) % articles.len();
             self.scroll_offset = 0;
+            self.selected_link_index = None;
         }
     }
 
@@ -270,6 +316,44 @@ impl ArticlesState {
                 self.selected_article_index - 1
             };
             self.scroll_offset = 0;
+            self.selected_link_index = None;
+        }
+    }
+
+    /// Select next link in current article
+    pub fn next_link(&mut self) {
+        let urls = self.get_current_urls();
+        if urls.is_empty() {
+            return;
+        }
+
+        self.selected_link_index = Some(match self.selected_link_index {
+            None => 0,
+            Some(idx) => (idx + 1) % urls.len(),
+        });
+    }
+
+    /// Select previous link in current article
+    pub fn prev_link(&mut self) {
+        let urls = self.get_current_urls();
+        if urls.is_empty() {
+            return;
+        }
+
+        self.selected_link_index = Some(match self.selected_link_index {
+            None => urls.len().saturating_sub(1),
+            Some(0) => urls.len().saturating_sub(1),
+            Some(idx) => idx - 1,
+        });
+    }
+
+    /// Get currently selected link URL
+    pub fn get_selected_link_url(&mut self) -> Option<String> {
+        if let Some(link_idx) = self.selected_link_index {
+            let urls = self.get_current_urls();
+            urls.get(link_idx).cloned()
+        } else {
+            None
         }
     }
 
@@ -281,8 +365,8 @@ impl ArticlesState {
     /// Scroll content down
     pub fn scroll_down(&mut self, lines: usize, max_lines: usize) {
         let articles = get_articles_by_category(self.selected_category);
-        if let Some(article) = articles.get(self.selected_article_index) {
-            let content_lines = article.content.lines().count();
+        if let Some(mut article) = articles.into_iter().nth(self.selected_article_index) {
+            let content_lines = article.get_rendered().lines.len();
             let max_scroll = content_lines.saturating_sub(max_lines);
             self.scroll_offset = (self.scroll_offset + lines).min(max_scroll);
         }
@@ -334,7 +418,7 @@ pub fn render_articles_screen(f: &mut Frame, app: &App, state: &ArticlesState) {
     render_article_viewer(f, content_chunks[2], state);
 
     // Status bar
-    render_status_bar(f, chunks[2]);
+    render_status_bar(f, chunks[2], state);
 
     // Render error dialog overlay if active (should be last so it appears on top)
     if let Some(ref dialog) = app.error_dialog {
@@ -435,48 +519,40 @@ fn render_articles_list(f: &mut Frame, area: Rect, state: &ArticlesState) {
     f.render_widget(list, area);
 }
 
-/// Render article viewer
+/// Render article viewer with markdown
 fn render_article_viewer(f: &mut Frame, area: Rect, state: &ArticlesState) {
     let articles = get_articles_by_category(state.selected_category);
 
     let content = if let Some(article) = articles.get(state.selected_article_index) {
-        let lines: Vec<Line> = article
-            .content
-            .lines()
+        // Render markdown on-demand
+        let renderer = MarkdownRenderer::new();
+        let rendered = renderer.render(article.content);
+
+        // Take lines from scroll offset
+        let lines: Vec<Line> = rendered
+            .lines
+            .iter()
             .skip(state.scroll_offset)
-            .map(|line| {
-                // Simple styling: headings in cyan/bold, code blocks in green
-                if line.ends_with(':') && !line.starts_with(' ') {
-                    Line::from(Span::styled(
-                        line.to_string(),
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    ))
-                } else if line.starts_with("- ") {
-                    Line::from(vec![
-                        Span::styled("• ", Style::default().fg(Color::Yellow)),
-                        Span::raw(&line[2..]),
-                    ])
-                } else if line.trim().chars().all(|c| c.is_numeric() || c == '.') {
-                    Line::from(Span::styled(
-                        line.to_string(),
-                        Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::BOLD),
-                    ))
-                } else {
-                    Line::from(line.to_string())
-                }
-            })
+            .cloned()
             .collect();
+
+        // Show link count if any links present
+        let title = if rendered.urls.is_empty() {
+            format!(" {} ", article.title)
+        } else {
+            let selected_indicator = state
+                .selected_link_index
+                .map(|idx| format!(" (Link {}/{}) ", idx + 1, rendered.urls.len()))
+                .unwrap_or_default();
+            format!(" {} {} ", article.title, selected_indicator)
+        };
 
         Paragraph::new(lines)
             .wrap(Wrap { trim: false })
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .title(format!(" {} ", article.title))
+                    .title(title)
                     .border_style(Style::default().fg(Color::Cyan)),
             )
     } else {
@@ -489,8 +565,10 @@ fn render_article_viewer(f: &mut Frame, area: Rect, state: &ArticlesState) {
 }
 
 /// Render status bar
-fn render_status_bar(f: &mut Frame, area: Rect) {
-    let hints = Line::from(vec![
+fn render_status_bar(f: &mut Frame, area: Rect, state: &ArticlesState) {
+    let has_links = !state.get_current_urls().is_empty();
+
+    let mut hint_spans = vec![
         Span::styled("ESC", Style::default().fg(Color::Yellow)),
         Span::raw(" Back | "),
         Span::styled("←→", Style::default().fg(Color::Yellow)),
@@ -498,10 +576,26 @@ fn render_status_bar(f: &mut Frame, area: Rect) {
         Span::styled("↑↓", Style::default().fg(Color::Yellow)),
         Span::raw(" Article | "),
         Span::styled("PgUp/PgDn", Style::default().fg(Color::Yellow)),
-        Span::raw(" Scroll | "),
+        Span::raw(" Scroll"),
+    ];
+
+    if has_links {
+        hint_spans.extend_from_slice(&[
+            Span::raw(" | "),
+            Span::styled("Tab", Style::default().fg(Color::Yellow)),
+            Span::raw(" Next Link | "),
+            Span::styled("Enter", Style::default().fg(Color::Yellow)),
+            Span::raw(" Open Link"),
+        ]);
+    }
+
+    hint_spans.extend_from_slice(&[
+        Span::raw(" | "),
         Span::styled("Q", Style::default().fg(Color::Yellow)),
         Span::raw(" Quit"),
     ]);
+
+    let hints = Line::from(hint_spans);
 
     let status = Paragraph::new(hints)
         .alignment(Alignment::Center)
