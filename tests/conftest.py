@@ -54,10 +54,6 @@ def pytest_configure(config):
     )
     config.addinivalue_line(
         "markers",
-        "tui: Tests for the Textual Terminal UI"
-    )
-    config.addinivalue_line(
-        "markers",
         "performance: Performance benchmarks and regression tests"
     )
     config.addinivalue_line(
@@ -107,10 +103,6 @@ def pytest_collection_modifyitems(config, items):
         # Auto-mark GUI tests
         if any(x in item.nodeid.lower() for x in ["gui", "qt", "pyside", "widget", "dialog"]):
             item.add_marker(pytest.mark.gui)
-
-        # Auto-mark TUI tests
-        if "tui" in item.nodeid.lower() or "textual" in item.nodeid.lower():
-            item.add_marker(pytest.mark.tui)
 
         # Auto-mark performance tests
         if "performance" in item.nodeid.lower() or "benchmark" in item.nodeid.lower():

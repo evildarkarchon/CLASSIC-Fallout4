@@ -4,7 +4,6 @@
 ```
 CLASSIC-Fallout4/
 ├── CLASSIC_Interface.py      # Main GUI entry point (PySide6)
-├── CLASSIC_TUI.py            # Terminal UI entry point (Textual)
 ├── CLASSIC_ScanLogs.py       # CLI entry point & core scanner
 ├── CLASSIC_ScanGame.py       # Game integrity checker
 ├── ClassicLib/               # Core library (modular architecture)
@@ -12,7 +11,7 @@ CLASSIC-Fallout4/
 ├── CLASSIC Data/             # Configuration & databases
 ├── docs/                     # Documentation
 ├── Release/                  # Built executables
-├── pyproject.toml           # Poetry configuration
+├── pyproject.toml           # uv/Python configuration
 ├── pytest.ini               # Test configuration
 └── CLAUDE.md                # AI assistant guidance
 

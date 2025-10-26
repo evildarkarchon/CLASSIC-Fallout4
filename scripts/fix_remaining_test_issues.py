@@ -281,7 +281,7 @@ def main():
 
     if fixed_count > 0:
         print("\n📝 Next steps:")
-        print("  1. Run tests: poetry run pytest tests/ -n 4 -q")
+        print("  1. Run tests: uv run pytest tests/ -n 4 -q")
         print("  2. Check for any remaining errors")
         print("  3. If GUI tests still fail, may need to run them separately without parallelization")
 

@@ -92,9 +92,9 @@ def main():
     # Show summary
     if modified_count > 0:
         print("\nYou can now run tests with markers like:")
-        print("  poetry run pytest -m 'gui and unit' -n auto")
-        print("  poetry run pytest -m 'gui and integration' -v")
-        print("  poetry run pytest -m 'gui and not slow' -n 4")
+        print("  uv run pytest -m 'gui and unit' -n auto")
+        print("  uv run pytest -m 'gui and integration' -v")
+        print("  uv run pytest -m 'gui and not slow' -n 4")
 
 
 if __name__ == '__main__':

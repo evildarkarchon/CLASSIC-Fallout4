@@ -1,8 +1,8 @@
-///! Clipboard operations for copying text to system clipboard.
-///!
-///! This module provides cross-platform clipboard functionality using the
-///! `arboard` crate for copying error messages, report content, and other
-///! text to the system clipboard.
+//! Clipboard operations for copying text to system clipboard.
+//!
+//! This module provides cross-platform clipboard functionality using the
+//! `arboard` crate for copying error messages, report content, and other
+//! text to the system clipboard.
 
 use anyhow::{Context, Result};
 use arboard::Clipboard;

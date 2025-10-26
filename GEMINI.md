@@ -1,6 +1,6 @@
 ## Project Overview
 
-CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a high-performance hybrid Python-Rust desktop application that analyzes crash logs from Bethesda games (Fallout 4 and Skyrim). It provides three interfaces: GUI (PySide6/Qt), TUI (Textual), and CLI.
+CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a high-performance hybrid Python-Rust desktop application that analyzes crash logs from Bethesda games (Fallout 4 and Skyrim). It provides two Python interfaces: GUI (PySide6/Qt) and CLI. A Rust-based TUI (Ratatui) is also available as a separate application.
 
 **🚀 Rust Acceleration**: CLASSIC uses Rust for performance-critical operations, achieving 10-150x speedups while maintaining full Python compatibility.
 
@@ -22,7 +22,6 @@ uv sync --all-extras
 
 # Run application
 uv run python CLASSIC_Interface.py  # GUI
-uv run python CLASSIC_TUI.py        # TUI
 uv run python CLASSIC_ScanLogs.py   # CLI
 
 # Testing (use terminal, not VS Code test tool)
@@ -97,7 +96,7 @@ cargo test --all-features --workspace
 | Record Scanning | 150ms/scan | 3-4ms/scan | 40x |
 
 ### Core Components
-- **Entry Points**: `CLASSIC_Interface.py` (GUI), `CLASSIC_TUI.py` (TUI), `CLASSIC_ScanLogs.py` (CLI)
+- **Entry Points**: `CLASSIC_Interface.py` (GUI), `CLASSIC_ScanLogs.py` (CLI)
 - **AsyncBridge**: Singleton for async/sync bridging (replaces deprecated AsyncCore)
 - **MessageHandler**: Central messaging system for all output modes
 - **YamlSettingsCache**: Configuration management with batch loading

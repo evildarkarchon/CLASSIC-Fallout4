@@ -1,12 +1,12 @@
-///! Folder picker widget for navigating and selecting directories
-///!
-///! This widget provides an interactive file browser for selecting folders.
-///! Features:
-///! - Navigate directories with arrow keys
-///! - Select with Enter
-///! - Go up a directory with Backspace
-///! - Show current path
-///! - Filter to show only directories
+//! Folder picker widget for navigating and selecting directories
+//!
+//! This widget provides an interactive file browser for selecting folders.
+//! Features:
+//! - Navigate directories with arrow keys
+//! - Select with Enter
+//! - Go up a directory with Backspace
+//! - Show current path
+//! - Filter to show only directories
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -82,10 +82,10 @@ impl FolderPickerState {
         self.error = None;
 
         // Add parent directory entry if not at root
-        if self.current_dir.parent().is_some() {
+        if let Some(parent) = self.current_dir.parent() {
             self.entries.push(DirEntry {
                 name: "..".to_string(),
-                path: self.current_dir.parent().unwrap().to_path_buf(),
+                path: parent.to_path_buf(),
             });
         }
 

@@ -30,12 +30,6 @@ All spec files have been updated to properly bundle the `CLASSIC Data` directory
 - Creates a single-file executable for convenience
 - Optimized for command-line usage
 
-#### CLASSIC-TUI.spec (Terminal UI)
-- Includes Textual framework dependencies
-- Excludes GUI frameworks
-- Creates a single-file executable
-- Optimized for terminal interfaces
-
 #### CLASSIC-Test.spec (Debug Build)
 - No optimization for easier debugging
 - Console enabled for debug output
@@ -76,7 +70,7 @@ The ResourceLoader uses a hierarchical strategy to find data files:
 
 1. Install PyInstaller:
    ```bash
-   poetry install  # Includes pyinstaller in dev dependencies
+   uv sync --all-extras  # Includes pyinstaller in dev dependencies
    # or
    pip install pyinstaller
    ```
@@ -89,26 +83,22 @@ The ResourceLoader uses a hierarchical strategy to find data files:
 
 ```bash
 # GUI Application (folder distribution)
-poetry run pyinstaller --clean CLASSIC.spec
+uv run pyinstaller --clean CLASSIC.spec
 
 # CLI Application (single file)
-poetry run pyinstaller --clean CLASSIC-CLI.spec
-
-# TUI Application (single file)
-poetry run pyinstaller --clean CLASSIC-TUI.spec
+uv run pyinstaller --clean CLASSIC-CLI.spec
 
 # Debug/Test Build
-poetry run pyinstaller --clean CLASSIC-Test.spec
+uv run pyinstaller --clean CLASSIC-Test.spec
 
 # With UPX compression (if not in PATH)
-poetry run pyinstaller --clean --upx-dir "C:\Path\To\UPX" CLASSIC.spec
+uv run pyinstaller --clean --upx-dir "C:\Path\To\UPX" CLASSIC.spec
 ```
 
 ### Output Locations
 
 - **GUI**: `dist/CLASSIC/` (folder with CLASSIC.exe and dependencies)
 - **CLI**: `dist/CLASSIC-CLI.exe` (single executable)
-- **TUI**: `dist/CLASSIC-TUI.exe` (single executable)
 - **Test**: `dist/CLASSIC-Test.exe` (single executable with debug info)
 
 ## Testing Resource Loading
@@ -143,7 +133,7 @@ When running as a frozen executable:
 
 1. **Folder vs Single-File**:
    - GUI uses folder distribution for faster startup
-   - CLI/TUI use single-file for portability
+   - CLI uses single-file for portability
    - Single-file has slower initial startup (extraction time)
 
 2. **UPX Compression**:
@@ -218,7 +208,7 @@ If upgrading from a version without proper data bundling:
 
 The enhanced data bundling system ensures CLASSIC-Fallout4 works seamlessly whether:
 - Running from source code during development
-- Installed via pip/poetry as a package
+- Installed via pip/uv as a package
 - Distributed as a PyInstaller executable
 - Executed via uvx for temporary usage
 

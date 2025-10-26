@@ -113,7 +113,7 @@ def main():
 
     if fixed_count > 0:
         print("\n📝 Next steps:")
-        print("  1. Run tests: poetry run pytest tests/ -n 4 -q")
+        print("  1. Run tests: uv run pytest tests/ -n 4 -q")
         print("  2. All tests should now have proper fixture parameters")
 
 

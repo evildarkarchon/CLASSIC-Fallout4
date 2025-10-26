@@ -1,7 +1,7 @@
-///! Update checking functionality for CLASSIC TUI.
-///!
-///! This module provides functionality to check for new releases on GitHub,
-///! compare semantic versions, and notify users of available updates.
+//! Update checking functionality for CLASSIC TUI.
+//!
+//! This module provides functionality to check for new releases on GitHub,
+//! compare semantic versions, and notify users of available updates.
 
 use anyhow::{Context, Result};
 use serde::Deserialize;

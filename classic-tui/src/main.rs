@@ -88,7 +88,7 @@ async fn main() -> Result<()> {
     // Load session state
     let mut session_manager = state::SessionManager::new()
         .unwrap_or_else(|e| {
-            eprintln!("Failed to load session state: {}, using defaults", e);
+            tracing::warn!("Failed to load session state: {}, using defaults", e);
             state::SessionManager::with_defaults()
         });
 
@@ -147,7 +147,7 @@ async fn main() -> Result<()> {
     // Capture and save session state before quitting
     session_manager.capture_from_app(&app);
     if let Err(e) = session_manager.save() {
-        eprintln!("Failed to save session state: {}", e);
+        tracing::error!("Failed to save session state: {}", e);
     }
 
     // Restore terminal
@@ -361,7 +361,7 @@ async fn handle_ui_message(
             // Save configuration to YAML file
             if let Err(e) = app.save_config().await {
                 // Log error but don't crash
-                eprintln!("Failed to save settings: {}", e);
+                tracing::error!("Failed to save settings: {}", e);
             } else {
                 // Could add a success message to output
                 app.add_output("Settings saved successfully.".to_string());

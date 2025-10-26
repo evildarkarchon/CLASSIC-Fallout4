@@ -5,29 +5,29 @@
 ### 1. Code Quality Checks
 ```bash
 # Format code with Ruff
-poetry run ruff format .
+uv run ruff format .
 
 # Check and fix linting issues
-poetry run ruff check . --fix
+uv run ruff check . --fix
 
 # Run type checking
-poetry run mypy .
-poetry run pyright
+uv run mypy .
+uv run pyright
 ```
 
 ### 2. Test Execution
 ```bash
 # Run quick unit tests first
-poetry run python -m pytest -n 4 -m "unit and not slow" --maxfail=3
+uv run python -m pytest -n 4 -m "unit and not slow" --maxfail=3
 
 # If changes affect core functionality
-poetry run python -m pytest tests/core/ -n 4
+uv run python -m pytest tests/core/ -n 4
 
 # For async changes
-poetry run python -m pytest -n 4 -m "async_test"
+uv run python -m pytest -n 4 -m "async_test"
 
 # Full test suite before major commits
-poetry run python -m pytest tests/ -n 4
+uv run python -m pytest tests/ -n 4
 ```
 
 ### 3. Documentation Updates
@@ -83,10 +83,10 @@ poetry run python -m pytest tests/ -n 4
 ### 6. Final Validation
 ```bash
 # Run pre-commit hooks
-poetry run pre-commit run
+uv run pre-commit run
 
 # Check test coverage
-poetry run python -m pytest --cov=. --cov-report=term
+uv run python -m pytest --cov=. --cov-report=term
 
 # Verify no print statements added
 grep -r "print(" ClassicLib/ --include="*.py"

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-CLASSIC is a hybrid Python-Rust desktop application for analyzing Bethesda game crash logs (Fallout 4/Skyrim). It provides three interfaces: GUI (PySide6), TUI (Textual), and CLI. The project achieves 10-150x performance gains through strategic Rust acceleration while maintaining full Python compatibility.
+CLASSIC is a hybrid Python-Rust desktop application for analyzing Bethesda game crash logs (Fallout 4/Skyrim). It provides two Python interfaces: GUI (PySide6) and CLI. A Rust TUI (Ratatui) is available separately. The project achieves 10-150x performance gains through strategic Rust acceleration while maintaining full Python compatibility.
 
 ## Architecture Patterns
 
@@ -43,7 +43,6 @@ uv sync --all-extras
 
 # Run application
 uv run python CLASSIC_Interface.py  # GUI
-uv run python CLASSIC_TUI.py        # TUI  
 uv run python CLASSIC_ScanLogs.py   # CLI
 ```
 
@@ -113,7 +112,6 @@ msg_info("Operation completed")
 
 ### Entry Points
 - `CLASSIC_Interface.py` - GUI (PySide6/Qt)
-- `CLASSIC_TUI.py` - Terminal UI (Textual)
 - `CLASSIC_ScanLogs.py` - CLI scanner
 
 ### Core Components (`ClassicLib/`)
@@ -123,12 +121,11 @@ msg_info("Operation completed")
 - **Interface/** - GUI components (modular mixins)
 - **ScanLog/** - Log parsing with Rust acceleration
 - **FileIO/** - File operations with encoding detection
-- **TUI/** - Terminal UI screens and widgets
 
 ### Configuration
 - **uv** package manager (not pip/poetry)
 - **Python 3.12+** required
-- **Dependencies**: PySide6, Textual, aiohttp, ruamel-yaml
+- **Dependencies**: PySide6, aiohttp, ruamel-yaml
 - **Build**: PyInstaller for executables
 
 ## Testing Guidelines

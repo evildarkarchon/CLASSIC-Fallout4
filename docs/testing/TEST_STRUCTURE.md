@@ -113,34 +113,34 @@ tests/
 
 ### Run All Tests
 ```bash
-poetry run python -m pytest tests/ -n auto -v
+uv run python -m pytest tests/ -n auto -v
 ```
 
 ### Run Tests by Category
 ```bash
 # Core functionality tests
-poetry run python -m pytest tests/async_resources tests/io tests/concurrency -n 4
+uv run python -m pytest tests/async_resources tests/io tests/concurrency -n 4
 
 # Application feature tests
-poetry run python -m pytest tests/backup tests/mods tests/game -n 4
+uv run python -m pytest tests/backup tests/mods tests/game -n 4
 
 # GUI tests (may require display)
-poetry run python -m pytest tests/gui -v
+uv run python -m pytest tests/gui -v
 
 # Performance tests (may take longer)
-poetry run python -m pytest tests/performance -v
+uv run python -m pytest tests/performance -v
 ```
 
 ### Run Specific Test Domains
 ```bash
 # Backup system tests
-poetry run python -m pytest tests/backup/ -v
+uv run python -m pytest tests/backup/ -v
 
 # Mod detection tests
-poetry run python -m pytest tests/mods/ -v
+uv run python -m pytest tests/mods/ -v
 
 # Game integrity tests
-poetry run python -m pytest tests/game/integrity/ -v
+uv run python -m pytest tests/game/integrity/ -v
 ```
 
 ## Test Markers
@@ -157,13 +157,13 @@ Tests use pytest markers for categorization:
 ### Running Tests by Marker
 ```bash
 # Run only unit tests
-poetry run python -m pytest -m "unit" -n auto
+uv run python -m pytest -m "unit" -n auto
 
 # Run integration tests
-poetry run python -m pytest -m "integration" -v
+uv run python -m pytest -m "integration" -v
 
 # Skip slow tests
-poetry run python -m pytest -m "not slow" -n auto
+uv run python -m pytest -m "not slow" -n auto
 ```
 
 ## Test Fixtures
@@ -190,7 +190,7 @@ When adding new tests:
 
 To run tests with coverage reporting:
 ```bash
-poetry run python -m pytest tests/ --cov=ClassicLib --cov-report=html
+uv run python -m pytest tests/ --cov=ClassicLib --cov-report=html
 ```
 
 View coverage report:

@@ -230,7 +230,7 @@ impl SettingItem {
     /// Get the next setting item
     pub fn next(&self) -> Self {
         let items = Self::all();
-        let current_index = items.iter().position(|&item| item == *self).unwrap();
+        let current_index = items.iter().position(|&item| item == *self).unwrap_or(0);
         let next_index = (current_index + 1) % items.len();
         items[next_index]
     }
@@ -238,7 +238,7 @@ impl SettingItem {
     /// Get the previous setting item
     pub fn prev(&self) -> Self {
         let items = Self::all();
-        let current_index = items.iter().position(|&item| item == *self).unwrap();
+        let current_index = items.iter().position(|&item| item == *self).unwrap_or(0);
         let prev_index = if current_index == 0 {
             items.len() - 1
         } else {

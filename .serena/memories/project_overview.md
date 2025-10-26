@@ -5,7 +5,7 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a Python desktop a
 
 ## Key Features
 - Analyzes crash logs to identify problematic mods, settings, and errors
-- Provides three interfaces: GUI (PySide6/Qt), TUI (Textual), and CLI
+- Provides two Python interfaces: GUI (PySide6/Qt) and CLI. Rust TUI (Ratatui) available separately.
 - Performs game file integrity checking
 - Manages mod file backups and restoration
 - Monitors Papyrus logs in real-time
@@ -15,9 +15,8 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a Python desktop a
 ## Tech Stack
 - **Language**: Python 3.12+
 - **GUI Framework**: PySide6 (Qt bindings)
-- **TUI Framework**: Textual (rich terminal UI)
 - **Build System**: PyInstaller for Windows executables
-- **Package Management**: Poetry
+- **Package Management**: uv
 - **Testing**: pytest with pytest-asyncio, pytest-xdist
 - **Async**: Heavy use of asyncio for performance
 - **Configuration**: YAML files for settings and mod databases
@@ -34,6 +33,5 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a Python desktop a
 
 ## Entry Points
 - `CLASSIC_Interface.py` - GUI application (main)
-- `CLASSIC_TUI.py` - Terminal UI application
 - `CLASSIC_ScanLogs.py` - CLI interface
 - `CLASSIC_ScanGame.py` - Game integrity checker

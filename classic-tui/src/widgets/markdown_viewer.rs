@@ -1,7 +1,7 @@
-///! Markdown rendering for terminal with URL detection and link support.
-///!
-///! This module provides markdown-to-terminal rendering using pulldown-cmark,
-///! with URL detection, styling, and interactive link opening capabilities.
+//! Markdown rendering for terminal with URL detection and link support.
+//!
+//! This module provides markdown-to-terminal rendering using pulldown-cmark,
+//! with URL detection, styling, and interactive link opening capabilities.
 
 use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 use ratatui::{

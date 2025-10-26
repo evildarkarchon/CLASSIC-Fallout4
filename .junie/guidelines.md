@@ -6,37 +6,39 @@ This document provides essential information for advanced developers working on 
 
 ### Prerequisites
 - **Python**: Requires Python 3.12 or 3.13 (strictly `>=3.12,<3.14`)
-- **Package Manager**: Uses Poetry for dependency management
-- **Virtual Environment**: Recommended (Poetry handles this automatically)
+- **Package Manager**: Uses uv for dependency management
+- **Virtual Environment**: Recommended (uv handles this automatically)
 
 ### Setup Process
-1. **Install Poetry** (if not already installed):
+1. **Install uv** (if not already installed):
    ```bash
-   pip install poetry
+   # Windows (PowerShell)
+   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+   # macOS/Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
 2. **Install Dependencies**:
    ```bash
-   poetry install
+   uv sync --all-extras
    ```
    This installs all dependencies including development tools.
 
 3. **Install Optional Dependencies**:
-   - For GUI development: `poetry install --with gui`
-   - For CLI features: `poetry install --with cli`  
-   - For Windows-specific features: `poetry install --with windows`
+   - For CLI features: `uv sync --extra cli`
+   - For Windows-specific features: `uv sync --extra windows`
 
 ### Application Entry Points
 The project has multiple interfaces:
 - **GUI Interface**: `CLASSIC_Interface.py` (PySide6-based)
-- **TUI Interface**: `CLASSIC_TUI.py` (Textual-based)
 - **CLI Scanning**: `CLASSIC_ScanLogs.py`, `CLASSIC_ScanGame.py`
+- **TUI Interface**: Rust-based TUI (Ratatui) available separately
 
 ### Key Architecture Components
 - **ClassicLib/**: Core library containing all functionality
   - `AsyncCore/`: Asynchronous processing components
   - `Interface/`: GUI mixins and components (PySide6)
-  - `TUI/`: Terminal User Interface (Textual framework)
   - `ScanGame/`: Game file scanning functionality
   - `ScanLog/`: Crash log analysis core
 - **SetupCoordinator**: Handles application initialization
@@ -157,19 +159,19 @@ The project uses multiple tools for code quality:
 ### Development Commands
 ```bash
 # Format code
-poetry run ruff format .
+uv run ruff format .
 
 # Check for linting issues
-poetry run ruff check .
+uv run ruff check .
 
 # Auto-fix linting issues
-poetry run ruff check --fix .
+uv run ruff check --fix .
 
 # Type checking
-poetry run mypy .
+uv run mypy .
 
 # Run all quality checks
-poetry run ruff check . && poetry run mypy . && poetry run pytest
+uv run ruff check . && uv run mypy . && uv run pytest
 ```
 
 ### Code Style Guidelines
@@ -206,11 +208,10 @@ poetry run ruff check . && poetry run mypy . && poetry run pytest
 - **Crash Log Analysis**: Understanding Buffout 4 log formats is crucial
 - **Unicode Issues**: Be aware of encoding detection for various log formats
 - **GUI Debugging**: Use Qt's debugging tools for PySide6 issues
-- **TUI Debugging**: Use Textual's devtools for TUI development
 
 ### Release and Build Process
 - **Executable Generation**: Uses PyInstaller with custom specs
-- **Dependency Management**: Poetry handles all dependencies
+- **Dependency Management**: uv handles all dependencies
 - **Version Management**: Version defined in pyproject.toml
 - **Distribution**: Multiple entry points for different interfaces
 

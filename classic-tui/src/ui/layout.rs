@@ -4,31 +4,47 @@ use ratatui::layout::{Constraint, Direction, Layout, Rect};
 pub struct TuiLayout;
 
 impl TuiLayout {
-    /// Create the main screen layout
+    /// Create the main screen layout with responsive sizing
     /// Returns: (header, folder_section, buttons, output, status_bar)
     pub fn main_screen(area: Rect) -> (Rect, Rect, Rect, Rect, Rect) {
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(3), // Header
-                Constraint::Length(8), // Folder selectors
-                Constraint::Length(3), // Scan buttons
-                Constraint::Min(10),   // Output viewer
-                Constraint::Length(1), // Status bar
-            ])
-            .split(area);
+        // Adaptive layout based on terminal height
+        let chunks = if area.height < 30 {
+            // Compact layout for small terminals (< 30 lines)
+            Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Min(3),        // Header (min 3 lines)
+                    Constraint::Min(6),        // Folder selectors (min 6 lines, 2x3)
+                    Constraint::Min(3),        // Scan buttons (min 3 lines)
+                    Constraint::Min(8),        // Output viewer (min 8 lines for readability)
+                    Constraint::Length(1),     // Status bar (always 1 line)
+                ])
+                .split(area)
+        } else {
+            // Standard layout for normal terminals (>= 30 lines)
+            Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(3),     // Header (3 lines)
+                    Constraint::Percentage(15), // Folder selectors (~15% of height)
+                    Constraint::Length(3),     // Scan buttons (3 lines)
+                    Constraint::Min(10),       // Output viewer (remaining space, min 10)
+                    Constraint::Length(1),     // Status bar (1 line)
+                ])
+                .split(area)
+        };
 
         (chunks[0], chunks[1], chunks[2], chunks[3], chunks[4])
     }
 
-    /// Create the folder section layout
+    /// Create the folder section layout with responsive sizing
     /// Returns: (staging_folder, custom_folder)
     pub fn folder_section(area: Rect) -> (Rect, Rect) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(4), // Staging mods folder
-                Constraint::Length(4), // Custom scan folder
+                Constraint::Percentage(50), // Staging mods folder (50% of section)
+                Constraint::Percentage(50), // Custom scan folder (50% of section)
             ])
             .split(area);
 
@@ -71,6 +87,37 @@ impl TuiLayout {
             ])
             .split(popup_layout[1])[1]
     }
+
+    /// Check if terminal size meets minimum requirements
+    ///
+    /// Returns (is_valid, width_msg, height_msg)
+    pub fn check_minimum_size(area: Rect) -> (bool, Option<String>, Option<String>) {
+        const MIN_WIDTH: u16 = 80;
+        const MIN_HEIGHT: u16 = 24;
+
+        let width_ok = area.width >= MIN_WIDTH;
+        let height_ok = area.height >= MIN_HEIGHT;
+
+        let width_msg = if !width_ok {
+            Some(format!(
+                "Terminal width too small: {} (minimum: {})",
+                area.width, MIN_WIDTH
+            ))
+        } else {
+            None
+        };
+
+        let height_msg = if !height_ok {
+            Some(format!(
+                "Terminal height too small: {} (minimum: {})",
+                area.height, MIN_HEIGHT
+            ))
+        } else {
+            None
+        };
+
+        (width_ok && height_ok, width_msg, height_msg)
+    }
 }
 
 #[cfg(test)]
@@ -78,24 +125,39 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_main_screen_layout() {
+    fn test_main_screen_layout_standard() {
+        // Test standard layout (>= 30 lines)
         let area = Rect::new(0, 0, 100, 50);
         let (header, folders, buttons, output, status) = TuiLayout::main_screen(area);
 
         assert_eq!(header.height, 3);
-        assert_eq!(folders.height, 8);
+        assert!(folders.height > 0); // Percentage-based, ~15% of 50 = 7-8 lines
         assert_eq!(buttons.height, 3);
         assert!(output.height >= 10);
         assert_eq!(status.height, 1);
     }
 
     #[test]
+    fn test_main_screen_layout_compact() {
+        // Test compact layout (< 30 lines)
+        let area = Rect::new(0, 0, 100, 25);
+        let (header, folders, buttons, output, status) = TuiLayout::main_screen(area);
+
+        assert!(header.height >= 3);
+        assert!(folders.height >= 6);
+        assert!(buttons.height >= 3);
+        assert!(output.height >= 8);
+        assert_eq!(status.height, 1);
+    }
+
+    #[test]
     fn test_folder_section_layout() {
-        let area = Rect::new(0, 0, 100, 8);
+        let area = Rect::new(0, 0, 100, 10);
         let (staging, custom) = TuiLayout::folder_section(area);
 
-        assert_eq!(staging.height, 4);
-        assert_eq!(custom.height, 4);
+        // Each folder gets 50% of the section height
+        assert_eq!(staging.height, 5);
+        assert_eq!(custom.height, 5);
     }
 
     #[test]
@@ -120,5 +182,37 @@ mod tests {
         assert!(popup.y > 0 && popup.y < 25);
         assert!(popup.width > 0 && popup.width <= 50);
         assert!(popup.height > 0 && popup.height <= 25);
+    }
+
+    #[test]
+    fn test_minimum_size_ok() {
+        let area = Rect::new(0, 0, 100, 50);
+        let (is_valid, width_msg, height_msg) = TuiLayout::check_minimum_size(area);
+
+        assert!(is_valid);
+        assert!(width_msg.is_none());
+        assert!(height_msg.is_none());
+    }
+
+    #[test]
+    fn test_minimum_size_too_small() {
+        let area = Rect::new(0, 0, 60, 20);
+        let (is_valid, width_msg, height_msg) = TuiLayout::check_minimum_size(area);
+
+        assert!(!is_valid);
+        assert!(width_msg.is_some());
+        assert!(height_msg.is_some());
+        assert!(width_msg.unwrap().contains("60"));
+        assert!(height_msg.unwrap().contains("20"));
+    }
+
+    #[test]
+    fn test_minimum_size_width_ok_height_small() {
+        let area = Rect::new(0, 0, 100, 20);
+        let (is_valid, width_msg, height_msg) = TuiLayout::check_minimum_size(area);
+
+        assert!(!is_valid);
+        assert!(width_msg.is_none());
+        assert!(height_msg.is_some());
     }
 }

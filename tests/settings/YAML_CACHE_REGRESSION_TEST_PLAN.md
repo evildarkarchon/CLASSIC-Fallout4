@@ -70,19 +70,19 @@ Comprehensive regression test suite has been created to validate the YamlSetting
 
 ```bash
 # Run all regression tests
-poetry run pytest tests/settings/test_yaml_cache_singleton_regression.py -v
+uv run pytest tests/settings/test_yaml_cache_singleton_regression.py -v
 
 # Run with parallel execution (4 workers)
-poetry run pytest tests/settings/test_yaml_cache_singleton_regression.py -n 4 -v
+uv run pytest tests/settings/test_yaml_cache_singleton_regression.py -n 4 -v
 
 # Run stress tests only
-poetry run pytest tests/settings/test_yaml_cache_singleton_regression.py -k stress -v
+uv run pytest tests/settings/test_yaml_cache_singleton_regression.py -k stress -v
 
 # Run all settings tests with parallel execution
-poetry run pytest tests/settings/ -n auto -v
+uv run pytest tests/settings/ -n auto -v
 
 # Quick validation (unit tests only, no slow tests)
-poetry run pytest tests/settings/ -m "unit and not slow" -n 4
+uv run pytest tests/settings/ -m "unit and not slow" -n 4
 ```
 
 ## Performance Metrics

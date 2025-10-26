@@ -1,7 +1,7 @@
-///! Error dialog widget for displaying errors with clipboard support.
-///!
-///! This module provides a TUI error dialog that displays error messages with
-///! color-coded severity indicators, scrollable details, and clipboard integration.
+//! Error dialog widget for displaying errors with clipboard support.
+//!
+//! This module provides a TUI error dialog that displays error messages with
+//! color-coded severity indicators, scrollable details, and clipboard integration.
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},

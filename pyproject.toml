@@ -38,18 +38,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tui = ["textual>=5.3.0"]
 cli = ["tqdm>=4.67.1"]
 windows = ["pywin32>=310; sys_platform == 'win32'"]
-full = ["textual>=5.3.0", "tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
-all = ["textual>=5.3.0", "tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
+full = ["tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
+all = ["tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
 
 [project.scripts]
 # Entry points are in the root directory, not in src/
 classic = "CLASSIC_Interface:main"
 classic-gui = "CLASSIC_Interface:main"
 classic-cli = "CLASSIC_ScanLogs:main"
-classic-tui = "CLASSIC_TUI:main"
 classic-scan = "CLASSIC_ScanGame:main"
 
 [dependency-groups]
@@ -68,9 +66,7 @@ dev = [
     "pytest-qt>=4.4.0",
     "psutil>=7.0.0",
     "pytest-xdist>=3.8.0",
-    "pytest-textual-snapshot>=1.1.0",
     "pytest-timeout>=2.4",
-    "textual-dev>=1.7.0",
     "pylint>=3.3.8",
     "pyright>=1.1.405",
     "hypothesis>=6.140.2",

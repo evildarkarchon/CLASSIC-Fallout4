@@ -180,7 +180,7 @@ def main():
 
     if fixed_count > 0:
         print("\n📝 Next steps:")
-        print("  1. Run tests to verify fixes: poetry run pytest tests/ -n 4")
+        print("  1. Run tests to verify fixes: uv run pytest tests/ -n 4")
         print("  2. Check for any remaining fixture issues")
 
 

@@ -189,19 +189,19 @@ fn render_log_output(f: &mut Frame, area: Rect, app: &App) {
             .map(|line| {
                 // Color-code based on content
                 if line.contains(" error: ") {
-                    Line::from(Span::styled(line.clone(), Style::default().fg(Color::Red)))
+                    Line::from(Span::styled(line.as_str(), Style::default().fg(Color::Red)))
                 } else if line.contains(" warning: ") {
                     Line::from(Span::styled(
-                        line.clone(),
+                        line.as_str(),
                         Style::default().fg(Color::Yellow),
                     ))
                 } else if line.contains("Dumping Stacks") || line.contains("Dumping Stack") {
                     Line::from(Span::styled(
-                        line.clone(),
+                        line.as_str(),
                         Style::default().fg(Color::Magenta),
                     ))
                 } else {
-                    Line::from(line.clone())
+                    Line::from(line.as_str())
                 }
             })
             .collect()

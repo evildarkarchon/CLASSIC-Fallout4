@@ -95,7 +95,7 @@ def test_version_parsing(self):
 
 ### Test Command Used
 ```bash
-poetry run python -m pytest tests/async_tests/test_async_database.py \
+uv run python -m pytest tests/async_tests/test_async_database.py \
     tests/async_tests/test_async_orchestrator_unit.py \
     tests/core/test_formid_analyzer.py \
     tests/performance/test_orchestrator_performance.py \

@@ -90,26 +90,6 @@ uvx --from github:evildarkarchon/CLASSIC-Fallout4 classic-cli
 uvx --from github:evildarkarchon/CLASSIC-Fallout4 classic-scan
 ```
 
-#### Terminal UI Mode (Requires Additional Setup)
-The TUI mode requires the Textual library. You have two options:
-
-**Option 1: Install with extras (if supported by your uvx version):**
-```bash
-uvx --from github:evildarkarchon/CLASSIC-Fallout4 --with 'classic[tui]' classic-tui
-```
-
-**Option 2: Persistent installation:**
-```bash
-# Install CLASSIC persistently
-uvx install --from github:evildarkarchon/CLASSIC-Fallout4 classic
-
-# Add Textual support
-uv pip install textual
-
-# Now run TUI
-classic-tui
-```
-
 ### Running Specific Versions
 
 ```bash
@@ -145,7 +125,6 @@ uvx install --from github:evildarkarchon/CLASSIC-Fallout4 classic-fallout4
 classic       # GUI (full featured)
 classic-cli   # CLI crash log scanner
 classic-scan  # Game integrity checker
-classic-tui   # TUI (if Textual is installed)
 ```
 
 ### uvx Notes
@@ -194,12 +173,11 @@ cd CLASSIC-Fallout4
 uv sync --all-extras
 
 # Or install specific extras as needed:
-# uv sync --extra tui      # For TUI development
 # uv sync --extra cli      # For CLI progress features
 # uv sync --extra windows  # For Windows-specific features
 ```
 
-**Note**: For development, it's recommended to use `uv sync --all-extras` to ensure you have all optional dependencies (Textual for TUI, tqdm for CLI progress bars, pywin32 for Windows features) available for testing all interfaces.
+**Note**: For development, it's recommended to use `uv sync --all-extras` to ensure you have all optional dependencies (tqdm for CLI progress bars, pywin32 for Windows features) available for testing all interfaces.
 
 To verify VS Code is using this venv: press `F1` and search `>python.setInterpreter`, then select `.venv/Scripts/python.exe` (Windows) or `.venv/bin/python` (Unix).
 
@@ -208,9 +186,6 @@ To verify VS Code is using this venv: press `F1` and search `>python.setInterpre
 ```bash
 # Run GUI mode
 uv run python CLASSIC_Interface.py
-
-# Run TUI mode
-uv run python CLASSIC_TUI.py
 
 # Run CLI mode
 uv run python CLASSIC_ScanLogs.py

@@ -124,11 +124,10 @@ impl Article {
 
     /// Get or render the markdown content
     pub fn get_rendered(&mut self) -> &RenderedMarkdown {
-        if self.rendered.is_none() {
+        self.rendered.get_or_insert_with(|| {
             let renderer = MarkdownRenderer::new();
-            self.rendered = Some(renderer.render(self.content));
-        }
-        self.rendered.as_ref().unwrap()
+            renderer.render(self.content)
+        })
     }
 }
 

@@ -238,55 +238,52 @@ tests/
 
 ### Run all tests
 ```bash
-poetry run pytest tests/ -n 4
+uv run pytest tests/ -n 4
 ```
 
 ### Run specific component tests
 ```bash
 # Async tests
-poetry run pytest tests/async_tests/
+uv run pytest tests/async_tests/
 
 # Core functionality tests
-poetry run pytest tests/core/
+uv run pytest tests/core/
 
 # Scanning tests
-poetry run pytest tests/scanning/
+uv run pytest tests/scanning/
 
 # Game path tests
-poetry run pytest tests/game/
+uv run pytest tests/game/
 
 # Settings and YAML tests
-poetry run pytest tests/settings/
+uv run pytest tests/settings/
 
 # Performance tests only
-poetry run pytest tests/performance/
+uv run pytest tests/performance/
 
 # Concurrency and thread safety tests
-poetry run pytest tests/concurrency/
+uv run pytest tests/concurrency/
 
 # Setup and initialization tests
-poetry run pytest tests/setup/
+uv run pytest tests/setup/
 
 # Document path and INI tests
-poetry run pytest tests/documents/
-
-# TUI tests
-poetry run pytest tests/tui/
+uv run pytest tests/documents/
 
 # Exclude slow tests
-poetry run pytest tests/ -m "not slow"
+uv run pytest tests/ -m "not slow"
 ```
 
 ### Run tests by marker
 ```bash
 # Integration tests
-poetry run pytest -m integration
+uv run pytest -m integration
 
 # Async tests
-poetry run pytest -m asyncio
+uv run pytest -m asyncio
 
 # Performance benchmarks
-poetry run pytest -m performance
+uv run pytest -m performance
 ```
 
 ## Test Markers

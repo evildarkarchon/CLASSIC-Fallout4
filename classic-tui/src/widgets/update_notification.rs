@@ -1,7 +1,7 @@
-///! Update notification banner widget.
-///!
-///! This module provides a non-intrusive notification banner that displays
-///! when a new version of CLASSIC is available.
+//! Update notification banner widget.
+//!
+//! This module provides a non-intrusive notification banner that displays
+//! when a new version of CLASSIC is available.
 
 use crate::handlers::update_handler::UpdateInfo;
 use ratatui::{

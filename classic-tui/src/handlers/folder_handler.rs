@@ -1,10 +1,10 @@
-///! Folder selection handler for managing folder pickers
-///!
-///! This module handles folder selection interactions, including:
-///! - Managing folder picker state
-///! - Saving selected paths to configuration
-///! - Validating folder paths
-///! - Persisting configuration to YAML
+//! Folder selection handler for managing folder pickers
+//!
+//! This module handles folder selection interactions, including:
+//! - Managing folder picker state
+//! - Saving selected paths to configuration
+//! - Validating folder paths
+//! - Persisting configuration to YAML
 
 use crate::app::App;
 use crate::widgets::FolderPickerState;

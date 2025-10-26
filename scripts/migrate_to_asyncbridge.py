@@ -247,7 +247,7 @@ def main():
     _print_header("Migration Complete!")
     print("\nNext steps:")
     print("1. Review the changes using: git diff")
-    print("2. Run tests to ensure everything works: poetry run pytest tests/")
+    print("2. Run tests to ensure everything works: uv run pytest tests/")
     print("3. For tests, ensure they have the async_bridge fixture")
     print("\nRemember: AsyncBridge.get_instance().run_async() is thread-safe")
     print("and maintains a persistent event loop per thread.")

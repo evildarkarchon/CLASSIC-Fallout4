@@ -13,6 +13,14 @@ use ratatui::{
 pub fn render_main_screen(f: &mut Frame, app: &mut App) {
     let mut working_area = f.area();
 
+    // Check if terminal size is adequate
+    let (size_ok, width_msg, height_msg) = TuiLayout::check_minimum_size(working_area);
+    if !size_ok {
+        // Display size warning overlay
+        render_size_warning(f, working_area, width_msg, height_msg);
+        return;
+    }
+
     // Render update notification banner if visible (at top)
     if let Some(ref notification) = app.update_notification {
         if notification.is_visible() {
@@ -334,6 +342,62 @@ fn render_folder_picker_overlay(
         );
 
     picker_widget.render(f, popup_area, picker);
+}
+
+/// Render terminal size warning when terminal is too small
+fn render_size_warning(
+    f: &mut Frame,
+    area: Rect,
+    width_msg: Option<String>,
+    height_msg: Option<String>,
+) {
+    // Build warning message
+    let mut lines = vec![
+        Line::from(""),
+        Line::from(Span::styled(
+            "⚠ TERMINAL TOO SMALL ⚠",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+    ];
+
+    if let Some(msg) = width_msg {
+        lines.push(Line::from(Span::styled(
+            msg,
+            Style::default().fg(Color::Red),
+        )));
+    }
+
+    if let Some(msg) = height_msg {
+        lines.push(Line::from(Span::styled(
+            msg,
+            Style::default().fg(Color::Red),
+        )));
+    }
+
+    lines.push(Line::from(""));
+    lines.push(Line::from("Please resize your terminal or press 'q' to quit."));
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        "Recommended: 100x30 or larger",
+        Style::default().fg(Color::Cyan),
+    )));
+
+    let warning = Paragraph::new(lines)
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Yellow))
+                .title("Terminal Size Warning"),
+        );
+
+    // Center the warning
+    let popup_area = TuiLayout::centered_rect(60, 40, area);
+    f.render_widget(Clear, popup_area);
+    f.render_widget(warning, popup_area);
 }
 
 #[cfg(test)]

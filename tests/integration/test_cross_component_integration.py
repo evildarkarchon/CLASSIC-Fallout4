@@ -1,7 +1,7 @@
 """Cross-component integration tests.
 
 This module tests interactions between different components of the system,
-ensuring they work together correctly across GUI, TUI, and CLI interfaces.
+ensuring they work together correctly across GUI and CLI interfaces.
 """
 
 import pytest

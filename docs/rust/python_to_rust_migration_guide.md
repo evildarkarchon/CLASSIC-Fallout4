@@ -511,11 +511,10 @@ classic-cli --version  # Should be 8.0.0+
 C:\CLASSIC\
 ├── Python\
 │   ├── CLASSIC_Interface.py  (GUI)
-│   ├── CLASSIC_ScanLogs.py   (Old CLI)
-│   └── CLASSIC_TUI.py         (Old TUI)
+│   └── CLASSIC_ScanLogs.py   (CLI)
 └── Rust\
-    ├── classic-cli.exe        (New CLI)
-    └── classic-tui.exe        (New TUI)
+    ├── classic-cli.exe        (CLI - Rust version)
+    └── classic-tui.exe        (TUI - Rust only)
 ```
 
 ### Workflow Examples

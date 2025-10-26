@@ -152,28 +152,28 @@ def test_performance_baseline():
 ### Quick Testing
 ```bash
 # Fast unit tests only
-poetry run python -m pytest -n 4 -m "unit and not slow"
+uv run pytest -n 4 -m "unit and not slow"
 
 # Specific component
-poetry run python -m pytest tests/core/ -n 4
+uv run pytest tests/core/ -n 4
 ```
 
 ### Comprehensive Testing
 ```bash
 # Full test suite
-poetry run python -m pytest tests/ -n 4 -v
+uv run pytest tests/ -n 4 -v
 
 # With coverage
-poetry run python -m pytest --cov=. --cov-report=html
+uv run pytest --cov=. --cov-report=html
 ```
 
 ### Parallel Execution
 ```bash
 # Auto-detect cores
-poetry run python -m pytest -n auto
+uv run pytest -n auto
 
 # Specific worker count
-poetry run python -m pytest -n 4
+uv run pytest -n 4
 ```
 
 ## Common Testing Patterns
@@ -228,16 +228,16 @@ Before committing tests:
 
 ```bash
 # Verbose output
-poetry run python -m pytest -v
+uv run pytest -v
 
 # Show print statements
-poetry run python -m pytest -s
+uv run pytest -s
 
 # Drop into debugger on failure
-poetry run python -m pytest --pdb
+uv run pytest --pdb
 
 # Run specific test
-poetry run python -m pytest -k "test_name"
+uv run pytest -k "test_name"
 ```
 
 ## Important Notes

@@ -211,7 +211,7 @@ python tests/tools/migrate_tests.py tests/performance/test_async_performance.py
 ### Step 4: Verify Changes
 ```bash
 # Run the newly created test files to ensure they work
-poetry run pytest tests/performance/test_async_performance_*.py -v
+uv run pytest tests/performance/test_async_performance_*.py -v
 
 # Check updated compliance
 python tests/tools/validate_structure.py
@@ -231,16 +231,16 @@ Continue with the next files identified by the validator until compliance reache
 Once files are split, you can run tests selectively:
 ```bash
 # Run only fast unit tests during development
-poetry run pytest -m unit -n 4
+uv run pytest -m unit -n 4
 
 # Skip slow tests for quick validation
-poetry run pytest -m "not slow" -n 4
+uv run pytest -m "not slow" -n 4
 
 # Run only integration tests
-poetry run pytest -m integration -n 4
+uv run pytest -m integration -n 4
 
 # Run only async-related tests
-poetry run pytest -m async_test -n 4
+uv run pytest -m async_test -n 4
 ```
 
 ### Troubleshooting
