@@ -52,7 +52,7 @@ def test_async_function(mock_bridge_class):
     mock_bridge.run_async.return_value = "expected_result"
 ```
 
-**📖 [Complete Guide: Testing AsyncBridge](testing_async_bridge.md)**
+**📖 [Complete Guide: Testing AsyncBridge](async_bridge.md)**
 
 ### GlobalRegistry
 
@@ -74,7 +74,7 @@ def clean_registry():
     GlobalRegistry._registry.clear()
 ```
 
-**📖 [Complete Guide: Testing GlobalRegistry](testing_global_registry.md)**
+**📖 [Complete Guide: Testing GlobalRegistry](global_registry.md)**
 
 ### YamlSettingsCache
 
@@ -94,7 +94,7 @@ def test_settings(mock_yaml):
     mock_yaml.return_value = "test_value"
 ```
 
-**📖 [Complete Guide: Testing YamlSettingsCache](testing_yaml_cache.md)**
+**📖 [Complete Guide: Testing YamlSettingsCache](yaml_cache.md)**
 
 ### DatabasePoolManager
 
@@ -159,7 +159,7 @@ def clean_message_handler():
     ClassicLib.MessageHandler._message_handler = None
 ```
 
-**📖 [Complete Guide: Testing MessageHandler](testing_message_handler.md)**
+**📖 [Complete Guide: Testing MessageHandler](message_handler.md)**
 
 ### Database Pools
 
@@ -178,7 +178,7 @@ def reset_database_pools():
     SyncDatabasePool._instance = None
 ```
 
-**📖 [Complete Guide: Testing Database Pools](testing_database_pools.md)**
+**📖 [Complete Guide: Testing Database Pools](database_pools.md)**
 
 ### ThreadSafeLogCache
 
@@ -197,7 +197,7 @@ def fresh_log_cache(tmp_path):
     cache.cache.clear()
 ```
 
-**📖 [Complete Guide: Testing ThreadSafeLogCache](testing_thread_safe_cache.md)**
+**📖 [Complete Guide: Testing ThreadSafeLogCache](thread_safe_cache.md)**
 
 ### FileIOCore
 
@@ -214,7 +214,7 @@ def test_file_operations(mock_bridge_class):
     mock_bridge.run_async.return_value = "file_content"
 ```
 
-**📖 [Complete Guide: Testing FileIOCore](testing_fileio_core.md)**
+**📖 [Complete Guide: Testing FileIOCore](fileio_core.md)**
 
 ## Quick Reference: Pollution Prevention Patterns
 
@@ -433,13 +433,13 @@ Test pollution prevention has minimal performance impact when done correctly:
 ## Related Documentation
 
 ### Component-Specific Guides
-- 📖 [Testing AsyncBridge](testing_async_bridge.md) - Async/sync bridge mocking patterns
-- 📖 [Testing GlobalRegistry](testing_global_registry.md) - Singleton registry isolation
-- 📖 [Testing YamlSettingsCache](testing_yaml_cache.md) - Configuration testing without pollution
-- 📖 [Testing MessageHandler](testing_message_handler.md) - Message system isolation patterns
-- 📖 [Testing Database Pools](testing_database_pools.md) - Connection pool resource management
-- 📖 [Testing ThreadSafeLogCache](testing_thread_safe_cache.md) - Thread-safe cache isolation
-- 📖 [Testing FileIOCore](testing_fileio_core.md) - File I/O operations without bridge pollution
+- 📖 [Testing AsyncBridge](async_bridge.md) - Async/sync bridge mocking patterns
+- 📖 [Testing GlobalRegistry](global_registry.md) - Singleton registry isolation
+- 📖 [Testing YamlSettingsCache](yaml_cache.md) - Configuration testing without pollution
+- 📖 [Testing MessageHandler](message_handler.md) - Message system isolation patterns
+- 📖 [Testing Database Pools](database_pools.md) - Connection pool resource management
+- 📖 [Testing ThreadSafeLogCache](thread_safe_cache.md) - Thread-safe cache isolation
+- 📖 [Testing FileIOCore](fileio_core.md) - File I/O operations without bridge pollution
 
 ### CLASSIC Testing Documentation
 - 🧪 [Testing Guidelines in CLAUDE.md](../CLAUDE.md#testing-patterns) - General testing patterns for CLASSIC

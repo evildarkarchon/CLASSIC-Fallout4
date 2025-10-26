@@ -439,7 +439,7 @@ def clean_state():
 ## Related Documentation
 
 - [AsyncBridge Implementation](../ClassicLib/AsyncBridge.py)
-- [Testing AsyncBridge Guide](testing_async_bridge.md)
+- [Testing AsyncBridge Guide](async_bridge.md)
 - [Test Pollution Prevention Guide](test_pollution_guide.md)
 - [CLAUDE.md Testing Section](../CLAUDE.md#testing-patterns)
 

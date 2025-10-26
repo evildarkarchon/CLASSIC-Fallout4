@@ -16,7 +16,7 @@ This comprehensive index provides complete guidance for all Rust-related documen
 
 ### 📋 Core Documentation
 
-#### 1. [Rust Usage Guide](rust_usage_guide.md) - **START HERE for Users**
+#### 1. [Rust Usage Guide](rust/rust_usage_guide.md) - **START HERE for Users**
 Complete user guide for understanding and using Rust acceleration in CLASSIC.
 
 **Perfect for:**
@@ -33,7 +33,7 @@ Complete user guide for understanding and using Rust acceleration in CLASSIC.
 - When to expect maximum performance benefits
 - Monitoring and verification tools
 
-#### 2. [Performance Monitoring Guide](performance_monitoring.md)
+#### 2. [Performance Monitoring Guide](performance/performance_monitoring.md)
 Comprehensive performance monitoring, benchmarking, and optimization guide.
 
 **Perfect for:**
@@ -50,7 +50,7 @@ Comprehensive performance monitoring, benchmarking, and optimization guide.
 - Production monitoring and health checks
 - Advanced diagnostics and profiling tools
 
-#### 3. [Troubleshooting Guide](troubleshooting_rust.md)
+#### 3. [Troubleshooting Guide](rust/troubleshooting_rust.md)
 Complete troubleshooting guide for all Rust-related issues.
 
 **Perfect for:**
@@ -67,7 +67,7 @@ Complete troubleshooting guide for all Rust-related issues.
 - Environment-specific troubleshooting (Windows, Linux, macOS)
 - Advanced diagnostics and debugging tools
 
-#### 4. [Development Guide](development_with_rust.md)
+#### 4. [Development Guide](rust/development_with_rust.md)
 Comprehensive developer guide for working with Rust components.
 
 **Perfect for:**
@@ -85,9 +85,107 @@ Comprehensive developer guide for working with Rust components.
 - Debugging techniques and tools
 - Code organization and best practices
 
+### 🛠️ Development Guides (NEW)
+
+#### 5. [Rust Workspace Architecture](development/rust_workspace_architecture.md)
+Complete guide to CLASSIC's modular Cargo workspace structure.
+
+**Perfect for:**
+- Understanding crate organization and dependencies
+- Learning the separation between business logic and Python bindings
+- Working with `-core` and `-py` crate patterns
+- Understanding the ONE RUNTIME RULE
+
+**Topics Covered:**
+- Architecture rules and naming conventions
+- Business logic crates (`*-core`) vs Python binding crates (`*-py`)
+- Workspace directory structure and dependency hierarchy
+- Migration status from legacy crates
+- Key architectural rules and best practices
+
+#### 6. [Rust 2024 Edition Guide](development/rust_2024_edition_guide.md)
+Modern Rust features and best practices for CLASSIC development.
+
+**Perfect for:**
+- Writing new Rust code using latest features
+- Understanding Rust 2024 improvements
+- Learning modern error handling patterns
+- Migrating existing code to Rust 2024
+
+**Topics Covered:**
+- Rust 2024 key features (async traits, pattern matching, disjoint captures)
+- Modern error handling with `?` operator and thiserror
+- PyO3 integration with Rust 2024 patterns
+- Migration checklist and lints
+- Best practices and anti-patterns to avoid
+
+#### 7. [Async Development Guide](development/async_development_guide.md)
+Comprehensive async patterns for Python and Rust codebases.
+
+**Perfect for:**
+- Understanding the ONE RUNTIME RULE
+- Working with AsyncBridge in Python
+- Writing async Rust code with Tokio
+- Bridging Python and Rust async worlds
+
+**Topics Covered:**
+- Python async patterns (AsyncBridge, FileIOCore, YamlSettingsCache)
+- Native async solution without PyO3-asyncio
+- Common async patterns for both languages
+- Best practices and anti-patterns
+- Troubleshooting async issues
+
+#### 8. [PyO3 Integration Patterns](development/pyo3_integration_patterns.md)
+PyO3 module registration patterns and integration best practices.
+
+**Perfect for:**
+- Understanding PyO3 module registration
+- Building and installing Rust extensions
+- Troubleshooting common PyO3 issues
+- Verifying Rust acceleration
+
+**Topics Covered:**
+- Standalone module patterns (cdylib vs rlib)
+- Build methods (maturin, editable installs)
+- Common issues and solutions
+- Verification and environment configuration
+- Best practices for PyO3 integration
+
+#### 9. [Rust Acceleration Guide](development/rust_acceleration_guide.md)
+Performance monitoring, debugging, and troubleshooting Rust acceleration.
+
+**Perfect for:**
+- Monitoring Rust acceleration status
+- Debugging performance issues
+- Troubleshooting build and runtime problems
+- Profiling Rust code
+
+**Topics Covered:**
+- Performance monitoring and verification
+- Environment configuration and debugging
+- Common issues with detailed solutions
+- Debugging techniques and tools
+- Performance profiling methods
+
+#### 10. [Slint GUI Development](development/slint_gui_development.md)
+Complete guide for developing the Slint-based Rust GUI.
+
+**Perfect for:**
+- Working on the Slint GUI application
+- Understanding dual event loop architecture
+- Using AsyncBridge for UI operations
+- Troubleshooting GUI-specific issues
+
+**Topics Covered:**
+- Dual event loop architecture (Slint + Tokio)
+- AsyncBridge API and patterns
+- Development guidelines and common patterns
+- Building and running the GUI
+- Troubleshooting GUI issues
+
 ### 📊 Strategic Documentation
 
-#### 5. [Rust Migration Plan](../RUST_MIGRATION_PLAN.md) - **COMPLETED ✅**
+#### 11. [Rust Migration Plan](../RUST_MIGRATION_PLAN.md) - **COMPLETED ✅**
 Complete strategic migration plan with final results and achievements.
 
 **Status:** PHASE 6 COMPLETE - All objectives exceeded
@@ -105,7 +203,7 @@ Complete strategic migration plan with final results and achievements.
 - Success metrics and final impact analysis
 - Lessons learned and future roadmap
 
-#### 6. [Project Integration Guide](../CLAUDE.md)
+#### 12. [Project Integration Guide](../CLAUDE.md)
 Updated project guide with comprehensive Rust acceleration information.
 
 **Enhanced with:**
@@ -118,7 +216,7 @@ Updated project guide with comprehensive Rust acceleration information.
 
 ### 🔧 Technical Reference
 
-#### 7. [Rust Architecture Overview](rust_architecture.md)
+#### 13. [Rust Architecture Overview](rust/rust_architecture.md)
 Comprehensive overview of the Rust architecture, module structure, and integration patterns.
 
 **Topics Covered:**
@@ -128,7 +226,7 @@ Comprehensive overview of the Rust architecture, module structure, and integrati
 - Integration with Python components
 - Building and development workflows
 
-#### 8. [Native Async Pattern Guide](rust_async_pattern.md)
+#### 14. [Native Async Pattern Guide](rust/rust_async_pattern.md)
 Detailed documentation of our native async solution that replaces PyO3-asyncio.
 
 **Topics Covered:**
@@ -139,7 +237,7 @@ Detailed documentation of our native async solution that replaces PyO3-asyncio.
 - Performance benchmarks and comparisons
 - Best practices and troubleshooting
 
-#### 9. [Detailed Module Documentation](rust_modules_detailed.md)
+#### 15. [Detailed Module Documentation](rust/rust_modules_detailed.md)
 In-depth documentation for each Rust module with API references and examples.
 
 **Modules Documented:**
@@ -148,7 +246,7 @@ In-depth documentation for each Rust module with API references and examples.
 - ScanLog module (pattern matching, FormID analysis, 20-150x improvements)
 - Utils module (string processing, performance monitoring)
 
-#### 10. [Parser Module Deep Dive](rust_parser_module.md)
+#### 16. [Parser Module Deep Dive](rust/rust_parser_module.md)
 Specialized documentation for the high-performance parser module.
 
 **Topics Covered:**
@@ -159,7 +257,7 @@ Specialized documentation for the high-performance parser module.
 
 ### 🔧 PyO3 0.26.0 Integration (Current)
 
-#### 11. [PyO3 0.26.0 Migration Guide](pyo3_0.26_migration_guide.md) - **MIGRATION COMPLETE ✅**
+#### 17. [PyO3 0.26.0 Migration Guide](rust/pyo3_0.26_migration_guide.md) - **MIGRATION COMPLETE ✅**
 Comprehensive guide for PyO3 0.26.0 migration completed on September 27, 2025.
 
 **Perfect for:**
@@ -184,7 +282,7 @@ Comprehensive guide for PyO3 0.26.0 migration completed on September 27, 2025.
 - ✅ Python API 100% backward compatible
 - ✅ No performance regressions
 
-#### 12. [PyO3 Quick Reference](pyo3_quick_reference.md)
+#### 18. [PyO3 Quick Reference](rust/pyo3_quick_reference.md)
 Quick reference guide for common PyO3 patterns and idioms.
 
 **Perfect for:**
@@ -204,7 +302,7 @@ Quick reference guide for common PyO3 patterns and idioms.
 
 ## Quick Start Guide
 
-### 👤 For End Users - [Start Here](rust_usage_guide.md)
+### 👤 For End Users - [Start Here](rust/rust_usage_guide.md)
 
 **Goal:** Understand and verify Rust acceleration benefits
 ```python
@@ -219,11 +317,11 @@ content = io_core.read_file("crash_log.txt")
 ```
 
 **Next Steps:**
-1. 📖 Read [Rust Usage Guide](rust_usage_guide.md) for complete user information
-2. 📊 Use [Performance Monitoring](performance_monitoring.md) to verify benefits
-3. 🔧 Check [Troubleshooting Guide](troubleshooting_rust.md) if issues arise
+1. 📖 Read [Rust Usage Guide](rust/rust_usage_guide.md) for complete user information
+2. 📊 Use [Performance Monitoring](performance/performance_monitoring.md) to verify benefits
+3. 🔧 Check [Troubleshooting Guide](rust/troubleshooting_rust.md) if issues arise
 
-### 👨‍💻 For Developers - [Development Guide](development_with_rust.md)
+### 👨‍💻 For Developers - [Development Guide](rust/development_with_rust.md)
 
 **Goal:** Develop with and extend Rust components
 ```bash
@@ -241,11 +339,11 @@ uv run pytest tests/rust_integration/ -v
 ```
 
 **Next Steps:**
-1. 🏗️ Read [Development Guide](development_with_rust.md) for complete setup
-2. 🏛️ Study [Rust Architecture](rust_architecture.md) for design patterns
-3. ⚡ Review [Native Async Guide](rust_async_pattern.md) for async patterns
+1. 🏗️ Read [Development Guide](rust/development_with_rust.md) for complete setup
+2. 🏛️ Study [Rust Architecture](rust/rust_architecture.md) for design patterns
+3. ⚡ Review [Native Async Guide](rust/rust_async_pattern.md) for async patterns
 
-### 🔧 For System Administrators - [Performance Monitoring](performance_monitoring.md)
+### 🔧 For System Administrators - [Performance Monitoring](performance/performance_monitoring.md)
 
 **Goal:** Monitor and maintain Rust acceleration in production
 ```python
@@ -260,11 +358,11 @@ else:
 ```
 
 **Next Steps:**
-1. 📈 Implement [Performance Monitoring](performance_monitoring.md) tools
-2. 🚨 Set up alerts using [Troubleshooting Guide](troubleshooting_rust.md)
+1. 📈 Implement [Performance Monitoring](performance/performance_monitoring.md) tools
+2. 🚨 Set up alerts using [Troubleshooting Guide](rust/troubleshooting_rust.md)
 3. 📊 Use monitoring data for capacity planning
 
-### 🛠️ For Contributors - [All Documentation](rust_architecture.md)
+### 🛠️ For Contributors - [All Documentation](rust/rust_architecture.md)
 
 **Goal:** Contribute to Rust codebase and understand architecture
 ```bash
@@ -282,7 +380,7 @@ cargo watch -x "build" -s "maturin develop"
 ```
 
 **Next Steps:**
-1. 🏛️ Master [Rust Architecture](rust_architecture.md) and design principles
+1. 🏛️ Master [Rust Architecture](rust/rust_architecture.md) and design principles
 2. 🧪 Understand [Testing Strategies](development_with_rust.md#testing-strategies)
 3. 📋 Follow [Best Practices](development_with_rust.md#best-practices)
 
@@ -491,7 +589,7 @@ def monitor_production():
    });
    ```
 
-5. **Add comprehensive documentation** in `docs/`
+5. **Add comprehensive documentation** in `docs/testing/`
 6. **Write tests and benchmarks** in `tests/` and `benchmarks/`
 7. **Update integration layer** in `ClassicLib/RustIntegration.py`
 
@@ -524,8 +622,8 @@ def monitor_production():
 ### 📋 Internal Documentation
 - **[Main Project Guide](../CLAUDE.md)** - Complete project overview with Rust integration
 - **[Project README](../README.md)** - Repository overview and quick start
-- **[Testing Architecture](../docs/TEST_STRUCTURE.md)** - Python testing framework structure
-- **[All Rust Documentation](../docs/)** - Complete documentation directory
+- **[Testing Architecture](../docs/testing/TEST_STRUCTURE.md)** - Python testing framework structure
+- **[All Rust Documentation](../docs/testing/)** - Complete documentation directory
 
 ### 🌐 External Resources & Learning
 - **[PyO3 0.26.0 Documentation](https://pyo3.rs/v0.26.0/)** - Current PyO3 version official documentation

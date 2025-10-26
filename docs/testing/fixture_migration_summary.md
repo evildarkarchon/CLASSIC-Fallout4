@@ -145,7 +145,7 @@ All migration scripts are preserved in `scripts/` directory for reference:
 The test fixture migration successfully standardized the test infrastructure, eliminating most test pollution issues and enabling reliable parallel test execution. The new system is more maintainable, safer, and follows pytest best practices.
 
 ## References
-- [Test Fixture Standards](testing_fixture_standards.md)
+- [Test Fixture Standards](fixture_standards.md)
 - [Test Pollution Prevention Guide](test_pollution_guide.md)
-- [Testing GlobalRegistry Guide](testing_global_registry.md)
-- [Testing AsyncBridge Guide](testing_async_bridge.md)
+- [Testing GlobalRegistry Guide](global_registry.md)
+- [Testing AsyncBridge Guide](async_bridge.md)

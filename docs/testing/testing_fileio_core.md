@@ -713,7 +713,7 @@ def detect_async_leaks():
 
 ## See Also
 
-- [Testing AsyncBridge Guide](testing_async_bridge.md)
-- [Testing MessageHandler Guide](testing_message_handler.md)
-- [Testing Database Pools Guide](testing_database_pools.md)
+- [Testing AsyncBridge Guide](async_bridge.md)
+- [Testing MessageHandler Guide](message_handler.md)
+- [Testing Database Pools Guide](database_pools.md)
 - [Test Pollution Prevention Guide](test_pollution_guide.md)

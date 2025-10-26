@@ -291,7 +291,7 @@ perf report
 
 ## See Also
 
-- [PyO3 0.26.0 Migration Guide](pyo3_0.26_migration_guide.md) - Detailed migration documentation
+- [PyO3 0.26.0 Migration Guide](0.26_migration_guide.md) - Detailed migration documentation
 - [PyO3 Documentation](https://pyo3.rs/v0.26.0/) - Official PyO3 documentation
-- [Rust Usage Guide](rust_usage_guide.md) - Using Rust components in CLASSIC
+- [Rust Usage Guide](usage_guide.md) - Using Rust components in CLASSIC
 - [Development with Rust](development_with_rust.md) - Development workflow

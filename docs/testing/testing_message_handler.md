@@ -425,7 +425,7 @@ def detect_handler_pollution():
 
 ## See Also
 
-- [Testing AsyncBridge Guide](testing_async_bridge.md)
-- [Testing GlobalRegistry Guide](testing_global_registry.md)
-- [Testing YamlSettingsCache Guide](testing_yaml_cache.md)
+- [Testing AsyncBridge Guide](async_bridge.md)
+- [Testing GlobalRegistry Guide](global_registry.md)
+- [Testing YamlSettingsCache Guide](yaml_cache.md)
 - [Test Pollution Prevention Guide](test_pollution_guide.md)

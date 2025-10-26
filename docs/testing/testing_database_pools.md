@@ -575,7 +575,7 @@ def detect_pool_pollution():
 
 ## See Also
 
-- [Testing AsyncBridge Guide](testing_async_bridge.md)
-- [Testing GlobalRegistry Guide](testing_global_registry.md)
-- [Testing MessageHandler Guide](testing_message_handler.md)
+- [Testing AsyncBridge Guide](async_bridge.md)
+- [Testing GlobalRegistry Guide](global_registry.md)
+- [Testing MessageHandler Guide](message_handler.md)
 - [Test Pollution Prevention Guide](test_pollution_guide.md)

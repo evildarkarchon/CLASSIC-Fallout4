@@ -457,7 +457,7 @@ fn process(data: Py<PyAny>) -> PyResult<impl IntoPy<Py<PyAny>>> {
 - [PyO3 0.26.0 Migration Guide](https://pyo3.rs/v0.26.0/migration.html) - Official migration guide
 - [PyO3 Documentation](https://pyo3.rs/v0.26.0/) - Complete API documentation
 - [CLASSIC Rust Documentation Index](RUST_DOCUMENTATION_INDEX.md) - Project-specific Rust docs
-- [Rust Usage Guide](rust_usage_guide.md) - How to use Rust components in CLASSIC
+- [Rust Usage Guide](usage_guide.md) - How to use Rust components in CLASSIC
 
 ## Migration Checklist
 
