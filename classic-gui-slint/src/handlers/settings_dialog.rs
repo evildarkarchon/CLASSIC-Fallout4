@@ -150,10 +150,8 @@ impl SettingsData {
         }
 
         // Save configuration to YAML file
-        // Note: This also requires extending AppState to expose the save functionality
         tracing::info!("Persisting settings to YAML file...");
 
-        // TODO: Implement save_config in AppState (already exists, just needs to be called)
         state.read().save_config().await
             .context("Failed to save configuration to YAML")?;
 

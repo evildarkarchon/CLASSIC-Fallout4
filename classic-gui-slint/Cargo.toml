@@ -19,6 +19,9 @@ classic-file-io-core = { path = "../classic-file-io-core" }
 classic-scanlog-core = { path = "../classic-scanlog-core" }
 classic-config-core = { path = "../classic-config-core" }  # Provides YamlSource enum
 
+# UI shared coordination
+classic-ui-shared = { path = "../classic-ui-shared" }
+
 # Slint framework with winit backend and Skia renderer
 # Note: Using latest stable version (1.13.1) for best features and fixes
 slint = { version = "1.13", features = ["backend-winit", "renderer-skia"] }

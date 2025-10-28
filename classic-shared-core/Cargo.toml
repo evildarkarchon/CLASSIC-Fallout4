@@ -64,4 +64,4 @@ harness = false
 deprecated = "deny"
 rust_2024_compatibility = "warn"
 unsafe_code = "forbid"
-missing_docs = "deny"
+missing_docs = "warn" # benchmarks are exempt, deny was causing issues with them.

@@ -21,6 +21,19 @@ use slint::{PhysicalPosition, PhysicalSize};
 use std::sync::Arc;
 use tracing_subscriber;
 
+/// Pending action awaiting user confirmation
+///
+/// This enum tracks which action is waiting for user confirmation via the confirmation dialog.
+/// When a user confirms an action, the appropriate handler is invoked based on this state.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PendingConfirmation {
+    None,
+    // Future actions can be added here, e.g.:
+    // DeleteAllReports,
+    // ClearPapyrusLogs,
+    // ResetSettings,
+}
+
 fn main() -> Result<(), slint::PlatformError> {
     // Initialize logging
     tracing_subscriber::fmt()
@@ -36,6 +49,9 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // Create default app_state first (will be loaded async after window creation)
     let app_state = Arc::new(parking_lot::RwLock::new(AppState::default()));
+
+    // Track pending confirmation action
+    let pending_confirmation = Arc::new(parking_lot::Mutex::new(PendingConfirmation::None));
 
     // Load saved window geometry
     let geometry = WindowGeometry::load();
@@ -96,7 +112,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 let version = w.get_app_version().to_string();
 
                                 // Spawn async task for update check
-                                slint::spawn_local(async move {
+                                if let Err(e) = slint::spawn_local(async move {
                                     // Load update preferences
                                     match handlers::update_check::UpdatePreferences::load().await {
                                         Ok(prefs) => {
@@ -137,7 +153,9 @@ fn main() -> Result<(), slint::PlatformError> {
                                             tracing::warn!("Failed to load update preferences: {}", e);
                                         }
                                     }
-                                }).unwrap();
+                                }) {
+                                    tracing::error!("Failed to spawn update check task: {:?}", e);
+                                }
                             } else {
                                 tracing::debug!("Automatic update check disabled in settings");
                             }
@@ -229,7 +247,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let state = state.clone();
 
             // Spawn async task for scanning
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 if let Some(w) = window.upgrade() {
                     w.set_scan_in_progress(true);
                 }
@@ -294,7 +312,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -307,7 +327,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let state = state.clone();
 
             // Spawn async task for scanning
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 if let Some(w) = window.upgrade() {
                     w.set_scan_in_progress(true);
                 }
@@ -372,7 +392,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -441,7 +463,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let window = window_weak.clone();
 
             // Spawn async task for update check
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 if let Some(w) = window.upgrade() {
                     // Set checking state
                     w.set_update_checking(true);
@@ -484,7 +506,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -498,7 +522,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let state = state.clone();
 
             // Spawn async task for toggle
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 if let Some(w) = window.upgrade() {
                     let current_state = w.get_papyrus_monitoring();
 
@@ -513,11 +537,15 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                         Err(e) => {
                             tracing::error!("Failed to toggle Papyrus monitoring: {}", e);
-                            // TODO: Show error dialog
+                            w.set_error_title("Papyrus Monitoring Error".into());
+                            w.set_error_message(format!("Failed to toggle Papyrus monitoring:\n\n{}", e).into());
+                            w.set_show_error_dialog(true);
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -663,13 +691,20 @@ fn main() -> Result<(), slint::PlatformError> {
     // ARTICLES TAB EVENT CALLBACKS
     // ========================================
 
-    main_window.on_open_url(|url| {
-        let url_str = url.as_str();
-        tracing::debug!("Opening URL: {}", url_str);
+    main_window.on_open_url({
+        let main_window_weak = main_window.as_weak();
+        move |url| {
+            let url_str = url.as_str();
+            tracing::debug!("Opening URL: {}", url_str);
 
-        if let Err(e) = handlers::articles::handle_open_url(url_str) {
-            tracing::error!("Failed to open URL '{}': {}", url_str, e);
-            // TODO: Show error dialog to user
+            if let Err(e) = handlers::articles::handle_open_url(url_str) {
+                tracing::error!("Failed to open URL '{}': {}", url_str, e);
+                if let Some(w) = main_window_weak.upgrade() {
+                    w.set_error_title("Failed to Open URL".into());
+                    w.set_error_message(format!("Could not open URL '{}':\n\n{}", url_str, e).into());
+                    w.set_show_error_dialog(true);
+                }
+            }
         }
     });
 
@@ -697,7 +732,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let state = state.clone();
 
             // Spawn async task to scan reports
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 match handlers::results::scan_reports(state) {
                     Ok(reports) => {
                         if let Some(w) = window.upgrade() {
@@ -734,7 +769,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -817,7 +854,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let report_path = std::path::PathBuf::from(path_str.clone());
 
             // Spawn async task to load markdown
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 match handlers::markdown::load_markdown(&report_path) {
                     Ok(markdown_content) => {
                         if let Some(w) = window.upgrade() {
@@ -847,7 +884,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -993,7 +1032,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let state = state.clone();
 
             // Spawn async task to save settings
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 if let Some(w) = window.upgrade() {
                     // Gather settings from UI
                     let settings = handlers::settings_dialog::SettingsData {
@@ -1042,7 +1081,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -1162,7 +1203,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let window = window_weak.clone();
 
             // Spawn async task to save preferences
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 if let Some(w) = window.upgrade() {
                     let latest_version = w.get_update_latest_version().to_string();
                     let dont_check_again = w.get_update_dont_check_again();
@@ -1194,7 +1235,9 @@ fn main() -> Result<(), slint::PlatformError> {
                     // Close dialog
                     w.set_show_update_dialog(false);
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -1217,7 +1260,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let window = window_weak.clone();
             let state = state.clone();
 
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 match handlers::papyrus::start_monitoring(state).await {
                     Ok(()) => {
                         if let Some(w) = window.upgrade() {
@@ -1234,7 +1277,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -1244,7 +1289,7 @@ fn main() -> Result<(), slint::PlatformError> {
             tracing::info!("Stopping Papyrus monitoring...");
             let window = window_weak.clone();
 
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 match handlers::papyrus::stop_monitoring().await {
                     Ok(()) => {
                         if let Some(w) = window.upgrade() {
@@ -1256,7 +1301,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         tracing::error!("Failed to stop Papyrus monitoring: {}", e);
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -1264,15 +1311,15 @@ fn main() -> Result<(), slint::PlatformError> {
         let window_weak = main_window.as_weak();
         move || {
             tracing::debug!("Clearing Papyrus stats...");
-            handlers::papyrus::clear_papyrus_stats();
+            handlers::papyrus::clear_stats();
 
             // Reset UI counters
             if let Some(w) = window_weak.upgrade() {
                 w.set_papyrus_error_count(0);
                 w.set_papyrus_warning_count(0);
                 w.set_papyrus_info_count(0);
-                w.set_papyrus_dumps_count(0);   // NEW
-                w.set_papyrus_stacks_count(0);  // NEW
+                w.set_papyrus_dumps_count(0);
+                w.set_papyrus_stacks_count(0);
                 w.set_papyrus_log_content("".into());
                 tracing::info!("Papyrus stats cleared");
             }
@@ -1283,19 +1330,20 @@ fn main() -> Result<(), slint::PlatformError> {
         let window_weak = main_window.as_weak();
         move || {
             // Get current stats from Rust
-            let stats = handlers::papyrus::get_papyrus_stats();
+            let stats = handlers::papyrus::get_current_stats();
 
-            // Update UI
+            // Update UI (convert usize to i32 for Slint)
             if let Some(w) = window_weak.upgrade() {
-                w.set_papyrus_error_count(stats.errors);
-                w.set_papyrus_warning_count(stats.warnings);
-                w.set_papyrus_info_count(stats.info);
-                w.set_papyrus_dumps_count(stats.dumps);   // NEW
-                w.set_papyrus_stacks_count(stats.stacks); // NEW
+                w.set_papyrus_error_count(stats.errors as i32);
+                w.set_papyrus_warning_count(stats.warnings as i32);
+                w.set_papyrus_info_count(0); // Core analyzer doesn't track info-level messages
+                w.set_papyrus_dumps_count(stats.dumps as i32);
+                w.set_papyrus_stacks_count(stats.stacks as i32);
 
-                // Update log content with recent entries
-                let log_text = stats.recent_entries.join("\n");
-                w.set_papyrus_log_content(log_text.into());
+                // Note: Core analyzer doesn't expose recent_entries for log display
+                // Log content would need to be read separately if needed
+                tracing::debug!("Updated Papyrus stats: E={} W={} D={} S={}",
+                    stats.errors, stats.warnings, stats.dumps, stats.stacks);
             }
         }
     });
@@ -1303,21 +1351,42 @@ fn main() -> Result<(), slint::PlatformError> {
     // Confirmation dialog callbacks
     main_window.on_confirmation_confirmed({
         let window_weak = main_window.as_weak();
+        let pending = pending_confirmation.clone();
         move || {
-            tracing::debug!("Confirmation: User confirmed action");
+            let action = *pending.lock();
+            tracing::debug!("Confirmation: User confirmed action: {:?}", action);
+
             if let Some(w) = window_weak.upgrade() {
                 w.set_show_confirmation_dialog(false);
-                // TODO: Trigger the actual action based on context
+
+                // Execute the pending action
+                match action {
+                    PendingConfirmation::None => {
+                        tracing::debug!("No action to execute");
+                    }
+                    // Future actions can be handled here:
+                    // PendingConfirmation::DeleteAllReports => { ... }
+                    // PendingConfirmation::ClearPapyrusLogs => { ... }
+                }
+
+                // Clear the pending action
+                *pending.lock() = PendingConfirmation::None;
             }
         }
     });
 
     main_window.on_confirmation_cancelled({
         let window_weak = main_window.as_weak();
+        let pending = pending_confirmation.clone();
         move || {
-            tracing::debug!("Confirmation: User cancelled action");
+            let action = *pending.lock();
+            tracing::debug!("Confirmation: User cancelled action: {:?}", action);
+
             if let Some(w) = window_weak.upgrade() {
                 w.set_show_confirmation_dialog(false);
+
+                // Clear the pending action
+                *pending.lock() = PendingConfirmation::None;
             }
         }
     });
@@ -1342,7 +1411,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let topic_str = topic.to_string();
 
             // Spawn async task to load help topic
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 match handlers::help::get_help_topic(&category_str, &topic_str).await {
                     Ok(help_topic) => {
                         if let Some(w) = window.upgrade() {
@@ -1384,7 +1453,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -1408,7 +1479,7 @@ fn main() -> Result<(), slint::PlatformError> {
             };
 
             // Spawn async task to load help topic
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 match handlers::help::get_help_topic(category, topic).await {
                     Ok(help_topic) => {
                         if let Some(w) = window.upgrade() {
@@ -1440,7 +1511,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         // Silently fail - don't show error for F1
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 
@@ -1475,7 +1548,7 @@ fn main() -> Result<(), slint::PlatformError> {
             }
 
             // Spawn async task to download from Pastebin
-            slint::spawn_local(async move {
+            if let Err(e) = slint::spawn_local(async move {
                 // Set loading state
                 if let Some(w) = window.upgrade() {
                     w.set_pastebin_loading(true);
@@ -1556,7 +1629,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 }
-            }).unwrap();
+            }) {
+                tracing::error!("Failed to spawn async task: {:?}", e);
+            }
         }
     });
 

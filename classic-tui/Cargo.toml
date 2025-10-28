@@ -30,6 +30,9 @@ classic-yaml-core = { path = "../classic-yaml-core" }
 classic-config-core = { path = "../classic-config-core" }
 classic-shared-core = { path = "../classic-shared-core" }
 
+# UI shared coordination
+classic-ui-shared = { path = "../classic-ui-shared" }
+
 # TUI utilities
 tui-input = "0.14.0"
 

@@ -1,6 +1,7 @@
 // Backup operations handler for game file backups
 use anyhow::{anyhow, Context, Result};
 use classic_config_core::YamlSource;
+use classic_file_io_core::backup::{BackupManager, BackupType};
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use yaml_rust2::Yaml;
@@ -43,6 +44,18 @@ impl BackupCategory {
     }
 }
 
+/// Convert BackupCategory to BackupType from core library
+impl From<BackupCategory> for BackupType {
+    fn from(category: BackupCategory) -> Self {
+        match category {
+            BackupCategory::Xse => BackupType::XSE,
+            BackupCategory::Reshade => BackupType::ReShade,
+            BackupCategory::Vulkan => BackupType::Vulkan,
+            BackupCategory::Enb => BackupType::ENB,
+        }
+    }
+}
+
 /// Backup operation type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BackupOperation {
@@ -52,6 +65,13 @@ pub enum BackupOperation {
 }
 
 impl BackupOperation {
+    /// Returns the uppercase verb string for display in UI messages
+    ///
+    /// # Returns
+    ///
+    /// - `"BACKUP"` for backup operations
+    /// - `"RESTORE"` for restore operations
+    /// - `"REMOVE"` for remove operations
     pub fn verb(&self) -> &'static str {
         match self {
             Self::Backup => "BACKUP",
@@ -73,6 +93,12 @@ pub struct BackupResult {
 }
 
 impl BackupResult {
+    /// Creates a successful backup result
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - Success message to display to the user
+    /// * `files_processed` - Number of files successfully processed
     #[allow(dead_code)]
     pub fn success(message: String, files_processed: usize) -> Self {
         Self {
@@ -83,6 +109,11 @@ impl BackupResult {
         }
     }
 
+    /// Creates an error backup result
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - Error message to display to the user
     pub fn error(message: String) -> Self {
         Self {
             success: false,
@@ -93,8 +124,22 @@ impl BackupResult {
     }
 }
 
-/// Check if a backup exists for a given category (async version)
-/// Note: This must be called from within a Tokio runtime context
+/// Check if a backup exists for a given category
+///
+/// Checks if the backup directory exists and contains at least one file.
+///
+/// # Arguments
+///
+/// * `category` - The backup category to check (XSE, ENB, etc.)
+///
+/// # Returns
+///
+/// `true` if a backup directory exists and contains files, `false` otherwise.
+///
+/// # Runtime Context
+///
+/// **IMPORTANT**: This function is async and must be called from within a Tokio runtime context.
+/// When calling from Slint UI callbacks, use `AsyncBridge::run_with_ui_update()`.
 pub async fn check_backup_exists(category: BackupCategory) -> bool {
     let backup_path = category.backup_dir();
 
@@ -112,26 +157,26 @@ pub async fn check_backup_exists(category: BackupCategory) -> bool {
 }
 
 /// Performs a backup operation for a given category
-/// Note: This must be called from within a Tokio runtime context
+///
+/// Backs up game files according to the YAML configuration for the specified category.
+/// Only files that don't already exist in the backup are copied.
+///
+/// # Arguments
+///
+/// * `category` - The backup category (XSE, ENB, etc.)
+/// * `state` - Shared application state containing game paths and configuration
+///
+/// # Returns
+///
+/// A `BackupResult` containing the operation status, message, and statistics.
+///
+/// # Runtime Context
+///
+/// **IMPORTANT**: This function is async and must be called from within a Tokio runtime context.
+/// When calling from Slint UI callbacks, use `AsyncBridge::run_with_ui_update()`.
 pub async fn perform_backup(category: BackupCategory, state: SharedAppState) -> Result<BackupResult> {
     tracing::info!("Starting backup operation for {}", category.display_name());
 
-    // Load backup file list from YAML
-    let backup_files = load_backup_file_list(category, state.clone()).await?;
-
-    if backup_files.is_empty() {
-        return Ok(BackupResult::error(format!(
-            "No files configured for {} backup",
-            category.display_name()
-        )));
-    }
-
-    tracing::debug!(
-        "Loaded {} file patterns for {}",
-        backup_files.len(),
-        category.display_name()
-    );
-
     // Get game path from AppState
     let game_path = {
         let state_guard = state.read();
@@ -146,104 +191,50 @@ pub async fn perform_backup(category: BackupCategory, state: SharedAppState) -> 
         )));
     }
 
-    // Create backup directory
-    let backup_dir = category.backup_dir();
-    fs::create_dir_all(&backup_dir)
-        .await
-        .with_context(|| format!("Failed to create backup directory: {}", backup_dir.display()))?;
+    // Convert category to BackupType and create manager
+    let backup_type = BackupType::from(category);
+    let manager = BackupManager::new(game_path.clone(), Some(game_path.join("CLASSIC Backup/Game Files")));
 
-    tracing::debug!("Created backup directory: {}", backup_dir.display());
-
-    // Track files processed and errors
-    let mut files_processed = 0;
-    let mut errors = Vec::new();
-
-    // Get list of existing backup files to avoid duplicates
-    let existing_backups: std::collections::HashSet<String> = match fs::read_dir(&backup_dir).await {
-        Ok(mut entries) => {
-            let mut set = std::collections::HashSet::new();
-            while let Ok(Some(entry)) = entries.next_entry().await {
-                if let Some(name) = entry.file_name().to_str() {
-                    set.insert(name.to_string());
-                }
-            }
-            set
+    // Perform backup using BackupManager
+    match manager.create_backup(backup_type).await {
+        Ok(info) => {
+            let message = format!(
+                "Successfully backed up {} {} file(s) to:\n{}",
+                info.file_count,
+                category.display_name(),
+                info.backup_dir.display()
+            );
+            tracing::info!("Backup completed: {} files", info.file_count);
+            Ok(BackupResult::success(message, info.file_count))
         }
-        Err(_) => std::collections::HashSet::new(),
-    };
-
-    // Process each file/directory in backup list
-    for file_name in &backup_files {
-        let source_path = game_path.join(file_name);
-
-        // Skip if source doesn't exist
-        if !source_path.exists() {
-            tracing::debug!("Skipping {}: not found in game directory", file_name);
-            continue;
-        }
-
-        // Skip if already backed up
-        if existing_backups.contains(file_name) {
-            tracing::debug!("Skipping {}: already backed up", file_name);
-            continue;
-        }
-
-        // Copy file or directory
-        let dest_path = backup_dir.join(file_name);
-        match copy_path(&source_path, &dest_path).await {
-            Ok(()) => {
-                files_processed += 1;
-                tracing::debug!("Backed up: {}", file_name);
-            }
-            Err(e) => {
-                let error_msg = format!("Failed to backup {}: {}", file_name, e);
-                tracing::warn!("{}", error_msg);
-                errors.push(error_msg);
-            }
+        Err(e) => {
+            let error_msg = format!("Backup failed: {}", e);
+            tracing::error!("{}", error_msg);
+            Ok(BackupResult::error(error_msg))
         }
     }
-
-    // Build result message
-    let message = if files_processed > 0 {
-        format!(
-            "Successfully backed up {} {} file(s) to:\n{}",
-            files_processed,
-            category.display_name(),
-            backup_dir.display()
-        )
-    } else if errors.is_empty() {
-        format!(
-            "All {} files are already backed up",
-            category.display_name()
-        )
-    } else {
-        format!(
-            "Backup completed with {} error(s)",
-            errors.len()
-        )
-    };
-
-    Ok(BackupResult {
-        success: files_processed > 0 || errors.is_empty(),
-        message,
-        files_processed,
-        errors,
-    })
 }
 
 /// Performs a restore operation for a given category
-/// Note: This must be called from within a Tokio runtime context
+///
+/// Restores backed-up game files from the backup directory to the game directory.
+/// All files in the backup directory are copied back to their original locations.
+///
+/// # Arguments
+///
+/// * `category` - The backup category to restore (XSE, ENB, etc.)
+/// * `state` - Shared application state containing game paths
+///
+/// # Returns
+///
+/// A `BackupResult` containing the operation status, message, and statistics.
+///
+/// # Runtime Context
+///
+/// **IMPORTANT**: This function is async and must be called from within a Tokio runtime context.
+/// When calling from Slint UI callbacks, use `AsyncBridge::run_with_ui_update()`.
 pub async fn perform_restore(category: BackupCategory, state: SharedAppState) -> Result<BackupResult> {
     tracing::info!("Starting restore operation for {}", category.display_name());
-
-    // Check if backup exists
-    let backup_dir = category.backup_dir();
-    if !backup_dir.exists() || !backup_dir.is_dir() {
-        return Ok(BackupResult::error(format!(
-            "No backup found for {}. Please create a backup first.",
-            category.display_name()
-        )));
-    }
 
     // Get game path from AppState
     let game_path = {
@@ -259,61 +250,48 @@ pub async fn perform_restore(category: BackupCategory, state: SharedAppState) ->
         )));
     }
 
-    // Track files processed and errors
-    let mut files_processed = 0;
-    let mut errors = Vec::new();
+    // Convert category to BackupType and create manager
+    let backup_type = BackupType::from(category);
+    let manager = BackupManager::new(game_path.clone(), Some(game_path.join("CLASSIC Backup/Game Files")));
 
-    // Read backup directory
-    let mut backup_entries = fs::read_dir(&backup_dir).await.with_context(|| {
-        format!(
-            "Failed to read backup directory: {}",
-            backup_dir.display()
-        )
-    })?;
-
-    // Restore each backed-up file/directory
-    while let Some(entry) = backup_entries.next_entry().await? {
-        let backup_item = entry.path();
-        let file_name = entry.file_name();
-        let dest_path = game_path.join(&file_name);
-
-        tracing::debug!("Restoring {} to game directory", file_name.to_string_lossy());
-
-        // Copy from backup to game directory
-        match copy_path(&backup_item, &dest_path).await {
-            Ok(()) => {
-                files_processed += 1;
-                tracing::debug!("Restored: {:?}", file_name);
-            }
-            Err(e) => {
-                let error_msg = format!("Failed to restore {:?}: {}", file_name, e);
-                tracing::warn!("{}", error_msg);
-                errors.push(error_msg);
-            }
+    // Perform restore using BackupManager
+    match manager.restore_backup(backup_type).await {
+        Ok(file_count) => {
+            let message = format!(
+                "Successfully restored {} {} file(s) from backup",
+                file_count,
+                category.display_name()
+            );
+            tracing::info!("Restore completed: {} files", file_count);
+            Ok(BackupResult::success(message, file_count))
+        }
+        Err(e) => {
+            let error_msg = format!("Restore failed: {}", e);
+            tracing::error!("{}", error_msg);
+            Ok(BackupResult::error(error_msg))
         }
     }
-
-    // Build result message
-    let message = if files_processed > 0 {
-        format!(
-            "Successfully restored {} {} file(s) from backup",
-            files_processed,
-            category.display_name()
-        )
-    } else {
-        format!("No files were restored from {} backup", category.display_name())
-    };
-
-    Ok(BackupResult {
-        success: files_processed > 0 && errors.is_empty(),
-        message,
-        files_processed,
-        errors,
-    })
 }
 
 /// Performs a remove operation for a given category
-/// Note: This must be called from within a Tokio runtime context
+///
+/// Removes game files from the game directory according to the YAML configuration
+/// for the specified category. This is typically used to remove mods or tweaks
+/// that were backed up.
+///
+/// # Arguments
+///
+/// * `category` - The backup category whose files should be removed (XSE, ENB, etc.)
+/// * `state` - Shared application state containing game paths and configuration
+///
+/// # Returns
+///
+/// A `BackupResult` containing the operation status, message, and statistics.
+///
+/// # Runtime Context
+///
+/// **IMPORTANT**: This function is async and must be called from within a Tokio runtime context.
+/// When calling from Slint UI callbacks, use `AsyncBridge::run_with_ui_update()`.
 pub async fn perform_remove(category: BackupCategory, state: SharedAppState) -> Result<BackupResult> {
     tracing::info!("Starting remove operation for {}", category.display_name());
 
@@ -463,55 +441,6 @@ async fn load_backup_file_list(category: BackupCategory, state: SharedAppState) 
             Ok(Vec::new())
         }
     }
-}
-
-/// Recursively copy a file or directory
-///
-/// This handles both files and directories, copying recursively
-/// using async I/O operations.
-async fn copy_path(source: &Path, dest: &Path) -> Result<()> {
-    if source.is_file() {
-        // Copy single file
-        if let Some(parent) = dest.parent() {
-            fs::create_dir_all(parent).await?;
-        }
-        fs::copy(source, dest).await?;
-        Ok(())
-    } else if source.is_dir() {
-        // Copy directory recursively
-        copy_dir_recursive(source, dest).await
-    } else {
-        Err(anyhow!("Source path is neither file nor directory"))
-    }
-}
-
-/// Recursively copy a directory and all its contents
-fn copy_dir_recursive<'a>(
-    source: &'a Path,
-    dest: &'a Path,
-) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + 'a>> {
-    Box::pin(async move {
-        // Create destination directory
-        fs::create_dir_all(dest).await?;
-
-        // Read source directory entries
-        let mut entries = fs::read_dir(source).await?;
-
-        // Process each entry
-        while let Some(entry) = entries.next_entry().await? {
-            let source_path = entry.path();
-            let file_name = entry.file_name();
-            let dest_path = dest.join(&file_name);
-
-            if source_path.is_file() {
-                fs::copy(&source_path, &dest_path).await?;
-            } else if source_path.is_dir() {
-                copy_dir_recursive(&source_path, &dest_path).await?;
-            }
-        }
-
-        Ok(())
-    })
 }
 
 /// Remove a file or directory

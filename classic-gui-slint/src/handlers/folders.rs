@@ -1,7 +1,8 @@
 // Folder selection handlers
 use anyhow::Result;
+use classic_ui_shared::folder_validation;
 use rfd::FileDialog;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Opens a native folder browser dialog for selecting the mods folder
 ///
@@ -45,19 +46,21 @@ pub fn browse_scan_folder() -> Result<Option<PathBuf>> {
     Ok(result)
 }
 
-/// Validates a folder path
+/// Validates a folder path (wrapper around shared validation).
+///
+/// This is a convenience wrapper that allows empty paths (for optional fields).
 ///
 /// # Arguments
-/// * `path` - The folder path to validate
+/// * `path` - The folder path to validate (as string)
 ///
 /// # Returns
-/// Returns true if the path exists and is a directory
+/// Returns true if the path is valid or empty, false otherwise
 #[allow(dead_code)]
 pub fn validate_folder_path(path: &str) -> bool {
     if path.is_empty() {
         return true; // Empty paths are valid (optional fields)
     }
 
-    let path = PathBuf::from(path);
-    path.exists() && path.is_dir()
+    let path = Path::new(path);
+    folder_validation::validate_folder_path(path, true).is_valid()
 }

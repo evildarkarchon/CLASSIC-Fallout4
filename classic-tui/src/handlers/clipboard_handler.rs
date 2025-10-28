@@ -1,58 +1,19 @@
 //! Clipboard operations for copying text to system clipboard.
 //!
-//! This module provides cross-platform clipboard functionality using the
-//! `arboard` crate for copying error messages, report content, and other
-//! text to the system clipboard.
+//! This module re-exports clipboard functionality from [`classic_ui_shared::clipboard`]
+//! and provides TUI-specific convenience wrappers.
 
-use anyhow::{Context, Result};
-use arboard::Clipboard;
+use anyhow::Result;
 
-/// Copy text to the system clipboard.
-///
-/// This function creates a new clipboard instance and sets the text content.
-/// On success, returns `Ok(())`. On failure, returns an error describing what went wrong.
-///
-/// # Arguments
-///
-/// * `text` - The text content to copy to clipboard
-///
-/// # Returns
-///
-/// Returns `Ok(())` on success, or an error if clipboard operation fails.
-///
-/// # Examples
-///
-/// ```no_run
-/// use classic_tui::handlers::clipboard_handler::copy_to_clipboard;
-///
-/// let error_text = "Error: File not found\nDetails: /path/to/file.log";
-/// match copy_to_clipboard(error_text) {
-///     Ok(()) => println!("✓ Copied to clipboard"),
-///     Err(e) => println!("✗ Failed to copy: {}", e),
-/// }
-/// ```
-///
-/// # Errors
-///
-/// Returns an error if:
-/// - Clipboard is not available (e.g., headless environment)
-/// - Clipboard access is denied by the system
-/// - Text encoding fails
-pub fn copy_to_clipboard(text: &str) -> Result<()> {
-    let mut clipboard = Clipboard::new().context("Failed to access system clipboard")?;
+// Re-export shared clipboard functions
+pub use classic_ui_shared::clipboard::{
+    clear_clipboard, copy_to_clipboard, get_clipboard_text, is_clipboard_available,
+};
 
-    clipboard
-        .set_text(text.to_string())
-        .context("Failed to set clipboard text")?;
-
-    Ok(())
-}
-
-/// Copy formatted error information to clipboard.
+/// Copy formatted error information to clipboard (TUI-specific wrapper).
 ///
-/// This function formats error information with a timestamp, title, message,
-/// and optional details, then copies it to the clipboard. The format is
-/// designed to be easily pasted into bug reports or support requests.
+/// This is a convenience wrapper around [`classic_ui_shared::clipboard::copy_error_to_clipboard`]
+/// that automatically sets the interface name to "TUI".
 ///
 /// # Arguments
 ///
@@ -77,55 +38,7 @@ pub fn copy_to_clipboard(text: &str) -> Result<()> {
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn copy_error_to_clipboard(title: &str, message: &str, details: Option<&str>) -> Result<()> {
-    let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
-
-    let formatted = if let Some(details) = details {
-        format!(
-            "=== CLASSIC TUI Error Report ===\n\
-             Timestamp: {}\n\
-             Error: {}\n\
-             Message: {}\n\n\
-             Details:\n{}\n\
-             ================================",
-            timestamp, title, message, details
-        )
-    } else {
-        format!(
-            "=== CLASSIC TUI Error Report ===\n\
-             Timestamp: {}\n\
-             Error: {}\n\
-             Message: {}\n\
-             ================================",
-            timestamp, title, message
-        )
-    };
-
-    copy_to_clipboard(&formatted)
-}
-
-/// Check if clipboard is available on the current system.
-///
-/// This function attempts to create a clipboard instance to verify
-/// that clipboard functionality is available. Useful for disabling
-/// clipboard-related UI elements in headless environments.
-///
-/// # Returns
-///
-/// Returns `true` if clipboard is available, `false` otherwise.
-///
-/// # Examples
-///
-/// ```no_run
-/// use classic_tui::handlers::clipboard_handler::is_clipboard_available;
-///
-/// if is_clipboard_available() {
-///     println!("Clipboard support enabled");
-/// } else {
-///     println!("Clipboard not available (headless environment?)");
-/// }
-/// ```
-pub fn is_clipboard_available() -> bool {
-    Clipboard::new().is_ok()
+    classic_ui_shared::clipboard::copy_error_to_clipboard(title, message, details, "TUI")
 }
 
 #[cfg(test)]

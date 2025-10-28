@@ -1,5 +1,6 @@
 // Scan operation handlers
 use anyhow::{Context, Result};
+use classic_config_core::YamlSource;
 use classic_file_io_core::LogCollector;
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use std::sync::Mutex;
@@ -67,7 +68,7 @@ pub async fn handle_scan_crash_logs(state: SharedAppState) -> Result<ScanResult>
     let start_time = std::time::Instant::now();
 
     // Load configuration from AppState
-    let config = create_config_from_state(state.clone())?;
+    let config = create_config_from_state(state.clone()).await?;
 
     // Create orchestrator
     let orchestrator = OrchestratorCore::new(config)
@@ -214,20 +215,41 @@ pub async fn handle_scan_game_files(state: SharedAppState) -> Result<ScanResult>
 
 /// Creates analysis configuration from AppState
 ///
-/// Loads configuration values from AppState including game name and settings
-fn create_config_from_state(state: SharedAppState) -> Result<AnalysisConfig> {
+/// Loads configuration values from AppState including game name, settings, and
+/// game-specific YAML configuration (crash generator info, game version, XSE acronym).
+async fn create_config_from_state(state: SharedAppState) -> Result<AnalysisConfig> {
     let state_guard = state.read();
 
     let game_name = state_guard.game_name().to_string();
     let fcx_mode = state_guard.fcx_mode();
 
-    let mut config = AnalysisConfig::new(game_name, fcx_mode);
+    drop(state_guard); // Release read lock before async operations
 
-    // TODO: Load these values from YAML configuration
-    config.crashgen_name = "Buffout 4".to_string();
-    config.crashgen_latest = "1.28.6".to_string();
-    config.game_version = "1.10.163".to_string();
-    config.xse_acronym = "F4SE".to_string();
+    let mut config = AnalysisConfig::new(game_name.clone(), fcx_mode);
+
+    // Load game-specific configuration from YAML
+    let yaml_data = YamlSource::Game
+        .load(&game_name)
+        .await
+        .context("Failed to load game YAML configuration")?;
+
+    // Extract crash generator configuration
+    config.crashgen_name = yaml_data["CrashGen"]["Name"]
+        .as_str()
+        .unwrap_or("Unknown Crash Generator")
+        .to_string();
+    config.crashgen_latest = yaml_data["CrashGen"]["Latest"]
+        .as_str()
+        .unwrap_or("Unknown Version")
+        .to_string();
+    config.game_version = yaml_data["Game"]["Version"]
+        .as_str()
+        .unwrap_or("Unknown Version")
+        .to_string();
+    config.xse_acronym = yaml_data["XSE"]["Acronym"]
+        .as_str()
+        .unwrap_or("XSE")
+        .to_string();
 
     Ok(config)
 }
@@ -242,23 +264,35 @@ fn create_config_from_state(state: SharedAppState) -> Result<AnalysisConfig> {
 async fn find_crash_logs(state: SharedAppState) -> Result<Vec<String>> {
     let state_guard = state.read();
 
-    // Get paths from AppState
+    // Get paths and game name from AppState
     let docs_root = state_guard.docs_root().cloned();
     let custom_folder = state_guard.scan_folder().cloned();
+    let game_name = state_guard.game_name().to_string();
 
-    // Build XSE folder path (e.g., My Games/Fallout4/F4SE)
+    drop(state_guard); // Release lock before async operations
+
+    // Load XSE acronym from game YAML
+    let yaml_data = YamlSource::Game
+        .load(&game_name)
+        .await
+        .context("Failed to load game YAML configuration")?;
+
+    let xse_acronym = yaml_data["XSE"]["Acronym"]
+        .as_str()
+        .unwrap_or("XSE")
+        .to_string();
+
+    // Build XSE folder path using game-specific XSE acronym (e.g., My Games/Fallout4/F4SE)
     let xse_folder = docs_root.as_ref().and_then(|docs| {
         let parent = docs.parent()?;
-        let game_dir = parent.join(state_guard.game_name());
-        let xse_dir = game_dir.join("F4SE"); // TODO: Get from config
+        let game_dir = parent.join(&game_name);
+        let xse_dir = game_dir.join(&xse_acronym);
         if xse_dir.exists() {
             Some(xse_dir)
         } else {
             None
         }
     });
-
-    drop(state_guard); // Release lock before async operations
 
     // Use current directory as base (where Crash Logs folder will be created)
     let base_folder = std::env::current_dir().unwrap_or_default();

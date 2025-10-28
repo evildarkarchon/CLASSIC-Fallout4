@@ -11,6 +11,9 @@ members = [
     "classic-scanlog-core",
     "classic-config-core",
 
+    # UI Coordination (Shared across CLI/TUI/GUI)
+    "classic-ui-shared",
+
     # Python Bindings (PyO3 adapters)
     "classic-yaml-py",
     "classic-database-py",

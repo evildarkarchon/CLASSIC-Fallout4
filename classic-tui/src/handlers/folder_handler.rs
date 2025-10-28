@@ -9,6 +9,7 @@
 use crate::app::App;
 use crate::widgets::FolderPickerState;
 use anyhow::Result;
+use classic_ui_shared::folder_validation::validate_folder_path_result;
 use std::path::PathBuf;
 
 /// Type of folder being selected
@@ -70,7 +71,9 @@ pub async fn handle_folder_selection(
     Ok(())
 }
 
-/// Validate that a folder path is suitable for use
+/// Validate that a folder path is suitable for use.
+///
+/// This is a wrapper around [`classic_ui_shared::folder_validation::validate_folder_path_result`].
 ///
 /// # Arguments
 ///
@@ -97,28 +100,7 @@ pub async fn handle_folder_selection(
 /// assert!(validate_folder_path(&path).is_ok());
 /// ```
 pub fn validate_folder_path(path: &PathBuf) -> Result<()> {
-    // Check if path exists
-    if !path.exists() {
-        return Err(anyhow::anyhow!(
-            "Path does not exist: {}",
-            path.display()
-        ));
-    }
-
-    // Check if path is a directory
-    if !path.is_dir() {
-        return Err(anyhow::anyhow!("Path is not a directory: {}", path.display()));
-    }
-
-    // Check if path is readable by attempting to read the directory
-    match std::fs::read_dir(path) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(anyhow::anyhow!(
-            "Cannot read directory {}: {}",
-            path.display(),
-            e
-        )),
-    }
+    validate_folder_path_result(path, false)
 }
 
 /// Create folder picker state for a given folder type

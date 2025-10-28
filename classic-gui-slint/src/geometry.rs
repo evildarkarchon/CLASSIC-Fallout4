@@ -1,16 +1,33 @@
-// Window geometry persistence
-// Saves and restores window size and position between sessions
+//! Window geometry persistence
+//!
+//! This module handles saving and restoring window size and position
+//! between application sessions using JSON serialization. Window geometry
+//! is stored in the user's config directory (`~/.config/CLASSIC/window_geometry.json`
+//! on Linux, `%APPDATA%\CLASSIC\window_geometry.json` on Windows).
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+/// Window geometry configuration
+///
+/// Stores window dimensions and position for persistence between sessions.
+/// Coordinates use screen pixels with the origin at the top-left corner.
+///
+/// # Special Values
+///
+/// A value of `-1` for `x` or `y` indicates the window should be centered
+/// on screen in that dimension.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WindowGeometry {
+    /// Window width in pixels
     pub width: i32,
+    /// Window height in pixels
     pub height: i32,
+    /// Window X position in screen coordinates, or -1 to center horizontally
     pub x: i32,
+    /// Window Y position in screen coordinates, or -1 to center vertically
     pub y: i32,
 }
 
