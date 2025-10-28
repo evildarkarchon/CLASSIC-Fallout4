@@ -80,7 +80,7 @@
 //! ```
 
 use classic_config_core::{ConfigError, YamlDataCore};
-use classic_shared::get_runtime;
+use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::path::PathBuf;

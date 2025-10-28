@@ -12,7 +12,7 @@ crate-type = ["rlib"]  # Pure Rust library ONLY - NO Python bindings
 
 [dependencies]
 # CLASSIC core dependencies (pure Rust - NO PyO3!)
-classic-shared = { path = "../classic-shared" }
+classic-shared-core = { path = "../classic-shared-core" }
 classic-yaml-core = { path = "../classic-yaml-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-database-core = { path = "../classic-database-core" }

@@ -139,18 +139,12 @@ impl PathHandler {
     /// - This function relies on the `PathBuf::canonicalize` method, which may fail for non-existent or inaccessible paths.
     /// - The `clean_path` method is used as a fallback for cases where canonicalization fails.
     pub fn normalize_path(&self, path: String) -> PyResult<String> {
-        // Check cache first
-        if let Some(entry) = self.path_cache.get(&path) {
+        // Check cache first - use get_mut() to update in-place (eliminates race condition)
+        if let Some(mut entry) = self.path_cache.get_mut(&path) {
             if entry.timestamp.elapsed() < self.cache_ttl {
-                // Clone the value we need before dropping the guard
-                let result = entry.value.to_string_lossy().to_string();
-                let mut updated_entry = entry.clone();
-                updated_entry.hit_count += 1;
-                // Drop the guard before inserting
-                drop(entry);
-                // Update hit count
-                self.path_cache.insert(path.clone(), updated_entry);
-                return Ok(result);
+                // Update hit count in-place while holding the lock
+                entry.hit_count += 1;
+                return Ok(entry.value.to_string_lossy().to_string());
             }
         }
 
@@ -158,10 +152,14 @@ impl PathHandler {
         let path_buf = PathBuf::from(&path);
         let normalized = match path_buf.canonicalize() {
             Ok(p) => p,
-            Err(_) => {
-                // If canonicalize fails, just clean up the path
-                let cleaned = self.clean_path(&path_buf)?;
-                cleaned
+            Err(e) => {
+                // Log the canonicalization failure for debugging
+                log::debug!(
+                    "Failed to canonicalize path '{}': {}. Using cleaned path instead.",
+                    path,
+                    e
+                );
+                self.clean_path(&path_buf)
             }
         };
 
@@ -274,11 +272,9 @@ impl PathHandler {
     ///   whether the path exists or check for symlinks.
     /// - It operates purely on the logical structure of the path.
     ///
-    /// # Errors
-    /// - This function returns a `PyResult` because it is intended to be part of a 
-    ///   Python binding using PyO3. However, in its current implementation, it does not
-    ///   fail under normal circumstances.
-    fn clean_path(&self, path: &PathBuf) -> PyResult<PathBuf> {
+    /// # Notes (Continued)
+    /// - This function is infallible and always succeeds. It never returns an error.
+    fn clean_path(&self, path: &PathBuf) -> PathBuf {
         let mut components = vec![];
         for component in path.components() {
             match component {
@@ -296,7 +292,7 @@ impl PathHandler {
         for component in components {
             result.push(component);
         }
-        Ok(result)
+        result
     }
 
     /// Validates a batch of file paths for validity and caches the results for quicker subsequent validations.

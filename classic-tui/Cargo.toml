@@ -28,7 +28,7 @@ classic-file-io-core = { path = "../classic-file-io-core" }
 classic-database-core = { path = "../classic-database-core" }
 classic-yaml-core = { path = "../classic-yaml-core" }
 classic-config-core = { path = "../classic-config-core" }
-classic-shared = { path = "../classic-shared" }
+classic-shared-core = { path = "../classic-shared-core" }
 
 # TUI utilities
 tui-input = "0.14.0"

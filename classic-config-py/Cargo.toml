@@ -16,7 +16,8 @@ crate-type = ["cdylib", "rlib"]  # Both for Python and Rust usage
 classic-config-core = { path = "../classic-config-core" }
 
 # Foundation
-classic-shared = { path = "../classic-shared" }
+classic-shared-core = { path = "../classic-shared-core" }
+classic-shared-py = { path = "../classic-shared-py" }
 
 # Python bindings
 pyo3 = { workspace = true, features = ["extension-module"] }

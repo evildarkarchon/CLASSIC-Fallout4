@@ -19,7 +19,8 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 classic-scanlog-core = { path = "../classic-scanlog-core" }
 
 # CLASSIC shared utilities
-classic-shared = { path = "../classic-shared" }
+classic-shared-core = { path = "../classic-shared-core" }
+classic-shared-py = { path = "../classic-shared-py" }
 
 # Database operations (for FormID analyzer)
 classic-database-core = { path = "../classic-database-core" }

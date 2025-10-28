@@ -1,7 +1,8 @@
 [workspace]
 members = [
     # Foundation
-    "classic-shared",
+    "classic-shared-core",
+    "classic-shared-py",
 
     # Business Logic (Pure Rust - no PyO3)
     "classic-yaml-core",

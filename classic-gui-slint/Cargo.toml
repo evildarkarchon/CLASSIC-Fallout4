@@ -12,7 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 # CLASSIC core crates (business logic)
-classic-shared = { path = "../classic-shared", features = ["gui-bridge"] }
+classic-shared-core = { path = "../classic-shared-core", features = ["gui-bridge"] }
 classic-yaml-core = { path = "../classic-yaml-core" }
 classic-database-core = { path = "../classic-database-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }

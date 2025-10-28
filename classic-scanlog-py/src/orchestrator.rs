@@ -1,7 +1,8 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
-use classic_shared::{get_runtime, without_gil};
+use classic_shared_core::get_runtime;
+use classic_shared::without_gil;
 use pyo3::prelude::*;
 
 /// Python wrapper for AnalysisConfig

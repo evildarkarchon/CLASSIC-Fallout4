@@ -394,9 +394,9 @@ struct CachedYaml {
 /// and optional caching to optimize performance in repeated operations.
 /// # Fields
 ///
-/// * `format_config` - (Reserved for future use) This field will be utilized in 
+/// * `format_config` - (Reserved for future use) This field will be utilized in
 ///   future versions to store YAML format preservation configurations, allowing
-///   fine-grained control over YAML serialization and deserialization. 
+///   fine-grained control over YAML serialization and deserialization.
 ///   For now, this field is unused and deliberately marked with `#[allow(dead_code)]`.
 ///
 /// * `cache_enabled` - A boolean field that enables or disables caching functionality.
@@ -586,12 +586,12 @@ impl YamlOperations {
     ///   - If the document is empty, returns a `YamlError::EmptyDocument`.
     ///
     /// - **Cache Update**: After successfully parsing the file:
-    ///   - If caching is enabled, the method updates the cache with the new document, its raw contents, 
+    ///   - If caching is enabled, the method updates the cache with the new document, its raw contents,
     ///     and its last modified timestamp.
     ///
     /// # Caching Details
     ///
-    /// Caching is controlled via the `self.cache_enabled` flag. An internal global cache, `YAML_CACHE`, 
+    /// Caching is controlled via the `self.cache_enabled` flag. An internal global cache, `YAML_CACHE`,
     /// is used to store parsed documents. The cache keeps track of:
     /// - The parsed YAML document.
     /// - The last modification timestamp of the file.
@@ -625,12 +625,12 @@ impl YamlOperations {
     /// # Notes
     ///
     /// - Ensure that the file exists at the specified path before invoking this method.
-    /// - Caching leverages a global/static cache (`YAML_CACHE`), so proper initialization and handling 
+    /// - Caching leverages a global/static cache (`YAML_CACHE`), so proper initialization and handling
     ///   of this cache is expected prior to method execution.
     ///
     /// # Thread Safety
     ///
-    /// The method assumes thread-safe operations where necessary, particularly for the global `YAML_CACHE`. 
+    /// The method assumes thread-safe operations where necessary, particularly for the global `YAML_CACHE`.
     /// Use of `Arc` ensures shared ownership of cached YAML data across threads.
     pub fn load_yaml_file(&self, path: &Path) -> Result<Yaml, YamlError> {
         let file_path = path.to_path_buf();
@@ -752,9 +752,9 @@ impl YamlOperations {
     /// - `key_path: &str`: The dot-delimited string representing the key path to the desired setting (e.g., `"parent.child.key"`).
     ///
     /// # Returns
-    /// `Option<Yaml>`: 
+    /// `Option<Yaml>`:
     /// - Returns `Some(Yaml)` containing the value at the specified key path if it exists and is accessible.
-    /// - Returns `None` if any key in the key path does not exist, the path encounters a non-hash value along the way, 
+    /// - Returns `None` if any key in the key path does not exist, the path encounters a non-hash value along the way,
     ///   or the structure does not match the expected hierarchy.
     ///
     /// # Behavior
@@ -844,7 +844,7 @@ impl YamlOperations {
     /// ```
     ///
     /// # Notes
-    /// - If any intermediate path segments (e.g., `settings` or `theme` in the above example) 
+    /// - If any intermediate path segments (e.g., `settings` or `theme` in the above example)
     ///   do not exist in the YAML object, they will be automatically created as empty `Yaml::Hash`.
     /// - The function handles both existing and missing paths gracefully, ensuring a nested structure
     ///   is built as needed.

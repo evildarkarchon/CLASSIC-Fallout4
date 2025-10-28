@@ -14,18 +14,41 @@ use std::time::{Duration, Instant};
 /// Global performance metrics collector
 static METRICS: Lazy<Arc<PerformanceMetrics>> = Lazy::new(|| Arc::new(PerformanceMetrics::new()));
 
+/// Global reference instant for timer measurements
+/// Used to convert Instant to f64 for Python interop
+static TIMER_START: Lazy<Instant> = Lazy::new(Instant::now);
+
 /// Performance metrics storage
+///
+/// Thread-safe storage for tracking operation timings, counts, and bytes processed.
+/// Uses `DashMap` for lock-free concurrent access across multiple threads.
 pub struct PerformanceMetrics {
     /// Operation timings: name -> list of durations
+    ///
+    /// Stores all individual timing measurements for each operation type.
     timings: DashMap<String, Vec<Duration>>,
+
     /// Operation counts
+    ///
+    /// Tracks how many times each operation has been performed.
     counts: DashMap<String, AtomicUsize>,
+
     /// Total bytes processed by operation
+    ///
+    /// Accumulates the total bytes processed for throughput calculations.
     bytes_processed: DashMap<String, AtomicU64>,
+}
+
+impl Default for PerformanceMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PerformanceMetrics {
     /// Creates a new `PerformanceMetrics` instance with empty metrics.
+    ///
+    /// This is equivalent to `Default::default()`.
     pub fn new() -> Self {
         Self {
             timings: DashMap::new(),
@@ -70,7 +93,12 @@ impl PerformanceMetrics {
         }
 
         let total: Duration = timings.iter().sum();
-        let avg = total / count as u32;
+        // Use saturating conversion to prevent overflow/panic if count > u32::MAX
+        let avg = if count > 0 {
+            total / count.try_into().unwrap_or(u32::MAX)
+        } else {
+            Duration::ZERO
+        };
         let min = *timings.iter().min()?;
         let max = *timings.iter().max()?;
 
@@ -110,14 +138,51 @@ pub struct OperationStats {
 }
 
 /// Performance timer for measuring operation duration
+///
+/// Automatically records timing metrics when dropped or explicitly stopped.
+/// Use the `start()` method to begin timing, optionally set bytes with `set_bytes()`,
+/// and either call `stop()` explicitly or let it drop to auto-record.
+///
+/// # Examples
+/// ```rust
+/// use classic_shared::performance::Timer;
+///
+/// let timer = Timer::start("file_processing");
+/// // Do work...
+/// timer.stop(); // Explicitly stop and record
+///
+/// // Or let it auto-stop on drop:
+/// {
+///     let timer = Timer::start("auto_operation");
+///     // Do work...
+/// } // Timer drops here and auto-records
+/// ```
 pub struct Timer {
+    /// Operation name (None if already stopped)
     operation: Option<String>,
+
+    /// Start time of the operation
     start: Instant,
+
+    /// Optional bytes processed during operation
     bytes: Option<u64>,
 }
 
 impl Timer {
-    /// Start a new timer
+    /// Start a new timer for the given operation
+    ///
+    /// Returns a `Timer` that will automatically record metrics when dropped
+    /// or when `stop()` is called explicitly.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use classic_shared::performance::Timer;
+    ///
+    /// let timer = Timer::start("database_query");
+    /// // Perform database query...
+    /// timer.stop();
+    /// ```
+    #[must_use = "Timer should be stored and stopped or dropped to record metrics"]
     pub fn start(operation: impl Into<String>) -> Self {
         Self {
             operation: Some(operation.into()),
@@ -126,12 +191,27 @@ impl Timer {
         }
     }
 
-    /// Set bytes processed
+    /// Set the number of bytes processed during this operation
+    ///
+    /// This is used to calculate throughput metrics (bytes/sec).
+    ///
+    /// # Examples
+    /// ```rust
+    /// use classic_shared::performance::Timer;
+    ///
+    /// let mut timer = Timer::start("file_read");
+    /// let data = vec![0u8; 1024]; // Read 1KB
+    /// timer.set_bytes(data.len() as u64);
+    /// timer.stop();
+    /// ```
     pub fn set_bytes(&mut self, bytes: u64) {
         self.bytes = Some(bytes);
     }
 
     /// Stop the timer and record metrics
+    ///
+    /// Consumes the timer to prevent double-recording via the Drop implementation.
+    /// If you don't call this method, the timer will auto-record when dropped.
     pub fn stop(mut self) {
         if let Some(operation) = self.operation.take() {
             let duration = self.start.elapsed();
@@ -180,16 +260,44 @@ impl RustPerformanceMonitor {
     }
 
     /// Start timing an operation
+    ///
+    /// Returns a dictionary containing the operation name and start time (as f64 seconds).
+    /// Pass this dictionary to `stop_timer()` to record the elapsed time.
+    ///
+    /// # Examples
+    /// ```python
+    /// monitor = RustPerformanceMonitor()
+    /// timer = monitor.start_timer("my_operation")
+    /// # ... do work ...
+    /// monitor.stop_timer(timer)
+    /// ```
     #[pyo3(signature = (operation))]
     pub fn start_timer(&self, py: Python, operation: String) -> PyResult<Py<PyAny>> {
         let timer_dict = PyDict::new(py);
         timer_dict.set_item("operation", operation.clone())?;
-        timer_dict.set_item("start", Instant::now().elapsed().as_secs_f64())?;
+        // Store elapsed seconds from global reference instant for accurate timing
+        let start_time = TIMER_START.elapsed().as_secs_f64();
+        timer_dict.set_item("start_time", start_time)?;
 
         Ok(timer_dict.unbind().into())
     }
 
     /// Stop timing an operation
+    ///
+    /// Calculates the elapsed time since `start_timer()` was called and records
+    /// the timing metrics.
+    ///
+    /// # Arguments
+    /// * `timer_info` - Dictionary returned from `start_timer()`
+    /// * `bytes_processed` - Optional number of bytes processed during the operation
+    ///
+    /// # Examples
+    /// ```python
+    /// monitor = RustPerformanceMonitor()
+    /// timer = monitor.start_timer("file_read")
+    /// data = read_file(path)
+    /// monitor.stop_timer(timer, bytes_processed=len(data))
+    /// ```
     #[pyo3(signature = (timer_info, bytes_processed=None))]
     pub fn stop_timer(
         &self,
@@ -203,12 +311,16 @@ impl RustPerformanceMonitor {
             })?
             .extract()?;
 
-        let start: f64 = timer_info
-            .get_item("start")?
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyKeyError, _>("Missing 'start' key"))?
+        let start_time: f64 = timer_info
+            .get_item("start_time")?
+            .ok_or_else(|| {
+                PyErr::new::<pyo3::exceptions::PyKeyError, _>("Missing 'start_time' key")
+            })?
             .extract()?;
 
-        let duration = Duration::from_secs_f64(Instant::now().elapsed().as_secs_f64() - start);
+        // Calculate actual elapsed time from global reference
+        let current_time = TIMER_START.elapsed().as_secs_f64();
+        let duration = Duration::from_secs_f64(current_time - start_time);
 
         METRICS.record_timing(&operation, duration);
 

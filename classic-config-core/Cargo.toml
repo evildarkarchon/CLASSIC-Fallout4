@@ -12,7 +12,7 @@ crate-type = ["rlib"]  # Pure Rust library ONLY - no PyO3
 
 [dependencies]
 # CLASSIC shared utilities (provides runtime)
-classic-shared = { path = "../classic-shared" }
+classic-shared-core = { path = "../classic-shared-core" }
 
 # Async runtime (for JoinSet and file I/O)
 tokio = { workspace = true, features = ["full"] }

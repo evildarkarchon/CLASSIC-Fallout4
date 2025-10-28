@@ -18,7 +18,8 @@ crate-type = ["cdylib", "rlib"]
 pyo3 = { workspace = true, features = ["extension-module"] }
 
 # CLASSIC modular crates (workspace dependencies)
-classic-shared = { path = "../classic-shared" }
+classic-shared-core = { path = "../classic-shared-core" }
+classic-shared-py = { path = "../classic-shared-py" }
 
 # Pure business logic crates (for re-export)
 classic-yaml-core = { path = "../classic-yaml-core" }

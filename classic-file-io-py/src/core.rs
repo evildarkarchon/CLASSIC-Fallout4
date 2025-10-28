@@ -4,7 +4,7 @@
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
 use classic_file_io_core::FileIOCore;
-use classic_shared::get_runtime;
+use classic_shared_core::get_runtime;
 use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};

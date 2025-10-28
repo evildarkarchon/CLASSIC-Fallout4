@@ -1,0 +1,28 @@
+[package]
+name = "classic-shared-py"
+version = "8.0.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "PyO3 bindings for CLASSIC shared utilities"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_shared"
+crate-type = ["cdylib", "rlib"]  # Python extension + Rust library
+
+[dependencies]
+# Core business logic
+classic-shared-core = { path = "../classic-shared-core" }
+
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# Logging
+log = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "forbid"
+missing_docs = "deny"

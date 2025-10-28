@@ -12,7 +12,7 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 
 [dependencies]
 # CLASSIC shared utilities
-classic-shared = { path = "../classic-shared" }
+classic-shared-core = { path = "../classic-shared-core" }
 
 # YAML parsing (yaml-rust2)
 yaml-rust2 = { workspace = true }

@@ -13,7 +13,14 @@ use std::sync::Arc;
 /// and 40-60% memory reduction compared to DefaultAtom + DashMap.
 #[pyclass]
 pub struct StringProcessor {
+    /// String interner for efficient string deduplication
     interner: Arc<RwLock<Rodeo>>,
+}
+
+impl Default for StringProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[pymethods]
@@ -119,15 +126,42 @@ impl StringProcessor {
 impl StringProcessor {
     /// Intern string and return Spur handle (Rust-only API)
     ///
-    /// For Rust code, use this method to get a Spur handle instead of String.
-    /// Spur is a small Copy type (8 bytes) that can be used to resolve the string later.
-    #[allow(dead_code)]
+    /// This is a performance-optimized API for Rust code. For Rust callers,
+    /// use this method to get a `Spur` handle instead of `String`.
+    /// `Spur` is a small `Copy` type (8 bytes) that can be resolved later,
+    /// providing better performance than copying strings.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use classic_shared::StringProcessor;
+    ///
+    /// let processor = StringProcessor::new();
+    /// let spur = processor.intern_spur("example");
+    /// let resolved = processor.resolve(&spur);
+    /// assert_eq!(resolved, "example");
+    /// ```
+    ///
+    /// # Performance
+    /// - `Spur` is only 8 bytes (vs potentially hundreds for a `String`)
+    /// - `Copy` instead of `Clone` - no allocations
+    /// - Deduplicates strings automatically
     pub fn intern_spur(&self, s: &str) -> Spur {
         self.interner.write().get_or_intern(s)
     }
 
     /// Resolve a Spur handle back to a string (Rust-only API)
-    #[allow(dead_code)]
+    ///
+    /// Converts a `Spur` handle (obtained from `intern_spur()`) back into
+    /// the original string value.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use classic_shared::StringProcessor;
+    ///
+    /// let processor = StringProcessor::new();
+    /// let spur = processor.intern_spur("test");
+    /// assert_eq!(processor.resolve(&spur), "test");
+    /// ```
     pub fn resolve(&self, spur: &Spur) -> String {
         self.interner.read().resolve(spur).to_string()
     }

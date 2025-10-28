@@ -7,8 +7,8 @@
 //! - NO PyO3 dependency - pure Rust business logic only
 //!
 //! ## ONE RUNTIME RULE
-//! This crate uses the shared global Tokio runtime from classic-shared.
-//! All async operations use `classic_shared::get_runtime().block_on()`.
+//! This crate uses the shared global Tokio runtime from classic-shared-core.
+//! All async operations use `classic_shared_core::get_runtime().block_on()`.
 
 pub mod config;
 pub mod yamldata;
@@ -16,5 +16,5 @@ pub mod yamldata;
 pub use config::{ClassicConfig, PathConfig, YamlSource};
 pub use yamldata::{ConfigError, YamlDataCore};
 
-// Re-export get_runtime from classic-shared for convenience
-pub use classic_shared::get_runtime;
+// Re-export get_runtime from classic-shared-core for convenience
+pub use classic_shared_core::get_runtime;

@@ -22,7 +22,8 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 yaml-rust2 = { workspace = true }
 
 # Shared utilities
-classic-shared = { path = "../classic-shared" }
+classic-shared-core = { path = "../classic-shared-core" }
+classic-shared-py = { path = "../classic-shared-py" }
 
 [dev-dependencies]
 tempfile = { workspace = true }

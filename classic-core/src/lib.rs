@@ -6,7 +6,8 @@
 //! ## Architecture (Post-Business Logic Separation)
 //!
 //! ### Foundation Layer
-//! - **classic-shared**: Runtime, errors, utilities
+//! - **classic-shared-core**: Runtime, errors, pure Rust utilities
+//! - **classic-shared-py**: PyO3 bindings for utilities
 //!
 //! ### Business Logic Layer (Pure Rust, no PyO3)
 //! - **classic-yaml-core**: YAML operations (yaml-rust2)
@@ -44,12 +45,13 @@
 use pyo3::prelude::*;
 
 // Re-export the shared runtime for backward compatibility
-pub use classic_shared::get_runtime;
+pub use classic_shared_core::get_runtime;
 
 // Re-export all types from shared foundation
+pub use classic_shared_core::{ClassicError, ClassicResult, IntoClassicError};
 pub use classic_shared::{
-    ClassicError, ClassicResult, IntoClassicError, PathHandler, RustPerformanceMonitor,
-    StringProcessor,
+    PyPathHandler as PathHandler, PyRustPerformanceMonitor as RustPerformanceMonitor,
+    PyStringProcessor as StringProcessor,
 };
 
 // Re-export Python bindings (for Python usage via PyO3)

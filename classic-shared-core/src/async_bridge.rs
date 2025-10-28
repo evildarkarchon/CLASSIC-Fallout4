@@ -319,6 +319,6 @@ mod tests {
     fn test_async_bridge_exists() {
         // Basic compile test to ensure the module structure is correct
         // Actual functionality tests require a running Slint event loop
-        assert_eq!(std::any::type_name::<AsyncBridge>(), "classic_shared::async_bridge::AsyncBridge");
+        assert_eq!(std::any::type_name::<AsyncBridge>(), "classic_shared_core::async_bridge::AsyncBridge");
     }
 }

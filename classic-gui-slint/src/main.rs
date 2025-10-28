@@ -15,7 +15,7 @@ mod models;
 
 use anyhow::Result;
 use app_state::AppState;
-use classic_shared::AsyncBridge;
+use classic_shared_core::AsyncBridge;
 use geometry::WindowGeometry;
 use slint::{PhysicalPosition, PhysicalSize};
 use std::sync::Arc;
