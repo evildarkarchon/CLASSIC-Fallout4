@@ -6,6 +6,7 @@
 use dashmap::DashMap;
 use rayon::prelude::*;
 use std::path::{PathBuf, Path};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -26,6 +27,10 @@ struct PathCacheEntry {
 ///
 /// This struct provides functionality to cache resolved paths and their validation results
 /// for a specified Time-To-Live (TTL) duration.
+///
+/// # Performance Optimization
+/// The cache implements LRU eviction with configurable size limits to prevent unbounded growth.
+/// This ensures O(1) lookups while maintaining bounded memory usage.
 pub struct PathHandler {
     /// Cache for resolved paths with TTL
     path_cache: Arc<DashMap<String, PathCacheEntry>>,
@@ -33,18 +38,40 @@ pub struct PathHandler {
     validation_cache: Arc<DashMap<PathBuf, (bool, String, Instant)>>,
     /// Cache TTL duration
     cache_ttl: Duration,
+    /// Maximum cache size (0 = unlimited)
+    max_cache_size: usize,
+    /// Cache hit counter
+    cache_hits: AtomicUsize,
+    /// Cache miss counter
+    cache_misses: AtomicUsize,
 }
 
 impl PathHandler {
-    /// Creates a new `PathHandler` with the specified cache TTL.
+    /// Creates a new `PathHandler` with the specified cache TTL (unlimited size).
     ///
     /// # Arguments
     /// * `cache_ttl_seconds` - The duration (in seconds) for which cached items remain valid
     pub fn new(cache_ttl_seconds: u64) -> Self {
+        Self::new_with_limits(cache_ttl_seconds, 0) // 0 = unlimited
+    }
+
+    /// Creates a new `PathHandler` with specified cache TTL and size limit.
+    ///
+    /// # Arguments
+    /// * `cache_ttl_seconds` - The duration (in seconds) for which cached items remain valid
+    /// * `max_cache_size` - Maximum number of entries in cache (0 = unlimited, recommended: 10000)
+    ///
+    /// # Performance
+    /// Using a bounded cache prevents memory leaks in long-running applications.
+    /// When the cache reaches max_cache_size, the LRU (least recently used) entries are evicted.
+    pub fn new_with_limits(cache_ttl_seconds: u64, max_cache_size: usize) -> Self {
         Self {
             path_cache: Arc::new(DashMap::new()),
             validation_cache: Arc::new(DashMap::new()),
             cache_ttl: Duration::from_secs(cache_ttl_seconds),
+            max_cache_size,
+            cache_hits: AtomicUsize::new(0),
+            cache_misses: AtomicUsize::new(0),
         }
     }
 
@@ -56,9 +83,13 @@ impl PathHandler {
         if let Some(mut entry) = self.path_cache.get_mut(path) {
             if entry.timestamp.elapsed() < self.cache_ttl {
                 entry.hit_count += 1;
+                self.cache_hits.fetch_add(1, Ordering::Relaxed);
                 return Ok(entry.value.to_string_lossy().to_string());
             }
         }
+
+        // Cache miss
+        self.cache_misses.fetch_add(1, Ordering::Relaxed);
 
         // Normalize the path
         let path_buf = PathBuf::from(path);
@@ -73,6 +104,9 @@ impl PathHandler {
                 self.clean_path(&path_buf)
             }
         };
+
+        // Evict LRU entries if cache is full
+        self.evict_lru_if_needed();
 
         // Cache the result
         let entry = PathCacheEntry {
@@ -98,6 +132,58 @@ impl PathHandler {
     /// - The number of entries in the validation_cache
     pub fn cache_stats(&self) -> (usize, usize) {
         (self.path_cache.len(), self.validation_cache.len())
+    }
+
+    /// Returns cache hit/miss statistics
+    ///
+    /// Returns a tuple containing:
+    /// - Number of cache hits
+    /// - Number of cache misses
+    /// - Hit rate (0.0 to 1.0)
+    pub fn cache_metrics(&self) -> (usize, usize, f64) {
+        let hits = self.cache_hits.load(Ordering::Relaxed);
+        let misses = self.cache_misses.load(Ordering::Relaxed);
+        let total = hits + misses;
+        let hit_rate = if total > 0 {
+            hits as f64 / total as f64
+        } else {
+            0.0
+        };
+        (hits, misses, hit_rate)
+    }
+
+    /// Evicts LRU entries if cache exceeds max_cache_size
+    ///
+    /// This method is called automatically when inserting new entries.
+    /// It removes the least-used 20% of entries to avoid thrashing.
+    fn evict_lru_if_needed(&self) {
+        // Skip if no size limit or cache is not full
+        if self.max_cache_size == 0 || self.path_cache.len() < self.max_cache_size {
+            return;
+        }
+
+        // Collect all entries with their hit counts
+        let mut entries: Vec<(String, u32)> = self
+            .path_cache
+            .iter()
+            .map(|e| (e.key().clone(), e.value().hit_count))
+            .collect();
+
+        // Sort by hit count (ascending - least used first)
+        entries.sort_by_key(|(_, hits)| *hits);
+
+        // Remove bottom 20% to avoid frequent evictions
+        let to_remove = (self.max_cache_size / 5).max(1);
+        for (key, _) in entries.iter().take(to_remove) {
+            self.path_cache.remove(key);
+        }
+
+        log::debug!(
+            "Evicted {} LRU entries from path cache (size: {} -> {})",
+            to_remove,
+            self.path_cache.len() + to_remove,
+            self.path_cache.len()
+        );
     }
 
     /// Cleans up expired items from both caches based on the configured cache TTL.

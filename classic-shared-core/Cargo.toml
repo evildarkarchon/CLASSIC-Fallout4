@@ -45,6 +45,21 @@ slint = { workspace = true, optional = true }
 # Enable AsyncBridge for Slint GUI applications
 gui-bridge = ["slint"]
 
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "string_benchmarks"
+harness = false
+
+[[bench]]
+name = "path_benchmarks"
+harness = false
+
+[[bench]]
+name = "performance_benchmarks"
+harness = false
+
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "warn"
