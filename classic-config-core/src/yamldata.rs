@@ -6,10 +6,11 @@
 //! 2. Parallel loading of multiple YAML files with Tokio
 //! 3. Efficient memory representation
 
+use classic_yaml_core::YamlOperations;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::task::JoinSet;
-use yaml_rust2::{Yaml, YamlLoader};
+use yaml_rust2::YamlLoader;
 
 /// The `YamlDataCore` structure represents the core data configuration for YAML-based game settings and diagnostics.
 /// It stores various pieces of information related to game configurations, crash generation, warnings, mod databases,
@@ -246,129 +247,57 @@ impl YamlDataCore {
             .first()
             .ok_or_else(|| ConfigError::ParseError("Ignore YAML is empty".to_string()))?;
 
-        // Extract values using helper functions
+        // Create YamlOperations instance for using helper methods
+        let yaml_ops = YamlOperations::new();
+
+        // Extract values using helper functions from YamlOperations
         let vr_suffix = if vr_mode { "VR" } else { "" };
 
         // Build the configuration struct
         Ok(Self {
             // Main YAML values
-            classic_version: Self::get_string(main_data, "CLASSIC_Info.version", ""),
-            classic_version_date: Self::get_string(main_data, "CLASSIC_Info.version_date", ""),
-            classic_records_list: Self::get_vec(main_data, "catch_log_records"),
-            autoscan_text: Self::get_string(
+            classic_version: yaml_ops.get_string_value(main_data, "CLASSIC_Info.version", ""),
+            classic_version_date: yaml_ops.get_string_value(main_data, "CLASSIC_Info.version_date", ""),
+            classic_records_list: yaml_ops.get_vec_value(main_data, "catch_log_records"),
+            autoscan_text: yaml_ops.get_string_value(
                 main_data,
                 &format!("CLASSIC_Interface.autoscan_text_{}", game),
                 "",
             ),
 
             // Game YAML values
-            classic_game_hints: Self::get_vec(game_data, "Game_Hints"),
-            crashgen_name: Self::get_string(
+            classic_game_hints: yaml_ops.get_vec_value(game_data, "Game_Hints"),
+            crashgen_name: yaml_ops.get_string_value(
                 game_data,
                 &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix),
                 "",
             ),
-            crashgen_latest_og: Self::get_string(game_data, "Game_Info.CRASHGEN_LatestVer", ""),
-            crashgen_latest_vr: Self::get_string(game_data, "GameVR_Info.CRASHGEN_LatestVer", ""),
-            crashgen_ignore: Self::get_vec(
+            crashgen_latest_og: yaml_ops.get_string_value(game_data, "Game_Info.CRASHGEN_LatestVer", ""),
+            crashgen_latest_vr: yaml_ops.get_string_value(game_data, "GameVR_Info.CRASHGEN_LatestVer", ""),
+            crashgen_ignore: yaml_ops.get_vec_value(
                 game_data,
                 &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix),
             ),
-            warn_noplugins: Self::get_string(game_data, "Warnings_CRASHGEN.Warn_NOPlugins", ""),
-            warn_outdated: Self::get_string(game_data, "Warnings_CRASHGEN.Warn_Outdated", ""),
-            xse_acronym: Self::get_string(game_data, "Game_Info.XSE_Acronym", ""),
-            game_ignore_plugins: Self::get_vec(game_data, "Crashlog_Plugins_Exclude"),
-            game_ignore_records: Self::get_vec(game_data, "Crashlog_Records_Exclude"),
-            suspects_error_list: Self::get_hashmap(game_data, "Crashlog_Error_Check"),
-            suspects_stack_list: Self::get_hashmap(game_data, "Crashlog_Stack_Check"),
-            game_mods_conf: Self::get_hashmap(game_data, "Mods_CONF"),
-            game_mods_core: Self::get_hashmap(game_data, "Mods_CORE"),
-            game_mods_core_folon: Self::get_hashmap(game_data, "Mods_CORE_FOLON"),
-            game_mods_freq: Self::get_hashmap(game_data, "Mods_FREQ"),
-            game_mods_opc2: Self::get_hashmap(game_data, "Mods_OPC2"),
-            game_mods_solu: Self::get_hashmap(game_data, "Mods_SOLU"),
-            game_version: Self::get_string(game_data, "Game_Info.GameVersion", ""),
-            game_version_new: Self::get_string(game_data, "Game_Info.GameVersionNEW", ""),
-            game_version_vr: Self::get_string(game_data, "GameVR_Info.GameVersion", ""),
+            warn_noplugins: yaml_ops.get_string_value(game_data, "Warnings_CRASHGEN.Warn_NOPlugins", ""),
+            warn_outdated: yaml_ops.get_string_value(game_data, "Warnings_CRASHGEN.Warn_Outdated", ""),
+            xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
+            game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
+            game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
+            suspects_error_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Error_Check"),
+            suspects_stack_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Stack_Check"),
+            game_mods_conf: yaml_ops.get_hashmap_value(game_data, "Mods_CONF"),
+            game_mods_core: yaml_ops.get_hashmap_value(game_data, "Mods_CORE"),
+            game_mods_core_folon: yaml_ops.get_hashmap_value(game_data, "Mods_CORE_FOLON"),
+            game_mods_freq: yaml_ops.get_hashmap_value(game_data, "Mods_FREQ"),
+            game_mods_opc2: yaml_ops.get_hashmap_value(game_data, "Mods_OPC2"),
+            game_mods_solu: yaml_ops.get_hashmap_value(game_data, "Mods_SOLU"),
+            game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
+            game_version_new: yaml_ops.get_string_value(game_data, "Game_Info.GameVersionNEW", ""),
+            game_version_vr: yaml_ops.get_string_value(game_data, "GameVR_Info.GameVersion", ""),
 
             // Ignore YAML values
-            ignore_list: Self::get_vec(ignore_data, &format!("CLASSIC_Ignore_{}", game)),
+            ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{}", game)),
         })
-    }
-
-    /// Extract a string value from YAML using a dot-separated key path
-    ///
-    /// # Arguments
-    /// * `data` - YAML data to extract from
-    /// * `key_path` - Dot-separated path (e.g., "parent.child.field")
-    /// * `default` - Default value if key not found
-    ///
-    /// # Returns
-    /// String value or default
-    fn get_string(data: &Yaml, key_path: &str, default: &str) -> String {
-        let keys: Vec<&str> = key_path.split('.').collect();
-        let mut current = data;
-
-        for key in keys {
-            current = &current[key];
-        }
-
-        current.as_str().unwrap_or(default).to_string()
-    }
-
-    /// Extract a vector of strings from YAML using a dot-separated key path
-    ///
-    /// # Arguments
-    /// * `data` - YAML data to extract from
-    /// * `key_path` - Dot-separated path (e.g., "parent.child.array")
-    ///
-    /// # Returns
-    /// Vector of strings, or empty vector if key not found
-    fn get_vec(data: &Yaml, key_path: &str) -> Vec<String> {
-        let keys: Vec<&str> = key_path.split('.').collect();
-        let mut current = data;
-
-        for key in keys {
-            current = &current[key];
-        }
-
-        match current {
-            Yaml::Array(arr) => arr
-                .iter()
-                .filter_map(|item| item.as_str().map(String::from))
-                .collect(),
-            _ => Vec::new(),
-        }
-    }
-
-    /// Extract a hashmap from YAML using a dot-separated key path
-    ///
-    /// # Arguments
-    /// * `data` - YAML data to extract from
-    /// * `key_path` - Dot-separated path (e.g., "parent.child.map")
-    ///
-    /// # Returns
-    /// HashMap of string key-value pairs, or empty map if key not found
-    fn get_hashmap(data: &Yaml, key_path: &str) -> HashMap<String, String> {
-        let keys: Vec<&str> = key_path.split('.').collect();
-        let mut current = data;
-
-        for key in keys {
-            current = &current[key];
-        }
-
-        match current {
-            Yaml::Hash(map) => map
-                .iter()
-                .filter_map(|(k, v)| match (k.as_str(), v.as_str()) {
-                    (Some(key_str), Some(val_str)) => {
-                        Some((key_str.to_string(), val_str.to_string()))
-                    }
-                    _ => None,
-                })
-                .collect(),
-            _ => HashMap::new(),
-        }
     }
 }
 

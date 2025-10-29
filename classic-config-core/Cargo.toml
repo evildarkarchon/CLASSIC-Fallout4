@@ -14,6 +14,9 @@ crate-type = ["rlib"]  # Pure Rust library ONLY - no PyO3
 # CLASSIC shared utilities (provides runtime)
 classic-shared-core = { path = "../classic-shared-core" }
 
+# YAML operations (provides YamlOperations with helpers)
+classic-yaml-core = { path = "../classic-yaml-core" }
+
 # Async runtime (for JoinSet and file I/O)
 tokio = { workspace = true, features = ["full"] }
 

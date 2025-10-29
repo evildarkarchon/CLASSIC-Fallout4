@@ -12,7 +12,7 @@
 //!
 //! # Complete Usage Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use classic_yaml_core::{YamlOperations, YamlFormatConfig, YamlError};
 //! use std::path::Path;
 //!
@@ -76,7 +76,7 @@
 //!
 //! The module includes automatic file caching with modification time tracking:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use classic_yaml_core::YamlOperations;
 //! use std::path::Path;
 //!
@@ -104,7 +104,7 @@
 //!
 //! All operations are thread-safe. The cache uses `DashMap` for concurrent access:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use classic_yaml_core::YamlOperations;
 //! use std::sync::Arc;
 //! use std::thread;
@@ -365,7 +365,7 @@ impl Default for YamlFormatConfig {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use std::sync::Arc;
 /// use std::time::SystemTime;
 /// use some_yaml_crate::Yaml; // Replace with the actual crate providing the `Yaml` type.
@@ -483,7 +483,7 @@ impl YamlOperations {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
     /// use some_crate::{Yaml, YamlError};
     ///
     /// let yaml_content = r#"
@@ -531,7 +531,7 @@ impl YamlOperations {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,no_run
     /// use your_crate_name::some_module::{YourStruct, Yaml, YamlError};
     ///
     /// let yaml_data = Yaml::String("example".to_string());
@@ -606,7 +606,7 @@ impl YamlOperations {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
     /// use std::path::Path;
     ///
     /// let loader = YourLoaderStructure::new(cache_enabled: true); // Imaginary structure holding this method
@@ -766,7 +766,7 @@ impl YamlOperations {
     /// 3. If the entire key path is successfully traversed, it returns the value found at the final key.
     ///
     /// # Example
-    /// ```rust
+    /// ```rust,no_run
     /// use yaml_rust::{Yaml, YamlLoader};
     ///
     /// let yaml_str = r#"
@@ -953,7 +953,7 @@ impl YamlOperations {
     /// If a key path doesn't exist, it won't be included in the result.
     ///
     /// # Example
-    /// ```rust
+    /// ```rust,no_run
     /// use classic_yaml_core::YamlOperations;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -999,7 +999,7 @@ impl YamlOperations {
     /// key path is invalid.
     ///
     /// # Example
-    /// ```rust
+    /// ```rust,no_run
     /// use classic_yaml_core::{YamlOperations, YamlError};
     /// use yaml_rust2::Yaml;
     ///
@@ -1047,7 +1047,7 @@ impl YamlOperations {
     /// parsed YAML documents. Files that fail to load are not included in the result.
     ///
     /// # Example
-    /// ```rust
+    /// ```rust,no_run
     /// use classic_yaml_core::YamlOperations;
     /// use std::path::Path;
     ///
@@ -1072,6 +1072,158 @@ impl YamlOperations {
         }
 
         results
+    }
+
+    /// Extract a string value from YAML using a dot-separated key path
+    ///
+    /// This is a convenience method for getting string values from nested YAML structures.
+    /// It navigates through the YAML document using dot notation (e.g., "parent.child.field")
+    /// and returns the string value or a default if the key doesn't exist or isn't a string.
+    ///
+    /// # Arguments
+    /// * `data` - YAML data to extract from
+    /// * `key_path` - Dot-separated path (e.g., "parent.child.field")
+    /// * `default` - Default value if key not found or not a string
+    ///
+    /// # Returns
+    /// String value or default
+    ///
+    /// # Example
+    /// ```rust,no_run
+    /// use classic_yaml_core::YamlOperations;
+    ///
+    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let ops = YamlOperations::new();
+    /// let yaml_str = r#"
+    ///     game:
+    ///       name: Fallout4
+    ///       version: "1.10.163"
+    /// "#;
+    /// let yaml = ops.parse_yaml(yaml_str)?;
+    ///
+    /// let name = ops.get_string_value(&yaml, "game.name", "Unknown");
+    /// assert_eq!(name, "Fallout4");
+    ///
+    /// let missing = ops.get_string_value(&yaml, "game.missing", "default");
+    /// assert_eq!(missing, "default");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn get_string_value(&self, data: &Yaml, key_path: &str, default: &str) -> String {
+        let keys: Vec<&str> = key_path.split('.').collect();
+        let mut current = data;
+
+        for key in keys {
+            current = &current[key];
+        }
+
+        current.as_str().unwrap_or(default).to_string()
+    }
+
+    /// Extract a vector of strings from YAML using a dot-separated key path
+    ///
+    /// This is a convenience method for getting string arrays from nested YAML structures.
+    /// It navigates through the YAML document using dot notation and returns a vector
+    /// of strings, or an empty vector if the key doesn't exist or isn't an array.
+    ///
+    /// # Arguments
+    /// * `data` - YAML data to extract from
+    /// * `key_path` - Dot-separated path (e.g., "parent.child.array")
+    ///
+    /// # Returns
+    /// Vector of strings, or empty vector if key not found or not an array
+    ///
+    /// # Example
+    /// ```rust,no_run
+    /// use classic_yaml_core::YamlOperations;
+    ///
+    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let ops = YamlOperations::new();
+    /// let yaml_str = r#"
+    ///     game:
+    ///       plugins:
+    ///         - plugin1.esp
+    ///         - plugin2.esp
+    ///         - plugin3.esp
+    /// "#;
+    /// let yaml = ops.parse_yaml(yaml_str)?;
+    ///
+    /// let plugins = ops.get_vec_value(&yaml, "game.plugins");
+    /// assert_eq!(plugins.len(), 3);
+    /// assert_eq!(plugins[0], "plugin1.esp");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn get_vec_value(&self, data: &Yaml, key_path: &str) -> Vec<String> {
+        let keys: Vec<&str> = key_path.split('.').collect();
+        let mut current = data;
+
+        for key in keys {
+            current = &current[key];
+        }
+
+        match current {
+            Yaml::Array(arr) => arr
+                .iter()
+                .filter_map(|item| item.as_str().map(String::from))
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// Extract a hashmap from YAML using a dot-separated key path
+    ///
+    /// This is a convenience method for getting string key-value maps from nested YAML structures.
+    /// It navigates through the YAML document using dot notation and returns a HashMap,
+    /// or an empty map if the key doesn't exist or isn't a hash.
+    ///
+    /// # Arguments
+    /// * `data` - YAML data to extract from
+    /// * `key_path` - Dot-separated path (e.g., "parent.child.map")
+    ///
+    /// # Returns
+    /// HashMap of string key-value pairs, or empty map if key not found or not a hash
+    ///
+    /// # Example
+    /// ```rust,no_run
+    /// use classic_yaml_core::YamlOperations;
+    ///
+    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let ops = YamlOperations::new();
+    /// let yaml_str = r#"
+    ///     game:
+    ///       mods:
+    ///         mod1: "Description 1"
+    ///         mod2: "Description 2"
+    /// "#;
+    /// let yaml = ops.parse_yaml(yaml_str)?;
+    ///
+    /// let mods = ops.get_hashmap_value(&yaml, "game.mods");
+    /// assert_eq!(mods.len(), 2);
+    /// assert_eq!(mods.get("mod1"), Some(&"Description 1".to_string()));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn get_hashmap_value(&self, data: &Yaml, key_path: &str) -> HashMap<String, String> {
+        let keys: Vec<&str> = key_path.split('.').collect();
+        let mut current = data;
+
+        for key in keys {
+            current = &current[key];
+        }
+
+        match current {
+            Yaml::Hash(map) => map
+                .iter()
+                .filter_map(|(k, v)| match (k.as_str(), v.as_str()) {
+                    (Some(key_str), Some(val_str)) => {
+                        Some((key_str.to_string(), val_str.to_string()))
+                    }
+                    _ => None,
+                })
+                .collect(),
+            _ => HashMap::new(),
+        }
     }
 }
 

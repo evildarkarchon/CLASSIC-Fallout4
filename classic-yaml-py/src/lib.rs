@@ -182,6 +182,115 @@ impl PyYamlOperations {
     fn get_cache_stats(&self) -> PyResult<HashMap<String, usize>> {
         Ok(self.inner.get_cache_stats())
     }
+
+    /// Extract a string value from YAML using a dot-separated key path
+    ///
+    /// This is a convenience method for getting string values from nested YAML structures.
+    /// It navigates through the YAML document using dot notation (e.g., "parent.child.field")
+    /// and returns the string value or a default if the key doesn't exist or isn't a string.
+    ///
+    /// # Arguments
+    /// * `data` - YAML data to extract from
+    /// * `key_path` - Dot-separated path (e.g., "parent.child.field")
+    /// * `default` - Default value if key not found or not a string
+    ///
+    /// # Returns
+    /// String value or default
+    ///
+    /// # Example
+    /// ```python
+    /// ops = RustYamlOperations()
+    /// yaml_str = """
+    /// game:
+    ///   name: Fallout4
+    ///   version: "1.10.163"
+    /// """
+    /// data = ops.parse_yaml(yaml_str)
+    ///
+    /// name = ops.get_string_value(data, "game.name", "Unknown")
+    /// # Returns: "Fallout4"
+    ///
+    /// missing = ops.get_string_value(data, "game.missing", "default")
+    /// # Returns: "default"
+    /// ```
+    #[pyo3(signature = (data, key_path, default))]
+    fn get_string_value(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+        default: &str,
+    ) -> PyResult<String> {
+        let yaml = python_to_yaml(py, data)?;
+        Ok(self.inner.get_string_value(&yaml, key_path, default))
+    }
+
+    /// Extract a vector of strings from YAML using a dot-separated key path
+    ///
+    /// This is a convenience method for getting string arrays from nested YAML structures.
+    /// It navigates through the YAML document using dot notation and returns a vector
+    /// of strings, or an empty vector if the key doesn't exist or isn't an array.
+    ///
+    /// # Arguments
+    /// * `data` - YAML data to extract from
+    /// * `key_path` - Dot-separated path (e.g., "parent.child.array")
+    ///
+    /// # Returns
+    /// List of strings, or empty list if key not found or not an array
+    ///
+    /// # Example
+    /// ```python
+    /// ops = RustYamlOperations()
+    /// yaml_str = """
+    /// game:
+    ///   plugins:
+    ///     - plugin1.esp
+    ///     - plugin2.esp
+    ///     - plugin3.esp
+    /// """
+    /// data = ops.parse_yaml(yaml_str)
+    ///
+    /// plugins = ops.get_vec_value(data, "game.plugins")
+    /// # Returns: ["plugin1.esp", "plugin2.esp", "plugin3.esp"]
+    /// ```
+    #[pyo3(signature = (data, key_path))]
+    fn get_vec_value(&self, py: Python<'_>, data: Py<PyAny>, key_path: &str) -> PyResult<Vec<String>> {
+        let yaml = python_to_yaml(py, data)?;
+        Ok(self.inner.get_vec_value(&yaml, key_path))
+    }
+
+    /// Extract a hashmap from YAML using a dot-separated key path
+    ///
+    /// This is a convenience method for getting string key-value maps from nested YAML structures.
+    /// It navigates through the YAML document using dot notation and returns a dict,
+    /// or an empty dict if the key doesn't exist or isn't a hash.
+    ///
+    /// # Arguments
+    /// * `data` - YAML data to extract from
+    /// * `key_path` - Dot-separated path (e.g., "parent.child.map")
+    ///
+    /// # Returns
+    /// Dictionary of string key-value pairs, or empty dict if key not found or not a hash
+    ///
+    /// # Example
+    /// ```python
+    /// ops = RustYamlOperations()
+    /// yaml_str = """
+    /// game:
+    ///   mods:
+    ///     mod1: "Description 1"
+    ///     mod2: "Description 2"
+    /// """
+    /// data = ops.parse_yaml(yaml_str)
+    ///
+    /// mods = ops.get_hashmap_value(data, "game.mods")
+    /// # Returns: {"mod1": "Description 1", "mod2": "Description 2"}
+    /// ```
+    #[pyo3(signature = (data, key_path))]
+    fn get_hashmap_value(&self, py: Python<'_>, data: Py<PyAny>, key_path: &str) -> PyResult<HashMap<String, String>> {
+        let yaml = python_to_yaml(py, data)?;
+        Ok(self.inner.get_hashmap_value(&yaml, key_path))
+    }
 }
 
 /// Convert yaml-rust2 Yaml to Python object
