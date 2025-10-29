@@ -16,6 +16,7 @@ from ClassicLib.FileIOCore import FileIOCore
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
 from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
+from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
 from ClassicLib.ScanGame.ScanModInis import scan_mod_inis_async
 from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
 from ClassicLib.YamlSettingsCache import yaml_settings
@@ -39,19 +40,21 @@ class GameIntegrityOrchestratorCore:
         """Initialize the game integrity orchestrator core."""
         self.file_io = FileIOCore()
 
-    async def generate_game_combined_result_async(self) -> str:
+    async def generate_game_combined_result_async(self) -> tuple[str, list[ConfigIssue]]:
         """
-        Async implementation for generating combined game integrity results.
+        Async implementation for generating combined game integrity results with detected issues.
 
         This function performs a series of validations and scans on the game files
         and documentation directories. It consolidates plugin checks, crash generation
         settings, log errors, and additional configuration validations into a single
-        text result.
+        text result. Additionally, it detects configuration issues without modifying files.
 
         Returns:
-            str: A string summarizing the results of all performed checks and scans.
-            If the necessary paths or directories are not available, an empty string
-            is returned.
+            tuple[str, list[ConfigIssue]]: A tuple containing:
+                - str: A string summarizing the results of all performed checks and scans.
+                - list[ConfigIssue]: List of detected configuration issues.
+            If the necessary paths or directories are not available, an empty tuple
+            with empty string and empty list is returned.
         """
         try:
             # Get required paths
@@ -59,7 +62,7 @@ class GameIntegrityOrchestratorCore:
             game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
 
             if not (game_path and docs_path):
-                return ""
+                return "", []
 
             # Run all checks concurrently with fail-fast behavior
             # If any critical check fails, abort all checks
@@ -89,11 +92,18 @@ class GameIntegrityOrchestratorCore:
                 # Re-raise to propagate the failure
                 raise
 
-            return "".join(valid_results)
+            # Detect configuration issues (read-only, no file modifications)
+            from ClassicLib.ScanGame.Config import ConfigFileCache
+            from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
+
+            config_cache = ConfigFileCache()
+            detected_issues = await detect_all_ini_issues_async(config_cache)
+
+            return "".join(valid_results), detected_issues
 
         except (OSError, RuntimeError) as e:
             logger.error(f"Error in generate_game_combined_result_async: {e}")
-            return ""
+            return "", []
 
     @staticmethod
     async def generate_mods_combined_result_async() -> str:
@@ -173,7 +183,7 @@ class GameIntegrityOrchestratorCore:
                 mods_task = tg.create_task(self.generate_mods_combined_result_async())
 
             # Both reports generated successfully - combine and write
-            game_result = game_task.result()
+            game_result, _ = game_task.result()  # Unpack tuple, discard issues list
             mods_result = mods_task.result()
 
             # Write the combined results to file
@@ -306,16 +316,18 @@ def get_game_integrity_orchestrator_core() -> GameIntegrityOrchestratorCore:
 
 
 # Async-first interfaces
-async def generate_game_combined_result_async() -> str:
+async def generate_game_combined_result_async() -> tuple[str, list[ConfigIssue]]:
     """
-    Generates the combined result of the game asynchronously.
+    Generates the combined result of the game asynchronously with detected issues.
 
     This function interacts with the game integrity orchestrator core to
     generate and retrieve the combined result of the game in an asynchronous
-    manner.
+    manner, along with any detected configuration issues.
 
     Returns:
-        str: The combined result of the game.
+        tuple[str, list[ConfigIssue]]: A tuple containing:
+            - str: The combined result of the game.
+            - list[ConfigIssue]: List of detected configuration issues.
     """
     core = get_game_integrity_orchestrator_core()
     return await core.generate_game_combined_result_async()
@@ -354,22 +366,25 @@ async def write_combined_results_async() -> None:
 
 
 # Sync adapters for backwards compatibility
-def generate_game_combined_result() -> str:
+def generate_game_combined_result() -> tuple[str, list[ConfigIssue]]:
     """
-    Sync adapter for generating combined game integrity results.
+    Sync adapter for generating combined game integrity results with detected issues.
 
-    Generates a combined result summarizing game-related checks and scans.
+    Generates a combined result summarizing game-related checks and scans,
+    along with any detected configuration issues.
 
     This function performs a series of validations and scans on the game files
     and documentation directories. It consolidates plugin checks, crash generation
     settings, log errors, and additional configuration validations into a single
-    text result. The returned result can be used for diagnostics or reporting
-    purposes.
+    text result. Additionally, it detects configuration issues without modifying files.
+    The returned result can be used for diagnostics or reporting purposes.
 
     Returns:
-        str: A string summarizing the results of all performed checks and scans.
-        If the necessary paths or directories are not available, an empty string
-        is returned.
+        tuple[str, list[ConfigIssue]]: A tuple containing:
+            - str: A string summarizing the results of all performed checks and scans.
+            - list[ConfigIssue]: List of detected configuration issues.
+        If the necessary paths or directories are not available, an empty tuple
+        with empty string and empty list is returned.
     """
     bridge = AsyncBridge.get_instance()
     return bridge.run_async(generate_game_combined_result_async())

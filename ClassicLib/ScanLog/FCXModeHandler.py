@@ -31,6 +31,7 @@ class FCXModeHandlerFragments:
     _fcx_checks_run: ClassVar[bool] = False
     _main_files_result: ClassVar[str] = ""
     _game_files_result: ClassVar[str] = ""
+    _detected_issues: ClassVar[list] = []  # List of ConfigIssue objects
 
     def __init__(self, fcx_mode: bool | None) -> None:
         """
@@ -52,6 +53,9 @@ class FCXModeHandlerFragments:
         checks for main and game files are executed. If the FCX mode is disabled, the checks are
         bypassed, and default messages are assigned.
 
+        In FCX mode, this method now also detects configuration issues without modifying files,
+        storing detected issues in the class-level _detected_issues list for reporting.
+
         Raises:
             ImportError: Raised when necessary external modules fail to import during execution.
         """
@@ -60,8 +64,8 @@ class FCXModeHandlerFragments:
                 from ClassicLib.ScanGame import generate_game_combined_result as scan_game_files
             except ImportError:
                 # Fallback if the function doesn't exist
-                def scan_game_files() -> str:
-                    return "Game files check not available\n"
+                def scan_game_files() -> tuple[str, list]:
+                    return "Game files check not available\n", []
 
             from ClassicLib.SetupCoordinator import SetupCoordinator
 
@@ -72,7 +76,9 @@ class FCXModeHandlerFragments:
                     # Run the checks once and store results in class variables
                     coordinator = SetupCoordinator()
                     FCXModeHandlerFragments._main_files_result = coordinator.generate_combined_results()
-                    FCXModeHandlerFragments._game_files_result = scan_game_files()
+                    # Unpack tuple: scan_game_files now returns (report_text, detected_issues)
+                    FCXModeHandlerFragments._game_files_result, FCXModeHandlerFragments._detected_issues = scan_game_files()
+
                     FCXModeHandlerFragments._fcx_checks_run = True
 
             # Always assign the stored results to instance variables
@@ -92,6 +98,7 @@ class FCXModeHandlerFragments:
             cls._fcx_checks_run = False
             cls._main_files_result = ""
             cls._game_files_result = ""
+            cls._detected_issues = []
 
     def get_fcx_messages(self) -> ReportFragment:
         """
@@ -101,9 +108,12 @@ class FCXModeHandlerFragments:
         regarding FCX Mode being enabled or disabled. The messages include guidance
         for enabling/disabling the mode and additional checks if necessary.
 
+        When FCX mode is enabled, detected configuration issues are included in the
+        report with current vs. recommended values and file paths.
+
         Returns:
             ReportFragment: An object containing the generated messages as lines,
-            reflecting the current FCX mode status and associated checks.
+            reflecting the current FCX mode status, associated checks, and detected issues.
         """
         lines = []
 
@@ -116,6 +126,13 @@ class FCXModeHandlerFragments:
                 lines.append(self.main_files_check)
             if self.game_files_check:
                 lines.append(self.game_files_check)
+
+            # Add detected configuration issues section if any issues were found
+            if FCXModeHandlerFragments._detected_issues:
+                lines.append("\n--- DETECTED CONFIGURATION ISSUES ---\n\n")
+                for issue in FCXModeHandlerFragments._detected_issues:
+                    # Each ConfigIssue has a format_report() method that returns formatted text
+                    lines.append(issue.format_report())
         else:
             lines.extend([
                 "* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n\n",

@@ -1,13 +1,90 @@
-//! FCX Mode Handler - FCX mode state management and message generation
+//! FCX Mode Handler - Read-only FCX mode state management and message generation
 //!
 //! This module handles FCX (File Check eXtended) mode operations:
 //! - Managing FCX mode enabled/disabled state
 //! - Generating appropriate FCX mode messages
 //! - Collecting file check results (delegated to Python for complex imports)
+//!
+//! **Important**: FCX mode operates in read-only mode - it detects configuration issues
+//! but does not modify any files. All detected issues are reported with recommendations
+//! for manual fixes.
 
 use crate::report::ReportFragment;
 
-/// FCX Mode Handler for managing file check operations
+/// Configuration issue detected by FCX mode
+#[derive(Clone, Debug)]
+pub struct ConfigIssue {
+    /// Path to the configuration file
+    pub file_path: String,
+
+    /// INI section name (None for TOML or non-sectioned files)
+    pub section: Option<String>,
+
+    /// Setting/key name
+    pub setting: String,
+
+    /// Current value in the file
+    pub current_value: String,
+
+    /// Recommended value to fix the issue
+    pub recommended_value: String,
+
+    /// Human-readable description of the issue
+    pub description: String,
+
+    /// Issue severity level ("error", "warning", "info")
+    pub severity: String,
+}
+
+impl ConfigIssue {
+    /// Create a new configuration issue
+    pub fn new(
+        file_path: String,
+        section: Option<String>,
+        setting: String,
+        current_value: String,
+        recommended_value: String,
+        description: String,
+        severity: String,
+    ) -> Self {
+        Self {
+            file_path,
+            section,
+            setting,
+            current_value,
+            recommended_value,
+            description,
+            severity,
+        }
+    }
+
+    /// Format issue as human-readable report section
+    pub fn format_report(&self) -> String {
+        let icon = match self.severity.as_str() {
+            "error" => "❌",
+            "warning" => "⚠️",
+            "info" => "ℹ️",
+            _ => "⚠️",
+        };
+
+        let section_str = self.section.as_ref()
+            .map(|s| format!("[{}]", s))
+            .unwrap_or_else(|| "N/A".to_string());
+
+        format!(
+            "{} DETECTED ISSUE: {}\n   File: {}\n   Section: {}\n   Setting: {}\n   Current Value: {}\n   Recommended Value: {}\n\n",
+            icon,
+            self.description,
+            self.file_path,
+            section_str,
+            self.setting,
+            self.current_value,
+            self.recommended_value
+        )
+    }
+}
+
+/// FCX Mode Handler for managing file check operations (read-only)
 #[derive(Clone, Debug)]
 pub struct FcxModeHandler {
     /// Whether FCX mode is enabled
@@ -18,6 +95,9 @@ pub struct FcxModeHandler {
 
     /// Game files check result (from Python)
     pub game_files_check: Option<String>,
+
+    /// Detected configuration issues (read-only detection)
+    pub detected_issues: Vec<ConfigIssue>,
 }
 
 impl FcxModeHandler {
@@ -47,6 +127,7 @@ impl FcxModeHandler {
             fcx_mode,
             main_files_check: None,
             game_files_check: None,
+            detected_issues: Vec::new(),
         }
     }
 
@@ -64,6 +145,30 @@ impl FcxModeHandler {
     ///     result: Game files check result string
     pub fn set_game_files_result(&mut self, result: String) {
         self.game_files_check = Some(result);
+    }
+
+    /// Add a detected configuration issue
+    ///
+    /// Args:
+    ///     issue: ConfigIssue to add to the detected issues list
+    pub fn add_issue(&mut self, issue: ConfigIssue) {
+        self.detected_issues.push(issue);
+    }
+
+    /// Set detected configuration issues (replaces existing list)
+    ///
+    /// Args:
+    ///     issues: Vector of ConfigIssue objects
+    pub fn set_detected_issues(&mut self, issues: Vec<ConfigIssue>) {
+        self.detected_issues = issues;
+    }
+
+    /// Get reference to detected issues
+    ///
+    /// Returns:
+    ///     Reference to the vector of detected issues
+    pub fn get_detected_issues(&self) -> &[ConfigIssue] {
+        &self.detected_issues
     }
 
     /// Generate FCX mode messages based on current state
@@ -88,6 +193,14 @@ impl FcxModeHandler {
             if let Some(ref game_check) = self.game_files_check {
                 if !game_check.is_empty() {
                     lines.push(game_check.clone());
+                }
+            }
+
+            // Add detected configuration issues section if any issues were found
+            if !self.detected_issues.is_empty() {
+                lines.push("\n--- DETECTED CONFIGURATION ISSUES ---\n\n".to_string());
+                for issue in &self.detected_issues {
+                    lines.push(issue.format_report());
                 }
             }
         } else {
@@ -132,6 +245,7 @@ impl FcxModeHandler {
     pub fn reset(&mut self) {
         self.main_files_check = None;
         self.game_files_check = None;
+        self.detected_issues.clear();
     }
 
     /// Create a disabled FCX handler (convenience constructor)
@@ -140,6 +254,7 @@ impl FcxModeHandler {
             fcx_mode: false,
             main_files_check: None,
             game_files_check: None,
+            detected_issues: Vec::new(),
         }
     }
 
@@ -149,6 +264,7 @@ impl FcxModeHandler {
             fcx_mode: true,
             main_files_check: None,
             game_files_check: None,
+            detected_issues: Vec::new(),
         }
     }
 }

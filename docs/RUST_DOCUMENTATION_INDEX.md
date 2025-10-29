@@ -183,9 +183,26 @@ Complete guide for developing the Slint-based Rust GUI.
 - Building and running the GUI
 - Troubleshooting GUI issues
 
+#### 11. [FCX Mode Read-Only Conversion](implementation/fcx_read_only_conversion.md)
+Implementation plan and documentation for converting FCX mode to read-only operation.
+
+**Perfect for:**
+- Understanding the FCX mode refactoring
+- Learning about the shift from auto-fix to read-only reporting
+- Following the implementation phases and changes
+- Reviewing API changes and breaking changes
+
+**Topics Covered:**
+- Rationale for read-only conversion
+- Implementation phases (data models, detection, removal of write operations)
+- Report format changes (before/after examples)
+- Breaking changes and migration notes
+- Testing strategies for read-only behavior
+- Documentation updates
+
 ### 📊 Strategic Documentation
 
-#### 11. [Rust Migration Plan](../RUST_MIGRATION_PLAN.md) - **COMPLETED ✅**
+#### 12. [Rust Migration Plan](../RUST_MIGRATION_PLAN.md) - **COMPLETED ✅**
 Complete strategic migration plan with final results and achievements.
 
 **Status:** PHASE 6 COMPLETE - All objectives exceeded
@@ -203,7 +220,7 @@ Complete strategic migration plan with final results and achievements.
 - Success metrics and final impact analysis
 - Lessons learned and future roadmap
 
-#### 12. [Project Integration Guide](../CLAUDE.md)
+#### 13. [Project Integration Guide](../CLAUDE.md)
 Updated project guide with comprehensive Rust acceleration information.
 
 **Enhanced with:**
@@ -216,7 +233,7 @@ Updated project guide with comprehensive Rust acceleration information.
 
 ### 🔧 Technical Reference
 
-#### 13. [Rust Architecture Overview](rust/rust_architecture.md)
+#### 14. [Rust Architecture Overview](rust/rust_architecture.md)
 Comprehensive overview of the Rust architecture, module structure, and integration patterns.
 
 **Topics Covered:**
@@ -226,7 +243,7 @@ Comprehensive overview of the Rust architecture, module structure, and integrati
 - Integration with Python components
 - Building and development workflows
 
-#### 14. [Native Async Pattern Guide](rust/rust_async_pattern.md)
+#### 15. [Native Async Pattern Guide](rust/rust_async_pattern.md)
 Detailed documentation of our native async solution that replaces PyO3-asyncio.
 
 **Topics Covered:**
@@ -237,7 +254,7 @@ Detailed documentation of our native async solution that replaces PyO3-asyncio.
 - Performance benchmarks and comparisons
 - Best practices and troubleshooting
 
-#### 15. [Detailed Module Documentation](rust/rust_modules_detailed.md)
+#### 16. [Detailed Module Documentation](rust/rust_modules_detailed.md)
 In-depth documentation for each Rust module with API references and examples.
 
 **Modules Documented:**
@@ -246,7 +263,7 @@ In-depth documentation for each Rust module with API references and examples.
 - ScanLog module (pattern matching, FormID analysis, 20-150x improvements)
 - Utils module (string processing, performance monitoring)
 
-#### 16. [Parser Module Deep Dive](rust/rust_parser_module.md)
+#### 17. [Parser Module Deep Dive](rust/rust_parser_module.md)
 Specialized documentation for the high-performance parser module.
 
 **Topics Covered:**
@@ -257,7 +274,7 @@ Specialized documentation for the high-performance parser module.
 
 ### 🔧 PyO3 0.26.0 Integration (Current)
 
-#### 17. [PyO3 0.26.0 Migration Guide](rust/pyo3_0.26_migration_guide.md) - **MIGRATION COMPLETE ✅**
+#### 18. [PyO3 0.26.0 Migration Guide](rust/pyo3_0.26_migration_guide.md) - **MIGRATION COMPLETE ✅**
 Comprehensive guide for PyO3 0.26.0 migration completed on September 27, 2025.
 
 **Perfect for:**
@@ -282,7 +299,7 @@ Comprehensive guide for PyO3 0.26.0 migration completed on September 27, 2025.
 - ✅ Python API 100% backward compatible
 - ✅ No performance regressions
 
-#### 18. [PyO3 Quick Reference](rust/pyo3_quick_reference.md)
+#### 19. [PyO3 Quick Reference](rust/pyo3_quick_reference.md)
 Quick reference guide for common PyO3 patterns and idioms.
 
 **Perfect for:**

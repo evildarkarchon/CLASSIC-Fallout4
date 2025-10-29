@@ -113,11 +113,14 @@ def game_combined_result() -> str:
     Generates a combined result summarizing game-related checks and scans.
 
     This function delegates to the new GameIntegrityOrchestrator module.
+    Note: This wrapper maintains backward compatibility by unpacking the tuple
+    and returning only the report text, discarding detected issues.
 
     Returns:
         str: A string summarizing the results of all performed checks and scans.
     """
-    return generate_game_combined_result()
+    report_text, _ = generate_game_combined_result()  # Unpack tuple, discard issues
+    return report_text
 
 
 def mods_combined_result() -> str:

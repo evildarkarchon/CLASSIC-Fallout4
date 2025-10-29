@@ -13,8 +13,9 @@ import pytest
 
 from ClassicLib.ScanGame.Config import ConfigFileCache
 from ClassicLib.ScanGame.ScanModInis import (
-    apply_ini_fix_async,
     check_vsync_settings_async,
+    detect_all_ini_issues_async,
+    detect_ini_issue_async,
     scan_mod_inis,
     scan_mod_inis_async,
 )
@@ -37,10 +38,11 @@ class TestAsyncINIScanning:
             # Mock the async helper functions
             with patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=AsyncMock), \
                  patch("ClassicLib.ScanGame.ScanModInis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync, \
-                 patch("ClassicLib.ScanGame.ScanModInis.apply_all_ini_fixes_async", new_callable=AsyncMock), \
+                 patch("ClassicLib.ScanGame.ScanModInis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect, \
                  patch("ClassicLib.ScanGame.ScanModInis.check_duplicate_files"):
 
                 mock_vsync.return_value = []
+                mock_detect.return_value = []  # No issues detected
                 result = await scan_mod_inis_async()
 
                 # Verify result is a string
@@ -58,11 +60,12 @@ class TestAsyncINIScanning:
 
             with patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=AsyncMock), \
                  patch("ClassicLib.ScanGame.ScanModInis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync, \
-                 patch("ClassicLib.ScanGame.ScanModInis.apply_all_ini_fixes_async", new_callable=AsyncMock), \
+                 patch("ClassicLib.ScanGame.ScanModInis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect, \
                  patch("ClassicLib.ScanGame.ScanModInis.check_duplicate_files"):
 
                 # Mock VSync settings found
                 mock_vsync.return_value = ["enblocal.ini | SETTING: ForceVSync\n"]
+                mock_detect.return_value = []  # No issues detected
                 result = await scan_mod_inis_async()
 
                 # Verify VSync notice is in result
@@ -91,30 +94,6 @@ class TestAsyncINIScanning:
         # Verify VSync was detected
         assert len(result) == 1
         assert "ForceVSync" in result[0]
-
-    @pytest.mark.asyncio
-    async def test_apply_ini_fix_async(self):
-        """Test async INI fix application."""
-        mock_cache = MagicMock()
-        mock_cache.set = MagicMock()
-        mock_cache.__getitem__ = MagicMock(return_value=Path("test/f4ee.ini"))
-
-        message_list = []
-
-        await apply_ini_fix_async(
-            mock_cache,
-            "f4ee.ini",
-            "CharGen",
-            "bUnlockHeadParts",
-            1,
-            "INI HEAD PARTS UNLOCK",
-            message_list
-        )
-
-        # Verify fix was applied with correct signature (includes type parameter)
-        mock_cache.set.assert_called_once_with(int, "f4ee.ini", "CharGen", "bUnlockHeadParts", 1)
-        assert len(message_list) == 1
-        assert "Head Parts Unlock" in message_list[0]
 
     def test_scan_mod_inis_sync_wrapper(self):
         """Test synchronous wrapper calls async version correctly."""

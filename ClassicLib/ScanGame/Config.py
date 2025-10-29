@@ -441,6 +441,70 @@ class ConfigFileCache:
         except (configparser.NoSectionError, configparser.NoOptionError):
             return None
 
+    async def detect_issue[T](
+        self,
+        value_type: type[T],
+        file_name_lower: str,
+        section: str,
+        setting: str,
+        recommended_value: T,
+        description: str,
+        condition_check: Any,
+        severity: str = "warning",
+    ) -> Any | None:
+        """
+        Detect a configuration issue without modifying the file.
+
+        This method checks if a configuration setting meets a specific condition
+        and, if so, creates a ConfigIssue report with the current value,
+        recommended value, and description.
+
+        Args:
+            value_type: The expected data type of the configuration value (str, bool, int, float).
+            file_name_lower: The file name of the configuration file, in lowercase.
+            section: The section of the configuration file where the setting is located.
+            setting: The key of the configuration setting to check.
+            recommended_value: The value that should be set to resolve the issue.
+            description: Human-readable description of the issue.
+            condition_check: A callable that takes the current value and returns True if
+                there's an issue, False otherwise.
+            severity: Issue severity level ("error", "warning", "info"). Defaults to "warning".
+
+        Returns:
+            ConfigIssue object if an issue is detected, None otherwise.
+
+        Example:
+            >>> issue = await config_cache.detect_issue(
+            ...     int, "epo.ini", "Particles", "iMaxDesired", 5000,
+            ...     "High particle count can cause crashes",
+            ...     lambda val: int(val) > 5000
+            ... )
+        """
+        from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
+
+        # Get current value
+        current_value = await self.get_async(value_type, file_name_lower, section, setting)
+
+        if current_value is None:
+            # Setting doesn't exist - not an issue to report
+            return None
+
+        # Check if condition is met (indicating an issue)
+        if not condition_check(current_value):
+            # No issue detected
+            return None
+
+        # Issue detected - create ConfigIssue object
+        return ConfigIssue(
+            file_path=self._config_files[file_name_lower],
+            section=section,
+            setting=setting,
+            current_value=str(current_value),
+            recommended_value=str(recommended_value),
+            description=description,
+            severity=severity,  # type: ignore[arg-type]
+        )
+
     def get_strict[T](self, value_type: type[T], file: str, section: str, setting: str) -> T:
         """
         Fetches a configuration value with a strict fallback mechanism. If the value is not found, returns
@@ -481,50 +545,6 @@ class ConfigFileCache:
         if value_type is float:
             return 0.0  # type: ignore[return-value]
         raise NotImplementedError
-
-    def set[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str, value: T) -> None:
-        """
-        Sets a configuration value in a specified section and setting with a given type, and writes it to
-        the corresponding configuration file.
-
-        Processes the configuration value based on its type, checks the existence of the configuration
-        file in cache or loads it if not present, and updates or adds a new setting within the
-        specified section of the configuration. The updated configuration is saved unless the system
-        is in test mode.
-
-        Args:
-            value_type: The type of the value to be set. It must be one of the supported types:
-                str, bool, int, or float.
-            file_name_lower: The lowercased name of the configuration file to be updated.
-            section: The name of the configuration section where the setting resides.
-            setting: The specific setting to be updated or added within the section.
-            value: The value to set for the specified setting. The type of the value must correspond
-                to the provided value_type.
-
-        Raises:
-            NotImplementedError: If the provided value_type is not one of the supported types.
-        """
-        if value_type is not str and value_type is not bool and value_type is not int and value_type is not float:
-            raise NotImplementedError
-
-        if file_name_lower not in self._config_file_cache:
-            try:
-                self._load_config(file_name_lower)
-            except FileNotFoundError:
-                logger.debug(f"Config file not found: {file_name_lower}")
-                msg_error(f"Config file not found: {file_name_lower}")
-                return
-
-        cache: ConfigFile = self._config_file_cache[file_name_lower]
-        config: iniparse.ConfigParser = cache["settings"]
-        value = ("true" if value else "false") if value_type is bool else str(value)  # type: ignore[assignment]
-        if not config.has_section(section):
-            config.add_section(section)
-        config.set(section, setting, value)
-
-        if not TEST_MODE:
-            with cache["path"].open("w", encoding=cache["encoding"], newline="") as f:
-                config.write(f)
 
     def has(self, file_name_lower: str, section: str, setting: str) -> bool:
         """

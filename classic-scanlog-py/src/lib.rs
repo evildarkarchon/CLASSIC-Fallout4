@@ -95,7 +95,7 @@ pub mod settings_validator;
 pub mod suspect_scanner;
 
 // Re-export all public types
-pub use fcx_handler::PyFcxModeHandler;
+pub use fcx_handler::{PyConfigIssue, PyFcxModeHandler};
 pub use formid::{PyFormIDAnalyzer, PyRustFormIDAnalyzer};
 pub use formid_analyzer::{
     extract_formids_batch, is_valid_formid, validate_formids_batch, PyFormIDAnalyzerCore,
@@ -159,6 +159,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Validators and handlers
     m.add_class::<PySettingsValidator>()?;
+    m.add_class::<PyConfigIssue>()?;
     m.add_class::<PyFcxModeHandler>()?;
 
     // Orchestrator
@@ -216,6 +217,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Validators and handlers
     m.add_class::<PySettingsValidator>()?;
+    m.add_class::<PyConfigIssue>()?;
     m.add_class::<PyFcxModeHandler>()?;
 
     // Orchestrator

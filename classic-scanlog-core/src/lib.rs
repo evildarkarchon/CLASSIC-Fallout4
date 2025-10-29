@@ -30,7 +30,7 @@ pub mod suspect_scanner;
 
 // Re-export key types for convenience
 pub use error::ScanLogError;
-pub use fcx_handler::FcxModeHandler;
+pub use fcx_handler::{ConfigIssue, FcxModeHandler};
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
 pub use formid_analyzer::{
     extract_formids_batch, is_valid_formid, validate_formids_batch, FormIDAnalyzerCore,

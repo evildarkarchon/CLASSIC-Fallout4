@@ -255,3 +255,4 @@ All maintain backward compatibility through re-exports.
 - **NO MIXED CRATES**: Never combine business logic with PyO3 bindings in the same crate
 - **Slint AsyncBridge pattern** (2025-10-11): ALWAYS use `AsyncBridge::run_with_ui_update()` for async operations in Slint GUI
 - **Rust documentation requirement** (2025-10-23): ALL new Rust code MUST be fully documented. Missing documentation warnings are treated as errors.
+- **FCX mode read-only** (2025-10-29): FCX mode now operates in read-only mode - it detects configuration issues but never modifies files. All detected issues are reported with current vs. recommended values. Auto-fix functions (`apply_ini_fix_async`, `apply_all_ini_fixes_async`, `ConfigFileCache.set()`) have been removed. Use new detection functions (`detect_ini_issue_async`, `detect_all_ini_issues_async`, `ConfigFileCache.detect_issue()`) for read-only issue detection.

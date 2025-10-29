@@ -426,6 +426,12 @@ class OrchestratorCore:
 
         composer = ReportComposer()
 
+        # Pre-lowercase crashlog_plugins once to avoid redundant conversions
+        # Each detect_mods_* function will use _convert_to_lowercase internally,
+        # but lowercasing already-lowercase keys is much cheaper than lowercasing
+        # the original dict 5 times
+        crashlog_plugins_lower = {k.lower(): v for k, v in crashlog_plugins.items()}
+
         # Run mod detection based on plugins loaded status
         mod_checks_time = 0.0
         plugin_match_time = 0.0
@@ -436,38 +442,38 @@ class OrchestratorCore:
 
             # Check for conflicting mods with conditional header
             conflict_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins), "CONFLICT (TOGETHER)"
+                lambda: detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins_lower), "CONFLICT (TOGETHER)"
             )
             composer.add(conflict_fragment)
 
             # Check for frequently problematic mods with conditional header
             freq_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins), "FREQUENTLY CRASH"
+                lambda: detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins_lower), "FREQUENTLY CRASH"
             )
             composer.add(freq_fragment)
 
             # Check for mods with known solutions with conditional header
             solution_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins), "HAVE SOLUTIONS"
+                lambda: detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins_lower), "HAVE SOLUTIONS"
             )
             composer.add(solution_fragment)
 
             # Check FOLON-specific mods if Fallout: London is loaded
-            is_folon_loaded = any("londonworldspace.esm" in plugin_name.lower() for plugin_name in crashlog_plugins)
+            is_folon_loaded = any("londonworldspace.esm" in plugin_name for plugin_name in crashlog_plugins_lower)
             if is_folon_loaded and self.yamldata.game_mods_core_folon:
                 important_fragment = detect_mods_important(
-                    self.yamldata.game_mods_core_folon, crashlog_plugins, crashlog_gpu_rival, xse_modules
+                    self.yamldata.game_mods_core_folon, crashlog_plugins_lower, crashlog_gpu_rival, xse_modules
                 )
             else:
                 # Check for important core mods with GPU considerations
                 important_fragment = detect_mods_important(
-                    self.yamldata.game_mods_core, crashlog_plugins, crashlog_gpu_rival, xse_modules
+                    self.yamldata.game_mods_core, crashlog_plugins_lower, crashlog_gpu_rival, xse_modules
                 )
             composer.add(important_fragment)
 
             # Check for OPC2 mods with conditional header
             opc2_fragment = ConditionalSection.with_header(
-                lambda: detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins),
+                lambda: detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins_lower),
                 "ARE OUTDATED, REDUNDANT, OR HAVE COMMUNITY PATCHES",
             )
             composer.add(opc2_fragment)
@@ -475,17 +481,17 @@ class OrchestratorCore:
             mod_checks_time = time.perf_counter() - mod_start
 
         # Plugin suspect scanning (plugins found in crash stack)
-        if trigger_plugins_loaded and crashlog_plugins:
+        if trigger_plugins_loaded and crashlog_plugins_lower:
             plugin_start = time.perf_counter()
 
             # Convert callstack to lowercase for matching
             segment_callstack_lower = [line.lower() for line in segment_callstack]
-            # Convert plugins to lowercase set for matching
-            crashlog_plugins_lower = {plugin.lower() for plugin in crashlog_plugins}
+            # Create set of plugin names from already-lowercased dict
+            crashlog_plugins_lower_set = set(crashlog_plugins_lower.keys())
 
             # Run plugin matching and add with conditional header
             plugin_fragment = ConditionalSection.with_header(
-                lambda: self.plugin_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower),
+                lambda: self.plugin_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower_set),
                 header_text=None,  # plugin_match has its own header logic
                 header_generator=self.report_generator.generate_plugin_suspect_header,
             )
@@ -666,7 +672,9 @@ class OrchestratorCore:
 
         # Check for loadorder.txt (async file check for better concurrency)
         loadorder_path = Path("loadorder.txt")
-        if loadorder_path.exists():
+        # Use asyncio.to_thread for non-blocking filesystem check
+        loadorder_exists = await asyncio.to_thread(loadorder_path.exists)
+        if loadorder_exists:
             # Use async file reading for loadorder.txt (30-40% reduction in blocking)
             loadorder_plugins, trigger_plugins_loaded, _loadorder_fragment = await self._load_loadorder_async(loadorder_path)
             plugins = plugins | loadorder_plugins
@@ -770,7 +778,10 @@ class OrchestratorCore:
         Returns:
             Reformatted lines ready for parsing
         """
-        processed_lines_reversed: list[str] = []
+        from collections import deque
+
+        # Use deque for O(1) prepend operations instead of list append + reverse
+        processed_lines: deque[str] = deque()
         in_plugins_section = True  # State for tracking if currently in the PLUGINS section
 
         # Iterate over lines from bottom to top to correctly handle PLUGINS section logic
@@ -780,7 +791,7 @@ class OrchestratorCore:
 
             # Condition for removing lines if Simplify Logs is enabled
             if self.simplify_logs and any(string in line for string in self.remove_list):
-                # Skip this line by not adding it to processed_lines_reversed
+                # Skip this line by not adding it to processed_lines
                 continue
 
             # Condition for reformatting lines within the PLUGINS section
@@ -793,18 +804,18 @@ class OrchestratorCore:
                     # Only modify if spaces exist
                     if " " in fid:
                         modified_line: str = f"{indent}[{fid.replace(' ', '0')}]{name}"
-                        processed_lines_reversed.append(modified_line)
+                        processed_lines.appendleft(modified_line)
                     else:
-                        processed_lines_reversed.append(line)
+                        processed_lines.appendleft(line)
                 except ValueError:
                     # If line format is unexpected, keep original line
-                    processed_lines_reversed.append(line)
+                    processed_lines.appendleft(line)
             else:
                 # Line is not removed or modified, keep as is
-                processed_lines_reversed.append(line)
+                processed_lines.appendleft(line)
 
-        # The processed_lines_reversed list is in reverse order, so reverse it back
-        return list(reversed(processed_lines_reversed))
+        # Convert deque to list (no reversal needed since we used appendleft)
+        return list(processed_lines)
 
     @staticmethod
     def _parse_crashgen_settings(segment_crashgen: list[str]) -> dict[str, bool | int | str]:

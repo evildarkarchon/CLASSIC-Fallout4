@@ -65,8 +65,8 @@ async def scan_mod_inis_async() -> str:
     # Check for VSync settings in various files
     vsync_list: list[str] = await check_vsync_settings_async(config_files)
 
-    # Apply fixes to various INI files
-    await apply_all_ini_fixes_async(config_files, message_list)
+    # Note: FCX mode previously auto-fixed INI files here, but now operates in read-only mode.
+    # Configuration issues are detected and reported by FCXModeHandler instead.
 
     # Report VSync settings if found
     if vsync_list:
@@ -165,99 +165,163 @@ async def check_vsync_settings_async(config_files: ConfigFileCache) -> list[str]
     return vsync_list
 
 
-def apply_ini_fix(
+async def detect_ini_issue_async(
     config_files: ConfigFileCache,
     file_name_lower: str,
     section: str,
     setting: str,
-    value: Any,
-    fix_name: str,
-    message_list: list[str],
-) -> None:
-    """Sync wrapper for backward compatibility."""
-    from ClassicLib.AsyncBridge import AsyncBridge
-
-    bridge = AsyncBridge.get_instance()
-    return bridge.run_async(apply_ini_fix_async(config_files, file_name_lower, section, setting, value, fix_name, message_list))
-
-
-async def apply_ini_fix_async(
-    config_files: ConfigFileCache,
-    file_name: str,
-    section: str,
-    setting: str,
-    value: Any,
-    fix_description: str,
-    message_list: list[str],
-) -> None:
+    value_type: type,
+    recommended_value: Any,
+    condition_check: Any,
+    description: str,
+    severity: str = "warning",
+) -> Any | None:
     """
-    Applies a fix to an INI configuration by updating the specified setting with a new value.
+    Detect a configuration issue in an INI file without modifying it.
 
-    This function modifies the specified INI configuration file by setting the provided value
-    for a given section and setting. It logs the performed fix and appends a corresponding
-    message to the provided list of messages.
+    This function checks if a configuration setting meets a specific condition
+    and, if so, creates a ConfigIssue report with the current value,
+    recommended value, and description.
 
     Args:
-        config_files: The configuration file cache used to manage INI configurations.
-        file_name: The name of the configuration file to update.
+        config_files: The configuration file cache used to check INI configurations.
+        file_name_lower: The lowercase name of the configuration file to check.
         section: The section in the INI file where the setting resides.
-        setting: The specific setting within the section to be updated.
-        value: The new value to be set for the specified setting.
-        fix_description: A textual description of the fix being performed.
-        message_list: A list to which a formatted message about the performed fix is appended.
+        setting: The specific setting within the section to check.
+        value_type: The expected type of the configuration value (str, bool, int, float).
+        recommended_value: The value that should be set to resolve the issue.
+        condition_check: A callable that takes the current value and returns True if
+            there's an issue, False otherwise.
+        description: Human-readable description of the issue.
+        severity: Issue severity level ("error", "warning", "info"). Defaults to "warning".
+
+    Returns:
+        ConfigIssue object if an issue is detected, None otherwise.
+
+    Example:
+        >>> issue = await detect_ini_issue_async(
+        ...     config_files, "epo.ini", "Particles", "iMaxDesired", int, 5000,
+        ...     lambda val: int(val) > 5000,
+        ...     "High particle count can cause crashes"
+        ... )
     """
-    config_files.set(type(value), file_name, section, setting, value)
-    logger.info(f"> > > PERFORMED {fix_description} FIX FOR {config_files[file_name]}")
-    message_list.append(f"> Performed {fix_description.title()} Fix For : {config_files[file_name]}\n")
+    # Check if file exists in cache
+    if file_name_lower not in config_files:
+        return None
+
+    # Use ConfigFileCache.detect_issue() to detect the issue
+    return await config_files.detect_issue(
+        value_type,
+        file_name_lower,
+        section,
+        setting,
+        recommended_value,
+        description,
+        condition_check,
+        severity,
+    )
 
 
-def apply_all_ini_fixes(config_files: ConfigFileCache, message_list: list[str]) -> None:
-    """Sync wrapper for backward compatibility."""
-    from ClassicLib.AsyncBridge import AsyncBridge
-
-    bridge = AsyncBridge.get_instance()
-    return bridge.run_async(apply_all_ini_fixes_async(config_files, message_list))
-
-
-async def apply_all_ini_fixes_async(config_files: ConfigFileCache, message_list: list[str]) -> None:
+async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any]:
     """
-    Applies a set of fixes to specific `.ini` configuration files to address common
-    issues or enforce desired settings. The function checks the state of several
-    keys within predefined configuration files and applies corrections or updates
-    as necessary. If a correction is made, a corresponding message is added to
-    the provided message list.
+    Detect all configuration issues in INI files without modifying them.
+
+    This function checks for all known INI configuration issues and returns
+    a list of ConfigIssue objects describing each detected issue.
 
     Args:
-        config_files: A cache of configuration files allowing retrieval and update
-            of specific keys and sections within those files.
-        message_list: A list where confirmation or status messages are appended
-            whenever a fix is applied.
+        config_files: The configuration file cache used to check INI configurations.
 
+    Returns:
+        list[ConfigIssue]: List of detected configuration issues. Empty list if
+            no issues found.
+
+    Notes:
+        Issues detected:
+        - ESPExplorer hotkey commented out
+        - EPO particle count too high (> 5000)
+        - F4EE head parts locked (bUnlockHeadParts == 0)
+        - F4EE face tints locked (bUnlockTints == 0)
+        - High FPS Physics Fix loading screen FPS too low (< 600)
     """
-    # Fix ESPExplorer hotkey
-    if "; F10" in config_files.get_strict(str, "espexplorer.ini", "General", "HotKey"):
-        apply_ini_fix(config_files, "espexplorer.ini", "General", "HotKey", "0x79", "INI HOTKEY", message_list)
+    issues: list[Any] = []
 
-    # Fix EPO particle count
-    if config_files.get_strict(int, "epo.ini", "Particles", "iMaxDesired") > 5000:
-        apply_ini_fix(config_files, "epo.ini", "Particles", "iMaxDesired", 5000, "INI PARTICLE COUNT", message_list)
+    # ESPExplorer hotkey check
+    if "espexplorer.ini" in config_files:
+        issue = await detect_ini_issue_async(
+            config_files,
+            "espexplorer.ini",
+            "General",
+            "HotKey",
+            str,
+            "0x79",
+            lambda val: "; F10" in str(val),
+            "Hotkey is commented out and won't work. Change to hex code 0x79 for F10.",
+        )
+        if issue is not None:
+            issues.append(issue)
 
-    # Fix F4EE settings if present
+    # EPO particle count check
+    if "epo.ini" in config_files:
+        issue = await detect_ini_issue_async(
+            config_files,
+            "epo.ini",
+            "Particles",
+            "iMaxDesired",
+            int,
+            5000,
+            lambda val: int(val) > 5000,
+            "High particle count can cause performance issues and crashes.",
+        )
+        if issue is not None:
+            issues.append(issue)
+
+    # F4EE settings checks
     if "f4ee.ini" in config_files:
-        # Fix head parts unlock setting
-        if await config_files.get_async(int, "f4ee.ini", "CharGen", "bUnlockHeadParts") == 0:
-            await apply_ini_fix_async(config_files, "f4ee.ini", "CharGen", "bUnlockHeadParts", 1, "INI HEAD PARTS UNLOCK", message_list)
+        # Head parts unlock check
+        issue = await detect_ini_issue_async(
+            config_files,
+            "f4ee.ini",
+            "CharGen",
+            "bUnlockHeadParts",
+            int,
+            1,
+            lambda val: int(val) == 0,
+            "Head parts are locked. Set to 1 to unlock all head parts.",
+        )
+        if issue is not None:
+            issues.append(issue)
 
-        # Fix face tints unlock setting
-        if await config_files.get_async(int, "f4ee.ini", "CharGen", "bUnlockTints") == 0:
-            await apply_ini_fix_async(config_files, "f4ee.ini", "CharGen", "bUnlockTints", 1, "INI FACE TINTS UNLOCK", message_list)
+        # Face tints unlock check
+        issue = await detect_ini_issue_async(
+            config_files,
+            "f4ee.ini",
+            "CharGen",
+            "bUnlockTints",
+            int,
+            1,
+            lambda val: int(val) == 0,
+            "Face tints are locked. Set to 1 to unlock all face tints.",
+        )
+        if issue is not None:
+            issues.append(issue)
 
-    # Fix highfpsphysicsfix.ini loading screen FPS if present
-    if (
-        "highfpsphysicsfix.ini" in config_files
-        and config_files.get_strict(float, "highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS") < 600.0
-    ):
-        apply_ini_fix(config_files, "highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS", 600.0, "INI LOADING SCREEN FPS", message_list)
+    # High FPS Physics Fix loading screen FPS check
+    if "highfpsphysicsfix.ini" in config_files:
+        issue = await detect_ini_issue_async(
+            config_files,
+            "highfpsphysicsfix.ini",
+            "Limiter",
+            "LoadingScreenFPS",
+            float,
+            600.0,
+            lambda val: float(val) < 600.0,
+            "Loading screen FPS is too low. Increase to 600.0 to prevent physics issues.",
+        )
+        if issue is not None:
+            issues.append(issue)
+
+    return issues
 
 
 def check_duplicate_files(config_files: ConfigFileCache, message_list: list[str]) -> None:

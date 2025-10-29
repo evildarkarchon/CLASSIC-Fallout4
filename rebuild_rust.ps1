@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 # Dir: the source directory
 # ImportName: the actual Python module name for import (optional, defaults to WheelName)
 $RustModules = @(
-    @{WheelName = "classic_shared"; Dir = "classic-shared"; ImportName = $null },  # Not a Python module
+    @{WheelName = "classic_shared_py"; Dir = "classic-shared-py"; ImportName = $null },  # Not a Python module
     @{WheelName = "classic_yaml_py"; Dir = "classic-yaml-py"; ImportName = "classic_yaml" },
     @{WheelName = "classic_database_py"; Dir = "classic-database-py"; ImportName = "classic_database" },
     @{WheelName = "classic_file_io_py"; Dir = "classic-file-io-py"; ImportName = "classic_file_io" },

@@ -22,11 +22,11 @@ from ClassicLib.ScanGame.GameIntegrityOrchestrator import (
     write_combined_results_async,
 )
 from ClassicLib.ScanGame.ScanModInis import (
-    apply_all_ini_fixes,
-    apply_ini_fix,
     check_duplicate_files,
     check_starting_console_command,
     check_vsync_settings,
+    detect_all_ini_issues_async,
+    detect_ini_issue_async,
     scan_mod_inis,
 )
 from ClassicLib.ScanGame.WryeCheck import (
@@ -58,14 +58,14 @@ __all__ = [
     "write_combined_results_async",
     "get_game_integrity_orchestrator_core",
     # ScanModInis
-    "apply_all_ini_fixes",
-    "apply_ini_fix",
     "check_crashgen_settings",
     "check_duplicate_files",
     "check_starting_console_command",
     "check_vsync_settings",
     "check_xse_plugins",
     "compare_ini_files",
+    "detect_all_ini_issues_async",
+    "detect_ini_issue_async",
     # WryeCheck
     "extract_plugins_from_section",
     "format_section_header",

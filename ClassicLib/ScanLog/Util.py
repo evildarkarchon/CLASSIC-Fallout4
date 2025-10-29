@@ -394,12 +394,25 @@ def crashlogs_reformat(crashlog_list: list[Path], remove_list: tuple[str]) -> No
     operations such as removing certain lines from logs if simplification is enabled and modifying plugin load order lines
     to ensure consistency across different log versions.
 
+    .. deprecated::
+        This synchronous preprocessing approach is deprecated. Use inline reformatting
+        (OrchestratorCore._reformat_crash_data_inline) for better performance, or
+        crashlogs_reformat_async for async preprocessing if needed.
+
     Args:
         crashlog_list (list[Path]): A list of file paths pointing to crash log files to be reformatted.
         remove_list (tuple[str]): A tuple of strings representing the substrings that should trigger line removal from
             crash logs when log simplification is enabled.
 
     """
+    import warnings
+
+    warnings.warn(
+        "crashlogs_reformat() is deprecated. Use inline reformatting (OrchestratorCore._reformat_crash_data_inline) "
+        "or crashlogs_reformat_async() for better performance.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     logger.debug("- - - INITIATED CRASH LOG FILE REFORMAT")
     simplify_logs: bool | None = classic_settings(bool, "Simplify Logs")
 

@@ -13,6 +13,7 @@ Functions:
 """
 
 import re
+from functools import lru_cache
 from typing import Literal, cast
 
 from ClassicLib.ScanLog.ReportFragment import ReportFragment
@@ -54,6 +55,40 @@ def _validate_warning(mod_name: str, warning: str) -> None:
         raise ValueError(f"ERROR: {mod_name} has no warning in the database!")
 
 
+@lru_cache(maxsize=128)
+def _compile_mod_pattern(mod_names: frozenset[str]) -> re.Pattern[str]:
+    """
+    Compiles a regex pattern from a frozenset of mod names with caching.
+
+    This function creates a single compiled regex pattern that matches any of the
+    provided mod names using alternation (|). Results are cached for performance.
+
+    Args:
+        mod_names: A frozenset of mod names to match (must be hashable for caching).
+
+    Returns:
+        A compiled regex pattern with case-insensitive matching.
+    """
+    # Sort for consistent pattern generation (helps with debugging)
+    sorted_names = sorted(mod_names, key=len, reverse=True)
+    patterns = [re.escape(name) for name in sorted_names]
+    return re.compile("|".join(patterns), re.IGNORECASE)
+
+
+@lru_cache(maxsize=128)
+def _compile_single_pattern(mod_name: str) -> re.Pattern[str]:
+    """
+    Compiles a regex pattern for a single mod name with caching.
+
+    Args:
+        mod_name: The mod name to compile into a pattern.
+
+    Returns:
+        A compiled regex pattern with case-insensitive matching.
+    """
+    return re.compile(re.escape(mod_name.lower()), re.IGNORECASE)
+
+
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
     """
     Detects modifications (mods) based on provided YAML dictionary and crashlog plugins.
@@ -78,13 +113,13 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     # Sort mod names by length (longest first) to find most specific matches first
     mod_items = sorted(yaml_dict_lower.items(), key=lambda x: len(x[0]), reverse=True)
 
-    # Build a single regex pattern that matches all mod names
-    mod_patterns = [re.escape(mod_name) for mod_name, _ in mod_items]
-    if not mod_patterns:
+    # Extract mod names for pattern compilation
+    mod_names = frozenset(name for name, _ in mod_items)
+    if not mod_names:
         return ReportFragment.empty()
 
-    # Create a single compiled pattern with alternation for efficient matching
-    combined_pattern = re.compile("|".join(mod_patterns), re.IGNORECASE)
+    # Get cached compiled pattern for all mod names
+    combined_pattern = _compile_mod_pattern(mod_names)
 
     # Create a lookup dictionary for O(1) access to mod warnings
     mod_lookup = dict(mod_items)
@@ -164,9 +199,8 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     if not all_mod_names:
         return ReportFragment.empty()
 
-    # Create a single regex pattern to find all mods in one pass
-    mod_patterns = [re.escape(mod) for mod in all_mod_names]
-    combined_pattern = re.compile("|".join(mod_patterns), re.IGNORECASE)
+    # Get cached compiled pattern for all mod names
+    combined_pattern = _compile_mod_pattern(frozenset(all_mod_names))
 
     # Find which mods are present in the plugins
     mods_present: set[str] = set()
@@ -219,15 +253,12 @@ def detect_mods_important(
     module_names_lower = [name.lower() for name in xse_modules]
     all_plugins_text = " ".join(plugin_names_lower + module_names_lower)
 
-    # Build patterns for all mod IDs
-    mod_patterns: dict[str, re.Pattern[str]] = {}
-    for mod_entry in yaml_dict:
-        mod_id, _ = mod_entry.split(" | ", 1)
-        mod_patterns[mod_entry] = re.compile(re.escape(mod_id.lower()), re.IGNORECASE)
-
+    # Process each mod entry
     for mod_entry, mod_warning in yaml_dict.items():
         mod_id, mod_display_name = mod_entry.split(" | ", 1)
-        mod_found = bool(mod_patterns[mod_entry].search(all_plugins_text))
+        # Use cached pattern compilation for each mod ID
+        pattern = _compile_single_pattern(mod_id.lower())
+        mod_found = bool(pattern.search(all_plugins_text))
 
         if mod_found:
             if gpu_rival and cast("str", gpu_rival) in mod_warning.lower():

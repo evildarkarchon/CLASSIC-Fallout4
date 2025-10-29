@@ -8,6 +8,7 @@ This module handles all plugin-related operations including:
 - Managing plugin status classification
 """
 
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -19,6 +20,32 @@ from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+
+
+@lru_cache(maxsize=128)
+def _compile_plugin_pattern(plugins: frozenset[str]) -> re.Pattern[str]:
+    """
+    Compiles a regex pattern from a frozenset of plugin names with caching.
+
+    This function creates a single compiled regex pattern that matches any of the
+    provided plugin names using word boundaries for accurate matching. Results
+    are cached for performance when processing multiple crash logs with the same
+    plugin set.
+
+    Args:
+        plugins: A frozenset of plugin names to match (must be hashable for caching).
+
+    Returns:
+        A compiled regex pattern for matching plugin names.
+    """
+    if not plugins:
+        # Return a pattern that never matches
+        return re.compile(r"(?!.*)", re.IGNORECASE)
+
+    # Escape special regex characters and build alternation pattern
+    # Use word boundaries to avoid partial matches
+    patterns = [re.escape(plugin) for plugin in sorted(plugins)]
+    return re.compile("|".join(patterns), re.IGNORECASE)
 
 
 class PluginAnalyzer:
@@ -234,18 +261,28 @@ class PluginAnalyzer:
         # Pre-filter call stack lines that won't match
         relevant_lines: list[str] = [line for line in segment_callstack_lower if "modified by:" not in line]
 
+        # Filter out ignored plugins before pattern compilation
+        plugins_to_match = frozenset(
+            plugin for plugin in crashlog_plugins_lower if plugin not in self.lower_plugins_ignore
+        )
+
+        # Early return if no plugins to match
+        if not plugins_to_match:
+            lines.append("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n")
+            return ReportFragment.from_lines(lines)
+
+        # Get cached compiled pattern for all plugins
+        plugin_pattern = _compile_plugin_pattern(plugins_to_match)
+
         # Use Counter directly instead of list + Counter conversion
         plugins_matches: Counter[str] = Counter()
 
-        # Optimize the matching algorithm
+        # Optimized matching using single compiled regex pattern
         for line in relevant_lines:
-            for plugin in crashlog_plugins_lower:
-                # Skip plugins that are in the ignore list
-                if plugin in self.lower_plugins_ignore:
-                    continue
-
-                if plugin in line:
-                    plugins_matches[plugin] += 1
+            # Find all plugin matches in this line
+            matches = plugin_pattern.findall(line)
+            # Count each unique match
+            plugins_matches.update(match.lower() for match in matches)
 
         if plugins_matches:
             lines.append("The following PLUGINS were found in the CRASH STACK:\n")
