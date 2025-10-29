@@ -299,27 +299,37 @@ def get_mod_detector() -> dict[str, Any]:
     Get the best available mod detector functions.
 
     Returns:
-        Dictionary containing detect_mods_single and detect_mods_batch functions
+        Dictionary containing all mod detector functions (single, double, important)
     """
     components = _get_components()
 
     if not _is_rust_disabled() and components.get("mod_detector", False):
         try:
-            from ClassicLib.rust.mod_detector_rust import detect_mods_batch, detect_mods_single
+            from ClassicLib.rust.mod_detector_rust import (
+                detect_mods_single,
+                detect_mods_double,
+                detect_mods_important,
+            )
             logger.debug("Using Rust mod detector functions (35x speedup)")
             return {
                 "detect_mods_single": detect_mods_single,
-                "detect_mods_batch": detect_mods_batch,
+                "detect_mods_double": detect_mods_double,
+                "detect_mods_important": detect_mods_important,
             }
         except (ImportError, AttributeError) as e:
             logger.warning(f"Failed to get Rust mod detector: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.python.mod_detector_py import detect_mods_batch, detect_mods_single
+    from ClassicLib.python.mod_detector_py import (
+        detect_mods_single,
+        detect_mods_double,
+        detect_mods_important,
+    )
     logger.debug("Using Python mod detector implementation")
     return {
         "detect_mods_single": detect_mods_single,
-        "detect_mods_batch": detect_mods_batch,
+        "detect_mods_double": detect_mods_double,
+        "detect_mods_important": detect_mods_important,
     }
 
 
@@ -359,24 +369,16 @@ def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> Any:
         yamldata: YAML configuration data
 
     Returns:
-        Rust SuspectScanner if available, otherwise Python implementation
+        Rust-accelerated SuspectScanner wrapper with automatic fallback
     """
-    components = _get_components()
+    # Use wrapper that handles Rust/Python automatically
+    from ClassicLib.rust.suspect_rust import SuspectScanner, RUST_AVAILABLE
 
-    if not _is_rust_disabled() and components.get("suspect_scanner", False):
-        try:
-            import classic_scanlog
-            logger.debug("Using Rust SuspectScanner (40x speedup potential)")
-            return classic_scanlog.SuspectScanner(
-                yamldata.suspects_error_list,
-                yamldata.suspects_stack_list
-            )
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Failed to import Rust SuspectScanner: {e}")
+    if RUST_AVAILABLE:
+        logger.debug("Using Rust-accelerated SuspectScanner (40x speedup potential)")
+    else:
+        logger.debug("Using Python SuspectScanner implementation")
 
-    # Fall back to Python implementation
-    from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
-    logger.debug("Using Python SuspectScanner implementation")
     return SuspectScanner(yamldata)
 
 
@@ -388,25 +390,17 @@ def get_settings_validator(yamldata: ClassicScanLogsInfo) -> Any:
         yamldata: YAML configuration data
 
     Returns:
-        Rust SettingsValidator if available, otherwise Python implementation
+        Rust-accelerated SettingsValidator wrapper with automatic fallback
     """
-    components = _get_components()
+    # Use wrapper that handles Rust/Python automatically
+    from ClassicLib.rust.settings_rust import SettingsValidator, RUST_AVAILABLE
 
-    if not _is_rust_disabled() and components.get("settings_validator", False):
-        try:
-            import classic_scanlog
-            logger.debug("Using Rust SettingsValidator")
-            return classic_scanlog.SettingsValidator(
-                yamldata.crashgen_name,
-                yamldata.crashgen_ignore
-            )
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Failed to import Rust SettingsValidator: {e}")
+    if RUST_AVAILABLE:
+        logger.debug("Using Rust-accelerated SettingsValidator")
+    else:
+        logger.debug("Using Python SettingsScannerFragments implementation")
 
-    # Fall back to Python implementation
-    from ClassicLib.ScanLog.SettingsScanner import SettingsScanner
-    logger.debug("Using Python SettingsScanner implementation")
-    return SettingsScanner(yamldata)
+    return SettingsValidator(yamldata)
 
 
 def get_gpu_detector() -> Any:
@@ -414,47 +408,37 @@ def get_gpu_detector() -> Any:
     Get the best available GPU detector implementation.
 
     Returns:
-        Rust GpuDetector if available, otherwise Python implementation
+        Module with get_gpu_info function (Rust-accelerated or Python)
     """
-    components = _get_components()
+    # Use wrapper that provides get_gpu_info function with automatic Rust/Python fallback
+    from ClassicLib.rust import gpu_rust
 
-    if not _is_rust_disabled() and components.get("gpu_detector", False):
-        try:
-            import classic_scanlog
-            logger.debug("Using Rust GpuDetector")
-            return classic_scanlog.GpuDetector
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Failed to import Rust GpuDetector: {e}")
+    if gpu_rust.RUST_AVAILABLE:
+        logger.debug("Using Rust-accelerated GpuDetector")
+    else:
+        logger.debug("Using Python GPUDetector implementation")
 
-    # Fall back to Python implementation
-    from ClassicLib.ScanLog.GPUDetector import GPUDetector
-    logger.debug("Using Python GPUDetector implementation")
-    return GPUDetector
+    return gpu_rust
 
 
-def get_fcx_handler(fcx_mode: bool) -> Any:
+def get_fcx_handler(fcx_mode: bool | None) -> Any:
     """
     Get the best available FCX mode handler implementation.
 
     Args:
-        fcx_mode: Whether FCX mode is enabled
+        fcx_mode: Whether FCX mode is enabled (None treated as False)
 
     Returns:
-        Rust FcxModeHandler if available, otherwise Python implementation
+        Rust-accelerated FcxModeHandler wrapper with automatic fallback
     """
-    components = _get_components()
+    # Use wrapper that handles Rust/Python automatically
+    from ClassicLib.rust.fcx_rust import FCXModeHandler, RUST_AVAILABLE
 
-    if not _is_rust_disabled() and components.get("fcx_handler", False):
-        try:
-            import classic_scanlog
-            logger.debug("Using Rust FcxModeHandler")
-            return classic_scanlog.FcxModeHandler(fcx_mode)
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Failed to import Rust FcxModeHandler: {e}")
+    if RUST_AVAILABLE:
+        logger.debug("Using Rust-accelerated FcxModeHandler")
+    else:
+        logger.debug("Using Python FCXModeHandler implementation")
 
-    # Fall back to Python implementation
-    from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandler
-    logger.debug("Using Python FCXModeHandler implementation")
     return FCXModeHandler(fcx_mode)
 
 

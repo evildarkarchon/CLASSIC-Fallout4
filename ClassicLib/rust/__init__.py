@@ -32,7 +32,7 @@ try:
     )
     from ClassicLib.rust.file_io_rust import RustFileIOCore, create_file_io_sync, get_rust_file_io
     from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
-    from ClassicLib.rust.mod_detector_rust import analyze_mod_conflicts, detect_mods_batch, detect_mods_single, get_mod_detector_status
+    from ClassicLib.rust.mod_detector_rust import detect_mods_single, detect_mods_double, detect_mods_important, get_mod_detector_status
     from ClassicLib.rust.parser_rust import RustLogParser
     from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
     from ClassicLib.rust.record_rust import RustRecordScanner
@@ -47,6 +47,14 @@ try:
         RustAcceleratedReportGenerator,
         StringPool,
     )
+    from ClassicLib.rust.suspect_rust import RustAcceleratedSuspectScanner, SuspectScanner
+    from ClassicLib.rust.fcx_rust import FCXModeHandler, FcxModeHandler, RustAcceleratedFcxModeHandler
+    from ClassicLib.rust.settings_rust import (
+        RustAcceleratedSettingsValidator,
+        SettingsValidator,
+        SettingsScannerFragments,
+    )
+    from ClassicLib.rust import gpu_rust
 
     RUST_MODULES_AVAILABLE = True
     logger.debug("✅ Rust acceleration modules loaded successfully")
@@ -70,6 +78,15 @@ except ImportError as e:
     ReportComposer = None
     ReportGenerator = None
     StringPool = None
+    RustAcceleratedSuspectScanner = None
+    SuspectScanner = None
+    FCXModeHandler = None
+    FcxModeHandler = None
+    RustAcceleratedFcxModeHandler = None
+    RustAcceleratedSettingsValidator = None
+    SettingsValidator = None
+    SettingsScannerFragments = None
+    gpu_rust = None
 
 
 # Export all components
@@ -99,8 +116,8 @@ __all__ = [
 
     # Mod Detector
     "detect_mods_single",
-    "detect_mods_batch",
-    "analyze_mod_conflicts",
+    "detect_mods_double",
+    "detect_mods_important",
     "get_mod_detector_status",
 
     # Report Generation
@@ -112,6 +129,23 @@ __all__ = [
     "ReportComposer",
     "ReportGenerator",
     "StringPool",
+
+    # Suspect Scanner
+    "RustAcceleratedSuspectScanner",
+    "SuspectScanner",
+
+    # FCX Mode Handler
+    "FCXModeHandler",
+    "FcxModeHandler",
+    "RustAcceleratedFcxModeHandler",
+
+    # Settings Validator
+    "RustAcceleratedSettingsValidator",
+    "SettingsValidator",
+    "SettingsScannerFragments",
+
+    # GPU Detector
+    "gpu_rust",
 
     # Status
     "RUST_MODULES_AVAILABLE",
@@ -134,6 +168,10 @@ def get_rust_component_summary() -> dict[str, bool]:
         "database": RustAsyncDatabasePool is not None,
         "report_generation": ReportFragment is not None,
         "mod_detector": "detect_mods_single" in globals(),
+        "suspect_scanner": SuspectScanner is not None,
+        "fcx_handler": FCXModeHandler is not None,
+        "settings_validator": SettingsValidator is not None,
+        "gpu_detector": gpu_rust is not None,
     }
 
 

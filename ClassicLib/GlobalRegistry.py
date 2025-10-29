@@ -102,6 +102,11 @@ def get_yaml_cache() -> Any:
     """
     return get(Keys.YAML_CACHE)
 
+def set_game(game_name: str):
+    with _registry_lock:
+        if not is_registered(Keys.GAME) or not game_name == _registry[Keys.GAME]:
+            register(Keys.GAME, game_name)
+
 
 def get_manual_docs_gui() -> Any:
     """

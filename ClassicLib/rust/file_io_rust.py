@@ -78,6 +78,16 @@ class RustFileIOCore:
             from ClassicLib.FileIO.core import FileIOCore as PythonFileIOCore
             self._python_core = PythonFileIOCore(encoding, errors)
 
+    @property
+    def is_rust_accelerated(self) -> bool:
+        """
+        Check if Rust acceleration is being used.
+
+        Returns:
+            bool: True if using Rust implementation, False if using Python fallback
+        """
+        return self._rust_core is not None
+
     @staticmethod
     def _ensure_path(path: Path | str) -> Path:
         """Convert string to Path object efficiently."""

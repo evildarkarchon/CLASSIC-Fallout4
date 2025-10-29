@@ -143,6 +143,11 @@ impl FileReader {
 }
 
 /// Fast FormID processor using parallel computation
+///
+/// FormID Rules for Fallout 4:
+/// - Valid FormIDs are exactly 8 hex digits (0x00000000 - 0xFFFFFFFF)
+/// - FormIDs with FF prefix (0xFF000000 - 0xFFFFFFFF) are save file items
+/// - Anything longer than 8 hex digits is invalid
 #[pyclass]
 struct FormIDProcessor;
 
@@ -153,7 +158,12 @@ impl FormIDProcessor {
         Self
     }
 
-    /// Process FormIDs in parallel (sync API, async implementation)
+    /// Process FormIDs in parallel with validation
+    ///
+    /// Rules:
+    /// - Max 8 hex digits (after removing 0x prefix)
+    /// - Returns None for invalid FormIDs (too long, non-hex chars, empty)
+    /// - Returns Some(u32) for valid FormIDs (including FF-prefixed save file items)
     fn process_batch(&self, formids: Vec<String>) -> Vec<Option<u32>> {
         use rayon::prelude::*;
 
@@ -165,7 +175,56 @@ impl FormIDProcessor {
                     .trim()
                     .trim_start_matches("0x")
                     .trim_start_matches("0X");
+
+                // Validate: max 8 hex digits
+                if cleaned.is_empty() || cleaned.len() > 8 {
+                    return None;
+                }
+
+                // Parse as hex and validate range
                 u32::from_str_radix(cleaned, 16).ok()
+            })
+            .collect()
+    }
+
+    /// Check if a FormID is a save file FormID (FF prefix)
+    ///
+    /// Save file FormIDs have the FF prefix (0xFF000000 - 0xFFFFFFFF)
+    /// and represent items dynamically created in the save file.
+    fn is_save_file_formid(&self, formid: u32) -> bool {
+        // Check if the highest byte is 0xFF
+        (formid & 0xFF000000) == 0xFF000000
+    }
+
+    /// Process FormIDs with metadata about save file status
+    ///
+    /// Returns Vec of tuples: (Option<u32>, bool) where:
+    /// - First element: parsed FormID (None if invalid)
+    /// - Second element: true if save file FormID (FF prefix), false otherwise
+    fn process_batch_with_metadata(&self, formids: Vec<String>) -> Vec<(Option<u32>, bool)> {
+        use rayon::prelude::*;
+
+        formids
+            .par_iter()
+            .map(|formid| {
+                let cleaned = formid
+                    .trim()
+                    .trim_start_matches("0x")
+                    .trim_start_matches("0X");
+
+                // Validate: max 8 hex digits
+                if cleaned.is_empty() || cleaned.len() > 8 {
+                    return (None, false);
+                }
+
+                // Parse as hex
+                match u32::from_str_radix(cleaned, 16) {
+                    Ok(value) => {
+                        let is_save_file = (value & 0xFF000000) == 0xFF000000;
+                        (Some(value), is_save_file)
+                    }
+                    Err(_) => (None, false)
+                }
             })
             .collect()
     }

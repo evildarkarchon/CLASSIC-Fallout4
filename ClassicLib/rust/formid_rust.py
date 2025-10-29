@@ -50,10 +50,19 @@ class RustFormIDAnalyzer:
             # Try to use FormIDAnalyzerCore (optimized version) first
             if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "FormIDAnalyzerCore"):
                 FormIDAnalyzerCore = classic_core.scanlog.FormIDAnalyzerCore
+
+                # Extract required data from yamldata
+                crashgen_name = getattr(yamldata, "crashgen_name", "")
+                important_mods = getattr(yamldata, "problematic_plugins", {})
+                mods_single = getattr(yamldata, "mods_single", {})
+                mods_double = getattr(yamldata, "mods_double", {})
+
                 self._rust_core_analyzer = FormIDAnalyzerCore(
-                    yamldata,
                     show_formid_values,
-                    formid_db_exists
+                    crashgen_name,
+                    important_mods,
+                    mods_single,
+                    mods_double
                 )
                 self._use_rust_core = True
                 logger.debug("🚀 RustFormIDAnalyzer: Using RUST FormIDAnalyzerCore (zero-copy optimizations)")

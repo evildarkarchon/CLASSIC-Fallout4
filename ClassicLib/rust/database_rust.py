@@ -138,10 +138,11 @@ class RustAsyncDatabasePool:
         if not self._initialized:
             return
 
-        # Await Rust coroutine - true async, no blocking!
-        await self._rust_pool.close()
+        # Rust DatabasePool doesn't have a close() method
+        # Connections are automatically cleaned up when the pool is dropped
+        # Just mark as uninitialized for API compatibility
         self._initialized = False
-        logger.debug("Closed Rust database pool connections")
+        logger.debug("Rust database pool marked as closed (connections cleaned up on drop)")
 
     async def get_entry(self, formid: str, plugin: str) -> str | None:
         """

@@ -42,8 +42,17 @@ class RustRecordScanner:
             import classic_core
             if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "RecordScanner"):
                 RustRecordScannerImpl = classic_core.scanlog.RecordScanner
-                # Pass yamldata directly - Rust code uses getattr to extract what it needs
-                self._rust_scanner = RustRecordScannerImpl(yamldata)
+
+                # Extract required parameters from yamldata
+                target_records = getattr(yamldata, "classic_records_list", [])
+                ignore_records = getattr(yamldata, "game_ignore_records", [])
+                crashgen_name = getattr(yamldata, "crashgen_name", "")
+
+                self._rust_scanner = RustRecordScannerImpl(
+                    target_records,
+                    ignore_records,
+                    crashgen_name
+                )
                 self._use_rust = True
                 logger.debug("🚀 RustRecordScanner: Using RUST implementation (40x faster)")
             else:

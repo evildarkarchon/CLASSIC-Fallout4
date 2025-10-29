@@ -42,8 +42,23 @@ class RustPluginAnalyzer:
             import classic_core
             if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "PluginAnalyzer"):
                 RustPluginAnalyzerImpl = classic_core.scanlog.PluginAnalyzer
-                # Pass yamldata directly - Rust code uses getattr to extract what it needs
-                self._rust_analyzer = RustPluginAnalyzerImpl(yamldata)
+
+                # Extract required parameters from yamldata
+                game_ignore_plugins = getattr(yamldata, "game_ignore_plugins", [])
+                ignore_list = getattr(yamldata, "ignore_list", [])
+                crashgen_name = getattr(yamldata, "crashgen_name", "")
+                game_version = getattr(yamldata, "game_version", "")
+                game_version_vr = getattr(yamldata, "game_version_vr", "")
+                game_version_new = getattr(yamldata, "game_version_new", "")
+
+                self._rust_analyzer = RustPluginAnalyzerImpl(
+                    game_ignore_plugins,
+                    ignore_list,
+                    crashgen_name,
+                    game_version,
+                    game_version_vr,
+                    game_version_new
+                )
                 self._use_rust = True
                 logger.debug("🚀 RustPluginAnalyzer: Using RUST implementation (30x faster)")
             else:

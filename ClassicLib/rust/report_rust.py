@@ -66,12 +66,13 @@ class RustAcceleratedReportFragment:
         self._use_rust = use_rust and RUST_AVAILABLE
 
         if self._use_rust:
-            # Use Rust implementation with string pooling for efficiency
+            # Use Rust implementation
             if lines is None:
                 self._fragment = RustReportFragment.empty()
             else:
                 lines_list = list(lines) if isinstance(lines, tuple) else lines
-                self._fragment = RustReportFragment(lines_list, check_content, use_pool=True)
+                # Note: Rust from_lines doesn't take check_content parameter
+                self._fragment = RustReportFragment.from_lines(lines_list)
         # Fall back to Python implementation
         elif lines is None:
             self._fragment = PyReportFragment.empty()
@@ -115,7 +116,8 @@ class RustAcceleratedReportFragment:
         result._use_rust = self._use_rust and other._use_rust
 
         if result._use_rust:
-            result._fragment = self._fragment + other._fragment
+            # Rust uses combine() method instead of __add__
+            result._fragment = self._fragment.combine(other._fragment)
         else:
             # Convert to Python if needed
             if self._use_rust:
@@ -140,20 +142,29 @@ class RustAcceleratedReportFragment:
     def content(self) -> tuple[str, ...]:
         """Get the content as a tuple."""
         if self._use_rust:
-            return tuple(self._fragment.content)
+            # Rust doesn't have content property, convert from to_list()
+            return tuple(self._fragment.to_list())
         return self._fragment.content
 
     @property
     def has_content(self) -> bool:
         """Check if fragment has content."""
+        if self._use_rust:
+            # Rust has is_empty() method, invert it for has_content
+            return not self._fragment.is_empty()
         return self._fragment.has_content
 
     def __len__(self) -> int:
         """Get the number of lines."""
+        if self._use_rust:
+            # Rust has len() method
+            return self._fragment.len()
         return len(self._fragment)
 
     def __bool__(self) -> bool:
         """Check if fragment has content."""
+        if self._use_rust:
+            return not self._fragment.is_empty()
         return bool(self._fragment)
 
 
@@ -171,11 +182,13 @@ class RustAcceleratedReportComposer:
 
         Args:
             parallel_threshold: Number of fragments before using parallel processing
+                               (only used by Python implementation)
         """
         self._use_rust = RUST_AVAILABLE
 
         if self._use_rust:
-            self._composer = RustReportComposer(parallel_threshold)
+            # Rust ReportComposer takes no parameters
+            self._composer = RustReportComposer()
         else:
             self._composer = PyReportComposer()
 
@@ -195,13 +208,14 @@ class RustAcceleratedReportComposer:
             # Convert Python fragment to Rust if needed
             if isinstance(fragment, RustAcceleratedReportFragment):
                 if fragment._use_rust:
+                    # Rust add() returns None, we return self for chaining
                     self._composer.add(fragment._fragment)
                 else:
                     # Convert Python to Rust
-                    rust_frag = RustReportFragment(fragment._fragment.to_list())
+                    rust_frag = RustReportFragment.from_lines(fragment._fragment.to_list())
                     self._composer.add(rust_frag)
             elif isinstance(fragment, PyReportFragment):
-                rust_frag = RustReportFragment(fragment.to_list())
+                rust_frag = RustReportFragment.from_lines(fragment.to_list())
                 self._composer.add(rust_frag)
             elif hasattr(fragment, "_fragment"):
                 # Handle wrapped fragments
@@ -229,7 +243,9 @@ class RustAcceleratedReportComposer:
         result._use_rust = self._use_rust
 
         if self._use_rust:
-            result._fragment = self._composer.compose_optimized()
+            # Rust compose_optimized() returns list[str], need to wrap in ReportFragment
+            lines = self._composer.compose_optimized()
+            result._fragment = RustReportFragment.from_lines(lines)
         else:
             result._fragment = self._composer.compose()
 
@@ -242,7 +258,8 @@ class RustAcceleratedReportComposer:
     def to_list(self) -> list[str]:
         """Compose fragments and convert to list."""
         if self._use_rust:
-            return self._composer.to_list()
+            # Rust compose_optimized() directly returns list[str]
+            return self._composer.compose_optimized()
         return self._composer.to_list()
 
     def build_string(self) -> str:

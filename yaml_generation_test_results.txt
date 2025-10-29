@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "F:\Python Projects\CLASSIC-Fallout4\test_yaml_generation.py", line 5, in <module>
-    from classic_core import config
-ImportError: cannot import name 'config' from 'classic_core' (F:\Python Projects\CLASSIC-Fallout4\classic_core\__init__.py)

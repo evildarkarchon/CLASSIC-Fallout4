@@ -284,12 +284,12 @@ fn python_to_yaml(py: Python<'_>, obj: Py<PyAny>) -> PyResult<Yaml> {
 fn to_pyerr(err: YamlError) -> PyErr {
     match err {
         YamlError::ParseError(msg) => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Parse error: {}", msg))
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse YAML: {}", msg))
         }
         YamlError::SerializeError(msg) => {
             PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Serialize error: {}", msg))
         }
-        YamlError::IoError(e) => PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()),
+        YamlError::IoError(e) => PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to read file: {}", e)),
         YamlError::EmptyDocument => {
             PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty YAML document")
         }

@@ -20,22 +20,35 @@ logger = logging.getLogger(__name__)
 
 # Check if Rust mod detector is available
 RUST_AVAILABLE = False
-_rust_detect_batch = None
 _rust_detect_single = None
+_rust_detect_double = None
+_rust_detect_important = None
+_rust_detect_batch = None
 
 try:
     import classic_core
     if hasattr(classic_core, "scanlog"):
         scanlog = classic_core.scanlog
-        if hasattr(scanlog, "detect_mods_batch"):
-            _rust_detect_batch = scanlog.detect_mods_batch
-            RUST_AVAILABLE = True
-            logger.debug("✅ Rust mod detector batch function available (35x speedup)")
 
         if hasattr(scanlog, "detect_mods_single"):
             _rust_detect_single = scanlog.detect_mods_single
             RUST_AVAILABLE = True
-            logger.debug("✅ Rust mod detector single function available (35x speedup)")
+            logger.debug("✅ Rust detect_mods_single available (35x speedup)")
+
+        if hasattr(scanlog, "detect_mods_double"):
+            _rust_detect_double = scanlog.detect_mods_double
+            RUST_AVAILABLE = True
+            logger.debug("✅ Rust detect_mods_double available (35x speedup)")
+
+        if hasattr(scanlog, "detect_mods_important"):
+            _rust_detect_important = scanlog.detect_mods_important
+            RUST_AVAILABLE = True
+            logger.debug("✅ Rust detect_mods_important available (35x speedup)")
+
+        if hasattr(scanlog, "detect_mods_batch"):
+            _rust_detect_batch = scanlog.detect_mods_batch
+            RUST_AVAILABLE = True
+            logger.debug("✅ Rust detect_mods_batch available (35x speedup)")
 
         if not RUST_AVAILABLE:
             logger.debug("⚠️  Rust mod detector functions not found in classic_core")
@@ -43,126 +56,92 @@ except ImportError as e:
     logger.debug(f"Rust mod detector not available: {e}")
 
 
-def detect_mods_single(
-    segment: list[str],
-    mod_patterns: dict[str, list[str]] | None = None
-) -> dict[str, list[str]]:
+def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]):
     """
-    Detect mod conflicts in a single crash log segment.
+    Detect single mods in crash log plugins.
 
     Args:
-        segment: List of lines from crash log segment
-        mod_patterns: Optional dictionary of mod patterns to search for
+        yaml_dict: A mapping of mod names to their respective warnings.
+        crashlog_plugins: A mapping of plugin names to their identifiers.
 
     Returns:
-        Dictionary mapping mod names to detected issues
+        ReportFragment containing detected mods, or empty fragment if none found.
     """
+    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+
     if RUST_AVAILABLE and _rust_detect_single:
         try:
-            # Use Rust implementation
-            return _rust_detect_single(segment, mod_patterns)
+            # Rust returns Vec<String>, convert to ReportFragment
+            lines = _rust_detect_single(yaml_dict, crashlog_plugins)
+            return ReportFragment.from_lines(lines)
         except Exception as e:
             logger.warning(f"Rust mod detection failed, falling back to Python: {e}")
 
     # Python fallback implementation
-    detected = {}
-
-    # Default patterns if none provided
-    if mod_patterns is None:
-        mod_patterns = {
-            "Script Extender": ["F4SE", "SKSE", "NVSE", "OBSE"],
-            "ENB": ["d3d11.dll", "d3d9.dll", "enbhelper.dll", "enbseries"],
-            "Reshade": ["reshade", "dxgi.dll"],
-            "Mod Organizer": ["ModOrganizer.exe", "usvfs"],
-            "Vortex": ["Vortex.exe", "hardlink"],
-        }
-
-    # Simple pattern matching
-    for line in segment:
-        line_lower = line.lower()
-        for mod_name, patterns in mod_patterns.items():
-            for pattern in patterns:
-                if pattern.lower() in line_lower:
-                    if mod_name not in detected:
-                        detected[mod_name] = []
-                    detected[mod_name].append(line.strip())
-                    break
-
-    return detected
+    from ClassicLib.python.mod_detector_py import detect_mods_single as py_detect
+    return py_detect(yaml_dict, crashlog_plugins)
 
 
-def detect_mods_batch(
-    segments: list[list[str]],
-    mod_patterns: dict[str, list[str]] | None = None
-) -> list[dict[str, list[str]]]:
+def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]):
     """
-    Detect mod conflicts in multiple crash log segments.
+    Detect mod conflicts or combinations.
 
-    Uses parallel processing in Rust for high performance.
+    This function checks for combinations of mods defined in the yaml_dict
+    and returns caution messages when conflicting pairs are found.
 
     Args:
-        segments: List of segment line lists
-        mod_patterns: Optional dictionary of mod patterns to search for
+        yaml_dict: Dictionary where keys are mod pairs joined by ' | ' and values are warnings.
+        crashlog_plugins: Dictionary of plugin names from crash log.
 
     Returns:
-        List of detection results, one per segment
+        ReportFragment containing conflicts, or empty fragment if none found.
     """
-    if RUST_AVAILABLE and _rust_detect_batch:
+    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+
+    if RUST_AVAILABLE and _rust_detect_double:
         try:
-            # Use Rust batch implementation
-            return _rust_detect_batch(segments, mod_patterns)
+            # Rust returns Vec<String>, convert to ReportFragment
+            lines = _rust_detect_double(yaml_dict, crashlog_plugins)
+            return ReportFragment.from_lines(lines)
         except Exception as e:
-            logger.warning(f"Rust batch mod detection failed, falling back to Python: {e}")
+            logger.warning(f"Rust mod conflict detection failed, falling back to Python: {e}")
 
-    # Python fallback - process sequentially
-    results = []
-    for segment in segments:
-        results.append(detect_mods_single(segment, mod_patterns))
-    return results
+    # Python fallback implementation
+    from ClassicLib.python.mod_detector_py import detect_mods_double as py_detect
+    return py_detect(yaml_dict, crashlog_plugins)
 
 
-def analyze_mod_conflicts(
-    detected_mods: dict[str, list[str]],
-    known_conflicts: dict[str, list[str]] | None = None
-) -> list[str]:
+def detect_mods_important(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: str | None):
     """
-    Analyze detected mods for known conflicts.
+    Detect and evaluate important mods.
+
+    This function processes important mods, checks their installation status,
+    and verifies GPU compatibility.
 
     Args:
-        detected_mods: Dictionary of detected mods and their occurrences
-        known_conflicts: Optional dictionary of known mod conflicts
+        yaml_dict: Dictionary where keys represent mod names and values contain warnings.
+        crashlog_plugins: Dictionary of plugins present in the crash log.
+        gpu_rival: Optional GPU type for compatibility checks ("nvidia" or "amd").
 
     Returns:
-        List of conflict warnings
+        ReportFragment containing important mod status.
     """
-    warnings = []
+    from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
-    # Default known conflicts
-    if known_conflicts is None:
-        known_conflicts = {
-            "ENB": ["Reshade", "ReShade"],
-            "Script Extender": ["Outdated SKSE", "Wrong F4SE version"],
-            "Mod Organizer": ["Vortex"],
-        }
+    if RUST_AVAILABLE and _rust_detect_important:
+        try:
+            # Rust returns Vec<String>, convert to ReportFragment
+            # Note: Rust function may need xse_modules parameter, pass empty set if needed
+            lines = _rust_detect_important(yaml_dict, crashlog_plugins, gpu_rival, set())
+            return ReportFragment.from_lines(lines, check_content=False) if lines else ReportFragment.empty()
+        except Exception as e:
+            logger.warning(f"Rust important mod detection failed, falling back to Python: {e}")
 
-    # Check for conflicts
-    for mod1, conflicts in known_conflicts.items():
-        if mod1 in detected_mods:
-            for mod2 in conflicts:
-                if mod2 in detected_mods:
-                    warnings.append(
-                        f"⚠️  Potential conflict detected: {mod1} and {mod2} are both present"
-                    )
+    # Python fallback implementation
+    from ClassicLib.python.mod_detector_py import detect_mods_important as py_detect
+    return py_detect(yaml_dict, crashlog_plugins, gpu_rival)
 
-    # Check for duplicate mod managers
-    mod_managers = ["Mod Organizer", "Vortex", "NMM"]
-    detected_managers = [m for m in mod_managers if m in detected_mods]
-    if len(detected_managers) > 1:
-        warnings.append(
-            f"⚠️  Multiple mod managers detected: {', '.join(detected_managers)}"
-        )
 
-    return warnings
 
 
 def get_mod_detector_status() -> dict[str, Any]:
@@ -174,8 +153,10 @@ def get_mod_detector_status() -> dict[str, Any]:
     """
     return {
         "rust_available": RUST_AVAILABLE,
-        "batch_function": _rust_detect_batch is not None,
         "single_function": _rust_detect_single is not None,
+        "double_function": _rust_detect_double is not None,
+        "important_function": _rust_detect_important is not None,
+        "batch_function": _rust_detect_batch is not None,
         "performance_gain": "35x" if RUST_AVAILABLE else "1x",
     }
 
