@@ -34,7 +34,7 @@ impl SessionManager {
 
     /// Get the last active screen
     pub fn last_screen(&self) -> UiState {
-        self.state.last_screen.clone().into()
+        self.state.last_screen.into()
     }
 
     /// Set the last active screen
@@ -100,7 +100,7 @@ impl SessionManager {
 
     /// Get selected article category
     pub fn selected_category(&self) -> ArticleCategory {
-        self.state.selected_category.clone().into()
+        self.state.selected_category.into()
     }
 
     /// Set selected article category
@@ -122,7 +122,7 @@ impl SessionManager {
 
     /// Get last active settings tab
     pub fn last_settings_tab(&self) -> SettingsTab {
-        self.state.last_settings_tab.clone().into()
+        self.state.last_settings_tab.into()
     }
 
     /// Set last active settings tab
@@ -156,14 +156,11 @@ impl SessionManager {
 
         // Restore article state
         app.articles_state.selected_category = self.selected_category();
-        app.articles_state.selected_article_title = self.selected_article_title().map(|s| {
-            // Find the article with this title to get the &'static str reference
-            use crate::ui::articles_screen::get_all_articles;
-            get_all_articles()
-                .into_iter()
-                .find(|a| a.title == s)
-                .map(|a| a.title)
-        }).flatten();
+        app.articles_state.selected_article_title = self.selected_article_title().and_then(|s| {
+            // Use O(1) HashMap lookup instead of O(n) linear search
+            use crate::ui::articles_screen::get_article_title_map;
+            get_article_title_map().get(s).copied()
+        });
         app.articles_state.scroll_offset = self.article_scroll_offset();
 
         // Restore settings state

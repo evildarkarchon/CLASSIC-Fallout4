@@ -173,28 +173,37 @@ async fn run_app(
     loop {
         // Update terminal height for scroll calculations
         if let Ok(size) = terminal.size() {
-            app.terminal_height = size.height;
+            if app.terminal_height != size.height {
+                app.terminal_height = size.height;
+                app.needs_redraw = true;
+            }
         }
 
-        // Render UI
-        terminal.draw(|f| match app.ui_state {
-            UiState::MainScreen => render_main_screen(f, app),
-            UiState::HelpScreen => render_help_screen(f, app),
-            UiState::SettingsScreen => {
-                let state = &app.settings_state.clone();
-                render_settings_screen_interactive(f, app, state)
-            }
-            UiState::PapyrusScreen => render_papyrus_screen(f, app),
-            UiState::BackupScreen => render_backup_screen(f, app),
-            UiState::ResultsScreen => render_results_screen(f, app),
-            UiState::ArticlesScreen => {
-                let state = &app.articles_state.clone();
-                render_articles_screen(f, app, state)
-            }
-        })?;
+        // Render UI only if something changed (event-driven rendering)
+        if app.needs_redraw {
+            terminal.draw(|f| match app.ui_state {
+                UiState::MainScreen => render_main_screen(f, app),
+                UiState::HelpScreen => render_help_screen(f, app),
+                UiState::SettingsScreen => {
+                    // Need to clone to avoid borrow conflict (app borrowed both mutably and immutably)
+                    let state = app.settings_state.clone();
+                    render_settings_screen_interactive(f, app, &state)
+                }
+                UiState::PapyrusScreen => render_papyrus_screen(f, app),
+                UiState::BackupScreen => render_backup_screen(f, app),
+                UiState::ResultsScreen => render_results_screen(f, app),
+                UiState::ArticlesScreen => {
+                    // Need to clone to avoid borrow conflict (app borrowed both mutably and immutably)
+                    let state = app.articles_state.clone();
+                    render_articles_screen(f, app, &state)
+                }
+            })?;
+            app.needs_redraw = false;
+        }
 
-        // Poll for keyboard events (non-blocking, 33ms = ~30 FPS)
-        if event::poll(Duration::from_millis(33))? {
+        // Poll for keyboard events with longer timeout (100ms instead of 33ms for better CPU efficiency)
+        // This reduces wake-ups from ~30 FPS to ~10 FPS when idle
+        if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 if let Some(msg) = handle_key_event(app, key) {
                     handle_ui_message(
@@ -207,6 +216,8 @@ async fn run_app(
                         backup_handler,
                     )
                     .await?;
+                    // Request redraw after handling user input
+                    app.needs_redraw = true;
                 }
             }
         }
@@ -222,11 +233,15 @@ async fn run_app(
                     app.add_output(format!("Error auto-refreshing reports: {}", e));
                 }
             }
+            // Request redraw after processing scan message
+            app.needs_redraw = true;
         }
 
         // Process Papyrus messages
         while let Ok(msg) = papyrus_rx.try_recv() {
             handle_papyrus_message(app, msg);
+            // Request redraw after processing Papyrus message
+            app.needs_redraw = true;
         }
 
         // Check if should quit

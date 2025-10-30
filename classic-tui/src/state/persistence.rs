@@ -45,7 +45,7 @@ pub struct SessionState {
 }
 
 /// Serializable version of UiState
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum UiStateData {
     MainScreen,
     HelpScreen,
@@ -57,7 +57,7 @@ pub enum UiStateData {
 }
 
 /// Serializable version of ArticleCategory
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ArticleCategoryData {
     Installation,
     CommonIssues,
@@ -66,7 +66,7 @@ pub enum ArticleCategoryData {
 }
 
 /// Serializable version of SettingsTab
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum SettingsTabData {
     General,
     Paths,

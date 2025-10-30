@@ -140,8 +140,10 @@ async fn monitor_loop(
     let mut watcher: RecommendedWatcher = notify::recommended_watcher(
         move |res: Result<Event, notify::Error>| {
             if let Ok(event) = res {
-                // Send event to channel
-                let _ = watch_tx.blocking_send(event);
+                // Use try_send to avoid blocking if channel is full
+                if watch_tx.try_send(event).is_err() {
+                    tracing::warn!("Papyrus watch channel full, dropping file system event");
+                }
             }
         }
     )?;
@@ -157,6 +159,12 @@ async fn monitor_loop(
         if !*is_monitoring.read().await {
             let _ = tx.send(PapyrusMessage::Stopped).await;
             break;
+        }
+
+        // Monitor channel capacity to prevent overload
+        if tx.capacity() < 10 {
+            tracing::warn!("Papyrus message channel nearly full (capacity < 10), slowing down");
+            tokio::time::sleep(Duration::from_millis(100)).await;
         }
 
         tokio::select! {
@@ -187,9 +195,20 @@ async fn check_for_updates(
     analyzer: &Arc<RwLock<PapyrusAnalyzer>>,
     tx: &mpsc::Sender<PapyrusMessage>,
 ) -> Result<()> {
-    let mut analyzer_guard = analyzer.write().await;
+    // Clone Arc to move into spawn_blocking
+    let analyzer_clone = Arc::clone(analyzer);
 
-    match analyzer_guard.check_for_updates() {
+    // Use spawn_blocking to prevent file I/O from blocking the async runtime
+    // This moves the blocking file I/O and write lock acquisition to a thread pool
+    let result = tokio::task::spawn_blocking(move || {
+        // Use blocking lock instead of async lock since we're in spawn_blocking
+        let mut analyzer_guard = analyzer_clone.blocking_write();
+        analyzer_guard.check_for_updates()
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("Spawn blocking failed: {}", e))?;
+
+    match result {
         Ok(Some((new_lines, stats))) => {
             // Send new lines if any
             if !new_lines.is_empty() {

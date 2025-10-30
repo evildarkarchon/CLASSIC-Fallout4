@@ -107,8 +107,42 @@ use std::sync::OnceLock;
 /// This cache is initialized once on first access and contains all articles
 /// with their markdown pre-rendered. This avoids re-parsing markdown on every frame (~30 FPS).
 /// Uses article titles as cache keys for self-documenting, order-independent lookups.
+///
+/// # Cache Invalidation Design
+///
+/// This cache is **intentionally never invalidated** because all articles are embedded
+/// static content (`&'static str`) that cannot change at runtime. This design provides
+/// optimal performance with no memory overhead for invalidation mechanisms.
+///
+/// **If articles become dynamic in the future**, replace `OnceLock` with one of:
+/// - `LazyLock<RwLock<HashMap<...>>>` for manual invalidation
+/// - Event-based cache clearing on content updates
+/// - TTL-based expiration for periodically-updated content
 static RENDERED_ARTICLES_CACHE: OnceLock<HashMap<(ArticleCategory, &'static str), RenderedMarkdown>> =
     OnceLock::new();
+
+/// Global cache for article title lookups (String -> &'static str)
+///
+/// This cache enables O(1) lookups when restoring session state, where we have
+/// a String title from serialization and need the &'static str reference.
+static ARTICLE_TITLE_MAP: OnceLock<HashMap<String, &'static str>> = OnceLock::new();
+
+/// Get the article title map, initializing it if necessary
+///
+/// This map provides O(1) lookups from String titles to &'static str references,
+/// used primarily during session restoration to avoid O(n) linear searches.
+pub fn get_article_title_map() -> &'static HashMap<String, &'static str> {
+    ARTICLE_TITLE_MAP.get_or_init(|| {
+        let mut map = HashMap::new();
+
+        // Build map from all articles - O(n) initialization
+        for article in get_all_articles() {
+            map.insert(article.title.to_string(), article.title);
+        }
+
+        map
+    })
+}
 
 /// Get the rendered articles cache, initializing it if necessary
 fn get_rendered_articles_cache() -> &'static HashMap<(ArticleCategory, &'static str), RenderedMarkdown> {

@@ -2,7 +2,7 @@ use anyhow::Result;
 use classic_config_core::ClassicConfig;
 use classic_file_io_core::{BackupInfo, BackupType};
 use classic_scanlog_core::papyrus::PapyrusStats;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
 
 // Forward declare SettingsState, PathItem, and ArticlesState to avoid circular dependency
@@ -43,8 +43,8 @@ pub struct App {
     pub editing_path: Option<PathItem>,
     /// Papyrus monitoring statistics
     pub papyrus_stats: Option<PapyrusStats>,
-    /// Recent Papyrus log lines for display
-    pub papyrus_log_lines: Vec<String>,
+    /// Recent Papyrus log lines for display (using VecDeque for O(1) front removal)
+    pub papyrus_log_lines: VecDeque<String>,
     /// Backup status for all backup types
     pub backup_status: HashMap<BackupType, BackupInfo>,
     /// List of report file paths in Crash Logs/Reports/ directory
@@ -69,6 +69,8 @@ pub struct App {
     pub update_notification: Option<UpdateNotification>,
     /// Current terminal height (updated each frame)
     pub terminal_height: u16,
+    /// Whether the UI needs to be redrawn (event-driven rendering)
+    pub needs_redraw: bool,
 }
 
 /// UI state representing which screen is active
@@ -149,7 +151,7 @@ impl App {
             settings_path_picker: None,
             editing_path: None,
             papyrus_stats: None,
-            papyrus_log_lines: Vec::new(),
+            papyrus_log_lines: VecDeque::new(),
             backup_status: HashMap::new(),
             report_files: Vec::new(),
             selected_report_index: 0,
@@ -162,6 +164,7 @@ impl App {
             error_dialog: None,
             update_notification: None,
             terminal_height: 30, // Default, will be updated each frame
+            needs_redraw: true, // Start with true to draw initial frame
         }
     }
 
@@ -177,6 +180,12 @@ impl App {
     /// Switch to a different UI screen
     pub fn switch_screen(&mut self, state: UiState) {
         self.ui_state = state;
+        self.needs_redraw = true;
+    }
+
+    /// Mark the UI as needing a redraw
+    pub fn request_redraw(&mut self) {
+        self.needs_redraw = true;
     }
 
     /// Add a line to the output buffer
@@ -456,9 +465,9 @@ impl App {
         // Keep only the last 1000 lines to prevent unbounded growth
         const MAX_LINES: usize = 1000;
         self.papyrus_log_lines.extend(lines);
-        if self.papyrus_log_lines.len() > MAX_LINES {
-            let keep_from = self.papyrus_log_lines.len() - MAX_LINES;
-            self.papyrus_log_lines = self.papyrus_log_lines[keep_from..].to_vec();
+        // Use VecDeque's O(1) pop_front() instead of O(n) slice cloning
+        while self.papyrus_log_lines.len() > MAX_LINES {
+            self.papyrus_log_lines.pop_front();
         }
     }
 
@@ -483,7 +492,7 @@ impl App {
 
     /// Load report files from the Crash Logs/Reports/ directory
     pub async fn load_report_files(&mut self) -> Result<()> {
-        use std::fs;
+        use tokio::fs;
 
         // Construct path to reports directory from docs_root
         let reports_dir = if let Some(docs_root) = &self.config.paths.docs_root {
@@ -493,21 +502,27 @@ impl App {
             return Ok(());
         };
 
-        if !reports_dir.exists() {
+        // Use async metadata check instead of blocking exists()
+        if fs::metadata(&reports_dir).await.is_err() {
             self.report_files.clear();
             return Ok(());
         }
 
         let mut files = Vec::new();
 
-        if let Ok(entries) = fs::read_dir(&reports_dir) {
-            for entry in entries.flatten() {
+        // Use async directory reading
+        if let Ok(mut entries) = fs::read_dir(&reports_dir).await {
+            while let Ok(Some(entry)) = entries.next_entry().await {
                 let path = entry.path();
-                if path.is_file() {
-                    // Check if it's a text file (has .txt or .log extension)
-                    if let Some(ext) = path.extension() {
-                        if ext == "txt" || ext == "log" {
-                            files.push(path);
+
+                // Use async metadata check instead of blocking is_file()
+                if let Ok(metadata) = fs::metadata(&path).await {
+                    if metadata.is_file() {
+                        // Check if it's a text file (has .txt or .log extension)
+                        if let Some(ext) = path.extension() {
+                            if ext == "txt" || ext == "log" {
+                                files.push(path);
+                            }
                         }
                     }
                 }
@@ -670,14 +685,21 @@ impl App {
 
     /// Add character to search query
     pub fn add_search_char(&mut self, c: char) {
-        self.search_query.push(c.to_lowercase().next().unwrap_or(c));
-        self.search_in_report(&self.search_query.clone());
+        // Use direct iteration instead of creating iterator and calling next()
+        for lower_c in c.to_lowercase() {
+            self.search_query.push(lower_c);
+        }
+        // Clone once before mutable borrow to avoid creating temporary reference
+        let query = self.search_query.clone();
+        self.search_in_report(&query);
     }
 
     /// Remove last character from search query
     pub fn backspace_search(&mut self) {
         self.search_query.pop();
-        self.search_in_report(&self.search_query.clone());
+        // Clone once before mutable borrow to avoid creating temporary reference
+        let query = self.search_query.clone();
+        self.search_in_report(&query);
     }
 }
 

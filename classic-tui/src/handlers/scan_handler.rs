@@ -110,6 +110,12 @@ impl ScanHandler {
         let scan_start = std::time::Instant::now();
 
         for (idx, log_path) in log_files.iter().enumerate() {
+            // Monitor channel capacity to prevent overload
+            if tx.capacity() < 10 {
+                tracing::warn!("Scan message channel nearly full (capacity < 10), slowing down");
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            }
+
             let progress = (idx + 1) as f64 / total_logs as f64;
             tx.send(ScanMessage::progress(progress)).await?;
 
