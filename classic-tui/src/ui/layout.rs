@@ -1,3 +1,75 @@
+//! Shared layout utilities and responsive sizing for TUI screens.
+//!
+//! This module provides a centralized layout management system for the CLASSIC TUI application.
+//! It handles responsive sizing, minimum terminal size validation, and provides reusable layout
+//! functions for common UI patterns like centered popups and split-pane layouts.
+//!
+//! # Features
+//!
+//! - **Responsive Layouts**: Adapts to terminal size with compact mode for small terminals (<30 lines)
+//! - **Main Screen Layout**: 5-section vertical layout (header, folders, buttons, output, status)
+//! - **Folder Section**: 2-row vertical split for staging and custom folder selectors
+//! - **Button Row**: 4-column horizontal split for action buttons
+//! - **Centered Popups**: Percentage-based popup positioning for dialogs and overlays
+//! - **Minimum Size Validation**: Enforces 80x24 minimum terminal size with helpful error messages
+//!
+//! # Layout Strategies
+//!
+//! The module implements two layout strategies based on terminal height:
+//!
+//! ## Standard Layout (>= 30 lines)
+//! Uses fixed heights and percentage-based sizing for optimal appearance:
+//! - Header: 3 lines
+//! - Folders: 15% of height
+//! - Buttons: 3 lines
+//! - Output: Remaining space (min 10 lines)
+//! - Status: 1 line
+//!
+//! ## Compact Layout (< 30 lines)
+//! Uses minimum constraints to ensure usability on small terminals:
+//! - Header: Min 3 lines
+//! - Folders: Min 6 lines
+//! - Buttons: Min 3 lines
+//! - Output: Min 8 lines (critical for readability)
+//! - Status: 1 line
+//!
+//! # Terminal Size Requirements
+//!
+//! - **Minimum Width**: 80 columns (ensures buttons and labels fit)
+//! - **Minimum Height**: 24 lines (ensures all UI elements are visible)
+//! - **Recommended**: 100x30 or larger for optimal experience
+//!
+//! # Example Usage
+//!
+//! ```rust,no_run
+//! use classic_tui::ui::layout::TuiLayout;
+//! use ratatui::layout::Rect;
+//!
+//! // Create main screen layout
+//! let area = Rect::new(0, 0, 100, 40);
+//! let (header, folders, buttons, output, status) = TuiLayout::main_screen(area);
+//!
+//! // Create a centered popup (50% width, 50% height)
+//! let popup = TuiLayout::centered_rect(50, 50, area);
+//!
+//! // Validate terminal size
+//! let (is_valid, width_msg, height_msg) = TuiLayout::check_minimum_size(area);
+//! if !is_valid {
+//!     // Display error messages to user
+//!     println!("{}", width_msg.unwrap_or_default());
+//!     println!("{}", height_msg.unwrap_or_default());
+//! }
+//! ```
+//!
+//! # Testing
+//!
+//! The module includes comprehensive tests for:
+//! - Standard vs. compact layout behavior
+//! - Folder section 50/50 split
+//! - Button row 25/25/25/25 split
+//! - Centered popup positioning
+//! - Minimum size validation (width, height, both)
+
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
 /// Layout constants for the TUI

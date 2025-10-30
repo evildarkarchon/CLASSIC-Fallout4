@@ -1,3 +1,48 @@
+//! Backup operations screen for managing game file backups.
+//!
+//! This module provides a comprehensive UI for creating, restoring, and removing backups
+//! of critical game files (XSE/F4SE/SKSE, ReShade, Vulkan, ENB). The screen displays
+//! real-time backup status and provides keyboard shortcuts for all backup operations.
+//!
+//! # Features
+//!
+//! - Visual status indicators showing which backup types exist (✓ = backed up, empty = no backup)
+//! - Color-coded buttons for backup operations (Blue = Backup, Yellow = Restore, Red = Remove)
+//! - Disabled state for Restore/Remove buttons when no backup exists (DarkGray)
+//! - Keyboard shortcuts (1-4: Backup, 5-8: Restore, 9-0,-,=: Remove)
+//! - Update notification banner integration
+//!
+//! # Backup Types Supported
+//!
+//! - **XSE (F4SE/SKSE)**: Script extender executables and DLLs
+//! - **ReShade**: Graphics enhancement framework files
+//! - **Vulkan**: Vulkan API layer files
+//! - **ENB**: ENB graphics mod files
+//!
+//! # Layout
+//!
+//! The screen is organized into three vertical sections:
+//! - Header (3 lines): Application title
+//! - Backup sections (flexible): Four rows, one per backup type, each with three columns (Backup/Restore/Remove)
+//! - Status bar (3 lines): Keyboard shortcuts reference
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use classic_tui::ui::backup_screen::render_backup_screen;
+//! use classic_tui::app::App;
+//! use ratatui::backend::CrosstermBackend;
+//! use ratatui::Terminal;
+//! use std::io;
+//!
+//! let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout())).unwrap();
+//! let app = App::new();
+//!
+//! terminal.draw(|f| {
+//!     render_backup_screen(f, &app);
+//! }).unwrap();
+//! ```
+
 use crate::app::App;
 use classic_file_io_core::BackupType;
 use ratatui::{

@@ -1,3 +1,71 @@
+//! Interactive settings screen with tabbed navigation and live editing.
+//!
+//! This module provides a comprehensive settings interface with three tabs (General, Paths, Advanced)
+//! that allows users to view and modify application configuration. The screen features keyboard
+//! navigation, checkboxes for boolean settings, and a folder picker overlay for path selection.
+//!
+//! # Features
+//!
+//! - **Tabbed Interface**: Three tabs (General, Paths, Advanced) with Tab/Shift+Tab navigation
+//! - **General Tab**: Boolean settings with checkbox widgets (FCX mode, FormID values, stat logging, etc.)
+//! - **Paths Tab**: Path configuration with folder picker integration (game root, docs root, mods folder, custom scan)
+//! - **Advanced Tab**: Numeric/enum settings (thread count, batch size, DB pool size, log verbosity) - read-only for now
+//! - **Live Description**: Context-sensitive help text for the currently focused setting
+//! - **Folder Picker Overlay**: Modal folder browser for path selection (80% width, 70% height)
+//! - **Update Notification**: Banner integration at top of screen
+//!
+//! # Navigation
+//!
+//! - **↑/↓**: Navigate between settings in current tab
+//! - **Tab/Shift+Tab**: Switch between tabs
+//! - **Space/Enter**: Toggle checkboxes (General tab) or open folder picker (Paths tab)
+//! - **ESC**: Return to main screen
+//! - **S**: Save configuration changes
+//!
+//! # Architecture
+//!
+//! The module defines several key types:
+//! - [`SettingsTab`]: Enum for the three main tabs (General, Paths, Advanced)
+//! - [`SettingItem`]: General tab boolean settings (6 options)
+//! - [`PathItem`]: Paths tab path configurations (4 paths)
+//! - [`AdvancedItem`]: Advanced tab numeric/enum settings (4 settings)
+//! - [`SettingsState`]: Navigation state tracking (current tab, focused item, edit mode)
+//!
+//! Each enum provides navigation methods (`next()`, `prev()`, `all()`), labels, and descriptions.
+//!
+//! # Layout
+//!
+//! The screen is divided into five vertical sections:
+//! 1. Header (3 lines): "CLASSIC - Settings" title
+//! 2. Tab bar (3 lines): Tab names with active tab highlighted
+//! 3. Tab content (flexible): Current tab's settings UI
+//! 4. Description (5 lines): Help text for focused setting
+//! 5. Instructions (3 lines): Keyboard shortcuts reference
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use classic_tui::ui::settings_screen_interactive::{render_settings_screen_interactive, SettingsState};
+//! use classic_tui::app::App;
+//! use ratatui::backend::CrosstermBackend;
+//! use ratatui::Terminal;
+//! use std::io;
+//!
+//! let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout())).unwrap();
+//! let mut app = App::new();
+//! let state = SettingsState::new();
+//!
+//! terminal.draw(|f| {
+//!     render_settings_screen_interactive(f, &mut app, &state);
+//! }).unwrap();
+//! ```
+//!
+//! # Implementation Status
+//!
+//! - ✅ General tab: Fully functional with live checkbox toggling
+//! - ✅ Paths tab: Fully functional with folder picker integration
+//! - ⚠️ Advanced tab: Read-only (displays default values, editing not yet implemented)
+
 use crate::app::App;
 use crate::widgets::Checkbox;
 use ratatui::{

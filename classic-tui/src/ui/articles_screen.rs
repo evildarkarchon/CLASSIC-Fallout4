@@ -1,4 +1,93 @@
-/// Articles/Resources screen for help documentation and guides
+//! Articles and resources screen with categorized help documentation.
+//!
+//! This module provides a comprehensive help system with markdown-rendered articles organized
+//! into categories (Installation, Common Issues, Advanced Topics, Keyboard Shortcuts). The screen
+//! features a two-pane layout with category/article navigation on the left and rendered content
+//! on the right, including clickable URL detection and highlighting.
+//!
+//! # Features
+//!
+//! - **Categorized Navigation**: Four categories with multiple articles each
+//! - **Markdown Rendering**: Full markdown support with headers, bold, italic, lists, code blocks
+//! - **URL Detection**: Automatically detects and highlights URLs in markdown content
+//! - **Keyboard Navigation**: Arrow keys for selection, Enter to open URLs in browser
+//! - **Pre-rendered Cache**: All articles rendered once on first access for 60 FPS performance
+//! - **Syntax Highlighting**: Color-coded headers (Cyan), URLs (Yellow), code blocks (Green)
+//! - **Scrollable Content**: Long articles support vertical scrolling
+//!
+//! # Categories
+//!
+//! - **Installation & Setup**: Getting started with CLASSIC, system requirements, configuration
+//! - **Common Issues**: Troubleshooting frequent problems, error messages, solutions
+//! - **Advanced Topics**: FCX mode, batch processing, performance tuning, database management
+//! - **Keyboard Shortcuts**: Complete reference of all keyboard bindings by screen
+//!
+//! # Architecture
+//!
+//! The module uses several optimization strategies:
+//! - [`RENDERED_ARTICLES_CACHE`]: Global OnceLock cache initialized on first access
+//! - Pre-rendering: All markdown parsed once at startup, not every frame (30 FPS rendering loop)
+//! - Cache key: `(ArticleCategory, usize)` tuple for fast HashMap lookup
+//! - URL tracking: Each article tracks detected URLs with line numbers for keyboard navigation
+//!
+//! # Layout
+//!
+//! The screen is divided into two main horizontal sections:
+//! - **Left Pane** (30%): Category tabs + Article list with selection highlight
+//! - **Right Pane** (70%): Rendered markdown content with scrolling support
+//!
+//! The left pane contains:
+//! - Tab bar (3 lines): Category tabs with active tab underlined
+//! - Article list (flexible): Scrollable list of article titles in current category
+//! - Instructions (3 lines): Keyboard shortcuts reference
+//!
+//! # Navigation
+//!
+//! - **↑/↓**: Navigate between articles in current category
+//! - **Left/Right**: Switch between categories
+//! - **Enter**: Open currently highlighted URL in browser (if URL navigation is active)
+//! - **Tab**: Cycle through detected URLs in current article
+//! - **ESC**: Return to main screen
+//!
+//! # URL Navigation
+//!
+//! When an article contains URLs (detected via markdown or inline text):
+//! 1. URLs are highlighted in Yellow with (n) indicator
+//! 2. Press Tab to cycle through URLs
+//! 3. Press Enter to open currently selected URL in default browser
+//! 4. URL counter shows "[URL X/Y]" in article title bar
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use classic_tui::ui::articles_screen::render_articles_screen;
+//! use classic_tui::app::App;
+//! use ratatui::backend::CrosstermBackend;
+//! use ratatui::Terminal;
+//! use std::io;
+//!
+//! let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout())).unwrap();
+//! let mut app = App::new();
+//!
+//! terminal.draw(|f| {
+//!     render_articles_screen(f, &mut app);
+//! }).unwrap();
+//! ```
+//!
+//! # Performance
+//!
+//! - Pre-rendering eliminates markdown parsing overhead (30 FPS target)
+//! - Cache key structure: `(category, index)` for O(1) HashMap lookup
+//! - Static cache shared across all App instances (useful for testing)
+//! - Articles loaded lazily but cached permanently after first access
+//!
+//! # Implementation Note
+//!
+//! The `RENDERED_ARTICLES_CACHE` uses a non-ideal key structure: `(ArticleCategory, usize)` where
+//! `usize` is the article index within that category. This couples the cache to article ordering.
+//! A better approach would use article IDs or titles as keys, but the current implementation works
+//! for the static article set and avoids unnecessary complexity.
+
 use crate::app::App;
 use crate::widgets::markdown_viewer::{MarkdownRenderer, RenderedMarkdown};
 use ratatui::{

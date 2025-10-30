@@ -208,26 +208,3 @@ pub fn clear_stats() {
         tracing::info!("Papyrus statistics cleared");
     }
 }
-
-/// Checks if Papyrus monitoring is currently active
-pub fn is_monitoring() -> bool {
-    MONITORING_ACTIVE.load(Ordering::SeqCst)
-}
-
-/// Checks if the Papyrus log file exists
-///
-/// # Arguments
-/// * `state` - Application state for accessing configuration
-pub async fn check_log_exists(state: SharedAppState) -> bool {
-    let docs_root = {
-        let state_guard = state.read();
-        state_guard.docs_root().cloned()
-    };
-
-    if let Some(docs) = docs_root {
-        let papyrus_log_path = docs.join("Logs/Script/Papyrus.0.log");
-        papyrus_log_path.exists()
-    } else {
-        false
-    }
-}

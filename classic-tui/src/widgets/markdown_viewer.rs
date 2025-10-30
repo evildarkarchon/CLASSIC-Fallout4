@@ -24,10 +24,11 @@ pub struct DetectedUrl {
     /// The URL string
     pub url: String,
     /// Line number where the URL appears (0-indexed)
+    ///
+    /// Reserved for future URL navigation feature that allows jumping to specific lines.
     #[allow(dead_code)]
     pub line_number: usize,
     /// Display text for the URL
-    #[allow(dead_code)]
     pub display_text: String,
 }
 

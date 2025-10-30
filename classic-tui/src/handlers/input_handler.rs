@@ -1,3 +1,134 @@
+//! Keyboard input handling and event routing for all TUI screens.
+//!
+//! This module provides centralized keyboard input handling for the CLASSIC TUI application.
+//! It dispatches key events to screen-specific handlers based on the current UI state, handles
+//! global key bindings (Q to quit, Ctrl+C), and manages modal overlays (error dialogs, folder pickers).
+//!
+//! # Architecture
+//!
+//! The input handler follows a hierarchical dispatch pattern:
+//! 1. **Modal Overlays** (highest priority): Error dialogs, update notifications, folder pickers
+//! 2. **Global Bindings**: Q to quit, Ctrl+C to quit (work on all screens)
+//! 3. **Screen-Specific Bindings**: Dispatched based on [`UiState`]
+//!
+//! This ensures modals always capture input first, preventing key events from bleeding through
+//! to underlying screens.
+//!
+//! # Key Binding Organization
+//!
+//! Each screen has a dedicated handler function:
+//! - [`handle_main_screen_keys`]: Main screen (F5 scan, F6 game scan, F7 papyrus, etc.)
+//! - [`handle_help_screen_keys`]: Help screen (ESC to return)
+//! - [`handle_settings_screen_keys`]: Settings screen (Tab, ↑/↓, Space to toggle, S to save)
+//! - [`handle_papyrus_screen_keys`]: Papyrus monitoring (F7/P toggle, C clear, ESC back)
+//! - [`handle_backup_screen_keys`]: Backup operations (1-4 backup, 5-8 restore, 9-0 remove)
+//! - [`handle_results_screen_keys`]: Results viewer (↑/↓ scroll, / search, n/N navigate matches)
+//! - [`handle_articles_screen_keys`]: Articles browser (Left/Right categories, ↑/↓ articles, Tab URLs)
+//!
+//! # Global Key Bindings
+//!
+//! These work on all screens (unless a modal is active):
+//! - **Q**: Quit application
+//! - **Ctrl+C**: Quit application (standard terminal convention)
+//! - **F1**: Show help screen (navigation aid)
+//!
+//! # Modal Overlay Bindings
+//!
+//! - **Error Dialog**: ESC to close, ↑/↓ to scroll, C to copy to clipboard
+//! - **Update Notification**: U to open browser, X to dismiss
+//! - **Folder Picker**: ↑/↓ navigate, Enter select, Backspace parent, ESC cancel
+//!
+//! # Main Screen Bindings
+//!
+//! - **F2/S**: Open staging mods folder picker
+//! - **F3/C**: Open custom scan folder picker
+//! - **F5/R**: Start crash logs scan
+//! - **F6/G**: Start game files scan
+//! - **F7/P**: Toggle Papyrus monitor
+//! - **F8/B**: Show backup operations screen
+//! - **F9**: Show results viewer
+//! - **F10**: Show articles/resources screen
+//! - **Ctrl+L**: Clear output viewer
+//! - **Ctrl+O**: Open settings screen
+//! - **↑/↓**: Scroll output (1 line)
+//! - **Page Up/Down**: Scroll output (10 lines)
+//! - **/**: Search output (TODO - not yet implemented)
+//!
+//! # Settings Screen Bindings
+//!
+//! - **Tab**: Switch to next tab (General → Paths → Advanced)
+//! - **Shift+Tab**: Switch to previous tab
+//! - **↑/↓**: Navigate between settings in current tab
+//! - **Space/Enter**: Toggle checkbox (General tab) or open folder picker (Paths tab)
+//! - **E**: Edit path (Paths tab) - alternative to Space/Enter
+//! - **S**: Save configuration changes
+//! - **ESC**: Return to main screen (discards unsaved changes)
+//!
+//! # Papyrus Screen Bindings
+//!
+//! - **F7/P**: Toggle monitoring on/off
+//! - **C**: Clear log output
+//! - **↑/↓**: Scroll log output (if implemented)
+//! - **ESC**: Return to main screen
+//!
+//! # Backup Screen Bindings
+//!
+//! - **1**: Backup XSE (F4SE/SKSE)
+//! - **2**: Backup ReShade
+//! - **3**: Backup Vulkan
+//! - **4**: Backup ENB
+//! - **5**: Restore XSE
+//! - **6**: Restore ReShade
+//! - **7**: Restore Vulkan
+//! - **8**: Restore ENB
+//! - **9**: Remove XSE backup
+//! - **0**: Remove ReShade backup
+//! - **-**: Remove Vulkan backup
+//! - **=**: Remove ENB backup
+//! - **ESC**: Return to main screen
+//!
+//! # Results Screen Bindings
+//!
+//! - **↑/↓**: Navigate report list (left pane) or scroll content (right pane)
+//! - **Page Up/Down**: Scroll content by page
+//! - **Home/End**: Jump to start/end of report
+//! - **/**: Activate search mode (TODO - UI complete, backend pending)
+//! - **n**: Next search match
+//! - **N**: Previous search match (Shift+n)
+//! - **ESC**: Exit search mode or return to main screen
+//!
+//! # Articles Screen Bindings
+//!
+//! - **Left/Right**: Switch between categories
+//! - **↑/↓**: Navigate articles in current category
+//! - **Tab**: Cycle through URLs in current article (if URLs detected)
+//! - **Enter**: Open currently selected URL in browser
+//! - **ESC**: Return to main screen
+//!
+//! # Implementation Notes
+//!
+//! - All handler functions return `Option<UiMessage>` for command pattern
+//! - `None` means no action (key ignored or handled internally)
+//! - `Some(UiMessage)` enqueues a command for the main event loop to process
+//! - Handlers check app state (e.g., `app.is_scanning()`) to conditionally enable keys
+//! - Modal overlays checked first to prevent input leakage to underlying screens
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use classic_tui::handlers::input_handler::handle_key_event;
+//! use classic_tui::app::App;
+//! use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+//!
+//! let mut app = App::new();
+//! let key_event = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::empty());
+//!
+//! if let Some(msg) = handle_key_event(&mut app, key_event) {
+//!     // Process the UI message (e.g., quit application)
+//!     println!("Received message: {:?}", msg);
+//! }
+//! ```
+
 use crate::app::{App, UiState};
 use crate::events::UiMessage;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};

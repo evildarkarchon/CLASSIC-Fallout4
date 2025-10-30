@@ -1,3 +1,91 @@
+//! Checkbox widget for boolean settings with focus and dirty tracking.
+//!
+//! This module provides a reusable checkbox widget used in the settings screen for toggling
+//! boolean configuration options. The widget supports keyboard focus, visual state changes,
+//! and dirty tracking to optimize rendering performance by skipping unchanged widgets.
+//!
+//! # Features
+//!
+//! - **Visual States**: Checked ([X]) vs. unchecked ([ ]) with color coding
+//! - **Focus Highlighting**: Yellow border and bold text when focused
+//! - **Dirty Tracking**: Marks widget dirty on state/focus changes for selective rendering
+//! - **Color Coding**: Green checkmark when checked, White when unchecked
+//! - **Label Display**: Custom label text next to checkbox symbol
+//! - **Keyboard Toggle**: Space/Enter to toggle when focused
+//!
+//! # Visual Appearance
+//!
+//! **Unfocused, Unchecked**:
+//! ```text
+//! ┌────────────────────┐
+//! │ [ ] FCX Mode       │
+//! └────────────────────┘
+//! ```
+//!
+//! **Focused, Checked**:
+//! ```text
+//! ┌────────────────────┐ (Yellow border)
+//! │ [X] FCX Mode       │ (Bold text, Green X)
+//! └────────────────────┘
+//! ```
+//!
+//! # Dirty Tracking
+//!
+//! The checkbox tracks whether it needs re-rendering to optimize performance:
+//! - Starts dirty (forces initial render)
+//! - Marked dirty on state changes: `set_checked()`, `toggle()`, `set_focused()`
+//! - Marked clean after rendering: `mark_clean()` (called by parent after render)
+//! - Can be forced dirty: `mark_dirty()` (useful for external state changes)
+//!
+//! This allows rendering loops to skip unchanged checkboxes in the 30 FPS event loop.
+//!
+//! # Usage Example
+//!
+//! ```rust,no_run
+//! use classic_tui::widgets::Checkbox;
+//! use ratatui::backend::CrosstermBackend;
+//! use ratatui::Terminal;
+//! use ratatui::layout::Rect;
+//! use std::io;
+//!
+//! let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout())).unwrap();
+//! let mut checkbox = Checkbox::new("Enable FCX Mode", false);
+//!
+//! // Set as focused (highlights border)
+//! checkbox.set_focused(true);
+//!
+//! // Toggle state (user pressed Space)
+//! checkbox.toggle();
+//! assert!(checkbox.is_checked());
+//!
+//! // Render the checkbox
+//! terminal.draw(|f| {
+//!     let area = Rect::new(0, 0, 30, 3);
+//!     checkbox.render(f, area);
+//! }).unwrap();
+//!
+//! // Mark clean after rendering (parent's responsibility)
+//! checkbox.mark_clean();
+//! ```
+//!
+//! # Integration with Settings Screen
+//!
+//! The settings screen creates checkboxes for each boolean setting:
+//! 1. Create checkbox with `Checkbox::new(label, initial_value)`
+//! 2. Set focus on currently selected item with `set_focused(true)`
+//! 3. Call `render()` during frame draw
+//! 4. Handle toggle on Space/Enter key press
+//! 5. Sync changes back to config with `is_checked()`
+//!
+//! # Testing
+//!
+//! The module includes comprehensive tests:
+//! - Creation with initial state
+//! - Toggle functionality
+//! - Set checked explicitly
+//! - Focus state changes
+//! - Dirty tracking behavior (via state changes)
+
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},

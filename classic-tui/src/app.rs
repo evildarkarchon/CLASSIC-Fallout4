@@ -67,6 +67,8 @@ pub struct App {
     pub error_dialog: Option<ErrorDialog>,
     /// Update notification for displaying available updates
     pub update_notification: Option<UpdateNotification>,
+    /// Current terminal height (updated each frame)
+    pub terminal_height: u16,
 }
 
 /// UI state representing which screen is active
@@ -159,6 +161,7 @@ impl App {
             search_active: false,
             error_dialog: None,
             update_notification: None,
+            terminal_height: 30, // Default, will be updated each frame
         }
     }
 

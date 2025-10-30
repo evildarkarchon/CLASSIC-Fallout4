@@ -1,3 +1,55 @@
+//! Papyrus log monitoring screen with real-time statistics and log output.
+//!
+//! This module provides a live monitoring interface for Papyrus.0.log, tracking stack dumps,
+//! traces, errors, warnings, and severity ratios in real-time. The screen uses a file watcher
+//! to detect changes and updates statistics immediately as new log entries are written.
+//!
+//! # Features
+//!
+//! - **Real-time Statistics**: Displays stack dumps, traces, warnings, errors with live updates
+//! - **Severity Analysis**: Color-coded status (Red=Critical, Yellow=Warning, Green=OK)
+//! - **Diagnostic Ratios**: Error/warning ratio and dumps/stacks ratio for quick assessment
+//! - **Live Log Output**: Shows recent log lines with syntax highlighting (errors=red, warnings=yellow, dumps=magenta)
+//! - **Start/Stop Control**: Toggle monitoring with F7 or P key
+//! - **Clear Functionality**: Clear accumulated log lines with C key
+//!
+//! # Severity Levels
+//!
+//! The screen displays one of three severity levels based on PapyrusStats:
+//! - **Critical** (Red [X]): High error/warning ratio or dumps/stacks ratio indicates serious issues
+//! - **Warning** (Yellow [!]): Moderate ratios suggest potential problems
+//! - **OK** (Green [OK]): Normal operation, or only informational dumps present
+//!
+//! # Layout
+//!
+//! The screen is divided into four vertical sections:
+//! 1. Header (3 lines): Status indicator (ACTIVE/STOPPED) with color coding
+//! 2. Statistics (10 lines): Numerical stats with ratios and lines processed
+//! 3. Log Output (flexible): Recent log lines with color-coded severity (newest lines last)
+//! 4. Status Bar (3 lines): Keyboard shortcuts (F7/P Start/Stop, C Clear, ESC Back, Q Quit)
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use classic_tui::ui::papyrus_screen::render_papyrus_screen;
+//! use classic_tui::app::App;
+//! use ratatui::backend::CrosstermBackend;
+//! use ratatui::Terminal;
+//! use std::io;
+//!
+//! let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout())).unwrap();
+//! let app = App::new();
+//!
+//! terminal.draw(|f| {
+//!     render_papyrus_screen(f, &app);
+//! }).unwrap();
+//! ```
+//!
+//! # Integration
+//!
+//! This module integrates with [`classic_scanlog_core::papyrus`] for statistics calculation
+//! and uses the [`crate::handlers::papyrus_handler`] for file watching and async log processing.
+
 use crate::app::App;
 use classic_scanlog_core::papyrus::PapyrusStats;
 use ratatui::{

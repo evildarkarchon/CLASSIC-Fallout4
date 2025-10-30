@@ -1,3 +1,41 @@
+//! Help screen rendering for keyboard shortcuts reference.
+//!
+//! This module provides the help screen UI that displays all available keyboard shortcuts
+//! and navigation commands for the CLASSIC TUI application. The screen is accessible via
+//! the F1 key from any screen and provides a comprehensive reference for users.
+//!
+//! # Features
+//!
+//! - Displays keyboard shortcuts organized by category (Main Screen, Navigation, Folder Paths)
+//! - Shows update notification banner when available
+//! - Adjusts working area to accommodate notification overlay
+//! - Uses consistent color scheme (Cyan headers, Yellow highlights)
+//!
+//! # Layout
+//!
+//! The help screen is rendered as a single bordered paragraph containing:
+//! - Application title with styling
+//! - Categorized keyboard shortcuts with key bindings
+//! - Brief descriptions of folder path purposes
+//! - Instructions for returning to main screen (ESC key)
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use classic_tui::ui::help_screen::render_help_screen;
+//! use classic_tui::app::App;
+//! use ratatui::backend::CrosstermBackend;
+//! use ratatui::Terminal;
+//! use std::io;
+//!
+//! let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout())).unwrap();
+//! let app = App::new();
+//!
+//! terminal.draw(|f| {
+//!     render_help_screen(f, &app);
+//! }).unwrap();
+//! ```
+
 use crate::app::App;
 use ratatui::{
     layout::{Alignment, Rect},

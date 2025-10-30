@@ -87,7 +87,6 @@ pub enum UiMessage {
     /// Update custom scan folder path
     UpdateCustomFolder(std::path::PathBuf),
     /// Toggle update check
-    #[allow(dead_code)]
     ToggleUpdateCheck,
     /// Save settings to disk
     SaveSettings,
@@ -124,7 +123,6 @@ pub enum UiMessage {
     /// Refresh backup status
     RefreshBackupStatus,
     /// Show error dialog
-    #[allow(dead_code)]
     ShowErrorDialog,
     /// Close error dialog
     CloseErrorDialog,

@@ -13,7 +13,11 @@ use tokio::sync::mpsc;
 pub struct ScanHandler {
     /// Optional crash logs directory to scan
     scan_path: Option<PathBuf>,
-    /// Optional mods folder for mod detection (reserved for future use)
+    /// Optional mods folder for mod detection.
+    ///
+    /// Reserved for future feature: Enhanced mod-specific diagnostics and plugin analysis.
+    /// When implemented, this will enable the scanner to provide mod recommendations
+    /// and plugin load order suggestions based on detected issues.
     #[allow(dead_code)]
     mods_folder: Option<PathBuf>,
 }

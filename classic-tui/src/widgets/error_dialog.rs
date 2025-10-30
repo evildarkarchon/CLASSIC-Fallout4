@@ -17,13 +17,10 @@ use ratatui::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ErrorSeverity {
     /// Critical error (red) - operation failed, user action required
-    #[allow(dead_code)]
     Error,
     /// Warning (yellow) - operation completed with issues
-    #[allow(dead_code)]
     Warning,
     /// Information (blue) - operation completed successfully with notes
-    #[allow(dead_code)]
     Info,
 }
 

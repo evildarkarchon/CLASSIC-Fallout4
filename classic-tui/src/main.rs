@@ -171,6 +171,11 @@ async fn run_app(
     backup_handler: &mut BackupHandler,
 ) -> Result<()> {
     loop {
+        // Update terminal height for scroll calculations
+        if let Ok(size) = terminal.size() {
+            app.terminal_height = size.height;
+        }
+
         // Render UI
         terminal.draw(|f| match app.ui_state {
             UiState::MainScreen => render_main_screen(f, app),
@@ -233,28 +238,28 @@ async fn run_app(
     Ok(())
 }
 
-/// Handle UI messages from input handler
-async fn handle_ui_message(
+/// Handle navigation messages (screen switching)
+async fn handle_navigation_msg(
     app: &mut App,
-    msg: UiMessage,
-    scan_handler: &ScanHandler,
-    scan_tx: &mpsc::Sender<ScanMessage>,
-    papyrus_tx: &mpsc::Sender<PapyrusMessage>,
-    papyrus_handler: &mut Option<PapyrusHandler>,
+    msg: &UiMessage,
     backup_handler: &mut BackupHandler,
-) -> Result<()> {
+) -> Result<bool> {
     match msg {
         UiMessage::Quit => {
             app.should_quit = true;
+            Ok(true)
         }
         UiMessage::ShowMainScreen => {
             app.switch_screen(UiState::MainScreen);
+            Ok(true)
         }
         UiMessage::ShowHelpScreen => {
             app.switch_screen(UiState::HelpScreen);
+            Ok(true)
         }
         UiMessage::ShowSettingsScreen => {
             app.switch_screen(UiState::SettingsScreen);
+            Ok(true)
         }
         UiMessage::ShowBackupScreen => {
             app.switch_screen(UiState::BackupScreen);
@@ -262,6 +267,7 @@ async fn handle_ui_message(
             if let Ok(status) = backup_handler.refresh_status().await {
                 app.update_backup_status(status);
             }
+            Ok(true)
         }
         UiMessage::ShowResultsScreen => {
             app.switch_screen(UiState::ResultsScreen);
@@ -269,14 +275,28 @@ async fn handle_ui_message(
             if let Err(e) = app.load_report_files().await {
                 app.add_output(format!("Error loading reports: {}", e));
             }
+            Ok(true)
         }
         UiMessage::ShowArticlesScreen => {
             app.switch_screen(UiState::ArticlesScreen);
+            Ok(true)
         }
+        _ => Ok(false), // Not handled
+    }
+}
+
+/// Handle scan operation messages
+async fn handle_scan_msg(
+    app: &mut App,
+    msg: &UiMessage,
+    scan_tx: &mpsc::Sender<ScanMessage>,
+    papyrus_tx: &mpsc::Sender<PapyrusMessage>,
+    papyrus_handler: &mut Option<PapyrusHandler>,
+) -> Result<bool> {
+    match msg {
         UiMessage::StartCrashScan => {
             app.start_crash_scan();
             let tx = scan_tx.clone();
-            // Use paths from configuration
             let scan_path = app.custom_folder.clone();
             let mods_folder = app.staging_folder.clone();
             let handler = ScanHandler::with_paths(scan_path, mods_folder);
@@ -287,11 +307,11 @@ async fn handle_ui_message(
                         .await;
                 }
             });
+            Ok(true)
         }
         UiMessage::StartGameScan => {
             app.start_game_scan();
             let tx = scan_tx.clone();
-            // Use paths from configuration
             let scan_path = app.custom_folder.clone();
             let mods_folder = app.staging_folder.clone();
             let handler = ScanHandler::with_paths(scan_path, mods_folder);
@@ -302,17 +322,16 @@ async fn handle_ui_message(
                         .await;
                 }
             });
+            Ok(true)
         }
         UiMessage::TogglePapyrusMonitor => {
             if matches!(app.scan_state, app::ScanState::PapyrusMonitoring) {
-                // Stop monitoring
                 if let Some(handler) = papyrus_handler.as_mut() {
                     handler.stop_monitoring().await;
                 }
                 app.toggle_papyrus_monitor();
                 app.clear_papyrus_data();
             } else {
-                // Start monitoring
                 app.toggle_papyrus_monitor();
                 if let Some(handler) = papyrus_handler.as_mut() {
                     let tx = papyrus_tx.clone();
@@ -330,45 +349,61 @@ async fn handle_ui_message(
                     app.scan_error("Papyrus.0.log not found".to_string());
                 }
             }
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle output and scrolling messages
+fn handle_output_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
+    match msg {
         UiMessage::ClearOutput => {
             app.clear_output();
+            Ok(true)
         }
         UiMessage::ScrollUp(lines) => {
-            app.scroll_up(lines);
+            app.scroll_up(*lines);
+            Ok(true)
         }
         UiMessage::ScrollDown(lines) => {
-            // Calculate visible lines based on terminal size
-            // For now, use a reasonable default
-            app.scroll_down(lines, 20);
+            app.scroll_down(*lines, 20);
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle settings messages
+async fn handle_settings_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
+    use handlers::folder_handler::{handle_folder_selection, FolderType};
+
+    match msg {
         UiMessage::UpdateStagingFolder(path) => {
-            use handlers::folder_handler::{handle_folder_selection, FolderType};
-            if let Err(e) = handle_folder_selection(app, FolderType::Staging, path).await {
+            if let Err(e) = handle_folder_selection(app, FolderType::Staging, path.clone()).await {
                 app.add_output(format!("Error updating staging folder: {}", e));
             }
+            Ok(true)
         }
         UiMessage::UpdateCustomFolder(path) => {
-            use handlers::folder_handler::{handle_folder_selection, FolderType};
-            if let Err(e) = handle_folder_selection(app, FolderType::Custom, path).await {
+            if let Err(e) = handle_folder_selection(app, FolderType::Custom, path.clone()).await {
                 app.add_output(format!("Error updating custom folder: {}", e));
             }
+            Ok(true)
         }
         UiMessage::ToggleUpdateCheck => {
             app.check_updates = !app.check_updates;
+            Ok(true)
         }
         UiMessage::SaveSettings => {
-            // Save configuration to YAML file
             if let Err(e) = app.save_config().await {
-                // Log error but don't crash
                 tracing::error!("Failed to save settings: {}", e);
             } else {
-                // Could add a success message to output
                 app.add_output("Settings saved successfully.".to_string());
             }
+            Ok(true)
         }
         UiMessage::ResetCurrentTab => {
-            // Reset settings based on current tab
             use crate::ui::SettingsTab;
             match app.settings_state.current_tab {
                 SettingsTab::General => {
@@ -377,39 +412,56 @@ async fn handle_ui_message(
                 }
                 SettingsTab::Paths => {
                     app.reset_paths_settings();
-                    app.add_output("Path settings preserved (reset not applicable to paths).".to_string());
+                    app.add_output(
+                        "Path settings preserved (reset not applicable to paths).".to_string(),
+                    );
                 }
                 SettingsTab::Advanced => {
                     app.reset_advanced_settings();
-                    app.add_output("Advanced settings reset to defaults (when implemented).".to_string());
+                    app.add_output(
+                        "Advanced settings reset to defaults (when implemented).".to_string(),
+                    );
                 }
             }
+            Ok(true)
         }
         UiMessage::NextSettingsTab => {
             app.settings_state.next_tab();
+            Ok(true)
         }
         UiMessage::PreviousSettingsTab => {
             app.settings_state.prev_tab();
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle folder picker messages
+async fn handle_folder_picker_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
+    use handlers::folder_handler::{handle_folder_selection, FolderType};
+
+    match msg {
         UiMessage::OpenStagingPicker => {
             app.open_staging_picker();
+            Ok(true)
         }
         UiMessage::OpenCustomPicker => {
             app.open_custom_picker();
+            Ok(true)
         }
         UiMessage::OpenSettingsPathPicker => {
             let focused_path = app.settings_state.focused_path;
             app.open_settings_path_picker(focused_path);
+            Ok(true)
         }
         UiMessage::CloseFolderPicker => {
             app.close_staging_picker();
             app.close_custom_picker();
             app.close_settings_path_picker();
+            Ok(true)
         }
         UiMessage::SelectFolder => {
-            // Determine which picker is active and get the selected path
-            use handlers::folder_handler::{handle_folder_selection, FolderType};
-
             if let Some(ref picker) = app.staging_picker {
                 if picker.is_active() {
                     let selected_path = picker.get_selected_path();
@@ -436,7 +488,6 @@ async fn handle_ui_message(
                     let editing_path = app.editing_path;
                     app.close_settings_path_picker();
 
-                    // Update the appropriate config path
                     if let Some(path_item) = editing_path {
                         use crate::app::PathItem;
                         match path_item {
@@ -457,6 +508,7 @@ async fn handle_ui_message(
                     }
                 }
             }
+            Ok(true)
         }
         UiMessage::FolderPickerUp => {
             if let Some(ref mut picker) = app.staging_picker {
@@ -466,6 +518,7 @@ async fn handle_ui_message(
             } else if let Some(ref mut picker) = app.settings_path_picker {
                 picker.move_up();
             }
+            Ok(true)
         }
         UiMessage::FolderPickerDown => {
             if let Some(ref mut picker) = app.staging_picker {
@@ -475,6 +528,7 @@ async fn handle_ui_message(
             } else if let Some(ref mut picker) = app.settings_path_picker {
                 picker.move_down();
             }
+            Ok(true)
         }
         UiMessage::FolderPickerEnter => {
             if let Some(ref mut picker) = app.staging_picker {
@@ -484,6 +538,7 @@ async fn handle_ui_message(
             } else if let Some(ref mut picker) = app.settings_path_picker {
                 picker.enter_selected();
             }
+            Ok(true)
         }
         UiMessage::FolderPickerParent => {
             if let Some(ref mut picker) = app.staging_picker {
@@ -493,11 +548,24 @@ async fn handle_ui_message(
             } else if let Some(ref mut picker) = app.settings_path_picker {
                 picker.go_up();
             }
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle backup operation messages
+async fn handle_backup_msg(
+    app: &mut App,
+    msg: &UiMessage,
+    backup_handler: &mut BackupHandler,
+) -> Result<bool> {
+    use classic_file_io_core::BackupType;
+
+    match msg {
         UiMessage::CreateBackup(index) => {
-            use classic_file_io_core::BackupType;
             let backup_types = BackupType::all();
-            if let Some(&backup_type) = backup_types.get(index) {
+            if let Some(&backup_type) = backup_types.get(*index) {
                 app.add_output(format!("Creating {} backup...", backup_type.display_name()));
                 match backup_handler.create_backup(backup_type).await {
                     Ok(info) => {
@@ -514,11 +582,11 @@ async fn handle_ui_message(
                     }
                 }
             }
+            Ok(true)
         }
         UiMessage::RestoreBackup(index) => {
-            use classic_file_io_core::BackupType;
             let backup_types = BackupType::all();
-            if let Some(&backup_type) = backup_types.get(index) {
+            if let Some(&backup_type) = backup_types.get(*index) {
                 if backup_handler.backup_exists(backup_type) {
                     app.add_output(format!("Restoring {} backup...", backup_type.display_name()));
                     match backup_handler.restore_backup(backup_type).await {
@@ -536,11 +604,11 @@ async fn handle_ui_message(
                     ));
                 }
             }
+            Ok(true)
         }
         UiMessage::RemoveBackup(index) => {
-            use classic_file_io_core::BackupType;
             let backup_types = BackupType::all();
-            if let Some(&backup_type) = backup_types.get(index) {
+            if let Some(&backup_type) = backup_types.get(*index) {
                 if backup_handler.backup_exists(backup_type) {
                     app.add_output(format!("Removing {} backup...", backup_type.display_name()));
                     match backup_handler.remove_backup(backup_type).await {
@@ -561,6 +629,7 @@ async fn handle_ui_message(
                     ));
                 }
             }
+            Ok(true)
         }
         UiMessage::RefreshBackupStatus => {
             app.add_output("Refreshing backup status...".to_string());
@@ -573,80 +642,120 @@ async fn handle_ui_message(
                     app.add_output(format!("✗ Refresh failed: {}", e));
                 }
             }
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle report viewer messages
+async fn handle_reports_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
+    match msg {
         UiMessage::SelectNextReport => {
             if let Err(e) = app.select_next_report().await {
                 app.add_output(format!("Error selecting report: {}", e));
             }
+            Ok(true)
         }
         UiMessage::SelectPreviousReport => {
             if let Err(e) = app.select_previous_report().await {
                 app.add_output(format!("Error selecting report: {}", e));
             }
+            Ok(true)
         }
         UiMessage::ScrollReportUp(lines) => {
-            app.scroll_report_up(lines);
+            app.scroll_report_up(*lines);
+            Ok(true)
         }
         UiMessage::ScrollReportDown(lines) => {
-            // Calculate visible lines (approximate, terminal height minus borders)
-            let visible_lines = 30; // TODO: Get actual terminal height
-            app.scroll_report_down(lines, visible_lines);
+            let visible_lines = app.terminal_height.saturating_sub(10) as usize;
+            app.scroll_report_down(*lines, visible_lines);
+            Ok(true)
         }
         UiMessage::RefreshReports => {
             if let Err(e) = app.load_report_files().await {
                 app.add_output(format!("Error refreshing reports: {}", e));
             }
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle search messages
+fn handle_search_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
+    match msg {
         UiMessage::StartSearch => {
             app.start_search();
+            Ok(true)
         }
         UiMessage::ExitSearch => {
             app.exit_search();
+            Ok(true)
         }
         UiMessage::SearchAddChar(c) => {
-            app.add_search_char(c);
+            app.add_search_char(*c);
+            Ok(true)
         }
         UiMessage::SearchBackspace => {
             app.backspace_search();
+            Ok(true)
         }
         UiMessage::SearchNextMatch => {
-            let visible_lines = 30; // TODO: Get actual terminal height
+            let visible_lines = app.terminal_height.saturating_sub(10) as usize;
             app.next_search_match(visible_lines);
+            Ok(true)
         }
         UiMessage::SearchPreviousMatch => {
-            let visible_lines = 30; // TODO: Get actual terminal height
+            let visible_lines = app.terminal_height.saturating_sub(10) as usize;
             app.previous_search_match(visible_lines);
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle articles screen messages
+fn handle_articles_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
+    match msg {
         UiMessage::NextArticleCategory => {
             app.articles_state.next_category();
-            app.articles_state.selected_article_index = 0; // Reset to first article
-            app.articles_state.scroll_offset = 0; // Reset scroll
+            app.articles_state.selected_article_index = 0;
+            app.articles_state.scroll_offset = 0;
+            Ok(true)
         }
         UiMessage::PreviousArticleCategory => {
             app.articles_state.prev_category();
-            app.articles_state.selected_article_index = 0; // Reset to first article
-            app.articles_state.scroll_offset = 0; // Reset scroll
+            app.articles_state.selected_article_index = 0;
+            app.articles_state.scroll_offset = 0;
+            Ok(true)
         }
         UiMessage::NextArticle => {
             app.articles_state.next_article();
-            app.articles_state.scroll_offset = 0; // Reset scroll when changing articles
+            app.articles_state.scroll_offset = 0;
+            Ok(true)
         }
         UiMessage::PreviousArticle => {
             app.articles_state.prev_article();
-            app.articles_state.scroll_offset = 0; // Reset scroll when changing articles
+            app.articles_state.scroll_offset = 0;
+            Ok(true)
         }
         UiMessage::ScrollArticleUp(lines) => {
-            app.articles_state.scroll_up(lines);
+            app.articles_state.scroll_up(*lines);
+            Ok(true)
         }
         UiMessage::ScrollArticleDown(lines) => {
-            let visible_lines = 30; // TODO: Get actual terminal height
-            app.articles_state.scroll_down(lines, visible_lines);
+            let visible_lines = app.terminal_height.saturating_sub(10) as usize;
+            app.articles_state.scroll_down(*lines, visible_lines);
+            Ok(true)
         }
         UiMessage::NextArticleLink => {
             app.articles_state.next_link();
+            Ok(true)
         }
         UiMessage::PreviousArticleLink => {
             app.articles_state.prev_link();
+            Ok(true)
         }
         UiMessage::OpenArticleLink => {
             if let Some(url) = app.articles_state.get_selected_link_url() {
@@ -661,12 +770,22 @@ async fn handle_ui_message(
                     app.show_error_dialog(dialog);
                 }
             }
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle error dialog messages
+fn handle_error_dialog_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
+    match msg {
         UiMessage::ShowErrorDialog => {
-            // This is typically not called directly - errors show dialogs via app.show_error_dialog()
+            // Typically not called directly
+            Ok(true)
         }
         UiMessage::CloseErrorDialog => {
             app.close_error_dialog();
+            Ok(true)
         }
         UiMessage::CopyErrorToClipboard => {
             if let Some(dialog) = &app.error_dialog {
@@ -680,15 +799,24 @@ async fn handle_ui_message(
                     }
                 }
             }
+            Ok(true)
         }
         UiMessage::ScrollErrorUp(lines) => {
-            app.scroll_error_up(lines);
+            app.scroll_error_up(*lines);
+            Ok(true)
         }
         UiMessage::ScrollErrorDown(lines) => {
-            app.scroll_error_down(lines);
+            app.scroll_error_down(*lines);
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle update notification messages
+async fn handle_update_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
+    match msg {
         UiMessage::CheckForUpdates => {
-            // Check for updates and show notification if available
             match crate::handlers::update_handler::check_for_updates().await {
                 Ok(Some(update_info)) => {
                     app.show_update_notification(crate::widgets::UpdateNotification::new(
@@ -703,6 +831,7 @@ async fn handle_ui_message(
                     app.add_output(format!("✗ Failed to check for updates: {}", e));
                 }
             }
+            Ok(true)
         }
         UiMessage::ViewUpdateDetails => {
             if let Some(notification) = &app.update_notification {
@@ -716,12 +845,66 @@ async fn handle_ui_message(
                     }
                 }
             }
+            Ok(true)
         }
         UiMessage::DismissUpdateNotification => {
             app.dismiss_update_notification();
+            Ok(true)
         }
+        _ => Ok(false),
+    }
+}
+
+/// Handle UI messages from input handler
+async fn handle_ui_message(
+    app: &mut App,
+    msg: UiMessage,
+    scan_handler: &ScanHandler,
+    scan_tx: &mpsc::Sender<ScanMessage>,
+    papyrus_tx: &mpsc::Sender<PapyrusMessage>,
+    papyrus_handler: &mut Option<PapyrusHandler>,
+    backup_handler: &mut BackupHandler,
+) -> Result<()> {
+    // Delegate to specialized handler functions based on message category
+    // This reduces complexity from 54 branches to 11 top-level branches
+
+    // Try each handler in sequence (they return Ok(true) if handled, Ok(false) if not)
+    if handle_navigation_msg(app, &msg, backup_handler).await? {
+        return Ok(());
+    }
+    if handle_scan_msg(app, &msg, scan_tx, papyrus_tx, papyrus_handler).await? {
+        return Ok(());
+    }
+    if handle_output_msg(app, &msg)? {
+        return Ok(());
+    }
+    if handle_settings_msg(app, &msg).await? {
+        return Ok(());
+    }
+    if handle_folder_picker_msg(app, &msg).await? {
+        return Ok(());
+    }
+    if handle_backup_msg(app, &msg, backup_handler).await? {
+        return Ok(());
+    }
+    if handle_reports_msg(app, &msg).await? {
+        return Ok(());
+    }
+    if handle_search_msg(app, &msg)? {
+        return Ok(());
+    }
+    if handle_articles_msg(app, &msg)? {
+        return Ok(());
+    }
+    if handle_error_dialog_msg(app, &msg)? {
+        return Ok(());
+    }
+    if handle_update_msg(app, &msg).await? {
+        return Ok(());
     }
 
+    // If no handler processed the message, log a warning
+    tracing::warn!("Unhandled UI message: {:?}", msg);
     Ok(())
 }
 

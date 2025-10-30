@@ -1,3 +1,86 @@
+//! Scan results viewer with split-pane layout and search functionality.
+//!
+//! This module provides a comprehensive interface for browsing previously generated scan reports.
+//! The screen features a two-pane layout with a report list on the left and a full-featured
+//! report viewer on the right, including syntax highlighting, line numbers, and incremental search.
+//!
+//! # Features
+//!
+//! - **Split-Pane Layout**: Report list (30% width) + Report viewer (70% width)
+//! - **Report List Navigation**: ↑/↓ to select reports, automatic content loading
+//! - **Syntax Highlighting**: Color-coded keywords (errors=red, warnings=yellow, FormIDs=cyan, plugins=green, headers=magenta)
+//! - **Line Numbers**: 4-digit line numbers with separator for easy reference
+//! - **Incremental Search**: / to activate, type query, n/N for next/previous match
+//! - **Search Highlighting**: Current match (yellow background), other matches (cyan background)
+//! - **Match Counter**: Shows "Match X/Y" in title bar when searching
+//! - **Scroll Support**: ↑/↓ for line-by-line, Page Up/Down for page scrolling
+//! - **Update Notification**: Banner integration at top of screen
+//!
+//! # Navigation
+//!
+//! - **↑/↓**: Select report (left pane) or scroll content (right pane)
+//! - **Page Up/Down**: Scroll report viewer by page
+//! - **Home/End**: Jump to start/end of report
+//! - **/**: Activate search mode
+//! - **n**: Next search match
+//! - **N**: Previous search match (Shift+n)
+//! - **ESC**: Exit search mode or return to main screen
+//!
+//! # Search Functionality
+//!
+//! The search feature provides incremental matching as you type:
+//! 1. Press `/` to activate search bar at bottom
+//! 2. Type your query (updates matches in real-time)
+//! 3. Use `n`/`N` to navigate between matches
+//! 4. Current match highlighted in yellow, others in cyan
+//! 5. Auto-scrolls to keep current match visible
+//! 6. Press ESC to exit search mode
+//!
+//! # Syntax Highlighting Rules
+//!
+//! The viewer applies automatic syntax highlighting based on content patterns:
+//! - **Errors** (Red, Bold): Lines containing "error", "exception", "crash", "fatal"
+//! - **Warnings** (Yellow, Bold): Lines containing "warning", "suspect"
+//! - **FormIDs** (Cyan): Lines with "FormID:" or hexadecimal values (0x...)
+//! - **Plugins** (Green): Lines with bracket notation or .esp/.esm/.esl extensions
+//! - **Headers** (Magenta, Bold): Lines starting with ===, ---, ##, or **
+//! - **Default** (White): All other content
+//!
+//! # Layout
+//!
+//! The screen is divided into two main horizontal sections:
+//! - **Left Pane** (30%): Scrollable list of report files with selection highlight
+//! - **Right Pane** (70%): Report content viewer with optional search bar (3 lines) at bottom
+//!
+//! When search is active, the right pane splits into:
+//! - Content area (flexible): Report viewer with search highlights
+//! - Search bar (3 lines): Search input field with yellow border
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! use classic_tui::ui::results_screen::render_results_screen;
+//! use classic_tui::app::App;
+//! use ratatui::backend::CrosstermBackend;
+//! use ratatui::Terminal;
+//! use std::io;
+//!
+//! let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout())).unwrap();
+//! let app = App::new();
+//!
+//! terminal.draw(|f| {
+//!     render_results_screen(f, &app);
+//! }).unwrap();
+//! ```
+//!
+//! # Implementation Status
+//!
+//! - ✅ Report list with navigation
+//! - ✅ Syntax highlighting for common patterns
+//! - ✅ Line numbers with separator
+//! - ✅ Scroll support (line and page)
+//! - ⚠️ Search functionality (UI complete, backend wiring pending)
+
 use crate::app::App;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
