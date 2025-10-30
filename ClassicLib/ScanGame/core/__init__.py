@@ -1,8 +1,11 @@
 """ScanGame core module - refactored components."""
 
+from .ba2_scanner import BA2ArchiveScanner
 from .dds_processor import DDSProcessor
 from .file_operations import FileOperations
 from .log_processor import LogProcessor
+from .report_builder import ScanReportBuilder
+from .unpacked_scanner import UnpackedModsScanner
 from .utils import (
     ASYNC_ENCODING_AVAILABLE,
     MAX_CONCURRENT_DDS_READS,
@@ -27,10 +30,13 @@ except ImportError:
 
 __all__ = [
     # Processors
+    "BA2ArchiveScanner",
     "DDSProcessor",
     "FileOperations",
     "LogProcessor",
+    "ScanReportBuilder",
     "ScanValidators",
+    "UnpackedModsScanner",
     # Enhanced DDS (optional)
     "EnhancedDDSAnalyzer",
     "DDSInfo",

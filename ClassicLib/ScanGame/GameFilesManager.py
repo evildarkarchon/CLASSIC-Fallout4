@@ -9,7 +9,7 @@ pattern with core async functions and sync adapters for backwards compatibility.
 import asyncio
 import shutil
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success
 from ClassicLib.AsyncBridge import AsyncBridge
@@ -96,7 +96,8 @@ class GameFilesManagerCore:
 
             # Validate game path
             _validate_game_path(game_path)
-            assert game_path is not None  # Type narrowing for Pylance
+            # Type narrowing: game_path is validated by _validate_game_path (raises if None)
+            game_path = cast(Path, game_path)
 
             # Set up backup path
             backup_path: Path = Path(f"{BACKUP_DIR}/{classic_list}")
@@ -116,9 +117,10 @@ class GameFilesManagerCore:
         except PermissionError:
             self._handle_permission_error(mode, classic_list.split(maxsplit=1)[-1])
             raise
-        except Exception as e:
-            logger.error(f"Unexpected error in manage_game_files_async: {e}")
+        except (OSError, FileNotFoundError, IsADirectoryError) as e:
+            logger.error(f"File operation error in manage_game_files_async: {e}")
             raise
+        # Let other exceptions (KeyError, AttributeError, etc.) propagate naturally without logging
 
     # noinspection PyUnresolvedReferences,PyTypeChecker
     @staticmethod
@@ -161,7 +163,14 @@ class GameFilesManagerCore:
         tasks = [self._copy_file_with_semaphore(semaphore, file, backup_path / file.name) for file in matching_files]
 
         if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            # Check for exceptions in results
+            failed_operations = [r for r in results if isinstance(r, Exception)]
+            if failed_operations:
+                logger.error(f"Some backup operations failed for {list_name}:")
+                for exc in failed_operations:
+                    logger.error(f"  - {type(exc).__name__}: {exc}")
+                # Continue execution - partial backup is better than no backup
 
         msg_success(f"SUCCESSFULLY CREATED A BACKUP OF {list_name} FILES\n")
 
@@ -192,7 +201,14 @@ class GameFilesManagerCore:
                     restore_tasks.append(self._copy_file_with_semaphore(semaphore, source_file, file))
 
         if restore_tasks:
-            await asyncio.gather(*restore_tasks, return_exceptions=True)
+            results = await asyncio.gather(*restore_tasks, return_exceptions=True)
+            # Check for exceptions in results
+            failed_operations = [r for r in results if isinstance(r, Exception)]
+            if failed_operations:
+                logger.error(f"Some restore operations failed for {list_name}:")
+                for exc in failed_operations:
+                    logger.error(f"  - {type(exc).__name__}: {exc}")
+                # Continue execution - partial restore is better than no restore
 
         msg_success(f"SUCCESSFULLY RESTORED {list_name} FILES TO THE GAME FOLDER\n")
 
@@ -219,7 +235,14 @@ class GameFilesManagerCore:
         tasks = [self._remove_file_with_semaphore(semaphore, file) for file in matching_files]
 
         if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            # Check for exceptions in results
+            failed_operations = [r for r in results if isinstance(r, Exception)]
+            if failed_operations:
+                logger.error(f"Some remove operations failed for {list_name}:")
+                for exc in failed_operations:
+                    logger.error(f"  - {type(exc).__name__}: {exc}")
+                # Continue execution - partial removal is tracked
 
         msg_success(f"SUCCESSFULLY REMOVED {list_name} FILES FROM THE GAME FOLDER\n")
 

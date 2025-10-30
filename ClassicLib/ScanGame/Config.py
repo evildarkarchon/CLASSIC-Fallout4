@@ -23,6 +23,7 @@ from tomlkit import TOMLDocument
 from ClassicLib import GlobalRegistry, msg_error
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
+from ClassicLib.ScanGame.models.fcx_issue import ConfigIssueSeverity
 from ClassicLib.Util import calculate_file_hash, calculate_similarity
 from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -232,10 +233,11 @@ class ConfigFileCache:
 
     def _load_config(self, file_name_lower: str) -> None:
         """
-        Loads and parses a configuration file, caching its contents. If the file has
-        already been loaded and cached, the cache will be invalidated and reloaded.
-        The method ensures the file exists in the configuration mapping before
-        processing.
+        Loads and parses a configuration file, caching its contents (DEPRECATED).
+
+        .. deprecated::
+            Use :meth:`_load_config_async` instead. This synchronous method performs
+            blocking I/O operations that can degrade async performance.
 
         Args:
             file_name_lower (str): The lowercase name of the configuration file to be
@@ -245,7 +247,20 @@ class ConfigFileCache:
         Raises:
             FileNotFoundError: If the specified `file_name_lower` does not exist in
                 the `_config_files` mapping.
+
+        Warning:
+            This method is deprecated and will be removed in a future version.
+            It performs blocking file I/O in an async-first codebase.
         """
+        import warnings
+
+        warnings.warn(
+            "_load_config is deprecated, use _load_config_async instead. "
+            "Blocking I/O degrades async performance.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         if file_name_lower not in self._config_files:
             raise FileNotFoundError
 
@@ -366,11 +381,11 @@ class ConfigFileCache:
             if value_type is str:
                 return config.get(section, setting)
             if value_type is bool:
-                return config.getboolean(section, setting)  # type: ignore[no-any-return]
+                return config.getboolean(section, setting)
             if value_type is int:
-                return config.getint(section, setting)  # type: ignore[no-any-return]
+                return config.getint(section, setting)
             if value_type is float:
-                return config.getfloat(section, setting)  # type: ignore[no-any-return]
+                return config.getfloat(section, setting)
             raise NotImplementedError
         except ValueError as e:
             logger.debug(f"Value type error: {e}")
@@ -450,7 +465,7 @@ class ConfigFileCache:
         recommended_value: T,
         description: str,
         condition_check: Any,
-        severity: str = "warning",
+        severity: ConfigIssueSeverity = "warning",
     ) -> Any | None:
         """
         Detect a configuration issue without modifying the file.
@@ -502,7 +517,7 @@ class ConfigFileCache:
             current_value=str(current_value),
             recommended_value=str(recommended_value),
             description=description,
-            severity=severity,  # type: ignore[arg-type]
+            severity=severity,
         )
 
     def get_strict[T](self, value_type: type[T], file: str, section: str, setting: str) -> T:

@@ -13,6 +13,7 @@ from ClassicLib import GlobalRegistry, msg_error
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import mod_toml_config
+from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 
@@ -271,82 +272,121 @@ class CrashgenChecker:
             },
         ]
 
-    def _process_settings(self) -> None:
+    @staticmethod
+    def _detect_toml_issue(
+        config_file: Path,
+        setting: dict[str, Any],
+        current_value: Any,
+    ) -> ConfigIssue | None:
         """
-        Processes and validates settings from a configuration file and applies corrections as needed.
+        Detect a TOML configuration issue without modifying the file.
 
-        This method checks the compatibility and correctness of specific settings within the
-        provided configuration file. It validates conditions and applies recommended configurations
-        to ensure system compatibility. Special cases, such as handling the Baka ScrapHeap Mod,
-        are also considered and handled uniquely. Messages about changes or configuration status
-        are accumulated to provide feedback.
+        Args:
+            config_file: Path to the TOML configuration file.
+            setting: Dictionary containing setting information (name, section, key,
+                desired_value, description, reason).
+            current_value: Current value in the TOML file.
 
-        Raises:
-            AssertionError: If `config_file` is not set before calling this method.
-
+        Returns:
+            ConfigIssue if setting doesn't match desired value, None if correct.
         """
-        assert self.config_file is not None, "Config file must be checked by the caller before processing settings."
+        if current_value != setting["desired_value"]:
+            description = f"{setting['description']}. {setting['reason']}"
+            return ConfigIssue(
+                file_path=config_file,
+                section=setting["section"],
+                setting=setting["key"],
+                current_value=str(current_value),
+                recommended_value=str(setting["desired_value"]),
+                description=description,
+                severity="warning",
+            )
+        return None
+
+    def _detect_settings_issues(self) -> list[ConfigIssue]:
+        """
+        Detect configuration issues in TOML settings without modifying files (FCX read-only mode).
+
+        This method follows the FCX read-only pattern established in ScanModInis.py.
+        It detects configuration issues and returns them as ConfigIssue objects for
+        reporting to the user, but never modifies the configuration files.
+
+        Returns:
+            list[ConfigIssue]: List of detected configuration issues.
+
+        Note:
+            This replaces the deprecated auto-fix behavior. See CLAUDE.md for FCX mode
+            documentation (completed 2025-10-29).
+        """
+        issues: list[ConfigIssue] = []
+
+        # Type narrowing: config_file is validated by caller before this method is called
+        config_file = cast(Path, self.config_file)
         has_bakascrapheap: bool = "bakascrapheap.dll" in self.installed_plugins
 
         for setting in self._get_settings_to_check():
-            # Get current setting value
-            current_value: Any | None = mod_toml_config(self.config_file, cast("str", setting["section"]), cast("str", setting["key"]))
+            # Get current setting value (read-only operation)
+            current_value: Any | None = mod_toml_config(
+                config_file,
+                cast("str", setting["section"]),
+                cast("str", setting["key"])
+            )
 
             # Special case for BakaScrapHeap with MemoryManager
             if setting.get("special_case") == "bakascrapheap" and has_bakascrapheap and current_value:
+                issue = ConfigIssue(
+                    file_path=config_file,
+                    section=setting["section"],
+                    setting=setting["key"],
+                    current_value=str(current_value),
+                    recommended_value=str(setting["desired_value"]),
+                    description=f"The Baka ScrapHeap Mod is installed, but is redundant with {self.crashgen_name}. "
+                               f"Uninstall the Baka ScrapHeap Mod to prevent conflicts with {self.crashgen_name}.",
+                    severity="error",
+                )
+                issues.append(issue)
                 self.message_list.extend([
                     f"# ❌ CAUTION : The Baka ScrapHeap Mod is installed, but is redundant with {self.crashgen_name} #\n",
                     f" FIX: Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {self.crashgen_name}.\n-----\n",
                 ])
                 continue
 
-            # Check if this is an X-Cell related setting
-            is_xcell_setting = "X-Cell" in setting["reason"]
-
-            # Check if condition is met and setting needs changing
+            # Check if condition is met and setting needs attention
             if setting["condition"] and current_value != setting["desired_value"]:
-                if is_xcell_setting:
-                    # For X-Cell settings, only warn - don't auto-modify
+                # Detect issue without modifying
+                issue = self._detect_toml_issue(config_file, setting, current_value)
+                if issue:
+                    issues.append(issue)
+                    # Build message for backward compatibility
                     self.message_list.extend([
                         f"# ❌ CAUTION : {setting['description']}, but {setting['name']} parameter is set to {current_value} #\n",
                         f" FIX: Open {self.crashgen_name}'s TOML file and change {setting['name']} to {setting['desired_value']} {setting['reason']}.\n-----\n",
                     ])
-                else:
-                    # For non-X-Cell settings, auto-modify as before
-                    self.message_list.extend([
-                        f"# ❌ CAUTION : {setting['description']}, but {setting['name']} parameter is set to {current_value} #\n",
-                        f"    Auto Scanner will change this parameter to {setting['desired_value']} {setting['reason']}.\n-----\n",
-                    ])
-                    # Apply the change
-                    mod_toml_config(
-                        cast("Path", self.config_file),
-                        cast("str", setting["section"]),
-                        cast("str", setting["key"]),
-                        cast("str | bool | int | None", setting["desired_value"]),
-                    )
-                    logger.info(f"Changed {setting['name']} from {current_value} to {setting['desired_value']}")
+                    logger.info(f"Detected issue: {setting['name']} is {current_value}, recommended: {setting['desired_value']}")
             else:
                 # Setting is already correctly configured
                 self.message_list.append(
                     f"✔️ {setting['name']} parameter is correctly configured in your {self.crashgen_name} settings!\n-----\n"
                 )
 
-    def check(self) -> str:
-        """
-        Checks the settings for the given configuration file and generates an appropriate
-        message based on the existence of the config file.
+        return issues
 
-        This method inspects the application's state to verify if a configuration file
-        specific to a crash generator exists. If the config file is not found, it appends
-        a series of pre-defined messages to the message list, informing the user of the
-        issue without raising an exception. If the config file exists, it logs an
-        information message indicating the start of the settings check and invokes the
-        internal processing for settings. At the end, the cumulative message list is
-        returned as a concatenated string.
+    def check(self) -> tuple[str, list[ConfigIssue]]:
+        """
+        Checks the settings for the given configuration file and detects configuration issues.
+
+        This method follows the FCX read-only pattern, detecting configuration issues
+        without modifying files. It returns both a formatted message string (for backward
+        compatibility) and a list of ConfigIssue objects (for structured reporting).
 
         Returns:
-            str: The concatenated message list containing either the notice regarding a
-            missing configuration file or any messages resulting from the settings check.
+            tuple[str, list[ConfigIssue]]: A tuple containing:
+                - Formatted message string with detected issues and recommendations
+                - List of ConfigIssue objects for structured reporting
+
+        Note:
+            This method no longer auto-fixes configuration issues. It only detects and
+            reports them. See CLAUDE.md for FCX read-only mode documentation.
         """
         # If no config file found, return message without raising exception
         if not self.config_file:
@@ -355,23 +395,29 @@ class CrashgenChecker:
                 f"  To ensure this check doesn't get skipped, {self.crashgen_name} has to be installed manually.\n",
                 "  [ If you are using Mod Organizer 2, you need to run CLASSIC through a shortcut in MO2. ]\n-----\n",
             ])
-            return "".join(self.message_list)
+            return "".join(self.message_list), []
 
         logger.info(f"Checking {self.crashgen_name} settings in {self.config_file}")
-        self._process_settings()
-        return "".join(self.message_list)
+        issues = self._detect_settings_issues()
+        return "".join(self.message_list), issues
 
 
-def check_crashgen_settings() -> str:
+def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
     """
-    Checks the crash generation settings using a CrashgenChecker instance.
+    Checks the crash generation settings using a CrashgenChecker instance (FCX read-only mode).
 
     This function creates an instance of the CrashgenChecker class and
-    uses it to check the current crash generation settings. The result
-    of the check is returned as a string.
+    uses it to check the current crash generation settings. It returns both
+    a formatted message string and a list of detected configuration issues.
 
     Returns:
-        str: The result of the crash generation settings check.
+        tuple[str, list[ConfigIssue]]: A tuple containing:
+            - Formatted message string with detected issues and recommendations
+            - List of ConfigIssue objects for structured reporting
+
+    Note:
+        This function no longer auto-fixes issues. It follows the FCX read-only
+        pattern established in CLAUDE.md (2025-10-29).
     """
     checker: CrashgenChecker = CrashgenChecker()
     return checker.check()

@@ -76,9 +76,12 @@ class GameIntegrityOrchestratorCore:
                     mod_inis_task = tg.create_task(self._run_mod_inis_scan_async())
 
                 # All checks completed successfully - collect results
+                # Unpack crashgen result (returns tuple with ConfigIssues)
+                crashgen_message, crashgen_issues = crashgen_task.result()
+
                 valid_results = [
                     xse_task.result(),
-                    crashgen_task.result(),
+                    crashgen_message,
                     docs_log_task.result(),
                     game_log_task.result(),
                     wrye_task.result(),
@@ -97,9 +100,12 @@ class GameIntegrityOrchestratorCore:
             from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
 
             config_cache = ConfigFileCache()
-            detected_issues = await detect_all_ini_issues_async(config_cache)
+            ini_issues = await detect_all_ini_issues_async(config_cache)
 
-            return "".join(valid_results), detected_issues
+            # Combine issues from both crashgen and INI scans
+            all_detected_issues = crashgen_issues + ini_issues
+
+            return "".join(valid_results), all_detected_issues
 
         except (OSError, RuntimeError) as e:
             logger.error(f"Error in generate_game_combined_result_async: {e}")
@@ -224,17 +230,22 @@ class GameIntegrityOrchestratorCore:
         return await loop.run_in_executor(None, check_xse_plugins)
 
     @staticmethod
-    async def _run_crashgen_check_async() -> str:
+    async def _run_crashgen_check_async() -> tuple[str, list]:
         """
-        Asynchronously runs a crash generation configuration check.
+        Asynchronously runs a crash generation configuration check (FCX read-only mode).
 
         This method uses an event loop to run a crash generation settings check in a
         separate thread executor, ensuring that the application remains responsive while
         performing potentially blocking I/O operations.
 
         Returns:
-            str: The result of the crash generation settings check.
+            tuple[str, list[ConfigIssue]]: A tuple containing:
+                - Formatted message string with detected issues
+                - List of ConfigIssue objects for structured reporting
 
+        Note:
+            This method follows the FCX read-only pattern. It detects configuration
+            issues but does not modify files.
         """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, check_crashgen_settings)
