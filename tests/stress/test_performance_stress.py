@@ -206,64 +206,64 @@ class TestSustainedLoadPerformance:
         """
         performance_profiler.start_profiling()
 
-        bridge = AsyncBridge.get_instance()
-        io_core = FileIOCore()
+        with AsyncBridge.get_instance() as bridge:
+            io_core = FileIOCore()
 
-        # Create multiple test files
-        test_files = []
-        for i in range(20):  # 20 files to rotate through
-            content = stress_data_generator.generate_large_crash_log(
-                size_mb=2,  # 2MB per file
-                plugin_count=50,
-                formid_count=500
-            )
-            file_path = tmp_path / f"sustained_io_test_{i}.log"
-            file_path.write_text(content, encoding='utf-8')
-            test_files.append(file_path)
+            # Create multiple test files
+            test_files = []
+            for i in range(20):  # 20 files to rotate through
+                content = stress_data_generator.generate_large_crash_log(
+                    size_mb=2,  # 2MB per file
+                    plugin_count=50,
+                    formid_count=500
+                )
+                file_path = tmp_path / f"sustained_io_test_{i}.log"
+                file_path.write_text(content, encoding='utf-8')
+                test_files.append(file_path)
 
-        # Sustained I/O test
-        duration_seconds = 20  # 20-second I/O test
-        start_time = time.time()
-        read_times = []
-        bytes_read = []
+            # Sustained I/O test
+            duration_seconds = 20  # 20-second I/O test
+            start_time = time.time()
+            read_times = []
+            bytes_read = []
 
-        file_index = 0
-        while time.time() - start_time < duration_seconds:
-            read_start = time.time()
+            file_index = 0
+            while time.time() - start_time < duration_seconds:
+                read_start = time.time()
 
-            # Read file
-            current_file = test_files[file_index % len(test_files)]
-            content = bridge.run_async(io_core.read_file(current_file))
+                # Read file
+                current_file = test_files[file_index % len(test_files)]
+                content = bridge.run_async(io_core.read_file(current_file))
 
-            read_end = time.time()
-            read_time = read_end - read_start
+                read_end = time.time()
+                read_time = read_end - read_start
 
-            read_times.append(read_time)
-            bytes_read.append(len(content.encode('utf-8')))
+                read_times.append(read_time)
+                bytes_read.append(len(content.encode('utf-8')))
 
-            performance_profiler.record_operation(
-                "file_read_operation",
-                read_time,
-                0
-            )
+                performance_profiler.record_operation(
+                    "file_read_operation",
+                    read_time,
+                    0
+                )
 
-            file_index += 1
+                file_index += 1
 
-        performance_stats = performance_profiler.stop_profiling()
+            performance_stats = performance_profiler.stop_profiling()
 
-        # Analyze I/O performance
-        total_bytes = sum(bytes_read)
-        total_time = max(read_times) if read_times else 1
-        avg_throughput_mb_s = (total_bytes / (1024 * 1024)) / (duration_seconds)
+            # Analyze I/O performance
+            total_bytes = sum(bytes_read)
+            total_time = max(read_times) if read_times else 1
+            avg_throughput_mb_s = (total_bytes / (1024 * 1024)) / (duration_seconds)
 
-        # Should maintain reasonable I/O throughput
-        assert avg_throughput_mb_s > 10, f"I/O throughput too low: {avg_throughput_mb_s:.1f} MB/s"
+            # Should maintain reasonable I/O throughput
+            assert avg_throughput_mb_s > 10, f"I/O throughput too low: {avg_throughput_mb_s:.1f} MB/s"
 
-        # Consistent read times
-        if len(read_times) > 1:
-            read_times_ms = [t * 1000 for t in read_times]
-            cv = stdev(read_times_ms) / mean(read_times_ms)
-            assert cv < 0.4, f"High I/O time variability: CV = {cv:.2f}"
+            # Consistent read times
+            if len(read_times) > 1:
+                read_times_ms = [t * 1000 for t in read_times]
+                cv = stdev(read_times_ms) / mean(read_times_ms)
+                assert cv < 0.4, f"High I/O time variability: CV = {cv:.2f}"
 
     def test_yaml_cache_sustained_operations(self, performance_profiler):
         """
@@ -436,87 +436,87 @@ class TestConcurrentPerformance:
         """
         performance_profiler.start_profiling()
 
-        bridge = AsyncBridge.get_instance()
-        io_core = FileIOCore()
-        log_processor = classic_core.utils.LogProcessor()
-        string_processor = classic_core.utils.StringProcessor()
+        with AsyncBridge.get_instance() as bridge:
+            io_core = FileIOCore()
+            log_processor = classic_core.utils.LogProcessor()
+            string_processor = classic_core.utils.StringProcessor()
 
-        # Prepare test data
-        log_files = []
-        for i in range(5):
-            content = stress_data_generator.generate_large_crash_log(
-                size_mb=3,
-                plugin_count=50,
-                formid_count=500
-            )
-            file_path = tmp_path / f"mixed_workload_{i}.log"
-            file_path.write_text(content, encoding='utf-8')
-            log_files.append(file_path)
+            # Prepare test data
+            log_files = []
+            for i in range(5):
+                content = stress_data_generator.generate_large_crash_log(
+                    size_mb=3,
+                    plugin_count=50,
+                    formid_count=500
+                )
+                file_path = tmp_path / f"mixed_workload_{i}.log"
+                file_path.write_text(content, encoding='utf-8')
+                log_files.append(file_path)
 
-        test_strings = [f"Mixed_workload_string_{i}" for i in range(1000)]
+            test_strings = [f"Mixed_workload_string_{i}" for i in range(1000)]
 
-        def io_heavy_task():
-            """I/O intensive task."""
-            start = time.time()
-            for file_path in log_files:
-                content = bridge.run_async(io_core.read_file(file_path))
-            return time.time() - start
+            def io_heavy_task():
+                """I/O intensive task."""
+                start = time.time()
+                for file_path in log_files:
+                    content = bridge.run_async(io_core.read_file(file_path))
+                return time.time() - start
 
-        def cpu_heavy_task():
-            """CPU intensive task."""
-            start = time.time()
-            for _ in range(5):
-                upper = string_processor.process_batch(test_strings, "upper")
-                lower = string_processor.process_batch(test_strings, "lower")
-            return time.time() - start
+            def cpu_heavy_task():
+                """CPU intensive task."""
+                start = time.time()
+                for _ in range(5):
+                    upper = string_processor.process_batch(test_strings, "upper")
+                    lower = string_processor.process_batch(test_strings, "lower")
+                return time.time() - start
 
-        def log_processing_task():
-            """Log processing task."""
-            start = time.time()
-            content = log_files[0].read_text()
-            for _ in range(3):
-                formids = log_processor.extract_formids(content)
-                plugins = log_processor.extract_plugins(content)
-            return time.time() - start
+            def log_processing_task():
+                """Log processing task."""
+                start = time.time()
+                content = log_files[0].read_text()
+                for _ in range(3):
+                    formids = log_processor.extract_formids(content)
+                    plugins = log_processor.extract_plugins(content)
+                return time.time() - start
 
-        # Run mixed workload
-        workload_start = time.time()
+            # Run mixed workload
+            workload_start = time.time()
 
-        with ThreadPoolExecutor(max_workers=12) as executor:
-            # Submit different types of tasks
-            io_futures = [executor.submit(io_heavy_task) for _ in range(3)]
-            cpu_futures = [executor.submit(cpu_heavy_task) for _ in range(4)]
-            log_futures = [executor.submit(log_processing_task) for _ in range(5)]
+            with ThreadPoolExecutor(max_workers=12) as executor:
+                # Submit different types of tasks
+                io_futures = [executor.submit(io_heavy_task) for _ in range(3)]
+                cpu_futures = [executor.submit(cpu_heavy_task) for _ in range(4)]
+                log_futures = [executor.submit(log_processing_task) for _ in range(5)]
 
-            # Collect results
-            io_times = [f.result() for f in as_completed(io_futures)]
-            cpu_times = [f.result() for f in as_completed(cpu_futures)]
-            log_times = [f.result() for f in as_completed(log_futures)]
+                # Collect results
+                io_times = [f.result() for f in as_completed(io_futures)]
+                cpu_times = [f.result() for f in as_completed(cpu_futures)]
+                log_times = [f.result() for f in as_completed(log_futures)]
 
-        total_workload_time = time.time() - workload_start
+            total_workload_time = time.time() - workload_start
 
-        performance_stats = performance_profiler.stop_profiling()
+            performance_stats = performance_profiler.stop_profiling()
 
-        # Analyze mixed workload performance
-        avg_io_time = mean(io_times)
-        avg_cpu_time = mean(cpu_times)
-        avg_log_time = mean(log_times)
+            # Analyze mixed workload performance
+            avg_io_time = mean(io_times)
+            avg_cpu_time = mean(cpu_times)
+            avg_log_time = mean(log_times)
 
-        performance_profiler.record_operation("mixed_io_tasks", avg_io_time)
-        performance_profiler.record_operation("mixed_cpu_tasks", avg_cpu_time)
-        performance_profiler.record_operation("mixed_log_tasks", avg_log_time)
+            performance_profiler.record_operation("mixed_io_tasks", avg_io_time)
+            performance_profiler.record_operation("mixed_cpu_tasks", avg_cpu_time)
+            performance_profiler.record_operation("mixed_log_tasks", avg_log_time)
 
-        # All task types should complete in reasonable time
-        assert avg_io_time < 10.0, f"I/O tasks too slow: {avg_io_time:.2f}s"
-        assert avg_cpu_time < 5.0, f"CPU tasks too slow: {avg_cpu_time:.2f}s"
-        assert avg_log_time < 8.0, f"Log processing tasks too slow: {avg_log_time:.2f}s"
+            # All task types should complete in reasonable time
+            assert avg_io_time < 10.0, f"I/O tasks too slow: {avg_io_time:.2f}s"
+            assert avg_cpu_time < 5.0, f"CPU tasks too slow: {avg_cpu_time:.2f}s"
+            assert avg_log_time < 8.0, f"Log processing tasks too slow: {avg_log_time:.2f}s"
 
-        # Total workload time should show benefits of concurrency
-        sequential_estimate = sum(io_times) + sum(cpu_times) + sum(log_times)
-        concurrency_benefit = sequential_estimate / total_workload_time
+            # Total workload time should show benefits of concurrency
+            sequential_estimate = sum(io_times) + sum(cpu_times) + sum(log_times)
+            concurrency_benefit = sequential_estimate / total_workload_time
 
-        assert concurrency_benefit > 2.0, \
-            f"Insufficient concurrency benefit: {concurrency_benefit:.2f}x speedup"
+            assert concurrency_benefit > 2.0, \
+                f"Insufficient concurrency benefit: {concurrency_benefit:.2f}x speedup"
 
     def test_resource_utilization_efficiency(self, performance_profiler, fresh_memory_tracker):
         """
@@ -783,69 +783,69 @@ class TestPerformanceDegradation:
         """
         performance_profiler.start_profiling()
 
-        bridge = AsyncBridge.get_instance()
-        orchestrator = OrchestratorCore()
+        with AsyncBridge.get_instance() as bridge:
+            orchestrator = OrchestratorCore()
 
-        # Create test files with increasing batch sizes
-        batch_sizes = [1, 5, 10, 20]  # Different workload sizes
-        scaling_results = {}
+            # Create test files with increasing batch sizes
+            batch_sizes = [1, 5, 10, 20]  # Different workload sizes
+            scaling_results = {}
 
-        for batch_size in batch_sizes:
-            # Create files for this batch
-            batch_files = []
-            for i in range(batch_size):
-                content = stress_data_generator.generate_large_crash_log(
-                    size_mb=2,  # 2MB per file
-                    plugin_count=50,
-                    formid_count=500
+            for batch_size in batch_sizes:
+                # Create files for this batch
+                batch_files = []
+                for i in range(batch_size):
+                    content = stress_data_generator.generate_large_crash_log(
+                        size_mb=2,  # 2MB per file
+                        plugin_count=50,
+                        formid_count=500
+                    )
+                    file_path = tmp_path / f"orchestrator_scaling_{batch_size}_{i}.log"
+                    file_path.write_text(content, encoding='utf-8')
+                    batch_files.append(file_path)
+
+                # Process batch and measure performance
+                batch_start = time.time()
+                results = []
+
+                for file_path in batch_files:
+                    result = bridge.run_async(orchestrator.process_single_log(file_path))
+                    results.append(result)
+
+                batch_end = time.time()
+                batch_duration = batch_end - batch_start
+
+                scaling_results[batch_size] = {
+                    'duration': batch_duration,
+                    'files_processed': len(results),
+                    'avg_time_per_file': batch_duration / batch_size,
+                    'throughput_files_per_sec': batch_size / batch_duration
+                }
+
+                performance_profiler.record_operation(
+                    f"orchestrator_batch_{batch_size}",
+                    batch_duration,
+                    0
                 )
-                file_path = tmp_path / f"orchestrator_scaling_{batch_size}_{i}.log"
-                file_path.write_text(content, encoding='utf-8')
-                batch_files.append(file_path)
 
-            # Process batch and measure performance
-            batch_start = time.time()
-            results = []
+            performance_stats = performance_profiler.stop_profiling()
 
-            for file_path in batch_files:
-                result = bridge.run_async(orchestrator.process_single_log(file_path))
-                results.append(result)
+            # Analyze scaling characteristics
+            single_file_time = scaling_results[1]['avg_time_per_file']
 
-            batch_end = time.time()
-            batch_duration = batch_end - batch_start
+            for batch_size in [5, 10, 20]:
+                batch_avg_time = scaling_results[batch_size]['avg_time_per_file']
 
-            scaling_results[batch_size] = {
-                'duration': batch_duration,
-                'files_processed': len(results),
-                'avg_time_per_file': batch_duration / batch_size,
-                'throughput_files_per_sec': batch_size / batch_duration
-            }
+                # Per-file time shouldn't increase dramatically with batch size
+                scaling_factor = batch_avg_time / single_file_time
+                assert scaling_factor < 2.0, \
+                    f"Poor scaling at batch size {batch_size}: {scaling_factor:.2f}x slower per file"
 
-            performance_profiler.record_operation(
-                f"orchestrator_batch_{batch_size}",
-                batch_duration,
-                0
-            )
+            # Throughput should generally improve with batch size (some benefit)
+            single_throughput = scaling_results[1]['throughput_files_per_sec']
+            large_batch_throughput = scaling_results[20]['throughput_files_per_sec']
 
-        performance_stats = performance_profiler.stop_profiling()
-
-        # Analyze scaling characteristics
-        single_file_time = scaling_results[1]['avg_time_per_file']
-
-        for batch_size in [5, 10, 20]:
-            batch_avg_time = scaling_results[batch_size]['avg_time_per_file']
-
-            # Per-file time shouldn't increase dramatically with batch size
-            scaling_factor = batch_avg_time / single_file_time
-            assert scaling_factor < 2.0, \
-                f"Poor scaling at batch size {batch_size}: {scaling_factor:.2f}x slower per file"
-
-        # Throughput should generally improve with batch size (some benefit)
-        single_throughput = scaling_results[1]['throughput_files_per_sec']
-        large_batch_throughput = scaling_results[20]['throughput_files_per_sec']
-
-        assert large_batch_throughput >= single_throughput * 0.8, \
-            "Significant throughput degradation with larger batches"
+            assert large_batch_throughput >= single_throughput * 0.8, \
+                "Significant throughput degradation with larger batches"
 
 
 if __name__ == "__main__":

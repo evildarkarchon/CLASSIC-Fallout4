@@ -145,38 +145,38 @@ class TestMemoryLeakDetection:
         """
         fresh_memory_tracker.start_tracking()
 
-        bridge = AsyncBridge.get_instance()
-        io_core = FileIOCore()
+        with AsyncBridge.get_instance() as bridge:
+            io_core = FileIOCore()
 
-        # Get all log files
-        log_files = list(temp_crash_logs_dir.glob("*.log"))
-        assert len(log_files) >= 5, "Need multiple log files for test"
+            # Get all log files
+            log_files = list(temp_crash_logs_dir.glob("*.log"))
+            assert len(log_files) >= 5, "Need multiple log files for test"
 
-        # Read files multiple times
-        for round_num in range(5):
-            fresh_memory_tracker.take_measurement(f"round_{round_num}_start")
+            # Read files multiple times
+            for round_num in range(5):
+                fresh_memory_tracker.take_measurement(f"round_{round_num}_start")
 
-            # Sequential reads
-            for log_file in log_files:
-                content = bridge.run_async(io_core.read_file(log_file))
-                assert len(content) > 1000  # Should be substantial content
+                # Sequential reads
+                for log_file in log_files:
+                    content = bridge.run_async(io_core.read_file(log_file))
+                    assert len(content) > 1000  # Should be substantial content
 
-                # Process content to ensure it's actually loaded
-                lines = content.split('\n')
-                filtered_lines = [line for line in lines if 'FormID' in line]
+                    # Process content to ensure it's actually loaded
+                    lines = content.split('\n')
+                    filtered_lines = [line for line in lines if 'FormID' in line]
 
-                # Clear references
-                del content, lines, filtered_lines
+                    # Clear references
+                    del content, lines, filtered_lines
 
-            # Force cleanup
-            gc.collect()
-            fresh_memory_tracker.take_measurement(f"round_{round_num}_end")
+                # Force cleanup
+                gc.collect()
+                fresh_memory_tracker.take_measurement(f"round_{round_num}_end")
 
-        memory_stats = fresh_memory_tracker.stop_tracking()
+            memory_stats = fresh_memory_tracker.stop_tracking()
 
-        # Should not accumulate file content in memory
-        assert memory_stats["growth_mb"] < 30, \
-            f"File I/O accumulated {memory_stats['growth_mb']:.1f}MB in memory"
+            # Should not accumulate file content in memory
+            assert memory_stats["growth_mb"] < 30, \
+                f"File I/O accumulated {memory_stats['growth_mb']:.1f}MB in memory"
 
     def test_yaml_cache_memory_efficiency(self, fresh_memory_tracker):
         """
@@ -258,39 +258,39 @@ class TestLargeDatasetProcessing:
         processor = classic_core.utils.LogProcessor()
 
         # Read and process in chunks to test memory efficiency
-        bridge = AsyncBridge.get_instance()
-        io_core = FileIOCore()
+        with AsyncBridge.get_instance() as bridge:
+            io_core = FileIOCore()
 
-        # Read the massive file
-        content = bridge.run_async(io_core.read_file(massive_log_file))
-        fresh_memory_tracker.take_measurement("file_loaded")
+            # Read the massive file
+            content = bridge.run_async(io_core.read_file(massive_log_file))
+            fresh_memory_tracker.take_measurement("file_loaded")
 
-        # Extract FormIDs from massive content
-        formids = processor.extract_formids(content)
-        assert len(formids) > 10000, f"Expected many FormIDs, got {len(formids)}"
-        fresh_memory_tracker.take_measurement("formids_extracted")
+            # Extract FormIDs from massive content
+            formids = processor.extract_formids(content)
+            assert len(formids) > 10000, f"Expected many FormIDs, got {len(formids)}"
+            fresh_memory_tracker.take_measurement("formids_extracted")
 
-        # Extract plugins
-        plugins = processor.extract_plugins(content)
-        assert len(plugins) > 100, f"Expected many plugins, got {len(plugins)}"
-        fresh_memory_tracker.take_measurement("plugins_extracted")
+            # Extract plugins
+            plugins = processor.extract_plugins(content)
+            assert len(plugins) > 100, f"Expected many plugins, got {len(plugins)}"
+            fresh_memory_tracker.take_measurement("plugins_extracted")
 
-        # Process lines in parallel
-        lines = content.split('\n')
-        processed_lines = processor.process_lines_parallel(lines[:10000], "upper")  # Limit to avoid timeout
-        assert len(processed_lines) == 10000
-        fresh_memory_tracker.take_measurement("lines_processed")
+            # Process lines in parallel
+            lines = content.split('\n')
+            processed_lines = processor.process_lines_parallel(lines[:10000], "upper")  # Limit to avoid timeout
+            assert len(processed_lines) == 10000
+            fresh_memory_tracker.take_measurement("lines_processed")
 
-        # Clear large objects
-        del content, lines, processed_lines, formids, plugins
-        gc.collect()
-        fresh_memory_tracker.take_measurement("cleanup_done")
+            # Clear large objects
+            del content, lines, processed_lines, formids, plugins
+            gc.collect()
+            fresh_memory_tracker.take_measurement("cleanup_done")
 
-        memory_stats = fresh_memory_tracker.stop_tracking()
+            memory_stats = fresh_memory_tracker.stop_tracking()
 
-        # Peak memory should be reasonable (< 200MB for processing 100MB log)
-        assert memory_stats["peak_mb"] < 200, \
-            f"Peak memory usage {memory_stats['peak_mb']:.1f}MB too high for 100MB log"
+            # Peak memory should be reasonable (< 200MB for processing 100MB log)
+            assert memory_stats["peak_mb"] < 200, \
+                f"Peak memory usage {memory_stats['peak_mb']:.1f}MB too high for 100MB log"
 
     def test_thousands_of_formids_processing(self, fresh_memory_tracker, stress_data_generator):
         """
@@ -397,36 +397,36 @@ class TestMemoryLimitHandling:
         """
         fresh_memory_tracker.start_tracking()
 
-        bridge = AsyncBridge.get_instance()
-        orchestrator = OrchestratorCore()
+        with AsyncBridge.get_instance() as bridge:
+            orchestrator = OrchestratorCore()
 
-        # Get log files
-        log_files = list(temp_crash_logs_dir.glob("*.log"))
+            # Get log files
+            log_files = list(temp_crash_logs_dir.glob("*.log"))
 
-        # Process all files multiple times
-        for processing_round in range(3):  # 3 rounds to test sustained load
-            fresh_memory_tracker.take_measurement(f"round_{processing_round}_start")
+            # Process all files multiple times
+            for processing_round in range(3):  # 3 rounds to test sustained load
+                fresh_memory_tracker.take_measurement(f"round_{processing_round}_start")
 
-            # Process each file
-            for log_file in log_files:
-                # Use orchestrator to process file
-                result = bridge.run_async(orchestrator.process_single_log(log_file))
+                # Process each file
+                for log_file in log_files:
+                    # Use orchestrator to process file
+                    result = bridge.run_async(orchestrator.process_single_log(log_file))
 
-                # Verify processing succeeded
-                assert result is not None
-                if hasattr(result, 'formids'):
-                    assert len(result.formids) >= 0  # Should have some FormIDs
+                    # Verify processing succeeded
+                    assert result is not None
+                    if hasattr(result, 'formids'):
+                        assert len(result.formids) >= 0  # Should have some FormIDs
 
-                fresh_memory_tracker.take_measurement(f"processed_{log_file.name}")
+                    fresh_memory_tracker.take_measurement(f"processed_{log_file.name}")
 
-            # Force cleanup between rounds
-            gc.collect()
+                # Force cleanup between rounds
+                gc.collect()
 
-        memory_stats = fresh_memory_tracker.stop_tracking()
+            memory_stats = fresh_memory_tracker.stop_tracking()
 
-        # Orchestrator should manage memory efficiently
-        assert memory_stats["growth_mb"] < 100, \
-            f"Orchestrator memory growth {memory_stats['growth_mb']:.1f}MB too high"
+            # Orchestrator should manage memory efficiently
+            assert memory_stats["growth_mb"] < 100, \
+                f"Orchestrator memory growth {memory_stats['growth_mb']:.1f}MB too high"
 
     def test_concurrent_large_file_processing(self, fresh_memory_tracker, tmp_path, stress_data_generator):
         """
@@ -452,48 +452,48 @@ class TestMemoryLimitHandling:
         fresh_memory_tracker.take_measurement("files_created")
 
         # Process files concurrently using AsyncBridge
-        bridge = AsyncBridge.get_instance()
-        io_core = FileIOCore()
+        with AsyncBridge.get_instance() as bridge:
+            io_core = FileIOCore()
 
-        async def process_file_async(file_path):
-            """Process a single file asynchronously."""
-            content = await io_core.read_file(file_path)
+            async def process_file_async(file_path):
+                """Process a single file asynchronously."""
+                content = await io_core.read_file(file_path)
 
-            # Process with Rust components
-            processor = classic_core.utils.LogProcessor()
-            formids = processor.extract_formids(content)
-            plugins = processor.extract_plugins(content)
+                # Process with Rust components
+                processor = classic_core.utils.LogProcessor()
+                formids = processor.extract_formids(content)
+                plugins = processor.extract_plugins(content)
 
-            return {
-                'file': file_path.name,
-                'formid_count': len(formids),
-                'plugin_count': len(plugins),
-                'content_size': len(content)
-            }
+                return {
+                    'file': file_path.name,
+                    'formid_count': len(formids),
+                    'plugin_count': len(plugins),
+                    'content_size': len(content)
+                }
 
-        # Process all files concurrently
-        tasks = [process_file_async(f) for f in large_files]
+            # Process all files concurrently
+            tasks = [process_file_async(f) for f in large_files]
 
-        # Use AsyncBridge to run concurrent tasks
-        results = []
-        for task in tasks:
-            result = bridge.run_async(task)
-            results.append(result)
+            # Use AsyncBridge to run concurrent tasks
+            results = []
+            for task in tasks:
+                result = bridge.run_async(task)
+                results.append(result)
 
-        fresh_memory_tracker.take_measurement("all_files_processed")
+            fresh_memory_tracker.take_measurement("all_files_processed")
 
-        # Verify all files were processed
-        assert len(results) == 5
-        for result in results:
-            assert result['formid_count'] > 100  # Should find FormIDs
-            assert result['plugin_count'] > 10   # Should find plugins
-            assert result['content_size'] > 1000000  # Should be large
+            # Verify all files were processed
+            assert len(results) == 5
+            for result in results:
+                assert result['formid_count'] > 100  # Should find FormIDs
+                assert result['plugin_count'] > 10   # Should find plugins
+                assert result['content_size'] > 1000000  # Should be large
 
-        memory_stats = fresh_memory_tracker.stop_tracking()
+            memory_stats = fresh_memory_tracker.stop_tracking()
 
-        # Memory should be managed efficiently even with concurrent processing
-        assert memory_stats["peak_mb"] < 300, \
-            f"Concurrent processing used {memory_stats['peak_mb']:.1f}MB peak memory"
+            # Memory should be managed efficiently even with concurrent processing
+            assert memory_stats["peak_mb"] < 300, \
+                f"Concurrent processing used {memory_stats['peak_mb']:.1f}MB peak memory"
 
     def test_memory_pressure_recovery(self, fresh_memory_tracker, stress_data_generator):
         """

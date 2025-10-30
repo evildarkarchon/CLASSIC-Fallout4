@@ -665,9 +665,9 @@ class TestMassiveCallStackProcessing:
         start_time = time.time()
 
         # Read the file
-        bridge = AsyncBridge.get_instance()
-        io_core = FileIOCore()
-        content = bridge.run_async(io_core.read_file(log_file))
+        with AsyncBridge.get_instance() as bridge:
+            io_core = FileIOCore()
+            content = bridge.run_async(io_core.read_file(log_file))
 
         read_time = time.time() - start_time
         fresh_memory_tracker.take_measurement("file_read")
@@ -858,10 +858,6 @@ class TestBatchProcessingAtScale:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        bridge = AsyncBridge.get_instance()
-        io_core = FileIOCore()
-        orchestrator = OrchestratorCore()
-
         # Create 100 crash log files
         batch_size = 100
         crash_log_files = []
@@ -879,71 +875,75 @@ class TestBatchProcessingAtScale:
 
         fresh_memory_tracker.take_measurement("batch_files_created")
 
-        # Process batch sequentially (simulating single-threaded batch processing)
-        sequential_start = time.time()
-        sequential_results = []
+        with AsyncBridge.get_instance() as bridge:
+            io_core = FileIOCore()
+            orchestrator = OrchestratorCore()
 
-        for i, log_file in enumerate(crash_log_files):
-            file_start = time.time()
+            # Process batch sequentially (simulating single-threaded batch processing)
+            sequential_start = time.time()
+            sequential_results = []
 
-            # Process single log through orchestrator
-            result = bridge.run_async(orchestrator.process_single_log(log_file))
+            for i, log_file in enumerate(crash_log_files):
+                file_start = time.time()
 
-            file_time = time.time() - file_start
+                # Process single log through orchestrator
+                result = bridge.run_async(orchestrator.process_single_log(log_file))
 
-            sequential_results.append({
-                'file_index': i,
-                'filename': log_file.name,
-                'processing_time': file_time,
-                'success': result is not None
-            })
+                file_time = time.time() - file_start
 
-            performance_profiler.record_operation(f"batch_sequential_{i}", file_time)
+                sequential_results.append({
+                    'file_index': i,
+                    'filename': log_file.name,
+                    'processing_time': file_time,
+                    'success': result is not None
+                })
 
-            # Memory checkpoint every 20 files
-            if i % 20 == 0:
-                fresh_memory_tracker.take_measurement(f"sequential_{i}")
+                performance_profiler.record_operation(f"batch_sequential_{i}", file_time)
 
-        sequential_total_time = time.time() - sequential_start
+                # Memory checkpoint every 20 files
+                if i % 20 == 0:
+                    fresh_memory_tracker.take_measurement(f"sequential_{i}")
 
-        fresh_memory_tracker.take_measurement("sequential_batch_complete")
+            sequential_total_time = time.time() - sequential_start
 
-        # Process batch with concurrency (simulating multi-threaded batch processing)
-        concurrent_start = time.time()
+            fresh_memory_tracker.take_measurement("sequential_batch_complete")
 
-        def process_single_file(file_path):
-            """Process a single file and return timing information."""
-            start = time.time()
-            try:
-                result = bridge.run_async(orchestrator.process_single_log(file_path))
-                return {
-                    'filename': file_path.name,
-                    'processing_time': time.time() - start,
-                    'success': result is not None,
-                    'error': None
-                }
-            except Exception as e:
-                return {
-                    'filename': file_path.name,
-                    'processing_time': time.time() - start,
-                    'success': False,
-                    'error': str(e)
-                }
+            # Process batch with concurrency (simulating multi-threaded batch processing)
+            concurrent_start = time.time()
 
-        # Use ThreadPoolExecutor for concurrent processing
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            concurrent_futures = [executor.submit(process_single_file, f) for f in crash_log_files]
-            concurrent_results = [f.result() for f in as_completed(concurrent_futures)]
+            def process_single_file(file_path):
+                """Process a single file and return timing information."""
+                start = time.time()
+                try:
+                    result = bridge.run_async(orchestrator.process_single_log(file_path))
+                    return {
+                        'filename': file_path.name,
+                        'processing_time': time.time() - start,
+                        'success': result is not None,
+                        'error': None
+                    }
+                except Exception as e:
+                    return {
+                        'filename': file_path.name,
+                        'processing_time': time.time() - start,
+                        'success': False,
+                        'error': str(e)
+                    }
 
-        concurrent_total_time = time.time() - concurrent_start
+            # Use ThreadPoolExecutor for concurrent processing
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                concurrent_futures = [executor.submit(process_single_file, f) for f in crash_log_files]
+                concurrent_results = [f.result() for f in as_completed(concurrent_futures)]
 
-        fresh_memory_tracker.take_measurement("concurrent_batch_complete")
+            concurrent_total_time = time.time() - concurrent_start
 
-        performance_profiler.record_operation("batch_sequential_total", sequential_total_time)
-        performance_profiler.record_operation("batch_concurrent_total", concurrent_total_time)
+            fresh_memory_tracker.take_measurement("concurrent_batch_complete")
 
-        performance_stats = performance_profiler.stop_profiling()
-        memory_stats = fresh_memory_tracker.stop_tracking()
+            performance_profiler.record_operation("batch_sequential_total", sequential_total_time)
+            performance_profiler.record_operation("batch_concurrent_total", concurrent_total_time)
+
+            performance_stats = performance_profiler.stop_profiling()
+            memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze batch processing performance
         sequential_successes = sum(1 for r in sequential_results if r['success'])

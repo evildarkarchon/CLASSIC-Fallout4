@@ -273,9 +273,6 @@ class UpdateCheckWorker(QObject):
         try:
             from ClassicLib.AsyncBridge import AsyncBridge
 
-            # Use AsyncBridge instead of creating new event loop
-            bridge = AsyncBridge.get_instance()
-
             # Check if pre-release
             if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
                 if self.explicit:
@@ -283,9 +280,11 @@ class UpdateCheckWorker(QObject):
                 self.finished.emit()
                 return
 
-            # Run the async update check using AsyncBridge
-            result = bridge.run_async(self._async_check())
-            self.updateAvailable.emit(not result)
+            # Use AsyncBridge context manager for explicit cleanup
+            with AsyncBridge.get_instance() as bridge:
+                # Run the async update check using AsyncBridge
+                result = bridge.run_async(self._async_check())
+                self.updateAvailable.emit(not result)
 
         except UpdateCheckError as e:
             self.error.emit(str(e))

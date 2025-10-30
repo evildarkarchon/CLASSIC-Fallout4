@@ -179,43 +179,42 @@ class TestThreadSafetyValidation:
         Multiple threads simultaneously use AsyncBridge to run async
         operations, testing the thread-local event loop management.
         """
-        bridge = AsyncBridge.get_instance()
+        with AsyncBridge.get_instance() as bridge:
+            async def async_operation(duration: float, data: str):
+                """Simple async operation for testing."""
+                await asyncio.sleep(duration)
+                return f"Processed: {data}"
 
-        async def async_operation(duration: float, data: str):
-            """Simple async operation for testing."""
-            await asyncio.sleep(duration)
-            return f"Processed: {data}"
+            def concurrent_bridge_operation(thread_id: int, iteration: int, shared_data: list):
+                """Worker function using AsyncBridge concurrently."""
+                # Each thread runs its own async operation
+                data = f"Thread_{thread_id}_Iter_{iteration}"
+                result = bridge.run_async(async_operation(0.01, data))  # 10ms operation
 
-        def concurrent_bridge_operation(thread_id: int, iteration: int, shared_data: list):
-            """Worker function using AsyncBridge concurrently."""
-            # Each thread runs its own async operation
-            data = f"Thread_{thread_id}_Iter_{iteration}"
-            result = bridge.run_async(async_operation(0.01, data))  # 10ms operation
+                shared_data.append({
+                    'thread_id': thread_id,
+                    'iteration': iteration,
+                    'result': result,
+                    'success': result.startswith("Processed:")
+                })
 
-            shared_data.append({
-                'thread_id': thread_id,
-                'iteration': iteration,
-                'result': result,
-                'success': result.startswith("Processed:")
-            })
+                return 1 if result.startswith("Processed:") else 0
 
-            return 1 if result.startswith("Processed:") else 0
+            shared_results = []
+            results = concurrency_helper.create_contention_scenario(
+                target_func=concurrent_bridge_operation,
+                num_threads=20,
+                iterations_per_thread=25,
+                shared_data=shared_results
+            )
 
-        shared_results = []
-        results = concurrency_helper.create_contention_scenario(
-            target_func=concurrent_bridge_operation,
-            num_threads=20,
-            iterations_per_thread=25,
-            shared_data=shared_results
-        )
+            # Validate no async bridge errors
+            assert len(results["errors"]) == 0, f"AsyncBridge thread safety errors: {results['errors']}"
 
-        # Validate no async bridge errors
-        assert len(results["errors"]) == 0, f"AsyncBridge thread safety errors: {results['errors']}"
-
-        # All operations should succeed
-        success_count = sum(1 for r in shared_results if r['success'])
-        expected_count = 20 * 25  # 20 threads * 25 iterations
-        assert success_count == expected_count, f"Expected {expected_count} successes, got {success_count}"
+            # All operations should succeed
+            success_count = sum(1 for r in shared_results if r['success'])
+            expected_count = 20 * 25  # 20 threads * 25 iterations
+            assert success_count == expected_count, f"Expected {expected_count} successes, got {success_count}"
 
     def test_yaml_cache_concurrent_access(self, concurrency_helper):
         """
@@ -372,65 +371,65 @@ class TestRaceConditionDetection:
         Multiple threads perform file I/O operations simultaneously
         to ensure no race conditions in file handle management.
         """
-        bridge = AsyncBridge.get_instance()
-        io_core = FileIOCore()
+        with AsyncBridge.get_instance() as bridge:
+            io_core = FileIOCore()
 
-        # Create test files
-        test_files = []
-        for i in range(10):
-            file_path = tmp_path / f"concurrent_test_{i}.txt"
-            file_path.write_text(f"Test content for file {i}")
-            test_files.append(file_path)
+            # Create test files
+            test_files = []
+            for i in range(10):
+                file_path = tmp_path / f"concurrent_test_{i}.txt"
+                file_path.write_text(f"Test content for file {i}")
+                test_files.append(file_path)
 
-        def concurrent_file_operation(thread_id: int, iteration: int, shared_data: list):
-            """Worker function for concurrent file I/O."""
-            # Each thread reads from a different file
-            file_index = (thread_id + iteration) % len(test_files)
-            file_path = test_files[file_index]
+            def concurrent_file_operation(thread_id: int, iteration: int, shared_data: list):
+                """Worker function for concurrent file I/O."""
+                # Each thread reads from a different file
+                file_index = (thread_id + iteration) % len(test_files)
+                file_path = test_files[file_index]
 
-            try:
-                # Read file content
-                content = bridge.run_async(io_core.read_file(file_path))
+                try:
+                    # Read file content
+                    content = bridge.run_async(io_core.read_file(file_path))
 
-                # Validate content
-                expected = f"Test content for file {file_index}"
-                success = content.strip() == expected
+                    # Validate content
+                    expected = f"Test content for file {file_index}"
+                    success = content.strip() == expected
 
-                shared_data.append({
-                    'thread_id': thread_id,
-                    'file_index': file_index,
-                    'success': success,
-                    'content_length': len(content)
-                })
+                    shared_data.append({
+                        'thread_id': thread_id,
+                        'file_index': file_index,
+                        'success': success,
+                        'content_length': len(content)
+                    })
 
-                return 1 if success else 0
+                    return 1 if success else 0
 
-            except Exception as e:
-                shared_data.append({
-                    'thread_id': thread_id,
-                    'file_index': file_index,
-                    'success': False,
-                    'error': str(e)
-                })
-                return 0
+                except Exception as e:
+                    shared_data.append({
+                        'thread_id': thread_id,
+                        'file_index': file_index,
+                        'success': False,
+                        'error': str(e)
+                    })
+                    return 0
 
-        shared_results = []
-        results = concurrency_helper.create_contention_scenario(
-            target_func=concurrent_file_operation,
-            num_threads=25,
-            iterations_per_thread=20,
-            shared_data=shared_results
-        )
+            shared_results = []
+            results = concurrency_helper.create_contention_scenario(
+                target_func=concurrent_file_operation,
+                num_threads=25,
+                iterations_per_thread=20,
+                shared_data=shared_results
+            )
 
-        # Validate minimal file I/O errors
-        assert len(results["errors"]) < results["total_operations"] * 0.05, \
-            "Too many file I/O errors during concurrent access"
+            # Validate minimal file I/O errors
+            assert len(results["errors"]) < results["total_operations"] * 0.05, \
+                "Too many file I/O errors during concurrent access"
 
-        # Most file operations should succeed
-        success_count = sum(1 for r in shared_results if r.get('success', False))
-        expected_count = 25 * 20
-        assert success_count >= expected_count * 0.95, \
-            f"File I/O success rate too low: {success_count}/{expected_count}"
+            # Most file operations should succeed
+            success_count = sum(1 for r in shared_results if r.get('success', False))
+            expected_count = 25 * 20
+            assert success_count >= expected_count * 0.95, \
+                f"File I/O success rate too low: {success_count}/{expected_count}"
 
 
 @pytest.mark.stress
