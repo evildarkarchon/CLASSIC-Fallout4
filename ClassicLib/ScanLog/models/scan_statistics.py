@@ -35,33 +35,96 @@ class ScanStatistics:
     scan_start_time: float = field(default_factory=time.perf_counter)
 
     def increment_scanned(self) -> None:
-        """Increment the count of successfully scanned logs."""
+        """
+        Increments the scanned count by 1.
+
+        This method updates an internal counter that tracks the total number
+        of scanned items. It is primarily used to maintain a record of the
+        scanned operations.
+
+        Returns:
+            None: This method does not return any value.
+        """
         self.scanned += 1
 
     def increment_incomplete(self) -> None:
-        """Increment the count of incomplete logs."""
+        """
+        Increments the count of incomplete items by one.
+
+        This method increases the value of the `incomplete` attribute by one
+        every time it is invoked. It is typically used to track or manage the
+        number of incomplete tasks or items in a system.
+
+        Returns:
+            None
+        """
         self.incomplete += 1
 
     def increment_failed(self) -> None:
-        """Increment the count of failed logs."""
+        """
+        Increments the internal counter tracking the number of failed attempts.
+
+        The method updates the `failed` attribute by incrementing its value by 1.
+        This allows for keeping a record of failure occurrences.
+
+        """
         self.failed += 1
 
     def get_scan_duration(self) -> float:
-        """Get the duration of the scan in seconds."""  # noqa: DOC201
+        """
+        Calculates the duration of the scan.
+
+        This method computes the time elapsed since the scan started by subtracting
+        the stored start time from the current time using a high-resolution
+        performance counter.
+
+        Returns:
+            float: The duration of the scan in seconds.
+        """  # noqa: DOC201
         return time.perf_counter() - self.scan_start_time
 
     def get_success_rate(self) -> float:
-        """Get the success rate as a percentage."""  # noqa: DOC201
+        """
+        Calculates the success rate as a percentage.
+
+        This method computes the success rate of scanned files relative to the total
+        number of files. If no files exist (i.e., total_files is zero), it returns 0.0
+        to avoid division by zero.
+
+        Returns:
+            float: The success rate as a percentage.
+        """  # noqa: DOC201
         if self.total_files == 0:
             return 0.0
         return (self.scanned / self.total_files) * 100.0
 
     def to_counter(self) -> Counter[str]:
-        """Convert to Counter format for backward compatibility."""  # noqa: DOC201
+        """
+        Converts the object's state to a Counter representation.
+
+        This method creates a Counter object representing the instance's
+        attributes, allowing for an aggregated and easily readable summary
+        of specific state counts.
+
+        Returns:
+            Counter[str]: A Counter object with keys corresponding to the
+            attribute names and values representing their counts.
+        """  # noqa: DOC201
         return Counter(scanned=self.scanned, incomplete=self.incomplete, failed=self.failed)
 
     def update_from_counter(self, counter: Counter[str]) -> None:
-        """Update statistics from a Counter object."""
+        """
+        Updates the object's attributes with corresponding counts from the provided `Counter`.
+
+        This method increments the object's attributes based on the keys and values found
+        in the given `Counter` object. If a key is not present in the `Counter`, a
+        default value of 0 is used.
+
+        Args:
+            counter (Counter[str]): A `Counter` object containing counts for keys
+                "scanned", "incomplete", and "failed" to update the corresponding
+                attributes.
+        """
         self.scanned += counter.get("scanned", 0)
         self.incomplete += counter.get("incomplete", 0)
         self.failed += counter.get("failed", 0)

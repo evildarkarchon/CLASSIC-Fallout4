@@ -1,9 +1,15 @@
 """
-Rust Component Detection Module
+A module to detect and analyze availability of Rust components.
 
-Handles runtime detection of available Rust components for CLASSIC.
-This module checks for the availability of the classic_core Rust extension
-and identifies which components are available for acceleration.
+This module provides functionality to verify the presence and availability of
+various Rust components utilized in the system. It includes options to fetch
+detailed component information while honoring runtime conditions such as the
+environmental disablement of Rust-related acceleration.
+
+Functions:
+    detect_rust_components: Checks the availability of Rust components.
+    get_available_components: Gathers comprehensive details about Rust components,
+                              including their version and environmental status.
 """
 
 from __future__ import annotations
@@ -17,10 +23,19 @@ logger = logging.getLogger(__name__)
 
 def detect_rust_components() -> dict[str, bool]:
     """
-    Detect available Rust components.
+    Detects and validates the availability of Rust-based components and modules.
+
+    This function determines which Rust-based components are enabled and available
+    for use. It checks various modules and their attributes or functions to identify
+    capabilities within `classic_core`, `classic_scanlog`, and other related imports.
+    The output is a dictionary where component names are the keys, and boolean values
+    indicate whether the component is available (`True`) or unavailable (`False`).
+
+    The function also respects the environment variable `CLASSIC_DISABLE_RUST` to
+    disable Rust acceleration globally when specified.
 
     Returns:
-        Dictionary mapping component names to their availability status.
+        dict[str, bool]: A dictionary indicating the availability of Rust components.
     """
     # Check if Rust is disabled via environment variable
     if os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in ("1", "true", "yes"):
@@ -150,13 +165,18 @@ def detect_rust_components() -> dict[str, bool]:
 
 def get_available_components() -> dict[str, Any]:
     """
-    Get detailed information about available Rust components.
+    Retrieves the available components and their respective state for the system.
+
+    This function gathers information about the available components by detecting
+    Rust components and checking if they are disabled through an environment variable.
+    It also determines the version of the `classic_core` module if it is available.
 
     Returns:
-        Dictionary containing:
-        - components: Dict of component availability
-        - version: Version of classic_core if available
-        - disabled: Whether Rust is disabled by environment variable
+        dict[str, Any]: A dictionary containing:
+            - "components": The result from `detect_rust_components()` function.
+            - "version": Version of `classic_core` module or 'unknown' if unavailable.
+            - "disabled": Whether Rust components are disabled, determined by the
+              environment variable `CLASSIC_DISABLE_RUST`.
     """
     disabled = os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in ("1", "true", "yes")
     version = "unknown"
@@ -176,7 +196,18 @@ def get_available_components() -> dict[str, Any]:
 
 
 def _get_empty_component_dict() -> dict[str, bool]:
-    """Get an empty component dictionary with all components set to False."""
+    """
+    Generates a dictionary representing the status of various components with initial
+    states set to `False`.
+
+    This function provides a structured way to initialize component status, suitable for
+    describing the state of different modules or features in a system.
+
+    Returns:
+        dict[str, bool]: A dictionary where keys are component names as strings and values
+        are booleans representing the initialization status of the components (default is
+        `False`).
+    """
     return {
         "parser": False,
         "formid_analyzer": False,

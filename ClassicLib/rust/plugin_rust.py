@@ -32,7 +32,20 @@ class RustPluginAnalyzer:
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo):
-        """Initialize the analyzer, using Rust implementation when available."""
+        """
+        Initializes the analyzer by deciding whether to use the Rust implementation of the
+        PluginAnalyzer from the classic_core module or a fallback Python implementation.
+
+        This constructor tries to locate and utilize the Rust-based PluginAnalyzer if it is
+        available in the classic_core module. If the Rust implementation is successfully initialized,
+        it is preferred as it offers significant performance advantages. If unavailable, the
+        Python implementation of PluginAnalyzer is initialized as a fallback.
+
+        Args:
+            yamldata (ClassicScanLogsInfo): Contains configuration and parameters needed for
+                initializing the analyzers, such as game version, crash generation name, and
+                ignore plugin lists.
+        """
         self._rust_analyzer = None
         self._use_rust = False
         self._python_analyzer = None
@@ -79,18 +92,25 @@ class RustPluginAnalyzer:
         version_current: Any = None
     ) -> tuple[dict[str, str], bool, bool]:
         """
-        Scan and process plugin load order from crash log segment.
-
-        The core load order parsing is universal across all Bethesda games.
-        Version parameters are optional and only affect plugin limit detection.
+        Scans the load order log from the provided plugins segment. The function processes
+        the load order using either Rust or Python-based analyzers, depending on availability
+        and configuration. It returns the processed plugins in a structured dictionary format
+        along with flags that indicate whether plugin limits have been exceeded or plugin
+        limit checks are disabled.
 
         Args:
-            segment_plugins: List of plugin lines from crash log
-            game_version: Game version string (optional)
-            version_current: Current version info (optional)
+            segment_plugins (list[str]): A list of plugin names to be scanned for load
+                order processing.
+            game_version (Any, optional): The version of the game for which the plugin
+                limits need to be checked. Defaults to None.
+            version_current (Any, optional): The current version information to perform
+                compatibility checks. Defaults to None.
 
         Returns:
-            Tuple of (plugins_dict, plugin_limit_triggered, limit_check_disabled)
+            tuple[dict[str, str], bool, bool]: A tuple containing:
+                - A dictionary mapping hexadecimal index strings to plugin names.
+                - A boolean indicating if the plugin limit was triggered.
+                - A boolean indicating if the plugin limit checks are disabled.
         """
         if self._use_rust and self._rust_analyzer:
             try:
@@ -129,15 +149,17 @@ class RustPluginAnalyzer:
         version_current: Any = None
     ) -> tuple[bool, bool]:
         """
-        Check for plugin limit markers separately from load order parsing.
+        This function checks if the plugin count has exceeded the allowed limit for a specified configuration. It uses
+        either a pre-configured analyzer or creates an instance of `PluginAnalyzer` to perform the verification.
 
         Args:
-            segment_plugins: List of plugin lines
-            game_version: Game version string (optional)
-            version_current: Current version info (optional)
+            segment_plugins (list[str]): A list of plugins to analyze.
+            game_version (Any, optional): The version of the game. Defaults to None.
+            version_current (Any, optional): The current plugin version. Defaults to None.
 
         Returns:
-            Tuple of (plugin_limit_triggered, limit_check_disabled)
+            tuple[bool, bool]: A tuple containing two boolean values. The first indicates whether the plugin limit
+                was successfully checked, and the second indicates if the plugin count is within an acceptable range.
         """
         if self._python_analyzer:
             return self._python_analyzer.check_plugin_limit(segment_plugins, game_version, version_current)
@@ -147,11 +169,16 @@ class RustPluginAnalyzer:
 
     def plugin_match(self, plugins: list[str], report: Any) -> None:
         """
-        Match plugins against known problematic ones.
+        Matches the given plugins with analysis results from a report. Delegates the
+        execution to a Python analyzer if it is available; otherwise, it uses
+        a default PluginAnalyzer instance for processing.
 
         Args:
-            plugins: List of plugin names to check
-            report: Report object to update with matches
+            plugins (list[str]): A list of plugin identifiers.
+            report (Any): The report data to be matched with plugins.
+
+        Returns:
+            None
         """
         if self._python_analyzer:
             self._python_analyzer.plugin_match(plugins, report)
@@ -162,15 +189,21 @@ class RustPluginAnalyzer:
 
     def parse_plugin_line(self, line: str) -> tuple[str, str] | None:
         """
-        Parse a single plugin line for index and name.
+        Parses a single line of plugin data and extracts relevant information.
 
-        Rust-specific optimization for single-line parsing.
+        This function attempts to parse a line containing plugin information, checking
+        for a Rust-based parsing implementation first if available. If Rust parsing
+        is not available or fails, it falls back to a Python-based implementation.
+        The function extracts a hexadecimal ID and associated data from the input
+        line, if possible.
 
         Args:
-            line: Plugin line from crash log
+            line (str): The input line containing plugin data to be parsed.
 
         Returns:
-            Tuple of (hex_index, plugin_name) or None if invalid
+            tuple[str, str] | None: A tuple containing the extracted hexadecimal ID
+            (as an uppercase string) and the associated data string if parsing is
+            successful. Returns None if the line does not match the expected format.
         """
         if self._use_rust and self._rust_analyzer:
             try:
@@ -188,5 +221,13 @@ class RustPluginAnalyzer:
 
     @property
     def is_rust_accelerated(self) -> bool:
-        """Check if using Rust acceleration."""
+        """
+        Checks if Rust acceleration is enabled.
+
+        This property returns a boolean value indicating whether the Rust
+        acceleration feature is currently in use.
+
+        Returns:
+            bool: True if Rust acceleration is enabled, False otherwise.
+        """
         return self._use_rust

@@ -25,48 +25,47 @@ class FragmentCollector:
 
         This constructor initializes the attributes required for managing report
         fragments and pending lines.
-
-        Attributes:
-            _fragments (list[ReportFragment]): Internal storage for report fragments.
-            _pending_lines (list[str]): Internal storage for pending lines to be handled.
         """
         self._fragments: list[ReportFragment] = []
         self._pending_lines: list[str] = []
 
     def append(self, line: str) -> None:
         """
-        Appends a line to the pending lines list.
-
-        This method adds the provided line to the internal list of pending lines. It does not
-        return any value but modifies the internal state by appending the input line.
+        Appends a line to the internal pending lines buffer.
 
         Args:
-            line (str): The line to be added to the pending lines list.
+            line (str): The line to be appended to the internal pending lines buffer.
+
+        Returns:
+            None
         """
         self._pending_lines.append(line)
 
     def extend(self, lines: list[str] | tuple[str, ...]) -> None:
         """
-        Extends the existing list of pending lines with the given lines.
+        Extends the internal collection of pending lines with the provided lines.
+
+        This method adds new lines to the internal collection, preserving their
+        ordering. The lines should be provided as a list or tuple of strings.
 
         Args:
-            lines (list[str] | tuple[str, ...]): A list or tuple of strings to be added to
-                the pending lines.
+            lines (list[str] | tuple[str, ...]): A collection of strings to add
+                to the pending lines.
+
+        Returns:
+            None
         """
         self._pending_lines.extend(lines)
 
     def insert(self, index: int, line: str) -> None:
         """
-        Inserts a line into the internal pending lines at the given index.
-
-        This method is used to handle fragment-based insertion by adding a
-        new line into the pending lines list at a specific index. It ensures
-        that all pending operations are flushed before performing the insertion.
+        Inserts a line into the object's data at the given index. This method ensures
+        that any pending updates are processed before the operation is performed and
+        then uses a fragment-based approach to manage the insertion.
 
         Args:
-            index (int): The position at which the line will be inserted.
-            line (str): The line to be inserted.
-
+            index (int): The position at which to insert the new line.
+            line (str): The line of text to be inserted.
         """
         # Convert to fragment-based insertion
         self._flush_pending()
@@ -75,11 +74,14 @@ class FragmentCollector:
 
     def _flush_pending(self) -> None:
         """
-        Flushes all pending lines into fragments.
+        Processes and flushes any pending lines to create a new report fragment.
 
-        This method checks if there are any pending lines to be processed. If found,
-        it converts these lines into a ReportFragment and appends it to the fragments
-        list. After processing, it clears the pending lines.
+        This method checks for the existence of any pending lines and converts them
+        to a report fragment. The created fragment is appended to the list of
+        existing fragments. After processing, the list of pending lines is cleared.
+
+        Returns:
+            None
         """
         if self._pending_lines:
             self._fragments.append(ReportFragment.from_lines(self._pending_lines))

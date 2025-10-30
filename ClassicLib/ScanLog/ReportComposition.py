@@ -22,7 +22,20 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    """Provide deprecation warnings for imports."""
+    """
+    Handles attribute access within the module to provide compatibility for importing certain names from an updated
+    location and raises an appropriate deprecation warning or an error for unrecognized attributes.
+
+    Args:
+        name (str): The name of the attribute being accessed.
+
+    Raises:
+        AttributeError: If the requested name is not recognized as a valid attribute.
+
+    Returns:
+        Any: The global object corresponding to the accessed name if it is listed in `__all__`, otherwise raises
+            an exception.
+    """
     if name in __all__:
         warnings.warn(
             f"Importing {name} from ClassicLib.ScanLog.ReportComposition is deprecated. "

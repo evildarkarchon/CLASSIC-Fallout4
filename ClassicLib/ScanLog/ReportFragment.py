@@ -32,7 +32,23 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    """Provide deprecation warnings for imports."""
+    """
+    Retrieves a global attribute dynamically by its name and provides a warning if it has been
+    deprecated. The function primarily checks if the name exists in the specified attribute list
+    (__all__) and provides an alternative path to import the attribute.
+
+    If the specified name is not present in the globally defined attributes, it raises an
+    AttributeError.
+
+    Args:
+        name (str): The name of the attribute to be retrieved.
+
+    Returns:
+        Any: The global object associated with the given name if it exists in the __all__ list.
+
+    Raises:
+        AttributeError: If the provided name does not exist within the module.
+    """
     if name in __all__:
         warnings.warn(
             f"Importing {name} from ClassicLib.ScanLog.ReportFragment is deprecated. "

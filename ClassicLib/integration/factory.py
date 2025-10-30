@@ -1,8 +1,25 @@
 """
-Component Factory Module
+A module that provides methods for dynamically selecting the most efficient
+available implementations of various utilities and analyzers, including
+Rust and Python-based alternatives.
 
-Provides factory functions for creating the appropriate implementation
-(Rust or Python) of each component based on runtime availability.
+This module includes functions for selecting file I/O handlers, log parsers,
+FormID analyzers, plugin analyzers, record scanners, and report generators,
+with fallback mechanisms for Python-based implementations.
+
+Classes:
+    PythonParserWrapper: A wrapper class for Python-based log parser
+    implementations, mimicking the interface of a Rust-based log parser.
+
+Functions:
+    get_file_io: Retrieve the best available file I/O implementation.
+    get_parser: Retrieve the most efficient log parser implementation available.
+    get_formid_analyzer: Retrieve the best available FormID analyzer
+    implementation.
+    get_plugin_analyzer: Retrieve the most efficient plugin analyzer implementation.
+    get_record_scanner: Retrieve the best available record scanner implementation.
+    get_report_generator: Retrieve the most efficient report generator
+    implementation.
 """
 
 from __future__ import annotations
@@ -25,7 +42,18 @@ _components_cache: dict[str, bool] | None = None
 
 
 def _get_components() -> dict[str, bool]:
-    """Get cached component availability or detect if not cached."""
+    """
+    Retrieves the status of Rust components and caches the result.
+
+    This function checks if the Rust components have already been detected and
+    cached. If not, it calls the `detect_rust_components` function to get the
+    status of the available Rust components, stores the result in a global cache,
+    and returns it.
+
+    Returns:
+        dict[str, bool]: A dictionary where keys represent Rust components as
+        strings and values are booleans indicating the presence of those components.
+    """
     global _components_cache
     if _components_cache is None:
         _components_cache = detect_rust_components()
@@ -33,7 +61,16 @@ def _get_components() -> dict[str, bool]:
 
 
 def _is_rust_disabled() -> bool:
-    """Check if Rust is disabled via environment variable."""
+    """
+    Determines if Rust features are disabled based on an environment variable.
+
+    This function checks the presence and value of a specific environment
+    variable to determine whether Rust features should be disabled. It is
+    commonly used to conditionally enable or disable functionality.
+
+    Returns:
+        bool: True if Rust features are disabled, False otherwise.
+    """
     return os.environ.get(DISABLE_RUST_ENV_VAR, "").lower() in ("1", "true", "yes")
 
 
@@ -44,16 +81,23 @@ _file_io_lock = threading.Lock()
 
 def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
     """
-    Get the best available file I/O implementation (singleton).
-
-    Returns the same instance on subsequent calls for efficiency.
+    Retrieves or initializes a global file I/O instance with the specified encoding and error handling
+    mode. The function follows a thread-safe singleton pattern to ensure only one instance is created
+    and efficiently reused. It attempts to use a Rust-based implementation for improved performance,
+    falling back to a Python-based implementation if unavailable.
 
     Args:
-        encoding: Text encoding to use
-        errors: Error handling mode
+        encoding (str): The text encoding format to be used for file operations. Defaults to "utf-8".
+        errors (str): Specifies the error handling mode for encoding/decoding operations. Defaults
+            to "ignore".
 
     Returns:
-        RustFileIO if available, otherwise FileIOCore
+        Any: A singleton instance of the file I/O implementation that best fits the system's
+        configuration.
+
+    Raises:
+        ImportError: If the Rust-based file I/O implementation fails to load, though the Python
+        implementation is used as a fallback.
     """
     global _file_io_instance
 
@@ -87,10 +131,18 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
 
 def get_parser() -> Any:
     """
-    Get the best available log parser implementation.
+    Retrieves an appropriate parser based on the availability of components and configurations.
+
+    This function determines whether to use a Rust-based parser or a Python-based fallback for
+    parsing data. It checks the system configuration and availability of the Rust parser and
+    falls back to using pure Python implementations if necessary. The returned parser provides
+    the same interface regardless of the underlying implementation, ensuring seamless functionality.
 
     Returns:
-        RustLogParser wrapper if available, otherwise Python parser
+        Any: An instance of the parser, which could be a Rust-based or Python-based implementation.
+
+    Raises:
+        ImportError: If the Rust parser module fails to import.
     """
     components = _get_components()
 
@@ -111,10 +163,45 @@ def get_parser() -> Any:
         """Wrapper for Python parser functions to match RustLogParser interface."""
 
         def find_segments(self, crash_data, crashgen_name, xse_acronym, game_root_name):
+            """
+            Finds and retrieves segments information based on the input parameters.
+
+            This method serves as a wrapper for `find_segments` function, facilitating the
+            retrieval of segments information relevant to the crash data. It processes the
+            provided arguments to facilitate analysis or further processing of the crash
+            data associated with specific conditions.
+
+            Args:
+                crash_data: Data related to the crash context that needs to be analyzed.
+                crashgen_name: The name of the crash generation process or identifier.
+                xse_acronym: Acronym associated with the XSE process specifics.
+                game_root_name: Name of the root directory or identifier for the game's context.
+
+            Returns:
+                Any: The resulting data or information derived from analyzing the crash data.
+            """
             from ClassicLib.python.parser_py import find_segments
             return find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
 
         def extract_section(self, crash_data, start_marker, end_marker):
+            """
+            Extracts a specific section of text from the given crash data based on the
+            specified start and end markers.
+
+            This method iterates through a list of text lines and collects all lines
+            that appear after the start marker and before the end marker. The resulting
+            lines are returned as a list. If no matching section is found, the method
+            returns None.
+
+            Args:
+                crash_data: List of strings representing lines of crash data.
+                start_marker: String that marks the start of the desired section.
+                end_marker: String that marks the end of the desired section.
+
+            Returns:
+                list[str] | None: A list containing lines of the extracted section, or
+                None if no valid section is found.
+            """
             # Python implementation
             section = []
             in_section = False
@@ -139,15 +226,23 @@ def get_formid_analyzer(
     db_exists: bool
 ) -> Any:
     """
-    Get the best available FormID analyzer implementation.
+    Gets an appropriate FormIDAnalyzer instance based on available components and runtime configuration.
+
+    This function determines whether the Rust-based `RustFormIDAnalyzer` or
+    the Python implementation `FormIDAnalyzer` should be used for form ID
+    analysis, prioritizing the Rust implementation if it is available and
+    Rust-based components are not disabled. This provides potential
+    performance benefits. If the Rust implementation is unavailable or fails
+    to import, the fallback Python implementation is used.
 
     Args:
-        yamldata: YAML configuration data
-        show_values: Whether to show FormID values
-        db_exists: Whether FormID database exists
+        yamldata (ClassicScanLogsInfo): The YAML data to be analyzed.
+        show_values (bool): Flag indicating whether to include values in the analysis.
+        db_exists (bool): Flag indicating whether a database exists for reference during analysis.
 
     Returns:
-        RustFormIDAnalyzer wrapper if available, otherwise Python analyzer
+        Any: An instance of RustFormIDAnalyzer or FormIDAnalyzer, depending on the available
+        runtime components.
     """
     components = _get_components()
 
@@ -167,13 +262,21 @@ def get_formid_analyzer(
 
 def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> Any:
     """
-    Get the best available plugin analyzer implementation.
+    Retrieves the appropriate plugin analyzer, opting for a Rust-based implementation
+    if available and functional, otherwise defaulting to the Python implementation.
+
+    This function attempts to use `RustPluginAnalyzer` for faster performance.
+    If the Rust implementation is not available or cannot be imported, it falls back
+    to the `PluginAnalyzer` provided in Python. The selection is based on the
+    availability of the necessary components and the Rust support status.
 
     Args:
-        yamldata: YAML configuration data
+        yamldata: Input data of type `ClassicScanLogsInfo`, which is required
+            to initialize the plugin analyzer.
 
     Returns:
-        RustPluginAnalyzer wrapper if available, otherwise Python analyzer
+        Any: An instance of the selected plugin analyzer, either the Rust-based
+        `RustPluginAnalyzer` or the Python-based `PluginAnalyzer`.
     """
     components = _get_components()
 
@@ -193,13 +296,22 @@ def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> Any:
 
 def get_record_scanner(yamldata: ClassicScanLogsInfo) -> Any:
     """
-    Get the best available record scanner implementation.
+    Creates and returns an appropriate record scanner instance based on the availability
+    of components and the current runtime environment. The function prioritizes the
+    Rust-based implementation which offers significant performance benefits if available
+    and falls back to the Python implementation otherwise.
 
     Args:
-        yamldata: YAML configuration data
+        yamldata (ClassicScanLogsInfo): The YAML data required for scanning and processing
+            records.
 
     Returns:
-        RustRecordScanner wrapper if available, otherwise Python scanner
+        Any: An instance of a record scanner (either RustRecordScanner or RecordScanner)
+            that can process the given YAML data.
+
+    Raises:
+        ImportError: If the Rust-based library is not available when attempting to use
+            the Rust implementation.
     """
     components = _get_components()
 
@@ -219,13 +331,21 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> Any:
 
 def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> Any:
     """
-    Get the best available report generator implementation.
+    Generates a report generator instance.
+
+    This function determines the appropriate implementation of the report generator
+    to use. It prioritizes the Rust-accelerated version for performance, but if Rust
+    support is unavailable or fails to initialize, it falls back to the Python-based
+    implementation.
 
     Args:
-        yamldata: Optional YAML configuration data
+        yamldata: An optional ClassicScanLogsInfo instance containing data to initialize
+            the report generator. If None, the generator will be created without
+            pre-loaded data.
 
     Returns:
-        Rust report generator if available, otherwise Python implementation
+        Any: An instance of the chosen report generator (RustAcceleratedReportGenerator or
+        Python ReportGenerator implementations).
     """
     components = _get_components()
 
@@ -246,10 +366,18 @@ def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> Any:
 
 def get_yaml_operations() -> Any:
     """
-    Get the best available YAML operations implementation.
+    Retrieves the appropriate YAML operations implementation.
+
+    This function determines whether to use a Rust-based YAML operations
+    implementation for enhanced performance or to fall back to a Python-based
+    implementation. If Rust-based operations are available and not disabled,
+    they are utilized; otherwise, the Python implementation serves as the
+    default.
 
     Returns:
-        RustYamlOperations if available, otherwise Python implementation
+        Any: An instance of the Rust-based YAML operations class if available
+        and enabled, or None if Python implementation is used or if no
+        acceleration is available.
     """
     components = _get_components()
 
@@ -269,14 +397,22 @@ def get_yaml_operations() -> Any:
 
 def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -> Any:
     """
-    Get the best available database pool implementation.
+    Retrieves a database connection pool, either using a Rust-optimized implementation
+    or a Python-based fallback.
+
+    The function prioritizes a Rust-based implementation if available, which provides
+    significant performance improvements. If the Rust implementation is not available,
+    it resorts to using the Python-based fallback mechanism.
 
     Args:
-        max_connections: Maximum number of database connections
-        cache_ttl_seconds: TTL for cache entries in seconds
+        max_connections (int): Maximum number of connections allowed to be managed
+            by the database pool. Defaults to 10.
+        cache_ttl_seconds (int): Time-to-live of the connection cache in seconds.
+            Defaults to 300.
 
     Returns:
-        RustAsyncDatabasePool if available, otherwise AsyncDatabasePool
+        Any: The database pool instance, which can either be RustAsyncDatabasePool
+            or AsyncDatabasePool depending on the availability of the Rust module.
     """
     components = _get_components()
 
@@ -296,10 +432,21 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
 
 def get_mod_detector() -> dict[str, Any]:
     """
-    Get the best available mod detector functions.
+    Fetches an appropriate mod detection function implementations based on the
+    availability of Rust-optimized and Python-based modules. The function first
+    attempts to load the Rust-optimized mod detector for improved performance.
+    If the Rust module is unavailable or an error occurs during its loading,
+    it falls back to the Python implementation.
 
     Returns:
-        Dictionary containing all mod detector functions (single, double, important)
+        dict[str, Any]: A dictionary containing mod detection functions:
+            - `detect_mods_single`
+            - `detect_mods_double`
+            - `detect_mods_important`
+
+    Raises:
+        ImportError: If there is an issue importing the mod detection module.
+        AttributeError: If there is an issue accessing attributes during module loading.
     """
     components = _get_components()
 
@@ -335,15 +482,20 @@ def get_mod_detector() -> dict[str, Any]:
 
 def get_yamldata(yaml_dirs: list, game: str, is_vr: bool) -> Any:
     """
-    Get the best available YamlData implementation.
+    Loads YAML data depending on the available components and configurations.
+
+    This function attempts to load YAML data using a Rust-based library for faster
+    performance if the component is available and Rust is enabled. If Rust is not
+    available, it falls back to a Python-based implementation.
 
     Args:
-        yaml_dirs: List of YAML directory paths
-        game: Game name ("Fallout4" or "Skyrim")
-        is_vr: Whether VR mode is enabled
+        yaml_dirs (list): A list of directories containing YAML files.
+        game (str): The name of the game for which data is being loaded.
+        is_vr (bool): Indicates if the game is in virtual reality mode.
 
     Returns:
-        Rust YamlData if available, otherwise ClassicScanLogsInfo
+        Any: An instance of the YAML data handler, either Rust or Python-based,
+        depending on availability.
     """
     components = _get_components()
 
@@ -363,13 +515,20 @@ def get_yamldata(yaml_dirs: list, game: str, is_vr: bool) -> Any:
 
 def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> Any:
     """
-    Get the best available suspect scanner implementation.
+    Returns a SuspectScanner instance suitable for scanning the given YAML data.
+
+    This function automatically determines whether to use the Rust-accelerated
+    or Python implementation of the SuspectScanner based on runtime availability
+    of the Rust module. The Rust implementation provides significant speed
+    enhancements when available.
 
     Args:
-        yamldata: YAML configuration data
+        yamldata: A ClassicScanLogsInfo object containing the log information
+            to be scanned.
 
     Returns:
-        Rust-accelerated SuspectScanner wrapper with automatic fallback
+        Any: An instance of the SuspectScanner initialized with the provided
+            log data.
     """
     # Use wrapper that handles Rust/Python automatically
     from ClassicLib.rust.suspect_rust import SuspectScanner, RUST_AVAILABLE
@@ -384,13 +543,20 @@ def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> Any:
 
 def get_settings_validator(yamldata: ClassicScanLogsInfo) -> Any:
     """
-    Get the best available settings validator implementation.
+    Retrieves and returns a settings validator instance.
+
+    This function determines the appropriate settings validation implementation
+    to use, depending on the availability of a Rust-accelerated version. If Rust
+    support is available, it uses the Rust-accelerated `SettingsValidator`.
+    Otherwise, it defaults to a Python-based implementation.
 
     Args:
-        yamldata: YAML configuration data
+        yamldata: An instance of ClassicScanLogsInfo to be passed to the
+            settings validator.
 
     Returns:
-        Rust-accelerated SettingsValidator wrapper with automatic fallback
+        Any: A settings validator instance, either Rust-accelerated or
+        implemented in Python.
     """
     # Use wrapper that handles Rust/Python automatically
     from ClassicLib.rust.settings_rust import SettingsValidator, RUST_AVAILABLE
@@ -405,10 +571,16 @@ def get_settings_validator(yamldata: ClassicScanLogsInfo) -> Any:
 
 def get_gpu_detector() -> Any:
     """
-    Get the best available GPU detector implementation.
+    Retrieves the GPU detector function with automatic Rust or Python fallback.
+
+    This function determines whether the Rust-accelerated GPU detection implementation
+    is available. If Rust is available, the Rust-based implementation is used and logged;
+    otherwise, the Python-based implementation is used. The returned function provides
+    GPU detection capabilities depending on the selected implementation.
 
     Returns:
-        Module with get_gpu_info function (Rust-accelerated or Python)
+        Any: The GPU detection function, automatically selecting between Rust-accelerated
+        and Python implementations.
     """
     # Use wrapper that provides get_gpu_info function with automatic Rust/Python fallback
     from ClassicLib.rust import gpu_rust
@@ -423,13 +595,19 @@ def get_gpu_detector() -> Any:
 
 def get_fcx_handler(fcx_mode: bool | None) -> Any:
     """
-    Get the best available FCX mode handler implementation.
+    Determines and returns the appropriate FCXModeHandler based on the provided
+    mode and availability of Rust-accelerated functionality.
+
+    The function utilizes a Rust-accelerated implementation if available (`RUST_AVAILABLE`),
+    otherwise falls back to the Python implementation. This provides flexibility
+    and optimized performance where possible.
 
     Args:
-        fcx_mode: Whether FCX mode is enabled (None treated as False)
+        fcx_mode (bool | None): Determines the specific mode for the FCXModeHandler.
+            Can be `True`, `False`, or `None` to represent different behavior.
 
     Returns:
-        Rust-accelerated FcxModeHandler wrapper with automatic fallback
+        Any: An instance of the appropriate FCXModeHandler (either Python or Rust-based).
     """
     # Use wrapper that handles Rust/Python automatically
     from ClassicLib.rust.fcx_rust import FCXModeHandler, RUST_AVAILABLE
@@ -443,7 +621,15 @@ def get_fcx_handler(fcx_mode: bool | None) -> Any:
 
 
 def reset_cache() -> None:
-    """Reset the component cache to force re-detection."""
+    """
+    Resets the global components cache.
+
+    This function sets the global `_components_cache` variable to `None` and logs
+    a debug message indicating that the component cache has been reset.
+
+    Raises:
+        None
+    """
     global _components_cache
     _components_cache = None
     logger.debug("Component cache reset")

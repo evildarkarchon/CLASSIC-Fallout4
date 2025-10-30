@@ -103,6 +103,15 @@ def get_yaml_cache() -> Any:
     return get(Keys.YAML_CACHE)
 
 def set_game(game_name: str):
+    """
+    Sets the current game name in the system registry. This function ensures that
+    a game name is either registered for the first time or updated if different
+    from the currently registered game name. The operation is thread-safe due to
+    the use of a lock mechanism.
+
+    Args:
+        game_name (str): The name of the game to set in the registry.
+    """
     with _registry_lock:
         if not is_registered(Keys.GAME) or not game_name == _registry[Keys.GAME]:
             register(Keys.GAME, game_name)

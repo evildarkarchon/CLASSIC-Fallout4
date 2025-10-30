@@ -1,3 +1,14 @@
+"""Constants and enumerations for CLASSIC-Fallout4.
+
+This module provides:
+- Version constants for Fallout 4 and F4SE versions (OG/NG/VR)
+- YAML file path enumeration for configuration files
+- Database path resolution for FormID databases
+- Game identifier type definitions
+- Settings constants for ignore lists
+"""
+
+from collections.abc import Iterator
 from enum import Enum, auto
 from pathlib import Path
 from typing import Literal
@@ -62,14 +73,18 @@ SETTINGS_IGNORE_NONE = {
     "Root_Folder_Docs",
 }
 
+
 # Define paths for both Main and Local databases
 # Changed to a function to avoid circular import at module level
-def get_db_paths():
+def get_db_paths() -> tuple[Path, Path]:
     """Get absolute database paths based on current game.
 
     Returns absolute paths by resolving relative to CLASSIC Data directory
     found by ResourceLoader. This ensures databases work correctly whether
     running from source, installed package, or frozen executable.
+
+    Returns:
+        A tuple containing (main_db_path, local_db_path) as Path objects.
     """
     from ClassicLib import GlobalRegistry
     from ClassicLib.ResourceLoader import ResourceLoader
@@ -84,16 +99,19 @@ def get_db_paths():
         data_dir / "databases" / f"{game} FormIDs Local.db",
     )
 
+
 # For backward compatibility, create a property-like object
 class _DBPaths:
     """Backward compatible DB_PATHS that lazily gets the paths."""
-    def __getitem__(self, index):
+
+    def __getitem__(self, index: int) -> Path:
         return get_db_paths()[index]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Path]:
         return iter(get_db_paths())
 
-    def __len__(self):
+    def __len__(self) -> int:
         return 2
+
 
 DB_PATHS = _DBPaths()

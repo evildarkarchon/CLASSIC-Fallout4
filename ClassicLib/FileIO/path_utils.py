@@ -1,4 +1,11 @@
-"""Path conversion utilities with caching."""
+"""
+Provides utility functions for path conversion and caching.
+
+This module contains functions that handle the conversion of string
+representations of paths to `Path` objects. It includes an efficient
+caching mechanism to optimize repeated operations on frequently used
+paths.
+"""
 
 from functools import lru_cache
 from pathlib import Path
@@ -7,32 +14,31 @@ from pathlib import Path
 @lru_cache(maxsize=512)
 def cached_path_conversion(path_str: str) -> Path:
     """
-    Cached conversion of string paths to Path objects.
-
-    The LRU cache stores up to 512 most recently used paths,
-    significantly reducing overhead for frequently accessed files.
+    Converts a string representation of a file system path to a `Path` object and caches the result
+    to improve performance for repeated path conversions. The caching mechanism allows up to 512 unique
+    path conversions to be stored.
 
     Args:
-        path_str: String representation of the path
+        path_str: A string representing the file system path to be converted.
 
     Returns:
-        Path: Cached Path object
+        A `Path` object corresponding to the provided `path_str`.
     """
     return Path(path_str)
 
 
 def ensure_path(path: Path | str) -> Path:
     """
-    Efficiently convert string to Path object with caching.
-
-    This method provides a single point for path conversion with LRU caching
-    for string paths, significantly reducing overhead for frequently accessed files.
+    Ensures that the given input is converted to a Path object. If the input
+    is already a Path object, it is returned as-is. Otherwise, the input is
+    converted to a Path object through an appropriate conversion process.
 
     Args:
-        path: Path object or string representation
+        path (Path | str): A filesystem path provided as either a Path object
+        or a string.
 
     Returns:
-        Path: Path object (cached if originally a string)
+        Path: The ensured Path object.
     """
     if isinstance(path, Path):
         return path

@@ -67,12 +67,15 @@ class ProgressContext:
 
     def __init__(self, handler: MessageHandler, description: str, total: int | None = None) -> None:
         """
-        Initializes an object with attributes for managing progress tracking and display.
+        Initializes an instance of the class with the specified handler, description, and optional
+        total value. Tracks current progress and manages optional progress visualization.
 
         Args:
-            handler (MessageHandler): The handler to manage messages or tasks related to progress.
-            description (str): A textual description for the operation or task.
-            total (int | None): The total number of steps for the progress, or None if unspecified.
+            handler (MessageHandler): The handler responsible for managing messages during execution.
+            description (str): A descriptive text for the operation, typically displayed in the
+                progress visualization.
+            total (int | None): The total number of units of work to be completed. Defaults to None,
+                indicating that the total is unknown or undefined.
         """
         self.handler = handler
         self.description = description
@@ -87,21 +90,21 @@ class ProgressContext:
 
     def __enter__(self) -> ProgressContext:
         """
-        Context manager for establishing and managing a progress interface.
-
-        When invoked, this method creates a progress interface suitable for the current environment,
-        determined by whether the application is running in GUI or CLI mode. Depending on availability
-        and requirements, progress can be shown via a GUI progress dialog (Qt-based) or in the CLI
-        (using text-based progress bars). The method also accounts for settings enabled or disabled
-        within the application and manages worker thread interactions if necessary.
-
-        Returns:
-            ProgressContext: The current instance of the progress context manager, allowing
-            for chaining or further interaction within the context block.
+        Enters the progress context, initializing an appropriate progress tracking mechanism based
+        on the environment (GUI or CLI). It handles GUI progress dialog creation for GUI environments
+        and relies on CLI-based progress tracking (e.g., TQDM or custom CLI progress bar) for CLI environments,
+        with fallback mechanisms in case of missing dependencies or errors.
 
         Raises:
-            ImportError: If required dependencies or modules for specific environments are missing.
-            RuntimeError: If GUI operations fail in a context where GUI mode is active.
+            ImportError: If necessary modules are missing.
+            RuntimeError: If there is an issue with threading or GUI initialization.
+            FileNotFoundError: If the configuration file for CLI progress settings is missing.
+            KeyError: If the relevant settings key is not found in the configuration file.
+            TypeError: If the expected data type for a setting does not match.
+            Exception: For general unexpected behaviors during initialization.
+
+        Returns:
+            ProgressContext: An initialized instance of the progress context ready for tracking progress.
         """
         # Check if CLI progress is disabled
         try:
@@ -148,17 +151,13 @@ class ProgressContext:
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """
-        Handles cleanup actions for the context manager, ensuring proper resource management
-        depending on the attribute states and type of progress bar used.
+        Handles the cleanup process upon exiting a context managed block. Ensures proper closure
+        of progress indicators or signals based on the situation when the context is exited.
 
         Args:
-            exc_type: Any: The exception type, if an exception occurred during the context
-                execution.
-            exc_val: Any: The exception value, if an exception occurred during the context
-                execution.
-            exc_tb: Any: The traceback object, if an exception occurred during the context
-                execution.
-
+            exc_type (Any): The exception type, if any, raised within the context block.
+            exc_val (Any): The exception value, providing details about the exception.
+            exc_tb (Any): The traceback object associated with the exception.
         """
         if self._using_qt_signals:
             self.handler.progress_close_signal.emit()
@@ -170,17 +169,14 @@ class ProgressContext:
 
     def update(self, n: int = 1, description: str | None = None) -> None:
         """
-        Updates the progress value by a specified amount and optionally updates
-        the description. This method handles the progress bar and Qt signals
-        depending on the configuration of the object.
-
-        Throttles Qt signal emissions to reduce cross-thread overhead in GUI mode.
+        Updates the current progress and optionally emits signals or updates a progress bar
+        based on the current state. Handles throttling for Qt signals to reduce overhead
+        and updates graphical progress bars if available. Emits a description if provided.
 
         Args:
-            n (int): The number by which the current progress should be incremented.
-                Defaults to 1.
-            description (str | None): An optional description to update alongside
-                the progress. If None, no description is updated.
+            n (int): The amount by which to increment the current progress. Defaults to 1.
+            description (str | None): Optional description to accompany the update in cases
+                where a description mechanism is provided (e.g., GUI progress bars or signals).
         """
         self.current += n
 

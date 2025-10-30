@@ -1,7 +1,11 @@
 """
-Manages path-related settings and operations effectively, allowing the user to interact
-with path settings such as INI folder paths. Provides functionalities including setting,
-browsing, resetting, and auto-detecting path values for customization and ease of use.
+Module to manage INI folder paths for applications or games.
+
+This module encompasses the PathManager class, which interacts with the YAML
+settings and user interface components to streamline folder path operations. It
+provides functionality to browse, reset, and autodetect INI folder paths, ensuring
+efficient configuration management.
+
 """
 
 from __future__ import annotations

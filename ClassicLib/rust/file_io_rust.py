@@ -49,11 +49,16 @@ class RustFileIOCore:
 
     def __init__(self, encoding: str = "utf-8", errors: str = "ignore") -> None:
         """
-        Initialize RustFileIOCore with default encoding settings.
+        Initializes a File I/O core system to handle encoding and error preferences. This
+        class supports fallback between Rust and Python implementations, ensuring robust
+        file I/O operations regardless of the underlying availability of native support.
+        If Rust core is available and successfully initialized, it will be used;
+        otherwise, a Python-based fallback system is initialized.
 
         Args:
-            encoding: Default encoding for file operations
-            errors: Error handling strategy for encoding errors
+            encoding (str): The default text encoding to use for file operations. Defaults to "utf-8".
+            errors (str): The default error handling strategy for file encoding and decoding operations.
+                Possible values include "ignore", "strict", and "replace". Defaults to "ignore".
         """
         self.default_encoding = encoding
         self.default_errors = errors
@@ -81,16 +86,32 @@ class RustFileIOCore:
     @property
     def is_rust_accelerated(self) -> bool:
         """
-        Check if Rust acceleration is being used.
+        Property to check if Rust acceleration is enabled.
+
+        The property evaluates whether the `_rust_core` attribute is
+        set or not. If `_rust_core` is not `None`, it indicates that
+        Rust acceleration is active.
 
         Returns:
-            bool: True if using Rust implementation, False if using Python fallback
+            bool: True if Rust acceleration is enabled, False otherwise.
         """
         return self._rust_core is not None
 
     @staticmethod
     def _ensure_path(path: Path | str) -> Path:
-        """Convert string to Path object efficiently."""
+        """
+        Ensures that the given path is converted to a Path object.
+
+        This method checks if the provided input is of type `str`. If so, it converts
+        it to a `Path` object. If the input is already a `Path` object, it returns it
+        unchanged.
+
+        Args:
+            path (Path | str): The input path that needs to be ensured as a `Path` object.
+
+        Returns:
+            Path: The ensured `Path` object.
+        """
         if isinstance(path, str):
             return Path(path)
         return path
@@ -101,20 +122,19 @@ class RustFileIOCore:
 
     async def read_file(self, path: Path | str) -> str:
         """
-        Read entire file contents with automatic encoding detection.
+        Reads the content of a file asynchronously and returns it as a string.
 
-        Uses Rust's high-performance async I/O and encoding detection
-        when available, with LRU caching for frequently accessed files.
+        This function attempts to read a file using a Rust-based core if available for
+        optimal performance. If the Rust-based core fails or is unavailable, it falls
+        back to a Python-based core. If neither core is present, it employs manual
+        fallback logic to read the file synchronously using built-in Python capabilities.
 
         Args:
-            path: Path to the file to read
+            path (Path | str): The path to the file to be read. Can be a Path object
+                or a string representing the file path.
 
         Returns:
-            str: Complete file contents
-
-        Raises:
-            FileNotFoundError: If file doesn't exist
-            PermissionError: If file cannot be read
+            str: The content of the file as a string.
         """
         if self._rust_core:
             try:
@@ -133,13 +153,20 @@ class RustFileIOCore:
 
     async def read_lines(self, path: Path | str) -> list[str]:
         """
-        Read file lines with automatic encoding detection.
+        Reads lines from a file specified by the given path.
+
+        This method attempts to read the file using the Rust-based core reader if available.
+        If the Rust-based reader fails, it falls back to the Python-based core reader.
+        As a last resort, it reads the file content and splits it into lines manually.
 
         Args:
-            path: Path to the file to read
+            path (Path | str): The path to the file to be read.
 
         Returns:
-            list[str]: List of lines from the file
+            list[str]: A list of strings, each representing a line from the file.
+
+        Raises:
+            Exception: Raises exceptions from the Rust core or Python core readers during failure.
         """
         if self._rust_core:
             try:
@@ -155,13 +182,18 @@ class RustFileIOCore:
 
     async def read_bytes(self, path: Path | str) -> bytes:
         """
-        Read file as bytes.
+        Reads bytes from the specified file path using available core handlers.
+
+        The method attempts to read bytes from the file using the Rust core handler.
+        If it fails, it switches to the Python core handler. As a final fallback, it
+        directly reads the bytes from the given path.
 
         Args:
-            path: Path to the file to read
+            path (Path | str): The file path from which bytes are to be read. Can be
+                provided as either a Path object or a string.
 
         Returns:
-            bytes: Raw file contents
+            bytes: The content of the file as bytes.
         """
         if self._rust_core:
             try:
@@ -182,11 +214,13 @@ class RustFileIOCore:
 
     async def write_file(self, path: Path | str, content: str) -> None:
         """
-        Write string content to file.
+        Writes content to a file, either using the rust or python core, or directly
+        using Python file operations as a fallback. Ensures the parent directory
+        exists if using the Python fallback.
 
         Args:
-            path: Path to the file to write
-            content: String content to write
+            path (Path | str): The path to the file to be written.
+            content (str): The content to be written to the file.
         """
         if self._rust_core:
             try:
@@ -204,11 +238,14 @@ class RustFileIOCore:
 
     async def write_lines(self, path: Path | str, lines: list[str]) -> None:
         """
-        Write lines to file.
+        Writes multiple lines to a specified file asynchronously. The method determines
+        whether to use a Rust-based or Python-based core for writing the lines. If both
+        cores fail, it falls back to default content formatting for writing.
 
         Args:
-            path: Path to the file to write
-            lines: List of lines to write
+            path (Path | str): The file path where the lines will be written.
+            lines (list[str]): A list of strings, each representing a line to be written
+                into the file.
         """
         if self._rust_core:
             try:
@@ -227,11 +264,15 @@ class RustFileIOCore:
 
     async def write_bytes(self, path: Path | str, content: bytes) -> None:
         """
-        Write bytes to file.
+        Writes byte content to a specified file path.
+
+        This method attempts to utilize a Rust-based core implementation for performance.
+        If the Rust implementation fails, it will fall back to a Python-based or
+        default implementation.
 
         Args:
-            path: Path to the file to write
-            content: Bytes content to write
+            path (Path | str): The file path where the byte content is to be written.
+            content (bytes): The byte content to be written to the specified file path.
         """
         if self._rust_core:
             try:
@@ -249,11 +290,17 @@ class RustFileIOCore:
 
     async def append_file(self, path: Path | str, content: str) -> None:
         """
-        Append string content to file.
+        Appends the provided content to a file at the given path. The method attempts to
+        use the Rust implementation if available, otherwise falls back to the Python
+        implementation. If neither core is available, it directly handles the file
+        operation, ensuring the file's parent directory exists if necessary.
 
         Args:
-            path: Path to the file to append to
-            content: String content to append
+            path (Path | str): The path to the file where the content should be appended.
+            content (str): The string content to append to the specified file.
+
+        Raises:
+            Exception: Raised if the Rust core fails during the append operation.
         """
         if self._rust_core:
             try:
@@ -276,17 +323,23 @@ class RustFileIOCore:
 
     async def read_file_mmap(self, path: Path | str, encoding: str | None = None) -> str:
         """
-        Read file using memory mapping for large files.
-
-        This is a Rust-specific optimization that uses memory-mapped I/O
-        for files over 10MB, providing significant performance improvements.
+        Reads a file using memory-mapped I/O if available, with a fallback to regular
+        file reading. If Rust core is enabled, it attempts to use the Rust-based method
+        for optimal performance, and falls back to a basic Python read if it fails.
 
         Args:
-            path: Path to the file to read
-            encoding: Specific encoding to use, or "auto" for detection
+            path (Path | str): The path to the file to be read. Can be a Path object
+                or a string.
+            encoding (str | None): The encoding to use for reading the file. If None,
+                the system's default encoding is used.
 
         Returns:
-            str: File contents
+            str: The content of the file as a string.
+
+        Raises:
+            Exception: If an error occurs while reading the file using the Rust-based
+                method and logging the issue for fallback.
+
         """
         if self._rust_core:
             try:
@@ -299,16 +352,16 @@ class RustFileIOCore:
 
     async def read_dds_header(self, path: Path | str) -> tuple[int, int] | None:
         """
-        Parse DDS texture header for dimensions.
-
-        Uses zero-copy operations in Rust for maximum performance.
-        Results are cached for repeated access.
+        Reads the DDS header from the specified file path and returns the extracted header
+        information. This method ensures compatibility by attempting to use a high-performance
+        Rust implementation if available, or a Python fallback otherwise.
 
         Args:
-            path: Path to DDS file
+            path (Path | str): The file path to the DDS file which header needs to be read.
 
         Returns:
-            tuple[int, int] | None: (width, height) or None if not a valid DDS
+            tuple[int, int] | None: A tuple containing the width and height of the DDS file if
+            successful, or None if the operation fails.
         """
         if self._rust_core:
             try:
@@ -329,16 +382,23 @@ class RustFileIOCore:
 
     async def read_dds_headers_batch(self, paths: list[Path | str]) -> dict[str, tuple[int, int] | None]:
         """
-        Read multiple DDS headers in parallel.
+        Reads headers from multiple DDS (DirectDraw Surface) files either using a Rust
+        core implementation for batch processing or a Python fallback that processes
+        files sequentially.
 
-        Provides 30-40x speedup for batch DDS processing using
-        Rust's parallel iterators and zero-copy operations.
+        This function attempts to use a Rust-based implementation for performance
+        optimization. If the Rust implementation is unavailable or fails, the method
+        resorts to a Python-based sequential processing approach to extract the
+        required data from the files.
 
         Args:
-            paths: List of DDS file paths
+            paths (list[Path | str]): A list of file paths to DDS files where each path
+                is represented as a string or Path object.
 
         Returns:
-            dict: Mapping of paths to (width, height) tuples
+            dict[str, tuple[int, int] | None]: A dictionary where the keys are file
+                paths (as strings) and the values are either tuples containing header
+                information (two integers) or None if the header could not be processed.
         """
         if self._rust_core:
             try:
@@ -361,17 +421,28 @@ class RustFileIOCore:
         max_depth: int | None = None
     ) -> list[str]:
         """
-        Recursively walk directory with optional pattern matching.
+        Recursively walks through a directory to collect the file paths, optionally filtering by
+        a pattern and limiting the depth of the search.
 
-        Uses Rust's parallel directory traversal for high performance.
+        This asynchronous method attempts to use a Rust-based implementation for improved
+        performance when available. If the Rust-based implementation fails or is unavailable,
+        it falls back to a Python implementation for traversing the directory structure.
 
         Args:
-            path: Root directory to walk
-            pattern: Optional regex pattern to match files
-            max_depth: Maximum depth to traverse
+            path (Path | str): The directory path to start the walk from. Can be provided
+                as a Path object or a string.
+            pattern (str | None): The regex pattern to filter file names. Only files whose
+                names match the pattern will be included in the results. Defaults to None,
+                meaning no filtering is applied.
+            max_depth (int | None): The maximum depth to recurse into subdirectories. A
+                value of None indicates no depth restrictions. Defaults to None.
 
         Returns:
-            list[str]: List of matching file paths
+            list[str]: A list of file paths (as strings) collected during the directory walk.
+            Only paths meeting the specified filter criteria and depth constraints are included.
+
+        Raises:
+            None
         """
         if self._rust_core:
             try:
@@ -413,16 +484,24 @@ class RustFileIOCore:
 
     async def read_multiple_files(self, paths: list[Path | str]) -> dict[str, str]:
         """
-        Read multiple files concurrently.
+        Reads multiple files asynchronously and returns their contents in a dictionary.
 
-        Uses Rust's async runtime with concurrency control for
-        optimal performance without overwhelming the system.
+        The method attempts to use an optimized reading mechanism if it is available
+        through `_rust_core` or `_python_core`, falling back to a manual reading
+        approach if neither optimization is available. File contents are read and
+        mapped to their corresponding filenames (not full paths).
 
         Args:
-            paths: List of file paths to read
+            paths (list[Path | str]): A list of file paths or strings representing file
+                paths to be read.
 
         Returns:
-            dict: Mapping of file names to contents
+            dict[str, str]: A dictionary where the keys are filenames and the values
+                are the file contents.
+
+        Raises:
+            Exception: Logs an error message and adds empty content to the result in
+                case of individual file read failures.
         """
         if self._rust_core:
             try:
@@ -449,10 +528,17 @@ class RustFileIOCore:
 
     async def write_multiple_files(self, files: dict[Path | str, str]) -> None:
         """
-        Write multiple files concurrently.
+        Writes content to multiple files asynchronously.
+
+        This method writes the specified content to the provided file paths. It utilizes
+        different mechanisms for file writing based on the available core implementation
+        (rust or python). If none of the core implementations are accessible, it falls
+        back to writing each file individually.
 
         Args:
-            files: Dictionary mapping paths to contents
+            files (dict[Path | str, str]): A dictionary where the keys are file paths
+                (either `Path` objects or strings) and the values are the file contents
+                as strings.
         """
         if self._rust_core:
             try:
@@ -473,7 +559,21 @@ class RustFileIOCore:
     # ==========================================
 
     def file_exists(self, path: Path | str) -> bool:
-        """Check if file exists (fast, non-blocking)."""
+        """
+        Checks whether a specified file or directory exists.
+
+        This method verifies the existence of a file or directory at the provided
+        path. If an internal `_rust_core` attribute is present, it delegates the check
+        to the Rust core implementation for performance. Otherwise, it converts the
+        path and verifies its existence using Python's built-in functionality.
+
+        Args:
+            path (Path | str): The path to the file or directory to check. This can
+                be provided as a `Path` object or a string.
+
+        Returns:
+            bool: True if the file or directory exists, otherwise False.
+        """
         if self._rust_core:
             return self._rust_core.file_exists(str(path))
 
@@ -481,7 +581,22 @@ class RustFileIOCore:
         return path.exists()
 
     def get_file_size(self, path: Path | str) -> int:
-        """Get file size in bytes."""
+        """
+        Returns the size of a file located at the given path.
+
+        This method attempts to determine the physical size of a file in bytes.
+        If the underlying Rust core is available, it will delegate the size
+        calculation to it. Otherwise, it uses the `stat` method from the
+        os module to retrieve the file size. If the file does not exist or
+        an error occurs during the retrieval process, it will return -1.
+
+        Args:
+            path (Path | str): The file path for which the size is to be determined.
+
+        Returns:
+            int: The size of the file in bytes. Returns -1 if the file does not
+            exist or if the size retrieval fails.
+        """
         if self._rust_core:
             return self._rust_core.get_file_size(str(path))
 
@@ -493,13 +608,14 @@ class RustFileIOCore:
 
     async def read_crash_log(self, path: Path | str) -> list[str]:
         """
-        Read crash log file with appropriate encoding detection.
+        Reads the crash log from the specified file and returns a list of non-empty lines. This method strips any
+        trailing empty lines from the log for consistency.
 
         Args:
-            path: Path to crash log file
+            path (Path | str): The path to the crash log file.
 
         Returns:
-            list[str]: Lines from the crash log
+            list[str]: A list of strings, each representing a non-empty line from the crash log.
         """
         lines = await self.read_lines(path)
         # Strip any trailing empty lines for consistency
@@ -509,11 +625,21 @@ class RustFileIOCore:
 
     async def write_crash_report(self, path: Path | str, report_lines: list[str]) -> None:
         """
-        Write crash report to file.
+        Writes a crash report to the specified path in Markdown format.
+
+        This method ensures the given path is valid, converts it to a `.md` file,
+        and writes the given report lines as the content. It logs the operation
+        upon successful completion.
 
         Args:
-            path: Path to write report to
-            report_lines: Lines of the report
+            path (Path | str): The file path where the crash report should
+                be saved. It can be a string or a Path object.
+            report_lines (list[str]): A list of strings containing the lines
+                to be written into the report. Each line is expected to already
+                end with a newline character.
+
+        Returns:
+            None
         """
         path = self._ensure_path(path)
         report_path = path.with_suffix(".md")
@@ -529,7 +655,18 @@ class RustFileIOCore:
 
 # Sync adapter functions for backward compatibility
 def get_rust_file_io() -> RustFileIOCore | None:
-    """Get Rust FileIOCore instance if available."""
+    """
+    Gets an instance of RustFileIOCore if Rust is available.
+
+    This function checks whether Rust functionality is available in the current
+    environment. If available, it returns an instance of RustFileIOCore. If not,
+    it returns None. This is particularly useful for systems that require file I/O
+    handling through Rust for performance optimization or specific functionalities.
+
+    Returns:
+        RustFileIOCore | None: An instance of RustFileIOCore if Rust is available,
+        otherwise None.
+    """
     if RUST_AVAILABLE:
         return RustFileIOCore()
     return None
@@ -537,9 +674,18 @@ def get_rust_file_io() -> RustFileIOCore | None:
 
 def create_file_io_sync(encoding: str = "utf-8", errors: str = "ignore") -> Any:
     """
-    Create FileIOCore with Rust acceleration if available.
+    Creates a synchronous file I/O utility by wrapping asynchronous file I/O core
+    operations with synchronous equivalents for ease of use in synchronous
+    contexts.
 
-    Returns the best available implementation.
+    Args:
+        encoding: Encoding to use for reading and writing text files. Default
+            is "utf-8".
+        errors: Error handling strategy for encoding and decoding operations.
+            Default is "ignore".
+
+    Returns:
+        An instance of a synchronous wrapper for file I/O operations.
     """
     io_core = RustFileIOCore(encoding, errors)
 

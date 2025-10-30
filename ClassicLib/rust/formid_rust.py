@@ -32,7 +32,16 @@ class RustFormIDAnalyzer:
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo, show_formid_values: bool, formid_db_exists: bool):
-        """Initialize the analyzer, using Rust implementation when available."""
+        """
+        Initializes a form ID analyzer with a preference for optimized Rust implementations and a fallback
+        to a Python implementation. This class attempts to utilize Rust-based analyzers if available,
+        providing enhanced performance and optimizations.
+
+        Args:
+            yamldata: An instance of ClassicScanLogsInfo containing essential scan log data.
+            show_formid_values: A boolean indicating whether form ID values should be displayed.
+            formid_db_exists: A boolean specifying if the FormID database already exists.
+        """
         self._rust_analyzer = None
         self._rust_core_analyzer = None
         self._use_rust = False
@@ -85,13 +94,16 @@ class RustFormIDAnalyzer:
 
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
         """
-        Extract FormIDs from call stack segment.
+        Extracts a list of Form IDs from the given segment call stack using multiple possible analyzers.
+
+        The method attempts to use a Rust-based zero-copy extraction method if available. If that fails,
+        or if Rust analyzers are not enabled, it falls back to a Python-based Form ID analyzer.
 
         Args:
-            segment_callstack: List of call stack lines
+            segment_callstack (list[str]): The call stack segment from which to extract Form IDs.
 
         Returns:
-            List of extracted FormID strings
+            list[str]: A list of extracted Form IDs found within the provided call stack segment.
         """
         if self._use_rust_core and self._rust_core_analyzer:
             try:
@@ -127,12 +139,20 @@ class RustFormIDAnalyzer:
 
     def formid_match(self, formids: list[str], plugins: dict[str, str], report: Any) -> None:
         """
-        Match FormIDs with plugins and update report.
+        Matches form IDs with given plugins and generates a structured report, relying on either Rust
+        or Python-based analyzers depending on the configuration.
+
+        This method utilizes a Rust-based core for optimized processing when available, falling
+        back to the Python-based analyzer if necessary. Plugin configurations are cached for efficiency
+        in Rust-based processing. The resulting matches are converted into report fragments to be appended
+        to the provided report.
 
         Args:
-            formids: List of FormID strings to match
-            plugins: Dictionary mapping plugin indices to names
-            report: Report object to update with matches
+            formids (list[str]): A list of form IDs to be analyzed and matched.
+            plugins (dict[str, str]): A dictionary mapping plugin names to their respective paths or
+                details.
+            report (Any): A writable report object where the analysis results will be stored.
+
         """
         if self._use_rust_core and self._rust_core_analyzer:
             try:
@@ -153,7 +173,7 @@ class RustFormIDAnalyzer:
                     result_lines = self._rust_core_analyzer.process_formids_cached(formids, cache_key)
                     # Create ReportFragment from the result lines
                     if result_lines:
-                        from ClassicLib.Report.ReportFragment import ReportFragment
+                        from ClassicLib.ScanLog.ReportFragment import ReportFragment
                         fragment = ReportFragment.from_lines(result_lines)
                         report.add_fragment(fragment)
                     return
@@ -173,15 +193,19 @@ class RustFormIDAnalyzer:
 
     def extract_formids_batch(self, segments: list[list[str]]) -> list[list[str]]:
         """
-        Extract FormIDs from multiple segments in batch.
+        Extracts form IDs in batches from the provided list of segments.
 
-        Rust-specific optimization that processes multiple segments in parallel.
+        This method attempts to use a Rust-based implementation for batch extraction
+        of form IDs if available. If the Rust module is unavailable or fails to process
+        the data, a Python fallback mechanism is used, processing each segment sequentially.
 
         Args:
-            segments: List of segment line lists
+            segments (list[list[str]]): A list of lists where each inner list contains
+                segments to be processed for extracting form IDs.
 
         Returns:
-            List of FormID lists, one per segment
+            list[list[str]]: A list of lists where each inner list contains extracted
+                form IDs corresponding to the input segments.
         """
         if self._use_rust:
             try:
@@ -200,5 +224,13 @@ class RustFormIDAnalyzer:
 
     @property
     def is_rust_accelerated(self) -> bool:
-        """Check if using Rust acceleration."""
+        """
+        Checks if Rust acceleration is enabled.
+
+        This property determines whether Rust acceleration is enabled based on the
+        values of the underlying private attributes.
+
+        Returns:
+            bool: True if Rust acceleration is enabled, False otherwise.
+        """
         return self._use_rust or self._use_rust_core

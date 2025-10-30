@@ -1,4 +1,11 @@
-"""Validation and configuration methods for ScanGame operations."""
+"""
+Validation and configuration methods for handling game mod scanning.
+
+This module provides functionality to fetch and cache scanning settings, as well
+as to generate standardized issue messages for mod scan reports. The purpose is
+to assist in identifying and resolving issues in game mods, ensuring compatibility
+and stability during usage.
+"""
 
 from pathlib import Path
 
@@ -8,20 +15,35 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class ScanValidators:
-    """Validation and configuration methods for game scanning."""
+    """Manage and provide scan validation utilities for modding.
+
+    This class provides validation mechanisms such as retrieving scan settings
+    and standardized issue messages for mod scanning reports. The results of
+    these operations are cached to optimize performance during the lifetime
+    of the process.
+    """
 
     def __init__(self) -> None:
-        """Initialize validators with caching."""
+        """
+        Initializes an instance of the class.
+        """
         self._scan_settings_cache: tuple[str, dict[str, str], Path | None] | None = None
         self._issue_messages_cache: dict[tuple[str, str], dict[str, list[str]]] = {}
 
     def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
         """
-        Gets common settings used by mod scanning functions.
-        Results are cached for the lifetime of the process.
+        Retrieves and caches scanning settings required for the application.
+
+        This method gathers scanning settings information, caching it for further use
+        to enhance performance. The settings include an acronym, details of hashed
+        script files, and the path to the mods folder. If cached settings already
+        exist, they are immediately returned to avoid redundant operations. Otherwise,
+        the method facilitates fetching and caching of new settings data.
 
         Returns:
-            tuple: (xse_acronym, xse_scriptfiles, mod_path)
+            tuple[str, dict[str, str], Path | None]: A tuple containing the acronym as
+                a string, hashed script files as a dictionary, and the mods folder
+                path as a `Path` object or `None`.
         """
         # Use cached value if available
         if self._scan_settings_cache is not None:
@@ -44,15 +66,22 @@ class ScanValidators:
 
     def get_issue_messages(self, xse_acronym: str, mode: str) -> dict[str, list[str]]:
         """
-        Returns standardized issue messages for mod scan reports.
-        Results are cached for the lifetime of the process.
+        Retrieves issue messages based on a combination of script engine acronym and mode, with details
+        of identified problems and recommendations. The issue messages provide detailed explanations
+        for common mod issues and are categorized based on texture, sound formats, and other
+        potential conflicts.
+
+        The function prioritizes cached data for performance optimization and caches new results after
+        processing. Depending on the mode ('unpacked' or 'archived'), it includes specific messages
+        pertinent to the corresponding mode while retaining a base set of messages.
 
         Args:
-            xse_acronym: Script extender acronym from settings
-            mode: Either "unpacked" or "archived"
+            xse_acronym (str): Acronym representing the script extender engine.
+            mode (str): Mode in which the issues are being checked, such as 'unpacked' or 'archived'.
 
         Returns:
-            dict: Dictionary of issue types and their message templates
+            dict[str, list[str]]: A dictionary where keys are issue categories, and values are lists of
+            associated warning or error messages.
         """
         # Check cache first
         cache_key = (xse_acronym, mode)

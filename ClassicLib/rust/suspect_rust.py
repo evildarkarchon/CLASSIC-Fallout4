@@ -42,10 +42,13 @@ class RustAcceleratedSuspectScanner:
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
-        Initialize the suspect scanner.
+        Initializes an instance of the class with the provided ClassicScanLogsInfo object
+        and determines whether to use the Rust or Python implementation for the scanner,
+        based on the availability of Rust.
 
         Args:
-            yamldata: Configuration data containing suspect patterns
+            yamldata: An instance of ClassicScanLogsInfo that contains information
+                necessary for initializing the scanner.
         """
         self.yamldata = yamldata
         self._use_rust = RUST_AVAILABLE
@@ -63,14 +66,17 @@ class RustAcceleratedSuspectScanner:
 
     def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[ReportFragment, bool]:
         """
-        Scans the crash log for errors listed in a predefined suspect error list.
+        Analyzes the main error extracted from a crashlog and determines potential suspects by scanning
+        the input string and evaluating against a defined warning length threshold. This function either
+        uses a Rust-based scanner or a Python-based scanner depending on the runtime configuration.
 
         Args:
-            crashlog_mainerror: The main error output from a crash log to scan for suspect errors.
-            max_warn_length: The maximum length for formatting the error name in the report.
+            crashlog_mainerror (str): The main error extracted from the crashlog to be analyzed.
+            max_warn_length (int): The maximum warning length considered during the scan process.
 
         Returns:
-            Tuple of (ReportFragment containing findings, bool indicating if suspects found).
+            tuple[ReportFragment, bool]: A tuple containing a `ReportFragment` object based on the scan
+            results and a boolean indicating whether a suspect was found.
         """
         if self._use_rust:
             # Rust returns (list[str], bool), need to convert to (ReportFragment, bool)
@@ -84,15 +90,19 @@ class RustAcceleratedSuspectScanner:
         self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
     ) -> tuple[ReportFragment, bool]:
         """
-        Analyzes a crash report and call stack information to identify potential suspect errors.
+        Perform a scan of the stack to identify potential suspects based on the crash log
+        and call stack segment provided. This function determines whether any suspects
+        can be identified and returns the processed report fragment alongside a boolean
+        indicating detection status.
 
         Args:
-            crashlog_mainerror: The main error extracted from the crash log.
-            segment_callstack_intact: The intact segment of the call stack relevant to the analysis.
-            max_warn_length: Maximum allowed length for warnings included in the report.
+            crashlog_mainerror (str): Main error message or signature extracted from the crash log.
+            segment_callstack_intact (str): Call stack information in a simplified or processed form.
+            max_warn_length (int): Maximum permissible length for warnings in the report.
 
         Returns:
-            Tuple of (ReportFragment containing findings, bool indicating if suspects found).
+            tuple[ReportFragment, bool]: A tuple containing the processed report fragment
+            and a boolean flag indicating whether any suspect was found.
         """
         if self._use_rust:
             # Rust returns (list[str], bool), need to convert to (ReportFragment, bool)
@@ -107,13 +117,21 @@ class RustAcceleratedSuspectScanner:
     @staticmethod
     def check_dll_crash(crashlog_mainerror: str) -> ReportFragment:
         """
-        Analyze a crash log to identify if a DLL file is implicated in the crash.
+        Checks for DLL-related crashes in the given crash log and returns a
+        processed report.
+
+        This method attempts to analyze crash logs using Rust-based logic if
+        available, providing efficient processing. If Rust is unavailable, it
+        falls back to a Python-based implementation to ensure the operation
+        can still be performed.
 
         Args:
-            crashlog_mainerror: The main error message extracted from the crash log.
+            crashlog_mainerror (str): The main error log string to be analyzed.
 
         Returns:
-            ReportFragment containing DLL crash notification, or empty fragment.
+            ReportFragment: A detailed analysis report generated from the given
+            crash log.
+
         """
         if RUST_AVAILABLE:
             # Rust returns list[str], need to convert to ReportFragment

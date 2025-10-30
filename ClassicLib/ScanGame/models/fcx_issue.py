@@ -32,7 +32,19 @@ class ConfigIssue:
     severity: ConfigIssueSeverity = "warning"
 
     def __post_init__(self) -> None:
-        """Validate data after initialization."""
+        """
+        Validates and initializes class attributes after object creation.
+
+        This method verifies and converts the `file_path` attribute into a `Path` object
+        if it is not already of type `Path`. Additionally, it ensures that the `severity`
+        attribute is one of the accepted values, specifically "error", "warning", or
+        "info". If the value of `severity` is invalid, a `ValueError` is raised to
+        indicate the issue.
+
+        Raises:
+            ValueError: If the `severity` attribute is not one of the accepted
+                values ("error", "warning", "info").
+        """
         if not isinstance(self.file_path, Path):
             self.file_path = Path(self.file_path)
 
@@ -40,19 +52,13 @@ class ConfigIssue:
             raise ValueError(f"Invalid severity: {self.severity}")
 
     def format_report(self) -> str:
-        """Format issue as human-readable report section.
+        """
+        Formats a configuration issue report into a human-readable string format with relevant
+        details, including a severity icon, file path, affected section, and recommended values
+        for corrections.
 
         Returns:
-            Formatted markdown-style report text with emoji severity indicator,
-            issue description, file path, section, setting, and value comparison.
-
-        Example:
-            ⚠️ DETECTED ISSUE: Hotkey is commented out and won't work
-               File: C:\\...\\espexplorer.ini
-               Section: [Main]
-               Setting: HotKey
-               Current Value: ; F10
-               Recommended Value: 0x79
+            str: A formatted string representation of the configuration issue.
 
         """
         severity_icons: dict[ConfigIssueSeverity, str] = {

@@ -18,71 +18,165 @@ R = TypeVar("R")
 # These have been profiled to complete in < 1ms on average
 FAST_PATH_OPERATIONS = {
     # Path operations (filesystem metadata)
-    'exists', 'is_file', 'is_dir', 'is_symlink', 'is_mount',
-    'is_absolute', 'is_relative_to', 'stat', 'lstat',
-    'resolve', 'absolute', 'expanduser', 'cwd', 'home',
-    'samefile', 'parent', 'name', 'suffix', 'stem',
-
+    "exists",
+    "is_file",
+    "is_dir",
+    "is_symlink",
+    "is_mount",
+    "is_absolute",
+    "is_relative_to",
+    "stat",
+    "lstat",
+    "resolve",
+    "absolute",
+    "expanduser",
+    "cwd",
+    "home",
+    "samefile",
+    "parent",
+    "name",
+    "suffix",
+    "stem",
     # String operations (all are CPU-bound but very fast)
-    'split', 'rsplit', 'join', 'strip', 'lstrip', 'rstrip',
-    'upper', 'lower', 'capitalize', 'title', 'swapcase',
-    'replace', 'find', 'rfind', 'index', 'rindex',
-    'startswith', 'endswith', 'isalpha', 'isdigit',
-    'isalnum', 'isspace', 'isupper', 'islower',
-
+    "split",
+    "rsplit",
+    "join",
+    "strip",
+    "lstrip",
+    "rstrip",
+    "upper",
+    "lower",
+    "capitalize",
+    "title",
+    "swapcase",
+    "replace",
+    "find",
+    "rfind",
+    "index",
+    "rindex",
+    "startswith",
+    "endswith",
+    "isalpha",
+    "isdigit",
+    "isalnum",
+    "isspace",
+    "isupper",
+    "islower",
     # Fast built-ins
-    'len', 'bool', 'int', 'float', 'str', 'repr',
-    'hash', 'id', 'type', 'isinstance', 'issubclass',
-    'hasattr', 'getattr', 'setattr', 'delattr',
-
+    "len",
+    "bool",
+    "int",
+    "float",
+    "str",
+    "repr",
+    "hash",
+    "id",
+    "type",
+    "isinstance",
+    "issubclass",
+    "hasattr",
+    "getattr",
+    "setattr",
+    "delattr",
     # Fast collections operations
-    'append', 'extend', 'insert', 'remove', 'pop',
-    'clear', 'count', 'reverse', 'sort', 'get',
-    'keys', 'values', 'items', 'update',
-
+    "append",
+    "extend",
+    "insert",
+    "remove",
+    "pop",
+    "clear",
+    "count",
+    "reverse",
+    "sort",
+    "get",
+    "keys",
+    "values",
+    "items",
+    "update",
     # Fast Path operations that don't involve actual I/O
-    'mkdir',  # Creating directories is near-instant on modern filesystems
-    'joinpath', 'with_name', 'with_suffix', 'with_stem',
-    'parts', 'parents', 'anchor', 'drive', 'root',
+    "mkdir",  # Creating directories is near-instant on modern filesystems
+    "joinpath",
+    "with_name",
+    "with_suffix",
+    "with_stem",
+    "parts",
+    "parents",
+    "anchor",
+    "drive",
+    "root",
 }
 
 # Operations that should use executor based on size/complexity
 SIZE_DEPENDENT_OPERATIONS = {
-    'read_text', 'read_bytes', 'write_text', 'write_bytes',
-    'open', 'unlink', 'rename', 'replace', 'chmod',
-    'rmdir', 'touch', 'symlink_to', 'hardlink_to',
+    "read_text",
+    "read_bytes",
+    "write_text",
+    "write_bytes",
+    "open",
+    "unlink",
+    "rename",
+    "replace",
+    "chmod",
+    "rmdir",
+    "touch",
+    "symlink_to",
+    "hardlink_to",
 }
 
 
 class ExecutorDecisionMaker:
     """Helper class to encapsulate executor decision logic."""
 
-    def __init__(self, func: Callable, args: tuple, kwargs: dict, threshold_bytes: int):
+    def __init__(self, func: Callable, args: tuple, kwargs: dict, threshold_bytes: int) -> None:
+        """Initialize the executor decision maker.
+
+        Args:
+            func: The function to be executed
+            args: Positional arguments to pass to the function
+            kwargs: Keyword arguments to pass to the function
+            threshold_bytes: Size threshold in bytes for determining executor usage
+                           for I/O operations (files smaller than this run directly)
+        """
         self.func = func
         self.args = args
         self.kwargs = kwargs
         self.threshold_bytes = threshold_bytes
-        self.func_name = getattr(func, '__name__', '')
+        self.func_name = getattr(func, "__name__", "")
 
     async def _run_with_executor(self) -> Any:
-        """Run the function using the thread pool executor."""
+        """Run the function using the thread pool executor.
+
+        Returns:
+            The result of executing the function in the thread pool executor.
+        """
         loop = asyncio.get_event_loop()
         if self.kwargs:
             from functools import partial
+
             func = partial(self.func, **self.kwargs)
             return await loop.run_in_executor(None, func, *self.args)
         return await loop.run_in_executor(None, self.func, *self.args)
 
     def _run_directly(self) -> Any:
-        """Run the function directly without executor."""
+        """Run the function directly without executor.
+
+        Returns:
+            The result of executing the function directly with the provided arguments.
+        """
         return self.func(*self.args, **self.kwargs)
 
     def _should_use_executor_for_io(self) -> bool:
-        """Determine if I/O operation should use executor based on size."""
+        """Determine if I/O operation should use executor based on size.
+
+        Returns:
+            True if the operation should use the executor (file is large or cannot determine size),
+            False if the operation can run directly (file is small enough).
+        """
         if not self.args:
             return True
 
         from pathlib import Path
+
         first_arg = self.args[0]
 
         if not isinstance(first_arg, (Path, str)):
@@ -92,24 +186,31 @@ class ExecutorDecisionMaker:
             path = Path(first_arg) if isinstance(first_arg, str) else first_arg
 
             # Check read operations
-            if self.func_name in ('read_text', 'read_bytes'):
+            if self.func_name in {"read_text", "read_bytes"}:
                 if path.exists():
                     return path.stat().st_size >= self.threshold_bytes
 
             # Check write operations
-            elif self.func_name in ('write_text', 'write_bytes'):
-                if len(self.args) > 1:
-                    content = self.args[1]
-                    if isinstance(content, (str, bytes)):
-                        return len(content) >= self.threshold_bytes
-
-            return True
+            elif self.func_name in {"write_text", "write_bytes"} and len(self.args) > 1:
+                content = self.args[1]
+                if isinstance(content, (str, bytes)):
+                    return len(content) >= self.threshold_bytes
 
         except (OSError, AttributeError, IndexError):
             return True  # Default to executor on error
+        else:
+            return True  # Default to executor if no specific condition matched
 
     async def execute(self, force_executor: bool | None) -> Any:
-        """Execute the function with the appropriate strategy."""
+        """Execute the function with the appropriate strategy.
+
+        Args:
+            force_executor: Override automatic detection (True=always use executor,
+                          False=never use executor, None=auto-detect)
+
+        Returns:
+            The result of executing the function, either directly or through the executor.
+        """
         # Handle explicit override
         if force_executor is True:
             return await self._run_with_executor()
@@ -121,9 +222,8 @@ class ExecutorDecisionMaker:
             return self._run_directly()
 
         # Auto-detection: Size-dependent operations
-        if self.func_name in SIZE_DEPENDENT_OPERATIONS:
-            if not self._should_use_executor_for_io():
-                return self._run_directly()
+        if self.func_name in SIZE_DEPENDENT_OPERATIONS and not self._should_use_executor_for_io():
+            return self._run_directly()
 
         # Default: use executor
         return await self._run_with_executor()
@@ -134,7 +234,7 @@ async def smart_run_in_executor[R](
     *args: Any,
     threshold_bytes: int = 1024,  # 1KB threshold for I/O operations
     force_executor: bool | None = None,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> R:
     """
     Performance-aware executor that only uses thread pool for operations that benefit from it.
@@ -186,10 +286,7 @@ async def smart_run_in_executor[R](
 
 
 async def async_map_smart(
-    func: Callable[[T], Any],
-    items: list[T],
-    max_concurrent: int | None = None,
-    use_executor: bool | str = "auto"
+    func: Callable[[T], Any], items: list[T], max_concurrent: int | None = None, use_executor: bool | str = "auto"
 ) -> list[Any]:
     """
     Enhanced async map with intelligent executor usage.
@@ -232,38 +329,38 @@ async def async_map_smart(
             use_executor="profile"
         )
     """
-    if use_executor == "profile":
+    if use_executor == "profile" and items:
         # Profile mode - run a sample to determine best strategy
-        if items:
-            sample_item = items[0]
+        sample_item = items[0]
 
-            # Time with executor
+        # Time with executor
+        start = time.perf_counter()
+        if asyncio.iscoroutinefunction(func):
+            await func(sample_item)
+        else:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, func, sample_item)
+        with_executor_time = time.perf_counter() - start
+
+        # Time without executor (if not async)
+        without_executor_time = float("inf")
+        if not asyncio.iscoroutinefunction(func):
             start = time.perf_counter()
-            if asyncio.iscoroutinefunction(func):
-                await func(sample_item)
-            else:
-                loop = asyncio.get_event_loop()
-                await loop.run_in_executor(None, func, sample_item)
-            with_executor_time = time.perf_counter() - start
+            func(sample_item)
+            without_executor_time = time.perf_counter() - start
 
-            # Time without executor (if not async)
-            without_executor_time = float('inf')
-            if not asyncio.iscoroutinefunction(func):
-                start = time.perf_counter()
-                func(sample_item)
-                without_executor_time = time.perf_counter() - start
+        # Choose strategy based on profiling
+        # If direct execution is > 2x faster, avoid executor
+        use_executor = "never" if without_executor_time * 2 < with_executor_time else "always"
 
-            # Choose strategy based on profiling
-            # If direct execution is > 2x faster, avoid executor
-            use_executor = "never" if without_executor_time * 2 < with_executor_time else "always"
+        # Log the decision for debugging
+        from ClassicLib.Logger import logger
 
-            # Log the decision for debugging
-            from ClassicLib.Logger import logger
-            logger.debug(
-                f"Profiled {func.__name__ if hasattr(func, '__name__') else 'function'}: "
-                f"executor={with_executor_time:.4f}s, direct={without_executor_time:.4f}s, "
-                f"strategy={use_executor}"
-            )
+        logger.debug(
+            f"Profiled {func.__name__ if hasattr(func, '__name__') else 'function'}: "
+            f"executor={with_executor_time:.4f}s, direct={without_executor_time:.4f}s, "
+            f"strategy={use_executor}"
+        )
 
     # Build the execution strategy
     if max_concurrent:
@@ -283,7 +380,9 @@ async def async_map_smart(
                 # Legacy behavior - always use executor
                 loop = asyncio.get_event_loop()
                 return await loop.run_in_executor(None, func, item)
+
     else:
+
         async def bounded_func(item: T) -> Any:
             if asyncio.iscoroutinefunction(func):
                 return await func(item)
@@ -300,11 +399,7 @@ async def async_map_smart(
 
 
 async def batch_process_smart(
-    items: list[T],
-    processor: Callable[[T], Any],
-    batch_size: int = 10,
-    max_concurrent: int = 5,
-    use_executor: bool | str = "auto"
+    items: list[T], processor: Callable[[T], Any], batch_size: int = 10, max_concurrent: int = 5, use_executor: bool | str = "auto"
 ) -> list[Any]:
     """
     Enhanced batch processing with intelligent executor usage.

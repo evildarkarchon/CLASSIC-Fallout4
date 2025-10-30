@@ -23,11 +23,16 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 class FolderManagementMixin:
     """
-    Mixin class providing folder management functionality for the MainWindow.
+    Provides folder management features for selecting, validating, and initializing paths in a GUI application.
 
-    This class requires the following attributes to be present in the class it's mixed into:
-    - scan_folder_edit: QLineEdit for custom scan folder path
-    - mods_folder_edit: QLineEdit for mods folder path
+    This mixin class includes methods to handle folder-related tasks such as selecting folders via dialog boxes,
+    validating folder paths, initializing default paths from settings, and opening specific directories for user
+    interaction. The paths managed by this class are tailored for specific application functionalities such as
+    custom scans, staging mods, and logs.
+
+    Attributes:
+        scan_folder_edit (QLineEdit | None): Editable text field in the GUI for the scan folder path.
+        mods_folder_edit (QLineEdit | None): Editable text field in the GUI for the mods folder path.
     """
 
     if TYPE_CHECKING:
@@ -36,13 +41,17 @@ class FolderManagementMixin:
 
     def select_folder_scan(self) -> None:
         """
-        Prompts the user to select a folder for scanning and updates the scan folder
-        path in both the GUI and application settings.
+        Handles the process of selecting and validating a custom folder for scanning,
+        ensuring that the selected folder meets required conditions. If the path is
+        valid, it updates the UI and saves the configuration. Displays a warning
+        message if the selected path is invalid.
 
-        Tracks and updates the path of a folder chosen by the user for custom
-        scans. If the user selects a valid folder, the GUI field associated with
-        scan folder input is updated, and the folder path is stored in the
-        application's settings configuration.
+        Raises:
+            QMessageBox: Displays a warning dialog when the selected directory is
+            invalid.
+
+        Returns:
+            None
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
@@ -69,11 +78,15 @@ class FolderManagementMixin:
 
     def validate_scan_folder_text(self) -> None:
         """
-        Validates the manually entered scan folder path when the text field is edited.
+        Validates the input text from a folder selection field and updates the application settings accordingly.
 
-        This method is called when the user finishes editing the scan folder text field
-        (e.g., by pressing Enter or when the field loses focus). It validates the entered
-        path and saves it if valid, or clears it if invalid.
+        This method ensures that the entered path is valid, exists, is a directory, and is not restricted
+        for usage as a custom scan path. If the folder text is invalid or restricted, appropriate warnings
+        are displayed, and the setting is cleared. Otherwise, the valid custom scan path is saved to the
+        application's settings.
+
+        Raises:
+            Displays warning message boxes to the user if the folder path is invalid or restricted.
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
@@ -118,12 +131,17 @@ class FolderManagementMixin:
 
     def select_folder_mods(self) -> None:
         """
-        Handles the folder selection process for staging mods and updates the respective
-        UI component and settings configuration.
+        Selects a folder for staging mods and updates the settings configuration, if applicable.
 
-        The function opens a directory selection dialog to allow the user to select a folder
-        for staging mods. If a valid folder is selected, it updates a text field in the UI with
-        the selected folder path and writes the chosen path to a YAML configuration file.
+        If a folder is selected, it updates the associated text field with the selected
+        folder's path and saves the folder path to the corresponding YAML settings
+        key for future use.
+
+        Args:
+            self (object): The instance of the class where this function is called.
+
+        Returns:
+            None
         """
         folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
         if folder:
@@ -133,12 +151,14 @@ class FolderManagementMixin:
 
     def initialize_folder_paths(self) -> None:
         """
-        Initializes the folder paths by retrieving settings for specific folders and updating the
-        corresponding user interface fields if available.
+        Sets the text of folder path input fields based on retrieved settings.
 
-        This method retrieves the folder paths for "SCAN Custom Path" and "MODS Folder Path"
-        from the application settings and, if applicable, populates the respective input fields
-        with the retrieved values.
+        This method initializes the folder paths for 'SCAN Custom Path' and 'MODS Folder Path'
+        by fetching their values from the settings and, if they exist, updates the corresponding
+        text fields in the user interface.
+
+        Returns:
+            None
         """
         scan_folder: str | None = classic_settings(str, "SCAN Custom Path")
         mods_folder: str | None = classic_settings(str, "MODS Folder Path")
@@ -150,9 +170,14 @@ class FolderManagementMixin:
 
     def select_folder_ini(self) -> None:
         """
-        Prompts the user to select a folder path via a directory selection dialog and updates
-        the INI settings path accordingly. Displays a confirmation message after the path
-        is successfully set.
+        Selects a directory and updates the INI folder path setting.
+
+        Displays a dialog for the user to choose a directory. Once a folder is selected, updates
+        the INI folder path in the specified YAML settings and informs the user of the updated path
+        through a message box.
+
+        Raises:
+            QMessageBox: Displays a message to confirm the update of the INI folder path.
         """
         folder: str = QFileDialog.getExistingDirectory(self)
         if folder:
@@ -163,13 +188,17 @@ class FolderManagementMixin:
         """
         Opens the settings file for the application.
 
-        If the local directory is registered in the global registry, attempts to open the
-        "CLASSIC Settings.yaml" file from that directory. If the file is missing, a critical
-        error message is displayed, instructing the user to restart the application to resolve
-        the issue.
+        This method checks if the settings file exists in the local directory.
+        If the file does not exist, a critical error dialog is shown to inform
+        the user that the settings file is missing and the application needs
+        to be restarted. If the file exists, it will be opened using
+        Notepad++.
 
         Raises:
-            Displays a QMessageBox with a critical error if the settings file is missing.
+            None
+
+        Returns:
+            None
         """
         settings_file: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Settings.yaml"
         if not settings_file.is_file():
@@ -185,12 +214,18 @@ class FolderManagementMixin:
     @staticmethod
     def open_backup_folder() -> None:
         """
-        Opens the backup folder in a file explorer or displays an error if the folder
-        is not found.
+        Opens the backup folder if it exists, otherwise displays an error message.
 
-        This function attempts to open the backup folder using the system's default file
-        explorer. If the folder exists, it will be opened, otherwise an error message
-        will be displayed to inform the user that the folder has not been created yet.
+        This method attempts to locate and open the backup folder located within the
+        local directory registered in the `GlobalRegistry`. If the folder exists, it
+        will be opened using the default file explorer. If the folder does not exist,
+        an error message is displayed.
+
+        Returns:
+            None: This method does not return any value.
+
+        Raises:
+            None: This method does not raise explicit exceptions.
         """
         backup_folder: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup"
         if backup_folder.is_dir():
@@ -202,8 +237,15 @@ class FolderManagementMixin:
     @staticmethod
     def open_crash_logs_folder() -> None:
         """
-        Opens the crash logs folder in the system's file explorer. Creates the folder
-        if it doesn't exist.
+        Opens the crash logs folder. If the folder does not exist, it creates it.
+
+        The method ensures that the "Crash Logs" directory exists within the local directory retrieved
+        from the GlobalRegistry. If the directory does not exist, it is created with all necessary
+        parent directories. After ensuring the existence of the folder, it is opened using the default
+        system method for handling folder URLs.
+
+        Returns:
+            None
         """
         crash_logs_folder: Path = cast("Path", GlobalRegistry.get_local_dir()) / "Crash Logs"
         if not crash_logs_folder.is_dir():
@@ -215,10 +257,14 @@ class FolderManagementMixin:
     @staticmethod
     def _open_file_with_notepadpp(file_path: Path) -> None:
         """
-        Opens a file with Notepad++ if available, otherwise falls back to system default.
+        Opens a file using Notepad++ if installed, or falls back to the system's default
+        application for opening the file. It first checks if the Notepad++ executable
+        exists at the specified path. If Notepad++ is not available or an error occurs
+        while trying to open the file with it, the function uses the default system
+        editor to open the file.
 
         Args:
-            file_path: Path to the file to open
+            file_path (Path): The path to the file that needs to be opened.
         """
         notepadpp_path = Path("C:/Program Files/Notepad++/notepad++.exe")
         file_url: QUrl = QUrl.fromLocalFile(str(file_path))

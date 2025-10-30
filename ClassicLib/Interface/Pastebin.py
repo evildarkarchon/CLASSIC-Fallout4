@@ -22,9 +22,7 @@ class PastebinFetchWorker(QObject):
 
     def __init__(self, url: str) -> None:
         """
-        Initializes an instance of the class with a given URL.
-
-        This constructor method assigns the provided URL to the instance attribute.
+        Initializes an instance with a specified URL.
 
         Args:
             url (str): The URL to be assigned to the instance.

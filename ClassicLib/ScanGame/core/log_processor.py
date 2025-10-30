@@ -18,28 +18,63 @@ from .utils import ASYNC_ENCODING_AVAILABLE, read_lines_with_encoding_async
 
 
 class LogProcessor:
-    """Processes log files for error detection."""
+    """
+    Class for processing log files and detecting errors.
+
+    Handles concurrent reading and analysis of log files located in a specified folder.
+    The class ensures efficient processing with the use of concurrency controls like semaphores.
+    It filters logs based on customizable inclusion and exclusion rules and generates detailed
+    error reports for identified issues.
+
+    Attributes:
+        log_read_semaphore (asyncio.Semaphore): Semaphore used to control concurrency when
+            processing log files asynchronously.
+    """
 
     def __init__(self, log_read_semaphore: asyncio.Semaphore) -> None:
-        """Initialize with semaphore for concurrency control."""
+        """
+        Initializes an instance of the class with the provided log semaphore.
+
+        The constructor takes an asyncio semaphore object to control the
+        simultaneous execution of log-reading operations.
+
+        Args:
+            log_read_semaphore (asyncio.Semaphore): Semaphore that regulates access
+                to log-reading operations based on its permits.
+        """
         self.log_read_semaphore = log_read_semaphore
 
     async def check_log_errors(self, folder_path: Path | str) -> str:
         """
-        Async-first implementation for checking log file errors.
-
-        Inspects log files within a specified folder for recorded errors, processing
-        multiple log files concurrently for improved performance.
+        Checks for errors in log files within the specified folder path and returns a detailed
+        error report. This function scans log files for specific error patterns as defined in
+        the YAML configuration and allows for the exclusion of certain files and error types.
 
         Args:
-            folder_path (Path | str): Path to the folder containing log files for error inspection.
+            folder_path (Path | str): The folder path to scan for log files. Can be provided
+                as a `Path` object or a string.
 
         Returns:
-            str: A detailed report of all detected errors in the relevant log files, if any.
+            str: A detailed error report containing information about detected errors in the
+                log files.
         """
 
         def format_error_report(file_path: Path, errors: list[str]) -> list[str]:
-            """Format the error report for a specific log file."""
+            """
+            Formats an error report for a given file path and list of error messages.
+
+            This function generates a formatted error report that includes a warning message,
+            the file path of the log, the list of error messages, and a summary of the total
+            number of detected errors. The formatted report is returned as a list of strings,
+            where each string represents a line in the report.
+
+            Args:
+                file_path (Path): The path to the log file associated with the errors.
+                errors (list[str]): A list of error messages extracted from the log file.
+
+            Returns:
+                list[str]: A list of strings containing the formatted error report.
+            """
             return [
                 "[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n",
                 "[ Errors do not necessarily mean that the mod is not working. ]\n",
@@ -65,7 +100,23 @@ class LogProcessor:
         ]
 
         async def process_single_log(log_file_path: Path) -> list[str]:
-            """Process a single log file and return formatted error report."""
+            """
+            Processes a single log file to detect and filter specific error messages.
+
+            This asynchronous function reads a log file, identifies error lines based on
+            specified criteria, and formats those errors for further processing. Different
+            methods of reading the file are employed depending on the availability of
+            async libraries.
+
+            Args:
+                log_file_path (Path): Path to the log file to be processed.
+
+            Returns:
+                list[str]: A list containing formatted error messages detected from
+                    the log file. If no errors are detected, an empty list is returned.
+                    If the file cannot be read, a list with a single error message is
+                    returned.
+            """
             async with self.log_read_semaphore:
                 try:
                     # Use async encoding detection if available

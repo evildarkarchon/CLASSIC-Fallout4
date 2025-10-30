@@ -35,13 +35,17 @@ class PythonPluginAnalyzer:
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
         """
-        Initializes the plugin analyzer with provided YAML configuration.
+        Initializes an instance to handle scanning and processing of plugins information
+        from the provided YAML data.
 
         Args:
-            yamldata: An object containing YAML configuration information,
-                     including game-related plugin ignore lists.
+            yamldata (ClassicScanLogsInfo): An object containing YAML configuration
+                data. This data includes information about plugins such as game ignored
+                plugins (`game_ignore_plugins`) and an optional ignore list
+                (`ignore_list`).
         """
         self.yamldata = yamldata
+        # noinspection RegExpRedundantEscape
         self.pluginsearch = re.compile(
             r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
             flags=re.IGNORECASE,
@@ -101,17 +105,23 @@ class PythonPluginAnalyzer:
         self, segment_plugins: list[str], game_version: "Version | None" = None, version_current: "Version | None" = None
     ) -> tuple[bool, bool]:
         """
-        Check for plugin limit markers in the segment plugins.
+        Checks if a plugin limit has been triggered or if the limit check is disabled.
 
-        This is a separate concern from parsing the load order itself.
+        This function analyzes a list of segment plugins to determine if any plugin contains
+        specific markers indicating a limit. It adjusts the check behavior based on the
+        provided game version and current version. The results indicate whether a limit
+        has been triggered and whether the limit check has been disabled.
 
         Args:
-            segment_plugins: List of plugin entries to check.
-            game_version: Optional game version for limit detection.
-            version_current: Optional crashgen version for limit detection.
+            segment_plugins (list[str]): The list of plugins to be checked for limit markers.
+            game_version (Version | None): The game version being analyzed. If None, the limit
+                check is considered not triggered.
+            version_current (Version | None): The currently running version. If None, the
+                limit check is considered not triggered.
 
         Returns:
-            tuple: (plugin_limit_triggered, limit_check_disabled)
+            tuple[bool, bool]: A tuple where the first value indicates if the plugin limit is
+                triggered, and the second value indicates if the limit check is disabled.
         """
         if not game_version or not version_current:
             return False, False

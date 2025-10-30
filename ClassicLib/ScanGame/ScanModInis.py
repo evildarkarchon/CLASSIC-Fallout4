@@ -199,11 +199,12 @@ async def detect_ini_issue_async(
         ConfigIssue object if an issue is detected, None otherwise.
 
     Example:
-        >>> issue = await detect_ini_issue_async(
-        ...     config_files, "epo.ini", "Particles", "iMaxDesired", int, 5000,
-        ...     lambda val: int(val) > 5000,
-        ...     "High particle count can cause crashes"
-        ... )
+        ```no_run
+        issue = await detect_ini_issue_async(
+        config_files, "epo.ini", "Particles", "iMaxDesired", int, 5000,
+        lambda val: int(val) > 5000,
+        "High particle count can cause crashes"
+        )```
     """
     # Check if file exists in cache
     if file_name_lower not in config_files:

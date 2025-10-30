@@ -58,14 +58,17 @@ except ImportError as e:
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]):
     """
-    Detect single mods in crash log plugins.
+    Determines modifications from the provided YAML dictionary and crash log plugins.
+    This function attempts to leverage a Rust implementation if available for better
+    performance. If the Rust implementation is unavailable or fails, it will fall back
+    to a Python-based detection mechanism.
 
     Args:
-        yaml_dict: A mapping of mod names to their respective warnings.
-        crashlog_plugins: A mapping of plugin names to their identifiers.
+        yaml_dict (dict[str, str]): Dictionary containing YAML configuration data.
+        crashlog_plugins (dict[str, str]): Dictionary containing crash log plugin data.
 
     Returns:
-        ReportFragment containing detected mods, or empty fragment if none found.
+        ReportFragment: Detected modifications represented as a `ReportFragment` object.
     """
     from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
@@ -84,17 +87,20 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]):
     """
-    Detect mod conflicts or combinations.
+    Detects mod conflicts by leveraging Rust-based or Python fallback implementations.
 
-    This function checks for combinations of mods defined in the yaml_dict
-    and returns caution messages when conflicting pairs are found.
+    This function attempts to use the Rust-based conflict detection if available,
+    offering potentially faster performance. If the Rust implementation is not
+    available or fails, the function falls back to a Python-based implementation.
+    The detection generates a processed ReportFragment containing relevant
+    information about the detected mod conflicts.
 
     Args:
-        yaml_dict: Dictionary where keys are mod pairs joined by ' | ' and values are warnings.
-        crashlog_plugins: Dictionary of plugin names from crash log.
+        yaml_dict (dict[str, str]): A dictionary containing YAML configuration details.
+        crashlog_plugins (dict[str, str]): A dictionary containing crash log plugin mappings.
 
     Returns:
-        ReportFragment containing conflicts, or empty fragment if none found.
+        ReportFragment: An object representing the detected mod conflicts.
     """
     from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
@@ -113,18 +119,22 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 def detect_mods_important(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: str | None):
     """
-    Detect and evaluate important mods.
+    Detects important modifications (mods) using either Rust or Python implementation.
 
-    This function processes important mods, checks their installation status,
-    and verifies GPU compatibility.
+    This function attempts to use a Rust-based implementation for performance benefits.
+    If the Rust module is not available or encounters an error, it falls back to a
+    Python implementation. The function analyzes provided configuration data and
+    plugin crash logs to identify important modifications.
 
     Args:
-        yaml_dict: Dictionary where keys represent mod names and values contain warnings.
-        crashlog_plugins: Dictionary of plugins present in the crash log.
-        gpu_rival: Optional GPU type for compatibility checks ("nvidia" or "amd").
+        yaml_dict (dict[str, str]): A dictionary containing YAML configuration data.
+        crashlog_plugins (dict[str, str]): A dictionary of plugin crash logs.
+        gpu_rival (str | None): An optional string related to GPU rivalry or configuration.
 
     Returns:
-        ReportFragment containing important mod status.
+        ReportFragment: The result of the analysis represented in the form of a
+        `ReportFragment` object, either containing important modification details
+        or returned as empty if no data is detected.
     """
     from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
@@ -146,10 +156,25 @@ def detect_mods_important(yaml_dict: dict[str, str], crashlog_plugins: dict[str,
 
 def get_mod_detector_status() -> dict[str, Any]:
     """
-    Get the status of mod detector functionality.
+    Retrieves the current status of the module detector, including information about
+    the availability of specific detection functions and performance metrics. It
+    provides a summary of whether the functions are implemented and a relative
+    performance gain depending on the availability of rust-based implementations.
 
     Returns:
-        Dictionary with status information
+        dict[str, Any]: A dictionary containing the following keys:
+            - "rust_available" (bool): Indicates if Rust-based functionality is
+              available.
+            - "single_function" (bool): Specifies if the single detection function is
+              implemented.
+            - "double_function" (bool): Specifies if the double detection function is
+              implemented.
+            - "important_function" (bool): Specifies if the important detection
+              function is implemented.
+            - "batch_function" (bool): Specifies if the batch detection function is
+              implemented.
+            - "performance_gain" (str): Indicates the performance gain factor as a
+              string, formatted as "35x" if Rust is available, and "1x" otherwise.
     """
     return {
         "rust_available": RUST_AVAILABLE,
@@ -163,5 +188,13 @@ def get_mod_detector_status() -> dict[str, Any]:
 
 # Compatibility function for integration
 def is_rust_accelerated() -> bool:
-    """Check if mod detector is using Rust acceleration."""
+    """
+    Checks if Rust acceleration is available.
+
+    This function determines whether the Rust implementation is available and
+    enabled for optimization purposes.
+
+    Returns:
+        bool: True if Rust acceleration is available, otherwise False.
+    """
     return RUST_AVAILABLE

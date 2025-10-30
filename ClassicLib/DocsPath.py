@@ -212,7 +212,7 @@ class DocumentsPathManager:
             if "path" in library_line:
                 library_path = Path(library_line.split('"')[3])
             if str(game_sid) in library_line:
-                library_path = library_path / "steamapps"
+                library_path /= "steamapps"
                 linux_docs: Path = (
                     library_path
                     / "compatdata"

@@ -30,6 +30,8 @@ from ClassicLib.integration.factory import (
     get_parser,
     get_plugin_analyzer,
     get_record_scanner,
+    get_database_pool,
+    get_report_generator,
 )
 
 # Import the module-level status dicts
@@ -43,7 +45,22 @@ logger = logging.getLogger(__name__)
 
 
 class ComponentType(Enum):
-    """Types of Rust components available for acceleration."""
+    """Represents various component types as an enumeration.
+
+    This enumeration provides a set of predefined categories for categorizing
+    different types of components in a system. Each member of the enumeration
+    is a string constant that represents a specific component type.
+
+    Attributes:
+        PARSER (str): Represents components responsible for parsing activities.
+        FORMID_ANALYZER (str): Represents components used for analyzing form IDs.
+        PLUGIN_ANALYZER (str): Represents components designed to analyze plugins.
+        RECORD_SCANNER (str): Represents components that scan and process records.
+        REPORT_GENERATION (str): Represents components for generating reports.
+        DATABASE_POOL (str): Represents components functioning as database pools.
+        FILE_IO_CORE (str): Represents components handling core file I/O tasks.
+        MOD_DETECTOR (str): Represents components detecting modifications or mods.
+    """
     PARSER = "parser"
     FORMID_ANALYZER = "formid_analyzer"
     PLUGIN_ANALYZER = "plugin_analyzer"
@@ -55,7 +72,25 @@ class ComponentType(Enum):
 
 
 class OptimizationLevel(Enum):
-    """Optimization levels for Rust components."""
+    """
+    Represents different levels of optimization that can be applied.
+
+    This enumeration defines a range of optimization strategies that vary
+    from being completely disabled to dynamically adjusting based on workloads.
+    It is designed to provide flexible options for balancing performance,
+    compatibility, and resource usage.
+
+    Attributes:
+        DISABLED (int): Component disabled, no optimizations applied.
+        MINIMAL (int): Minimal optimization level, prioritizing maximum
+            compatibility, and stability.
+        BALANCED (int): Balances performance and resource usage, serving
+            as the default option for general scenarios.
+        AGGRESSIVE (int): Focuses on maximum performance, potentially
+            utilizing higher amounts of resources.
+        ADAPTIVE (int): Dynamically adjusts optimization level based on the
+            workload to maintain optimal performance and resource efficiency.
+    """
     DISABLED = 0  # Component disabled
     MINIMAL = 1   # Minimal optimization, maximum compatibility
     BALANCED = 2  # Balanced performance and resource usage (default)
@@ -65,7 +100,25 @@ class OptimizationLevel(Enum):
 
 @dataclass
 class ComponentMetrics:
-    """Performance metrics for a Rust component."""
+    """
+    Represents metrics for a component, tracking performance and error data.
+
+    This class is designed to aggregate and provide metrics related to calls made
+    to a given component. It includes information about the number of calls,
+    execution times, cache performance, and errors. It also provides calculated
+    properties such as average execution time and cache hit rate.
+
+    Attributes:
+        name (str): The name of the component being tracked.
+        calls (int): The total number of calls made to the component.
+        total_time (float): The total execution time of all calls.
+        min_time (float): The shortest execution time of any single call.
+        max_time (float): The longest execution time of any single call.
+        errors (int): The total number of errors recorded.
+        cache_hits (int): The number of successful cache hits.
+        cache_misses (int): The number of cache misses.
+        last_error (str | None): The most recent error message, if any.
+    """
     name: str
     calls: int = 0
     total_time: float = 0.0
@@ -78,17 +131,47 @@ class ComponentMetrics:
 
     @property
     def avg_time(self) -> float:
-        """Calculate average execution time."""
+        """
+        Calculates and retrieves the average time per call.
+
+        This property computes the average time taken for each call by dividing
+        the total accumulated time by the number of recorded calls. If no calls
+        have been recorded, the average time defaults to 0.0.
+
+        Returns:
+            float: The average time per call. Returns 0.0 if there are no calls.
+        """
         return self.total_time / self.calls if self.calls > 0 else 0.0
 
     @property
     def cache_hit_rate(self) -> float:
-        """Calculate cache hit rate."""
+        """
+        Calculates and returns the cache hit rate as a percentage.
+
+        The cache hit rate is the ratio of cache hits to the total cache
+        accesses (hits + misses), expressed as a percentage. If there are
+        no cache accesses, the hit rate is considered to be 0.0.
+
+        Returns:
+            float: The cache hit rate as a percentage, or 0.0 if there are no
+            cache hits or misses.
+        """
         total = self.cache_hits + self.cache_misses
         return (self.cache_hits / total * 100) if total > 0 else 0.0
 
     def record_call(self, duration: float, cache_hit: bool = False) -> None:
-        """Record a component call with timing."""
+        """
+        Records a single function call's duration and whether it was a cache hit or miss.
+        Updates the statistics including total calls, total time, minimum time, maximum time,
+        cache hits, and cache misses based on the provided data.
+
+        Args:
+            duration (float): The duration of the function call to be recorded.
+            cache_hit (bool, optional): Specifies whether the call was a cache hit. Defaults to False.
+
+        Returns:
+            None
+        """
         self.calls += 1
         self.total_time += duration
         self.min_time = min(self.min_time, duration)
@@ -100,14 +183,40 @@ class ComponentMetrics:
             self.cache_misses += 1
 
     def record_error(self, error: str) -> None:
-        """Record an error occurrence."""
+        """
+        Records an error by incrementing the error count and storing the latest error.
+
+        Args:
+            error (str): The error message to be recorded.
+        """
         self.errors += 1
         self.last_error = error
 
 
 @dataclass
 class WorkloadCharacteristics:
-    """Characteristics of the current workload for optimization decisions (Phase 6 Enhanced)."""
+    """
+    Represents characteristics of a computational workload and provides methods to
+    evaluate its optimization level and performance.
+
+    The WorkloadCharacteristics class is used to encapsulate various metrics and
+    attributes of a workload, including file count, file sizes, batch operation
+    flags, memory constraints, and extended metrics such as rust acceleration,
+    component errors, and performance timings. It supports determining the optimal
+    optimization level and calculating a performance score based on the given inputs.
+
+    Attributes:
+        file_count (int): Number of files involved in the workload.
+        total_file_size (int): Aggregate file size (in bytes) across all files.
+        formid_count (int): Count of FormID elements in the workload.
+        plugin_count (int): Number of plugins included in the workload.
+        database_queries (int): Number of database queries in the workload.
+        report_fragments (int): Count of report fragments being processed.
+        is_batch_operation (bool): Indicates whether the workload is part of a batch operation.
+        is_memory_constrained (bool): Specifies if memory availability is limited.
+        extended_metrics (dict[str, Any]): Additional workload metrics, such as
+            acceleration percentage, performance timings, or cache metrics.
+    """
     file_count: int = 0
     total_file_size: int = 0
     formid_count: int = 0
@@ -120,10 +229,16 @@ class WorkloadCharacteristics:
 
     def determine_optimization_level(self) -> OptimizationLevel:
         """
-        Determine optimal settings based on workload with Phase 6 enhanced decision logic.
+        Determines the optimal level of optimization based on various dynamic system metrics
+        and configuration parameters. This method analyzes conditions such as system stability,
+        Rust acceleration percentage, cache utilization, memory constraints, and workload
+        characteristics to return the appropriate optimization level for the current operation.
 
-        This method now considers extended metrics like acceleration percentage,
-        component errors, and performance timings for more intelligent optimization.
+        Returns:
+            OptimizationLevel: The determined optimization level based on the analyzed metrics.
+
+        Raises:
+            KeyError: If any required key in `extended_metrics` is missing.
         """
         # Check for component instability first
         component_errors = self.extended_metrics.get('component_errors', 0)
@@ -170,10 +285,16 @@ class WorkloadCharacteristics:
 
     def get_performance_score(self) -> float:
         """
-        Calculate a performance score based on current metrics.
+        Calculates the performance score based on various metrics such as acceleration
+        percentage, cache utilization, component errors, and parse time. The score is
+        adjusted to provide bonuses or penalties based on these criteria, ensuring it
+        falls within the range of 0 to 100.
 
         Returns:
-            Float between 0.0 and 100.0 representing overall performance
+            float: The calculated performance score, constrained between 0.0 and 100.0.
+
+        Raises:
+            None
         """
         score = 50.0  # Base score
 
@@ -201,25 +322,52 @@ class WorkloadCharacteristics:
 
 class RustAcceleration:
     """
-    Central coordination for all Rust-accelerated components in CLASSIC.
+    Handles Rust acceleration and coordination between Rust-accelerated components
+    with fallback to Python implementations. Ensures singleton pattern for its
+    instance and manages workload characteristics for optimization decisions.
 
-    This singleton class manages the entire Rust subsystem, providing:
-    - Component lifecycle management
-    - Performance monitoring and optimization
-    - Unified error handling
-    - Dynamic workload adaptation
+    The class provides methods to initialize, retrieve, and manage Rust-accelerated
+    components with caching, error handling, and performance logging. Additionally,
+    it supports dynamic workload updates and adjusts optimization levels accordingly.
+
+    Attributes:
+        optimization_level (OptimizationLevel): Current optimization level for
+            Rust acceleration.
+        metrics (dict[ComponentType, ComponentMetrics]): Metrics tracking
+            performance and errors for each component type.
+        workload (WorkloadCharacteristics): Characteristics of the current
+            workload to assist in optimization decisions.
     """
 
     _instance: RustAcceleration | None = None
 
     def __new__(cls) -> RustAcceleration:
-        """Ensure singleton instance."""
+        """
+        Creates and manages a singleton instance of the RustAcceleration class.
+
+        This method ensures that only one instance of the class is created and shared
+        throughout the application. If an instance already exists, the existing one
+        is returned; otherwise, it creates a new instance.
+
+        Returns:
+            RustAcceleration: The singleton instance of the RustAcceleration class.
+        """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
-        """Initialize the Rust acceleration coordinator."""
+        """
+        Initializes the RustAcceleration coordinator instance.
+
+        The initializer sets up the instance to manage workload characteristics and
+        performance metrics for different components. It initializes necessary attributes,
+        prepares metrics storage for all component types, and logs the instance status.
+
+        Raises:
+            None
+
+        """
         if hasattr(self, '_initialized'):
             return
 
@@ -239,7 +387,18 @@ class RustAcceleration:
         self._log_status()
 
     def _log_status(self) -> None:
-        """Log current acceleration status."""
+        """
+        Logs the status of Rust components.
+
+        This function assesses the current status of Rust components, logging whether
+        they are fully active, partially active, or inactive. Logs are sent to the
+        configured logger. The purpose of this function is to ensure that the user is
+        aware of the runtime status of Rust components and any potential fallbacks to
+        Python implementations.
+
+        Raises:
+            None
+        """
         status = get_rust_component_status()
         active = status['active_count']
         total = status['total_count']
@@ -256,14 +415,24 @@ class RustAcceleration:
 
     def get_component(self, component_type: ComponentType, *args, **kwargs) -> Any:
         """
-        Get a Rust-accelerated component instance with automatic fallback.
+        Fetches or creates a specified component based on the component type and caches it for
+        future use. The method checks the cache for an existing instance of the component, and if
+        not found, it creates the component using the appropriate helper function. Metrics such
+        as call duration and errors are logged accordingly.
 
         Args:
-            component_type: Type of component to retrieve
-            *args, **kwargs: Arguments for component initialization
+            component_type: The type of component to fetch or create.
+            *args: Additional positional arguments that may be required for certain component
+                creations.
+            **kwargs: Additional keyword arguments that may be needed for specific component
+                initializations.
 
         Returns:
-            Component instance (Rust-accelerated if available, Python fallback otherwise)
+            The requested component instance, either retrieved from the cache or newly created.
+
+        Raises:
+            The method might propagate exceptions raised during the creation of the component,
+            which are also logged for metrics recording.
         """
         cache_key = f"{component_type.value}_{args}_{kwargs}"
 
@@ -288,11 +457,9 @@ class RustAcceleration:
                 component = get_file_io(*args, **kwargs)
             elif component_type == ComponentType.DATABASE_POOL:
                 # Import here to avoid circular dependency
-                from ClassicLib.AsyncDatabasePool import get_database_pool
                 component = get_database_pool(*args, **kwargs)
             elif component_type == ComponentType.REPORT_GENERATION:
                 # Import here to avoid circular dependency
-                from ClassicLib.ScanLog.RustReportGeneration import get_report_generator
                 component = get_report_generator()
             else:
                 logger.warning(f"Unknown component type: {component_type}")
@@ -404,10 +571,16 @@ class RustAcceleration:
 
     def set_optimization_level(self, level: OptimizationLevel) -> None:
         """
-        Set the optimization level for all components.
+        Sets the optimization level for the object.
+
+        This method allows the user to configure the optimization level of the object
+        by assigning a specific level from the `OptimizationLevel` enumeration. It also
+        applies relevant optimization settings based on the selected level and logs the
+        change for traceability.
 
         Args:
-            level: Desired optimization level
+            level (OptimizationLevel): The desired optimization level to apply.
+
         """
         self.optimization_level = level
         logger.info(f"Optimization level set to: {level.name}")
@@ -428,7 +601,15 @@ class RustAcceleration:
             self._configure_balanced_settings()
 
     def _configure_aggressive_settings(self) -> None:
-        """Configure components for maximum performance."""
+        """
+        Configures aggressive optimization settings within the system.
+
+        This method sets parameters intended to optimize performance in a Rust
+        component (currently logged as actions without functional implementation).
+
+        Raises:
+            None
+        """
         # These would normally configure the Rust components
         # For now, we log the intent
         logger.debug("Configuring aggressive optimization settings:")
@@ -438,14 +619,36 @@ class RustAcceleration:
         logger.debug("  - Parallel I/O operations")
 
     def _configure_minimal_settings(self) -> None:
-        """Configure components for minimal resource usage."""
+        """
+        Configures minimal optimization settings to reduce resource usage.
+
+        This method adjusts system settings to employ a lightweight configuration,
+        including reducing thread pool size, minimizing cache sizes, and enabling
+        serial operation mode.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         logger.debug("Configuring minimal optimization settings:")
         logger.debug("  - Reduced thread pool size")
         logger.debug("  - Small cache sizes")
         logger.debug("  - Serial operations")
 
     def _configure_balanced_settings(self) -> None:
-        """Configure components with balanced settings."""
+        """
+        Adjusts the system to use balanced optimization settings.
+
+        This method configures system parameters to achieve a balance between performance
+        and resource utilization. It includes settings for thread pool size, cache sizes,
+        and selective parallelism. These configurations are designed to provide moderate
+        optimization suitable for most general-purpose workloads.
+
+        Returns:
+            None
+        """
         logger.debug("Configuring balanced optimization settings:")
         logger.debug("  - Moderate thread pool size")
         logger.debug("  - Standard cache sizes")
@@ -453,10 +656,17 @@ class RustAcceleration:
 
     def get_performance_report(self) -> dict[str, Any]:
         """
-        Generate a comprehensive performance report.
+        Generates a performance report for the system, providing insights into resource utilization,
+        error rates, optimization levels, and component-specific metrics. This report also includes
+        workload characteristics and evaluates acceleration factors for components leveraging Rust.
 
         Returns:
-            Dictionary containing performance metrics for all components
+            dict[str, Any]: A dictionary containing the system's performance metrics, component-specific
+            statistics, workload characteristics, and calculated measures such as uptime, error rate, and
+            optimization level.
+
+        Raises:
+            None
         """
         uptime = time.time() - self._start_time
         total_calls = sum(m.calls for m in self.metrics.values())
@@ -501,7 +711,17 @@ class RustAcceleration:
         }
 
     def print_performance_summary(self) -> None:
-        """Print a formatted performance summary to console."""
+        """
+        Prints a detailed performance summary of the RUST acceleration system.
+
+        This method outputs a comprehensive summary report to the console, including runtime
+        statistics, error rates, optimization levels, acceleration metrics, and per-component
+        performance details. It is intended for diagnostic and monitoring purposes to analyze
+        the efficiency and reliability of the RUST acceleration implementation.
+
+        Returns:
+            None
+        """
         report = self.get_performance_report()
 
         print("\n" + "=" * 60)

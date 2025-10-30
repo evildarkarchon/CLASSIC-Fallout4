@@ -20,18 +20,34 @@ from ClassicLib.Logger import logger
 
 
 class PathValidator:
-    """Validates and maintains path settings."""
+    """
+    Provides static methods for validating and managing file system paths.
+
+    This class provides utility methods to validate paths for existence, their appropriateness
+    for specific purposes such as being part of restricted directories, and for cleaning
+    invalid paths from configuration settings. Additionally, helper methods allow
+    comprehensive path validations, including for specific required files.
+
+    The class is particularly useful for applications managing custom configurations
+    and paths related to file system operations or integrations with game files.
+    """
 
     @staticmethod
     def is_valid_path(path: str | Path) -> bool:
         """
-        Check if a path exists and is accessible.
+        Checks if the supplied path is valid and exists in the file system.
+
+        This method determines the validity of a given path by verifying its type,
+        checking if it is not empty or None, and confirming whether the path exists
+        in the operating system's file system. If the path is invalid or does not exist,
+        the method will return False.
 
         Args:
-            path: Path to validate (string or Path object)
+            path (str | Path): The file system path to check. May either be a string
+                or a Path object.
 
         Returns:
-            True if the path exists and is accessible, False otherwise.
+            bool: True if the path is valid and exists in the file system, False otherwise.
         """
         # Handle None and empty strings
         if path is None or (isinstance(path, str) and not path.strip()):
@@ -46,16 +62,17 @@ class PathValidator:
     @staticmethod
     def is_restricted_path(path: str | Path) -> bool:
         """
-        Check if path is in a restricted directory.
+        Checks whether the provided path is a restricted path.
 
-        Restricted directories are hard-coded paths that should not be
-        used for custom scanning or other user-configurable paths.
+        This method verifies if a given path is restricted or valid by utilizing an
+        existing utility function. If any exception occurs during the validation
+        process, it will consider the path as restricted.
 
         Args:
-            path: Path to check (string or Path object)
+            path (str | Path): The path to be checked for restriction.
 
         Returns:
-            True if the path is restricted, False otherwise.
+            bool: True if the path is restricted, False otherwise.
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
@@ -71,16 +88,17 @@ class PathValidator:
     @staticmethod
     def validate_custom_scan_path() -> None:
         """
-        Validate and clean custom scan path setting.
+        Validates the custom scan path defined in the application settings.
 
-        This method checks the custom scan path stored in settings and
-        removes it if:
-        - The path doesn't exist on the filesystem
-        - The path is empty or None
-        - The path is in a restricted directory
+        This method checks whether the custom scan path specified in the application
+        settings is valid or not. A path is considered invalid if it does not exist,
+        is not a directory, or is restricted based on implementation-specific rules.
+        If an invalid or restricted path is found, the method removes the path from
+        settings and logs a warning message.
 
-        The custom scan path is used for scanning crash logs from
-        user-specified directories.
+        Raises:
+            None: No exceptions are raised by this method. It handles all invalid
+            path scenarios internally.
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
         from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
@@ -114,18 +132,28 @@ class PathValidator:
         path_description: str = "path",
     ) -> bool:
         """
-        Helper method to validate a path setting and clear it if invalid.
+        Validates the 'path' setting based on provided parameters.
+
+        This static method ensures the specified 'path' meets certain validation
+        criteria, such as existence, being a directory, and containing required files
+        (if applicable). If 'path' is invalid, associated behaviors are handled,
+        including logging, updating YAML settings, and warning messaging.
 
         Args:
-            path: The path to validate
-            setting_name: Human-readable name for logging
-            yaml_type: YAML settings type (e.g., YAML.Settings, YAML.Game_Local)
-            setting_key: Full settings key to update if invalid
-            required_files: Optional list of filenames that must exist in the path
-            path_description: Description of the path type for error messages
+            path (str | Path | None): The path to validate. Can be None, a string,
+                or a Path instance.
+            setting_name (str): The name of the setting to use in warning messages.
+            yaml_type (YAML): YAML object type used for updating settings.
+            setting_key (str): The key in YAML settings to be updated if the path
+                is invalid.
+            required_files (list[str] | None): A list of required filenames within
+                the path. If provided, their presence is verified.
+            path_description (str): A descriptor for the type of path being validated.
+                Defaults to "path."
 
         Returns:
-            True if the path is valid, False otherwise.
+            bool: Returns True if the path is valid and meets all criteria. Otherwise,
+                returns False.
         """
         from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -173,10 +201,17 @@ class PathValidator:
     @staticmethod
     def validate_game_root_path() -> None:
         """
-        Validate the game root folder path.
+        Validates the game root path settings and ensures the required files exist.
 
-        This checks that the game installation directory exists and contains
-        the expected game executable file.
+        This method retrieves the game root path from the settings, determines the
+        expected executable file based on the game's name, and validates that the
+        path is correctly configured in the settings. If the path exists, it also
+        checks whether the required executable file is present.
+
+        Raises:
+            ValueError: If the specified path does not exist or is invalid.
+            FileNotFoundError: If the required game executable is missing.
+
         """
         from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -202,9 +237,14 @@ class PathValidator:
     @staticmethod
     def validate_documents_path() -> None:
         """
-        Validate the documents folder path.
+        Validates the documents path specified in the YAML settings cache. Ensures the existence
+        and proper directory structure of the documents folder for the application. This method
+        checks the validity of the path configuration and ensures compliance without enforcing
+        specific files within the directory.
 
-        This checks that the My Games documents folder exists and is accessible.
+        Raises:
+            ValidationError: If the documents path is invalid or does not meet the specified
+                requirements.
         """
         from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -228,10 +268,15 @@ class PathValidator:
     @staticmethod
     def validate_mods_folder_path() -> None:
         """
-        Validate the mods folder path.
+        Validates the path of the mods folder based on application settings.
 
-        This checks that the mod manager staging directory exists and is accessible.
-        Used for mod managers like MO2 (Mod Organizer 2) and Vortex.
+        Retrieves the path for the mods folder from configuration settings and checks
+        its validity. If the path is specified, performs additional validation using
+        internal utilities, including checks against provided settings and descriptions.
+        The mods folder can be empty, so no required files are enforced during validation.
+
+        Returns:
+            None
         """
         from ClassicLib.YamlSettingsCache import classic_settings
 
@@ -251,10 +296,15 @@ class PathValidator:
     @staticmethod
     def validate_ini_folder_path() -> None:
         """
-        Validate the INI folder path.
+        Validates the INI folder path retrieved from the application settings.
 
-        This checks that the custom INI folder exists and is accessible.
-        Used primarily for MO2 profile-specific INI files.
+        This static method fetches the INI folder path from application settings and verifies
+        if the given path adheres to expected criteria. The validation includes checking the
+        existence and validity of the path. The folder may not yet contain INI files, so the
+        validation skips checking for required files.
+
+        Raises:
+            ValueError: If the path is invalid or does not meet the expected criteria.
         """
         from ClassicLib.YamlSettingsCache import classic_settings
 
@@ -274,17 +324,16 @@ class PathValidator:
     @staticmethod
     def validate_all_settings_paths() -> None:
         """
-        Validate all paths stored in settings.
+        Validates all necessary settings paths to ensure proper application configuration.
 
-        This method performs validation on all path-related settings,
-        removing any that are invalid, non-existent, or restricted.
+        This static method performs a comprehensive validation of various critical paths
+        required for the application to function correctly. These validations include paths
+        for custom scans, game installation, documents, mod manager folders, and INI folders.
+        If any path is invalid or misconfigured, this ensures those issues are identified at
+        an early stage.
 
-        Validates:
-        - Custom scan path for crash log directories
-        - Game root folder path
-        - Documents folder path
-        - Mods folder path (MO2/Vortex)
-        - INI folder path (MO2 profiles)
+        Returns:
+            None
         """
         logger.debug("Validating all settings paths")
 

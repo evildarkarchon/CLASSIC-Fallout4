@@ -1,7 +1,10 @@
 """
-Tab creation methods for CLASSIC settings dialog.
+Factory class and methods for creating settings dialog tabs in a PySide6 GUI application.
 
-This module contains factory methods for creating the various settings tabs.
+This module provides the `TabCreator` class, which includes static methods to generate
+different tabs in a settings dialog. Each tab is implemented as a QWidget with a set of
+associated settings widgets. These settings widgets allow users to configure various
+preferences for the application.
 """
 
 from __future__ import annotations
@@ -25,18 +28,32 @@ if TYPE_CHECKING:
 
 
 class TabCreator:
-    """Factory class for creating settings dialog tabs."""
+    """
+    A utility class for creating and organizing settings tabs in a graphical user interface.
+
+    This class provides methods for generating various tabs, such as General settings, Scanning settings,
+    Paths settings, and Updates settings. Each method dynamically constructs the required widgets and layouts,
+    associating user input widgets with logical settings for seamless user configuration.
+    """
 
     @staticmethod
     def create_general_tab(parent: QWidget | None = None) -> tuple[QWidget, dict[str, QWidget]]:
         """
-        Create the General settings tab.
+        Creates the general settings tab UI with specific settings widgets.
+
+        The method initializes a QWidget containing a layout for general settings
+        and populates it with checkboxes for user-configurable settings such as
+        audio notifications and VR mode. The created widgets are arranged into
+        a group box with appropriate spacing and tooltips.
 
         Args:
-            parent: Parent widget for the tab
+            parent (QWidget | None): Parent widget to which the general settings
+                tab belongs. It can be None.
 
         Returns:
-            Tuple of (tab widget, settings widgets dict)
+            tuple[QWidget, dict[str, QWidget]]: A tuple containing the general
+                settings QWidget and a dictionary that maps string keys to
+                their corresponding widget instances for programmatic access.
         """
         general_widget = QWidget(parent)
         layout = QVBoxLayout(general_widget)
@@ -70,13 +87,18 @@ class TabCreator:
     @staticmethod
     def create_scanning_tab(parent: QWidget | None = None) -> tuple[QWidget, dict[str, QWidget]]:
         """
-        Create the Scanning settings tab.
+        Creates a scanning settings tab with various options and their corresponding widgets.
+
+        Returns a QWidget containing the layout and the created settings widgets. The method initializes
+        a group of checkboxes to allow the user to customize scanning options. Each checkbox comes with
+        a descriptive tooltip to indicate its functional implications.
 
         Args:
-            parent: Parent widget for the tab
+            parent (QWidget | None): The parent widget for the created scanning tab, or None if no parent is specified.
 
         Returns:
-            Tuple of (tab widget, settings widgets dict)
+            tuple[QWidget, dict[str, QWidget]]: A tuple containing the root QWidget for the scanning tab and
+            a dictionary mapping widget keys to the corresponding QWidgets.
         """
         scanning_widget = QWidget(parent)
         layout = QVBoxLayout(scanning_widget)
@@ -122,14 +144,25 @@ class TabCreator:
     @staticmethod
     def create_paths_tab(parent: QWidget | None, path_manager: PathManager) -> tuple[QWidget, dict[str, QWidget]]:
         """
-        Create the Paths settings tab.
+        Creates the Paths tab within a user interface and returns the created widget
+        along with a dictionary of specific settings widgets.
+
+        This function initializes a settings widget for managing file paths, particularly the
+        INI folder path required by the application. Users can manually input the path, use
+        automatic detection, or browse their file system to locate the desired folder. It also
+        provides an optional reset functionality to rollback to default settings. A help text
+        offers guidance for cases where file detection fails.
 
         Args:
-            parent: Parent widget for the tab
-            path_manager: PathManager instance for handling path operations
+            parent (QWidget | None): The parent widget for the paths tab. If None, the
+                paths tab will not have a parent.
+            path_manager (PathManager): Instance for managing, validating, and resetting
+                file path configurations.
 
         Returns:
-            Tuple of (tab widget, settings widgets dict)
+            tuple[QWidget, dict[str, QWidget]]: A tuple containing the created paths tab
+                widget and a dictionary of individual path-related widgets. Each dictionary
+                key is the name of the setting, and the value is the corresponding widget.
         """
         paths_widget = QWidget(parent)
         layout = QVBoxLayout(paths_widget)
@@ -196,13 +229,22 @@ class TabCreator:
     @staticmethod
     def create_updates_tab(parent: QWidget | None = None) -> tuple[QWidget, dict[str, QWidget], QPushButton]:
         """
-        Create the Updates settings tab.
+        Creates and configures the 'Updates' tab within the application.
+
+        This method generates a QWidget containing the layout and widgets for update
+        settings, including a checkbox for enabling updates, a combo box for selecting
+        the update source, and a button to check for updates immediately. The method
+        returns the widget, a dictionary of the settings widgets, and the "Check for
+        Updates Now" button.
 
         Args:
-            parent: Parent widget for the tab
+            parent (QWidget | None): The parent widget for the updates widget.
+                Defaults to None.
 
         Returns:
-            Tuple of (tab widget, settings widgets dict, check_now_button)
+            tuple[QWidget, dict[str, QWidget], QPushButton]: A tuple containing the
+            updates widget, a dictionary of update settings widgets, and the "Check
+            for Updates Now" button.
         """
         updates_widget = QWidget(parent)
         layout = QVBoxLayout(updates_widget)

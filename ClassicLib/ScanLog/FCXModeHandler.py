@@ -91,8 +91,15 @@ class FCXModeHandlerFragments:
     @classmethod
     def reset_fcx_checks(cls) -> None:
         """
-        Resets the FCX checks by updating related class-level indicators. This method ensures
-        thread-safe modifications to attributes by utilizing a lock mechanism.
+        Resets the state of FCX checks to their initial state.
+
+        This method is responsible for resetting all the state variables related to FCX
+        checks. It ensures that the checks can start from a clean state by acquiring
+        a lock to prevent race conditions in a multi-threaded environment. All internal
+        tracking variables such as results and detected issues are cleared and reset.
+
+        Returns:
+            None
         """
         with cls._fcx_lock:
             cls._fcx_checks_run = False
@@ -102,18 +109,18 @@ class FCXModeHandlerFragments:
 
     def get_fcx_messages(self) -> ReportFragment:
         """
-        Generates and returns FCX messages as a ReportFragment object.
+        Generates a detailed report fragment related to the FCX mode status and any detected
+        configuration issues.
 
-        Depending on the FCX mode status, this method generates appropriate messages
-        regarding FCX Mode being enabled or disabled. The messages include guidance
-        for enabling/disabling the mode and additional checks if necessary.
-
-        When FCX mode is enabled, detected configuration issues are included in the
-        report with current vs. recommended values and file paths.
+        This method is responsible for aggregating information about the current FCX mode
+        state, mod and game file checks, and any configuration issues that have been detected.
+        Depending on whether FCX mode is enabled or not, it prepares and formats an appropriate
+        message. If FCX mode is enabled, additional details about detected issues with the
+        configuration may also be appended to the report.
 
         Returns:
-            ReportFragment: An object containing the generated messages as lines,
-            reflecting the current FCX mode status, associated checks, and detected issues.
+            ReportFragment: An object representing the aggregated and formatted report
+            detailing FCX mode status and its associated information.
         """
         lines = []
 

@@ -33,7 +33,13 @@ class SetupCoordinator:
     """Coordinates application setup and initialization."""
 
     def __init__(self) -> None:
-        """Initialize the SetupCoordinator with all required components."""
+        """
+        Initializes the primary components required for the system's functionality.
+
+        The constructor sets up instances of the necessary helper classes for
+        file generation, integrity checking, backup management, document validation,
+        and path validation.
+        """
         self.file_generator = FileGenerator()
         self.integrity_checker = GameIntegrityChecker()
         self.backup_manager = BackupManager()
@@ -258,12 +264,15 @@ class SetupCoordinator:
 
     def _display_status_message(self, message: str, level: str, is_gui: bool) -> None:
         """
-        Display status message appropriately for CLI or GUI mode.
+        Displays a status message to the user, either via the command-line interface (CLI)
+        or a graphical user interface (GUI). The display method and formatting vary
+        based on the specified level and interface type.
 
         Args:
-            message: The message to display
-            level: Message level ("INFO", "WARNING", "ERROR")
-            is_gui: Whether running in GUI mode
+            message: The message string to be displayed to the user.
+            level: The severity level of the message ("INFO", "WARNING", or "ERROR").
+            is_gui: A flag indicating whether the message is to be displayed in a
+                graphical user interface (True) or the command-line interface (False).
         """
         # Always print for CLI visibility
         if not is_gui:

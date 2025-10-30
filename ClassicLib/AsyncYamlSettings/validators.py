@@ -1,4 +1,11 @@
-"""Validation utilities for AsyncYamlSettings."""
+"""
+A utility for validating and coercing settings data structures.
+
+Provides functions to ensure settings have the correct structure and types,
+validate values against expected types, and coerce values to the required
+types where possible. Includes logging and handling of specific cases such
+as generic types and special types like Path.
+"""
 
 from typing import Any, get_origin
 
@@ -8,13 +15,17 @@ from ClassicLib.Logger import logger
 
 def validate_settings_structure(data: dict[str, Any], store_type: str) -> None:
     """
-    Validate the structure of loaded settings.
-
-    Ensures required keys exist and have valid values.
+    Validates the structure of a given settings data object, ensuring it conforms to specific
+    requirements based on the store type. Raises an exception if the structure is invalid.
+    Logs a warning if the data is empty.
 
     Args:
-        data: The loaded YAML data
-        store_type: Type of store (e.g., "Settings", "Game")
+        data (dict[str, Any]): The settings data object to validate.
+        store_type (str): A string indicating the type of store (e.g., "Settings") being validated.
+
+    Raises:
+        ValueError: If the data is not a dictionary or if specific structural requirements are
+            not met based on the store type.
     """
     if not isinstance(data, dict):
         raise ValueError(f"Invalid {store_type} structure: expected dict, got {type(data)}")
@@ -29,16 +40,22 @@ def validate_settings_structure(data: dict[str, Any], store_type: str) -> None:
         logger.warning(f"{store_type} file is empty")
 
 
+# noinspection PyTypeChecker
 def validate_setting_value(value: Any, expected_type: type) -> bool:
     """
-    Validate that a setting value matches the expected type.
+    Validates if a given value matches the expected type, with support for handling
+    parameterized generic types and type conversions. This function checks for direct
+    type matches, compatibility with generic types (e.g., list[str]), special cases
+    like Path, and performs type conversion if applicable. A global setting may allow
+    `None` as a valid value.
 
     Args:
-        value: The value to validate
-        expected_type: The expected type
+        value: The value to validate.
+        expected_type: The expected type or type hint to validate against.
 
     Returns:
-        True if valid, False otherwise
+        bool: True if the value matches the expected type or can be successfully
+              converted; False otherwise.
     """
     # None is valid if allowed by settings
     if value is None:
@@ -47,8 +64,10 @@ def validate_setting_value(value: Any, expected_type: type) -> bool:
     # Handle parameterized generics (e.g., list[str], dict[str, Any])
     origin_type = get_origin(expected_type)
     if origin_type is not None:
+        if not isinstance(value, origin_type):
+            pass
         # For generic types, check against the origin (e.g., list for list[str])
-        if isinstance(value, origin_type):
+        else:
             return True
     # Direct type match for non-generic types
     elif isinstance(value, expected_type):
@@ -69,16 +88,19 @@ def validate_setting_value(value: Any, expected_type: type) -> bool:
     return False
 
 
+# noinspection PyTypeChecker
 def coerce_setting_value(value: Any, expected_type: type) -> Any:
     """
-    Attempt to coerce a value to the expected type.
+    Attempts to coerce a given value to the expected type. Handles basic type
+    coercions, handling for parameterized generics, and special cases like
+    paths and collections.
 
     Args:
-        value: The value to coerce
-        expected_type: The target type
+        value: The value to coerce to the expected type.
+        expected_type: The type to which the value should be coerced.
 
     Returns:
-        Coerced value or original if coercion fails
+        The coerced value, or the original value if coercion is not possible.
     """
     # Handle parameterized generics
     origin_type = get_origin(expected_type)

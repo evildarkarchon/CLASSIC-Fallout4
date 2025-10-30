@@ -1,8 +1,15 @@
 """
-Status and Monitoring Module
+A high-level diagnostic and management utility for Rust component integration.
 
-Provides functions for monitoring and reporting the status of Rust components
-and their performance characteristics.
+This module provides utility functions and global configuration for detecting,
+managing, and reporting the status of Rust-accelerated components within the
+application. It is responsible for initializing component availability,
+tracking their status, and providing detailed diagnostics to users.
+
+The primary responsibilities include:
+- Detecting available Rust components and their performance gains.
+- Providing status updates and reports for Rust acceleration.
+- Ensuring backward compatibility with older imports and configurations.
 """
 
 from __future__ import annotations
@@ -25,7 +32,7 @@ from .config import (
     PERFORMANCE_MULTIPLIERS,
     PERFORMANCE_THRESHOLD_EXCELLENT,
     PERFORMANCE_THRESHOLD_GOOD,
-    PERFORMANCE_THRESHOLD_PARTIAL,
+    PERFORMANCE_THRESHOLD_PARTIAL, DISABLE_RUST_ENV_VAR,
 )
 from .detector import detect_rust_components, get_available_components
 
@@ -50,7 +57,17 @@ _initialized = False
 
 
 def _initialize_rust_available() -> None:
-    """Initialize RUST_AVAILABLE dictionary with current component status."""
+    """
+    Initializes the availability of Rust components.
+
+    This function checks for the presence of necessary Rust components by calling
+    `detect_rust_components` and sets the global variable `RUST_AVAILABLE`
+    accordingly. It ensures that this initialization is only performed once per
+    runtime by maintaining an `_initialized` state.
+
+    Raises:
+        ImportError: If the required Rust components cannot be detected.
+    """
     global RUST_AVAILABLE, _initialized
     if not _initialized:
         RUST_AVAILABLE = detect_rust_components()
@@ -58,25 +75,34 @@ def _initialize_rust_available() -> None:
 
 
 def _ensure_initialized() -> None:
-    """Ensure RUST_AVAILABLE is initialized before use."""
+    """
+    Ensures that the system is initialized before proceeding.
+
+    This function checks the status of initialization and performs the
+    necessary setup if the system is not yet initialized.
+
+    Raises:
+        RuntimeError: If the system fails to initialize properly.
+    """
     if not _initialized:
         _initialize_rust_available()
 
 
 def get_rust_component_status() -> dict[str, Any]:
     """
-    Get detailed status of all Rust components.
+    Retrieves the current status of Rust-based components integrated into the system.
+
+    This function gathers information about the availability and initialization state
+    of Rust components, calculates the percentage of active components, and determines
+    an acceleration level based on predefined performance thresholds. Additionally,
+    it compiles performance gains for the active components. The information is then
+    summarized in a structured dictionary for further use.
 
     Returns:
-        Dictionary with comprehensive status information including:
-        - available: Dict of component availability
-        - initialized: Components successfully initialized
-        - failed: Components that failed with reasons
-        - performance_gains: Performance improvements per component
-        - active_count: Number of active components
-        - total_count: Total number of components
-        - acceleration_active: Whether any acceleration is active
-        - acceleration_level: Overall acceleration level
+        dict[str, Any]: A dictionary containing detailed information about the
+        availability and performance status of Rust components, including initialized
+        states, performance gains, total and active counts, acceleration level, and
+        the version and disabled components list.
     """
     components = detect_rust_components()
     info = get_available_components()
@@ -125,13 +151,16 @@ def get_rust_component_status() -> dict[str, Any]:
 
 def is_rust_accelerated(component_name: str) -> bool:
     """
-    Check if a specific component is using Rust acceleration.
+    Checks if a given component is accelerated using Rust.
+
+    This function determines whether a specific component benefits from a Rust-based
+    implementation for performance optimization.
 
     Args:
-        component_name: Name of the component to check
+        component_name (str): The name of the component to check for Rust acceleration.
 
     Returns:
-        True if the component is using Rust, False otherwise
+        bool: True if the component is accelerated using Rust, False otherwise.
     """
     _ensure_initialized()
     return RUST_AVAILABLE.get(component_name, False)
@@ -139,13 +168,20 @@ def is_rust_accelerated(component_name: str) -> bool:
 
 def get_performance_multiplier(component_name: str) -> str:
     """
-    Get the performance multiplier for a specific component.
+    Determines and returns the performance multiplier for a given component.
+
+    This function checks if the specified component is accelerated using Rust.
+    If it is, it retrieves the corresponding performance multiplier from a predefined
+    dictionary. If the component is not found in the dictionary, it defaults to "N/A".
+    If the component is not accelerated by Rust, the function returns a default
+    performance multiplier of "1x".
 
     Args:
-        component_name: Name of the component
+        component_name (str): The name of the component for which the performance
+            multiplier is being retrieved.
 
     Returns:
-        Performance gain string (e.g., "150x") or "1x" if not accelerated
+        str: The performance multiplier string for the specified component.
     """
     _ensure_initialized()
     if is_rust_accelerated(component_name):
@@ -155,19 +191,33 @@ def get_performance_multiplier(component_name: str) -> str:
 
 def update_status(component: str, status: str, reason: str | None = None) -> None:
     """
-    Update the status of a component.
+    Updates the status information for a specific component. The function updates
+    or adds the status of a given component in the internal status tracking
+    dictionary. If a reason is provided, it will be used; otherwise, a default
+    reason is generated automatically.
 
     Args:
-        component: Component name
-        status: Status type ("initialized", "failed")
-        reason: Optional reason for the status
+        component (str): The name of the component whose status needs to be
+            updated.
+        status (str): The new status to assign to the component.
+        reason (str | None): An optional detailed reason for the status update.
+            If not provided, a default reason is generated.
     """
     if status in _status_info:
         _status_info[status][component] = reason or f"{component} {status}"
 
 
 def print_rust_status() -> None:
-    """Print comprehensive status of Rust module availability."""
+    """
+    Prints the status of Rust acceleration for the application, including detailed
+    information about available, active, and missing components categorized by
+    functionality. Additionally, displays summary statistics and provides guidance
+    on enabling Rust components if they are not active.
+
+    Raises:
+        Exception: If an issue occurs while retrieving ClassicLib settings, defaults
+            to not displaying Rust acceleration status.
+    """
     _ensure_initialized()
 
     # Check if debug messages are enabled
@@ -239,10 +289,31 @@ def print_rust_status() -> None:
 
 def get_performance_report() -> dict[str, Any]:
     """
-    Generate a performance report for active components.
+    Generates a performance report detailing the acceleration metrics, active and inactive components,
+    performance gains, and actionable recommendations based on the availability and utilization
+    of Rust acceleration components.
+
+    The function analyzes Rust acceleration status and calculates various metrics, including the
+    percentage of performance improvement achieved, the number of components utilized, and the
+    potential for further optimization. Recommendations are added to guide further improvements
+    if necessary.
 
     Returns:
-        Dictionary containing performance metrics and recommendations
+        dict[str, Any]: A dictionary containing the following keys:
+            - "acceleration_level" (str): The current level of performance acceleration.
+            - "active_percentage" (float): The active percentage of acceleration utilization.
+            - "speedup_coverage" (float): Percentage of utilized components relative to the total
+              potential components.
+            - "active_components" (list[str]): List of currently active acceleration components.
+            - "inactive_components" (list[str]): List of currently inactive or unavailable
+              acceleration components.
+            - "performance_gains" (dict): Key-value pairs providing insights into performance gains
+              from individual components.
+            - "recommendations" (list[str]): Suggested actions to further enhance performance.
+
+    Raises:
+        AnyError: Raises an error if a Rust component failure, invalid configuration,
+        or other critical mismatch occurs during status evaluation.
     """
     status = get_rust_component_status()
 

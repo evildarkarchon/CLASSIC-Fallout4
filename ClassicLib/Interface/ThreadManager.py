@@ -13,7 +13,19 @@ from ClassicLib.Logger import logger
 
 
 class ThreadType(Enum):
-    """Enumeration of thread types managed by ThreadManager."""
+    """
+    Defines an enumeration for different types of threads.
+
+    This class is used to specify various thread types for specific operations. Each thread
+    type corresponds to a distinct functionality in the system.
+
+    Attributes:
+        UPDATE_CHECK (str): Represents threads responsible for checking updates.
+        PAPYRUS_MONITOR (str): Represents threads monitoring Papyrus logs.
+        PASTEBIN_FETCH (str): Represents threads fetching data from Pastebin.
+        CRASH_LOGS_SCAN (str): Represents threads scanning crash logs.
+        GAME_FILES_SCAN (str): Represents threads scanning game files.
+    """
 
     UPDATE_CHECK = "update_check"
     PAPYRUS_MONITOR = "papyrus_monitor"
@@ -24,31 +36,27 @@ class ThreadType(Enum):
 
 class ManagedThread:
     """
-    Encapsulates threading functionality for managing a thread and its associated worker.
+    Manages a thread and its associated worker with specific threading types.
 
-    This class is designed to handle the lifecycle of a thread and its associated
-    worker with an optional type categorization. It provides utility to track
-    thread execution and to determine whether the thread is running.
+    This class serves as a manager to handle operations involving a
+    thread, a worker, and their associated configurations. It provides
+    functionalities to check the running status of the thread and other
+    related threading operations.
 
     Attributes:
-        thread (QThread): Represents the managed thread.
-        worker (QObject): The worker object associated with the thread.
-        thread_type (ThreadType): The type or category of the thread.
-        start_time (Any): The time when the thread was started.
+        thread (QThread): The thread object being managed.
+        worker (QObject): The worker object assigned to handle tasks.
+        thread_type (ThreadType): The specific type of threading being utilized.
     """
 
     def __init__(self, thread: QThread, worker: QObject, thread_type: ThreadType) -> None:
         """
-        Initializes the thread manager with provided thread, worker, and thread type.
-
-        This constructor sets up the thread manager object with a specific thread, worker,
-        and thread type. It prepares the instance for handling operations that will involve
-        threading and the associated worker.
+        Initializes an instance of the class with the given thread, worker, and thread type.
 
         Args:
-            thread: The thread object to manage.
-            worker: The worker object that will perform tasks.
-            thread_type: Specifies the type of thread being initialized.
+            thread (QThread): The thread associated with the instance.
+            worker (QObject): The worker object for performing tasks in the thread.
+            thread_type (ThreadType): The type of thread indicating its purpose or category.
         """
         self.thread = thread
         self.worker = worker
@@ -57,23 +65,32 @@ class ManagedThread:
 
     def is_running(self) -> bool:
         """
-        Checks if the thread is currently running.
+        Determines if the associated thread is currently running.
 
-        This method verifies whether the thread associated with the instance
-        is not None and is actively running.
+        This method checks the status of the thread to determine if it is active
+        and running. It returns a boolean indicating the running state of the
+        thread.
 
         Returns:
-            bool: True if the thread exists and is running, False otherwise.
+            bool: True if the thread is running, False otherwise.
         """
         return self.thread is not None and self.thread.isRunning()
 
 
 class ThreadManager(QObject):
     """
-    Centralized thread management system.
+    Manages threads and their lifecycle in a concurrent application.
 
-    This class provides thread-safe management of all worker threads in the application,
-    including lifecycle management, cleanup, and graceful shutdown capabilities.
+    The ThreadManager class is responsible for registering, starting, stopping, and
+    cleaning up threads. It provides mechanisms to manage thread safety and ensures
+    proper handling of threads, including graceful shutdown procedures. It also emits
+    signals to notify about thread-related events.
+
+    Attributes:
+        threadStarted (Signal): Signal emitted when a thread starts, containing the thread type.
+        threadFinished (Signal): Signal emitted when a thread stops, containing the thread type.
+        threadError (Signal): Signal emitted when a thread error occurs, containing the thread
+            type and the error message.
     """
 
     # Signals
@@ -83,11 +100,11 @@ class ThreadManager(QObject):
 
     def __init__(self) -> None:
         """
-        Initializes the class instance.
+        Initializes an instance of the class.
 
-        This constructor initializes internal structures and synchronization mechanisms
-        required for managing threads. It sets up an empty registry for threads, a mutex
-        for ensuring concurrency safety, and a flag to track ongoing shutdown operations.
+        The constructor prepares the necessary initial conditions for managing threads,
+        including maintaining a dictionary of threads, a mutex for thread synchronization,
+        and a flag to track shutdown operations.
         """
         super().__init__()
         self._threads: dict[ThreadType, ManagedThread] = {}
@@ -96,15 +113,21 @@ class ThreadManager(QObject):
 
     def register_thread(self, thread_type: ThreadType, thread: QThread, worker: QObject) -> bool:
         """
-        Register a new thread with the manager.
+        Registers a new thread with the specified thread type, thread instance, and
+        worker object. This method ensures that only one thread of a given type can
+        be active at a time. If a thread of the specified type is already running,
+        the registration will fail. When successfully registered, the thread is managed
+        internally and cleanup operations are triggered once the thread finishes execution.
 
         Args:
-            thread_type: The type of thread being registered
-            thread: The QThread instance
-            worker: The worker QObject
+            thread_type: The type or category of the thread being registered; used for
+                uniquely identifying and managing threads.
+            thread: The QThread instance representing the thread to be registered.
+            worker: The QObject that performs the actual work inside the thread.
 
         Returns:
-            bool: True if registered successfully, False if a thread of this type is already running
+            bool: True if the thread is successfully registered; False if a thread
+            of the same type is already running.
         """
         self._mutex.lock()
         try:
@@ -128,13 +151,19 @@ class ThreadManager(QObject):
 
     def start_thread(self, thread_type: ThreadType) -> bool:
         """
-        Start a registered thread.
+        Starts a thread of a specified type, ensuring proper setup and thread state management.
+
+        This function attempts to start a thread of the given type. It ensures that no threads
+        are started during a system shutdown, that the specified thread type is registered,
+        and that the thread is not already running. If all conditions are met, the thread is
+        started, and relevant signals are emitted.
 
         Args:
-            thread_type: The type of thread to start
+            thread_type (ThreadType): The type of thread to be started. Must be a valid and
+                registered thread type.
 
         Returns:
-            bool: True if started successfully, False otherwise
+            bool: True if the thread is successfully started, False otherwise.
         """
         self._mutex.lock()
         try:
@@ -164,14 +193,20 @@ class ThreadManager(QObject):
 
     def stop_thread(self, thread_type: ThreadType, wait_ms: int = 5000) -> bool:
         """
-        Stop a running thread gracefully.
+        Stops a specific thread of the given type, waits for its completion, and ensures it is not running.
+
+        This method stops a managed thread if it exists and is currently running. It ensures
+        the thread terminates properly within the specified waiting period. If the thread does
+        not exist or is already stopped, the method will simply confirm its stopped state.
 
         Args:
-            thread_type: The type of thread to stop
-            wait_ms: Maximum time to wait for thread to stop (milliseconds)
+            thread_type (ThreadType): The type of thread to be stopped.
+            wait_ms (int): The maximum time in milliseconds to wait for the thread to stop. Defaults to 5000.
 
         Returns:
-            bool: True if stopped successfully, False otherwise
+            bool: True if the thread has stopped successfully or is already stopped. False if the thread
+                  could not be stopped within the specified time.
+
         """
         self._mutex.lock()
         try:
@@ -203,10 +238,15 @@ class ThreadManager(QObject):
 
     def stop_all_threads(self, wait_ms: int = 5000) -> None:
         """
-        Stop all running threads gracefully.
+        Stops all threads managed by the current instance.
+
+        This method first marks that a shutdown is in progress, then retrieves a list
+        of all currently running threads. It subsequently stops each thread with a
+        specified wait time before concluding the operation.
 
         Args:
-            wait_ms: Maximum time to wait for each thread to stop
+            wait_ms (int): The maximum wait time in milliseconds for each thread
+                to stop. Defaults to 5000.
         """
         logger.info("Stopping all threads...")
         self._shutdown_in_progress = True
@@ -224,10 +264,13 @@ class ThreadManager(QObject):
 
     def get_running_threads(self) -> set[ThreadType]:
         """
-        Get a set of currently running thread types.
+        Returns a set of currently running thread types.
+
+        This method retrieves thread types that are actively running by checking
+        the state of each thread managed in the internal thread collection.
 
         Returns:
-            Set of ThreadType enums for running threads
+            set[ThreadType]: A set containing thread types that are currently running.
         """
         self._mutex.lock()
         try:
@@ -237,13 +280,18 @@ class ThreadManager(QObject):
 
     def is_thread_running(self, thread_type: ThreadType) -> bool:
         """
-        Check if a specific thread type is running.
+        Checks whether a specific type of thread is currently running.
+
+        This method determines whether a thread of the specified type is actively
+        running. If the thread type does not exist within the managed threads, the
+        method returns False. Thread safety is ensured by locking and unlocking a mutex
+        during the operation.
 
         Args:
-            thread_type: The type of thread to check
+            thread_type: The type of thread to be checked.
 
         Returns:
-            bool: True if running, False otherwise
+            bool: True if the thread is running, False otherwise.
         """
         self._mutex.lock()
         try:
@@ -254,7 +302,16 @@ class ThreadManager(QObject):
             self._mutex.unlock()
 
     def cleanup_finished_threads(self) -> None:
-        """Remove references to finished threads."""
+        """
+        Cleans up finished threads from the internal thread tracking mechanism.
+
+        Removes threads that have finished executing from the internal dictionary
+        and logs each cleanup action. Ensures thread-safe operation by locking and
+        unlocking a mutex during the cleanup process.
+
+        Raises:
+            Any error occurring during thread dictionary modification or mutex operation.
+        """
         self._mutex.lock()
         try:
             finished_types = [tt for tt, mt in self._threads.items() if not mt.is_running()]
@@ -265,7 +322,17 @@ class ThreadManager(QObject):
             self._mutex.unlock()
 
     def _on_thread_finished(self, thread_type: ThreadType) -> None:
-        """Handle thread finished signal."""
+        """
+        Handles the completion of a thread operation and performs cleanup.
+
+        This method is triggered when a thread finishes its execution. It logs the
+        completion of the thread, emits a signal indicating the thread's completion,
+        and removes the thread reference from internal tracking to ensure proper
+        resource management.
+
+        Args:
+            thread_type: The type of the thread that has finished execution.
+        """
         logger.info(f"Thread finished: {thread_type.value}")
         self.threadFinished.emit(thread_type.value)
 

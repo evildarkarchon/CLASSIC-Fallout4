@@ -35,10 +35,14 @@ class RustAcceleratedFcxModeHandler:
 
     def __init__(self, fcx_mode: bool | None) -> None:
         """
-        Initialize the FCX mode handler.
+        Initializes an instance of the class, handling the configuration and setup
+        based on the specified mode. Depending on the system configuration, the
+        handler will either use a Rust-based implementation (if available) or a
+        Python fallback implementation.
 
         Args:
-            fcx_mode: Whether FCX mode is enabled (None treated as False)
+            fcx_mode: Indicates whether FCX mode is enabled. If None, it will default
+                      to False for the Rust-based implementation.
         """
         self.fcx_mode = fcx_mode
         self._use_rust = RUST_AVAILABLE
@@ -59,12 +63,15 @@ class RustAcceleratedFcxModeHandler:
 
     def check_fcx_mode(self) -> None:
         """
-        Checks and updates the FCX mode status, ensuring checks are performed only once per session.
+        Determines the FCX mode and synchronizes results from the handler.
 
-        This method is responsible for verifying the FCX mode and performing validations by invoking
-        necessary external components or fallback mechanisms. The FCX mode dictates whether certain
-        checks for main and game files are executed. If the FCX mode is disabled, the checks are
-        bypassed, and default messages are assigned.
+        If the Rust implementation is enabled, the method executes the handler's FCX
+        mode check using the Rust logic. For the Python implementation, the method
+        executes the handler's FCX mode check and then copies necessary results to the
+        corresponding attributes for maintaining consistency in the Python API.
+
+        Raises:
+            Any exception raised internally by the handler's check_fcx_mode method.
         """
         if self._use_rust:
             self._handler.check_fcx_mode()
@@ -98,10 +105,14 @@ class RustAcceleratedFcxModeHandler:
     @classmethod
     def reset_fcx_checks(cls) -> None:
         """
-        Resets the FCX checks by updating related class-level indicators.
+        Resets the FCX checks state for the current mode, depending on the implementation.
+        This method provides compatibility between the Rust-based and Python-based
+        FCX mode handlers. The Python implementation explicitly resets the state using
+        the `FCXModeHandlerFragments` class, while the Rust implementation manages
+        the state internally and does not expose this reset functionality directly.
 
-        This method ensures thread-safe modifications to attributes by utilizing a lock mechanism.
-        Note: Rust implementation may not support this class method.
+        Returns:
+            None: This method does not return any value.
         """
         if not RUST_AVAILABLE:
             from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments

@@ -79,11 +79,13 @@ class FolderManagementMixin:
 
     def validate_scan_folder_text(self) -> None:
         """
-        Validates the manually entered scan folder path when the text field is edited.
+        Validates and processes the user-provided scan folder path entered in a text field.
+        Handles scenarios like empty input, non-existent paths, restricted paths, and valid paths,
+        updating the application settings and notifying the user accordingly.
 
-        This method is called when the user finishes editing the scan folder text field
-        (e.g., by pressing Enter or when the field loses focus). It validates the entered
-        path and saves it if valid, or clears it if invalid.
+        Raises:
+            Warning: A QMessageBox warning is raised if the provided path is invalid
+            or restricted, suggesting corrective actions to the user.
         """
         if self.scan_folder_edit is None:
             return
@@ -128,12 +130,13 @@ class FolderManagementMixin:
 
     def select_folder_mods(self) -> None:
         """
-        Handles the folder selection process for staging mods and updates the respective
-        UI component and settings configuration.
+        Selects a folder for staging mods and updates the relevant settings.
 
-        The function opens a directory selection dialog to allow the user to select a folder
-        for staging mods. If a valid folder is selected, it updates a text field in the UI with
-        the selected folder path and writes the chosen path to a YAML configuration file.
+        This function allows the user to select a directory using a dialog for staging mods, updates the
+        text field with the chosen directory, and saves the folder path to a YAML settings file.
+
+        Raises:
+            OSError: If there is an issue accessing the selected directory.
         """
         # noinspection PyTypeChecker
         folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
@@ -144,12 +147,13 @@ class FolderManagementMixin:
 
     def initialize_folder_paths(self) -> None:
         """
-        Initializes the folder paths by retrieving settings for specific folders and updating the
-        corresponding user interface fields if available.
+        Initializes folder paths for scanning and mods based on user settings.
 
-        This method retrieves the folder paths for "SCAN Custom Path" and "MODS Folder Path"
-        from the application settings and, if applicable, populates the respective input fields
-        with the retrieved values.
+        This method retrieves folder paths for scanning and mods from user-defined
+        settings and applies them to corresponding UI elements if they exist.
+
+        Raises:
+            None
         """
         scan_folder: str | None = classic_settings(str, "SCAN Custom Path")
         mods_folder: str | None = classic_settings(str, "MODS Folder Path")
@@ -161,10 +165,16 @@ class FolderManagementMixin:
 
     def open_settings(self) -> None:
         """
-        Opens the settings dialog for the application.
+        Opens the settings dialog and applies changes if accepted.
 
-        Displays a modal dialog where users can configure all application settings
-        in a structured interface. Changes are saved when the user clicks OK.
+        This method creates an instance of `SettingsDialog` and displays it to
+        the user. If the user accepts the changes in the dialog, immediate
+        setting changes are applied using the `apply_settings_changes` method.
+
+        Raises:
+            Any errors from the creation or execution of the `SettingsDialog`
+            instance.
+
         """
         from ClassicLib.Interface.SettingsDialog import SettingsDialog
 

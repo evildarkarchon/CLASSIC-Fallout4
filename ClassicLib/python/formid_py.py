@@ -25,17 +25,20 @@ _PATTERN_CACHE: dict[str, re.Pattern[str]] = {}
 @lru_cache(maxsize=512)
 def _cached_formid_lookup(formid: str, plugin: str) -> str | None:
     """
-    Caches and retrieves a specific form ID associated with a given plugin.
+    Caches the lookup result of a FormID and its associated plugin.
 
-    This function leverages an LRU (Least Recently Used) cache mechanism to enhance
-    performance by storing up to a specified number of recent form ID lookups.
+    This function performs a cached lookup to retrieve the entry
+    associated with the given `formid` and `plugin`. It uses an
+    LRU cache to optimize repeated lookups for the same
+    FormID-plugin pairs, with a maximum cache size of 512 entries.
 
     Args:
-        formid: The identifier of the form to look up.
-        plugin: The plugin associated with the specified form ID.
+        formid (str): The unique identifier of the form to look up.
+        plugin (str): The plugin name associated with the form ID.
 
     Returns:
-        str | None: The cached or retrieved string form ID if found, otherwise None.
+        str | None: The retrieved entry associated with the given
+        form ID and plugin, or None if no entry is found.
     """
     from ClassicLib.ScanLog.Util import get_entry
     return get_entry(formid, plugin)
@@ -185,13 +188,21 @@ class PythonFormIDAnalyzer:
 
     async def _perform_async_lookups(self, lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
         """
-        Performs asynchronous lookups for provided tasks and formats the results.
-
-        Uses batch database queries to efficiently fetch multiple FormID entries.
+        Performs asynchronous database lookups for the given tasks and appends the processed
+        results to the provided list of lines. If no database connection pool is available,
+        a fallback mechanism is used to add basic formatted strings to the lines.
 
         Args:
-            lookup_tasks: List of tuples containing lookup task information.
-            lines: List to which the formatted output results will be appended.
+            lookup_tasks (list[tuple[str, str, str, int]]): A list of tuples where each tuple
+                contains the following elements:
+                - The full FormID (str).
+                - The short FormID (str).
+                - The plugin name (str).
+                - The FormID count (int).
+            lines (list[str]): A list of strings to which the results of the lookup are appended.
+
+        Returns:
+            None
         """
         if not self.db_pool:
             # Fallback if no database pool available
@@ -218,13 +229,20 @@ class PythonFormIDAnalyzer:
     @staticmethod
     async def _perform_sync_lookups(lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
         """
-        Performs synchronous database lookups in an asynchronous context.
+        Performs synchronous lookups for provided tasks and modifies the given list of lines with the results.
 
-        This method processes a list of lookup tasks using cached synchronous lookups.
+        This method asynchronously handles a list of lookup tasks, each consisting of attributes for
+        form ID details and associated plugin information, and appends formatted results to the `lines` list.
+        It uses a cached synchronous database lookup function to optimize repeated queries.
 
         Args:
-            lookup_tasks: List of tuples containing lookup task information.
-            lines: List to which the formatted lookup results will be appended.
+            lookup_tasks (list[tuple[str, str, str, int]]): A list of tuples containing form ID full
+                reference, form ID suffix, plugin name, and count for each lookup task.
+            lines (list[str]): A list to which the method will append formatted output strings containing
+                the results of the lookup operations.
+
+        Returns:
+            None
         """
         for formid_full, formid_suffix, plugin, count in lookup_tasks:
             # Use cached sync database lookup to avoid repeated queries
@@ -236,18 +254,21 @@ class PythonFormIDAnalyzer:
 
     async def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
         """
-        Performs a lookup for a formid value in the database or cache.
+        Looks up the value associated with the given `formid` and `plugin` within
+        the form ID database. Returns the value if found, or `None` if the database
+        does not exist or the entry is not present.
 
-        If the database is present, it will try to use the async database
-        connection pool to retrieve the formid entry. If unavailable,
-        it falls back to a cached synchronous lookup.
+        This function first checks if the form ID database exists and proceeds only
+        if it does. It uses an asynchronous database pool for the lookup, if
+        available. As a fallback mechanism, it performs a lookup via a synchronous
+        cached method in a separate thread.
 
         Args:
-            formid: The formid to look up.
-            plugin: The plugin associated with the formid.
+            formid: The unique form ID to look up in the database.
+            plugin: The plugin or namespace associated with the form ID.
 
         Returns:
-            str | None: The value if found, otherwise None.
+            str | None: The associated value as a string if found, otherwise `None`.
         """
         if not self.formid_db_exists:
             return None

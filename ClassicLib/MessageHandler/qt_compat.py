@@ -48,6 +48,14 @@ except ImportError:
 
     # noinspection PyPep8Naming,PyUnusedLocal
     class QProgressDialog:  # noqa: D101
+        """Provides a dialog that displays the progress of an ongoing operation.
+
+        The QProgressDialog class represents a modal or non-modal dialog that can be
+        used to show the progress of a lengthy operation. It includes a progress bar,
+        a descriptive label, and an optional cancel button. The progress dialog can be
+        configured with custom ranges, text, and behavior properties, making it
+        suitable for varied user interface requirements.
+        """
         def __init__(  # noqa: D107
             self,
             labelText: str = "",
@@ -58,6 +66,23 @@ except ImportError:
             *args: Any,
             **kwargs: Any,
         ) -> None:
+            """
+            Initializes an instance of the class with the given parameters.
+
+            This constructor sets up the class with default or specified values for its
+            configuration. The provided parameters enable customization of the instance's
+            behavior and appearance. All optional arguments have appropriate default
+            values.
+
+            Args:
+                labelText: A string to specify the initial text label to display.
+                cancelButtonText: A string to set the text of the cancel button.
+                minimum: An integer value for the minimum allowable value in the range.
+                maximum: An integer value for the maximum allowable value in the range.
+                parent: A QWidget or None, indicating the parent of this widget.
+                *args: Additional positional arguments for further customization.
+                **kwargs: Additional keyword arguments for further customization.
+            """
             pass
 
         def setWindowTitle(self, title: str) -> None:  # noqa: D102

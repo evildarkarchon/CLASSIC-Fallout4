@@ -82,9 +82,35 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
 
 
 class GamePathFinder:
-    """Helper class to encapsulate game path finding logic."""
+    """
+    Handles the discovery and configuration of the game path.
+
+    This class is responsible for locating the installation directory of
+    a game. It utilizes various methods, including cached paths, system
+    registry (on Windows), configuration files, and user inputs. The
+    class ensures that the determined game path is valid before saving it
+    to settings.
+
+    Attributes:
+        exe_name (str): Name of the game executable file, usually determined
+            dynamically based on the game and virtual reality configuration.
+        xse_file (str): Path to the XSE (game log or configuration) file, loaded
+            from YAML settings.
+        xse_acronym (str): Acronym used in the XSE file configuration, loaded
+            from YAML settings.
+        xse_acronym_base (str): Base acronym for XSE, loaded from a global YAML
+            settings key.
+        game_name (str): Root name of the game, loaded from YAML settings.
+    """
 
     def __init__(self):
+        """
+        Represents a configuration class that initializes and manages key YAML settings and game-related identifiers.
+
+        Raises:
+            TypeError: If any of the YAML settings such as `xse_acronym`, `xse_acronym_base`, or
+                `game_name` are not strings.
+        """
         self.exe_name = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
         self.xse_file = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
         self.xse_acronym = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
@@ -114,7 +140,13 @@ class GamePathFinder:
         return True
 
     def _report_xse_error(self, error_msg: str) -> None:
-        """Report XSE file access errors with appropriate messages."""
+        """
+        Reports an error related to the XSE log file based on the provided error message. The error is logged
+        with details, guiding the user toward resolving the issue depending on the type of error.
+
+        Args:
+            error_msg (str): The error message indicating the reason for the encountered issue.
+        """
         xse_acronym_lower = self.xse_acronym.lower() if self.xse_acronym else "xse"
         if "does not exist" in error_msg:
             msg_error(
@@ -130,7 +162,16 @@ class GamePathFinder:
             )
 
     def _parse_xse_log_for_path(self) -> Path | None:
-        """Parse XSE log file to extract game path."""
+        """
+        Parses a log file to extract a directory path.
+
+        This method processes a log file associated with the `xse_file` attribute, searches
+        for a line starting with the string "plugin directory", and extracts a directory
+        path based on specific formatting rules. If no such line is found, the method returns `None`.
+
+        Returns:
+            Path | None: Extracted directory path if found; otherwise, None.
+        """
         with open_file_with_encoding(cast("str", self.xse_file)) as log_file:
             for line in log_file:
                 if line.startswith("plugin directory"):
@@ -144,7 +185,18 @@ class GamePathFinder:
         return None
 
     def _validate_game_path(self, game_path: Path) -> bool:
-        """Validate that the game path is valid and contains the game executable."""
+        """
+        Validates the provided game path to ensure it meets the necessary criteria.
+
+        This function checks if the path is accessible, whether it is an existing directory,
+        and if the expected executable file is present within the directory.
+
+        Args:
+            game_path (Path): The path to the game directory that needs to be validated.
+
+        Returns:
+            bool: True if the game path is valid and meets all required conditions, False otherwise.
+        """
         from ClassicLib.Util import validate_path
 
         is_valid, error_msg = validate_path(game_path, check_write=False, check_read=True)
@@ -164,7 +216,13 @@ class GamePathFinder:
         return True
 
     def _save_game_path(self, game_path: Path) -> None:
-        """Save the validated game path to settings and cache."""
+        """
+        Saves the provided game path to multiple cache locations and registers
+        it within the global registry.
+
+        Args:
+            game_path (Path): The path to the game directory to be saved.
+        """
         from ClassicLib.ResourceLoader import ResourceLoader
 
         # Save to all cache locations (cache.yaml, Local.yaml, and suggest env var)
@@ -172,7 +230,19 @@ class GamePathFinder:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
 
     def _get_path_from_user_gui(self) -> Path:
-        """Get game path from user via GUI dialog."""
+        """
+        Retrieves a file path from the user via a graphical user interface (GUI).
+
+        This method prompts the user with a dialog to select a file path. If the user
+        cancels the selection, the application will safely handle it by raising a
+        RuntimeError. The retrieved file path is returned.
+
+        Raises:
+            RuntimeError: If the user cancels the file path selection dialog.
+
+        Returns:
+            Path: The file path selected by the user.
+        """
         # This will return a valid path or exit the application if cancelled
         result = show_game_path_dialog_static()
         if result is None:
@@ -181,7 +251,17 @@ class GamePathFinder:
         return result
 
     def _get_path_from_user_console(self) -> Path:
-        """Get game path from user via console input."""
+        """
+        Retrieves and validates a directory path for a game installation from the user via console input.
+
+        This method prompts the user to provide the full directory path where the game is located.
+        The entered path is validated for readability, and the existence of the game's executable file
+        is confirmed. If the validation fails or the executable file is not found, the user is prompted
+        to re-enter the path until a valid path is provided.
+
+        Returns:
+            Path: The validated directory path provided by the user.
+        """
         from ClassicLib.Util import validate_path
 
         while True:
@@ -204,7 +284,19 @@ class GamePathFinder:
             msg_error(f"ERROR : NO {self.exe_name} FILE FOUND IN '{game_path}'! Please try again.")
 
     def find_game_path(self) -> None:
-        """Main method to find and configure the game path."""
+        """
+        Finds and sets the game installation path.
+
+        This method determines the path to the game installation by using various approaches in a
+        hierarchical manner. It first checks if a cached path is available. If not, on Windows systems,
+        it attempts to retrieve the path from the registry. If these methods fail, it validates the XSE
+        file and tries to extract the path from the XSE log. As a last resort, it prompts the user
+        for the path either via a GUI or the console, depending on the mode the application runs in.
+
+        Raises:
+            ValueError: If the user-provided path or XSE-derived path is invalid.
+
+        """
         # First, check if we have a cached path (for uvx compatibility)
         from ClassicLib.ResourceLoader import ResourceLoader
 
@@ -243,14 +335,20 @@ class GamePathFinder:
 
 def game_path_find() -> None:
     """
-    Finds and verifies the game installation path by checking specific requirements and interacting with the user
-    through different interfaces depending on context (e.g., GUI mode or console). Updates the game's settings once
-    a valid path is confirmed.
+    Find and verify the game path by initializing and utilizing the GamePathFinder
+    class. This function is responsible for initiating the game path check process
+    and ensuring that the proper game path is found.
 
-    Raises
-    ------
-    TypeError
-        If essential configuration data retrieved from YAML settings is not of the expected type.
+    Logs the initiation of the game path check for debugging purposes.
+
+    Raises:
+        Any exceptions raised by the `GamePathFinder` methods will propagate and need
+        to be handled by the caller. Refer to the `GamePathFinder` class documentation
+        for details on the exceptions.
+
+    Returns:
+        None: This function does not return a value but serves as a procedural process
+        for game path verification.
     """
     logger.debug("- - - INITIATED GAME PATH CHECK")
 
@@ -260,13 +358,17 @@ def game_path_find() -> None:
 
 def game_generate_paths() -> None:
     """
-    Generates and configures the necessary paths and files for the current game version. This function interacts
-    with a YAML settings manager to set up paths and validates game versions. It ensures the local game environment
-    is correctly configured based on the registry's active game and version setting.
+    Generates game-specific paths and configurations using YAML settings and global registry data.
+
+    This function reads and verifies necessary game paths and settings and configures them based on
+    the game version and type (e.g., VR or non-VR). It ensures that certain properties like file paths
+    and game configurations are correctly set based on predefined constants and the game's version
+    compatibility. If any invalid or unsupported values are encountered, appropriate exceptions are
+    raised.
 
     Raises:
-        TypeError: If the game path or XSE acronym base is not a string type as expected.
-        ValueError: If the game version is unsupported, invalid, or does not match the known valid versions for Fallout4.
+        TypeError: If the game path or XSE acronym base is not of type `str`.
+        ValueError: If the game version is unsupported or invalid.
     """
     logger.debug("- - - INITIATED GAME PATH GENERATION")
 

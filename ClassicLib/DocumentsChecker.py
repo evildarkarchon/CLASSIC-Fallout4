@@ -9,7 +9,8 @@ from ClassicLib.Logger import logger
 class DocumentsChecker:
     """Validates game documents folder and configuration files."""
 
-    def check_folder_configuration(self) -> str:
+    @staticmethod
+    def check_folder_configuration() -> str:
         """
         Validates and checks the folder configuration for specific document paths.
 
@@ -42,7 +43,8 @@ class DocumentsChecker:
 
         return "".join(message_list)
 
-    def validate_ini_file(self, ini_filename: str) -> str:
+    @staticmethod
+    def validate_ini_file(ini_filename: str) -> str:
         """
         Validates if the provided INI filename refers to a valid INI file. This ensures that
         the given file adheres to the expected structure, syntax, and format of INI files.

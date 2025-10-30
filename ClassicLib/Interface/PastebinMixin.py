@@ -57,7 +57,13 @@ class PastebinMixin:
         pastebin_fetch_button: QPushButton
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the PastebinMixin with required patterns."""
+        """
+        Initializes the instance of the class and parent class.
+
+        Args:
+            *args: Positional arguments for initialization.
+            **kwargs: Keyword arguments for initialization.
+        """
         super().__init__(*args, **kwargs)
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
 

@@ -1,8 +1,9 @@
 """
-Backup operations functionality for the CLASSIC interface.
+Module facilitating backup and management of game files through a graphical interface.
 
-This module contains a mixin class that handles backup, restore, and removal
-operations for game files.
+This module provides backup, restore, and removal functionality for predefined game file
+categories. It integrates with a graphical interface using the PySide6 framework to manage
+UI elements and user interactions.
 """
 
 from __future__ import annotations
@@ -29,21 +30,25 @@ if TYPE_CHECKING:
 
 class BackupOperationsMixin:
     """
-    Mixin class providing backup operations functionality for the MainWindow.
+    Mixin class providing utility methods and UI components for managing backups.
 
-    This class handles backup, restore, and removal operations for various
-    game file categories (XSE, RESHADE, VULKAN, ENB).
+    This mixin contains methods for managing backup-related operations including checking
+    the existence of backups, adding backup sections to UI layouts, and performing specific
+    backup actions such as backup, restore, and removal. The class also provides mechanisms
+    to update UI components based on the backup state.
     """
 
     def check_existing_backups(self) -> None:
         """
-        Checks the existence of backup directories for specific categories and updates
-        UI restore buttons accordingly.
+        Checks for existing backup folders and updates corresponding restore buttons.
 
-        This method assesses whether backup folders for particular categories exist and
-        contain any files. If such conditions are met, corresponding restore buttons in
-        the UI are enabled and visually updated with a specific stylesheet. The process
-        is automated for the predefined categories.
+        This method iterates through predefined backup category folders to determine if backups
+        exist for each category. It examines the folder's existence and checks if the folder
+        contains any files or subdirectories. If backups are found for a category, the associated
+        restore button is enabled and styled with the defined enabled button style.
+
+        Returns:
+            None
         """
         for category in ["XSE", "RESHADE", "VULKAN", "ENB"]:
             backup_path: Path = Path(f"CLASSIC Backup/Game Files/Backup {category}")
@@ -55,17 +60,16 @@ class BackupOperationsMixin:
 
     def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None:
         """
-        Adds a backup section to the given layout with a specified title
-        and backup type. The section includes a title label and three buttons
-        for backup, restore, and remove actions related to the specified
+        Adds a backup section to the provided layout. This section includes a title label and buttons for
+        backup, restore, and remove actions, styled consistently for a user interface. Each button is
+        connected to a click event handler that triggers the managed file operation for the given
         backup type.
 
         Args:
-            layout (QBoxLayout): Layout where the backup section will be added.
-            title (str): Title to display at the top of the backup section.
-            backup_type (Literal["XSE", "RESHADE", "VULKAN", "ENB"]):
-                Type of backup for which the section is being created.
-
+            layout (QBoxLayout): The layout to which the backup section will be added.
+            title (str): The title text displayed in the backup section.
+            backup_type (Literal["XSE", "RESHADE", "VULKAN", "ENB"]): The type of backup to configure
+                the section for. This determines the labeling of buttons and their associated actions.
         """
         layout.addWidget(create_separator())
 
@@ -129,16 +133,20 @@ class BackupOperationsMixin:
     @staticmethod
     def _validate_selected_list_format(selected_list: str) -> list[str]:
         """
-        Validates the format of the selected list string.
+        Validates the format of the selected_list to ensure it adheres to the expected structure of 'Backup TYPE'.
+
+        This method checks if the input string matches the required format. It splits the string into parts and verifies
+        that the first part is "Backup" and that there are exactly two parts. If the format is invalid, it raises a
+        ValueError.
 
         Args:
-            selected_list (str): The string to validate, expected format "Backup TYPE".
+            selected_list (str): The input string to validate, expected in the format 'Backup TYPE'.
 
         Returns:
-            list[str]: A list containing the parts of the string if valid.
+            list[str]: A list containing the parts of the validated input string.
 
         Raises:
-            ValueError: If the selected_list format is invalid.
+            ValueError: If the format of the selected_list does not match the required structure.
         """
         parts: list[str] = selected_list.split()
         if len(parts) != 2 or parts[0] != "Backup":
@@ -147,17 +155,20 @@ class BackupOperationsMixin:
 
     def classic_files_manage(self, selected_list: str, selected_mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
         """
-        Manages game files by performing operations such as backup, restore, or removal
-            based on the selected mode. This function interacts with the game files and
-            updates the GUI to reflect the changes.
-            Args:
-                selected_list (str): The selected list containing game file references, with
-                    entries separated by a space.
-                selected_mode (Literal["BACKUP", "RESTORE", "REMOVE"], optional): The mode
-                    of operation to perform on the game files. Defaults to "BACKUP".
-            Raises:
-                PermissionError: If the function is unable to access files in the game folder
-                    due to insufficient permissions.
+        Manages game files based on the selected list and operation mode. This function handles file operations
+        like backup, restore, or removal of game files and updates the UI accordingly. It also validates
+        the format of the selected list for the operation and provides error messages in case of failures.
+
+        Args:
+            selected_list (str): The selected list in a specific format which determines the game files
+                to manage.
+            selected_mode (Literal["BACKUP", "RESTORE", "REMOVE"], optional): The operation mode specifying
+                the action to be performed on the files. Defaults to "BACKUP".
+
+        Raises:
+            PermissionError: Raised if the application doesn't have the required permissions to access
+                the game folder.
+            ValueError: Raised if the selected list format is invalid.
         """
         # noinspection PyShadowingNames
         try:
@@ -191,11 +202,13 @@ class BackupOperationsMixin:
 
     def _enable_restore_button_for_type(self, backup_type: str) -> None:
         """
-        Enables the restore button for a specific backup type category.
+        Enables the restore button for a specific backup type, if the corresponding restore
+        button for the provided backup type exists. This method also applies the enabled
+        button style to the restore button.
 
         Args:
-            backup_type (str): The type of backup category for which to enable
-                the restore button (e.g., "XSE", "RESHADE", "VULKAN", "ENB").
+            backup_type (str): The type of backup for which the restore button should be
+                enabled.
         """
         restore_button: Any | None = getattr(self, f"RestoreButton_{backup_type}", None)
         if restore_button:

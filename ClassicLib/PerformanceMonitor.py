@@ -19,14 +19,19 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 def timed_operation(name: str | None = None, log_level: str = "info") -> Callable[[F], F]:
     """
-    Decorator to time synchronous operations and log results.
+    A decorator to measure the execution time of a function, log the duration,
+    and optionally store execution metrics. The decorator allows customization
+    of the operation name and logging level.
 
     Args:
-        name: Optional operation name (defaults to function name)
-        log_level: Logging level ("debug", "info", "warning")
+        name (str | None): The name of the operation for logging and metric purposes.
+            If None, the decorated function's name will be used.
+        log_level (str): The logging level to use for recording the operation's duration.
+            Supported levels are "info", "debug", or "warning". Defaults to "info".
 
     Returns:
-        Decorated function that logs execution time
+        Callable[[F], F]: A decorator that wraps the provided function to measure and log
+        its execution time.
     """
 
     def decorator(func: F) -> F:
@@ -64,14 +69,19 @@ def timed_operation(name: str | None = None, log_level: str = "info") -> Callabl
 
 def async_timed_operation(name: str | None = None, log_level: str = "info") -> Callable[[F], F]:
     """
-    Decorator to time async operations and log results.
+    Decorator function to measure and log the duration of asynchronous operations. This decorator
+    can be applied to any coroutine. The operation name for logging can be explicitly specified or
+    defaulted to the function name. Additionally, logs are created based on the specified log level,
+    and execution time is stored as a metric for analysis.
 
     Args:
-        name: Optional operation name (defaults to function name)
-        log_level: Logging level ("debug", "info", "warning")
+        name (str | None): Optional custom name for the operation. Defaults to None, which uses the
+            function name as the operation name.
+        log_level (str): Logging level to use for the operation's status. Defaults to "info".
 
     Returns:
-        Decorated async function that logs execution time
+        Callable[[F], F]: A decorator that wraps the target coroutine, timing its execution
+            and logging the result.
     """
 
     def decorator(func: F) -> F:
@@ -109,15 +119,17 @@ def async_timed_operation(name: str | None = None, log_level: str = "info") -> C
 
 def batch_operation_monitor(operation_name: str) -> Callable[[F], F]:
     """
-    Special decorator for monitoring batch operations.
-
-    Logs both total time and average time per item for batch operations.
+    A decorator function used for monitoring the performance of batch operations. It measures
+    the elapsed time for the execution of the decorated function and attempts to calculate the
+    average time per item in a batch if applicable. The function logs relevant performance
+    metrics and stores them using appropriate metric handlers.
 
     Args:
-        operation_name: Name of the batch operation
+        operation_name (str): The name of the operation being monitored. This name will be
+            used for log messages and metric storage.
 
     Returns:
-        Decorated function that logs batch performance metrics
+        Callable[[F], F]: A decorator function that can wrap another function for monitoring.
     """
 
     def decorator(func: F) -> F:
@@ -152,7 +164,22 @@ _performance_metrics: dict[str, list[float]] = {}
 
 
 def _store_metric(name: str, duration: float) -> None:
-    """Store a performance metric for later analysis."""
+    """
+    Stores a performance metric by associating a metric name with a duration value.
+    If the metric name does not already exist within the performance metrics storage,
+    a new entry is added to initialize tracking for this metric. Each duration value
+    is appended to the list associated with the key, facilitating performance tracking
+    over time.
+
+    Args:
+        name (str): The name of the performance metric to store. Used as a key
+            for tracking the metric durations.
+        duration (float): The duration value associated with the metric. Represents
+            the specific performance measurement to record.
+
+    Returns:
+        None
+    """
     if name not in _performance_metrics:
         _performance_metrics[name] = []
     _performance_metrics[name].append(duration)
@@ -160,10 +187,16 @@ def _store_metric(name: str, duration: float) -> None:
 
 def get_performance_summary() -> dict[str, dict[str, float]]:
     """
-    Get a summary of all collected performance metrics.
+    Calculates and summarizes performance metrics for various operations.
+
+    This function aggregates performance metrics for different operations and
+    returns a summary containing statistics such as count, total time, average,
+    minimum time, and maximum time for each operation.
 
     Returns:
-        Dictionary with operation names as keys and statistics as values
+        dict[str, dict[str, float]]: A dictionary where each key is the name of
+        an operation and the value is another dictionary containing statistical
+        metrics ("count", "total", "average", "min", "max") for that operation.
     """
     summary = {}
 
@@ -181,7 +214,19 @@ def get_performance_summary() -> dict[str, dict[str, float]]:
 
 
 def log_performance_summary() -> None:
-    """Log a formatted summary of all performance metrics."""
+    """
+    Logs a summary of performance metrics collected during the execution.
+
+    The function retrieves a performance summary and logs it in a
+    structured format. If no metrics are available, it logs an
+    appropriate message. Otherwise, it logs each operation's performance
+    statistics, including count, average time per operation, and
+    total time spent.
+
+    Raises:
+        KeyError: If the structure of the performance summary contains missing
+            or unexpected keys for operations.
+    """
     summary = get_performance_summary()
 
     if not summary:
@@ -202,12 +247,11 @@ def reset_metrics() -> None:
     """
     Resets the global performance metrics.
 
-    This function clears the global `_performance_metrics` variable and logs the
-    action. It is used to reset performance metrics, ensuring a clean state for
-    new metric collection.
+    This function clears all data in the global performance metrics storage. It is
+    typically used to reset metrics tracking during or after execution.
 
     Raises:
-        None
+        KeyError: If the global performance metrics storage does not exist.
     """
     global _performance_metrics
     _performance_metrics.clear()
@@ -233,20 +277,13 @@ class TimedBlock:
 
     def __init__(self, name: str, log_level: str = "info"):
         """
-        Represents an initialization for a logging system, setting basic properties
-        such as the logger name and the log level. This class handles essential
-        configuration that helps in monitoring and debugging the system.
+        Initializes the instance of the class with the provided name and log level.
+        The class is responsible for managing logging behavior based on the specified
+        log level and tracking operational start time for additional functionality.
 
         Args:
-            name: The name identifier for the logger.
-            log_level: The log level to be used, defaulting to "info". Common
-                log levels include "debug", "info", "warn", "error", etc.
-
-        Attributes:
-            name: The name identifier of the logger instance.
-            log_level: The configured logging level for the logger.
-            start_time: A timestamp representing the starting point for logging
-                activities, initialized to 0 and expected to update elsewhere.
+            name (str): The name identifier for the instance.
+            log_level (str, optional): The logging level for the instance, defaults to "info".
         """
         self.name = name
         self.log_level = log_level

@@ -88,13 +88,17 @@ class UpdateManagerMixin:
 
     def perform_update_check(self) -> None:
         """
-        Stops the update check timer and performs an asynchronous update check.
+        Performs an update check by initializing and starting a worker thread.
 
-        This method is responsible for stopping the ongoing update check timer and
-        invokes the asynchronous update check function to ensure that updates are
-        checked in an orderly and non-blocking manner. Uses a QThread worker
-        managed by ThreadManager.
+        This method stops any existing update check timer, verifies if an update
+        check is already in progress, and then proceeds to create a new thread
+        and worker for performing the update check. It registers the worker
+        thread with a thread manager, connects appropriate signals for handling
+        the worker's operations and results, and starts the worker through
+        the thread manager.
 
+        Raises:
+            None
         """
         self.update_check_timer.stop()
 
@@ -126,11 +130,14 @@ class UpdateManagerMixin:
 
     def force_update_check(self) -> None:
         """
-        Directly initiates an update check process, bypassing any saved settings or
-        scheduled events to trigger the process immediately. This function ensures that
-        any update checking mechanism will execute explicitly without user configuration
-        intervention.
+        Performs a force update check by initiating a new thread and worker to handle
+        the update process explicitly. This method bypasses the typical settings and
+        ensures an immediate update check is started if no other update check is already
+        running. Handles proper thread and worker lifecycle management, including signal
+        connections for success, error, and completion of the update process.
 
+        Raises:
+            QMessageBox: Provides information if an update check is already in progress.
         """
         # Directly perform the update check without reading from settings
         self.is_update_check_running = True
@@ -166,10 +173,14 @@ class UpdateManagerMixin:
 
     def _update_check_finished(self) -> None:
         """
-        Sets the status of the update check process to finished.
+        Marks the update check as finished by resetting relevant flags and clearing
+        references to worker and thread objects.
 
-        This method clears internal references to the update check thread and worker
-        for proper cleanup after the update process has completed.
+        Resets the `is_update_check_running` flag to `False` and clears the references
+        to the worker and thread instances associated with the update check process.
+
+        Raises:
+            None
         """
         self.is_update_check_running = False
         # ThreadManager handles thread cleanup, just clear our references
@@ -178,13 +189,16 @@ class UpdateManagerMixin:
 
     def show_update_result(self, is_up_to_date: bool) -> None:
         """
-        Displays update result to the user in a message box and handles further actions based
-        on the user's response if an update is available.
+        Display results of an update check to the user and prompts for further action if an update is available.
 
         Args:
-            is_up_to_date: Indicates whether the application is already up to date. If True,
-                a message box informs the user that they have the latest version. If False, the
-                user is prompted with a choice to visit the update page.
+            is_up_to_date: A boolean value indicating whether the current version is up to date.
+
+        Raises:
+            None
+
+        Returns:
+            None
         """
         if is_up_to_date:
             QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)
@@ -202,12 +216,15 @@ class UpdateManagerMixin:
 
     def show_update_error(self, error_message: str) -> None:
         """
-        Displays a warning message with an error description when the application fails to check
-        for updates. This method provides user feedback in case of an update failure by showing
-        a warning dialog box with the specified error details.
+        Displays a warning message box indicating a failure to check for updates.
+
+        This method uses a QMessageBox to show an error message to the user when
+        a check for updates fails, providing the supplied error message in the
+        dialog.
 
         Args:
-            error_message: The error message describing the reason for the update check failure.
+            error_message (str): The error message to be displayed in the warning
+                dialog.
         """
         QMessageBox.warning(
             self,

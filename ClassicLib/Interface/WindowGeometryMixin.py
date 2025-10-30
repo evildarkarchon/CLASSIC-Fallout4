@@ -7,7 +7,7 @@ allowing each tab to have its own minimum size and remembered dimensions.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Any
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
@@ -57,25 +57,27 @@ class WindowGeometryMixin:
         def normalGeometry(self) -> Any: ...  # noqa: D102
 
     def __init__(self) -> None:
-        """Initialize window geometry tracking."""
+        """
+        Initializes an instance of the class.
+
+        The constructor is responsible for initializing the object and setting the
+        attributes used internally by the class. It ensures proper setup for subsequent usage.
+        """
         super().__init__()
         self._last_tab_index: int | None = None
         self._geometry_initialized = False
 
     def setup_window_geometry(self) -> None:
         """
-        Handles the setup and initialization of the window geometry for the tab widget, ensuring that
-        the initial window size is set correctly and updates when the active tab changes.
-
-        Attributes:
-            tab_widget: The tab widget whose geometry is being managed. Geometry changes are applied
-                based on the active tab.
+        Sets up the window geometry and connects tab change events if a tab widget
+        exists within the instance. This ensures window size and state are managed
+        when switching tabs.
 
         Raises:
-            AttributeError: Raised if the tab widget is not correctly initialized and its attributes
-                are accessed before setup.
-            RuntimeError: Raised if an attempt is made to operate on the geometry management before
-                initialization.
+            None
+
+        Returns:
+            None
         """
         if not hasattr(self, "tab_widget"):
             logger.warning("Tab widget not found, skipping geometry setup")
@@ -94,16 +96,14 @@ class WindowGeometryMixin:
 
     def handle_tab_changed(self, index: int) -> None:
         """
-        Handles tab changes in a user interface component.
+        Handles the event of changing tabs in the application.
 
-        This method is called when the selected tab is changed. It ensures the geometry
-        (properties such as size, position) of the previous tab is saved before switching
-        to the new tab. After the switch, it restores the geometry for the newly selected
-        tab. If geometry initialization hasn't occurred, the function exits without
-        modifying any geometry information.
+        This method ensures the geometry state of the current tab is saved before
+        switching, and the geometry of the new tab is restored after switching.
+        It also updates the internal state to reflect the tab change.
 
         Args:
-            index (int): The index of the new tab that is being selected.
+            index (int): The index of the new tab being switched to.
         """
         if not self._geometry_initialized:
             return
@@ -120,13 +120,16 @@ class WindowGeometryMixin:
 
     def save_tab_geometry(self, tab_index: int) -> None:
         """
-        Save the current window size for a specific tab.
-
-        Handles both normal and maximized window states, saving the appropriate
-        geometry based on the current state.
+        Saves the geometry of a specified tab, including its size and maximized state,
+        into a persistent storage. If the window is maximized, it saves both the
+        maximized state and the geometry the window had before maximization. Otherwise,
+        the current size of the window is saved.
 
         Args:
-            tab_index: The index of the tab to save geometry for
+            tab_index (int): The index of the tab for which the geometry should be saved.
+
+        Raises:
+            KeyError: If the tab_index is not found in the list of tab names.
         """
         if tab_index not in self.TAB_NAMES:
             return
@@ -166,13 +169,15 @@ class WindowGeometryMixin:
 
     def restore_tab_geometry(self, tab_index: int) -> None:
         """
-        Restore the saved window size for a specific tab.
-
-        If no saved size exists, uses the default minimum size for that tab.
-        Also restores the maximized state if the window was maximized when last saved.
+        Restores the geometry of a tab based on saved settings. This includes its size
+        and maximized state, ensuring either restored or minimum dimensions are met.
 
         Args:
-            tab_index: The index of the tab to restore geometry for
+            tab_index (int): Index of the tab whose geometry is to be restored. The
+                index must exist in `self.TAB_NAMES`.
+
+        Raises:
+            TypeError: If the provided `tab_index` is not an integer.
         """
         if tab_index not in self.TAB_NAMES:
             return

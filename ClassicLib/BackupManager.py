@@ -119,7 +119,8 @@ class BackupManager:
 
         return version
 
-    def create_backup_directory(self, version: str) -> Path:
+    @staticmethod
+    def create_backup_directory(version: str) -> Path:
         """
         Creates a backup directory for the specified game version.
 

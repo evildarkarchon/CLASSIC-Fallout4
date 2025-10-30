@@ -17,24 +17,27 @@ def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
     """
     Converts all keys in a dictionary to lowercase.
 
-    This function is used for case-insensitive mod matching.
+    This function takes a dictionary where the keys are strings and returns a new
+    dictionary where all the keys have been converted to lowercase. The values
+    in the dictionary remain unchanged.
 
     Args:
-        data: A dictionary where both keys and values are strings.
+        data (dict[str, str]): A dictionary with string keys and string values.
 
     Returns:
-        A new dictionary with all keys converted to lowercase.
+        dict[str, str]: A new dictionary with all keys converted to lowercase.
     """
     return {key.lower(): value for key, value in data.items()}
 
 
 def _validate_warning(mod_name: str, warning: str) -> None:
     """
-    Validates the presence of a warning message for a given module.
+    Validates the presence of a warning message for a given module name. If no warning is
+    found, raises a ValueError to indicate a missing warning entry in the database.
 
     Args:
-        mod_name: The name of the module to validate.
-        warning: The warning message associated with the module.
+        mod_name (str): The name of the module to validate.
+        warning (str): The warning message associated with the module.
 
     Raises:
         ValueError: If the warning message is empty or not provided.
@@ -45,20 +48,30 @@ def _validate_warning(mod_name: str, warning: str) -> None:
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
     """
-    Pure Python implementation for detecting single mods.
+    Detect modifications from the given mod dictionary and crash log plugins.
 
-    This function checks if any mod names from the YAML dictionary exist in
-    the crashlog plugins and returns appropriate warnings.
+    This function identifies modifications (mods) in a given crash log by matching them
+    against a dictionary of known mods and their associated warnings. It uses optimized
+    techniques for matching and processing the data to ensure efficient execution.
+
+    The process includes:
+    1. Lowercasing input dictionaries for case-insensitive matching.
+    2. Sorting mod names by length to match the most specific names first.
+    3. Building a combined regex pattern for efficient matching against all plugin names.
+    4. Consolidating matches with warnings and formatting output for compatibility.
+
+    The function returns a `ReportFragment` object containing detailed information about
+    the identified mods, their associated warnings, and matching plugin information.
 
     Args:
-        yaml_dict: A mapping of mod names to their respective warnings.
-        crashlog_plugins: A mapping of plugin names to their identifiers.
+        yaml_dict (dict[str, str]): A dictionary where keys represent mod names and values
+            represent their corresponding warnings or descriptions.
+        crashlog_plugins (dict[str, str]): A dictionary where keys represent plugin names
+            and values represent plugin IDs, extracted from a crash log.
 
     Returns:
-        ReportFragment containing detected mods, or empty fragment if none found.
-
-    Raises:
-        ValueError: If a mod from the YAML dictionary has no warning defined.
+        ReportFragment: An object encapsulating the lines of the consolidated report about
+        detected mods, warnings, and matched plugins.
     """
     from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
@@ -122,20 +135,22 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
     """
-    Pure Python implementation for detecting mod conflicts or combinations.
+    Detect conflicting mods from given data and generate a report fragment.
 
-    This function checks for combinations of mods defined in the yaml_dict
-    and returns caution messages when conflicting pairs are found.
+    This function analyzes two dictionaries: one containing pairs of mods with associated warnings
+    and another representing plugins presumably linked to the mods. It detects potential conflicts
+    between mods listed in the dictionaries and creates a report fragment containing any relevant
+    warnings.
 
     Args:
-        yaml_dict: Dictionary where keys are mod pairs joined by ' | ' and values are warnings.
-        crashlog_plugins: Dictionary of plugin names from crash log.
+        yaml_dict (dict[str, str]): A dictionary where the keys are pairs of mod names separated by
+            ' | ' and the values are the corresponding warnings.
+        crashlog_plugins (dict[str, str]): A dictionary representing the crashlog plugins, with
+            plugin names as keys.
 
     Returns:
-        ReportFragment containing conflicts, or empty fragment if none found.
-
-    Raises:
-        ValueError: If a detected mod combination has no warning associated.
+        ReportFragment: An instance of `ReportFragment` containing any detected conflicts along with
+        warnings.
     """
     from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
@@ -182,18 +197,30 @@ def detect_mods_important(
     yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: Literal["nvidia", "amd"] | None
 ) -> "ReportFragment":
     """
-    Pure Python implementation for detecting and evaluating important mods.
+    Processes mod detection based on provided plugin data and YAML configuration.
 
-    This function processes important mods, checks their installation status,
-    and verifies GPU compatibility.
+    This function performs detection of important mods by comparing plugin names
+    against a pattern matching system created from a YAML configuration dictionary.
+    Additionally, it validates whether certain mods are suitable for the detected
+    GPU type and provides warnings accordingly. The function generates a report
+    fragment containing details about the found or missing mods.
 
     Args:
-        yaml_dict: Dictionary where keys represent mod names and values contain warnings.
-        crashlog_plugins: Dictionary of plugins present in the crash log.
-        gpu_rival: Optional GPU type for compatibility checks.
+        yaml_dict (dict[str, str]): Dictionary where keys represent mod entries in
+            the format "mod_id | mod_display_name" and values are warning messages or
+            additional notes about GPU compatibility or potential issues.
+        crashlog_plugins (dict[str, str]): Dictionary containing plugin names
+            extracted from the crash log report. The keys of this dictionary are
+            plugin identifiers in lowercase as a result of preprocessing.
+        gpu_rival (Literal["nvidia", "amd"] | None): String indicating the type
+            of the GPU detected. It is either "nvidia" or "amd", or None if the GPU
+            type is not explicitly specified.
 
     Returns:
-        ReportFragment containing important mod status.
+        ReportFragment: A report fragment instance summarizing the detection results
+        for important mods. It includes details about detected mods, missing mods,
+        and any warnings related to GPU compatibility.
+
     """
     from ClassicLib.ScanLog.ReportFragment import ReportFragment
 

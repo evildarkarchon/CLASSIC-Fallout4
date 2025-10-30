@@ -32,7 +32,16 @@ class RustRecordScanner:
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo):
-        """Initialize the scanner, using Rust implementation when available."""
+        """
+        Initializes the scanner instance using the provided configuration data from yamldata.
+        Determines whether a Rust-based or Python-based scanner implementation should
+        be used. Rust implementation is preferred for performance benefits, but falls
+        back to the Python implementation if unavailable or initialization fails.
+
+        Args:
+            yamldata (ClassicScanLogsInfo): Configuration data required for the scanner,
+                including target records, ignore list, and crash generator name.
+        """
         self._rust_scanner = None
         self._use_rust = False
         self._python_scanner = None
@@ -68,13 +77,17 @@ class RustRecordScanner:
 
     def scan_named_records(self, segment_callstack: list[str]) -> tuple[Any, list[str]]:
         """
-        Scan for named records in call stack and return report fragment and matches.
+        Scans named records in the provided call stack segment.
+
+        This method attempts to scan for named records using a Rust-based scanner
+        when possible for better performance. If the Rust scanner is unavailable or raises
+        an exception, the method falls back to a Python-based scanner for compatibility.
 
         Args:
-            segment_callstack: List of call stack lines to scan
+            segment_callstack (list[str]): A list representing the segment call stack to be scanned.
 
         Returns:
-            Tuple of (report_fragment, matches_list)
+            tuple[Any, list[str]]: A tuple containing the scan result and list of matches.
         """
         if self._use_rust and self._rust_scanner:
             try:
@@ -93,16 +106,17 @@ class RustRecordScanner:
 
     def scan_for_pattern(self, lines: list[str], pattern: str) -> list[str]:
         """
-        Scan lines for a specific pattern.
-
-        Rust-specific optimization for pattern matching.
+        Scans through a list of strings to find lines that match a given pattern. The
+        method attempts to use a Rust-based scanner if available and falls back to a
+        Python implementation otherwise.
 
         Args:
-            lines: List of lines to scan
-            pattern: Pattern to search for
+            lines (list[str]): List of strings to scan through.
+            pattern (str): The regex pattern to match within each line.
 
         Returns:
-            List of matching lines
+            list[str]: A list of strings from the input that match the specified
+            pattern.
         """
         if self._use_rust and self._rust_scanner:
             try:
@@ -122,15 +136,18 @@ class RustRecordScanner:
 
     def batch_scan_records(self, segments: list[list[str]]) -> list[tuple[Any, list[str]]]:
         """
-        Scan multiple call stack segments in batch.
+        Scans multiple segments of records either using a Rust implementation (if available) or a Python fallback.
 
-        Rust-specific optimization for batch processing.
+        If a Rust-based implementation is available and fails gracefully, this function falls back to processing
+        segments sequentially using the Python method.
 
         Args:
-            segments: List of call stack segments
+            segments: A list of segments, where each segment is a list of string records.
 
         Returns:
-            List of (fragment, matches) tuples
+            A list of tuples, where each tuple contains:
+                - Any: The result of scanning the segment.
+                - list[str]: The processed list of string records.
         """
         if self._use_rust and self._rust_scanner:
             try:
@@ -147,16 +164,31 @@ class RustRecordScanner:
 
     @property
     def is_rust_accelerated(self) -> bool:
-        """Check if using Rust acceleration."""
+        """
+        Indicates whether Rust acceleration is enabled.
+
+        This property checks whether the implementation is currently using
+        Rust-based acceleration. Rust acceleration can provide performance
+        benefits when enabled, but the underlying implementation determines
+        its availability and usage.
+
+        Returns:
+            bool: True if Rust acceleration is enabled, False otherwise.
+        """
         return self._use_rust
 
     @property
     def scan_patterns(self) -> list[str] | None:
         """
-        Get the scan patterns used by the scanner.
+        Gets the scan patterns used by the scanner.
+
+        This property retrieves the patterns utilized by the scanner, either from
+        a Rust-based or Python-based implementation, if available. If neither
+        scanner is accessible or patterns cannot be fetched, it will return None.
 
         Returns:
-            List of patterns or None if not available
+            list[str] | None: A list of scan patterns or None if patterns are not
+            available.
         """
         if self._rust_scanner and hasattr(self._rust_scanner, "get_patterns"):
             try:

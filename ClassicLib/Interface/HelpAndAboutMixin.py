@@ -29,23 +29,33 @@ class HelpAndAboutMixin:
     # noinspection PyUnresolvedReferences
     def show_about(self) -> None:
         """
-        Displays the "About" dialog for the application by initializing and executing
-        a custom dialog window.
+        Displays the "About" dialog.
 
-        This method creates an instance of the `CustomAboutDialog` class, passing the
-        current instance (self) as an argument. It then displays the dialog window
-        modally by invoking the `exec()` method on the dialog instance.
+        This method initializes and displays a custom "About" dialog using the
+        CustomAboutDialog class. It does not return any value.
+
+        Args:
+            self: The instance of the class.
+
+        Returns:
+            None
         """
         dialog: CustomAboutDialog = CustomAboutDialog(self)
         dialog.exec()
 
     def help_popup_main(self) -> None:
         """
-        Displays a help popup with information retrieved from the YAML settings.
+        Displays a help dialog with information related to the main interface.
 
-        The method retrieves the help text from the YAML configuration file under
-        the specified key. It then displays the retrieved text in a message box
-        with a title and an "OK" button.
+        This method accesses a YAML settings file to retrieve the help text associated
+        with the main interface. It then displays this information in a modal dialog
+        using a QMessageBox.
+
+        Args:
+            self: Reference to the current instance of the class.
+
+        Returns:
+            None
         """
         help_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
         QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)

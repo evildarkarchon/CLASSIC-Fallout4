@@ -19,14 +19,25 @@ from ClassicLib.YamlSettingsCache import classic_settings
 
 class CrashLogsScanWorker(QObject):
     """
-    CrashLogsScanWorker is a QObject-based worker class responsible for scanning crash logs and emitting signals based on the scan's outcome.
+    Handles crash log scanning tasks with asynchronous mechanisms and emits relevant signals
+    for feedback.
 
-    Signals:
-        finished: Emitted when the scan completes (success or failure)
-        notify_sound_signal: Emitted when scan completes successfully
-        error_sound_signal: Emitted when an error occurs (for audio notification)
-        error_occurred: Emitted with error details (title, message, details) for dialog display
-        custom_sound_signal: Emitted with a path to a custom sound to play
+    This class is responsible for executing crash log scans, managing related notifications, and
+    handling errors. It utilizes PyQt's signal-slot system to communicate the success or failure
+    of the scanning process and ensures signals are emitted appropriately for user or application
+    response. The scanning is performed asynchronously to avoid blocking the main thread.
+
+    Attributes:
+        finished (Signal): Signal emitted when the scan process finishes, irrespective of its success
+            or failure.
+        notify_sound_signal (Signal): Signal emitted to notify that a success notification sound
+            should be played.
+        error_sound_signal (Signal): Signal emitted to notify that an error notification sound
+            should be played.
+        error_occurred (Signal): Signal emitted when an error occurs in the scanning process. It
+            includes title, message, and details as arguments.
+        custom_sound_signal (Signal): Signal emitted when a custom notification sound needs
+            to be played.
     """
 
     finished: Signal = Signal()
@@ -40,16 +51,14 @@ class CrashLogsScanWorker(QObject):
     @Slot()
     def run(self) -> None:
         """
-        Triggers a scan process, determines appropriate audio notification based on the outcome,
-        and emits corresponding signals. Upon completion, it ensures the finished signal is emitted
-        regardless of the outcome.
-
-        Slot:
-            Decorates the method to indicate that it is callable as a slot in the context
-            of PyQt/PySide signal-slot mechanism.
+        Executes the main logic of the function, performing a scan for crash logs
+        and playing a success notification upon completion. In case of an error
+        during the scan, the error is handled appropriately. Once the process
+        is complete, emits a signal to indicate the operation is finished.
 
         Raises:
-            Exception: Propagates any raised exception if audio notifications are disabled.
+            Exception: Propagates any unexpected exception encountered during
+            the execution of the function.
         """
         # noinspection PyShadowingNames
         try:
@@ -63,13 +72,16 @@ class CrashLogsScanWorker(QObject):
     @staticmethod
     def _perform_crash_logs_scan() -> None:
         """
-        Performs a crash logs scan with pure async event loop.
-
-        Runs the scan in a clean asyncio event loop without Qt overhead.
-        Qt automatically handles cross-thread signals via queued connections.
+        Performs a scan for crash logs using an asynchronous execution model. This method is primarily
+        responsible for initializing a scanner, setting up an asynchronous event loop, warming up resources,
+        executing the scan, and providing timing metrics for performance evaluation. It ensures no Qt event
+        processing overhead during execution.
 
         Raises:
-            Exception: Propagates exceptions from the async tasks if they occur.
+            None
+
+        Returns:
+            None
         """
         import time
         from datetime import datetime
@@ -97,7 +109,15 @@ class CrashLogsScanWorker(QObject):
         asyncio.set_event_loop(loop)
 
         async def run_scan() -> None:
-            """Run scan with pure async - no Qt overhead."""
+            """
+            Executes a scan process asynchronously, ensuring necessary resources are
+            initialized prior to the scan and logging the performance metrics for
+            both the resource warm-up and the actual scan.
+
+            Raises:
+                Any exceptions raised during the warm-up or scanning process
+                will propagate to the caller.
+            """
             # Warm up resources first
             warmup_start = time.perf_counter()
             logger.debug("Warming up scan resources...")
@@ -130,21 +150,31 @@ class CrashLogsScanWorker(QObject):
             asyncio.set_event_loop(None)
 
     def _play_success_notification(self) -> None:
-        """Plays a notification sound for successful scan."""
+        """
+        Plays the success notification sound by emitting the notify_sound_signal.
+
+        This function is used to trigger a success notification sound in the
+        application by emitting the associated signal.
+
+        Raises:
+            No exceptions are explicitly raised by this method.
+        """
         self.notify_sound_signal.emit()  # type: ignore
 
     def _handle_scan_error(self, error: Exception) -> None:
         """
-        Handles errors during the scan process based on user settings.
-
-        Emits error details for dialog display and optionally plays error sound.
-        Always emits error_occurred signal for user feedback.
+        Handles errors that occur during the crash log scanning process. This includes
+        logging the error, preparing detailed error information, and managing user
+        notifications such as dialog messages or audio signals.
 
         Args:
-            error: The exception that occurred during scanning
+            error (Exception): The exception instance that triggered the error
+                during the scan. This will be used to log the error message, prepare
+                dialog details, and re-raise the exception if necessary.
 
         Raises:
-            Exception: Re-raises the exception if audio notifications are disabled
+            Exception: Re-raises the original error if audio notifications are
+                disabled in user settings.
         """
         logger.error(f"Crash logs scan failed: {error!s}")
 
@@ -167,17 +197,25 @@ class CrashLogsScanWorker(QObject):
 # noinspection PyBroadException
 class GameFilesScanWorker(QObject):
     """
-    A worker class responsible for scanning game files in a separate thread.
+    Worker class responsible for scanning game files and providing notifications.
 
-    This class processes game results and provides audio notifications based on
-    the outcome of the scanning process.
+    This class handles the game files scanning process, processes the results,
+    and triggers appropriate signals for status updates and audio notifications.
+    Its primary purpose is to manage the workflow for scanning game files,
+    notifying success or errors, and emitting associated signals for user
+    interfaces or other subscribers.
 
-    Signals:
-        scan_finished: Emitted when the scanning process completes (success or failure)
-        play_success_sound: Emitted when processing completes successfully
-        play_error_sound: Emitted when an error occurs (for audio notification)
-        error_occurred: Emitted with error details (title, message, details) for dialog display
-        play_custom_sound: Emitted with a path to a custom sound to play
+    Attributes:
+        scan_finished (Signal): Signal emitted when the scanning process is
+            completed, regardless of success or failure.
+        play_success_sound (Signal): Signal emitted to play a success notification
+            sound.
+        play_error_sound (Signal): Signal emitted to play an error notification
+            sound.
+        error_occurred (Signal): Signal emitted when an error occurs, providing
+            error details (title, message, and traceback details).
+        play_custom_sound (Signal): Signal emitted to play a custom sound, where
+            the string parameter specifies the sound file or identifier.
     """
 
     scan_finished: Signal = Signal()
@@ -189,11 +227,16 @@ class GameFilesScanWorker(QObject):
     @Slot()
     def run(self) -> None:
         """
-        Executes the game files scanning process.
+        Executes the main process for running and finalizing game result processing.
 
-        Processes game result data and handles appropriate audio notifications
-        based on the outcome and user settings. Always emits the scan_finished
-        signal when complete.
+        Executes the processing of game results and notifies about the success upon
+        completion. Handles any exceptions that occur during the execution, ensuring
+        that errors are properly managed. Always emits a signal indicating the scan
+        has finished, regardless of success or error.
+
+        Raises:
+            Exception: Propagates any unhandled exception that occurs during the
+                processing of the game results.
         """
         try:
             self._process_game_results()
@@ -205,25 +248,41 @@ class GameFilesScanWorker(QObject):
 
     @staticmethod
     def _process_game_results() -> None:
-        """Process and write the combined game results data."""
+        """
+        Processes game results and combines them into a final output.
+
+        Handles the aggregation and combination of game results to produce a consolidated
+        output or final result. This method does not return any value.
+
+        Returns:
+            None: This method does not return a value.
+        """
         write_combined_results()
 
     def _notify_success(self) -> None:
-        """Play success notification sound."""
+        """
+        Notifies success by emitting a signal to play a success sound.
+
+        This method is used to indicate the successful completion of an
+        operation by emitting the `play_success_sound` signal.
+
+        Raises:
+            TypeError: If signal type is incompatible during runtime.
+        """
         self.play_success_sound.emit()  # type: ignore
 
     def _handle_error(self, error: Exception) -> None:
         """
-        Handle exceptions during game files scanning.
+        Handles errors that occur during the game files scanning process.
 
-        Emits error details for dialog display and optionally plays error sound.
-        Always emits error_occurred signal for user feedback.
+        This method logs the error details, prepares them for display in a dialog,
+        emits the error information, and optionally handles audio notifications
+        based on user settings. In the absence of audio notifications, the
+        error is raised.
 
         Args:
-            error: The exception that occurred during processing
-
-        Raises:
-            Exception: Re-raises the exception if audio notifications are disabled
+            error (Exception): The exception that occurred during the game files
+                scanning process.
         """
         logger.error(f"Game files scan failed: {error!s}")
 
@@ -244,9 +303,22 @@ class GameFilesScanWorker(QObject):
 
 class UpdateCheckWorker(QObject):
     """
-    Worker class to handle update checking in a separate thread using asyncio.
+    Worker class for checking software updates.
 
-    This replaces the direct asyncio.run() calls that block the Qt event loop.
+    This class enables background checking of software updates, utilizing
+    asynchronous operations. It is specifically designed to work as a part
+    of a threaded environment. Update statuses, errors, and completion
+    states are communicated via PyQt signals, allowing seamless integration
+    with UI components.
+
+    Attributes:
+        finished (Signal): Signal emitted when the worker thread concludes
+            its execution.
+        updateAvailable (Signal): Signal emitted indicating whether an
+            update is available. Emits a boolean value where True indicates
+            an update is available.
+        error (Signal): Signal emitted when an error occurs during the
+            update check. Emits a string containing the error message.
     """
 
     # Signals
@@ -256,10 +328,10 @@ class UpdateCheckWorker(QObject):
 
     def __init__(self, explicit: bool = False) -> None:
         """
-        Initialize the update check worker.
+        Initializes the object with the option to specify explicit behavior.
 
         Args:
-            explicit: Whether this is an explicit user-initiated check
+            explicit (bool): Determines whether the behavior should be explicit. Defaults to False.
         """
         super().__init__()
         self.explicit = explicit
@@ -267,8 +339,23 @@ class UpdateCheckWorker(QObject):
     @Slot()
     def run(self) -> None:
         """
-        Main entry point for the worker thread.
-        Uses AsyncBridge for efficient async operations in worker thread.
+        Executes the process of checking for software updates, handling various
+        errors and states.
+
+        This method checks whether the software update process should proceed
+        based on the current stage of the application (e.g., pre-release).
+        It uses the `AsyncBridge` class for performing asynchronous tasks
+        related to checking updates and emits relevant signals based on the
+        outcome of the process.
+
+        Raises:
+            UpdateCheckError: If a specific error occurs during the update check.
+            RuntimeError: If a runtime-related error occurs.
+            OSError: If an operating system-related error occurs.
+            ValueError: If a value-related error occurs.
+
+        Returns:
+            None
         """
         try:
             from ClassicLib.AsyncBridge import AsyncBridge
@@ -295,9 +382,12 @@ class UpdateCheckWorker(QObject):
 
     async def _async_check(self) -> bool:
         """
-        Perform the actual async update check.
+        Checks asynchronously whether the current version is the latest.
+
+        This method uses an external utility to determine if the application is up-to-date.
+        It runs the check in a quiet mode and can optionally consider GUI-specific requests.
 
         Returns:
-            bool: True if up to date, False if update available
+            bool: A boolean indicating whether the current version is the latest.
         """
         return await is_latest_version(quiet=True, gui_request=self.explicit)

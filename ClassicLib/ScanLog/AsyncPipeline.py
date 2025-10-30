@@ -29,18 +29,19 @@ __all__ = [
 
 def __getattr__(name: str):
     """
-    Gets an attribute of the module. Handles deprecated attribute imports and raises an
-    error if the attribute does not exist.
+    Gets the attribute from the module with deprecation warning for specific cases.
+
+    This function is invoked when an attribute lookup has not found the attribute in the usual places
+    (e.g., in an instance attribute or a class attribute).
 
     Args:
-        name (str): The name of the attribute to retrieve.
+        name (str): The name of the attribute being accessed.
 
     Returns:
-        object: The attribute with the requested name if it is found and not deprecated.
+        Any: The value of the attribute if found.
 
     Raises:
-        AttributeError: If the attribute with the specified name does not exist in the
-            module.
+        AttributeError: If the attribute does not exist in the module.
     """
     if name in __all__:
         warnings.warn(

@@ -37,36 +37,72 @@ class ScanResult:
     error_messages: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        """Initialize computed fields after dataclass creation."""
+        """
+        Calculates and assigns a default scan time if not explicitly provided during initialization.
+
+        This method is automatically invoked after the object is initialized. It checks whether a
+        scan time has been set. If the scan time is zero, it determines a default value by retrieving
+        the scan duration from the associated statistics.
+
+        Raises:
+            AttributeError: If `self.stats` does not have a `get_scan_duration` method, resulting
+            in the inability to calculate the scan time.
+
+        Returns:
+            None
+        """
         # Calculate scan time if not provided
         if self.scan_time == 0.0:
             self.scan_time = self.stats.get_scan_duration()
 
     def add_failed_log(self, log_name: str) -> None:
-        """Add a failed log to the results."""
+        """
+        Adds a log entry to the list of failed logs if it is not already present and
+        updates the count of failed logs.
+
+        Args:
+            log_name (str): The name of the log to be added to the failed logs list.
+
+        Returns:
+            None
+        """
         if log_name not in self.failed_logs:
             self.failed_logs.append(log_name)
         self.stats.increment_failed()
 
     def add_processed_file(self, file_path: Path) -> None:
-        """Add a successfully processed file to the results."""
+        """
+        Adds a file to the list of processed files if it has not already been processed.
+
+        This method checks if the given file path is not already in the list of
+        processed files. If it is not present, the file path is added to the list.
+
+        Args:
+            file_path (Path): The path of the file to be added to the processed files list.
+        """
         if file_path not in self.processed_files:
             self.processed_files.append(file_path)
 
     def add_error_message(self, message: str) -> None:
-        """Add an error message to the results."""
+        """
+        Adds an error message to the list of error messages if it does not already exist.
+
+        Args:
+            message (str): The error message to add.
+        """
         if message not in self.error_messages:
             self.error_messages.append(message)
 
     def is_successful(self) -> bool:
         """
-        Determines if the operation is considered successful based on the scanning and failure statistics.
+        Determines whether the given operation was successful based on statistical thresholds.
 
-        The method evaluates whether the scanning operation qualifies as successful by checking if
-        the number of scanned items is greater than zero and the failure rate is less than 50%.
+        The method evaluates success based on the number of scanned and failed files in
+        relation to the total number of files. The operation is considered successful
+        if at least one file has been scanned, and the failure rate is less than 50%.
 
         Returns:
-            bool: True if the operation is successful per the defined criteria, False otherwise.
+            bool: True if the operation meets the success criteria, False otherwise.
         """
         return (
             self.stats.scanned > 0 and self.stats.failed < self.stats.total_files * 0.5  # Less than 50% failure rate

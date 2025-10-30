@@ -29,6 +29,7 @@ performance improvement for the most common operation - parsing crash logs.
 """
 
 import logging
+from typing import Any
 
 import regex as re
 
@@ -269,7 +270,7 @@ def is_rust_parser_available() -> bool:
     return _rust_available
 
 
-def get_parser_stats() -> dict[str, any]:
+def get_parser_stats() -> dict[str, Any]:
     """Get statistics about the parser performance and caches.
 
     Returns:

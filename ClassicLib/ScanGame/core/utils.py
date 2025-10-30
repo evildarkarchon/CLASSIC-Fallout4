@@ -1,4 +1,13 @@
-"""Utilities and constants for ScanGame operations."""
+"""System resource-based concurrency utility.
+
+This module provides functionality to derive optimal concurrency limits
+based on system resources such as CPU and memory availability. Additionally,
+it offers asynchronous file handling utilities and constants for managing
+concurrent limits.
+
+The module handles dependencies gracefully where certain utilities, such as
+`psutil` or async encoding utilities, may not be available at runtime.
+"""
 
 import os
 from pathlib import Path
@@ -23,7 +32,21 @@ except ImportError:
 
 
 def get_optimal_limits() -> dict[str, int]:
-    """Calculate optimal concurrency limits based on system resources."""
+    """
+    Determines optimal limits for various operations based on system resources.
+
+    This function calculates optimal limits for subprocesses, file operations, log
+    reads, and DDS (data distribution service) reads by considering the available
+    CPU count and system memory. If the `psutil` module is available, the memory
+    factor is dynamically adjusted based on the total memory to improve accuracy.
+    The results are capped at predefined maximums to ensure stability across
+    different environments.
+
+    Returns:
+        dict[str, int]: A dictionary containing optimal limits for subprocesses,
+        file operations (`file_ops`), log reads (`log_reads`), and DDS reads
+        (`dds_reads`).
+    """
     cpu_count = os.cpu_count() or 4
 
     # Try to get memory if psutil is available

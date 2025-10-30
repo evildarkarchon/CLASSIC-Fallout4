@@ -1,4 +1,23 @@
-"""Core AsyncYamlSettings implementation."""
+"""
+Core functionality for managing asynchronous YAML settings, featuring caching
+and validation mechanisms.
+
+This module provides the `AsyncYamlSettingsCore` class designed for managing
+YAML-based settings in asynchronous Python applications. It supports operations
+such as reading, writing, batch processing, cache management, file validation,
+and backups.
+
+Imported classes and utility functions:
+- YamlCache: Handles caching of YAML settings.
+- YamlFileOperations: Provides methods for I/O operations on YAML files.
+- validate_setting_value: Validates the value of a specific setting.
+
+Dependencies:
+- asyncio: Enables asynchronous operations.
+- starmap: Used for batch processing of settings.
+- pathlib.Path: Handles file and directory paths.
+- typing: Provides type hints for better static type checking.
+"""
 
 import asyncio
 from itertools import starmap
@@ -14,10 +33,31 @@ from .validators import validate_setting_value
 
 
 class AsyncYamlSettingsCore:
-    """Core async YAML settings manager with caching and validation."""
+    """
+    Manage asynchronous operations for YAML settings and files.
+
+    The `AsyncYamlSettingsCore` class provides a set of methods to asynchronously
+    read, write, cache, and manage settings stored in YAML files. It supports batch
+    operations and file validation, along with capabilities for backing up files and
+    ensuring file existence. Caching mechanisms are implemented to optimize performance
+    by avoiding redundant file access. This class offers tools for thread-safe access
+    to YAML files through asynchronous locks.
+
+    Attributes:
+        settings_dir (Path): The directory where YAML settings are stored.
+        cache (YamlCache): Cache manager for YAML settings.
+        file_ops (YamlFileOperations): Helper for file operations.
+    """
 
     def __init__(self, settings_dir: Path | None = None):
-        """Initialize the async YAML settings manager."""
+        """
+        Initializes an instance of the class with specified settings directory, cache, and file
+        operations.
+
+        Args:
+            settings_dir (Path | None): The directory where settings files are stored. Defaults
+                to "CLASSIC Data" if not provided.
+        """
         self.settings_dir = Path(settings_dir) if settings_dir else Path("CLASSIC Data")
         self.cache = YamlCache()
         self.file_ops = YamlFileOperations()
@@ -25,7 +65,21 @@ class AsyncYamlSettingsCore:
         self._file_locks: dict[Path, asyncio.Lock] = {}
 
     def _get_file_lock(self, file_path: Path) -> asyncio.Lock:
-        """Get or create a lock for a specific file."""
+        """
+        Generates or retrieves an asyncio lock for a specified file path to ensure
+        synchronous access to file-specific operations.
+
+        This method maintains a dictionary of locks keyed by file paths. If a lock
+        for the given file path already exists, it retrieves the existing lock;
+        otherwise, it creates a new lock and stores it for future use.
+
+        Args:
+            file_path (Path): The path of the file for which the lock is required.
+
+        Returns:
+            asyncio.Lock: An asyncio lock instance associated with the specified
+                file path.
+        """
         if file_path not in self._file_locks:
             self._file_locks[file_path] = asyncio.Lock()
         return self._file_locks[file_path]
@@ -38,20 +92,25 @@ class AsyncYamlSettingsCore:
         value: T | None = None,
     ) -> T | None:
         """
-        Read or write a setting in a YAML file asynchronously.
+        Handles asynchronous retrieval and update of settings stored in YAML files. This
+        method supports caching for read operations and allows type validation of retrieved
+        values. When invoked for reading, it fetches the specified setting either from a
+        memory cache or from the YAML file. For write operations, it updates the specified
+        setting and persists the changes to the relevant file while also updating the cache.
 
         Args:
-            variable_type: The expected type of the value
-            yaml_store: Which YAML store to use
-            key: The key path in dot notation (e.g., "CLASSIC_Settings.MaxOutputLines")
-            value: If provided, write this value; otherwise read
+            variable_type (type[T]): Expected type of the setting value. Used for
+                type validation when retrieving settings.
+            yaml_store (YAML): YAML configuration or storage reference. Determines the
+                target YAML file for the operation.
+            key (str): Dot-separated key path to the specific setting within the YAML structure.
+            value (T | None, optional): New value to set for the specified key. If None,
+                the method performs a read operation. Defaults to None.
 
         Returns:
-            The value from the YAML file, or None if not found
-
-        Raises:
-            yaml.YAMLError: If the YAML file is invalid
-            OSError: If the file cannot be accessed
+            T | None: Returns the retrieved value if performing a read operation and the key
+                exists. For write operations, returns the value that was written. If the
+                key does not exist during a read, returns None.
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -108,13 +167,24 @@ class AsyncYamlSettingsCore:
         self, requests: list[tuple[type, YAML, str]]
     ) -> list[Any]:
         """
-        Get multiple settings in a batch operation.
+        Executes asynchronous batched settings retrieval based on provided requests.
+
+        This function receives a list of requests, where each request is a tuple
+        consisting of a type, a YAML object, and a string. It processes these
+        requests asynchronously using a predefined method (`async_yaml_settings`),
+        and collects the results as a list.
 
         Args:
-            requests: List of tuples (variable_type, yaml_store, key)
+            requests (list[tuple[type, YAML, str]]): A list of tuples representing
+                the batched requests. Each tuple contains:
+                    - A type object that specifies a type to handle.
+                    - A YAML object to be processed.
+                    - A string that contains additional information for
+                      processing the configuration.
 
         Returns:
-            List of values corresponding to each request
+            list[Any]: A list containing the results of processing each request
+                in the input list.
         """
         tasks = list(starmap(self.async_yaml_settings, requests))
         return await asyncio.gather(*tasks)
@@ -123,19 +193,35 @@ class AsyncYamlSettingsCore:
         self, updates: list[tuple[type, YAML, str, Any]]
     ) -> list[Any]:
         """
-        Set multiple settings in a batch operation.
+        Updates the settings of multiple YAML configuration files asynchronously.
+
+        This method processes a batch of configuration updates by invoking
+        `self.async_yaml_settings` for each set of parameters. The updates are
+        executed concurrently, and their results are returned as a list.
 
         Args:
-            updates: List of tuples (variable_type, yaml_store, key, value)
+            updates (list[tuple[type, YAML, str, Any]]): A list of tuples where each
+                tuple contains the type of the configuration, a YAML object, a key
+                within the configuration, and the new value to assign.
 
         Returns:
-            List of values that were set
+            list[Any]: A list of results from the `self.async_yaml_settings` calls.
+                Each result corresponds to the outcome of applying a configuration
+                update.
         """
         tasks = list(starmap(self.async_yaml_settings, updates))
         return await asyncio.gather(*tasks)
 
     async def clear_cache(self, yaml_store: YAML | None = None) -> None:
-        """Clear the cache for a specific store or all stores."""
+        """
+        Clears cached settings, paths, and other relevant data either for a specific YAML
+        store or entirely. This method is useful for refreshing cached data when there are
+        changes in the configuration or to reset all caches.
+
+        Args:
+            yaml_store (YAML | None): The YAML store whose related cache entries need
+                to be cleared. If None, all cached entries are cleared.
+        """
         if yaml_store:
             # Clear entries for specific store from settings cache
             keys_to_remove = [k for k in self.cache.settings_cache if k[1] == yaml_store]
@@ -149,13 +235,21 @@ class AsyncYamlSettingsCore:
 
     async def reload_settings(self, yaml_store: YAML) -> dict[str, Any]:
         """
-        Reload settings from disk, bypassing cache.
+        Reloads configuration settings from a YAML file source.
+
+        This method retrieves the file path associated with a given YAML store,
+        removes any cached data for that file if it exists, and reloads the data
+        from the file on disk. The operation is thread-safe within an asynchronous
+        context using file-specific locks.
 
         Args:
-            yaml_store: Which YAML store to reload
+            yaml_store (YAML): The YAML data store object to fetch and reload
+                configuration settings from.
 
         Returns:
-            The reloaded settings dictionary
+            dict[str, Any]: A dictionary containing the reloaded settings from the
+                YAML file.
+
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -169,7 +263,15 @@ class AsyncYamlSettingsCore:
             return await self.file_ops.load_yaml_file(file_path)
 
     async def ensure_file_exists(self, yaml_store: YAML) -> None:
-        """Ensure that a YAML file exists, creating it if necessary."""
+        """
+        Ensures that the file associated with the given YAML store exists. This method
+        acquires an asynchronous lock for the file path to prevent concurrent access
+        issues during file creation.
+
+        Args:
+            yaml_store (YAML): The YAML store object for which the corresponding file's
+                existence is to be ensured.
+        """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
 
@@ -178,14 +280,19 @@ class AsyncYamlSettingsCore:
 
     async def backup_file(self, yaml_store: YAML, backup_suffix: str = ".bak") -> Path:
         """
-        Create a backup of a YAML file.
+        Backs up a YAML file by creating a duplicate with a specified suffix.
+
+        The method acquires a file lock to ensure the file's safety during the
+        backup process. The backup file will have the same name as the original
+        file but with the specified suffix appended. The operation is performed
+        asynchronously.
 
         Args:
-            yaml_store: Which YAML store to backup
-            backup_suffix: Suffix to append to the backup file
+            yaml_store: YAML store object to identify the target file for backup.
+            backup_suffix: Suffix to append to the backup file. Default is ".bak".
 
         Returns:
-            Path to the backup file
+            Path: The file path of the created backup file.
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -195,13 +302,19 @@ class AsyncYamlSettingsCore:
 
     async def validate_file(self, yaml_store: YAML) -> bool:
         """
-        Validate that a YAML file can be loaded without errors.
+        Validates the specified YAML file for its existence and loadability.
+
+        This function checks if the YAML file associated with the given YAML store
+        exists at the designated path and can be successfully loaded. If the
+        file is accessible and loadable, it returns True. Otherwise, it returns False.
 
         Args:
-            yaml_store: Which YAML store to validate
+            yaml_store: YAML
+                YAML store instance for which the file validation is to be performed.
 
         Returns:
-            True if the file is valid, False otherwise
+            bool
+                True if the file exists and is successfully loadable, False otherwise.
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -215,13 +328,17 @@ class AsyncYamlSettingsCore:
 
     async def get_all_settings(self, yaml_store: YAML) -> dict[str, Any]:
         """
-        Get all settings from a YAML store.
+        Fetches all settings from a YAML store asynchronously.
+
+        This method retrieves all settings from a specified YAML store by obtaining
+        the file's path, acquiring a lock for thread-safe access, and then loading
+        the YAML file to return its content as a dictionary.
 
         Args:
-            yaml_store: Which YAML store to read
+            yaml_store (YAML): The YAML store object referencing the target store.
 
         Returns:
-            Dictionary of all settings
+            dict[str, Any]: A dictionary containing all settings from the YAML store.
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -233,11 +350,18 @@ class AsyncYamlSettingsCore:
         self, yaml_store: YAML, updates: dict[str, Any]
     ) -> None:
         """
-        Update multiple settings in a single file operation.
+        Updates the settings in a YAML configuration file.
+
+        This asynchronous function modifies a YAML configuration file by applying the
+        provided updates. It ensures that changes are written safely to the file
+        by acquiring a lock, and also updates an internal settings cache.
 
         Args:
-            yaml_store: Which YAML store to update
-            updates: Dictionary of key-value pairs to update
+            yaml_store (YAML): The YAML store object representing the configuration
+                file.
+            updates (dict[str, Any]): A dictionary containing updates to apply to the
+                configuration file. Each key is a dot-separated path to a setting,
+                and the corresponding value is the new value to assign.
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -274,10 +398,17 @@ _core_lock = asyncio.Lock()
 
 async def get_async_yaml_core() -> AsyncYamlSettingsCore:
     """
-    Get or create the global AsyncYamlSettingsCore instance.
+    Asynchronously retrieves an instance of `AsyncYamlSettingsCore`.
+
+    This function initializes and provides a global instance of the
+    `AsyncYamlSettingsCore` class. It ensures thread-safety by using an
+    asynchronous lock to prevent multiple concurrent initializations. The
+    singleton pattern is implemented to create only one instance of
+    `AsyncYamlSettingsCore`, which will be reused on subsequent calls.
 
     Returns:
-        The global instance
+        AsyncYamlSettingsCore: The global instance of the asynchronous YAML
+        settings core.
     """
     global _async_yaml_core
 
@@ -298,16 +429,19 @@ async def yaml_settings_async(
     default: T | None = None,
 ) -> T | None:
     """
-    Async convenience function to get a YAML setting.
+    Asynchronously retrieves a setting from a YAML store using a specified key path. If the requested
+    setting does not exist in the store, a default value is returned.
 
     Args:
-        return_type: Expected return type
-        yaml_store: YAML store to read from
-        key_path: Dot-separated path to the setting
-        default: Default value if not found
+        return_type (type[T]): The expected type of the returned setting value.
+        yaml_store (YAML): The YAML store from which the setting will be retrieved.
+        key_path (str): The key path used to locate the setting within the YAML store.
+        default (T | None): The default value to return if the specified setting is not found
+            in the YAML store.
 
     Returns:
-        Setting value or default
+        T | None: The value retrieved from the YAML store corresponding to the given key path,
+        or the specified default value if the key does not exist.
     """
     core = await get_async_yaml_core()
     result = await core.async_yaml_settings(return_type, yaml_store, key_path)
@@ -320,15 +454,19 @@ async def classic_settings_async(
     default: T | None = None,
 ) -> T | None:
     """
-    Async convenience function to get a CLASSIC setting.
+    Asynchronously retrieves settings using the specified key path by combining it
+    with a predefined prefix ("CLASSIC_Settings.") and delegates the fetching to
+    `yaml_settings_async`.
 
     Args:
-        return_type: Expected return type
-        key_path: Dot-separated path to the setting (without CLASSIC_Settings prefix)
-        default: Default value if not found
+        return_type (type[T]): The expected type of the returned value.
+        key_path (str): The key path used to fetch the setting.
+        default (T | None, optional): The default value returned if the key is not
+            found. Defaults to None.
 
     Returns:
-        Setting value or default
+        T | None: The fetched value converted to the specified type, or the default
+            value if the key is not found.
     """
     # Prepend CLASSIC_Settings to the key path
     full_path = f"CLASSIC_Settings.{key_path}"

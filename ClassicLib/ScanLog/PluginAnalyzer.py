@@ -139,10 +139,23 @@ class PluginAnalyzer:
         self, segment_plugins: list[str], game_version: Version | None = None, version_current: Version | None = None
     ) -> tuple[bool, bool]:
         """
-        Check for plugin limit markers in the segment plugins.
+        Checks if the plugin limit is triggered or if the limit check is disabled based on the provided
+        segment_plugins and game version.
 
-        This is a separate concern from parsing the load order itself.
-        Returns (plugin_limit_triggered, limit_check_disabled)
+        This function evaluates specific conditions depending on the game version and version characteristics,
+        and checks for a plugin limit marker within the provided list of segment_plugins. Depending on these
+        conditions, it determines whether the plugin limit has been triggered or if the limit check is
+        disabled.
+
+        Args:
+            segment_plugins: A list of strings, where each string represents a plugin entry. These may
+                include specific markers used for checks.
+            game_version: The Version object representing the game version, or None if not provided.
+            version_current: The Version object representing the current version, or None if not provided.
+
+        Returns:
+            tuple[bool, bool]: A tuple where the first boolean indicates whether the plugin limit is triggered
+                and the second boolean indicates whether the limit check is disabled.
         """
         if not game_version or not version_current:
             return False, False

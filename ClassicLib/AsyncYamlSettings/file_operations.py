@@ -1,4 +1,9 @@
-"""File operations for AsyncYamlSettings."""
+"""
+Manage YAML file operations, providing functionalities for reading, writing,
+and parsing YAML files. It supports optional Rust acceleration for performance
+on static database files and uses Python-based implementations for preserving
+comments in user-editable files.
+"""
 
 from io import StringIO
 from pathlib import Path
@@ -16,7 +21,19 @@ from ClassicLib.ResourceLoader import ResourceLoader
 # TODO: Make Static YAML Stores read-only in the future
 # Static stores should not be written to at runtime.
 class YamlFileOperations:
-    """Handles YAML file I/O operations."""
+    """
+    Handles operations for YAML files including parsing, dumping, and caching.
+
+    This class provides methods to work with YAML files, leveraging both Python
+    and Rust capabilities for enhanced performance and specific feature handling.
+    Static read-only files utilize Rust for speed, while user-editable files use
+    Python to preserve comments. File-level caching is also implemented for
+    performance optimization.
+
+    Attributes:
+        STATIC_YAML_STORES (set[YAML]): A collection of static database files
+            that can use Rust acceleration for performance enhancement.
+    """
 
     # Static YAML stores that don't change based on game selection
     # These are read-only database files that ship with the application
@@ -26,7 +43,16 @@ class YamlFileOperations:
     }
 
     def __init__(self, io_core: FileIOCore | None = None) -> None:
-        """Initialize with FileIOCore instance."""
+        """
+        Initializes a YamlFileOperations object. Responsible for managing YAML file
+        operations using either Python or Rust-based implementations, depending on
+        availability. The Rust implementation is used for static database files, while
+        Python is preferred for user-editable files to preserve comments.
+
+        Args:
+            io_core (FileIOCore | None): An optional FileIOCore instance for handling
+                file I/O operations. If not provided, a new FileIOCore instance is created.
+        """
         self.io_core = io_core or FileIOCore()
         self._file_cache: dict[str, dict[str, Any]] = {}
 
@@ -43,16 +69,18 @@ class YamlFileOperations:
 
     def _should_use_rust_for_file(self, file_path: Path) -> bool:
         """
-        Determine if a file should use Rust acceleration.
+        Determines whether Rust should be used for processing a given file path.
 
-        Static/read-only database files (STATIC_YAML_STORES) can use Rust for maximum performance.
-        User-editable files must use Python to preserve comments.
+        This method evaluates a given file path to determine whether it is a static
+        YAML store or a user-editable file. Static YAML stores are read-only and do
+        not require comment preservation; in such cases, Rust should be used. For
+        user-editable files, Python is preferred to ensure comment preservation.
 
         Args:
-            file_path: Path to the YAML file
+            file_path (Path): The file path to check.
 
         Returns:
-            True if Rust acceleration should be used, False otherwise
+            bool: True if Rust should be used for the given file path, False otherwise.
         """
         # Check if this file path corresponds to a static YAML store
         # Static stores are read-only and don't need comment preservation
@@ -78,7 +106,22 @@ class YamlFileOperations:
         return False
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
-        """Get the file path for a specific YAML store."""
+        """
+        Determines the file path for a given YAML store type.
+
+        This method dynamically computes and returns a relevant file path based on the specified
+        YAML store. The function accounts for different scenarios, including development and
+        installed package setups, and supports multiple types of YAML configurations.
+
+        Args:
+            yaml_store (YAML): The type of YAML store for which the path is required.
+
+        Returns:
+            Path: The computed file path corresponding to the given YAML store.
+
+        Raises:
+            ValueError: If the provided `yaml_store` does not match any known type.
+        """
         # Use ResourceLoader to get the data directory
         # This handles both development and installed package scenarios
         base_path: Path = ResourceLoader.get_data_directory()
@@ -116,17 +159,19 @@ class YamlFileOperations:
 
     async def parse_yaml_content(self, content: str, preserve_comments: bool = True) -> dict[str, Any]:
         """
-        Parse YAML content from string.
-
-        Uses Python (ruamel.yaml) when preserve_comments=True to maintain comment information.
-        Can use Rust acceleration when preserve_comments=False for read-only files.
+        Parses a YAML content string and returns its equivalent dictionary representation. Optionally, it can preserve
+        comments using the Python-based parser if specified, or leverage an accelerated Rust implementation if available
+        and comments preservation is not required.
 
         Args:
-            content: YAML string content
-            preserve_comments: Whether to preserve comments (use Python) or allow Rust acceleration
+            content (str): The YAML content as a string to be parsed.
+            preserve_comments (bool, optional): A flag indicating whether to preserve comments. Defaults to True.
 
         Returns:
-            Parsed YAML data (ruamel.yaml.CommentedMap if preserve_comments=True)
+            dict: A dictionary representation of the parsed YAML content.
+
+        Raises:
+            ruamel.yaml.YAMLError: If YAML parsing fails with the Python parser.
         """
         # Use Rust acceleration for read-only files
         if not preserve_comments and self.rust_yaml:
@@ -151,16 +196,23 @@ class YamlFileOperations:
 
     async def dump_yaml_content(self, data: dict[str, Any]) -> str:
         """
-        Convert data to YAML string.
+        Writes a dictionary as a YAML formatted string while preserving comments from
+        the input data. The function applies a specific YAML formatting style
+        including preserving quotes, setting a maximum line width, and explicit
+        indentation for mappings and sequences.
 
-        Always uses Python (ruamel.yaml) to preserve comments from CommentedMap objects.
-        If data is a ruamel.yaml.CommentedMap (from parse_yaml_content), comments will be preserved.
+        If the operation fails, an error is logged, and the exception is re-raised.
 
         Args:
-            data: Data to serialize (preferably a ruamel.yaml.CommentedMap)
+            data (dict[str, Any]): A dictionary representing the structured data
+                to be converted into a YAML formatted string.
 
         Returns:
-            YAML string with preserved comments
+            str: A string containing the YAML representation of the input `data`.
+
+        Raises:
+            Exception: Propagates exceptions encountered during the YAML dumping
+                process.
         """
         # Always use Python implementation to preserve comments from CommentedMap
         yaml = ruamel.yaml.YAML()
@@ -178,17 +230,26 @@ class YamlFileOperations:
 
     async def load_yaml_file(self, file_path: Path, use_cache: bool = True) -> dict[str, Any]:
         """
-        Load and parse a YAML file with file-level caching.
+        Asynchronously loads a YAML file and returns its contents as a dictionary.
 
-        Uses Rust acceleration for static/read-only files (Main, Game databases).
-        Uses Python (ruamel.yaml) for user-editable files to preserve comments.
+        The method supports optional caching for faster subsequent access of the same file and
+        can use Rust-based acceleration for reading static (read-only) files when applicable. If
+        Rust acceleration fails or is not applicable, the method falls back to a Python-based
+        implementation. YAML comments can be preserved when using the Python implementation,
+        particularly for user-editable files.
 
         Args:
-            file_path: Path to YAML file
-            use_cache: Whether to use file-level caching (default True)
+            file_path (Path): The path to the YAML file to load.
+            use_cache (bool): A flag indicating whether to use caching for the YAML file.
+                Defaults to True.
 
         Returns:
-            Parsed YAML data
+            dict[str, Any]: The parsed YAML content as a dictionary. If the file is empty or
+            not found, returns an empty dictionary.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            Exception: If any error occurs during file reading or parsing.
         """
         # Check cache first if enabled
         file_key = str(file_path)
@@ -246,17 +307,16 @@ class YamlFileOperations:
 
     async def save_yaml_file(self, file_path: Path, data: dict[str, Any]) -> bool:
         """
-        Save data to a YAML file.
-
-        Note: Always uses Python (ruamel.yaml) to preserve comments and formatting.
-        Rust acceleration is not used for writing because yaml-rust2 strips comments.
+        Asynchronously saves a dictionary as a YAML file while preserving comments and formatting.
+        Ensures the parent directory for the file exists before writing. Utilizes an async
+        file-writing functionality to handle the operation.
 
         Args:
-            file_path: Path to save to
-            data: Data to save
+            file_path (Path): Path to the YAML file to be written.
+            data (dict[str, Any]): The data to be written into the YAML file.
 
         Returns:
-            True if successful, False otherwise
+            bool: Returns True if the operation is successful, otherwise False.
         """
         try:
             # Always use Python implementation for writing to preserve comments
@@ -277,10 +337,12 @@ class YamlFileOperations:
 
     async def ensure_file_exists(self, file_path: Path) -> None:
         """
-        Ensure that a YAML file exists, creating it if necessary.
+        Ensures that the given file exists at the specified path. If the file does not exist,
+        it will create the required directories (if needed) and create an empty YAML file
+        at the specified location.
 
         Args:
-            file_path: Path to the YAML file
+            file_path (Path): The path to the file that needs to be checked or created.
         """
         if not file_path.exists():
             logger.debug(f"Creating missing YAML file: {file_path}")
@@ -290,14 +352,19 @@ class YamlFileOperations:
 
     async def backup_file(self, file_path: Path, backup_suffix: str = ".bak") -> Path:
         """
-        Create a backup of a YAML file.
+        Creates a backup of the given file by appending a backup suffix.
+
+        This method asynchronously reads the content of the specified file and creates
+        a backup by writing the content to a new file with an appended suffix. If the
+        specified file does not exist, no backup is created, and a warning is logged.
 
         Args:
-            file_path: Path to the file to backup
-            backup_suffix: Suffix to append to the backup file
+            file_path (Path): Path to the file that needs to be backed up.
+            backup_suffix (str, optional): Suffix to add to the file's extension when
+                creating the backup. Defaults to ".bak".
 
         Returns:
-            Path to the backup file
+            Path: The path to the newly created backup file.
         """
         backup_path = file_path.with_suffix(file_path.suffix + backup_suffix)
 
@@ -312,13 +379,20 @@ class YamlFileOperations:
 
     async def regenerate_settings_file(self, yaml_store: YAML) -> dict[str, Any]:
         """
-        Regenerate a settings file from defaults.
+        Regenerates a YAML settings file and reloads it. This method determines the file type to
+        regenerate based on the provided `yaml_store` parameter and uses the appropriate routines
+        from the `FileGeneration` module. If the regeneration is successful, the method loads
+        and returns the contents of the regenerated file.
 
         Args:
-            yaml_store: The YAML store to regenerate
+            yaml_store (YAML): An enumeration representing the type of YAML file
+                to regenerate. Possible values include YAML.Settings, YAML.Main,
+                and YAML.Game.
 
         Returns:
-            Default settings data
+            dict[str, Any]: A dictionary containing the contents of the regenerated
+                YAML file if successful, or an empty dictionary if the operation
+                fails.
         """
         logger.info(f"Regenerating {yaml_store} file")
 
