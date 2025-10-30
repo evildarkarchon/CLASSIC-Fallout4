@@ -720,24 +720,18 @@ fn handle_articles_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
     match msg {
         UiMessage::NextArticleCategory => {
             app.articles_state.next_category();
-            app.articles_state.selected_article_index = 0;
-            app.articles_state.scroll_offset = 0;
             Ok(true)
         }
         UiMessage::PreviousArticleCategory => {
             app.articles_state.prev_category();
-            app.articles_state.selected_article_index = 0;
-            app.articles_state.scroll_offset = 0;
             Ok(true)
         }
         UiMessage::NextArticle => {
             app.articles_state.next_article();
-            app.articles_state.scroll_offset = 0;
             Ok(true)
         }
         UiMessage::PreviousArticle => {
             app.articles_state.prev_article();
-            app.articles_state.scroll_offset = 0;
             Ok(true)
         }
         UiMessage::ScrollArticleUp(lines) => {

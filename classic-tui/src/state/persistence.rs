@@ -28,8 +28,8 @@ pub struct SessionState {
     /// Report viewer scroll position - maps to App.report_scroll_offset
     pub report_scroll_offset: usize,
 
-    /// Selected article index in articles screen - maps to ArticlesState.selected_article_index
-    pub selected_article_index: usize,
+    /// Selected article title in articles screen - maps to ArticlesState.selected_article_title
+    pub selected_article_title: Option<String>,
 
     /// Selected article category - maps to ArticlesState.selected_category
     pub selected_category: ArticleCategoryData,
@@ -81,7 +81,7 @@ impl Default for SessionState {
             results_list_scroll: 0,
             selected_report_index: 0,
             report_scroll_offset: 0,
-            selected_article_index: 0,
+            selected_article_title: None,
             selected_category: ArticleCategoryData::Installation,
             article_scroll_offset: 0,
             last_settings_tab: SettingsTabData::General,
@@ -257,7 +257,7 @@ output_scroll_offset: 42
 results_list_scroll: 10
 selected_report_index: 5
 report_scroll_offset: 20
-selected_article_index: 2
+selected_article_title: "Configuration"
 selected_category: CommonIssues
 article_scroll_offset: 15
 last_settings_tab: Paths

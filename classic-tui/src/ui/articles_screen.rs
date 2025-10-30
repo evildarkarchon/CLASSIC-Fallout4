@@ -27,7 +27,7 @@
 //! The module uses several optimization strategies:
 //! - [`RENDERED_ARTICLES_CACHE`]: Global OnceLock cache initialized on first access
 //! - Pre-rendering: All markdown parsed once at startup, not every frame (30 FPS rendering loop)
-//! - Cache key: `(ArticleCategory, usize)` tuple for fast HashMap lookup
+//! - Cache key: `(ArticleCategory, &'static str)` tuple for self-documenting, order-independent lookups
 //! - URL tracking: Each article tracks detected URLs with line numbers for keyboard navigation
 //!
 //! # Layout
@@ -77,16 +77,18 @@
 //! # Performance
 //!
 //! - Pre-rendering eliminates markdown parsing overhead (30 FPS target)
-//! - Cache key structure: `(category, index)` for O(1) HashMap lookup
+//! - Cache key structure: `(category, title)` for O(1) HashMap lookup with self-documenting keys
 //! - Static cache shared across all App instances (useful for testing)
 //! - Articles loaded lazily but cached permanently after first access
 //!
-//! # Implementation Note
+//! # Cache Design
 //!
-//! The `RENDERED_ARTICLES_CACHE` uses a non-ideal key structure: `(ArticleCategory, usize)` where
-//! `usize` is the article index within that category. This couples the cache to article ordering.
-//! A better approach would use article IDs or titles as keys, but the current implementation works
-//! for the static article set and avoids unnecessary complexity.
+//! The `RENDERED_ARTICLES_CACHE` uses article titles as cache keys: `(ArticleCategory, &'static str)`.
+//! This approach provides several advantages:
+//! - **Self-documenting**: Cache keys directly show which article they reference
+//! - **Order-independent**: Article ordering doesn't affect cache validity
+//! - **O(n) initialization**: Direct title lookup vs. O(n²) position search
+//! - **Robust**: Adding/removing articles doesn't invalidate existing cache entries
 
 use crate::app::App;
 use crate::widgets::markdown_viewer::{MarkdownRenderer, RenderedMarkdown};
@@ -104,20 +106,18 @@ use std::sync::OnceLock;
 ///
 /// This cache is initialized once on first access and contains all articles
 /// with their markdown pre-rendered. This avoids re-parsing markdown on every frame (~30 FPS).
-static RENDERED_ARTICLES_CACHE: OnceLock<HashMap<(ArticleCategory, usize), RenderedMarkdown>> =
+/// Uses article titles as cache keys for self-documenting, order-independent lookups.
+static RENDERED_ARTICLES_CACHE: OnceLock<HashMap<(ArticleCategory, &'static str), RenderedMarkdown>> =
     OnceLock::new();
 
 /// Get the rendered articles cache, initializing it if necessary
-fn get_rendered_articles_cache() -> &'static HashMap<(ArticleCategory, usize), RenderedMarkdown> {
+fn get_rendered_articles_cache() -> &'static HashMap<(ArticleCategory, &'static str), RenderedMarkdown> {
     RENDERED_ARTICLES_CACHE.get_or_init(|| {
         let mut cache = HashMap::new();
 
-        // Pre-render all articles
+        // Pre-render all articles - O(n) initialization using titles as keys
         for article in get_all_articles() {
-            let key = (article.category, get_articles_by_category(article.category)
-                .iter()
-                .position(|a| a.title == article.title)
-                .unwrap_or(0));
+            let key = (article.category, article.title);
             // Create a new renderer for each article since render() consumes self
             let renderer = MarkdownRenderer::new();
             let rendered = renderer.render(article.content);
@@ -183,7 +183,7 @@ impl ArticleCategory {
     }
 }
 
-/// Article content with lazy-rendered markdown
+/// Article content with markdown
 #[derive(Debug, Clone)]
 pub struct Article {
     /// Article title displayed in the list
@@ -192,8 +192,6 @@ pub struct Article {
     pub content: &'static str,
     /// Category this article belongs to
     pub category: ArticleCategory,
-    /// Cached rendered markdown (lazily initialized)
-    rendered: Option<RenderedMarkdown>,
 }
 
 impl Article {
@@ -207,16 +205,7 @@ impl Article {
             title,
             content,
             category,
-            rendered: None,
         }
-    }
-
-    /// Get or render the markdown content
-    pub fn get_rendered(&mut self) -> &RenderedMarkdown {
-        self.rendered.get_or_insert_with(|| {
-            let renderer = MarkdownRenderer::new();
-            renderer.render(self.content)
-        })
     }
 }
 
@@ -365,8 +354,8 @@ pub fn get_articles_by_category(category: ArticleCategory) -> Vec<Article> {
 pub struct ArticlesState {
     /// Currently selected category
     pub selected_category: ArticleCategory,
-    /// Currently selected article index within category
-    pub selected_article_index: usize,
+    /// Currently selected article title within category
+    pub selected_article_title: Option<&'static str>,
     /// Scroll offset for article content
     pub scroll_offset: usize,
     /// Currently selected link index (None if no link selected)
@@ -375,9 +364,14 @@ pub struct ArticlesState {
 
 impl Default for ArticlesState {
     fn default() -> Self {
+        // Select first article in Installation category
+        let first_article = get_articles_by_category(ArticleCategory::Installation)
+            .first()
+            .map(|a| a.title);
+
         Self {
             selected_category: ArticleCategory::Installation,
-            selected_article_index: 0,
+            selected_article_title: first_article,
             scroll_offset: 0,
             selected_link_index: None,
         }
@@ -392,19 +386,22 @@ impl ArticlesState {
 
     /// Get current article's URLs from pre-rendered cache
     pub fn get_current_urls(&self) -> Vec<String> {
-        let cache = get_rendered_articles_cache();
-        let key = (self.selected_category, self.selected_article_index);
-        if let Some(rendered) = cache.get(&key) {
-            rendered.urls.iter().map(|u| u.url.clone()).collect()
-        } else {
-            Vec::new()
+        if let Some(title) = self.selected_article_title {
+            let cache = get_rendered_articles_cache();
+            let key = (self.selected_category, title);
+            if let Some(rendered) = cache.get(&key) {
+                return rendered.urls.iter().map(|u| u.url.clone()).collect();
+            }
         }
+        Vec::new()
     }
 
     /// Switch to next category
     pub fn next_category(&mut self) {
         self.selected_category = self.selected_category.next();
-        self.selected_article_index = 0;
+        self.selected_article_title = get_articles_by_category(self.selected_category)
+            .first()
+            .map(|a| a.title);
         self.scroll_offset = 0;
         self.selected_link_index = None;
     }
@@ -412,7 +409,9 @@ impl ArticlesState {
     /// Switch to previous category
     pub fn prev_category(&mut self) {
         self.selected_category = self.selected_category.prev();
-        self.selected_article_index = 0;
+        self.selected_article_title = get_articles_by_category(self.selected_category)
+            .first()
+            .map(|a| a.title);
         self.scroll_offset = 0;
         self.selected_link_index = None;
     }
@@ -420,25 +419,49 @@ impl ArticlesState {
     /// Select next article
     pub fn next_article(&mut self) {
         let articles = get_articles_by_category(self.selected_category);
-        if !articles.is_empty() {
-            self.selected_article_index = (self.selected_article_index + 1) % articles.len();
-            self.scroll_offset = 0;
-            self.selected_link_index = None;
+        if articles.is_empty() {
+            return;
         }
+
+        // Find current article index and select next
+        if let Some(current_title) = self.selected_article_title {
+            if let Some(current_idx) = articles.iter().position(|a| a.title == current_title) {
+                let next_idx = (current_idx + 1) % articles.len();
+                self.selected_article_title = articles.get(next_idx).map(|a| a.title);
+            }
+        } else {
+            // No article selected, select first
+            self.selected_article_title = articles.first().map(|a| a.title);
+        }
+
+        self.scroll_offset = 0;
+        self.selected_link_index = None;
     }
 
     /// Select previous article
     pub fn prev_article(&mut self) {
         let articles = get_articles_by_category(self.selected_category);
-        if !articles.is_empty() {
-            self.selected_article_index = if self.selected_article_index == 0 {
-                articles.len() - 1
-            } else {
-                self.selected_article_index - 1
-            };
-            self.scroll_offset = 0;
-            self.selected_link_index = None;
+        if articles.is_empty() {
+            return;
         }
+
+        // Find current article index and select previous
+        if let Some(current_title) = self.selected_article_title {
+            if let Some(current_idx) = articles.iter().position(|a| a.title == current_title) {
+                let prev_idx = if current_idx == 0 {
+                    articles.len() - 1
+                } else {
+                    current_idx - 1
+                };
+                self.selected_article_title = articles.get(prev_idx).map(|a| a.title);
+            }
+        } else {
+            // No article selected, select last
+            self.selected_article_title = articles.last().map(|a| a.title);
+        }
+
+        self.scroll_offset = 0;
+        self.selected_link_index = None;
     }
 
     /// Select next link in current article
@@ -485,11 +508,14 @@ impl ArticlesState {
 
     /// Scroll content down
     pub fn scroll_down(&mut self, lines: usize, max_lines: usize) {
-        let articles = get_articles_by_category(self.selected_category);
-        if let Some(mut article) = articles.into_iter().nth(self.selected_article_index) {
-            let content_lines = article.get_rendered().lines.len();
-            let max_scroll = content_lines.saturating_sub(max_lines);
-            self.scroll_offset = (self.scroll_offset + lines).min(max_scroll);
+        if let Some(title) = self.selected_article_title {
+            let cache = get_rendered_articles_cache();
+            let key = (self.selected_category, title);
+            if let Some(rendered) = cache.get(&key) {
+                let content_lines = rendered.lines.len();
+                let max_scroll = content_lines.saturating_sub(max_lines);
+                self.scroll_offset = (self.scroll_offset + lines).min(max_scroll);
+            }
         }
     }
 }
@@ -610,9 +636,10 @@ fn render_articles_list(f: &mut Frame, area: Rect, state: &ArticlesState) {
 
     let items: Vec<ListItem> = articles
         .iter()
-        .enumerate()
-        .map(|(idx, article)| {
-            let style = if idx == state.selected_article_index {
+        .map(|article| {
+            let is_selected = state.selected_article_title == Some(article.title);
+
+            let style = if is_selected {
                 Style::default()
                     .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD)
@@ -620,11 +647,7 @@ fn render_articles_list(f: &mut Frame, area: Rect, state: &ArticlesState) {
                 Style::default().fg(Color::White)
             };
 
-            let prefix = if idx == state.selected_article_index {
-                "> "
-            } else {
-                "  "
-            };
+            let prefix = if is_selected { "> " } else { "  " };
 
             ListItem::new(format!("{}{}", prefix, article.title)).style(style)
         })
@@ -642,12 +665,10 @@ fn render_articles_list(f: &mut Frame, area: Rect, state: &ArticlesState) {
 
 /// Render article viewer with markdown
 fn render_article_viewer(f: &mut Frame, area: Rect, state: &ArticlesState) {
-    let articles = get_articles_by_category(state.selected_category);
-
-    let content = if let Some(article) = articles.get(state.selected_article_index) {
+    let content = if let Some(title) = state.selected_article_title {
         // Get pre-rendered markdown from cache
         let cache = get_rendered_articles_cache();
-        let key = (state.selected_category, state.selected_article_index);
+        let key = (state.selected_category, title);
         let rendered = cache.get(&key).expect("Article not found in cache");
 
         // Take lines from scroll offset
@@ -659,14 +680,14 @@ fn render_article_viewer(f: &mut Frame, area: Rect, state: &ArticlesState) {
             .collect();
 
         // Show link count if any links present
-        let title = if rendered.urls.is_empty() {
-            format!(" {} ", article.title)
+        let title_text = if rendered.urls.is_empty() {
+            format!(" {} ", title)
         } else {
             let selected_indicator = state
                 .selected_link_index
                 .map(|idx| format!(" (Link {}/{}) ", idx + 1, rendered.urls.len()))
                 .unwrap_or_default();
-            format!(" {} {} ", article.title, selected_indicator)
+            format!(" {} {} ", title, selected_indicator)
         };
 
         Paragraph::new(lines)
@@ -674,7 +695,7 @@ fn render_article_viewer(f: &mut Frame, area: Rect, state: &ArticlesState) {
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .title(title)
+                    .title(title_text)
                     .border_style(Style::default().fg(Color::Cyan)),
             )
     } else {

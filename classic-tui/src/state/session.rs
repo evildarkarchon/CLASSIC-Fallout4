@@ -87,14 +87,14 @@ impl SessionManager {
         self.dirty = true;
     }
 
-    /// Get selected article index
-    pub fn selected_article_index(&self) -> usize {
-        self.state.selected_article_index
+    /// Get selected article title
+    pub fn selected_article_title(&self) -> Option<&str> {
+        self.state.selected_article_title.as_deref()
     }
 
-    /// Set selected article index
-    pub fn set_selected_article_index(&mut self, index: usize) {
-        self.state.selected_article_index = index;
+    /// Set selected article title
+    pub fn set_selected_article_title(&mut self, title: Option<&str>) {
+        self.state.selected_article_title = title.map(|s| s.to_string());
         self.dirty = true;
     }
 
@@ -156,7 +156,14 @@ impl SessionManager {
 
         // Restore article state
         app.articles_state.selected_category = self.selected_category();
-        app.articles_state.selected_article_index = self.selected_article_index();
+        app.articles_state.selected_article_title = self.selected_article_title().map(|s| {
+            // Find the article with this title to get the &'static str reference
+            use crate::ui::articles_screen::get_all_articles;
+            get_all_articles()
+                .into_iter()
+                .find(|a| a.title == s)
+                .map(|a| a.title)
+        }).flatten();
         app.articles_state.scroll_offset = self.article_scroll_offset();
 
         // Restore settings state
@@ -177,7 +184,7 @@ impl SessionManager {
 
         // Capture article state
         self.set_selected_category(app.articles_state.selected_category);
-        self.set_selected_article_index(app.articles_state.selected_article_index);
+        self.set_selected_article_title(app.articles_state.selected_article_title);
         self.set_article_scroll_offset(app.articles_state.scroll_offset);
 
         // Capture settings state
@@ -248,7 +255,7 @@ mod tests {
         manager.set_selected_report_index(5);
         assert_eq!(manager.selected_report_index(), 5);
 
-        manager.set_selected_article_index(2);
-        assert_eq!(manager.selected_article_index(), 2);
+        manager.set_selected_article_title(Some("Getting Started"));
+        assert_eq!(manager.selected_article_title(), Some("Getting Started"));
     }
 }
