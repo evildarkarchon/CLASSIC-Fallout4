@@ -10,8 +10,8 @@ from collections import Counter
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.fragments import ReportFragment
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 
 class PythonRecordScanner:
@@ -59,7 +59,7 @@ class PythonRecordScanner:
                 - A ReportFragment describing the results of the scan.
                 - A list of matching records found during the scan.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         # Constants for record extraction
         rsp_marker = "[RSP+"
@@ -120,7 +120,7 @@ class PythonRecordScanner:
         Returns:
             ReportFragment: Object containing formatted lines with counted records.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         lines = []
 

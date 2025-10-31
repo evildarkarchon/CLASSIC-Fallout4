@@ -8,7 +8,7 @@ replacing the mutable list pattern with immutable fragment composition.
 import threading
 from typing import ClassVar
 
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 
 class FCXModeHandlerFragments:

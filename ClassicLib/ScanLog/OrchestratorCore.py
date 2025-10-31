@@ -25,8 +25,8 @@ from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from ClassicLib.ScanLog.Parser import extract_module_names, find_segments
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
-from ClassicLib.ScanLog.ReportComposition import ConditionalSection, ReportComposer
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
+from ClassicLib.ScanLog.fragments import ReportFragment
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
@@ -34,7 +34,7 @@ from ClassicLib.Util import crashgen_version_gen
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 
 class OrchestratorCore:
@@ -711,7 +711,7 @@ class OrchestratorCore:
         """
         import aiofiles
 
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         lines = []
         loadorder_origin = "LO"  # Origin marker for plugins from loadorder.txt

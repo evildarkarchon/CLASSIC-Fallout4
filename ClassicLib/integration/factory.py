@@ -33,7 +33,7 @@ from .config import DISABLE_RUST_ENV_VAR
 from .detector import detect_rust_components
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
 
@@ -508,7 +508,7 @@ def get_yamldata(yaml_dirs: list, game: str, is_vr: bool) -> Any:
             logger.warning(f"Failed to import Rust YamlData: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
     logger.debug("Using Python ClassicScanLogsInfo implementation")
     return ClassicScanLogsInfo()
 

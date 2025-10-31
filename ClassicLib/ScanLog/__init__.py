@@ -6,7 +6,7 @@ This package contains modules for scanning and analyzing crash logs.
 
 # Core scanning components
 # Modern async-first core components
-from ClassicLib.ScanLog.AsyncPipeline import AsyncCrashLogPipeline
+from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
 from ClassicLib.ScanLog.AsyncReformat import (
     batch_file_copy_async,
     batch_file_move_async,
@@ -27,7 +27,7 @@ from ClassicLib.ScanLog.Parser import extract_module_names, extract_segments, fi
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments as ReportGenerator
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 from ClassicLib.ScanLog.ScanLogsExecutor import ClassicScanLogs, ScanLogsExecutor
 from ClassicLib.ScanLog.ScanLogsUtils import (
     complete_scan_with_summary,
@@ -47,7 +47,6 @@ from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
 from ClassicLib.ScanLog.Util import (
     copy_files,
     crashlogs_get_files,
-    crashlogs_reformat,
     ensure_directory_exists,
     get_entry,
     get_path_from_setting,
@@ -103,7 +102,6 @@ __all__ = [
     # Utility functions
     "copy_files",
     "crashlogs_get_files",
-    "crashlogs_reformat",
     "ensure_directory_exists",
     "get_entry",
     "get_path_from_setting",

@@ -12,7 +12,7 @@ Key API Translations:
 
 from __future__ import annotations
 
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 try:
     import classic_core

@@ -21,7 +21,7 @@ from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 # ThreadSafeLogCache and load_crash_logs_async removed - using direct file I/O for better performance
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 
 class AsyncCrashLogPipeline:

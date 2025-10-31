@@ -18,7 +18,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
 

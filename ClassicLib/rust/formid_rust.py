@@ -18,7 +18,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +173,7 @@ class RustFormIDAnalyzer:
                     result_lines = self._rust_core_analyzer.process_formids_cached(formids, cache_key)
                     # Create ReportFragment from the result lines
                     if result_lines:
-                        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+                        from ClassicLib.ScanLog.fragments import ReportFragment
                         fragment = ReportFragment.from_lines(result_lines)
                         report.add_fragment(fragment)
                     return

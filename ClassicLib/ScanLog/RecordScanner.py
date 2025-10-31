@@ -13,11 +13,11 @@ from collections import Counter
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 
 @lru_cache(maxsize=128)

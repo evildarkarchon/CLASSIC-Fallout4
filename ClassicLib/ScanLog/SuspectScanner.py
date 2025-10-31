@@ -10,11 +10,11 @@ This module scans for known crash patterns and suspects including:
 
 from typing import TYPE_CHECKING
 
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 
 class SuspectScanner:

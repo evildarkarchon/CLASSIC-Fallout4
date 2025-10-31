@@ -10,7 +10,7 @@ import re
 from typing import TYPE_CHECKING, Literal, cast
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+    from ClassicLib.ScanLog.fragments import ReportFragment
 
 
 def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
@@ -73,7 +73,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         ReportFragment: An object encapsulating the lines of the consolidated report about
         detected mods, warnings, and matched plugins.
     """
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+    from ClassicLib.ScanLog.fragments import ReportFragment
 
     lines = []
     yaml_dict_lower = _convert_to_lowercase(yaml_dict)
@@ -152,7 +152,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         ReportFragment: An instance of `ReportFragment` containing any detected conflicts along with
         warnings.
     """
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+    from ClassicLib.ScanLog.fragments import ReportFragment
 
     lines = []
     yaml_dict_lower = _convert_to_lowercase(yaml_dict)
@@ -222,7 +222,7 @@ def detect_mods_important(
         and any warnings related to GPU compatibility.
 
     """
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+    from ClassicLib.ScanLog.fragments import ReportFragment
 
     lines = [
         "### Checking for Important Mods\n\n",

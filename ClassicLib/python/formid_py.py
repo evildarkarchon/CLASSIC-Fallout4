@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.fragments import ReportFragment
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 # Module-level regex pattern cache to avoid recompilation
 _PATTERN_CACHE: dict[str, re.Pattern[str]] = {}
@@ -139,7 +139,7 @@ class PythonFormIDAnalyzer:
         Returns:
             ReportFragment containing the FormID analysis results
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         if not formids_matches:
             return ReportFragment.from_lines(["* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n"])

@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from packaging.version import Version
 
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.fragments import ReportFragment
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 
 class PythonPluginAnalyzer:
@@ -68,7 +68,7 @@ class PythonPluginAnalyzer:
                 - A boolean indicating if any plugins were successfully loaded.
                 - A ReportFragment object containing logs of the operation.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         lines = []
         loadorder_origin = "LO"  # Origin marker for plugins from loadorder.txt
@@ -227,7 +227,7 @@ class PythonPluginAnalyzer:
         Returns:
             ReportFragment: A report fragment with the matched plugins and their occurrences.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         lines = []
 

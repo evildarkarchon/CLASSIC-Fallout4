@@ -9,8 +9,8 @@ creation of various report sections and fragments.
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.fragments import ReportFragment
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 
 class PythonReportGenerator:
@@ -51,7 +51,7 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: An object representing the header section of the report.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         version = self.yamldata.classic_version if self.yamldata else "CLASSIC"
         return ReportFragment.from_lines([
@@ -89,7 +89,7 @@ class PythonReportGenerator:
             ReportFragment: A ReportFragment object containing the constructed error section.
         """
         from ClassicLib import GlobalRegistry
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
         lines = [
@@ -119,7 +119,7 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: A fragment containing the section header for the report.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         return ReportFragment.from_lines([
             "### Checking for Known Crash Messages, Errors and Suspects\n\n",
@@ -143,7 +143,7 @@ class PythonReportGenerator:
             ReportFragment: An instance of ReportFragment containing the generated footer
                 message.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         if found_suspect:
             return ReportFragment.from_lines([
@@ -164,7 +164,7 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: A report fragment initialized with the section header lines.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         return ReportFragment.from_lines([
             "### Checking for Settings-related Issues\n\n",
@@ -186,7 +186,7 @@ class PythonReportGenerator:
             ReportFragment: An instance of ReportFragment containing the
                 generated header lines.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         return ReportFragment.from_lines([
             f"### Checking For Mods That {check_type}\n\n",
@@ -205,7 +205,7 @@ class PythonReportGenerator:
             ReportFragment: A report fragment with the specified plugin-related
                 error section header.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         return ReportFragment.from_lines([
             "### Checking for Plugin-related Errors\n\n",
@@ -220,7 +220,7 @@ class PythonReportGenerator:
             ReportFragment: A new instance of ReportFragment containing the lines for
             the FormID section header.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         return ReportFragment.from_lines([
             "### Checking FormIDs\n\n",
@@ -238,7 +238,7 @@ class PythonReportGenerator:
             ReportFragment: A `ReportFragment` object initialized with the appropriate
             header lines.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         return ReportFragment.from_lines([
             "### Checking for Named Records\n\n",
@@ -255,7 +255,7 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: A formatted section representing the footer of the report.
         """
-        from ClassicLib.ScanLog.ReportFragment import ReportFragment
+        from ClassicLib.ScanLog.fragments import ReportFragment
 
         version = self.yamldata.classic_version if self.yamldata else "CLASSIC"
         return ReportFragment.from_lines([

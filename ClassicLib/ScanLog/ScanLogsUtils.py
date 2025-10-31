@@ -17,7 +17,7 @@ from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info
 from ClassicLib.AsyncBridge import run_async
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.models import ScanResult
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor

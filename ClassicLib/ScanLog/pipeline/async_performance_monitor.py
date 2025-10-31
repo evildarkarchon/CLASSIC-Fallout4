@@ -13,7 +13,7 @@ from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import run_async_crash
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 
 class AsyncPerformanceMonitor:

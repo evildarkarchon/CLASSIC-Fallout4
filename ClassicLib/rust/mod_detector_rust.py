@@ -70,7 +70,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     Returns:
         ReportFragment: Detected modifications represented as a `ReportFragment` object.
     """
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+    from ClassicLib.ScanLog.fragments import ReportFragment
 
     if RUST_AVAILABLE and _rust_detect_single:
         try:
@@ -102,7 +102,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     Returns:
         ReportFragment: An object representing the detected mod conflicts.
     """
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+    from ClassicLib.ScanLog.fragments import ReportFragment
 
     if RUST_AVAILABLE and _rust_detect_double:
         try:
@@ -136,7 +136,7 @@ def detect_mods_important(yaml_dict: dict[str, str], crashlog_plugins: dict[str,
         `ReportFragment` object, either containing important modification details
         or returned as empty if no data is detected.
     """
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
+    from ClassicLib.ScanLog.fragments import ReportFragment
 
     if RUST_AVAILABLE and _rust_detect_important:
         try:

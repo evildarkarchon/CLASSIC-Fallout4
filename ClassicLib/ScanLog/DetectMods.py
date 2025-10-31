@@ -16,7 +16,7 @@ import re
 from functools import lru_cache
 from typing import Literal, cast
 
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 
 def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:

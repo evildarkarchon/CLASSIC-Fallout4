@@ -17,7 +17,7 @@ from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 from ClassicLib.ScanLog.Util import crashlogs_get_files
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 

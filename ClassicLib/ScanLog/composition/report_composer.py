@@ -8,7 +8,7 @@ multiple report fragments into a complete report.
 from collections.abc import Callable
 
 from ClassicLib.ScanLog.composition.conditional_section import ConditionalSection
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 
 class ReportComposer:
