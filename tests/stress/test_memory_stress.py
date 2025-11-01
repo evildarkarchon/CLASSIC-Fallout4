@@ -16,9 +16,9 @@ from unittest.mock import Mock, patch
 import pytest
 
 # Skip these tests if Rust extensions are not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
-import classic_core
+import classic_scanlog
 from tests.stress.stress_test_fixtures import (
     MemoryTracker,
     PerformanceProfiler,
@@ -52,7 +52,7 @@ class TestMemoryLeakDetection:
         """
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_core.utils.StringProcessor()
+        processor = classic_scanlog.utils.StringProcessor()
 
         # Generate test data
         base_strings = [f"Test string {i} with content" for i in range(1000)]
@@ -97,7 +97,7 @@ class TestMemoryLeakDetection:
         """
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate large log content
         large_log = stress_data_generator.generate_large_crash_log(
@@ -255,7 +255,7 @@ class TestLargeDatasetProcessing:
         fresh_memory_tracker.take_measurement("log_file_created")
 
         # Process with Rust components
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Read and process in chunks to test memory efficiency
         with AsyncBridge.get_instance() as bridge:
@@ -306,7 +306,7 @@ class TestLargeDatasetProcessing:
         fresh_memory_tracker.take_measurement("formids_generated")
 
         # Process with Rust FormIDProcessor
-        processor = classic_core.FormIDProcessor()
+        processor = classic_scanlog.FormIDProcessor()
 
         # Process in batches to test memory efficiency
         batch_size = 5000
@@ -359,7 +359,7 @@ class TestLargeDatasetProcessing:
                 plugin_formids = [f"0x{i:08X}" for i in range(100)]  # 100 FormIDs per plugin
 
                 # Process with Rust
-                processor = classic_core.FormIDProcessor()
+                processor = classic_scanlog.FormIDProcessor()
                 results = processor.process_batch(plugin_formids)
                 valid_count = sum(1 for r in results if r is not None)
                 assert valid_count == 100  # All should be valid
@@ -460,7 +460,7 @@ class TestMemoryLimitHandling:
                 content = await io_core.read_file(file_path)
 
                 # Process with Rust components
-                processor = classic_core.utils.LogProcessor()
+                processor = classic_scanlog.utils.LogProcessor()
                 formids = processor.extract_formids(content)
                 plugins = processor.extract_plugins(content)
 
@@ -518,7 +518,7 @@ class TestMemoryLimitHandling:
             fresh_memory_tracker.take_measurement(f"dataset_{i}_created")
 
         # Process all datasets to create maximum memory pressure
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
         all_formids = []
 
         for i, dataset in enumerate(large_datasets):

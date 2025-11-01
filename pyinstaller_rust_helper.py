@@ -21,11 +21,11 @@ Rust Crate Structure → Python Modules:
   - Depends on: classic-scanlog-core (business logic)
 - classic-config-py (bindings) → classic_config.pyd
   - Depends on: classic-config-core (business logic)
-- classic-core (facade) → classic_core.pyd
-  - Re-exports Phase 1 components for Python
 
 Note: Only the *-py crates produce .pyd files. The *-core crates are rlib only
 and provide pure Rust business logic that can be used by CLI/TUI applications.
+Python imports these modules directly (e.g., import classic_yaml) for transparent
+Rust acceleration.
 
 Performance: These Rust extensions provide 10-150x speedups for:
 - Log parsing (10x), FormID analysis (25x), Pattern matching (20x)
@@ -45,7 +45,6 @@ RUST_MODULES = [
     "classic_file_io",     # File I/O operations (from classic-file-io-py)
     "classic_scanlog",     # Log parsing (from classic-scanlog-py)
     "classic_config",      # Configuration (from classic-config-py)
-    "classic_core"         # Facade re-exporting Phase 1 components
 ]
 
 

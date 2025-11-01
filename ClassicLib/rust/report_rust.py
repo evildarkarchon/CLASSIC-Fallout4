@@ -15,23 +15,15 @@ from typing import Any
 
 # Try to import Rust implementation
 try:
-    import classic_core
+    import classic_scanlog
 
-    if hasattr(classic_core, "scanlog"):
-        RustReportFragment = classic_core.scanlog.ReportFragment
-        RustReportComposer = classic_core.scanlog.ReportComposer
-        RustReportGenerator = classic_core.scanlog.ReportGenerator
-        RustStringPool = classic_core.scanlog.StringPool
-        RustParallelProcessor = classic_core.scanlog.ParallelReportProcessor
+    RustReportFragment = classic_scanlog.ReportFragment
+    RustReportComposer = classic_scanlog.ReportComposer
+    RustReportGenerator = classic_scanlog.ReportGenerator
+    RustStringPool = classic_scanlog.StringPool
+    RustParallelProcessor = classic_scanlog.ParallelReportProcessor
 
-        RUST_AVAILABLE = True
-    else:
-        RustReportFragment = None  # type: ignore[assignment]
-        RustReportComposer = None  # type: ignore[assignment]
-        RustReportGenerator = None  # type: ignore[assignment]
-        RustStringPool = None  # type: ignore[assignment]
-        RustParallelProcessor = None  # type: ignore[assignment]
-        RUST_AVAILABLE = False
+    RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RustReportFragment = None  # type: ignore[assignment]
     RustReportComposer = None  # type: ignore[assignment]

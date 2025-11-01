@@ -17,7 +17,7 @@ Tests cover:
 import pytest
 
 try:
-    from classic_core.scanlog import PatternMatcher
+    from classic_scanlog import PatternMatcher
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False

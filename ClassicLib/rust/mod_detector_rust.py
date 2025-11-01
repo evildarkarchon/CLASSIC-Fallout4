@@ -26,32 +26,30 @@ _rust_detect_important = None
 _rust_detect_batch = None
 
 try:
-    import classic_core
-    if hasattr(classic_core, "scanlog"):
-        scanlog = classic_core.scanlog
+    import classic_scanlog
 
-        if hasattr(scanlog, "detect_mods_single"):
-            _rust_detect_single = scanlog.detect_mods_single
-            RUST_AVAILABLE = True
-            logger.debug("✅ Rust detect_mods_single available (35x speedup)")
+    if hasattr(classic_scanlog, "detect_mods_single"):
+        _rust_detect_single = classic_scanlog.detect_mods_single
+        RUST_AVAILABLE = True
+        logger.debug("✅ Rust detect_mods_single available (35x speedup)")
 
-        if hasattr(scanlog, "detect_mods_double"):
-            _rust_detect_double = scanlog.detect_mods_double
-            RUST_AVAILABLE = True
-            logger.debug("✅ Rust detect_mods_double available (35x speedup)")
+    if hasattr(classic_scanlog, "detect_mods_double"):
+        _rust_detect_double = classic_scanlog.detect_mods_double
+        RUST_AVAILABLE = True
+        logger.debug("✅ Rust detect_mods_double available (35x speedup)")
 
-        if hasattr(scanlog, "detect_mods_important"):
-            _rust_detect_important = scanlog.detect_mods_important
-            RUST_AVAILABLE = True
-            logger.debug("✅ Rust detect_mods_important available (35x speedup)")
+    if hasattr(classic_scanlog, "detect_mods_important"):
+        _rust_detect_important = classic_scanlog.detect_mods_important
+        RUST_AVAILABLE = True
+        logger.debug("✅ Rust detect_mods_important available (35x speedup)")
 
-        if hasattr(scanlog, "detect_mods_batch"):
-            _rust_detect_batch = scanlog.detect_mods_batch
-            RUST_AVAILABLE = True
-            logger.debug("✅ Rust detect_mods_batch available (35x speedup)")
+    if hasattr(classic_scanlog, "detect_mods_batch"):
+        _rust_detect_batch = classic_scanlog.detect_mods_batch
+        RUST_AVAILABLE = True
+        logger.debug("✅ Rust detect_mods_batch available (35x speedup)")
 
-        if not RUST_AVAILABLE:
-            logger.debug("⚠️  Rust mod detector functions not found in classic_core")
+    if not RUST_AVAILABLE:
+        logger.debug("⚠️  Rust mod detector functions not found in classic_scanlog")
 except ImportError as e:
     logger.debug(f"Rust mod detector not available: {e}")
 

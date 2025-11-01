@@ -29,7 +29,7 @@ from tests.test_infra.async_test_utils import AsyncTestCase
 from tests.test_infra.performance_utils import PerformanceTimer, measure_performance
 
 # Skip entire module if Rust extensions not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import core components
 from ClassicLib.AsyncBridge import AsyncBridge

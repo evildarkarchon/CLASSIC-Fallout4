@@ -14,10 +14,10 @@ import pytest
 
 # Import the Rust module when available
 try:
-    import classic_core
+    import classic_scanlog
     RUST_AVAILABLE = True
 except ImportError:
-    classic_core = None
+    classic_scanlog = None
     RUST_AVAILABLE = False
     pytestmark = pytest.mark.skip(reason="Rust extensions not available")
 
@@ -88,7 +88,7 @@ class TestRustParserIntegration:
 
     def test_parser_creation(self):
         """Test creating a parser instance."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         assert parser is not None
 
         # Get statistics
@@ -102,12 +102,12 @@ class TestRustParserIntegration:
             ("START:", "END:"),
             ("BEGIN:", "FINISH:"),
         ]
-        parser = classic_core.scanlog.LogParser(custom_boundaries) # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser(custom_boundaries) # pyright: ignore[reportOptionalMemberAccess]
         assert parser is not None
 
     def test_segment_parsing(self):
         """Test parsing crash log into segments."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         log_lines = create_sample_crash_log()
 
         segments = parser.parse_segments(log_lines)
@@ -124,7 +124,7 @@ class TestRustParserIntegration:
 
     def test_parallel_segment_parsing(self):
         """Test parallel parsing for large logs."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         large_log = create_large_crash_log(5000)
 
         # Time parallel parsing
@@ -145,7 +145,7 @@ class TestRustParserIntegration:
 
     def test_pattern_matching(self):
         """Test pattern matching in crash logs."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         log_lines = create_sample_crash_log()
 
         matches = parser.find_patterns(log_lines)
@@ -161,7 +161,7 @@ class TestRustParserIntegration:
 
     def test_custom_patterns(self):
         """Test adding custom regex patterns."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
 
         # Add custom pattern for addresses
         parser.add_pattern("address", r"0x[0-9A-Fa-f]{8,16}")
@@ -180,7 +180,7 @@ class TestRustParserIntegration:
 
     def test_section_extraction(self):
         """Test extracting specific sections from log."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         log_lines = create_sample_crash_log()
 
         section = parser.extract_section(
@@ -199,7 +199,7 @@ class TestRustParserIntegration:
 
     def test_batch_section_extraction(self):
         """Test extracting multiple sections in parallel."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         log_lines = create_sample_crash_log()
 
         markers = [
@@ -217,7 +217,7 @@ class TestRustParserIntegration:
 
     def test_crash_header_parsing(self):
         """Test parsing crash header information."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         log_lines = create_sample_crash_log()
 
         header = parser.parse_crash_header(log_lines)
@@ -234,7 +234,7 @@ class TestRustParserIntegration:
 
     def test_cache_effectiveness(self):
         """Test that caching improves performance."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         log_lines = create_sample_crash_log()
 
         # First parse - populates cache
@@ -264,7 +264,7 @@ class TestRustParserIntegration:
 
     def test_performance_improvement(self):
         """Test performance improvement over Python implementation."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
         large_log = create_large_crash_log(10000)
 
         # Time Rust implementation
@@ -294,7 +294,7 @@ class TestRustParserWithRealLogs:
 
     def test_parse_from_file(self, sample_log_path):
         """Test parsing a crash log from a file."""
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
 
         # Read file
         log_lines = sample_log_path.read_text().splitlines()
@@ -314,7 +314,7 @@ class TestRustParserWithRealLogs:
         large_log = create_large_crash_log(50000)
         large_file.write_text("\n".join(large_log))
 
-        parser = classic_core.scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
+        parser = classic_scanlog.LogParser() # pyright: ignore[reportOptionalMemberAccess]
 
         # Read and process
         start = time.perf_counter()

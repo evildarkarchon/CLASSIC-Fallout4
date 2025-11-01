@@ -50,14 +50,14 @@ class RustLogParser:
         self._use_rust = False
 
         try:
-            import classic_core
-            if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "LogParser"):
-                LogParser = classic_core.scanlog.LogParser
+            import classic_scanlog
+            if hasattr(classic_scanlog, "LogParser"):
+                LogParser = classic_scanlog.LogParser
                 self._rust_parser = LogParser()
                 self._use_rust = True
                 logger.debug("🚀 RustLogParser: Using RUST implementation (150x faster)")
             else:
-                logger.debug("⚠️  RustLogParser: LogParser not found in classic_core")
+                logger.debug("⚠️  RustLogParser: LogParser not found in classic_scanlog")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Rust parser: {e}")
 

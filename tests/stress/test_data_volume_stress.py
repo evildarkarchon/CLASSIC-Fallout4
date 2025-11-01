@@ -16,9 +16,9 @@ from unittest.mock import patch
 import pytest
 
 # Skip these tests if Rust extensions are not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
-import classic_core
+import classic_scanlog
 from tests.stress.stress_test_fixtures import (
     MemoryTracker,
     PerformanceProfiler,
@@ -54,7 +54,7 @@ class TestMassiveFormIDProcessing:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_core.FormIDProcessor()
+        processor = classic_scanlog.FormIDProcessor()
 
         # Generate massive FormID dataset
         massive_formid_count = 100000
@@ -131,7 +131,7 @@ class TestMassiveFormIDProcessing:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.FormIDProcessor()
+        processor = classic_scanlog.FormIDProcessor()
 
         # Generate dataset with many duplicates
         base_formids = stress_data_generator.generate_formid_dataset(count=5000)  # 5k unique
@@ -205,7 +205,7 @@ class TestMassiveFormIDProcessing:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.FormIDProcessor()
+        processor = classic_scanlog.FormIDProcessor()
 
         # Generate massive plugin list and FormIDs
         plugin_list = stress_data_generator.generate_plugin_load_order(count=500)
@@ -303,7 +303,7 @@ class TestMassivePluginLoadOrders:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate massive plugin load order
         massive_plugin_count = 1000
@@ -512,7 +512,7 @@ class TestMassivePluginLoadOrders:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate massive plugin list with potential conflicts
         plugin_count = 400
@@ -619,7 +619,7 @@ class TestMassiveCallStackProcessing:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate extremely deep call stack
         stack_depth = 10000
@@ -736,7 +736,7 @@ class TestMassiveCallStackProcessing:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate massive memory dump data
         memory_region_count = 5000
@@ -987,7 +987,7 @@ class TestBatchProcessingAtScale:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Create many medium-sized files for streaming processing
         file_count = 200

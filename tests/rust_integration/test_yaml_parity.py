@@ -20,8 +20,8 @@ import time
 import pytest
 
 try:
-    from classic_core import yaml
-    RustYamlOperations = yaml.RustYamlOperations
+    import classic_yaml
+    RustYamlOperations = classic_yaml.RustYamlOperations
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False

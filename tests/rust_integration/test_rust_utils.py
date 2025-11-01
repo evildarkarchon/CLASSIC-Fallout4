@@ -10,23 +10,23 @@ import time
 import pytest
 
 # Skip these tests if Rust extensions are not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
-import classic_core
+import classic_scanlog
 
 # Skip if utils module not yet implemented
-if not hasattr(classic_core, 'utils'):
-    pytest.skip("classic_core.utils not yet implemented", allow_module_level=True)
+if not hasattr(classic_scanlog, 'utils'):
+    pytest.skip("classic_scanlog.utils not yet implemented", allow_module_level=True)
 
 # Access utils as an attribute, not a submodule
-PathHandler = classic_core.utils.PathHandler
-RustPerformanceMonitor = classic_core.utils.RustPerformanceMonitor
-StringProcessor = classic_core.utils.StringProcessor
+PathHandler = classic_scanlog.utils.PathHandler
+RustPerformanceMonitor = classic_scanlog.utils.RustPerformanceMonitor
+StringProcessor = classic_scanlog.utils.StringProcessor
 
 # LogProcessor is not yet implemented - skip related tests
 LogProcessor = None
-if hasattr(classic_core.utils, 'LogProcessor'):
-    LogProcessor = classic_core.utils.LogProcessor
+if hasattr(classic_scanlog.utils, 'LogProcessor'):
+    LogProcessor = classic_scanlog.utils.LogProcessor
 
 
 @pytest.mark.rust
@@ -465,7 +465,7 @@ class TestRustCoreClasses:
         file1.write_text("Content 1")
         file2.write_text("Content 2")
 
-        reader = classic_core.FileReader()
+        reader = classic_scanlog.FileReader()
 
         # Test single file read
         content = reader.read_file(str(file1))
@@ -486,7 +486,7 @@ class TestRustCoreClasses:
         - Anything longer than 8 hex digits is invalid
         - Hex or ignored philosophy: valid hex strings parsed, invalid strings return None
         """
-        processor = classic_core.FormIDProcessor()
+        processor = classic_scanlog.FormIDProcessor()
 
         # Test batch processing with validation
         formids = [
@@ -529,7 +529,7 @@ class TestRustCoreClasses:
 
     def test_formid_save_file_detection(self):
         """Test detection of save file FormIDs (FF prefix)."""
-        processor = classic_core.FormIDProcessor()
+        processor = classic_scanlog.FormIDProcessor()
 
         # Save file FormIDs (FF prefix - highest byte is 0xFF)
         assert processor.is_save_file_formid(0xFF000000) is True, "0xFF000000 is save file"
@@ -545,7 +545,7 @@ class TestRustCoreClasses:
 
     def test_formid_batch_with_metadata(self):
         """Test batch processing with save file metadata."""
-        processor = classic_core.FormIDProcessor()
+        processor = classic_scanlog.FormIDProcessor()
 
         formids = [
             "0xFF001234",    # Save file FormID
@@ -592,10 +592,10 @@ class TestRustCoreClasses:
         test_file.write_text("ERROR ERROR WARNING INFO ERROR")
 
         # Count patterns
-        count = classic_core.count_patterns_in_file(str(test_file), "ERROR")
+        count = classic_scanlog.count_patterns_in_file(str(test_file), "ERROR")
         assert count == 3
 
-        count = classic_core.count_patterns_in_file(str(test_file), "WARNING")
+        count = classic_scanlog.count_patterns_in_file(str(test_file), "WARNING")
         assert count == 1
 
 

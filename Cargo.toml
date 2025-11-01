@@ -11,6 +11,16 @@ members = [
     "classic-scanlog-core",
     "classic-config-core",
 
+    # Phase 1 - Core Infrastructure (Business Logic)
+    "classic-registry-core",
+    "classic-perf-core",
+    "classic-pybridge-core",
+    "classic-settings-core",
+    "classic-message-core",
+
+    # Phase 2 - Path Management (Business Logic)
+    "classic-path-core",
+
     # UI Coordination (Shared across CLI/TUI/GUI)
     "classic-ui-shared",
 
@@ -21,8 +31,15 @@ members = [
     "classic-scanlog-py",
     "classic-config-py",
 
-    # Facade
-    "classic-core",
+    # Phase 1 - Core Infrastructure (Python Bindings)
+    "classic-registry-py",
+    "classic-perf-py",
+    "classic-pybridge-py",
+    "classic-settings-py",
+    "classic-message-py",
+
+    # Phase 2 - Path Management (Python Bindings)
+    "classic-path-py",
 
     # Native Applications
     "classic-cli",
@@ -34,6 +51,7 @@ resolver = "2"
 [workspace.dependencies]
 # PyO3 bindings
 pyo3 = { version = "0.26.0", features = ["abi3-py312"] }
+pyo3-async-runtimes = { version = "0.26.0" }
 
 # Async runtime (ONE RUNTIME RULE)
 tokio = { version = "1.48.0", features = ["full"] }
@@ -104,6 +122,7 @@ tempfile = "3.18"
 
 [workspace.lints.rust]
 deprecated = "deny"
+unused = "deny"
 
 [profile.release]
 opt-level = 3

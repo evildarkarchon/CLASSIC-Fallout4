@@ -18,7 +18,7 @@ import pytest
 from types import SimpleNamespace
 
 try:
-    from classic_core.scanlog import RecordScanner, scan_records_batch, contains_record
+    from classic_scanlog import RecordScanner, scan_records_batch, contains_record
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False

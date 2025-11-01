@@ -31,7 +31,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 # Skip entire module if Rust extensions not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import test infrastructure
 from tests.test_infra.performance_utils import PerformanceTimer

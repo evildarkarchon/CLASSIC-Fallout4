@@ -1,0 +1,29 @@
+[package]
+name = "classic-settings-py"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-settings-core"
+license = "MIT"
+
+[lib]
+name = "classic_settings"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# Async Python support
+pyo3-async-runtimes = { workspace = true, features = ["tokio-runtime"] }
+
+# Core settings cache business logic
+classic-settings-core = { path = "../classic-settings-core" }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

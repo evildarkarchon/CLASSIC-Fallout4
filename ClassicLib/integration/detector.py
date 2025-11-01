@@ -44,106 +44,113 @@ def detect_rust_components() -> dict[str, bool]:
 
     components = _get_empty_component_dict()
 
+    # Check classic_scanlog module for scanlog components
     try:
-        import classic_core
-        logger.info(f"classic_core module loaded (version: {getattr(classic_core, '__version__', 'unknown')})")
+        import classic_scanlog
+        logger.info(f"classic_scanlog module loaded (version: {getattr(classic_scanlog, '__version__', 'unknown')})")
 
-        # Check scanlog module components
-        if hasattr(classic_core, "scanlog"):
-            scanlog = classic_core.scanlog
-            logger.debug("scanlog module detected")
+        # LogParser
+        if hasattr(classic_scanlog, "LogParser"):
+            components["parser"] = True
+            logger.debug("LogParser component available")
 
-            # LogParser
-            if hasattr(scanlog, "LogParser"):
-                components["parser"] = True
-                logger.debug("LogParser component available")
+        # FormIDAnalyzer
+        if hasattr(classic_scanlog, "FormIDAnalyzer"):
+            components["formid_analyzer"] = True
+            logger.debug("FormIDAnalyzer component available")
 
-            # FormIDAnalyzer
-            if hasattr(scanlog, "FormIDAnalyzer"):
-                components["formid_analyzer"] = True
-                logger.debug("FormIDAnalyzer component available")
+        # PluginAnalyzer
+        if hasattr(classic_scanlog, "PluginAnalyzer"):
+            components["plugin_analyzer"] = True
+            logger.debug("PluginAnalyzer component available")
 
-            # PluginAnalyzer
-            if hasattr(scanlog, "PluginAnalyzer"):
-                components["plugin_analyzer"] = True
-                logger.debug("PluginAnalyzer component available")
+        # RecordScanner
+        if hasattr(classic_scanlog, "RecordScanner"):
+            components["record_scanner"] = True
+            logger.debug("RecordScanner component available")
 
-            # RecordScanner
-            if hasattr(scanlog, "RecordScanner"):
-                components["record_scanner"] = True
-                logger.debug("RecordScanner component available")
+        # Report Generation
+        if hasattr(classic_scanlog, "ReportGenerator"):
+            components["report_generation"] = True
+            logger.debug("ReportGenerator component available")
 
-            # Report Generation
-            if hasattr(scanlog, "ReportGenerator") or hasattr(scanlog, "report"):
-                components["report_generation"] = True
-                logger.debug("ReportGenerator component available")
+        # Mod Detector functions
+        if hasattr(classic_scanlog, "detect_mods_batch") or hasattr(classic_scanlog, "detect_mods_single"):
+            components["mod_detector"] = True
+            logger.debug("ModDetector functions available")
 
-            # Mod Detector functions
-            if hasattr(scanlog, "detect_mods_batch") or hasattr(scanlog, "detect_mods_single"):
-                components["mod_detector"] = True
-                logger.debug("ModDetector functions available")
+        # SuspectScanner
+        if hasattr(classic_scanlog, "SuspectScanner"):
+            components["suspect_scanner"] = True
+            logger.debug("SuspectScanner component available")
 
-        # Check classic_scanlog standalone module for Phase 2 components
-        try:
-            import classic_scanlog
+        # SettingsValidator
+        if hasattr(classic_scanlog, "SettingsValidator"):
+            components["settings_validator"] = True
+            logger.debug("SettingsValidator component available")
 
-            # SuspectScanner
-            if hasattr(classic_scanlog, "SuspectScanner"):
-                components["suspect_scanner"] = True
-                logger.debug("SuspectScanner component available (classic_scanlog)")
+        # GpuDetector
+        if hasattr(classic_scanlog, "GpuDetector"):
+            components["gpu_detector"] = True
+            logger.debug("GpuDetector component available")
 
-            # SettingsValidator
-            if hasattr(classic_scanlog, "SettingsValidator"):
-                components["settings_validator"] = True
-                logger.debug("SettingsValidator component available (classic_scanlog)")
-
-            # GpuDetector
-            if hasattr(classic_scanlog, "GpuDetector"):
-                components["gpu_detector"] = True
-                logger.debug("GpuDetector component available (classic_scanlog)")
-
-            # FcxModeHandler
-            if hasattr(classic_scanlog, "FcxModeHandler"):
-                components["fcx_handler"] = True
-                logger.debug("FcxModeHandler component available (classic_scanlog)")
-
-        except ImportError:
-            logger.debug("classic_scanlog module not available for Phase 2 components")
-
-        # Check database module components
-        if hasattr(classic_core, "database"):
-            components["database"] = True
-            logger.debug("database module detected")
-
-            # Database Pool
-            if hasattr(classic_core.database, "RustDatabasePool") or hasattr(classic_core.database, "DatabasePool"):
-                components["database_pool"] = True
-                logger.debug("DatabasePool component available")
-
-        # Check file I/O module components
-        if hasattr(classic_core, "file_io"):
-            components["file_io"] = True
-            logger.debug("file_io module detected")
-
-            # FileIOCore
-            if hasattr(classic_core.file_io, "RustFileIOCore"):
-                components["file_io_core"] = True
-                logger.debug("FileIOCore component available")
-
-        # Check YAML module components
-        if hasattr(classic_core, "yaml"):
-            components["yaml"] = True
-            logger.debug("yaml module detected")
-
-            # RustYamlOperations
-            if hasattr(classic_core.yaml, "RustYamlOperations"):
-                components["yaml_operations"] = True
-                logger.debug("RustYamlOperations component available")
+        # FcxModeHandler
+        if hasattr(classic_scanlog, "FcxModeHandler"):
+            components["fcx_handler"] = True
+            logger.debug("FcxModeHandler component available")
 
     except ImportError as e:
-        logger.warning(f"classic_core module not available: {e}")
+        logger.warning(f"classic_scanlog module not available: {e}")
     except Exception as e:
-        logger.error(f"Error detecting Rust components: {e}")
+        logger.error(f"Error detecting classic_scanlog components: {e}")
+
+    # Check database module components
+    try:
+        import classic_database
+        logger.info(f"classic_database module loaded (version: {getattr(classic_database, '__version__', 'unknown')})")
+        components["database"] = True
+
+        # Database Pool
+        if hasattr(classic_database, "RustDatabasePool"):
+            components["database_pool"] = True
+            logger.debug("DatabasePool component available")
+
+    except ImportError as e:
+        logger.warning(f"classic_database module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting database components: {e}")
+
+    # Check file I/O module components
+    try:
+        import classic_file_io
+        logger.info(f"classic_file_io module loaded (version: {getattr(classic_file_io, '__version__', 'unknown')})")
+        components["file_io"] = True
+
+        # FileIOCore
+        if hasattr(classic_file_io, "RustFileIOCore"):
+            components["file_io_core"] = True
+            logger.debug("FileIOCore component available")
+
+    except ImportError as e:
+        logger.warning(f"classic_file_io module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting file_io components: {e}")
+
+    # Check YAML module components
+    try:
+        import classic_yaml
+        logger.info(f"classic_yaml module loaded (version: {getattr(classic_yaml, '__version__', 'unknown')})")
+        components["yaml"] = True
+
+        # RustYamlOperations
+        if hasattr(classic_yaml, "RustYamlOperations"):
+            components["yaml_operations"] = True
+            logger.debug("RustYamlOperations component available")
+
+    except ImportError as e:
+        logger.warning(f"classic_yaml module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting yaml components: {e}")
 
     # Check classic-config-core (standalone module)
     try:
@@ -169,28 +176,30 @@ def get_available_components() -> dict[str, Any]:
 
     This function gathers information about the available components by detecting
     Rust components and checking if they are disabled through an environment variable.
-    It also determines the version of the `classic_core` module if it is available.
+    It also determines versions of available Rust modules.
 
     Returns:
         dict[str, Any]: A dictionary containing:
             - "components": The result from `detect_rust_components()` function.
-            - "version": Version of `classic_core` module or 'unknown' if unavailable.
+            - "versions": Dict of module versions for available modules.
             - "disabled": Whether Rust components are disabled, determined by the
               environment variable `CLASSIC_DISABLE_RUST`.
     """
     disabled = os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in ("1", "true", "yes")
-    version = "unknown"
+    versions = {}
 
-    try:
-        if not disabled:
-            import classic_core
-            version = getattr(classic_core, '__version__', 'unknown')
-    except ImportError:
-        pass
+    if not disabled:
+        # Check versions of individual modules
+        for module_name in ["classic_scanlog", "classic_database", "classic_file_io", "classic_yaml", "classic_config"]:
+            try:
+                module = __import__(module_name)
+                versions[module_name] = getattr(module, '__version__', 'unknown')
+            except ImportError:
+                pass
 
     return {
         "components": detect_rust_components(),
-        "version": version,
+        "versions": versions,
         "disabled": disabled
     }
 

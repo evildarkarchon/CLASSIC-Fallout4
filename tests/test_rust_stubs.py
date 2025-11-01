@@ -10,7 +10,6 @@ from pathlib import Path
 
 # Test imports - these should work with the stub files
 try:
-    import classic_core
     import classic_config
     import classic_scanlog
 
@@ -18,57 +17,6 @@ try:
 except ImportError:
     RUST_AVAILABLE = False
     print("⚠️  Rust modules not available - stub files will be validated without runtime checks")
-
-
-def test_classic_core_stubs():
-    """Test classic_core stub file completeness."""
-    print("Testing classic_core.pyi...")
-
-    if not RUST_AVAILABLE:
-        print("  ⏭️  Skipping runtime checks (module not available)")
-        return
-
-    # Test root module classes
-    assert hasattr(classic_core, "FileReader")
-    assert hasattr(classic_core, "FormIDProcessor")
-    assert hasattr(classic_core, "count_patterns_in_file")
-
-    # Test utils submodule
-    assert hasattr(classic_core, "utils")
-    assert hasattr(classic_core.utils, "StringProcessor")
-    assert hasattr(classic_core.utils, "PathHandler")
-    assert hasattr(classic_core.utils, "RustPerformanceMonitor")
-
-    # Test scanlog submodule
-    assert hasattr(classic_core, "scanlog")
-    assert hasattr(classic_core.scanlog, "FormIDAnalyzer")
-    assert hasattr(classic_core.scanlog, "LogParser")
-    assert hasattr(classic_core.scanlog, "RustOrchestrator")
-    assert hasattr(classic_core.scanlog, "AnalysisConfig")
-    assert hasattr(classic_core.scanlog, "AnalysisResult")
-
-    # Test scanlog functions
-    assert hasattr(classic_core.scanlog, "extract_formids_batch")
-    assert hasattr(classic_core.scanlog, "is_valid_formid")
-    assert hasattr(classic_core.scanlog, "detect_mods_batch")
-
-    # Test database submodule
-    assert hasattr(classic_core, "database")
-    assert hasattr(classic_core.database, "RustDatabasePool")
-
-    # Test file_io submodule
-    assert hasattr(classic_core, "file_io")
-    assert hasattr(classic_core.file_io, "RustFileIOCore")
-    assert hasattr(classic_core.file_io, "EncodingDetector")
-
-    # Test yaml submodule
-    assert hasattr(classic_core, "yaml")
-    assert hasattr(classic_core.yaml, "RustYamlOperations")
-
-    # Test version
-    assert hasattr(classic_core, "__version__")
-
-    print("  ✅ classic_core.pyi is complete")
 
 
 def test_classic_config_stubs():
@@ -160,11 +108,9 @@ def test_stub_file_locations():
     """Test that stub files are in the correct locations."""
     print("Testing stub file locations...")
 
-    classic_core_stub = Path("classic-core/classic_core.pyi")
     classic_config_stub = Path("classic-config-core/classic_config.pyi")
     classic_scanlog_stub = Path("classic-scanlog/classic_scanlog.pyi")
 
-    assert classic_core_stub.exists(), f"Missing: {classic_core_stub}"
     assert classic_config_stub.exists(), f"Missing: {classic_config_stub}"
     assert classic_scanlog_stub.exists(), f"Missing: {classic_scanlog_stub}"
 
@@ -176,7 +122,6 @@ def test_stub_file_syntax():
     print("Testing stub file syntax...")
 
     stub_files = [
-        Path("classic-core/classic_core.pyi"),
         Path("classic-config-core/classic_config.pyi"),
         Path("classic-scanlog/classic_scanlog.pyi"),
     ]
@@ -209,9 +154,6 @@ def main():
         print()
 
         test_stub_file_syntax()
-        print()
-
-        test_classic_core_stubs()
         print()
 
         test_classic_config_stubs()

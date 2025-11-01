@@ -1,0 +1,44 @@
+[package]
+name = "classic-settings-core"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Core YAML settings cache with dual sync/async API"
+license = "MIT"
+
+[dependencies]
+# ONE RUNTIME RULE - shared Tokio runtime
+classic-shared-core = { path = "../classic-shared-core" }
+
+# Performance monitoring
+classic-perf-core = { path = "../classic-perf-core" }
+
+# YAML parsing
+yaml-rust2 = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true, features = ["fs", "io-util"] }
+
+# Thread safety
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+once_cell = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+
+[dev-dependencies]
+serial_test = "3.2"
+tempfile = "3.14"
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

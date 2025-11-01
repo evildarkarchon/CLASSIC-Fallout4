@@ -45,15 +45,18 @@ uv run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
 ### Rust Extension Development
 ```bash
 # Method 1: Build wheel (MOST RELIABLE - RECOMMENDED)
-maturin build --release --out classic-core/dist
-uv pip install classic-core/dist/classic_*.whl --force-reinstall
+# Build individual modules:
+cd classic-yaml-py && maturin build --release --out dist && cd ..
+uv pip install classic-yaml-py/dist/classic_yaml_py-*.whl --force-reinstall
+
+# Or use rebuild_rust.ps1 to build all modules:
+./rebuild_rust.ps1
 
 # Method 2: Editable install (DEVELOPMENT)
-rm .venv/Lib/site-packages/classic_core.pyd  # Remove old FIRST
 uv pip install -e . --force-reinstall
 
 # Verify Rust acceleration
-uv run python -c "import classic_core; print(f'Rust version: {classic_core.__version__}')"
+uv run python -c "import classic_yaml; print(f'Rust YAML version: {classic_yaml.__version__}')"
 uv run python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
 ```
 
@@ -67,8 +70,8 @@ uv run python -c "from ClassicLib.integration.status import print_rust_status; p
   - **Foundation Layer**: `classic-shared` (runtime, errors, utilities)
   - **Business Logic Layer** (Pure Rust - no PyO3): `-core` crates
   - **Python Bindings Layer** (PyO3 adapters): `-py` crates
-  - **Facade Layer**: `classic-core` (re-exports all Python modules)
 - **Integration**: PyO3 0.26.0 bindings with native async solution
+- **Direct Imports**: Python imports individual modules (e.g., `import classic_yaml`)
 - **Fallback**: Full Python implementations ensure compatibility
 - **Transparent**: Automatic acceleration - no API changes required
 
@@ -397,7 +400,7 @@ All maintain backward compatibility through re-exports.
 
 ## YAML Operations (yaml-rust2)
 - **Library**: yaml-rust2 v0.10.4 (YAML 1.2 compliant, pure Rust, owned types)
-- **Import**: `from classic_core import yaml; ops = yaml.RustYamlOperations()`
+- **Import**: `import classic_yaml; ops = classic_yaml.RustYamlOperations()`
 - **Performance**: 15-30x faster than ruamel.yaml
 - **Features**: Multi-document, anchor/alias, insertion order, pure Rust safety
 
@@ -405,8 +408,8 @@ All maintain backward compatibility through re-exports.
 - Output test results to file to avoid truncation
 - Use Mixins with TYPE_CHECKING for MainWindow extensions
 - Maintain API compatibility with deprecation warnings
-- **classic_core import pattern**: Always use `from classic_core import <module>` NOT `from classic_core.<module> import <class>`
-- **Workspace modularization complete**: classic-rust renamed to classic-core as thin facade (2025-10-06)
+- **Direct module imports**: Import individual Rust modules directly (e.g., `import classic_yaml`, `import classic_scanlog`)
+- **Facade removed** (2025-11-01): classic-core facade eliminated - Python imports individual modules for cleaner PyO3 integration
 - **ONE RUNTIME RULE**: All Rust crates use `classic_shared::get_runtime()` to share global Tokio runtime
 - **PyO3 module registration**: `#[pyclass]` types ONLY export from standalone cdylib modules
 - **Standalone module pattern**: Each Rust crate exporting Python classes must have `crate-type = ["cdylib", "rlib"]`

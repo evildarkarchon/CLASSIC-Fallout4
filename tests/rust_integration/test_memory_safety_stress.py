@@ -131,7 +131,7 @@ class TestMemorySafetyStress:
         """Setup test environment."""
         self.rust_available = False
         try:
-            import classic_core
+            import classic_scanlog
             self.rust_available = True
         except ImportError:
             pass

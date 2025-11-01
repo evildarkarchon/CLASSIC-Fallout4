@@ -26,8 +26,7 @@ $ShadowingDirs = @(
     "classic_database",
     "classic_file_io",
     "classic_scanlog",
-    "classic_config",
-    "classic_core"
+    "classic_config"
 )
 
 $foundShadowingDirs = @()
@@ -122,14 +121,14 @@ else {
 # The Rust workspace uses separated architecture:
 #   - *-core crates: Pure Rust business logic (rlib only, NO PyO3)
 #   - *-py crates: Thin PyO3 bindings (cdylib, produces .pyd files)
-#   - classic-core: Facade crate re-exporting Phase 1 components
 #
 # This separation enables:
 #   1. CLI/TUI applications to use pure Rust business logic directly
 #   2. Python applications to use the same logic via PyO3 bindings
 #   3. 10-150x performance improvements for all operations
+# Python imports individual modules directly (e.g., import classic_yaml)
 #
-if (Test-Path "classic-core") {
+if (Test-Path "classic-yaml-py") {
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host "Building Rust workspace (separated architecture)..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
@@ -143,8 +142,7 @@ if (Test-Path "classic-core") {
         @{Name = "classic_database"; Dir = "classic-database-py"; Description = "SQLite operations (bindings)"},
         @{Name = "classic_file_io"; Dir = "classic-file-io-py"; Description = "File I/O + DDS parsing (bindings)"},
         @{Name = "classic_scanlog"; Dir = "classic-scanlog-py"; Description = "Log parsing + analysis (bindings)"},
-        @{Name = "classic_config"; Dir = "classic-config-py"; Description = "YamlData configuration (bindings)"},
-        @{Name = "classic_core"; Dir = "classic-core"; Description = "Facade re-exporting Phase 1 components"}
+        @{Name = "classic_config"; Dir = "classic-config-py"; Description = "YamlData configuration (bindings)"}
     )
 
     # Build all Rust modules
@@ -227,7 +225,7 @@ if (Test-Path "classic-core") {
             }
             Write-Host ""
             Write-Host "Note: Files are extracted directly to rust_extensions/ (no subdirectories)" -ForegroundColor Yellow
-            Write-Host "This prevents shadowing the actual classic_core module in site-packages" -ForegroundColor Yellow
+            Write-Host "This prevents shadowing the actual Rust modules in site-packages" -ForegroundColor Yellow
 
             # Create manifest file
             $manifestContent = @"

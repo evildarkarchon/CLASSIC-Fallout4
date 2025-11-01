@@ -62,6 +62,7 @@ fn test_lru_eviction_on_overflow() {
 }
 
 #[test]
+#[allow(unused)]
 fn test_cache_metrics() {
     let handler = PathHandler::new_with_limits(300, 100);
 

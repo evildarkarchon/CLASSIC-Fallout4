@@ -581,9 +581,9 @@ def cleanup_after_test():
     # Clear any module-level caches if they exist
     try:
         # Clear Rust caches if available
-        import classic_core
-        if hasattr(classic_core, 'clear_all_caches'):
-            classic_core.clear_all_caches()
+        import classic_scanlog
+        if hasattr(classic_scanlog, 'clear_all_caches'):
+            classic_scanlog.clear_all_caches()
     except ImportError:
         pass
 

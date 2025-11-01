@@ -31,7 +31,7 @@ except ImportError:
 
 # Try to import the Rust core module
 try:
-    from classic_core.database import RustDatabasePool
+    from classic_database import RustDatabasePool
     RUST_CORE_AVAILABLE = True
 except ImportError:
     RustDatabasePool = None
@@ -386,7 +386,7 @@ class TestRustAsyncDatabasePool:
                 ("00045678", "TestMod.esp"),
             ]
 
-            with patch("classic_core.database_pool.GlobalRegistry.get_game", return_value="Fallout4"):
+            with patch("ClassicLib.registry.GlobalRegistry.get_game", return_value="Fallout4"):
                 results = await pool.get_entries_batch(pairs)
 
                 assert len(results) == 3
@@ -399,7 +399,7 @@ class TestRustAsyncDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("classic_core.database_pool.DB_PATHS", [db_path]):
+        with patch("ClassicLib.Constants.DB_PATHS", [db_path]):
             pool = RustAsyncDatabasePool(cache_ttl_seconds=60)
             await pool.initialize()
 
@@ -436,7 +436,7 @@ class TestRustAsyncDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("classic_core.database_pool.DB_PATHS", [db_path]):
+        with patch("ClassicLib.Constants.DB_PATHS", [db_path]):
             manager1 = DatabasePoolManager()
             manager2 = DatabasePoolManager()
 
@@ -466,7 +466,7 @@ class TestRustAsyncDatabasePool:
 
             async def worker(worker_id):
                 results = []
-                with patch("classic_core.database_pool.GlobalRegistry.get_game", return_value="Fallout4"):
+                with patch("ClassicLib.registry.GlobalRegistry.get_game", return_value="Fallout4"):
                     for i in range(10):
                         formid = f"{12345 + worker_id:08}"
                         result = await pool.get_entry(formid, "Fallout4.esm")
@@ -540,7 +540,7 @@ class TestDatabasePoolPerformance:
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
-            with patch("classic_core.database_pool.GlobalRegistry.get_game", return_value="Fallout4"):
+            with patch("ClassicLib.registry.GlobalRegistry.get_game", return_value="Fallout4"):
                 # Warm up cache
                 await pool.get_entry("00012345", "Fallout4.esm")
 

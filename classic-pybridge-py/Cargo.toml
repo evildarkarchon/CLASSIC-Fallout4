@@ -1,0 +1,26 @@
+[package]
+name = "classic-pybridge-py"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-pybridge-core"
+license = "MIT"
+
+[lib]
+name = "classic_pybridge"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# Core async bridge utilities
+classic-pybridge-core = { path = "../classic-pybridge-core" }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

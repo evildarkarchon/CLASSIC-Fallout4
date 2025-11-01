@@ -26,7 +26,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 # Skip entire module if Rust extensions not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import test infrastructure
 from tests.test_infra.async_test_utils import AsyncTestCase

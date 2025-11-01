@@ -17,9 +17,9 @@ from unittest.mock import Mock, patch
 import pytest
 
 # Skip these tests if Rust extensions are not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
-import classic_core
+import classic_scanlog
 from .stress_test_fixtures import (
     ConcurrencyTestHelper,
     MemoryTracker,
@@ -53,7 +53,7 @@ class TestThreadSafetyValidation:
         Multiple threads simultaneously use the same StringProcessor
         instance to ensure thread-safe operations and consistent results.
         """
-        from classic_core.utils import StringProcessor
+        from classic_scanlog.utils import StringProcessor
         processor = StringProcessor()
 
         def concurrent_string_operation(thread_id: int, iteration: int, shared_data: list):
@@ -108,7 +108,7 @@ class TestThreadSafetyValidation:
         Multiple threads perform pattern matching operations on the same
         processor to ensure internal state management is thread-safe.
         """
-        from classic_core.utils import LogProcessor
+        from classic_scanlog.utils import LogProcessor
         processor = LogProcessor()
         patterns = ["ERROR", "WARNING", "INFO", "FormID", "Plugin"]
 
@@ -548,7 +548,7 @@ class TestHighContentionScenarios:
         Creates maximum concurrent load on Rust components to test
         stability and performance under extreme stress conditions.
         """
-        from classic_core.utils import LogProcessor
+        from classic_scanlog.utils import LogProcessor
         processor = LogProcessor()
 
         # Generate challenging test data
@@ -644,7 +644,7 @@ class TestHighContentionScenarios:
                                for i in range(100)]  # ~100KB per thread
 
                 # Process with Rust components (internal memory allocation)
-                from classic_core.utils import StringProcessor
+                from classic_scanlog.utils import StringProcessor
                 processor = StringProcessor()
                 processed = processor.process_batch(large_strings, "upper")
 

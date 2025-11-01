@@ -13,8 +13,7 @@ $RustModules = @(
     @{WheelName = "classic_database_py"; Dir = "classic-database-py"; ImportName = "classic_database" },
     @{WheelName = "classic_file_io_py"; Dir = "classic-file-io-py"; ImportName = "classic_file_io" },
     @{WheelName = "classic_scanlog_py"; Dir = "classic-scanlog-py"; ImportName = "classic_scanlog" },
-    @{WheelName = "classic_config_py"; Dir = "classic-config-py"; ImportName = "classic_config" },
-    @{WheelName = "classic_core"; Dir = "classic-core"; ImportName = "classic_core" }
+    @{WheelName = "classic_config_py"; Dir = "classic-config-py"; ImportName = "classic_config" }
 )
 
 Write-Host "🧹 Cleaning old builds..." -ForegroundColor Cyan

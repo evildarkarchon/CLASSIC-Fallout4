@@ -28,13 +28,12 @@ RUST_AVAILABLE = False
 _rust_io = None
 
 try:
-    import classic_core
+    import classic_file_io
 
-    if hasattr(classic_core, "file_io"):
-        if hasattr(classic_core.file_io, "RustFileIOCore"):
-            _rust_io = classic_core.file_io.RustFileIOCore
-            RUST_AVAILABLE = True
-            logger.info("✓ Rust FileIOCore available (10-20x speedup)")
+    if hasattr(classic_file_io, "RustFileIOCore"):
+        _rust_io = classic_file_io.RustFileIOCore
+        RUST_AVAILABLE = True
+        logger.info("✓ Rust FileIOCore available (10-20x speedup)")
 except ImportError:
     pass
 

@@ -79,7 +79,7 @@ class ReportParityValidator(ParityValidator):
 
         try:
             # Try to import Rust report generation components
-            import classic_core.scanlog as rust_scanlog
+            import classic_scanlog as rust_scanlog
             if hasattr(rust_scanlog, "ReportGenerator"):
                 return rust_scanlog.ReportGenerator()
             elif hasattr(rust_scanlog, "report"):

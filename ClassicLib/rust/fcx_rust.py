@@ -15,9 +15,9 @@ from __future__ import annotations
 from ClassicLib.ScanLog.fragments import ReportFragment
 
 try:
-    import classic_core
+    import classic_scanlog
 
-    RustFcxModeHandler = classic_core.scanlog.FcxModeHandler
+    RustFcxModeHandler = classic_scanlog.FcxModeHandler
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RustFcxModeHandler = None

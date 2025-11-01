@@ -23,9 +23,9 @@ if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 try:
-    import classic_core
+    import classic_scanlog
 
-    RustSettingsValidator = classic_core.scanlog.SettingsValidator
+    RustSettingsValidator = classic_scanlog.SettingsValidator
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RustSettingsValidator = None

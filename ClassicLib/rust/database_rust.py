@@ -12,8 +12,8 @@ import asyncio
 from typing import Any, ClassVar
 
 try:
-    import classic_core
-    RustDatabasePool = classic_core.database.RustDatabasePool
+    import classic_database
+    RustDatabasePool = classic_database.RustDatabasePool
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RUST_AVAILABLE = False

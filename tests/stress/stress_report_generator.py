@@ -107,7 +107,7 @@ class StressTestReporter:
         # Check if Rust extensions are available
         rust_available = True
         try:
-            import classic_core
+            import classic_scanlog
         except ImportError:
             rust_available = False
 

@@ -15,9 +15,9 @@ from unittest.mock import Mock, patch
 import pytest
 
 # Skip these tests if Rust extensions are not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
-import classic_core
+import classic_scanlog
 from tests.stress.stress_test_fixtures import (
     MemoryTracker,
     PerformanceProfiler,
@@ -51,7 +51,7 @@ class TestSustainedLoadPerformance:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.StringProcessor()
+        processor = classic_scanlog.utils.StringProcessor()
 
         # Test parameters
         duration_seconds = 30  # 30-second sustained load test
@@ -126,7 +126,7 @@ class TestSustainedLoadPerformance:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate test log content
         log_content = stress_data_generator.generate_large_crash_log(
@@ -358,7 +358,7 @@ class TestConcurrentPerformance:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Test data
         test_content = """
@@ -438,8 +438,8 @@ class TestConcurrentPerformance:
 
         with AsyncBridge.get_instance() as bridge:
             io_core = FileIOCore()
-            log_processor = classic_core.utils.LogProcessor()
-            string_processor = classic_core.utils.StringProcessor()
+            log_processor = classic_scanlog.utils.LogProcessor()
+            string_processor = classic_scanlog.utils.StringProcessor()
 
             # Prepare test data
             log_files = []
@@ -528,8 +528,8 @@ class TestConcurrentPerformance:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_core.utils.LogProcessor()
-        string_processor = classic_core.utils.StringProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
+        string_processor = classic_scanlog.utils.StringProcessor()
 
         # Generate substantial workload
         large_content = """
@@ -625,7 +625,7 @@ class TestPerformanceDegradation:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate test content
         log_content = stress_data_generator.generate_large_crash_log(

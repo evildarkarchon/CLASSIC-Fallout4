@@ -383,10 +383,10 @@ def get_yaml_operations() -> Any:
 
     if not _is_rust_disabled() and components.get("yaml_operations", False):
         try:
-            import classic_core
-            if hasattr(classic_core, "yaml") and hasattr(classic_core.yaml, "RustYamlOperations"):
+            import classic_yaml
+            if hasattr(classic_yaml, "RustYamlOperations"):
                 logger.debug("Using Rust YAML Operations (15-30x parsing, 10-20x writing speedup)")
-                return classic_core.yaml.RustYamlOperations()
+                return classic_yaml.RustYamlOperations()
         except (ImportError, AttributeError) as e:
             logger.warning(f"Failed to get Rust YAML Operations: {e}")
 

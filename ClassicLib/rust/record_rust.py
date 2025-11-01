@@ -48,9 +48,9 @@ class RustRecordScanner:
         self.yamldata = yamldata
 
         try:
-            import classic_core
-            if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "RecordScanner"):
-                RustRecordScannerImpl = classic_core.scanlog.RecordScanner
+            import classic_scanlog
+            if hasattr(classic_scanlog, "RecordScanner"):
+                RustRecordScannerImpl = classic_scanlog.RecordScanner
 
                 # Extract required parameters from yamldata
                 target_records = getattr(yamldata, "classic_records_list", [])
@@ -65,7 +65,7 @@ class RustRecordScanner:
                 self._use_rust = True
                 logger.debug("🚀 RustRecordScanner: Using RUST implementation (40x faster)")
             else:
-                logger.debug("⚠️  RustRecordScanner: RecordScanner not found in classic_core")
+                logger.debug("⚠️  RustRecordScanner: RecordScanner not found in classic_scanlog")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Rust RecordScanner: {e}")
 

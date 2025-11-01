@@ -62,6 +62,7 @@ harness = false
 
 [lints.rust]
 deprecated = "deny"
-rust_2024_compatibility = "warn"
-unsafe_code = "forbid"
-missing_docs = "warn" # benchmarks are exempt, deny was causing issues with them.
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"

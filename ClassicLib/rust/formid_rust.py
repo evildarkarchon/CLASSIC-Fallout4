@@ -55,10 +55,10 @@ class RustFormIDAnalyzer:
         self.formid_db_exists = formid_db_exists
 
         try:
-            import classic_core
+            import classic_scanlog
             # Try to use FormIDAnalyzerCore (optimized version) first
-            if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "FormIDAnalyzerCore"):
-                FormIDAnalyzerCore = classic_core.scanlog.FormIDAnalyzerCore
+            if hasattr(classic_scanlog, "FormIDAnalyzerCore"):
+                FormIDAnalyzerCore = classic_scanlog.FormIDAnalyzerCore
 
                 # Extract required data from yamldata
                 crashgen_name = getattr(yamldata, "crashgen_name", "")
@@ -75,14 +75,14 @@ class RustFormIDAnalyzer:
                 )
                 self._use_rust_core = True
                 logger.debug("🚀 RustFormIDAnalyzer: Using RUST FormIDAnalyzerCore (zero-copy optimizations)")
-            elif hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "FormIDAnalyzer"):
+            elif hasattr(classic_scanlog, "FormIDAnalyzer"):
                 # Fallback to simple FormIDAnalyzer
-                RustFormIDAnalyzerImpl = classic_core.scanlog.FormIDAnalyzer
+                RustFormIDAnalyzerImpl = classic_scanlog.FormIDAnalyzer
                 self._rust_analyzer = RustFormIDAnalyzerImpl()
                 self._use_rust = True
                 logger.debug("🚀 RustFormIDAnalyzer: Using RUST FormIDAnalyzer (50x faster)")
             else:
-                logger.debug("⚠️  RustFormIDAnalyzer: FormIDAnalyzer not found in classic_core")
+                logger.debug("⚠️  RustFormIDAnalyzer: FormIDAnalyzer not found in classic_scanlog")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Rust FormIDAnalyzer: {e}")
 
@@ -118,9 +118,9 @@ class RustFormIDAnalyzer:
         elif self._use_rust and self._rust_analyzer:
             try:
                 # Use simple Rust analyzer
-                import classic_core
-                if hasattr(classic_core.scanlog, "extract_formids_batch"):
-                    extract_formids_batch = classic_core.scanlog.extract_formids_batch
+                import classic_scanlog
+                if hasattr(classic_scanlog, "extract_formids_batch"):
+                    extract_formids_batch = classic_scanlog.extract_formids_batch
                     formids = extract_formids_batch([segment_callstack])
                     # extract_formids_batch returns a list of lists, get the first one
                     return formids[0] if formids else []
@@ -209,9 +209,9 @@ class RustFormIDAnalyzer:
         """
         if self._use_rust:
             try:
-                import classic_core
-                if hasattr(classic_core.scanlog, "extract_formids_batch"):
-                    extract_formids_batch = classic_core.scanlog.extract_formids_batch
+                import classic_scanlog
+                if hasattr(classic_scanlog, "extract_formids_batch"):
+                    extract_formids_batch = classic_scanlog.extract_formids_batch
                     return extract_formids_batch(segments)
             except Exception as e:
                 logger.debug(f"Rust batch extraction failed: {e}")

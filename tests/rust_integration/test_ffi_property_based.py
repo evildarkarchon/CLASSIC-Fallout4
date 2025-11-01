@@ -99,7 +99,7 @@ class TestRustFFIPropertyBased:
         # Mock the Rust module if not available
         self.rust_available = False
         try:
-            import classic_core
+            import classic_scanlog
             self.rust_available = True
         except ImportError:
             pass
@@ -346,10 +346,10 @@ class TestRustFFIPropertyBased:
             pytest.skip("Rust module not available")
 
         try:
-            import classic_core
+            import classic_scanlog
 
             # Test serialization roundtrip
-            result = classic_core.test_json_roundtrip(data)
+            result = classic_scanlog.test_json_roundtrip(data)
 
             # Should preserve structure
             assert isinstance(result, dict)

@@ -16,11 +16,11 @@ Tests cover:
 import pytest
 
 try:
-    import classic_core
-    detect_mods_single = classic_core.scanlog.detect_mods_single
-    detect_mods_double = classic_core.scanlog.detect_mods_double
-    detect_mods_important = classic_core.scanlog.detect_mods_important
-    detect_mods_batch = classic_core.scanlog.detect_mods_batch
+    import classic_scanlog
+    detect_mods_single = classic_scanlog.detect_mods_single
+    detect_mods_double = classic_scanlog.detect_mods_double
+    detect_mods_important = classic_scanlog.detect_mods_important
+    detect_mods_batch = classic_scanlog.detect_mods_batch
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RUST_AVAILABLE = False

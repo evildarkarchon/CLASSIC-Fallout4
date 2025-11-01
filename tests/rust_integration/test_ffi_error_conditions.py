@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.rust]
 
 
 class MockRustModule:
-    """Mock Rust module for testing when classic_core is unavailable."""
+    """Mock Rust module for testing when Rust modules are unavailable."""
 
     class RustError(Exception):
         """Mock Rust error type."""
@@ -56,9 +56,9 @@ class TestFFIErrorConditions:
         """Setup test environment."""
         self.rust_available = False
         try:
-            import classic_core
+            import classic_scanlog
             self.rust_available = True
-            self.rust_module = classic_core
+            self.rust_module = classic_scanlog
         except ImportError:
             self.rust_module = MockRustModule()
 

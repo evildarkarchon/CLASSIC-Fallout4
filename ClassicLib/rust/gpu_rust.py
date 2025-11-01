@@ -14,10 +14,10 @@ Key API Translations:
 from __future__ import annotations
 
 try:
-    import classic_core
+    import classic_scanlog
 
-    RustGpuDetector = classic_core.scanlog.GpuDetector
-    RustGpuInfo = classic_core.scanlog.GpuInfo
+    RustGpuDetector = classic_scanlog.GpuDetector
+    RustGpuInfo = classic_scanlog.GpuInfo
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RustGpuDetector = None

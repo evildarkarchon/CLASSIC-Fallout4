@@ -19,9 +19,9 @@ from typing import List, Dict, Any
 import pytest
 
 # Skip these tests if Rust extensions are not available
-pytest.importorskip("classic_core", reason="Rust extensions not available")
+pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
-import classic_core
+import classic_scanlog
 from .stress_test_fixtures import (
     ConcurrencyTestHelper,
     MemoryTracker,
@@ -57,7 +57,7 @@ class TestMalformedDataHandling:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate different types of corrupted logs
         corrupted_logs = [
@@ -145,7 +145,7 @@ class TestMalformedDataHandling:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.FormIDProcessor()
+        processor = classic_scanlog.FormIDProcessor()
 
         # Generate various malformed FormID patterns
         malformed_formids = []
@@ -241,7 +241,7 @@ class TestMalformedDataHandling:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Generate logs with various plugin data issues
         invalid_plugin_logs = [
@@ -525,7 +525,7 @@ class TestResourceFailureRecovery:
         simulator = resource_exhaustion_simulator
 
         # Simulate memory-intensive operations with pressure
-        processor = classic_core.utils.StringProcessor()
+        processor = classic_scanlog.utils.StringProcessor()
         allocation_results = []
 
         for i in range(50):  # 50 memory-intensive operations
@@ -617,7 +617,7 @@ class TestPartialFailureHandling:
 
         with AsyncBridge.get_instance() as bridge:
             io_core = FileIOCore()
-            processor = classic_core.utils.LogProcessor()
+            processor = classic_scanlog.utils.LogProcessor()
 
             # Create mixed batch of files (some good, some problematic)
             batch_files = []
@@ -722,7 +722,7 @@ class TestPartialFailureHandling:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_core.utils.LogProcessor()
+        processor = classic_scanlog.utils.LogProcessor()
 
         # Create test data with mix of valid and invalid content
         test_contents = [
@@ -1025,7 +1025,7 @@ class TestCascadingFailureRecovery:
 
         with AsyncBridge.get_instance() as bridge:
             io_core = FileIOCore()
-            processor = classic_core.utils.LogProcessor()
+            processor = classic_scanlog.utils.LogProcessor()
 
             # Create scenario with deliberate error injection
             error_injection_points = [

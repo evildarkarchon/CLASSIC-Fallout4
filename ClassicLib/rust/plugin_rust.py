@@ -52,9 +52,9 @@ class RustPluginAnalyzer:
         self.yamldata = yamldata
 
         try:
-            import classic_core
-            if hasattr(classic_core, "scanlog") and hasattr(classic_core.scanlog, "PluginAnalyzer"):
-                RustPluginAnalyzerImpl = classic_core.scanlog.PluginAnalyzer
+            import classic_scanlog
+            if hasattr(classic_scanlog, "PluginAnalyzer"):
+                RustPluginAnalyzerImpl = classic_scanlog.PluginAnalyzer
 
                 # Extract required parameters from yamldata
                 game_ignore_plugins = getattr(yamldata, "game_ignore_plugins", [])
@@ -75,7 +75,7 @@ class RustPluginAnalyzer:
                 self._use_rust = True
                 logger.debug("🚀 RustPluginAnalyzer: Using RUST implementation (30x faster)")
             else:
-                logger.debug("⚠️  RustPluginAnalyzer: PluginAnalyzer not found in classic_core")
+                logger.debug("⚠️  RustPluginAnalyzer: PluginAnalyzer not found in classic_scanlog")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Rust PluginAnalyzer: {e}")
 

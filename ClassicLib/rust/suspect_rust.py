@@ -21,9 +21,9 @@ if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 try:
-    import classic_core
+    import classic_scanlog
 
-    RustSuspectScanner = classic_core.scanlog.SuspectScanner
+    RustSuspectScanner = classic_scanlog.SuspectScanner
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RustSuspectScanner = None

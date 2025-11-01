@@ -78,3 +78,4 @@ rust_2024_compatibility = "warn"
 unsafe_code = "deny"  # We don't use unsafe, but Slint dependencies do
 missing_docs = "warn"   # Encourage documentation
 deprecated = "deny"
+unused = "deny"
