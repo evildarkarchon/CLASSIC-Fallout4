@@ -1,0 +1,89 @@
+"""
+Pure Python fallback implementation of IniValidator.
+
+This module provides a Python-only implementation of INI file validation
+that matches the Rust interface.
+"""
+
+from pathlib import Path
+
+from ClassicLib.ScanGame.Config import ConfigFileCache
+from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
+
+
+class IniValidator:
+    """Validates game INI configuration files.
+
+    This is a Python fallback implementation that matches the Rust interface.
+    It checks INI files for known issues and configuration problems.
+
+    Attributes:
+        game_name: Name of the game (e.g., "Fallout4", "Skyrim").
+
+    Example:
+        >>> validator = IniValidator("Fallout4")
+        >>> report = validator.validate_inis(Path("/game/root"))
+        >>> print(report)
+    """
+
+    def __init__(self, game_name: str) -> None:
+        """Initialize IniValidator for a specific game.
+
+        Args:
+            game_name: Name of the game to validate INIs for.
+        """
+        self.game_name = game_name
+
+    def validate_inis(self, game_root: Path) -> str:
+        """Validate INI files and return formatted report.
+
+        Performs comprehensive validation of game INI files and returns
+        a formatted string report of issues and recommendations.
+
+        Args:
+            game_root: Path to game root directory.
+
+        Returns:
+            Formatted validation report string.
+
+        Example:
+            >>> validator = IniValidator("Fallout4")
+            >>> report = validator.validate_inis(Path("/game"))
+            >>> if report:
+            ...     print("Issues found:", report)
+        """
+        # Use existing Python implementation
+        from ClassicLib.ScanGame.ScanModInis import scan_mod_inis
+
+        return scan_mod_inis()
+
+    def detect_all_issues(self, config_files: dict[str, Path]) -> list[ConfigIssue]:
+        """Detect all INI configuration issues.
+
+        Scans INI files for known configuration issues and returns a list
+        of ConfigIssue objects describing each problem.
+
+        Args:
+            config_files: Dictionary mapping lowercase filenames to file paths.
+
+        Returns:
+            List of ConfigIssue objects describing detected problems.
+
+        Example:
+            >>> validator = IniValidator("Fallout4")
+            >>> config_map = {"epo.ini": Path("/game/epo.ini")}
+            >>> issues = validator.detect_all_issues(config_map)
+            >>> for issue in issues:
+            ...     print(f"{issue.setting}: {issue.description}")
+        """
+        # Create ConfigFileCache for issue detection
+        config_cache = ConfigFileCache()
+
+        # Use existing async detection logic
+        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
+
+        bridge = AsyncBridge.get_instance()
+        issues = bridge.run_async(detect_all_ini_issues_async(config_cache))
+
+        return issues

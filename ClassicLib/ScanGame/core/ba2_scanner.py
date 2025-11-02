@@ -147,12 +147,10 @@ class BA2ArchiveScanner:
             """
             local_issues: dict[str, set[str]] = {
                 "ba2_frmt": set(),
-                "animdata": set(),
                 "tex_dims": set(),
                 "tex_frmt": set(),
                 "snd_frmt": set(),
                 "xse_file": set(),
-                "previs": set(),
             }
 
             # Read BA2 header
@@ -362,9 +360,7 @@ class BA2ArchiveScanner:
 
         Uses BSArch.exe to list files in the archive and validates:
         - Sound file formats (checks for MP3/M4A which should be XWM)
-        - Animation data presence
         - XSE script files
-        - Previs/Precombine files
 
         Args:
             file_path: The path to the BA2 file.
@@ -385,10 +381,8 @@ class BA2ArchiveScanner:
             ...     print("Found sound format issues")
         """
         local_issues: dict[str, set[str]] = {
-            "animdata": set(),
             "snd_frmt": set(),
             "xse_file": set(),
-            "previs": set(),
         }
         proc: asyncio.subprocess.Process | None = None  # Initialize to None for exception handler access
 
@@ -437,9 +431,7 @@ class BA2ArchiveScanner:
 
         Scans through the file list from a GNRL BA2 archive and checks for:
         - MP3/M4A sound files (should be XWM for Bethesda games)
-        - AnimationFileData directories
         - XSE script files (F4SE, SKSE, etc.)
-        - Previs/Precombine files (.uvd, _oc.nif)
 
         Args:
             files: List of file paths in the BA2 (lowercase).
@@ -449,24 +441,18 @@ class BA2ArchiveScanner:
             local_issues: Dictionary to store detected issues.
 
         Example:
-            >>> issues = {"snd_frmt": set(), "animdata": set(), "xse_file": set(), "previs": set()}
+            >>> issues = {"snd_frmt": set(), "xse_file": set()}
             >>> files = ["sounds\\music.mp3", "scripts\\f4se\\example.pex"]
             >>> BA2ArchiveScanner.analyze_general_files(files, "mod.ba2", path, xse, issues)
             >>> len(issues["snd_frmt"])
             1
         """
-        has_previs_files = has_anim_data = has_xse_files = False
+        has_xse_files = False
 
         for file in files:
             # Check sound formats
             if file.endswith((".mp3", ".m4a")):
                 local_issues["snd_frmt"].add(f"  - {file[-3:].upper()} : {filename} > {file}\n")
-                continue
-
-            # Check animation data
-            if not has_anim_data and "animationfiledata" in file:
-                has_anim_data = True
-                local_issues["animdata"].add(f"  - {filename}\n")
                 continue
 
             # Check XSE files
@@ -478,11 +464,6 @@ class BA2ArchiveScanner:
                 has_xse_files = True
                 local_issues["xse_file"].add(f"  - {filename}\n")
                 continue
-
-            # Check previs files
-            if not has_previs_files and file.endswith((".uvd", "_oc.nif")):
-                has_previs_files = True
-                local_issues["previs"].add(f"  - {filename}\n")
 
     @staticmethod
     def merge_scan_results(results: list, target_issues: dict[str, set[str]]) -> None:

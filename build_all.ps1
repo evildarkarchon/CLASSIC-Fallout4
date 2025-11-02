@@ -22,11 +22,18 @@ Write-Host ""
 # These directories can be created by accidental wheel extractions or build artifacts
 $ShadowingDirs = @(
     "classic_shared",
-    "classic_yaml",
+    "classic_config",
     "classic_database",
     "classic_file_io",
+    "classic_message",
+    "classic_path",
+    "classic_perf",
+    "classic_pybridge",
+    "classic_registry",
+    "classic_scangame",
     "classic_scanlog",
-    "classic_config"
+    "classic_settings",
+    "classic_yaml"
 )
 
 $foundShadowingDirs = @()
@@ -138,11 +145,18 @@ if (Test-Path "rust/python-bindings/classic-yaml-py") {
     # Note: Only *-py crates produce .pyd files; *-core crates are pure Rust (rlib)
     $RustModules = @(
         @{Name = "classic_shared"; Dir = "rust/foundation/classic-shared-py"; Description = "Foundation (runtime, errors, utilities)"},
-        @{Name = "classic_yaml"; Dir = "rust/python-bindings/classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"},
+        @{Name = "classic_config"; Dir = "rust/python-bindings/classic-config-py"; Description = "YamlData configuration (bindings)"},
         @{Name = "classic_database"; Dir = "rust/python-bindings/classic-database-py"; Description = "SQLite operations (bindings)"},
         @{Name = "classic_file_io"; Dir = "rust/python-bindings/classic-file-io-py"; Description = "File I/O + DDS parsing (bindings)"},
+        @{Name = "classic_message"; Dir = "rust/python-bindings/classic-message-py"; Description = "Message handling (bindings)"},
+        @{Name = "classic_path"; Dir = "rust/python-bindings/classic-path-py"; Description = "Path management (bindings)"},
+        @{Name = "classic_perf"; Dir = "rust/python-bindings/classic-perf-py"; Description = "Performance monitoring (bindings)"},
+        @{Name = "classic_pybridge"; Dir = "rust/python-bindings/classic-pybridge-py"; Description = "Async Python bridge utilities (bindings)"},
+        @{Name = "classic_registry"; Dir = "rust/python-bindings/classic-registry-py"; Description = "Windows registry operations (bindings)"},
+        @{Name = "classic_scangame"; Dir = "rust/python-bindings/classic-scangame-py"; Description = "Game scanning + validation (bindings)"},
         @{Name = "classic_scanlog"; Dir = "rust/python-bindings/classic-scanlog-py"; Description = "Log parsing + analysis (bindings)"},
-        @{Name = "classic_config"; Dir = "rust/python-bindings/classic-config-py"; Description = "YamlData configuration (bindings)"}
+        @{Name = "classic_settings"; Dir = "rust/python-bindings/classic-settings-py"; Description = "Settings cache management (bindings)"},
+        @{Name = "classic_yaml"; Dir = "rust/python-bindings/classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"}
     )
 
     # Build all Rust modules

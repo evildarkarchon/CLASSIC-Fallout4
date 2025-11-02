@@ -10,6 +10,7 @@ members = [
     "business-logic/classic-file-io-core",
     "business-logic/classic-scanlog-core",
     "business-logic/classic-config-core",
+    "business-logic/classic-scangame-core",
 
     # Phase 1 - Core Infrastructure (Business Logic)
     "business-logic/classic-registry-core",
@@ -30,6 +31,7 @@ members = [
     "python-bindings/classic-file-io-py",
     "python-bindings/classic-scanlog-py",
     "python-bindings/classic-config-py",
+    "python-bindings/classic-scangame-py",
 
     # Phase 1 - Core Infrastructure (Python Bindings)
     "python-bindings/classic-registry-py",
@@ -88,6 +90,9 @@ walkdir = "2.5"
 ddsfile = "0.5"
 dirs = "5.0"
 
+# BA2 Archive support
+ba2 = "3.0.1"
+
 # Parsing
 regex = "1.11"
 memchr = "2.7"
@@ -103,6 +108,11 @@ rustc-hash = "2.1"      # Fast hasher for short strings (optimization 1.2)
 xxhash-rust = { version = "0.8", features = [
     "xxh3",
 ] } # Fast non-cryptographic hash (optimization 4.1)
+sha2 = "0.10"           # Cryptographic hashing (SHA256 for file comparison)
+
+# Text processing
+strsim = "0.11"         # String similarity algorithms
+configparser = "3.1"    # INI file parsing
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

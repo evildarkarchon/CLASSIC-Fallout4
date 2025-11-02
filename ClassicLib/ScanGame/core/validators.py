@@ -137,18 +137,6 @@ class ScanValidators:
                     "▶️ Any mods with copies of original Script Extender files\n",
                     "  may cause script related problems or crashes.\n\n",
                 ],
-                "previs": [
-                    "\n# ⚠️ BA2 ARCHIVES CONTAIN CUSTOM PRECOMBINE / PREVIS FILES ⚠️\n",
-                    "▶️ Any mods that contain custom precombine/previs files\n",
-                    "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
-                    "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
-                ],
-                "animdata": [
-                    "\n# ❓ BA2 ARCHIVES CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
-                    "▶️ Any mods that have their own custom Animation File Data\n",
-                    "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
-                    "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
-                ],
                 "ba2_frmt": [
                     "\n# ❓ BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 ❓\n",
                     "▶️ Any files with an incorrect file format will not work.\n",

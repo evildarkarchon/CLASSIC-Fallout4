@@ -218,7 +218,7 @@ main_window.on_button_click({
 **Goal**: Establish foundation for all other components
 
 **Components**:
-1. **AsyncBridge (Python)** → `classic-pybridge-core` + `classic-pybridge-py`
+1. **AsyncBridge (Python)** → `rust/business-logic/classic-pybridge-core` + `rust/python-bindings/classic-pybridge-py`
    - Priority: CRITICAL
    - Python async/sync coordination (distinct from Slint's `AsyncBridge` in `rust/foundation/classic-shared-core`)
    - Bridge Python asyncio with Qt/PySide6 event loop
@@ -226,30 +226,30 @@ main_window.on_button_click({
    - Essential for PySide6 GUI and async CLI operations
    - Estimate: 1 week
 
-2. **GlobalRegistry** → `classic-registry-core` + `classic-registry-py`
+2. **GlobalRegistry** → `rust/business-logic/classic-registry-core` + `rust/python-bindings/classic-registry-py`
    - Priority: HIGH
    - Singleton management with DashMap
    - Thread-safe instance tracking
    - Estimate: 3 days
 
-3. **YamlSettingsCache** → `classic-settings-core` + `classic-settings-py`
+3. **YamlSettingsCache** → `rust/business-logic/classic-settings-core` + `rust/python-bindings/classic-settings-py`
    - Priority: HIGH
    - Layer on top of existing `rust/business-logic/classic-yaml-core`
    - Caching with `quick_cache`
    - Batch loading support
    - Estimate: 1 week
 
-4. **MessageHandler** → `classic-message-core` + `classic-message-py`
+4. **MessageHandler** → `rust/business-logic/classic-message-core` + `rust/python-bindings/classic-message-py`
    - Priority: HIGH
    - Central messaging system
    - Multiple output modes (CLI, GUI, TUI)
    - Progress tracking
    - Estimate: 1.5 weeks
 
-5. **PerformanceMonitor** → `classic-perf-core` + `classic-perf-py`
+5. **PerformanceMonitor** → `rust/business-logic/classic-perf-core` + `rust/python-bindings/classic-perf-py`
    - Priority: MEDIUM
    - Rationale: While `performance_core.rs` exists in `rust/foundation/classic-shared-core`, creating dedicated crates provides:
-     - **Python acceleration**: 10x memory efficiency (O(1) vs O(n)) + thread safety
+     - **Python acceleration* *: 10x memory efficiency (O(1) vs O(n)) + thread safety
      - **Rust applications**: Proper logging integration, formatted reports, JSON/CSV export
      - **Cross-language metrics**: Unified performance tracking across Python and Rust
      - **Better architecture**: Dedicated crate is more discoverable than embedded module
@@ -278,7 +278,7 @@ main_window.on_button_click({
 
 **Goal**: Consolidate all path-related operations into a unified crate
 
-**Components**: Single crate group `classic-path-core` + `classic-path-py`
+**Components**: Single crate group `rust/business-logic/classic-path-core` + `rust/python-bindings/classic-path-py`
 
 **Modules within `classic-path-core`**:
 1. **GamePath module** (`game_path.rs`)
@@ -329,17 +329,17 @@ main_window.on_button_click({
 **Goal**: Port ScanGame/ module for game integrity checking
 
 **Components**:
-1. **ScanGameCore** → `classic-scangame-core` + `classic-scangame-py`
+1. **ScanGameCore** → `rust/business-logic/classic-scangame-core` + `rust/python-bindings/classic-scangame-py`
    - Core scanning orchestration
    - Parallel file scanning
    - Estimate: 2 weeks
 
-2. **GameIntegrityOrchestrator** → merge into `classic-scangame-core`
+2. **GameIntegrityOrchestrator** → merge into `rust/business-logic/classic-scangame-core`
    - High-level orchestration
    - Report generation
    - Estimate: 1 week
 
-3. **BA2Scanner** → `classic-ba2-core` + `classic-ba2-py`
+3. **BA2Scanner** → `rust/business-logic/classic-ba2-core` + `rust/python-bindings/classic-ba2-py`
    - BA2 archive parsing
    - Asset validation
    - Estimate: 2 weeks
@@ -349,24 +349,24 @@ main_window.on_button_click({
    - Format validation
    - Estimate: 1 week
 
-5. **CheckCrashgen** → `classic-crashgen-core` + `classic-crashgen-py`
+5. **CheckCrashgen** → `rust/business-logic/classic-crashgen-core` + `rust/python-bindings/classic-crashgen-py`
    - Crash Gen detection
    - Estimate: 3 days
 
-6. **CheckXsePlugins** → merge into `classic-xse-core` (Phase 4)
+6. **CheckXsePlugins** → merge into `rust/business-logic/classic-xse-core` (Phase 4)
    - XSE plugin validation
    - Estimate: 1 week
 
-7. **GameFilesManager** → `classic-gamefiles-core` + `classic-gamefiles-py`
+7. **GameFilesManager** → `rust/business-logic/classic-gamefiles-core` + `rust/python-bindings/classic-gamefiles-py`
    - File management operations
    - Estimate: 1 week
 
-8. **ScanModInis** → `classic-modini-core` + `classic-modini-py`
+8. **ScanModInis** → `rust/business-logic/classic-modini-core` + `rust/python-bindings/classic-modini-py`
    - INI file scanning
    - Configuration validation
    - Estimate: 1 week
 
-9. **WryeCheck** → `classic-wrye-core` + `classic-wrye-py`
+9. **WryeCheck** → `rust/business-logic/classic-wrye-core` + `rust/python-bindings/classic-wrye-py`
    - Wrye Bash integration
    - Estimate: 1 week
 
@@ -390,18 +390,18 @@ main_window.on_button_click({
 **Goal**: Port XSE checking and utility functions
 
 **Components**:
-1. **XseCheck** → `classic-xse-core` + `classic-xse-py`
+1. **XseCheck** → `rust/business-logic/classic-xse-core` + `rust/python-bindings/classic-xse-py`
    - Script extender detection
    - Version checking
    - Plugin validation
    - Estimate: 2 weeks
 
-2. **ResourceLoader** → `classic-resource-core` + `classic-resource-py`
+2. **ResourceLoader** → `rust/business-logic/classic-resource-core` + `rust/python-bindings/classic-resource-py`
    - Resource management
    - Asset loading
    - Estimate: 1.5 weeks
 
-3. **Utils/** → `classic-utils-core` + `classic-utils-py`
+3. **Utils/** → `rust/business-logic/classic-utils-core` + `rust/python-bindings/classic-utils-py`
    - File utilities
    - String utilities
    - Path utilities
@@ -432,32 +432,32 @@ main_window.on_button_click({
 **Goal**: Port high-level coordination and update logic
 
 **Components**:
-1. **SetupCoordinator** → `classic-setup-core` + `classic-setup-py`
+1. **SetupCoordinator** → `rust/business-logic/classic-setup-core` + `rust/python-bindings/classic-setup-py`
    - Application setup orchestration
    - First-run initialization
    - Estimate: 1.5 weeks
 
-2. **Update** → `classic-update-core` + `classic-update-py`
+2. **Update** → `rust/business-logic/classic-update-core` + `rust/python-bindings/classic-update-py`
    - Auto-update functionality
    - Version checking
    - Update download and installation
    - Estimate: 2 weeks
 
-3. **FileGeneration** → `classic-filegen-core` + `classic-filegen-py`
+3. **FileGeneration** → `rust/business-logic/classic-filegen-core` + `rust/python-bindings/classic-filegen-py`
    - File generation utilities
    - Template processing
    - Estimate: 1 week
 
-4. **GameIntegrity** → merge into `classic-scangame-core`
+4. **GameIntegrity** → merge into `rust/business-logic/classic-scangame-core`
    - Integrity verification
    - Estimate: 3 days
 
-5. **PapyrusLog** → `classic-papyrus-core` + `classic-papyrus-py`
+5. **PapyrusLog** → `rust/business-logic/classic-papyrus-core` + `rust/python-bindings/classic-papyrus-py`
    - Papyrus log parsing
    - Error extraction
    - Estimate: 1 week
 
-6. **Logger** → merge into `classic-message-core`
+6. **Logger** → merge into `rust/business-logic/classic-message-core`
    - Logging infrastructure
    - Estimate: 2 days
 

@@ -9,11 +9,18 @@ $ErrorActionPreference = "Stop"
 # ImportName: the actual Python module name for import (optional, defaults to WheelName)
 $RustModules = @(
     @{WheelName = "classic_shared_py"; Dir = "rust/foundation/classic-shared-py"; ImportName = $null },  # Not a Python module
-    @{WheelName = "classic_yaml_py"; Dir = "rust/python-bindings/classic-yaml-py"; ImportName = "classic_yaml" },
+    @{WheelName = "classic_config_py"; Dir = "rust/python-bindings/classic-config-py"; ImportName = "classic_config" },
     @{WheelName = "classic_database_py"; Dir = "rust/python-bindings/classic-database-py"; ImportName = "classic_database" },
     @{WheelName = "classic_file_io_py"; Dir = "rust/python-bindings/classic-file-io-py"; ImportName = "classic_file_io" },
+    @{WheelName = "classic_message_py"; Dir = "rust/python-bindings/classic-message-py"; ImportName = "classic_message" },
+    @{WheelName = "classic_path_py"; Dir = "rust/python-bindings/classic-path-py"; ImportName = "classic_path" },
+    @{WheelName = "classic_perf_py"; Dir = "rust/python-bindings/classic-perf-py"; ImportName = "classic_perf" },
+    @{WheelName = "classic_pybridge_py"; Dir = "rust/python-bindings/classic-pybridge-py"; ImportName = "classic_pybridge" },
+    @{WheelName = "classic_registry_py"; Dir = "rust/python-bindings/classic-registry-py"; ImportName = "classic_registry" },
+    @{WheelName = "classic_scangame_py"; Dir = "rust/python-bindings/classic-scangame-py"; ImportName = "classic_scangame" },
     @{WheelName = "classic_scanlog_py"; Dir = "rust/python-bindings/classic-scanlog-py"; ImportName = "classic_scanlog" },
-    @{WheelName = "classic_config_py"; Dir = "rust/python-bindings/classic-config-py"; ImportName = "classic_config" }
+    @{WheelName = "classic_settings_py"; Dir = "rust/python-bindings/classic-settings-py"; ImportName = "classic_settings" },
+    @{WheelName = "classic_yaml_py"; Dir = "rust/python-bindings/classic-yaml-py"; ImportName = "classic_yaml" }
 )
 
 Write-Host "🧹 Cleaning old builds..." -ForegroundColor Cyan

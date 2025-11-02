@@ -28,16 +28,26 @@
 //!     lines = ["Line 1", "Line 2", "Line 3"]
 //!     await io_core.write_lines("output.txt", lines)
 //!
-//!     # Read DDS texture header for validation
+//!     # Read DDS texture header for validation (returns tuple)
 //!     header = await io_core.read_dds_header("texture.dds")
-//!     print(f"Texture size: {header['width']}x{header['height']}")
+//!     print(f"Texture size: {header[0]}x{header[1]}")
+//!
+//!     # Or use DDSHeader class for detailed analysis
+//!     from classic_file_io import DDSHeader
+//!     with open("texture.dds", "rb") as f:
+//!         header = DDSHeader.from_bytes(f.read())
+//!         if header:
+//!             print(f"Size: {header.width}x{header.height}")
+//!             print(f"Format: {header.format}, Mipmaps: {header.mipmap_count}")
+//!             if header.is_bc_compressed() and not header.has_valid_bc_dimensions():
+//!                 print("ERROR: Invalid BC compression dimensions")
 //!
 //!     # Batch process DDS headers (40x faster with parallelism)
 //!     dds_files = ["tex1.dds", "tex2.dds", "tex3.dds"]
 //!     headers = await io_core.read_dds_headers_batch(dds_files)
-//!     for file, header in zip(dds_files, headers):
-//!         if header:
-//!             print(f"{file}: {header['width']}x{header['height']}")
+//!     for file, (width, height) in headers.items():
+//!         if width:
+//!             print(f"{file}: {width}x{height}")
 //!
 //!     # Check file existence (cached for performance)
 //!     if io_core.file_exists("config.yaml"):
@@ -90,6 +100,7 @@ mod encoding;
 mod log_collector;
 
 pub use core::PyFileIOCore;
+pub use dds::PyDDSHeader;
 pub use encoding::PyEncodingDetector;
 pub use log_collector::PyLogCollector;
 
@@ -109,6 +120,7 @@ pub fn register_file_io_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Add all classes - CRITICAL: PyLogCollector must be added!
     m.add_class::<PyFileIOCore>()?;
+    m.add_class::<PyDDSHeader>()?;
     m.add_class::<PyEncodingDetector>()?;
     m.add_class::<PyLogCollector>()?;  // This MUST add PyLogCollector to the module
 

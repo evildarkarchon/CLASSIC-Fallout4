@@ -59,29 +59,38 @@ class LogProcessor:
                 log files.
         """
 
-        def format_error_report(file_path: Path, errors: list[str]) -> list[str]:
+        def format_error_report(file_path: Path, errors: list[str], total_count: int) -> list[str]:
             """
             Formats an error report for a given file path and list of error messages.
 
             This function generates a formatted error report that includes a warning message,
             the file path of the log, the list of error messages, and a summary of the total
-            number of detected errors. The formatted report is returned as a list of strings,
-            where each string represents a line in the report.
+            number of detected errors. If errors were truncated, shows a notice.
 
             Args:
                 file_path (Path): The path to the log file associated with the errors.
-                errors (list[str]): A list of error messages extracted from the log file.
+                errors (list[str]): A list of error messages (limited to last 50).
+                total_count (int): Total number of errors found before truncation.
 
             Returns:
                 list[str]: A list of strings containing the formatted error report.
             """
-            return [
+            report = [
                 "[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n",
                 "[ Errors do not necessarily mean that the mod is not working. ]\n",
                 f"\nLOG PATH > {file_path}\n",
-                *errors,
-                f"\n* TOTAL NUMBER OF DETECTED LOG ERRORS * : {len(errors)}\n",
             ]
+
+            # Show truncation notice if errors were limited
+            if total_count > len(errors):
+                report.append(f"[ Showing last {len(errors)} of {total_count} total errors ]\n\n")
+            else:
+                report.append("\n")
+
+            report.extend(errors)
+            report.append(f"\n* TOTAL NUMBER OF DETECTED LOG ERRORS * : {total_count}\n")
+
+            return report
 
         # Convert string path to Path object if needed
         if isinstance(folder_path, str):
@@ -140,13 +149,20 @@ class LogProcessor:
                         and all(ignore not in line.lower() for ignore in ignore_errors_set)
                     ]
 
+                    # Keep track of total count before truncation
+                    total_errors = len(detected_errors)
+
+                    # Limit to last 50 errors (tail -50)
+                    if total_errors > 50:
+                        detected_errors = detected_errors[-50:]
+
                 except OSError:
                     error_message = f"❌ ERROR : Unable to scan this log file :\n  {log_file_path}"
                     logger.warning(f"> ! > DETECT LOG ERRORS > UNABLE TO SCAN : {log_file_path}")
                     return [error_message]
                 else:
                     if detected_errors:
-                        return format_error_report(log_file_path, detected_errors)
+                        return format_error_report(log_file_path, detected_errors, total_errors)
                     return []
 
         # Process all log files concurrently

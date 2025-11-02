@@ -236,7 +236,7 @@ class ScanGameCore:
 
         Notes:
             - The method checks .ba2 archive format validity and extracts file-level metadata to
-              analyze textures, sound formats, animation data, XSE files, Previs files, etc.
+              analyze textures, sound formats, XSE files, etc.
             - Processes files in controlled asynchronous batches, leveraging system resources effectively.
             - Relies on external tools like BSArch.exe for parsing archive files and retrieving necessary
               metadata.
@@ -273,12 +273,10 @@ class ScanGameCore:
         # Initialize sets for collecting different issue types
         issue_lists: dict[str, set[str]] = {
             "ba2_frmt": set(),
-            "animdata": set(),
             "tex_dims": set(),
             "tex_frmt": set(),
             "snd_frmt": set(),
             "xse_file": set(),
-            "previs": set(),
         }
 
         # Get settings
