@@ -4,8 +4,9 @@
 //! - Game installation paths (Bethesda, Steam, GOG)
 //! - System documents folder detection
 
-use crate::error::{DocsPathError, DocsPathResult, GamePathError, GamePathResult};
-use std::path::PathBuf;
+use crate::error::{DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult};
+use std::fs;
+use std::path::{Path, PathBuf};
 use winreg::enums::*;
 use winreg::RegKey;
 
@@ -112,6 +113,64 @@ fn query_registry_path(
         ))?;
 
     Ok(PathBuf::from(value))
+}
+
+/// Remove the read-only attribute from a file or directory (Windows only).
+///
+/// This function modifies the file permissions to remove the read-only flag.
+/// If the operation fails (e.g., due to permissions), it logs a warning but
+/// does not fail - this is a best-effort operation.
+///
+/// # Arguments
+///
+/// * `file_path` - Path to the file or directory
+///
+/// # Returns
+///
+/// `Ok(())` if successful or if the operation is not needed.
+/// Returns an error only for serious filesystem errors (optional logging can be added).
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::platform::windows::remove_readonly;
+/// use std::path::Path;
+///
+/// let file = Path::new("C:\\Games\\Fallout4\\Fallout4.ini");
+/// remove_readonly(file)?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub fn remove_readonly(file_path: &Path) -> PathResult<()> {
+    // Get current permissions
+    let metadata = fs::metadata(file_path).map_err(|e| PathError::IoError {
+        path: file_path.to_path_buf(),
+        source: e,
+    })?;
+
+    let mut permissions = metadata.permissions();
+
+    // Check if read-only bit is set
+    if permissions.readonly() {
+        // Clear the read-only flag
+        permissions.set_readonly(false);
+
+        // Apply the modified permissions
+        fs::set_permissions(file_path, permissions).map_err(|e| {
+            // Log warning to stderr - this is best-effort
+            eprintln!(
+                "Warning: Could not remove read-only attribute from {}: {}",
+                file_path.display(),
+                e
+            );
+            PathError::PermissionDenied(format!(
+                "Failed to remove read-only attribute from {}: {}",
+                file_path.display(),
+                e
+            ))
+        })?;
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

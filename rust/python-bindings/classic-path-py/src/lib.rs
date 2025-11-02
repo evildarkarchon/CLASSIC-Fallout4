@@ -469,6 +469,191 @@ impl PathValidator {
         )
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))
     }
+
+    /// Check if a path points to a valid executable file.
+    ///
+    /// Validates that the path exists, is a file, and has an executable extension.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to check (string or PathLike)
+    ///
+    /// # Returns
+    ///
+    /// `True` if the path is a valid executable, `False` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```python
+    /// from classic_path import PathValidator
+    ///
+    /// if PathValidator.is_valid_executable_path("C:\\Games\\Fallout4\\Fallout4.exe"):
+    ///     print("Valid executable")
+    /// ```
+    #[staticmethod]
+    fn is_valid_executable_path(path: String) -> bool {
+        classic_path_core::is_valid_executable_path(&PathBuf::from(path))
+    }
+
+    /// Check if the drive exists (Windows only).
+    ///
+    /// On Windows, validates that the drive letter in the path exists and is accessible.
+    /// On other platforms, this always succeeds.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to check (string or PathLike)
+    ///
+    /// # Raises
+    ///
+    /// * `ValueError` - If the drive does not exist (Windows only)
+    ///
+    /// # Examples
+    ///
+    /// ```python
+    /// from classic_path import PathValidator
+    ///
+    /// try:
+    ///     PathValidator.check_drive_exists("C:\\Games\\Fallout4")
+    ///     print("Drive exists")
+    /// except ValueError as e:
+    ///     print(f"Drive check failed: {e}")
+    /// ```
+    #[staticmethod]
+    fn check_drive_exists(path: String) -> PyResult<()> {
+        classic_path_core::check_drive_exists(&PathBuf::from(path))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))
+    }
+
+    /// Check read permissions for a path.
+    ///
+    /// Attempts to verify that the path is readable by trying to access it.
+    /// For directories, checks if contents can be listed.
+    /// For files, checks if the file can be opened for reading.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to check (string or PathLike)
+    ///
+    /// # Raises
+    ///
+    /// * `PermissionError` - If read access is denied
+    /// * `OSError` - If the path cannot be accessed
+    ///
+    /// # Examples
+    ///
+    /// ```python
+    /// from classic_path import PathValidator
+    ///
+    /// try:
+    ///     PathValidator.check_read_permissions("C:\\Games\\Fallout4")
+    ///     print("Read access OK")
+    /// except PermissionError as e:
+    ///     print(f"No read permission: {e}")
+    /// ```
+    #[staticmethod]
+    fn check_read_permissions(path: String) -> PyResult<()> {
+        classic_path_core::check_read_permissions(&PathBuf::from(path))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string()))
+    }
+
+    /// Check write permissions for a path.
+    ///
+    /// Attempts to verify that the path is writable by creating a temporary test file.
+    /// For directories, creates a test file in the directory.
+    /// For files, creates a test file in the parent directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to check (string or PathLike)
+    ///
+    /// # Raises
+    ///
+    /// * `PermissionError` - If write access is denied
+    /// * `OSError` - If the path cannot be accessed
+    ///
+    /// # Examples
+    ///
+    /// ```python
+    /// from classic_path import PathValidator
+    ///
+    /// try:
+    ///     PathValidator.check_write_permissions("C:\\Games\\Fallout4")
+    ///     print("Write access OK")
+    /// except PermissionError as e:
+    ///     print(f"No write permission: {e}")
+    /// ```
+    #[staticmethod]
+    fn check_write_permissions(path: String) -> PyResult<()> {
+        classic_path_core::check_write_permissions(&PathBuf::from(path))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string()))
+    }
+
+    /// Validate a path with comprehensive permission checks.
+    ///
+    /// Performs multiple validation checks:
+    /// 1. Drive exists (Windows only)
+    /// 2. Path exists
+    /// 3. Read permissions (if check_read is True)
+    /// 4. Write permissions (if check_write is True)
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to validate (string or PathLike)
+    /// * `check_read` - Whether to check read permissions (default: True)
+    /// * `check_write` - Whether to check write permissions (default: False)
+    ///
+    /// # Raises
+    ///
+    /// * `FileNotFoundError` - If path does not exist
+    /// * `PermissionError` - If permission checks fail
+    /// * `ValueError` - If drive check fails (Windows)
+    /// * `OSError` - If other access errors occur
+    ///
+    /// # Examples
+    ///
+    /// ```python
+    /// from classic_path import PathValidator
+    ///
+    /// # Check only existence and read
+    /// try:
+    ///     PathValidator.validate_path_with_permissions("C:\\Games\\Fallout4", True, False)
+    ///     print("Path valid and readable")
+    /// except Exception as e:
+    ///     print(f"Validation failed: {e}")
+    ///
+    /// # Check read and write
+    /// try:
+    ///     PathValidator.validate_path_with_permissions("C:\\Games\\Fallout4", True, True)
+    ///     print("Path valid, readable, and writable")
+    /// except PermissionError:
+    ///     print("Read-only access")
+    /// ```
+    #[staticmethod]
+    #[pyo3(signature = (path, check_read=true, check_write=false))]
+    fn validate_path_with_permissions(
+        path: String,
+        check_read: bool,
+        check_write: bool,
+    ) -> PyResult<()> {
+        classic_path_core::validate_path_with_permissions(
+            &PathBuf::from(path),
+            check_read,
+            check_write,
+        )
+        .map_err(|e| match e {
+            classic_path_core::PathError::NotFound(_) => {
+                PyErr::new::<pyo3::exceptions::PyFileNotFoundError, _>(e.to_string())
+            }
+            classic_path_core::PathError::PermissionDenied(_) => {
+                PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string())
+            }
+            classic_path_core::PathError::InvalidPath(_) => {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string())
+            }
+            _ => PyErr::new::<pyo3::exceptions::PyOSError, _>(e.to_string()),
+        })
+    }
 }
 
 /// Python wrapper for documents path detection.
@@ -1138,6 +1323,54 @@ impl DocumentsChecker {
     }
 }
 
+/// Remove the read-only attribute from a file or directory (Windows only).
+///
+/// This function modifies file permissions to remove the read-only flag on Windows.
+/// On non-Windows platforms, this function does nothing and always succeeds.
+/// If the operation fails (e.g., due to permissions), it returns an error.
+///
+/// # Arguments
+///
+/// * `file_path` - Path to the file or directory (string or PathLike)
+///
+/// # Raises
+///
+/// * `PermissionError` - If unable to modify permissions
+/// * `OSError` - If other I/O errors occur
+///
+/// # Examples
+///
+/// ```python
+/// import classic_path
+///
+/// # Remove readonly from a file
+/// try:
+///     classic_path.remove_readonly("C:\\Games\\Fallout4\\Fallout4.ini")
+///     print("Read-only attribute removed")
+/// except PermissionError as e:
+///     print(f"Could not modify permissions: {e}")
+/// ```
+///
+/// # Platform Notes
+///
+/// - **Windows**: Removes the FILE_ATTRIBUTE_READONLY flag
+/// - **Other platforms**: No-op, always succeeds
+#[pyfunction]
+#[cfg(target_os = "windows")]
+fn remove_readonly(file_path: String) -> PyResult<()> {
+    classic_path_core::remove_readonly(&PathBuf::from(file_path))
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string()))
+}
+
+/// Remove the read-only attribute (stub for non-Windows platforms).
+///
+/// On non-Windows platforms, this function does nothing and always succeeds.
+#[pyfunction]
+#[cfg(not(target_os = "windows"))]
+fn remove_readonly(_file_path: String) -> PyResult<()> {
+    Ok(())
+}
+
 /// Python module for path management.
 ///
 /// This module provides unified path management functionality for CLASSIC:
@@ -1146,6 +1379,7 @@ impl DocumentsChecker {
 /// - Documents path management (DocsPathFinder)
 /// - Backup operations (BackupManager, XseVersion)
 /// - Documents checking (DocumentsChecker, IniCheckResult)
+/// - Platform utilities (remove_readonly)
 ///
 /// # Examples
 ///
@@ -1167,6 +1401,9 @@ impl DocumentsChecker {
 /// # Find documents path
 /// docs_finder = classic_path.DocsPathFinder("My Games\\Fallout4")
 /// docs_path = docs_finder.find_docs_path(cached_path=None)
+///
+/// # Remove readonly attribute (Windows)
+/// classic_path.remove_readonly("C:\\Games\\Fallout4\\Fallout4.ini")
 /// ```
 #[pymodule]
 fn classic_path(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -1190,6 +1427,9 @@ fn classic_path(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Add the IniCheckResult class
     m.add_class::<IniCheckResult>()?;
+
+    // Add module-level functions
+    m.add_function(wrap_pyfunction!(remove_readonly, m)?)?;
 
     // Module metadata
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

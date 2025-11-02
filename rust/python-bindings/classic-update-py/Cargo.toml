@@ -1,0 +1,33 @@
+[package]
+name = "classic-update-py"
+version = "8.0.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-update-core"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_update"
+crate-type = ["cdylib", "rlib"]  # cdylib for Python, rlib for Rust consumers
+
+[dependencies]
+# Core business logic (pure Rust - NO PyO3)
+classic-update-core = { path = "../../business-logic/classic-update-core" }
+
+# PyO3 for Python bindings
+pyo3 = { workspace = true }
+pyo3-async-runtimes = { workspace = true, features = ["tokio-runtime"] }
+
+# Async runtime
+tokio = { workspace = true }
+
+[profile.release]
+# Inherits from workspace
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

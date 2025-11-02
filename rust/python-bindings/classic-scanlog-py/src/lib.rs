@@ -70,6 +70,7 @@
 //! - **Pattern matching**: 5-10x faster with Rayon parallelism
 //! - **Mod detection**: 15-25x faster with compiled regex
 //! - **DDS processing**: 40x faster with parallel batch operations
+//! - **Papyrus log analysis**: 15-30x faster than Python
 //! - **Complete analysis**: 50-200ms per log (Python: 2-3 seconds)
 //!
 //! ## Thread Safety
@@ -86,6 +87,7 @@ pub mod formid_analyzer;
 pub mod gpu_detector;
 pub mod mod_detector;
 pub mod orchestrator;
+pub mod papyrus;
 pub mod parser;
 pub mod patterns;
 pub mod plugin_analyzer;
@@ -105,6 +107,7 @@ pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
 };
 pub use orchestrator::{PyAnalysisConfig, PyAnalysisResult, PyRustOrchestrator};
+pub use papyrus::{papyrus_logging, PyPapyrusAnalyzer, PyPapyrusStats};
 pub use parser::PyLogParser;
 pub use patterns::PyPatternMatcher;
 pub use plugin_analyzer::{contains_plugin, detect_plugins_batch, PyPluginAnalyzer};
@@ -174,6 +177,9 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyReportGenerator>()?;
     m.add_class::<PyParallelReportProcessor>()?;
 
+    // Papyrus log analysis
+    papyrus::register(m)?;
+
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
@@ -231,6 +237,9 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyReportComposer>()?;
     m.add_class::<PyReportGenerator>()?;
     m.add_class::<PyParallelReportProcessor>()?;
+
+    // Papyrus log analysis
+    papyrus::register(m)?;
 
     Ok(())
 }

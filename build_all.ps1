@@ -33,7 +33,15 @@ $ShadowingDirs = @(
     "classic_scangame",
     "classic_scanlog",
     "classic_settings",
-    "classic_yaml"
+    "classic_yaml",
+    # Phase 4 - Constants and Utilities
+    "classic_constants",
+    "classic_version",
+    "classic_resource",
+    "classic_xse",
+    "classic_web",
+    # Phase 5 - Application Coordination
+    "classic_update"
 )
 
 $foundShadowingDirs = @()
@@ -156,7 +164,15 @@ if (Test-Path "rust/python-bindings/classic-yaml-py") {
         @{Name = "classic_scangame"; Dir = "rust/python-bindings/classic-scangame-py"; Description = "Game scanning + validation (bindings)"},
         @{Name = "classic_scanlog"; Dir = "rust/python-bindings/classic-scanlog-py"; Description = "Log parsing + analysis (bindings)"},
         @{Name = "classic_settings"; Dir = "rust/python-bindings/classic-settings-py"; Description = "Settings cache management (bindings)"},
-        @{Name = "classic_yaml"; Dir = "rust/python-bindings/classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"}
+        @{Name = "classic_yaml"; Dir = "rust/python-bindings/classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"},
+        # Phase 4 - Constants and Utilities
+        @{Name = "classic_constants"; Dir = "rust/python-bindings/classic-constants-py"; Description = "Game constants and enumerations (bindings)"},
+        @{Name = "classic_version"; Dir = "rust/python-bindings/classic-version-py"; Description = "Version parsing and comparison (bindings)"},
+        @{Name = "classic_resource"; Dir = "rust/python-bindings/classic-resource-py"; Description = "Resource file detection (bindings)"},
+        @{Name = "classic_xse"; Dir = "rust/python-bindings/classic-xse-py"; Description = "Script Extender (XSE) utilities (bindings)"},
+        @{Name = "classic_web"; Dir = "rust/python-bindings/classic-web-py"; Description = "Web utilities and URL validation (bindings)"},
+        # Phase 5 - Application Coordination
+        @{Name = "classic_update"; Dir = "rust/python-bindings/classic-update-py"; Description = "Auto-update system (GitHub + Nexus) (bindings)"}
     )
 
     # Build all Rust modules

@@ -83,3 +83,7 @@ pub fn parse_steam_library(game_steam_id: u32) -> DocsPathResult<PathBuf> {
 pub fn parse_steam_library(_game_steam_id: u32) -> DocsPathResult<PathBuf> {
     Err(DocsPathError::NotFound)
 }
+
+// Re-export Windows-specific functions
+#[cfg(target_os = "windows")]
+pub use windows::remove_readonly;

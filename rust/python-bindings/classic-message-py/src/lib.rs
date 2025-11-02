@@ -1,10 +1,12 @@
 ///! Python bindings for CLASSIC message core.
 ///!
 ///! This module provides Python access to the Rust message routing and formatting system.
-///! It exposes message types, targets, and formatting utilities.
+///! It exposes message types, targets, formatting utilities, and logging functionality.
 
 use classic_message_core as core;
 use pyo3::prelude::*;
+
+mod logging;
 
 /// Message type enumeration for categorizing messages.
 ///
@@ -479,6 +481,7 @@ fn format_log_message(content: &str, details: Option<&str>) -> String {
 ///     MessageType: Enum for message categories (INFO, WARNING, ERROR, etc.)
 ///     MessageTarget: Enum for message routing (ALL, GUI, CONSOLE, LOG_ONLY)
 ///     Message: Data structure for messages with content, type, target, and metadata
+///     Logger: Centralized logging facility for the CLASSIC application
 ///
 /// Core Functions:
 ///     strip_emoji(text): Remove emojis from text for log safety
@@ -496,6 +499,11 @@ fn format_log_message(content: &str, details: Option<&str>) -> String {
 ///     >>>
 ///     >>> # Format for logging
 ///     >>> log_text = classic_message.format_log_message(msg.content(), msg.details())
+///     >>>
+///     >>> # Use the logger
+///     >>> logger = classic_message.Logger()
+///     >>> logger.info("Application started")
+///     >>> logger.log_message(msg)
 #[pymodule]
 fn classic_message(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add enums
@@ -504,6 +512,9 @@ fn classic_message(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Add message class
     m.add_class::<Message>()?;
+
+    // Add logging
+    logging::register(m)?;
 
     // Add functions
     m.add_function(wrap_pyfunction!(strip_emoji, m)?)?;

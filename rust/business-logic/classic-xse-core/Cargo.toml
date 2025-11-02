@@ -1,0 +1,40 @@
+[package]
+name = "classic-xse-core"
+version = "8.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Script Extender (XSE) utilities for CLASSIC (no PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+
+[dependencies]
+# Constants and utilities
+classic-constants-core = { path = "../classic-constants-core" }
+classic-version-core = { path = "../classic-version-core" }
+classic-path-core = { path = "../classic-path-core" }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Version handling
+semver = "1.0"
+
+# Serialization
+serde = { workspace = true, features = ["derive"] }
+
+# NO PyO3 dependency!
+
+[dev-dependencies]
+# Testing
+tempfile = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

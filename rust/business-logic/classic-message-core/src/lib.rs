@@ -87,10 +87,12 @@
 mod enums;
 mod formatter;
 mod message;
+pub mod logging;
 
 // Re-export public API
 pub use enums::{MessageTarget, MessageType};
 pub use formatter::{format_log_message, strip_emoji};
+pub use logging::Logger;
 pub use message::Message;
 
 #[cfg(test)]

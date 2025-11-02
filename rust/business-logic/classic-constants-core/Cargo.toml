@@ -1,0 +1,34 @@
+[package]
+name = "classic-constants-core"
+version = "8.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Application constants and enumerations for CLASSIC (no PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+
+[dependencies]
+# Version handling
+semver = "1.0"
+
+# String collections
+phf = { version = "0.11", features = ["macros"] }
+
+# Serialization (for potential YAML integration)
+serde = { workspace = true, features = ["derive"] }
+
+# NO PyO3 dependency!
+
+[dev-dependencies]
+# Testing
+serde_json = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

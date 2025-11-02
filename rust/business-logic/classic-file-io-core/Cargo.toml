@@ -35,6 +35,9 @@ rayon = { workspace = true }
 # Parsing
 regex = { workspace = true }
 
+# Hashing
+sha2 = "0.10"
+
 # Error handling
 anyhow = { workspace = true }
 thiserror = { workspace = true }

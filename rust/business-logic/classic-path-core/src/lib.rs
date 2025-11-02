@@ -71,6 +71,9 @@ pub use validator::{
     is_valid_path, is_restricted_path, validate_settings_paths,
     validate_path_exists, validate_is_directory, validate_is_file,
     validate_required_files, validate_custom_scan_path, validate_settings_path,
+    // Permission and accessibility checks
+    is_valid_executable_path, check_drive_exists, check_read_permissions,
+    check_write_permissions, validate_path_with_permissions,
 };
 
 // Re-export platform utilities
@@ -78,7 +81,7 @@ pub use platform::{get_system_documents_path, parse_steam_library};
 
 // Re-export platform-specific Windows functions
 #[cfg(target_os = "windows")]
-pub use platform::windows::query_game_registry;
+pub use platform::{windows::query_game_registry, remove_readonly};
 
 // Module exports (to be uncommented as modules are implemented)
 // pub use game_path::GamePathFinder;

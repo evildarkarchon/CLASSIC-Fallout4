@@ -85,7 +85,7 @@ This document outlines a phased approach to port the remaining Python components
 - `Constants.py` (3KB) - Application constants
 
 #### **Tier 5 - Application Coordination** (~10 files)
-- `SetupCoordinator.py` (13KB) - Setup orchestration
+- `SetupCoordinator.py` (13KB) - **[REMAINING PYTHON-ONLY]** - Setup orchestration (heavy Python-specific dependencies)
 - `Update.py` (32KB) - Auto-update functionality
 - `FileGeneration.py` (8KB) - File generation
 - `GameIntegrity.py` (6KB) - Integrity checks
@@ -431,11 +431,14 @@ main_window.on_button_click({
 
 **Goal**: Port high-level coordination and update logic
 
+**Note**: SetupCoordinator will remain Python-only due to heavy Python-specific dependencies (BackupManager, ResourceLoader, DocumentsChecker). Pure orchestration layer is better suited to Python.
+
 **Components**:
-1. **SetupCoordinator** → `rust/business-logic/classic-setup-core` + `rust/python-bindings/classic-setup-py`
+1. **SetupCoordinator** → **[DEFERRED - REMAINING PYTHON-ONLY]**
    - Application setup orchestration
    - First-run initialization
-   - Estimate: 1.5 weeks
+   - Heavy Python dependencies make Rust port low-value
+   - Estimate: N/A (not porting)
 
 2. **Update** → `rust/business-logic/classic-update-core` + `rust/python-bindings/classic-update-py`
    - Auto-update functionality
@@ -474,7 +477,7 @@ main_window.on_button_click({
 
 ---
 
-### Phase 6: GUI Integration & Polish (Months 7-9) (Deferred, Slint GUI is already mostly implemented)
+### Phase 6: GUI Integration & Polish (Months 7-9)
 
 **Goal**: Integrate Rust components with GUI, optimize, and finalize
 
@@ -891,14 +894,14 @@ Workspace Root
 ├── classic-resource-py/           # ResourceLoader Python bindings
 ├── classic-utils-core/            # Utilities business logic
 ├── classic-utils-py/              # Utilities Python bindings
-├── classic-setup-core/            # SetupCoordinator business logic
-├── classic-setup-py/              # SetupCoordinator Python bindings
 ├── classic-update-core/           # Update business logic
 ├── classic-update-py/             # Update Python bindings
-├── classic-filegen-core/          # FileGeneration business logic
-├── classic-filegen-py/            # FileGeneration Python bindings
-├── classic-papyrus-core/          # PapyrusLog business logic
-└── classic-papyrus-py/            # PapyrusLog Python bindings
+├── classic-filegen-core/          # FileGeneration business logic (merged into classic-file-io-core)
+├── classic-filegen-py/            # FileGeneration Python bindings (merged into classic-file-io-py)
+├── classic-papyrus-core/          # PapyrusLog business logic (merged into classic-scanlog-core)
+└── classic-papyrus-py/            # PapyrusLog Python bindings (merged into classic-scanlog-py)
+
+Note: SetupCoordinator remains Python-only and will not have Rust crates
 
 
 Existing Crates (unchanged):
@@ -920,9 +923,16 @@ Existing Crates (unchanged):
 └── classic-gui-slint/             # Slint GUI (pure Rust)
 ```
 
-**Total New Crates**: ~44 (22 -core + 22 -py)
+**Total New Crates**: ~40 (20 -core + 20 -py)
 
-**Note**: Path management consolidated into single `classic-path` crate group (reduces by 6 crates). PerformanceMonitor gets dedicated crates despite existing in `rust/foundation/classic-shared-core` to provide Python acceleration (10x memory efficiency), unified cross-language metrics, and proper logging integration. Python AsyncBridge (`classic-pybridge`) is distinct from Slint's AsyncBridge in `rust/foundation/classic-shared-core` - the former bridges Python asyncio with Qt, while the latter bridges Rust async with Slint's UI thread.
+**Note**:
+- Path management consolidated into single `classic-path` crate group (reduces by 6 crates)
+- PapyrusLog merged into `classic-scanlog-core` (reduces by 2 crates)
+- FileGeneration merged into `classic-file-io-core` (reduces by 2 crates)
+- Logger merged into `classic-message-core` (reduces by 2 crates)
+- SetupCoordinator remains Python-only (reduces by 2 crates)
+- PerformanceMonitor gets dedicated crates despite existing in `rust/foundation/classic-shared-core` to provide Python acceleration (10x memory efficiency), unified cross-language metrics, and proper logging integration
+- Python AsyncBridge (`classic-pybridge`) is distinct from Slint's AsyncBridge in `rust/foundation/classic-shared-core` - the former bridges Python asyncio with Qt, while the latter bridges Rust async with Slint's UI thread
 
 ---
 
@@ -947,10 +957,11 @@ Existing Crates (unchanged):
 | XseCheck | ~100ms | <10ms | 10x |
 | ResourceLoader | ~50ms | <5ms | 10x |
 | Utils (aggregate) | ~1ms | <100μs | 10x |
-| SetupCoordinator | ~500ms | <50ms | 10x |
 | Update | ~2s | <200ms | 10x |
 | FileGeneration | ~100ms | <10ms | 10x |
 | PapyrusLog | ~50ms | <5ms | 10x |
+
+Note: SetupCoordinator remains Python-only (no Rust port)
 
 **Aggregate Expected Performance**:
 - Overall application startup: **5-10x faster** (Rust apps)

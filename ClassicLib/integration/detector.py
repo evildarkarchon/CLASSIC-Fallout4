@@ -167,6 +167,57 @@ def detect_rust_components() -> dict[str, bool]:
     except Exception as e:
         logger.error(f"Error detecting config module: {e}")
 
+    # Phase 4 - Constants and Utilities
+    try:
+        import classic_constants
+        logger.info(f"classic_constants module loaded (version: {getattr(classic_constants, '__version__', 'unknown')})")
+        components["constants"] = True
+        logger.debug("Constants module available")
+    except ImportError as e:
+        logger.warning(f"classic_constants module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting constants module: {e}")
+
+    try:
+        import classic_version
+        logger.info(f"classic_version module loaded (version: {getattr(classic_version, '__version__', 'unknown')})")
+        components["version_utils"] = True
+        logger.debug("Version utilities module available")
+    except ImportError as e:
+        logger.warning(f"classic_version module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting version module: {e}")
+
+    try:
+        import classic_resource
+        logger.info(f"classic_resource module loaded (version: {getattr(classic_resource, '__version__', 'unknown')})")
+        components["resource_mgmt"] = True
+        logger.debug("Resource management module available")
+    except ImportError as e:
+        logger.warning(f"classic_resource module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting resource module: {e}")
+
+    try:
+        import classic_xse
+        logger.info(f"classic_xse module loaded (version: {getattr(classic_xse, '__version__', 'unknown')})")
+        components["xse_utils"] = True
+        logger.debug("XSE utilities module available")
+    except ImportError as e:
+        logger.warning(f"classic_xse module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting xse module: {e}")
+
+    try:
+        import classic_web
+        logger.info(f"classic_web module loaded (version: {getattr(classic_web, '__version__', 'unknown')})")
+        components["web_utils"] = True
+        logger.debug("Web utilities module available")
+    except ImportError as e:
+        logger.warning(f"classic_web module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting web module: {e}")
+
     return components
 
 
@@ -190,7 +241,11 @@ def get_available_components() -> dict[str, Any]:
 
     if not disabled:
         # Check versions of individual modules
-        for module_name in ["classic_scanlog", "classic_database", "classic_file_io", "classic_yaml", "classic_config"]:
+        for module_name in [
+            "classic_scanlog", "classic_database", "classic_file_io", "classic_yaml", "classic_config",
+            # Phase 4 - Constants and Utilities
+            "classic_constants", "classic_version", "classic_resource", "classic_xse", "classic_web"
+        ]:
             try:
                 module = __import__(module_name)
                 versions[module_name] = getattr(module, '__version__', 'unknown')
@@ -236,4 +291,10 @@ def _get_empty_component_dict() -> dict[str, bool]:
         "settings_validator": False,
         "gpu_detector": False,
         "fcx_handler": False,
+        # Phase 4 - Constants and Utilities
+        "constants": False,
+        "version_utils": False,
+        "resource_mgmt": False,
+        "xse_utils": False,
+        "web_utils": False,
     }

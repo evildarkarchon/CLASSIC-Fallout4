@@ -15,6 +15,9 @@ crate-type = ["cdylib", "rlib"]
 # PyO3 bindings
 pyo3 = { workspace = true, features = ["extension-module"] }
 
+# Logging
+log = { workspace = true }
+
 # Core message business logic
 classic-message-core = { path = "../../business-logic/classic-message-core" }
 

@@ -36,6 +36,24 @@ pub enum FileIOError {
     /// Generic I/O operation failure
     #[error("I/O operation failed: {0}")]
     Io(String),
+
+    /// File write operation failed
+    #[error("Failed to write file {path}: {source}")]
+    WriteError {
+        /// Path to the file
+        path: std::path::PathBuf,
+        /// Underlying I/O error
+        source: std::io::Error,
+    },
+
+    /// Directory creation failed
+    #[error("Failed to create directory {path}: {source}")]
+    CreateDirectoryError {
+        /// Path to the directory
+        path: std::path::PathBuf,
+        /// Underlying I/O error
+        source: std::io::Error,
+    },
 }
 
 /// Result type alias for file I/O operations

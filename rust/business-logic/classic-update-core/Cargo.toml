@@ -1,0 +1,54 @@
+[package]
+name = "classic-update-core"
+version = "8.0.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "Pure Rust business logic for auto-update system (NO PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library ONLY - NO Python bindings
+
+[dependencies]
+# CLASSIC core dependencies (pure Rust - NO PyO3!)
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
+# Async runtime
+tokio = { workspace = true, features = ["full"] }
+futures = { workspace = true }
+
+# HTTP client and scraping
+reqwest = { workspace = true, features = ["json"] }
+scraper = { workspace = true }
+
+# Serialization for GitHub API
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+# Version comparison
+semver = "1.0"
+
+# URL parsing
+url = "2.5"
+
+[profile.release]
+# Inherits from workspace
+
+[dev-dependencies]
+tempfile = { workspace = true }
+mockito = "1.5"  # HTTP mocking for tests
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"

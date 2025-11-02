@@ -1,0 +1,29 @@
+[package]
+name = "classic-version-py"
+version = "8.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-version-core (PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "classic_version"
+
+[dependencies]
+# Business logic - NO PyO3 here!
+classic-version-core = { path = "../../business-logic/classic-version-core" }
+
+# PyO3 bindings
+pyo3 = { workspace = true }
+
+# Version handling (for Python-visible version types)
+semver = "1.0"
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"

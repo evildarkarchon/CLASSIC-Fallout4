@@ -20,7 +20,17 @@ $RustModules = @(
     @{WheelName = "classic_scangame_py"; Dir = "rust/python-bindings/classic-scangame-py"; ImportName = "classic_scangame" },
     @{WheelName = "classic_scanlog_py"; Dir = "rust/python-bindings/classic-scanlog-py"; ImportName = "classic_scanlog" },
     @{WheelName = "classic_settings_py"; Dir = "rust/python-bindings/classic-settings-py"; ImportName = "classic_settings" },
-    @{WheelName = "classic_yaml_py"; Dir = "rust/python-bindings/classic-yaml-py"; ImportName = "classic_yaml" }
+    @{WheelName = "classic_yaml_py"; Dir = "rust/python-bindings/classic-yaml-py"; ImportName = "classic_yaml" },
+
+    # Phase 4 - Constants and Utilities
+    @{WheelName = "classic_constants_py"; Dir = "rust/python-bindings/classic-constants-py"; ImportName = "classic_constants" },
+    @{WheelName = "classic_version_py"; Dir = "rust/python-bindings/classic-version-py"; ImportName = "classic_version" },
+    @{WheelName = "classic_resource_py"; Dir = "rust/python-bindings/classic-resource-py"; ImportName = "classic_resource" },
+    @{WheelName = "classic_xse_py"; Dir = "rust/python-bindings/classic-xse-py"; ImportName = "classic_xse" },
+    @{WheelName = "classic_web_py"; Dir = "rust/python-bindings/classic-web-py"; ImportName = "classic_web" },
+
+    # Phase 5 - Application Coordination
+    @{WheelName = "classic_update_py"; Dir = "rust/python-bindings/classic-update-py"; ImportName = "classic_update" }
 )
 
 Write-Host "🧹 Cleaning old builds..." -ForegroundColor Cyan

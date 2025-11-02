@@ -4,7 +4,8 @@ available implementations of various utilities and analyzers, including
 Rust and Python-based alternatives.
 
 This module includes functions for selecting file I/O handlers, log parsers,
-FormID analyzers, plugin analyzers, record scanners, and report generators,
+FormID analyzers, plugin analyzers, record scanners, report generators,
+and Phase 4 utility modules (constants, version, resource, XSE, web),
 with fallback mechanisms for Python-based implementations.
 
 Classes:
@@ -20,6 +21,20 @@ Functions:
     get_record_scanner: Retrieve the best available record scanner implementation.
     get_report_generator: Retrieve the most efficient report generator
     implementation.
+    get_yaml_operations: Retrieve the Rust YAML operations if available.
+    get_database_pool: Retrieve the database pool implementation.
+    get_mod_detector: Retrieve mod detection functions.
+    get_yamldata: Load YAML data with Rust acceleration if available.
+    get_suspect_scanner: Retrieve the suspect scanner implementation.
+    get_settings_validator: Retrieve the settings validator implementation.
+    get_gpu_detector: Retrieve the GPU detector implementation.
+    get_fcx_handler: Retrieve the FCX mode handler implementation.
+    get_constants: Retrieve the Rust constants module (Phase 4).
+    get_version_utils: Retrieve the Rust version utilities module (Phase 4).
+    get_resource_mgmt: Retrieve the Rust resource management module (Phase 4).
+    get_xse_utils: Retrieve the Rust XSE utilities module (Phase 4).
+    get_web_utils: Retrieve the Rust web utilities module (Phase 4).
+    reset_cache: Reset the component detection cache.
 """
 
 from __future__ import annotations
@@ -633,3 +648,168 @@ def reset_cache() -> None:
     global _components_cache
     _components_cache = None
     logger.debug("Component cache reset")
+
+
+# ============================================================================
+# Phase 4 - Constants and Utilities
+# ============================================================================
+
+
+def get_constants() -> Any | None:
+    """
+    Retrieves the Rust-based constants module if available.
+
+    This function attempts to import and return the Rust `classic_constants`
+    module, which provides game constants, enumerations, and common values
+    with high performance. If the module is unavailable or Rust is disabled,
+    returns None.
+
+    Returns:
+        Any | None: The classic_constants module if available, None otherwise.
+
+    Examples:
+        >>> constants = get_constants()
+        >>> if constants:
+        ...     game = constants.GameId.fallout4()
+        ...     print(f"Game: {game.as_str()}")
+    """
+    components = _get_components()
+
+    if not _is_rust_disabled() and components.get("constants", False):
+        try:
+            import classic_constants
+            logger.debug("Using Rust constants module")
+            return classic_constants
+        except ImportError as e:
+            logger.warning(f"Failed to import classic_constants: {e}")
+
+    logger.debug("Constants module not available")
+    return None
+
+
+def get_version_utils() -> Any | None:
+    """
+    Retrieves the Rust-based version utilities module if available.
+
+    This function attempts to import and return the Rust `classic_version`
+    module, which provides fast version parsing, comparison, and extraction
+    utilities. If the module is unavailable or Rust is disabled, returns None.
+
+    Returns:
+        Any | None: The classic_version module if available, None otherwise.
+
+    Examples:
+        >>> version = get_version_utils()
+        >>> if version:
+        ...     v = version.parse_version("1.10.163")
+        ...     print(f"Parsed: {v}")
+    """
+    components = _get_components()
+
+    if not _is_rust_disabled() and components.get("version_utils", False):
+        try:
+            import classic_version
+            logger.debug("Using Rust version utilities module")
+            return classic_version
+        except ImportError as e:
+            logger.warning(f"Failed to import classic_version: {e}")
+
+    logger.debug("Version utilities module not available")
+    return None
+
+
+def get_resource_mgmt() -> Any | None:
+    """
+    Retrieves the Rust-based resource management module if available.
+
+    This function attempts to import and return the Rust `classic_resource`
+    module, which provides fast resource file detection, enumeration, and
+    validation. If the module is unavailable or Rust is disabled, returns None.
+
+    Returns:
+        Any | None: The classic_resource module if available, None otherwise.
+
+    Examples:
+        >>> resource = get_resource_mgmt()
+        >>> if resource:
+        ...     rt = resource.detect_resource_type("texture.dds")
+        ...     print(f"Type: {rt.as_str()}")
+    """
+    components = _get_components()
+
+    if not _is_rust_disabled() and components.get("resource_mgmt", False):
+        try:
+            import classic_resource
+            logger.debug("Using Rust resource management module")
+            return classic_resource
+        except ImportError as e:
+            logger.warning(f"Failed to import classic_resource: {e}")
+
+    logger.debug("Resource management module not available")
+    return None
+
+
+def get_xse_utils() -> Any | None:
+    """
+    Retrieves the Rust-based XSE utilities module if available.
+
+    This function attempts to import and return the Rust `classic_xse`
+    module, which provides Script Extender (XSE) detection, version checking,
+    and status information for F4SE, SKSE, SFSE, and their VR variants. If the
+    module is unavailable or Rust is disabled, returns None.
+
+    Returns:
+        Any | None: The classic_xse module if available, None otherwise.
+
+    Examples:
+        >>> xse = get_xse_utils()
+        >>> if xse:
+        ...     info = xse.get_xse_info("C:/Games/Fallout4", xse.XseType.f4se())
+        ...     print(f"F4SE installed: {info.installed()}")
+    """
+    components = _get_components()
+
+    if not _is_rust_disabled() and components.get("xse_utils", False):
+        try:
+            import classic_xse
+            logger.debug("Using Rust XSE utilities module")
+            return classic_xse
+        except ImportError as e:
+            logger.warning(f"Failed to import classic_xse: {e}")
+
+    logger.debug("XSE utilities module not available")
+    return None
+
+
+def get_web_utils() -> Any | None:
+    """
+    Retrieves the Rust-based web utilities module if available.
+
+    This function attempts to import and return the Rust `classic_web`
+    module, which provides URL validation, user agent generation, and
+    mod site constants. If the module is unavailable or Rust is disabled,
+    returns None.
+
+    Returns:
+        Any | None: The classic_web module if available, None otherwise.
+
+    Examples:
+        >>> web = get_web_utils()
+        >>> if web:
+        ...     ua = web.get_user_agent()
+        ...     print(f"User agent: {ua}")
+        ...     valid = web.is_valid_url("https://www.nexusmods.com")
+        ...     print(f"Valid URL: {valid}")
+    """
+    components = _get_components()
+
+    if not _is_rust_disabled() and components.get("web_utils", False):
+        try:
+            import classic_web
+            logger.debug("Using Rust web utilities module")
+            return classic_web
+        except ImportError as e:
+            logger.warning(f"Failed to import classic_web: {e}")
+
+    logger.debug("Web utilities module not available")
+    return None

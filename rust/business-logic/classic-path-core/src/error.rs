@@ -29,12 +29,12 @@ pub enum PathError {
     },
 
     /// Permission denied accessing path.
-    #[error("Permission denied accessing: {0}")]
-    PermissionDenied(PathBuf),
+    #[error("Permission denied: {0}")]
+    PermissionDenied(String),
 
     /// Invalid path format or characters.
-    #[error("Invalid path format: {0}")]
-    InvalidFormat(String),
+    #[error("Invalid path: {0}")]
+    InvalidPath(String),
 }
 
 /// Path validation errors.

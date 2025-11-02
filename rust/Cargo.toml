@@ -22,6 +22,16 @@ members = [
     # Phase 2 - Path Management (Business Logic)
     "business-logic/classic-path-core",
 
+    # Phase 4 - Constants and Utilities (Business Logic)
+    "business-logic/classic-constants-core",
+    "business-logic/classic-version-core",
+    "business-logic/classic-resource-core",
+    "business-logic/classic-xse-core",
+    "business-logic/classic-web-core",
+
+    # Phase 5 - Application Coordination (Business Logic)
+    "business-logic/classic-update-core",
+
     # UI Coordination (Shared across CLI/TUI/GUI)
     "ui-applications/classic-ui-shared",
 
@@ -42,6 +52,16 @@ members = [
 
     # Phase 2 - Path Management (Python Bindings)
     "python-bindings/classic-path-py",
+
+    # Phase 4 - Constants and Utilities (Python Bindings)
+    "python-bindings/classic-constants-py",
+    "python-bindings/classic-version-py",
+    "python-bindings/classic-resource-py",
+    "python-bindings/classic-xse-py",
+    "python-bindings/classic-web-py",
+
+    # Phase 5 - Application Coordination (Python Bindings)
+    "python-bindings/classic-update-py",
 
     # Native Applications
     "ui-applications/classic-cli",
@@ -85,6 +105,7 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 
 # File I/O
 encoding_rs = "0.8"
+chardetng = "0.1"    # Character encoding detection (Phase 5 - PapyrusLog)
 memmap2 = "0.9"
 walkdir = "2.5"
 ddsfile = "0.5"
@@ -117,6 +138,10 @@ configparser = "3.1"    # INI file parsing
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+# Network (Phase 5 - Update system)
+reqwest = { version = "0.12", features = ["json"] }    # Async HTTP client
+scraper = "0.20"                                        # HTML parsing
 
 # Logging
 log = "0.4"

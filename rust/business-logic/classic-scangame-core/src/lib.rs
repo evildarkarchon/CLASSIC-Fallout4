@@ -20,6 +20,7 @@ pub mod logs;        // log_processor.py (Phase 3C) - IMPLEMENTED
 pub mod ini;         // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
 pub mod toml;        // CheckCrashgen.py TOML validation (Phase 3C) - IMPLEMENTED
 pub mod xse;         // CheckXsePlugins.py (Phase 3C) - IMPLEMENTED
+pub mod integrity;   // GameIntegrity.py validation (Phase 5) - IMPLEMENTED
 
 pub mod ba2;         // BA2 archive handling (Phase 3B) - IMPLEMENTED
 pub mod error;
@@ -29,6 +30,9 @@ pub use ba2::{BA2Error, BA2Issues, BA2Scanner};
 pub use config::{ConfigDuplicateDetector, ConfigError, DuplicateGroup};
 pub use error::ScanGameError;
 pub use ini::{ConfigIssue, IniError, IniValidator, IssueSeverity};
+pub use integrity::{
+    CheckType, GameIntegrityChecker, IntegrityCheckResult, IntegrityConfig, IntegrityError,
+};
 pub use logs::{LogError, LogErrorEntry, LogProcessor};
 pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};
 pub use unpacked::{UnpackedError, UnpackedIssues, UnpackedScanner};

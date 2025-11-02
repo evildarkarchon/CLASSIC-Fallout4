@@ -332,6 +332,253 @@ pub fn validate_settings_paths(
     Ok(())
 }
 
+// ============================================================================
+// Permission and Accessibility Checks
+// ============================================================================
+
+/// Check if a path points to a valid executable file.
+///
+/// Validates that the path:
+/// - Exists and is a file
+/// - Has a recognized executable extension (.exe, .app, or no extension)
+///
+/// # Arguments
+///
+/// * `path` - The path to check
+///
+/// # Returns
+///
+/// `true` if the path is a valid executable, `false` otherwise.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::validator::is_valid_executable_path;
+/// use std::path::Path;
+///
+/// let exe_path = Path::new("C:\\Games\\Fallout4\\Fallout4.exe");
+/// if is_valid_executable_path(exe_path) {
+///     println!("Valid executable");
+/// }
+/// ```
+pub fn is_valid_executable_path(path: &Path) -> bool {
+    if !path.exists() || !path.is_file() {
+        return false;
+    }
+
+    // Check extension (.exe for Windows, .app for macOS, or no extension for Unix)
+    match path.extension().and_then(|e| e.to_str()) {
+        Some("exe") | Some("app") => true,
+        Some(_) => false,
+        None => true, // No extension is valid (Unix executables)
+    }
+}
+
+/// Check if the drive exists (Windows only).
+///
+/// On Windows, validates that the drive letter exists in the system.
+/// On other platforms, always returns `Ok(())`.
+///
+/// # Arguments
+///
+/// * `path` - The path to check
+///
+/// # Returns
+///
+/// `Ok(())` if the drive exists or not on Windows, or a `PathError` if the drive doesn't exist.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::validator::check_drive_exists;
+/// use std::path::Path;
+///
+/// let path = Path::new("C:\\Games\\Fallout4");
+/// check_drive_exists(path)?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+#[cfg(target_os = "windows")]
+pub fn check_drive_exists(path: &Path) -> PathResult<()> {
+    use std::path::Component;
+
+    // Extract drive letter from path
+    if let Some(Component::Prefix(prefix)) = path.components().next() {
+        let drive_path_str = format!("{}\\", prefix.as_os_str().to_string_lossy());
+        let drive_path = Path::new(&drive_path_str);
+        if !drive_path.exists() {
+            return Err(PathError::InvalidPath(format!(
+                "Drive does not exist: {}",
+                prefix.as_os_str().to_string_lossy()
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+/// Check if the drive exists (non-Windows platforms).
+///
+/// Always returns `Ok(())` on non-Windows platforms as drive letters are Windows-specific.
+#[cfg(not(target_os = "windows"))]
+pub fn check_drive_exists(_path: &Path) -> PathResult<()> {
+    Ok(())
+}
+
+/// Check read permissions for a path.
+///
+/// Tests whether the current process can read from the path:
+/// - For directories: Attempts to list contents
+/// - For files: Attempts to open for reading
+///
+/// # Arguments
+///
+/// * `path` - The path to check
+///
+/// # Returns
+///
+/// `Ok(())` if readable, or a `PathError` if read permission denied.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::validator::check_read_permissions;
+/// use std::path::Path;
+///
+/// let path = Path::new("C:\\Games\\Fallout4");
+/// check_read_permissions(path)?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub fn check_read_permissions(path: &Path) -> PathResult<()> {
+    use std::fs;
+
+    if path.is_dir() {
+        // For directories, try to list contents
+        fs::read_dir(path).map_err(|e| {
+            PathError::PermissionDenied(format!("No read permission for {}: {}", path.display(), e))
+        })?;
+    } else if path.is_file() {
+        // For files, try to open for reading
+        fs::File::open(path).map_err(|e| {
+            PathError::PermissionDenied(format!("No read permission for {}: {}", path.display(), e))
+        })?;
+    } else {
+        return Err(PathError::InvalidPath(format!(
+            "Path is neither a file nor directory: {}",
+            path.display()
+        )));
+    }
+
+    Ok(())
+}
+
+/// Check write permissions for a path.
+///
+/// Tests whether the current process can write to the path:
+/// - For directories: Attempts to create and delete a temporary file
+/// - For files: Checks if the parent directory is writable
+///
+/// # Arguments
+///
+/// * `path` - The path to check
+///
+/// # Returns
+///
+/// `Ok(())` if writable, or a `PathError` if write permission denied.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::validator::check_write_permissions;
+/// use std::path::Path;
+///
+/// let path = Path::new("C:\\Games\\Fallout4");
+/// check_write_permissions(path)?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub fn check_write_permissions(path: &Path) -> PathResult<()> {
+    use std::fs;
+
+    let test_dir = if path.is_dir() {
+        path.to_path_buf()
+    } else {
+        // For files, check parent directory
+        path.parent()
+            .ok_or_else(|| PathError::InvalidPath(format!("Path has no parent: {}", path.display())))?
+            .to_path_buf()
+    };
+
+    // Try to create and remove a test file
+    let test_file = test_dir.join(".classic_test_write");
+
+    fs::write(&test_file, b"test")
+        .and_then(|_| fs::remove_file(&test_file))
+        .map_err(|e| {
+            PathError::PermissionDenied(format!(
+                "No write permission for {}: {}",
+                test_dir.display(),
+                e
+            ))
+        })?;
+
+    Ok(())
+}
+
+/// Comprehensive path validation with permission checks.
+///
+/// This function performs a complete validation of a path:
+/// 1. Checks if the drive exists (Windows only)
+/// 2. Checks if the path exists
+/// 3. Optionally checks read permissions
+/// 4. Optionally checks write permissions
+///
+/// # Arguments
+///
+/// * `path` - The path to validate
+/// * `check_read` - Whether to verify read permissions (default: true)
+/// * `check_write` - Whether to verify write permissions (default: false)
+///
+/// # Returns
+///
+/// `Ok(())` if all checks pass, or the first `PathError` encountered.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::validator::validate_path_with_permissions;
+/// use std::path::Path;
+///
+/// // Check existence and read permission
+/// let path = Path::new("C:\\Games\\Fallout4");
+/// validate_path_with_permissions(path, true, false)?;
+///
+/// // Check all permissions including write
+/// validate_path_with_permissions(path, true, true)?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub fn validate_path_with_permissions(
+    path: &Path,
+    check_read: bool,
+    check_write: bool,
+) -> PathResult<()> {
+    // Check if drive exists (Windows only, no-op on other platforms)
+    check_drive_exists(path)?;
+
+    // Check if path exists
+    validate_path_exists(path)?;
+
+    // Check read permissions if requested
+    if check_read {
+        check_read_permissions(path)?;
+    }
+
+    // Check write permissions if requested
+    if check_write {
+        check_write_permissions(path)?;
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
