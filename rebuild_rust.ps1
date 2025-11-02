@@ -5,19 +5,21 @@ $ErrorActionPreference = "Stop"
 
 # Define all Rust Python modules in dependency order
 # WheelName: used for finding the built wheel file (must match Cargo package name with dashes->underscores)
-# Dir: the source directory
+# Dir: the source directory (relative to rust/ directory)
 # ImportName: the actual Python module name for import (optional, defaults to WheelName)
 $RustModules = @(
-    @{WheelName = "classic_shared_py"; Dir = "classic-shared-py"; ImportName = $null },  # Not a Python module
-    @{WheelName = "classic_yaml_py"; Dir = "classic-yaml-py"; ImportName = "classic_yaml" },
-    @{WheelName = "classic_database_py"; Dir = "classic-database-py"; ImportName = "classic_database" },
-    @{WheelName = "classic_file_io_py"; Dir = "classic-file-io-py"; ImportName = "classic_file_io" },
-    @{WheelName = "classic_scanlog_py"; Dir = "classic-scanlog-py"; ImportName = "classic_scanlog" },
-    @{WheelName = "classic_config_py"; Dir = "classic-config-py"; ImportName = "classic_config" }
+    @{WheelName = "classic_shared_py"; Dir = "rust/foundation/classic-shared-py"; ImportName = $null },  # Not a Python module
+    @{WheelName = "classic_yaml_py"; Dir = "rust/python-bindings/classic-yaml-py"; ImportName = "classic_yaml" },
+    @{WheelName = "classic_database_py"; Dir = "rust/python-bindings/classic-database-py"; ImportName = "classic_database" },
+    @{WheelName = "classic_file_io_py"; Dir = "rust/python-bindings/classic-file-io-py"; ImportName = "classic_file_io" },
+    @{WheelName = "classic_scanlog_py"; Dir = "rust/python-bindings/classic-scanlog-py"; ImportName = "classic_scanlog" },
+    @{WheelName = "classic_config_py"; Dir = "rust/python-bindings/classic-config-py"; ImportName = "classic_config" }
 )
 
 Write-Host "🧹 Cleaning old builds..." -ForegroundColor Cyan
+Push-Location rust
 cargo clean --workspace
+Pop-Location
 
 Write-Host "🗑️  Removing old .pyd files from venv..." -ForegroundColor Cyan
 foreach ($module in $RustModules) {
@@ -75,7 +77,7 @@ foreach ($module in $RustModules) {
     # Special handling for non-Python modules (like classic_shared - pure Rust rlib)
     if ($null -eq $module.ImportName) {
         # Verify the rlib was built by checking target directory
-        $rlibPath = "target\release\$($module.WheelName.Replace('_', '-')).rlib"
+        $rlibPath = "rust\target\release\$($module.WheelName.Replace('_', '-')).rlib"
         if (Test-Path $rlibPath) {
             $verificationResults += @{Module = $module.WheelName; Status = "✓"; Version = "Rust rlib"; IsPython = $false }
             Write-Host "  ✓ $($module.WheelName) - Rust library built" -ForegroundColor Cyan

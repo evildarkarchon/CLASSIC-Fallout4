@@ -1,0 +1,95 @@
+[package]
+name = "classic-tui"
+version = "0.1.0"
+edition = "2024"
+authors = ["CLASSIC Team"]
+description = "CLASSIC Terminal User Interface - High-performance TUI for crash log analysis"
+license = "MIT"
+
+[[bin]]
+name = "classic-tui"
+path = "src/main.rs"
+
+[dependencies]
+# TUI Framework
+ratatui = "0.29.0"
+crossterm = "0.29.0"
+
+# Async runtime
+tokio = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Business logic crates (NO PyO3 overhead - direct Rust access)
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+classic-database-core = { path = "../../business-logic/classic-database-core" }
+classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
+classic-config-core = { path = "../../business-logic/classic-config-core" }
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
+# UI shared coordination
+classic-ui-shared = { path = "../classic-ui-shared" }
+
+# TUI utilities
+tui-input = "0.14.0"
+
+# File system watching (cross-platform: Windows, Linux, macOS)
+notify = "7.0"
+
+# Clipboard support (cross-platform)
+arboard = "3.4"
+
+# Date/time for error timestamps
+chrono = "0.4"
+
+# HTTP client for update checking (rustls-tls for cross-platform compatibility)
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+
+# Open URLs in system browser
+open = "5.0"
+
+# Markdown parsing for articles
+pulldown-cmark = "0.12"
+
+# System directories
+dirs = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = "0.9"
+
+[dev-dependencies]
+tempfile = "3.8"
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+proptest = "1.5"
+pretty_assertions = "1.4"
+
+[[bench]]
+name = "tui_benchmarks"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"

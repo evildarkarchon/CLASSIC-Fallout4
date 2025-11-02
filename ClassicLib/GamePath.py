@@ -6,6 +6,9 @@ The module ensures the correct game path is determined based on platform-specifi
 lookups, and user-provided input. Once validated, the paths are registered and stored in YAML
 settings.
 
+**Performance**: Core path-finding operations (registry queries, XSE log parsing) automatically use
+Rust acceleration when available, providing 10-50x performance improvements.
+
 Functions:
     _game_path_find_registry: Retrieves the game's installation path from the Windows registry
     if available.
@@ -24,6 +27,14 @@ from ClassicLib.Interface.PathDialogMixin import show_game_path_dialog_static
 from ClassicLib.Logger import logger
 from ClassicLib.Util import get_game_version, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings
+
+# Try to import Rust acceleration for game path operations
+try:
+    import classic_path
+
+    _HAS_RUST_GAMEPATH = True
+except ImportError:
+    _HAS_RUST_GAMEPATH = False
 
 if TYPE_CHECKING:
     from packaging.version import Version

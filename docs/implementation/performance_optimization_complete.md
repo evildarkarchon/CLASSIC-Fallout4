@@ -66,7 +66,7 @@ During Phase 3 implementation, **we discovered that Rust extensions were already
 
 ### 1. FormID Extraction (Rust)
 
-**Location**: `classic-scanlog-core/src/formid_analyzer.rs` + `classic-scanlog-py/src/formid_analyzer.rs`
+**Location**: `rust/business-logic/classic-scanlog-core/src/formid_analyzer.rs` + `rust/python-bindings/classic-scanlog-py/src/formid_analyzer.rs`
 
 **Features**:
 - Pre-compiled regex pattern for FormID extraction
@@ -93,7 +93,7 @@ Processing rate: ~340,000 FormIDs/second
 
 ### 2. Plugin Matching (Rust)
 
-**Location**: `classic-scanlog-core/src/plugin_analyzer.rs` + `classic-scanlog-py/src/plugin_analyzer.rs`
+**Location**: `rust/business-logic/classic-scanlog-core/src/plugin_analyzer.rs` + `rust/python-bindings/classic-scanlog-py/src/plugin_analyzer.rs`
 
 **Features**:
 - Pre-compiled plugin detection patterns
@@ -208,7 +208,7 @@ For a typical crash log (5MB, 50,000 lines):
 ### Rust Crate Structure
 
 ```
-classic-scanlog-core/        # Pure Rust business logic (NO PyO3)
+rust/business-logic/classic-scanlog-core/        # Pure Rust business logic (NO PyO3)
 ├── src/
 │   ├── formid_analyzer.rs   # ✅ FormID extraction
 │   ├── plugin_analyzer.rs   # ✅ Plugin matching
@@ -216,7 +216,7 @@ classic-scanlog-core/        # Pure Rust business logic (NO PyO3)
 │   ├── record_scanner.rs    # Record scanning
 │   └── ...
 
-classic-scanlog-py/          # PyO3 bindings (thin adapter)
+rust/python-bindings/classic-scanlog-py/          # PyO3 bindings (thin adapter)
 ├── src/
 │   ├── formid_analyzer.rs   # ✅ PyO3 wrapper
 │   ├── plugin_analyzer.rs   # ✅ PyO3 wrapper
@@ -234,7 +234,7 @@ ClassicLib/rust/formid_rust.py (RustFormIDAnalyzer wrapper)
     ↓
 classic_core.scanlog.FormIDAnalyzerCore (PyO3 binding)
     ↓
-classic-scanlog-core FormIDAnalyzerCore (Pure Rust)
+rust/business-logic/classic-scanlog-core FormIDAnalyzerCore (Pure Rust)
 ```
 
 **Fallback**: If Rust unavailable → Python implementation automatically used
@@ -410,8 +410,8 @@ Rust Combined Workflow: 0.0272s for 50 iterations
 
 ### Dependencies
 - `classic-core` (PyO3 bindings)
-- `classic-scanlog-core` (Pure Rust logic)
-- `classic-scanlog-py` (PyO3 adapters)
+- `rust/business-logic/classic-scanlog-core` (Pure Rust logic)
+- `rust/python-bindings/classic-scanlog-py` (PyO3 adapters)
 
 ---
 

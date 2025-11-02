@@ -42,21 +42,21 @@ it offers:
 
 ### Method 1: Download Pre-built Binary (Recommended)
 
-1. Download `classic-cli.exe` from the [releases page](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases)
+1. Download `rust/ui-applications/classic-cli.exe` from the [releases page](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases)
 2. Place in a directory of your choice
 3. (Optional) Add to PATH for system-wide access
 
 ### Method 2: Install via Cargo
 
 ```bash
-cargo install --git https://github.com/evildarkarchon/CLASSIC-Fallout4 classic-cli
+cargo install --git https://github.com/evildarkarchon/CLASSIC-Fallout4 rust/ui-applications/classic-cli
 ```
 
 ### Verification
 
 ```bash
-classic-cli --version
-# Output: classic-cli 8.0.0
+rust/ui-applications/classic-cli --version
+# Output: rust/ui-applications/classic-cli 8.0.0
 ```
 
 ---
@@ -66,7 +66,7 @@ classic-cli --version
 ### Basic Scan (Default Settings)
 
 ```bash
-classic-cli
+rust/ui-applications/classic-cli
 ```
 
 This will:
@@ -90,7 +90,7 @@ On first run, CLASSIC will:
 ### General Options
 
 ```bash
-classic-cli [OPTIONS]
+rust/ui-applications/classic-cli [OPTIONS]
 ```
 
 | Option              | Type | Description                                  | Default |
@@ -112,8 +112,8 @@ classic-cli [OPTIONS]
 ### Help and Version
 
 ```bash
-classic-cli --help       # Show all options
-classic-cli --version    # Show version
+rust/ui-applications/classic-cli --help       # Show all options
+rust/ui-applications/classic-cli --version    # Show version
 ```
 
 ---
@@ -170,7 +170,7 @@ notepad "C:\Users\Name\Documents\My Games\Fallout4\CLASSIC Settings.yaml"
 **Option 2: CLI Override (Temporary)**
 
 ```bash
-classic-cli --fcx-mode --show-fid-values
+rust/ui-applications/classic-cli --fcx-mode --show-fid-values
 ```
 
 This won't modify the YAML file; settings apply only to this run.
@@ -182,7 +182,7 @@ This won't modify the YAML file; settings apply only to this run.
 ### Example 1: Basic Scan with Default Settings
 
 ```bash
-classic-cli
+rust/ui-applications/classic-cli
 ```
 
 **Output:**
@@ -216,13 +216,13 @@ Reports saved to: C:\...\Crash Logs\Reports\
 ### Example 2: Custom Scan Directory
 
 ```bash
-classic-cli --scan-path "D:\Additional Crash Logs"
+rust/ui-applications/classic-cli --scan-path "D:\Additional Crash Logs"
 ```
 
 ### Example 3: Full Analysis with All Options
 
 ```bash
-classic-cli \
+rust/ui-applications/classic-cli \
   --fcx-mode \
   --show-fid-values \
   --stat-logging \
@@ -242,7 +242,7 @@ $dirs = @(
 
 foreach ($dir in $dirs) {
     Write-Host "Scanning: $dir"
-    classic-cli --scan-path $dir --stat-logging
+    rust/ui-applications/classic-cli --scan-path $dir --stat-logging
 }
 ```
 
@@ -252,7 +252,7 @@ foreach ($dir in $dirs) {
 #!/bin/bash
 # Run CLASSIC scan and check for errors
 
-classic-cli --stat-logging --fcx-mode
+rust/ui-applications/classic-cli --stat-logging --fcx-mode
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
@@ -266,7 +266,7 @@ echo "CLASSIC scan completed successfully"
 ### Example 6: Generate Statistics Report
 
 ```bash
-classic-cli --stat-logging > scan_results.txt
+rust/ui-applications/classic-cli --stat-logging > scan_results.txt
 ```
 
 ---
@@ -344,8 +344,8 @@ CLASSIC automatically uses all CPU cores. For batch processing:
 
 ```bash
 # Good: Sequential processing (CLASSIC handles parallelization)
-classic-cli --scan-path "Logs1"
-classic-cli --scan-path "Logs2"
+rust/ui-applications/classic-cli --scan-path "Logs1"
+rust/ui-applications/classic-cli --scan-path "Logs2"
 
 # Not needed: Manual parallelization
 # CLASSIC already parallelizes within each scan
@@ -355,10 +355,10 @@ classic-cli --scan-path "Logs2"
 
 ```bash
 # Faster scan (minimal output)
-classic-cli --simplify-logs
+rust/ui-applications/classic-cli --simplify-logs
 
 # Full analysis (more time)
-classic-cli --fcx-mode --show-fid-values --stat-logging
+rust/ui-applications/classic-cli --fcx-mode --show-fid-values --stat-logging
 ```
 
 ### 4. Regular Database Updates
@@ -380,7 +380,7 @@ Keep your FormID database updated for faster lookups:
 
 1. Verify crash logs directory:
    ```bash
-   classic-cli --scan-path "C:\Users\Name\Documents\My Games\Fallout4\F4SE"
+   rust/ui-applications/classic-cli --scan-path "C:\Users\Name\Documents\My Games\Fallout4\F4SE"
    ```
 
 2. Check if crash logs exist:
@@ -397,7 +397,7 @@ Keep your FormID database updated for faster lookups:
 1. Delete configuration and let CLASSIC recreate it:
    ```bash
    del "CLASSIC Settings.yaml"
-   classic-cli  # Creates new config
+   rust/ui-applications/classic-cli  # Creates new config
    ```
 
 2. Validate YAML syntax online: https://www.yamllint.com/
@@ -437,7 +437,7 @@ Keep your FormID database updated for faster lookups:
 1. Run as administrator (Windows):
    ```bash
    # Right-click CMD/PowerShell → "Run as administrator"
-   classic-cli
+   rust/ui-applications/classic-cli
    ```
 
 2. Check folder permissions:
@@ -451,28 +451,28 @@ Keep your FormID database updated for faster lookups:
 1. Syntax is correct:
    ```bash
    # Correct
-   classic-cli --fcx-mode
+   rust/ui-applications/classic-cli --fcx-mode
 
    # Incorrect (missing dashes)
-   classic-cli fcx-mode
+   rust/ui-applications/classic-cli fcx-mode
    ```
 
 2. Boolean flags don't need values:
    ```bash
    # Correct
-   classic-cli --fcx-mode
+   rust/ui-applications/classic-cli --fcx-mode
 
    # Incorrect
-   classic-cli --fcx-mode true
+   rust/ui-applications/classic-cli --fcx-mode true
    ```
 
 3. Paths with spaces need quotes:
    ```bash
    # Correct
-   classic-cli --scan-path "C:\My Logs"
+   rust/ui-applications/classic-cli --scan-path "C:\My Logs"
 
    # Incorrect (will fail)
-   classic-cli --scan-path C:\My Logs
+   rust/ui-applications/classic-cli --scan-path C:\My Logs
    ```
 
 ---
@@ -492,7 +492,7 @@ $watcher.EnableRaisingEvents = $true
 
 Register-ObjectEvent $watcher "Created" -Action {
     Write-Host "New crash detected, analyzing..."
-    classic-cli --fcx-mode
+    rust/ui-applications/classic-cli --fcx-mode
 }
 ```
 
@@ -506,7 +506,7 @@ SCAN_DIR="/mnt/games/Fallout4/crashes"
 ARCHIVE_DIR="/mnt/archives/crash_reports"
 
 # Run scan
-classic-cli --scan-path "$SCAN_DIR" --stat-logging > daily_report.txt
+rust/ui-applications/classic-cli --scan-path "$SCAN_DIR" --stat-logging > daily_report.txt
 
 # Archive reports
 DATE=$(date +%Y-%m-%d)

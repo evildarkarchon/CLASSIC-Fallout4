@@ -19,7 +19,7 @@
 
 #### Business Logic Separation (Phase 4 Complete)
 
-**Core Modules** (`classic-scanlog-core` - Pure Rust, 0% PyO3):
+**Core Modules** (`rust/business-logic/classic-scanlog-core` - Pure Rust, 0% PyO3):
 - `formid_analyzer.rs` - FormID extraction and analysis
 - `gpu_detector.rs` - GPU information detection
 - `log_parser.rs` - Crash log parsing and segmentation
@@ -33,7 +33,7 @@
 
 **Total**: 4,023 LOC pure Rust business logic
 
-**Python Bindings** (`classic-scanlog-py` - Thin PyO3 wrappers):
+**Python Bindings** (`rust/python-bindings/classic-scanlog-py` - Thin PyO3 wrappers):
 - 14 wrapper files
 - 1,453 LOC
 - Async bridge pattern: `get_runtime().block_on()`
@@ -88,7 +88,7 @@ Based on integration factory and documentation:
 
 ### Test Coverage
 
-**Core Tests** (`classic-scanlog-core/tests/`):
+**Core Tests** (`rust/business-logic/classic-scanlog-core/tests/`):
 - ✅ 27 tests passing
 - Pure Rust unit tests
 - No PyO3 dependencies in tests

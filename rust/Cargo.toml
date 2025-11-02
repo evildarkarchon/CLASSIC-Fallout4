@@ -1,0 +1,131 @@
+[workspace]
+members = [
+    # Foundation
+    "foundation/classic-shared-core",
+    "foundation/classic-shared-py",
+
+    # Business Logic (Pure Rust - no PyO3)
+    "business-logic/classic-yaml-core",
+    "business-logic/classic-database-core",
+    "business-logic/classic-file-io-core",
+    "business-logic/classic-scanlog-core",
+    "business-logic/classic-config-core",
+
+    # Phase 1 - Core Infrastructure (Business Logic)
+    "business-logic/classic-registry-core",
+    "business-logic/classic-perf-core",
+    "business-logic/classic-pybridge-core",
+    "business-logic/classic-settings-core",
+    "business-logic/classic-message-core",
+
+    # Phase 2 - Path Management (Business Logic)
+    "business-logic/classic-path-core",
+
+    # UI Coordination (Shared across CLI/TUI/GUI)
+    "ui-applications/classic-ui-shared",
+
+    # Python Bindings (PyO3 adapters)
+    "python-bindings/classic-yaml-py",
+    "python-bindings/classic-database-py",
+    "python-bindings/classic-file-io-py",
+    "python-bindings/classic-scanlog-py",
+    "python-bindings/classic-config-py",
+
+    # Phase 1 - Core Infrastructure (Python Bindings)
+    "python-bindings/classic-registry-py",
+    "python-bindings/classic-perf-py",
+    "python-bindings/classic-pybridge-py",
+    "python-bindings/classic-settings-py",
+    "python-bindings/classic-message-py",
+
+    # Phase 2 - Path Management (Python Bindings)
+    "python-bindings/classic-path-py",
+
+    # Native Applications
+    "ui-applications/classic-cli",
+    "ui-applications/classic-tui",
+    "ui-applications/classic-gui-slint",
+]
+resolver = "2"
+
+[workspace.dependencies]
+# PyO3 bindings
+pyo3 = { version = "0.26.0", features = ["abi3-py312"] }
+pyo3-async-runtimes = { version = "0.26.0" }
+
+# Async runtime (ONE RUNTIME RULE)
+tokio = { version = "1.48.0", features = ["full"] }
+futures = "0.3"
+
+# Performance
+once_cell = "1.20"
+dashmap = "6.1"
+parking_lot = "0.12"
+rayon = "1.10"
+crossbeam = "0.8"
+num_cpus = "1.16"
+
+# YAML
+yaml-rust2 = "0.10.4"
+
+# Strings & errors
+string_cache = "0.9.0"
+smartstring = "1.0"
+lasso = { version = "0.7", features = [
+    "multi-threaded",
+] } # Fast string interning (optimization 3.1)
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Database
+rusqlite = { version = "0.37.0", features = ["bundled", "backup"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
+
+# File I/O
+encoding_rs = "0.8"
+memmap2 = "0.9"
+walkdir = "2.5"
+ddsfile = "0.5"
+dirs = "5.0"
+
+# Parsing
+regex = "1.11"
+memchr = "2.7"
+aho-corasick = "1.1"
+
+# Caching
+lru = "0.16.1"
+linked-hash-map = "0.5"
+quick_cache = "0.6"     # Lock-free concurrent cache (optimization 1.3)
+rustc-hash = "2.1"      # Fast hasher for short strings (optimization 1.2)
+
+# Hashing
+xxhash-rust = { version = "0.8", features = [
+    "xxh3",
+] } # Fast non-cryptographic hash (optimization 4.1)
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# GUI (Slint)
+slint = "1.13"
+
+# Testing
+tempfile = "3.18"
+
+[workspace.lints.rust]
+deprecated = "deny"
+unused = "deny"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true

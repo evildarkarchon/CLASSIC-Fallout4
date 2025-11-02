@@ -49,7 +49,7 @@ Each Rust crate that exports Python classes MUST be:
 - ✅ `classic_config-py` - standalone module with YamlData
 - ✅ `classic_scanlog-py` - standalone module with RustOrchestrator, AnalysisConfig, AnalysisResult
 - ✅ `classic_core-py` - standalone module re-exporting from other crates
-- ✅ `classic-yaml-py` - standalone module with PyYamlOperations
+- ✅ `rust/python-bindings/classic-yaml-py` - standalone module with PyYamlOperations
 
 ## Build Methods
 

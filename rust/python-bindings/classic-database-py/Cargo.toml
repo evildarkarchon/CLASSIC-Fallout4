@@ -1,0 +1,34 @@
+[package]
+name = "classic-database-py"
+version = "8.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-database-core (PyO3 adapter)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_database"  # Python module name
+crate-type = ["cdylib", "rlib"]  # Python extension + Rust library
+
+[dependencies]
+# Business logic (pure Rust)
+classic-database-core = { path = "../../business-logic/classic-database-core" }
+
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+pyo3-async-runtimes = { version = "0.26", features = ["tokio-runtime"] }
+
+# Shared utilities
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation

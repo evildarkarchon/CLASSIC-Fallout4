@@ -1,0 +1,40 @@
+[package]
+name = "classic-pybridge-core"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Core async bridge utilities for Python-Rust interop"
+license = "MIT"
+
+[dependencies]
+# ONE RUNTIME RULE - shared Tokio runtime
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
+# Performance monitoring
+classic-perf-core = { path = "../classic-perf-core" }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Thread safety
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+once_cell = { workspace = true }
+
+# System info
+num_cpus = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+serial_test = "3.2"
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

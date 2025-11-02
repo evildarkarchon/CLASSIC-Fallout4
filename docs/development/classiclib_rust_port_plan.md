@@ -41,13 +41,13 @@ This document outlines a phased approach to port the remaining Python components
 
 | Component | Rust Crates | Status | Notes |
 |-----------|-------------|--------|-------|
-| YAML Operations | `classic-yaml-core` + `classic-yaml-py` | ✅ Complete | 15-30x faster |
-| File I/O | `classic-file-io-core` + `classic-file-io-py` | ✅ Complete | 10x faster |
-| Database | `classic-database-core` + `classic-database-py` | ✅ Complete | - |
-| ScanLog | `classic-scanlog-core` + `classic-scanlog-py` | ✅ Complete | - |
-| Config | `classic-config-core` + `classic-config-py` | ✅ Complete | - |
-| Shared Runtime | `classic-shared-core` + `classic-shared-py` | ✅ Complete | Foundation |
-| TUI | `classic-tui` | ✅ Complete | Pure Rust app |
+| YAML Operations | `rust/business-logic/classic-yaml-core` + `rust/python-bindings/classic-yaml-py` | ✅ Complete | 15-30x faster |
+| File I/O | `rust/business-logic/classic-file-io-core` + `rust/python-bindings/classic-file-io-py` | ✅ Complete | 10x faster |
+| Database | `rust/business-logic/classic-database-core` + `rust/python-bindings/classic-database-py` | ✅ Complete | - |
+| ScanLog | `rust/business-logic/classic-scanlog-core` + `rust/python-bindings/classic-scanlog-py` | ✅ Complete | - |
+| Config | `rust/business-logic/classic-config-core` + `rust/python-bindings/classic-config-py` | ✅ Complete | - |
+| Shared Runtime | `rust/foundation/classic-shared-core` + `rust/foundation/classic-shared-py` | ✅ Complete | Foundation |
+| TUI | `rust/ui-applications/classic-tui` | ✅ Complete | Pure Rust app |
 | Slint GUI | `classic-gui-slint` | ✅ Complete | Pure Rust app |
 
 ### Components to Port (Estimated 60% remaining)
@@ -220,7 +220,7 @@ main_window.on_button_click({
 **Components**:
 1. **AsyncBridge (Python)** → `classic-pybridge-core` + `classic-pybridge-py`
    - Priority: CRITICAL
-   - Python async/sync coordination (distinct from Slint's `AsyncBridge` in `classic-shared-core`)
+   - Python async/sync coordination (distinct from Slint's `AsyncBridge` in `rust/foundation/classic-shared-core`)
    - Bridge Python asyncio with Qt/PySide6 event loop
    - Replace manual `asyncio.run()` patterns in Python code
    - Essential for PySide6 GUI and async CLI operations
@@ -234,7 +234,7 @@ main_window.on_button_click({
 
 3. **YamlSettingsCache** → `classic-settings-core` + `classic-settings-py`
    - Priority: HIGH
-   - Layer on top of existing `classic-yaml-core`
+   - Layer on top of existing `rust/business-logic/classic-yaml-core`
    - Caching with `quick_cache`
    - Batch loading support
    - Estimate: 1 week
@@ -248,7 +248,7 @@ main_window.on_button_click({
 
 5. **PerformanceMonitor** → `classic-perf-core` + `classic-perf-py`
    - Priority: MEDIUM
-   - Rationale: While `performance_core.rs` exists in `classic-shared-core`, creating dedicated crates provides:
+   - Rationale: While `performance_core.rs` exists in `rust/foundation/classic-shared-core`, creating dedicated crates provides:
      - **Python acceleration**: 10x memory efficiency (O(1) vs O(n)) + thread safety
      - **Rust applications**: Proper logging integration, formatted reports, JSON/CSV export
      - **Cross-language metrics**: Unified performance tracking across Python and Rust
@@ -344,7 +344,7 @@ main_window.on_button_click({
    - Asset validation
    - Estimate: 2 weeks
 
-4. **DDSAnalyzer** → Basic implementation already in `classic-file-io-core` + `classic-file-io-py`, expand here
+4. **DDSAnalyzer** → Basic implementation already in `rust/business-logic/classic-file-io-core` + `rust/python-bindings/classic-file-io-py`, expand here
    - DDS texture analysis
    - Format validation
    - Estimate: 1 week
@@ -410,7 +410,7 @@ main_window.on_button_click({
    - Logging utilities
    - Estimate: 2 weeks (parallelizable)
 
-4. **Constants** → merge into `classic-shared-core`
+4. **Constants** → merge into `rust/foundation/classic-shared-core`
    - Application constants
    - Estimate: 2 days
 
@@ -902,27 +902,27 @@ Workspace Root
 
 
 Existing Crates (unchanged):
-├── classic-shared-core/           # Foundation
-├── classic-shared-py/             # Foundation Python bindings
-├── classic-yaml-core/             # YAML operations
-├── classic-yaml-py/               # YAML Python bindings
-├── classic-database-core/         # Database operations
-├── classic-database-py/           # Database Python bindings
-├── classic-file-io-core/          # File I/O
-├── classic-file-io-py/            # File I/O Python bindings
-├── classic-scanlog-core/          # ScanLog business logic
-├── classic-scanlog-py/            # ScanLog Python bindings
-├── classic-config-core/           # Config management
-├── classic-config-py/             # Config Python bindings
+├── rust/foundation/classic-shared-core/           # Foundation
+├── rust/foundation/classic-shared-py/             # Foundation Python bindings
+├── rust/business-logic/classic-yaml-core/             # YAML operations
+├── rust/python-bindings/classic-yaml-py/               # YAML Python bindings
+├── rust/business-logic/classic-database-core/         # Database operations
+├── rust/python-bindings/classic-database-py/           # Database Python bindings
+├── rust/business-logic/classic-file-io-core/          # File I/O
+├── rust/python-bindings/classic-file-io-py/            # File I/O Python bindings
+├── rust/business-logic/classic-scanlog-core/          # ScanLog business logic
+├── rust/python-bindings/classic-scanlog-py/            # ScanLog Python bindings
+├── rust/business-logic/classic-config-core/           # Config management
+├── rust/python-bindings/classic-config-py/             # Config Python bindings
 ├── classic-ui-shared/             # UI coordination
-├── classic-cli/                   # CLI app (pure Rust)
-├── classic-tui/                   # TUI app (pure Rust)
+├── rust/ui-applications/classic-cli/                   # CLI app (pure Rust)
+├── rust/ui-applications/classic-tui/                   # TUI app (pure Rust)
 └── classic-gui-slint/             # Slint GUI (pure Rust)
 ```
 
 **Total New Crates**: ~44 (22 -core + 22 -py)
 
-**Note**: Path management consolidated into single `classic-path` crate group (reduces by 6 crates). PerformanceMonitor gets dedicated crates despite existing in `classic-shared-core` to provide Python acceleration (10x memory efficiency), unified cross-language metrics, and proper logging integration. Python AsyncBridge (`classic-pybridge`) is distinct from Slint's AsyncBridge in `classic-shared-core` - the former bridges Python asyncio with Qt, while the latter bridges Rust async with Slint's UI thread.
+**Note**: Path management consolidated into single `classic-path` crate group (reduces by 6 crates). PerformanceMonitor gets dedicated crates despite existing in `rust/foundation/classic-shared-core` to provide Python acceleration (10x memory efficiency), unified cross-language metrics, and proper logging integration. Python AsyncBridge (`classic-pybridge`) is distinct from Slint's AsyncBridge in `rust/foundation/classic-shared-core` - the former bridges Python asyncio with Qt, while the latter bridges Rust async with Slint's UI thread.
 
 ---
 
@@ -1008,7 +1008,7 @@ Existing Crates (unchanged):
    - **Recommendation**: Yes - proven approach, ONE RUNTIME RULE
 
 5. **Error Handling**: Standardize error types across all crates?
-   - **Recommendation**: Yes - define common error types in `classic-shared-core`
+   - **Recommendation**: Yes - define common error types in `rust/foundation/classic-shared-core`
 
 ---
 

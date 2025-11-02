@@ -55,7 +55,7 @@ classic-ui-shared/
 - GUI: `copy_error_to_clipboard()` automatically uses "GUI" interface name
 
 **Files Modified**:
-- [classic-tui/src/handlers/clipboard_handler.rs](../../classic-tui/src/handlers/clipboard_handler.rs) - Now re-exports from shared
+- [rust/ui-applications/classic-tui/src/handlers/clipboard_handler.rs](../../rust/ui-applications/classic-tui/src/handlers/clipboard_handler.rs) - Now re-exports from shared
 - [classic-gui-slint/src/handlers/clipboard.rs](../../classic-gui-slint/src/handlers/clipboard.rs) - Now re-exports from shared
 
 ### 3. Folder Validation Module
@@ -69,7 +69,7 @@ classic-ui-shared/
 - Checks: existence, is_directory, read permissions
 
 **Files Modified**:
-- [classic-tui/src/handlers/folder_handler.rs:102](../../classic-tui/src/handlers/folder_handler.rs#L102) - Uses shared validation
+- [rust/ui-applications/classic-tui/src/handlers/folder_handler.rs:102](../../rust/ui-applications/classic-tui/src/handlers/folder_handler.rs#L102) - Uses shared validation
 - [classic-gui-slint/src/handlers/folders.rs:59](../../classic-gui-slint/src/handlers/folders.rs#L59) - Uses shared validation
 
 ### 4. Update Check Module
@@ -101,7 +101,7 @@ classic-ui-shared/
 
 ### 6. Integration Updates
 
-**TUI Integration** ([classic-tui/Cargo.toml:34](../../classic-tui/Cargo.toml#L34)):
+**TUI Integration** ([rust/ui-applications/classic-tui/Cargo.toml:34](../../rust/ui-applications/classic-tui/Cargo.toml#L34)):
 - Added `classic-ui-shared` dependency
 - Updated clipboard handler to use shared code
 - Updated folder handler to use shared validation
@@ -143,7 +143,7 @@ classic-ui-shared/
 
 **Files Modified**:
 - [classic-gui-slint/src/handlers/backup.rs](../../classic-gui-slint/src/handlers/backup.rs) - Now uses BackupManager from core
-- [classic-gui-slint/Cargo.toml](../../classic-gui-slint/Cargo.toml) - Already had classic-file-io-core dependency
+- [classic-gui-slint/Cargo.toml](../../classic-gui-slint/Cargo.toml) - Already had rust/business-logic/classic-file-io-core dependency
 
 **Result**: ✅ Compiles cleanly, 392 lines removed, uses standardized backup logic
 
@@ -248,9 +248,9 @@ classic-ui-shared/
 ### ✅ All Interfaces Compiling
 
 - **classic-ui-shared**: ✅ Compiles cleanly, all tests pass
-- **classic-tui**: ✅ Compiles with shared dependencies, no new warnings
+- **rust/ui-applications/classic-tui**: ✅ Compiles with shared dependencies, no new warnings
 - **classic-gui-slint**: ✅ Compiles cleanly after all refactoring phases
-- **classic-cli**: ✅ No changes needed (minimal duplication)
+- **rust/ui-applications/classic-cli**: ✅ No changes needed (minimal duplication)
 
 ---
 
@@ -353,12 +353,12 @@ pub fn copy_error(title: &str, msg: &str, details: Option<&str>) -> Result<()> {
                        │
      ┌─────────────────▼──────────────────┐
      │  -core crates (Business Logic)     │
-     │  • classic-file-io-core            │
+     │  • rust/business-logic/classic-file-io-core            │
      │    - BackupManager                 │
-     │  • classic-scanlog-core            │
+     │  • rust/business-logic/classic-scanlog-core            │
      │    - PapyrusAnalyzer               │
-     │  • classic-config-core             │
-     │  • classic-yaml-core               │
+     │  • rust/business-logic/classic-config-core             │
+     │  • rust/business-logic/classic-yaml-core               │
      └────────────────────────────────────┘
 ```
 

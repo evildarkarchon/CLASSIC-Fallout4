@@ -46,8 +46,8 @@ uv run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
 ```bash
 # Method 1: Build wheel (MOST RELIABLE - RECOMMENDED)
 # Build individual modules:
-cd classic-yaml-py && maturin build --release --out dist && cd ..
-uv pip install classic-yaml-py/dist/classic_yaml_py-*.whl --force-reinstall
+cd rust/python-bindings/classic-yaml-py && maturin build --release --out dist && cd ../../..
+uv pip install rust/python-bindings/classic-yaml-py/dist/classic_yaml_py-*.whl --force-reinstall
 
 # Or use rebuild_rust.ps1 to build all modules:
 ./rebuild_rust.ps1
@@ -79,6 +79,72 @@ uv run python -c "from ClassicLib.integration.status import print_rust_status; p
 - **ONE RUNTIME RULE**: Single global Tokio runtime shared across all crates
 - **SEPARATION OF CONCERNS**: Business logic in `-core` crates, PyO3 bindings in `-py` crates
 - **NO MIXED CRATES**: Never combine business logic with PyO3 bindings in the same crate
+
+**📚 Deep Dive**: See [Rust Workspace Architecture](docs/development/rust_workspace_architecture.md)
+
+### Rust Directory Structure
+
+**IMPORTANT**: All Rust crates are organized in the `rust/` directory with subdirectories by layer:
+
+```
+rust/
+├── Cargo.toml                        # Workspace manifest (all crate coordination)
+├── Cargo.lock                        # Dependency lock file
+├── foundation/                       # Foundation Layer
+│   ├── classic-shared-core/         # Core runtime, errors, utilities
+│   └── classic-shared-py/           # PyO3 bindings for shared components
+├── business-logic/                   # Business Logic Layer (Pure Rust - NO PyO3)
+│   ├── classic-yaml-core/           # YAML operations
+│   ├── classic-database-core/       # Database operations
+│   ├── classic-file-io-core/        # File I/O operations
+│   ├── classic-scanlog-core/        # Log parsing
+│   ├── classic-config-core/         # Configuration
+│   ├── classic-registry-core/       # Registry management
+│   ├── classic-perf-core/           # Performance monitoring
+│   ├── classic-pybridge-core/       # Python bridge
+│   ├── classic-settings-core/       # Settings management
+│   ├── classic-message-core/        # Message handling
+│   └── classic-path-core/           # Path management
+├── python-bindings/                  # Python Bindings Layer (PyO3 adapters)
+│   ├── classic-yaml-py/             # Python bindings for YAML
+│   ├── classic-database-py/         # Python bindings for database
+│   ├── classic-file-io-py/          # Python bindings for file I/O
+│   ├── classic-scanlog-py/          # Python bindings for log parsing
+│   ├── classic-config-py/           # Python bindings for config
+│   ├── classic-registry-py/         # Python bindings for registry
+│   ├── classic-perf-py/             # Python bindings for perf
+│   ├── classic-pybridge-py/         # Python bindings for bridge
+│   ├── classic-settings-py/         # Python bindings for settings
+│   ├── classic-message-py/          # Python bindings for messages
+│   └── classic-path-py/             # Python bindings for paths
+└── ui-applications/                  # UI Applications
+    ├── classic-cli/                 # Command-line interface
+    ├── classic-tui/                 # Terminal UI (Ratatui)
+    ├── classic-gui-slint/           # Slint GUI
+    └── classic-ui-shared/           # Shared UI components
+```
+
+**Creating New Crates**:
+1. **Business Logic** (`-core` crate): Create in `rust/business-logic/`
+   - Pure Rust, NO PyO3 dependencies
+   - `Cargo.toml`: `crate-type = ["rlib"]`
+   - Add to workspace in `rust/Cargo.toml` under `# Business Logic`
+
+2. **Python Bindings** (`-py` crate): Create in `rust/python-bindings/`
+   - Depends on corresponding `-core` crate
+   - `Cargo.toml`: `crate-type = ["cdylib", "rlib"]`
+   - Add PyO3 dependency: `pyo3.workspace = true`
+   - Add to workspace in `rust/Cargo.toml` under `# Python Bindings`
+   - Add to `rebuild_rust.ps1` and `build_all.ps1`
+
+3. **UI Applications**: Create in `rust/ui-applications/`
+   - Standalone applications (CLI/TUI/GUI)
+   - Add to workspace in `rust/Cargo.toml` under `# Native Applications`
+
+**Build System Updates**:
+- Always update `rust/Cargo.toml` workspace members when adding crates
+- Update `rebuild_rust.ps1` for Python binding crates
+- Update `build_all.ps1` for PyInstaller bundling
 
 **📚 Deep Dive**: See [Rust Workspace Architecture](docs/development/rust_workspace_architecture.md)
 
@@ -420,3 +486,4 @@ All maintain backward compatibility through re-exports.
 - **Slint AsyncBridge pattern** (2025-10-11): ALWAYS use `AsyncBridge::run_with_ui_update()` for async operations in Slint GUI
 - **Rust documentation requirement** (2025-10-23): ALL new Rust code MUST be fully documented. Missing documentation warnings are treated as errors.
 - **FCX mode read-only** (2025-10-29): FCX mode now operates in read-only mode - it detects configuration issues but never modifies files. All detected issues are reported with current vs. recommended values. Auto-fix functions (`apply_ini_fix_async`, `apply_all_ini_fixes_async`, `ConfigFileCache.set()`) have been removed. Use new detection functions (`detect_ini_issue_async`, `detect_all_ini_issues_async`, `ConfigFileCache.detect_issue()`) for read-only issue detection.
+- **Rust directory reorganization** (2025-11-01): All Rust crates moved to `rust/` directory with subdirectories: `foundation/`, `business-logic/`, `python-bindings/`, `ui-applications/`. ALL new Rust crates MUST be created in the appropriate subdirectory. Workspace manifest at `rust/Cargo.toml`. Build scripts (`rebuild_rust.ps1`, `build_all.ps1`) updated to reference new paths.

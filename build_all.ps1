@@ -128,7 +128,7 @@ else {
 #   3. 10-150x performance improvements for all operations
 # Python imports individual modules directly (e.g., import classic_yaml)
 #
-if (Test-Path "classic-yaml-py") {
+if (Test-Path "rust/python-bindings/classic-yaml-py") {
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host "Building Rust workspace (separated architecture)..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
@@ -137,12 +137,12 @@ if (Test-Path "classic-yaml-py") {
     # Define all Rust Python modules (.pyd files from *-py crates) in dependency order
     # Note: Only *-py crates produce .pyd files; *-core crates are pure Rust (rlib)
     $RustModules = @(
-        @{Name = "classic_shared"; Dir = "classic-shared"; Description = "Foundation (runtime, errors, utilities)"},
-        @{Name = "classic_yaml"; Dir = "classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"},
-        @{Name = "classic_database"; Dir = "classic-database-py"; Description = "SQLite operations (bindings)"},
-        @{Name = "classic_file_io"; Dir = "classic-file-io-py"; Description = "File I/O + DDS parsing (bindings)"},
-        @{Name = "classic_scanlog"; Dir = "classic-scanlog-py"; Description = "Log parsing + analysis (bindings)"},
-        @{Name = "classic_config"; Dir = "classic-config-py"; Description = "YamlData configuration (bindings)"}
+        @{Name = "classic_shared"; Dir = "rust/foundation/classic-shared-py"; Description = "Foundation (runtime, errors, utilities)"},
+        @{Name = "classic_yaml"; Dir = "rust/python-bindings/classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"},
+        @{Name = "classic_database"; Dir = "rust/python-bindings/classic-database-py"; Description = "SQLite operations (bindings)"},
+        @{Name = "classic_file_io"; Dir = "rust/python-bindings/classic-file-io-py"; Description = "File I/O + DDS parsing (bindings)"},
+        @{Name = "classic_scanlog"; Dir = "rust/python-bindings/classic-scanlog-py"; Description = "Log parsing + analysis (bindings)"},
+        @{Name = "classic_config"; Dir = "rust/python-bindings/classic-config-py"; Description = "YamlData configuration (bindings)"}
     )
 
     # Build all Rust modules

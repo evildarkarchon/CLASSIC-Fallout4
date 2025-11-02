@@ -1,0 +1,59 @@
+[package]
+name = "classic-file-io-core"
+version = "8.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Pure Rust file I/O operations for CLASSIC (no PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+
+[dependencies]
+# CLASSIC shared utilities
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
+# File I/O
+encoding_rs = { workspace = true }
+memmap2 = { workspace = true }
+walkdir = { workspace = true }
+ddsfile = { workspace = true }
+glob = "0.3"
+
+# Async runtime
+tokio = { workspace = true, features = ["full"] }
+futures = { workspace = true }
+
+# Caching and concurrency
+dashmap = { workspace = true }
+lru = { workspace = true }
+quick_cache = { workspace = true }  # Optimization 1.3: Lock-free concurrent cache
+parking_lot = { workspace = true }
+rayon = { workspace = true }
+
+# Parsing
+regex = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+log = { workspace = true }
+tracing = { workspace = true }
+
+# Time handling
+chrono = "0.4"
+
+# NO PyO3 dependency!
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "warn"  # Allow unsafe for memory-mapped I/O (properly documented)
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"
