@@ -297,11 +297,7 @@ impl CrashgenChecker {
     ///
     /// Value if found, None otherwise
     fn get_value(&self, section: &str, key: &str) -> Option<&Value> {
-        self.toml_data
-            .as_ref()?
-            .get(section)?
-            .as_table()?
-            .get(key)
+        self.toml_data.as_ref()?.get(section)?.as_table()?.get(key)
     }
 
     /// Get settings to check based on installed plugins
@@ -311,12 +307,17 @@ impl CrashgenChecker {
     /// Vector of settings to validate
     fn get_settings_to_check(&self) -> Vec<TomlSetting> {
         let has_xcell = self.has_plugin(&["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll"]);
-        let has_achievements = self.has_plugin(&["achievements.dll", "achievementsmodsenablerloader.dll"]);
+        let has_achievements =
+            self.has_plugin(&["achievements.dll", "achievementsmodsenablerloader.dll"]);
         let has_looksmenu = self.installed_plugins.iter().any(|f| f.contains("f4ee"));
         let is_og_config = self
             .config_file
             .as_ref()
-            .map(|p| p.to_string_lossy().to_lowercase().contains("buffout4/config.toml"))
+            .map(|p| {
+                p.to_string_lossy()
+                    .to_lowercase()
+                    .contains("buffout4/config.toml")
+            })
             .unwrap_or(false);
 
         vec![
@@ -327,7 +328,8 @@ impl CrashgenChecker {
                 name: "Achievements".to_string(),
                 condition: has_achievements,
                 desired_value: Value::Boolean(false),
-                description: "The Achievements Mod and/or Unlimited Survival Mode is installed".to_string(),
+                description: "The Achievements Mod and/or Unlimited Survival Mode is installed"
+                    .to_string(),
                 reason: format!("to prevent conflicts with {}", self.crashgen_name),
                 special_case: None,
             },
@@ -408,7 +410,8 @@ impl CrashgenChecker {
                 name: "F4EE (Looks Menu)".to_string(),
                 condition: has_looksmenu,
                 desired_value: Value::Boolean(true),
-                description: "Looks Menu is installed, but F4EE parameter is set to FALSE".to_string(),
+                description: "Looks Menu is installed, but F4EE parameter is set to FALSE"
+                    .to_string(),
                 reason: "to prevent bugs and crashes from Looks Menu".to_string(),
                 special_case: None,
             },

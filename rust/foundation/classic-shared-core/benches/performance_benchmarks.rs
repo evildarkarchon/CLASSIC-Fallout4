@@ -2,8 +2,8 @@
 
 #![allow(missing_docs)]
 
-use classic_shared_core::performance_core::{get_global_metrics, Timer};
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use classic_shared_core::performance_core::{Timer, get_global_metrics};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use std::time::Duration;
 
 fn bench_record_timing(c: &mut Criterion) {
@@ -197,10 +197,7 @@ fn bench_concurrent_recording(c: &mut Criterion) {
                     std::thread::spawn(move || {
                         for i in 0..100 {
                             let duration = Duration::from_micros(100 + (i % 100));
-                            metrics.record_timing(
-                                &format!("thread_{}_op", thread_id),
-                                duration,
-                            );
+                            metrics.record_timing(&format!("thread_{}_op", thread_id), duration);
                         }
                     })
                 })

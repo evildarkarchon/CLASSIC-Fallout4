@@ -93,11 +93,11 @@
 use crate::app::App;
 use crate::widgets::markdown_viewer::{MarkdownRenderer, RenderedMarkdown};
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
-    Frame,
 };
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -118,8 +118,9 @@ use std::sync::OnceLock;
 /// - `LazyLock<RwLock<HashMap<...>>>` for manual invalidation
 /// - Event-based cache clearing on content updates
 /// - TTL-based expiration for periodically-updated content
-static RENDERED_ARTICLES_CACHE: OnceLock<HashMap<(ArticleCategory, &'static str), RenderedMarkdown>> =
-    OnceLock::new();
+static RENDERED_ARTICLES_CACHE: OnceLock<
+    HashMap<(ArticleCategory, &'static str), RenderedMarkdown>,
+> = OnceLock::new();
 
 /// Global cache for article title lookups (String -> &'static str)
 ///
@@ -145,7 +146,8 @@ pub fn get_article_title_map() -> &'static HashMap<String, &'static str> {
 }
 
 /// Get the rendered articles cache, initializing it if necessary
-fn get_rendered_articles_cache() -> &'static HashMap<(ArticleCategory, &'static str), RenderedMarkdown> {
+fn get_rendered_articles_cache()
+-> &'static HashMap<(ArticleCategory, &'static str), RenderedMarkdown> {
     RENDERED_ARTICLES_CACHE.get_or_init(|| {
         let mut cache = HashMap::new();
 
@@ -724,14 +726,12 @@ fn render_article_viewer(f: &mut Frame, area: Rect, state: &ArticlesState) {
             format!(" {} {} ", title, selected_indicator)
         };
 
-        Paragraph::new(lines)
-            .wrap(Wrap { trim: false })
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(title_text)
-                    .border_style(Style::default().fg(Color::Cyan)),
-            )
+        Paragraph::new(lines).wrap(Wrap { trim: false }).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(title_text)
+                .border_style(Style::default().fg(Color::Cyan)),
+        )
     } else {
         Paragraph::new("No article selected")
             .alignment(Alignment::Center)

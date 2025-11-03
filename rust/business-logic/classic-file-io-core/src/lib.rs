@@ -29,6 +29,8 @@ pub use core::FileIOCore;
 pub use dds::DDSHeader;
 pub use encoding::EncodingDetector;
 pub use error::FileIOError;
-pub use generation::{generate_ignore_file, generate_local_yaml, FileGenerator, FileGeneratorConfig};
+pub use generation::{
+    FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
+};
 pub use hash::FileHasher;
-pub use log_collection::{LogCollector, CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN};
+pub use log_collection::{CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector};

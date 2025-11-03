@@ -298,9 +298,7 @@ impl PyGameIntegrityChecker {
     ///     >>> message = checker.run_full_check()
     ///     >>> print(message)
     fn run_full_check(&self) -> PyResult<String> {
-        self.inner
-            .run_full_check()
-            .map_err(convert_integrity_error)
+        self.inner.run_full_check().map_err(convert_integrity_error)
     }
 
     /// Get the configuration

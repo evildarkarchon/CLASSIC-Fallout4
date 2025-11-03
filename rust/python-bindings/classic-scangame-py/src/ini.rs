@@ -94,7 +94,10 @@ impl PyIniValidator {
     /// Returns:
     ///     Formatted validation report string
     fn validate_inis(&mut self, game_root: PathBuf) -> PyResult<String> {
-        let report = self.inner.validate_inis(&game_root).map_err(crate::to_pyerr)?;
+        let report = self
+            .inner
+            .validate_inis(&game_root)
+            .map_err(crate::to_pyerr)?;
         Ok(report)
     }
 
@@ -105,7 +108,11 @@ impl PyIniValidator {
     ///
     /// Returns:
     ///     List of ConfigIssue objects describing detected issues
-    fn detect_all_issues(&self, _py: Python<'_>, config_files: &Bound<'_, PyDict>) -> Vec<PyConfigIssue> {
+    fn detect_all_issues(
+        &self,
+        _py: Python<'_>,
+        config_files: &Bound<'_, PyDict>,
+    ) -> Vec<PyConfigIssue> {
         // Convert PyDict to HashMap<String, PathBuf>
         let mut config_map = HashMap::new();
         for (key, value) in config_files.iter() {

@@ -193,8 +193,7 @@ impl IniValidator {
 
         // Parse INI
         let mut ini = Ini::new();
-        ini.read(content)
-            .map_err(|e| IniError::ParseError(e))?;
+        ini.read(content).map_err(|e| IniError::ParseError(e))?;
 
         self.ini_cache.insert(file_name_lower, ini);
         Ok(())
@@ -360,7 +359,9 @@ impl IniValidator {
                             setting: "iMaxDesired".to_string(),
                             current_value: value,
                             recommended_value: "5000".to_string(),
-                            description: "High particle count can cause performance issues and crashes.".to_string(),
+                            description:
+                                "High particle count can cause performance issues and crashes."
+                                    .to_string(),
                             severity: IssueSeverity::Warning,
                         });
                     }
@@ -379,7 +380,8 @@ impl IniValidator {
                         setting: "bUnlockHeadParts".to_string(),
                         current_value: value,
                         recommended_value: "1".to_string(),
-                        description: "Head parts are locked. Set to 1 to unlock all head parts.".to_string(),
+                        description: "Head parts are locked. Set to 1 to unlock all head parts."
+                            .to_string(),
                         severity: IssueSeverity::Warning,
                     });
                 }
@@ -394,7 +396,8 @@ impl IniValidator {
                         setting: "bUnlockTints".to_string(),
                         current_value: value,
                         recommended_value: "1".to_string(),
-                        description: "Face tints are locked. Set to 1 to unlock all face tints.".to_string(),
+                        description: "Face tints are locked. Set to 1 to unlock all face tints."
+                            .to_string(),
                         severity: IssueSeverity::Warning,
                     });
                 }
@@ -403,7 +406,9 @@ impl IniValidator {
 
         // High FPS Physics Fix loading screen FPS check
         if let Some(file_path) = config_files.get("highfpsphysicsfix.ini") {
-            if let Some(value) = self.get_setting("highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS") {
+            if let Some(value) =
+                self.get_setting("highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS")
+            {
                 if let Ok(fps) = value.parse::<f64>() {
                     if fps < 600.0 {
                         issues.push(ConfigIssue {

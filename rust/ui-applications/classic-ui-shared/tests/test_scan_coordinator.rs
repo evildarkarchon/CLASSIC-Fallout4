@@ -1,6 +1,6 @@
 //! Tests for scan coordinator module
 
-use classic_ui_shared::scan_coordinator::{discover_xse_folder, ScanStatistics};
+use classic_ui_shared::scan_coordinator::{ScanStatistics, discover_xse_folder};
 use std::fs;
 use std::path::PathBuf;
 use tempfile::TempDir;
@@ -19,7 +19,11 @@ fn test_scan_statistics_new() {
 #[test]
 fn test_scan_statistics_success_rate_empty() {
     let stats = ScanStatistics::new();
-    assert_eq!(stats.success_rate(), 0.0, "Empty stats should have 0% success rate");
+    assert_eq!(
+        stats.success_rate(),
+        0.0,
+        "Empty stats should have 0% success rate"
+    );
 }
 
 #[test]
@@ -51,7 +55,11 @@ fn test_scan_statistics_success_rate_half() {
 #[test]
 fn test_scan_statistics_failure_rate_empty() {
     let stats = ScanStatistics::new();
-    assert_eq!(stats.failure_rate(), 0.0, "Empty stats should have 0% failure rate");
+    assert_eq!(
+        stats.failure_rate(),
+        0.0,
+        "Empty stats should have 0% failure rate"
+    );
 }
 
 #[test]
@@ -96,7 +104,11 @@ async fn test_discover_xse_folder_f4se() {
     fs::create_dir_all(&f4se_logs).unwrap();
 
     let result = discover_xse_folder(temp_dir.path()).await;
-    assert!(result.is_ok(), "Should find F4SE logs directory: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Should find F4SE logs directory: {:?}",
+        result
+    );
     assert_eq!(result.unwrap(), f4se_logs);
 }
 
@@ -109,7 +121,11 @@ async fn test_discover_xse_folder_skse() {
     fs::create_dir_all(&skse_logs).unwrap();
 
     let result = discover_xse_folder(temp_dir.path()).await;
-    assert!(result.is_ok(), "Should find SKSE logs directory: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Should find SKSE logs directory: {:?}",
+        result
+    );
     assert_eq!(result.unwrap(), skse_logs);
 }
 
@@ -124,9 +140,17 @@ async fn test_discover_xse_folder_both_exists() {
     fs::create_dir_all(&skse_logs).unwrap();
 
     let result = discover_xse_folder(temp_dir.path()).await;
-    assert!(result.is_ok(), "Should find XSE logs directory: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Should find XSE logs directory: {:?}",
+        result
+    );
     // F4SE should be checked first
-    assert_eq!(result.unwrap(), f4se_logs, "Should prefer F4SE when both exist");
+    assert_eq!(
+        result.unwrap(),
+        f4se_logs,
+        "Should prefer F4SE when both exist"
+    );
 }
 
 #[tokio::test]
@@ -134,7 +158,10 @@ async fn test_discover_xse_folder_none_exists() {
     let temp_dir = TempDir::new().unwrap();
 
     let result = discover_xse_folder(temp_dir.path()).await;
-    assert!(result.is_err(), "Should return error when no XSE directories exist");
+    assert!(
+        result.is_err(),
+        "Should return error when no XSE directories exist"
+    );
 }
 
 #[tokio::test]
@@ -150,10 +177,17 @@ async fn test_discover_xse_folder_case_insensitive() {
     // On Windows (case-insensitive), should find it
     // On Linux (case-sensitive), won't find it
     #[cfg(windows)]
-    assert!(result.is_ok(), "Should find lowercase f4se on Windows: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Should find lowercase f4se on Windows: {:?}",
+        result
+    );
 
     #[cfg(unix)]
-    assert!(result.is_err(), "Should not find lowercase f4se on Unix (case-sensitive)");
+    assert!(
+        result.is_err(),
+        "Should not find lowercase f4se on Unix (case-sensitive)"
+    );
 }
 
 #[tokio::test]

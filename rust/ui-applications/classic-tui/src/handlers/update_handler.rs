@@ -187,8 +187,7 @@ pub async fn check_for_updates() -> Result<Option<UpdateInfo>> {
         .context("Failed to parse GitHub API response")?;
 
     // Parse versions
-    let current_version = SemanticVersion::current()
-        .context("Failed to parse current version")?;
+    let current_version = SemanticVersion::current().context("Failed to parse current version")?;
 
     let latest_version = SemanticVersion::parse(&release.tag_name)
         .context("Failed to parse latest version from GitHub")?;

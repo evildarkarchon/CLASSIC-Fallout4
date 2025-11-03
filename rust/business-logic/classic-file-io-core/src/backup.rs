@@ -315,7 +315,10 @@ mod tests {
 
     #[test]
     fn test_pattern_matching() {
-        assert!(BackupManager::matches_pattern("f4se_1_10_163.dll", "f4se_*.dll"));
+        assert!(BackupManager::matches_pattern(
+            "f4se_1_10_163.dll",
+            "f4se_*.dll"
+        ));
         assert!(BackupManager::matches_pattern("dxgi.dll", "dxgi.dll"));
         assert!(!BackupManager::matches_pattern("other.dll", "f4se_*.dll"));
     }
@@ -327,10 +330,7 @@ mod tests {
 
         let manager = BackupManager::new(game_root.clone(), None);
         assert_eq!(manager.game_root, game_root);
-        assert_eq!(
-            manager.backup_base,
-            game_root.join("CLASSIC_Backups")
-        );
+        assert_eq!(manager.backup_base, game_root.join("CLASSIC_Backups"));
     }
 
     #[tokio::test]

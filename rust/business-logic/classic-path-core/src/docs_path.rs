@@ -34,8 +34,8 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
-use crate::error::{DocsPathError, DocsPathResult};
 use crate::IniFile;
+use crate::error::{DocsPathError, DocsPathResult};
 use std::path::{Path, PathBuf};
 
 /// Documents path finder with multi-strategy detection.
@@ -164,8 +164,8 @@ impl DocsPathFinder {
     fn find_docs_path_windows(&self) -> DocsPathResult<PathBuf> {
         use crate::platform::windows::get_documents_path;
 
-        let docs_base = get_documents_path()
-            .map_err(|e| DocsPathError::RegistryError(e.to_string()))?;
+        let docs_base =
+            get_documents_path().map_err(|e| DocsPathError::RegistryError(e.to_string()))?;
 
         let docs_path = docs_base.join(&self.relative_path);
         self.validate_docs_path(&docs_path)?;
@@ -188,8 +188,7 @@ impl DocsPathFinder {
     fn find_docs_path_linux(&self) -> DocsPathResult<PathBuf> {
         use crate::platform::linux::get_home_directory;
 
-        let home = get_home_directory()
-            .map_err(|e| DocsPathError::PathError(e))?;
+        let home = get_home_directory().map_err(|e| DocsPathError::PathError(e))?;
 
         // For Linux, use Wine's compatibility folder structure
         let docs_path = home.join(".local/share").join(&self.relative_path);
@@ -226,9 +225,9 @@ impl DocsPathFinder {
     /// ```
     pub fn validate_docs_path(&self, path: &Path) -> DocsPathResult<()> {
         if !path.exists() {
-            return Err(DocsPathError::PathError(
-                crate::error::PathError::NotFound(path.to_path_buf()),
-            ));
+            return Err(DocsPathError::PathError(crate::error::PathError::NotFound(
+                path.to_path_buf(),
+            )));
         }
 
         if !path.is_dir() {
@@ -339,9 +338,9 @@ mod tests {
         assert!(result.is_err());
         assert!(matches!(
             result,
-            Err(DocsPathError::PathError(
-                crate::error::PathError::NotFound(_)
-            ))
+            Err(DocsPathError::PathError(crate::error::PathError::NotFound(
+                _
+            )))
         ));
     }
 
@@ -354,9 +353,11 @@ mod tests {
         create_test_ini(&docs_path, "Fallout4Prefs.ini");
 
         let finder = DocsPathFinder::new("My Games/Fallout4");
-        assert!(finder
-            .validate_ini_files(&docs_path, &["Fallout4.ini", "Fallout4Prefs.ini"])
-            .is_ok());
+        assert!(
+            finder
+                .validate_ini_files(&docs_path, &["Fallout4.ini", "Fallout4Prefs.ini"])
+                .is_ok()
+        );
     }
 
     #[test]

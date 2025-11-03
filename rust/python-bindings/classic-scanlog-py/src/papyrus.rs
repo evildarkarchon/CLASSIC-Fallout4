@@ -228,7 +228,10 @@ impl PyPapyrusAnalyzer {
 
     /// String representation
     fn __repr__(&self) -> String {
-        format!("PapyrusAnalyzer(log_path='{}')", self.inner.log_path().display())
+        format!(
+            "PapyrusAnalyzer(log_path='{}')",
+            self.inner.log_path().display()
+        )
     }
 }
 

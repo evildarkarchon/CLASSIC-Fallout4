@@ -94,12 +94,10 @@ impl SessionState {
     /// Get the path to the session state file
     fn get_session_path() -> Result<PathBuf> {
         // Store in user's config directory
-        let config_dir = dirs::config_dir()
-            .context("Failed to determine config directory")?;
+        let config_dir = dirs::config_dir().context("Failed to determine config directory")?;
 
         let classic_dir = config_dir.join("CLASSIC");
-        fs::create_dir_all(&classic_dir)
-            .context("Failed to create CLASSIC config directory")?;
+        fs::create_dir_all(&classic_dir).context("Failed to create CLASSIC config directory")?;
 
         Ok(classic_dir.join("tui_session.yaml"))
     }
@@ -113,11 +111,9 @@ impl SessionState {
             return Ok(Self::default());
         }
 
-        let content = fs::read_to_string(&path)
-            .context("Failed to read session file")?;
+        let content = fs::read_to_string(&path).context("Failed to read session file")?;
 
-        let state: Self = serde_yaml::from_str(&content)
-            .context("Failed to parse session YAML")?;
+        let state: Self = serde_yaml::from_str(&content).context("Failed to parse session YAML")?;
 
         Ok(state)
     }
@@ -126,11 +122,9 @@ impl SessionState {
     pub fn save(&self) -> Result<()> {
         let path = Self::get_session_path()?;
 
-        let yaml = serde_yaml::to_string(self)
-            .context("Failed to serialize session state")?;
+        let yaml = serde_yaml::to_string(self).context("Failed to serialize session state")?;
 
-        fs::write(&path, yaml)
-            .context("Failed to write session file")?;
+        fs::write(&path, yaml).context("Failed to write session file")?;
 
         Ok(())
     }
@@ -141,8 +135,7 @@ impl SessionState {
         let path = Self::get_session_path()?;
 
         if path.exists() {
-            fs::remove_file(&path)
-                .context("Failed to remove session file")?;
+            fs::remove_file(&path).context("Failed to remove session file")?;
         }
 
         Ok(())

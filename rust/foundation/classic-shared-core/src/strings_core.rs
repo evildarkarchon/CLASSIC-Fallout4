@@ -145,7 +145,9 @@ impl StringProcessor {
     pub fn clear_pool(&self) {
         // ThreadedRodeo doesn't support clearing - it's optimized for append-only
         // To reset, create a new StringProcessor instance instead
-        eprintln!("Warning: ThreadedRodeo doesn't support clearing. Create a new instance instead.");
+        eprintln!(
+            "Warning: ThreadedRodeo doesn't support clearing. Create a new instance instead."
+        );
     }
 }
 

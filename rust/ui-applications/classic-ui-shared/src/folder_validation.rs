@@ -95,10 +95,7 @@ impl FolderValidationResult {
 /// let result = validate_folder_path(&empty_path, true);
 /// assert!(result.is_empty());
 /// ```
-pub fn validate_folder_path<P: AsRef<Path>>(
-    path: P,
-    allow_empty: bool,
-) -> FolderValidationResult {
+pub fn validate_folder_path<P: AsRef<Path>>(path: P, allow_empty: bool) -> FolderValidationResult {
     let path = path.as_ref();
 
     // Convert path to string for empty check
@@ -115,10 +112,7 @@ pub fn validate_folder_path<P: AsRef<Path>>(
 
     // Check if path exists
     if !path.exists() {
-        return FolderValidationResult::Invalid(format!(
-            "Path does not exist: {}",
-            path.display()
-        ));
+        return FolderValidationResult::Invalid(format!("Path does not exist: {}", path.display()));
     }
 
     // Check if path is a directory
@@ -197,10 +191,7 @@ mod tests {
         let path = PathBuf::from("");
         let result = validate_folder_path(&path, false);
         assert!(result.is_invalid());
-        assert!(result
-            .error_message()
-            .unwrap()
-            .contains("cannot be empty"));
+        assert!(result.error_message().unwrap().contains("cannot be empty"));
     }
 
     #[test]
@@ -208,10 +199,7 @@ mod tests {
         let path = PathBuf::from("/this/path/should/not/exist/hopefully/12345");
         let result = validate_folder_path(&path, false);
         assert!(result.is_invalid());
-        assert!(result
-            .error_message()
-            .unwrap()
-            .contains("does not exist"));
+        assert!(result.error_message().unwrap().contains("does not exist"));
     }
 
     #[test]
@@ -225,10 +213,7 @@ mod tests {
 
         let result = validate_folder_path(&file_path, false);
         assert!(result.is_invalid());
-        assert!(result
-            .error_message()
-            .unwrap()
-            .contains("not a directory"));
+        assert!(result.error_message().unwrap().contains("not a directory"));
     }
 
     #[test]

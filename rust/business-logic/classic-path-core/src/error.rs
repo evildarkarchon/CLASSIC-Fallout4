@@ -24,7 +24,9 @@ pub enum PathError {
     /// I/O error occurred.
     #[error("I/O error for path {path}: {source}")]
     IoError {
+        /// The path where the I/O error occurred.
         path: PathBuf,
+        /// The underlying I/O error.
         source: std::io::Error,
     },
 
@@ -46,11 +48,21 @@ pub enum ValidationError {
 
     /// Required file not found in path.
     #[error("Required file '{file}' not found in path: {path}")]
-    RequiredFileNotFound { path: PathBuf, file: String },
+    RequiredFileNotFound {
+        /// The path where the file was expected.
+        path: PathBuf,
+        /// The name of the required file.
+        file: String,
+    },
 
     /// Path validation failed.
     #[error("Path validation failed for {setting}: {reason}")]
-    ValidationFailed { setting: String, reason: String },
+    ValidationFailed {
+        /// The name of the setting being validated.
+        setting: String,
+        /// The reason why validation failed.
+        reason: String,
+    },
 
     /// General path error.
     #[error(transparent)]
@@ -79,7 +91,9 @@ pub enum GamePathError {
     /// Failed to read XSE log file.
     #[error("Failed to read XSE log file '{path}': {source}")]
     XseLogReadError {
+        /// The path to the XSE log file.
         path: PathBuf,
+        /// The underlying I/O error.
         source: std::io::Error,
     },
 
@@ -97,11 +111,21 @@ pub enum GamePathError {
 
     /// Game executable not found in detected path.
     #[error("Game executable '{exe}' not found in path: {path}")]
-    ExecutableNotFound { path: PathBuf, exe: String },
+    ExecutableNotFound {
+        /// The path where the executable was expected.
+        path: PathBuf,
+        /// The name of the missing executable.
+        exe: String,
+    },
 
     /// XSE file not found in detected path.
     #[error("XSE file '{xse}' not found in path: {path}")]
-    XseFileNotFound { path: PathBuf, xse: String },
+    XseFileNotFound {
+        /// The path where the XSE file was expected.
+        path: PathBuf,
+        /// The name of the missing XSE file.
+        xse: String,
+    },
 
     /// Game path validation failed.
     #[error("Game path validation failed: {0}")]
@@ -149,11 +173,21 @@ pub enum DocsPathError {
 
     /// INI file validation failed.
     #[error("INI file validation failed for '{ini}': {reason}")]
-    IniValidationFailed { ini: String, reason: String },
+    IniValidationFailed {
+        /// The name of the INI file that failed validation.
+        ini: String,
+        /// The reason why validation failed.
+        reason: String,
+    },
 
     /// INI parsing error.
     #[error("Failed to parse INI file '{path}': {reason}")]
-    IniParseError { path: PathBuf, reason: String },
+    IniParseError {
+        /// The path to the INI file that failed to parse.
+        path: PathBuf,
+        /// The reason why parsing failed.
+        reason: String,
+    },
 
     /// User cancelled the path selection.
     #[error("User cancelled documents path selection")]
@@ -186,15 +220,20 @@ pub enum BackupError {
     /// Failed to create backup directory.
     #[error("Failed to create backup directory '{path}': {source}")]
     CreateDirectoryFailed {
+        /// The path of the directory that failed to be created.
         path: PathBuf,
+        /// The underlying I/O error.
         source: std::io::Error,
     },
 
     /// Failed to copy file to backup.
     #[error("Failed to copy file '{src}' to '{dst}': {source}")]
     CopyFileFailed {
+        /// The source file path.
         src: PathBuf,
+        /// The destination file path.
         dst: PathBuf,
+        /// The underlying I/O error.
         source: std::io::Error,
     },
 

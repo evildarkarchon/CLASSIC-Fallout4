@@ -7,7 +7,7 @@
 //! - Type-safe access
 //! - Convenience functions
 
-use classic_registry_core::{get, is_registered, register, set_game, get_game, Keys};
+use classic_registry_core::{Keys, get, get_game, is_registered, register, set_game};
 use std::path::PathBuf;
 
 fn main() {
@@ -23,8 +23,16 @@ fn main() {
 
     // Example 2: Check if a key is registered
     println!("2. Check registration:");
-    println!("   Is {} registered? {}", Keys::GAME, is_registered(Keys::GAME));
-    println!("   Is {} registered? {}", Keys::DOCS_PATH, is_registered(Keys::DOCS_PATH));
+    println!(
+        "   Is {} registered? {}",
+        Keys::GAME,
+        is_registered(Keys::GAME)
+    );
+    println!(
+        "   Is {} registered? {}",
+        Keys::DOCS_PATH,
+        is_registered(Keys::DOCS_PATH)
+    );
     println!();
 
     // Example 3: Register different types

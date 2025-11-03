@@ -12,7 +12,7 @@
 #![allow(missing_docs)] // Benchmark functions don't need individual documentation
 
 use classic_cli::{CliConfig, OutputFormatter, PathConfig, ScanStats};
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::path::PathBuf;
 use std::time::Duration;
 use tempfile::tempdir;

@@ -38,7 +38,8 @@ pub fn strip_emoji(text: &str) -> String {
                 (0x24C2..=0x1F251).contains(&code) ||   // Extended range
                 (0x1F900..=0x1F9FF).contains(&code) ||  // Supplemental symbols
                 (0x2600..=0x26FF).contains(&code) ||    // Miscellaneous symbols
-                (0x2700..=0x27BF).contains(&code)       // Dingbats extended
+                (0x2700..=0x27BF).contains(&code)
+                // Dingbats extended
             )
         })
         .collect::<String>()
@@ -124,7 +125,7 @@ mod tests {
     #[test]
     fn test_strip_emoji_unicode_ranges() {
         // Test various emoji ranges
-        let text = "😀😎🚀🇺🇸✂️⚡🎨";  // Various emoji categories
+        let text = "😀😎🚀🇺🇸✂️⚡🎨"; // Various emoji categories
         let result = strip_emoji(text);
         assert!(result.is_empty() || result.trim().is_empty());
     }

@@ -1,5 +1,4 @@
 ///! Message data structure for managing messages and their associated metadata.
-
 use crate::enums::{MessageTarget, MessageType};
 use serde::{Deserialize, Serialize};
 
@@ -91,7 +90,11 @@ impl Message {
     /// assert_eq!(msg.target(), MessageTarget::LogOnly);
     /// ```
     #[must_use]
-    pub fn with_target(content: impl Into<String>, msg_type: MessageType, target: MessageTarget) -> Self {
+    pub fn with_target(
+        content: impl Into<String>,
+        msg_type: MessageType,
+        target: MessageTarget,
+    ) -> Self {
         Self {
             content: content.into(),
             msg_type,

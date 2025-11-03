@@ -77,12 +77,7 @@ impl GamePathFinder {
     /// finder_vr = GamePathFinder.new("Fallout4VR.exe", None, "Fallout4", True)
     /// ```
     #[new]
-    fn new(
-        game_exe: String,
-        xse_loader: Option<String>,
-        game_name: String,
-        is_vr: bool,
-    ) -> Self {
+    fn new(game_exe: String, xse_loader: Option<String>, game_name: String, is_vr: bool) -> Self {
         Self {
             inner: classic_path_core::GamePathFinder::new(game_exe, xse_loader, game_name, is_vr),
         }
@@ -374,11 +369,8 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn validate_required_files(directory: String, required_files: Vec<String>) -> PyResult<()> {
-        classic_path_core::validate_required_files(
-            &PathBuf::from(directory),
-            &required_files,
-        )
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyFileNotFoundError, _>(e.to_string()))
+        classic_path_core::validate_required_files(&PathBuf::from(directory), &required_files)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyFileNotFoundError, _>(e.to_string()))
     }
 
     /// Validate a settings path with optional required files.
@@ -996,7 +988,10 @@ impl BackupManager {
     /// version_dir = manager.get_version_path(version)
     /// ```
     fn get_version_path(&self, version: &XseVersion) -> String {
-        self.inner.get_version_path(&version.inner).display().to_string()
+        self.inner
+            .get_version_path(&version.inner)
+            .display()
+            .to_string()
     }
 }
 

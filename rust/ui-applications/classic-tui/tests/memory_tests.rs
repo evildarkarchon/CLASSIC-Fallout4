@@ -21,8 +21,6 @@ fn test_checkbox_toggle_no_leak() {
     assert!(!checkbox.is_checked());
 }
 
-
-
 /// Profiling markers for external tools
 mod profiling_markers {
     use super::*;
@@ -44,4 +42,3 @@ mod profiling_markers {
         println!("=== PROFILING END: Widget Creation ===");
     }
 }
-

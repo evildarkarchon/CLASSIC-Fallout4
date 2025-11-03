@@ -100,18 +100,18 @@ pub mod suspect_scanner;
 pub use fcx_handler::{PyConfigIssue, PyFcxModeHandler};
 pub use formid::{PyFormIDAnalyzer, PyRustFormIDAnalyzer};
 pub use formid_analyzer::{
-    extract_formids_batch, is_valid_formid, validate_formids_batch, PyFormIDAnalyzerCore,
+    PyFormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
 };
 pub use gpu_detector::{PyGpuDetector, PyGpuInfo, PyGpuVendor};
 pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
 };
 pub use orchestrator::{PyAnalysisConfig, PyAnalysisResult, PyRustOrchestrator};
-pub use papyrus::{papyrus_logging, PyPapyrusAnalyzer, PyPapyrusStats};
+pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
 pub use patterns::PyPatternMatcher;
-pub use plugin_analyzer::{contains_plugin, detect_plugins_batch, PyPluginAnalyzer};
-pub use record_scanner::{contains_record, scan_records_batch, PyRecordScanner};
+pub use plugin_analyzer::{PyPluginAnalyzer, contains_plugin, detect_plugins_batch};
+pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
 pub use report::{
     PyParallelReportProcessor, PyReportComposer, PyReportFragment, PyReportGenerator, PyStringPool,
 };

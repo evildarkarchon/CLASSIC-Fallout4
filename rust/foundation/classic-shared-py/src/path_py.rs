@@ -36,9 +36,9 @@ impl PyPathHandler {
     /// # Returns
     /// The normalized path
     pub fn normalize_path(&self, path: String) -> PyResult<String> {
-        self.inner.normalize_path(&path).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string())
-        })
+        self.inner
+            .normalize_path(&path)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
     }
 
     /// Clear all caches
@@ -71,11 +71,13 @@ impl PyPathHandler {
     /// This method releases the GIL during parallel validation, allowing concurrent
     /// Python threads to continue execution. This provides 3-4x better throughput
     /// for large batches (100+ paths).
-    pub fn validate_paths_batch(&self, py: Python<'_>, paths: Vec<String>) -> Vec<(String, bool, String)> {
+    pub fn validate_paths_batch(
+        &self,
+        py: Python<'_>,
+        paths: Vec<String>,
+    ) -> Vec<(String, bool, String)> {
         // Release GIL during parallel I/O operations
-        crate::without_gil(py, || {
-            self.inner.validate_paths_batch(&paths)
-        })
+        crate::without_gil(py, || self.inner.validate_paths_batch(&paths))
     }
 
     /// Join a base path with path components.
@@ -154,9 +156,9 @@ impl PyPathHandler {
     /// # Returns
     /// The absolute path
     pub fn to_absolute(&self, path: String, base: Option<String>) -> PyResult<String> {
-        self.inner.to_absolute(&path, base.as_deref()).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string())
-        })
+        self.inner
+            .to_absolute(&path, base.as_deref())
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
     }
 
     /// Find the common prefix of multiple paths.
@@ -190,9 +192,7 @@ impl PyPathHandler {
         paths: Vec<String>,
     ) -> PyResult<Bound<'py, PyList>> {
         // Release GIL during parallel I/O operations
-        let results = crate::without_gil(py, || {
-            self.inner.validate_paths_batch(&paths)
-        });
+        let results = crate::without_gil(py, || self.inner.validate_paths_batch(&paths));
 
         // Convert to list of tuples with minimal allocations
         let py_list = PyList::empty(py);

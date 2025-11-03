@@ -11,7 +11,7 @@
 use dashmap::DashMap;
 use lru::LruCache;
 use memmap2::Mmap;
-use quick_cache::sync::Cache;  // Optimization 1.3: Lock-free concurrent cache
+use quick_cache::sync::Cache; // Optimization 1.3: Lock-free concurrent cache
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::Read;
@@ -96,13 +96,13 @@ impl FileMetadata {
 pub struct FileIOCore {
     encoding_detector: Arc<EncodingDetector>,
     // Multi-level caching
-    read_cache: Arc<Cache<PathBuf, String>>,  // Optimization 1.3: Lock-free cache
-    path_cache: Arc<DashMap<Arc<str>, Arc<PathBuf>>>,  // Optimization 3.2: Arc for cheap cloning
+    read_cache: Arc<Cache<PathBuf, String>>, // Optimization 1.3: Lock-free cache
+    path_cache: Arc<DashMap<Arc<str>, Arc<PathBuf>>>, // Optimization 3.2: Arc for cheap cloning
     metadata_cache: Arc<DashMap<PathBuf, FileMetadata>>,
     dds_cache: Arc<RwLock<LruCache<PathBuf, DDSHeader>>>,
     // Concurrency control (Optimization 5.2: Separate semaphores for reads/writes)
-    read_semaphore: Arc<Semaphore>,   // For read operations (higher concurrency)
-    write_semaphore: Arc<Semaphore>,  // For write operations (more exclusivity)
+    read_semaphore: Arc<Semaphore>, // For read operations (higher concurrency)
+    write_semaphore: Arc<Semaphore>, // For write operations (more exclusivity)
     // Configuration
     default_encoding: String,
     default_errors: String,
@@ -150,8 +150,8 @@ impl FileIOCore {
 
         // Optimization 5.2: Separate semaphores for reads and writes
         // Reads can be more concurrent, writes need more exclusivity
-        let read_limit = max_concurrent_io * 2;  // Reads: 2x base concurrency
-        let write_limit = max_concurrent_io.max(1) / 2;  // Writes: 0.5x base concurrency (min 1)
+        let read_limit = max_concurrent_io * 2; // Reads: 2x base concurrency
+        let write_limit = max_concurrent_io.max(1) / 2; // Writes: 0.5x base concurrency (min 1)
 
         Self {
             encoding_detector: Arc::new(EncodingDetector::new()),
@@ -964,9 +964,7 @@ impl FileIOCore {
         let mmap = unsafe { Mmap::map(&file)? };
 
         // Detect encoding from first chunk (up to 8KB)
-        let encoding = self
-            .encoding_detector
-            .detect(&mmap[..mmap.len().min(8192)]);
+        let encoding = self.encoding_detector.detect(&mmap[..mmap.len().min(8192)]);
 
         // For UTF-8, we can validate without decoding
         if encoding.name() == "UTF-8" || encoding.name() == "ASCII" {
@@ -1120,7 +1118,7 @@ impl FileIOCore {
 
         // Fast path: check cache with O(1) lookup
         if let Some(cached) = self.path_cache.get(path_str) {
-            return Arc::clone(cached.value());  // ✅ Cheap Arc clone
+            return Arc::clone(cached.value()); // ✅ Cheap Arc clone
         }
 
         // Slow path: create and cache
@@ -1187,9 +1185,9 @@ impl FileIOCore {
 
         // Adaptive concurrency based on workload size
         let concurrency = if paths.len() < 10 {
-            paths.len()  // Small batch: max parallelism
+            paths.len() // Small batch: max parallelism
         } else {
-            (paths.len() / 4).clamp(10, 50)  // Large batch: controlled parallelism
+            (paths.len() / 4).clamp(10, 50) // Large batch: controlled parallelism
         };
 
         let results: Vec<_> = stream::iter(paths)
@@ -1202,7 +1200,7 @@ impl FileIOCore {
                     (path, result)
                 }
             })
-            .buffer_unordered(concurrency)  // ✅ Adaptive concurrency
+            .buffer_unordered(concurrency) // ✅ Adaptive concurrency
             .collect()
             .await;
 
@@ -1266,9 +1264,9 @@ impl FileIOCore {
 
         // Adaptive concurrency for writes (more conservative than reads)
         let concurrency = if files.len() < 10 {
-            files.len()  // Small batch: max parallelism
+            files.len() // Small batch: max parallelism
         } else {
-            (files.len() / 6).clamp(5, 25)  // Large batch: more conservative than reads
+            (files.len() / 6).clamp(5, 25) // Large batch: more conservative than reads
         };
 
         let results: Vec<_> = stream::iter(files)
@@ -1290,7 +1288,7 @@ impl FileIOCore {
                     (path, result)
                 }
             })
-            .buffer_unordered(concurrency)  // ✅ Adaptive concurrency
+            .buffer_unordered(concurrency) // ✅ Adaptive concurrency
             .collect()
             .await;
 

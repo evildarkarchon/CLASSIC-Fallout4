@@ -4,11 +4,11 @@
 //! color-coded severity indicators, scrollable details, and clipboard integration.
 
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
-    Frame,
 };
 
 /// Severity level for error dialogs.
@@ -281,7 +281,11 @@ impl ErrorDialog {
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(border_style)
-            .title(format!(" {} {} ", self.severity.symbol(), self.severity.label()))
+            .title(format!(
+                " {} {} ",
+                self.severity.symbol(),
+                self.severity.label()
+            ))
             .title_alignment(Alignment::Center);
 
         // Split dialog into sections
@@ -291,22 +295,20 @@ impl ErrorDialog {
         let sections = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3),  // Title
-                Constraint::Length(3),  // Message
-                Constraint::Min(5),     // Details (scrollable)
-                Constraint::Length(2),  // Help text
+                Constraint::Length(3), // Title
+                Constraint::Length(3), // Message
+                Constraint::Min(5),    // Details (scrollable)
+                Constraint::Length(2), // Help text
             ])
             .split(inner);
 
         // Render title
-        let title_text = Line::from(vec![
-            Span::styled(
-                &self.title,
-                Style::default()
-                    .fg(severity_color)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ]);
+        let title_text = Line::from(vec![Span::styled(
+            &self.title,
+            Style::default()
+                .fg(severity_color)
+                .add_modifier(Modifier::BOLD),
+        )]);
         let title_para = Paragraph::new(title_text)
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: true });
@@ -343,15 +345,29 @@ impl ErrorDialog {
 
         // Render help text
         let help_text = Line::from(vec![
-            Span::styled("C", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "C",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" Copy to Clipboard   "),
-            Span::styled("ESC", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "ESC",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" Close   "),
-            Span::styled("↑↓", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "↑↓",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" Scroll Details"),
         ]);
-        let help_para = Paragraph::new(help_text)
-            .alignment(Alignment::Center);
+        let help_para = Paragraph::new(help_text).alignment(Alignment::Center);
         f.render_widget(help_para, sections[3]);
     }
 }
@@ -393,12 +409,7 @@ mod tests {
 
     #[test]
     fn test_error_dialog_activate_deactivate() {
-        let mut dialog = ErrorDialog::new(
-            "Test",
-            "Message",
-            None::<String>,
-            ErrorSeverity::Info,
-        );
+        let mut dialog = ErrorDialog::new("Test", "Message", None::<String>, ErrorSeverity::Info);
 
         assert!(!dialog.is_active());
 

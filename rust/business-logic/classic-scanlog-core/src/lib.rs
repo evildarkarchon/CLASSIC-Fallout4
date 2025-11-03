@@ -33,7 +33,7 @@ pub use error::ScanLogError;
 pub use fcx_handler::{ConfigIssue, FcxModeHandler};
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
 pub use formid_analyzer::{
-    extract_formids_batch, is_valid_formid, validate_formids_batch, FormIDAnalyzerCore,
+    FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
 };
 pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
 pub use mod_detector::{
@@ -43,8 +43,8 @@ pub use orchestrator::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};
 pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};
 pub use patterns::PatternMatcher;
-pub use plugin_analyzer::{contains_plugin, detect_plugins_batch, PluginAnalyzer};
-pub use record_scanner::{contains_record, scan_records_batch, RecordScanner};
+pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};
+pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};
 pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;

@@ -48,14 +48,14 @@ use classic_config_core::ClassicConfig;
 use crossterm::{
     event::{self, Event},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use events::{ScanMessage, UiMessage};
 use handlers::{
-    handle_key_event, papyrus_handler::PapyrusHandler, papyrus_handler::PapyrusMessage,
-    BackupHandler, ScanHandler,
+    BackupHandler, ScanHandler, handle_key_event, papyrus_handler::PapyrusHandler,
+    papyrus_handler::PapyrusMessage,
 };
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io;
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -86,11 +86,10 @@ async fn main() -> Result<()> {
     let game_root = config.paths.game_root.clone();
 
     // Load session state
-    let mut session_manager = state::SessionManager::new()
-        .unwrap_or_else(|e| {
-            tracing::warn!("Failed to load session state: {}, using defaults", e);
-            state::SessionManager::with_defaults()
-        });
+    let mut session_manager = state::SessionManager::new().unwrap_or_else(|e| {
+        tracing::warn!("Failed to load session state: {}, using defaults", e);
+        state::SessionManager::with_defaults()
+    });
 
     // Create application
     let mut app = App::with_config(config);
@@ -224,7 +223,8 @@ async fn run_app(
 
         // Process scan messages
         while let Ok(msg) = scan_rx.try_recv() {
-            let should_refresh_results = matches!(msg, ScanMessage::Completed(_) | ScanMessage::Error(_));
+            let should_refresh_results =
+                matches!(msg, ScanMessage::Completed(_) | ScanMessage::Error(_));
             handle_scan_message(app, msg);
 
             // Auto-refresh results if on Results screen and scan completed/failed
@@ -391,7 +391,7 @@ fn handle_output_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
 
 /// Handle settings messages
 async fn handle_settings_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
-    use handlers::folder_handler::{handle_folder_selection, FolderType};
+    use handlers::folder_handler::{FolderType, handle_folder_selection};
 
     match msg {
         UiMessage::UpdateStagingFolder(path) => {
@@ -454,7 +454,7 @@ async fn handle_settings_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
 
 /// Handle folder picker messages
 async fn handle_folder_picker_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
-    use handlers::folder_handler::{handle_folder_selection, FolderType};
+    use handlers::folder_handler::{FolderType, handle_folder_selection};
 
     match msg {
         UiMessage::OpenStagingPicker => {
@@ -603,7 +603,10 @@ async fn handle_backup_msg(
             let backup_types = BackupType::all();
             if let Some(&backup_type) = backup_types.get(*index) {
                 if backup_handler.backup_exists(backup_type) {
-                    app.add_output(format!("Restoring {} backup...", backup_type.display_name()));
+                    app.add_output(format!(
+                        "Restoring {} backup...",
+                        backup_type.display_name()
+                    ));
                     match backup_handler.restore_backup(backup_type).await {
                         Ok(count) => {
                             app.add_output(format!("✓ Restored {} file(s)", count));

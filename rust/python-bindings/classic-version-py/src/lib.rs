@@ -4,8 +4,8 @@
 //! All version handling functionality from the core crate is exposed through
 //! Python-friendly wrapper functions.
 
-use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
 use semver::Version;
 use std::cmp::Ordering;
 
@@ -73,8 +73,7 @@ fn parse_version(version_str: &str) -> PyResult<(u64, u64, u64)> {
 /// ```
 #[pyfunction]
 fn try_parse_version(version_str: &str) -> Option<(u64, u64, u64)> {
-    classic_version_core::try_parse_version(version_str)
-        .map(|v| (v.major, v.minor, v.patch))
+    classic_version_core::try_parse_version(version_str).map(|v| (v.major, v.minor, v.patch))
 }
 
 /// Compare two semantic versions.
@@ -225,8 +224,7 @@ fn extract_version_from_filename(filename: &str) -> Option<(u64, u64, u64)> {
 /// ```
 #[pyfunction]
 fn extract_version_from_log(log_content: &str) -> Option<(u64, u64, u64)> {
-    classic_version_core::extract_version_from_log(log_content)
-        .map(|v| (v.major, v.minor, v.patch))
+    classic_version_core::extract_version_from_log(log_content).map(|v| (v.major, v.minor, v.patch))
 }
 
 /// Extract all versions from a text content.
@@ -290,7 +288,7 @@ fn format_version(version: (u64, u64, u64), prefix: Option<&str>) -> String {
     // Default to "v" prefix if None is provided
     let actual_prefix = match prefix {
         None => Some("v"),
-        Some("") => None,  // Empty string means no prefix
+        Some("") => None, // Empty string means no prefix
         Some(p) => Some(p),
     };
     classic_version_core::format_version(&v, actual_prefix)
@@ -324,7 +322,10 @@ fn classic_version(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Module metadata
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
-    m.add("__doc__", "Version detection and parsing utilities for CLASSIC")?;
+    m.add(
+        "__doc__",
+        "Version detection and parsing utilities for CLASSIC",
+    )?;
 
     Ok(())
 }

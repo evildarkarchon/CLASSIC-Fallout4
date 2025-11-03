@@ -9,7 +9,7 @@ use classic_database_core::DatabasePool;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
-use rustc_hash::FxHashMap;  // Optimization 1.2: Faster hasher for FormID counting
+use rustc_hash::FxHashMap; // Optimization 1.2: Faster hasher for FormID counting
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -234,12 +234,12 @@ impl FormIDAnalyzerCore {
     /// ```
     pub async fn formid_match(
         &self,
-        mut formids_matches: Vec<String>,  // Optimization 1.2: Make mutable for in-place sort
+        mut formids_matches: Vec<String>, // Optimization 1.2: Make mutable for in-place sort
         crashlog_plugins: &HashMap<String, String>,
     ) -> Result<Vec<String>> {
         if formids_matches.is_empty() {
             return Ok(vec![
-                "* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n".to_string()
+                "* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n".to_string(),
             ]);
         }
 
@@ -247,12 +247,12 @@ impl FormIDAnalyzerCore {
 
         // Optimization 1.2: Count occurrences with FxHashMap (faster than LinkedHashMap)
         // Avoid unnecessary clone by sorting in-place and counting with faster hasher
-        formids_matches.sort();  // ✅ Sort in-place (no clone needed)
+        formids_matches.sort(); // ✅ Sort in-place (no clone needed)
 
         // Use FxHashMap for faster counting (optimized for short string keys like FormIDs)
         let mut formids_found: FxHashMap<&str, usize> = FxHashMap::default();
         for formid in formids_matches.iter() {
-            *formids_found.entry(formid.as_str()).or_insert(0) += 1;  // ✅ No String allocation
+            *formids_found.entry(formid.as_str()).or_insert(0) += 1; // ✅ No String allocation
         }
 
         // Sort by key for deterministic output
@@ -292,10 +292,7 @@ impl FormIDAnalyzerCore {
                                 formid_full, plugin, description, count
                             ));
                         } else {
-                            lines.push(format!(
-                                "- {} | [{}] | {}\n",
-                                formid_full, plugin, count
-                            ));
+                            lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
                         }
                     } else {
                         lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));

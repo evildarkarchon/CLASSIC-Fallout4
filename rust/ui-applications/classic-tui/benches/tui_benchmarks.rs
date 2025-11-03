@@ -46,7 +46,6 @@ fn bench_dirty_tracking(c: &mut Criterion) {
     });
 }
 
-
 criterion_group!(
     benches,
     bench_widget_creation,

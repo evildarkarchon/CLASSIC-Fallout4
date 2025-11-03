@@ -87,11 +87,11 @@
 //! - Dirty tracking behavior (via state changes)
 
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 /// Checkbox widget for boolean settings

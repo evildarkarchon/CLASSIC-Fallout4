@@ -20,8 +20,7 @@ pub fn show_about() -> Result<()> {
          for analyzing crash logs from Bethesda games.\n\n\
          License: MIT\n\
          Repository: https://github.com/evildarkarchon/CLASSIC-Fallout4",
-        VERSION,
-        AUTHORS
+        VERSION, AUTHORS
     );
 
     // Use native message dialog
@@ -40,7 +39,8 @@ pub fn show_help() -> Result<()> {
     tracing::info!("Showing Help dialog...");
 
     // Open CLASSIC documentation in browser
-    const DOCS_URL: &str = "https://github.com/evildarkarchon/CLASSIC-Fallout4/blob/classic-next/README.md";
+    const DOCS_URL: &str =
+        "https://github.com/evildarkarchon/CLASSIC-Fallout4/blob/classic-next/README.md";
 
     open::that(DOCS_URL)?;
     tracing::debug!("Opened help documentation in browser");

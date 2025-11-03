@@ -2,11 +2,11 @@ use crate::app::{App, ScanState};
 use crate::ui::layout::TuiLayout;
 use crate::widgets::FolderPicker;
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
-    Frame,
 };
 
 /// Render the main screen
@@ -283,11 +283,17 @@ fn render_status_bar(f: &mut Frame, area: Rect, app: &App) {
                 " F1 Help | F5 Crash | F6 Game | F7 Papyrus | F8 Backup | F9 Results | F10 Articles | Q Quit "
             }
             crate::app::UiState::HelpScreen => " ESC Back | Q Quit ",
-            crate::app::UiState::SettingsScreen => " ESC Back | Tab/Shift+Tab Tabs | ↑↓ Navigate | Space/Enter Toggle | R Reset | S Save | Q Quit ",
+            crate::app::UiState::SettingsScreen => {
+                " ESC Back | Tab/Shift+Tab Tabs | ↑↓ Navigate | Space/Enter Toggle | R Reset | S Save | Q Quit "
+            }
             crate::app::UiState::PapyrusScreen => " ESC Back | F7 Stop | Q Quit ",
             crate::app::UiState::BackupScreen => " ESC Back | 1-4 Backup | 5-8 Restore | Q Quit ",
-            crate::app::UiState::ResultsScreen => " ESC Back | ↑↓ Select | PgUp/PgDn Scroll | / Search | n/N Navigate | Q Quit ",
-            crate::app::UiState::ArticlesScreen => " ESC Back | ←→ Category | ↑↓ Article | PgUp/PgDn Scroll | Q Quit ",
+            crate::app::UiState::ResultsScreen => {
+                " ESC Back | ↑↓ Select | PgUp/PgDn Scroll | / Search | n/N Navigate | Q Quit "
+            }
+            crate::app::UiState::ArticlesScreen => {
+                " ESC Back | ←→ Category | ↑↓ Article | PgUp/PgDn Scroll | Q Quit "
+            }
         }
     };
 
@@ -333,7 +339,11 @@ fn render_folder_picker_overlay(
 
     // Render the folder picker
     let picker_widget = FolderPicker::new(title)
-        .border_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .border_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .selected_style(
             Style::default()
                 .fg(Color::Black)
@@ -378,21 +388,21 @@ fn render_size_warning(
     }
 
     lines.push(Line::from(""));
-    lines.push(Line::from("Please resize your terminal or press 'q' to quit."));
+    lines.push(Line::from(
+        "Please resize your terminal or press 'q' to quit.",
+    ));
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
         "Recommended: 100x30 or larger",
         Style::default().fg(Color::Cyan),
     )));
 
-    let warning = Paragraph::new(lines)
-        .alignment(Alignment::Center)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Yellow))
-                .title("Terminal Size Warning"),
-        );
+    let warning = Paragraph::new(lines).alignment(Alignment::Center).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Yellow))
+            .title("Terminal Size Warning"),
+    );
 
     // Center the warning
     let popup_area = TuiLayout::centered_rect(60, 40, area);
@@ -403,8 +413,8 @@ fn render_size_warning(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     #[test]
     fn test_render_main_screen() {

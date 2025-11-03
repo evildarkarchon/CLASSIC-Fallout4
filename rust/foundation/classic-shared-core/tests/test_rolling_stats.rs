@@ -1,6 +1,6 @@
 //! Unit tests for rolling statistics optimizations
 
-use classic_shared_core::performance_core::{get_global_metrics, Timer};
+use classic_shared_core::performance_core::{Timer, get_global_metrics};
 use std::thread;
 use std::time::Duration;
 
@@ -22,16 +22,8 @@ fn test_rolling_stats_basic() {
         Duration::from_millis(60),
         "Total should be 60ms"
     );
-    assert_eq!(
-        stats.min,
-        Duration::from_millis(10),
-        "Min should be 10ms"
-    );
-    assert_eq!(
-        stats.max,
-        Duration::from_millis(30),
-        "Max should be 30ms"
-    );
+    assert_eq!(stats.min, Duration::from_millis(10), "Min should be 10ms");
+    assert_eq!(stats.max, Duration::from_millis(30), "Max should be 30ms");
     assert_eq!(
         stats.average,
         Duration::from_millis(20),
@@ -50,7 +42,9 @@ fn test_rolling_stats_constant_memory() {
         metrics.record_timing("memory_test", duration);
     }
 
-    let stats = metrics.get_stats("memory_test").expect("Stats should exist");
+    let stats = metrics
+        .get_stats("memory_test")
+        .expect("Stats should exist");
 
     assert_eq!(stats.count, 10000, "Should have 10000 recorded timings");
     assert!(stats.total > Duration::ZERO, "Total should be positive");
@@ -87,18 +81,12 @@ fn test_rolling_stats_min_max() {
         metrics.record_timing("minmax_test", Duration::from_micros(t));
     }
 
-    let stats = metrics.get_stats("minmax_test").expect("Stats should exist");
+    let stats = metrics
+        .get_stats("minmax_test")
+        .expect("Stats should exist");
 
-    assert_eq!(
-        stats.min,
-        Duration::from_micros(25),
-        "Min should be 25µs"
-    );
-    assert_eq!(
-        stats.max,
-        Duration::from_micros(300),
-        "Max should be 300µs"
-    );
+    assert_eq!(stats.min, Duration::from_micros(25), "Min should be 25µs");
+    assert_eq!(stats.max, Duration::from_micros(300), "Max should be 300µs");
 }
 
 #[test]
@@ -178,7 +166,9 @@ fn test_timer_auto_drop() {
         // Timer drops here and auto-records
     }
 
-    let stats = metrics.get_stats("auto_drop_test").expect("Stats should exist");
+    let stats = metrics
+        .get_stats("auto_drop_test")
+        .expect("Stats should exist");
     assert_eq!(stats.count, 1, "Should have 1 timing from auto-drop");
     assert!(
         stats.total >= Duration::from_millis(5),
@@ -280,7 +270,9 @@ fn test_rolling_stats_accuracy() {
         metrics.record_timing("accuracy_test", Duration::from_millis(t));
     }
 
-    let stats = metrics.get_stats("accuracy_test").expect("Stats should exist");
+    let stats = metrics
+        .get_stats("accuracy_test")
+        .expect("Stats should exist");
 
     assert_eq!(stats.count, expected_count, "Count should match");
     assert_eq!(

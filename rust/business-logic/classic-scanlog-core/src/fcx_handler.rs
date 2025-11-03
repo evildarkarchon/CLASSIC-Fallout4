@@ -67,7 +67,9 @@ impl ConfigIssue {
             _ => "⚠️",
         };
 
-        let section_str = self.section.as_ref()
+        let section_str = self
+            .section
+            .as_ref()
             .map(|s| format!("[{}]", s))
             .unwrap_or_else(|| "N/A".to_string());
 

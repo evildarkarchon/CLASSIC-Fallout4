@@ -168,7 +168,9 @@ impl FileHasher {
     /// }
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn hash_files_parallel(paths: &[&Path]) -> Result<Vec<(PathBuf, Option<String>)>, FileIOError> {
+    pub fn hash_files_parallel(
+        paths: &[&Path],
+    ) -> Result<Vec<(PathBuf, Option<String>)>, FileIOError> {
         let results: Vec<(PathBuf, Option<String>)> = paths
             .par_iter()
             .map(|&path| {

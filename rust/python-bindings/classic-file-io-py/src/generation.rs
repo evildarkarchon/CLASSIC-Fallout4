@@ -1,7 +1,7 @@
 //! Python bindings for file generation
 
-use classic_file_io_core::generation::{FileGenerator, FileGeneratorConfig};
 use classic_file_io_core::FileIOError;
+use classic_file_io_core::generation::{FileGenerator, FileGeneratorConfig};
 use pyo3::exceptions::{PyIOError, PyPermissionError, PyRuntimeError};
 use pyo3::prelude::*;
 use std::path::PathBuf;
@@ -21,11 +21,7 @@ impl PyFileGeneratorConfig {
     ///     local_yaml_content: Default content for local YAML file
     ///     game_name: Game name for local YAML path (e.g., "Fallout4", "Skyrim")
     #[new]
-    fn new(
-        ignore_file_content: String,
-        local_yaml_content: String,
-        game_name: String,
-    ) -> Self {
+    fn new(ignore_file_content: String, local_yaml_content: String, game_name: String) -> Self {
         Self {
             inner: FileGeneratorConfig::new(ignore_file_content, local_yaml_content, game_name),
         }

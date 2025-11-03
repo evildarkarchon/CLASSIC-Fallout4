@@ -23,10 +23,10 @@ mod metrics;
 mod runtime;
 
 pub use metrics::{
-    record_bridge_operation, get_bridge_metrics, clear_bridge_metrics,
-    BridgeMetrics, BridgeOperation,
+    BridgeMetrics, BridgeOperation, clear_bridge_metrics, get_bridge_metrics,
+    record_bridge_operation,
 };
-pub use runtime::{is_runtime_available, get_runtime_info, execute_on_runtime, RuntimeInfo};
+pub use runtime::{RuntimeInfo, execute_on_runtime, get_runtime_info, is_runtime_available};
 
 #[cfg(test)]
 mod tests {

@@ -85,12 +85,7 @@ impl GamePathFinder {
     ///     false,
     /// );
     /// ```
-    pub fn new<S1, S2, S3>(
-        game_exe: S1,
-        xse_loader: Option<S2>,
-        game_name: S3,
-        is_vr: bool,
-    ) -> Self
+    pub fn new<S1, S2, S3>(game_exe: S1, xse_loader: Option<S2>, game_name: S3, is_vr: bool) -> Self
     where
         S1: Into<String>,
         S2: Into<String>,
@@ -303,11 +298,10 @@ pub fn parse_xse_log(log_path: &Path) -> GamePathResult<PathBuf> {
         return Err(GamePathError::XseLogNotFound(log_path.to_path_buf()));
     }
 
-    let content = fs::read_to_string(log_path)
-        .map_err(|e| GamePathError::XseLogReadError {
-            path: log_path.to_path_buf(),
-            source: e,
-        })?;
+    let content = fs::read_to_string(log_path).map_err(|e| GamePathError::XseLogReadError {
+        path: log_path.to_path_buf(),
+        source: e,
+    })?;
 
     // Look for the plugin directory line
     // Format: "plugin directory = C:\Games\Fallout4\Data\F4SE\Plugins\"
@@ -354,7 +348,8 @@ mod tests {
 
     #[test]
     fn test_game_path_finder_new() {
-        let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
+        let finder =
+            GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
 
         assert_eq!(finder.game_exe(), "Fallout4.exe");
         assert_eq!(finder.xse_loader(), Some("f4se_loader.exe"));
@@ -379,7 +374,8 @@ mod tests {
         fs::write(game_dir.join("Fallout4.exe"), "mock exe").unwrap();
         fs::write(game_dir.join("f4se_loader.exe"), "mock loader").unwrap();
 
-        let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
+        let finder =
+            GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
 
         let result = finder.validate_game_path(game_dir);
         assert!(result.is_ok());
@@ -410,7 +406,8 @@ mod tests {
         // Create only the game exe, not the loader
         fs::write(game_dir.join("Fallout4.exe"), "mock exe").unwrap();
 
-        let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
+        let finder =
+            GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
 
         let result = finder.validate_game_path(game_dir);
         assert!(result.is_err());

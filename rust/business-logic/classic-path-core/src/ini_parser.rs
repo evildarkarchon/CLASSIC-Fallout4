@@ -481,7 +481,8 @@ mod tests {
     #[test]
     fn test_get_bool() {
         let temp_dir = TempDir::new().unwrap();
-        let ini_content = "[Archive]\nbInvalidateOlderFiles=1\nbUseArchives=0\ntrue_val=true\nfalse_val=false\n";
+        let ini_content =
+            "[Archive]\nbInvalidateOlderFiles=1\nbUseArchives=0\ntrue_val=true\nfalse_val=false\n";
         let ini_path = create_test_ini(temp_dir.path(), "test.ini", ini_content);
 
         let ini = IniFile::load(&ini_path).unwrap();
@@ -554,7 +555,10 @@ mod tests {
         let ini = IniFile::load(&ini_path).unwrap();
 
         // Should succeed
-        assert!(ini.validate_keys("Display", &["iSize W", "iSize H"]).is_ok());
+        assert!(
+            ini.validate_keys("Display", &["iSize W", "iSize H"])
+                .is_ok()
+        );
 
         // Should fail - missing key
         let result = ini.validate_keys("Display", &["iSize W", "NonExistent"]);

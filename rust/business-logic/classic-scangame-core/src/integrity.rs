@@ -90,12 +90,7 @@ impl IntegrityConfig {
 
 impl Default for IntegrityConfig {
     fn default() -> Self {
-        Self::new(
-            PathBuf::new(),
-            String::new(),
-            String::new(),
-            String::new(),
-        )
+        Self::new(PathBuf::new(), String::new(), String::new(), String::new())
     }
 }
 
@@ -184,8 +179,8 @@ impl GameIntegrityChecker {
         let local_hash = calculate_sha256_file(&self.config.game_exe_path)?;
 
         // Check if hash matches known versions
-        let is_valid_version = local_hash == self.config.exe_hash_old
-            || local_hash == self.config.exe_hash_new;
+        let is_valid_version =
+            local_hash == self.config.exe_hash_old || local_hash == self.config.exe_hash_new;
 
         // Check for Steam INI (indicates outdated installation)
         let steam_ini_exists = self
@@ -444,7 +439,11 @@ mod tests {
 
         // Temporary file should not be in Program Files
         assert!(result.is_valid);
-        assert!(result.message.contains("outside of the Program Files folder"));
+        assert!(
+            result
+                .message
+                .contains("outside of the Program Files folder")
+        );
     }
 
     #[test]

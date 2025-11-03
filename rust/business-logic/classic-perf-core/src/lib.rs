@@ -41,10 +41,8 @@
 mod metrics;
 mod timer;
 
-pub use metrics::{
-    clear_metrics, get_summary, record_timing, MetricsSummary,
-};
-pub use timer::{start_timer, Timer};
+pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};
+pub use timer::{Timer, start_timer};
 
 #[cfg(test)]
 mod tests {

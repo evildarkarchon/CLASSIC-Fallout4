@@ -23,7 +23,7 @@ pub use performance_py::PyRustPerformanceMonitor;
 pub use strings_py::PyStringProcessor;
 
 // Re-export core types for convenience
-pub use classic_shared_core::{get_runtime, ClassicError, ClassicResult};
+pub use classic_shared_core::{ClassicError, ClassicResult, get_runtime};
 
 /// Convert ClassicError to PyErr
 ///
@@ -111,7 +111,9 @@ pub fn to_py_err(err: ClassicError) -> PyErr {
             actual,
         } => {
             let msg = match (expected, actual) {
-                (Some(exp), Some(act)) => format!("{} | Expected: {}, Actual: {}", message, exp, act),
+                (Some(exp), Some(act)) => {
+                    format!("{} | Expected: {}, Actual: {}", message, exp, act)
+                }
                 _ => message,
             };
             PyRuntimeError::new_err(msg)

@@ -74,7 +74,10 @@ impl PyFileHasher {
     ///     >>>     else:
     ///     >>>         print(f"{path}: FAILED")
     #[staticmethod]
-    fn hash_files_parallel<'py>(py: Python<'py>, paths: Vec<String>) -> PyResult<Bound<'py, PyDict>> {
+    fn hash_files_parallel<'py>(
+        py: Python<'py>,
+        paths: Vec<String>,
+    ) -> PyResult<Bound<'py, PyDict>> {
         // Convert to Path refs
         let path_refs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
         let path_slice: Vec<&std::path::Path> = path_refs.iter().map(|p| p.as_path()).collect();

@@ -3,7 +3,7 @@
 #![allow(missing_docs)]
 
 use classic_shared_core::strings_core::{StringOperation, StringProcessor};
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 
 fn bench_string_interning(c: &mut Criterion) {
     let mut group = c.benchmark_group("string_interning");
@@ -28,9 +28,7 @@ fn bench_string_interning(c: &mut Criterion) {
     });
 
     // Benchmark bulk interning
-    let test_strings: Vec<String> = (0..1000)
-        .map(|i| format!("bulk_string_{}", i))
-        .collect();
+    let test_strings: Vec<String> = (0..1000).map(|i| format!("bulk_string_{}", i)).collect();
     group.bench_function("intern_bulk_1000", |b| {
         b.iter(|| {
             for s in &test_strings {
@@ -88,9 +86,7 @@ fn bench_batch_operations(c: &mut Criterion) {
     let processor = StringProcessor::new();
 
     for size in [10, 100, 1000] {
-        let batch: Vec<&str> = (0..size)
-            .map(|_| "  whitespace trimming test  ")
-            .collect();
+        let batch: Vec<&str> = (0..size).map(|_| "  whitespace trimming test  ").collect();
 
         group.bench_with_input(
             BenchmarkId::new("process_batch_trim", size),

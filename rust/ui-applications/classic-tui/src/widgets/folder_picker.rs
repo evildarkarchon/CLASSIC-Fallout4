@@ -9,11 +9,11 @@
 //! - Filter to show only directories
 
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
-    Frame,
 };
 use std::path::{Path, PathBuf};
 
@@ -315,11 +315,7 @@ impl<'a> FolderPicker<'a> {
                 .entries
                 .iter()
                 .map(|entry| {
-                    let icon = if entry.name == ".." {
-                        "⬆ "
-                    } else {
-                        "📁 "
-                    };
+                    let icon = if entry.name == ".." { "⬆ " } else { "📁 " };
                     ListItem::new(format!("{}{}", icon, entry.name))
                 })
                 .collect();
@@ -333,18 +329,16 @@ impl<'a> FolderPicker<'a> {
         }
 
         // Render help text
-        let help_text = vec![
-            Line::from(vec![
-                Span::styled("↑↓", Style::default().fg(Color::Yellow)),
-                Span::raw(" Navigate | "),
-                Span::styled("Enter", Style::default().fg(Color::Yellow)),
-                Span::raw(" Select/Enter Dir | "),
-                Span::styled("Backspace", Style::default().fg(Color::Yellow)),
-                Span::raw(" Parent | "),
-                Span::styled("Esc", Style::default().fg(Color::Yellow)),
-                Span::raw(" Cancel"),
-            ]),
-        ];
+        let help_text = vec![Line::from(vec![
+            Span::styled("↑↓", Style::default().fg(Color::Yellow)),
+            Span::raw(" Navigate | "),
+            Span::styled("Enter", Style::default().fg(Color::Yellow)),
+            Span::raw(" Select/Enter Dir | "),
+            Span::styled("Backspace", Style::default().fg(Color::Yellow)),
+            Span::raw(" Parent | "),
+            Span::styled("Esc", Style::default().fg(Color::Yellow)),
+            Span::raw(" Cancel"),
+        ])];
 
         let help_widget = Paragraph::new(help_text)
             .block(Block::default().borders(Borders::ALL))

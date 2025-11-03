@@ -57,7 +57,9 @@ fn yaml_to_py(py: Python, yaml: &Yaml) -> PyResult<Py<PyAny>> {
         Yaml::Null => Ok(py.None()),
         Yaml::BadValue => {
             // BadValue indicates a parsing error
-            Err(pyo3::exceptions::PyValueError::new_err("Invalid YAML value"))
+            Err(pyo3::exceptions::PyValueError::new_err(
+                "Invalid YAML value",
+            ))
         }
     }
 }

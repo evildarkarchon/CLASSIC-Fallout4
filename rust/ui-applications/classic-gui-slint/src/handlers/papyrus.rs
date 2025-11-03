@@ -4,8 +4,8 @@
 // from classic-scanlog-core. It manages the monitoring lifecycle and provides
 // statistics to the Slint UI.
 
-use anyhow::{Context, Result};
 use crate::app_state::SharedAppState;
+use anyhow::{Context, Result};
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use notify::{EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use parking_lot::Mutex;
@@ -81,7 +81,8 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
     let mut analyzer = PapyrusAnalyzer::new(papyrus_log_path.clone());
 
     // Start monitoring from END of file (ignore history)
-    analyzer.start_monitoring()
+    analyzer
+        .start_monitoring()
         .context("Failed to initialize Papyrus analyzer")?;
 
     tracing::info!("Analyzer initialized with tail -f behavior");
@@ -91,15 +92,15 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
 
     // Create file watcher
     let (tx, rx) = channel();
-    let mut watcher = notify::recommended_watcher(tx)
-        .context("Failed to create file watcher")?;
+    let mut watcher = notify::recommended_watcher(tx).context("Failed to create file watcher")?;
 
     // Watch the log file directory (watching the file directly doesn't work reliably)
-    let log_dir = papyrus_log_path.parent().ok_or_else(|| {
-        anyhow::anyhow!("Failed to get log directory path")
-    })?;
+    let log_dir = papyrus_log_path
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("Failed to get log directory path"))?;
 
-    watcher.watch(log_dir, RecursiveMode::NonRecursive)
+    watcher
+        .watch(log_dir, RecursiveMode::NonRecursive)
         .context("Failed to start watching log directory")?;
 
     // Store watcher globally so it stays alive
@@ -123,7 +124,11 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
                         Ok(event) => {
                             // Only process modify events for the Papyrus log
                             if matches!(event.kind, EventKind::Modify(_)) {
-                                if event.paths.iter().any(|p| p.file_name() == papyrus_log_path.file_name()) {
+                                if event
+                                    .paths
+                                    .iter()
+                                    .any(|p| p.file_name() == papyrus_log_path.file_name())
+                                {
                                     tracing::debug!("Papyrus log modified");
 
                                     // Check for updates using core analyzer
@@ -144,7 +149,10 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
                                                 // No updates
                                             }
                                             Err(e) => {
-                                                tracing::error!("Failed to check for updates: {}", e);
+                                                tracing::error!(
+                                                    "Failed to check for updates: {}",
+                                                    e
+                                                );
                                             }
                                         }
                                     }

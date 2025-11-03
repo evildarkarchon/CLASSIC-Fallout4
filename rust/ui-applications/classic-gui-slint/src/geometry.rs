@@ -49,8 +49,7 @@ impl WindowGeometry {
             .context("Failed to get config directory")?
             .join("CLASSIC");
 
-        fs::create_dir_all(&config_dir)
-            .context("Failed to create CLASSIC config directory")?;
+        fs::create_dir_all(&config_dir).context("Failed to create CLASSIC config directory")?;
 
         Ok(config_dir.join("window_geometry.json"))
     }
@@ -62,8 +61,7 @@ impl WindowGeometry {
                 let contents = fs::read_to_string(&path)
                     .with_context(|| format!("Failed to read geometry from {:?}", path))?;
 
-                serde_json::from_str(&contents)
-                    .context("Failed to parse geometry JSON")
+                serde_json::from_str(&contents).context("Failed to parse geometry JSON")
             })
             .unwrap_or_else(|err| {
                 tracing::debug!("Using default geometry: {}", err);
@@ -75,8 +73,7 @@ impl WindowGeometry {
     pub fn save(&self) -> Result<()> {
         let path = Self::config_path()?;
 
-        let json = serde_json::to_string_pretty(self)
-            .context("Failed to serialize geometry")?;
+        let json = serde_json::to_string_pretty(self).context("Failed to serialize geometry")?;
 
         fs::write(&path, json)
             .with_context(|| format!("Failed to write geometry to {:?}", path))?;

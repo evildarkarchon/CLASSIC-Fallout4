@@ -133,7 +133,7 @@ impl PyFcxModeHandler {
         if !self.inner.fcx_mode {
             // FCX mode disabled - set default messages
             self.inner.set_main_files_result(
-                "❌ FCX Mode is disabled, skipping game files check... \n-----\n".to_string()
+                "❌ FCX Mode is disabled, skipping game files check... \n-----\n".to_string(),
             );
             self.inner.set_game_files_result(String::new());
             return Ok(());
@@ -161,29 +161,34 @@ impl PyFcxModeHandler {
                         match scan_game_fn.call0() {
                             Ok(result_tuple) => {
                                 // Extract the two elements from the tuple
-                                let game_text = result_tuple.get_item(0)
+                                let game_text = result_tuple
+                                    .get_item(0)
                                     .and_then(|item| item.extract::<String>())
-                                    .unwrap_or_else(|_| "Game files check not available\n".to_string());
+                                    .unwrap_or_else(|_| {
+                                        "Game files check not available\n".to_string()
+                                    });
 
-                                let issues = result_tuple.get_item(1)
+                                let issues = result_tuple
+                                    .get_item(1)
                                     .and_then(|item| item.extract::<Vec<PyConfigIssue>>())
                                     .unwrap_or_else(|_| Vec::new());
 
                                 (game_text, issues)
                             }
-                            Err(_) => ("Game files check not available\n".to_string(), Vec::new())
+                            Err(_) => ("Game files check not available\n".to_string(), Vec::new()),
                         }
                     }
-                    Err(_) => ("Game files check not available\n".to_string(), Vec::new())
+                    Err(_) => ("Game files check not available\n".to_string(), Vec::new()),
                 }
             }
-            Err(_) => ("Game files check not available\n".to_string(), Vec::new())
+            Err(_) => ("Game files check not available\n".to_string(), Vec::new()),
         };
 
         self.inner.set_game_files_result(game_result);
 
         // Convert PyConfigIssue to ConfigIssue and set
-        let rust_issues: Vec<ConfigIssue> = detected_issues.into_iter()
+        let rust_issues: Vec<ConfigIssue> = detected_issues
+            .into_iter()
             .map(|py_issue| py_issue.inner)
             .collect();
         self.inner.set_detected_issues(rust_issues);
@@ -235,15 +240,15 @@ impl PyFcxModeHandler {
 
     /// Set detected configuration issues (replaces existing list)
     pub fn set_detected_issues(&mut self, issues: Vec<PyConfigIssue>) {
-        let rust_issues: Vec<ConfigIssue> = issues.into_iter()
-            .map(|py_issue| py_issue.inner)
-            .collect();
+        let rust_issues: Vec<ConfigIssue> =
+            issues.into_iter().map(|py_issue| py_issue.inner).collect();
         self.inner.set_detected_issues(rust_issues);
     }
 
     /// Get detected configuration issues
     pub fn get_detected_issues(&self) -> Vec<PyConfigIssue> {
-        self.inner.get_detected_issues()
+        self.inner
+            .get_detected_issues()
             .iter()
             .cloned()
             .map(PyConfigIssue::from)

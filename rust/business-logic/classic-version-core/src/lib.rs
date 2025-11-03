@@ -39,8 +39,8 @@ use thiserror::Error;
 
 // Re-export version constants from classic-constants-core
 pub use classic_constants_core::{
-    FALLOUT4_NG_VERSION, FALLOUT4_OG_VERSION, FALLOUT4_VERSIONS, FALLOUT4_VR_VERSION,
-    F4SE_NG_VERSION, F4SE_OG_VERSION, F4SE_VERSIONS, NULL_VERSION,
+    F4SE_NG_VERSION, F4SE_OG_VERSION, F4SE_VERSIONS, FALLOUT4_NG_VERSION, FALLOUT4_OG_VERSION,
+    FALLOUT4_VERSIONS, FALLOUT4_VR_VERSION, NULL_VERSION,
 };
 
 /// Version parsing and comparison errors.
@@ -436,8 +436,14 @@ mod tests {
     #[test]
     fn test_parse_version() {
         assert_eq!(parse_version("1.10.163").unwrap(), Version::new(1, 10, 163));
-        assert_eq!(parse_version("1.10.163.0").unwrap(), Version::new(1, 10, 163));
-        assert_eq!(parse_version("v1.10.163").unwrap(), Version::new(1, 10, 163));
+        assert_eq!(
+            parse_version("1.10.163.0").unwrap(),
+            Version::new(1, 10, 163)
+        );
+        assert_eq!(
+            parse_version("v1.10.163").unwrap(),
+            Version::new(1, 10, 163)
+        );
         assert_eq!(parse_version("0.6.23").unwrap(), Version::new(0, 6, 23));
     }
 

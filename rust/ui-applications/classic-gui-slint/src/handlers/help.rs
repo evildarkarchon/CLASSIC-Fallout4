@@ -37,8 +37,7 @@ pub async fn load_help_yaml() -> Result<Yaml> {
         .context("Failed to read help file")?;
 
     // Parse YAML
-    let docs = YamlLoader::load_from_str(&contents)
-        .context("Failed to parse help YAML")?;
+    let docs = YamlLoader::load_from_str(&contents).context("Failed to parse help YAML")?;
 
     if docs.is_empty() {
         anyhow::bail!("Help file is empty");
@@ -76,10 +75,7 @@ pub async fn get_help_topic(category: &str, topic: &str) -> Result<HelpTopic> {
     }
 
     // Extract topic data
-    let title = topic_node["title"]
-        .as_str()
-        .unwrap_or("Help")
-        .to_string();
+    let title = topic_node["title"].as_str().unwrap_or("Help").to_string();
 
     let content = topic_node["content"]
         .as_str()

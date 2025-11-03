@@ -91,5 +91,5 @@ debug = true
 deprecated = "deny"
 rust_2024_compatibility = "deny"
 unsafe_code = "deny"  # We don't use unsafe in CLASSIC
-missing_docs = "warn"   # Encourage documentation
+missing_docs = "allow"   # External code is getting caught in the crosshairs
 unused = "deny"

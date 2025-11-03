@@ -48,7 +48,7 @@ static BRIDGE_POOL: Lazy<ThreadPool> = Lazy::new(|| {
     rayon::ThreadPoolBuilder::new()
         .num_threads(bridge_threads)
         .thread_name(|i| format!("async-bridge-{}", i))
-        .stack_size(1024 * 1024)  // 1MB stack (vs default 2MB)
+        .stack_size(1024 * 1024) // 1MB stack (vs default 2MB)
         .build()
         .expect("Failed to create async bridge thread pool")
 });
@@ -281,8 +281,7 @@ impl AsyncBridge {
     where
         F: FnOnce() + Send + 'static,
     {
-        slint::invoke_from_event_loop(f)
-            .expect("Failed to invoke function on Slint event loop");
+        slint::invoke_from_event_loop(f).expect("Failed to invoke function on Slint event loop");
     }
 
     /// Run an async operation with loading state management
@@ -314,11 +313,7 @@ impl AsyncBridge {
     ///     }
     /// );
     /// ```
-    pub fn run_with_loading<F, R, L, C>(
-        set_loading: L,
-        operation: F,
-        on_complete: C,
-    )
+    pub fn run_with_loading<F, R, L, C>(set_loading: L, operation: F, on_complete: C)
     where
         F: Future<Output = R> + Send + 'static,
         R: Send + 'static,
@@ -354,6 +349,9 @@ mod tests {
     fn test_async_bridge_exists() {
         // Basic compile test to ensure the module structure is correct
         // Actual functionality tests require a running Slint event loop
-        assert_eq!(std::any::type_name::<AsyncBridge>(), "classic_shared_core::async_bridge::AsyncBridge");
+        assert_eq!(
+            std::any::type_name::<AsyncBridge>(),
+            "classic_shared_core::async_bridge::AsyncBridge"
+        );
     }
 }

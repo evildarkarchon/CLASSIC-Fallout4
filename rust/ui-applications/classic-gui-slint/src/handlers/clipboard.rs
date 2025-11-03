@@ -29,7 +29,9 @@ pub fn copy_error_to_clipboard(title: &str, message: &str, details: Option<&str>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use classic_ui_shared::clipboard::{clear_clipboard, get_clipboard_text, is_clipboard_available};
+    use classic_ui_shared::clipboard::{
+        clear_clipboard, get_clipboard_text, is_clipboard_available,
+    };
 
     #[test]
     fn test_clipboard_operations() {

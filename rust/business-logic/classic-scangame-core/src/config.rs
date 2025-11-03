@@ -290,13 +290,13 @@ fn compare_ini_files(file1: &Path, file2: &Path) -> Result<bool> {
     let mut config2 = Ini::new();
 
     // Load both files
-    config1.load(file1).map_err(|e| {
-        ConfigError::EncodingError(format!("Failed to parse INI file: {}", e))
-    })?;
+    config1
+        .load(file1)
+        .map_err(|e| ConfigError::EncodingError(format!("Failed to parse INI file: {}", e)))?;
 
-    config2.load(file2).map_err(|e| {
-        ConfigError::EncodingError(format!("Failed to parse INI file: {}", e))
-    })?;
+    config2
+        .load(file2)
+        .map_err(|e| ConfigError::EncodingError(format!("Failed to parse INI file: {}", e)))?;
 
     // Compare sections
     let sections1 = config1.sections();
@@ -308,7 +308,10 @@ fn compare_ini_files(file1: &Path, file2: &Path) -> Result<bool> {
 
     // Compare each section's contents
     for section in &sections1 {
-        if let (Some(map1), Some(map2)) = (config1.get_map_ref().get(section), config2.get_map_ref().get(section)) {
+        if let (Some(map1), Some(map2)) = (
+            config1.get_map_ref().get(section),
+            config2.get_map_ref().get(section),
+        ) {
             if map1 != map2 {
                 return Ok(false);
             }

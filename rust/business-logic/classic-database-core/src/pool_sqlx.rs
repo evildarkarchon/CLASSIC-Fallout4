@@ -138,7 +138,10 @@ impl DatabasePool {
         let mut valid_paths = Vec::new();
         let max_conn = self.max_connections.read().unwrap().unwrap_or(50);
 
-        info!("Initializing sqlx pools for {} database files", db_paths.len());
+        info!(
+            "Initializing sqlx pools for {} database files",
+            db_paths.len()
+        );
 
         for path in db_paths {
             if !path.exists() {
@@ -168,7 +171,10 @@ impl DatabasePool {
             self.pools.insert(path.clone(), pool);
             valid_paths.push(path.clone());
 
-            info!("Created sqlx pool with {} connections for {:?}", max_conn, path);
+            info!(
+                "Created sqlx pool with {} connections for {:?}",
+                max_conn, path
+            );
 
             if let Ok(mut s) = self.stats.write() {
                 s.total_connections += max_conn as u64;
@@ -237,7 +243,8 @@ impl DatabasePool {
                 Ok(Some(row)) => {
                     let value: String = row.try_get(0)?;
                     let cache_ttl = *self.cache_ttl.read().unwrap();
-                    self.query_cache.insert(cache_key.clone(), CacheEntry::new(value.clone(), cache_ttl));
+                    self.query_cache
+                        .insert(cache_key.clone(), CacheEntry::new(value.clone(), cache_ttl));
                     debug!("Found FormID {} in database {:?}", formid, db_path);
                     return Ok(Some(value));
                 }
@@ -345,7 +352,8 @@ impl DatabasePool {
                             let cache_key = format!("{}:{}:{}", game_table, formid, plugin);
 
                             results.insert(result_key, entry.clone());
-                            self.query_cache.insert(cache_key, CacheEntry::new(entry, cache_ttl));
+                            self.query_cache
+                                .insert(cache_key, CacheEntry::new(entry, cache_ttl));
                         }
                     }
                     Err(e) => {

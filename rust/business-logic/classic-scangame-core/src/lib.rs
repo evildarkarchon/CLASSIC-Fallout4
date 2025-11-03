@@ -14,15 +14,15 @@
 //! For Python bindings, see `classic-scangame-py`.
 
 // Module declarations - will be implemented in Phase 3B-3C
-pub mod config;      // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
-pub mod unpacked;    // unpacked_scanner.py (Phase 3B) - IMPLEMENTED
-pub mod logs;        // log_processor.py (Phase 3C) - IMPLEMENTED
-pub mod ini;         // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
-pub mod toml;        // CheckCrashgen.py TOML validation (Phase 3C) - IMPLEMENTED
-pub mod xse;         // CheckXsePlugins.py (Phase 3C) - IMPLEMENTED
-pub mod integrity;   // GameIntegrity.py validation (Phase 5) - IMPLEMENTED
+pub mod config; // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
+pub mod ini; // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
+pub mod integrity;
+pub mod logs; // log_processor.py (Phase 3C) - IMPLEMENTED
+pub mod toml; // CheckCrashgen.py TOML validation (Phase 3C) - IMPLEMENTED
+pub mod unpacked; // unpacked_scanner.py (Phase 3B) - IMPLEMENTED
+pub mod xse; // CheckXsePlugins.py (Phase 3C) - IMPLEMENTED // GameIntegrity.py validation (Phase 5) - IMPLEMENTED
 
-pub mod ba2;         // BA2 archive handling (Phase 3B) - IMPLEMENTED
+pub mod ba2; // BA2 archive handling (Phase 3B) - IMPLEMENTED
 pub mod error;
 
 // Re-export key types for convenience

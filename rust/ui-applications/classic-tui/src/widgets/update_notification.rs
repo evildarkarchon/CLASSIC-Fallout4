@@ -5,11 +5,11 @@
 
 use crate::handlers::update_handler::UpdateInfo;
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 /// Update notification state and display.
@@ -99,13 +99,11 @@ impl UpdateNotification {
         };
 
         // Create banner block with colored border
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .border_style(
-                Style::default()
-                    .fg(border_color)
-                    .add_modifier(Modifier::BOLD),
-            );
+        let block = Block::default().borders(Borders::ALL).border_style(
+            Style::default()
+                .fg(border_color)
+                .add_modifier(Modifier::BOLD),
+        );
 
         // Build notification text
         let notification_text = vec![Line::from(vec![
@@ -124,7 +122,9 @@ impl UpdateNotification {
             Span::raw(": "),
             Span::styled(
                 &self.update_info.version,
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::raw(" - "),
             Span::styled(&self.update_info.name, Style::default().fg(Color::White)),
@@ -158,11 +158,7 @@ impl UpdateNotification {
     ///
     /// Returns 3 if visible, 0 if hidden.
     pub fn height(&self) -> u16 {
-        if self.visible {
-            3
-        } else {
-            0
-        }
+        if self.visible { 3 } else { 0 }
     }
 }
 

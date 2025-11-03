@@ -92,7 +92,10 @@ impl PyBA2Scanner {
     /// Returns:
     ///     BA2Issues object containing lists of problematic entries
     fn scan_archive(&self, archive_path: PathBuf) -> PyResult<PyBA2Issues> {
-        let issues = self.inner.scan_archive(&archive_path).map_err(crate::to_pyerr)?;
+        let issues = self
+            .inner
+            .scan_archive(&archive_path)
+            .map_err(crate::to_pyerr)?;
 
         Ok(PyBA2Issues {
             tex_dims: issues.tex_dims,
@@ -109,7 +112,10 @@ impl PyBA2Scanner {
     ///
     /// Returns:
     ///     List of tuples (archive_path, BA2Issues) for successful scans
-    fn scan_archives_batch(&self, archive_paths: Vec<PathBuf>) -> PyResult<Vec<(PathBuf, PyBA2Issues)>> {
+    fn scan_archives_batch(
+        &self,
+        archive_paths: Vec<PathBuf>,
+    ) -> PyResult<Vec<(PathBuf, PyBA2Issues)>> {
         let results = self.inner.scan_archives_batch(&archive_paths);
 
         let mut output = Vec::new();

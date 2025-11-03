@@ -310,7 +310,12 @@ impl GameId {
     /// ```
     #[must_use]
     pub const fn all() -> [Self; 4] {
-        [Self::Fallout4, Self::Fallout4VR, Self::Skyrim, Self::Starfield]
+        [
+            Self::Fallout4,
+            Self::Fallout4VR,
+            Self::Skyrim,
+            Self::Starfield,
+        ]
     }
 }
 

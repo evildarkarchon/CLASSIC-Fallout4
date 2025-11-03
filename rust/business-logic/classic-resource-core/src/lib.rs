@@ -227,34 +227,64 @@ pub fn detect_resource_type(path: &Path) -> ResourceType {
             let ext_lower = ext_str.to_lowercase();
 
             // Check each resource type's extensions
-            if ResourceType::Texture.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Texture
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Texture;
             }
-            if ResourceType::Mesh.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Mesh
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Mesh;
             }
-            if ResourceType::Script.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Script
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Script;
             }
-            if ResourceType::Plugin.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Plugin
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Plugin;
             }
-            if ResourceType::Sound.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Sound
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Sound;
             }
-            if ResourceType::Animation.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Animation
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Animation;
             }
-            if ResourceType::Interface.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Interface
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Interface;
             }
-            if ResourceType::Strings.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Strings
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Strings;
             }
-            if ResourceType::Archive.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Archive
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Archive;
             }
-            if ResourceType::Config.extensions().contains(&ext_lower.as_str()) {
+            if ResourceType::Config
+                .extensions()
+                .contains(&ext_lower.as_str())
+            {
                 return ResourceType::Config;
             }
         }

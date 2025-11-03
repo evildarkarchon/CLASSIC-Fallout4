@@ -3,8 +3,8 @@
 //! This module provides Python access to web utilities, including URL validation,
 //! user agent generation, and mod site constants.
 
-use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
 
 /// Mod site enumeration for Python.
 #[pyclass(module = "classic_web", name = "ModSite")]
@@ -219,8 +219,7 @@ fn is_valid_url(url_str: &str) -> bool {
 /// ```
 #[pyfunction]
 fn extract_domain(url_str: &str) -> PyResult<String> {
-    classic_web_core::extract_domain(url_str)
-        .map_err(|e| PyValueError::new_err(e.to_string()))
+    classic_web_core::extract_domain(url_str).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 /// Join a base URL with a path.
@@ -248,8 +247,7 @@ fn extract_domain(url_str: &str) -> PyResult<String> {
 /// ```
 #[pyfunction]
 fn join_url(base: &str, path: &str) -> PyResult<String> {
-    classic_web_core::join_url(base, path)
-        .map_err(|e| PyValueError::new_err(e.to_string()))
+    classic_web_core::join_url(base, path).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 /// Build a URL with query parameters.

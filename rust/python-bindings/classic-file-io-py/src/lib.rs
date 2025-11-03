@@ -105,7 +105,7 @@ pub use core::PyFileIOCore;
 pub use dds::PyDDSHeader;
 pub use encoding::PyEncodingDetector;
 pub use generation::{
-    generate_ignore_file_async, generate_local_yaml_async, PyFileGenerator, PyFileGeneratorConfig,
+    PyFileGenerator, PyFileGeneratorConfig, generate_ignore_file_async, generate_local_yaml_async,
 };
 pub use hash::PyFileHasher;
 pub use log_collector::PyLogCollector;
@@ -129,7 +129,7 @@ pub fn register_file_io_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyDDSHeader>()?;
     m.add_class::<PyEncodingDetector>()?;
     m.add_class::<PyFileHasher>()?;
-    m.add_class::<PyLogCollector>()?;  // This MUST add PyLogCollector to the module
+    m.add_class::<PyLogCollector>()?; // This MUST add PyLogCollector to the module
 
     // Phase 5 - File generation
     generation::register(m)?;

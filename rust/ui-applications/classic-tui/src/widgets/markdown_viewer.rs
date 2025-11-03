@@ -164,10 +164,8 @@ impl MarkdownRenderer {
             }
             Tag::Item => {
                 // Add bullet point
-                self.current_line.push(Span::styled(
-                    "• ",
-                    Style::default().fg(Color::Yellow),
-                ));
+                self.current_line
+                    .push(Span::styled("• ", Style::default().fg(Color::Yellow)));
             }
             _ => {}
         }

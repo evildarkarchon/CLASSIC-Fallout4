@@ -29,8 +29,8 @@
 //! }
 //! ```
 
-use crate::error::DocsPathResult;
 use crate::IniFile;
+use crate::error::DocsPathResult;
 use std::path::Path;
 
 /// Result of an INI file validation check.
@@ -475,7 +475,9 @@ mod tests {
         let docs_path = create_test_docs(temp_dir.path(), "Fallout4");
 
         let checker = DocumentsChecker::new("Fallout4");
-        let result = checker.validate_ini_file(&docs_path, "Fallout4.ini").unwrap();
+        let result = checker
+            .validate_ini_file(&docs_path, "Fallout4.ini")
+            .unwrap();
 
         assert!(!result.exists);
         assert!(!result.is_valid);
@@ -490,7 +492,9 @@ mod tests {
         create_test_ini(&docs_path, "Fallout4.ini", "[General]\nkey=value\n");
 
         let checker = DocumentsChecker::new("Fallout4");
-        let result = checker.validate_ini_file(&docs_path, "Fallout4.ini").unwrap();
+        let result = checker
+            .validate_ini_file(&docs_path, "Fallout4.ini")
+            .unwrap();
 
         assert!(result.exists);
         assert!(result.is_valid);
@@ -506,7 +510,9 @@ mod tests {
         create_test_ini(&docs_path, "Fallout4.ini", "[General\nkey=value\n");
 
         let checker = DocumentsChecker::new("Fallout4");
-        let result = checker.validate_ini_file(&docs_path, "Fallout4.ini").unwrap();
+        let result = checker
+            .validate_ini_file(&docs_path, "Fallout4.ini")
+            .unwrap();
 
         assert!(result.exists);
         assert!(!result.is_valid);
@@ -521,7 +527,9 @@ mod tests {
         create_test_ini(&docs_path, "Fallout4Custom.ini", "[General]\nkey=value\n");
 
         let checker = DocumentsChecker::new("Fallout4");
-        let result = checker.validate_ini_file(&docs_path, "Fallout4Custom.ini").unwrap();
+        let result = checker
+            .validate_ini_file(&docs_path, "Fallout4Custom.ini")
+            .unwrap();
 
         assert!(result.exists);
         assert!(result.is_valid);
@@ -541,7 +549,9 @@ mod tests {
         );
 
         let checker = DocumentsChecker::new("Fallout4");
-        let result = checker.validate_ini_file(&docs_path, "Fallout4Custom.ini").unwrap();
+        let result = checker
+            .validate_ini_file(&docs_path, "Fallout4Custom.ini")
+            .unwrap();
 
         assert!(result.exists);
         assert!(result.is_valid);
@@ -554,7 +564,11 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let docs_path = create_test_docs(temp_dir.path(), "Fallout4");
         create_test_ini(&docs_path, "Fallout4.ini", "[General]\nkey=value\n");
-        create_test_ini(&docs_path, "Fallout4Custom.ini", "[Archive]\nbInvalidateOlderFiles=1\n");
+        create_test_ini(
+            &docs_path,
+            "Fallout4Custom.ini",
+            "[Archive]\nbInvalidateOlderFiles=1\n",
+        );
         create_test_ini(&docs_path, "Fallout4Prefs.ini", "[Display]\niSize W=1920\n");
 
         let checker = DocumentsChecker::new("Fallout4");
@@ -562,7 +576,11 @@ mod tests {
 
         // Should have 3 messages (all OK)
         assert_eq!(messages.len(), 3);
-        assert!(messages.iter().all(|m| m.contains("✔️") || m.contains("enabled")));
+        assert!(
+            messages
+                .iter()
+                .all(|m| m.contains("✔️") || m.contains("enabled"))
+        );
     }
 
     #[test]

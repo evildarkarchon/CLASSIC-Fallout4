@@ -216,13 +216,13 @@ fn get_config_path() -> Result<PathBuf> {
 }
 
 /// ```rust
-/// Finds directories containing YAML data based on the application's execution path 
+/// Finds directories containing YAML data based on the application's execution path
 /// or the current working directory.
 ///```
 /// ## Description
-/// This function is designed to locate YAML data directories following a known structure 
-/// under `CLASSIC Data/databases` in the executable's directory or the current working 
-/// directory. If the proper folder structure is found, it returns three paths: 
+/// This function is designed to locate YAML data directories following a known structure
+/// under `CLASSIC Data/databases` in the executable's directory or the current working
+/// directory. If the proper folder structure is found, it returns three paths:
 /// 1. A `databases` directory intended for "Main".
 /// 2. A `databases` directory intended for "Game".
 /// 3. The parent directory (execution directory or current working directory).
@@ -237,11 +237,11 @@ fn get_config_path() -> Result<PathBuf> {
 /// - `Err`: An error if the `CLASSIC Data/databases` folder cannot be located.
 ///
 /// ## Parameters
-/// - `config: &CliConfig`: A configuration object for CLI interaction (though it is 
+/// - `config: &CliConfig`: A configuration object for CLI interaction (though it is
 /// currently unused in the function).
 ///
 /// ## Errors
-/// - Returns an error using `anyhow::bail!` if neither the executable's directory 
+/// - Returns an error using `anyhow::bail!` if neither the executable's directory
 /// nor the current directory contains a valid `CLASSIC Data/databases` folder.
 ///
 /// ## Examples
@@ -279,15 +279,13 @@ fn find_yaml_directories(_config: &CliConfig) -> Result<Vec<PathBuf>> {
         let databases_dir = current_dir.join("CLASSIC Data/databases");
         if databases_dir.exists() {
             // Return: [databases (Main), databases (Game), current_dir (Ignore)]
-            return Ok(vec![
-                databases_dir.clone(),
-                databases_dir,
-                current_dir,
-            ]);
+            return Ok(vec![databases_dir.clone(), databases_dir, current_dir]);
         }
     }
 
-    anyhow::bail!("Could not find YAML data directories. Please ensure 'CLASSIC Data/databases' folder exists.")
+    anyhow::bail!(
+        "Could not find YAML data directories. Please ensure 'CLASSIC Data/databases' folder exists."
+    )
 }
 
 #[cfg(test)]

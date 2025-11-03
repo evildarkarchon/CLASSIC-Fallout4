@@ -16,7 +16,9 @@ use anyhow::{Context, Result};
 /// * `Err(anyhow::Error)` - Invalid URL format
 fn extract_paste_id(url: &str) -> Result<String> {
     // Remove protocol if present
-    let url = url.trim_start_matches("https://").trim_start_matches("http://");
+    let url = url
+        .trim_start_matches("https://")
+        .trim_start_matches("http://");
 
     // Check if it's a pastebin.com URL
     if !url.starts_with("pastebin.com/") {
@@ -49,8 +51,7 @@ pub async fn download_from_pastebin(url: &str) -> Result<String> {
     tracing::info!("Downloading from Pastebin: {}", url);
 
     // Extract paste ID
-    let paste_id = extract_paste_id(url)
-        .context("Failed to parse Pastebin URL")?;
+    let paste_id = extract_paste_id(url).context("Failed to parse Pastebin URL")?;
 
     // Build raw URL (always use raw format for clean text)
     let raw_url = format!("https://pastebin.com/raw/{}", paste_id);
@@ -145,7 +146,7 @@ mod tests {
     #[test]
     fn test_extract_paste_id_special_chars() {
         let result = extract_paste_id("https://pastebin.com/ABC-123");
-        assert!(result.is_err());  // Should reject non-alphanumeric
+        assert!(result.is_err()); // Should reject non-alphanumeric
     }
 
     // Note: Actual download tests would require network access

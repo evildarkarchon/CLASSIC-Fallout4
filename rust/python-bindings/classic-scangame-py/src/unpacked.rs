@@ -94,8 +94,13 @@ impl PyUnpackedScanner {
     ///
     /// Returns:
     ///     UnpackedIssues object containing lists of problematic files
-    fn scan_directory(&self, root_path: PathBuf, xse_scriptfiles: Vec<String>) -> PyResult<PyUnpackedIssues> {
-        let issues = self.inner
+    fn scan_directory(
+        &self,
+        root_path: PathBuf,
+        xse_scriptfiles: Vec<String>,
+    ) -> PyResult<PyUnpackedIssues> {
+        let issues = self
+            .inner
             .scan_directory(&root_path, &xse_scriptfiles)
             .map_err(crate::to_pyerr)?;
 
@@ -124,7 +129,10 @@ impl PyUnpackedScanner {
 ///     UnpackedIssues object
 #[pyfunction]
 #[pyo3(signature = (root_path, xse_scriptfiles))]
-pub fn scan_unpacked_files(root_path: PathBuf, xse_scriptfiles: Vec<String>) -> PyResult<PyUnpackedIssues> {
+pub fn scan_unpacked_files(
+    root_path: PathBuf,
+    xse_scriptfiles: Vec<String>,
+) -> PyResult<PyUnpackedIssues> {
     let scanner = PyUnpackedScanner::new();
     scanner.scan_directory(root_path, xse_scriptfiles)
 }

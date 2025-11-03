@@ -82,7 +82,11 @@ impl UnpackedIssues {
 
     /// Get total number of issues
     pub fn total_count(&self) -> usize {
-        self.animdata.len() + self.tex_frmt.len() + self.snd_frmt.len() + self.xse_file.len() + self.previs.len()
+        self.animdata.len()
+            + self.tex_frmt.len()
+            + self.snd_frmt.len()
+            + self.xse_file.len()
+            + self.previs.len()
     }
 }
 
@@ -134,7 +138,11 @@ impl UnpackedScanner {
     ///     &["f4se.dll".to_string()]
     /// )?;
     /// ```
-    pub fn scan_directory(&self, mod_path: &Path, xse_scriptfiles: &[String]) -> Result<UnpackedIssues> {
+    pub fn scan_directory(
+        &self,
+        mod_path: &Path,
+        xse_scriptfiles: &[String],
+    ) -> Result<UnpackedIssues> {
         if !mod_path.exists() {
             return Err(UnpackedError::DirectoryNotFound(
                 mod_path.display().to_string(),
@@ -182,7 +190,9 @@ impl UnpackedScanner {
             if let Some(dir_name) = path.file_name() {
                 if dir_name.to_string_lossy().to_lowercase() == "animationfiledata" {
                     if let Some(parent) = relative_path.parent() {
-                        issues.animdata.insert(format!("  - {}\n", parent.display()));
+                        issues
+                            .animdata
+                            .insert(format!("  - {}\n", parent.display()));
                     }
                 }
             }
@@ -199,9 +209,7 @@ impl UnpackedScanner {
         let file_ext = path.extension()?.to_string_lossy().to_lowercase();
 
         // Check texture formats (TGA/PNG - should be DDS)
-        if (file_ext == "tga" || file_ext == "png")
-            && !self.is_bodyslide_file(path)
-        {
+        if (file_ext == "tga" || file_ext == "png") && !self.is_bodyslide_file(path) {
             issues.tex_frmt.insert(format!(
                 "  - {} : {}\n",
                 file_ext.to_uppercase(),
@@ -229,7 +237,9 @@ impl UnpackedScanner {
         // Check for XSE script files
         if self.is_xse_script(path, &file_name_lower, xse_scriptfiles) {
             if let Some(parent) = relative_path.parent() {
-                issues.xse_file.insert(format!("  - {}\n", parent.display()));
+                issues
+                    .xse_file
+                    .insert(format!("  - {}\n", parent.display()));
             }
             return Some(issues);
         }
@@ -255,7 +265,12 @@ impl UnpackedScanner {
     }
 
     /// Check if file is an XSE script file
-    fn is_xse_script(&self, path: &Path, file_name_lower: &str, xse_scriptfiles: &[String]) -> bool {
+    fn is_xse_script(
+        &self,
+        path: &Path,
+        file_name_lower: &str,
+        xse_scriptfiles: &[String],
+    ) -> bool {
         // Must be in Scripts directory
         let path_str = path.to_string_lossy().to_lowercase();
         if !path_str.contains("scripts\\") && !path_str.contains("scripts/") {

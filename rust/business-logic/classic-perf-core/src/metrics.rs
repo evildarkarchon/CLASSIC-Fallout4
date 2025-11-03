@@ -43,7 +43,10 @@ impl MetricsSummary {
     ///
     /// Panics if timings slice is empty.
     fn from_timings(timings: &[f64]) -> Self {
-        assert!(!timings.is_empty(), "Cannot create summary from empty timings");
+        assert!(
+            !timings.is_empty(),
+            "Cannot create summary from empty timings"
+        );
 
         let count = timings.len();
         let total: f64 = timings.iter().sum();

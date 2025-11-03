@@ -85,11 +85,11 @@ impl TuiLayout {
             Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Min(3),        // Header (min 3 lines)
-                    Constraint::Min(6),        // Folder selectors (min 6 lines, 2x3)
-                    Constraint::Min(3),        // Scan buttons (min 3 lines)
-                    Constraint::Min(8),        // Output viewer (min 8 lines for readability)
-                    Constraint::Length(1),     // Status bar (always 1 line)
+                    Constraint::Min(3),    // Header (min 3 lines)
+                    Constraint::Min(6),    // Folder selectors (min 6 lines, 2x3)
+                    Constraint::Min(3),    // Scan buttons (min 3 lines)
+                    Constraint::Min(8),    // Output viewer (min 8 lines for readability)
+                    Constraint::Length(1), // Status bar (always 1 line)
                 ])
                 .split(area)
         } else {
@@ -97,11 +97,11 @@ impl TuiLayout {
             Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Length(3),     // Header (3 lines)
+                    Constraint::Length(3),      // Header (3 lines)
                     Constraint::Percentage(15), // Folder selectors (~15% of height)
-                    Constraint::Length(3),     // Scan buttons (3 lines)
-                    Constraint::Min(10),       // Output viewer (remaining space, min 10)
-                    Constraint::Length(1),     // Status bar (1 line)
+                    Constraint::Length(3),      // Scan buttons (3 lines)
+                    Constraint::Min(10),        // Output viewer (remaining space, min 10)
+                    Constraint::Length(1),      // Status bar (1 line)
                 ])
                 .split(area)
         };

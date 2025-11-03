@@ -1,7 +1,7 @@
 // Settings dialog handlers - Comprehensive settings management
 #![allow(dead_code)]
-use anyhow::{Context, Result};
 use crate::app_state::SharedAppState;
+use anyhow::{Context, Result};
 use std::path::PathBuf;
 
 /// Settings data structure for dialog-AppState synchronization
@@ -121,22 +121,18 @@ impl SettingsData {
             state_guard.set_game_root(PathBuf::from(&self.game_root));
 
             tracing::debug!("  Docs Root: {}", self.docs_root);
-            state_guard.set_docs_root(
-                if self.docs_root.is_empty() {
-                    None
-                } else {
-                    Some(PathBuf::from(&self.docs_root))
-                }
-            );
+            state_guard.set_docs_root(if self.docs_root.is_empty() {
+                None
+            } else {
+                Some(PathBuf::from(&self.docs_root))
+            });
 
             tracing::debug!("  INI Folder: {}", self.ini_folder);
-            state_guard.set_ini_folder(
-                if self.ini_folder.is_empty() {
-                    None
-                } else {
-                    Some(PathBuf::from(&self.ini_folder))
-                }
-            );
+            state_guard.set_ini_folder(if self.ini_folder.is_empty() {
+                None
+            } else {
+                Some(PathBuf::from(&self.ini_folder))
+            });
 
             tracing::debug!("  Mods Folder: {}", self.mods_folder);
             if !self.mods_folder.is_empty() {
@@ -152,7 +148,10 @@ impl SettingsData {
         // Save configuration to YAML file
         tracing::info!("Persisting settings to YAML file...");
 
-        state.read().save_config().await
+        state
+            .read()
+            .save_config()
+            .await
             .context("Failed to save configuration to YAML")?;
 
         tracing::info!("Settings saved successfully");
@@ -176,17 +175,11 @@ impl SettingsData {
 
         let game_root_path = PathBuf::from(&self.game_root);
         if !game_root_path.exists() {
-            anyhow::bail!(
-                "Game root directory does not exist: {}",
-                self.game_root
-            );
+            anyhow::bail!("Game root directory does not exist: {}", self.game_root);
         }
 
         if !game_root_path.is_dir() {
-            anyhow::bail!(
-                "Game root path is not a directory: {}",
-                self.game_root
-            );
+            anyhow::bail!("Game root path is not a directory: {}", self.game_root);
         }
 
         // Validate optional paths (only if not empty)
@@ -203,30 +196,21 @@ impl SettingsData {
         if !self.ini_folder.is_empty() {
             let ini_path = PathBuf::from(&self.ini_folder);
             if !ini_path.exists() {
-                anyhow::bail!(
-                    "INI folder does not exist: {}",
-                    self.ini_folder
-                );
+                anyhow::bail!("INI folder does not exist: {}", self.ini_folder);
             }
         }
 
         if !self.mods_folder.is_empty() {
             let mods_path = PathBuf::from(&self.mods_folder);
             if !mods_path.exists() {
-                anyhow::bail!(
-                    "Mods folder does not exist: {}",
-                    self.mods_folder
-                );
+                anyhow::bail!("Mods folder does not exist: {}", self.mods_folder);
             }
         }
 
         if !self.scan_custom.is_empty() {
             let scan_path = PathBuf::from(&self.scan_custom);
             if !scan_path.exists() {
-                anyhow::bail!(
-                    "Custom scan folder does not exist: {}",
-                    self.scan_custom
-                );
+                anyhow::bail!("Custom scan folder does not exist: {}", self.scan_custom);
             }
         }
 

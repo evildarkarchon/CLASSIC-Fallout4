@@ -128,5 +128,4 @@ mod tests {
         let result = execute_on_runtime(test_async());
         assert_eq!(result, 42);
     }
-
 }

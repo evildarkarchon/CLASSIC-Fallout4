@@ -53,27 +53,36 @@ mod platform;
 
 // Component modules
 mod backup;
+mod checker;
 mod docs_path;
 mod game_path;
 mod ini_parser;
-mod checker;
 
 pub use backup::{BackupManager, XseVersion};
 pub use checker::{DocumentsChecker, IniCheckResult};
 pub use docs_path::DocsPathFinder;
 pub use error::{
-    PathError, ValidationError, GamePathError, DocsPathError, BackupError,
-    PathResult, ValidationResult, GamePathResult, DocsPathResult, BackupResult,
+    BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult,
+    PathError, PathResult, ValidationError, ValidationResult,
 };
 pub use game_path::{GamePathFinder, parse_xse_log};
 pub use ini_parser::IniFile;
 pub use validator::{
-    is_valid_path, is_restricted_path, validate_settings_paths,
-    validate_path_exists, validate_is_directory, validate_is_file,
-    validate_required_files, validate_custom_scan_path, validate_settings_path,
+    check_drive_exists,
+    check_read_permissions,
+    check_write_permissions,
+    is_restricted_path,
     // Permission and accessibility checks
-    is_valid_executable_path, check_drive_exists, check_read_permissions,
-    check_write_permissions, validate_path_with_permissions,
+    is_valid_executable_path,
+    is_valid_path,
+    validate_custom_scan_path,
+    validate_is_directory,
+    validate_is_file,
+    validate_path_exists,
+    validate_path_with_permissions,
+    validate_required_files,
+    validate_settings_path,
+    validate_settings_paths,
 };
 
 // Re-export platform utilities
@@ -81,7 +90,7 @@ pub use platform::{get_system_documents_path, parse_steam_library};
 
 // Re-export platform-specific Windows functions
 #[cfg(target_os = "windows")]
-pub use platform::{windows::query_game_registry, remove_readonly};
+pub use platform::{remove_readonly, windows::query_game_registry};
 
 // Module exports (to be uncommented as modules are implemented)
 // pub use game_path::GamePathFinder;

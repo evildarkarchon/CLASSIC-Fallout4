@@ -92,9 +92,7 @@ pub use cache::{
     load_batch_sync, load_settings_async, load_settings_sync,
 };
 pub use error::{Result, SettingsError};
-pub use loader::{
-    load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_sync,
-};
+pub use loader::{load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_sync};
 
 // Re-export yaml_rust2 types for convenience
 pub use yaml_rust2::Yaml;

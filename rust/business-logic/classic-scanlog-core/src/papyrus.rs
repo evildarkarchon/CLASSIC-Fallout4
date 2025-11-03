@@ -73,11 +73,7 @@ impl PapyrusStats {
     /// Returns 0.0 if there are no warnings
     pub fn error_to_warning_ratio(&self) -> f64 {
         if self.warnings == 0 {
-            if self.errors > 0 {
-                f64::INFINITY
-            } else {
-                0.0
-            }
+            if self.errors > 0 { f64::INFINITY } else { 0.0 }
         } else {
             self.errors as f64 / self.warnings as f64
         }
@@ -231,12 +227,13 @@ impl PapyrusAnalyzer {
         self.stats.last_modified = metadata.modified().ok();
 
         // Read the log file with UTF-8 encoding, ignoring invalid sequences
-        let content = std::fs::read_to_string(&self.log_path)
-            .or_else(|_| -> Result<String, std::io::Error> {
+        let content = std::fs::read_to_string(&self.log_path).or_else(
+            |_| -> Result<String, std::io::Error> {
                 // If UTF-8 fails, try reading as bytes and convert lossily
                 let bytes = std::fs::read(&self.log_path)?;
                 Ok(String::from_utf8_lossy(&bytes).to_string())
-            })?;
+            },
+        )?;
 
         // Update position to end of file
         self.last_position = content.len() as u64;
@@ -269,7 +266,9 @@ impl PapyrusAnalyzer {
     /// Returns error if:
     /// - Failed to read the file
     /// - File was truncated (size < last_position)
-    pub fn check_for_updates(&mut self) -> Result<Option<(Vec<String>, PapyrusStats)>, PapyrusError> {
+    pub fn check_for_updates(
+        &mut self,
+    ) -> Result<Option<(Vec<String>, PapyrusStats)>, PapyrusError> {
         if !self.log_path.exists() {
             return Err(PapyrusError::LogNotFound(self.log_path.clone()));
         }

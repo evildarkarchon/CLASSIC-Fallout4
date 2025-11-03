@@ -290,7 +290,10 @@ pub fn cache_size() -> usize {
 /// # }
 /// ```
 pub fn cache_keys() -> Vec<String> {
-    SETTINGS_CACHE.iter().map(|entry| entry.key().clone()).collect()
+    SETTINGS_CACHE
+        .iter()
+        .map(|entry| entry.key().clone())
+        .collect()
 }
 
 #[cfg(test)]

@@ -254,7 +254,12 @@ impl PyYamlOperations {
     /// # Returns: ["plugin1.esp", "plugin2.esp", "plugin3.esp"]
     /// ```
     #[pyo3(signature = (data, key_path))]
-    fn get_vec_value(&self, py: Python<'_>, data: Py<PyAny>, key_path: &str) -> PyResult<Vec<String>> {
+    fn get_vec_value(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+    ) -> PyResult<Vec<String>> {
         let yaml = python_to_yaml(py, data)?;
         Ok(self.inner.get_vec_value(&yaml, key_path))
     }
@@ -287,7 +292,12 @@ impl PyYamlOperations {
     /// # Returns: {"mod1": "Description 1", "mod2": "Description 2"}
     /// ```
     #[pyo3(signature = (data, key_path))]
-    fn get_hashmap_value(&self, py: Python<'_>, data: Py<PyAny>, key_path: &str) -> PyResult<HashMap<String, String>> {
+    fn get_hashmap_value(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+    ) -> PyResult<HashMap<String, String>> {
         let yaml = python_to_yaml(py, data)?;
         Ok(self.inner.get_hashmap_value(&yaml, key_path))
     }
@@ -392,13 +402,16 @@ fn python_to_yaml(py: Python<'_>, obj: Py<PyAny>) -> PyResult<Yaml> {
 /// Convert YamlError to PyErr
 fn to_pyerr(err: YamlError) -> PyErr {
     match err {
-        YamlError::ParseError(msg) => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse YAML: {}", msg))
-        }
+        YamlError::ParseError(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+            "Failed to parse YAML: {}",
+            msg
+        )),
         YamlError::SerializeError(msg) => {
             PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Serialize error: {}", msg))
         }
-        YamlError::IoError(e) => PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to read file: {}", e)),
+        YamlError::IoError(e) => {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to read file: {}", e))
+        }
         YamlError::EmptyDocument => {
             PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty YAML document")
         }

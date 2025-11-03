@@ -4,11 +4,13 @@
 //! - Game installation paths (Bethesda, Steam, GOG)
 //! - System documents folder detection
 
-use crate::error::{DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult};
+use crate::error::{
+    DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult,
+};
 use std::fs;
 use std::path::{Path, PathBuf};
-use winreg::enums::*;
 use winreg::RegKey;
+use winreg::enums::*;
 
 /// Query Windows registry for game installation path.
 ///
@@ -42,7 +44,10 @@ pub fn query_game_registry(
     try_gog: bool,
 ) -> GamePathResult<PathBuf> {
     // Try Bethesda/Steam registry
-    let registry_path = format!("SOFTWARE\\WOW6432Node\\Bethesda Softworks\\{}{}", game_name, vr_suffix);
+    let registry_path = format!(
+        "SOFTWARE\\WOW6432Node\\Bethesda Softworks\\{}{}",
+        game_name, vr_suffix
+    );
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
 
     if let Ok(path) = query_registry_path(&hklm, &registry_path, "installed path") {
@@ -97,20 +102,17 @@ pub fn get_documents_path() -> DocsPathResult<PathBuf> {
 /// # Returns
 ///
 /// The string value as a PathBuf, or a GamePathError if not found.
-fn query_registry_path(
-    hkey: &RegKey,
-    path: &str,
-    value_name: &str,
-) -> GamePathResult<PathBuf> {
-    let key = hkey
-        .open_subkey_with_flags(path, KEY_READ)
-        .map_err(|e| GamePathError::RegistryError(format!("Failed to open key '{}': {}", path, e)))?;
+fn query_registry_path(hkey: &RegKey, path: &str, value_name: &str) -> GamePathResult<PathBuf> {
+    let key = hkey.open_subkey_with_flags(path, KEY_READ).map_err(|e| {
+        GamePathError::RegistryError(format!("Failed to open key '{}': {}", path, e))
+    })?;
 
-    let value: String = key
-        .get_value(value_name)
-        .map_err(|e| GamePathError::RegistryError(
-            format!("Failed to read value '{}' from '{}': {}", value_name, path, e)
-        ))?;
+    let value: String = key.get_value(value_name).map_err(|e| {
+        GamePathError::RegistryError(format!(
+            "Failed to read value '{}' from '{}': {}",
+            value_name, path, e
+        ))
+    })?;
 
     Ok(PathBuf::from(value))
 }
@@ -206,7 +208,11 @@ mod tests {
             Ok(path) => {
                 assert!(path.is_absolute(), "Documents path should be absolute");
                 // Documents path should exist
-                assert!(path.exists(), "Documents path should exist: {}", path.display());
+                assert!(
+                    path.exists(),
+                    "Documents path should exist: {}",
+                    path.display()
+                );
             }
             Err(e) => {
                 panic!("Failed to get documents path: {}", e);

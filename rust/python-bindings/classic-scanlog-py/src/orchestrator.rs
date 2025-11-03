@@ -1,8 +1,8 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
-use classic_shared_core::get_runtime;
 use classic_shared::without_gil;
+use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 
 /// Python wrapper for AnalysisConfig
@@ -257,7 +257,11 @@ impl PyRustOrchestrator {
     ///
     /// # Returns
     /// Vector of analysis results for each log file
-    pub fn process_logs_batch(&self, py: Python<'_>, log_paths: Vec<String>) -> PyResult<Vec<PyAnalysisResult>> {
+    pub fn process_logs_batch(
+        &self,
+        py: Python<'_>,
+        log_paths: Vec<String>,
+    ) -> PyResult<Vec<PyAnalysisResult>> {
         // Release GIL during parallel batch processing
         let results = without_gil(py, || {
             get_runtime().block_on(async { self.inner.process_logs_batch(log_paths).await })

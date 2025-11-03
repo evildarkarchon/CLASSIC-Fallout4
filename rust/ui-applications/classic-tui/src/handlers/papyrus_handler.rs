@@ -9,7 +9,7 @@ use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 
 /// Messages sent from Papyrus monitor to UI
 #[derive(Debug, Clone)]
@@ -76,16 +76,18 @@ impl PapyrusHandler {
     /// # Returns
     ///
     /// Result indicating success or error
-    pub async fn start_monitoring(
-        &mut self,
-        tx: mpsc::Sender<PapyrusMessage>,
-    ) -> Result<()> {
+    pub async fn start_monitoring(&mut self, tx: mpsc::Sender<PapyrusMessage>) -> Result<()> {
         // Set monitoring flag
         *self.is_monitoring.write().await = true;
 
         // Start monitoring from end of file (ignore prior history)
         if let Err(e) = self.analyzer.write().await.start_monitoring() {
-            let _ = tx.send(PapyrusMessage::Error(format!("Failed to start monitoring: {}", e))).await;
+            let _ = tx
+                .send(PapyrusMessage::Error(format!(
+                    "Failed to start monitoring: {}",
+                    e
+                )))
+                .await;
             return Err(e.into());
         }
 
@@ -133,23 +135,22 @@ async fn monitor_loop(
     tx: mpsc::Sender<PapyrusMessage>,
 ) -> Result<()> {
     // Get parent directory for watching
-    let watch_dir = log_path.parent().ok_or_else(|| {
-        anyhow::anyhow!("Log path has no parent directory")
-    })?;
+    let watch_dir = log_path
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("Log path has no parent directory"))?;
 
     // Create file watcher
     let (watch_tx, mut watch_rx) = mpsc::channel(100);
 
-    let mut watcher: RecommendedWatcher = notify::recommended_watcher(
-        move |res: Result<Event, notify::Error>| {
+    let mut watcher: RecommendedWatcher =
+        notify::recommended_watcher(move |res: Result<Event, notify::Error>| {
             if let Ok(event) = res {
                 // Use try_send to avoid blocking if channel is full
                 if watch_tx.try_send(event).is_err() {
                     tracing::warn!("Papyrus watch channel full, dropping file system event");
                 }
             }
-        }
-    )?;
+        })?;
 
     // Watch the directory containing the log file
     watcher.watch(watch_dir, RecursiveMode::NonRecursive)?;

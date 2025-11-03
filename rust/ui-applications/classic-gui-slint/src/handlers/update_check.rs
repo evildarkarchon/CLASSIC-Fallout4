@@ -4,8 +4,8 @@
 //! for the latest release and comparing it with the current version.
 
 use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
 use semver::Version;
+use serde::{Deserialize, Serialize};
 
 /// GitHub release information from API
 #[derive(Debug, Deserialize)]
@@ -49,7 +49,10 @@ pub struct UpdateInfo {
 /// }
 /// ```
 pub async fn check_for_updates(current_version: &str) -> Result<Option<UpdateInfo>> {
-    tracing::info!("Checking for updates (current version: {})", current_version);
+    tracing::info!(
+        "Checking for updates (current version: {})",
+        current_version
+    );
 
     // GitHub API endpoint for latest release
     let url = "https://api.github.com/repos/evildarkarchon/CLASSIC-Fallout4/releases/latest";
@@ -69,10 +72,7 @@ pub async fn check_for_updates(current_version: &str) -> Result<Option<UpdateInf
 
     // Check if request was successful
     if !response.status().is_success() {
-        anyhow::bail!(
-            "GitHub API returned error status: {}",
-            response.status()
-        );
+        anyhow::bail!("GitHub API returned error status: {}", response.status());
     }
 
     let release: GithubRelease = response
@@ -91,13 +91,21 @@ pub async fn check_for_updates(current_version: &str) -> Result<Option<UpdateInf
 
     // Compare versions
     if version_is_newer(latest_version, current_version)? {
-        tracing::info!("Update available: {} -> {}", current_version, latest_version);
+        tracing::info!(
+            "Update available: {} -> {}",
+            current_version,
+            latest_version
+        );
         Ok(Some(UpdateInfo {
             version: latest_version.to_string(),
             release_notes: release.body,
         }))
     } else {
-        tracing::info!("No update available (current: {}, latest: {})", current_version, latest_version);
+        tracing::info!(
+            "No update available (current: {}, latest: {})",
+            current_version,
+            latest_version
+        );
         Ok(None)
     }
 }
@@ -172,8 +180,8 @@ impl UpdatePreferences {
             .await
             .context("Failed to read update preferences file")?;
 
-        let prefs: UpdatePreferences = serde_json::from_str(&content)
-            .context("Failed to parse update preferences JSON")?;
+        let prefs: UpdatePreferences =
+            serde_json::from_str(&content).context("Failed to parse update preferences JSON")?;
 
         tracing::debug!("Loaded update preferences: {:?}", prefs);
         Ok(prefs)
@@ -189,8 +197,8 @@ impl UpdatePreferences {
     pub async fn save(&self) -> Result<()> {
         let path = std::path::PathBuf::from("update_preferences.json");
 
-        let json = serde_json::to_string_pretty(self)
-            .context("Failed to serialize update preferences")?;
+        let json =
+            serde_json::to_string_pretty(self).context("Failed to serialize update preferences")?;
 
         tokio::fs::write(&path, json)
             .await

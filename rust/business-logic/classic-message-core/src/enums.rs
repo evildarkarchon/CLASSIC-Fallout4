@@ -1,5 +1,4 @@
 ///! Message type and target enumerations for the MessageHandler system.
-
 use serde::{Deserialize, Serialize};
 
 /// Represents various types of messages categorized by their context and severity.

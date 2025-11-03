@@ -64,8 +64,7 @@ pub fn parse_steam_library_vdf(game_steam_id: u32) -> DocsPathResult<PathBuf> {
         return Err(DocsPathError::SteamLibraryNotFound(vdf_path));
     }
 
-    let content = fs::read_to_string(&vdf_path)
-        .map_err(|e| DocsPathError::IoError(e))?;
+    let content = fs::read_to_string(&vdf_path).map_err(|e| DocsPathError::IoError(e))?;
 
     parse_vdf_content(&content, game_steam_id)
 }
@@ -268,7 +267,7 @@ mod tests {
         let docs_path = construct_proton_docs_path(&library, 377160, "My Games/Fallout4");
 
         let expected = PathBuf::from(
-            "/home/user/.local/share/Steam/steamapps/compatdata/377160/pfx/drive_c/users/steamuser/My Documents/My Games/Fallout4"
+            "/home/user/.local/share/Steam/steamapps/compatdata/377160/pfx/drive_c/users/steamuser/My Documents/My Games/Fallout4",
         );
 
         assert_eq!(docs_path, expected);

@@ -176,9 +176,7 @@ impl GithubClient {
             reqwest::StatusCode::NOT_FOUND => {
                 Err(UpdateError::NotFound("No releases found".to_string()))
             }
-            reqwest::StatusCode::FORBIDDEN => {
-                Err(UpdateError::RateLimitExceeded(None))
-            }
+            reqwest::StatusCode::FORBIDDEN => Err(UpdateError::RateLimitExceeded(None)),
             status => Err(UpdateError::GithubError(format!(
                 "API returned status {}",
                 status

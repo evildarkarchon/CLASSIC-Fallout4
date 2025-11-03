@@ -166,12 +166,10 @@ pub async fn load_yaml_batch_async(paths: &[&Path]) -> Result<Vec<(String, Vec<Y
 
     let mut results = Vec::with_capacity(paths.len());
     for handle in handles {
-        let result = handle
-            .await
-            .map_err(|e| SettingsError::YamlParseError {
-                path: "unknown".into(),
-                message: format!("Task join error: {}", e),
-            })??;
+        let result = handle.await.map_err(|e| SettingsError::YamlParseError {
+            path: "unknown".into(),
+            message: format!("Task join error: {}", e),
+        })??;
         results.push(result);
     }
 

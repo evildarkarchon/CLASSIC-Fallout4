@@ -141,7 +141,10 @@ pub fn get_bridge_metrics() -> BridgeMetrics {
     }
 
     // Aggregate timeout stats
-    if let Some(stats) = metrics.operations.get(&BridgeOperation::RunAsyncWithTimeout) {
+    if let Some(stats) = metrics
+        .operations
+        .get(&BridgeOperation::RunAsyncWithTimeout)
+    {
         result.timeout_count = stats.count;
         result.timeout_success = stats.success;
         result.timeout_failure = stats.failure;
@@ -251,11 +254,7 @@ mod tests {
             .map(|i| {
                 thread::spawn(move || {
                     for _ in 0..10 {
-                        record_bridge_operation(
-                            BridgeOperation::RunAsync,
-                            0.001,
-                            i % 2 == 0,
-                        );
+                        record_bridge_operation(BridgeOperation::RunAsync, 0.001, i % 2 == 0);
                     }
                 })
             })

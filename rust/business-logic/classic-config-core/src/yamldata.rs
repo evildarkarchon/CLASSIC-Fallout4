@@ -257,7 +257,11 @@ impl YamlDataCore {
         Ok(Self {
             // Main YAML values
             classic_version: yaml_ops.get_string_value(main_data, "CLASSIC_Info.version", ""),
-            classic_version_date: yaml_ops.get_string_value(main_data, "CLASSIC_Info.version_date", ""),
+            classic_version_date: yaml_ops.get_string_value(
+                main_data,
+                "CLASSIC_Info.version_date",
+                "",
+            ),
             classic_records_list: yaml_ops.get_vec_value(main_data, "catch_log_records"),
             autoscan_text: yaml_ops.get_string_value(
                 main_data,
@@ -272,14 +276,30 @@ impl YamlDataCore {
                 &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix),
                 "",
             ),
-            crashgen_latest_og: yaml_ops.get_string_value(game_data, "Game_Info.CRASHGEN_LatestVer", ""),
-            crashgen_latest_vr: yaml_ops.get_string_value(game_data, "GameVR_Info.CRASHGEN_LatestVer", ""),
+            crashgen_latest_og: yaml_ops.get_string_value(
+                game_data,
+                "Game_Info.CRASHGEN_LatestVer",
+                "",
+            ),
+            crashgen_latest_vr: yaml_ops.get_string_value(
+                game_data,
+                "GameVR_Info.CRASHGEN_LatestVer",
+                "",
+            ),
             crashgen_ignore: yaml_ops.get_vec_value(
                 game_data,
                 &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix),
             ),
-            warn_noplugins: yaml_ops.get_string_value(game_data, "Warnings_CRASHGEN.Warn_NOPlugins", ""),
-            warn_outdated: yaml_ops.get_string_value(game_data, "Warnings_CRASHGEN.Warn_Outdated", ""),
+            warn_noplugins: yaml_ops.get_string_value(
+                game_data,
+                "Warnings_CRASHGEN.Warn_NOPlugins",
+                "",
+            ),
+            warn_outdated: yaml_ops.get_string_value(
+                game_data,
+                "Warnings_CRASHGEN.Warn_Outdated",
+                "",
+            ),
             xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
             game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),

@@ -1,6 +1,8 @@
 //! Tests for folder validation module
 
-use classic_ui_shared::folder_validation::{validate_folder_path, validate_folder_path_result, FolderValidationResult};
+use classic_ui_shared::folder_validation::{
+    FolderValidationResult, validate_folder_path, validate_folder_path_result,
+};
 use std::path::Path;
 use tempfile::TempDir;
 
@@ -15,14 +17,20 @@ fn test_valid_existing_directory() {
 fn test_empty_path_allowed() {
     let empty_path = Path::new("");
     let result = validate_folder_path(empty_path, true);
-    assert!(matches!(result, FolderValidationResult::Empty), "Empty path should return Empty when allowed");
+    assert!(
+        matches!(result, FolderValidationResult::Empty),
+        "Empty path should return Empty when allowed"
+    );
 }
 
 #[test]
 fn test_empty_path_not_allowed() {
     let empty_path = Path::new("");
     let result = validate_folder_path(empty_path, false);
-    assert!(result.is_invalid(), "Empty path should be invalid when not allowed");
+    assert!(
+        result.is_invalid(),
+        "Empty path should be invalid when not allowed"
+    );
 }
 
 #[test]
@@ -32,8 +40,10 @@ fn test_nonexistent_path() {
     assert!(result.is_invalid(), "Nonexistent path should be invalid");
 
     if let FolderValidationResult::Invalid(msg) = result {
-        assert!(msg.contains("does not exist") || msg.contains("not found"),
-            "Error message should mention path doesn't exist");
+        assert!(
+            msg.contains("does not exist") || msg.contains("not found"),
+            "Error message should mention path doesn't exist"
+        );
     }
 }
 
@@ -44,11 +54,16 @@ fn test_file_instead_of_directory() {
     std::fs::write(&file_path, "test content").unwrap();
 
     let result = validate_folder_path(&file_path, false);
-    assert!(result.is_invalid(), "File path should be invalid when expecting directory");
+    assert!(
+        result.is_invalid(),
+        "File path should be invalid when expecting directory"
+    );
 
     if let FolderValidationResult::Invalid(msg) = result {
-        assert!(msg.contains("not a directory") || msg.contains("is a file"),
-            "Error message should mention it's not a directory");
+        assert!(
+            msg.contains("not a directory") || msg.contains("is a file"),
+            "Error message should mention it's not a directory"
+        );
     }
 }
 
@@ -84,7 +99,10 @@ fn test_validate_folder_path_result_empty_not_allowed() {
 fn test_whitespace_only_path() {
     let whitespace = Path::new("   ");
     let result = validate_folder_path(whitespace, false);
-    assert!(result.is_invalid(), "Whitespace-only path should be invalid");
+    assert!(
+        result.is_invalid(),
+        "Whitespace-only path should be invalid"
+    );
 }
 
 #[cfg(unix)]
@@ -103,7 +121,10 @@ fn test_readonly_directory() {
 
     // Should still be valid (we only check if it's a readable directory)
     let result = validate_folder_path(&readonly_dir, false);
-    assert!(result.is_valid(), "Read-only directory should still be valid for validation");
+    assert!(
+        result.is_valid(),
+        "Read-only directory should still be valid for validation"
+    );
 
     // Restore write permissions for cleanup
     let perms = Permissions::from_mode(0o755);

@@ -83,11 +83,11 @@
 
 use crate::app::App;
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph},
-    Frame,
 };
 
 /// Render the results viewer screen with split-pane layout
@@ -188,8 +188,8 @@ fn render_report_viewer(f: &mut Frame, area: Rect, app: &App) {
         Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Min(3),       // Content
-                Constraint::Length(3),    // Search bar
+                Constraint::Min(3),    // Content
+                Constraint::Length(3), // Search bar
             ])
             .split(area)
     } else {
@@ -291,10 +291,7 @@ fn highlight_search_matches(line: &str, line_idx: usize, app: &App) -> Vec<Span<
 
     if line_matches.is_empty() {
         // No matches, use regular syntax highlighting
-        spans.push(Span::styled(
-            line.to_string(),
-            get_line_style(line),
-        ));
+        spans.push(Span::styled(line.to_string(), get_line_style(line)));
         return spans;
     }
 
@@ -317,9 +314,7 @@ fn highlight_search_matches(line: &str, line_idx: usize, app: &App) -> Vec<Span<
                 .bg(Color::Yellow)
                 .add_modifier(Modifier::BOLD)
         } else {
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Cyan)
+            Style::default().fg(Color::Black).bg(Color::Cyan)
         };
 
         spans.push(Span::styled(line[start..end].to_string(), match_style));

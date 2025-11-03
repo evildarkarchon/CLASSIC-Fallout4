@@ -11,7 +11,7 @@
 
 use dashmap::DashMap;
 use log::{debug, error, info, warn};
-use rusqlite::{params, Connection, ToSql};
+use rusqlite::{Connection, ToSql, params};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
@@ -184,39 +184,39 @@ pub struct PoolStatistics {
 /// for the database system.
 /// ### Fields:
 ///
-/// - `connections`: 
-///   An `Arc` of a `DashMap` that maps paths (`PathBuf`) to a thread-safe (via `Arc<Mutex<...>>`) 
-///   `ConnectionWrapper` object. This is used to manage the actual database connections, 
+/// - `connections`:
+///   An `Arc` of a `DashMap` that maps paths (`PathBuf`) to a thread-safe (via `Arc<Mutex<...>>`)
+///   `ConnectionWrapper` object. This is used to manage the actual database connections,
 ///   ensuring thread-safe sharing among multiple consumers.
 ///
-/// - `query_cache`: 
-///   An `Arc` of a `DashMap` mapping query strings (`String`) to `CacheEntry` objects. 
+/// - `query_cache`:
+///   An `Arc` of a `DashMap` mapping query strings (`String`) to `CacheEntry` objects.
 ///   The cache is used to store query results or metadata for improving performance
 ///   by avoiding repeated queries for the same data set.
 ///
-/// - `cache_ttl`: 
-///   An `Arc` of an `RwLock` that holds a `Duration` representing the "time-to-live" value for cache entries. 
+/// - `cache_ttl`:
+///   An `Arc` of an `RwLock` that holds a `Duration` representing the "time-to-live" value for cache entries.
 ///   This ensures that cached queries are refreshed periodically.
 ///
-/// - `max_connections`: 
-///   An `Arc` of an `RwLock` containing an optional `usize`. This limits the maximum number 
+/// - `max_connections`:
+///   An `Arc` of an `RwLock` containing an optional `usize`. This limits the maximum number
 ///   of connections that can be maintained in the pool. If `None`, no connection limit is enforced.
 ///
-/// - `stats`: 
-///   An `Arc` of an `RwLock` holding `PoolStatistics`, which keeps track of various metrics/statistics 
+/// - `stats`:
+///   An `Arc` of an `RwLock` holding `PoolStatistics`, which keeps track of various metrics/statistics
 ///   related to connection pool usage, e.g., number of active connections, queries performed, etc.
 ///
-/// - `game_table`: 
-///   An `Arc` of an `RwLock` containing a `String` representing the name of the central 
+/// - `game_table`:
+///   An `Arc` of an `RwLock` containing a `String` representing the name of the central
 ///   table being accessed in the database for game-related operations.
 ///
-/// - `db_paths`: 
-///   An `Arc` of an `RwLock` pointing to a vector of `PathBuf` objects, each representing a 
+/// - `db_paths`:
+///   An `Arc` of an `RwLock` pointing to a vector of `PathBuf` objects, each representing a
 ///   potential file path to database files. This serves as a configuration for available database files.
 ///
 /// ### Thread Safety:
-/// The use of `Arc` and various synchronization primitives (`Mutex`, `RwLock`, etc.) ensures that 
-/// this struct can be safely shared and accessed across multiple threads, making it suitable for 
+/// The use of `Arc` and various synchronization primitives (`Mutex`, `RwLock`, etc.) ensures that
+/// this struct can be safely shared and accessed across multiple threads, making it suitable for
 /// concurrent environments.
 ///
 /// ### Potential Use Cases:
@@ -402,7 +402,7 @@ impl DatabasePool {
     ///
     /// # Returns
     /// Returns `Ok(Some(String))` containing the entry value if the form is found in the cache or any connected
-    /// database. Returns `Ok(None)` if the form is not found. In case of errors during database access or 
+    /// database. Returns `Ok(None)` if the form is not found. In case of errors during database access or
     /// execution, returns `Err(DatabaseError)`.
     ///
     /// # Behavior
@@ -758,7 +758,7 @@ impl DatabasePool {
     /// # Notes
     /// - If the `RwLock` is poisoned or cannot be locked for write access, the method will silently fail
     ///   and no changes will be made to the game table.
-    /// - Ensure that logging is properly configured in the application to capture output from the 
+    /// - Ensure that logging is properly configured in the application to capture output from the
     ///   `info!` macro.
     ///
     /// # Example
@@ -878,7 +878,7 @@ impl DatabasePool {
     /// ```
     ///
     /// # Notes
-    /// - This function assumes that the `connections` pool is thread-safe and that 
+    /// - This function assumes that the `connections` pool is thread-safe and that
     ///   `self.connections` provides an iterator over connection entries.
     /// - The `spawn_blocking` ensures that CPU-intensive tasks do not block the async runtime's thread pool.
     ///

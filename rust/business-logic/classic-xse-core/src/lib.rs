@@ -30,7 +30,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 // Re-export version utilities
-pub use classic_version_core::{parse_version, try_parse_version, compare_versions};
+pub use classic_version_core::{compare_versions, parse_version, try_parse_version};
 
 /// XSE management errors.
 #[derive(Error, Debug)]

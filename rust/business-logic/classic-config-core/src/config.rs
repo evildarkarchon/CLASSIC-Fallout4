@@ -72,7 +72,10 @@ impl YamlSource {
                 PathBuf::from(format!("CLASSIC Data/databases/CLASSIC {}.yaml", game))
             }
             Self::GameLocal => {
-                assert!(!game.is_empty(), "Game name required for YamlSource::GameLocal");
+                assert!(
+                    !game.is_empty(),
+                    "Game name required for YamlSource::GameLocal"
+                );
                 PathBuf::from(format!("CLASSIC Data/CLASSIC {} Local.yaml", game))
             }
             Self::Test => PathBuf::from("tests/test_settings.yaml"),
@@ -212,13 +215,13 @@ pub struct ClassicConfig {
 ///
 /// # Fields
 ///
-/// * `ini_folder` - An optional path to the folder containing INI configuration files. 
+/// * `ini_folder` - An optional path to the folder containing INI configuration files.
 ///   Typically, this corresponds to the game's documents folder.
 ///
-/// * `scan_custom` - An optional path to a custom folder location to scan for additional resources. 
+/// * `scan_custom` - An optional path to a custom folder location to scan for additional resources.
 ///   This is helpful for specifying user-defined locations outside standard directories.
 ///
-/// * `mods_folder` - An optional path to the folder containing mods for the game. This is the directory 
+/// * `mods_folder` - An optional path to the folder containing mods for the game. This is the directory
 ///   where custom modifications for the game are stored or loaded from.
 ///
 /// * `game_root` - The path to the root directory of the game installation. It serves as the main location
@@ -232,7 +235,7 @@ pub struct ClassicConfig {
 /// All paths represented in this structure use [`PathBuf`], which provides an owned, mutable path
 /// representation that's platform-independent.
 ///
-/// This struct is serializable and deserializable using the `Serialize` and `Deserialize` traits 
+/// This struct is serializable and deserializable using the `Serialize` and `Deserialize` traits
 /// (from [serde](https://serde.rs/)) and supports cloning and debugging with the respective traits.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PathConfig {
@@ -262,7 +265,7 @@ impl Default for ClassicConfig {
             simplify_logs: false,
             update_check: true,
             vr_mode: false,
-            auto_switch_to_results: true,  // Enable by default for better UX
+            auto_switch_to_results: true, // Enable by default for better UX
             paths: PathConfig::default(),
         }
     }
@@ -529,15 +532,13 @@ impl ClassicConfig {
             return Ok(());
         }
 
-        let content = fs::read_to_string(&local_yaml_path)
-            .await
-            .context(format!(
-                "Failed to read Local.yaml file: {}",
-                local_yaml_path.display()
-            ))?;
+        let content = fs::read_to_string(&local_yaml_path).await.context(format!(
+            "Failed to read Local.yaml file: {}",
+            local_yaml_path.display()
+        ))?;
 
-        let docs =
-            YamlLoader::load_from_str(&content).context("Failed to parse Local.yaml configuration")?;
+        let docs = YamlLoader::load_from_str(&content)
+            .context("Failed to parse Local.yaml configuration")?;
 
         let doc = docs.first().context("Local.yaml file is empty")?;
 
@@ -622,7 +623,10 @@ mod tests {
         assert_eq!(restored.simplify_logs, config.simplify_logs);
         assert_eq!(restored.update_check, config.update_check);
         assert_eq!(restored.vr_mode, config.vr_mode);
-        assert_eq!(restored.auto_switch_to_results, config.auto_switch_to_results);
+        assert_eq!(
+            restored.auto_switch_to_results,
+            config.auto_switch_to_results
+        );
         assert_eq!(restored.paths.ini_folder, config.paths.ini_folder);
         assert_eq!(restored.paths.scan_custom, config.paths.scan_custom);
         assert_eq!(restored.paths.mods_folder, config.paths.mods_folder);

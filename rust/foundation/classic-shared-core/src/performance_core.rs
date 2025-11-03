@@ -5,8 +5,8 @@
 
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 /// Global performance metrics collector

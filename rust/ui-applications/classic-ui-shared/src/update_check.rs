@@ -92,7 +92,10 @@ struct GitHubRelease {
 /// # });
 /// ```
 pub async fn check_for_updates(current_version: &str, repo: &str) -> Result<UpdateStatus> {
-    tracing::info!("Checking for updates (current version: {})", current_version);
+    tracing::info!(
+        "Checking for updates (current version: {})",
+        current_version
+    );
 
     // Parse current version
     let current = parse_version(current_version)
@@ -129,15 +132,10 @@ pub async fn check_for_updates(current_version: &str, repo: &str) -> Result<Upda
 
     // Parse latest version (strip 'v' prefix if present)
     let latest_version_str = release.tag_name.trim_start_matches('v');
-    let latest = parse_version(latest_version_str).with_context(|| {
-        format!("Failed to parse latest version: {}", latest_version_str)
-    })?;
+    let latest = parse_version(latest_version_str)
+        .with_context(|| format!("Failed to parse latest version: {}", latest_version_str))?;
 
-    tracing::info!(
-        "Latest version: {}, Current version: {}",
-        latest,
-        current
-    );
+    tracing::info!("Latest version: {}, Current version: {}", latest, current);
 
     // Compare versions
     if latest > current {

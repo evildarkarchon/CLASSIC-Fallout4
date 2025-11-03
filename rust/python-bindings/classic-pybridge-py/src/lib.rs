@@ -23,8 +23,12 @@ impl From<BridgeOperationType> for classic_pybridge_core::BridgeOperation {
     fn from(op: BridgeOperationType) -> Self {
         match op {
             BridgeOperationType::RunAsync => classic_pybridge_core::BridgeOperation::RunAsync,
-            BridgeOperationType::RunAsyncWithTimeout => classic_pybridge_core::BridgeOperation::RunAsyncWithTimeout,
-            BridgeOperationType::LoopCreation => classic_pybridge_core::BridgeOperation::LoopCreation,
+            BridgeOperationType::RunAsyncWithTimeout => {
+                classic_pybridge_core::BridgeOperation::RunAsyncWithTimeout
+            }
+            BridgeOperationType::LoopCreation => {
+                classic_pybridge_core::BridgeOperation::LoopCreation
+            }
             BridgeOperationType::LoopCleanup => classic_pybridge_core::BridgeOperation::LoopCleanup,
         }
     }
@@ -73,9 +77,12 @@ impl BridgeMetrics {
     fn __repr__(&self) -> String {
         format!(
             "BridgeMetrics(run_async={}/{}, timeout={}/{}, loops={}/{})",
-            self.run_async_success, self.run_async_count,
-            self.timeout_success, self.timeout_count,
-            self.loops_cleaned, self.loops_created
+            self.run_async_success,
+            self.run_async_count,
+            self.timeout_success,
+            self.timeout_count,
+            self.loops_cleaned,
+            self.loops_created
         )
     }
 }

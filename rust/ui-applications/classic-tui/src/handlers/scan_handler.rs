@@ -149,10 +149,11 @@ impl ScanHandler {
                             // Find and display pattern matches and suspect lines
                             for line in result.report_lines.iter().take(10) {
                                 // Only show lines with actual findings
-                                if line.contains("Pattern:") ||
-                                   line.contains("Suspect") ||
-                                   line.contains("CRITICAL") ||
-                                   line.contains("FormID:") {
+                                if line.contains("Pattern:")
+                                    || line.contains("Suspect")
+                                    || line.contains("CRITICAL")
+                                    || line.contains("FormID:")
+                                {
                                     tx.send(ScanMessage::output(format!("    {}", line)))
                                         .await?;
                                 }
@@ -294,7 +295,10 @@ mod tests {
         // If logs were found, verify we got the expected output pattern
         if scanned_count > 0 {
             // Should have found logs in the project directory
-            assert!(output_lines > 4, "Should have more output when logs are found");
+            assert!(
+                output_lines > 4,
+                "Should have more output when logs are found"
+            );
         }
     }
 
@@ -356,7 +360,10 @@ mod tests {
             progress_updates >= 3,
             "Should have at least 3 progress updates"
         );
-        assert!(output_lines >= 11, "Should have at least 11 output messages");
+        assert!(
+            output_lines >= 11,
+            "Should have at least 11 output messages"
+        );
         assert!(completed, "Should complete successfully");
     }
 
@@ -393,5 +400,4 @@ mod tests {
             "Should have completed message"
         );
     }
-
 }

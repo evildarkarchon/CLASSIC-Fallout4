@@ -1,6 +1,6 @@
 //! PyO3 bindings for string processing utilities
 
-use classic_shared_core::strings_core::{StringProcessor as CoreStringProcessor, StringOperation};
+use classic_shared_core::strings_core::{StringOperation, StringProcessor as CoreStringProcessor};
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyString};
 
@@ -48,14 +48,17 @@ impl PyStringProcessor {
     /// This method releases the GIL during parallel processing, allowing other Python
     /// threads to run concurrently. This provides 2-3x better throughput in multi-threaded
     /// Python applications.
-    pub fn process_batch(&self, py: Python<'_>, strings: Vec<String>, operation: String) -> Vec<String> {
+    pub fn process_batch(
+        &self,
+        py: Python<'_>,
+        strings: Vec<String>,
+        operation: String,
+    ) -> Vec<String> {
         let op = StringOperation::from_str(&operation).unwrap_or(StringOperation::Trim);
         let string_refs: Vec<&str> = strings.iter().map(|s| s.as_str()).collect();
 
         // Release GIL for parallel work (PyO3 0.26)
-        crate::without_gil(py, || {
-            self.inner.process_batch(&string_refs, op)
-        })
+        crate::without_gil(py, || self.inner.process_batch(&string_refs, op))
     }
 
     /// Find common prefix of multiple strings
@@ -73,9 +76,7 @@ impl PyStringProcessor {
         let string_refs: Vec<&str> = strings.iter().map(|s| s.as_str()).collect();
 
         // Release GIL for CPU-intensive work
-        crate::without_gil(py, || {
-            self.inner.common_prefix(&string_refs)
-        })
+        crate::without_gil(py, || self.inner.common_prefix(&string_refs))
     }
 
     /// Split text into lines efficiently
@@ -91,9 +92,7 @@ impl PyStringProcessor {
     /// Python threads to continue execution.
     pub fn split_lines(&self, py: Python<'_>, text: String) -> Vec<String> {
         // Release GIL for parallel work
-        crate::without_gil(py, || {
-            self.inner.split_lines(&text)
-        })
+        crate::without_gil(py, || self.inner.split_lines(&text))
     }
 
     /// Join lines with a separator
@@ -141,7 +140,10 @@ impl PyStringProcessor {
         strings: Vec<String>,
     ) -> PyResult<Bound<'py, PyList>> {
         let interned = crate::without_gil(py, || {
-            strings.iter().map(|s| self.inner.intern(s)).collect::<Vec<_>>()
+            strings
+                .iter()
+                .map(|s| self.inner.intern(s))
+                .collect::<Vec<_>>()
         });
 
         let py_list = PyList::empty(py);
@@ -173,9 +175,7 @@ impl PyStringProcessor {
         let op = StringOperation::from_str(&operation).unwrap_or(StringOperation::Trim);
         let string_refs: Vec<&str> = strings.iter().map(|s| s.as_str()).collect();
 
-        let results = crate::without_gil(py, || {
-            self.inner.process_batch(&string_refs, op)
-        });
+        let results = crate::without_gil(py, || self.inner.process_batch(&string_refs, op));
 
         let py_list = PyList::empty(py);
         for s in results {
@@ -201,9 +201,7 @@ impl PyStringProcessor {
         py: Python<'py>,
         text: String,
     ) -> PyResult<Bound<'py, PyList>> {
-        let lines = crate::without_gil(py, || {
-            self.inner.split_lines(&text)
-        });
+        let lines = crate::without_gil(py, || self.inner.split_lines(&text));
 
         let py_list = PyList::empty(py);
         for line in lines {

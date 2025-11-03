@@ -1,5 +1,5 @@
 // Backup operations handler for game file backups
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use classic_config_core::YamlSource;
 use classic_file_io_core::backup::{BackupManager, BackupType};
 use std::path::{Path, PathBuf};
@@ -40,7 +40,10 @@ impl BackupCategory {
 
     /// Returns the backup directory name for this category
     pub fn backup_dir(&self) -> PathBuf {
-        PathBuf::from(format!("CLASSIC Backup/Game Files/Backup {}", self.display_name()))
+        PathBuf::from(format!(
+            "CLASSIC Backup/Game Files/Backup {}",
+            self.display_name()
+        ))
     }
 }
 
@@ -147,12 +150,20 @@ pub async fn check_backup_exists(category: BackupCategory) -> bool {
     if let Ok(mut entries) = fs::read_dir(&backup_path).await {
         // Try to get at least one entry
         if entries.next_entry().await.is_ok() {
-            tracing::debug!("Backup exists for {}: {:?}", category.display_name(), backup_path);
+            tracing::debug!(
+                "Backup exists for {}: {:?}",
+                category.display_name(),
+                backup_path
+            );
             return true;
         }
     }
 
-    tracing::debug!("No backup found for {}: {:?}", category.display_name(), backup_path);
+    tracing::debug!(
+        "No backup found for {}: {:?}",
+        category.display_name(),
+        backup_path
+    );
     false
 }
 
@@ -174,7 +185,10 @@ pub async fn check_backup_exists(category: BackupCategory) -> bool {
 ///
 /// **IMPORTANT**: This function is async and must be called from within a Tokio runtime context.
 /// When calling from Slint UI callbacks, use `AsyncBridge::run_with_ui_update()`.
-pub async fn perform_backup(category: BackupCategory, state: SharedAppState) -> Result<BackupResult> {
+pub async fn perform_backup(
+    category: BackupCategory,
+    state: SharedAppState,
+) -> Result<BackupResult> {
     tracing::info!("Starting backup operation for {}", category.display_name());
 
     // Get game path from AppState
@@ -193,7 +207,10 @@ pub async fn perform_backup(category: BackupCategory, state: SharedAppState) -> 
 
     // Convert category to BackupType and create manager
     let backup_type = BackupType::from(category);
-    let manager = BackupManager::new(game_path.clone(), Some(game_path.join("CLASSIC Backup/Game Files")));
+    let manager = BackupManager::new(
+        game_path.clone(),
+        Some(game_path.join("CLASSIC Backup/Game Files")),
+    );
 
     // Perform backup using BackupManager
     match manager.create_backup(backup_type).await {
@@ -233,7 +250,10 @@ pub async fn perform_backup(category: BackupCategory, state: SharedAppState) -> 
 ///
 /// **IMPORTANT**: This function is async and must be called from within a Tokio runtime context.
 /// When calling from Slint UI callbacks, use `AsyncBridge::run_with_ui_update()`.
-pub async fn perform_restore(category: BackupCategory, state: SharedAppState) -> Result<BackupResult> {
+pub async fn perform_restore(
+    category: BackupCategory,
+    state: SharedAppState,
+) -> Result<BackupResult> {
     tracing::info!("Starting restore operation for {}", category.display_name());
 
     // Get game path from AppState
@@ -252,7 +272,10 @@ pub async fn perform_restore(category: BackupCategory, state: SharedAppState) ->
 
     // Convert category to BackupType and create manager
     let backup_type = BackupType::from(category);
-    let manager = BackupManager::new(game_path.clone(), Some(game_path.join("CLASSIC Backup/Game Files")));
+    let manager = BackupManager::new(
+        game_path.clone(),
+        Some(game_path.join("CLASSIC Backup/Game Files")),
+    );
 
     // Perform restore using BackupManager
     match manager.restore_backup(backup_type).await {
@@ -292,7 +315,10 @@ pub async fn perform_restore(category: BackupCategory, state: SharedAppState) ->
 ///
 /// **IMPORTANT**: This function is async and must be called from within a Tokio runtime context.
 /// When calling from Slint UI callbacks, use `AsyncBridge::run_with_ui_update()`.
-pub async fn perform_remove(category: BackupCategory, state: SharedAppState) -> Result<BackupResult> {
+pub async fn perform_remove(
+    category: BackupCategory,
+    state: SharedAppState,
+) -> Result<BackupResult> {
     tracing::info!("Starting remove operation for {}", category.display_name());
 
     // Load backup file list from YAML
@@ -305,10 +331,7 @@ pub async fn perform_remove(category: BackupCategory, state: SharedAppState) -> 
         )));
     }
 
-    tracing::debug!(
-        "Loaded {} file patterns for removal",
-        backup_files.len()
-    );
+    tracing::debug!("Loaded {} file patterns for removal", backup_files.len());
 
     // Get game path from AppState
     let game_path = {
@@ -360,15 +383,9 @@ pub async fn perform_remove(category: BackupCategory, state: SharedAppState) -> 
             category.display_name()
         )
     } else if errors.is_empty() {
-        format!(
-            "No {} files found to remove",
-            category.display_name()
-        )
+        format!("No {} files found to remove", category.display_name())
     } else {
-        format!(
-            "Remove operation completed with {} error(s)",
-            errors.len()
-        )
+        format!("Remove operation completed with {} error(s)", errors.len())
     };
 
     Ok(BackupResult {
@@ -387,13 +404,11 @@ pub fn open_backups_folder() -> Result<()> {
 
     // Create directory if it doesn't exist
     if !backup_root.exists() {
-        std::fs::create_dir_all(&backup_root)
-            .context("Failed to create backup directory")?;
+        std::fs::create_dir_all(&backup_root).context("Failed to create backup directory")?;
     }
 
     // Open in file explorer using 'open' crate
-    open::that(&backup_root)
-        .context("Failed to open backup folder in file explorer")?;
+    open::that(&backup_root).context("Failed to open backup folder in file explorer")?;
 
     tracing::debug!("Opened backup folder: {:?}", backup_root);
     Ok(())
@@ -405,7 +420,10 @@ pub fn open_backups_folder() -> Result<()> {
 /// to backup for the given category (e.g., "Backup XSE", "Backup ENB").
 ///
 /// Uses `YamlSource::Game` enum for single source of truth for YAML paths.
-async fn load_backup_file_list(category: BackupCategory, state: SharedAppState) -> Result<Vec<String>> {
+async fn load_backup_file_list(
+    category: BackupCategory,
+    state: SharedAppState,
+) -> Result<Vec<String>> {
     // Get game name from AppState
     let game = {
         let state_guard = state.read();

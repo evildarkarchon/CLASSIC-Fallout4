@@ -43,7 +43,8 @@ pub fn load_markdown(path: &Path) -> Result<MarkdownContent> {
         .with_context(|| format!("Failed to read markdown file: {}", path.display()))?;
 
     // Get file metadata
-    let metadata = path.metadata()
+    let metadata = path
+        .metadata()
         .with_context(|| format!("Failed to read file metadata: {}", path.display()))?;
 
     let filename = path
@@ -58,8 +59,11 @@ pub fn load_markdown(path: &Path) -> Result<MarkdownContent> {
     // Parse markdown and convert to formatted text
     let text = parse_markdown_to_text(&source)?;
 
-    tracing::debug!("Loaded markdown: {} bytes, {} characters formatted",
-        metadata.len(), text.len());
+    tracing::debug!(
+        "Loaded markdown: {} bytes, {} characters formatted",
+        metadata.len(),
+        text.len()
+    );
 
     Ok(MarkdownContent {
         text,

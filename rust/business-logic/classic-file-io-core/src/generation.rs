@@ -30,11 +30,7 @@ impl FileGeneratorConfig {
     /// * `ignore_file_content` - Default content for CLASSIC Ignore.yaml
     /// * `local_yaml_content` - Default content for local YAML file
     /// * `game_name` - Game name for local YAML path
-    pub fn new(
-        ignore_file_content: String,
-        local_yaml_content: String,
-        game_name: String,
-    ) -> Self {
+    pub fn new(ignore_file_content: String, local_yaml_content: String, game_name: String) -> Self {
         Self {
             ignore_file_content,
             local_yaml_content,
@@ -88,10 +84,7 @@ impl FileGenerator {
                 source: e,
             })?;
 
-        log::debug!(
-            "Generated CLASSIC Ignore.yaml at {}",
-            ignore_path.display()
-        );
+        log::debug!("Generated CLASSIC Ignore.yaml at {}", ignore_path.display());
         Ok(true)
     }
 
@@ -110,8 +103,10 @@ impl FileGenerator {
     ///
     /// Returns error if file I/O or directory creation fails
     pub async fn generate_local_yaml_async(&self) -> Result<bool, FileIOError> {
-        let local_path =
-            PathBuf::from(format!("CLASSIC Data/CLASSIC {} Local.yaml", self.config.game_name));
+        let local_path = PathBuf::from(format!(
+            "CLASSIC Data/CLASSIC {} Local.yaml",
+            self.config.game_name
+        ));
 
         // Check if file already exists
         if fs::try_exists(&local_path).await.unwrap_or(false) {
@@ -177,7 +172,10 @@ impl FileGenerator {
 
     /// Get the local YAML file path
     pub fn local_yaml_path(&self) -> PathBuf {
-        PathBuf::from(format!("CLASSIC Data/CLASSIC {} Local.yaml", self.config.game_name))
+        PathBuf::from(format!(
+            "CLASSIC Data/CLASSIC {} Local.yaml",
+            self.config.game_name
+        ))
     }
 
     /// Get the configuration
@@ -218,10 +216,7 @@ pub async fn generate_ignore_file(content: impl Into<String>) -> Result<bool, Fi
             source: e,
         })?;
 
-    log::debug!(
-        "Generated CLASSIC Ignore.yaml at {}",
-        ignore_path.display()
-    );
+    log::debug!("Generated CLASSIC Ignore.yaml at {}", ignore_path.display());
     Ok(true)
 }
 
@@ -246,8 +241,7 @@ pub async fn generate_local_yaml(
     game_name: impl Into<String>,
 ) -> Result<bool, FileIOError> {
     let game_name_str = game_name.into();
-    let local_path =
-        PathBuf::from(format!("CLASSIC Data/CLASSIC {} Local.yaml", game_name_str));
+    let local_path = PathBuf::from(format!("CLASSIC Data/CLASSIC {} Local.yaml", game_name_str));
 
     // Check if file already exists
     if fs::try_exists(&local_path).await.unwrap_or(false) {

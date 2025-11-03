@@ -351,14 +351,8 @@ mod tests {
         };
 
         assert_eq!(state.game_name(), "TestGame");
-        assert_eq!(
-            state.mods_folder(),
-            Some(&PathBuf::from("test_mods"))
-        );
-        assert_eq!(
-            state.scan_folder(),
-            Some(&PathBuf::from("test_scan"))
-        );
+        assert_eq!(state.mods_folder(), Some(&PathBuf::from("test_mods")));
+        assert_eq!(state.scan_folder(), Some(&PathBuf::from("test_scan")));
     }
 
     #[tokio::test]
@@ -376,13 +370,7 @@ mod tests {
         state.set_scan_folder(PathBuf::from("override_scan"));
 
         // Override paths take precedence
-        assert_eq!(
-            state.mods_folder(),
-            Some(&PathBuf::from("override_mods"))
-        );
-        assert_eq!(
-            state.scan_folder(),
-            Some(&PathBuf::from("override_scan"))
-        );
+        assert_eq!(state.mods_folder(), Some(&PathBuf::from("override_mods")));
+        assert_eq!(state.scan_folder(), Some(&PathBuf::from("override_scan")));
     }
 }

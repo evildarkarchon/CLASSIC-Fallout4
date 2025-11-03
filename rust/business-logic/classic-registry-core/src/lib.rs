@@ -41,12 +41,12 @@ mod keys;
 mod registry;
 
 pub use keys::Keys;
-pub use registry::{get, is_registered, register, clear_all};
+pub use registry::{clear_all, get, is_registered, register};
 
 // Convenience functions matching Python API
 pub use registry::{
-    get_game, get_local_dir, get_manual_docs_gui, get_game_path_gui,
-    get_vr, get_yaml_cache, is_gui_mode, set_game,
+    get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_vr, get_yaml_cache,
+    is_gui_mode, set_game,
 };
 
 #[cfg(test)]

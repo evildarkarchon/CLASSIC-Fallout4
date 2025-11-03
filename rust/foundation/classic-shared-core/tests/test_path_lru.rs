@@ -112,10 +112,7 @@ fn test_unbounded_cache() {
     }
 
     let (cache_size, _) = handler.cache_stats();
-    assert_eq!(
-        cache_size, 1000,
-        "Unbounded cache should store all entries"
-    );
+    assert_eq!(cache_size, 1000, "Unbounded cache should store all entries");
 }
 
 #[test]

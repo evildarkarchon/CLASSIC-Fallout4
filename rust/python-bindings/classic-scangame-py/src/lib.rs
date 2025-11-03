@@ -53,14 +53,14 @@
 use pyo3::prelude::*;
 
 // Module declarations - Phase 3B-3C implementations
-pub mod config;      // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
-pub mod unpacked;    // unpacked_scanner.py (Phase 3B) - IMPLEMENTED
-pub mod logs;        // log_processor.py (Phase 3C) - IMPLEMENTED
-pub mod ini;         // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
-pub mod toml_check;  // CheckCrashgen.py TOML validation (Phase 3C) - IMPLEMENTED
-pub mod xse;         // CheckXsePlugins.py (Phase 3C) - IMPLEMENTED
-pub mod ba2;         // BA2 archive handling (Phase 3B) - IMPLEMENTED
-pub mod integrity;   // GameIntegrity.py (Phase 5) - IMPLEMENTED
+pub mod ba2; // BA2 archive handling (Phase 3B) - IMPLEMENTED
+pub mod config; // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
+pub mod ini; // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
+pub mod integrity;
+pub mod logs; // log_processor.py (Phase 3C) - IMPLEMENTED
+pub mod toml_check; // CheckCrashgen.py TOML validation (Phase 3C) - IMPLEMENTED
+pub mod unpacked; // unpacked_scanner.py (Phase 3B) - IMPLEMENTED
+pub mod xse; // CheckXsePlugins.py (Phase 3C) - IMPLEMENTED // GameIntegrity.py (Phase 5) - IMPLEMENTED
 
 /// Convert ScanGameError to PyErr
 pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
@@ -85,16 +85,16 @@ fn classic_scangame(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__debug_registered__", true)?;
 
     // Register all modules - Phase 3B-3C components
-    config::register_config(m)?;      // Config duplicate detection
-    unpacked::register_unpacked(m)?;  // Unpacked file scanning
-    logs::register_logs(m)?;          // Log processing
-    ini::register_ini(m)?;            // INI validation
-    toml_check::register_toml(m)?;    // TOML validation (CheckCrashgen)
-    xse::register_xse(m)?;            // XSE plugin checking
-    ba2::register_ba2(m)?;            // BA2 archive handling
+    config::register_config(m)?; // Config duplicate detection
+    unpacked::register_unpacked(m)?; // Unpacked file scanning
+    logs::register_logs(m)?; // Log processing
+    ini::register_ini(m)?; // INI validation
+    toml_check::register_toml(m)?; // TOML validation (CheckCrashgen)
+    xse::register_xse(m)?; // XSE plugin checking
+    ba2::register_ba2(m)?; // BA2 archive handling
 
     // Phase 5 - Application Coordination
-    integrity::register(m)?;          // Game integrity checking
+    integrity::register(m)?; // Game integrity checking
 
     Ok(())
 }

@@ -175,7 +175,10 @@ pub fn validate_is_file(path: &Path) -> PathResult<()> {
 /// validate_required_files(game_dir, &required)?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-pub fn validate_required_files(directory: &Path, required_files: &[String]) -> ValidationResult<()> {
+pub fn validate_required_files(
+    directory: &Path,
+    required_files: &[String],
+) -> ValidationResult<()> {
     validate_is_directory(directory)?;
 
     for file_name in required_files {
@@ -315,11 +318,7 @@ pub fn validate_settings_paths(
     game_exe: &str,
 ) -> ValidationResult<()> {
     // Validate game root path
-    validate_settings_path(
-        game_path,
-        "Game Path",
-        Some(&[game_exe.to_string()]),
-    )?;
+    validate_settings_path(game_path, "Game Path", Some(&[game_exe.to_string()]))?;
 
     // Validate documents path
     validate_settings_path(docs_path, "Documents Path", None)?;
@@ -503,7 +502,9 @@ pub fn check_write_permissions(path: &Path) -> PathResult<()> {
     } else {
         // For files, check parent directory
         path.parent()
-            .ok_or_else(|| PathError::InvalidPath(format!("Path has no parent: {}", path.display())))?
+            .ok_or_else(|| {
+                PathError::InvalidPath(format!("Path has no parent: {}", path.display()))
+            })?
             .to_path_buf()
     };
 
@@ -600,14 +601,18 @@ mod tests {
         // System directories should be restricted
         assert!(is_restricted_path(&PathBuf::from("C:\\Windows")));
         assert!(is_restricted_path(&PathBuf::from("C:\\Program Files")));
-        assert!(is_restricted_path(&PathBuf::from("C:\\Program Files (x86)")));
+        assert!(is_restricted_path(&PathBuf::from(
+            "C:\\Program Files (x86)"
+        )));
 
         // Root directories should be restricted
         assert!(is_restricted_path(&PathBuf::from("C:\\")));
         assert!(is_restricted_path(&PathBuf::from("/")));
 
         // User directories should not be restricted
-        assert!(!is_restricted_path(&PathBuf::from("C:\\Users\\Name\\Downloads")));
+        assert!(!is_restricted_path(&PathBuf::from(
+            "C:\\Users\\Name\\Downloads"
+        )));
         assert!(!is_restricted_path(&PathBuf::from("/home/user/downloads")));
     }
 
@@ -704,7 +709,10 @@ mod tests {
             }
             Err(ValidationError::RestrictedPath(_)) => {
                 // Temp dir is restricted (e.g., in AppData) - this is expected on some systems
-                eprintln!("Note: Temp directory is in a restricted location: {}", nested_dir.display());
+                eprintln!(
+                    "Note: Temp directory is in a restricted location: {}",
+                    nested_dir.display()
+                );
             }
             Err(e) => {
                 panic!("Unexpected error for unrestricted path: {:?}", e);
@@ -722,7 +730,10 @@ mod tests {
             // Should either be restricted or not exist
             match result {
                 Err(ValidationError::RestrictedPath(_)) | Err(ValidationError::PathError(_)) => {}
-                Ok(_) => panic!("Should have failed for restricted path: {}", restricted.display()),
+                Ok(_) => panic!(
+                    "Should have failed for restricted path: {}",
+                    restricted.display()
+                ),
                 Err(_) => panic!("Unexpected error type"),
             }
         }

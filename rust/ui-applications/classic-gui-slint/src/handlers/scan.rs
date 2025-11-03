@@ -34,7 +34,8 @@ impl Drop for ScanLockGuard {
 /// * `Ok(ScanLockGuard)` - Lock acquired successfully
 /// * `Err(anyhow::Error)` - Another scan is already in progress
 fn acquire_scan_lock() -> Result<ScanLockGuard> {
-    let mut lock = SCAN_LOCK.lock()
+    let mut lock = SCAN_LOCK
+        .lock()
         .map_err(|e| anyhow::anyhow!("Scan lock poisoned: {}", e))?;
 
     if *lock {
@@ -71,8 +72,8 @@ pub async fn handle_scan_crash_logs(state: SharedAppState) -> Result<ScanResult>
     let config = create_config_from_state(state.clone()).await?;
 
     // Create orchestrator
-    let orchestrator = OrchestratorCore::new(config)
-        .context("Failed to create crash log orchestrator")?;
+    let orchestrator =
+        OrchestratorCore::new(config).context("Failed to create crash log orchestrator")?;
 
     // Find crash logs using AppState paths and LogCollector
     let crash_logs = find_crash_logs(state).await?;
@@ -118,7 +119,12 @@ pub async fn handle_scan_crash_logs(state: SharedAppState) -> Result<ScanResult>
         message: if failed == 0 {
             format!("Successfully scanned {} crash log(s)", successful)
         } else {
-            format!("Scanned {} log(s): {} succeeded, {} failed", results.len(), successful, failed)
+            format!(
+                "Scanned {} log(s): {} succeeded, {} failed",
+                results.len(),
+                successful,
+                failed
+            )
         },
         details,
         processing_time_ms,
@@ -172,7 +178,7 @@ pub async fn handle_scan_game_files(state: SharedAppState) -> Result<ScanResult>
     let data_dir = game_root.join("Data");
     if data_dir.exists() {
         for entry in walkdir::WalkDir::new(&data_dir)
-            .max_depth(2)  // Don't go too deep for performance
+            .max_depth(2) // Don't go too deep for performance
             .into_iter()
             .filter_map(|e| e.ok())
         {
@@ -191,7 +197,10 @@ pub async fn handle_scan_game_files(state: SharedAppState) -> Result<ScanResult>
     }
 
     // Build detailed results
-    details.push(format!("Scanned {} file(s) in game directory", files_scanned));
+    details.push(format!(
+        "Scanned {} file(s) in game directory",
+        files_scanned
+    ));
     details.push(format!("Plugin files found: {}", plugin_count));
     details.push(format!("DDS texture files found: {}", dds_count));
     details.push("".to_string());

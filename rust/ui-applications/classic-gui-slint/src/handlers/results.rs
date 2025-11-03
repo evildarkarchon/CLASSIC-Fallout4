@@ -10,7 +10,7 @@ use anyhow::{Context, Result};
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{Receiver, channel};
 use std::time::Duration;
 use walkdir::WalkDir;
 
@@ -91,7 +91,7 @@ pub fn scan_reports(state: SharedAppState) -> Result<Vec<ReportItem>> {
 /// Searches for files matching "*-AUTOSCAN.md" pattern
 fn scan_directory(dir: &Path, reports: &mut HashSet<PathBuf>) -> Result<()> {
     for entry in WalkDir::new(dir)
-        .max_depth(2)  // Don't recurse too deep
+        .max_depth(2) // Don't recurse too deep
         .into_iter()
         .filter_map(|e| e.ok())
     {
@@ -159,7 +159,10 @@ pub fn open_reports_folder(state: SharedAppState) -> Result<()> {
         .context("Documents root not configured")?;
 
     if !crash_logs_dir.exists() {
-        anyhow::bail!("Crash Logs folder does not exist: {}", crash_logs_dir.display());
+        anyhow::bail!(
+            "Crash Logs folder does not exist: {}",
+            crash_logs_dir.display()
+        );
     }
 
     tracing::info!("Opening folder: {}", crash_logs_dir.display());
@@ -194,8 +197,8 @@ impl ReportWatcher {
     pub fn new(state: SharedAppState) -> Result<Self> {
         let (tx, receiver) = channel();
 
-        let mut watcher = notify::recommended_watcher(tx)
-            .context("Failed to create file system watcher")?;
+        let mut watcher =
+            notify::recommended_watcher(tx).context("Failed to create file system watcher")?;
 
         // Watch all report locations
         let state_guard = state.read();
@@ -204,7 +207,8 @@ impl ReportWatcher {
         if let Some(docs_root) = state_guard.docs_root() {
             let crash_logs_dir = docs_root.join("Crash Logs");
             if crash_logs_dir.exists() {
-                watcher.watch(&crash_logs_dir, RecursiveMode::NonRecursive)
+                watcher
+                    .watch(&crash_logs_dir, RecursiveMode::NonRecursive)
                     .with_context(|| format!("Failed to watch: {}", crash_logs_dir.display()))?;
                 tracing::debug!("Watching: {}", crash_logs_dir.display());
             }
@@ -213,7 +217,8 @@ impl ReportWatcher {
         // Location 2: Custom scan folder
         if let Some(scan_folder) = state_guard.scan_folder() {
             if scan_folder.exists() {
-                watcher.watch(scan_folder, RecursiveMode::NonRecursive)
+                watcher
+                    .watch(scan_folder, RecursiveMode::NonRecursive)
                     .with_context(|| format!("Failed to watch: {}", scan_folder.display()))?;
                 tracing::debug!("Watching: {}", scan_folder.display());
             }
@@ -223,7 +228,8 @@ impl ReportWatcher {
         if let Some(docs_root) = state_guard.docs_root() {
             let backup_dir = docs_root.join("CLASSIC Backup").join("Unsolved Logs");
             if backup_dir.exists() {
-                watcher.watch(&backup_dir, RecursiveMode::NonRecursive)
+                watcher
+                    .watch(&backup_dir, RecursiveMode::NonRecursive)
                     .with_context(|| format!("Failed to watch: {}", backup_dir.display()))?;
                 tracing::debug!("Watching: {}", backup_dir.display());
             }
@@ -274,7 +280,7 @@ impl RefreshDebouncer {
     #[allow(dead_code)]
     pub fn new(debounce_duration: Duration) -> Self {
         Self {
-            last_refresh: std::time::Instant::now() - debounce_duration,  // Allow immediate first refresh
+            last_refresh: std::time::Instant::now() - debounce_duration, // Allow immediate first refresh
             debounce_duration,
         }
     }

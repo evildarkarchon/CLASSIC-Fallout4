@@ -151,7 +151,8 @@ impl BA2Scanner {
     pub fn scan_archive(&self, path: &Path) -> Result<BA2Issues> {
         // Open archive with memory-mapped I/O
         let file = File::open(path)?;
-        let (archive, _options) = Archive::read(&file).map_err(|e| BA2Error::ParseError(e.to_string()))?;
+        let (archive, _options) =
+            Archive::read(&file).map_err(|e| BA2Error::ParseError(e.to_string()))?;
 
         let filename = path
             .file_name()
@@ -251,12 +252,22 @@ impl BA2Scanner {
     }
 
     /// Scan a GNRL general file and detect issues
-    fn scan_gnrl_file(&self, file_name: &str, archive_name: &str, archive_path: &Path, issues: &mut BA2Issues) {
+    fn scan_gnrl_file(
+        &self,
+        file_name: &str,
+        archive_name: &str,
+        archive_path: &Path,
+        issues: &mut BA2Issues,
+    ) {
         let file_lower = file_name.to_lowercase();
 
         // Check sound formats (MP3/M4A should be XWM)
         if file_lower.ends_with(".mp3") || file_lower.ends_with(".m4a") {
-            let ext = file_lower.rsplit('.').next().unwrap_or("unknown").to_uppercase();
+            let ext = file_lower
+                .rsplit('.')
+                .next()
+                .unwrap_or("unknown")
+                .to_uppercase();
             issues
                 .snd_frmt
                 .push(format!("  - {} : {} > {}\n", ext, archive_name, file_name));

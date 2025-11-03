@@ -302,8 +302,10 @@ impl LogProcessor {
 
         for entry_opt in results {
             if let Some(entry) = entry_opt {
-                report.push_str("[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n");
-                report.push_str("[ Errors do not necessarily mean that the mod is not working. ]\n");
+                report
+                    .push_str("[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n");
+                report
+                    .push_str("[ Errors do not necessarily mean that the mod is not working. ]\n");
                 report.push_str(&format!("\nLOG PATH > {}\n", entry.file_path.display()));
 
                 // Show truncation notice if errors were limited
@@ -368,12 +370,7 @@ mod tests {
         )
         .unwrap();
 
-        let processor = LogProcessor::new(
-            vec!["error".to_string()],
-            vec![],
-            vec![],
-        )
-        .unwrap();
+        let processor = LogProcessor::new(vec!["error".to_string()], vec![], vec![]).unwrap();
 
         let report = processor.process_logs(temp_dir.path()).unwrap();
         assert!(report.contains("ERROR > ERROR: Something failed"));
@@ -409,12 +406,7 @@ mod tests {
 
         fs::write(&crash_log, "ERROR: Crash happened\n").unwrap();
 
-        let processor = LogProcessor::new(
-            vec!["error".to_string()],
-            vec![],
-            vec![],
-        )
-        .unwrap();
+        let processor = LogProcessor::new(vec!["error".to_string()], vec![], vec![]).unwrap();
 
         let report = processor.process_logs(temp_dir.path()).unwrap();
         assert!(report.is_empty());
@@ -432,12 +424,7 @@ mod tests {
         }
         fs::write(&log_file, log_content).unwrap();
 
-        let processor = LogProcessor::new(
-            vec!["error".to_string()],
-            vec![],
-            vec![],
-        )
-        .unwrap();
+        let processor = LogProcessor::new(vec!["error".to_string()], vec![], vec![]).unwrap();
 
         let report = processor.process_logs(temp_dir.path()).unwrap();
 

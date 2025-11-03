@@ -5,9 +5,9 @@
 
 use dashmap::DashMap;
 use rayon::prelude::*;
-use std::path::{PathBuf, Path};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use crate::{ClassicError, ClassicResult};

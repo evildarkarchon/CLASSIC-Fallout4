@@ -28,8 +28,8 @@ mod widget_interactions {
 // They serve as structure for manual testing
 #[cfg(test)]
 mod rendering_integration {
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     #[test]
     #[ignore] // Requires mock terminal backend and is meant for manual testing

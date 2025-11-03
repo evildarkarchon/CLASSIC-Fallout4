@@ -424,7 +424,8 @@ mod tests {
     #[test]
     fn test_multiple_correct_versions_non_vr() {
         // Non-VR can have either OG or NG - both are correct
-        let temp_dir = setup_test_plugins_dir(&["version-1-10-163-0.bin", "version-1-10-984-0.bin"]);
+        let temp_dir =
+            setup_test_plugins_dir(&["version-1-10-163-0.bin", "version-1-10-984-0.bin"]);
         let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Original).unwrap();
 
         let result = checker.check();

@@ -388,7 +388,10 @@ fn classic_constants(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Module metadata
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
-    m.add("__doc__", "Python bindings for CLASSIC application constants")?;
+    m.add(
+        "__doc__",
+        "Python bindings for CLASSIC application constants",
+    )?;
 
     Ok(())
 }

@@ -140,7 +140,7 @@ impl PyLogger {
                 return Err(pyo3::exceptions::PyValueError::new_err(format!(
                     "Invalid log level: '{}'. Expected one of: info, warning, error, debug, trace",
                     level
-                )))
+                )));
             }
         };
 
@@ -161,10 +161,8 @@ impl PyLogger {
     ///     >>> logger.log_message(msg)
     fn log_message(&self, message: &crate::Message) {
         // Convert Python Message wrapper to Rust Message
-        let rust_message = core::Message::new(
-            message.content().to_string(),
-            message.msg_type().into(),
-        );
+        let rust_message =
+            core::Message::new(message.content().to_string(), message.msg_type().into());
 
         // Add title if present
         let rust_message = if let Some(title) = message.title() {
@@ -212,7 +210,7 @@ impl PyLogger {
                 return Err(pyo3::exceptions::PyValueError::new_err(format!(
                     "Invalid log level: '{}'. Expected one of: info, warning, error, debug, trace",
                     level
-                )))
+                )));
             }
         };
 

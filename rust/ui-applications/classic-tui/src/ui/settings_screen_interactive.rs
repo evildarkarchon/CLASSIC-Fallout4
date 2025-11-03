@@ -69,11 +69,11 @@
 use crate::app::App;
 use crate::widgets::Checkbox;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
-    Frame,
 };
 
 /// Settings tabs
@@ -260,7 +260,9 @@ impl AdvancedItem {
     /// Get the description for this advanced item
     pub fn description(&self) -> &'static str {
         match self {
-            Self::ThreadCount => "Number of worker threads for parallel processing (default: CPU cores)",
+            Self::ThreadCount => {
+                "Number of worker threads for parallel processing (default: CPU cores)"
+            }
             Self::BatchSize => "Number of items to process in each batch (default: 100)",
             Self::DatabasePoolSize => "Maximum database connection pool size (default: 10)",
             Self::LogVerbosity => "Logging verbosity level (Error, Warning, Info, Debug)",
@@ -270,11 +272,9 @@ impl AdvancedItem {
     /// Get the default value for this setting
     pub fn default_value(&self) -> String {
         match self {
-            Self::ThreadCount => {
-                std::thread::available_parallelism()
-                    .map(|n| n.get().to_string())
-                    .unwrap_or_else(|_| "4".to_string())
-            }
+            Self::ThreadCount => std::thread::available_parallelism()
+                .map(|n| n.get().to_string())
+                .unwrap_or_else(|_| "4".to_string()),
             Self::BatchSize => "100".to_string(),
             Self::DatabasePoolSize => "10".to_string(),
             Self::LogVerbosity => "Info".to_string(),
@@ -475,7 +475,11 @@ pub fn render_settings_screen_interactive(f: &mut Frame, app: &mut App, state: &
             let popup_area = centered_rect(80, 70, f.area());
             f.render_widget(Clear, popup_area);
             let folder_picker = FolderPicker::new(&title)
-                .border_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+                .border_style(
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                )
                 .selected_style(
                     Style::default()
                         .fg(Color::Black)
@@ -711,7 +715,9 @@ fn render_paths_tab(f: &mut Frame, area: Rect, app: &App, state: &SettingsState)
         };
 
         let value_style = if is_focused {
-            Style::default().fg(Color::White).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(Color::White)
         };
@@ -766,7 +772,9 @@ fn render_advanced_tab(f: &mut Frame, area: Rect, _app: &App, state: &SettingsSt
         };
 
         let value_style = if is_focused {
-            Style::default().fg(Color::White).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(Color::White)
         };
@@ -795,8 +803,8 @@ fn render_advanced_tab(f: &mut Frame, area: Rect, _app: &App, state: &SettingsSt
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     #[test]
     fn test_setting_item_navigation() {

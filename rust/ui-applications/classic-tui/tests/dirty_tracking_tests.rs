@@ -48,4 +48,3 @@ fn test_checkbox_dirty_tracking() {
     checkbox.set_focused(true);
     assert!(!checkbox.is_dirty());
 }
-

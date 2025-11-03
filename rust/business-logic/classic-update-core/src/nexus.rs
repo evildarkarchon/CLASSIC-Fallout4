@@ -327,12 +327,7 @@ impl NexusClient {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn has_update(
-        &self,
-        game: &str,
-        mod_id: u64,
-        cached_version: &str,
-    ) -> Result<bool> {
+    pub async fn has_update(&self, game: &str, mod_id: u64, cached_version: &str) -> Result<bool> {
         let info = self.get_mod_info(game, mod_id).await?;
         Ok(info.version != cached_version)
     }

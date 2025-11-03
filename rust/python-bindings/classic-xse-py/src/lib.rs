@@ -3,8 +3,8 @@
 //! This module provides Python access to Script Extender (XSE) utilities,
 //! including detection, version checking, and status information.
 
-use pyo3::prelude::*;
 use pyo3::exceptions::{PyIOError, PyValueError};
+use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// XSE type enumeration for Python.

@@ -46,11 +46,11 @@
 use crate::app::App;
 use classic_file_io_core::BackupType;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 /// Render the backup operations screen
@@ -74,9 +74,9 @@ pub fn render_backup_screen(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Header
-            Constraint::Min(20),    // Backup sections
-            Constraint::Length(3),  // Status bar
+            Constraint::Length(3), // Header
+            Constraint::Min(20),   // Backup sections
+            Constraint::Length(3), // Status bar
         ])
         .split(working_area);
 
@@ -128,8 +128,18 @@ fn render_backup_sections(f: &mut Frame, area: Rect, app: &App) {
         "XSE (F4SE/SKSE)",
         app.backup_exists(BackupType::XSE),
     );
-    render_backup_type_section(f, sections[1], "ReShade", app.backup_exists(BackupType::ReShade));
-    render_backup_type_section(f, sections[2], "Vulkan", app.backup_exists(BackupType::Vulkan));
+    render_backup_type_section(
+        f,
+        sections[1],
+        "ReShade",
+        app.backup_exists(BackupType::ReShade),
+    );
+    render_backup_type_section(
+        f,
+        sections[2],
+        "Vulkan",
+        app.backup_exists(BackupType::Vulkan),
+    );
     render_backup_type_section(f, sections[3], "ENB", app.backup_exists(BackupType::ENB));
 }
 
@@ -181,9 +191,7 @@ fn render_backup_type_section(f: &mut Frame, area: Rect, title: &str, backup_exi
 fn render_button(f: &mut Frame, area: Rect, text: &str, fg_color: Color, border_color: Color) {
     let button_text = vec![Line::from(vec![Span::styled(
         text,
-        Style::default()
-            .fg(fg_color)
-            .add_modifier(Modifier::BOLD),
+        Style::default().fg(fg_color).add_modifier(Modifier::BOLD),
     )])];
 
     let button = Paragraph::new(button_text)
@@ -225,8 +233,8 @@ fn render_status_bar(f: &mut Frame, area: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     #[test]
     fn test_render_backup_screen() {

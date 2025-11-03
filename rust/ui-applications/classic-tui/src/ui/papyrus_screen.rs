@@ -53,11 +53,11 @@
 use crate::app::App;
 use classic_scanlog_core::papyrus::PapyrusStats;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 /// Helper to get status color based on severity level
@@ -190,10 +190,7 @@ fn render_stats(f: &mut Frame, area: Rect, app: &App) {
                 "  Error/Warning Ratio:  {:.2}",
                 error_warning_ratio
             )),
-            Line::from(format!(
-                "  Dumps/Stacks Ratio:   {:.2}",
-                dumps_stacks_ratio
-            )),
+            Line::from(format!("  Dumps/Stacks Ratio:   {:.2}", dumps_stacks_ratio)),
             Line::from(format!("  Lines Processed:      {}", stats.lines_processed)),
         ]
     } else {
@@ -326,8 +323,8 @@ fn render_status_bar(f: &mut Frame, area: Rect, _app: &App) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     #[test]
     fn test_render_papyrus_screen() {

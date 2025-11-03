@@ -1,7 +1,7 @@
-///! Python bindings for CLASSIC message core.
-///!
-///! This module provides Python access to the Rust message routing and formatting system.
-///! It exposes message types, targets, formatting utilities, and logging functionality.
+//! Python bindings for CLASSIC message core.
+//!
+//! This module provides Python access to the Rust message routing and formatting system.
+//! It exposes message types, targets, formatting utilities, and logging functionality.
 
 use classic_message_core as core;
 use pyo3::prelude::*;

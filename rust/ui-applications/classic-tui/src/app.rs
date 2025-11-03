@@ -166,7 +166,7 @@ impl App {
             error_dialog: None,
             update_notification: None,
             terminal_height: 30, // Default, will be updated each frame
-            needs_redraw: true, // Start with true to draw initial frame
+            needs_redraw: true,  // Start with true to draw initial frame
         }
     }
 
@@ -533,10 +533,7 @@ impl App {
         }
 
         // Sort by filename in descending order (newest first)
-        files.sort_by(|a, b| {
-            b.file_name()
-                .cmp(&a.file_name())
-        });
+        files.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
 
         self.report_files = files;
         self.selected_report_index = 0;
@@ -574,7 +571,8 @@ impl App {
 
     /// Select the next report in the list
     pub async fn select_next_report(&mut self) -> Result<()> {
-        if !self.report_files.is_empty() && self.selected_report_index < self.report_files.len() - 1 {
+        if !self.report_files.is_empty() && self.selected_report_index < self.report_files.len() - 1
+        {
             self.selected_report_index += 1;
             self.load_selected_report().await?;
         }
@@ -597,7 +595,10 @@ impl App {
 
     /// Scroll the report viewer down
     pub fn scroll_report_down(&mut self, lines: usize, visible_lines: usize) {
-        let max_scroll = self.current_report_content.len().saturating_sub(visible_lines);
+        let max_scroll = self
+            .current_report_content
+            .len()
+            .saturating_sub(visible_lines);
         self.report_scroll_offset = (self.report_scroll_offset + lines).min(max_scroll);
     }
 

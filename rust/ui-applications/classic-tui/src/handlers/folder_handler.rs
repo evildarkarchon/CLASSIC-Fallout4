@@ -141,10 +141,7 @@ mod tests {
         let path = PathBuf::from("/nonexistent/path/that/should/not/exist");
         let result = validate_folder_path(&path);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("does not exist"));
+        assert!(result.unwrap_err().to_string().contains("does not exist"));
     }
 
     #[test]
@@ -155,10 +152,7 @@ mod tests {
 
         let result = validate_folder_path(&file_path);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("not a directory"));
+        assert!(result.unwrap_err().to_string().contains("not a directory"));
     }
 
     #[test]

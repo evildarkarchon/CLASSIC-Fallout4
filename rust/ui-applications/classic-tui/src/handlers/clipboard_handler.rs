@@ -75,7 +75,11 @@ mod tests {
             Some("Stack trace:\n  at function1()\n  at function2()"),
         );
 
-        assert!(result.is_ok(), "Failed to copy error to clipboard: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Failed to copy error to clipboard: {:?}",
+            result
+        );
     }
 
     #[test]
@@ -85,13 +89,13 @@ mod tests {
             return;
         }
 
-        let result = copy_error_to_clipboard(
-            "Simple Error",
-            "This error has no details",
-            None,
-        );
+        let result = copy_error_to_clipboard("Simple Error", "This error has no details", None);
 
-        assert!(result.is_ok(), "Failed to copy error to clipboard: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Failed to copy error to clipboard: {:?}",
+            result
+        );
     }
 
     #[test]

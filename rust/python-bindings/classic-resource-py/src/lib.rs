@@ -3,8 +3,8 @@
 //! This module provides Python access to resource management functionality,
 //! including file type detection, resource enumeration, and validation.
 
-use pyo3::prelude::*;
 use pyo3::exceptions::{PyIOError, PyValueError};
+use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// Resource type enumeration for Python.
@@ -352,7 +352,10 @@ fn parse_resource_type(type_name: &str) -> PyResourceType {
 /// print(f"Found {len(textures)} textures")
 /// ```
 #[pyfunction]
-fn enumerate_resources(root: &str, filter_type: Option<PyResourceType>) -> PyResult<Vec<PyResourceInfo>> {
+fn enumerate_resources(
+    root: &str,
+    filter_type: Option<PyResourceType>,
+) -> PyResult<Vec<PyResourceInfo>> {
     let filter = filter_type.map(|rt| rt.inner);
 
     classic_resource_core::enumerate_resources(&PathBuf::from(root), filter)
@@ -428,16 +431,13 @@ fn count_resources_by_type(root: &str) -> PyResult<Vec<(PyResourceType, usize)>>
 /// ```
 #[pyfunction]
 fn validate_resource(path: &str) -> PyResult<()> {
-    classic_resource_core::validate_resource(&PathBuf::from(path))
-        .map_err(|e| match e {
-            classic_resource_core::ResourceError::NotFound(_) => {
-                PyIOError::new_err(format!("Resource not found: {}", path))
-            }
-            classic_resource_core::ResourceError::InvalidType(msg) => {
-                PyValueError::new_err(msg)
-            }
-            _ => PyIOError::new_err(e.to_string()),
-        })
+    classic_resource_core::validate_resource(&PathBuf::from(path)).map_err(|e| match e {
+        classic_resource_core::ResourceError::NotFound(_) => {
+            PyIOError::new_err(format!("Resource not found: {}", path))
+        }
+        classic_resource_core::ResourceError::InvalidType(msg) => PyValueError::new_err(msg),
+        _ => PyIOError::new_err(e.to_string()),
+    })
 }
 
 /// Python module for resource management.

@@ -248,10 +248,7 @@ impl PyGithubClient {
                 .await
                 .map(PyGithubRelease::from)
                 .map_err(|e| {
-                    pyo3::exceptions::PyRuntimeError::new_err(format!(
-                        "GitHub API error: {}",
-                        e
-                    ))
+                    pyo3::exceptions::PyRuntimeError::new_err(format!("GitHub API error: {}", e))
                 })
         })
     }
@@ -291,10 +288,7 @@ impl PyGithubClient {
                         .collect::<Vec<_>>()
                 })
                 .map_err(|e| {
-                    pyo3::exceptions::PyRuntimeError::new_err(format!(
-                        "GitHub API error: {}",
-                        e
-                    ))
+                    pyo3::exceptions::PyRuntimeError::new_err(format!("GitHub API error: {}", e))
                 })
         })
     }
@@ -317,9 +311,7 @@ impl PyGithubClient {
     fn has_update(&self, current_version: &str, latest_version: &str) -> PyResult<bool> {
         self.inner
             .has_update(current_version, latest_version)
-            .map_err(|e| {
-                pyo3::exceptions::PyValueError::new_err(format!("Version error: {}", e))
-            })
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Version error: {}", e)))
     }
 
     /// Gets the repository owner.

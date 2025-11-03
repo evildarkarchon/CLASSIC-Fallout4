@@ -121,11 +121,7 @@ pub struct PyXseChecker {
 impl PyXseChecker {
     #[new]
     #[pyo3(signature = (plugins_path, is_vr_mode=false, game_version=PyGameVersion::Original))]
-    fn new(
-        plugins_path: PathBuf,
-        is_vr_mode: bool,
-        game_version: PyGameVersion,
-    ) -> PyResult<Self> {
+    fn new(plugins_path: PathBuf, is_vr_mode: bool, game_version: PyGameVersion) -> PyResult<Self> {
         let version = match game_version {
             PyGameVersion::Null => GameVersion::Null,
             PyGameVersion::Original => GameVersion::Original,
@@ -133,7 +129,8 @@ impl PyXseChecker {
             PyGameVersion::Vr => GameVersion::Vr,
         };
 
-        let checker = XseChecker::new(plugins_path, is_vr_mode, version).map_err(crate::to_pyerr)?;
+        let checker =
+            XseChecker::new(plugins_path, is_vr_mode, version).map_err(crate::to_pyerr)?;
 
         Ok(Self { inner: checker })
     }

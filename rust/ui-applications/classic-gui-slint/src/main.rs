@@ -65,7 +65,10 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // Apply saved geometry
     let window = main_window.window();
-    window.set_size(PhysicalSize::new(geometry.width as u32, geometry.height as u32));
+    window.set_size(PhysicalSize::new(
+        geometry.width as u32,
+        geometry.height as u32,
+    ));
 
     // Set position if not default (-1 means center)
     if geometry.x >= 0 && geometry.y >= 0 {
@@ -79,95 +82,119 @@ fn main() -> Result<(), slint::PlatformError> {
 
         tracing::info!("Loading application configuration...");
 
-        AsyncBridge::run_with_ui_update(
-            AppState::load(),
-            move |result| {
-                match result {
-                    Ok(loaded_state) => {
-                        // Replace the default state with loaded state
-                        *state.write() = loaded_state.read().clone();
+        AsyncBridge::run_with_ui_update(AppState::load(), move |result| {
+            match result {
+                Ok(loaded_state) => {
+                    // Replace the default state with loaded state
+                    *state.write() = loaded_state.read().clone();
 
-                        let state_guard = state.read();
-                        tracing::info!(
-                            "Configuration loaded successfully - Game: {}, Root: {}",
-                            state_guard.game_name(),
-                            state_guard.game_root().display()
-                        );
+                    let state_guard = state.read();
+                    tracing::info!(
+                        "Configuration loaded successfully - Game: {}, Root: {}",
+                        state_guard.game_name(),
+                        state_guard.game_root().display()
+                    );
 
-                        // Update UI with loaded paths
-                        if let Some(w) = window_weak.upgrade() {
-                            if let Some(mods_folder) = state_guard.mods_folder() {
-                                w.set_mods_folder_path(mods_folder.to_string_lossy().to_string().into());
-                                tracing::debug!("Loaded mods folder from config: {}", mods_folder.display());
-                            }
-                            if let Some(scan_folder) = state_guard.scan_folder() {
-                                w.set_scan_folder_path(scan_folder.to_string_lossy().to_string().into());
-                                tracing::debug!("Loaded scan folder from config: {}", scan_folder.display());
-                            }
+                    // Update UI with loaded paths
+                    if let Some(w) = window_weak.upgrade() {
+                        if let Some(mods_folder) = state_guard.mods_folder() {
+                            w.set_mods_folder_path(
+                                mods_folder.to_string_lossy().to_string().into(),
+                            );
+                            tracing::debug!(
+                                "Loaded mods folder from config: {}",
+                                mods_folder.display()
+                            );
+                        }
+                        if let Some(scan_folder) = state_guard.scan_folder() {
+                            w.set_scan_folder_path(
+                                scan_folder.to_string_lossy().to_string().into(),
+                            );
+                            tracing::debug!(
+                                "Loaded scan folder from config: {}",
+                                scan_folder.display()
+                            );
+                        }
 
-                            // Check for updates if enabled in settings
-                            if state_guard.update_check() {
-                                tracing::info!("Automatic update check enabled");
-                                let window_for_update = w.as_weak();
-                                let version = w.get_app_version().to_string();
+                        // Check for updates if enabled in settings
+                        if state_guard.update_check() {
+                            tracing::info!("Automatic update check enabled");
+                            let window_for_update = w.as_weak();
+                            let version = w.get_app_version().to_string();
 
-                                // Spawn async task for update check
-                                if let Err(e) = slint::spawn_local(async move {
-                                    // Load update preferences
-                                    match handlers::update_check::UpdatePreferences::load().await {
-                                        Ok(prefs) => {
-                                            if prefs.dont_check_again {
-                                                tracing::info!("Update checking disabled by user preference");
-                                                return;
-                                            }
-
-                                            // Check for updates
-                                            match handlers::update_check::check_for_updates(&version).await {
-                                                Ok(Some(info)) => {
-                                                    // Check if this version was skipped
-                                                    if prefs.should_skip(&info.version) {
-                                                        tracing::info!("Skipping previously dismissed update: {}", info.version);
-                                                        return;
-                                                    }
-
-                                                    // Show update dialog
-                                                    if let Some(w) = window_for_update.upgrade() {
-                                                        tracing::info!("Update available on startup: {}", info.version);
-                                                        w.set_update_available(true);
-                                                        w.set_update_current_version(version.into());
-                                                        w.set_update_latest_version(info.version.into());
-                                                        w.set_update_release_notes(info.release_notes.into());
-                                                        w.set_update_error_message("".into());
-                                                        w.set_show_update_dialog(true);
-                                                    }
-                                                }
-                                                Ok(None) => {
-                                                    tracing::info!("No update available on startup");
-                                                }
-                                                Err(e) => {
-                                                    tracing::warn!("Automatic update check failed: {}", e);
-                                                }
-                                            }
+                            // Spawn async task for update check
+                            if let Err(e) = slint::spawn_local(async move {
+                                // Load update preferences
+                                match handlers::update_check::UpdatePreferences::load().await {
+                                    Ok(prefs) => {
+                                        if prefs.dont_check_again {
+                                            tracing::info!(
+                                                "Update checking disabled by user preference"
+                                            );
+                                            return;
                                         }
-                                        Err(e) => {
-                                            tracing::warn!("Failed to load update preferences: {}", e);
+
+                                        // Check for updates
+                                        match handlers::update_check::check_for_updates(&version)
+                                            .await
+                                        {
+                                            Ok(Some(info)) => {
+                                                // Check if this version was skipped
+                                                if prefs.should_skip(&info.version) {
+                                                    tracing::info!(
+                                                        "Skipping previously dismissed update: {}",
+                                                        info.version
+                                                    );
+                                                    return;
+                                                }
+
+                                                // Show update dialog
+                                                if let Some(w) = window_for_update.upgrade() {
+                                                    tracing::info!(
+                                                        "Update available on startup: {}",
+                                                        info.version
+                                                    );
+                                                    w.set_update_available(true);
+                                                    w.set_update_current_version(version.into());
+                                                    w.set_update_latest_version(
+                                                        info.version.into(),
+                                                    );
+                                                    w.set_update_release_notes(
+                                                        info.release_notes.into(),
+                                                    );
+                                                    w.set_update_error_message("".into());
+                                                    w.set_show_update_dialog(true);
+                                                }
+                                            }
+                                            Ok(None) => {
+                                                tracing::info!("No update available on startup");
+                                            }
+                                            Err(e) => {
+                                                tracing::warn!(
+                                                    "Automatic update check failed: {}",
+                                                    e
+                                                );
+                                            }
                                         }
                                     }
-                                }) {
-                                    tracing::error!("Failed to spawn update check task: {:?}", e);
+                                    Err(e) => {
+                                        tracing::warn!("Failed to load update preferences: {}", e);
+                                    }
                                 }
-                            } else {
-                                tracing::debug!("Automatic update check disabled in settings");
+                            }) {
+                                tracing::error!("Failed to spawn update check task: {:?}", e);
                             }
+                        } else {
+                            tracing::debug!("Automatic update check disabled in settings");
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to load configuration: {}", e);
-                        tracing::warn!("Using default configuration (some features may not work)");
-                    }
+                }
+                Err(e) => {
+                    tracing::error!("Failed to load configuration: {}", e);
+                    tracing::warn!("Using default configuration (some features may not work)");
                 }
             }
-        );
+        });
     }
 
     // Setup window lifecycle callbacks
@@ -269,8 +296,10 @@ fn main() -> Result<(), slint::PlatformError> {
                                 };
 
                                 if auto_switch {
-                                    w.set_current_tab(3);  // Tab 3 = Results
-                                    tracing::debug!("Auto-switched to Results tab after successful scan");
+                                    w.set_current_tab(3); // Tab 3 = Results
+                                    tracing::debug!(
+                                        "Auto-switched to Results tab after successful scan"
+                                    );
                                 }
 
                                 // Show success dialog
@@ -307,7 +336,9 @@ fn main() -> Result<(), slint::PlatformError> {
                             tracing::debug!("Auto-refreshed results list after scan error");
 
                             w.set_error_title("Crash Logs Scan Error".into());
-                            w.set_error_message(format!("Failed to scan crash logs:\n\n{}", e).into());
+                            w.set_error_message(
+                                format!("Failed to scan crash logs:\n\n{}", e).into(),
+                            );
                             w.set_show_error_dialog(true);
                         }
                     }
@@ -349,8 +380,10 @@ fn main() -> Result<(), slint::PlatformError> {
                                 };
 
                                 if auto_switch {
-                                    w.set_current_tab(3);  // Tab 3 = Results
-                                    tracing::debug!("Auto-switched to Results tab after successful scan");
+                                    w.set_current_tab(3); // Tab 3 = Results
+                                    tracing::debug!(
+                                        "Auto-switched to Results tab after successful scan"
+                                    );
                                 }
 
                                 // Show success dialog
@@ -387,7 +420,9 @@ fn main() -> Result<(), slint::PlatformError> {
                             tracing::debug!("Auto-refreshed results list after scan error");
 
                             w.set_error_title("Game Files Scan Error".into());
-                            w.set_error_message(format!("Failed to scan game files:\n\n{}", e).into());
+                            w.set_error_message(
+                                format!("Failed to scan game files:\n\n{}", e).into(),
+                            );
                             w.set_show_error_dialog(true);
                         }
                     }
@@ -421,7 +456,8 @@ fn main() -> Result<(), slint::PlatformError> {
 
             if let Some(w) = window_weak.upgrade() {
                 // Load current settings from AppState
-                let settings = handlers::settings_dialog::SettingsData::from_app_state(state.clone());
+                let settings =
+                    handlers::settings_dialog::SettingsData::from_app_state(state.clone());
 
                 // Populate UI with current settings
                 w.set_settings_fcx_mode(settings.fcx_mode);
@@ -474,7 +510,11 @@ fn main() -> Result<(), slint::PlatformError> {
                     match handlers::update_check::check_for_updates(&current_version).await {
                         Ok(Some(info)) => {
                             // Update available
-                            tracing::info!("Update available: {} -> {}", current_version, info.version);
+                            tracing::info!(
+                                "Update available: {} -> {}",
+                                current_version,
+                                info.version
+                            );
 
                             w.set_update_checking(false);
                             w.set_update_available(true);
@@ -490,7 +530,10 @@ fn main() -> Result<(), slint::PlatformError> {
 
                             w.set_update_checking(false);
                             w.set_success_title("No Updates Available".into());
-                            w.set_success_message(format!("You are using the latest version ({})", current_version).into());
+                            w.set_success_message(
+                                format!("You are using the latest version ({})", current_version)
+                                    .into(),
+                            );
                             w.set_show_success_dialog(true);
                         }
                         Err(e) => {
@@ -499,7 +542,9 @@ fn main() -> Result<(), slint::PlatformError> {
 
                             w.set_update_checking(false);
                             w.set_update_available(false);
-                            w.set_update_error_message(format!("Failed to check for updates:\n\n{}", e).into());
+                            w.set_update_error_message(
+                                format!("Failed to check for updates:\n\n{}", e).into(),
+                            );
 
                             // Show error in update dialog for context
                             w.set_show_update_dialog(true);
@@ -538,7 +583,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         Err(e) => {
                             tracing::error!("Failed to toggle Papyrus monitoring: {}", e);
                             w.set_error_title("Papyrus Monitoring Error".into());
-                            w.set_error_message(format!("Failed to toggle Papyrus monitoring:\n\n{}", e).into());
+                            w.set_error_message(
+                                format!("Failed to toggle Papyrus monitoring:\n\n{}", e).into(),
+                            );
                             w.set_show_error_dialog(true);
                         }
                     }
@@ -632,24 +679,108 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     // XSE operations
-    setup_backup_operation!(main_window, on_backup_xse, handlers::backup::BackupCategory::Xse, handlers::backup::BackupOperation::Backup, perform_backup, app_state);
-    setup_backup_operation!(main_window, on_restore_xse, handlers::backup::BackupCategory::Xse, handlers::backup::BackupOperation::Restore, perform_restore, app_state);
-    setup_backup_operation!(main_window, on_remove_xse, handlers::backup::BackupCategory::Xse, handlers::backup::BackupOperation::Remove, perform_remove, app_state);
+    setup_backup_operation!(
+        main_window,
+        on_backup_xse,
+        handlers::backup::BackupCategory::Xse,
+        handlers::backup::BackupOperation::Backup,
+        perform_backup,
+        app_state
+    );
+    setup_backup_operation!(
+        main_window,
+        on_restore_xse,
+        handlers::backup::BackupCategory::Xse,
+        handlers::backup::BackupOperation::Restore,
+        perform_restore,
+        app_state
+    );
+    setup_backup_operation!(
+        main_window,
+        on_remove_xse,
+        handlers::backup::BackupCategory::Xse,
+        handlers::backup::BackupOperation::Remove,
+        perform_remove,
+        app_state
+    );
 
     // RESHADE operations
-    setup_backup_operation!(main_window, on_backup_reshade, handlers::backup::BackupCategory::Reshade, handlers::backup::BackupOperation::Backup, perform_backup, app_state);
-    setup_backup_operation!(main_window, on_restore_reshade, handlers::backup::BackupCategory::Reshade, handlers::backup::BackupOperation::Restore, perform_restore, app_state);
-    setup_backup_operation!(main_window, on_remove_reshade, handlers::backup::BackupCategory::Reshade, handlers::backup::BackupOperation::Remove, perform_remove, app_state);
+    setup_backup_operation!(
+        main_window,
+        on_backup_reshade,
+        handlers::backup::BackupCategory::Reshade,
+        handlers::backup::BackupOperation::Backup,
+        perform_backup,
+        app_state
+    );
+    setup_backup_operation!(
+        main_window,
+        on_restore_reshade,
+        handlers::backup::BackupCategory::Reshade,
+        handlers::backup::BackupOperation::Restore,
+        perform_restore,
+        app_state
+    );
+    setup_backup_operation!(
+        main_window,
+        on_remove_reshade,
+        handlers::backup::BackupCategory::Reshade,
+        handlers::backup::BackupOperation::Remove,
+        perform_remove,
+        app_state
+    );
 
     // VULKAN operations
-    setup_backup_operation!(main_window, on_backup_vulkan, handlers::backup::BackupCategory::Vulkan, handlers::backup::BackupOperation::Backup, perform_backup, app_state);
-    setup_backup_operation!(main_window, on_restore_vulkan, handlers::backup::BackupCategory::Vulkan, handlers::backup::BackupOperation::Restore, perform_restore, app_state);
-    setup_backup_operation!(main_window, on_remove_vulkan, handlers::backup::BackupCategory::Vulkan, handlers::backup::BackupOperation::Remove, perform_remove, app_state);
+    setup_backup_operation!(
+        main_window,
+        on_backup_vulkan,
+        handlers::backup::BackupCategory::Vulkan,
+        handlers::backup::BackupOperation::Backup,
+        perform_backup,
+        app_state
+    );
+    setup_backup_operation!(
+        main_window,
+        on_restore_vulkan,
+        handlers::backup::BackupCategory::Vulkan,
+        handlers::backup::BackupOperation::Restore,
+        perform_restore,
+        app_state
+    );
+    setup_backup_operation!(
+        main_window,
+        on_remove_vulkan,
+        handlers::backup::BackupCategory::Vulkan,
+        handlers::backup::BackupOperation::Remove,
+        perform_remove,
+        app_state
+    );
 
     // ENB operations
-    setup_backup_operation!(main_window, on_backup_enb, handlers::backup::BackupCategory::Enb, handlers::backup::BackupOperation::Backup, perform_backup, app_state);
-    setup_backup_operation!(main_window, on_restore_enb, handlers::backup::BackupCategory::Enb, handlers::backup::BackupOperation::Restore, perform_restore, app_state);
-    setup_backup_operation!(main_window, on_remove_enb, handlers::backup::BackupCategory::Enb, handlers::backup::BackupOperation::Remove, perform_remove, app_state);
+    setup_backup_operation!(
+        main_window,
+        on_backup_enb,
+        handlers::backup::BackupCategory::Enb,
+        handlers::backup::BackupOperation::Backup,
+        perform_backup,
+        app_state
+    );
+    setup_backup_operation!(
+        main_window,
+        on_restore_enb,
+        handlers::backup::BackupCategory::Enb,
+        handlers::backup::BackupOperation::Restore,
+        perform_restore,
+        app_state
+    );
+    setup_backup_operation!(
+        main_window,
+        on_remove_enb,
+        handlers::backup::BackupCategory::Enb,
+        handlers::backup::BackupOperation::Remove,
+        perform_remove,
+        app_state
+    );
 
     // Open backups folder
     main_window.on_open_backups_folder(|| {
@@ -667,10 +798,15 @@ fn main() -> Result<(), slint::PlatformError> {
         AsyncBridge::run_with_ui_update(
             async {
                 // Check backup status for all categories in parallel
-                let xse = handlers::backup::check_backup_exists(handlers::backup::BackupCategory::Xse);
-                let reshade = handlers::backup::check_backup_exists(handlers::backup::BackupCategory::Reshade);
-                let vulkan = handlers::backup::check_backup_exists(handlers::backup::BackupCategory::Vulkan);
-                let enb = handlers::backup::check_backup_exists(handlers::backup::BackupCategory::Enb);
+                let xse =
+                    handlers::backup::check_backup_exists(handlers::backup::BackupCategory::Xse);
+                let reshade = handlers::backup::check_backup_exists(
+                    handlers::backup::BackupCategory::Reshade,
+                );
+                let vulkan =
+                    handlers::backup::check_backup_exists(handlers::backup::BackupCategory::Vulkan);
+                let enb =
+                    handlers::backup::check_backup_exists(handlers::backup::BackupCategory::Enb);
 
                 // Await all checks concurrently
                 tokio::join!(xse, reshade, vulkan, enb)
@@ -683,7 +819,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     window.set_vulkan_backup_exists(results.2);
                     window.set_enb_backup_exists(results.3);
                 }
-            }
+            },
         );
     }
 
@@ -701,7 +837,9 @@ fn main() -> Result<(), slint::PlatformError> {
                 tracing::error!("Failed to open URL '{}': {}", url_str, e);
                 if let Some(w) = main_window_weak.upgrade() {
                     w.set_error_title("Failed to Open URL".into());
-                    w.set_error_message(format!("Could not open URL '{}':\n\n{}", url_str, e).into());
+                    w.set_error_message(
+                        format!("Could not open URL '{}':\n\n{}", url_str, e).into(),
+                    );
                     w.set_show_error_dialog(true);
                 }
             }
@@ -737,10 +875,8 @@ fn main() -> Result<(), slint::PlatformError> {
                     Ok(reports) => {
                         if let Some(w) = window.upgrade() {
                             // Convert to Slint ReportData structs
-                            let slint_reports: Vec<ReportData> = reports
-                                .iter()
-                                .map(report_item_to_slint)
-                                .collect();
+                            let slint_reports: Vec<ReportData> =
+                                reports.iter().map(report_item_to_slint).collect();
 
                             // Update UI
                             let model = std::rc::Rc::new(slint::VecModel::from(slint_reports));
@@ -750,7 +886,7 @@ fn main() -> Result<(), slint::PlatformError> {
                             if reports.len() > 0 {
                                 w.set_selected_report_index(0);
                                 w.set_selected_report_path(
-                                    reports[0].path.to_string_lossy().to_string().into()
+                                    reports[0].path.to_string_lossy().to_string().into(),
                                 );
                             } else {
                                 w.set_selected_report_index(-1);
@@ -879,7 +1015,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         tracing::error!("Failed to load markdown: {}", e);
                         if let Some(w) = window.upgrade() {
                             w.set_error_title("Failed to Load Report".into());
-                            w.set_error_message(format!("Could not load markdown file:\n\n{}", e).into());
+                            w.set_error_message(
+                                format!("Could not load markdown file:\n\n{}", e).into(),
+                            );
                             w.set_show_error_dialog(true);
                         }
                     }
@@ -896,7 +1034,7 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             if let Some(w) = window_weak.upgrade() {
                 let current_zoom = w.get_zoom_level();
-                let new_zoom = (current_zoom + 25).min(150);  // Max 150%
+                let new_zoom = (current_zoom + 25).min(150); // Max 150%
                 w.set_zoom_level(new_zoom);
                 tracing::debug!("Zoom in: {}%", new_zoom);
             }
@@ -908,7 +1046,7 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             if let Some(w) = window_weak.upgrade() {
                 let current_zoom = w.get_zoom_level();
-                let new_zoom = (current_zoom - 25).max(50);  // Min 50%
+                let new_zoom = (current_zoom - 25).max(50); // Min 50%
                 w.set_zoom_level(new_zoom);
                 tracing::debug!("Zoom out: {}%", new_zoom);
             }
@@ -947,7 +1085,11 @@ fn main() -> Result<(), slint::PlatformError> {
                         // Show success feedback
                         w.set_success_title("Copied to Clipboard".into());
                         w.set_success_message(
-                            format!("Report copied to clipboard ({} characters)", content_str.len()).into()
+                            format!(
+                                "Report copied to clipboard ({} characters)",
+                                content_str.len()
+                            )
+                            .into(),
                         );
                         w.set_show_success_dialog(true);
                     }
@@ -957,7 +1099,7 @@ fn main() -> Result<(), slint::PlatformError> {
                         // Show error feedback
                         w.set_error_title("Copy Failed".into());
                         w.set_error_message(
-                            format!("Failed to copy to clipboard:\n\n{}", e).into()
+                            format!("Failed to copy to clipboard:\n\n{}", e).into(),
                         );
                         w.set_show_error_dialog(true);
                     }
@@ -1062,13 +1204,17 @@ fn main() -> Result<(), slint::PlatformError> {
 
                                     // Show success message
                                     w.set_success_title("Settings Saved".into());
-                                    w.set_success_message("Your settings have been saved successfully.".into());
+                                    w.set_success_message(
+                                        "Your settings have been saved successfully.".into(),
+                                    );
                                     w.set_show_success_dialog(true);
                                 }
                                 Err(e) => {
                                     tracing::error!("Failed to save settings: {}", e);
                                     w.set_error_title("Save Failed".into());
-                                    w.set_error_message(format!("Failed to save settings:\n\n{}", e).into());
+                                    w.set_error_message(
+                                        format!("Failed to save settings:\n\n{}", e).into(),
+                                    );
                                     w.set_show_error_dialog(true);
                                 }
                             }
@@ -1076,7 +1222,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         Err(e) => {
                             tracing::warn!("Settings validation failed: {}", e);
                             w.set_error_title("Invalid Settings".into());
-                            w.set_error_message(format!("Settings validation failed:\n\n{}", e).into());
+                            w.set_error_message(
+                                format!("Settings validation failed:\n\n{}", e).into(),
+                            );
                             w.set_show_error_dialog(true);
                         }
                     }
@@ -1115,7 +1263,10 @@ fn main() -> Result<(), slint::PlatformError> {
                 };
 
                 // Call file picker
-                match handlers::settings_dialog::browse_settings_path(&path_type_str, current_path.as_str()) {
+                match handlers::settings_dialog::browse_settings_path(
+                    &path_type_str,
+                    current_path.as_str(),
+                ) {
                     Ok(Some(path)) => {
                         let path_str = path.to_string_lossy().to_string();
                         tracing::info!("Path selected for {}: {}", path_type_str, path_str);
@@ -1157,14 +1308,18 @@ fn main() -> Result<(), slint::PlatformError> {
 
     main_window.on_about_open_github(|| {
         tracing::info!("Opening GitHub page...");
-        if let Err(e) = handlers::articles::handle_open_url("https://github.com/evildarkarchon/CLASSIC-Fallout4") {
+        if let Err(e) = handlers::articles::handle_open_url(
+            "https://github.com/evildarkarchon/CLASSIC-Fallout4",
+        ) {
             tracing::error!("Failed to open GitHub: {}", e);
         }
     });
 
     main_window.on_about_open_nexus(|| {
         tracing::info!("Opening Nexus Mods page...");
-        if let Err(e) = handlers::articles::handle_open_url("https://www.nexusmods.com/fallout4/mods/56255") {
+        if let Err(e) =
+            handlers::articles::handle_open_url("https://www.nexusmods.com/fallout4/mods/56255")
+        {
             tracing::error!("Failed to open Nexus Mods: {}", e);
         }
     });
@@ -1185,7 +1340,9 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::info!("Opening download page...");
             // Get the latest version URL (GitHub releases)
-            if let Err(e) = handlers::articles::handle_open_url("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest") {
+            if let Err(e) = handlers::articles::handle_open_url(
+                "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest",
+            ) {
                 tracing::error!("Failed to open download page: {}", e);
             }
 
@@ -1272,7 +1429,9 @@ fn main() -> Result<(), slint::PlatformError> {
                         tracing::error!("Failed to start Papyrus monitoring: {}", e);
                         if let Some(w) = window.upgrade() {
                             w.set_error_title("Monitoring Error".into());
-                            w.set_error_message(format!("Failed to start monitoring:\n\n{}", e).into());
+                            w.set_error_message(
+                                format!("Failed to start monitoring:\n\n{}", e).into(),
+                            );
                             w.set_show_error_dialog(true);
                         }
                     }
@@ -1342,8 +1501,13 @@ fn main() -> Result<(), slint::PlatformError> {
 
                 // Note: Core analyzer doesn't expose recent_entries for log display
                 // Log content would need to be read separately if needed
-                tracing::debug!("Updated Papyrus stats: E={} W={} D={} S={}",
-                    stats.errors, stats.warnings, stats.dumps, stats.stacks);
+                tracing::debug!(
+                    "Updated Papyrus stats: E={} W={} D={} S={}",
+                    stats.errors,
+                    stats.warnings,
+                    stats.dumps,
+                    stats.stacks
+                );
             }
         }
     });
@@ -1363,10 +1527,9 @@ fn main() -> Result<(), slint::PlatformError> {
                 match action {
                     PendingConfirmation::None => {
                         tracing::debug!("No action to execute");
-                    }
-                    // Future actions can be handled here:
-                    // PendingConfirmation::DeleteAllReports => { ... }
-                    // PendingConfirmation::ClearPapyrusLogs => { ... }
+                    } // Future actions can be handled here:
+                      // PendingConfirmation::DeleteAllReports => { ... }
+                      // PendingConfirmation::ClearPapyrusLogs => { ... }
                 }
 
                 // Clear the pending action
@@ -1437,18 +1600,27 @@ fn main() -> Result<(), slint::PlatformError> {
                                 })
                                 .collect();
 
-                            w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(related_topics)));
+                            w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(
+                                related_topics,
+                            )));
 
                             // Show the dialog
                             w.set_show_help_dialog(true);
                         }
                     }
                     Err(e) => {
-                        tracing::error!("Failed to load help topic {}/{}: {}", category_str, topic_str, e);
+                        tracing::error!(
+                            "Failed to load help topic {}/{}: {}",
+                            category_str,
+                            topic_str,
+                            e
+                        );
                         if let Some(w) = window.upgrade() {
                             // Show error in dialog
                             w.set_error_title("Help Error".into());
-                            w.set_error_message(format!("Failed to load help topic:\n\n{}", e).into());
+                            w.set_error_message(
+                                format!("Failed to load help topic:\n\n{}", e).into(),
+                            );
                             w.set_show_error_dialog(true);
                         }
                     }
@@ -1469,10 +1641,10 @@ fn main() -> Result<(), slint::PlatformError> {
             let (category, topic) = if let Some(w) = window.upgrade() {
                 let current_tab = w.get_current_tab();
                 match current_tab {
-                    0 => ("main", "scan_crash_logs"),      // Main tab
-                    1 => ("backups", "backup_overview"),   // Backups tab
-                    3 => ("results", "view_report"),       // Results tab
-                    _ => ("main", "scan_crash_logs"),      // Default to main
+                    0 => ("main", "scan_crash_logs"),    // Main tab
+                    1 => ("backups", "backup_overview"), // Backups tab
+                    3 => ("results", "view_report"),     // Results tab
+                    _ => ("main", "scan_crash_logs"),    // Default to main
                 }
             } else {
                 return;
@@ -1500,7 +1672,9 @@ fn main() -> Result<(), slint::PlatformError> {
                                 })
                                 .collect();
 
-                            w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(related_topics)));
+                            w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(
+                                related_topics,
+                            )));
 
                             // Show the dialog
                             w.set_show_help_dialog(true);
@@ -1524,7 +1698,7 @@ fn main() -> Result<(), slint::PlatformError> {
             tracing::debug!("Pastebin: User cancelled");
             if let Some(w) = window_weak.upgrade() {
                 w.set_show_pastebin_dialog(false);
-                w.set_pastebin_url_input("".into());  // Clear input
+                w.set_pastebin_url_input("".into()); // Clear input
             }
         }
     });

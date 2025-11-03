@@ -54,5 +54,5 @@ pub mod update_check;
 
 // Re-export commonly used types
 pub use clipboard::{clear_clipboard, copy_to_clipboard, get_clipboard_text};
-pub use folder_validation::{validate_folder_path, FolderValidationResult};
-pub use update_check::{check_for_updates, UpdateInfo, UpdateStatus};
+pub use folder_validation::{FolderValidationResult, validate_folder_path};
+pub use update_check::{UpdateInfo, UpdateStatus, check_for_updates};

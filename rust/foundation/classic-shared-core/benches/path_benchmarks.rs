@@ -3,7 +3,7 @@
 #![allow(missing_docs)]
 
 use classic_shared_core::path_core::PathHandler;
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use std::env;
 
 fn bench_normalize_path(c: &mut Criterion) {
@@ -11,7 +11,10 @@ fn bench_normalize_path(c: &mut Criterion) {
 
     // Get current directory for realistic path
     let current_dir = env::current_dir().expect("Failed to get current directory");
-    let test_path = current_dir.join("test_file.txt").to_string_lossy().to_string();
+    let test_path = current_dir
+        .join("test_file.txt")
+        .to_string_lossy()
+        .to_string();
 
     // Unbounded cache (original behavior)
     let handler_unbounded = PathHandler::new(300);
@@ -107,11 +110,15 @@ fn bench_validate_paths_batch(c: &mut Criterion) {
             })
             .collect();
 
-        group.bench_with_input(BenchmarkId::new("validate_batch", size), &paths, |b, paths| {
-            b.iter(|| {
-                black_box(handler.validate_paths_batch(paths));
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::new("validate_batch", size),
+            &paths,
+            |b, paths| {
+                b.iter(|| {
+                    black_box(handler.validate_paths_batch(paths));
+                });
+            },
+        );
     }
 
     group.finish();
