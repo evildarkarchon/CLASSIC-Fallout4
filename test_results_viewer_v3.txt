@@ -1,0 +1,67 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.6.0 -- F:\Python Projects\CLASSIC-Fallout4\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+PySide6 6.10.0 -- Qt runtime 6.10.0 -- Qt compiled 6.10.0
+rootdir: F:\Python Projects\CLASSIC-Fallout4
+configfile: pytest.ini
+plugins: anyio-4.11.0, hypothesis-6.142.1, asyncio-1.2.0, cov-7.0.0, qt-4.5.0, textual-snapshot-1.1.0, timeout-2.4.0, xdist-3.8.0, syrupy-4.8.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 13 items
+
+tests/interface/test_results_viewer_mixin.py::test_results_viewer_mixin_exists ERROR [  7%]
+tests/interface/test_results_viewer_mixin.py::test_mixin_signals ERROR   [ 15%]
+tests/interface/test_results_viewer_mixin.py::test_rust_acceleration_detection ERROR [ 23%]
+tests/interface/test_results_viewer_mixin.py::test_rust_status_logging_on_setup ERROR [ 30%]
+tests/interface/test_results_viewer_mixin.py::test_load_report_uses_rust_file_io ERROR [ 38%]
+tests/interface/test_results_viewer_mixin.py::test_load_report_fallback_uses_rust_file_io ERROR [ 46%]
+tests/interface/test_results_viewer_mixin.py::test_copy_report_uses_rust_file_io ERROR [ 53%]
+tests/interface/test_results_viewer_mixin.py::test_load_report_handles_missing_file ERROR [ 61%]
+tests/interface/test_results_viewer_mixin.py::test_copy_report_handles_no_report_loaded ERROR [ 69%]
+tests/interface/test_results_viewer_mixin.py::test_load_report_handles_read_errors ERROR [ 76%]
+tests/interface/test_results_viewer_mixin.py::test_report_loaded_signal_emission ERROR [ 84%]
+tests/interface/test_results_viewer_mixin.py::test_reports_refreshed_signal_emission ERROR [ 92%]
+tests/interface/test_results_viewer_mixin.py::test_rust_file_io_available ERROR [100%]
+
+=================================== ERRORS ====================================
+_____________ ERROR at setup of test_results_viewer_mixin_exists ______________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+____________________ ERROR at setup of test_mixin_signals _____________________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+_____________ ERROR at setup of test_rust_acceleration_detection ______________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+_____________ ERROR at setup of test_rust_status_logging_on_setup _____________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+____________ ERROR at setup of test_load_report_uses_rust_file_io _____________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+________ ERROR at setup of test_load_report_fallback_uses_rust_file_io ________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+____________ ERROR at setup of test_copy_report_uses_rust_file_io _____________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+___________ ERROR at setup of test_load_report_handles_missing_file ___________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+_________ ERROR at setup of test_copy_report_handles_no_report_loaded _________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+___________ ERROR at setup of test_load_report_handles_read_errors ____________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+____________ ERROR at setup of test_report_loaded_signal_emission _____________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+__________ ERROR at setup of test_reports_refreshed_signal_emission ___________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+________________ ERROR at setup of test_rust_file_io_available ________________
+E   ImportError: cannot import name 'get_runtime_context' from 'ClassicLib.AsyncBridge' (F:\Python Projects\CLASSIC-Fallout4\ClassicLib\AsyncBridge.py)
+=========================== short test summary info ===========================
+ERROR tests/interface/test_results_viewer_mixin.py::test_results_viewer_mixin_exists
+ERROR tests/interface/test_results_viewer_mixin.py::test_mixin_signals - Impo...
+ERROR tests/interface/test_results_viewer_mixin.py::test_rust_acceleration_detection
+ERROR tests/interface/test_results_viewer_mixin.py::test_rust_status_logging_on_setup
+ERROR tests/interface/test_results_viewer_mixin.py::test_load_report_uses_rust_file_io
+ERROR tests/interface/test_results_viewer_mixin.py::test_load_report_fallback_uses_rust_file_io
+ERROR tests/interface/test_results_viewer_mixin.py::test_copy_report_uses_rust_file_io
+ERROR tests/interface/test_results_viewer_mixin.py::test_load_report_handles_missing_file
+ERROR tests/interface/test_results_viewer_mixin.py::test_copy_report_handles_no_report_loaded
+ERROR tests/interface/test_results_viewer_mixin.py::test_load_report_handles_read_errors
+ERROR tests/interface/test_results_viewer_mixin.py::test_report_loaded_signal_emission
+ERROR tests/interface/test_results_viewer_mixin.py::test_reports_refreshed_signal_emission
+ERROR tests/interface/test_results_viewer_mixin.py::test_rust_file_io_available
+============================= 13 errors in 0.34s ==============================

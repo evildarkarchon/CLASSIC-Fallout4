@@ -245,5 +245,8 @@ fn classic_perf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Timer>()?;
     m.add_class::<MetricsSummary>()?;
 
+    // Add version
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
     Ok(())
 }

@@ -61,9 +61,9 @@ Explicit GUI-Only Sync Wrapper:
         process_data_sync = create_sync_wrapper(process_data)
 
 Mode Detection:
-    from ClassicLib.AsyncBridge import is_gui_mode, should_use_async_bridge
+    from ClassicLib import GlobalRegistry
 
-    if should_use_async_bridge():
+    if GlobalRegistry.is_gui_mode():
         # GUI mode - use sync wrappers
         result = obj.method_sync()
     else:
@@ -92,6 +92,8 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 from functools import wraps
 from typing import Any, ClassVar, TypeVar
 
+from ClassicLib import GlobalRegistry
+
 # Module exports
 __all__ = [
     # Main class
@@ -100,8 +102,6 @@ __all__ = [
     "run_async",
     "run_async_with_timeout",
     # Phase 2: Context-aware wrappers
-    "is_gui_mode",
-    "should_use_async_bridge",
     "context_aware_sync",
     "smart_await",
     "create_sync_wrapper",
@@ -252,9 +252,7 @@ class AsyncBridge:
             self._loop = asyncio.new_event_loop()
             logger.debug(f"AsyncBridge: Created new event loop for thread {self._thread_id}")
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to create event loop for AsyncBridge in thread {self._thread_id}: {e}"
-            ) from e
+            raise RuntimeError(f"Failed to create event loop for AsyncBridge in thread {self._thread_id}: {e}") from e
 
         # Create a reusable event for waiting
         ready_event = threading.Event()
@@ -276,10 +274,7 @@ class AsyncBridge:
         # Wait with timeout for loop to be ready
         if not ready_event.wait(timeout=5.0):
             logger.error(f"AsyncBridge: Loop failed to start within 5 seconds for thread {self._thread_id}")
-            raise RuntimeError(
-                f"AsyncBridge event loop failed to start within 5 seconds "
-                f"for thread {self._thread_id}"
-            )
+            raise RuntimeError(f"AsyncBridge event loop failed to start within 5 seconds for thread {self._thread_id}")
 
     def _run_loop(self) -> None:
         """Run the event loop in the background thread."""
@@ -310,14 +305,22 @@ class AsyncBridge:
         error_type: str | None = None
 
         # Check if we're already in an async context
-        try:
-            running_loop = asyncio.get_running_loop()
-            # If we got here, we're in an async context - this is an error
+        def _raise_async_context_error() -> None:
+            """Raise error when called from async context.
+
+            Raises:
+                RuntimeError: Always raised to indicate misuse of run_async() from async context.
+            """
             raise RuntimeError(
                 "Cannot use AsyncBridge.run_async() from within an async context. "
                 "Use 'await' directly instead.\n"
                 f"Called from thread: {threading.current_thread().name}"
             ) from None
+
+        try:
+            asyncio.get_running_loop()
+            # If we got here, we're in an async context - this is an error
+            _raise_async_context_error()
         except RuntimeError as e:
             # Check if this is our error or asyncio's "no running loop" error
             if "Cannot use AsyncBridge" in str(e):
@@ -401,11 +404,9 @@ class AsyncBridge:
                 # but provides defense in depth
                 error_type = "FutureTimeoutError"
                 logger.error(f"AsyncBridge: Future timeout after {timeout} seconds (thread: {self._thread_id})")
-                raise TimeoutError(
-                    f"Operation timed out after {timeout} seconds (future level)"
-                ) from e
+                raise TimeoutError(f"Operation timed out after {timeout} seconds (future level)") from e
 
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             # Asyncio wait_for timeout (expected path)
             error_type = "AsyncioTimeoutError"
             logger.debug(f"AsyncBridge: Asyncio timeout after {timeout} seconds (thread: {self._thread_id})")
@@ -462,8 +463,7 @@ class AsyncBridge:
                 if self._thread.is_alive():
                     # Thread didn't stop - log warning and force close
                     print(
-                        f"Warning: AsyncBridge thread {self._thread_id} "
-                        f"did not stop within timeout. Forcing loop close.",
+                        f"Warning: AsyncBridge thread {self._thread_id} did not stop within timeout. Forcing loop close.",
                         file=sys.stderr,
                     )
                     logger.warning(f"AsyncBridge: Thread {self._thread_id} did not stop, forcing close")
@@ -487,6 +487,9 @@ class AsyncBridge:
         Usage:
             with AsyncBridge.get_instance() as bridge:
                 result = bridge.run_async(my_async_func())
+
+        Returns:
+            AsyncBridge: The current bridge instance with an active event loop
         """
         self.ensure_loop()
         logger.debug(f"AsyncBridge: Entered context for thread {self._thread_id}")
@@ -550,7 +553,7 @@ class AsyncBridge:
 
 
 # Convenience functions
-def run_async(coro: Coroutine[Any, Any, T]) -> T:
+def run_async[T](coro: Coroutine[Any, Any, T]) -> T:
     """
     Convenience function to run async code from sync context.
 
@@ -567,7 +570,7 @@ def run_async(coro: Coroutine[Any, Any, T]) -> T:
     return bridge.run_async(coro)
 
 
-def run_async_with_timeout(coro: Coroutine[Any, Any, T], timeout: float) -> T:
+def run_async_with_timeout[T](coro: Coroutine[Any, Any, T], timeout: float) -> T:
     """
     Convenience function to run async code with timeout.
 
@@ -592,34 +595,7 @@ def run_async_with_timeout(coro: Coroutine[Any, Any, T], timeout: float) -> T:
 # ================================
 
 
-def is_gui_mode() -> bool:
-    """
-    Check if application is running in GUI mode.
-
-    Returns:
-        True if in GUI mode (needs AsyncBridge), False otherwise (use native async)
-
-    Note:
-        Import inside function to avoid circular dependency. This is safe because
-        GlobalRegistry doesn't import AsyncBridge at module level. The import is
-        cached after first call, so performance overhead is minimal.
-    """
-    from ClassicLib import GlobalRegistry
-
-    return GlobalRegistry.is_gui_mode()
-
-
-def should_use_async_bridge() -> bool:
-    """
-    Determine if AsyncBridge should be used in current context.
-
-    Returns:
-        True if AsyncBridge should be used (GUI mode), False if native async should be used (CLI/TUI mode)
-    """
-    return is_gui_mode()
-
-
-def context_aware_sync(async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T | Coroutine[Any, Any, T]]:
+def context_aware_sync[T](async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T | Coroutine[Any, Any, T]]:
     """
     Decorator that makes an async function context-aware.
 
@@ -646,11 +622,16 @@ def context_aware_sync(async_func: Callable[..., Coroutine[Any, Any, T]]) -> Cal
 
     @wraps(async_func)
     def wrapper(*args: Any, **kwargs: Any) -> T | Coroutine[Any, Any, T]:
-        """Context-aware wrapper that checks mode at runtime."""
+        """Context-aware wrapper that checks mode at runtime.
+
+        Returns:
+            T | Coroutine[Any, Any, T]: In GUI mode, returns the sync result of type T.
+                In CLI/TUI mode, returns a coroutine that must be awaited.
+        """
         coro = async_func(*args, **kwargs)
 
         # Check mode at CALL time for maximum flexibility
-        if should_use_async_bridge():
+        if GlobalRegistry.is_gui_mode():
             # GUI mode - run synchronously via AsyncBridge
             bridge = AsyncBridge.get_instance()
             # Type checker can't understand runtime mode branching - we return T here
@@ -664,7 +645,7 @@ def context_aware_sync(async_func: Callable[..., Coroutine[Any, Any, T]]) -> Cal
     return wrapper  # type: ignore[return-value]  # Wrapper return type depends on runtime mode
 
 
-def smart_await(coro: Coroutine[Any, Any, T]) -> T:
+def smart_await[T](coro: Coroutine[Any, Any, T]) -> T:
     """
     Smart await that automatically chooses between AsyncBridge and native await.
 
@@ -688,7 +669,7 @@ def smart_await(coro: Coroutine[Any, Any, T]) -> T:
     Raises:
         RuntimeError: If called in CLI/TUI mode (should use native await)
     """
-    if should_use_async_bridge():
+    if GlobalRegistry.is_gui_mode():
         bridge = AsyncBridge.get_instance()
         return bridge.run_async(coro)
 
@@ -698,11 +679,13 @@ def smart_await(coro: Coroutine[Any, Any, T]) -> T:
     )
 
 
-def create_sync_wrapper(async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T]:
+def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T]:
     """
-    Create a sync wrapper for an async function that errors in non-GUI mode.
+    Create a sync wrapper for an async function that works in both GUI and CLI modes.
 
-    This is useful for creating explicit sync methods that should ONLY be used by GUI code.
+    This wrapper automatically chooses the appropriate async execution method:
+    - GUI mode: Uses AsyncBridge (Qt event loop integration)
+    - CLI/TUI mode: Uses asyncio.run() (standard Python async)
 
     Usage:
         class MyClass:
@@ -710,30 +693,26 @@ def create_sync_wrapper(async_func: Callable[..., Coroutine[Any, Any, T]]) -> Ca
                 # Implementation
                 pass
 
-            # Sync wrapper for GUI ONLY
+            # Sync wrapper that works in both GUI and CLI modes
             my_sync_method = create_sync_wrapper(my_async_method)
 
     Args:
         async_func: The async function to wrap
 
     Returns:
-        A sync wrapper that errors in non-GUI mode
-
-    Raises:
-        RuntimeError: If called in CLI/TUI mode
+        A sync wrapper that works in both GUI and CLI modes
     """
+    import asyncio
 
     @wraps(async_func)
     def wrapper(*args: Any, **kwargs: Any) -> T:
-        if not should_use_async_bridge():
-            func_name = getattr(async_func, "__name__", "function")
-            raise RuntimeError(
-                f"Cannot use sync wrapper '{func_name}' in CLI/TUI mode.\n"
-                f"Use the async version with 'await' instead."
-            )
-
         coro = async_func(*args, **kwargs)
-        bridge = AsyncBridge.get_instance()
-        return bridge.run_async(coro)
+
+        if GlobalRegistry.is_gui_mode():
+            # GUI mode: Use AsyncBridge for Qt event loop integration
+            bridge = AsyncBridge.get_instance()
+            return bridge.run_async(coro)
+        # CLI/TUI mode: Use standard asyncio.run()
+        return asyncio.run(coro)
 
     return wrapper

@@ -378,5 +378,8 @@ fn classic_settings(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(cache_size, m)?)?;
     m.add_function(wrap_pyfunction!(cache_keys, m)?)?;
 
+    // Add version
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
     Ok(())
 }

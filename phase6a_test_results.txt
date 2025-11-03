@@ -1,0 +1,134 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.6.0 -- F:\Python Projects\CLASSIC-Fallout4\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+PySide6 6.10.0 -- Qt runtime 6.10.0 -- Qt compiled 6.10.0
+rootdir: F:\Python Projects\CLASSIC-Fallout4
+configfile: pytest.ini
+plugins: anyio-4.11.0, hypothesis-6.142.1, asyncio-1.2.0, cov-7.0.0, qt-4.5.0, textual-snapshot-1.1.0, timeout-2.4.0, xdist-3.8.0, syrupy-4.8.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 95 items
+
+tests/interface/test_crash_logs_worker.py::test_crash_logs_worker_exists PASSED [  1%]
+tests/interface/test_crash_logs_worker.py::test_worker_signals PASSED    [  2%]
+tests/interface/test_crash_logs_worker.py::test_worker_uses_async_bridge PASSED [  3%]
+tests/interface/test_crash_logs_worker.py::test_no_manual_event_loop_creation PASSED [  4%]
+tests/interface/test_crash_logs_worker.py::test_rust_acceleration_detection SKIPPED [  5%]
+tests/interface/test_crash_logs_worker.py::test_rust_status_logging PASSED [  6%]
+tests/interface/test_crash_logs_worker.py::test_success_signal_emission PASSED [  7%]
+tests/interface/test_crash_logs_worker.py::test_error_signal_emission PASSED [  8%]
+tests/interface/test_crash_logs_worker.py::test_error_handling_with_audio_disabled PASSED [  9%]
+tests/interface/test_crash_logs_worker.py::test_finished_signal_always_emitted PASSED [ 10%]
+tests/interface/test_crash_logs_worker.py::test_performance_metrics_logged PASSED [ 11%]
+tests/interface/test_crash_logs_worker.py::test_worker_is_qobject PASSED [ 12%]
+tests/interface/test_game_files_worker.py::test_game_files_worker_exists PASSED [ 13%]
+tests/interface/test_game_files_worker.py::test_worker_signals PASSED    [ 14%]
+tests/interface/test_game_files_worker.py::test_worker_uses_async_bridge PASSED [ 15%]
+tests/interface/test_game_files_worker.py::test_no_manual_event_loop_creation PASSED [ 16%]
+tests/interface/test_game_files_worker.py::test_rust_acceleration_detection PASSED [ 17%]
+tests/interface/test_game_files_worker.py::test_rust_status_logging PASSED [ 18%]
+tests/interface/test_game_files_worker.py::test_success_signal_emission PASSED [ 20%]
+tests/interface/test_game_files_worker.py::test_error_signal_emission PASSED [ 21%]
+tests/interface/test_game_files_worker.py::test_error_handling_with_audio_disabled PASSED [ 22%]
+tests/interface/test_game_files_worker.py::test_finished_signal_always_emitted PASSED [ 23%]
+tests/interface/test_game_files_worker.py::test_performance_metrics_logged PASSED [ 24%]
+tests/interface/test_game_files_worker.py::test_worker_is_qobject PASSED [ 25%]
+tests/interface/test_results_viewer_mixin.py::test_results_viewer_mixin_exists PASSED [ 26%]
+tests/interface/test_results_viewer_mixin.py::test_mixin_signals PASSED  [ 27%]
+tests/interface/test_results_viewer_mixin.py::test_rust_acceleration_detection PASSED [ 28%]
+tests/interface/test_results_viewer_mixin.py::test_rust_status_logging_on_setup PASSED [ 29%]
+tests/interface/test_results_viewer_mixin.py::test_load_report_uses_rust_file_io PASSED [ 30%]
+tests/interface/test_results_viewer_mixin.py::test_load_report_fallback_uses_rust_file_io PASSED [ 31%]
+tests/interface/test_results_viewer_mixin.py::test_copy_report_uses_rust_file_io PASSED [ 32%]
+tests/interface/test_results_viewer_mixin.py::test_load_report_handles_missing_file PASSED [ 33%]
+tests/interface/test_results_viewer_mixin.py::test_copy_report_handles_no_report_loaded PASSED [ 34%]
+tests/interface/test_results_viewer_mixin.py::test_load_report_handles_read_errors PASSED [ 35%]
+tests/interface/test_results_viewer_mixin.py::test_report_loaded_signal_emission PASSED [ 36%]
+tests/interface/test_results_viewer_mixin.py::test_reports_refreshed_signal_emission PASSED [ 37%]
+tests/interface/test_results_viewer_mixin.py::test_rust_file_io_available PASSED [ 38%]
+tests/interface/test_papyrus_monitor_worker.py::test_papyrus_monitor_worker_exists PASSED [ 40%]
+tests/interface/test_papyrus_monitor_worker.py::test_worker_signals PASSED [ 41%]
+tests/interface/test_papyrus_monitor_worker.py::test_worker_initialization PASSED [ 42%]
+tests/interface/test_papyrus_monitor_worker.py::test_rust_acceleration_detection PASSED [ 43%]
+tests/interface/test_papyrus_monitor_worker.py::test_rust_status_logging PASSED [ 44%]
+tests/interface/test_papyrus_monitor_worker.py::test_papyrus_logging_uses_rust_file_io PASSED [ 45%]
+tests/interface/test_papyrus_monitor_worker.py::test_papyrus_logging_handles_missing_file PASSED [ 46%]
+tests/interface/test_papyrus_monitor_worker.py::test_papyrus_logging_handles_none_path PASSED [ 47%]
+tests/interface/test_papyrus_monitor_worker.py::test_parse_stats PASSED  [ 48%]
+tests/interface/test_papyrus_monitor_worker.py::test_parse_stats_zero_dumps PASSED [ 49%]
+tests/interface/test_papyrus_monitor_worker.py::test_monitoring_loop_emits_stats_signal PASSED [ 50%]
+tests/interface/test_papyrus_monitor_worker.py::test_monitoring_loop_does_not_emit_duplicate_stats PASSED [ 51%]
+tests/interface/test_papyrus_monitor_worker.py::test_monitoring_loop_emits_error_signal PASSED [ 52%]
+tests/interface/test_papyrus_monitor_worker.py::test_stop_mechanism PASSED [ 53%]
+tests/interface/test_papyrus_monitor_worker.py::test_stop_is_thread_safe PASSED [ 54%]
+tests/interface/test_papyrus_monitor_worker.py::test_worker_is_qobject PASSED [ 55%]
+tests/interface/test_papyrus_monitor_worker.py::test_papyrus_stats_equality PASSED [ 56%]
+tests/interface/test_papyrus_monitor_worker.py::test_papyrus_stats_hash PASSED [ 57%]
+tests/interface/test_yaml_settings_rust.py::test_rust_yaml_available PASSED [ 58%]
+tests/interface/test_yaml_settings_rust.py::test_yaml_operations_detects_rust PASSED [ 60%]
+tests/interface/test_yaml_settings_rust.py::test_static_files_use_rust PASSED [ 61%]
+tests/interface/test_yaml_settings_rust.py::test_user_editable_files_use_python PASSED [ 62%]
+tests/interface/test_yaml_settings_rust.py::test_rust_yaml_parsing PASSED [ 63%]
+tests/interface/test_yaml_settings_rust.py::test_python_yaml_parsing_preserves_comments PASSED [ 64%]
+tests/interface/test_yaml_settings_rust.py::test_load_yaml_file_with_rust PASSED [ 65%]
+tests/interface/test_yaml_settings_rust.py::test_load_yaml_file_with_python PASSED [ 66%]
+tests/interface/test_yaml_settings_rust.py::test_python_works_without_rust PASSED [ 67%]
+tests/interface/test_yaml_settings_rust.py::test_operations_without_rust PASSED [ 68%]
+tests/interface/test_yaml_settings_rust.py::test_yaml_settings_cache_has_async_core PASSED [ 69%]
+tests/interface/test_yaml_settings_rust.py::test_yaml_settings_cache_singleton PASSED [ 70%]
+tests/interface/test_yaml_settings_rust.py::test_yaml_cache_file_ops_has_rust PASSED [ 71%]
+tests/interface/test_yaml_settings_rust.py::test_rust_faster_than_python PASSED [ 72%]
+tests/interface/test_yaml_settings_rust.py::test_rust_can_be_disabled_via_env PASSED [ 73%]
+tests/interface/test_yaml_settings_rust.py::test_yaml_file_caching PASSED [ 74%]
+tests/interface/test_yaml_settings_rust.py::test_yaml_cache_bypass PASSED [ 75%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_select_folder_scan_valid_path PASSED [ 76%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_select_folder_scan_invalid_path PASSED [ 77%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_select_folder_scan_cancelled PASSED [ 78%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_validate_scan_folder_text_valid FAILED [ 80%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_validate_scan_folder_text_empty PASSED [ 81%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_validate_scan_folder_text_nonexistent PASSED [ 82%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_validate_scan_folder_text_restricted FAILED [ 83%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_validate_scan_folder_text_no_edit PASSED [ 84%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_select_folder_mods PASSED [ 85%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_select_folder_mods_cancelled PASSED [ 86%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_initialize_folder_paths PASSED [ 87%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_initialize_folder_paths_no_saved PASSED [ 88%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_initialize_folder_paths_no_edits PASSED [ 89%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_select_folder_ini PASSED [ 90%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_settings_file_exists PASSED [ 91%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_settings_file_missing PASSED [ 92%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_backup_folder_exists PASSED [ 93%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_backup_folder_not_exists PASSED [ 94%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_crash_logs_folder_exists PASSED [ 95%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_crash_logs_folder_creates_if_missing PASSED [ 96%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_file_with_notepadpp_exists PASSED [ 97%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_file_with_notepadpp_fallback PASSED [ 98%]
+tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_open_file_notepadpp_error_fallback PASSED [100%]
+
+================================== FAILURES ===================================
+F:\Python Projects\CLASSIC-Fallout4\tests\gui\test_folder_management_unit.py:165: AssertionError: assert '/valid/existing/path' in ''
+F:\Python Projects\CLASSIC-Fallout4\tests\gui\test_folder_management_unit.py:244: AssertionError: assert 'Invalid Custom Scan Path' in 'Invalid Path'
+============================== warnings summary ===============================
+tests/interface/test_crash_logs_worker.py::test_worker_uses_async_bridge
+tests/interface/test_crash_logs_worker.py::test_no_manual_event_loop_creation
+tests/interface/test_crash_logs_worker.py::test_rust_status_logging
+tests/interface/test_crash_logs_worker.py::test_performance_metrics_logged
+  F:\Python Projects\CLASSIC-Fallout4\tests\stress\stress_test_fixtures.py:579: RuntimeWarning: coroutine 'CrashLogsScanWorker._perform_crash_logs_scan.<locals>.run_scan' was never awaited
+    gc.collect()
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/interface/test_game_files_worker.py::test_worker_uses_async_bridge
+tests/interface/test_game_files_worker.py::test_no_manual_event_loop_creation
+tests/interface/test_game_files_worker.py::test_rust_status_logging
+tests/interface/test_game_files_worker.py::test_performance_metrics_logged
+  F:\Python Projects\CLASSIC-Fallout4\tests\stress\stress_test_fixtures.py:579: RuntimeWarning: coroutine 'write_combined_results_async' was never awaited
+    gc.collect()
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_validate_scan_folder_text_valid
+FAILED tests/gui/test_folder_management_unit.py::TestFolderManagementMixin::test_validate_scan_folder_text_restricted
+============ 2 failed, 92 passed, 1 skipped, 8 warnings in 10.89s =============

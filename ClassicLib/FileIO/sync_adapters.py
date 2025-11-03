@@ -1,14 +1,18 @@
 """
-Synchronous adapter functions for FileIOCore - Phase 2 Context-Aware.
+Synchronous adapter functions for FileIOCore - Context-Aware.
 
-These adapters use Phase 2 utilities to automatically error in CLI/TUI mode
-(where async should be used) while working in GUI mode via AsyncBridge.
+These adapters automatically choose the appropriate async execution method:
+- GUI mode: Uses AsyncBridge for Qt event loop integration
+- CLI/TUI mode: Uses asyncio.run() for standard Python async execution
 
-IMPORTANT: These are for GUI mode ONLY. In CLI/TUI, use FileIOCore async methods directly:
-    # GUI mode (works)
+This allows sync adapters to work in all contexts:
+    # GUI mode (uses AsyncBridge)
     content = read_file_sync(path)
 
-    # CLI/TUI mode (use this instead)
+    # CLI/TUI mode (uses asyncio.run())
+    content = read_file_sync(path)  # Also works!
+
+    # Or use async directly if preferred
     io_core = FileIOCore()
     content = await io_core.read_file(path)
 """

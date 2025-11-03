@@ -13,8 +13,6 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import (
     context_aware_sync,
     create_sync_wrapper,
-    is_gui_mode,
-    should_use_async_bridge,
     smart_await,
 )
 
@@ -34,37 +32,6 @@ def cleanup_registry():
     elif GlobalRegistry.is_registered(GlobalRegistry.Keys.IS_GUI_MODE):
         # Remove the key if it wasn't there originally
         GlobalRegistry._registry.pop(GlobalRegistry.Keys.IS_GUI_MODE, None)
-
-
-@pytest.mark.unit
-class TestModeDetection:
-    """Test mode detection functions."""
-
-    def test_is_gui_mode_returns_false_when_not_set(self):
-        """Test is_gui_mode() returns False when not registered."""
-        # Ensure not registered
-        if GlobalRegistry.is_registered(GlobalRegistry.Keys.IS_GUI_MODE):
-            GlobalRegistry._registry.pop(GlobalRegistry.Keys.IS_GUI_MODE)
-
-        assert is_gui_mode() is False
-
-    def test_is_gui_mode_returns_true_when_set(self):
-        """Test is_gui_mode() returns True when registered as True."""
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, True)
-        assert is_gui_mode() is True
-
-    def test_is_gui_mode_returns_false_when_explicitly_false(self):
-        """Test is_gui_mode() returns False when registered as False."""
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
-        assert is_gui_mode() is False
-
-    def test_should_use_async_bridge_matches_gui_mode(self):
-        """Test should_use_async_bridge() matches is_gui_mode()."""
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, True)
-        assert should_use_async_bridge() is True
-
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
-        assert should_use_async_bridge() is False
 
 
 @pytest.mark.unit
@@ -153,8 +120,8 @@ class TestCreateSyncWrapper:
         result = sync_wrapper()
         assert result == "result"
 
-    def test_sync_wrapper_errors_in_cli_mode(self):
-        """Test sync wrapper raises error in CLI mode."""
+    def test_sync_wrapper_works_in_cli_mode(self):
+        """Test sync wrapper uses asyncio.run() in CLI mode."""
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
 
         async def async_function():
@@ -162,8 +129,9 @@ class TestCreateSyncWrapper:
 
         sync_wrapper = create_sync_wrapper(async_function)
 
-        with pytest.raises(RuntimeError, match="Cannot use sync wrapper.*CLI/TUI mode"):
-            sync_wrapper()
+        # Should work in CLI mode using asyncio.run()
+        result = sync_wrapper()
+        assert result == "result"
 
     def test_sync_wrapper_preserves_metadata(self):
         """Test sync wrapper preserves function metadata."""
@@ -187,17 +155,17 @@ class TestCreateSyncWrapper:
         result = sync_wrapper("a", "b", kwarg1="c")
         assert result == "a-b-c"
 
-    def test_error_message_includes_function_name(self):
-        """Test error message includes function name for clarity."""
+    def test_sync_wrapper_handles_arguments_in_cli_mode(self):
+        """Test sync wrapper handles arguments correctly in CLI mode."""
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
 
-        async def my_specific_function():
-            return "result"
+        async def async_function(arg1, arg2, kwarg1=None):
+            await asyncio.sleep(0.01)
+            return f"{arg1}-{arg2}-{kwarg1}"
 
-        sync_wrapper = create_sync_wrapper(my_specific_function)
-
-        with pytest.raises(RuntimeError, match="my_specific_function"):
-            sync_wrapper()
+        sync_wrapper = create_sync_wrapper(async_function)
+        result = sync_wrapper("a", "b", kwarg1="c")
+        assert result == "a-b-c"
 
 
 @pytest.mark.unit
@@ -282,7 +250,7 @@ class TestRealWorldScenarios:
         with pytest.raises(RuntimeError):
             processor.process_data_sync("test")
 
-    async def test_migration_pattern_before_after(self):
+    def test_migration_pattern_before_after(self):
         """Test migration from Phase 1 to Phase 2 pattern."""
 
         # BEFORE: Always uses AsyncBridge (Phase 1)
@@ -315,9 +283,9 @@ class TestRealWorldScenarios:
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, True)
         assert new.method() == "result"
 
-        # Test new implementation in CLI mode
+        # Test new implementation in CLI mode (returns coroutine, need to run it)
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
-        result = await new.method()  # type: ignore[misc]
+        result = asyncio.run(new.method())  # type: ignore[arg-type]
         assert result == "result"
 
     def test_context_detection_in_method(self):
@@ -330,7 +298,7 @@ class TestRealWorldScenarios:
 
             def smart_method(self, data):
                 """Adapts based on context."""
-                if should_use_async_bridge():
+                if GlobalRegistry.is_gui_mode():
                     # GUI mode - use bridge
                     from ClassicLib.AsyncBridge import run_async
 

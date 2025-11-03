@@ -257,5 +257,8 @@ fn classic_pybridge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(is_runtime_available, m)?)?;
     m.add_function(wrap_pyfunction!(get_runtime_info, m)?)?;
 
+    // Add version
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
     Ok(())
 }

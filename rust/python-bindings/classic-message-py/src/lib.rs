@@ -520,5 +520,8 @@ fn classic_message(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(strip_emoji, m)?)?;
     m.add_function(wrap_pyfunction!(format_log_message, m)?)?;
 
+    // Add version
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
     Ok(())
 }

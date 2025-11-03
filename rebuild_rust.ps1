@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 # Dir: the source directory (relative to rust/ directory)
 # ImportName: the actual Python module name for import (optional, defaults to WheelName)
 $RustModules = @(
-    @{WheelName = "classic_shared_py"; Dir = "rust/foundation/classic-shared-py"; ImportName = $null },  # Not a Python module
+    @{WheelName = "classic_shared_py"; Dir = "rust/foundation/classic-shared-py"; ImportName = "classic_shared" },
     @{WheelName = "classic_config_py"; Dir = "rust/python-bindings/classic-config-py"; ImportName = "classic_config" },
     @{WheelName = "classic_database_py"; Dir = "rust/python-bindings/classic-database-py"; ImportName = "classic_database" },
     @{WheelName = "classic_file_io_py"; Dir = "rust/python-bindings/classic-file-io-py"; ImportName = "classic_file_io" },

@@ -152,6 +152,22 @@ def detect_rust_components() -> dict[str, bool]:
     except Exception as e:
         logger.error(f"Error detecting yaml components: {e}")
 
+    # Check path module components
+    try:
+        import classic_path
+        logger.info(f"classic_path module loaded (version: {getattr(classic_path, '__version__', 'unknown')})")
+        components["path"] = True
+
+        # RustPathOperations
+        if hasattr(classic_path, "RustPathOperations"):
+            components["path_operations"] = True
+            logger.debug("RustPathOperations component available")
+
+    except ImportError as e:
+        logger.warning(f"classic_path module not available: {e}")
+    except Exception as e:
+        logger.error(f"Error detecting path components: {e}")
+
     # Check classic-config-core (standalone module)
     try:
         import classic_config
@@ -242,7 +258,7 @@ def get_available_components() -> dict[str, Any]:
     if not disabled:
         # Check versions of individual modules
         for module_name in [
-            "classic_scanlog", "classic_database", "classic_file_io", "classic_yaml", "classic_config",
+            "classic_scanlog", "classic_database", "classic_file_io", "classic_yaml", "classic_path", "classic_config",
             # Phase 4 - Constants and Utilities
             "classic_constants", "classic_version", "classic_resource", "classic_xse", "classic_web"
         ]:
@@ -285,6 +301,8 @@ def _get_empty_component_dict() -> dict[str, bool]:
         "mod_detector": False,
         "yaml": False,
         "yaml_operations": False,
+        "path": False,
+        "path_operations": False,
         "yamldata": False,
         # Phase 2 components (classic_scanlog module)
         "suspect_scanner": False,

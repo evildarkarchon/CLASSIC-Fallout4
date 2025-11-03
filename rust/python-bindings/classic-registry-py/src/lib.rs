@@ -350,5 +350,8 @@ fn classic_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_vr, m)?)?;
     m.add_function(wrap_pyfunction!(get_local_dir, m)?)?;
 
+    // Add version
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
     Ok(())
 }
