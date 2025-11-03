@@ -27,3 +27,4 @@ rust_2024_compatibility = "warn"
 unsafe_code = "deny"  # We don't use unsafe in CLASSIC
 missing_docs = "warn"   # Encourage documentation
 unused = "deny"
+non_snake_case = "allow"

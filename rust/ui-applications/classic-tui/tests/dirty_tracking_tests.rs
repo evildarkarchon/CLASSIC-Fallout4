@@ -1,3 +1,8 @@
+//! Tests for the dirty tracking optimization system.
+//!
+//! These tests ensure widgets correctly track when they need to be redrawn,
+//! which is essential for efficient terminal rendering.
+
 use classic_tui::widgets::*;
 
 /// Tests for the dirty tracking optimization system

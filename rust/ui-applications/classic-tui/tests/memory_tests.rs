@@ -1,3 +1,8 @@
+//! Memory leak detection tests for TUI components.
+//!
+//! These tests focus on widgets that accumulate state over time to ensure
+//! they don't leak memory during repeated operations.
+
 use classic_tui::widgets::Checkbox;
 
 /// Memory leak detection tests for TUI components

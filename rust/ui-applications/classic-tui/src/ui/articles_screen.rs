@@ -67,10 +67,10 @@
 //! use std::io;
 //!
 //! let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout())).unwrap();
-//! let mut app = App::new();
+//! let app = App::new();
 //!
 //! terminal.draw(|f| {
-//!     render_articles_screen(f, &mut app);
+//!     render_articles_screen(f, &app, &app.articles_state);
 //! }).unwrap();
 //! ```
 //!

@@ -1,3 +1,8 @@
+//! Integration tests for classic-tui widgets and rendering.
+//!
+//! This test suite verifies widget interactions and provides structure for
+//! manual testing of rendering behaviors.
+
 use classic_tui::*;
 
 /// Integration tests for TUI widgets working together
@@ -32,7 +37,7 @@ mod rendering_integration {
         // This would test the full main screen layout
         // Requires mock terminal backend
         let backend = TestBackend::new(80, 24);
-        let mut terminal = Terminal::new(backend).unwrap();
+        let _terminal = Terminal::new(backend).unwrap();
 
         // Would render main screen and verify layout
         // This is more of a manual test or requires snapshot testing
