@@ -8,6 +8,9 @@ use anyhow::Result;
 // Re-export shared clipboard functions
 pub use classic_ui_shared::clipboard::copy_to_clipboard;
 
+#[cfg(test)]
+use classic_ui_shared::clipboard::is_clipboard_available;
+
 /// Copy formatted error information to clipboard (TUI-specific wrapper).
 ///
 /// This is a convenience wrapper around [`classic_ui_shared::clipboard::copy_error_to_clipboard`]
