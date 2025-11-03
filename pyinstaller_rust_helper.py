@@ -69,7 +69,9 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
     Find Rust extensions for bundling in PyInstaller.
 
     Checks in order:
-    1. Local rust_extensions/ directory (created by build_all.ps1 - flattened structure)
+    1. Local rust_extensions/ directory (created by build_all.ps1/bat - flattened structure)
+       - All .pyd files extracted directly to rust_extensions/ (no subdirectories)
+       - Wheels are built to project_root/dist-rust/ before extraction
     2. Site-packages (installed via pip/uv)
 
     Args:
@@ -80,6 +82,11 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
         - binaries: List of (source, dest) tuples for .pyd files
         - datas: List of (source, dest) tuples for __init__.py and other data
         - found: Boolean indicating if Rust extensions were found
+
+    Note:
+        build_all.ps1 and build_all.bat now output all wheels to a single
+        dist-rust/ directory in the project root (not rust/python-bindings/dist-rust/
+        or rust/foundation/dist-rust/) to ensure all modules are discovered.
     """
     binaries = []
     datas = []
@@ -139,8 +146,7 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
                 datas.append((str(init_file), module_name))
 
             # Add .pyi stub files if they exist
-            for pyi_file in module_dir.glob("*.pyi"):
-                datas.append((str(pyi_file), module_name))
+            datas.extend((str(pyi_file), module_name) for pyi_file in module_dir.glob("*.pyi"))
 
     if modules_found:
         print(f"  Total modules bundled from site-packages: {len(modules_found)}/{len(RUST_MODULES)}")

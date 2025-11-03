@@ -151,39 +151,50 @@ if (Test-Path "rust/python-bindings/classic-yaml-py") {
 
     # Define all Rust Python modules (.pyd files from *-py crates) in dependency order
     # Note: Only *-py crates produce .pyd files; *-core crates are pure Rust (rlib)
+    # WheelName: Package name in Cargo.toml (with _py suffix for wheel files)
+    # ModuleName: Python import name (without _py suffix)
     $RustModules = @(
-        @{Name = "classic_shared"; Dir = "rust/foundation/classic-shared-py"; Description = "Foundation (runtime, errors, utilities)"},
-        @{Name = "classic_config"; Dir = "rust/python-bindings/classic-config-py"; Description = "YamlData configuration (bindings)"},
-        @{Name = "classic_database"; Dir = "rust/python-bindings/classic-database-py"; Description = "SQLite operations (bindings)"},
-        @{Name = "classic_file_io"; Dir = "rust/python-bindings/classic-file-io-py"; Description = "File I/O + DDS parsing (bindings)"},
-        @{Name = "classic_message"; Dir = "rust/python-bindings/classic-message-py"; Description = "Message handling (bindings)"},
-        @{Name = "classic_path"; Dir = "rust/python-bindings/classic-path-py"; Description = "Path management (bindings)"},
-        @{Name = "classic_perf"; Dir = "rust/python-bindings/classic-perf-py"; Description = "Performance monitoring (bindings)"},
-        @{Name = "classic_pybridge"; Dir = "rust/python-bindings/classic-pybridge-py"; Description = "Async Python bridge utilities (bindings)"},
-        @{Name = "classic_registry"; Dir = "rust/python-bindings/classic-registry-py"; Description = "Windows registry operations (bindings)"},
-        @{Name = "classic_scangame"; Dir = "rust/python-bindings/classic-scangame-py"; Description = "Game scanning + validation (bindings)"},
-        @{Name = "classic_scanlog"; Dir = "rust/python-bindings/classic-scanlog-py"; Description = "Log parsing + analysis (bindings)"},
-        @{Name = "classic_settings"; Dir = "rust/python-bindings/classic-settings-py"; Description = "Settings cache management (bindings)"},
-        @{Name = "classic_yaml"; Dir = "rust/python-bindings/classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"},
+        @{WheelName = "classic_shared_py"; ModuleName = "classic_shared"; Dir = "rust/foundation/classic-shared-py"; Description = "Foundation (runtime, errors, utilities)"},
+        @{WheelName = "classic_config_py"; ModuleName = "classic_config"; Dir = "rust/python-bindings/classic-config-py"; Description = "YamlData configuration (bindings)"},
+        @{WheelName = "classic_database_py"; ModuleName = "classic_database"; Dir = "rust/python-bindings/classic-database-py"; Description = "SQLite operations (bindings)"},
+        @{WheelName = "classic_file_io_py"; ModuleName = "classic_file_io"; Dir = "rust/python-bindings/classic-file-io-py"; Description = "File I/O + DDS parsing (bindings)"},
+        @{WheelName = "classic_message_py"; ModuleName = "classic_message"; Dir = "rust/python-bindings/classic-message-py"; Description = "Message handling (bindings)"},
+        @{WheelName = "classic_path_py"; ModuleName = "classic_path"; Dir = "rust/python-bindings/classic-path-py"; Description = "Path management (bindings)"},
+        @{WheelName = "classic_perf_py"; ModuleName = "classic_perf"; Dir = "rust/python-bindings/classic-perf-py"; Description = "Performance monitoring (bindings)"},
+        @{WheelName = "classic_pybridge_py"; ModuleName = "classic_pybridge"; Dir = "rust/python-bindings/classic-pybridge-py"; Description = "Async Python bridge utilities (bindings)"},
+        @{WheelName = "classic_registry_py"; ModuleName = "classic_registry"; Dir = "rust/python-bindings/classic-registry-py"; Description = "Windows registry operations (bindings)"},
+        @{WheelName = "classic_scangame_py"; ModuleName = "classic_scangame"; Dir = "rust/python-bindings/classic-scangame-py"; Description = "Game scanning + validation (bindings)"},
+        @{WheelName = "classic_scanlog_py"; ModuleName = "classic_scanlog"; Dir = "rust/python-bindings/classic-scanlog-py"; Description = "Log parsing + analysis (bindings)"},
+        @{WheelName = "classic_settings_py"; ModuleName = "classic_settings"; Dir = "rust/python-bindings/classic-settings-py"; Description = "Settings cache management (bindings)"},
+        @{WheelName = "classic_yaml_py"; ModuleName = "classic_yaml"; Dir = "rust/python-bindings/classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"},
         # Phase 4 - Constants and Utilities
-        @{Name = "classic_constants"; Dir = "rust/python-bindings/classic-constants-py"; Description = "Game constants and enumerations (bindings)"},
-        @{Name = "classic_version"; Dir = "rust/python-bindings/classic-version-py"; Description = "Version parsing and comparison (bindings)"},
-        @{Name = "classic_resource"; Dir = "rust/python-bindings/classic-resource-py"; Description = "Resource file detection (bindings)"},
-        @{Name = "classic_xse"; Dir = "rust/python-bindings/classic-xse-py"; Description = "Script Extender (XSE) utilities (bindings)"},
-        @{Name = "classic_web"; Dir = "rust/python-bindings/classic-web-py"; Description = "Web utilities and URL validation (bindings)"},
+        @{WheelName = "classic_constants_py"; ModuleName = "classic_constants"; Dir = "rust/python-bindings/classic-constants-py"; Description = "Game constants and enumerations (bindings)"},
+        @{WheelName = "classic_version_py"; ModuleName = "classic_version"; Dir = "rust/python-bindings/classic-version-py"; Description = "Version parsing and comparison (bindings)"},
+        @{WheelName = "classic_resource_py"; ModuleName = "classic_resource"; Dir = "rust/python-bindings/classic-resource-py"; Description = "Resource file detection (bindings)"},
+        @{WheelName = "classic_xse_py"; ModuleName = "classic_xse"; Dir = "rust/python-bindings/classic-xse-py"; Description = "Script Extender (XSE) utilities (bindings)"},
+        @{WheelName = "classic_web_py"; ModuleName = "classic_web"; Dir = "rust/python-bindings/classic-web-py"; Description = "Web utilities and URL validation (bindings)"},
         # Phase 5 - Application Coordination
-        @{Name = "classic_update"; Dir = "rust/python-bindings/classic-update-py"; Description = "Auto-update system (GitHub + Nexus) (bindings)"}
+        @{WheelName = "classic_update_py"; ModuleName = "classic_update"; Dir = "rust/python-bindings/classic-update-py"; Description = "Auto-update system (GitHub + Nexus) (bindings)"}
     )
 
-    # Build all Rust modules
+    # Build all Rust modules to a single dist-rust directory in project root
     Write-Host "Building Rust modules with maturin..." -ForegroundColor Yellow
+    $projectRoot = $PSScriptRoot
+    $distRustDir = Join-Path $projectRoot "dist-rust"
+
+    # Create dist-rust directory if it doesn't exist
+    if (-not (Test-Path $distRustDir)) {
+        New-Item -ItemType Directory -Path $distRustDir | Out-Null
+    }
+
     $buildSuccess = $true
     foreach ($module in $RustModules) {
-        Write-Host "  Building $($module.Name)..." -ForegroundColor Cyan
+        Write-Host "  Building $($module.ModuleName)..." -ForegroundColor Cyan
         Push-Location $module.Dir
-        Invoke-Expression "$MaturinCmd build --release --out ../dist-rust 2>&1" | Out-Null
+        # Output all wheels to project root dist-rust directory
+        Invoke-Expression "$MaturinCmd build --release --out `"$distRustDir`" 2>&1" | Out-Null
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "  WARNING: $($module.Name) build failed!" -ForegroundColor Red
+            Write-Host "  WARNING: $($module.ModuleName) build failed!" -ForegroundColor Red
             $buildSuccess = $false
         }
         Pop-Location
@@ -203,28 +214,32 @@ if (Test-Path "rust/python-bindings/classic-yaml-py") {
         # Extract each module's .pyd from its wheel (flattened structure)
         $extractedModules = @()
         foreach ($module in $RustModules) {
-            $wheel = Get-ChildItem -Path "dist-rust\$($module.Name)-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+            # Use WheelName to find the wheel file (has _py suffix)
+            $wheel = Get-ChildItem -Path "dist-rust\$($module.WheelName)-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
             if ($wheel) {
-                $tempDir = "temp_extract_$($module.Name)"
+                $tempDir = "temp_extract_$($module.ModuleName)"
 
-                # Extract wheel (it's just a zip file)
-                Expand-Archive -Path $wheel.FullName -DestinationPath $tempDir -Force
+                # Extract wheel using Python (wheels are ZIP files but Expand-Archive doesn't support .whl extension)
+                # Use forward slashes to avoid backslash escaping issues
+                $wheelPath = $wheel.FullName -replace '\\', '/'
+                $tempPath = $tempDir -replace '\\', '/'
+                .venv\Scripts\python -c "import zipfile; z = zipfile.ZipFile(r'$wheelPath'); z.extractall(r'$tempPath')"
 
-                # Find the module directory
-                $moduleDir = Get-ChildItem -Path $tempDir -Directory -Filter $module.Name -Recurse | Select-Object -First 1
+                # Find the module directory using ModuleName (Python import name, without _py)
+                $moduleDir = Get-ChildItem -Path $tempDir -Directory -Filter $module.ModuleName -Recurse | Select-Object -First 1
                 if ($moduleDir) {
                     # Copy .pyd files directly to rust_extensions/ (flattened)
                     $pydFiles = Get-ChildItem -Path $moduleDir.FullName -Filter "*.pyd" -Recurse
                     foreach ($pyd in $pydFiles) {
                         $destFile = Join-Path $rustExtDir $pyd.Name
                         Copy-Item -Path $pyd.FullName -Destination $destFile -Force
-                        $extractedModules += @{Module = $module.Name; File = $pyd.Name}
+                        $extractedModules += @{Module = $module.ModuleName; File = $pyd.Name}
                     }
 
                     # Copy __init__.py if it exists (directly to rust_extensions/)
                     $initFile = Get-ChildItem -Path $moduleDir.FullName -Filter "__init__.py" -Recurse | Select-Object -First 1
                     if ($initFile) {
-                        $destInit = Join-Path $rustExtDir "$($module.Name)__init__.py"
+                        $destInit = Join-Path $rustExtDir "$($module.ModuleName)__init__.py"
                         Copy-Item -Path $initFile.FullName -Destination $destInit -Force
                     }
 
@@ -236,14 +251,14 @@ if (Test-Path "rust/python-bindings/classic-yaml-py") {
                     }
                 }
                 else {
-                    Write-Host "  WARNING: $($module.Name) directory not found in wheel!" -ForegroundColor Yellow
+                    Write-Host "  WARNING: $($module.ModuleName) directory not found in wheel!" -ForegroundColor Yellow
                 }
 
                 # Clean up temp directory
                 Remove-Item -Path $tempDir -Recurse -Force
             }
             else {
-                Write-Host "  WARNING: No wheel file found for $($module.Name)!" -ForegroundColor Yellow
+                Write-Host "  WARNING: No wheel file found for $($module.WheelName)!" -ForegroundColor Yellow
             }
         }
 
@@ -332,11 +347,10 @@ function Build-Spec {
     Write-Host ""
 }
 
-# Build all versions
+# Build all versions (TUI is now pure Rust, built separately)
 Build-Spec "CLASSIC.spec" "GUI version - Folder Distribution (CLASSIC.exe)"
 Build-Spec "CLASSIC-GUI-OneFile.spec" "GUI version - Single File (CLASSIC-GUI-OneFile.exe)"
 Build-Spec "CLASSIC-CLI.spec" "CLI version (CLASSIC-CLI.exe)"
-Build-Spec "CLASSIC-TUI.spec" "TUI version (CLASSIC-TUI.exe)"
 
 # Optional test build
 if ($BuildTest) {
@@ -365,8 +379,7 @@ Write-Host ""
 $executables = @(
     @{Path = "dist\CLASSIC\CLASSIC.exe"; Type = "GUI (Folder)" },
     @{Path = "dist\CLASSIC-GUI-OneFile.exe"; Type = "GUI (Single File)" },
-    @{Path = "dist\CLASSIC-CLI.exe"; Type = "CLI (Single)" },
-    @{Path = "dist\CLASSIC-TUI.exe"; Type = "TUI (Single)" }
+    @{Path = "dist\CLASSIC-CLI.exe"; Type = "CLI (Single)" }
 )
 
 if ($BuildTest) {
@@ -391,12 +404,13 @@ Write-Host "Executables are located in the 'dist' directory:" -ForegroundColor C
 Write-Host "  - GUI Folder: dist\CLASSIC\CLASSIC.exe (folder distribution - smaller)" -ForegroundColor White
 Write-Host "  - GUI Single: dist\CLASSIC-GUI-OneFile.exe (single file - portable)" -ForegroundColor White
 Write-Host "  - CLI: dist\CLASSIC-CLI.exe (single file)" -ForegroundColor White
-Write-Host "  - TUI: dist\CLASSIC-TUI.exe (single file)" -ForegroundColor White
 
 if ($BuildTest) {
     Write-Host "  - Test: dist\CLASSIC-Test.exe (debug build)" -ForegroundColor White
 }
 
 Write-Host ""
-Write-Host "Build script completed!" -ForegroundColor Green
+Write-Host "Note: TUI is now a pure Rust application. Build separately with:" -ForegroundColor Yellow
+Write-Host "  cd rust\ui-applications\classic-tui && cargo build --release" -ForegroundColor Cyan
+Write-Host ""
 Write-Host "Build script completed!" -ForegroundColor Green
