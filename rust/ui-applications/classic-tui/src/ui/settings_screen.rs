@@ -8,6 +8,7 @@ use ratatui::{
 };
 
 /// Render the settings screen
+#[allow(dead_code)]
 pub fn render_settings_screen(f: &mut Frame, app: &App) {
     let mut working_area = f.area();
 

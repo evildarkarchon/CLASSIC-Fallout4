@@ -352,6 +352,7 @@ pub struct SettingsState {
     /// Currently focused advanced item (Advanced tab)
     pub focused_advanced: AdvancedItem,
     /// Whether we're in edit mode
+    #[allow(dead_code)]
     pub editing: bool,
 }
 

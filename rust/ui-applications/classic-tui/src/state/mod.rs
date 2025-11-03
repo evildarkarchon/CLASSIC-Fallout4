@@ -6,5 +6,4 @@
 pub mod persistence;
 pub mod session;
 
-pub use persistence::{SessionState, UiStateData};
 pub use session::SessionManager;

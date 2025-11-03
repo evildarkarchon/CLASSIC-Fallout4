@@ -102,6 +102,7 @@ pub struct Checkbox {
     dirty: bool, // Track if widget needs redraw
 }
 
+#[allow(dead_code)]
 impl Checkbox {
     /// Create a new checkbox
     pub fn new(label: impl Into<String>, checked: bool) -> Self {

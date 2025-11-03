@@ -59,6 +59,7 @@ impl PapyrusHandler {
     }
 
     /// Check if the log file exists
+    #[allow(dead_code)]
     pub async fn log_exists(&self) -> bool {
         self.analyzer.read().await.log_exists()
     }
@@ -111,11 +112,13 @@ impl PapyrusHandler {
     }
 
     /// Check if currently monitoring
+    #[allow(dead_code)]
     pub async fn is_monitoring(&self) -> bool {
         *self.is_monitoring.read().await
     }
 
     /// Get current statistics (one-time read)
+    #[allow(dead_code)]
     pub async fn get_current_stats(&self) -> Result<PapyrusStats> {
         let mut analyzer = self.analyzer.write().await;
         Ok(analyzer.analyze_full()?.clone())

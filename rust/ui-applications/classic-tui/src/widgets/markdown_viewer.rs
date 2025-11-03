@@ -29,6 +29,7 @@ pub struct DetectedUrl {
     #[allow(dead_code)]
     pub line_number: usize,
     /// Display text for the URL
+    #[allow(dead_code)]
     pub display_text: String,
 }
 

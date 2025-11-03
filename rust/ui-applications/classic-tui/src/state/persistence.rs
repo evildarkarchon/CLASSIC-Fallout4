@@ -8,7 +8,7 @@ use crate::ui::{ArticleCategory, SettingsTab};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Session state that persists between application runs
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -136,6 +136,7 @@ impl SessionState {
     }
 
     /// Clear saved session state
+    #[allow(dead_code)]
     pub fn clear() -> Result<()> {
         let path = Self::get_session_path()?;
 

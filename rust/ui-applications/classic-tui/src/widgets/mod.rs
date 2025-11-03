@@ -16,5 +16,4 @@ pub mod update_notification;
 pub use checkbox::Checkbox;
 pub use error_dialog::{ErrorDialog, ErrorSeverity};
 pub use folder_picker::{FolderPicker, FolderPickerState};
-pub use markdown_viewer::{DetectedUrl, MarkdownRenderer, RenderedMarkdown};
 pub use update_notification::UpdateNotification;

@@ -15,6 +15,7 @@ pub enum ScanMessage {
 
 /// Messages for UI events
 #[derive(Debug, Clone)]
+#[allow(unused)]
 pub enum UiMessage {
     /// Quit the application
     Quit,

@@ -113,6 +113,7 @@ pub fn validate_folder_path(path: &PathBuf) -> Result<()> {
 /// # Returns
 ///
 /// Folder picker state initialized with the current path for that folder type
+#[allow(dead_code)]
 pub fn create_picker_for_folder(app: &App, folder_type: FolderType) -> FolderPickerState {
     let start_dir = match folder_type {
         FolderType::Staging => app.staging_folder.clone(),

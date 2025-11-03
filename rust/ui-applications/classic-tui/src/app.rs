@@ -112,9 +112,11 @@ pub enum ScanState {
     /// Scan completed successfully with result summary
     Completed {
         /// Summary of scan results
+        #[allow(dead_code)]
         results: ScanResults,
     },
     /// Scan failed with error
+    #[allow(dead_code)]
     Error(String),
 }
 
@@ -184,6 +186,7 @@ impl App {
     }
 
     /// Mark the UI as needing a redraw
+    #[allow(dead_code)]
     pub fn request_redraw(&mut self) {
         self.needs_redraw = true;
     }
@@ -642,7 +645,9 @@ impl App {
 
         // Scroll to first match if any
         if !self.search_matches.is_empty() {
-            self.scroll_to_current_match(30); // TODO: Get actual visible lines
+            // Calculate visible lines from terminal height (same as used in navigation)
+            let visible_lines = self.terminal_height.saturating_sub(10) as usize;
+            self.scroll_to_current_match(visible_lines);
         }
     }
 

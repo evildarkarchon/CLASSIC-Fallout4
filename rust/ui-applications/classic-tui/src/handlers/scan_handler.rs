@@ -105,7 +105,6 @@ impl ScanHandler {
 
         // Process each log with progress updates
         let mut total_formids = 0;
-        let mut _total_plugins = 0;
         let mut total_suspects = 0;
         let scan_start = std::time::Instant::now();
 
@@ -133,7 +132,6 @@ impl ScanHandler {
             {
                 Ok(result) => {
                     total_formids += result.formid_count;
-                    _total_plugins += result.plugin_count;
                     total_suspects += result.suspect_count;
 
                     if result.success {

@@ -6,9 +6,7 @@
 use anyhow::Result;
 
 // Re-export shared clipboard functions
-pub use classic_ui_shared::clipboard::{
-    clear_clipboard, copy_to_clipboard, get_clipboard_text, is_clipboard_available,
-};
+pub use classic_ui_shared::clipboard::copy_to_clipboard;
 
 /// Copy formatted error information to clipboard (TUI-specific wrapper).
 ///
@@ -37,6 +35,7 @@ pub use classic_ui_shared::clipboard::{
 /// )?;
 /// # Ok::<(), anyhow::Error>(())
 /// ```
+#[allow(dead_code)]
 pub fn copy_error_to_clipboard(title: &str, message: &str, details: Option<&str>) -> Result<()> {
     classic_ui_shared::clipboard::copy_error_to_clipboard(title, message, details, "TUI")
 }

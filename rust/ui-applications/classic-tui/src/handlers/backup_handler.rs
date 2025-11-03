@@ -10,6 +10,7 @@ use std::path::PathBuf;
 
 /// Backup operation result message
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum BackupMessage {
     /// Backup status updated
     StatusUpdate(HashMap<BackupType, BackupInfo>),
@@ -52,6 +53,7 @@ impl BackupHandler {
     }
 
     /// Get current backup status from cache
+    #[allow(dead_code)]
     pub fn get_status(&self) -> &HashMap<BackupType, BackupInfo> {
         &self.status_cache
     }

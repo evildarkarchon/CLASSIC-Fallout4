@@ -3,7 +3,7 @@
 //! This module provides the SessionManager which tracks runtime state
 //! and coordinates with persistence for save/load operations.
 
-use super::persistence::{SessionState, UiStateData};
+use super::persistence::SessionState;
 use crate::app::{App, UiState};
 use crate::ui::{ArticleCategory, SettingsTab};
 use anyhow::Result;
@@ -55,11 +55,13 @@ impl SessionManager {
     }
 
     /// Get results list scroll position
+    #[allow(dead_code)]
     pub fn results_list_scroll(&self) -> usize {
         self.state.results_list_scroll
     }
 
     /// Set results list scroll position
+    #[allow(dead_code)]
     pub fn set_results_list_scroll(&mut self, position: usize) {
         self.state.results_list_scroll = position;
         self.dirty = true;
@@ -132,11 +134,13 @@ impl SessionManager {
     }
 
     /// Get Papyrus scroll position
+    #[allow(dead_code)]
     pub fn papyrus_scroll_offset(&self) -> usize {
         self.state.papyrus_scroll_offset
     }
 
     /// Set Papyrus scroll position
+    #[allow(dead_code)]
     pub fn set_papyrus_scroll_offset(&mut self, position: usize) {
         self.state.papyrus_scroll_offset = position;
         self.dirty = true;
@@ -189,6 +193,7 @@ impl SessionManager {
     }
 
     /// Save state to disk if dirty
+    #[allow(dead_code)]
     pub fn save_if_dirty(&mut self) -> Result<()> {
         if self.dirty {
             self.state.save()?;
@@ -205,6 +210,7 @@ impl SessionManager {
     }
 
     /// Check if state has unsaved changes
+    #[allow(dead_code)]
     pub fn is_dirty(&self) -> bool {
         self.dirty
     }

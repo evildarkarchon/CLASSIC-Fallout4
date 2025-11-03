@@ -48,6 +48,7 @@ struct DirEntry {
     path: PathBuf,
 }
 
+#[allow(dead_code)]
 impl FolderPickerState {
     /// Create a new folder picker starting at the given directory
     ///
@@ -205,6 +206,7 @@ impl FolderPickerState {
 }
 
 /// Folder picker widget
+#[allow(dead_code)]
 pub struct FolderPicker<'a> {
     /// Title for the picker
     title: &'a str,
@@ -219,6 +221,7 @@ pub struct FolderPicker<'a> {
     normal_style: Style,
 }
 
+#[allow(dead_code)]
 impl<'a> FolderPicker<'a> {
     /// Create a new folder picker widget
     ///

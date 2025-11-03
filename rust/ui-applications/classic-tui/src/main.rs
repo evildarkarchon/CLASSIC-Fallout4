@@ -868,7 +868,7 @@ async fn handle_update_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
 async fn handle_ui_message(
     app: &mut App,
     msg: UiMessage,
-    scan_handler: &ScanHandler,
+    _scan_handler: &ScanHandler,
     scan_tx: &mpsc::Sender<ScanMessage>,
     papyrus_tx: &mpsc::Sender<PapyrusMessage>,
     papyrus_handler: &mut Option<PapyrusHandler>,

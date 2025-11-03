@@ -15,6 +15,7 @@ use ratatui::{
 ///
 /// Determines the color coding and visual presentation of the error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum ErrorSeverity {
     /// Critical error (red) - operation failed, user action required
     Error,
@@ -84,6 +85,7 @@ pub struct ErrorDialog {
     pub active: bool,
 }
 
+#[allow(dead_code)]
 impl ErrorDialog {
     /// Create a new error dialog.
     ///
