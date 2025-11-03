@@ -8,7 +8,6 @@ Tests the AsyncBridge utilities including:
 - Thread safety
 """
 
-import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -472,9 +471,9 @@ class TestRustAcceleration:
 
     def test_rust_module_used(self):
         """Test that we're using the Rust-accelerated module."""
-        import classic_pybridge
-        import sys
         from pathlib import Path
+
+        import classic_pybridge
 
         # Check if the Rust extension module exists
         # The module structure is: classic_pybridge (package) -> classic_pybridge.pyd (extension)

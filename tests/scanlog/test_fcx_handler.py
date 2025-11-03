@@ -8,13 +8,11 @@ to verify it operates in read-only mode and never modifies configuration files.
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
-from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
-from tests.fixtures.fcx_fixtures import sample_config_issues, fcx_test_config
 
 
 @pytest.mark.unit

@@ -5,14 +5,14 @@ Tests the complete flow from worker error to dialog display, including
 signal connections and error dialog presentation.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from PySide6.QtCore import QThread, Qt
-from PySide6.QtWidgets import QMainWindow, QButtonGroup, QPushButton
+from unittest.mock import MagicMock, patch
 
+import pytest
+from PySide6.QtWidgets import QButtonGroup, QMainWindow
+
+from ClassicLib.Interface.Dialogs import CustomErrorDialog
 from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
 from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorker
-from ClassicLib.Interface.Dialogs import CustomErrorDialog
 
 
 # Create a test class that combines the mixin with QMainWindow
@@ -22,8 +22,9 @@ class TestMainWindow(ScanOperationsMixin, QMainWindow):
     def __init__(self):
         super().__init__()
         from PySide6.QtCore import QMutex
-        from ClassicLib.Interface.ThreadManager import ThreadManager
+
         from ClassicLib.Interface.Audio import AudioPlayer
+        from ClassicLib.Interface.ThreadManager import ThreadManager
 
         self._scan_mutex = QMutex()
         self._running_scans = set()
@@ -114,7 +115,7 @@ class TestScanErrorDialogIntegration:
     def test_game_files_worker_error_triggers_dialog(self, main_window, qtbot):
         """Test that game files worker error triggers error dialog display."""
         def _process_mock():
-            raise IOError("Failed to write results")
+            raise OSError("Failed to write results")
 
         with patch.object(GameFilesScanWorker, "_process_game_results", _process_mock):
             with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):

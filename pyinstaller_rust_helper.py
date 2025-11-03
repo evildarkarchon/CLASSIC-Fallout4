@@ -32,9 +32,8 @@ Performance: These Rust extensions provide 10-150x speedups for:
 - File I/O (10x), DDS processing (40x), Record scanning (40x)
 """
 
-from pathlib import Path
 import site
-
+from pathlib import Path
 
 # All Rust Python modules to bundle (.pyd files from *-py crates)
 # These are the standalone Python extension modules that PyInstaller needs to include

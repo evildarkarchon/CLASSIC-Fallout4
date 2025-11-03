@@ -4,14 +4,25 @@ This test suite verifies that the Rust GlobalRegistry implementation
 provides full API compatibility with the Python GlobalRegistry.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 # Import the Rust registry module
 try:
-    from registry import Keys, register, get, is_registered, clear_all
-    from registry import get_game, set_game, is_gui_mode
-    from registry import get_yaml_cache, get_vr, get_local_dir
+    from registry import (
+        Keys,
+        clear_all,
+        get,
+        get_game,
+        get_local_dir,
+        get_vr,
+        get_yaml_cache,
+        is_gui_mode,
+        is_registered,
+        register,
+        set_game,
+    )
     REGISTRY_AVAILABLE = True
 except ImportError as e:
     REGISTRY_AVAILABLE = False
@@ -205,7 +216,7 @@ class TestConvenienceFunctions:
         assert local_dir  # Should not be empty
         # Should be a valid path
         path = Path(local_dir)
-        assert path.exists() or path == Path(".")
+        assert path.exists() or path == Path()
 
 
 class TestPythonObjectStorage:

@@ -6,15 +6,8 @@ conditions, including malformed data, resource failures, partial failures,
 and cascading error scenarios that simulate production failure conditions.
 """
 
-import asyncio
-import os
-import random
-import tempfile
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from typing import List, Dict, Any
 
 import pytest
 
@@ -22,19 +15,11 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
-from .stress_test_fixtures import (
-    ConcurrencyTestHelper,
-    MemoryTracker,
-    PerformanceProfiler,
-    StressDataGenerator
-)
 
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.FileIOCore import FileIOCore
-from ClassicLib.MessageHandler import MessageHandler
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.YamlSettingsCache import yaml_cache
 
 
 @pytest.mark.stress
@@ -151,10 +136,10 @@ class TestMalformedDataHandling:
         malformed_formids = []
 
         # Invalid hex values
-        malformed_formids.extend([f"0xGGGGGGGG", f"0xHHHHHHHH", f"0xZZZZZZZZ"] * 100)
+        malformed_formids.extend(["0xGGGGGGGG", "0xHHHHHHHH", "0xZZZZZZZZ"] * 100)
 
         # Wrong format
-        malformed_formids.extend([f"12345678", f"ABCDEF", f"0X12345678"] * 100)
+        malformed_formids.extend(["12345678", "ABCDEF", "0X12345678"] * 100)
 
         # Empty/null values
         malformed_formids.extend(["", "0x", "0x0", None] * 100)
@@ -163,7 +148,7 @@ class TestMalformedDataHandling:
         malformed_formids.extend([f"0x{'A' * 100}", f"0x{'F' * 50}"] * 100)
 
         # Special characters
-        malformed_formids.extend([f"0x1234!@#$", f"0x<script>", f"0x\x00\x01"] * 100)
+        malformed_formids.extend(["0x1234!@#$", "0x<script>", "0x\x00\x01"] * 100)
 
         # Mixed valid and invalid
         for i in range(500):
@@ -397,12 +382,12 @@ class TestResourceFailureRecovery:
                     try:
                         if file_type == 'locked':
                             # Simulate locked file by trying to open with exclusive access
-                            with open(file_path, 'r+') as f:
+                            with Path(file_path).open('r+') as f:
                                 content = bridge.run_async(io_core.read_file(file_path))
                         elif file_type == 'permission':
                             # Make file read-only to simulate permission issues
                             if iteration == 0:  # Only on first iteration
-                                os.chmod(file_path, 0o444)  # Read-only
+                                Path(file_path).chmod(0o444)  # Read-only
                             content = bridge.run_async(io_core.read_file(file_path))
                         elif file_type == 'nonexistent':
                             # Try to read non-existent file

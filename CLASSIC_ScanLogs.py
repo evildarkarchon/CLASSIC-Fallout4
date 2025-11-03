@@ -14,17 +14,12 @@ The main() function is async and uses asyncio.run() only at the entry point.
 import asyncio
 import os
 import sys
-import warnings
-from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
-from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan as _crashlogs_scan
 from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 

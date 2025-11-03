@@ -8,6 +8,7 @@ PyInstaller frozen executable. It also manages persistent caching for uvx compat
 It also provides integration with Rust extensions through the rust_loader module.
 """
 
+import asyncio
 import os
 import sys
 from importlib.metadata import PackageNotFoundError, distribution
@@ -40,8 +41,7 @@ class ResourceLoader:
             if data_dir.exists():
                 logger.debug(f"Using CLASSIC Data from executable directory: {data_dir}")
                 return data_dir
-            else:
-                logger.debug(f"CLASSIC Data not found next to executable: {exe_dir}")
+            logger.debug(f"CLASSIC Data not found next to executable: {exe_dir}")
 
         return None
 
@@ -590,26 +590,79 @@ class ResourceLoader:
         return None
 
     @staticmethod
-    def save_path_to_cache(path: Path, path_type: str, game_name: str | None = None, vr_suffix: str = "") -> None:
+    async def save_path_to_cache_async(path: Path, path_type: str, game_name: str | None = None, vr_suffix: str = "") -> None:
         """
-        Saves a given path to a persistent cache and a local configuration file for backward compatibility.
-        It is intended to store important file or directory paths specific to a game or virtual reality suffix.
-        This method attempts to save the provided path to `cache.yaml` and `Local.yaml` configuration files.
-        In case of failures, warnings are logged, and no exception is propagated.
+        Asynchronously saves a path to persistent cache and local configuration files.
+
+        This is the async version that should be used from async contexts.
+        It uses yaml_settings_async() to properly handle async contexts without blocking.
 
         Args:
             path (Path): The file or directory path to be saved.
             path_type (str): The type of path being saved, e.g., "GamePath" or "DocsPath".
-            game_name (str | None, optional): The name of the game for which the path is associated. If not provided, a default
-                game name is retrieved from `GlobalRegistry`, which assumes the context of the running environment.
-            vr_suffix (str, optional): A suffix representing a specific virtual reality context. Defaults to an empty string.
+            game_name (str | None, optional): The name of the game for which the path is associated.
+            vr_suffix (str, optional): A suffix representing a specific virtual reality context.
         """
         if game_name is None:
             game_name = GlobalRegistry.get_game()
         if not vr_suffix:
             vr_suffix = GlobalRegistry.get_vr()
 
-        from ClassicLib import msg_info
+        from ClassicLib.Constants import YAML
+        from ClassicLib.YamlSettingsCache import yaml_settings_async
+
+        # Save to persistent cache.yaml
+        try:
+            await yaml_settings_async(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}", str(path))
+            logger.debug(f"Saved {path_type} to cache.yaml")
+        except Exception as e:
+            logger.warning(f"Could not save to cache.yaml: {e}")
+
+        # Save to Local.yaml for backward compatibility
+        try:
+            if path_type == "GamePath":
+                await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game", str(path))
+            elif path_type == "DocsPath":
+                await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs", str(path))
+            logger.debug(f"Saved {path_type} to Local.yaml")
+        except Exception as e:
+            logger.warning(f"Could not save to Local.yaml: {e}")
+
+    @staticmethod
+    def save_path_to_cache(path: Path, path_type: str, game_name: str | None = None, vr_suffix: str = "") -> None:
+        """
+        Saves a path to persistent cache and local configuration files (sync version).
+
+        This method detects whether it's being called from an async context and automatically
+        uses the appropriate method (async or sync). When called from async context, it runs
+        the async version; otherwise, it uses AsyncBridge for sync contexts.
+
+        Note: This method should only be used from sync contexts (GUI initialization).
+        For async contexts (CLI, async functions), use save_path_to_cache_async() directly.
+
+        Args:
+            path (Path): The file or directory path to be saved.
+            path_type (str): The type of path being saved, e.g., "GamePath" or "DocsPath".
+            game_name (str | None, optional): The name of the game for which the path is associated.
+            vr_suffix (str, optional): A suffix representing a specific virtual reality context.
+        """
+        # Check if we're in an async context
+        try:
+            loop = asyncio.get_running_loop()
+            # If we get here, we're in an async context - run the async version
+            logger.debug("Detected async context in save_path_to_cache, using save_path_to_cache_async")
+            # Create a task to run the async version
+            asyncio.create_task(ResourceLoader.save_path_to_cache_async(path, path_type, game_name, vr_suffix))
+            return
+        except RuntimeError:
+            # No running event loop - we're in a sync context, continue with sync version
+            pass
+
+        if game_name is None:
+            game_name = GlobalRegistry.get_game()
+        if not vr_suffix:
+            vr_suffix = GlobalRegistry.get_vr()
+
         from ClassicLib.Constants import YAML
         from ClassicLib.YamlSettingsCache import yaml_settings
 

@@ -4,12 +4,12 @@ This module tests the crash log scanning CLI interface, including
 backward compatibility wrappers, async adapters, and core scanning functionality.
 """
 
-import pytest
 import warnings
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, AsyncMock, call
 from collections import Counter
-import asyncio
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]
@@ -114,7 +114,7 @@ class TestClassicScanLogs:
         mock_write_func: Mock
     ) -> None:
         """Test write_report_to_file backward compatibility function."""
-        from CLASSIC_ScanLogs import write_report_to_file, ClassicScanLogs
+        from CLASSIC_ScanLogs import ClassicScanLogs, write_report_to_file
 
         # Arrange
         crashlog = Path("test.log")
@@ -174,7 +174,7 @@ class TestClassicScanLogs:
         mock_func: Mock
     ) -> None:
         """Test crashlogs_scan_async_pure_with_qt backward compatibility."""
-        from CLASSIC_ScanLogs import crashlogs_scan_async_pure_with_qt, ClassicScanLogs
+        from CLASSIC_ScanLogs import ClassicScanLogs, crashlogs_scan_async_pure_with_qt
 
         # Arrange
         scanner = MagicMock(spec=ClassicScanLogs)
@@ -195,7 +195,7 @@ class TestClassicScanLogs:
     @pytest.mark.asyncio
     async def test_crashlogs_scan_async_pure(self) -> None:
         """Test crashlogs_scan_async_pure backward compatibility."""
-        from CLASSIC_ScanLogs import crashlogs_scan_async_pure, ClassicScanLogs
+        from CLASSIC_ScanLogs import ClassicScanLogs, crashlogs_scan_async_pure
 
         # Arrange
         scanner = MagicMock(spec=ClassicScanLogs)
@@ -215,7 +215,7 @@ class TestClassicScanLogs:
     @pytest.mark.asyncio
     async def test_write_report_to_file_async(self) -> None:
         """Test write_report_to_file_async backward compatibility."""
-        from CLASSIC_ScanLogs import write_report_to_file_async, ClassicScanLogs
+        from CLASSIC_ScanLogs import ClassicScanLogs, write_report_to_file_async
 
         # Arrange
         crashlog = Path("test.log")
@@ -240,7 +240,7 @@ class TestClassicScanLogs:
         mock_func: Mock
     ) -> None:
         """Test _complete_scan_with_summary backward compatibility."""
-        from CLASSIC_ScanLogs import _complete_scan_with_summary, ClassicScanLogs
+        from CLASSIC_ScanLogs import ClassicScanLogs, _complete_scan_with_summary
 
         # Arrange
         scanner = MagicMock(spec=ClassicScanLogs)
@@ -321,10 +321,8 @@ class TestClassicScanLogs:
 
     def test_main_module_execution(self) -> None:
         """Test that the module can be executed as __main__."""
-        with patch("CLASSIC_ScanLogs.crashlogs_scan") as mock_scan:
-            with patch("CLASSIC_ScanLogs.__name__", "__main__"):
-                import importlib
-                import CLASSIC_ScanLogs
+        with patch("CLASSIC_ScanLogs.crashlogs_scan") as mock_scan, patch("CLASSIC_ScanLogs.__name__", "__main__"):
+            pass
                 # Module doesn't have __main__ block, but crashlogs_scan would be called
                 # if it did have one
 

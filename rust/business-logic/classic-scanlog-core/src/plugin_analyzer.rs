@@ -184,20 +184,28 @@ impl PluginAnalyzer {
         Ok((loadorder_plugins, plugins_loaded, lines))
     }
 
-    /// Extracts plugin names from crash log plugin segment lines in load order.
+    /// Scans and processes the plugin load order from the provided segment plugins.
     ///
-    /// This method parses plugin entries from crash log segments using regex pattern matching,
-    /// extracting unique plugin names in the order they appear. It handles both regular plugins
-    /// (`[XX] Plugin.esp`) and Form Engine (FE) plugins (`[FE:XXX] Plugin.esl`).
+    /// This method analyzes a list of segment plugins to extract their details and
+    /// builds a mapping of plugin names to their identifiers or classification.
+    /// It matches the Python implementation's behavior exactly.
+    ///
+    /// Note: The core load order parsing is universal across all Bethesda games.
+    /// The game_version and version_current parameters are optional and only used
+    /// for plugin limit detection (backward compatibility).
     ///
     /// # Arguments
     ///
     /// * `segment_plugins` - Vector of plugin segment lines from the crash log
+    /// * `game_version` - Optional game version for plugin limit detection
+    /// * `version_current` - Optional crashgen version for plugin limit detection
     ///
     /// # Returns
     ///
-    /// Returns `Ok(Vec<String>)` containing unique plugin names in load order. Empty vector if
-    /// no plugins found or input is empty.
+    /// Returns `Ok((HashMap, bool, bool))` containing:
+    /// - HashMap mapping plugin names to their hex indices or status ("DLL", "???")
+    /// - Boolean flag for plugin limit triggered (requires version params)
+    /// - Boolean flag for limit check disabled (requires version params)
     ///
     /// # Example
     ///
@@ -215,38 +223,69 @@ impl PluginAnalyzer {
     ///     "[01] MyMod.esp".to_string(),
     /// ];
     ///
-    /// let plugins = analyzer.loadorder_scan_log(segment)?;
+    /// let (plugins, limit_triggered, limit_disabled) = analyzer.loadorder_scan_log(
+    ///     segment,
+    ///     Some("1.10.163"),
+    ///     Some("1.36.0")
+    /// )?;
     /// assert_eq!(plugins.len(), 2);
+    /// assert_eq!(plugins.get("Fallout4.esm"), Some(&"00".to_string()));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn loadorder_scan_log(&self, segment_plugins: Vec<String>) -> Result<Vec<String>> {
+    pub fn loadorder_scan_log(
+        &self,
+        segment_plugins: Vec<String>,
+        game_version: Option<&str>,
+        version_current: Option<&str>,
+    ) -> Result<(HashMap<String, String>, bool, bool)> {
         // Early return for empty input
         if segment_plugins.is_empty() {
-            return Ok(Vec::new());
+            return Ok((HashMap::new(), false, false));
         }
 
-        // Collect unique plugins in order
-        let mut plugin_list = Vec::new();
-        let mut seen = HashSet::new();
+        // Initialize plugin map
+        let mut plugin_map = HashMap::new();
 
-        // Process each plugin entry to extract plugin names
+        // Check plugin limits separately if version info provided
+        let mut plugin_limit_triggered = false;
+        let mut limit_check_disabled = false;
+        if let (Some(game_ver), Some(version_cur)) = (game_version, version_current) {
+            let (triggered, disabled) =
+                self.check_plugin_limit(segment_plugins.clone(), game_ver, version_cur)?;
+            plugin_limit_triggered = triggered;
+            limit_check_disabled = disabled;
+        }
+
+        // Process each plugin entry (universal parsing logic)
         for entry in &segment_plugins {
             // Extract plugin information using regex
             if let Some(caps) = PLUGIN_PATTERN.captures(entry) {
-                if let Some(plugin_name_match) = caps.get(3) {
-                    let plugin_name = plugin_name_match.as_str().to_string();
+                let plugin_id = caps.get(1).map(|m| m.as_str().to_string());
+                let plugin_name = caps
+                    .get(3)
+                    .map(|m| m.as_str().to_string())
+                    .unwrap_or_default();
 
-                    // Add unique plugins in order
-                    if !plugin_name.is_empty() && !seen.contains(&plugin_name) {
-                        seen.insert(plugin_name.clone());
-                        plugin_list.push(plugin_name);
-                    }
+                // Skip if plugin name is empty or already processed
+                if plugin_name.is_empty() || plugin_map.contains_key(&plugin_name) {
+                    continue;
                 }
+
+                // Classify the plugin
+                let status = if let Some(id) = plugin_id {
+                    id.replace(":", "").to_uppercase()
+                } else if plugin_name.to_lowercase().contains("dll") {
+                    PLUGIN_STATUS_DLL.to_string()
+                } else {
+                    PLUGIN_STATUS_UNKNOWN.to_string()
+                };
+
+                plugin_map.insert(plugin_name, status);
             }
         }
 
-        Ok(plugin_list)
+        Ok((plugin_map, plugin_limit_triggered, limit_check_disabled))
     }
 
     /// Checks for plugin limit markers ([FF]) in crash logs with version-specific logic.
@@ -525,7 +564,7 @@ pub fn detect_plugins_batch(logs: Vec<String>) -> Vec<HashMap<String, String>> {
 
                     if !plugin_name.is_empty() && !plugins.contains_key(&plugin_name) {
                         let status = if let Some(id) = plugin_id {
-                            id.replace(":", "")
+                            id.replace(":", "").to_uppercase()
                         } else if plugin_name.to_lowercase().contains("dll") {
                             PLUGIN_STATUS_DLL.to_string()
                         } else {

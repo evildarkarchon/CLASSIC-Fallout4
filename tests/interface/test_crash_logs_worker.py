@@ -9,11 +9,10 @@ This test module verifies that:
 5. AsyncBridge cleanup happens automatically
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-from PySide6.QtCore import QThread, QObject
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+from PySide6.QtCore import QObject, QThread
 
 # Test worker initialization
 
@@ -46,8 +45,8 @@ def test_worker_signals():
 @pytest.mark.unit
 def test_worker_uses_async_bridge():
     """Test that worker uses AsyncBridge instead of manual event loop."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
     from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.Interface.Workers import CrashLogsScanWorker
 
     # Create worker
     worker = CrashLogsScanWorker()
@@ -83,7 +82,6 @@ def test_worker_uses_async_bridge():
                         def capture_run_async(coro):
                             run_async_calls.append(coro)
                             # Simulate successful execution
-                            return None
 
                         mock_bridge.run_async.side_effect = capture_run_async
 
@@ -102,8 +100,8 @@ def test_worker_uses_async_bridge():
 @pytest.mark.unit
 def test_no_manual_event_loop_creation():
     """Test that worker doesn't create manual event loops."""
+
     from ClassicLib.Interface.Workers import CrashLogsScanWorker
-    import asyncio
 
     worker = CrashLogsScanWorker()
 
@@ -130,7 +128,6 @@ def test_no_manual_event_loop_creation():
 @pytest.mark.rust
 def test_rust_acceleration_detection():
     """Test that Rust acceleration is detected and logged."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
     from ClassicLib.integration.status import is_rust_accelerated
 
     # Check if Rust is available
@@ -155,24 +152,23 @@ def test_rust_status_logging():
     with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
             from ClassicLib.ScanLog import FCXModeHandler
-            with patch.object(FCXModeHandler, "reset_fcx_checks"):
-                with patch("ClassicLib.AsyncBridge.AsyncBridge"):
-                    with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
-                        with patch.object(logger, "info") as mock_log_info:
-                            with patch.object(logger, "debug") as mock_log_debug:
-                                # Test with Rust available
-                                mock_rust_check.return_value = True
+            with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.AsyncBridge.AsyncBridge"):
+                with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
+                    with patch.object(logger, "info") as mock_log_info:
+                        with patch.object(logger, "debug") as mock_log_debug:
+                            # Test with Rust available
+                            mock_rust_check.return_value = True
 
-                                try:
-                                    worker._perform_crash_logs_scan()
-                                except Exception:
-                                    pass
+                            try:
+                                worker._perform_crash_logs_scan()
+                            except Exception:
+                                pass
 
-                                # Check if Rust acceleration was logged
-                                info_calls = [str(call) for call in mock_log_info.call_args_list]
-                                rust_logged = any("Rust acceleration" in str(call) or "150x speedup" in str(call) for call in info_calls)
+                            # Check if Rust acceleration was logged
+                            info_calls = [str(call) for call in mock_log_info.call_args_list]
+                            rust_logged = any("Rust acceleration" in str(call) or "150x speedup" in str(call) for call in info_calls)
 
-                                assert rust_logged, "Should log Rust acceleration status"
+                            assert rust_logged, "Should log Rust acceleration status"
 
 
 # Test signal emissions

@@ -5,15 +5,13 @@ of malformed, corrupted, or unusual crash logs that might be encountered in
 production environments.
 """
 
-import pytest
-import tempfile
-import random
-import string
-from pathlib import Path
-from typing import List, Dict, Any, Optional
-from unittest.mock import MagicMock, patch
-import json
 import asyncio
+import random
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.edge_cases]
@@ -53,10 +51,10 @@ STACK TRACE:
         """Generate a log with mixed character encodings."""
         # Mix UTF-8, CP1252, and invalid sequences
         parts = [
-            "Fallout 4 v1.10.163\n".encode('utf-8'),
+            b"Fallout 4 v1.10.163\n",
             "Exception à l'adresse ".encode('cp1252'),  # French with CP1252
             b"\xFF\xFE\xFD\xFC",  # Invalid UTF-8 bytes
-            "\nКрах игры\n".encode('utf-8'),  # Russian in UTF-8
+            "\nКрах игры\n".encode(),  # Russian in UTF-8
             "PLUGINS:\n".encode('ascii'),
         ]
         return b"".join(parts)

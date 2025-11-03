@@ -48,7 +48,7 @@ class GpuDetectorParityValidator(ParityValidator):
 
     def create_rust_implementation(self, **kwargs) -> Any | None:
         """Create Rust GPU detector implementation using factory."""
-        if not RUST_AVAILABLE.get("gpu_detector", False):
+        if not RUST_AVAILABLE.get("gpu_detector"):
             return None
 
         # Use factory function to get the best implementation

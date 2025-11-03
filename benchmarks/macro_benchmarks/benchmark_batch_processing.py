@@ -16,17 +16,16 @@ Performance metrics tracked:
 from __future__ import annotations
 
 import logging
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, List, Optional
-
-import sys
 from pathlib import Path
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ClassicLib.RustAcceleration import get_rust_acceleration, configure_for_batch_processing
+from ClassicLib.RustAcceleration import configure_for_batch_processing, get_rust_acceleration
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ class BatchProcessingBenchmarkResult:
         self.peak_memory_usage: int = 0
         self.errors: int = 0
         self.parallel_efficiency: float = 0.0
-        self.resource_utilization: Dict[str, Any] = {}
+        self.resource_utilization: dict[str, Any] = {}
 
 
 class BatchProcessingBenchmark:
@@ -101,7 +100,7 @@ class BatchProcessingBenchmark:
 
     def run_complete_pipeline(
         self,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         scenario: str = 'medium_batch_parallel'
     ) -> BatchProcessingBenchmarkResult:
         """
@@ -187,9 +186,9 @@ class BatchProcessingBenchmark:
 
     def _run_sequential_batch_processing(
         self,
-        crash_logs: List[List[str]],
-        scenario_config: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        crash_logs: list[list[str]],
+        scenario_config: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """
         Run sequential batch processing.
 
@@ -248,9 +247,9 @@ class BatchProcessingBenchmark:
 
     def _run_parallel_batch_processing(
         self,
-        crash_logs: List[List[str]],
-        scenario_config: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        crash_logs: list[list[str]],
+        scenario_config: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """
         Run parallel batch processing using ThreadPoolExecutor.
 
@@ -305,9 +304,9 @@ class BatchProcessingBenchmark:
 
     def _process_batch_parallel(
         self,
-        batch_logs: List[List[str]],
+        batch_logs: list[list[str]],
         batch_index: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process a single batch of logs in a worker thread.
 
@@ -346,7 +345,7 @@ class BatchProcessingBenchmark:
             'throughput': logs_processed / batch_time if batch_time > 0 else 0,
         }
 
-    def _process_single_log_simplified(self, log_data: List[str]):
+    def _process_single_log_simplified(self, log_data: list[str]):
         """
         Simplified single log processing for batch benchmarking.
 
@@ -380,9 +379,9 @@ class BatchProcessingBenchmark:
 
     def compare_batch_scenarios(
         self,
-        dataset: Dict[str, Any],
-        scenarios: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        dataset: dict[str, Any],
+        scenarios: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Compare performance across different batch processing scenarios.
 
@@ -459,8 +458,8 @@ class BatchProcessingBenchmark:
 
     def _generate_batch_optimization_recommendations(
         self,
-        performance_ranking: List[tuple]
-    ) -> List[str]:
+        performance_ranking: list[tuple]
+    ) -> list[str]:
         """Generate optimization recommendations based on batch processing results."""
         recommendations = []
 
@@ -534,9 +533,9 @@ class BatchProcessingBenchmark:
 
     def analyze_scalability_characteristics(
         self,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         max_batch_size: int = 100
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analyze how batch processing performance scales with batch size.
 
@@ -619,7 +618,7 @@ class BatchProcessingBenchmark:
                 'scalability_trend': 'increasing' if throughputs[-1] > throughputs[0] else 'decreasing',
             }
 
-            logger.info(f"Scalability analysis complete:")
+            logger.info("Scalability analysis complete:")
             logger.info(f"  Optimal batch size: {optimal['batch_size']}")
             logger.info(f"  Peak throughput: {optimal['throughput']:.2f} logs/sec")
 
@@ -627,10 +626,10 @@ class BatchProcessingBenchmark:
 
 
 def benchmark_batch_processing_performance(
-    crash_logs: List[List[str]],
-    scenarios: Optional[List[str]] = None,
+    crash_logs: list[list[str]],
+    scenarios: list[str] | None = None,
     include_scalability_analysis: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Standalone function for batch processing performance benchmarking.
 

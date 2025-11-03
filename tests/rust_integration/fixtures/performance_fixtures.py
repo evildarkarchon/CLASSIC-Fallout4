@@ -8,9 +8,9 @@ performance data generators, and validation helpers.
 
 import statistics
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Optional, Tuple
-from unittest.mock import Mock
+from typing import Any
 
 
 class PerformanceTestFixtures:
@@ -24,7 +24,7 @@ class PerformanceTestFixtures:
 
     @staticmethod
     def generate_scalable_crash_data(base_size: int = 100,
-                                   scale_factors: List[int] = None) -> Dict[str, List[str]]:
+                                   scale_factors: list[int] = None) -> dict[str, list[str]]:
         """
         Generate crash log data at multiple scales for performance testing.
 
@@ -79,7 +79,7 @@ class PerformanceTestFixtures:
         test_data: Any,
         iterations: int = 5,
         warmup_iterations: int = 2
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a performance benchmark for a specific operation.
 
@@ -147,10 +147,10 @@ class PerformanceTestFixtures:
 
     @staticmethod
     def validate_performance_targets(
-        benchmark_results: Dict[str, Any],
-        performance_targets: Dict[str, float],
-        scale_factor: Optional[float] = None
-    ) -> Dict[str, bool]:
+        benchmark_results: dict[str, Any],
+        performance_targets: dict[str, float],
+        scale_factor: float | None = None
+    ) -> dict[str, bool]:
         """
         Validate benchmark results against performance targets.
 
@@ -183,8 +183,8 @@ class PerformanceTestFixtures:
 
     @staticmethod
     def analyze_scaling_characteristics(
-        benchmark_results: Dict[str, Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        benchmark_results: dict[str, dict[str, Any]]
+    ) -> dict[str, Any]:
         """
         Analyze scaling characteristics across different data sizes.
 
@@ -258,8 +258,9 @@ class PerformanceTestFixtures:
             Context manager that tracks memory usage during execution
         """
         try:
-            import psutil
             import os
+
+            import psutil
 
             @contextmanager
             def memory_tracker():
@@ -320,7 +321,7 @@ class PerformanceTestFixtures:
         Returns:
             Function that calculates throughput from benchmark results
         """
-        def calculate_throughput(test_data: Any, benchmark_results: Dict[str, Any]) -> Dict[str, float]:
+        def calculate_throughput(test_data: Any, benchmark_results: dict[str, Any]) -> dict[str, float]:
             """Calculate throughput metrics from benchmark results."""
             data_size = data_size_func(test_data)
             avg_time = benchmark_results["statistics"]["avg_time"]
@@ -342,7 +343,7 @@ class PerformanceTestFixtures:
         return calculate_throughput
 
     @staticmethod
-    def create_performance_regression_detector(baseline_results: Dict[str, Any]):
+    def create_performance_regression_detector(baseline_results: dict[str, Any]):
         """
         Create a performance regression detector.
 
@@ -353,9 +354,9 @@ class PerformanceTestFixtures:
             Function that detects performance regressions
         """
         def detect_regression(
-            current_results: Dict[str, Any],
+            current_results: dict[str, Any],
             regression_threshold: float = 1.2  # 20% slowdown threshold
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """Detect performance regression compared to baseline."""
 
             baseline_time = baseline_results["statistics"]["avg_time"]
@@ -390,9 +391,9 @@ class PerformanceTestFixtures:
     @staticmethod
     def generate_concurrent_test_scenarios(
         base_operation: Callable,
-        thread_counts: List[int] = None,
+        thread_counts: list[int] = None,
         iterations_per_thread: int = 10
-    ) -> Dict[str, Callable]:
+    ) -> dict[str, Callable]:
         """
         Generate concurrent test scenarios for performance testing.
 
@@ -405,7 +406,6 @@ class PerformanceTestFixtures:
             Dictionary mapping scenario names to test functions
         """
         from concurrent.futures import ThreadPoolExecutor, as_completed
-        import threading
 
         if thread_counts is None:
             thread_counts = [1, 2, 4, 8]
@@ -428,17 +428,16 @@ class PerformanceTestFixtures:
                     if threads == 1:
                         # Sequential execution
                         return worker(0, test_data)
-                    else:
-                        # Concurrent execution
-                        with ThreadPoolExecutor(max_workers=threads) as executor:
-                            futures = [
-                                executor.submit(worker, i, test_data)
-                                for i in range(threads)
-                            ]
-                            all_results = []
-                            for future in as_completed(futures):
-                                all_results.extend(future.result())
-                            return all_results
+                    # Concurrent execution
+                    with ThreadPoolExecutor(max_workers=threads) as executor:
+                        futures = [
+                            executor.submit(worker, i, test_data)
+                            for i in range(threads)
+                        ]
+                        all_results = []
+                        for future in as_completed(futures):
+                            all_results.extend(future.result())
+                        return all_results
 
                 return concurrent_test
 
@@ -455,9 +454,9 @@ class PerformanceTestFixtures:
             Function that generates formatted performance reports
         """
         def generate_report(
-            benchmark_results: Dict[str, Dict[str, Any]],
-            scaling_analysis: Optional[Dict[str, Any]] = None,
-            regression_results: Optional[Dict[str, Any]] = None
+            benchmark_results: dict[str, dict[str, Any]],
+            scaling_analysis: dict[str, Any] | None = None,
+            regression_results: dict[str, Any] | None = None
         ) -> str:
             """Generate a formatted performance report."""
 

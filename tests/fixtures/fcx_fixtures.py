@@ -7,9 +7,9 @@ verifying no file modifications occur, and generating sample ConfigIssue objects
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from collections.abc import Generator
 
 import pytest
 

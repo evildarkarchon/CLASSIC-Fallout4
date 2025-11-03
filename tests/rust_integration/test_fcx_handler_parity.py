@@ -47,7 +47,7 @@ class FcxHandlerParityValidator(ParityValidator):
 
     def create_rust_implementation(self, fcx_mode: bool = False, **kwargs) -> Any | None:
         """Create Rust FCX handler implementation using factory."""
-        if not RUST_AVAILABLE.get("fcx_handler", False):
+        if not RUST_AVAILABLE.get("fcx_handler"):
             return None
 
         # Use factory function to get the best implementation
@@ -305,7 +305,7 @@ class TestFcxHandlerParity:
         python_final = python_handler.get_fcx_messages()
 
         assert rust_final.fragment_content == python_final.fragment_content, \
-            f"Results differ in performance test"
+            "Results differ in performance test"
 
         # Validate performance improvement
         if python_time > 0 and rust_time > 0:
@@ -323,8 +323,6 @@ class TestFcxHandlerParity:
         This test verifies that both Rust and Python implementations of the FCX
         handler operate in read-only mode and never modify configuration files.
         """
-        from pathlib import Path
-        from unittest.mock import patch
 
         validator = FcxHandlerParityValidator()
 

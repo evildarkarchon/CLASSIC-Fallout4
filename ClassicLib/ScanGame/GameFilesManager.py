@@ -97,7 +97,7 @@ class GameFilesManagerCore:
             # Validate game path
             _validate_game_path(game_path)
             # Type narrowing: game_path is validated by _validate_game_path (raises if None)
-            game_path = cast(Path, game_path)
+            game_path = cast("Path", game_path)
 
             # Set up backup path
             backup_path: Path = Path(f"{BACKUP_DIR}/{classic_list}")
@@ -464,7 +464,7 @@ async def manage_game_files_async(classic_list: str, mode: Literal["BACKUP", "RE
     await core.manage_game_files_async(classic_list, mode)
 
 
-# Sync adapter for backwards compatibility
+# Sync adapter for backwards compatibility and GUI usage
 def manage_game_files(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
     """
     Sync adapter for game files management operations.
@@ -472,6 +472,14 @@ def manage_game_files(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
     Manages game files by performing backup, restore, or removal operations.
     The function interacts with the game's directory and modifies files based
     on the specified mode.
+
+    IMPORTANT - Usage:
+    ✅ GUI workers and Qt threads
+    ✅ Testing and benchmarking
+    ❌ Production CLI code (use manage_game_files_async() instead)
+
+    For CLI production code, use the async version:
+        await manage_game_files_async(classic_list, mode)
 
     Args:
         classic_list: The name of the list specifying which files need to be managed.

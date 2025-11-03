@@ -13,7 +13,6 @@ The module includes functionalities to:
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import ConfigFileCache
 
 if TYPE_CHECKING:

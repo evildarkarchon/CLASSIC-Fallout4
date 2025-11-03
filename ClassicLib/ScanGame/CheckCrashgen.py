@@ -321,7 +321,7 @@ class CrashgenChecker:
         issues: list[ConfigIssue] = []
 
         # Type narrowing: config_file is validated by caller before this method is called
-        config_file = cast(Path, self.config_file)
+        config_file = cast("Path", self.config_file)
         has_bakascrapheap: bool = "bakascrapheap.dll" in self.installed_plugins
 
         for setting in self._get_settings_to_check():
@@ -359,7 +359,7 @@ class CrashgenChecker:
                     issues.append(issue)
                     # Build message for backward compatibility
                     self.message_list.extend([
-                        f"# ❌ CAUTION : {setting['description']}, but {setting['name']} parameter is set to {current_value} #\n",
+                        f"**❌ CAUTION : {setting['description']}, but {setting['name']} parameter is set to {current_value}**\n",
                         f" FIX: Open {self.crashgen_name}'s TOML file and change {setting['name']} to {setting['desired_value']} {setting['reason']}.\n-----\n",
                     ])
                     logger.info(f"Detected issue: {setting['name']} is {current_value}, recommended: {setting['desired_value']}")

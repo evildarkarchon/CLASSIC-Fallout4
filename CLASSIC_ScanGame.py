@@ -1,21 +1,24 @@
 """Game integrity and mod scanning shared interface for CLASSIC.
 
 This module provides sync wrappers for game file integrity checks and mod scanning
-operations. It serves as a shared interface used by GUI workers, TUI, and scanning contexts.
+operations. It serves as a shared interface used by GUI workers and testing contexts.
 
 Main functionality:
 - Game file integrity checking and management (backup, restore, remove)
 - Mod scanning for both unpacked and archived mods
 - Combined result generation for comprehensive reports
-- Phase 2 context-aware sync wrappers (work in GUI, error in CLI/TUI)
+- Phase 2 context-aware sync wrappers (for GUI workers and testing)
 
-IMPORTANT: These are GUI-compatible sync wrappers. For pure async contexts:
-- Use ScanGameCore directly with await
-- TUI/CLI should use async methods, not these wrappers
+IMPORTANT Usage Patterns:
+- GUI workers: Use sync wrappers (game_combined_result(), mods_combined_result())
+- CLI production: Use async methods directly (see main() for reference pattern)
+- Testing/benchmarking: Sync wrappers work via asyncio.run() fallback
 
 Phase 4: Refactored to use create_sync_wrapper() for context awareness.
+Phase 5: CLI entry point converted to async-first pattern (following CLASSIC_ScanLogs.py).
 """
 
+import asyncio
 from pathlib import Path
 from typing import Literal
 
@@ -23,9 +26,12 @@ from ClassicLib import msg_info
 from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.ScanGame import (
     generate_game_combined_result,
+    generate_game_combined_result_async,
     generate_mods_combined_result,
+    generate_mods_combined_result_async,
     manage_game_files,
-    write_combined_results,
+    manage_game_files_async,
+    write_combined_results_async,
 )
 from ClassicLib.ScanGame.Config import TEST_MODE
 from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
@@ -135,8 +141,14 @@ def mods_combined_result() -> str:
     return generate_mods_combined_result()
 
 
-def main() -> None:
-    """Main entry point for game scanning."""
+async def main() -> None:
+    """Main entry point for game scanning - Async-First Pattern.
+
+    This CLI entry point uses native async operations with a single asyncio.run()
+    call, following the same pattern as CLASSIC_ScanLogs.py.
+
+    For GUI workers, use the sync wrappers (game_combined_result(), etc.) instead.
+    """
     # Initialize application using SetupCoordinator
     coordinator = SetupCoordinator()
     coordinator.initialize_application(is_gui=False)
@@ -144,13 +156,19 @@ def main() -> None:
     # Files are generated on-demand when needed, not at every startup
 
     if TEST_MODE:
-        write_combined_results()
+        await write_combined_results_async()
     else:
-        msg_info(game_combined_result())
-        msg_info(mods_combined_result())
-        game_files_manage("Backup ENB")
+        # Use async methods directly in CLI production code
+        game_result, _ = await generate_game_combined_result_async()
+        msg_info(game_result)
+
+        mods_result = await generate_mods_combined_result_async()
+        msg_info(mods_result)
+
+        await manage_game_files_async("Backup ENB")
 
 
 if __name__ == "__main__":
-    main()
+    # Single asyncio.run() call at entry point only (async-first pattern)
+    asyncio.run(main())
     input("Press Enter to continue...")

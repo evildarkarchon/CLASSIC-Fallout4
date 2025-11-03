@@ -5,21 +5,19 @@ detection, thread safety validation, and resource handling under typical
 and extreme workloads.
 """
 
-import pytest
 import asyncio
+import gc
+import random
+import tempfile
 import threading
 import time
-import psutil
-import gc
+import tracemalloc
 import weakref
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Set
-from unittest.mock import MagicMock, Mock, patch
-import tempfile
-import random
-import string
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
-import tracemalloc
+from typing import Any
+
+import psutil
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.stress, pytest.mark.slow]
@@ -55,7 +53,7 @@ class StressTestMetrics:
         """Update thread count."""
         self.thread_counts.append(threading.active_count())
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get test summary."""
         elapsed = time.time() - self.start_time
         return {
@@ -117,7 +115,7 @@ class SyntheticWorkloadGenerator:
         return content
 
     @staticmethod
-    def generate_user_action_sequence() -> List[str]:
+    def generate_user_action_sequence() -> list[str]:
         """Generate a sequence of typical user actions."""
         actions = []
         action_types = [
@@ -179,7 +177,7 @@ class TestConcurrentOperationsStress:
 
         # Analyze results
         summary = metrics.get_summary()
-        print(f"\nConcurrent Parsing Stress Test:")
+        print("\nConcurrent Parsing Stress Test:")
         print(f"  Operations: {summary['operations']}")
         print(f"  Throughput: {summary['ops_per_second']:.2f} ops/sec")
         print(f"  Avg Response: {summary['avg_response_time']*1000:.1f}ms")
@@ -196,8 +194,8 @@ class TestConcurrentOperationsStress:
     @pytest.mark.timeout(30)
     async def test_mixed_operations_stress(self, metrics, generator, mock_yamldata_python_only):
         """Stress test with mixed operation types."""
-        from ClassicLib.integration.factory import get_parser, get_formid_analyzer
         from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.integration.factory import get_formid_analyzer, get_parser
 
         parser = get_parser()
         analyzer = get_formid_analyzer(mock_yamldata_python_only, True, False)
@@ -252,7 +250,7 @@ class TestConcurrentOperationsStress:
 
         # Summary
         summary = metrics.get_summary()
-        print(f"\nMixed Operations Stress Test:")
+        print("\nMixed Operations Stress Test:")
         print(f"  Total Operations: {total_successes + total_failures}")
         print(f"  Successes: {total_successes}")
         print(f"  Failures: {total_failures}")
@@ -297,7 +295,7 @@ class TestConcurrentOperationsStress:
         metrics.update_memory()
         summary = metrics.get_summary()
 
-        print(f"\nSustained Load Stress Test (10 seconds):")
+        print("\nSustained Load Stress Test (10 seconds):")
         print(f"  Operations: {summary['operations']}")
         print(f"  Throughput: {summary['ops_per_second']:.2f} ops/sec")
         print(f"  Error Rate: {summary['error_rate']*100:.2f}%")
@@ -356,7 +354,7 @@ class TestMemoryLeakDetection:
         snapshot = tracemalloc.take_snapshot()
         top_stats = snapshot.statistics('lineno')[:10]
 
-        print(f"\nMemory Leak Test (Parser):")
+        print("\nMemory Leak Test (Parser):")
         print(f"  Initial Memory: {initial_memory:.1f}MB")
         print(f"  Final Memory: {final_memory:.1f}MB")
         print(f"  Increase: {memory_increase:.1f}MB")
@@ -371,8 +369,8 @@ class TestMemoryLeakDetection:
     @pytest.mark.timeout(30)
     async def test_async_operations_memory_leak(self):
         """Test for memory leaks in async operations."""
-        from ClassicLib.FileIOCore import FileIOCore
         from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.FileIOCore import FileIOCore
 
         io_core = FileIOCore()
         bridge = AsyncBridge.get_instance()
@@ -408,7 +406,7 @@ class TestMemoryLeakDetection:
         final_memory = process.memory_info().rss / (1024 * 1024)
         memory_increase = final_memory - initial_memory
 
-        print(f"\nMemory Leak Test (Async):")
+        print("\nMemory Leak Test (Async):")
         print(f"  Memory Increase: {memory_increase:.1f}MB")
 
         # Should not leak significant memory
@@ -449,7 +447,7 @@ class TestMemoryLeakDetection:
         # Check how many objects are still alive
         alive = sum(1 for ref in tracked_objects if ref() is not None)
 
-        print(f"\nObject Lifecycle Test:")
+        print("\nObject Lifecycle Test:")
         print(f"  Tracked: {len(tracked_objects)}")
         print(f"  Still Alive: {alive}")
         print(f"  Cleanup Rate: {(1 - alive/len(tracked_objects))*100:.1f}%")
@@ -463,8 +461,8 @@ class TestThreadSafetyValidation:
 
     def test_singleton_thread_safety(self):
         """Test that singletons are thread-safe."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
         from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.MessageHandler.handler import MessageHandler
 
         # Clear AsyncBridge instances (GlobalRegistry and MessageHandler are not singletons anymore)
         with AsyncBridge._lock:
@@ -605,7 +603,7 @@ class TestResourceExhaustion:
 
                     # Keep files open
                     try:
-                        f = open(file_path, 'r')
+                        f = Path(file_path).open()
                         open_files.append(f)
                     except OSError as e:
                         # Expected when handles exhausted

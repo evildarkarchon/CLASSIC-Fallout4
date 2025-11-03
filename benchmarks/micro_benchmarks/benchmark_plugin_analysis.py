@@ -14,17 +14,16 @@ Performance metrics tracked:
 from __future__ import annotations
 
 import logging
-import time
-from typing import Any, Dict, List, Optional
-
 import sys
+import time
 from pathlib import Path
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.integration.factory import get_plugin_analyzer
+from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 
@@ -51,8 +50,8 @@ class PluginBenchmark:
     def __init__(self):
         """Initialize plugin analysis benchmark."""
         self.mock_yamldata = self._create_mock_yamldata()
-        self._rust_analyzer: Optional[RustPluginAnalyzer] = None
-        self._python_analyzer: Optional[PluginAnalyzer] = None
+        self._rust_analyzer: RustPluginAnalyzer | None = None
+        self._python_analyzer: PluginAnalyzer | None = None
 
     def _create_mock_yamldata(self):
         """Create mock YAML data for plugin analysis testing."""
@@ -72,7 +71,7 @@ class PluginBenchmark:
     def run_benchmark(
         self,
         implementation: str,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         warm_up: bool = False
     ) -> PluginBenchmarkResult:
         """
@@ -129,8 +128,8 @@ class PluginBenchmark:
     def _run_batch_plugin_analysis(
         self,
         implementation: str,
-        plugin_segments: List[List[str]]
-    ) -> List[Dict[str, Any]]:
+        plugin_segments: list[list[str]]
+    ) -> list[dict[str, Any]]:
         """Run batch plugin analysis for performance measurement."""
         results = []
 
@@ -158,7 +157,7 @@ class PluginBenchmark:
 
         return results
 
-    def _analyze_with_rust(self, segment_lines: List[str]) -> Dict[str, Any]:
+    def _analyze_with_rust(self, segment_lines: list[str]) -> dict[str, Any]:
         """Analyze plugins using Rust implementation."""
         if self._rust_analyzer is None:
             self._rust_analyzer = get_plugin_analyzer(self.mock_yamldata)
@@ -179,7 +178,7 @@ class PluginBenchmark:
             'limit_triggered': limit_triggered,
         }
 
-    def _analyze_with_python(self, segment_lines: List[str]) -> Dict[str, Any]:
+    def _analyze_with_python(self, segment_lines: list[str]) -> dict[str, Any]:
         """Analyze plugins using Python implementation."""
         if self._python_analyzer is None:
             self._python_analyzer = PluginAnalyzer(self.mock_yamldata)
@@ -200,7 +199,7 @@ class PluginBenchmark:
             'limit_triggered': limit_triggered,
         }
 
-    def _run_single_analysis(self, implementation: str, plugin_segments: List[List[str]]):
+    def _run_single_analysis(self, implementation: str, plugin_segments: list[list[str]]):
         """Run single plugin analysis for warm-up."""
         if not plugin_segments:
             return
@@ -212,9 +211,9 @@ class PluginBenchmark:
 
 
 def benchmark_plugin_analysis_performance(
-    plugin_segments: List[List[str]],
+    plugin_segments: list[list[str]],
     iterations: int = 5
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Standalone function for benchmarking plugin analysis performance."""
     benchmark = PluginBenchmark()
     dataset = {'plugin_segments': plugin_segments}

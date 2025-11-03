@@ -6,8 +6,8 @@ used in Rust integration testing, including YAML data, settings,
 and other configuration objects.
 """
 
-from typing import Any, Dict, List, Optional
-from unittest.mock import Mock, MagicMock
+from typing import Any
+from unittest.mock import MagicMock, Mock
 
 
 class MockDataFactory:
@@ -20,8 +20,8 @@ class MockDataFactory:
 
     @staticmethod
     def create_fallout4_yamldata(
-        problematic_plugins: Optional[Dict[str, str]] = None,
-        record_patterns: Optional[List[str]] = None,
+        problematic_plugins: dict[str, str] | None = None,
+        record_patterns: list[str] | None = None,
         formid_db_enabled: bool = True,
         show_formid_values: bool = True
     ) -> Mock:
@@ -201,9 +201,7 @@ class MockDataFactory:
             """Mock implementation of batch_get_settings."""
             results = []
             for type_class, yaml_enum, key in settings_requests:
-                if key == "show_formid_values":
-                    results.append(True)
-                elif key == "formid_database_enabled":
+                if key == "show_formid_values" or key == "formid_database_enabled":
                     results.append(True)
                 elif key == "problematic_plugins":
                     results.append({"TestMod.esp": "Test problematic plugin"})
@@ -376,7 +374,7 @@ class MockDataFactory:
     @classmethod
     def create_complete_test_environment(cls,
                                        game_type: str = "fallout4",
-                                       rust_available: bool = True) -> Dict[str, Any]:
+                                       rust_available: bool = True) -> dict[str, Any]:
         """
         Create a complete test environment with all necessary mocks.
 
@@ -409,7 +407,7 @@ class MockDataFactory:
         return environment
 
     @staticmethod
-    def create_rust_status_mock(components_available: List[str]) -> Dict[str, Any]:
+    def create_rust_status_mock(components_available: list[str]) -> dict[str, Any]:
         """
         Create a mock Rust status dictionary.
 

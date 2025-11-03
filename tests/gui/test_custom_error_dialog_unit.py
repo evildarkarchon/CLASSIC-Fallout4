@@ -4,10 +4,11 @@ Unit tests for CustomErrorDialog.
 Tests the custom error dialog with clipboard copy functionality.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
-from PySide6.QtWidgets import QApplication, QPushButton, QTextEdit
+
+import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QPushButton, QTextEdit
 
 from ClassicLib.Interface.Dialogs import CustomErrorDialog
 

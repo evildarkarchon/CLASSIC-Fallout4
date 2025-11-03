@@ -20,6 +20,7 @@ Dependencies:
 """
 
 import asyncio
+import logging
 from itertools import starmap
 from pathlib import Path
 from typing import Any, cast
@@ -30,6 +31,8 @@ from .cache import YamlCache
 from .file_operations import YamlFileOperations
 from .types import T
 from .validators import validate_setting_value
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncYamlSettingsCore:

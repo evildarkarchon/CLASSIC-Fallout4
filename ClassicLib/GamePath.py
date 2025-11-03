@@ -118,9 +118,13 @@ class GamePathFinder:
         """
         Represents a configuration class that initializes and manages key YAML settings and game-related identifiers.
 
+        Note: This constructor uses synchronous yaml_settings(). For async contexts,
+        use the async factory method create_async() instead.
+
         Raises:
             TypeError: If any of the YAML settings such as `xse_acronym`, `xse_acronym_base`, or
                 `game_name` are not strings.
+            RuntimeError: If called from within an async context.
         """
         self.exe_name = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
         self.xse_file = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
@@ -130,6 +134,41 @@ class GamePathFinder:
 
         if not all(isinstance(val, str) for val in [self.xse_acronym, self.xse_acronym_base, self.game_name]):
             raise TypeError("Required YAML settings are not strings")
+
+    @classmethod
+    async def create_async(cls) -> "GamePathFinder":
+        """
+        Async factory method to create a GamePathFinder instance.
+
+        This method should be used in async contexts instead of the synchronous __init__.
+        It uses yaml_settings_async() to load configuration without blocking.
+
+        Returns:
+            GamePathFinder: A fully initialized instance with YAML settings loaded.
+
+        Raises:
+            TypeError: If any of the YAML settings are not strings.
+
+        Example:
+            >>> finder = await GamePathFinder.create_async()
+            >>> finder.find_game_path()
+        """
+        from ClassicLib.YamlSettingsCache import yaml_settings_async
+
+        # Create instance without calling __init__
+        instance = cls.__new__(cls)
+
+        # Initialize attributes using async yaml operations
+        instance.exe_name = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
+        instance.xse_file = await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
+        instance.xse_acronym = await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+        instance.xse_acronym_base = await yaml_settings_async(str, YAML.Game, "Game_Info.XSE_Acronym")
+        instance.game_name = await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Root_Name")
+
+        if not all(isinstance(val, str) for val in [instance.xse_acronym, instance.xse_acronym_base, instance.game_name]):
+            raise TypeError("Required YAML settings are not strings")
+
+        return instance
 
     def _validate_xse_file(self) -> bool:
         """Validate XSE file existence and accessibility."""
@@ -226,10 +265,25 @@ class GamePathFinder:
 
         return True
 
+    async def _save_game_path_async(self, game_path: Path) -> None:
+        """
+        Asynchronously saves the game path to cache locations and registers it.
+
+        Args:
+            game_path (Path): The path to the game directory to be saved.
+        """
+        from ClassicLib.ResourceLoader import ResourceLoader
+
+        # Save to all cache locations (cache.yaml, Local.yaml)
+        await ResourceLoader.save_path_to_cache_async(game_path, "GamePath")
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
+
     def _save_game_path(self, game_path: Path) -> None:
         """
         Saves the provided game path to multiple cache locations and registers
         it within the global registry.
+
+        Note: This is the sync version. For async contexts, use _save_game_path_async().
 
         Args:
             game_path (Path): The path to the game directory to be saved.
@@ -294,15 +348,63 @@ class GamePathFinder:
 
             msg_error(f"ERROR : NO {self.exe_name} FILE FOUND IN '{game_path}'! Please try again.")
 
+    async def find_game_path_async(self) -> None:
+        """
+        Asynchronously finds and sets the game installation path.
+
+        This is the async version that should be used from async contexts (CLI, async workers).
+        It uses yaml_settings_async() and _save_game_path_async() to properly handle async operations.
+
+        Raises:
+            ValueError: If the user-provided path or XSE-derived path is invalid.
+        """
+        # First, check if we have a cached path (for uvx compatibility)
+        from ClassicLib.ResourceLoader import ResourceLoader
+        from ClassicLib.YamlSettingsCache import yaml_settings_async
+
+        cached_path = ResourceLoader.get_cached_game_path()
+        if cached_path and cached_path.joinpath(self.exe_name).is_file():
+            logger.debug(f"Using cached game path: {cached_path}")
+            GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, cached_path)
+            # Still save to Local.yaml for consistency
+            await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(cached_path))
+            return
+
+        # Try registry first on Windows
+        if platform.system() == "Windows":
+            game_path = _game_path_find_registry(self.exe_name)
+            if game_path:
+                return
+
+        # Validate XSE file
+        if not self._validate_xse_file():
+            return
+
+        # Try to extract path from XSE log
+        game_path = self._parse_xse_log_for_path()
+        if game_path and self._validate_game_path(game_path):
+            await self._save_game_path_async(game_path)
+            return
+
+        # Fall back to user input
+        if GlobalRegistry.is_gui_mode():
+            game_path = self._get_path_from_user_gui()
+        else:
+            game_path = self._get_path_from_user_console()
+
+        await self._save_game_path_async(game_path)
+
     def find_game_path(self) -> None:
         """
-        Finds and sets the game installation path.
+        Finds and sets the game installation path (sync version).
 
         This method determines the path to the game installation by using various approaches in a
         hierarchical manner. It first checks if a cached path is available. If not, on Windows systems,
         it attempts to retrieve the path from the registry. If these methods fail, it validates the XSE
         file and tries to extract the path from the XSE log. As a last resort, it prompts the user
         for the path either via a GUI or the console, depending on the mode the application runs in.
+
+        Note: For async contexts (CLI, async workers), use find_game_path_async() instead.
 
         Raises:
             ValueError: If the user-provided path or XSE-derived path is invalid.
@@ -367,6 +469,28 @@ def game_path_find() -> None:
     finder.find_game_path()
 
 
+async def game_path_find_async() -> None:
+    """
+    Asynchronously verifies and determines the game path.
+
+    This async function creates a GamePathFinder instance using async initialization
+    and initiates the process of finding the game path. It should be used in async
+    contexts (like CLI async code or async workers) instead of the synchronous
+    game_path_find().
+
+    Returns:
+        None: This function does not return a value but serves as a procedural process
+        for game path verification.
+
+    Example:
+        >>> await game_path_find_async()
+    """
+    logger.debug("- - - INITIATED GAME PATH CHECK (ASYNC)")
+
+    finder = await GamePathFinder.create_async()
+    await finder.find_game_path_async()
+
+
 def game_generate_paths() -> None:
     """
     Generates game-specific paths and configurations using YAML settings and global registry data.
@@ -424,6 +548,73 @@ def game_generate_paths() -> None:
                 )
         case "Fallout4" if GlobalRegistry.get_vr():
             yaml_settings(
+                str,
+                YAML.Game_Local,
+                "GameVR_Info.Game_File_AddressLib",
+                rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-2-72-0.csv",
+            )
+
+
+async def game_generate_paths_async() -> None:
+    """
+    Asynchronously generates game-specific paths and configurations using YAML settings.
+
+    This async version should be used in async contexts (like CLI async code or async workers)
+    instead of the synchronous game_generate_paths(). It uses yaml_settings_async() to avoid
+    blocking the event loop.
+
+    Raises:
+        TypeError: If the game path or XSE acronym base is not of type `str`.
+        ValueError: If the game version is unsupported or invalid.
+
+    Example:
+        >>> await game_generate_paths_async()
+    """
+    from ClassicLib.YamlSettingsCache import yaml_settings_async
+
+    logger.debug("- - - INITIATED GAME PATH GENERATION (ASYNC)")
+
+    game_path: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
+    await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+    xse_acronym_base: str | None = await yaml_settings_async(str, YAML.Game, "Game_Info.XSE_Acronym")
+    if not (isinstance(game_path, str) and isinstance(xse_acronym_base, str)):
+        raise TypeError
+
+    await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Data", rf"{game_path}\Data")
+    await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
+    await yaml_settings_async(
+        str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins"
+    )
+    await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
+    await yaml_settings_async(
+        str,
+        YAML.Game_Local,
+        f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE",
+        rf"{game_path}\{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe",
+    )
+    game_version: Version = get_game_version(
+        Path(cast("str", await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")))
+    )
+    match GlobalRegistry.get_game():
+        case "Fallout4" if not GlobalRegistry.get_vr():
+            if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
+                raise ValueError("Unsupported or invalid game version")
+            if game_version in {OG_VERSION, NULL_VERSION}:
+                await yaml_settings_async(
+                    str,
+                    YAML.Game_Local,
+                    "Game_Info.Game_File_AddressLib",
+                    rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin",
+                )
+            elif game_version == NG_VERSION:
+                await yaml_settings_async(
+                    str,
+                    YAML.Game_Local,
+                    "Game_Info.Game_File_AddressLib",
+                    rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-984-0.bin",
+                )
+        case "Fallout4" if GlobalRegistry.get_vr():
+            await yaml_settings_async(
                 str,
                 YAML.Game_Local,
                 "GameVR_Info.Game_File_AddressLib",

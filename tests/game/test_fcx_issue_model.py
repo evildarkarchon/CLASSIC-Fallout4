@@ -172,7 +172,7 @@ class TestGenerateGameCombinedResultTuple:
     @pytest.mark.unit
     async def test_async_function_returns_tuple(self) -> None:
         """Test that generate_game_combined_result_async returns tuple[str, list[ConfigIssue]]."""
-        from unittest.mock import Mock, patch
+        from unittest.mock import patch
 
         from ClassicLib.ScanGame import generate_game_combined_result_async
 
@@ -196,7 +196,7 @@ class TestGenerateGameCombinedResultTuple:
     @pytest.mark.unit
     def test_sync_function_returns_tuple(self) -> None:
         """Test that generate_game_combined_result sync adapter returns tuple[str, list[ConfigIssue]]."""
-        from unittest.mock import Mock, patch
+        from unittest.mock import patch
 
         from ClassicLib.ScanGame import generate_game_combined_result
 

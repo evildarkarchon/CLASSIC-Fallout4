@@ -60,11 +60,10 @@ def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
             "manufacturer": gpu_info.manufacturer,
             "rival": gpu_info.rival,  # Rust returns None if not present
         }
-    else:
-        # Fallback to Python implementation
-        from ClassicLib.ScanLog.GPUDetector import get_gpu_info as py_get_gpu_info
+    # Fallback to Python implementation
+    from ClassicLib.ScanLog.GPUDetector import get_gpu_info as py_get_gpu_info
 
-        return py_get_gpu_info(segment_system)
+    return py_get_gpu_info(segment_system)
 
 
 # Export for compatibility

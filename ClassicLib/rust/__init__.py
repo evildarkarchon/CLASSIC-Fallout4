@@ -24,15 +24,17 @@ logger = logging.getLogger(__name__)
 
 # Import all Rust wrapper components
 try:
+    from ClassicLib.rust import gpu_rust
     from ClassicLib.rust.database_rust import (
         AsyncDatabasePool,
         DatabasePoolManager,
         RustAsyncDatabasePool,
         get_database_pool_implementation,
     )
+    from ClassicLib.rust.fcx_rust import FCXModeHandler, FcxModeHandler, RustAcceleratedFcxModeHandler
     from ClassicLib.rust.file_io_rust import RustFileIOCore, create_file_io_sync, get_rust_file_io
     from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
-    from ClassicLib.rust.mod_detector_rust import detect_mods_single, detect_mods_double, detect_mods_important, get_mod_detector_status
+    from ClassicLib.rust.mod_detector_rust import detect_mods_double, detect_mods_important, detect_mods_single, get_mod_detector_status
     from ClassicLib.rust.parser_rust import RustLogParser
     from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
     from ClassicLib.rust.record_rust import RustRecordScanner
@@ -47,14 +49,12 @@ try:
         RustAcceleratedReportGenerator,
         StringPool,
     )
-    from ClassicLib.rust.suspect_rust import RustAcceleratedSuspectScanner, SuspectScanner
-    from ClassicLib.rust.fcx_rust import FCXModeHandler, FcxModeHandler, RustAcceleratedFcxModeHandler
     from ClassicLib.rust.settings_rust import (
         RustAcceleratedSettingsValidator,
-        SettingsValidator,
         SettingsScannerFragments,
+        SettingsValidator,
     )
-    from ClassicLib.rust import gpu_rust
+    from ClassicLib.rust.suspect_rust import RustAcceleratedSuspectScanner, SuspectScanner
 
     RUST_MODULES_AVAILABLE = True
     logger.debug("✅ Rust acceleration modules loaded successfully")

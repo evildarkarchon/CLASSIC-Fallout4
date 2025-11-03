@@ -18,6 +18,7 @@ from __future__ import annotations
 import platform
 import sys
 from pathlib import Path
+
 import pytest
 
 from ClassicLib.PathValidator import PathValidator

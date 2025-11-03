@@ -17,7 +17,6 @@ from __future__ import annotations
 import logging
 import time
 from typing import Any
-from unittest.mock import Mock
 
 import pytest
 
@@ -49,7 +48,7 @@ class SuspectScannerParityValidator(ParityValidator):
 
     def create_rust_implementation(self, yamldata=None, **kwargs) -> Any | None:
         """Create Rust suspect scanner implementation using factory."""
-        if not RUST_AVAILABLE.get("suspect_scanner", False):
+        if not RUST_AVAILABLE.get("suspect_scanner"):
             return None
 
         # Use factory function to get the best implementation
@@ -269,7 +268,7 @@ class TestSuspectScannerParity:
                 python_content = python_fragment.fragment_content if python_fragment else ""
 
                 if rust_content != python_content:
-                    differences.append(f"Fragment content differs")
+                    differences.append("Fragment content differs")
                     differences.append(f"  Rust lines: {len(rust_content.splitlines())}")
                     differences.append(f"  Python lines: {len(python_content.splitlines())}")
                     is_identical = False
@@ -390,7 +389,7 @@ class TestSuspectScannerParity:
                 python_content = python_fragment.fragment_content if python_fragment else ""
 
                 if rust_content != python_content:
-                    differences.append(f"Fragment content differs")
+                    differences.append("Fragment content differs")
                     differences.append(f"  Rust lines: {len(rust_content.splitlines())}")
                     differences.append(f"  Python lines: {len(python_content.splitlines())}")
                     is_identical = False
@@ -507,7 +506,7 @@ class TestSuspectScannerParity:
                 python_content = python_fragment.fragment_content if python_fragment else ""
 
                 if rust_content != python_content:
-                    differences.append(f"Fragment content differs")
+                    differences.append("Fragment content differs")
                     is_identical = False
 
                 result = ParityResult(

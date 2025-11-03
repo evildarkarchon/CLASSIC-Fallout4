@@ -450,7 +450,6 @@ class TestModuleInfo:
 
     def test_rust_acceleration_active(self):
         """Test that Rust acceleration is being used."""
-        import os
 
         # The module should be in a directory with a .pyd file
         assert hasattr(classic_settings, "__file__")

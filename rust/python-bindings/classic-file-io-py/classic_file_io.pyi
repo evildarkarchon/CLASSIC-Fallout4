@@ -34,8 +34,9 @@ Usage:
 """
 
 from __future__ import annotations
-from typing import Any, Optional
+
 from pathlib import Path
+from typing import Any
 
 __version__: str
 
@@ -63,9 +64,8 @@ class RustFileIOCore:
         Example:
             >>> io_core = RustFileIOCore()
         """
-        ...
 
-    def read_file(self, path: str | Path, encoding: Optional[str] = None) -> str:
+    def read_file(self, path: str | Path, encoding: str | None = None) -> str:
         """Read entire file as string with automatic encoding detection.
 
         Reads a text file and returns its contents as a string. If no encoding
@@ -90,9 +90,8 @@ class RustFileIOCore:
             >>> # Or with explicit encoding
             >>> content = io_core.read_file("config.txt", encoding="utf-8")
         """
-        ...
 
-    def read_lines(self, path: str | Path, encoding: Optional[str] = None) -> list[str]:
+    def read_lines(self, path: str | Path, encoding: str | None = None) -> list[str]:
         """Read file as list of lines.
 
         Reads a text file and returns its contents as a list of lines.
@@ -115,7 +114,6 @@ class RustFileIOCore:
             >>> for line in lines:
             ...     print(line)
         """
-        ...
 
     def read_bytes(self, path: str | Path) -> bytes:
         """Read entire file as raw bytes.
@@ -138,7 +136,6 @@ class RustFileIOCore:
             >>> data = io_core.read_bytes("image.png")
             >>> print(f"File size: {len(data)} bytes")
         """
-        ...
 
     def write_file(self, path: str | Path, content: str, encoding: str = "utf-8") -> None:
         """Write string content to file.
@@ -159,7 +156,6 @@ class RustFileIOCore:
             >>> io_core = RustFileIOCore()
             >>> io_core.write_file("output.txt", "Hello, World!")
         """
-        ...
 
     def write_lines(self, path: str | Path, lines: list[str], encoding: str = "utf-8") -> None:
         """Write list of lines to file.
@@ -181,7 +177,6 @@ class RustFileIOCore:
             >>> lines = ["Line 1", "Line 2", "Line 3"]
             >>> io_core.write_lines("output.txt", lines)
         """
-        ...
 
     def write_bytes(self, path: str | Path, data: bytes) -> None:
         """Write raw bytes to file.
@@ -202,7 +197,6 @@ class RustFileIOCore:
             >>> data = b'\\x89PNG\\r\\n\\x1a\\n'
             >>> io_core.write_bytes("image.png", data)
         """
-        ...
 
     def append_file(self, path: str | Path, content: str, encoding: str = "utf-8") -> None:
         """Append string content to file.
@@ -223,7 +217,6 @@ class RustFileIOCore:
             >>> io_core = RustFileIOCore()
             >>> io_core.append_file("log.txt", "New log entry\\n")
         """
-        ...
 
     def file_exists(self, path: str | Path) -> bool:
         """Check if file exists.
@@ -242,7 +235,6 @@ class RustFileIOCore:
             >>> if io_core.file_exists("config.txt"):
             ...     content = io_core.read_file("config.txt")
         """
-        ...
 
     def get_file_size(self, path: str | Path) -> int:
         """Get file size in bytes.
@@ -263,9 +255,8 @@ class RustFileIOCore:
             >>> size = io_core.get_file_size("large_file.dat")
             >>> print(f"Size: {size / 1024 / 1024:.2f} MB")
         """
-        ...
 
-    def read_dds_header(self, path: str | Path) -> Optional[dict[str, Any]]:
+    def read_dds_header(self, path: str | Path) -> dict[str, Any] | None:
         """Parse DDS texture file header (40x speedup).
 
         Parses the header of a DirectDraw Surface (DDS) texture file and
@@ -291,9 +282,8 @@ class RustFileIOCore:
             ...     print(f"Format: {header['format']}")
             ...     print(f"Mipmaps: {header['mipmap_count']}")
         """
-        ...
 
-    def read_dds_headers_batch(self, paths: list[str | Path]) -> list[Optional[dict[str, Any]]]:
+    def read_dds_headers_batch(self, paths: list[str | Path]) -> list[dict[str, Any] | None]:
         """Parse multiple DDS headers in parallel.
 
         Parses multiple DDS texture file headers in parallel for improved
@@ -314,7 +304,6 @@ class RustFileIOCore:
             ...     if header:
             ...         print(f"{path}: {header['width']}x{header['height']}")
         """
-        ...
 
     def clear_cache(self) -> None:
         """Clear the file content cache to free memory.
@@ -327,7 +316,6 @@ class RustFileIOCore:
             >>> # ... read many files ...
             >>> io_core.clear_cache()  # Free cached content
         """
-        ...
 
     def py_read_file_mmap(self, path: str | Path) -> bytes:
         """Read file using memory mapping for large files.
@@ -351,13 +339,12 @@ class RustFileIOCore:
             >>> data = io_core.py_read_file_mmap("huge_file.dat")
             >>> print(f"Read {len(data)} bytes using mmap")
         """
-        ...
 
     def py_read_multiple_files(
         self,
         paths: list[str | Path],
-        encoding: Optional[str] = None
-    ) -> list[Optional[str]]:
+        encoding: str | None = None
+    ) -> list[str | None]:
         """Read multiple files in parallel.
 
         Reads multiple text files in parallel for improved performance.
@@ -379,7 +366,6 @@ class RustFileIOCore:
             ...     if content:
             ...         print(f"{path}: {len(content)} chars")
         """
-        ...
 
     def py_write_multiple_files(
         self,
@@ -409,12 +395,11 @@ class RustFileIOCore:
             >>> results = io_core.py_write_multiple_files(writes)
             >>> print(f"Successful writes: {sum(results)}")
         """
-        ...
 
     def py_walk_directory(
         self,
         root_path: str | Path,
-        pattern: Optional[str] = None,
+        pattern: str | None = None,
         recursive: bool = True
     ) -> list[str]:
         """Walk directory tree and collect file paths.
@@ -439,7 +424,6 @@ class RustFileIOCore:
             >>> # Find all files (no pattern)
             >>> all_files = io_core.py_walk_directory("data", recursive=True)
         """
-        ...
 
 class EncodingDetector:
     """Encoding detection utility using chardet.
@@ -449,7 +433,7 @@ class EncodingDetector:
     """
 
     @staticmethod
-    def detect_encoding(data: bytes) -> Optional[str]:
+    def detect_encoding(data: bytes) -> str | None:
         """Detect encoding of byte data.
 
         Analyzes byte data to determine the most likely text encoding.
@@ -469,4 +453,3 @@ class EncodingDetector:
             >>> encoding = EncodingDetector.detect_encoding(data)
             >>> print(f"Detected encoding: {encoding}")
         """
-        ...

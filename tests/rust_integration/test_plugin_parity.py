@@ -23,7 +23,6 @@ with the Python implementation while providing significant performance improveme
 from __future__ import annotations
 
 import logging
-import random
 import time
 from typing import Any
 from unittest.mock import Mock
@@ -32,18 +31,12 @@ import pytest
 
 from ClassicLib.integration.factory import get_plugin_analyzer
 from ClassicLib.integration.status import (
-    get_rust_component_status,
     is_rust_accelerated,
 )
 
 RUST_AVAILABLE = {"plugin_analyzer": is_rust_accelerated("plugin_analyzer")}
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
-from tests.rust_integration.parity_fixtures import (
-    ParityResult,
-    ParityValidator,
-    skip_if_rust_unavailable,
-    validate_plugin_dictionaries
-)
+from tests.rust_integration.parity_fixtures import ParityResult, ParityValidator, skip_if_rust_unavailable, validate_plugin_dictionaries
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +56,7 @@ class PluginParityValidator(ParityValidator):
 
     def create_rust_implementation(self, yamldata=None, **kwargs) -> Any | None:
         """Create Rust plugin analyzer implementation using factory."""
-        if not RUST_AVAILABLE.get("plugin_analyzer", False):
+        if not RUST_AVAILABLE.get("plugin_analyzer"):
             return None
 
         # Use factory function to get the best implementation

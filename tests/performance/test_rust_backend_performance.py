@@ -7,11 +7,11 @@ for crash log analysis, ensuring 10-150x speedups over Python implementation.
 Phase 3 Integration - Performance Validation
 """
 
-import pytest
-from pathlib import Path
-from typing import List
-import time
 import statistics
+import time
+from pathlib import Path
+
+import pytest
 
 # Skip all tests if Rust not available
 pytest.importorskip("classic_scanlog")
@@ -27,7 +27,7 @@ def orchestrator() -> ClassicOrchestrator:
 
 
 @pytest.fixture
-def sample_crash_logs() -> List[Path]:
+def sample_crash_logs() -> list[Path]:
     """Get sample crash logs for benchmarking"""
     backup_dir = Path("CLASSIC Backup/Unsolved Logs")
     if not backup_dir.exists():
@@ -42,7 +42,7 @@ def sample_crash_logs() -> List[Path]:
 
 
 @pytest.fixture
-def single_crash_log(sample_crash_logs: List[Path]) -> Path:
+def single_crash_log(sample_crash_logs: list[Path]) -> Path:
     """Get a single crash log"""
     return sample_crash_logs[0]
 
@@ -109,7 +109,7 @@ class TestBatchPerformance:
         self,
         benchmark,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """Benchmark throughput with small batch (5 logs)"""
         logs = sample_crash_logs[:5]
@@ -135,7 +135,7 @@ class TestBatchPerformance:
         self,
         benchmark,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """Benchmark throughput with medium batch (10 logs)"""
         logs = sample_crash_logs[:10]
@@ -162,7 +162,7 @@ class TestBatchPerformance:
         self,
         benchmark,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """Benchmark throughput with large batch (20 logs)"""
         logs = sample_crash_logs[:20]
@@ -200,7 +200,7 @@ class TestParallelismEfficiency:
     def test_parallelism_factor(
         self,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """Test that parallelism factor indicates good speedup"""
         logs = sample_crash_logs[:10]
@@ -223,7 +223,7 @@ class TestParallelismEfficiency:
     def test_scaling_with_concurrency(
         self,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """Test that increasing concurrency improves performance"""
         logs = sample_crash_logs[:10]
@@ -250,7 +250,7 @@ class TestParallelismEfficiency:
     def test_concurrent_overhead(
         self,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """Test that concurrent overhead is acceptable"""
         if len(sample_crash_logs) < 5:
@@ -292,8 +292,9 @@ class TestMemoryEfficiency:
         single_crash_log: Path,
     ):
         """Test memory usage for single log processing"""
-        import psutil
         import gc
+
+        import psutil
 
         process = psutil.Process()
 
@@ -323,11 +324,12 @@ class TestMemoryEfficiency:
     def test_memory_usage_batch(
         self,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """Test memory usage for batch processing"""
-        import psutil
         import gc
+
+        import psutil
 
         logs = sample_crash_logs[:20]
         if len(logs) < 10:
@@ -370,11 +372,12 @@ class TestMemoryEfficiency:
     def test_no_memory_leaks(
         self,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """Test for memory leaks over multiple iterations"""
-        import psutil
         import gc
+
+        import psutil
 
         logs = sample_crash_logs[:5]
         if len(logs) < 3:
@@ -449,7 +452,7 @@ class TestPerformanceTargets:
     def test_batch_10_logs_target_150_200ms(
         self,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """
         Test 10-log batch meets 150-200ms target.
@@ -508,7 +511,7 @@ class TestPerformanceTargets:
     def test_parallelism_factor_target(
         self,
         orchestrator: ClassicOrchestrator,
-        sample_crash_logs: List[Path],
+        sample_crash_logs: list[Path],
     ):
         """
         Test parallelism factor meets target.

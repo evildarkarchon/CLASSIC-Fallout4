@@ -9,9 +9,7 @@ large-scale batch processing operations.
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-from statistics import mean, median
-from unittest.mock import patch
+from statistics import mean
 
 import pytest
 
@@ -19,11 +17,6 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
-from tests.stress.stress_test_fixtures import (
-    MemoryTracker,
-    PerformanceProfiler,
-    StressDataGenerator
-)
 
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
@@ -631,7 +624,7 @@ class TestMassiveCallStackProcessing:
             "Fallout 4 v1.10.163",
             "Buffout 4 v1.28.6",
             "",
-            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\"",
+            'Unhandled exception "EXCEPTION_ACCESS_VIOLATION"',
             "",
             "STACK TRACE:"
         ]
@@ -769,7 +762,7 @@ class TestMassiveCallStackProcessing:
             # Add some heap allocation information
             if i % 100 == 0:
                 log_sections.extend([
-                    f"\tHEAP ALLOCATIONS:",
+                    "\tHEAP ALLOCATIONS:",
                     f"\t  Active Allocations: {(i//100 + 1) * 50}",
                     f"\t  Total Allocated: {(i//100 + 1) * 1024 * 1024:,} bytes",
                     f"\t  Fragmentation: {(i % 10) * 10}%",

@@ -25,12 +25,12 @@ from enum import Enum
 from typing import Any
 
 from ClassicLib.integration.factory import (
+    get_database_pool,
     get_file_io,
     get_formid_analyzer,
     get_parser,
     get_plugin_analyzer,
     get_record_scanner,
-    get_database_pool,
     get_report_generator,
 )
 

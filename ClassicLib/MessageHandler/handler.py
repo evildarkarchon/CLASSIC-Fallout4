@@ -81,6 +81,7 @@ class MessageHandler(QObject):
 
         # Store progress dialog reference
         self._progress_dialog: QProgressDialog | None = None
+        self._cancelled = False  # Track cancellation state across threads
 
     def _should_display(self, target: MessageTarget) -> bool:
         """
@@ -217,6 +218,8 @@ class MessageHandler(QObject):
                 progress indicator.
 
         """
+        # Reset cancellation state when creating new progress dialog
+        self._cancelled = False
         if not HAS_QT:
             return
 
@@ -244,6 +247,10 @@ class MessageHandler(QObject):
             if description:
                 self._progress_dialog.setLabelText(description)
 
+            # Check if user cancelled and update state
+            if self._progress_dialog.wasCanceled():
+                self._cancelled = True
+
     def _close_progress_dialog(self) -> None:
         """
         Closes the progress dialog if it is currently open.
@@ -255,6 +262,17 @@ class MessageHandler(QObject):
         if self._progress_dialog:
             self._progress_dialog.hide()
             self._progress_dialog = None
+        # Reset cancellation state when closing
+        self._cancelled = False
+
+    def is_cancelled(self) -> bool:
+        """
+        Check if the current operation was cancelled by the user.
+
+        Returns:
+            bool: True if cancelled, False otherwise. Thread-safe.
+        """
+        return self._cancelled
 
     @staticmethod
     def _handle_cli_message(message: Message) -> None:

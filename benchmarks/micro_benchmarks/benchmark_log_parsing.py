@@ -26,13 +26,13 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.integration.factory import get_parser
+from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.rust.parser_rust import RustLogParser
 from ClassicLib.ScanLog.Parser import find_segments
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
@@ -97,8 +97,8 @@ class LogParsingBenchmark:
         }
 
         # Cache for reused components
-        self._rust_parser: Optional[RustLogParser] = None
-        self._python_parser_cache: Dict[str, Any] = {}
+        self._rust_parser: RustLogParser | None = None
+        self._python_parser_cache: dict[str, Any] = {}
 
     def _create_mock_yamldata(self) -> ClassicScanLogsInfo:
         """Create minimal mock YAML data for parsing tests."""
@@ -131,7 +131,7 @@ class LogParsingBenchmark:
     def run_benchmark(
         self,
         implementation: str,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         warm_up: bool = False,
         scenario: str = 'standard_parsing'
     ) -> BenchmarkResult:
@@ -192,9 +192,9 @@ class LogParsingBenchmark:
     def _run_batch_parse(
         self,
         implementation: str,
-        crash_logs: List[List[str]],
-        scenario_config: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        crash_logs: list[list[str]],
+        scenario_config: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """
         Run batch parsing operation for performance measurement.
 
@@ -248,12 +248,12 @@ class LogParsingBenchmark:
 
     def _parse_with_rust(
         self,
-        crash_data: List[str],
+        crash_data: list[str],
         crashgen_name: str,
         xse_acronym: str,
         game_root_name: str,
-        scenario_config: Dict[str, Any]
-    ) -> Tuple[str, str, str, List[List[str]]]:
+        scenario_config: dict[str, Any]
+    ) -> tuple[str, str, str, list[list[str]]]:
         """
         Parse crash log using Rust implementation.
 
@@ -292,12 +292,12 @@ class LogParsingBenchmark:
 
     def _parse_with_python(
         self,
-        crash_data: List[str],
+        crash_data: list[str],
         crashgen_name: str,
         xse_acronym: str,
         game_root_name: str,
-        scenario_config: Dict[str, Any]
-    ) -> Tuple[str, str, str, List[List[str]]]:
+        scenario_config: dict[str, Any]
+    ) -> tuple[str, str, str, list[list[str]]]:
         """
         Parse crash log using Python implementation.
 
@@ -328,8 +328,8 @@ class LogParsingBenchmark:
     def _run_single_parse(
         self,
         implementation: str,
-        crash_logs: List[List[str]],
-        scenario_config: Dict[str, Any]
+        crash_logs: list[list[str]],
+        scenario_config: dict[str, Any]
     ) -> None:
         """Run single parse operation for warm-up."""
         if not crash_logs:
@@ -349,7 +349,7 @@ class LogParsingBenchmark:
                 crash_logs[0], crashgen_name, xse_acronym, game_root_name, scenario_config
             )
 
-    def _add_complex_headers(self, crash_data: List[str]) -> List[str]:
+    def _add_complex_headers(self, crash_data: list[str]) -> list[str]:
         """
         Add complex header information for testing header parsing performance.
 
@@ -369,7 +369,7 @@ class LogParsingBenchmark:
             "Windows 11 Professional (Build 22621.2715)",
             "System Memory: 32768 MB (Available: 24576 MB)",
             "Graphics: NVIDIA GeForce RTX 4080 (Driver: 546.01)",
-            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF6F2C45A80 Fallout4.exe+1DC5A80",
+            'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6F2C45A80 Fallout4.exe+1DC5A80',
             "Additional Exception Info: Attempted to read from virtual address 0x0000000000000000",
             "",
         ]
@@ -377,7 +377,7 @@ class LogParsingBenchmark:
         # Insert complex headers at the beginning
         return complex_headers + crash_data
 
-    def _add_malformed_data(self, crash_data: List[str]) -> List[str]:
+    def _add_malformed_data(self, crash_data: list[str]) -> list[str]:
         """
         Add malformed data to test error handling and recovery.
 
@@ -418,8 +418,8 @@ class LogParsingBenchmark:
     def run_all_scenarios(
         self,
         implementation: str,
-        dataset: Dict[str, Any]
-    ) -> Dict[str, BenchmarkResult]:
+        dataset: dict[str, Any]
+    ) -> dict[str, BenchmarkResult]:
         """
         Run all test scenarios for comprehensive performance analysis.
 
@@ -450,8 +450,8 @@ class LogParsingBenchmark:
 
     def get_performance_characteristics(
         self,
-        dataset: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        dataset: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Analyze performance characteristics across different data sizes and complexity.
 
@@ -523,10 +523,10 @@ class LogParsingBenchmark:
 
 # Convenience function for standalone benchmarking
 def benchmark_log_parsing_performance(
-    crash_logs: List[List[str]],
+    crash_logs: list[list[str]],
     iterations: int = 5,
     include_scenarios: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Standalone function for benchmarking log parsing performance.
 

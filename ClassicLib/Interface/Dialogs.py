@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QStyle,
     QTextEdit,
     QVBoxLayout,
 )
@@ -220,7 +221,7 @@ class CustomErrorDialog(QDialog):
 
         # Add error icon
         icon_label = QLabel(self)
-        icon_pixmap = self.style().standardIcon(QMessageBox.StandardButton.Critical.value).pixmap(48, 48)
+        icon_pixmap = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical).pixmap(48, 48)
         icon_label.setPixmap(icon_pixmap)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignTop)
         h_layout.addWidget(icon_label)

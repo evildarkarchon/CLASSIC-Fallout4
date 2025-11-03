@@ -4,12 +4,9 @@ This module tests mod detection logic using synthetic data based on
 real crash log patterns observed in actual Fallout 4 logs.
 """
 
-import pytest
-import re
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, mock_open
-from typing import List, Dict, Tuple, Optional
 import random
+
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]
@@ -73,9 +70,8 @@ class SyntheticModGenerator:
         if plugin_index.startswith("FE"):
             # Light plugin FormID
             return f"FE{local_id:06X}"
-        else:
-            # Regular plugin FormID
-            return f"{plugin_index}{local_id:06X}"
+        # Regular plugin FormID
+        return f"{plugin_index}{local_id:06X}"
 
     @staticmethod
     def generate_ba2_reference(mod_name: str) -> str:
@@ -110,7 +106,7 @@ class TestModDetectionPatterns:
             plugin_lines.append(f"[{i:02X}] SyntheticMod_{i}.esp")
 
         # Add light plugins (FE format)
-        for i in range(0x000, 0x050):
+        for i in range(0x050):
             plugin_lines.append(generator.generate_plugin_entry(i, is_light=True))
 
         # Parse the list

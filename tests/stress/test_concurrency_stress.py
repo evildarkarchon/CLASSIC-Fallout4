@@ -11,7 +11,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue
-from threading import Barrier, Lock, Event
+from threading import Barrier, Lock
 from unittest.mock import Mock, patch
 
 import pytest
@@ -19,17 +19,11 @@ import pytest
 # Skip these tests if Rust extensions are not available
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
-import classic_scanlog
-from .stress_test_fixtures import (
-    ConcurrencyTestHelper,
-    MemoryTracker,
-    PerformanceProfiler
-)
 
 # Import components to test
+from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.FileIOCore import FileIOCore
-from ClassicLib import GlobalRegistry
 from ClassicLib.MessageHandler import MessageHandler
 from ClassicLib.YamlSettingsCache import yaml_cache
 
@@ -509,7 +503,7 @@ class TestHighContentionScenarios:
                     operation_times.append(operation_time)
 
                 return operation_time
-            except Exception as e:
+            except Exception:
                 return -1  # Indicate failure
 
         # Use ThreadPoolExecutor to simulate thread pool saturation
@@ -528,7 +522,7 @@ class TestHighContentionScenarios:
                 try:
                     result = future.result()
                     results.append(result)
-                except Exception as e:
+                except Exception:
                     results.append(-1)
 
         total_time = time.time() - start_time

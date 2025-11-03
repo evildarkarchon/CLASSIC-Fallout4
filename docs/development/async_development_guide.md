@@ -4,13 +4,131 @@ This guide covers async patterns and best practices for CLASSIC's Python and Rus
 
 ## Python Async Patterns
 
-### Use AsyncBridge for Sync Contexts
+### AsyncBridge Usage - When and Where
+
+AsyncBridge provides sync-to-async bridging, but it should be used **ONLY in specific contexts**:
+
+#### ✅ Appropriate AsyncBridge Usage
+
+1. **GUI Workers** (Qt threads, PySide6 slots) - PRIMARY USE CASE
+   ```python
+   class CrashLogsScanWorker(QThread):
+       def _perform_scan(self):
+           bridge = AsyncBridge.get_instance()
+           result = bridge.run_async(executor.execute_scan())
+   ```
+
+2. **Testing and Benchmarking** isolated async functions
+   ```python
+   def test_async_function():
+       sync_wrapper = create_sync_wrapper(async_function)
+       result = sync_wrapper()  # Works via asyncio.run() in CLI mode
+   ```
+
+3. **One-off operations** in sync initialization contexts
+   ```python
+   def __init__(self):
+       bridge = AsyncBridge.get_instance()
+       self._core = bridge.run_async(get_async_core())
+   ```
+
+#### ❌ Inappropriate AsyncBridge Usage
+
+1. **Production CLI main flow** - Creates new event loop per call (inefficient)
+   ```python
+   # ❌ WRONG - Each call creates a new event loop
+   def main():
+       result1 = create_sync_wrapper(async_func1)()  # New loop
+       result2 = create_sync_wrapper(async_func2)()  # New loop
+   ```
+
+2. **When already in async context** - Use await directly
+   ```python
+   # ❌ WRONG - Already in async context
+   async def process():
+       sync_wrapper = create_sync_wrapper(async_operation)
+       result = sync_wrapper()  # Unnecessary wrapper
+
+   # ✅ CORRECT
+   async def process():
+       result = await async_operation()
+   ```
+
+3. **Repeated operations in CLI** - Use async-first pattern instead
+   ```python
+   # ❌ WRONG - Multiple event loop creations
+   for file in files:
+       content = read_file_sync(file)  # New loop each iteration
+
+   # ✅ CORRECT - Single event loop
+   async def main():
+       io_core = FileIOCore()
+       for file in files:
+           content = await io_core.read_file(file)  # Same loop
+   ```
+
+### Async-First Pattern for CLI
+
+Production CLI code should use the **async-first pattern** with a single `asyncio.run()` call:
 
 ```python
-# Use AsyncBridge for sync contexts
+# Example: CLASSIC_ScanLogs.py (CORRECT PATTERN)
+async def main() -> None:
+    """Main CLI entry point - Async-First."""
+    coordinator = SetupCoordinator()
+    coordinator.initialize_application(is_gui=False)
+
+    config = create_config_from_args(parse_arguments())
+    executor = ScanLogsExecutor(config)
+
+    # Direct async calls - single event loop
+    result = await executor.execute_scan()
+
+if __name__ == "__main__":
+    # Single asyncio.run() at entry point only
+    asyncio.run(main())
+```
+
+#### Why Async-First?
+- **Performance**: Single event loop vs creating/destroying loops per call
+- **Simplicity**: Natural async/await patterns
+- **Efficiency**: No AsyncBridge overhead in CLI contexts
+- **Best practice**: Follows Python async conventions
+
+### Context-Aware Code - GUI vs CLI
+
+For code used by both GUI and CLI, provide separate interfaces:
+
+```python
+# GUI interface - Uses sync wrapper
+def game_combined_result() -> tuple[str, list]:
+    """Sync adapter for GUI contexts."""
+    bridge = AsyncBridge.get_instance()
+    return bridge.run_async(generate_game_combined_result_async())
+
+# CLI interface - Direct async
+async def generate_game_combined_result_async() -> tuple[str, list]:
+    """Async method for CLI contexts."""
+    core = get_game_integrity_orchestrator_core()
+    return await core.generate_combined_result()
+
+# Usage
+# GUI:
+result = game_combined_result()  # Uses AsyncBridge
+
+# CLI:
+result = await generate_game_combined_result_async()  # Direct async
+```
+
+### Use AsyncBridge for Sync Contexts (GUI Only)
+
+```python
+# Use AsyncBridge in GUI workers only
 from ClassicLib.AsyncBridge import AsyncBridge
 bridge = AsyncBridge.get_instance()
 result = bridge.run_async(async_function())
+
+# For CLI, use async-first pattern instead (see above)
 ```
 
 ### Use FileIOCore for File Operations

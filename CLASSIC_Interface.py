@@ -205,6 +205,7 @@ class MainWindow(
             self.stop_papyrus_monitoring()
 
         # Use thread manager to stop all threads gracefully
+        # 3-second timeout (task cleanup has 2s timeout, +1s for overhead)
         logger.debug("Stopping all managed threads...")
         self.thread_manager.stop_all_threads(wait_ms=3000)
 

@@ -29,10 +29,11 @@ __all__ = [
 
 from .config import (
     COMPONENT_CATEGORIES,
+    DISABLE_RUST_ENV_VAR,
     PERFORMANCE_MULTIPLIERS,
     PERFORMANCE_THRESHOLD_EXCELLENT,
     PERFORMANCE_THRESHOLD_GOOD,
-    PERFORMANCE_THRESHOLD_PARTIAL, DISABLE_RUST_ENV_VAR,
+    PERFORMANCE_THRESHOLD_PARTIAL,
 )
 from .detector import detect_rust_components, get_available_components
 

@@ -56,7 +56,6 @@ class BA2Scanner:
 
     def __init__(self) -> None:
         """Initialize BA2Scanner."""
-        pass
 
     def scan_archive(self, archive_path: Path) -> BA2Issues:
         """Scan a single BA2 archive for issues.

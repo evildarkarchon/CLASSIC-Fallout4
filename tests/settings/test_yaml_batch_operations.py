@@ -4,18 +4,16 @@ This module tests YamlSettingsCache batch loading performance,
 cache invalidation, and concurrent access patterns.
 """
 
-import pytest
-import threading
-import asyncio
-import time
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, AsyncMock
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, List, Tuple
 import random
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from unittest.mock import patch
 
-from ClassicLib.YamlSettingsCache import YamlSettingsCache, yaml_cache
+import pytest
+
 from ClassicLib.Constants import YAML
+from ClassicLib.YamlSettingsCache import YamlSettingsCache, yaml_cache
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.performance]
@@ -325,11 +323,11 @@ class TestYamlBatchOperations:
 
             results = cache.batch_get_settings(batch_keys)
 
-            assert results[(str, YAML.TEST, "strings.key")] == "string_value"
-            assert results[(int, YAML.TEST, "numbers.key")] == 42
-            assert results[(bool, YAML.TEST, "booleans.key")] is True
-            assert results[(list, YAML.TEST, "lists.key")] == [1, 2, 3]
-            assert results[(dict, YAML.TEST, "dicts.key")] == {"nested": "value"}
+            assert results[str, YAML.TEST, "strings.key"] == "string_value"
+            assert results[int, YAML.TEST, "numbers.key"] == 42
+            assert results[bool, YAML.TEST, "booleans.key"] is True
+            assert results[list, YAML.TEST, "lists.key"] == [1, 2, 3]
+            assert results[dict, YAML.TEST, "dicts.key"] == {"nested": "value"}
 
     def test_performance_degradation_detection(self) -> None:
         """Test that performance doesn't degrade with cache size."""
@@ -375,10 +373,10 @@ class TestYamlBatchOperations:
             results = cache.batch_get_settings(batch_keys)
 
             # Valid keys should succeed
-            assert results[(str, YAML.TEST, "valid.key1")] == "value1"
-            assert results[(str, YAML.TEST, "valid.key2")] == "value2"
+            assert results[str, YAML.TEST, "valid.key1"] == "value1"
+            assert results[str, YAML.TEST, "valid.key2"] == "value2"
             # Invalid key should return None or default
-            assert results[(str, YAML.TEST, "invalid.key")] is None
+            assert results[str, YAML.TEST, "invalid.key"] is None
 
     def test_concurrent_invalidation_and_batch_loading(self) -> None:
         """Test concurrent cache invalidation and batch loading."""

@@ -4,10 +4,10 @@ This module tests the game file integrity checks, mod scanning operations,
 and synchronous adapters for async operations using AsyncBridge.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, AsyncMock, call
-from typing import Any
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]

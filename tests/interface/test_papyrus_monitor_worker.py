@@ -10,12 +10,12 @@ This test module verifies that:
 6. Rust acceleration detection and logging work
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, call
-from PySide6.QtCore import QObject, QThread
 from datetime import datetime
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
+import pytest
+from PySide6.QtCore import QObject, QThread
 
 # Test worker initialization
 
@@ -75,34 +75,33 @@ def test_rust_acceleration_detection():
 @pytest.mark.unit
 def test_rust_status_logging():
     """Test that Rust acceleration status is logged."""
-    from ClassicLib.PapyrusLog import papyrus_logging
     from ClassicLib.Logger import logger
+    from ClassicLib.PapyrusLog import papyrus_logging
 
     # Mock dependencies
-    with patch("ClassicLib.PapyrusLog.yaml_settings") as mock_settings:
-        with patch("ClassicLib.PapyrusLog.read_lines_sync") as mock_read:
-            with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
-                with patch.object(logger, "debug") as mock_log_debug:
-                    # Setup mocks
-                    mock_path = MagicMock(spec=Path)
-                    mock_path.exists.return_value = True
-                    mock_settings.return_value = mock_path
-                    mock_read.return_value = []
+    with patch("ClassicLib.PapyrusLog.yaml_settings") as mock_settings, patch("ClassicLib.PapyrusLog.read_lines_sync") as mock_read:
+        with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
+            with patch.object(logger, "debug") as mock_log_debug:
+                # Setup mocks
+                mock_path = MagicMock(spec=Path)
+                mock_path.exists.return_value = True
+                mock_settings.return_value = mock_path
+                mock_read.return_value = []
 
-                    # Clear the logged flag if it exists
-                    if hasattr(papyrus_logging, "_logged_rust_status"):
-                        delattr(papyrus_logging, "_logged_rust_status")
+                # Clear the logged flag if it exists
+                if hasattr(papyrus_logging, "_logged_rust_status"):
+                    delattr(papyrus_logging, "_logged_rust_status")
 
-                    # Test with Rust available
-                    mock_rust_check.return_value = True
+                # Test with Rust available
+                mock_rust_check.return_value = True
 
-                    papyrus_logging()
+                papyrus_logging()
 
-                    # Check if Rust acceleration was logged
-                    debug_calls = [str(call) for call in mock_log_debug.call_args_list]
-                    rust_logged = any("Rust-accelerated" in str(call) or "10x faster" in str(call) for call in debug_calls)
+                # Check if Rust acceleration was logged
+                debug_calls = [str(call) for call in mock_log_debug.call_args_list]
+                rust_logged = any("Rust-accelerated" in str(call) or "10x faster" in str(call) for call in debug_calls)
 
-                    assert rust_logged, "Should log Rust acceleration status"
+                assert rust_logged, "Should log Rust acceleration status"
 
 
 # Test papyrus_logging function with Rust file I/O
@@ -125,27 +124,26 @@ def test_papyrus_logging_uses_rust_file_io():
     ]
 
     # Mock dependencies
-    with patch("ClassicLib.PapyrusLog.yaml_settings") as mock_settings:
-        with patch("ClassicLib.PapyrusLog.read_lines_sync") as mock_read:
-            mock_settings.return_value = mock_path
-            mock_read.return_value = mock_log_data
+    with patch("ClassicLib.PapyrusLog.yaml_settings") as mock_settings, patch("ClassicLib.PapyrusLog.read_lines_sync") as mock_read:
+        mock_settings.return_value = mock_path
+        mock_read.return_value = mock_log_data
 
-            # Clear the logged flag if it exists
-            if hasattr(papyrus_logging, "_logged_rust_status"):
-                delattr(papyrus_logging, "_logged_rust_status")
+        # Clear the logged flag if it exists
+        if hasattr(papyrus_logging, "_logged_rust_status"):
+            delattr(papyrus_logging, "_logged_rust_status")
 
-            message, count = papyrus_logging()
+        message, count = papyrus_logging()
 
-            # Verify read_lines_sync was called
-            assert mock_read.called, "Should call read_lines_sync"
-            mock_read.assert_called_once_with(mock_path)
+        # Verify read_lines_sync was called
+        assert mock_read.called, "Should call read_lines_sync"
+        mock_read.assert_called_once_with(mock_path)
 
-            # Verify stats were parsed correctly
-            assert count == 1, "Should count 1 dump"
-            assert "NUMBER OF DUMPS    : 1" in message
-            assert "NUMBER OF STACKS   : 2" in message
-            assert "NUMBER OF WARNINGS : 1" in message
-            assert "NUMBER OF ERRORS   : 1" in message
+        # Verify stats were parsed correctly
+        assert count == 1, "Should count 1 dump"
+        assert "NUMBER OF DUMPS    : 1" in message
+        assert "NUMBER OF STACKS   : 2" in message
+        assert "NUMBER OF WARNINGS : 1" in message
+        assert "NUMBER OF ERRORS   : 1" in message
 
 
 @pytest.mark.unit
@@ -254,9 +252,8 @@ def test_monitoring_loop_emits_stats_signal():
         worker.stop()
         return mock_message, 1
 
-    with patch("ClassicLib.Interface.Papyrus.papyrus_logging", side_effect=mock_logging):
-        with patch.object(QThread, "msleep"):
-            worker.run()
+    with patch("ClassicLib.Interface.Papyrus.papyrus_logging", side_effect=mock_logging), patch.object(QThread, "msleep"):
+        worker.run()
 
     # Verify signal was emitted
     assert len(stats_emitted) >= 1, "Should emit statsUpdated signal at least once"
@@ -285,9 +282,8 @@ def test_monitoring_loop_does_not_emit_duplicate_stats():
             worker.stop()
         return mock_message, 1
 
-    with patch("ClassicLib.Interface.Papyrus.papyrus_logging", side_effect=mock_logging):
-        with patch.object(QThread, "msleep"):
-            worker.run()
+    with patch("ClassicLib.Interface.Papyrus.papyrus_logging", side_effect=mock_logging), patch.object(QThread, "msleep"):
+        worker.run()
 
     # Verify signal was only emitted once (stats didn't change)
     assert len(stats_emitted) == 1, "Should only emit once when stats don't change"
@@ -305,9 +301,8 @@ def test_monitoring_loop_emits_error_signal():
     worker.error.connect(lambda e: errors_emitted.append(e))
 
     # Mock papyrus_logging to raise an error
-    with patch("ClassicLib.Interface.Papyrus.papyrus_logging", side_effect=ValueError("Test error")):
-        with patch.object(QThread, "msleep"):
-            worker.run()
+    with patch("ClassicLib.Interface.Papyrus.papyrus_logging", side_effect=ValueError("Test error")), patch.object(QThread, "msleep"):
+        worker.run()
 
     # Verify error signal was emitted
     assert len(errors_emitted) == 1, "Should emit error signal"
@@ -375,8 +370,9 @@ def test_worker_is_qobject():
 @pytest.mark.unit
 def test_papyrus_stats_equality():
     """Test that PapyrusStats equality works correctly."""
-    from ClassicLib.Interface.Papyrus import PapyrusStats
     from datetime import datetime
+
+    from ClassicLib.Interface.Papyrus import PapyrusStats
 
     stats1 = PapyrusStats(
         timestamp=datetime.now(),
@@ -415,8 +411,9 @@ def test_papyrus_stats_equality():
 @pytest.mark.unit
 def test_papyrus_stats_hash():
     """Test that PapyrusStats hashing works correctly."""
-    from ClassicLib.Interface.Papyrus import PapyrusStats
     from datetime import datetime
+
+    from ClassicLib.Interface.Papyrus import PapyrusStats
 
     stats1 = PapyrusStats(
         timestamp=datetime.now(),

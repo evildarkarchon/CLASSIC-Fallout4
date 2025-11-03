@@ -89,7 +89,6 @@ class UnpackedScanner:
 
     def __init__(self) -> None:
         """Initialize UnpackedScanner."""
-        pass
 
     def scan_directory(self, root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:
         """Scan a directory for unpacked file issues.

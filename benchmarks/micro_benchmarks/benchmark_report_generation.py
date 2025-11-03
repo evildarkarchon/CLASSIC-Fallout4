@@ -14,11 +14,10 @@ Performance metrics tracked:
 from __future__ import annotations
 
 import logging
-import time
-from typing import Any, Dict, List, Optional
-
 import sys
+import time
 from pathlib import Path
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -52,7 +51,7 @@ class ReportGenBenchmark:
     def run_benchmark(
         self,
         implementation: str,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         warm_up: bool = False
     ) -> ReportGenBenchmarkResult:
         """Execute report generation benchmark."""
@@ -94,8 +93,8 @@ class ReportGenBenchmark:
     def _run_batch_report_generation(
         self,
         implementation: str,
-        report_fragments: List[List[str]]
-    ) -> List[str]:
+        report_fragments: list[list[str]]
+    ) -> list[str]:
         """Run batch report generation for performance measurement."""
         results = []
 
@@ -106,12 +105,14 @@ class ReportGenBenchmark:
 
         return results
 
-    def _generate_with_rust(self, report_fragments: List[List[str]]) -> List[str]:
+    def _generate_with_rust(self, report_fragments: list[list[str]]) -> list[str]:
         """Generate reports using Rust implementation."""
         try:
             # Import Rust report generation components
             from ClassicLib.ScanLog.RustReportGeneration import (
                 ReportComposer as RustComposer,
+            )
+            from ClassicLib.ScanLog.RustReportGeneration import (
                 ReportFragment as RustFragment,
             )
 
@@ -129,12 +130,12 @@ class ReportGenBenchmark:
             logger.debug("Rust report generation not available, falling back to Python")
             return self._generate_with_python(report_fragments)
 
-    def _generate_with_python(self, report_fragments: List[List[str]]) -> List[str]:
+    def _generate_with_python(self, report_fragments: list[list[str]]) -> list[str]:
         """Generate reports using Python implementation."""
         try:
             # Import Python report generation components
-            from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment as PyFragment
             from ClassicLib.ScanLog.fragments.report_composer import ReportComposer as PyComposer
+            from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment as PyFragment
 
             # Create fragments
             fragments = []
@@ -156,7 +157,7 @@ class ReportGenBenchmark:
                 reports.append(report)
             return reports
 
-    def _run_single_generation(self, implementation: str, report_fragments: List[List[str]]):
+    def _run_single_generation(self, implementation: str, report_fragments: list[list[str]]):
         """Run single report generation for warm-up."""
         if not report_fragments:
             return
@@ -168,9 +169,9 @@ class ReportGenBenchmark:
 
 
 def benchmark_report_generation_performance(
-    report_fragments: List[List[str]],
+    report_fragments: list[list[str]],
     iterations: int = 5
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Standalone function for benchmarking report generation performance."""
     benchmark = ReportGenBenchmark()
     dataset = {'report_fragments': report_fragments}

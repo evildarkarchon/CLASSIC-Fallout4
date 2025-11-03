@@ -12,12 +12,11 @@ import pytest
 # Import factory functions
 from ClassicLib.integration.factory import (
     get_constants,
-    get_version_utils,
     get_resource_mgmt,
-    get_xse_utils,
+    get_version_utils,
     get_web_utils,
+    get_xse_utils,
 )
-
 
 pytestmark = [
     pytest.mark.rust,

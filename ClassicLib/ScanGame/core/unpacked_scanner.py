@@ -9,7 +9,6 @@ import asyncio
 import os
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from itertools import starmap
 from pathlib import Path
 
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info

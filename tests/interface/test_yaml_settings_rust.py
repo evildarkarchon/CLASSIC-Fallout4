@@ -9,11 +9,10 @@ This test module verifies that:
 5. AsyncBridge coordination works correctly
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 import os
+from unittest.mock import patch
 
+import pytest
 
 # Fixtures
 
@@ -196,7 +195,6 @@ def test_operations_without_rust():
         assert ops.io_core is not None, "Python IO should still work"
 
         # Test that operations still work without Rust
-        from pathlib import Path
         from ClassicLib.Constants import YAML
 
         # Get a settings path (user-editable, so won't use Rust anyway)
@@ -281,8 +279,8 @@ async def test_rust_faster_than_python(yaml_file_ops, tmp_path):
 @pytest.mark.unit
 def test_rust_can_be_disabled_via_env():
     """Test that Rust can be disabled via environment variable."""
-    from ClassicLib.integration.factory import _is_rust_disabled
     from ClassicLib.integration.config import DISABLE_RUST_ENV_VAR
+    from ClassicLib.integration.factory import _is_rust_disabled
 
     # Save original value
     original = os.environ.get(DISABLE_RUST_ENV_VAR)

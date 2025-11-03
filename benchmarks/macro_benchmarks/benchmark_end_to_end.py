@@ -26,24 +26,22 @@ Performance metrics tracked:
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import time
-from typing import Any, Dict, List, Optional
-
 import sys
+import time
 from pathlib import Path
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.integration.factory import (
-    get_parser,
     get_formid_analyzer,
+    get_parser,
     get_plugin_analyzer,
     get_record_scanner,
 )
+from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.RustAcceleration import get_rust_acceleration
 
 logger = logging.getLogger(__name__)
@@ -55,11 +53,11 @@ class EndToEndBenchmarkResult:
     def __init__(self):
         self.total_execution_time: float = 0.0
         self.logs_processed: int = 0
-        self.pipeline_stages: Dict[str, float] = {}
+        self.pipeline_stages: dict[str, float] = {}
         self.throughput_logs_per_second: float = 0.0
         self.memory_peak: int = 0
         self.errors: int = 0
-        self.component_performance: Dict[str, Dict[str, Any]] = {}
+        self.component_performance: dict[str, dict[str, Any]] = {}
 
 
 class EndToEndBenchmark:
@@ -118,7 +116,7 @@ class EndToEndBenchmark:
 
     def run_complete_pipeline(
         self,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         use_rust_acceleration: bool = True
     ) -> EndToEndBenchmarkResult:
         """
@@ -189,10 +187,10 @@ class EndToEndBenchmark:
 
     def _process_single_crash_log(
         self,
-        crash_log_data: List[str],
-        plugins_data: Dict[str, str],
+        crash_log_data: list[str],
+        plugins_data: dict[str, str],
         use_rust: bool
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process a single crash log through the complete pipeline.
 
@@ -417,9 +415,9 @@ class EndToEndBenchmark:
 
     def compare_rust_vs_python_pipeline(
         self,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         iterations: int = 3
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Compare end-to-end pipeline performance between Rust and Python implementations.
 
@@ -482,7 +480,7 @@ class EndToEndBenchmark:
                 'python_throughput': sum(r['throughput'] for r in comparison_results['python_results']) / len(comparison_results['python_results']),
             }
 
-            logger.info(f"Pipeline comparison complete:")
+            logger.info("Pipeline comparison complete:")
             logger.info(f"  Rust average: {avg_rust_time:.4f}s")
             logger.info(f"  Python average: {avg_python_time:.4f}s")
             logger.info(f"  Speedup: {comparison_results['comparison_metrics']['speedup_factor']:.2f}x")
@@ -491,8 +489,8 @@ class EndToEndBenchmark:
 
     def analyze_pipeline_bottlenecks(
         self,
-        dataset: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        dataset: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Analyze pipeline stages to identify performance bottlenecks.
 
@@ -546,9 +544,9 @@ class EndToEndBenchmark:
 
     def _generate_bottleneck_recommendations(
         self,
-        major_bottlenecks: List[tuple],
-        minor_bottlenecks: List[tuple]
-    ) -> List[str]:
+        major_bottlenecks: list[tuple],
+        minor_bottlenecks: list[tuple]
+    ) -> list[str]:
         """Generate optimization recommendations based on bottleneck analysis."""
         recommendations = []
 
@@ -603,11 +601,11 @@ class EndToEndBenchmark:
 
 
 def benchmark_end_to_end_performance(
-    crash_logs: List[List[str]],
-    plugins: Optional[Dict[str, str]] = None,
+    crash_logs: list[list[str]],
+    plugins: dict[str, str] | None = None,
     iterations: int = 3,
     compare_implementations: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Standalone function for end-to-end performance benchmarking.
 

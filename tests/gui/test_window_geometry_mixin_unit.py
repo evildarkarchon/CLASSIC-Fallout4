@@ -206,6 +206,63 @@ class TestWindowGeometryInitialization:
             debug_call = mock_logger.debug.call_args[0][0]
             assert "Switched to tab 2" in debug_call
 
+    def test_handle_tab_changed_results_tab_with_refresh(self, mock_qt_window):
+        """Test that switching to results tab (index 3) calls refresh_reports_list."""
+        # Setup initialized state
+        mock_qt_window._geometry_initialized = True
+        mock_qt_window._last_tab_index = 0
+
+        # Add mock refresh_reports_list method
+        mock_qt_window.refresh_reports_list = MagicMock()
+
+        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save, \
+             patch.object(mock_qt_window, 'restore_tab_geometry') as mock_restore, \
+             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
+
+            # Switch to results tab (index 3)
+            mock_qt_window.handle_tab_changed(3)
+
+            # Should perform normal geometry operations
+            mock_save.assert_called_once_with(0)
+            mock_restore.assert_called_once_with(3)
+            assert mock_qt_window._last_tab_index == 3
+
+            # Should call refresh_reports_list for results tab
+            mock_qt_window.refresh_reports_list.assert_called_once()
+
+            # Should log both the tab change and the refresh
+            assert mock_logger.debug.call_count == 2
+            debug_calls = [call[0][0] for call in mock_logger.debug.call_args_list]
+            assert any("Switched to tab 3" in call for call in debug_calls)
+            assert any("Refreshed reports list" in call for call in debug_calls)
+
+    def test_handle_tab_changed_results_tab_without_refresh(self, mock_qt_window):
+        """Test that switching to results tab without refresh_reports_list method doesn't crash."""
+        # Setup initialized state
+        mock_qt_window._geometry_initialized = True
+        mock_qt_window._last_tab_index = 0
+
+        # Ensure refresh_reports_list doesn't exist
+        if hasattr(mock_qt_window, 'refresh_reports_list'):
+            delattr(mock_qt_window, 'refresh_reports_list')
+
+        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save, \
+             patch.object(mock_qt_window, 'restore_tab_geometry') as mock_restore, \
+             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
+
+            # Switch to results tab (index 3) - should not crash
+            mock_qt_window.handle_tab_changed(3)
+
+            # Should perform normal geometry operations
+            mock_save.assert_called_once_with(0)
+            mock_restore.assert_called_once_with(3)
+            assert mock_qt_window._last_tab_index == 3
+
+            # Should only log the tab change
+            mock_logger.debug.assert_called_once()
+            debug_call = mock_logger.debug.call_args[0][0]
+            assert "Switched to tab 3" in debug_call
+
 
 class TestTabGeometrySaving:
     """Test saving tab geometry functionality."""

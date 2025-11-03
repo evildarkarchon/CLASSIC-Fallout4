@@ -9,11 +9,10 @@ This test module verifies that:
 5. AsyncBridge cleanup happens automatically
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-from PySide6.QtCore import QThread, QObject
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+from PySide6.QtCore import QObject, QThread
 
 # Test worker initialization
 
@@ -47,8 +46,8 @@ def test_worker_signals():
 @pytest.mark.unit
 def test_worker_uses_async_bridge():
     """Test that worker uses AsyncBridge instead of manual event loop."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
     from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.Interface.Workers import GameFilesScanWorker
 
     # Create worker
     worker = GameFilesScanWorker()
@@ -69,7 +68,6 @@ def test_worker_uses_async_bridge():
                 def capture_run_async(coro):
                     run_async_calls.append(coro)
                     # Simulate successful execution
-                    return None
 
                 mock_bridge.run_async.side_effect = capture_run_async
 
@@ -88,8 +86,8 @@ def test_worker_uses_async_bridge():
 @pytest.mark.unit
 def test_no_manual_event_loop_creation():
     """Test that worker doesn't create manual event loops."""
+
     from ClassicLib.Interface.Workers import GameFilesScanWorker
-    import asyncio
 
     worker = GameFilesScanWorker()
 
@@ -113,7 +111,6 @@ def test_no_manual_event_loop_creation():
 @pytest.mark.rust
 def test_rust_acceleration_detection():
     """Test that Rust acceleration is detected and logged (preparing for future)."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
     from ClassicLib.integration.status import is_rust_accelerated
 
     # Check if Rust is available (currently False, but preparing for future)

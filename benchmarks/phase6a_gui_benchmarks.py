@@ -19,7 +19,6 @@ Performance targets:
 
 from __future__ import annotations
 
-import asyncio
 import gc
 import sys
 import tempfile
@@ -27,18 +26,15 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from statistics import mean, median, stdev
-from typing import Any
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import Rust acceleration status
+from ClassicLib.FileIO import read_lines_sync
 from ClassicLib.integration.status import is_rust_accelerated, print_rust_status
 
 # Import the components we're benchmarking
-from ClassicLib.YamlSettingsCache import yaml_settings
-from ClassicLib.FileIO import read_file_sync, read_lines_sync
-from ClassicLib.PapyrusLog import papyrus_logging
 
 
 @dataclass
@@ -146,7 +142,7 @@ plugins:
                 data = yaml_ops.load_yaml_file(str(test_file))
             else:
                 # Use ruamel.yaml
-                with open(test_file, encoding="utf-8") as f:
+                with Path(test_file).open(encoding="utf-8") as f:
                     data = yaml_ops.load(f)
 
             # Access nested values (simulates yaml_settings lookups)
@@ -166,16 +162,16 @@ plugins:
     test_dir.rmdir()
 
     # Print results
-    print(f"\n   Results:")
+    print("\n   Results:")
     print(f"   • Mean time: {result.mean_time * 1000:.3f}ms")
     print(f"   • Median time: {result.median_time * 1000:.3f}ms")
     print(f"   • Std dev: {result.std_dev * 1000:.3f}ms")
     print(f"   • Ops/sec: {result.operations_per_second:.1f}")
 
     if rust_available:
-        print(f"   • ✅ Using Rust acceleration (15-30x faster)")
+        print("   • ✅ Using Rust acceleration (15-30x faster)")
     else:
-        print(f"   • Using Python implementation")
+        print("   • Using Python implementation")
 
     # Return both results (but Python baseline is estimated)
     python_result = BenchmarkResult(
@@ -212,12 +208,12 @@ def benchmark_file_io_operations(iterations: int = 50) -> tuple[BenchmarkResult,
     for i in range(1000):
         log_content.append(f"[{i:04d}] Frame {i}: Processing scripts\n")
         if i % 50 == 0:
-            log_content.append(f"Dumping Stacks\n")
-            log_content.append(f"Dumping Stack\n")
+            log_content.append("Dumping Stacks\n")
+            log_content.append("Dumping Stack\n")
         if i % 100 == 0:
-            log_content.append(f" warning: Memory allocation spike\n")
+            log_content.append(" warning: Memory allocation spike\n")
         if i % 200 == 0:
-            log_content.append(f" error: Script timeout\n")
+            log_content.append(" error: Script timeout\n")
 
     test_file.write_text("".join(log_content), encoding="utf-8")
 
@@ -253,7 +249,7 @@ def benchmark_file_io_operations(iterations: int = 50) -> tuple[BenchmarkResult,
     test_dir.rmdir()
 
     # Print results
-    print(f"\n   Results:")
+    print("\n   Results:")
     print(f"   • Mean time: {result.mean_time * 1000:.3f}ms")
     print(f"   • Median time: {result.median_time * 1000:.3f}ms")
     print(f"   • Std dev: {result.std_dev * 1000:.3f}ms")
@@ -261,9 +257,9 @@ def benchmark_file_io_operations(iterations: int = 50) -> tuple[BenchmarkResult,
     print(f"   • File size: {len(log_content)} lines")
 
     if rust_available:
-        print(f"   • ✅ Using Rust acceleration (10x faster)")
+        print("   • ✅ Using Rust acceleration (10x faster)")
     else:
-        print(f"   • Using Python implementation")
+        print("   • Using Python implementation")
 
     # Return both results (but Python baseline is estimated)
     python_result = BenchmarkResult(
@@ -325,7 +321,7 @@ def benchmark_path_validation(iterations: int = 100) -> tuple[BenchmarkResult, B
                 _ = path.is_absolute()
                 _ = path.resolve()
 
-        except Exception as e:
+        except Exception:
             # Some paths are expected to fail - this is fine
             pass
 
@@ -333,7 +329,7 @@ def benchmark_path_validation(iterations: int = 100) -> tuple[BenchmarkResult, B
         result.add_time(end - start)
 
     # Print results
-    print(f"\n   Results:")
+    print("\n   Results:")
     print(f"   • Mean time: {result.mean_time * 1000:.3f}ms")
     print(f"   • Median time: {result.median_time * 1000:.3f}ms")
     print(f"   • Std dev: {result.std_dev * 1000:.3f}ms")
@@ -341,9 +337,9 @@ def benchmark_path_validation(iterations: int = 100) -> tuple[BenchmarkResult, B
     print(f"   • Paths validated per iteration: {len(test_paths)}")
 
     if rust_available:
-        print(f"   • ✅ Using Rust acceleration (10-20x faster)")
+        print("   • ✅ Using Rust acceleration (10-20x faster)")
     else:
-        print(f"   • Using Python implementation")
+        print("   • Using Python implementation")
 
     # Return both results (but Python baseline is estimated)
     python_result = BenchmarkResult(
@@ -461,9 +457,9 @@ def main():
         print_summary_table(results)
 
         print("\n✅ All benchmarks completed successfully!")
-        print(f"\nNote: Components 3 & 4 (scanlog workers) use async operations with")
-        print(f"      AsyncBridge and are tested via integration tests. They achieve")
-        print(f"      150x speedup for log parsing operations.")
+        print("\nNote: Components 3 & 4 (scanlog workers) use async operations with")
+        print("      AsyncBridge and are tested via integration tests. They achieve")
+        print("      150x speedup for log parsing operations.")
 
     except KeyboardInterrupt:
         print("\n\n⚠️ Benchmarks interrupted by user")

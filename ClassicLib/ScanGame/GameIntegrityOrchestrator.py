@@ -376,7 +376,7 @@ async def write_combined_results_async() -> None:
     await core.write_combined_results_async()
 
 
-# Sync adapters for backwards compatibility
+# Sync adapters for backwards compatibility and GUI usage
 def generate_game_combined_result() -> tuple[str, list[ConfigIssue]]:
     """
     Sync adapter for generating combined game integrity results with detected issues.
@@ -389,6 +389,14 @@ def generate_game_combined_result() -> tuple[str, list[ConfigIssue]]:
     settings, log errors, and additional configuration validations into a single
     text result. Additionally, it detects configuration issues without modifying files.
     The returned result can be used for diagnostics or reporting purposes.
+
+    IMPORTANT - Usage:
+    ✅ GUI workers and Qt threads
+    ✅ Testing and benchmarking
+    ❌ Production CLI code (use generate_game_combined_result_async() instead)
+
+    For CLI production code, use the async version:
+        result, issues = await generate_game_combined_result_async()
 
     Returns:
         tuple[str, list[ConfigIssue]]: A tuple containing:
@@ -412,6 +420,14 @@ def generate_mods_combined_result() -> str:
     appends the results of scanning the archived mods to the result of the unpacked
     mods scan and provides a combined status report.
 
+    IMPORTANT - Usage:
+    ✅ GUI workers and Qt threads
+    ✅ Testing and benchmarking
+    ❌ Production CLI code (use generate_mods_combined_result_async() instead)
+
+    For CLI production code, use the async version:
+        result = await generate_mods_combined_result_async()
+
     Returns:
         str: The combined results of the unpacked and archived mods scans, or a message
         indicating that the mods folder path is not provided.
@@ -430,6 +446,14 @@ def write_combined_results() -> None:
     and the mods result. It then writes their combined output into a markdown
     file named "CLASSIC GFS Report.md". The report file is encoded in UTF-8 and
     any errors during encoding are ignored.
+
+    IMPORTANT - Usage:
+    ✅ GUI workers and Qt threads
+    ✅ Testing and benchmarking
+    ❌ Production CLI code (use write_combined_results_async() instead)
+
+    For CLI production code, use the async version:
+        await write_combined_results_async()
     """
     bridge = AsyncBridge.get_instance()
     bridge.run_async(write_combined_results_async())

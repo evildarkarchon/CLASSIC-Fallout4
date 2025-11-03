@@ -1,9 +1,10 @@
 """Performance testing utilities for CLASSIC test suite."""
 
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Optional, Callable, Any
+from typing import Any
 
 
 @dataclass
@@ -32,8 +33,8 @@ class PerformanceTimer:
         """
         self.name = name
         self.iterations = iterations
-        self.start_time: Optional[float] = None
-        self.end_time: Optional[float] = None
+        self.start_time: float | None = None
+        self.end_time: float | None = None
 
     def __enter__(self) -> "PerformanceTimer":
         """Start timing."""
@@ -62,7 +63,7 @@ class PerformanceTimer:
 
 
 @contextmanager
-def measure_performance(name: str = "Operation", callback: Optional[Callable[[PerformanceResult], None]] = None):
+def measure_performance(name: str = "Operation", callback: Callable[[PerformanceResult], None] | None = None):
     """Context manager for measuring performance.
 
     Args:

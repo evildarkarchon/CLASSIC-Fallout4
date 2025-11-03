@@ -144,13 +144,7 @@ class ScanLogsExecutor:
             asyncio.CancelledError: If the asynchronous task is cancelled during execution.
 
         """
-        import time
-
         logger.info("Starting crash log scan execution")
-
-        # Initialize timing accumulators for profiling
-        total_write_time = 0.0
-        total_processing_time = 0.0
 
         # Initialize yamldata here using async factory (no AsyncBridge overhead)
         # If eager_load was set, warm_up() should have been called already
@@ -167,9 +161,9 @@ class ScanLogsExecutor:
 
         # Ensure game paths are generated before creating orchestrator
         # This is required for FCX mode checks which need Game_Folder_Scripts and other inferred paths
-        from ClassicLib.GamePath import game_generate_paths, game_path_find
-        game_path_find()
-        game_generate_paths()
+        from ClassicLib.GamePath import game_generate_paths_async, game_path_find_async
+        await game_path_find_async()
+        await game_generate_paths_async()
 
         # Create async orchestrator with context manager for proper resource management
         # Reformatting happens inline during processing - no blocking preload
@@ -178,94 +172,101 @@ class ScanLogsExecutor:
         ) as orchestrator:
             # Run FCX checks if enabled
             if self.config.fcx_mode:
-                orchestrator.fcx_handler.check_fcx_mode()
+                await orchestrator.fcx_handler.check_fcx_mode_async()
 
             # Use semaphore to limit concurrent operations
             max_concurrent = min(self.config.max_concurrent, len(self.crashlog_list))
             semaphore = asyncio.Semaphore(max_concurrent)
 
-            async def process_with_limit(log_path: Path) -> tuple[Path, list[str], bool, Counter[str]]:
-                """
-                Processes a crash log file asynchronously while respecting a semaphore limit.
-
-                True async - Rust methods return coroutines, no blocking!
-
-                Args:
-                    log_path (Path): Path to the log file to be processed.
-
-                Returns:
-                    tuple[Path, list[str], bool, Counter[str]]: A tuple containing the log path,
-                    list of strings (e.g., messages or findings), a boolean flag indicating a status
-                    or result, and a counter of occurrences for specific elements in the log.
-                """
-                async with semaphore:
-                    # Direct async call - Rust returns coroutines, no thread pool needed!
-                    # Multiple operations run concurrently via Python's event loop
-                    return await self._process_crashlog_async(log_path, orchestrator)
-
-            # Create tasks for all crash logs
-            tasks = [asyncio.create_task(process_with_limit(log)) for log in self.crashlog_list]
-
-            # Process with progress tracking
+            # Process with progress tracking - create tasks on-demand
             total_logs = len(self.crashlog_list)
             completed = 0
+            log_iter = iter(self.crashlog_list)
+            active_tasks: set[asyncio.Task] = set()
 
             with msg_progress_context("Processing Crash Logs", total_logs) as progress:
-                # Process tasks as they complete for real-time progress updates
-                for task in asyncio.as_completed(tasks):
+                # Start initial batch of tasks
+                for _ in range(max_concurrent):
                     try:
-                        # Time the task completion (processing time)
-                        task_start = time.perf_counter()
-                        task_result = await task
-                        task_time = time.perf_counter() - task_start
-                        total_processing_time += task_time
+                        log = next(log_iter)
+                        task = asyncio.create_task(self._process_crashlog_async(log, orchestrator))
+                        active_tasks.add(task)
+                    except StopIteration:
+                        break
 
-                        # Unpack result - the first element is always the log file path
-                        crashlog_file, autoscan_report, trigger_scan_failed, local_stats = task_result
+                # Process tasks as they complete, creating new ones on-demand
+                while active_tasks:
+                    # Check for cancellation
+                    if progress.was_cancelled():
+                        logger.info("User cancelled scan operation - stopping immediately")
+                        # Cancel all active tasks
+                        for task in active_tasks:
+                            task.cancel()
+                        break
 
-                        # Update statistics
-                        if isinstance(local_stats, Counter):
-                            self.statistics.update_from_counter(local_stats)
+                    # Wait for next task to complete with short timeout for responsiveness
+                    done, active_tasks = await asyncio.wait(
+                        active_tasks,
+                        return_when=asyncio.FIRST_COMPLETED,
+                        timeout=0.1  # Check cancellation every 100ms
+                    )
 
-                        # Add to processed files
-                        result.add_processed_file(crashlog_file)
+                    # Process completed tasks
+                    for task in done:
+                        try:
+                            task_result = task.result()
 
-                        # Write report using utils function
-                        from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file_async
+                            # Unpack result
+                            crashlog_file, autoscan_report, trigger_scan_failed, local_stats = task_result
 
-                        write_start = time.perf_counter()
-                        await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, self)
-                        write_time = time.perf_counter() - write_start
-                        total_write_time += write_time
+                            # Update statistics
+                            if isinstance(local_stats, Counter):
+                                self.statistics.update_from_counter(local_stats)
 
-                        # Track failed scans
-                        if trigger_scan_failed:
-                            result.add_failed_log(crashlog_file.name)
+                            # Add to processed files
+                            result.add_processed_file(crashlog_file)
 
-                        completed += 1
-                        progress.update(1, f"Processed: {crashlog_file.name}")
+                            # Write report
+                            from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file_async
 
-                    except (RuntimeError, ImportError, OSError, asyncio.CancelledError) as e:
-                        # Handle specific exceptions that can occur during async processing
-                        error_msg = f"Error processing crash log: {e}"
-                        logger.error(error_msg)
-                        result.add_error_message(error_msg)
-                        self.statistics.increment_failed()
+                            await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, self)
 
-                        # Update progress even on error
-                        progress.update(1, "Failed: Error during processing")
+                            # Track failed scans
+                            if trigger_scan_failed:
+                                result.add_failed_log(crashlog_file.name)
+
+                            completed += 1
+                            progress.update(1, f"Processed: {crashlog_file.name}")
+
+                            # Start next task if not cancelled
+                            if not progress.was_cancelled():
+                                try:
+                                    log = next(log_iter)
+                                    new_task = asyncio.create_task(self._process_crashlog_async(log, orchestrator))
+                                    active_tasks.add(new_task)
+                                except StopIteration:
+                                    pass  # No more logs to process
+
+                        except asyncio.CancelledError:
+                            logger.debug("Task cancelled by user")
+
+                        except (RuntimeError, ImportError, OSError) as e:
+                            error_msg = f"Error processing crash log: {e}"
+                            logger.error(error_msg)
+                            result.add_error_message(error_msg)
+                            self.statistics.increment_failed()
+                            progress.update(1, "Failed: Error during processing")
+
+                # Wait for any remaining tasks to finish (already cancelled if user cancelled)
+                if active_tasks:
+                    logger.info(f"Waiting for {len(active_tasks)} tasks to complete...")
+                    await asyncio.gather(*active_tasks, return_exceptions=True)
 
         # Update final scan time
         result.scan_time = self.statistics.get_scan_duration()
 
-        # Log aggregate timing breakdown
+        # Log completion
         logger.info(f"Completed crash log scan execution in {result.scan_time:.2f} seconds")
-        logger.debug(
-            f"Aggregate timing breakdown: "
-            f"total_processing={total_processing_time:.2f}s, "
-            f"total_writing={total_write_time:.2f}s, "
-            f"avg_per_log={(total_processing_time + total_write_time) / max(completed, 1):.3f}s"
-        )
 
         return result
 
@@ -287,7 +288,8 @@ class ScanLogsExecutor:
         """
         try:
             # OrchestratorCore uses the base method name
-            return await orchestrator.process_crash_log(crashlog_file)
+            result = await orchestrator.process_crash_log(crashlog_file)
+            return result
         except (RuntimeError, ImportError, OSError) as e:
             logger.error(f"Error processing crash log {crashlog_file}: {e}")
             # Return failure result

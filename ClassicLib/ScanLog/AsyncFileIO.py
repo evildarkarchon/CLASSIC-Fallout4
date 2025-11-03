@@ -10,7 +10,6 @@ from collections.abc import Callable, Coroutine
 from pathlib import Path
 from typing import Any
 
-from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
 

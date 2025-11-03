@@ -21,8 +21,8 @@ Usage:
 """
 
 from __future__ import annotations
-from typing import Any, Optional
-from pathlib import Path
+
+from typing import Any
 
 __version__: str
 
@@ -53,56 +53,46 @@ class YamlData:
             FileNotFoundError: If required YAML files are missing
             ValueError: If YAML data is malformed or invalid
         """
-        ...
 
     # CLASSIC version information
     @property
     def classic_version(self) -> str:
         """CLASSIC version string (e.g., '8.0.0')."""
-        ...
 
     @property
     def classic_version_date(self) -> str:
         """CLASSIC release date string."""
-        ...
 
     # Game configuration
     @property
     def game_version(self) -> str:
         """Current game version string."""
-        ...
 
     @property
     def game_version_new(self) -> str:
         """Latest available game version string."""
-        ...
 
     @property
     def game_version_vr(self) -> str:
         """VR game version string."""
-        ...
 
     # Crash generator settings
     @property
     def crashgen_name(self) -> str:
         """Crash generator/logger name (e.g., 'Buffout 4')."""
-        ...
 
     @property
     def crashgen_latest_og(self) -> str:
         """Latest crash generator version for regular game."""
-        ...
 
     @property
     def crashgen_latest_vr(self) -> str:
         """Latest crash generator version for VR game."""
-        ...
 
     # Script extender configuration
     @property
     def xse_acronym(self) -> str:
         """Script extender acronym (e.g., 'F4SE' for Fallout 4)."""
-        ...
 
     # Ignore lists
     @property
@@ -112,7 +102,6 @@ class YamlData:
         Returns:
             List of ignore pattern strings
         """
-        ...
 
     @property
     def game_ignore_plugins(self) -> list[str]:
@@ -123,7 +112,6 @@ class YamlData:
         Returns:
             List of plugin names to ignore
         """
-        ...
 
     @property
     def game_ignore_records(self) -> list[str]:
@@ -134,7 +122,6 @@ class YamlData:
         Returns:
             List of record type strings
         """
-        ...
 
     @property
     def crashgen_ignore(self) -> list[str]:
@@ -143,7 +130,6 @@ class YamlData:
         Returns:
             List of ignore pattern strings
         """
-        ...
 
     # Mod detection lists
     @property
@@ -153,7 +139,6 @@ class YamlData:
         Returns:
             Dictionary mapping mod names to detection patterns
         """
-        ...
 
     @property
     def game_mods_core_folon(self) -> dict[str, Any]:
@@ -162,7 +147,6 @@ class YamlData:
         Returns:
             Dictionary mapping FOLON mod names to detection patterns
         """
-        ...
 
     @property
     def game_mods_freq(self) -> dict[str, Any]:
@@ -171,7 +155,6 @@ class YamlData:
         Returns:
             Dictionary mapping mod names to detection patterns
         """
-        ...
 
     @property
     def game_mods_solu(self) -> dict[str, Any]:
@@ -180,7 +163,6 @@ class YamlData:
         Returns:
             Dictionary mapping solution mod names to detection patterns
         """
-        ...
 
     @property
     def game_mods_opc2(self) -> dict[str, Any]:
@@ -189,7 +171,6 @@ class YamlData:
         Returns:
             Dictionary mapping optimization mod names to detection patterns
         """
-        ...
 
     @property
     def game_mods_conf(self) -> dict[str, Any]:
@@ -198,7 +179,6 @@ class YamlData:
         Returns:
             Dictionary mapping config mod names to detection patterns
         """
-        ...
 
     # Records configuration
     @property
@@ -208,7 +188,6 @@ class YamlData:
         Returns:
             List of record type strings (e.g., ['TES4', 'GRUP', 'ACHR', ...])
         """
-        ...
 
     # Suspect detection lists
     @property
@@ -218,7 +197,6 @@ class YamlData:
         Returns:
             Dictionary mapping error categories to detection patterns
         """
-        ...
 
     @property
     def suspects_stack_list(self) -> dict[str, Any]:
@@ -227,7 +205,6 @@ class YamlData:
         Returns:
             Dictionary mapping callstack categories to detection patterns
         """
-        ...
 
     # Warning messages
     @property
@@ -237,7 +214,6 @@ class YamlData:
         Returns:
             Warning message string
         """
-        ...
 
     @property
     def warn_outdated(self) -> str:
@@ -246,7 +222,6 @@ class YamlData:
         Returns:
             Warning message string
         """
-        ...
 
     # UI text
     @property
@@ -256,7 +231,6 @@ class YamlData:
         Returns:
             Autoscan description text
         """
-        ...
 
     @property
     def classic_game_hints(self) -> dict[str, Any]:
@@ -265,7 +239,6 @@ class YamlData:
         Returns:
             Dictionary mapping hint categories to hint text
         """
-        ...
 
 def create_yamldata() -> YamlData:
     """Factory function to create a YamlData instance.
@@ -286,4 +259,3 @@ def create_yamldata() -> YamlData:
         >>> print(yaml_data.classic_version)
         '8.0.0'
     """
-    ...

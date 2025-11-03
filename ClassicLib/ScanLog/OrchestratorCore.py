@@ -15,26 +15,27 @@ from packaging.version import Version
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.integration.factory import get_file_io
+from ClassicLib.integration.factory import get_file_io, get_plugin_analyzer
 from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager, write_file_async
+from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
+from ClassicLib.ScanLog.fragments import ReportFragment
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from ClassicLib.ScanLog.Parser import extract_module_names, find_segments
-from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
-from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
-from ClassicLib.ScanLog.fragments import ReportFragment
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
 from ClassicLib.Util import crashgen_version_gen
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettingsCache import classic_settings_async, yaml_settings_async
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+
+logger = logging.getLogger(__name__)
 
 
 class OrchestratorCore:
@@ -98,20 +99,21 @@ class OrchestratorCore:
         self.yamldata: ClassicScanLogsInfo = yamldata
         self.show_formid_values = show_formid_values
         self.formid_db_exists = formid_db_exists
-        self.remove_list = remove_list or yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
-        self.simplify_logs = classic_settings(bool, "Simplify Logs")
+        self._remove_list_param = remove_list  # Store param, load in __aenter__
 
-        # Initialize all modules (using refactored versions where available)
-        self.plugin_analyzer = PluginAnalyzer(yamldata)
+        # Deferred YAML loading - these will be initialized in __aenter__
+        self.remove_list: tuple[str, ...] = ("",)
+        self.simplify_logs: bool = False
+        self.game_root_name: str | None = None
+
+        # Initialize modules - use Rust PluginAnalyzer (30x speedup), Python for others (API compatibility)
+        self.plugin_analyzer = get_plugin_analyzer(yamldata)  # Rust accelerated
         self.formid_analyzer = FormIDAnalyzer(yamldata, show_formid_values or False, formid_db_exists)
         self.suspect_scanner = SuspectScanner(yamldata)
         self.record_scanner = RecordScanner(yamldata)
         self.settings_scanner = SettingsScannerFragments(yamldata)
         self.report_generator = ReportGeneratorFragments(yamldata)
         self.fcx_handler = FCXModeHandlerFragments(fcx_mode)
-
-        # Get game info
-        self.game_root_name: str | None = yaml_settings(str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name")
 
         # Async-specific attributes
         self._db_pool: AsyncDatabasePool | None = None
@@ -138,6 +140,17 @@ class OrchestratorCore:
         # Initialize asyncio.Lock
         self._state_lock = asyncio.Lock()
 
+        # Load YAML settings asynchronously (deferred from __init__)
+        self.remove_list = (
+            self._remove_list_param
+            or await yaml_settings_async(tuple, YAML.Main, "exclude_log_records")
+            or ("",)
+        )
+        self.simplify_logs = await classic_settings_async(bool, "Simplify Logs") or False
+        self.game_root_name = await yaml_settings_async(
+            str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name"
+        )
+
         # Lazy database pool initialization - only if database exists
         if self.formid_db_exists:
             pool_manager = DatabasePoolManager()
@@ -149,6 +162,7 @@ class OrchestratorCore:
         self._async_formid_analyzer = FormIDAnalyzerCore(
             self.yamldata, self.show_formid_values or False, self.formid_db_exists, self._db_pool
         )
+
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
@@ -184,23 +198,16 @@ class OrchestratorCore:
             - Boolean indicating if the scan failed
             - Counter with local statistics
         """
-        import time
-        log_start = time.perf_counter()
-
         trigger_scan_failed = False
         local_stats: Counter[str] = Counter(scanned=1, incomplete=0, failed=0)
 
         # Read and reformat crash data inline (no blocking preload)
         # When Rust is enabled, this allows concurrent processing of multiple logs
-        read_start = time.perf_counter()
         io_core = get_file_io()
         content = await io_core.read_file(crashlog_file)
-        read_time = time.perf_counter() - read_start
 
         # Reformat inline as part of processing pipeline
-        reformat_start = time.perf_counter()
         crash_data = self._reformat_crash_data_inline(content.splitlines())
-        reformat_time = time.perf_counter() - reformat_start
 
         # Create report composer
         composer = ReportComposer()
@@ -209,11 +216,9 @@ class OrchestratorCore:
         composer.add(self.report_generator.generate_header(crashlog_file.name))
 
         # Parse crash log segments (direct call - we're in a thread pool thread)
-        parse_start = time.perf_counter()
         (crashlog_gameversion, crashlog_crashgen, crashlog_mainerror, segments) = find_segments(
             crash_data, self.yamldata.crashgen_name, self.yamldata.xse_acronym, self.game_root_name or ""
         )
-        parse_time = time.perf_counter() - parse_start
 
         # Unpack segments
         (
@@ -234,7 +239,6 @@ class OrchestratorCore:
             trigger_scan_failed = True
 
         # Process crash log sections and compose fragments
-        sections_start = time.perf_counter()
         section_fragments = await self._process_log_sections_async(
             crashlog_gameversion,
             crashlog_crashgen,
@@ -245,7 +249,6 @@ class OrchestratorCore:
             segment_xsemodules,
             segment_plugins,
         )
-        sections_time = time.perf_counter() - sections_start
 
         composer.add(section_fragments)
 
@@ -253,19 +256,7 @@ class OrchestratorCore:
         composer.add(self.report_generator.generate_footer())
 
         # Convert final composed fragment to list
-        composition_start = time.perf_counter()
         autoscan_report = composer.to_list()
-        composition_time = time.perf_counter() - composition_start
-
-        # Log detailed timing breakdown
-        total_time = time.perf_counter() - log_start
-        if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
-            logging.getLogger(__name__).debug(
-                f"Log processing breakdown for {crashlog_file.name}: "
-                f"read={read_time*1000:.1f}ms, reformat={reformat_time*1000:.1f}ms, "
-                f"parse={parse_time*1000:.1f}ms, sections={sections_time*1000:.1f}ms, "
-                f"composition={composition_time*1000:.1f}ms, total={total_time*1000:.1f}ms"
-            )
 
         return crashlog_file, autoscan_report, trigger_scan_failed, local_stats
 
@@ -309,12 +300,9 @@ class OrchestratorCore:
             on the provided crash log segments.
 
         """
-        import time
-
         composer = ReportComposer()
 
         # Version checking
-        setup_start = time.perf_counter()
         game_version: Version = crashgen_version_gen(crashlog_gameversion)
         version_current: Version = crashgen_version_gen(crashlog_crashgen)
         version_latest: Version = crashgen_version_gen(self.yamldata.crashgen_latest_og)
@@ -339,57 +327,37 @@ class OrchestratorCore:
         crashlog_gpu_rival: Literal["nvidia", "amd"] | None = (
             cast("Literal['nvidia', 'amd']", rival_value) if rival_value in {"nvidia", "amd"} else None
         )
-        setup_time = time.perf_counter() - setup_start
 
         # Process plugins (async for better concurrency)
-        plugins_start = time.perf_counter()
         crashlog_plugins, _trigger_plugin_limit, _trigger_limit_check_disabled, trigger_plugins_loaded = await self._process_plugins_async(
             segment_plugins, segment_callstack, game_version, version_current
         )
-        plugins_time = time.perf_counter() - plugins_start
 
         # Store for async FormID processing
         async with self._state_lock:
             self._last_plugins = crashlog_plugins.copy()
 
         # Run suspect scanning
-        suspect_start = time.perf_counter()
         suspect_fragments = self._run_suspect_scanning(crashlog_mainerror, segment_callstack)
         composer.add(suspect_fragments)
-        suspect_time = time.perf_counter() - suspect_start
 
         # Check FCX mode and settings
-        fcx_start = time.perf_counter()
         fcx_and_settings_fragments = self._check_fcx_and_settings(
             xsemodules,
             crashgen,
             version_current,
         )
         composer.add(fcx_and_settings_fragments)
-        fcx_time = time.perf_counter() - fcx_start
 
         # Run mod detection with async FormID analysis if available
-        mod_start = time.perf_counter()
         mod_detection_fragments = await self._run_mod_detection_async(
             crashlog_plugins, segment_callstack, trigger_plugins_loaded, crashlog_gpu_rival, xsemodules
         )
         composer.add(mod_detection_fragments)
-        mod_time = time.perf_counter() - mod_start
 
         # Scan for specific suspects (named records)
-        record_start = time.perf_counter()
         record_fragments = self._scan_specific_suspects(segment_callstack)
         composer.add(record_fragments)
-        record_time = time.perf_counter() - record_start
-
-        # Log detailed section timing breakdown
-        if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
-            logging.getLogger(__name__).debug(
-                f"Section timing breakdown: setup={setup_time*1000:.1f}ms, "
-                f"plugins={plugins_time*1000:.1f}ms, suspect={suspect_time*1000:.1f}ms, "
-                f"fcx={fcx_time*1000:.1f}ms, mod_detection={mod_time*1000:.1f}ms, "
-                f"records={record_time*1000:.1f}ms"
-            )
 
         return composer.build()
 
@@ -421,7 +389,6 @@ class OrchestratorCore:
             ReportFragment: A composed report fragment summarizing findings from the asynchronous
             mod detection process, including identified issues or problematic mods.
         """
-        import time
         from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 
         composer = ReportComposer()
@@ -433,12 +400,7 @@ class OrchestratorCore:
         crashlog_plugins_lower = {k.lower(): v for k, v in crashlog_plugins.items()}
 
         # Run mod detection based on plugins loaded status
-        mod_checks_time = 0.0
-        plugin_match_time = 0.0
-        formid_time = 0.0
-
         if trigger_plugins_loaded:
-            mod_start = time.perf_counter()
 
             # Check for conflicting mods with conditional header
             conflict_fragment = ConditionalSection.with_header(
@@ -478,11 +440,8 @@ class OrchestratorCore:
             )
             composer.add(opc2_fragment)
 
-            mod_checks_time = time.perf_counter() - mod_start
-
         # Plugin suspect scanning (plugins found in crash stack)
         if trigger_plugins_loaded and crashlog_plugins_lower:
-            plugin_start = time.perf_counter()
 
             # Convert callstack to lowercase for matching
             segment_callstack_lower = [line.lower() for line in segment_callstack]
@@ -497,25 +456,13 @@ class OrchestratorCore:
             )
             composer.add(plugin_fragment)
 
-            plugin_match_time = time.perf_counter() - plugin_start
-
         # Use async FormID analyzer if available
         if self._async_formid_analyzer and self._last_formids:
-            formid_start = time.perf_counter()
 
             # Add FormID section header and results
             composer.add(self.report_generator.generate_formid_section_header())
             formid_fragment = await self._async_formid_analyzer.formid_match(self._last_formids, crashlog_plugins)
             composer.add(formid_fragment)
-
-            formid_time = time.perf_counter() - formid_start
-
-        # Log mod detection timing breakdown
-        if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
-            logging.getLogger(__name__).debug(
-                f"Mod detection breakdown: mod_checks={mod_checks_time*1000:.1f}ms, "
-                f"plugin_match={plugin_match_time*1000:.1f}ms, formid_analysis={formid_time*1000:.1f}ms"
-            )
 
         return composer.build()
 

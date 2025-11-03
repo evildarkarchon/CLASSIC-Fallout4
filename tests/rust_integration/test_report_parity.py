@@ -22,39 +22,20 @@ with the Python implementation while providing significant performance improveme
 
 from __future__ import annotations
 
-import json
 import logging
 import tempfile
 import time
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock
 
 import pytest
 
-from ClassicLib.integration.factory import (
-    get_parser,
-    get_formid_analyzer,
-    get_plugin_analyzer,
-    get_record_scanner,
-    get_report_generator,
-    get_database_pool,
-    get_file_io,
-)
-from ClassicLib.integration.status import (
-    get_rust_component_status,
-    is_rust_accelerated,
-)
 from ClassicLib.integration.detector import get_available_components
 
 RUST_AVAILABLE = get_available_components()["components"]
 from ClassicLib.ScanLog.ReportFragment import ReportFragment
-from tests.rust_integration.parity_fixtures import (
-    ParityResult,
-    ParityValidator,
-    normalize_markdown_content,
-    skip_if_rust_unavailable
-)
+
+from tests.rust_integration.parity_fixtures import ParityResult, ParityValidator, normalize_markdown_content, skip_if_rust_unavailable
 
 logger = logging.getLogger(__name__)
 
@@ -82,10 +63,9 @@ class ReportParityValidator(ParityValidator):
             import classic_scanlog as rust_scanlog
             if hasattr(rust_scanlog, "ReportGenerator"):
                 return rust_scanlog.ReportGenerator()
-            elif hasattr(rust_scanlog, "report"):
+            if hasattr(rust_scanlog, "report"):
                 return rust_scanlog.report
-            else:
-                return None
+            return None
         except ImportError:
             return None
 
@@ -271,7 +251,7 @@ class TestReportParity:
                 python_content_normalized = normalize_markdown_content(str(python_content))
 
                 if rust_content_normalized != python_content_normalized:
-                    differences.append(f"Fragment content differs")
+                    differences.append("Fragment content differs")
                     is_identical = False
 
                 # Compare type

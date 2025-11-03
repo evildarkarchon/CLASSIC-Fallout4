@@ -5,14 +5,13 @@ no memory leaks, proper cleanup, and graceful handling of extreme
 memory conditions using only synthetic data.
 """
 
-import pytest
 import gc
-import psutil
-import threading
+import sys
 import time
 import weakref
-import sys
-from pathlib import Path
+
+import psutil
+import pytest
 
 # resource module is Unix-only
 try:
@@ -20,12 +19,10 @@ try:
     RESOURCE_AVAILABLE = True
 except ImportError:
     RESOURCE_AVAILABLE = False
-from typing import List, Any, Optional
-from unittest.mock import MagicMock, patch
-import tracemalloc
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import random
-import string
+import tracemalloc
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from unittest.mock import MagicMock
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.stress, pytest.mark.rust, pytest.mark.slow]
@@ -94,7 +91,7 @@ class SyntheticDataGenerator:
         return "\n".join(lines)
 
     @staticmethod
-    def generate_formid_batch(count: int) -> List[str]:
+    def generate_formid_batch(count: int) -> list[str]:
         """Generate a batch of synthetic FormIDs."""
         formids = []
         for i in range(count):
@@ -189,7 +186,7 @@ class TestMemorySafetyStress:
         if not self.rust_available:
             pytest.skip("Rust module not available")
 
-        from ClassicLib.integration.factory import get_parser, get_formid_analyzer
+        from ClassicLib.integration.factory import get_formid_analyzer, get_parser
 
         monitor = MemoryMonitor()
         monitor.start()

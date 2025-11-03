@@ -24,18 +24,16 @@ Performance metrics tracked:
 from __future__ import annotations
 
 import logging
-import re
-import time
-from typing import Any, Dict, List, Optional, Set, Tuple
-
 import sys
+import time
 from pathlib import Path
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.integration.factory import get_formid_analyzer
+from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
@@ -125,8 +123,8 @@ class FormIDBenchmark:
         ]
 
         # Cache for analyzer instances
-        self._rust_analyzer: Optional[RustFormIDAnalyzer] = None
-        self._python_analyzer: Optional[FormIDAnalyzer] = None
+        self._rust_analyzer: RustFormIDAnalyzer | None = None
+        self._python_analyzer: FormIDAnalyzer | None = None
 
     def _create_mock_yamldata(self) -> ClassicScanLogsInfo:
         """Create comprehensive mock YAML data for FormID analysis testing."""
@@ -162,7 +160,7 @@ class FormIDBenchmark:
                     'enable_formid_validation': True,
                 }
 
-            def get_formid_info(self, formid: str) -> Optional[Dict[str, str]]:
+            def get_formid_info(self, formid: str) -> dict[str, str] | None:
                 """Mock FormID database lookup."""
                 return self.formid_database.get(formid.upper())
 
@@ -179,7 +177,7 @@ class FormIDBenchmark:
     def run_benchmark(
         self,
         implementation: str,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         warm_up: bool = False,
         scenario: str = 'standard_extraction'
     ) -> FormIDBenchmarkResult:
@@ -263,10 +261,10 @@ class FormIDBenchmark:
     def _run_batch_formid_analysis(
         self,
         implementation: str,
-        callstacks: List[List[str]],
-        plugins: Dict[str, str],
-        scenario_config: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        callstacks: list[list[str]],
+        plugins: dict[str, str],
+        scenario_config: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """
         Run batch FormID analysis for performance measurement.
 
@@ -318,10 +316,10 @@ class FormIDBenchmark:
 
     def _analyze_with_rust(
         self,
-        callstack_lines: List[str],
-        plugins: Dict[str, str],
-        scenario_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        callstack_lines: list[str],
+        plugins: dict[str, str],
+        scenario_config: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Analyze FormIDs using Rust implementation.
 
@@ -354,7 +352,7 @@ class FormIDBenchmark:
         }
 
         # Perform plugin matching if requested and data available
-        if scenario_config.get('test_plugins', False) and plugins:
+        if scenario_config.get('test_plugins') and plugins:
             try:
                 # Create mock report object for plugin matching
                 mock_report = MockReportFragment()
@@ -375,10 +373,10 @@ class FormIDBenchmark:
 
     def _analyze_with_python(
         self,
-        callstack_lines: List[str],
-        plugins: Dict[str, str],
-        scenario_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        callstack_lines: list[str],
+        plugins: dict[str, str],
+        scenario_config: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Analyze FormIDs using Python implementation.
 
@@ -411,7 +409,7 @@ class FormIDBenchmark:
         }
 
         # Perform plugin matching
-        if scenario_config.get('test_plugins', False) and plugins:
+        if scenario_config.get('test_plugins') and plugins:
             try:
                 mock_report = MockReportFragment()
                 self._python_analyzer.formid_match(extracted_formids, plugins, mock_report)
@@ -431,9 +429,9 @@ class FormIDBenchmark:
 
     def _apply_scenario_preprocessing(
         self,
-        callstacks: List[List[str]],
-        scenario_config: Dict[str, Any]
-    ) -> List[List[str]]:
+        callstacks: list[list[str]],
+        scenario_config: dict[str, Any]
+    ) -> list[list[str]]:
         """
         Apply scenario-specific preprocessing to call stack data.
 
@@ -450,15 +448,15 @@ class FormIDBenchmark:
             modified_stack = list(callstack)  # Copy original
 
             # Add malformed FormIDs for error testing
-            if scenario_config.get('include_malformed', False):
+            if scenario_config.get('include_malformed'):
                 modified_stack = self._add_malformed_formids(modified_stack)
 
             # Add edge case FormID patterns
-            if scenario_config.get('include_edge_cases', False):
+            if scenario_config.get('include_edge_cases'):
                 modified_stack = self._add_edge_case_formids(modified_stack)
 
             # Increase volume for stress testing
-            if scenario_config.get('stress_volume', False):
+            if scenario_config.get('stress_volume'):
                 # Duplicate the call stack with variations to increase FormID density
                 modified_stack = self._increase_formid_density(modified_stack)
 
@@ -466,7 +464,7 @@ class FormIDBenchmark:
 
         return processed
 
-    def _add_malformed_formids(self, callstack: List[str]) -> List[str]:
+    def _add_malformed_formids(self, callstack: list[str]) -> list[str]:
         """Add malformed FormID patterns for error handling testing."""
         malformed_patterns = [
             "FormID: INVALID_HEX",      # Non-hex characters
@@ -487,7 +485,7 @@ class FormIDBenchmark:
 
         return modified
 
-    def _add_edge_case_formids(self, callstack: List[str]) -> List[str]:
+    def _add_edge_case_formids(self, callstack: list[str]) -> list[str]:
         """Add edge case FormID patterns for comprehensive testing."""
         edge_cases = [
             # Maximum values
@@ -523,7 +521,7 @@ class FormIDBenchmark:
 
         return modified
 
-    def _increase_formid_density(self, callstack: List[str]) -> List[str]:
+    def _increase_formid_density(self, callstack: list[str]) -> list[str]:
         """Increase FormID density for volume stress testing."""
         enhanced_stack = []
 
@@ -570,8 +568,8 @@ class FormIDBenchmark:
     def _run_single_extraction(
         self,
         implementation: str,
-        callstacks: List[List[str]],
-        scenario_config: Dict[str, Any]
+        callstacks: list[list[str]],
+        scenario_config: dict[str, Any]
     ) -> None:
         """Run single FormID extraction for warm-up."""
         if not callstacks:
@@ -586,8 +584,8 @@ class FormIDBenchmark:
     def run_all_scenarios(
         self,
         implementation: str,
-        dataset: Dict[str, Any]
-    ) -> Dict[str, FormIDBenchmarkResult]:
+        dataset: dict[str, Any]
+    ) -> dict[str, FormIDBenchmarkResult]:
         """
         Run all test scenarios for comprehensive FormID analysis.
 
@@ -618,9 +616,9 @@ class FormIDBenchmark:
 
     def get_formid_extraction_accuracy(
         self,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         reference_implementation: str = "python"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analyze FormID extraction accuracy between implementations.
 
@@ -702,8 +700,8 @@ class MockReportFragment:
     """Mock report fragment for plugin matching testing."""
 
     def __init__(self):
-        self.matched_plugins: Set[str] = set()
-        self.formid_matches: Dict[str, str] = {}
+        self.matched_plugins: set[str] = set()
+        self.formid_matches: dict[str, str] = {}
 
     def add_plugin_match(self, plugin_name: str, formid: str):
         """Add a plugin match result."""
@@ -713,11 +711,11 @@ class MockReportFragment:
 
 # Convenience function for standalone benchmarking
 def benchmark_formid_analysis_performance(
-    callstacks: List[List[str]],
-    plugins: Optional[Dict[str, str]] = None,
+    callstacks: list[list[str]],
+    plugins: dict[str, str] | None = None,
     iterations: int = 5,
     include_scenarios: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Standalone function for benchmarking FormID analysis performance.
 

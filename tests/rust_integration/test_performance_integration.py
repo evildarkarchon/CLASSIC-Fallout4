@@ -14,44 +14,34 @@ Key Performance Areas:
 - Scalability validation with large datasets
 """
 
-import asyncio
 import gc
 import logging
 import os
-import psutil
 import statistics
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import Mock
 
+import psutil
 import pytest
 
 # Skip entire module if Rust extensions not available
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import test infrastructure
-from tests.test_infra.performance_utils import PerformanceTimer
-
 # Import core components
-from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.integration.factory import (
-    get_parser,
     get_formid_analyzer,
+    get_parser,
     get_plugin_analyzer,
     get_record_scanner,
-    get_database_pool,
-    get_file_io,
 )
 from ClassicLib.integration.status import (
-    get_rust_component_status,
     is_rust_accelerated,
-    get_performance_multiplier,
 )
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+from tests.test_infra.performance_utils import PerformanceTimer
 
 
 @contextmanager
@@ -110,7 +100,7 @@ class TestPerformanceBenchmarks:
     """
 
     @pytest.fixture(scope="class")
-    def performance_test_data(self) -> Dict[str, List[str]]:
+    def performance_test_data(self) -> dict[str, list[str]]:
         """
         Generate test data of various sizes for performance testing.
 
@@ -485,7 +475,7 @@ class TestMemoryPerformance:
     """
 
     @pytest.fixture
-    def large_test_data(self) -> List[str]:
+    def large_test_data(self) -> list[str]:
         """Generate large test data for memory testing."""
         data = [
             "Fallout 4 v1.10.163",
@@ -579,7 +569,7 @@ class TestMemoryPerformance:
         peak_rss_mb = memory_stats["peak_rss"] / 1024 / 1024
         growth_mb = memory_stats["rss_growth_mb"]
 
-        logging.info(f"Memory usage analysis:")
+        logging.info("Memory usage analysis:")
         logging.info(f"  Initial RSS: {initial_rss_mb:.1f} MB")
         logging.info(f"  Final RSS: {final_rss_mb:.1f} MB")
         logging.info(f"  Peak RSS: {peak_rss_mb:.1f} MB")
@@ -619,7 +609,7 @@ class TestMemoryPerformance:
         # Memory per item should be very small
         memory_per_item = (growth_mb * 1024 * 1024) / formid_count if formid_count > 0 else 0
 
-        logging.info(f"Memory efficiency - FormID analyzer:")
+        logging.info("Memory efficiency - FormID analyzer:")
         logging.info(f"  Growth: {growth_mb:.1f} MB for {formid_count} items")
         logging.info(f"  Per item: {memory_per_item:.2f} bytes")
 
@@ -641,7 +631,7 @@ class TestMemoryPerformance:
         if not available_components:
             pytest.skip("No Rust components available for concurrent memory testing")
 
-        def process_data(thread_id: int) -> Dict[str, Any]:
+        def process_data(thread_id: int) -> dict[str, Any]:
             """Process data in a thread and return results."""
             thread_results = {}
 
@@ -700,7 +690,7 @@ class TestConcurrentPerformance:
     """
 
     @pytest.fixture
-    def concurrent_test_data(self) -> List[List[str]]:
+    def concurrent_test_data(self) -> list[list[str]]:
         """Generate multiple datasets for concurrent testing."""
         datasets = []
 
@@ -752,7 +742,7 @@ class TestConcurrentPerformance:
         if not is_rust_accelerated("parser"):
             pytest.skip("Rust parser not available for concurrent performance testing")
 
-        def parse_single(data_index: int) -> Dict[str, Any]:
+        def parse_single(data_index: int) -> dict[str, Any]:
             """Parse a single dataset and return timing info."""
             crash_data = concurrent_test_data[data_index]
             parser = get_parser()
@@ -792,7 +782,7 @@ class TestConcurrentPerformance:
         speedup = sequential_time / concurrent_time
         efficiency = speedup / 4  # 4 threads
 
-        logging.info(f"Parser concurrent performance:")
+        logging.info("Parser concurrent performance:")
         logging.info(f"  Sequential total: {sequential_time:.3f}s (avg: {sequential_avg:.3f}s per task)")
         logging.info(f"  Concurrent total: {concurrent_time:.3f}s (avg: {concurrent_avg:.3f}s per task)")
         logging.info(f"  Speedup: {speedup:.2f}x")
@@ -813,7 +803,7 @@ class TestConcurrentPerformance:
         if not is_rust_accelerated("formid_analyzer"):
             pytest.skip("Rust FormID analyzer not available for concurrent testing")
 
-        def analyze_formids(data_index: int) -> Dict[str, Any]:
+        def analyze_formids(data_index: int) -> dict[str, Any]:
             """Analyze FormIDs in a single dataset."""
             crash_data = concurrent_test_data[data_index]
             analyzer = get_formid_analyzer(mock_yamldata, True, True)
@@ -882,7 +872,7 @@ class TestConcurrentPerformance:
         if len(available_components) < 2:
             pytest.skip("Need at least 2 different Rust components for mixed concurrent testing")
 
-        def run_mixed_operations(data_index: int) -> Dict[str, Any]:
+        def run_mixed_operations(data_index: int) -> dict[str, Any]:
             """Run mixed operations on a dataset."""
             crash_data = concurrent_test_data[data_index]
             results = {"data_index": data_index}
@@ -928,7 +918,7 @@ class TestConcurrentPerformance:
 
         speedup = sequential_time / concurrent_time
 
-        logging.info(f"Mixed concurrent operations:")
+        logging.info("Mixed concurrent operations:")
         logging.info(f"  Components: {available_components}")
         logging.info(f"  Sequential: {sequential_time:.3f}s")
         logging.info(f"  Concurrent: {concurrent_time:.3f}s")

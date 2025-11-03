@@ -34,8 +34,9 @@ Usage:
 """
 
 from __future__ import annotations
-from typing import Any, Optional
+
 from pathlib import Path
+from typing import Any
 
 __version__: str
 
@@ -73,7 +74,6 @@ class RustDatabasePool:
             >>> pool = RustDatabasePool("formids.db", max_connections=8)
             >>> pool.initialize()
         """
-        ...
 
     def initialize(self) -> None:
         """Initialize the database pool and prepare connections.
@@ -89,7 +89,6 @@ class RustDatabasePool:
             >>> pool = RustDatabasePool("formids.db")
             >>> pool.initialize()
         """
-        ...
 
     def close(self) -> None:
         """Close all database connections and clear cache.
@@ -103,9 +102,8 @@ class RustDatabasePool:
             >>> # ... use pool ...
             >>> pool.close()
         """
-        ...
 
-    def get_entry(self, formid: str) -> Optional[dict[str, Any]]:
+    def get_entry(self, formid: str) -> dict[str, Any] | None:
         """Lookup a single FormID in the database.
 
         Queries the database for a FormID entry. Uses caching to avoid
@@ -125,7 +123,6 @@ class RustDatabasePool:
             >>> if entry:
             ...     print(f"Plugin: {entry['plugin']}")
         """
-        ...
 
     def batch_lookup(self, formids: list[str]) -> dict[str, dict[str, Any]]:
         """Lookup multiple FormIDs in a single optimized query.
@@ -148,9 +145,8 @@ class RustDatabasePool:
             >>> for formid, entry in results.items():
             ...     print(f"{formid}: {entry['plugin']}")
         """
-        ...
 
-    def get_entries_batch(self, formids: list[str]) -> list[Optional[dict[str, Any]]]:
+    def get_entries_batch(self, formids: list[str]) -> list[dict[str, Any] | None]:
         """Get entries for multiple FormIDs, preserving order.
 
         Similar to batch_lookup but returns results in the same order as the
@@ -174,7 +170,6 @@ class RustDatabasePool:
             ...     else:
             ...         print(f"{formid}: Not found")
         """
-        ...
 
     def get_game_table(self) -> str:
         """Get the current game table name being queried.
@@ -191,7 +186,6 @@ class RustDatabasePool:
             >>> print(pool.get_game_table())
             'fallout4'
         """
-        ...
 
     def set_game_table(self, table_name: str) -> None:
         """Set the game table to query (e.g., 'fallout4', 'skyrim').
@@ -207,7 +201,6 @@ class RustDatabasePool:
             >>> pool.initialize()
             >>> pool.set_game_table("skyrim")  # Switch to Skyrim database
         """
-        ...
 
     def clear_cache(self) -> None:
         """Clear the query cache to free memory.
@@ -221,7 +214,6 @@ class RustDatabasePool:
             >>> # ... perform many queries ...
             >>> pool.clear_cache()  # Clear cached results
         """
-        ...
 
     def set_cache_ttl(self, ttl_seconds: int) -> None:
         """Set cache entry time-to-live.
@@ -239,7 +231,6 @@ class RustDatabasePool:
             >>> pool.initialize()
             >>> pool.set_cache_ttl(120)  # Cache for 2 minutes
         """
-        ...
 
     def optimize(self) -> None:
         """Run database optimization (VACUUM, ANALYZE).
@@ -255,7 +246,6 @@ class RustDatabasePool:
             >>> pool.initialize()
             >>> pool.optimize()  # Optimize database
         """
-        ...
 
     def get_stats(self) -> dict[str, Any]:
         """Get pool and cache statistics.
@@ -280,7 +270,6 @@ class RustDatabasePool:
             >>> print(f"Cache hit rate: {stats['cache_hit_rate']:.1%}")
             >>> print(f"Active connections: {stats['active_connections']}")
         """
-        ...
 
     def get_max_connections(self) -> int:
         """Get the current maximum number of connections.
@@ -294,7 +283,6 @@ class RustDatabasePool:
             >>> print(pool.get_max_connections())
             8
         """
-        ...
 
     def set_max_connections(self, max_connections: int) -> None:
         """Set the maximum number of connections.
@@ -311,7 +299,6 @@ class RustDatabasePool:
             >>> pool.initialize()
             >>> pool.set_max_connections(16)  # Increase pool size
         """
-        ...
 
     def recalculate_max_connections(self) -> int:
         """Recalculate optimal maximum connections based on CPU cores.
@@ -328,4 +315,3 @@ class RustDatabasePool:
             >>> optimal = pool.recalculate_max_connections()
             >>> print(f"Optimal connections: {optimal}")
         """
-        ...

@@ -19,7 +19,6 @@ from typing import Any, ClassVar
 from ClassicLib.Constants import YAML
 
 
-
 class YamlCache:
     """
     YamlCache is a utility class to manage YAML file caching efficiently.

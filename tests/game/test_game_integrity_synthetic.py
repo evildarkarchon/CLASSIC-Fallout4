@@ -5,16 +5,13 @@ data structures that simulate game files without using any actual
 copyrighted game content.
 """
 
-import pytest
-import tempfile
-import json
 import hashlib
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, mock_open
-from typing import Dict, List, Any, Optional
-import shutil
-import os
 import random
+import shutil
+import tempfile
+from pathlib import Path
+
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.integration]
@@ -24,7 +21,7 @@ class SyntheticGameFileGenerator:
     """Generate synthetic game file structures for testing."""
 
     @staticmethod
-    def generate_formid(plugin_index: int = 0, local_id: Optional[int] = None) -> str:
+    def generate_formid(plugin_index: int = 0, local_id: int | None = None) -> str:
         """Generate a synthetic FormID in proper hex format."""
         if local_id is None:
             local_id = random.randint(0x000001, 0xFFFFFF)
@@ -33,7 +30,7 @@ class SyntheticGameFileGenerator:
         return f"{plugin_index:02X}{local_id:06X}"
 
     @staticmethod
-    def generate_light_formid(plugin_index: int = 0xFE, local_id: Optional[int] = None) -> str:
+    def generate_light_formid(plugin_index: int = 0xFE, local_id: int | None = None) -> str:
         """Generate a light plugin FormID (FE prefix)."""
         if local_id is None:
             local_id = random.randint(0x000800, 0x000FFF)  # Light plugin range

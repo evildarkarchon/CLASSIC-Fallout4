@@ -5,13 +5,14 @@ including error propagation, concurrent operation limits, and fallback mechanism
 """
 
 import asyncio
-import pytest
 import threading
 import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import patch
+
+import pytest
 
 from ClassicLib.AsyncBridge import AsyncBridge
 
@@ -56,7 +57,6 @@ class TestAsyncBridgeFailureModes:
 
         class CustomException(Exception):
             """Custom exception for testing."""
-            pass
 
         async def failing_async_func():
             raise CustomException("Async error occurred")

@@ -40,7 +40,7 @@ class RustAcceleratedSuspectScanner:
     - Rust returns list[str], Python returns ReportFragment
     """
 
-    def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
+    def __init__(self, yamldata: ClassicScanLogsInfo) -> None:
         """
         Initializes an instance of the class with the provided ClassicScanLogsInfo object
         and determines whether to use the Rust or Python implementation for the scanner,
@@ -82,9 +82,8 @@ class RustAcceleratedSuspectScanner:
             # Rust returns (list[str], bool), need to convert to (ReportFragment, bool)
             lines, found_suspect = self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
             return ReportFragment.from_lines(lines), found_suspect
-        else:
-            # Python already returns correct types
-            return self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
+        # Python already returns correct types
+        return self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
 
     def suspect_scan_stack(
         self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
@@ -110,9 +109,8 @@ class RustAcceleratedSuspectScanner:
                 crashlog_mainerror, segment_callstack_intact, max_warn_length
             )
             return ReportFragment.from_lines(lines), any_suspect_found
-        else:
-            # Python already returns correct types
-            return self._scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, max_warn_length)
+        # Python already returns correct types
+        return self._scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, max_warn_length)
 
     @staticmethod
     def check_dll_crash(crashlog_mainerror: str) -> ReportFragment:
@@ -137,11 +135,10 @@ class RustAcceleratedSuspectScanner:
             # Rust returns list[str], need to convert to ReportFragment
             lines = RustSuspectScanner.check_dll_crash(crashlog_mainerror)
             return ReportFragment.from_lines(lines)
-        else:
-            # Fallback to Python implementation
-            from ClassicLib.ScanLog.SuspectScanner import SuspectScanner as PySuspectScanner
+        # Fallback to Python implementation
+        from ClassicLib.ScanLog.SuspectScanner import SuspectScanner as PySuspectScanner
 
-            return PySuspectScanner.check_dll_crash(crashlog_mainerror)
+        return PySuspectScanner.check_dll_crash(crashlog_mainerror)
 
 
 # Export both the wrapper and components for compatibility

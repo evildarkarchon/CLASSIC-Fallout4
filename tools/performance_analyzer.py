@@ -42,17 +42,15 @@ import math
 import statistics
 import sys
 import time
-from collections import defaultdict, namedtuple
+from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-import json
-import threading
-import psutil
-import concurrent.futures
+from typing import Any
 
 # Statistical analysis
-import numpy as np
+import psutil
+
 try:
     from scipy import stats
     SCIPY_AVAILABLE = True
@@ -63,15 +61,14 @@ except ImportError:
 # Visualization (optional)
 try:
     import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
+    from matplotlib import patches
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
     plt = None
 
 # Import our profiling tools
-from tools.ffi_profiler import FFIProfiler, FFICall, FFIProfileStats
-from tools.ffi_optimizer import FFIOptimizer, OptimizationResult
+from tools.ffi_profiler import FFIProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -133,22 +130,22 @@ class ComparisonResult:
     # Statistical significance
     is_significant: bool = False
     confidence_level: float = 0.0
-    p_value: Optional[float] = None
+    p_value: float | None = None
 
     # Analysis details
     sample_size: int = 0
     test_duration: float = 0.0
 
     # Recommendations
-    recommendations: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 class StatisticalAnalyzer:
     """Statistical analysis tools for performance data."""
 
     @staticmethod
-    def calculate_confidence_interval(data: List[float],
-                                    confidence: float = 0.95) -> Tuple[float, float, float]:
+    def calculate_confidence_interval(data: list[float],
+                                    confidence: float = 0.95) -> tuple[float, float, float]:
         """
         Calculate confidence interval for performance data.
 
@@ -173,24 +170,23 @@ class StatisticalAnalyzer:
             # Degrees of freedom
             df = n - 1
             t_value = stats.t.ppf((1 + confidence) / 2, df)
+        # Approximate with normal distribution for large samples
+        # or use t-table approximation for small samples
+        elif n >= 30:
+            t_value = 1.96  # 95% confidence
+        elif n >= 10:
+            t_value = 2.228  # Rough approximation for small samples
         else:
-            # Approximate with normal distribution for large samples
-            # or use t-table approximation for small samples
-            if n >= 30:
-                t_value = 1.96  # 95% confidence
-            elif n >= 10:
-                t_value = 2.228  # Rough approximation for small samples
-            else:
-                t_value = 3.182  # Very conservative for very small samples
+            t_value = 3.182  # Very conservative for very small samples
 
         margin_of_error = t_value * std_error
 
         return mean, mean - margin_of_error, mean + margin_of_error
 
     @staticmethod
-    def welch_t_test(sample1: List[float],
-                     sample2: List[float],
-                     alpha: float = 0.05) -> Tuple[bool, float]:
+    def welch_t_test(sample1: list[float],
+                     sample2: list[float],
+                     alpha: float = 0.05) -> tuple[bool, float]:
         """
         Perform Welch's t-test to determine if performance difference is significant.
 
@@ -204,39 +200,38 @@ class StatisticalAnalyzer:
             # Use scipy for proper Welch's t-test
             statistic, p_value = stats.ttest_ind(sample1, sample2, equal_var=False)
             return p_value < alpha, p_value
+        # Manual implementation of Welch's t-test
+        n1, n2 = len(sample1), len(sample2)
+        mean1, mean2 = statistics.mean(sample1), statistics.mean(sample2)
+
+        if n1 == 1 or n2 == 1:
+            return False, 1.0
+
+        var1 = statistics.variance(sample1)
+        var2 = statistics.variance(sample2)
+
+        # Welch's t-statistic
+        t_stat = (mean1 - mean2) / math.sqrt(var1/n1 + var2/n2)
+
+        # Approximate degrees of freedom (Welch-Satterthwaite equation)
+        df = (var1/n1 + var2/n2)**2 / (var1**2/(n1**2*(n1-1)) + var2**2/(n2**2*(n2-1)))
+
+        # Rough p-value approximation (conservative)
+        # This is a simplified approximation
+        abs_t = abs(t_stat)
+        if abs_t > 2.576:  # 99% confidence
+            p_value = 0.01
+        elif abs_t > 1.96:  # 95% confidence
+            p_value = 0.05
+        elif abs_t > 1.645:  # 90% confidence
+            p_value = 0.10
         else:
-            # Manual implementation of Welch's t-test
-            n1, n2 = len(sample1), len(sample2)
-            mean1, mean2 = statistics.mean(sample1), statistics.mean(sample2)
+            p_value = 0.50
 
-            if n1 == 1 or n2 == 1:
-                return False, 1.0
-
-            var1 = statistics.variance(sample1)
-            var2 = statistics.variance(sample2)
-
-            # Welch's t-statistic
-            t_stat = (mean1 - mean2) / math.sqrt(var1/n1 + var2/n2)
-
-            # Approximate degrees of freedom (Welch-Satterthwaite equation)
-            df = (var1/n1 + var2/n2)**2 / (var1**2/(n1**2*(n1-1)) + var2**2/(n2**2*(n2-1)))
-
-            # Rough p-value approximation (conservative)
-            # This is a simplified approximation
-            abs_t = abs(t_stat)
-            if abs_t > 2.576:  # 99% confidence
-                p_value = 0.01
-            elif abs_t > 1.96:  # 95% confidence
-                p_value = 0.05
-            elif abs_t > 1.645:  # 90% confidence
-                p_value = 0.10
-            else:
-                p_value = 0.50
-
-            return p_value < alpha, p_value
+        return p_value < alpha, p_value
 
     @staticmethod
-    def detect_outliers(data: List[float], method: str = "iqr") -> List[bool]:
+    def detect_outliers(data: list[float], method: str = "iqr") -> list[bool]:
         """
         Detect outliers in performance data using IQR or Z-score method.
 
@@ -256,7 +251,7 @@ class StatisticalAnalyzer:
 
             return [x < lower_bound or x > upper_bound for x in data]
 
-        elif method == "zscore":
+        if method == "zscore":
             # Z-score method
             mean = statistics.mean(data)
             std_dev = statistics.stdev(data)
@@ -267,8 +262,7 @@ class StatisticalAnalyzer:
             z_scores = [(x - mean) / std_dev for x in data]
             return [abs(z) > 3 for z in z_scores]  # 3 sigma rule
 
-        else:
-            return [False] * len(data)
+        return [False] * len(data)
 
 class PerformanceBenchmark:
     """
@@ -282,7 +276,7 @@ class PerformanceBenchmark:
 
     def benchmark_function(self,
                           func: Callable,
-                          test_data: List[Any],
+                          test_data: list[Any],
                           test_name: str = "",
                           enable_ffi_profiling: bool = True) -> PerformanceMetrics:
         """
@@ -438,8 +432,8 @@ class PerformanceBenchmark:
 
     def benchmark_with_multiple_datasets(self,
                                        func: Callable,
-                                       datasets: Dict[str, List[Any]],
-                                       test_name: str = "") -> Dict[str, PerformanceMetrics]:
+                                       datasets: dict[str, list[Any]],
+                                       test_name: str = "") -> dict[str, PerformanceMetrics]:
         """
         Benchmark a function with multiple different datasets.
 
@@ -476,13 +470,13 @@ class PerformanceAnalyzer:
         self.benchmark = PerformanceBenchmark()
 
         # Results storage
-        self.analysis_history: List[ComparisonResult] = []
-        self.baseline_results: Dict[str, List[PerformanceMetrics]] = defaultdict(list)
+        self.analysis_history: list[ComparisonResult] = []
+        self.baseline_results: dict[str, list[PerformanceMetrics]] = defaultdict(list)
 
     def compare_implementations(self,
                               baseline_func: Callable,
                               optimized_func: Callable,
-                              test_data: List[Any],
+                              test_data: list[Any],
                               baseline_name: str = "Python",
                               optimized_name: str = "Rust",
                               runs_per_implementation: int = 10) -> ComparisonResult:
@@ -591,8 +585,8 @@ class PerformanceAnalyzer:
     def analyze_scaling_behavior(self,
                                 func: Callable,
                                 base_data: Any,
-                                scale_factors: List[int],
-                                func_name: str = "function") -> Dict[str, Any]:
+                                scale_factors: list[int],
+                                func_name: str = "function") -> dict[str, Any]:
         """
         Analyze how function performance scales with input size.
 
@@ -666,9 +660,9 @@ class PerformanceAnalyzer:
 
     def regression_analysis(self,
                           func: Callable,
-                          test_data: List[Any],
+                          test_data: list[Any],
                           baseline_metrics: PerformanceMetrics,
-                          tolerance_pct: float = 5.0) -> Dict[str, Any]:
+                          tolerance_pct: float = 5.0) -> dict[str, Any]:
         """
         Detect performance regressions by comparing current performance to baseline.
 
@@ -729,7 +723,7 @@ class PerformanceAnalyzer:
 
     def generate_report(self,
                        comparison_result: ComparisonResult,
-                       output_file: Optional[Union[str, Path]] = None,
+                       output_file: str | Path | None = None,
                        include_charts: bool = True) -> str:
         """
         Generate a comprehensive HTML performance report.
@@ -859,7 +853,7 @@ class PerformanceAnalyzer:
                     <td>Error Rate</td>
                     <td>{100 - baseline.success_rate:.1f}%</td>
                     <td>{100 - optimized.success_rate:.1f}%</td>
-                    <td class="{'improvement' if optimized.success_rate > baseline.success_rate else 'degradation' if optimized.success_rate < baseline.success_rate else 'neutral'}">{((optimized.success_rate - baseline.success_rate)):+.1f}pp</td>
+                    <td class="{'improvement' if optimized.success_rate > baseline.success_rate else 'degradation' if optimized.success_rate < baseline.success_rate else 'neutral'}">{(optimized.success_rate - baseline.success_rate):+.1f}pp</td>
                 </tr>
             </tbody>
         </table>
@@ -894,7 +888,7 @@ class PerformanceAnalyzer:
         # Save to file if requested
         if output_file:
             output_path = Path(output_file)
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with Path(output_path).open('w', encoding='utf-8') as f:
                 f.write(html)
             logger.info(f"Performance report saved to {output_path}")
 
@@ -911,24 +905,24 @@ class PerformanceAnalyzer:
         print(f"   Duration: {result.test_duration:.2f}s total")
 
         # Main metrics
-        print(f"\n⏱️ EXECUTION TIME:")
+        print("\n⏱️ EXECUTION TIME:")
         print(f"   {result.baseline_name:12s}: {result.baseline_metrics.wall_time:.3f}s")
         print(f"   {result.optimized_name:12s}: {result.optimized_metrics.wall_time:.3f}s")
         print(f"   Speedup Factor: {result.speedup_factor:.2f}x {'🚀' if result.speedup_factor > 2 else '✅' if result.speedup_factor > 1.1 else '⚠️'}")
 
-        print(f"\n🧠 MEMORY USAGE:")
+        print("\n🧠 MEMORY USAGE:")
         print(f"   {result.baseline_name:12s}: {result.baseline_metrics.memory_delta:+.2f}MB")
         print(f"   {result.optimized_name:12s}: {result.optimized_metrics.memory_delta:+.2f}MB")
         print(f"   Improvement: {result.memory_improvement_pct:+.1f}%")
 
-        print(f"\n📈 THROUGHPUT:")
+        print("\n📈 THROUGHPUT:")
         print(f"   {result.baseline_name:12s}: {result.baseline_metrics.items_per_second:.1f} items/s")
         print(f"   {result.optimized_name:12s}: {result.optimized_metrics.items_per_second:.1f} items/s")
         print(f"   Improvement: {result.throughput_improvement_pct:+.1f}%")
 
         # FFI-specific metrics
         if result.optimized_metrics.ffi_calls > 0:
-            print(f"\n🔄 FFI METRICS:")
+            print("\n🔄 FFI METRICS:")
             print(f"   FFI Calls: {result.optimized_metrics.ffi_calls:,}")
             print(f"   FFI Overhead: {result.optimized_metrics.ffi_overhead:.3f}s")
             if result.optimized_metrics.wall_time > 0:
@@ -936,33 +930,33 @@ class PerformanceAnalyzer:
                 print(f"   FFI Overhead: {ffi_pct:.1f}% of total time")
 
         # Statistical significance
-        print(f"\n📊 STATISTICAL ANALYSIS:")
+        print("\n📊 STATISTICAL ANALYSIS:")
         print(f"   Significant: {'Yes ✅' if result.is_significant else 'No ❓'}")
         print(f"   P-value: {result.p_value:.3f}")
         print(f"   Confidence: {result.confidence_level*100:.0f}%")
 
         # Warnings and recommendations
         if result.warnings:
-            print(f"\n⚠️ WARNINGS:")
+            print("\n⚠️ WARNINGS:")
             for warning in result.warnings:
                 print(f"   ⚠️ {warning}")
 
         if result.recommendations:
-            print(f"\n💡 RECOMMENDATIONS:")
+            print("\n💡 RECOMMENDATIONS:")
             for rec in result.recommendations:
                 print(f"   💡 {rec}")
 
         # Overall assessment
         if result.speedup_factor > 5:
-            print(f"\n🎯 ASSESSMENT: EXCELLENT - Outstanding performance improvement!")
+            print("\n🎯 ASSESSMENT: EXCELLENT - Outstanding performance improvement!")
         elif result.speedup_factor > 2:
-            print(f"\n🚀 ASSESSMENT: VERY GOOD - Significant performance gains achieved")
+            print("\n🚀 ASSESSMENT: VERY GOOD - Significant performance gains achieved")
         elif result.speedup_factor > 1.2:
-            print(f"\n✅ ASSESSMENT: GOOD - Meaningful performance improvement")
+            print("\n✅ ASSESSMENT: GOOD - Meaningful performance improvement")
         elif result.speedup_factor > 1.05:
-            print(f"\n📈 ASSESSMENT: MINOR - Small but measurable improvement")
+            print("\n📈 ASSESSMENT: MINOR - Small but measurable improvement")
         else:
-            print(f"\n❓ ASSESSMENT: INVESTIGATE - Limited or no improvement detected")
+            print("\n❓ ASSESSMENT: INVESTIGATE - Limited or no improvement detected")
 
         print("=" * 80)
 

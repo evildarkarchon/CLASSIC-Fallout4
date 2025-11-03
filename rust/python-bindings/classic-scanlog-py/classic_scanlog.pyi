@@ -11,7 +11,8 @@ This standalone module provides high-performance crash log analysis with:
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 __version__: str
 
@@ -39,7 +40,6 @@ class FormIDAnalyzer:
             show_values: Whether to show FormID values in output
             db_exists: Whether FormID database exists for lookups
         """
-        ...
 
     def extract_formids(self, text: str) -> list[str]:
         """Extract FormIDs from text.
@@ -50,7 +50,6 @@ class FormIDAnalyzer:
         Returns:
             List of FormID strings in hex format
         """
-        ...
 
     def analyze_formids(
         self,
@@ -66,7 +65,6 @@ class FormIDAnalyzer:
         Returns:
             Dictionary with analysis results including matched plugins
         """
-        ...
 
     def formid_match(
         self,
@@ -82,7 +80,6 @@ class FormIDAnalyzer:
         Returns:
             List of matched plugin names
         """
-        ...
 
 
 class RustFormIDAnalyzer:
@@ -105,7 +102,6 @@ class RustFormIDAnalyzer:
             show_values: Whether to show FormID values
             db_exists: Whether FormID database exists
         """
-        ...
 
     def extract_formids(self, text: str) -> list[str]:
         """Extract FormIDs from text.
@@ -116,7 +112,6 @@ class RustFormIDAnalyzer:
         Returns:
             List of FormID strings
         """
-        ...
 
     def analyze_formids(
         self,
@@ -132,7 +127,6 @@ class RustFormIDAnalyzer:
         Returns:
             Analysis results
         """
-        ...
 
 
 class FormIDAnalyzerCore:
@@ -143,7 +137,6 @@ class FormIDAnalyzerCore:
 
     def __init__(self) -> None:
         """Create FormID analyzer core."""
-        ...
 
     def is_valid_formid(self, formid: str) -> bool:
         """Check if FormID string is valid.
@@ -154,9 +147,8 @@ class FormIDAnalyzerCore:
         Returns:
             True if valid hex FormID
         """
-        ...
 
-    def parse_formid(self, formid: str) -> Optional[int]:
+    def parse_formid(self, formid: str) -> int | None:
         """Parse FormID string to integer.
 
         Args:
@@ -165,9 +157,8 @@ class FormIDAnalyzerCore:
         Returns:
             Parsed FormID integer or None if invalid
         """
-        ...
 
-    def extract_plugin_index(self, formid: str) -> Optional[int]:
+    def extract_plugin_index(self, formid: str) -> int | None:
         """Extract plugin index from FormID.
 
         Args:
@@ -176,7 +167,6 @@ class FormIDAnalyzerCore:
         Returns:
             Plugin index (0-255) or None if invalid
         """
-        ...
 
 
 # =============================================================================
@@ -192,7 +182,6 @@ class LogParser:
 
     def __init__(self) -> None:
         """Create a new LogParser instance."""
-        ...
 
     def find_segments(
         self,
@@ -218,14 +207,13 @@ class LogParser:
                 - probable_callstack: Most relevant stack section
                 - etc.
         """
-        ...
 
     def extract_section(
         self,
         crash_data: list[str],
         start_marker: str,
         end_marker: str
-    ) -> Optional[list[str]]:
+    ) -> list[str] | None:
         """Extract a section between markers.
 
         Args:
@@ -236,7 +224,6 @@ class LogParser:
         Returns:
             Extracted section lines or None if not found
         """
-        ...
 
     def parse_plugins(self, plugin_section: list[str]) -> list[str]:
         """Parse plugin list from crash log section.
@@ -247,12 +234,11 @@ class LogParser:
         Returns:
             List of plugin names
         """
-        ...
 
     def extract_game_version(
         self,
         crash_data: list[str]
-    ) -> Optional[str]:
+    ) -> str | None:
         """Extract game version from crash log.
 
         Args:
@@ -261,7 +247,6 @@ class LogParser:
         Returns:
             Game version string or None if not found
         """
-        ...
 
 
 # =============================================================================
@@ -276,7 +261,6 @@ class PatternMatcher:
 
     def __init__(self) -> None:
         """Create pattern matcher."""
-        ...
 
     def match_patterns(
         self,
@@ -292,7 +276,6 @@ class PatternMatcher:
         Returns:
             List of matched pattern keys
         """
-        ...
 
     def match_pattern_batch(
         self,
@@ -308,7 +291,6 @@ class PatternMatcher:
         Returns:
             List of matched pattern keys for each text
         """
-        ...
 
 
 # =============================================================================
@@ -328,7 +310,6 @@ class PluginAnalyzer:
         Args:
             yamldata: YAML configuration data
         """
-        ...
 
     def analyze_plugins(
         self,
@@ -345,7 +326,6 @@ class PluginAnalyzer:
                 - problematic_plugins: Known problematic plugins
                 - plugin_count: Total plugin count
         """
-        ...
 
     def check_plugin_conflicts(
         self,
@@ -359,7 +339,6 @@ class PluginAnalyzer:
         Returns:
             List of conflict descriptions
         """
-        ...
 
 
 # =============================================================================
@@ -379,7 +358,6 @@ class RecordScanner:
         Args:
             yamldata: YAML configuration data
         """
-        ...
 
     def scan_records(
         self,
@@ -395,7 +373,6 @@ class RecordScanner:
         Returns:
             List of found record names
         """
-        ...
 
     def scan_named_records(
         self,
@@ -409,7 +386,6 @@ class RecordScanner:
         Returns:
             Dictionary mapping record types to found instances
         """
-        ...
 
 
 # =============================================================================
@@ -426,7 +402,6 @@ class RustOrchestrator:
 
     def __init__(self) -> None:
         """Create a new orchestrator instance."""
-        ...
 
     def process_log(self, log_path: str) -> AnalysisResult:
         """Process a single crash log.
@@ -450,13 +425,12 @@ class RustOrchestrator:
             IOError: If log file cannot be read
             ValueError: If log format is invalid
         """
-        ...
 
     def process_logs_parallel(
         self,
         log_paths: list[str],
         max_concurrent: int = 10,
-        progress_callback: Optional[Callable[[str], None]] = None
+        progress_callback: Callable[[str], None] | None = None
     ) -> list[AnalysisResult]:
         """Process multiple crash logs in parallel.
 
@@ -476,7 +450,6 @@ class RustOrchestrator:
             IOError: If log files cannot be read
             ValueError: If log format is invalid
         """
-        ...
 
 
 class AnalysisConfig:
@@ -503,7 +476,6 @@ class AnalysisConfig:
             game: Game name (e.g., "Fallout4", "Skyrim")
             vr_mode: Whether VR mode is enabled (default: False)
         """
-        ...
 
     @staticmethod
     def from_yamldata(yamldata: Any) -> AnalysisConfig:
@@ -524,7 +496,6 @@ class AnalysisConfig:
             >>> yamldata = YamlData([...], "Fallout4", False)
             >>> config = AnalysisConfig.from_yamldata(yamldata)
         """
-        ...
 
 
 class AnalysisResult:
@@ -537,7 +508,7 @@ class AnalysisResult:
     log_path: str
     report_lines: list[str]
     success: bool
-    error: Optional[str]
+    error: str | None
     processing_time_ms: int
     plugin_count: int
     formid_count: int
@@ -549,7 +520,6 @@ class AnalysisResult:
         Args:
             log_path: Path to the analyzed log file
         """
-        ...
 
     def __repr__(self) -> str:
         """Return string representation.
@@ -557,7 +527,6 @@ class AnalysisResult:
         Returns:
             String showing key statistics
         """
-        ...
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary.
@@ -565,7 +534,6 @@ class AnalysisResult:
         Returns:
             Dictionary representation of all fields
         """
-        ...
 
     def get_report_text(self) -> str:
         """Get report as single string.
@@ -573,7 +541,6 @@ class AnalysisResult:
         Returns:
             Complete report text with newlines
         """
-        ...
 
 
 # =============================================================================
@@ -588,7 +555,6 @@ class StringPool:
 
     def __init__(self) -> None:
         """Create string pool."""
-        ...
 
     def intern(self, text: str) -> str:
         """Intern a string.
@@ -599,11 +565,9 @@ class StringPool:
         Returns:
             Interned string reference (may be same object for duplicates)
         """
-        ...
 
     def clear(self) -> None:
         """Clear the string pool."""
-        ...
 
 
 class ReportFragment:
@@ -622,7 +586,6 @@ class ReportFragment:
             content: Fragment content (markdown text)
             priority: Priority for ordering (higher = earlier, default: 0)
         """
-        ...
 
 
 class ReportComposer:
@@ -633,7 +596,6 @@ class ReportComposer:
 
     def __init__(self) -> None:
         """Create report composer."""
-        ...
 
     def add_fragment(self, fragment: ReportFragment) -> None:
         """Add a report fragment.
@@ -641,7 +603,6 @@ class ReportComposer:
         Args:
             fragment: Fragment to add to composition
         """
-        ...
 
     def add_section(self, title: str, content: str, priority: int = 0) -> None:
         """Add a section as a fragment.
@@ -651,7 +612,6 @@ class ReportComposer:
             content: Section content
             priority: Section priority
         """
-        ...
 
     def compose(self) -> list[str]:
         """Compose final report.
@@ -661,11 +621,9 @@ class ReportComposer:
         Returns:
             Report lines (markdown format)
         """
-        ...
 
     def clear(self) -> None:
         """Clear all fragments."""
-        ...
 
 
 class ReportGenerator:
@@ -675,13 +633,12 @@ class ReportGenerator:
     relevant information organized by section.
     """
 
-    def __init__(self, yamldata: Optional[Any] = None) -> None:
+    def __init__(self, yamldata: Any | None = None) -> None:
         """Create report generator.
 
         Args:
             yamldata: Optional YAML configuration data for formatting
         """
-        ...
 
     def generate_report(
         self,
@@ -702,7 +659,6 @@ class ReportGenerator:
         Returns:
             Report lines (markdown format)
         """
-        ...
 
     def format_section(
         self,
@@ -718,7 +674,6 @@ class ReportGenerator:
         Returns:
             Formatted section lines
         """
-        ...
 
 
 class ParallelReportProcessor:
@@ -734,7 +689,6 @@ class ParallelReportProcessor:
         Args:
             max_workers: Maximum parallel workers (default: 4)
         """
-        ...
 
     def process_batch(
         self,
@@ -748,7 +702,6 @@ class ParallelReportProcessor:
         Returns:
             List of generated reports (one per result)
         """
-        ...
 
 
 # =============================================================================
@@ -766,7 +719,6 @@ def extract_formids_batch(texts: list[str]) -> list[list[str]]:
     Returns:
         List of FormID lists for each text
     """
-    ...
 
 
 def is_valid_formid(formid: str) -> bool:
@@ -778,7 +730,6 @@ def is_valid_formid(formid: str) -> bool:
     Returns:
         True if valid FormID format (8-char hex)
     """
-    ...
 
 
 def validate_formids_batch(formids: list[str]) -> list[bool]:
@@ -790,7 +741,6 @@ def validate_formids_batch(formids: list[str]) -> list[bool]:
     Returns:
         List of validation results (True for valid, False for invalid)
     """
-    ...
 
 
 def scan_records_batch(
@@ -806,7 +756,6 @@ def scan_records_batch(
     Returns:
         List of found records for each text
     """
-    ...
 
 
 def contains_record(text: str, record: str) -> bool:
@@ -819,7 +768,6 @@ def contains_record(text: str, record: str) -> bool:
     Returns:
         True if record found in text
     """
-    ...
 
 
 def detect_plugins_batch(
@@ -835,7 +783,6 @@ def detect_plugins_batch(
     Returns:
         List of detected plugins for each text
     """
-    ...
 
 
 def contains_plugin(text: str, plugin: str) -> bool:
@@ -848,7 +795,6 @@ def contains_plugin(text: str, plugin: str) -> bool:
     Returns:
         True if plugin found in text
     """
-    ...
 
 
 def detect_mods_single(
@@ -866,7 +812,6 @@ def detect_mods_single(
     Returns:
         List of detected mod names
     """
-    ...
 
 
 def detect_mods_double(
@@ -884,7 +829,6 @@ def detect_mods_double(
     Returns:
         List of detected mod names
     """
-    ...
 
 
 def detect_mods_important(
@@ -902,7 +846,6 @@ def detect_mods_important(
     Returns:
         List of detected important mod names
     """
-    ...
 
 
 def detect_mods_batch(
@@ -920,7 +863,6 @@ def detect_mods_batch(
     Returns:
         List of detected mods for each text
     """
-    ...
 
 
 # =============================================================================
@@ -942,7 +884,6 @@ class SuspectScanner:
         Args:
             yamldata: YAML configuration data with suspect patterns
         """
-        ...
 
     def scan_mainerror(
         self,
@@ -958,7 +899,6 @@ class SuspectScanner:
         Returns:
             Tuple of (suspect_lines, found_suspect)
         """
-        ...
 
     def scan_stack(
         self,
@@ -979,7 +919,6 @@ class SuspectScanner:
         Returns:
             Tuple of (suspect_lines, found_suspect)
         """
-        ...
 
     def check_dll_crash(self, main_error: str) -> list[str]:
         """Check for DLL-related crashes.
@@ -990,7 +929,6 @@ class SuspectScanner:
         Returns:
             List of DLL crash indicators
         """
-        ...
 
 
 # =============================================================================
@@ -1013,7 +951,6 @@ class SettingsValidator:
         Args:
             yamldata: YAML configuration data
         """
-        ...
 
     def validate_all(
         self,
@@ -1031,7 +968,6 @@ class SettingsValidator:
         Returns:
             List of settings issue lines
         """
-        ...
 
     def check_memory_settings(
         self,
@@ -1045,7 +981,6 @@ class SettingsValidator:
         Returns:
             Issue description or None
         """
-        ...
 
     def check_achievements(
         self,
@@ -1061,7 +996,6 @@ class SettingsValidator:
         Returns:
             Issue description or None
         """
-        ...
 
 
 # =============================================================================
@@ -1077,7 +1011,6 @@ class GpuDetector:
 
     def __init__(self) -> None:
         """Create GPU detector."""
-        ...
 
     def detect_gpu(self, system_info: list[str]) -> tuple[str | None, str | None]:
         """Detect GPU from system info.
@@ -1088,7 +1021,6 @@ class GpuDetector:
         Returns:
             Tuple of (vendor, model) or (None, None) if not detected
         """
-        ...
 
     def get_vendor(self, gpu_string: str) -> str | None:
         """Get GPU vendor from string.
@@ -1099,7 +1031,6 @@ class GpuDetector:
         Returns:
             Vendor name ("AMD", "Nvidia", "Intel") or None
         """
-        ...
 
 
 # =============================================================================
@@ -1118,11 +1049,9 @@ class FcxModeHandler:
         Args:
             enabled: Whether FCX mode is enabled
         """
-        ...
 
     def check_fcx_mode(self) -> None:
         """Check and update FCX mode state."""
-        ...
 
     def get_messages(self) -> list[str]:
         """Get FCX mode messages.
@@ -1130,7 +1059,6 @@ class FcxModeHandler:
         Returns:
             List of FCX-related messages
         """
-        ...
 
     def is_enabled(self) -> bool:
         """Check if FCX mode is enabled.
@@ -1138,7 +1066,6 @@ class FcxModeHandler:
         Returns:
             True if enabled
         """
-        ...
 
 
 # =============================================================================
@@ -1154,7 +1081,6 @@ class TestClass:
 
     def __init__(self) -> None:
         """Create test class instance."""
-        ...
 
     def test_method(self) -> str:
         """Test method.
@@ -1162,4 +1088,3 @@ class TestClass:
         Returns:
             Test string to verify functionality
         """
-        ...

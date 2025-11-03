@@ -98,9 +98,8 @@ class RustAcceleratedFcxModeHandler:
             # Rust returns list[str], need to convert to ReportFragment
             lines = self._handler.get_fcx_messages()
             return ReportFragment.from_lines(lines)
-        else:
-            # Python already returns ReportFragment
-            return self._handler.get_fcx_messages()
+        # Python already returns ReportFragment
+        return self._handler.get_fcx_messages()
 
     @classmethod
     def reset_fcx_checks(cls) -> None:

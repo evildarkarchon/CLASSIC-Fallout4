@@ -2,26 +2,37 @@
 Sync wrapper for AsyncYamlSettingsCore providing synchronous YAML settings access.
 
 This module provides both synchronous and asynchronous interfaces to the async-first
-YAML settings system:
+YAML settings system with conditional AsyncBridge usage based on context.
 
-- Sync methods (e.g., batch_get_settings) use AsyncBridge for sync-to-async bridging
-- Async methods (e.g., batch_get_settings_async) can be used directly in async contexts
+Interface Selection:
+- Sync methods (e.g., batch_get_settings) use AsyncBridge for GUI contexts
+- Async methods (e.g., batch_get_settings_async) should be used directly in CLI/async contexts
 - Module-level async functions (yaml_settings_async, classic_settings_async) provide
   convenient async access without needing the cache instance
 
-Usage:
-    # Sync context (e.g., __init__, __post_init__)
+Usage Patterns:
+    # GUI context (Qt workers, GUI initialization)
     from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
-    result = yaml_cache.batch_get_settings(requests)
+    result = yaml_cache.batch_get_settings(requests)  # Uses AsyncBridge
     value = yaml_settings(str, YAML.Main, "key")
 
-    # Async context (e.g., async def functions)
+    # CLI/TUI async context (production async code)
     from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings_async
-    result = await yaml_cache.batch_get_settings_async(requests)
+    result = await yaml_cache.batch_get_settings_async(requests)  # Direct async
     value = await yaml_settings_async(str, YAML.Main, "key")
+
+    # Testing/benchmarking (sync context, CLI mode)
+    from ClassicLib.YamlSettingsCache import yaml_cache
+    result = yaml_cache.batch_get_settings(requests)  # Works via asyncio.run() fallback
+
+Performance Notes:
+- CLI production code should use async methods directly for best performance
+- GUI contexts automatically use AsyncBridge (lazy initialized)
+- Sync methods in CLI mode use asyncio.run() fallback (valid for testing only)
 """
 
 import asyncio
+import logging
 import threading
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
@@ -44,6 +55,8 @@ from ClassicLib.Constants import YAML
 # Fixed circular import - import directly from module
 from ClassicLib.GlobalRegistry import Keys, is_registered, register
 
+logger = logging.getLogger(__name__)
+
 T = TypeVar("T")
 
 
@@ -61,11 +74,33 @@ class YamlSettingsCache:
     _lock: ClassVar[threading.Lock] = threading.Lock()
 
     def __init__(self) -> None:
-        """Initialize the sync wrapper with async core and bridge."""
-        self._bridge = AsyncBridge.get_instance()
-        # Get the async core instance using the bridge
-        self._async_core = self._bridge.run_async(get_async_yaml_core())
+        """Initialize the sync wrapper with async core and lazy AsyncBridge.
+
+        AsyncBridge is initialized lazily only when needed (typically in GUI contexts).
+        CLI contexts should use async methods directly without needing the bridge.
+        """
+        self._bridge: AsyncBridge | None = None
+        # Get the async core instance directly (no bridge needed for initialization)
+        # Use asyncio.run for initialization - this is a one-time operation at startup
+        self._async_core = asyncio.run(get_async_yaml_core())
+
         self._init_lock = threading.Lock()
+
+    def _get_bridge(self) -> AsyncBridge:
+        """Get or create AsyncBridge instance lazily.
+
+        AsyncBridge is only created when needed (GUI contexts or sync methods).
+        This avoids unnecessary event loop creation in pure async contexts.
+
+        Returns:
+            AsyncBridge: The AsyncBridge instance for this cache.
+        """
+        if self._bridge is None:
+            with self._init_lock:
+                # Double-check pattern
+                if self._bridge is None:
+                    self._bridge = AsyncBridge.get_instance()
+        return self._bridge
 
     @classmethod
     def get_instance(cls) -> "YamlSettingsCache":
@@ -97,6 +132,7 @@ class YamlSettingsCache:
 
             # Create new instance
             cls._instance = cls()
+
             return cls._instance
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
@@ -142,14 +178,16 @@ class YamlSettingsCache:
         the YAML file specified by the provided path and returns its contents
         as a mapping.
 
+        Note: For CLI production code, use load_yaml_async() directly instead.
+
         Args:
             yaml_path (Path): The file path of the YAML file to be loaded.
 
         Returns:
             YAMLMapping: The parsed YAML content as a mapping.
         """
-        # Load through file_ops using AsyncBridge
-        return self._bridge.run_async(self._async_core.file_ops.load_yaml_file(yaml_path))
+        # Load through file_ops using AsyncBridge (lazy initialization)
+        return self._get_bridge().run_async(self._async_core.file_ops.load_yaml_file(yaml_path))
 
     def async_yaml_settings(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """
@@ -160,6 +198,8 @@ class YamlSettingsCache:
         efficiency and non-blocking behavior. The method interacts with a provided
         YAML object, modifies or fetches the value based on the key path provided,
         and optionally takes a new value for updating.
+
+        Note: For CLI production code, use the async core methods directly with await.
 
         Args:
             _type: The type hint for the value to be retrieved or updated.
@@ -174,7 +214,7 @@ class YamlSettingsCache:
             after modification. Returns `None` if no value is found or no update
             is performed.
         """
-        return self._bridge.run_async(self._async_core.async_yaml_settings(_type, yaml_store, key_path, new_value))
+        return self._get_bridge().run_async(self._async_core.async_yaml_settings(_type, yaml_store, key_path, new_value))
 
     async def load_multiple_stores_async(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
         """
@@ -206,6 +246,8 @@ class YamlSettingsCache:
         returning a dictionary that maps each input YAML store to its
         corresponding YAML mapping.
 
+        Note: For CLI production code, use load_multiple_stores_async() directly.
+
         Args:
             stores (list[YAML]): A list of YAML store objects to be loaded.
 
@@ -213,7 +255,7 @@ class YamlSettingsCache:
             dict[YAML, YAMLMapping]: A dictionary mapping each input YAML store
                 to its respective YAML mapping.
         """
-        return self._bridge.run_async(self.load_multiple_stores_async(stores))
+        return self._get_bridge().run_async(self.load_multiple_stores_async(stores))
 
     async def batch_get_settings_async(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
         """
@@ -242,6 +284,8 @@ class YamlSettingsCache:
         a type identifier, a YAML object, and a string. It returns the results of these
         settings requests encapsulated in a list.
 
+        Note: For CLI production code, use batch_get_settings_async() directly.
+
         Args:
             requests (list[tuple[type, YAML, str]]): A list of tuples representing the
                 settings requests to process. Each tuple contains a type, configuration
@@ -250,7 +294,7 @@ class YamlSettingsCache:
         Returns:
             list[Any]: A list containing the results of the processed settings requests.
         """
-        return self._bridge.run_async(self._async_core.batch_get_settings(requests))
+        return self._get_bridge().run_async(self._async_core.batch_get_settings(requests))
 
     def prefetch_all_settings(self) -> None:
         """
@@ -260,6 +304,9 @@ class YamlSettingsCache:
         the file loading mechanism. If any of these stores do not exist or cause an
         exception during loading, the method gracefully logs the error without stopping
         the process. It ensures the file contents are cached for future access.
+
+        Note: This is typically called during GUI initialization. For CLI, consider using
+        async prefetching if available.
 
         Raises:
             Exception: If any unexpected error occurs during the file loading process. However,
@@ -273,8 +320,8 @@ class YamlSettingsCache:
         for store in stores_to_prefetch:
             try:
                 file_path = self._async_core.file_ops.get_path_for_store(store)
-                # Trigger file load which will cache it
-                self._bridge.run_async(self._async_core.file_ops.load_yaml_file(file_path, use_cache=True))
+                # Trigger file load which will cache it (uses lazy bridge initialization)
+                self._get_bridge().run_async(self._async_core.file_ops.load_yaml_file(file_path, use_cache=True))
             except Exception as e:
                 # Log but don't fail - some stores might not exist
                 from ClassicLib.Logger import logger
@@ -448,6 +495,9 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
     This function provides synchronous access to YAML configuration data.
     It retrieves or updates a setting based on the provided key path.
 
+    Note: If called from an async context, this will raise a RuntimeError.
+    Use yaml_settings_async() instead in async contexts.
+
     Args:
         _type: The expected type of the setting value
         yaml_store: The YAML store to access
@@ -456,7 +506,24 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
 
     Returns:
         The setting value, properly typed
+
+    Raises:
+        RuntimeError: If called from within an async context
     """
+    # Check if we're in an async context
+    try:
+        asyncio.get_running_loop()
+        # If we get here, we're in an async context
+        raise RuntimeError(
+            "yaml_settings() called from async context. Use 'await yaml_settings_async()' instead.\n"
+            f"Location: yaml_store={yaml_store}, key_path={key_path}"
+        )
+    except RuntimeError as e:
+        # Re-raise our custom error
+        if "yaml_settings() called from async context" in str(e):
+            raise
+        # If it's the "no running event loop" RuntimeError, we're in sync context - continue
+
     cache = _get_yaml_cache()
     setting = cache.async_yaml_settings(_type, yaml_store, key_path, new_value)
 

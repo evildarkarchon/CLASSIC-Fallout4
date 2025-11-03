@@ -5,6 +5,7 @@ This module provides fragment-returning version of FCX mode handling,
 replacing the mutable list pattern with immutable fragment composition.
 """
 
+import asyncio
 import threading
 from typing import ClassVar
 
@@ -43,6 +44,56 @@ class FCXModeHandlerFragments:
         self.game_files_check = None
         self.main_files_check = None
         self.fcx_mode = fcx_mode
+
+    async def check_fcx_mode_async(self) -> None:
+        """
+        Asynchronously checks and updates the FCX mode status.
+
+        This is the async version that should be used from async contexts.
+        It runs the sync FCX checks in a thread pool to avoid blocking the event loop
+        and prevent async context violations from sync YAML operations.
+
+        In FCX mode, this method detects configuration issues without modifying files,
+        storing detected issues in the class-level _detected_issues list for reporting.
+
+        Raises:
+            ImportError: Raised when necessary external modules fail to import during execution.
+        """
+        if self.fcx_mode:
+            try:
+                from ClassicLib.ScanGame import generate_game_combined_result as scan_game_files
+            except ImportError:
+                # Fallback if the function doesn't exist
+                def scan_game_files() -> tuple[str, list]:
+                    return "Game files check not available\n", []
+
+            from ClassicLib.SetupCoordinator import SetupCoordinator
+
+            # Define sync function to run in thread pool
+            def run_fcx_checks() -> tuple[str, str, list]:
+                """Run FCX checks synchronously in thread pool."""
+                coordinator = SetupCoordinator()
+                main_result = coordinator.generate_combined_results()
+                game_result, detected_issues = scan_game_files()
+                return main_result, game_result, detected_issues
+
+            # Use class-level lock to ensure thread safety
+            with FCXModeHandlerFragments._fcx_lock:
+                # Check if we've already run the FCX checks in this scan session
+                if not FCXModeHandlerFragments._fcx_checks_run:
+                    # Run the checks in a thread pool to avoid blocking async event loop
+                    main_result, game_result, detected_issues = await asyncio.to_thread(run_fcx_checks)
+                    FCXModeHandlerFragments._main_files_result = main_result
+                    FCXModeHandlerFragments._game_files_result = game_result
+                    FCXModeHandlerFragments._detected_issues = detected_issues
+                    FCXModeHandlerFragments._fcx_checks_run = True
+
+            # Always assign the stored results to instance variables
+            self.main_files_check = FCXModeHandlerFragments._main_files_result
+            self.game_files_check = FCXModeHandlerFragments._game_files_result
+        else:
+            self.main_files_check = "❌ FCX Mode is disabled, skipping game files check... \n-----\n"
+            self.game_files_check = ""
 
     def check_fcx_mode(self) -> None:
         """

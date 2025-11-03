@@ -8,13 +8,13 @@ automatically loaded using classic-config crate (15-30x faster than Python).
 Phase 3 Integration - Part of the full backend migration plan.
 """
 
-from pathlib import Path
-from typing import List, Optional, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 try:
-    from classic_scanlog import RustOrchestrator, AnalysisConfig, AnalysisResult
     from classic_config import YamlData
+    from classic_scanlog import AnalysisConfig, AnalysisResult, RustOrchestrator
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False
@@ -44,11 +44,11 @@ class BatchAnalysisResult:
             process, indicating how many analyses were executed in parallel.
     """
 
-    results: List['AnalysisResult']
+    results: list['AnalysisResult']
     total_time_ms: int
     parallelism_factor: float
 
-    def successful_results(self) -> List['AnalysisResult']:
+    def successful_results(self) -> list['AnalysisResult']:
         """
         Filters and returns a list of successful analysis results.
 
@@ -62,7 +62,7 @@ class BatchAnalysisResult:
         """
         return [r for r in self.results if r.success]
 
-    def failed_results(self) -> List['AnalysisResult']:
+    def failed_results(self) -> list['AnalysisResult']:
         """
         Gets a list of failed analysis results.
 
@@ -157,9 +157,9 @@ class ClassicOrchestrator:
 
     def process_crash_logs_batch(
         self,
-        log_paths: List[Path],
+        log_paths: list[Path],
         max_concurrent: int = 10,
-        progress_callback: Optional[Callable[[str], None]] = None,
+        progress_callback: Callable[[str], None] | None = None,
     ) -> BatchAnalysisResult:
         """
         Processes a batch of crash log files in parallel and returns the analysis results.
@@ -254,9 +254,9 @@ def process_crash_log(log_path: Path) -> AnalysisResult:
 
 
 def process_crash_logs_batch(
-    log_paths: List[Path],
+    log_paths: list[Path],
     max_concurrent: int = 10,
-    progress_callback: Optional[Callable[[str], None]] = None,
+    progress_callback: Callable[[str], None] | None = None,
 ) -> BatchAnalysisResult:
     """
     Processes a batch of crash logs concurrently and provides the analysis result.

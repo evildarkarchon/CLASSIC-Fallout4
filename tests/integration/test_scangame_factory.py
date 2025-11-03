@@ -187,22 +187,21 @@ class TestFactoryFallbackBehavior:
 
     def test_factory_with_rust_disabled(self):
         """Test that factory falls back to Python when Rust import fails."""
-        with patch.object(scangame_factory, "_RUST_AVAILABLE", False):
-            with patch.object(scangame_factory, "_classic_scangame", None):
-                scanner = scangame_factory.get_ba2_scanner()
-                assert hasattr(scanner, "scan_archive")
+        with patch.object(scangame_factory, "_RUST_AVAILABLE", False), patch.object(scangame_factory, "_classic_scangame", None):
+            scanner = scangame_factory.get_ba2_scanner()
+            assert hasattr(scanner, "scan_archive")
 
-                detector = scangame_factory.get_config_duplicate_detector()
-                assert hasattr(detector, "detect_duplicates")
+            detector = scangame_factory.get_config_duplicate_detector()
+            assert hasattr(detector, "detect_duplicates")
 
-                unpacked = scangame_factory.get_unpacked_scanner()
-                assert hasattr(unpacked, "scan_directory")
+            unpacked = scangame_factory.get_unpacked_scanner()
+            assert hasattr(unpacked, "scan_directory")
 
-                log_proc = scangame_factory.get_log_processor([], [], [])
-                assert hasattr(log_proc, "process_logs")
+            log_proc = scangame_factory.get_log_processor([], [], [])
+            assert hasattr(log_proc, "process_logs")
 
-                ini_val = scangame_factory.get_ini_validator("Fallout4")
-                assert hasattr(ini_val, "validate_inis")
+            ini_val = scangame_factory.get_ini_validator("Fallout4")
+            assert hasattr(ini_val, "validate_inis")
 
     def test_is_rust_available_with_rust_disabled(self):
         """Test is_rust_available() returns False when Rust unavailable."""

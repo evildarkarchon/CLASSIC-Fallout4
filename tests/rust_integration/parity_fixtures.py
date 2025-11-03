@@ -11,14 +11,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import sys
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from difflib import unified_diff
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import Mock
 
 import pytest
 
@@ -30,9 +29,6 @@ _status = get_rust_component_status()
 RUST_AVAILABLE = _status.get("available", {})
 from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from tests.rust_integration.fixtures.crash_log_factory import CrashLogFactory, CrashLogType
-
-if TYPE_CHECKING:
-    from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
 logger = logging.getLogger(__name__)
 
@@ -129,17 +125,14 @@ class ParityValidator(ABC):
     @abstractmethod
     def create_rust_implementation(self, **kwargs) -> Any:
         """Create an instance of the Rust implementation."""
-        pass
 
     @abstractmethod
     def create_python_implementation(self, **kwargs) -> Any:
         """Create an instance of the Python implementation."""
-        pass
 
     @abstractmethod
     def generate_test_cases(self) -> list[ParityTestCase]:
         """Generate test cases for this component."""
-        pass
 
     def validate_outputs(self, rust_result: Any, python_result: Any, test_case: ParityTestCase) -> tuple[bool, list[str]]:
         """
@@ -217,7 +210,7 @@ class ParityValidator(ABC):
         if rust_result == python_result:
             return True, []
 
-        differences.append(f"Value mismatch: Rust={repr(rust_result)}, Python={repr(python_result)}")
+        differences.append(f"Value mismatch: Rust={rust_result!r}, Python={python_result!r}")
         return False, differences
 
     def _generate_string_diff(self, rust_str: str, python_str: str) -> list[str]:
@@ -414,7 +407,7 @@ class CrashLogParityGenerator:
 
         for crash_file in crash_files:
             try:
-                with open(crash_file, 'r', encoding='utf-8', errors='ignore') as f:
+                with Path(crash_file).open('r', encoding='utf-8', errors='ignore') as f:
                     crash_data = f.read().splitlines()
 
                 test_cases.append(ParityTestCase(
@@ -669,10 +662,9 @@ class ParityTestRunner:
         # the specific interface of each component
         if asyncio.iscoroutinefunction(getattr(impl, 'execute', None)):
             return await asyncio.wait_for(impl.execute(**inputs), timeout=timeout)
-        elif hasattr(impl, 'execute'):
+        if hasattr(impl, 'execute'):
             return impl.execute(**inputs)
-        else:
-            return impl  # If impl is the result itself
+        return impl  # If impl is the result itself
 
     def generate_parity_report(self) -> dict[str, Any]:
         """
@@ -724,7 +716,7 @@ class ParityTestRunner:
                 "average_performance_improvement": f"{avg_improvement:.1f}x",
                 "rust_availability": {
                     component: RUST_AVAILABLE.get(component, False)
-                    for component in by_component.keys()
+                    for component in by_component
                 }
             },
             "by_component": by_component,
@@ -742,7 +734,7 @@ class ParityTestRunner:
         # Write detailed report to file if specified
         if self.output_file:
             try:
-                with open(self.output_file, 'w', encoding='utf-8') as f:
+                with Path(self.output_file).open('w', encoding='utf-8') as f:
                     json.dump(report, f, indent=2, ensure_ascii=False)
                 self.logger.info(f"Detailed parity report written to {self.output_file}")
             except Exception as e:

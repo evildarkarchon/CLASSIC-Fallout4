@@ -8,13 +8,12 @@ production-readiness of the Rust migration components.
 
 import json
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from statistics import mean, median, stdev
-from typing import Dict, List, Any, Optional, Tuple
+from statistics import mean
+from typing import Any
 
-import pytest
 import psutil
 
 
@@ -26,7 +25,7 @@ class TestMetric:
     unit: str
     category: str
     status: str  # "pass", "fail", "warning"
-    threshold: Optional[float] = None
+    threshold: float | None = None
     description: str = ""
 
 
@@ -39,8 +38,8 @@ class TestSectionResult:
     failed: int
     warnings: int
     duration: float
-    metrics: List[TestMetric]
-    error_summary: List[str]
+    metrics: list[TestMetric]
+    error_summary: list[str]
 
 
 @dataclass
@@ -86,8 +85,8 @@ class StressTestReporter:
 
     def _gather_system_specs(self) -> SystemSpecs:
         """Gather system specifications for the report."""
-        import sys
         import platform
+        import sys
 
         # CPU information
         cpu_info = "Unknown CPU"
@@ -129,7 +128,7 @@ class StressTestReporter:
             classic_version=classic_version
         )
 
-    def generate_comprehensive_report(self) -> Dict[str, Any]:
+    def generate_comprehensive_report(self) -> dict[str, Any]:
         """Generate comprehensive test report."""
         report_time = datetime.now()
         total_duration = time.time() - self.start_time
@@ -179,7 +178,7 @@ class StressTestReporter:
 
         return report
 
-    def _analyze_performance_metrics(self) -> Dict[str, Any]:
+    def _analyze_performance_metrics(self) -> dict[str, Any]:
         """Analyze performance metrics across all test sections."""
         all_metrics = []
         for section in self.test_results.values():
@@ -208,7 +207,7 @@ class StressTestReporter:
 
         return analysis
 
-    def _assess_stability(self) -> Dict[str, Any]:
+    def _assess_stability(self) -> dict[str, Any]:
         """Assess system stability based on test results."""
         error_counts = {}
         crash_indicators = 0
@@ -241,7 +240,7 @@ class StressTestReporter:
             "concurrency_stability": self._evaluate_concurrency_stability()
         }
 
-    def _evaluate_production_readiness(self) -> Dict[str, Any]:
+    def _evaluate_production_readiness(self) -> dict[str, Any]:
         """Evaluate production readiness based on all test results."""
         # Critical criteria for production readiness
         criteria = {
@@ -278,7 +277,7 @@ class StressTestReporter:
             "recommended_actions": self._recommend_actions(criteria, overall_score)
         }
 
-    def _compile_detailed_metrics(self) -> Dict[str, List[Dict]]:
+    def _compile_detailed_metrics(self) -> dict[str, list[dict]]:
         """Compile detailed metrics organized by category."""
         metrics_by_category = {}
 
@@ -299,7 +298,7 @@ class StressTestReporter:
 
         return metrics_by_category
 
-    def _generate_recommendations(self) -> List[Dict[str, str]]:
+    def _generate_recommendations(self) -> list[dict[str, str]]:
         """Generate recommendations based on test results."""
         recommendations = []
 
@@ -364,19 +363,19 @@ class StressTestReporter:
 
         if format_type == "json":
             report_file = self.output_dir / f"stress_test_report_{timestamp}.json"
-            with open(report_file, 'w', encoding='utf-8') as f:
+            with Path(report_file).open('w', encoding='utf-8') as f:
                 json.dump(report_data, f, indent=2, default=str)
 
         elif format_type == "html":
             report_file = self.output_dir / f"stress_test_report_{timestamp}.html"
             html_content = self._generate_html_report(report_data)
-            with open(report_file, 'w', encoding='utf-8') as f:
+            with Path(report_file).open('w', encoding='utf-8') as f:
                 f.write(html_content)
 
         elif format_type == "markdown":
             report_file = self.output_dir / f"stress_test_report_{timestamp}.md"
             markdown_content = self._generate_markdown_report(report_data)
-            with open(report_file, 'w', encoding='utf-8') as f:
+            with Path(report_file).open('w', encoding='utf-8') as f:
                 f.write(markdown_content)
 
         else:
@@ -385,11 +384,11 @@ class StressTestReporter:
         return report_file
 
     # Helper methods for analysis
-    def _safe_mean(self, values: List[float]) -> float:
+    def _safe_mean(self, values: list[float]) -> float:
         """Calculate mean safely, returning 0 for empty lists."""
         return mean(values) if values else 0.0
 
-    def _format_section_result(self, result: TestSectionResult) -> Dict:
+    def _format_section_result(self, result: TestSectionResult) -> dict:
         """Format a section result for inclusion in the report."""
         return {
             "test_count": result.test_count,
@@ -403,7 +402,7 @@ class StressTestReporter:
             "top_errors": result.error_summary[:5]  # Top 5 errors
         }
 
-    def _calculate_memory_efficiency(self, memory_metrics: List[TestMetric]) -> str:
+    def _calculate_memory_efficiency(self, memory_metrics: list[TestMetric]) -> str:
         """Calculate memory efficiency rating."""
         if not memory_metrics:
             return "Unknown"
@@ -413,14 +412,13 @@ class StressTestReporter:
 
         if failed_memory_tests == 0:
             return "Excellent"
-        elif failed_memory_tests / total_memory_tests < 0.1:
+        if failed_memory_tests / total_memory_tests < 0.1:
             return "Good"
-        elif failed_memory_tests / total_memory_tests < 0.3:
+        if failed_memory_tests / total_memory_tests < 0.3:
             return "Fair"
-        else:
-            return "Poor"
+        return "Poor"
 
-    def _compare_rust_python_performance(self) -> Dict[str, Any]:
+    def _compare_rust_python_performance(self) -> dict[str, Any]:
         """Compare Rust vs Python performance where applicable."""
         # This is a placeholder for Rust vs Python comparison
         # In a real implementation, this would analyze metrics tagged with implementation type
@@ -431,7 +429,7 @@ class StressTestReporter:
             "performance_improvement": "3.5x average speedup"
         }
 
-    def _assess_scalability(self, performance_metrics: List[TestMetric]) -> Dict[str, str]:
+    def _assess_scalability(self, performance_metrics: list[TestMetric]) -> dict[str, str]:
         """Assess system scalability based on performance metrics."""
         # Analyze performance degradation patterns
         degradation_metrics = [m for m in performance_metrics if "degradation" in m.name.lower()]
@@ -456,7 +454,7 @@ class StressTestReporter:
             "details": f"Based on {len(degradation_metrics)} scalability tests"
         }
 
-    def _calculate_stability_score(self, error_counts: Dict, crash_indicators: int) -> float:
+    def _calculate_stability_score(self, error_counts: dict, crash_indicators: int) -> float:
         """Calculate overall stability score."""
         base_score = 100.0
 
@@ -483,12 +481,11 @@ class StressTestReporter:
 
         if success_rate >= 0.95:
             return "Excellent"
-        elif success_rate >= 0.85:
+        if success_rate >= 0.85:
             return "Good"
-        elif success_rate >= 0.70:
+        if success_rate >= 0.70:
             return "Fair"
-        else:
-            return "Poor"
+        return "Poor"
 
     def _evaluate_concurrency_stability(self) -> str:
         """Evaluate concurrency stability."""
@@ -513,14 +510,13 @@ class StressTestReporter:
 
         if failure_rate == 0:
             return "Excellent"
-        elif failure_rate < 0.05:
+        if failure_rate < 0.05:
             return "Good"
-        elif failure_rate < 0.15:
+        if failure_rate < 0.15:
             return "Fair"
-        else:
-            return "Poor"
+        return "Poor"
 
-    def _check_memory_management(self) -> Dict[str, Any]:
+    def _check_memory_management(self) -> dict[str, Any]:
         """Check memory management criteria."""
         memory_sections = [name for name in self.test_results.keys() if "memory" in name.lower()]
 
@@ -538,7 +534,7 @@ class StressTestReporter:
             "status": "Pass" if score >= 90 else "Needs Improvement"
         }
 
-    def _check_performance_consistency(self) -> Dict[str, Any]:
+    def _check_performance_consistency(self) -> dict[str, Any]:
         """Check performance consistency criteria."""
         performance_sections = [name for name in self.test_results.keys() if "performance" in name.lower()]
 
@@ -557,7 +553,7 @@ class StressTestReporter:
             "status": "Pass" if score >= 85 else "Needs Improvement"
         }
 
-    def _check_error_handling(self) -> Dict[str, Any]:
+    def _check_error_handling(self) -> dict[str, Any]:
         """Check error handling criteria."""
         error_sections = [name for name in self.test_results.keys() if "error" in name.lower()]
 
@@ -575,7 +571,7 @@ class StressTestReporter:
             "status": "Pass" if score >= 80 else "Needs Improvement"
         }
 
-    def _check_concurrency_safety(self) -> Dict[str, Any]:
+    def _check_concurrency_safety(self) -> dict[str, Any]:
         """Check concurrency safety criteria."""
         concurrency_sections = [name for name in self.test_results.keys() if "concurrency" in name.lower()]
 
@@ -593,7 +589,7 @@ class StressTestReporter:
             "status": "Pass" if score >= 95 else "Critical Issue"
         }
 
-    def _check_data_volume_handling(self) -> Dict[str, Any]:
+    def _check_data_volume_handling(self) -> dict[str, Any]:
         """Check data volume handling criteria."""
         volume_sections = [name for name in self.test_results.keys() if "volume" in name.lower() or "data" in name.lower()]
 
@@ -611,7 +607,7 @@ class StressTestReporter:
             "status": "Pass" if score >= 85 else "Needs Improvement"
         }
 
-    def _check_stability_under_load(self) -> Dict[str, Any]:
+    def _check_stability_under_load(self) -> dict[str, Any]:
         """Check stability under load criteria."""
         # Combine results from stress, performance, and concurrency tests
         load_sections = [name for name in self.test_results.keys()
@@ -631,7 +627,7 @@ class StressTestReporter:
             "status": "Pass" if score >= 90 else "Needs Improvement"
         }
 
-    def _identify_blocking_issues(self, criteria: Dict) -> List[str]:
+    def _identify_blocking_issues(self, criteria: dict) -> list[str]:
         """Identify blocking issues for production deployment."""
         blocking_issues = []
 
@@ -641,7 +637,7 @@ class StressTestReporter:
 
         return blocking_issues
 
-    def _recommend_actions(self, criteria: Dict, overall_score: float) -> List[str]:
+    def _recommend_actions(self, criteria: dict, overall_score: float) -> list[str]:
         """Recommend actions based on test results."""
         actions = []
 
@@ -669,7 +665,7 @@ class StressTestReporter:
 
         return actions
 
-    def _identify_memory_issues(self) -> List[str]:
+    def _identify_memory_issues(self) -> list[str]:
         """Identify specific memory issues."""
         issues = []
 
@@ -680,7 +676,7 @@ class StressTestReporter:
 
         return issues
 
-    def _identify_performance_issues(self) -> List[str]:
+    def _identify_performance_issues(self) -> list[str]:
         """Identify specific performance issues."""
         issues = []
 
@@ -691,7 +687,7 @@ class StressTestReporter:
 
         return issues
 
-    def _identify_concurrency_issues(self) -> List[str]:
+    def _identify_concurrency_issues(self) -> list[str]:
         """Identify specific concurrency issues."""
         issues = []
 
@@ -703,7 +699,7 @@ class StressTestReporter:
 
         return issues
 
-    def _identify_error_handling_issues(self) -> List[str]:
+    def _identify_error_handling_issues(self) -> list[str]:
         """Identify specific error handling issues."""
         issues = []
 
@@ -715,7 +711,7 @@ class StressTestReporter:
 
         return issues
 
-    def _generate_html_report(self, report_data: Dict) -> str:
+    def _generate_html_report(self, report_data: dict) -> str:
         """Generate HTML formatted report."""
         html_template = """
         <!DOCTYPE html>
@@ -778,7 +774,7 @@ class StressTestReporter:
 
         return html_template
 
-    def _generate_markdown_report(self, report_data: Dict) -> str:
+    def _generate_markdown_report(self, report_data: dict) -> str:
         """Generate Markdown formatted report."""
         markdown_lines = [
             "# CLASSIC Phase 6 Stress Test Report",
@@ -831,7 +827,7 @@ def create_stress_test_reporter() -> StressTestReporter:
     return StressTestReporter()
 
 
-def collect_pytest_results() -> List[TestSectionResult]:
+def collect_pytest_results() -> list[TestSectionResult]:
     """
     Collect pytest results for stress test reporting.
 

@@ -5,16 +5,15 @@ using only synthetic/mock data, ensuring proper error handling and
 graceful degradation without using any copyrighted game files.
 """
 
-import pytest
-import sys
 import gc
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, mock_open
-from typing import Any, Optional
-import json
+import sys
 import tempfile
 import threading
 import time
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.rust]
@@ -25,11 +24,9 @@ class MockRustModule:
 
     class RustError(Exception):
         """Mock Rust error type."""
-        pass
 
     class FFIError(Exception):
         """Mock FFI error type."""
-        pass
 
     def parse_log(self, content: str) -> dict:
         """Mock log parser."""
@@ -339,8 +336,9 @@ class TestFFIErrorConditions:
 
     def test_signal_handling_during_ffi_call(self):
         """Test signal handling doesn't corrupt FFI state."""
-        from ClassicLib.integration.factory import get_parser
         import signal
+
+        from ClassicLib.integration.factory import get_parser
 
         parser = get_parser()
 
@@ -399,7 +397,7 @@ class TestFFIErrorConditions:
         # Using synthetic crash log with deep nesting
         nested_content = "BEGIN\n"
         for i in range(10000):  # Very deep nesting
-            nested_content += f"  " * min(i, 100) + f"Level {i}\n"
+            nested_content += "  " * min(i, 100) + f"Level {i}\n"
         nested_content += "END\n"
 
         try:

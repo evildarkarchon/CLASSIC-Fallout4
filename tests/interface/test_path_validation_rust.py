@@ -10,11 +10,10 @@ This test module verifies that:
 6. Windows-specific path handling works
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import patch
 import os
+from pathlib import Path
 
+import pytest
 
 # Test Rust availability
 
@@ -209,6 +208,7 @@ def test_windows_unc_path():
 def test_rust_validation_performance():
     """Test that Rust validation is reasonably fast."""
     import time
+
     from ClassicLib.Interface.FolderManagement import _is_valid_directory
 
     # Time multiple validations
@@ -275,8 +275,9 @@ def test_common_windows_directories():
 @pytest.mark.unit
 def test_temp_directory():
     """Test validation of temp directory."""
-    from ClassicLib.Interface.FolderManagement import _is_valid_directory
     import tempfile
+
+    from ClassicLib.Interface.FolderManagement import _is_valid_directory
 
     temp_dir = tempfile.gettempdir()
     assert _is_valid_directory(temp_dir), "Temp directory should be valid"

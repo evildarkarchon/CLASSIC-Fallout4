@@ -5,14 +5,16 @@ Rust-Python FFI boundaries with thousands of generated test cases,
 ensuring type safety, error handling, and memory safety.
 """
 
-import pytest
 import string
 from pathlib import Path
-from typing import Any, List, Dict, Optional
+from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from hypothesis import given, strategies as st, settings, assume, example
+    from hypothesis import assume, example, given, settings
+    from hypothesis import strategies as st
     from hypothesis.strategies import composite
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
@@ -50,14 +52,13 @@ def mock_crash_log_line(draw):
         address = draw(st.integers(min_value=0, max_value=0xFFFFFFFF))
         module = draw(st.text(alphabet=string.ascii_letters, min_size=1, max_size=20))
         return f"  [{address:08X}] {module}.dll+{draw(st.integers(0, 0xFFFF)):04X}"
-    elif line_type == "error":
+    if line_type == "error":
         return f"ERROR: {draw(st.text(min_size=1, max_size=100))}"
-    elif line_type == "formid":
+    if line_type == "formid":
         formid = draw(mock_formid())
         plugin = draw(mock_plugin_name())
         return f"  FormID: {formid} from {plugin}"
-    else:
-        return draw(st.text(min_size=1, max_size=200))
+    return draw(st.text(min_size=1, max_size=200))
 
 
 @composite
@@ -131,7 +132,7 @@ class TestRustFFIPropertyBased:
         st.lists(mock_crash_log_line(), min_size=0, max_size=1000)
     )
     @settings(max_examples=50)
-    def test_rust_parser_with_mock_crash_logs(self, log_lines: List[str]):
+    def test_rust_parser_with_mock_crash_logs(self, log_lines: list[str]):
         """Test Rust parser with various mock crash log formats."""
         if not self.rust_available:
             pytest.skip("Rust module not available")
@@ -160,7 +161,7 @@ class TestRustFFIPropertyBased:
         st.booleans()   # db_exists
     )
     @settings(max_examples=50)
-    def test_formid_analyzer_with_synthetic_ids(self, formids: List[str], show_values: bool, db_exists: bool):
+    def test_formid_analyzer_with_synthetic_ids(self, formids: list[str], show_values: bool, db_exists: bool):
         """Test FormID analyzer with synthetic FormIDs."""
         from ClassicLib.integration.factory import get_formid_analyzer
 
@@ -188,7 +189,7 @@ class TestRustFFIPropertyBased:
         )
     )
     @settings(max_examples=50)
-    def test_file_io_with_mock_file_structures(self, file_structure: Dict[str, int]):
+    def test_file_io_with_mock_file_structures(self, file_structure: dict[str, int]):
         """Test Rust file I/O with mock file structures."""
         from ClassicLib.integration.factory import get_file_io_core
 
@@ -198,19 +199,18 @@ class TestRustFFIPropertyBased:
         for filename, size in file_structure.items():
             mock_path = Path(f"/mock/game/data/{filename}")
 
-            with patch("pathlib.Path.exists", return_value=True):
-                with patch("pathlib.Path.stat") as mock_stat:
-                    mock_stat.return_value.st_size = size
+            with patch("pathlib.Path.exists", return_value=True), patch("pathlib.Path.stat") as mock_stat:
+                mock_stat.return_value.st_size = size
 
-                    try:
-                        # Should handle path operations
-                        result = io_core.get_file_info(str(mock_path))
-                        assert result is not None
-                        if isinstance(result, dict):
-                            assert "size" in result or "error" in result
-                    except Exception as e:
-                        # Should handle gracefully
-                        assert isinstance(e, (OSError, RuntimeError, ValueError))
+                try:
+                    # Should handle path operations
+                    result = io_core.get_file_info(str(mock_path))
+                    assert result is not None
+                    if isinstance(result, dict):
+                        assert "size" in result or "error" in result
+                except Exception as e:
+                    # Should handle gracefully
+                    assert isinstance(e, (OSError, RuntimeError, ValueError))
 
     @given(
         st.binary(min_size=0, max_size=10000),  # Random binary data
@@ -253,9 +253,10 @@ class TestRustFFIPropertyBased:
         if thread_count > 100:  # Reasonable limit for testing
             assume(False)
 
-        from ClassicLib.integration.factory import get_parser
         import threading
         import time
+
+        from ClassicLib.integration.factory import get_parser
 
         parser = get_parser()
         errors = []
@@ -340,7 +341,7 @@ class TestRustFFIPropertyBased:
         )
     )
     @settings(max_examples=50)
-    def test_rust_json_serialization(self, data: Dict[str, Any]):
+    def test_rust_json_serialization(self, data: dict[str, Any]):
         """Test Rust JSON serialization with various data types."""
         if not self.rust_available:
             pytest.skip("Rust module not available")

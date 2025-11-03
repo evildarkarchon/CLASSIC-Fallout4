@@ -47,7 +47,6 @@ class ConfigDuplicateDetector:
 
     def __init__(self) -> None:
         """Initialize ConfigDuplicateDetector."""
-        pass
 
     def detect_duplicates(self, root_path: Path) -> list[DuplicateGroup]:
         """Detect duplicate configuration files in the specified directory.

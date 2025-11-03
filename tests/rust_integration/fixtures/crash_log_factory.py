@@ -9,8 +9,6 @@ authentic structures, FormIDs, and plugin patterns found in real logs.
 import random
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
-from unittest.mock import Mock
 
 
 class CrashLogType(Enum):
@@ -79,7 +77,7 @@ class CrashLogFactory:
         "TESObjectMISC", "AlchemyItem", "BGSPerk", "ActorValueInfo"
     ]
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int | None = None):
         """
         Initialize the crash log factory.
 
@@ -92,7 +90,7 @@ class CrashLogFactory:
         self._formid_counter = 0
         self._plugin_counter = 0
 
-    def generate_crash_log(self, log_type: CrashLogType, **kwargs) -> List[str]:
+    def generate_crash_log(self, log_type: CrashLogType, **kwargs) -> list[str]:
         """
         Generate a crash log of the specified type.
 
@@ -105,27 +103,26 @@ class CrashLogFactory:
         """
         if log_type == CrashLogType.BUFFOUT4_BASIC:
             return self._generate_buffout4_basic(**kwargs)
-        elif log_type == CrashLogType.BUFFOUT4_LARGE:
+        if log_type == CrashLogType.BUFFOUT4_LARGE:
             return self._generate_buffout4_large(**kwargs)
-        elif log_type == CrashLogType.BUFFOUT4_MANY_MODS:
+        if log_type == CrashLogType.BUFFOUT4_MANY_MODS:
             return self._generate_buffout4_many_mods(**kwargs)
-        elif log_type == CrashLogType.CRASH_LOGGER:
+        if log_type == CrashLogType.CRASH_LOGGER:
             return self._generate_crash_logger(**kwargs)
-        elif log_type == CrashLogType.NETSCRIPTFRAMEWORK:
+        if log_type == CrashLogType.NETSCRIPTFRAMEWORK:
             return self._generate_netscriptframework(**kwargs)
-        elif log_type == CrashLogType.CORRUPTED:
+        if log_type == CrashLogType.CORRUPTED:
             return self._generate_corrupted(**kwargs)
-        elif log_type == CrashLogType.MINIMAL:
+        if log_type == CrashLogType.MINIMAL:
             return self._generate_minimal(**kwargs)
-        elif log_type == CrashLogType.STRESS_TEST:
+        if log_type == CrashLogType.STRESS_TEST:
             return self._generate_stress_test(**kwargs)
-        else:
-            raise ValueError(f"Unsupported crash log type: {log_type}")
+        raise ValueError(f"Unsupported crash log type: {log_type}")
 
     def _generate_buffout4_basic(self,
                                 formid_count: int = 20,
                                 plugin_count: int = 50,
-                                **kwargs) -> List[str]:
+                                **kwargs) -> list[str]:
         """Generate a basic Buffout 4 crash log."""
         lines = [
             "Fallout 4 v1.10.163",
@@ -176,7 +173,7 @@ class CrashLogFactory:
     def _generate_buffout4_large(self,
                                 formid_count: int = 100,
                                 plugin_count: int = 200,
-                                **kwargs) -> List[str]:
+                                **kwargs) -> list[str]:
         """Generate a large Buffout 4 crash log."""
         # Start with basic structure
         lines = self._generate_buffout4_basic(formid_count=formid_count, plugin_count=plugin_count)
@@ -198,7 +195,7 @@ class CrashLogFactory:
                                     formid_count: int = 200,
                                     plugin_count: int = 300,
                                     esl_count: int = 50,
-                                    **kwargs) -> List[str]:
+                                    **kwargs) -> list[str]:
         """Generate a crash log with many mods (typical heavy load order)."""
         lines = self._generate_buffout4_basic(formid_count=formid_count, plugin_count=plugin_count)
 
@@ -216,7 +213,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_crash_logger(self, **kwargs) -> List[str]:
+    def _generate_crash_logger(self, **kwargs) -> list[str]:
         """Generate a Crash Logger format crash log."""
         lines = [
             "Crash Logger SSE v1.0.0",
@@ -244,7 +241,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_netscriptframework(self, **kwargs) -> List[str]:
+    def _generate_netscriptframework(self, **kwargs) -> list[str]:
         """Generate a .NET Script Framework format crash log."""
         lines = [
             ".NET Script Framework",
@@ -272,7 +269,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_corrupted(self, **kwargs) -> List[str]:
+    def _generate_corrupted(self, **kwargs) -> list[str]:
         """Generate a corrupted/malformed crash log for error testing."""
         lines = [
             "CORRUPTED_HEADER",
@@ -293,7 +290,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_minimal(self, **kwargs) -> List[str]:
+    def _generate_minimal(self, **kwargs) -> list[str]:
         """Generate a minimal crash log for basic testing."""
         return [
             "Fallout 4 v1.10.163",
@@ -309,7 +306,7 @@ class CrashLogFactory:
     def _generate_stress_test(self,
                             formid_count: int = 5000,
                             plugin_count: int = 500,
-                            **kwargs) -> List[str]:
+                            **kwargs) -> list[str]:
         """Generate an extremely large crash log for stress testing."""
         lines = [
             "Fallout 4 v1.10.163",
@@ -333,7 +330,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_call_stack(self, formid_count: int) -> List[str]:
+    def _generate_call_stack(self, formid_count: int) -> list[str]:
         """Generate a realistic call stack with FormIDs."""
         lines = []
 
@@ -356,7 +353,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_plugin_list(self, plugin_count: int) -> List[str]:
+    def _generate_plugin_list(self, plugin_count: int) -> list[str]:
         """Generate a realistic plugin list."""
         lines = []
         plugins_added = set()
@@ -388,7 +385,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_esl_plugins(self, esl_count: int) -> List[str]:
+    def _generate_esl_plugins(self, esl_count: int) -> list[str]:
         """Generate ESL (light) plugins."""
         lines = []
 
@@ -429,22 +426,21 @@ class CrashLogFactory:
 
         if mod_index == 0x00:
             return "Fallout4.esm"
-        elif mod_index == 0x01:
+        if mod_index == 0x01:
             return "DLCRobot.esm"
-        elif mod_index == 0x02:
+        if mod_index == 0x02:
             return "DLCworkshop01.esm"
-        elif mod_index == 0x03:
+        if mod_index == 0x03:
             return "DLCCoast.esm"
-        elif mod_index == 0x04:
+        if mod_index == 0x04:
             return "DLCworkshop02.esm"
-        elif mod_index == 0x05:
+        if mod_index == 0x05:
             return "DLCworkshop03.esm"
-        elif mod_index == 0x06:
+        if mod_index == 0x06:
             return "DLCNukaWorld.esm"
-        elif mod_index == 0xFE:
+        if mod_index == 0xFE:
             return random.choice([f"ESLPlugin{random.randint(1,100):03d}.esl"])
-        else:
-            return self._generate_plugin_name()
+        return self._generate_plugin_name()
 
     def _generate_plugin_name(self, extension: str = ".esp") -> str:
         """Generate a realistic plugin name."""
@@ -494,13 +490,12 @@ class CrashLogFactory:
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, 'w', encoding='utf-8') as f:
-            for line in crash_data:
-                f.write(line + '\n')
+        with Path(output_path).open('w', encoding='utf-8') as f:
+            f.writelines(line + '\n' for line in crash_data)
 
         return output_path
 
-    def get_expected_extraction_counts(self, log_type: CrashLogType, **kwargs) -> Dict[str, int]:
+    def get_expected_extraction_counts(self, log_type: CrashLogType, **kwargs) -> dict[str, int]:
         """
         Get expected extraction counts for validation.
 

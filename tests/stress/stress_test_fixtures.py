@@ -10,11 +10,9 @@ import os
 import threading
 import time
 import tracemalloc
-from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import Mock
 
 import psutil
 import pytest
@@ -43,7 +41,7 @@ class MemoryTracker:
         self._measurements = []
         self._tracking_enabled = True
 
-    def stop_tracking(self) -> Dict[str, Any]:
+    def stop_tracking(self) -> dict[str, Any]:
         """
         Stop tracking and return comprehensive memory statistics.
 
@@ -115,7 +113,7 @@ class ConcurrencyTestHelper:
                                  target_func: callable,
                                  num_threads: int = 20,
                                  iterations_per_thread: int = 100,
-                                 shared_data: Any = None) -> Dict[str, Any]:
+                                 shared_data: Any = None) -> dict[str, Any]:
         """
         Create a high-contention scenario to test thread safety.
 
@@ -172,8 +170,8 @@ class ConcurrencyTestHelper:
         }
 
     def detect_race_conditions(self,
-                             operations: List[callable],
-                             num_iterations: int = 1000) -> Dict[str, Any]:
+                             operations: list[callable],
+                             num_iterations: int = 1000) -> dict[str, Any]:
         """
         Detect potential race conditions by running operations many times.
 
@@ -246,7 +244,7 @@ class StressDataGenerator:
             "Fallout 4 v1.10.163",
             "Buffout 4 v1.28.6",
             "",
-            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF6EF4C3512 Fallout4.exe+0733512",
+            'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512',
             "",
             "SYSTEM SPECS:",
             "\tOS: Microsoft Windows 11 Pro v10.0.22621",
@@ -294,7 +292,7 @@ class StressDataGenerator:
         return "\n".join(lines)
 
     @staticmethod
-    def generate_plugin_load_order(count: int = 500) -> List[str]:
+    def generate_plugin_load_order(count: int = 500) -> list[str]:
         """
         Generate a large plugin load order for testing.
 
@@ -330,7 +328,7 @@ class StressDataGenerator:
         return plugins
 
     @staticmethod
-    def generate_formid_dataset(count: int = 10000) -> List[str]:
+    def generate_formid_dataset(count: int = 10000) -> list[str]:
         """
         Generate a large set of FormIDs for testing.
 
@@ -387,7 +385,7 @@ class PerformanceProfiler:
         self._monitoring = True
         self._monitor_thread.start()
 
-    def stop_profiling(self) -> Dict[str, Any]:
+    def stop_profiling(self) -> dict[str, Any]:
         """
         Stop profiling and return comprehensive performance statistics.
 
@@ -446,7 +444,7 @@ class PerformanceProfiler:
                 # Ignore monitoring errors
                 pass
 
-    def _calculate_cpu_stats(self) -> Dict[str, float]:
+    def _calculate_cpu_stats(self) -> dict[str, float]:
         """Calculate CPU usage statistics."""
         if not self._cpu_measurements:
             return {}
@@ -458,7 +456,7 @@ class PerformanceProfiler:
             "min_percent": min(cpu_values)
         }
 
-    def _calculate_io_stats(self) -> Dict[str, Any]:
+    def _calculate_io_stats(self) -> dict[str, Any]:
         """Calculate I/O statistics."""
         if len(self._io_measurements) < 2:
             return {}
@@ -477,7 +475,7 @@ class PerformanceProfiler:
             "total_write_bytes": last["write_bytes"] - first["write_bytes"]
         }
 
-    def _detect_degradation(self) -> Dict[str, Any]:
+    def _detect_degradation(self) -> dict[str, Any]:
         """Detect performance degradation patterns."""
         if len(self._measurements) < 10:
             return {"degradation_detected": False}
@@ -503,7 +501,7 @@ class PerformanceProfiler:
 def memory_tracker():
     """Session-wide memory tracker for leak detection across tests."""
     tracker = MemoryTracker()
-    yield tracker
+    return tracker
 
 
 @pytest.fixture
@@ -648,7 +646,6 @@ def mock_yamldata_python_only():
 
     For Rust integration tests, DO NOT use this fixture - use proper test data instead.
     """
-    import os
 
     # Disable Rust to avoid PyO3 type conversion issues with Mock objects
     original_value = os.environ.get("CLASSIC_DISABLE_RUST")

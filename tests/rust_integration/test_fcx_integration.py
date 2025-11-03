@@ -16,7 +16,6 @@ import pytest
 from ClassicLib.integration.status import is_rust_accelerated
 from tests.rust_integration.parity_fixtures import skip_if_rust_unavailable
 
-
 # Check Rust availability
 RUST_AVAILABLE = is_rust_accelerated("fcx_handler")
 
@@ -78,8 +77,9 @@ class TestRustFCXIntegration:
         if not RUST_AVAILABLE:
             pytest.skip("Rust FCX handler not available")
 
-        from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
         from pathlib import Path
+
+        from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
 
         # Create sample ConfigIssue
         issue = ConfigIssue(
@@ -260,6 +260,7 @@ class TestRustFCXIntegration:
             pytest.skip("Rust FCX handler not available")
 
         import concurrent.futures
+
         from ClassicLib.integration.factory import get_fcx_handler
 
         # Create handler

@@ -13,9 +13,10 @@ Tests cover:
 - Error handling
 """
 
+import math
 import tempfile
-from pathlib import Path
 import time
+from pathlib import Path
 
 import pytest
 
@@ -57,7 +58,7 @@ class TestParseYaml:
 
         # Float
         result = yaml_ops.parse_yaml("3.14")
-        assert abs(result - 3.14) < 0.001
+        assert abs(result - math.pi) < 0.001
 
         # String
         result = yaml_ops.parse_yaml('"hello world"')
@@ -584,7 +585,7 @@ class TestPythonTypeConversion:
             "bool_false": False,
             # Numbers
             "int_value": 42,
-            "float_value": 3.14,
+            "float_value": math.pi,
             # String
             "string_value": "hello",
             # List
@@ -604,7 +605,7 @@ class TestPythonTypeConversion:
         assert reparsed["bool_true"] is True
         assert reparsed["bool_false"] is False
         assert reparsed["int_value"] == 42
-        assert abs(reparsed["float_value"] - 3.14) < 0.001
+        assert abs(reparsed["float_value"] - math.pi) < 0.001
         assert reparsed["string_value"] == "hello"
         assert reparsed["list_value"] == [1, 2, 3]
         assert reparsed["dict_value"]["nested_key"] == "nested_value"

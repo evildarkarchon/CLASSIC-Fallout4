@@ -16,39 +16,30 @@ Key Features Tested:
 
 import asyncio
 import logging
-import os
-import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 # Import test infrastructure
-from tests.test_infra.async_test_utils import AsyncTestCase
-from tests.test_infra.performance_utils import PerformanceTimer, measure_performance
+from tests.test_infra.performance_utils import PerformanceTimer
 
 # Skip entire module if Rust extensions not available
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import core components
 from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib import GlobalRegistry
-from ClassicLib.MessageHandler import MessageHandler
 from ClassicLib.integration.factory import (
-    get_parser,
     get_formid_analyzer,
+    get_parser,
     get_plugin_analyzer,
     get_record_scanner,
-    get_database_pool,
-    get_file_io,
 )
 from ClassicLib.integration.status import (
     get_rust_component_status,
     is_rust_accelerated,
 )
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.YamlSettingsCache import yaml_cache
 
 
 @pytest.mark.rust
@@ -64,7 +55,7 @@ class TestE2EPipeline:
     """
 
     @pytest.fixture(scope="class")
-    def crash_log_samples(self) -> Dict[str, Path]:
+    def crash_log_samples(self) -> dict[str, Path]:
         """
         Provide paths to real crash log samples for testing.
 
@@ -208,7 +199,7 @@ PLUGINS:
 	[06] AnotherMod.esp
 """
 
-    def _read_crash_log(self, log_path: Path) -> List[str]:
+    def _read_crash_log(self, log_path: Path) -> list[str]:
         """
         Read a crash log file and return it as a list of lines.
 
@@ -219,8 +210,8 @@ PLUGINS:
             List of strings, each representing a line in the crash log
         """
         try:
-            with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
-                return [line.rstrip('\n\r') for line in f.readlines()]
+            with Path(log_path).open('r', encoding='utf-8', errors='ignore') as f:
+                return [line.rstrip('\n\r') for line in f]
         except Exception as e:
             pytest.skip(f"Could not read crash log {log_path}: {e}")
 
@@ -628,11 +619,11 @@ class TestE2EPerformance:
         # Performance should be reasonable (< 2 seconds for typical logs)
         assert avg_rust_time < 2.0, f"Rust pipeline too slow: {avg_rust_time:.3f}s"
 
-    def _read_crash_log(self, log_path: Path) -> List[str]:
+    def _read_crash_log(self, log_path: Path) -> list[str]:
         """Helper method to read crash log files."""
         try:
-            with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
-                return [line.rstrip('\n\r') for line in f.readlines()]
+            with Path(log_path).open('r', encoding='utf-8', errors='ignore') as f:
+                return [line.rstrip('\n\r') for line in f]
         except Exception as e:
             pytest.skip(f"Could not read crash log {log_path}: {e}")
 

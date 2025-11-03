@@ -17,7 +17,6 @@ Performance targets for Phase 6:
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add project root to path
@@ -26,8 +25,8 @@ sys.path.insert(0, str(project_root))
 
 # Now we can import the benchmark suite
 from benchmarks.benchmark_suite_comprehensive import (
-    ComprehensiveBenchmarkSuite,
     BenchmarkType,
+    ComprehensiveBenchmarkSuite,
     TestDataSize,
 )
 
@@ -57,7 +56,7 @@ def run_quick_validation():
     summary = results.get('summary', {})
     overall = summary.get('overall_assessment', {})
 
-    print(f"\n📊 Quick Validation Results:")
+    print("\n📊 Quick Validation Results:")
     print(f"   Status: {overall.get('status', 'Unknown')}")
     print(f"   Targets Achieved: {overall.get('targets_achieved', 0)}/{overall.get('total_comparisons', 0)}")
     print(f"   Average Speedup: {overall.get('average_speedup', 0):.2f}x")
@@ -87,7 +86,7 @@ def run_full_benchmark():
     summary = results.get('summary', {})
     overall = summary.get('overall_assessment', {})
 
-    print(f"\n📊 Comprehensive Benchmark Results:")
+    print("\n📊 Comprehensive Benchmark Results:")
     print(f"   Status: {overall.get('status', 'Unknown')}")
     print(f"   Message: {overall.get('message', 'No message available')}")
     print(f"   Targets Achieved: {overall.get('targets_achieved', 0)}/{overall.get('total_comparisons', 0)} "
@@ -96,7 +95,7 @@ def run_full_benchmark():
 
     # Show component performance summary
     component_summary = summary.get('component_summary', {})
-    print(f"\n🔧 Component Performance:")
+    print("\n🔧 Component Performance:")
     for component, perf_data in component_summary.items():
         print(f"   {component}:")
         print(f"     Speedup: {perf_data.get('avg_speedup', 0):.1f}x")
@@ -105,14 +104,14 @@ def run_full_benchmark():
     # Show optimization priorities
     optimization_priorities = summary.get('optimization_priorities', [])
     if optimization_priorities:
-        print(f"\n⚡ Top Optimization Priorities:")
+        print("\n⚡ Top Optimization Priorities:")
         for priority in optimization_priorities[:3]:
             print(f"   {priority.get('priority', 'UNKNOWN')}: {priority.get('component', 'Unknown')} "
                   f"({priority.get('target_achievement', 0):.1f}% of target)")
 
     # Show Rust acceleration status
     rust_status = summary.get('rust_acceleration_status', {})
-    print(f"\n🦀 Rust Acceleration Status:")
+    print("\n🦀 Rust Acceleration Status:")
     print(f"   Components Active: {rust_status.get('components_active', 0)}/{rust_status.get('components_total', 0)} "
           f"({rust_status.get('acceleration_percentage', 0):.1f}%)")
 
@@ -151,13 +150,13 @@ def run_regression_test():
     else:
         print("✅ Found recent benchmark results, loading for regression analysis...")
         import json
-        with open(latest_results_file, 'r') as f:
+        with Path(latest_results_file).open() as f:
             results = json.load(f)
 
     # Run regression analysis
     regression_results = suite.compare_with_baseline(results)
 
-    print(f"\n📊 Regression Analysis Results:")
+    print("\n📊 Regression Analysis Results:")
     print(f"   Status: {regression_results.get('overall_status', 'Unknown')}")
     print(f"   Baseline Date: {regression_results.get('baseline_date', 'Unknown')}")
     print(f"   Current Date: {regression_results.get('current_date', 'Unknown')}")
@@ -211,9 +210,9 @@ def main():
         elif args.mode == 'regression':
             results = run_regression_test()
 
-        print(f"\n✅ Benchmark completed successfully!")
-        print(f"   Results saved in: benchmarks/reports/")
-        print(f"   Check the generated markdown and CSV reports for detailed analysis.")
+        print("\n✅ Benchmark completed successfully!")
+        print("   Results saved in: benchmarks/reports/")
+        print("   Check the generated markdown and CSV reports for detailed analysis.")
 
     except ImportError as e:
         print(f"❌ Import Error: {e}")

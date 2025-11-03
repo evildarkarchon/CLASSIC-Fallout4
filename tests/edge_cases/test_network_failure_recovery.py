@@ -4,16 +4,16 @@ This module tests the application's ability to handle and recover from
 various network failures, timeouts, and connection issues.
 """
 
-import pytest
 import asyncio
-import time
 import socket
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, AsyncMock
-from typing import Dict, List, Any, Optional
-import aiohttp
-import json
 import tempfile
+import time
+from pathlib import Path
+from typing import Any
+from unittest.mock import AsyncMock, patch
+
+import aiohttp
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.network]
@@ -26,7 +26,7 @@ class NetworkFailureSimulator:
     async def simulate_timeout(delay: float = 10.0):
         """Simulate a network timeout."""
         await asyncio.sleep(delay)
-        raise asyncio.TimeoutError("Network request timed out")
+        raise TimeoutError("Network request timed out")
 
     @staticmethod
     async def simulate_connection_refused():
@@ -286,7 +286,7 @@ class TestDownloadResilience:
                 mock_get.return_value.__aenter__.return_value = mock_response
 
                 # Should be able to append to partial file
-                with open(temp_path, 'ab') as f:
+                with Path(temp_path).open('ab') as f:
                     f.write(b" Second part of file content")
 
                 # Verify complete file
@@ -329,7 +329,7 @@ class TestDownloadResilience:
             "http://mirror2.example.com/file",
         ]
 
-        async def download_with_mirrors(mirrors: List[str]) -> Optional[str]:
+        async def download_with_mirrors(mirrors: list[str]) -> str | None:
             """Try downloading from multiple mirrors."""
             for i, mirror_url in enumerate(mirrors):
                 try:
@@ -403,8 +403,9 @@ class TestCacheNetworkFallback:
     @pytest.mark.asyncio
     async def test_cache_expiry_during_network_outage(self):
         """Test cache behavior when expired during network outage."""
-        from ClassicLib.YamlSettingsCache import YamlSettingsCache
         import datetime
+
+        from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
         if hasattr(YamlSettingsCache, "_instance"):
             delattr(YamlSettingsCache, "_instance")
@@ -449,7 +450,7 @@ class TestNetworkRecoveryPatterns:
         async def retry_with_backoff(
             max_retries: int = 5,
             base_delay: float = 1.0
-        ) -> List[float]:
+        ) -> list[float]:
             """Implement exponential backoff retry."""
             delays = []
             for attempt in range(max_retries):

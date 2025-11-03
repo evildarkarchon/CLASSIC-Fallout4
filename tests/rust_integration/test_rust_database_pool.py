@@ -7,14 +7,11 @@ Phase 4 features including TTL caching, batch operations, and performance.
 
 import asyncio
 import sqlite3
-import tempfile
 import time
 from pathlib import Path
-from typing import Any
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
-
 
 # Import via the integration layer
 from ClassicLib.integration.factory import get_database_pool
@@ -22,7 +19,7 @@ from ClassicLib.integration.status import is_rust_accelerated
 
 # Try to import Rust wrapper classes for type checking
 try:
-    from ClassicLib.rust.database_rust import RustAsyncDatabasePool, DatabasePoolManager
+    from ClassicLib.rust.database_rust import DatabasePoolManager, RustAsyncDatabasePool
     RUST_WRAPPER_AVAILABLE = True
 except ImportError:
     RustAsyncDatabasePool = None
@@ -390,9 +387,9 @@ class TestRustAsyncDatabasePool:
                 results = await pool.get_entries_batch(pairs)
 
                 assert len(results) == 3
-                assert results[("00012345", "Fallout4.esm")] == "Power Armor Frame"
-                assert results[("00034567", "DLCNukaWorld.esm")] == "Nuka Cola Quantum"
-                assert results[("00045678", "TestMod.esp")] == "Custom Weapon"
+                assert results["00012345", "Fallout4.esm"] == "Power Armor Frame"
+                assert results["00034567", "DLCNukaWorld.esm"] == "Nuka Cola Quantum"
+                assert results["00045678", "TestMod.esp"] == "Custom Weapon"
 
     async def test_async_cache_management(self, tmp_path):
         """Test async cache management."""

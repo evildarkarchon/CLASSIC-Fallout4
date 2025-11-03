@@ -16,7 +16,6 @@ Key Validation Areas:
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -25,21 +24,17 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import test infrastructure
-from tests.test_infra.performance_utils import PerformanceTimer
-
 # Import core components
 from ClassicLib.integration.factory import (
-    get_parser,
     get_formid_analyzer,
+    get_parser,
     get_plugin_analyzer,
     get_record_scanner,
-    get_database_pool,
-    get_file_io,
 )
 from ClassicLib.integration.status import (
-    get_rust_component_status,
     is_rust_accelerated,
 )
+from tests.test_infra.performance_utils import PerformanceTimer
 
 
 @pytest.mark.rust
@@ -55,7 +50,7 @@ class TestRealCrashLogValidation:
     """
 
     @pytest.fixture(scope="class")
-    def real_crash_logs(self) -> Dict[str, Path]:
+    def real_crash_logs(self) -> dict[str, Path]:
         """
         Discover and categorize real crash logs for testing.
 
@@ -74,7 +69,7 @@ class TestRealCrashLogValidation:
             for log_file in log_files:
                 try:
                     # Read first few lines to categorize
-                    with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    with Path(log_file).open('r', encoding='utf-8', errors='ignore') as f:
                         first_lines = [f.readline().strip() for _ in range(10)]
 
                     # Determine crash log type based on content
@@ -248,11 +243,11 @@ PLUGINS:
 	[15] Scrap Everything.esp
 """
 
-    def _read_crash_log(self, log_path: Path) -> List[str]:
+    def _read_crash_log(self, log_path: Path) -> list[str]:
         """Read a crash log file and return it as a list of lines."""
         try:
-            with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
-                return [line.rstrip('\n\r') for line in f.readlines()]
+            with Path(log_path).open('r', encoding='utf-8', errors='ignore') as f:
+                return [line.rstrip('\n\r') for line in f]
         except Exception as e:
             pytest.skip(f"Could not read crash log {log_path}: {e}")
 
@@ -651,7 +646,7 @@ class TestRealDataAccuracy:
             "high_id_esp": re.compile(r'0x[0-9A-Fa-f][1-9A-Fa-f][0-9A-Fa-f]{6}') # High ID ESPs
         }
 
-        pattern_counts = {pattern: 0 for pattern in known_patterns}
+        pattern_counts = dict.fromkeys(known_patterns, 0)
         total_logs_processed = 0
 
         for log_category, log_path in real_crash_logs.items():
@@ -697,7 +692,7 @@ class TestRealDataAccuracy:
             "esl_files": [".esl"],  # Any ESL file
         }
 
-        pattern_findings = {category: 0 for category in expected_plugins}
+        pattern_findings = dict.fromkeys(expected_plugins, 0)
         total_load_orders = 0
 
         for log_category, log_path in real_crash_logs.items():
@@ -782,7 +777,7 @@ class TestRealDataAccuracy:
             logs_with_issues = sum(1 for data in correlation_data
                                  if data["problematic_plugins"] or data["limit_triggered"])
 
-            logging.info(f"Crash cause correlation analysis:")
+            logging.info("Crash cause correlation analysis:")
             logging.info(f"  Total logs analyzed: {len(correlation_data)}")
             logging.info(f"  Logs with potential issues: {logs_with_issues}")
 

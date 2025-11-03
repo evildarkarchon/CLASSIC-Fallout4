@@ -468,9 +468,9 @@ def get_mod_detector() -> dict[str, Any]:
     if not _is_rust_disabled() and components.get("mod_detector", False):
         try:
             from ClassicLib.rust.mod_detector_rust import (
-                detect_mods_single,
                 detect_mods_double,
                 detect_mods_important,
+                detect_mods_single,
             )
             logger.debug("Using Rust mod detector functions (35x speedup)")
             return {
@@ -483,9 +483,9 @@ def get_mod_detector() -> dict[str, Any]:
 
     # Fall back to Python implementation
     from ClassicLib.python.mod_detector_py import (
-        detect_mods_single,
         detect_mods_double,
         detect_mods_important,
+        detect_mods_single,
     )
     logger.debug("Using Python mod detector implementation")
     return {
@@ -546,7 +546,7 @@ def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> Any:
             log data.
     """
     # Use wrapper that handles Rust/Python automatically
-    from ClassicLib.rust.suspect_rust import SuspectScanner, RUST_AVAILABLE
+    from ClassicLib.rust.suspect_rust import RUST_AVAILABLE, SuspectScanner
 
     if RUST_AVAILABLE:
         logger.debug("Using Rust-accelerated SuspectScanner (40x speedup potential)")
@@ -574,7 +574,7 @@ def get_settings_validator(yamldata: ClassicScanLogsInfo) -> Any:
         implemented in Python.
     """
     # Use wrapper that handles Rust/Python automatically
-    from ClassicLib.rust.settings_rust import SettingsValidator, RUST_AVAILABLE
+    from ClassicLib.rust.settings_rust import RUST_AVAILABLE, SettingsValidator
 
     if RUST_AVAILABLE:
         logger.debug("Using Rust-accelerated SettingsValidator")
@@ -625,7 +625,7 @@ def get_fcx_handler(fcx_mode: bool | None) -> Any:
         Any: An instance of the appropriate FCXModeHandler (either Python or Rust-based).
     """
     # Use wrapper that handles Rust/Python automatically
-    from ClassicLib.rust.fcx_rust import FCXModeHandler, RUST_AVAILABLE
+    from ClassicLib.rust.fcx_rust import RUST_AVAILABLE, FCXModeHandler
 
     if RUST_AVAILABLE:
         logger.debug("Using Rust-accelerated FcxModeHandler")

@@ -14,18 +14,16 @@ Performance metrics tracked:
 from __future__ import annotations
 
 import logging
+import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
-import sys
-from pathlib import Path
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.integration.factory import get_file_io
+from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.rust.file_io_rust import RustFileIOCore as RustFileIO
 
 logger = logging.getLogger(__name__)
@@ -50,13 +48,13 @@ class FileIOBenchmark:
 
     def __init__(self):
         """Initialize file I/O benchmark."""
-        self._rust_io: Optional[RustFileIO] = None
+        self._rust_io: RustFileIO | None = None
         self._python_io = None
 
     def run_benchmark(
         self,
         implementation: str,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         warm_up: bool = False
     ) -> FileIOBenchmarkResult:
         """Execute file I/O benchmark."""
@@ -99,8 +97,8 @@ class FileIOBenchmark:
     def _run_batch_file_operations(
         self,
         implementation: str,
-        test_files: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        test_files: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Run batch file operations for performance measurement."""
         results = []
 
@@ -128,7 +126,7 @@ class FileIOBenchmark:
 
         return results
 
-    def _process_with_rust(self, file_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_with_rust(self, file_data: dict[str, Any]) -> dict[str, Any]:
         """Process file using Rust implementation."""
         if self._rust_io is None:
             self._rust_io = get_file_io()
@@ -154,7 +152,7 @@ class FileIOBenchmark:
             'processing_time': end_time - start_time,
         }
 
-    def _process_with_python(self, file_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_with_python(self, file_data: dict[str, Any]) -> dict[str, Any]:
         """Process file using Python implementation."""
         # Mock Python file I/O operations with typical overhead
         file_content = file_data.get('content', '')
@@ -179,7 +177,7 @@ class FileIOBenchmark:
             'processing_time': end_time - start_time,
         }
 
-    def _run_single_file_ops(self, implementation: str, test_files: List[Dict[str, Any]]):
+    def _run_single_file_ops(self, implementation: str, test_files: list[dict[str, Any]]):
         """Run single file operations for warm-up."""
         if not test_files:
             return
@@ -191,9 +189,9 @@ class FileIOBenchmark:
 
 
 def benchmark_file_io_performance(
-    test_files: List[Dict[str, Any]],
+    test_files: list[dict[str, Any]],
     iterations: int = 5
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Standalone function for benchmarking file I/O performance."""
     benchmark = FileIOBenchmark()
     dataset = {'test_files': test_files}

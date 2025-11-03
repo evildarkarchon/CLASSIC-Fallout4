@@ -6,7 +6,6 @@ This package contains modules for scanning and analyzing crash logs.
 
 # Core scanning components
 # Modern async-first core components
-from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
 from ClassicLib.ScanLog.AsyncReformat import (
     batch_file_copy_async,
     batch_file_move_async,
@@ -24,6 +23,7 @@ from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.Parser import extract_module_names, extract_segments, find_segments, parse_crash_header
+from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments as ReportGenerator
@@ -38,6 +38,7 @@ from ClassicLib.ScanLog.ScanLogsUtils import (
     write_report_to_file,
     write_report_to_file_async,
 )
+
 # ScanOrchestrator removed - deprecated, no production usage
 # Use OrchestratorCore directly for async operations
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments as SettingsScanner

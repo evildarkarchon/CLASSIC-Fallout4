@@ -14,11 +14,12 @@ Tests cover:
 - Performance characteristics (40x speedup target)
 """
 
-import pytest
 from types import SimpleNamespace
 
+import pytest
+
 try:
-    from classic_scanlog import RecordScanner, scan_records_batch, contains_record
+    from classic_scanlog import RecordScanner, contains_record, scan_records_batch
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False
@@ -197,7 +198,7 @@ class TestScanRecordsBatch:
         segments = [[
             "[RSP+8  ] 0x80ECFDFA90      (void*)",
             "[RSP+10 ] 0x1AC             (size_t)",
-            "[RSP+18 ] 0x22FCA037A78     (char*) \"WCLINS_PRP_Patch - Main.ba2\"",
+            '[RSP+18 ] 0x22FCA037A78     (char*) "WCLINS_PRP_Patch - Main.ba2"',
             "[RSP+40 ] 0x7FF6F1E52E60      (BSResource::Archive2**)",
             "[RSP+48 ] 0x2302DDAB040       (BSGeometrySegmentData*)",
         ]]
@@ -450,7 +451,7 @@ class TestRecordScanner:
         callstack = [
             "[RSP+8  ] 0x80ECFDFA90      (void*)",
             "[RSP+10 ] 0x1AC             (size_t)",
-            "[RSP+18 ] 0x22FCA037A78     (char*) \"WCLINS_PRP_Patch - Main.ba2\"",
+            '[RSP+18 ] 0x22FCA037A78     (char*) "WCLINS_PRP_Patch - Main.ba2"',
             "[RSP+20 ] 0x0               (NULL)",
             "[RSP+28 ] 0x80ECFDFB30      (void*)",
             "[RSP+30 ] 0x22FCA037950     (void*)",

@@ -60,9 +60,10 @@ class RustPluginAnalyzer:
                 game_ignore_plugins = getattr(yamldata, "game_ignore_plugins", [])
                 ignore_list = getattr(yamldata, "ignore_list", [])
                 crashgen_name = getattr(yamldata, "crashgen_name", "")
-                game_version = getattr(yamldata, "game_version", "")
-                game_version_vr = getattr(yamldata, "game_version_vr", "")
-                game_version_new = getattr(yamldata, "game_version_new", "")
+                # Convert Version objects to strings for Rust compatibility
+                game_version = str(getattr(yamldata, "game_version", ""))
+                game_version_vr = str(getattr(yamldata, "game_version_vr", ""))
+                game_version_new = str(getattr(yamldata, "game_version_new", ""))
 
                 self._rust_analyzer = RustPluginAnalyzerImpl(
                     game_ignore_plugins,
@@ -108,28 +109,22 @@ class RustPluginAnalyzer:
 
         Returns:
             tuple[dict[str, str], bool, bool]: A tuple containing:
-                - A dictionary mapping hexadecimal index strings to plugin names.
+                - A dictionary mapping plugin names to hexadecimal index strings.
                 - A boolean indicating if the plugin limit was triggered.
                 - A boolean indicating if the plugin limit checks are disabled.
         """
         if self._use_rust and self._rust_analyzer:
             try:
-                # Use Rust analyzer for parsing (universal load order)
-                loadorder = self._rust_analyzer.loadorder_scan_log(segment_plugins)
+                # Rust now returns (HashMap, bool, bool) with correct structure
+                # Convert Version objects to strings if needed
+                game_ver_str = str(game_version) if game_version else None
+                version_cur_str = str(version_current) if version_current else None
 
-                # Convert to expected format
-                plugins_dict = {}
-                for idx, plugin in enumerate(loadorder):
-                    hex_idx = f"{idx:02X}"
-                    plugins_dict[hex_idx] = plugin
-
-                # Check plugin limits if version info provided
-                plugin_limit_triggered = False
-                limit_check_disabled = False
-                if game_version and version_current and self._python_analyzer:
-                    plugin_limit_triggered, limit_check_disabled = self._python_analyzer.check_plugin_limit(
-                        segment_plugins, game_version, version_current
-                    )
+                plugins_dict, plugin_limit_triggered, limit_check_disabled = self._rust_analyzer.loadorder_scan_log(
+                    segment_plugins,
+                    game_version=game_ver_str,
+                    version_current=version_cur_str
+                )
 
                 return plugins_dict, plugin_limit_triggered, limit_check_disabled
             except Exception as e:
@@ -167,25 +162,58 @@ class RustPluginAnalyzer:
         analyzer = PluginAnalyzer(self.yamldata)
         return analyzer.check_plugin_limit(segment_plugins, game_version, version_current)
 
-    def plugin_match(self, plugins: list[str], report: Any) -> None:
+    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]):
         """
-        Matches the given plugins with analysis results from a report. Delegates the
-        execution to a Python analyzer if it is available; otherwise, it uses
-        a default PluginAnalyzer instance for processing.
+        Matches plugins found in crash call stack and generates a suspect report with counts.
 
         Args:
-            plugins (list[str]): A list of plugin identifiers.
-            report (Any): The report data to be matched with plugins.
+            segment_callstack_lower: Lowercase call stack lines
+            crashlog_plugins_lower: Set of lowercase plugin names from crash log
 
         Returns:
-            None
+            ReportFragment with plugin match results
         """
+        from ClassicLib.ScanLog.fragments import ReportFragment
+
+        if self._use_rust and self._rust_analyzer:
+            try:
+                # Rust returns list[str], convert to ReportFragment
+                lines = self._rust_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
+                return ReportFragment.from_lines(lines)
+            except Exception as e:
+                logger.warning(f"Rust plugin_match failed: {e}, falling back to Python")
+
+        # Python fallback
         if self._python_analyzer:
-            self._python_analyzer.plugin_match(plugins, report)
-        else:
-            from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
-            analyzer = PluginAnalyzer(self.yamldata)
-            analyzer.plugin_match(plugins, report)
+            return self._python_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
+
+        from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
+        analyzer = PluginAnalyzer(self.yamldata)
+        return analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
+
+    def filter_ignored_plugins(self, crashlog_plugins: dict[str, str]) -> dict[str, str]:
+        """
+        Filters out ignored plugins from crash log plugin list using configured ignore lists.
+
+        Args:
+            crashlog_plugins: HashMap of plugin names to load order IDs
+
+        Returns:
+            HashMap with ignored plugins removed
+        """
+        if self._use_rust and self._rust_analyzer:
+            try:
+                return self._rust_analyzer.filter_ignored_plugins(crashlog_plugins)
+            except Exception as e:
+                logger.warning(f"Rust filter_ignored_plugins failed: {e}, falling back to Python")
+
+        # Python fallback
+        if self._python_analyzer:
+            return self._python_analyzer.filter_ignored_plugins(crashlog_plugins)
+
+        from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
+        analyzer = PluginAnalyzer(self.yamldata)
+        return analyzer.filter_ignored_plugins(crashlog_plugins)
 
     def parse_plugin_line(self, line: str) -> tuple[str, str] | None:
         """

@@ -10,9 +10,7 @@ Tests the high-performance file I/O operations including:
 """
 
 import asyncio
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -267,7 +265,7 @@ class TestRustFileIOCore:
         assert "# Crash Report" in content
         assert "Error occurred" in content
 
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core", False), reason="Rust FileIOCore not available")
+    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_memory_mapped_reading(self, temp_dir):
         """Test memory-mapped file reading for large files."""
@@ -281,7 +279,7 @@ class TestRustFileIOCore:
         assert len(content) > 10_000_000  # Should be ~11MB
 
     @pytest.mark.skip(reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing.")
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core", False), reason="Rust FileIOCore not available")
+    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_header_parsing(self, mock_dds_file):
         """Test DDS header parsing.
@@ -301,7 +299,7 @@ class TestRustFileIOCore:
         assert dimensions == (2048, 1024)  # (width, height)
 
     @pytest.mark.skip(reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing.")
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core", False), reason="Rust FileIOCore not available")
+    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_header_invalid_dimensions(self, mock_invalid_dds_file):
         """Test DDS header parsing with invalid dimensions.
@@ -319,7 +317,7 @@ class TestRustFileIOCore:
         assert dimensions == (2047, 1023)  # Odd dimensions
 
     @pytest.mark.skip(reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing.")
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core", False), reason="Rust FileIOCore not available")
+    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_batch_processing(self, tmp_path):
         """Test batch DDS header processing.
@@ -350,7 +348,7 @@ class TestRustFileIOCore:
             dims = results[str(path)]
             assert dims == ((i + 1) * 512, (i + 1) * 256)
 
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core", False), reason="Rust FileIOCore not available")
+    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_directory_traversal(self, temp_dir):
         """Test parallel directory traversal."""
@@ -382,7 +380,7 @@ class TestRustFileIOCore:
         deep_paths = [f for f in shallow_files if "deep.txt" in f]
         assert len(deep_paths) == 0
 
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core", False), reason="Rust FileIOCore not available")
+    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     def test_caching_behavior(self, temp_dir):
         """Test that caching improves performance."""
         from ClassicLib.rust.file_io_rust import RustFileIOCore
@@ -421,7 +419,7 @@ class TestRustIntegration:
         """Test that Rust modules are properly detected."""
         io = get_file_io()
         # Check if Rust is being used (if available)
-        if RUST_AVAILABLE.get("file_io_core", False):
+        if RUST_AVAILABLE.get("file_io_core"):
             assert io.is_rust_accelerated
         else:
             assert not io.is_rust_accelerated

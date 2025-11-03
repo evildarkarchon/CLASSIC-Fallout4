@@ -14,8 +14,6 @@ import pytest
 from ClassicLib.ScanGame.Config import ConfigFileCache
 from ClassicLib.ScanGame.ScanModInis import (
     check_vsync_settings_async,
-    detect_all_ini_issues_async,
-    detect_ini_issue_async,
     scan_mod_inis,
     scan_mod_inis_async,
 )

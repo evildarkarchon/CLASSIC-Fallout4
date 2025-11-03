@@ -5,19 +5,18 @@ comparing Rust-accelerated components against Python fallbacks and
 ensuring performance targets are met.
 """
 
-import pytest
-import time
+import asyncio
+import gc
+import random
 import statistics
 import tempfile
-import json
-import psutil
-import gc
+import time
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
-from unittest.mock import patch, MagicMock
-import asyncio
-import random
-import string
+from typing import Any
+from unittest.mock import MagicMock, patch
+
+import psutil
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.integration, pytest.mark.performance]
@@ -27,11 +26,11 @@ class PerformanceMetrics:
     """Track and analyze performance metrics."""
 
     def __init__(self):
-        self.measurements: Dict[str, List[float]] = {}
-        self.baselines: Dict[str, float] = {}
-        self.rust_status: Dict[str, bool] = {}
+        self.measurements: dict[str, list[float]] = {}
+        self.baselines: dict[str, float] = {}
+        self.rust_status: dict[str, bool] = {}
 
-    def measure(self, name: str, func, *args, **kwargs) -> Tuple[Any, float]:
+    def measure(self, name: str, func, *args, **kwargs) -> tuple[Any, float]:
         """Measure execution time of a function."""
         gc.collect()  # Clean state
         start = time.perf_counter()
@@ -44,7 +43,7 @@ class PerformanceMetrics:
 
         return result, elapsed
 
-    async def measure_async(self, name: str, coro) -> Tuple[Any, float]:
+    async def measure_async(self, name: str, coro) -> tuple[Any, float]:
         """Measure execution time of an async coroutine."""
         gc.collect()  # Clean state
         start = time.perf_counter()
@@ -57,7 +56,7 @@ class PerformanceMetrics:
 
         return result, elapsed
 
-    def get_statistics(self, name: str) -> Dict[str, float]:
+    def get_statistics(self, name: str) -> dict[str, float]:
         """Get statistics for a measurement."""
         if name not in self.measurements or not self.measurements[name]:
             return {}
@@ -149,7 +148,7 @@ class SyntheticDataGenerator:
         return "\n".join(lines)
 
     @staticmethod
-    def generate_formid_list(count: int) -> List[str]:
+    def generate_formid_list(count: int) -> list[str]:
         """Generate list of synthetic FormIDs."""
         formids = []
         for i in range(count):
@@ -159,7 +158,7 @@ class SyntheticDataGenerator:
         return formids
 
     @staticmethod
-    def generate_plugin_data(num_plugins: int, formids_per_plugin: int) -> Dict:
+    def generate_plugin_data(num_plugins: int, formids_per_plugin: int) -> dict:
         """Generate synthetic plugin data."""
         plugins = {}
         for i in range(num_plugins):
@@ -538,7 +537,7 @@ class TestPluginAnalysisPerformance:
             dependencies[plugin_name] = deps
 
         # Measure dependency resolution
-        def resolve_dependencies(plugin: str, resolved: set = None) -> List[str]:
+        def resolve_dependencies(plugin: str, resolved: set = None) -> list[str]:
             if resolved is None:
                 resolved = set()
 
@@ -580,7 +579,6 @@ class TestMemoryPerformance:
     def test_memory_efficiency_large_logs(self, generator):
         """Test memory efficiency when processing large logs."""
         from ClassicLib.integration.factory import get_parser
-        import psutil
 
         parser = get_parser()
         process = psutil.Process()
@@ -617,8 +615,9 @@ class TestMemoryPerformance:
 
     def test_memory_cleanup_after_processing(self, generator):
         """Test that memory is properly cleaned up after processing."""
-        from ClassicLib.integration.factory import get_parser
         import weakref
+
+        from ClassicLib.integration.factory import get_parser
 
         parser = get_parser()
 
@@ -734,7 +733,7 @@ class TestRegressionBaselines:
         print("PERFORMANCE SUMMARY")
         print("=" * 60)
 
-        print(f"\nRust Acceleration Status:")
+        print("\nRust Acceleration Status:")
         print(f"  Active: {rust_status['acceleration_active']}")
         print(f"  Components: {rust_status['active_count']}/{rust_status['total_count']}")
 

@@ -4,15 +4,14 @@ This module tests the application's ability to handle various file
 permission errors, access violations, and filesystem restrictions.
 """
 
-import pytest
-import tempfile
-import os
-import sys
-import stat
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, mock_open
-from typing import List, Optional
 import asyncio
+import stat
+import sys
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.filesystem]
@@ -511,9 +510,8 @@ class TestPermissionRecoveryStrategies:
             if attempt_count == 1:
                 # First attempt fails
                 raise PermissionError("Access denied")
-            else:
-                # Second attempt with "elevated" permissions succeeds
-                return True
+            # Second attempt with "elevated" permissions succeeds
+            return True
 
         # Test retry with elevation
         try:

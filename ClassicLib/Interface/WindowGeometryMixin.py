@@ -7,7 +7,7 @@ allowing each tab to have its own minimum size and remembered dimensions.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
@@ -102,6 +102,9 @@ class WindowGeometryMixin:
         switching, and the geometry of the new tab is restored after switching.
         It also updates the internal state to reflect the tab change.
 
+        When switching to the results tab (index 3), this method also refreshes
+        the reports list to ensure any new reports are displayed.
+
         Args:
             index (int): The index of the new tab being switched to.
         """
@@ -117,6 +120,11 @@ class WindowGeometryMixin:
 
         self._last_tab_index = index
         logger.debug(f"Switched to tab {index} ({self.TAB_NAMES.get(index, 'unknown')})")
+
+        # Refresh reports list when switching to results tab
+        if index == 3 and hasattr(self, "refresh_reports_list"):
+            self.refresh_reports_list()  # type: ignore[attr-defined]
+            logger.debug("Refreshed reports list after switching to results tab")
 
     def save_tab_geometry(self, tab_index: int) -> None:
         """

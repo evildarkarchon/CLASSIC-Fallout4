@@ -5,21 +5,22 @@ This script measures the performance improvements from FFI boundary optimization
 It compares the original multi-call approach with the optimized single-call approach.
 """
 
-import time
-import statistics
-import psutil
-import os
-from pathlib import Path
-from typing import Dict, List, Tuple, Any
 import json
+import statistics
 
 # Add project root to path
 import sys
+import time
+from pathlib import Path
+from typing import Any
+
+import psutil
+
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from ClassicLib.rust.parser_rust import RustLogParser
 from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
+from ClassicLib.rust.parser_rust import RustLogParser
 
 
 class FFIBenchmark:
@@ -31,14 +32,14 @@ class FFIBenchmark:
         self.sample_callstack = self._generate_sample_callstack(500)
         self.sample_plugins = self._generate_sample_plugins()
 
-    def _generate_sample_log(self, lines: int) -> List[str]:
+    def _generate_sample_log(self, lines: int) -> list[str]:
         """Generate a realistic sample crash log."""
         log = []
 
         # Header
         log.append("Fallout 4 v1.10.984")
         log.append("Buffout 4 Crash Logger v1.0.0")
-        log.append("Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF6E5D29E91")
+        log.append('Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6E5D29E91')
 
         # Compatibility section
         log.append("\t[Compatibility]")
@@ -70,7 +71,7 @@ class FFIBenchmark:
 
         return log
 
-    def _generate_sample_callstack(self, lines: int) -> List[str]:
+    def _generate_sample_callstack(self, lines: int) -> list[str]:
         """Generate sample callstack with FormIDs."""
         callstack = []
         for i in range(lines):
@@ -80,14 +81,14 @@ class FFIBenchmark:
                 callstack.append(f"[{i}] 0x7FF6E5D29E91 Function::Call+0x{i:03X}")
         return callstack
 
-    def _generate_sample_plugins(self) -> Dict[str, str]:
+    def _generate_sample_plugins(self) -> dict[str, str]:
         """Generate sample plugin mappings."""
         plugins = {}
         for i in range(255):
             plugins[f"{i:02X}"] = f"Plugin_{i:03d}.esp"
         return plugins
 
-    def benchmark_parser_legacy(self, iterations: int = 10) -> Dict[str, Any]:
+    def benchmark_parser_legacy(self, iterations: int = 10) -> dict[str, Any]:
         """Benchmark the legacy multi-FFI-call parser."""
         parser = RustLogParser()
 
@@ -124,7 +125,7 @@ class FFIBenchmark:
             "ffi_crossings": 7,  # Known number for legacy
         }
 
-    def benchmark_parser_optimized(self, iterations: int = 10) -> Dict[str, Any]:
+    def benchmark_parser_optimized(self, iterations: int = 10) -> dict[str, Any]:
         """Benchmark the optimized single-FFI-call parser."""
         parser = RustLogParser()
 
@@ -152,7 +153,7 @@ class FFIBenchmark:
             "ffi_crossings": 1,  # Optimized to single call
         }
 
-    def benchmark_formid_legacy(self, iterations: int = 10) -> Dict[str, Any]:
+    def benchmark_formid_legacy(self, iterations: int = 10) -> dict[str, Any]:
         """Benchmark legacy FormID extraction."""
         from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
@@ -187,7 +188,7 @@ class FFIBenchmark:
             "string_copies": len(self.sample_callstack),
         }
 
-    def benchmark_formid_optimized(self, iterations: int = 10) -> Dict[str, Any]:
+    def benchmark_formid_optimized(self, iterations: int = 10) -> dict[str, Any]:
         """Benchmark optimized zero-copy FormID extraction."""
         from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 
@@ -213,7 +214,7 @@ class FFIBenchmark:
             "string_copies": 0,  # Zero-copy
         }
 
-    def run_all_benchmarks(self) -> Dict[str, Any]:
+    def run_all_benchmarks(self) -> dict[str, Any]:
         """Run all benchmarks and compare results."""
         print("=" * 60)
         print("FFI OPTIMIZATION BENCHMARK")
@@ -271,7 +272,7 @@ class FFIBenchmark:
 
         # Save results to file
         output_file = Path(__file__).parent / "ffi_benchmark_results.json"
-        with open(output_file, 'w') as f:
+        with Path(output_file).open('w') as f:
             json.dump(results, f, indent=2)
         print(f"\nDetailed results saved to: {output_file}")
 

@@ -14,14 +14,11 @@ Key Integration Points Tested:
 - Thread safety and concurrent access patterns
 """
 
-import asyncio
 import logging
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import Any
+from unittest.mock import Mock
 
 import pytest
 
@@ -29,33 +26,21 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import test infrastructure
-from tests.test_infra.async_test_utils import AsyncTestCase
-from tests.test_infra.performance_utils import PerformanceTimer
-
 # Import core components
-from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib import GlobalRegistry
-from ClassicLib.MessageHandler import MessageHandler
+
 # Import factory pattern for Rust components
 from ClassicLib.integration.factory import (
-    get_parser,
     get_formid_analyzer,
+    get_parser,
     get_plugin_analyzer,
     get_record_scanner,
-    get_database_pool,
-    get_file_io,
 )
 from ClassicLib.integration.status import (
-    get_rust_component_status,
     is_rust_accelerated,
 )
+
 # Status imports
-from ClassicLib.integration.status import (
-    RUST_AVAILABLE,
-    get_performance_multiplier,
-    print_rust_status,
-)
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+from tests.test_infra.performance_utils import PerformanceTimer
 
 
 @pytest.mark.rust
@@ -71,7 +56,7 @@ class TestComponentDataFlow:
     """
 
     @pytest.fixture
-    def sample_crash_data(self) -> List[str]:
+    def sample_crash_data(self) -> list[str]:
         """
         Provide sample crash log data for component testing.
 
@@ -82,7 +67,7 @@ class TestComponentDataFlow:
             "Fallout 4 v1.10.163",
             "Buffout 4 v1.28.6",
             "",
-            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF66DF19300 Fallout4.exe+0DB9300",
+            'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF66DF19300 Fallout4.exe+0DB9300',
             "",
             "\t[Compatibility]",
             "\t\tF4EE: false",
@@ -361,7 +346,7 @@ class TestComponentErrorHandling:
     """
 
     @pytest.fixture
-    def corrupted_crash_data(self) -> List[str]:
+    def corrupted_crash_data(self) -> list[str]:
         """Provide corrupted crash data to test error handling."""
         return [
             "CORRUPTED_HEADER",
@@ -564,7 +549,7 @@ class TestComponentConcurrency:
     """
 
     @pytest.fixture
-    def sample_crash_data(self) -> List[str]:
+    def sample_crash_data(self) -> list[str]:
         """Sample crash data for concurrency testing."""
         return [
             "Fallout 4 v1.10.163",
@@ -603,7 +588,7 @@ class TestComponentConcurrency:
         if not is_rust_accelerated("parser"):
             pytest.skip("Rust parser not available for concurrency testing")
 
-        def parse_log(thread_id: int) -> Dict[str, Any]:
+        def parse_log(thread_id: int) -> dict[str, Any]:
             """Parse log in a thread and return results."""
             parser = get_parser()
             start_time = time.time()
@@ -655,7 +640,7 @@ class TestComponentConcurrency:
             ["\t[0] 0x7FF66DF19700 -> FormID: 0x55555555"],
         ]
 
-        def analyze_formids(thread_id: int, data: List[str]) -> Dict[str, Any]:
+        def analyze_formids(thread_id: int, data: list[str]) -> dict[str, Any]:
             """Analyze FormIDs in a thread."""
             analyzer = get_formid_analyzer(mock_yamldata, True, True)
             start_time = time.time()
@@ -761,7 +746,7 @@ class TestComponentPerformance:
     """
 
     @pytest.fixture
-    def large_crash_data(self) -> List[str]:
+    def large_crash_data(self) -> list[str]:
         """Generate large crash data for performance testing."""
         base_data = [
             "Fallout 4 v1.10.163",
@@ -856,7 +841,7 @@ class TestComponentPerformance:
 
         # Log performance summary
         total_time = sum(component_times.values())
-        logging.info(f"Component pipeline performance:")
+        logging.info("Component pipeline performance:")
         for component, time_taken in component_times.items():
             logging.info(f"  {component}: {time_taken:.3f}s")
         logging.info(f"  Total: {total_time:.3f}s")
@@ -871,8 +856,9 @@ class TestComponentPerformance:
         Runs the component pipeline multiple times and validates
         that memory usage remains stable.
         """
-        import psutil
         import os
+
+        import psutil
 
         available_components = [comp for comp in ["parser", "formid_analyzer", "plugin_analyzer"]
                                if is_rust_accelerated(comp)]

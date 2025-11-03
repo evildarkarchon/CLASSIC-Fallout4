@@ -26,7 +26,7 @@ import logging
 import random
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class RealisticDataGenerator:
     and validation of optimization improvements.
     """
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int | None = None):
         """
         Initialize the realistic data generator.
 
@@ -133,7 +133,7 @@ class RealisticDataGenerator:
         # FormID patterns for different plugin types
         self.formid_patterns = {
             'master_files': {
-                'fallout4_esm': range(0x00000000, 0x01000000),  # 00xxxxxx
+                'fallout4_esm': range(0x01000000),  # 00xxxxxx
                 'dlc_esm': range(0x01000000, 0x06000000),       # 01-05xxxxxx
             },
             'plugin_files': {
@@ -174,7 +174,7 @@ class RealisticDataGenerator:
         corruption_probability: float = 0.02,
         vary_formats: bool = True,
         game_type: str = 'fallout4'
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a comprehensive dataset for benchmarking.
 
@@ -267,7 +267,7 @@ class RealisticDataGenerator:
         # Remove duplicates from FormID queries
         dataset['formid_queries'] = list(set(dataset['formid_queries']))[:1000]  # Limit total
 
-        logger.info(f"Dataset generation complete:")
+        logger.info("Dataset generation complete:")
         logger.info(f"  Crash logs: {len(dataset['crash_logs'])}")
         logger.info(f"  Total lines: {sum(len(log) for log in dataset['crash_logs'])}")
         logger.info(f"  Plugins: {len(dataset['plugins'])}")
@@ -279,12 +279,12 @@ class RealisticDataGenerator:
     def _generate_realistic_crash_log(
         self,
         target_lines: int,
-        game_template: Dict[str, Any],
-        plugins: Dict[str, str],
+        game_template: dict[str, Any],
+        plugins: dict[str, str],
         include_formids: bool,
         corruption_probability: float,
         vary_formats: bool
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a single realistic crash log with all segments.
 
@@ -363,10 +363,10 @@ class RealisticDataGenerator:
 
     def _generate_crash_log_header(
         self,
-        game_template: Dict[str, Any],
+        game_template: dict[str, Any],
         crash_type: str,
         vary_formats: bool
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate realistic crash log header section."""
         crash_info = self.crash_patterns[crash_type]
         exception_code = crash_info['exception_code']
@@ -379,7 +379,7 @@ class RealisticDataGenerator:
             f"{game_template['game_exe']} v{game_template['game_version']}",
             f"{game_template['xse_name']} v{game_template['xse_version']}",
             "",
-            f"Unhandled exception \"{exception_code}\" at {crash_address} {game_template['game_exe']}+{random.randint(1000000, 9999999):07X}",
+            f'Unhandled exception "{exception_code}" at {crash_address} {game_template['game_exe']}+{random.randint(1000000, 9999999):07X}',
         ]
 
         # Add timestamp with some variation
@@ -397,7 +397,7 @@ class RealisticDataGenerator:
 
         return header
 
-    def _generate_system_info_segment(self) -> List[str]:
+    def _generate_system_info_segment(self) -> list[str]:
         """Generate realistic system information segment."""
         # Realistic system configurations
         cpu_models = [
@@ -436,9 +436,9 @@ class RealisticDataGenerator:
     def _generate_callstack_segment(
         self,
         target_lines: int,
-        game_template: Dict[str, Any],
+        game_template: dict[str, Any],
         include_formids: bool
-    ) -> Tuple[List[str], List[str]]:
+    ) -> tuple[list[str], list[str]]:
         """
         Generate realistic call stack segment with FormID patterns.
 
@@ -512,7 +512,7 @@ class RealisticDataGenerator:
         formid_int = random.choice(list(formid_range)[:10000])  # Limit range for performance
         return f"{formid_int:08X}"
 
-    def _generate_modules_segment(self, target_lines: int) -> List[str]:
+    def _generate_modules_segment(self, target_lines: int) -> list[str]:
         """Generate realistic modules/DLL segment."""
         modules = ["MODULES:"]
 
@@ -538,17 +538,17 @@ class RealisticDataGenerator:
 
     def _generate_plugins_segment(
         self,
-        plugins: Dict[str, str],
-        game_template: Dict[str, Any]
-    ) -> List[str]:
+        plugins: dict[str, str],
+        game_template: dict[str, Any]
+    ) -> list[str]:
         """Generate realistic plugins segment from load order."""
         segment = [f"{game_template['xse_name'].upper()} PLUGINS:"]
 
         # Add some XSE plugins
         xse_plugins = [
-            f"achievements.dll v1.3.0.0",
-            f"BetterConsole.dll v1.2.1.0",
-            f"BufOutOfSightNE.dll v2.1.0.0",
+            "achievements.dll v1.3.0.0",
+            "BetterConsole.dll v1.2.1.0",
+            "BufOutOfSightNE.dll v2.1.0.0",
         ]
 
         for plugin in xse_plugins[:random.randint(2, len(xse_plugins))]:
@@ -573,7 +573,7 @@ class RealisticDataGenerator:
 
         return segment
 
-    def _generate_plugin_load_order(self, num_plugins: int, game_type: str) -> Dict[str, str]:
+    def _generate_plugin_load_order(self, num_plugins: int, game_type: str) -> dict[str, str]:
         """
         Generate realistic plugin load order with authentic naming patterns.
 
@@ -684,7 +684,7 @@ class RealisticDataGenerator:
 
         return "\n".join(lines)
 
-    def _generate_padding_lines(self, num_lines: int, include_formids: bool) -> List[str]:
+    def _generate_padding_lines(self, num_lines: int, include_formids: bool) -> list[str]:
         """Generate additional lines to reach target line count."""
         padding = []
 
@@ -704,16 +704,15 @@ class RealisticDataGenerator:
                 thread_id = random.randint(1000, 9999)
                 padding.append(f"\tThread {thread_id}: State=Running, Priority=Normal")
 
-            else:  # additional_data
-                if include_formids and random.random() < 0.4:
-                    formid = self._generate_realistic_formid()
-                    padding.append(f"\tAdditional FormID reference: {formid}")
-                else:
-                    padding.append(f"\tAdditional data entry {i}: {uuid.uuid4().hex[:16]}")
+            elif include_formids and random.random() < 0.4:
+                formid = self._generate_realistic_formid()
+                padding.append(f"\tAdditional FormID reference: {formid}")
+            else:
+                padding.append(f"\tAdditional data entry {i}: {uuid.uuid4().hex[:16]}")
 
         return padding
 
-    def _apply_corruption(self, lines: List[str], corruption_probability: float) -> List[str]:
+    def _apply_corruption(self, lines: list[str], corruption_probability: float) -> list[str]:
         """Apply realistic corruption patterns to simulate real-world data issues."""
         corrupted_lines = []
 
@@ -753,7 +752,7 @@ class RealisticDataGenerator:
 
         return corrupted_lines
 
-    def _add_edge_cases(self, dataset: Dict[str, Any], corruption_probability: float) -> Dict[str, Any]:
+    def _add_edge_cases(self, dataset: dict[str, Any], corruption_probability: float) -> dict[str, Any]:
         """Add edge cases and stress-test scenarios to the dataset."""
         logger.debug("Adding edge cases and stress test scenarios")
 
@@ -815,7 +814,7 @@ class RealisticDataGenerator:
 
 
 # Convenience functions for quick data generation
-def generate_small_dataset(seed: Optional[int] = None) -> Dict[str, Any]:
+def generate_small_dataset(seed: int | None = None) -> dict[str, Any]:
     """Generate small dataset for quick testing."""
     generator = RealisticDataGenerator(seed=seed)
     return generator.generate_comprehensive_dataset(
@@ -828,7 +827,7 @@ def generate_small_dataset(seed: Optional[int] = None) -> Dict[str, Any]:
     )
 
 
-def generate_medium_dataset(seed: Optional[int] = None) -> Dict[str, Any]:
+def generate_medium_dataset(seed: int | None = None) -> dict[str, Any]:
     """Generate medium dataset for standard benchmarking."""
     generator = RealisticDataGenerator(seed=seed)
     return generator.generate_comprehensive_dataset(
@@ -841,7 +840,7 @@ def generate_medium_dataset(seed: Optional[int] = None) -> Dict[str, Any]:
     )
 
 
-def generate_large_dataset(seed: Optional[int] = None) -> Dict[str, Any]:
+def generate_large_dataset(seed: int | None = None) -> dict[str, Any]:
     """Generate large dataset for stress testing."""
     generator = RealisticDataGenerator(seed=seed)
     return generator.generate_comprehensive_dataset(
@@ -854,7 +853,7 @@ def generate_large_dataset(seed: Optional[int] = None) -> Dict[str, Any]:
     )
 
 
-def generate_stress_dataset(seed: Optional[int] = None) -> Dict[str, Any]:
+def generate_stress_dataset(seed: int | None = None) -> dict[str, Any]:
     """Generate maximum size dataset for stress testing."""
     generator = RealisticDataGenerator(seed=seed)
     return generator.generate_comprehensive_dataset(
@@ -889,7 +888,7 @@ if __name__ == "__main__":
     print("  ...")
 
     # Show sample plugins
-    print(f"\nSample plugins (first 5):")
+    print("\nSample plugins (first 5):")
     for load_order, plugin in list(sample_data['plugins'].items())[:5]:
         print(f"  [{load_order}] {plugin}")
     print("  ...")

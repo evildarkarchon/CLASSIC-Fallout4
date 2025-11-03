@@ -7,8 +7,6 @@ to ensure consistent test environments and reduce duplication.
 
 import asyncio
 import time
-from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -143,11 +141,11 @@ async def initialized_database_pool(tmp_path):
 
     Handles both Rust and Python implementations appropriately.
     """
-    from ClassicLib.integration.factory import get_database_pool
-    from ClassicLib.integration.status import is_rust_accelerated
-
     # Create test database
     import sqlite3
+
+    from ClassicLib.integration.factory import get_database_pool
+    from ClassicLib.integration.status import is_rust_accelerated
     db_path = tmp_path / "test.db"
 
     conn = sqlite3.connect(db_path)
@@ -189,7 +187,6 @@ async def initialized_database_pool(tmp_path):
             await pool.initialize([str(db_path)])
         else:
             # Python version uses global DB_PATHS
-            from unittest.mock import patch
             from ClassicLib.Constants import DB_PATHS
 
             # Temporarily add our test database to DB_PATHS

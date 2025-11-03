@@ -524,10 +524,12 @@ class MarkdownViewer(QTextBrowser):
         Returns:
             None
         """
-        # Process markdown for better display
+        # Process markdown for better display (converts **bold** to <b>bold</b>)
+        # Qt's markdown parser will preserve the HTML tags we embed
         processed = self._process_markdown(markdown)
 
-        # Convert markdown to HTML using Qt's converter for better CSS control
+        # Convert markdown to HTML using Qt's converter for markdown features
+        # (headers, code blocks, lists, etc.) while preserving our HTML tags
         html = self._markdown_to_html(processed)
 
         # Use HTML rendering instead of markdown for better CSS support
@@ -647,6 +649,14 @@ class MarkdownViewer(QTextBrowser):
             r'<span class="success">[SOLVED]\1</span>',
             processed,
             flags=re.IGNORECASE
+        )
+
+        # Convert markdown bold syntax to HTML bold tags
+        # This ensures proper rendering in Qt viewer without relying on Qt's markdown parser
+        processed = re.sub(
+            r'\*\*([^*]+)\*\*',
+            r'<b>\1</b>',
+            processed
         )
 
         return processed

@@ -40,7 +40,6 @@ class TestAsyncYamlCaching:
     async def test_ttl_cache_invalidation(self, async_yaml_core, temp_yaml_file):
         """Test TTL-based cache invalidation for dynamic files."""
         import aiofiles
-        import aiofiles.os
 
         # Load file first time using file_ops
         data1 = await async_yaml_core.file_ops.load_yaml_file(temp_yaml_file)

@@ -111,8 +111,9 @@ class ProgressContext:
             from ClassicLib.YamlSettingsCache import classic_settings
 
             disable_cli_progress = classic_settings(bool, "Disable CLI Progress") or False
-        except (ImportError, FileNotFoundError, KeyError, TypeError):
+        except (ImportError, FileNotFoundError, KeyError, TypeError, RuntimeError):
             # If we can't load settings, default to showing progress
+            # RuntimeError can occur if called from async context
             disable_cli_progress = False
 
         if self.handler.is_gui_mode and HAS_QT:
@@ -202,3 +203,20 @@ class ProgressContext:
                 self._progress_bar.update(n)  # type: ignore
                 if description and hasattr(self._progress_bar, "set_description"):
                     self._progress_bar.set_description(description)  # type: ignore[attr-defined]
+
+    def was_cancelled(self) -> bool:
+        """
+        Check if the progress operation was cancelled by the user.
+
+        Returns:
+            bool: True if cancelled, False otherwise.
+        """
+        # When using Qt signals (worker thread), check handler's state
+        if self._using_qt_signals:
+            return self.handler.is_cancelled()
+
+        # When in main thread with direct progress bar access
+        if self._progress_bar is not None and HAS_QT and isinstance(self._progress_bar, QProgressDialog):
+            return self._progress_bar.wasCanceled()
+
+        return False

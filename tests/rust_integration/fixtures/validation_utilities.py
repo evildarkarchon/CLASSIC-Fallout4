@@ -7,9 +7,7 @@ accuracy checks on extracted data.
 """
 
 import re
-import statistics
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any
 
 
 class ValidationUtilities:
@@ -51,9 +49,9 @@ class ValidationUtilities:
     }
 
     @staticmethod
-    def validate_formids(formids: List[str],
+    def validate_formids(formids: list[str],
                         strict: bool = True,
-                        allow_decimal: bool = False) -> Dict[str, Any]:
+                        allow_decimal: bool = False) -> dict[str, Any]:
         """
         Validate a list of extracted FormIDs for correctness.
 
@@ -145,8 +143,8 @@ class ValidationUtilities:
         return results
 
     @staticmethod
-    def validate_plugins(plugins: Union[List[str], Dict[str, str]],
-                        check_load_order: bool = True) -> Dict[str, Any]:
+    def validate_plugins(plugins: list[str] | dict[str, str],
+                        check_load_order: bool = True) -> dict[str, Any]:
         """
         Validate a list or dictionary of plugins for correctness.
 
@@ -224,16 +222,15 @@ class ValidationUtilities:
                     # Check hex format
                     if not re.match(r'^([0-9A-F]{2}|FE:[0-9A-F]{3})$', index, re.IGNORECASE):
                         results["load_order_errors"].append(f"Invalid load order index: {index}")
+                    # Check for valid range
+                    elif index.startswith("FE:"):
+                        esl_index = int(index[3:], 16)
+                        if esl_index > 0x7FF:  # ESL limit
+                            results["load_order_errors"].append(f"ESL index too high: {index}")
                     else:
-                        # Check for valid range
-                        if index.startswith("FE:"):
-                            esl_index = int(index[3:], 16)
-                            if esl_index > 0x7FF:  # ESL limit
-                                results["load_order_errors"].append(f"ESL index too high: {index}")
-                        else:
-                            esp_index = int(index, 16)
-                            if esp_index > 0xFE:  # ESP limit (FE is reserved)
-                                results["load_order_errors"].append(f"ESP index too high: {index}")
+                        esp_index = int(index, 16)
+                        if esp_index > 0xFE:  # ESP limit (FE is reserved)
+                            results["load_order_errors"].append(f"ESP index too high: {index}")
 
         # Calculate validity ratio
         if results["total_plugins"] > 0:
@@ -242,7 +239,7 @@ class ValidationUtilities:
         return results
 
     @staticmethod
-    def validate_records(record_matches: List[str]) -> Dict[str, Any]:
+    def validate_records(record_matches: list[str]) -> dict[str, Any]:
         """
         Validate a list of record matches for correctness.
 
@@ -314,9 +311,9 @@ class ValidationUtilities:
         return results
 
     @staticmethod
-    def compare_extraction_results(rust_results: Dict[str, Any],
-                                 python_results: Dict[str, Any],
-                                 tolerance: float = 0.1) -> Dict[str, Any]:
+    def compare_extraction_results(rust_results: dict[str, Any],
+                                 python_results: dict[str, Any],
+                                 tolerance: float = 0.1) -> dict[str, Any]:
         """
         Compare extraction results between Rust and Python implementations.
 
@@ -410,15 +407,14 @@ class ValidationUtilities:
                     "relative_diff": relative_diff if rust_value != 0 else float('inf')
                 }
 
+            # Direct comparison
+            elif rust_value == python_value:
+                matches += 1
             else:
-                # Direct comparison
-                if rust_value == python_value:
-                    matches += 1
-                else:
-                    comparison["differences"].append(
-                        f"{key}: rust={rust_value}, python={python_value}"
-                    )
-                    comparison["overall_match"] = False
+                comparison["differences"].append(
+                    f"{key}: rust={rust_value}, python={python_value}"
+                )
+                comparison["overall_match"] = False
 
         if total_comparisons > 0:
             comparison["match_ratio"] = matches / total_comparisons
@@ -426,9 +422,9 @@ class ValidationUtilities:
         return comparison
 
     @staticmethod
-    def validate_performance_results(benchmark_results: Dict[str, Any],
-                                   expected_targets: Dict[str, float],
-                                   performance_multipliers: Dict[str, str] = None) -> Dict[str, Any]:
+    def validate_performance_results(benchmark_results: dict[str, Any],
+                                   expected_targets: dict[str, float],
+                                   performance_multipliers: dict[str, str] = None) -> dict[str, Any]:
         """
         Validate performance benchmark results against expected targets.
 
@@ -501,7 +497,7 @@ class ValidationUtilities:
         return validation
 
     @staticmethod
-    def create_validation_report(validation_results: Dict[str, Dict[str, Any]]) -> str:
+    def create_validation_report(validation_results: dict[str, dict[str, Any]]) -> str:
         """
         Create a comprehensive validation report from multiple validation results.
 

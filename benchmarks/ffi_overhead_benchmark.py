@@ -36,17 +36,18 @@ import json
 import logging
 import random
 import string
+import sys
 import time
-import threading
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-import sys
+from typing import Any
+
+from tools.ffi_optimizer import BatchProcessor, DataOptimizer, FFIOptimizer
 
 # Import our profiling and analysis tools
 from tools.ffi_profiler import FFIProfiler
-from tools.ffi_optimizer import FFIOptimizer, BatchProcessor, DataOptimizer
-from tools.performance_analyzer import PerformanceAnalyzer, PerformanceMetrics, ComparisonResult
+from tools.performance_analyzer import ComparisonResult, PerformanceAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -59,16 +60,16 @@ class BenchmarkCase:
 
     # Test functions
     python_func: Callable
-    rust_func: Optional[Callable] = None
+    rust_func: Callable | None = None
 
     # Test data generation
-    data_generator: Optional[Callable] = None
-    data_sizes: List[int] = field(default_factory=lambda: [10, 100, 1000])
+    data_generator: Callable | None = None
+    data_sizes: list[int] = field(default_factory=lambda: [10, 100, 1000])
 
     # Benchmark parameters
     warmup_runs: int = 3
     measurement_runs: int = 10
-    timeout_seconds: Optional[float] = None
+    timeout_seconds: float | None = None
 
     # Expected results
     expected_speedup_min: float = 1.0  # Minimum expected speedup
@@ -78,9 +79,9 @@ class BenchmarkCase:
 class BenchmarkResult:
     """Results from running a benchmark case."""
     case: BenchmarkCase
-    comparison_results: Dict[int, ComparisonResult]  # data_size -> ComparisonResult
-    profiling_data: Dict[str, Any]
-    optimization_analysis: Dict[str, Any]
+    comparison_results: dict[int, ComparisonResult]  # data_size -> ComparisonResult
+    profiling_data: dict[str, Any]
+    optimization_analysis: dict[str, Any]
 
     # Summary metrics
     avg_speedup: float = 0.0
@@ -89,7 +90,7 @@ class BenchmarkResult:
 
     # Scaling analysis
     scaling_behavior: str = "Unknown"
-    optimal_data_size: Optional[int] = None
+    optimal_data_size: int | None = None
 
     # Performance characteristics
     ffi_overhead_pct: float = 0.0
@@ -99,23 +100,23 @@ class DataGenerators:
     """Collection of data generators for different benchmark scenarios."""
 
     @staticmethod
-    def small_strings(size: int) -> List[str]:
+    def small_strings(size: int) -> list[str]:
         """Generate list of small strings for string processing benchmarks."""
         return [f"item_{i:06d}" for i in range(size)]
 
     @staticmethod
-    def large_strings(size: int) -> List[str]:
+    def large_strings(size: int) -> list[str]:
         """Generate list of large strings for bulk processing benchmarks."""
         base_string = ''.join(random.choices(string.ascii_letters + string.digits, k=1000))
         return [f"{base_string}_{i}" for i in range(size)]
 
     @staticmethod
-    def numeric_lists(size: int) -> List[List[int]]:
+    def numeric_lists(size: int) -> list[list[int]]:
         """Generate lists of numeric data for mathematical operations."""
         return [[random.randint(1, 1000) for _ in range(100)] for _ in range(size)]
 
     @staticmethod
-    def mixed_dictionaries(size: int) -> List[Dict[str, Any]]:
+    def mixed_dictionaries(size: int) -> list[dict[str, Any]]:
         """Generate mixed-type dictionaries for complex data processing."""
         dicts = []
         for i in range(size):
@@ -130,7 +131,7 @@ class DataGenerators:
         return dicts
 
     @staticmethod
-    def formid_patterns(size: int) -> List[str]:
+    def formid_patterns(size: int) -> list[str]:
         """Generate FormID patterns similar to CLASSIC crash logs."""
         formids = []
         for i in range(size):
@@ -140,7 +141,7 @@ class DataGenerators:
         return formids
 
     @staticmethod
-    def crash_log_lines(size: int) -> List[str]:
+    def crash_log_lines(size: int) -> list[str]:
         """Generate crash log lines for parsing benchmarks."""
         lines = []
 
@@ -148,7 +149,7 @@ class DataGenerators:
         lines.extend([
             "Fallout 4 v1.10.163.0",
             "F4SE v0.6.21",
-            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7C8B2E1B0 Fallout4.exe+0x08DE1B0",
+            'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF7C8B2E1B0 Fallout4.exe+0x08DE1B0',
             ""
         ])
 
@@ -177,7 +178,7 @@ class DataGenerators:
         return lines
 
     @staticmethod
-    def binary_data(size: int) -> List[bytes]:
+    def binary_data(size: int) -> list[bytes]:
         """Generate binary data for file I/O benchmarks."""
         return [bytes(random.getrandbits(8) for _ in range(1024)) for _ in range(size)]
 
@@ -185,19 +186,19 @@ class MockRustFunctions:
     """Mock Rust functions for benchmarking when real Rust code isn't available."""
 
     @staticmethod
-    def mock_string_processor(items: List[str]) -> List[str]:
+    def mock_string_processor(items: list[str]) -> list[str]:
         """Mock Rust string processing - faster than Python."""
         time.sleep(0.0001)  # Simulate Rust processing time
         return [item.upper().replace('_', '-') for item in items]
 
     @staticmethod
-    def mock_numeric_processor(lists: List[List[int]]) -> List[float]:
+    def mock_numeric_processor(lists: list[list[int]]) -> list[float]:
         """Mock Rust numeric processing."""
         time.sleep(0.0002)  # Simulate processing
         return [sum(lst) / len(lst) if lst else 0.0 for lst in lists]
 
     @staticmethod
-    def mock_formid_extractor(lines: List[str]) -> List[str]:
+    def mock_formid_extractor(lines: list[str]) -> list[str]:
         """Mock Rust FormID extraction."""
         time.sleep(0.0005)  # Simulate regex processing
         formids = []
@@ -210,7 +211,7 @@ class MockRustFunctions:
         return formids
 
     @staticmethod
-    def mock_log_parser(lines: List[str]) -> Dict[str, List[str]]:
+    def mock_log_parser(lines: list[str]) -> dict[str, list[str]]:
         """Mock Rust log parsing."""
         time.sleep(0.001)  # Simulate parsing
         sections = {'modules': [], 'plugins': [], 'callstack': []}
@@ -231,7 +232,7 @@ class MockRustFunctions:
         return sections
 
     @staticmethod
-    def mock_batch_processor(items: List[Any]) -> List[Any]:
+    def mock_batch_processor(items: list[Any]) -> list[Any]:
         """Mock Rust batch processing."""
         time.sleep(0.0001 * len(items))  # Linear scaling
         return [f"processed_{item}" for item in items]
@@ -240,17 +241,17 @@ class PythonReferenceFunctions:
     """Reference Python implementations for benchmarking comparison."""
 
     @staticmethod
-    def python_string_processor(items: List[str]) -> List[str]:
+    def python_string_processor(items: list[str]) -> list[str]:
         """Python string processing."""
         return [item.upper().replace('_', '-') for item in items]
 
     @staticmethod
-    def python_numeric_processor(lists: List[List[int]]) -> List[float]:
+    def python_numeric_processor(lists: list[list[int]]) -> list[float]:
         """Python numeric processing."""
         return [sum(lst) / len(lst) if lst else 0.0 for lst in lists]
 
     @staticmethod
-    def python_formid_extractor(lines: List[str]) -> List[str]:
+    def python_formid_extractor(lines: list[str]) -> list[str]:
         """Python FormID extraction using regex."""
         import re
         formid_pattern = re.compile(r'\[([0-9A-F]{8})\]')
@@ -261,7 +262,7 @@ class PythonReferenceFunctions:
         return formids
 
     @staticmethod
-    def python_log_parser(lines: List[str]) -> Dict[str, List[str]]:
+    def python_log_parser(lines: list[str]) -> dict[str, list[str]]:
         """Python log parsing."""
         sections = {'modules': [], 'plugins': [], 'callstack': []}
         current_section = None
@@ -281,7 +282,7 @@ class PythonReferenceFunctions:
         return sections
 
     @staticmethod
-    def python_batch_processor(items: List[Any]) -> List[Any]:
+    def python_batch_processor(items: list[Any]) -> list[Any]:
         """Python batch processing."""
         return [f"processed_{item}" for item in items]
 
@@ -296,7 +297,7 @@ class FFIBenchmarkSuite:
         self.profiler = FFIProfiler()
 
         # Results storage
-        self.benchmark_results: Dict[str, BenchmarkResult] = {}
+        self.benchmark_results: dict[str, BenchmarkResult] = {}
 
         # Configuration
         self.enable_optimization_testing = True
@@ -306,7 +307,7 @@ class FFIBenchmarkSuite:
         # Initialize benchmark cases
         self.benchmark_cases = self._create_benchmark_cases()
 
-    def _create_benchmark_cases(self) -> List[BenchmarkCase]:
+    def _create_benchmark_cases(self) -> list[BenchmarkCase]:
         """Create all benchmark test cases."""
         cases = []
 
@@ -455,7 +456,7 @@ class FFIBenchmarkSuite:
             memory_efficiency=memory_efficiency
         )
 
-    def _analyze_scaling_behavior(self, results: Dict[int, ComparisonResult]) -> str:
+    def _analyze_scaling_behavior(self, results: dict[int, ComparisonResult]) -> str:
         """Analyze how performance scales with data size."""
         if len(results) < 2:
             return "Insufficient data"
@@ -467,14 +468,12 @@ class FFIBenchmarkSuite:
         if all(speedups[i] >= speedups[i-1] for i in range(1, len(speedups))):
             if speedups[-1] > speedups[0] * 2:
                 return "Improving with scale"
-            else:
-                return "Stable scaling"
-        elif all(speedups[i] <= speedups[i-1] for i in range(1, len(speedups))):
+            return "Stable scaling"
+        if all(speedups[i] <= speedups[i-1] for i in range(1, len(speedups))):
             return "Degrading with scale"
-        else:
-            return "Variable scaling"
+        return "Variable scaling"
 
-    def _calculate_ffi_overhead(self, results: Dict[int, ComparisonResult]) -> float:
+    def _calculate_ffi_overhead(self, results: dict[int, ComparisonResult]) -> float:
         """Calculate average FFI overhead percentage."""
         if not results:
             return 0.0
@@ -490,7 +489,7 @@ class FFIBenchmarkSuite:
 
         return total_overhead / count if count > 0 else 0.0
 
-    def _calculate_memory_efficiency(self, results: Dict[int, ComparisonResult]) -> float:
+    def _calculate_memory_efficiency(self, results: dict[int, ComparisonResult]) -> float:
         """Calculate memory efficiency score."""
         if not results:
             return 0.0
@@ -505,7 +504,7 @@ class FFIBenchmarkSuite:
 
         return total_improvement / count if count > 0 else 0.0
 
-    def run_optimization_analysis(self, case: BenchmarkCase) -> Dict[str, Any]:
+    def run_optimization_analysis(self, case: BenchmarkCase) -> dict[str, Any]:
         """Run optimization analysis for a benchmark case."""
         if case.rust_func is None:
             return {}
@@ -576,7 +575,7 @@ class FFIBenchmarkSuite:
 
         return optimization_results
 
-    def run_threading_benchmark(self, case: BenchmarkCase) -> Dict[str, Any]:
+    def run_threading_benchmark(self, case: BenchmarkCase) -> dict[str, Any]:
         """Test threading performance and GIL impact."""
         if case.rust_func is None or not self.enable_threading_tests:
             return {}
@@ -630,7 +629,7 @@ class FFIBenchmarkSuite:
 
         return threading_results
 
-    def run_all_benchmarks(self, categories: Optional[List[str]] = None) -> Dict[str, BenchmarkResult]:
+    def run_all_benchmarks(self, categories: list[str] | None = None) -> dict[str, BenchmarkResult]:
         """Run all benchmark cases with comprehensive analysis."""
         logger.info("Starting comprehensive FFI benchmark suite")
 
@@ -671,8 +670,8 @@ class FFIBenchmarkSuite:
         return results
 
     def generate_comprehensive_report(self,
-                                    results: Dict[str, BenchmarkResult],
-                                    output_file: Optional[Union[str, Path]] = None) -> str:
+                                    results: dict[str, BenchmarkResult],
+                                    output_file: str | Path | None = None) -> str:
         """Generate a comprehensive HTML benchmark report."""
 
         # Calculate overall statistics
@@ -799,14 +798,14 @@ class FFIBenchmarkSuite:
 
                 status_class = 'excellent' if avg_speedup > 5 else 'good' if avg_speedup > 2 else 'warning' if avg_speedup > 1.1 else 'poor'
 
-                html += f'''
+                html += f"""
                 <div class="category-summary">
                     <h4>{category}</h4>
                     <p>Average Speedup: <span class="speedup {status_class}">{avg_speedup:.1f}x</span> |
                        Peak Speedup: <span class="speedup {status_class}">{max_speedup:.1f}x</span> |
                        Tests: {len(speedups)}</p>
                 </div>
-                '''
+                """
 
             html += '</div></div>'
 
@@ -818,7 +817,7 @@ class FFIBenchmarkSuite:
         for name, result in results.items():
             case = result.case
 
-            html += f'''
+            html += f"""
             <div class="benchmark-card">
                 <h4>{case.name.replace('_', ' ').title()}</h4>
                 <div class="description">{case.description}</div>
@@ -834,30 +833,30 @@ class FFIBenchmarkSuite:
                         </tr>
                     </thead>
                     <tbody>
-            '''
+            """
 
             for size, comparison in result.comparison_results.items():
                 speedup_class = 'excellent' if comparison.speedup_factor > 10 else 'good' if comparison.speedup_factor > 3 else 'fair' if comparison.speedup_factor > 1.2 else 'poor'
 
-                html += f'''
+                html += f"""
                         <tr>
                             <td class="size-col">{size:,}</td>
                             <td class="number-col"><span class="speedup {speedup_class}">{comparison.speedup_factor:.1f}x</span></td>
                             <td class="number-col">{comparison.optimized_metrics.wall_time*1000:.1f}</td>
                             <td class="number-col">{comparison.optimized_metrics.items_per_second:.0f}/s</td>
                         </tr>
-                '''
+                """
 
-            html += '''
+            html += """
                     </tbody>
                 </table>
-            '''
+            """
 
             # Add scaling behavior and optimization info
-            html += f'''
+            html += f"""
                 <p><strong>Scaling Behavior:</strong> {result.scaling_behavior}</p>
                 <p><strong>FFI Overhead:</strong> {result.ffi_overhead_pct:.1f}%</p>
-            '''
+            """
 
             # Add optimization analysis if available
             if result.optimization_analysis:
@@ -888,27 +887,27 @@ class FFIBenchmarkSuite:
         # Warnings
         poor_performers = [name for name, result in results.items() if result.avg_speedup < 1.5]
         if poor_performers:
-            html += f'''
+            html += f"""
             <div class="warning">
                 ⚠️ <strong>Low Performance Warning:</strong> The following benchmarks showed limited speedup: {', '.join(poor_performers)}.
                 Consider investigating FFI overhead or algorithm efficiency.
             </div>
-            '''
+            """
 
         # Recommendations
         excellent_performers = [name for name, result in results.items() if result.avg_speedup > 10]
         if excellent_performers:
-            html += f'''
+            html += f"""
             <div class="recommendation">
                 🎯 <strong>Excellent Results:</strong> Outstanding performance in: {', '.join(excellent_performers)}.
                 These patterns should be prioritized for Rust migration.
             </div>
-            '''
+            """
 
         html += '</div></div></div>'  # End section content and section
 
         # Footer
-        html += f'''
+        html += f"""
         <div class="footer">
             <p>Report generated by CLASSIC FFI Benchmark Suite</p>
             <p>Python {sys.version} | Benchmarks completed in {len(results)} test cases</p>
@@ -917,18 +916,18 @@ class FFIBenchmarkSuite:
     </div>
 </body>
 </html>
-        '''
+        """
 
         # Save to file if requested
         if output_file:
             output_path = Path(output_file)
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with Path(output_path).open('w', encoding='utf-8') as f:
                 f.write(html)
             logger.info(f"Comprehensive benchmark report saved to {output_path}")
 
         return html
 
-    def export_results(self, results: Dict[str, BenchmarkResult], filepath: Union[str, Path]):
+    def export_results(self, results: dict[str, BenchmarkResult], filepath: str | Path):
         """Export benchmark results to JSON for further analysis."""
         export_data = {
             'metadata': {
@@ -971,7 +970,7 @@ class FFIBenchmarkSuite:
 
             export_data['results'][name] = result_data
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with Path(filepath).open('w', encoding='utf-8') as f:
             json.dump(export_data, f, indent=2, default=str)
 
         logger.info(f"Benchmark results exported to {filepath}")
@@ -1017,7 +1016,7 @@ if __name__ == "__main__":
             avg_speedup = sum(all_speedups) / len(all_speedups)
             max_speedup = max(all_speedups)
 
-            print(f"\n📊 BENCHMARK SUMMARY:")
+            print("\n📊 BENCHMARK SUMMARY:")
             print(f"   Benchmarks completed: {len(results)}")
             print(f"   Average speedup: {avg_speedup:.1f}x")
             print(f"   Maximum speedup: {max_speedup:.1f}x")

@@ -21,33 +21,25 @@ with the Python implementation while providing significant performance improveme
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import random
 import re
 import time
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
-from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.integration.factory import get_formid_analyzer
 from ClassicLib.integration.status import (
-    get_rust_component_status,
     is_rust_accelerated,
 )
 
 RUST_AVAILABLE = {"formid_analyzer": is_rust_accelerated("formid_analyzer")}
+
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
-from tests.rust_integration.parity_fixtures import (
-    ParityResult,
-    ParityValidator,
-    skip_if_rust_unavailable,
-    validate_formid_lists
-)
+from tests.rust_integration.parity_fixtures import ParityResult, ParityValidator, skip_if_rust_unavailable, validate_formid_lists
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +58,7 @@ class FormIDParityValidator(ParityValidator):
 
     def create_rust_implementation(self, yamldata=None, **kwargs) -> Any | None:
         """Create Rust FormID analyzer implementation using factory."""
-        if not RUST_AVAILABLE.get("formid_analyzer", False):
+        if not RUST_AVAILABLE.get("formid_analyzer"):
             return None
 
         show_formid_values = kwargs.get("show_formid_values", True)
@@ -76,7 +68,7 @@ class FormIDParityValidator(ParityValidator):
         analyzer = get_formid_analyzer(yamldata, show_formid_values, formid_db_exists)
 
         # Set database pool if provided
-        db_pool = kwargs.get("db_pool", None)
+        db_pool = kwargs.get("db_pool")
         if db_pool and hasattr(analyzer, 'db_pool'):
             analyzer.db_pool = db_pool
 
@@ -86,7 +78,7 @@ class FormIDParityValidator(ParityValidator):
         """Create Python FormID analyzer implementation."""
         show_formid_values = kwargs.get("show_formid_values", True)
         formid_db_exists = kwargs.get("formid_db_exists", False)
-        db_pool = kwargs.get("db_pool", None)
+        db_pool = kwargs.get("db_pool")
 
         return FormIDAnalyzerCore(yamldata, show_formid_values, formid_db_exists, db_pool)
 
@@ -694,6 +686,6 @@ class TestFormIDParity:
         rust_set = set(rust_formids)
         python_set = set(python_formids)
 
-        assert rust_set == expected_set, f"Rust extracted FormIDs don't match expected"
-        assert python_set == expected_set, f"Python extracted FormIDs don't match expected"
+        assert rust_set == expected_set, "Rust extracted FormIDs don't match expected"
+        assert python_set == expected_set, "Python extracted FormIDs don't match expected"
         assert len(rust_formids) == len(expected_formids), f"Rust FormID count mismatch: got {len(rust_formids)}, expected {len(expected_formids)}"

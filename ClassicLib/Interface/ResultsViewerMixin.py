@@ -25,6 +25,10 @@ from PySide6.QtWidgets import (
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 
+# Import Rust-accelerated file I/O
+from ClassicLib.FileIO import read_file_sync
+from ClassicLib.integration.status import is_rust_accelerated
+
 # Import the widget classes from ResultsViewerWidgets
 from ClassicLib.Interface.ResultsViewerWidgets import (
     MarkdownViewer,
@@ -34,9 +38,6 @@ from ClassicLib.Interface.ResultsViewerWidgets import (
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
-# Import Rust-accelerated file I/O
-from ClassicLib.FileIO import read_file_sync
-from ClassicLib.integration.status import is_rust_accelerated
 
 
 class ResultsViewerMixin:

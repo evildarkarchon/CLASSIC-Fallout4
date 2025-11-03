@@ -71,10 +71,36 @@ impl PyPluginAnalyzer {
         Ok(Self { inner })
     }
 
-    /// Scan log for plugins
-    pub fn loadorder_scan_log(&self, segment_plugins: Vec<String>) -> PyResult<Vec<String>> {
+    /// Scan log for plugins and check limits
+    ///
+    /// Scans segment plugins and extracts plugin information, returning a mapping of
+    /// plugin names to their load order IDs/status along with plugin limit flags.
+    ///
+    /// # Arguments
+    ///
+    /// * `segment_plugins` - List of plugin segment lines from crash log
+    /// * `game_version` - Optional game version for plugin limit detection
+    /// * `version_current` - Optional crashgen version for plugin limit detection
+    ///
+    /// # Returns
+    ///
+    /// Tuple containing:
+    /// - Dict mapping plugin names to IDs/status
+    /// - Boolean flag for plugin limit triggered
+    /// - Boolean flag for limit check disabled
+    #[pyo3(signature = (segment_plugins, game_version=None, version_current=None))]
+    pub fn loadorder_scan_log(
+        &self,
+        segment_plugins: Vec<String>,
+        game_version: Option<String>,
+        version_current: Option<String>,
+    ) -> PyResult<(HashMap<String, String>, bool, bool)> {
         self.inner
-            .loadorder_scan_log(segment_plugins)
+            .loadorder_scan_log(
+                segment_plugins,
+                game_version.as_deref(),
+                version_current.as_deref(),
+            )
             .map_err(crate::to_pyerr)
     }
 

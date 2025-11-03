@@ -14,11 +14,10 @@ Performance metrics tracked:
 from __future__ import annotations
 
 import logging
-import time
-from typing import Any, Dict, List
-
 import sys
+import time
 from pathlib import Path
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -52,7 +51,7 @@ class DatabaseBenchmark:
     def run_benchmark(
         self,
         implementation: str,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         warm_up: bool = False
     ) -> DatabaseBenchmarkResult:
         """Execute database operations benchmark."""
@@ -92,8 +91,8 @@ class DatabaseBenchmark:
     def _run_batch_database_operations(
         self,
         implementation: str,
-        formid_queries: List[str]
-    ) -> List[Dict[str, Any]]:
+        formid_queries: list[str]
+    ) -> list[dict[str, Any]]:
         """Run batch database operations for performance measurement."""
         results = []
 
@@ -104,7 +103,7 @@ class DatabaseBenchmark:
 
         return results
 
-    def _query_with_rust(self, formid_queries: List[str]) -> List[Dict[str, Any]]:
+    def _query_with_rust(self, formid_queries: list[str]) -> list[dict[str, Any]]:
         """Execute queries using Rust database pool."""
         try:
             # Mock Rust database operations for benchmarking
@@ -130,7 +129,7 @@ class DatabaseBenchmark:
             logger.debug("Rust database pool not available, falling back to Python")
             return self._query_with_python(formid_queries)
 
-    def _query_with_python(self, formid_queries: List[str]) -> List[Dict[str, Any]]:
+    def _query_with_python(self, formid_queries: list[str]) -> list[dict[str, Any]]:
         """Execute queries using Python database operations."""
         # Mock Python database operations
         results = []
@@ -149,7 +148,7 @@ class DatabaseBenchmark:
 
         return results
 
-    def _run_single_queries(self, implementation: str, formid_queries: List[str]):
+    def _run_single_queries(self, implementation: str, formid_queries: list[str]):
         """Run single database queries for warm-up."""
         if not formid_queries:
             return
@@ -161,9 +160,9 @@ class DatabaseBenchmark:
 
 
 def benchmark_database_operations_performance(
-    formid_queries: List[str],
+    formid_queries: list[str],
     iterations: int = 5
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Standalone function for benchmarking database operations performance."""
     benchmark = DatabaseBenchmark()
     dataset = {'formid_queries': formid_queries}

@@ -80,7 +80,7 @@ class ScanStatistics:
 
         Returns:
             float: The duration of the scan in seconds.
-        """  # noqa: DOC201
+        """
         return time.perf_counter() - self.scan_start_time
 
     def get_success_rate(self) -> float:
@@ -93,7 +93,7 @@ class ScanStatistics:
 
         Returns:
             float: The success rate as a percentage.
-        """  # noqa: DOC201
+        """
         if self.total_files == 0:
             return 0.0
         return (self.scanned / self.total_files) * 100.0
@@ -109,7 +109,7 @@ class ScanStatistics:
         Returns:
             Counter[str]: A Counter object with keys corresponding to the
             attribute names and values representing their counts.
-        """  # noqa: DOC201
+        """
         return Counter(scanned=self.scanned, incomplete=self.incomplete, failed=self.failed)
 
     def update_from_counter(self, counter: Counter[str]) -> None:

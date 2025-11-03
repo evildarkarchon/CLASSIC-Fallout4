@@ -7,11 +7,7 @@ real-world production scenarios.
 """
 
 import gc
-import threading
-import time
-import tracemalloc
-from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -19,11 +15,6 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
-from tests.stress.stress_test_fixtures import (
-    MemoryTracker,
-    PerformanceProfiler,
-    StressDataGenerator
-)
 
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge

@@ -5,12 +5,10 @@ This module contains QObject-based worker classes that run in separate threads
 to perform long-running operations without blocking the GUI.
 """
 
-import asyncio
 import traceback
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from ClassicLib.ScanGame import write_combined_results
 from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.Update import UpdateCheckError, is_latest_version
@@ -101,10 +99,10 @@ class CrashLogsScanWorker(QObject):
 
         # Import here to avoid circular dependency
         from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.integration.status import is_rust_accelerated
+        from ClassicLib.ScanLog import FCXModeHandler
         from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
         from ClassicLib.ScanLog.ScanLogsUtils import crashlogs_scan_async_pure
-        from ClassicLib.ScanLog import FCXModeHandler
-        from ClassicLib.integration.status import is_rust_accelerated
 
         init_start = time.perf_counter()
         # Initialize scanner with eager_load flag for proactive warm-up
@@ -286,8 +284,8 @@ class GameFilesScanWorker(QObject):
 
         # Import here to avoid circular dependency
         from ClassicLib.AsyncBridge import AsyncBridge
-        from ClassicLib.ScanGame import write_combined_results_async
         from ClassicLib.integration.status import is_rust_accelerated
+        from ClassicLib.ScanGame import write_combined_results_async
 
         # Check for Rust acceleration (prepare for future classic_scangame module)
         if is_rust_accelerated("scangame"):

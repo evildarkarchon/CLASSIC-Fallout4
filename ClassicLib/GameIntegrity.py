@@ -70,6 +70,37 @@ class GameIntegrityChecker:
 
         logger.debug("Loaded game integrity configuration")
 
+    async def load_configuration_async(self) -> None:
+        """
+        Asynchronously loads game-specific configuration settings from YAML files.
+
+        This is the async version that should be used from async contexts.
+        It loads various settings needed for integrity checks asynchronously.
+
+        Raises:
+            TypeError: If any of the loaded settings are not strings.
+        """
+        from ClassicLib.YamlSettingsCache import yaml_settings_async
+
+        vr_suffix: str = GlobalRegistry.get_vr()
+
+        # Load settings from YAML asynchronously
+        self._config = {
+            "steam_ini_path": await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
+            "exe_hash_old": await yaml_settings_async(str, YAML.Game, "Game_Info.EXE_HashedOLD"),
+            "exe_hash_new": await yaml_settings_async(str, YAML.Game, "Game_Info.EXE_HashedNEW"),
+            "game_exe_path": await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
+            "root_name": await yaml_settings_async(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
+            "root_warn": await yaml_settings_async(str, YAML.Main, "Warnings_GAME.warn_root_path"),
+        }
+
+        # Validate settings types
+        for key, value in self._config.items():
+            if value is not None and not isinstance(value, str):
+                raise TypeError(f"Expected string for {key}, got {type(value)}")
+
+        logger.debug("Loaded game integrity configuration (async)")
+
     def check_executable_version(self) -> tuple[bool, str]:
         """
         Check if game executable is up to date.
@@ -122,13 +153,48 @@ class GameIntegrityChecker:
         message = self._config["root_warn"] or ""
         return False, message
 
+    async def run_full_check_async(self) -> str:
+        """
+        Asynchronously run all integrity checks and return combined results.
+
+        This is the async version that should be used from async contexts.
+        Performs the following checks:
+        1. Game executable version validation
+        2. Installation location verification
+
+        Returns:
+            A detailed message string indicating the integrity status
+            of all game files and installation.
+        """
+        logger.debug("- - - INITIATED GAME INTEGRITY CHECK (ASYNC)")
+
+        # Ensure configuration is loaded
+        if not self._config:
+            await self.load_configuration_async()
+
+        messages: list[str] = []
+
+        # Check game executable version
+        _, version_message = self.check_executable_version()
+        if version_message:
+            messages.append(version_message)
+
+        # Check installation location
+        _, location_message = self.check_installation_location()
+        if location_message:
+            messages.append(location_message)
+
+        return "".join(messages)
+
     def run_full_check(self) -> str:
         """
-        Run all integrity checks and return combined results.
+        Run all integrity checks and return combined results (sync version).
 
         Performs the following checks:
         1. Game executable version validation
         2. Installation location verification
+
+        Note: For async contexts, use run_full_check_async() instead.
 
         Returns:
             A detailed message string indicating the integrity status

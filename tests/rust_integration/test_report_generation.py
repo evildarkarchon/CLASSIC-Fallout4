@@ -8,7 +8,6 @@ performance improvements, and backward compatibility with Python implementation.
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
 
 import pytest
 
@@ -24,12 +23,10 @@ from ClassicLib.ScanLog.RustReportGeneration import (
     StringPool,
 )
 
-# Also test against Python implementation for comparison
-from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment as PyReportFragment
 from ClassicLib.ScanLog.fragments.report_composer import ReportComposer as PyReportComposer
 
-if TYPE_CHECKING:
-    from pathlib import Path
+# Also test against Python implementation for comparison
+from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment as PyReportFragment
 
 
 @pytest.mark.unit

@@ -1,6 +1,6 @@
 """Qt compatibility layer for environments without PySide6."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 # Try to import PySide6 for GUI mode
 try:
@@ -47,7 +47,7 @@ except ImportError:
             return 0
 
     # noinspection PyPep8Naming,PyUnusedLocal
-    class QProgressDialog:  # noqa: D101
+    class QProgressDialog:
         """Provides a dialog that displays the progress of an ongoing operation.
 
         The QProgressDialog class represents a modal or non-modal dialog that can be
@@ -56,7 +56,7 @@ except ImportError:
         configured with custom ranges, text, and behavior properties, making it
         suitable for varied user interface requirements.
         """
-        def __init__(  # noqa: D107
+        def __init__(
             self,
             labelText: str = "",
             cancelButtonText: str = "",
@@ -83,7 +83,6 @@ except ImportError:
                 *args: Additional positional arguments for further customization.
                 **kwargs: Additional keyword arguments for further customization.
             """
-            pass
 
         def setWindowTitle(self, title: str) -> None:  # noqa: D102
             pass

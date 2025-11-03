@@ -29,21 +29,18 @@ Features:
 
 from __future__ import annotations
 
-import asyncio
 import gc
 import json
 import logging
-import os
 import sys
 import time
 import tracemalloc
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from statistics import mean, median, stdev
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 # Add parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -54,32 +51,30 @@ logger = logging.getLogger(__name__)
 # Import benchmark modules with proper path handling
 try:
     # Try absolute imports first
-    from benchmarks.micro_benchmarks.benchmark_log_parsing import LogParsingBenchmark
+    from benchmarks.macro_benchmarks.benchmark_batch_processing import BatchProcessingBenchmark
+    from benchmarks.macro_benchmarks.benchmark_end_to_end import EndToEndBenchmark
+    from benchmarks.micro_benchmarks.benchmark_database_ops import DatabaseBenchmark
+    from benchmarks.micro_benchmarks.benchmark_file_io import FileIOBenchmark
     from benchmarks.micro_benchmarks.benchmark_formid_analysis import FormIDBenchmark
+    from benchmarks.micro_benchmarks.benchmark_log_parsing import LogParsingBenchmark
     from benchmarks.micro_benchmarks.benchmark_plugin_analysis import PluginBenchmark
     from benchmarks.micro_benchmarks.benchmark_record_scanning import RecordScanBenchmark
     from benchmarks.micro_benchmarks.benchmark_report_generation import ReportGenBenchmark
-    from benchmarks.micro_benchmarks.benchmark_database_ops import DatabaseBenchmark
-    from benchmarks.micro_benchmarks.benchmark_file_io import FileIOBenchmark
-
-    from benchmarks.macro_benchmarks.benchmark_end_to_end import EndToEndBenchmark
-    from benchmarks.macro_benchmarks.benchmark_batch_processing import BatchProcessingBenchmark
 
     # Import test data generators
     from benchmarks.test_data.realistic_data_generator import RealisticDataGenerator
 except ImportError:
     # Handle relative imports when run from benchmarks directory
     try:
-        from micro_benchmarks.benchmark_log_parsing import LogParsingBenchmark
+        from macro_benchmarks.benchmark_batch_processing import BatchProcessingBenchmark
+        from macro_benchmarks.benchmark_end_to_end import EndToEndBenchmark
+        from micro_benchmarks.benchmark_database_ops import DatabaseBenchmark
+        from micro_benchmarks.benchmark_file_io import FileIOBenchmark
         from micro_benchmarks.benchmark_formid_analysis import FormIDBenchmark
+        from micro_benchmarks.benchmark_log_parsing import LogParsingBenchmark
         from micro_benchmarks.benchmark_plugin_analysis import PluginBenchmark
         from micro_benchmarks.benchmark_record_scanning import RecordScanBenchmark
         from micro_benchmarks.benchmark_report_generation import ReportGenBenchmark
-        from micro_benchmarks.benchmark_database_ops import DatabaseBenchmark
-        from micro_benchmarks.benchmark_file_io import FileIOBenchmark
-
-        from macro_benchmarks.benchmark_end_to_end import EndToEndBenchmark
-        from macro_benchmarks.benchmark_batch_processing import BatchProcessingBenchmark
 
         # Import test data generators
         from test_data.realistic_data_generator import RealisticDataGenerator
@@ -89,16 +84,13 @@ except ImportError:
         raise
 
 # Import Rust integration for availability checking
-from ClassicLib.RustAcceleration import (
-    RustAcceleration,
-    ComponentType,
-    OptimizationLevel,
-    get_rust_acceleration,
-)
 from ClassicLib.integration.status import (
     RUST_AVAILABLE,
     get_rust_component_status,
-    print_rust_status,
+)
+from ClassicLib.RustAcceleration import (
+    ComponentType,
+    get_rust_acceleration,
 )
 
 
@@ -135,7 +127,7 @@ class BenchmarkMetrics:
     test_size: TestDataSize
 
     # Timing metrics (in seconds)
-    execution_times: List[float] = field(default_factory=list)
+    execution_times: list[float] = field(default_factory=list)
     min_time: float = float('inf')
     max_time: float = 0.0
     mean_time: float = 0.0
@@ -183,7 +175,7 @@ class BenchmarkMetrics:
         if self.mean_time > 0:
             self.throughput = 1.0 / self.mean_time
 
-    def calculate_confidence_interval(self, confidence: float = 0.95) -> Tuple[float, float]:
+    def calculate_confidence_interval(self, confidence: float = 0.95) -> tuple[float, float]:
         """
         Calculate confidence interval for execution times.
 
@@ -213,7 +205,7 @@ class BenchmarkMetrics:
         total = self.cache_hits + self.cache_misses
         return (self.cache_hits / total * 100) if total > 0 else 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert metrics to dictionary for JSON serialization."""
         lower_ci, upper_ci = self.calculate_confidence_interval()
 
@@ -282,7 +274,7 @@ class ComparisonResult:
     target_percentage: float = 0.0
 
     # Recommendations
-    optimization_recommendations: List[str] = field(default_factory=list)
+    optimization_recommendations: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Calculate comparison metrics after initialization."""
@@ -366,7 +358,7 @@ class ComparisonResult:
 
         self.optimization_recommendations = recommendations
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert comparison to dictionary for JSON serialization."""
         return {
             'component_name': self.component_name,
@@ -411,7 +403,7 @@ class ComprehensiveBenchmarkSuite:
         ComponentType.FILE_IO_CORE: 15.0,  # Middle of 10-20x range
     }
 
-    def __init__(self, output_dir: Optional[Path] = None, baseline_dir: Optional[Path] = None):
+    def __init__(self, output_dir: Path | None = None, baseline_dir: Path | None = None):
         """
         Initialize the comprehensive benchmark suite.
 
@@ -447,8 +439,8 @@ class ComprehensiveBenchmarkSuite:
         }
 
         # Results storage
-        self.results: Dict[str, Any] = {}
-        self.comparison_results: List[ComparisonResult] = []
+        self.results: dict[str, Any] = {}
+        self.comparison_results: list[ComparisonResult] = []
 
         # Configure logging for detailed tracing
         self._setup_logging()
@@ -479,12 +471,12 @@ class ComprehensiveBenchmarkSuite:
 
     def run_comprehensive_benchmark(
         self,
-        benchmark_types: List[BenchmarkType] = None,
-        test_sizes: List[TestDataSize] = None,
+        benchmark_types: list[BenchmarkType] = None,
+        test_sizes: list[TestDataSize] = None,
         iterations: int = 5,
         include_memory_profiling: bool = True,
         parallel_execution: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run comprehensive benchmarks with detailed performance analysis.
 
@@ -599,7 +591,7 @@ class ComprehensiveBenchmarkSuite:
             logger.info(f"   ❌ {', '.join(inactive_components)}")
             logger.info("   ⚠️  Some benchmarks will use Python fallbacks")
 
-    def _generate_test_data_suite(self, test_sizes: List[TestDataSize]) -> Dict[TestDataSize, Any]:
+    def _generate_test_data_suite(self, test_sizes: list[TestDataSize]) -> dict[TestDataSize, Any]:
         """
         Generate comprehensive test data for all benchmark sizes.
 
@@ -655,11 +647,11 @@ class ComprehensiveBenchmarkSuite:
 
     def _run_micro_benchmarks(
         self,
-        test_data: Dict[TestDataSize, Any],
+        test_data: dict[TestDataSize, Any],
         iterations: int,
         include_memory: bool,
         parallel: bool
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute all micro-benchmarks for individual components.
 
@@ -801,13 +793,11 @@ class ComprehensiveBenchmarkSuite:
                     top_stats = snapshot_after.compare_to(snapshot_before, 'lineno')
                     total_size_diff = sum(stat.size_diff for stat in top_stats)
 
-                    if total_size_diff > metrics.memory_increase:
-                        metrics.memory_increase = total_size_diff
+                    metrics.memory_increase = max(metrics.memory_increase, total_size_diff)
 
                     # Record peak memory
                     current_peak = snapshot_after.statistics('lineno')[0].size
-                    if current_peak > metrics.peak_memory:
-                        metrics.peak_memory = current_peak
+                    metrics.peak_memory = max(metrics.peak_memory, current_peak)
 
                 # Extract additional metrics from benchmark result if available
                 if hasattr(result, 'cache_hits'):
@@ -829,10 +819,10 @@ class ComprehensiveBenchmarkSuite:
 
     def _run_macro_benchmarks(
         self,
-        test_data: Dict[TestDataSize, Any],
+        test_data: dict[TestDataSize, Any],
         iterations: int,
         include_memory: bool
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute macro-benchmarks for end-to-end system testing.
 
@@ -934,7 +924,7 @@ class ComprehensiveBenchmarkSuite:
 
         return macro_results
 
-    def _run_memory_analysis(self, test_data: Dict[TestDataSize, Any]) -> Dict[str, Any]:
+    def _run_memory_analysis(self, test_data: dict[TestDataSize, Any]) -> dict[str, Any]:
         """
         Perform detailed memory usage analysis across all components.
 
@@ -1041,7 +1031,7 @@ class ComprehensiveBenchmarkSuite:
 
         return memory_results
 
-    def _generate_comparisons(self, results: Dict[str, Any]) -> List[ComparisonResult]:
+    def _generate_comparisons(self, results: dict[str, Any]) -> list[ComparisonResult]:
         """
         Generate detailed performance comparisons between Rust and Python implementations.
 
@@ -1105,7 +1095,7 @@ class ComprehensiveBenchmarkSuite:
 
         return comparisons
 
-    def _reconstruct_metrics(self, data: Dict[str, Any]) -> BenchmarkMetrics:
+    def _reconstruct_metrics(self, data: dict[str, Any]) -> BenchmarkMetrics:
         """Reconstruct BenchmarkMetrics object from stored data."""
         timing = data.get('timing', {})
         memory = data.get('memory', {})
@@ -1149,7 +1139,7 @@ class ComprehensiveBenchmarkSuite:
 
         return metrics
 
-    def _generate_summary(self, results: Dict[str, Any], comparisons: List[ComparisonResult]) -> Dict[str, Any]:
+    def _generate_summary(self, results: dict[str, Any], comparisons: list[ComparisonResult]) -> dict[str, Any]:
         """
         Generate comprehensive benchmark summary with actionable insights.
 
@@ -1284,20 +1274,20 @@ class ComprehensiveBenchmarkSuite:
             }
         }
 
-    def _save_results(self, results: Dict[str, Any]):
+    def _save_results(self, results: dict[str, Any]):
         """Save comprehensive benchmark results to JSON files."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Save complete results
         results_file = self.output_dir / f"benchmark_results_{timestamp}.json"
-        with open(results_file, 'w') as f:
+        with Path(results_file).open('w') as f:
             json.dump(results, f, indent=2, default=str)
 
         logger.info(f"📄 Results saved to: {results_file}")
 
         # Save summary for quick access
         summary_file = self.output_dir / f"benchmark_summary_{timestamp}.json"
-        with open(summary_file, 'w') as f:
+        with Path(summary_file).open('w') as f:
             json.dump(results['summary'], f, indent=2, default=str)
 
         # Update latest results link/copy
@@ -1313,14 +1303,14 @@ class ComprehensiveBenchmarkSuite:
         else:
             latest_file.symlink_to(results_file.name)
 
-    def _generate_reports(self, results: Dict[str, Any], comparisons: List[ComparisonResult]):
+    def _generate_reports(self, results: dict[str, Any], comparisons: list[ComparisonResult]):
         """Generate detailed HTML and markdown reports."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Generate markdown report
         markdown_report = self._generate_markdown_report(results, comparisons)
         markdown_file = self.output_dir / f"benchmark_report_{timestamp}.md"
-        with open(markdown_file, 'w') as f:
+        with Path(markdown_file).open('w') as f:
             f.write(markdown_report)
 
         logger.info(f"📊 Markdown report generated: {markdown_file}")
@@ -1328,12 +1318,12 @@ class ComprehensiveBenchmarkSuite:
         # Generate CSV summary for spreadsheet analysis
         csv_data = self._generate_csv_summary(comparisons)
         csv_file = self.output_dir / f"benchmark_summary_{timestamp}.csv"
-        with open(csv_file, 'w') as f:
+        with Path(csv_file).open('w') as f:
             f.write(csv_data)
 
         logger.info(f"📈 CSV summary generated: {csv_file}")
 
-    def _generate_markdown_report(self, results: Dict[str, Any], comparisons: List[ComparisonResult]) -> str:
+    def _generate_markdown_report(self, results: dict[str, Any], comparisons: list[ComparisonResult]) -> str:
         """Generate comprehensive markdown report."""
         summary = results['summary']
         metadata = results['metadata']
@@ -1362,7 +1352,7 @@ Iterations: {metadata['iterations']}
         for comp_name, comp_data in summary['component_summary'].items():
             report += f"| {comp_name} | {comp_data['avg_speedup']:.1f}x | {comp_data['target_achievement_rate']:.1f}% | {comp_data['performance_consistency']:.2f} |\n"
 
-        report += f"""
+        report += """
 ## Optimization Priorities
 
 ### Immediate Actions Required
@@ -1378,7 +1368,7 @@ Iterations: {metadata['iterations']}
             for rec in action['recommendations']:
                 report += f"  - {rec}\n"
 
-        report += f"""
+        report += """
 ### Medium-Term Optimizations
 """
 
@@ -1443,7 +1433,7 @@ Iterations: {metadata['iterations']}
 
         return report
 
-    def _generate_csv_summary(self, comparisons: List[ComparisonResult]) -> str:
+    def _generate_csv_summary(self, comparisons: list[ComparisonResult]) -> str:
         """Generate CSV summary for spreadsheet analysis."""
         csv_lines = [
             "Component,Test Size,Rust Time (s),Python Time (s),Speedup,Target,Target Achieved,Memory Efficiency,Cache Hit Rate,Success Rate"
@@ -1465,7 +1455,7 @@ Iterations: {metadata['iterations']}
 
         return "\n".join(csv_lines)
 
-    def compare_with_baseline(self, results: Dict[str, Any]) -> Dict[str, Any]:
+    def compare_with_baseline(self, results: dict[str, Any]) -> dict[str, Any]:
         """
         Compare current results with stored baseline for regression testing.
 
@@ -1484,12 +1474,12 @@ Iterations: {metadata['iterations']}
 
         if not baseline_file.exists():
             logger.warning("⚠️ No baseline found, storing current results as baseline")
-            with open(baseline_file, 'w') as f:
+            with Path(baseline_file).open('w') as f:
                 json.dump(results, f, indent=2, default=str)
             return {'status': 'baseline_created', 'file': str(baseline_file)}
 
         # Load baseline
-        with open(baseline_file, 'r') as f:
+        with Path(baseline_file).open('r') as f:
             baseline = json.load(f)
 
         # Compare results
@@ -1563,7 +1553,7 @@ Iterations: {metadata['iterations']}
         # Save regression report
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         regression_file = self.output_dir / f"regression_analysis_{timestamp}.json"
-        with open(regression_file, 'w') as f:
+        with Path(regression_file).open('w') as f:
             json.dump(regression_analysis, f, indent=2, default=str)
 
         logger.info(f"📈 Regression analysis saved to: {regression_file}")
@@ -1606,7 +1596,7 @@ def main():
             logger.error("❌ No results found for regression testing. Run benchmarks first.")
             sys.exit(1)
 
-        with open(latest_file, 'r') as f:
+        with Path(latest_file).open('r') as f:
             results = json.load(f)
 
         regression_results = suite.compare_with_baseline(results)
@@ -1650,11 +1640,11 @@ def main():
         print(f"    Targets Achieved: {summary['overall_assessment']['targets_achieved']}/{summary['overall_assessment']['total_comparisons']}")
         print(f"    Average Speedup: {summary['overall_assessment']['average_speedup']:.2f}x")
 
-        print(f"\n🔧 Optimization Priorities:")
+        print("\n🔧 Optimization Priorities:")
         for priority in summary['optimization_priorities'][:3]:
             print(f"    {priority['priority']}: {priority['component']} ({priority['target_achievement']:.1f}% of target)")
 
-        print(f"\n💾 Memory Efficiency:")
+        print("\n💾 Memory Efficiency:")
         if summary['memory_analysis']['components_with_issues']:
             print(f"    ⚠️ {summary['memory_analysis']['components_with_issues']} components need memory optimization")
         else:

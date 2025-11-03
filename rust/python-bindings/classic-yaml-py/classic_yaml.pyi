@@ -33,8 +33,9 @@ Usage:
 """
 
 from __future__ import annotations
-from typing import Any, Optional
+
 from pathlib import Path
+from typing import Any
 
 __version__: str
 
@@ -61,7 +62,6 @@ class RustYamlOperations:
         Initializes internal caching structures for improved performance on
         repeated YAML operations.
         """
-        ...
 
     def load_yaml_file(self, path: str | Path) -> dict[str, Any]:
         """Load and parse a YAML file.
@@ -87,7 +87,6 @@ class RustYamlOperations:
             >>> print(config["setting"])
             'value'
         """
-        ...
 
     def parse_yaml(self, content: str) -> dict[str, Any]:
         """Parse YAML content from a string.
@@ -111,7 +110,6 @@ class RustYamlOperations:
             >>> print(data["list"])
             ['item1', 'item2']
         """
-        ...
 
     def dump_yaml(self, data: dict[str, Any]) -> str:
         """Convert Python dictionary to YAML string.
@@ -135,7 +133,6 @@ class RustYamlOperations:
               - 2
               - 3
         """
-        ...
 
     def save_yaml_file(self, path: str | Path, data: dict[str, Any]) -> None:
         """Save dictionary as YAML file.
@@ -155,7 +152,6 @@ class RustYamlOperations:
             >>> yaml_ops = RustYamlOperations()
             >>> yaml_ops.save_yaml_file("output.yaml", {"key": "value"})
         """
-        ...
 
     def get_setting(self, key: str, default: Any = None) -> Any:
         """Get a setting value from cached YAML data.
@@ -177,7 +173,6 @@ class RustYamlOperations:
             >>> print(host)
             'localhost'
         """
-        ...
 
     def set_setting(self, key: str, value: Any) -> None:
         """Set a setting value in cached YAML data.
@@ -194,7 +189,6 @@ class RustYamlOperations:
             >>> yaml_ops.set_setting("database.host", "localhost")
             >>> yaml_ops.set_setting("database.port", 5432)
         """
-        ...
 
     def clear_cache(self) -> None:
         """Clear the YAML cache to free memory.
@@ -208,7 +202,6 @@ class RustYamlOperations:
             >>> # ... use data ...
             >>> yaml_ops.clear_cache()  # Free memory
         """
-        ...
 
     def get_cache_stats(self) -> dict[str, int]:
         """Get cache statistics.
@@ -228,4 +221,3 @@ class RustYamlOperations:
             >>> print(f"Cached items: {stats['entries']}")
             >>> print(f"Memory used: {stats['memory_bytes']} bytes")
         """
-        ...

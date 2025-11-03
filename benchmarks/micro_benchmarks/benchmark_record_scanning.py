@@ -14,17 +14,16 @@ Performance metrics tracked:
 from __future__ import annotations
 
 import logging
-import time
-from typing import Any, Dict, List, Optional
-
 import sys
+import time
 from pathlib import Path
+from typing import Any
 
 # Add parent's parent directory to path to import ClassicLib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.integration.factory import get_record_scanner
+from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.rust.record_rust import RustRecordScanner
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
 
@@ -50,8 +49,8 @@ class RecordScanBenchmark:
     def __init__(self):
         """Initialize record scanning benchmark."""
         self.mock_yamldata = self._create_mock_yamldata()
-        self._rust_scanner: Optional[RustRecordScanner] = None
-        self._python_scanner: Optional[RecordScanner] = None
+        self._rust_scanner: RustRecordScanner | None = None
+        self._python_scanner: RecordScanner | None = None
 
     def _create_mock_yamldata(self):
         """Create mock YAML data for record scanning testing."""
@@ -68,7 +67,7 @@ class RecordScanBenchmark:
     def run_benchmark(
         self,
         implementation: str,
-        dataset: Dict[str, Any],
+        dataset: dict[str, Any],
         warm_up: bool = False
     ) -> RecordScanBenchmarkResult:
         """Execute record scanning benchmark."""
@@ -110,8 +109,8 @@ class RecordScanBenchmark:
     def _run_batch_record_scanning(
         self,
         implementation: str,
-        callstacks: List[List[str]]
-    ) -> List[Dict[str, Any]]:
+        callstacks: list[list[str]]
+    ) -> list[dict[str, Any]]:
         """Run batch record scanning for performance measurement."""
         results = []
 
@@ -138,21 +137,21 @@ class RecordScanBenchmark:
 
         return results
 
-    def _scan_with_rust(self, callstack_lines: List[str]):
+    def _scan_with_rust(self, callstack_lines: list[str]):
         """Scan records using Rust implementation."""
         if self._rust_scanner is None:
             self._rust_scanner = get_record_scanner(self.mock_yamldata)
 
         return self._rust_scanner.scan_named_records(callstack_lines)
 
-    def _scan_with_python(self, callstack_lines: List[str]):
+    def _scan_with_python(self, callstack_lines: list[str]):
         """Scan records using Python implementation."""
         if self._python_scanner is None:
             self._python_scanner = RecordScanner(self.mock_yamldata)
 
         return self._python_scanner.scan_named_records(callstack_lines)
 
-    def _run_single_scan(self, implementation: str, callstacks: List[List[str]]):
+    def _run_single_scan(self, implementation: str, callstacks: list[list[str]]):
         """Run single record scan for warm-up."""
         if not callstacks:
             return
@@ -164,9 +163,9 @@ class RecordScanBenchmark:
 
 
 def benchmark_record_scanning_performance(
-    callstacks: List[List[str]],
+    callstacks: list[list[str]],
     iterations: int = 5
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Standalone function for benchmarking record scanning performance."""
     benchmark = RecordScanBenchmark()
     dataset = {'callstacks': callstacks}

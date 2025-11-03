@@ -8,10 +8,9 @@ the ClassicLib test suite.
 
 import time
 
-import pytest
-
 # Import the Rust module
 import classic_perf
+import pytest
 
 
 class TestPerfImport:

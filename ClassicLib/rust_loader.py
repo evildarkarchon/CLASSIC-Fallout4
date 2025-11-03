@@ -16,8 +16,9 @@ import warnings
 from pathlib import Path
 from typing import Any
 
-from ClassicLib.MessageHandler.enums import MessageTarget
 from ClassicLib.MessageHandler import msg_info
+from ClassicLib.MessageHandler.enums import MessageTarget
+
 
 class RustExtensionLoader:
     """

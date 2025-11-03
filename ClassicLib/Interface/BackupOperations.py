@@ -21,8 +21,8 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
-from ClassicLib.ScanGame import manage_game_files
 from ClassicLib.Interface.UIHelpers import ENABLED_BUTTON_STYLE, create_separator
+from ClassicLib.ScanGame import manage_game_files
 
 if TYPE_CHECKING:
     from typing import Any

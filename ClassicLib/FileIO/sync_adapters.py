@@ -5,19 +5,54 @@ These adapters automatically choose the appropriate async execution method:
 - GUI mode: Uses AsyncBridge for Qt event loop integration
 - CLI/TUI mode: Uses asyncio.run() for standard Python async execution
 
-This allows sync adapters to work in all contexts:
-    # GUI mode (uses AsyncBridge)
-    content = read_file_sync(path)
+IMPORTANT - Appropriate Usage:
+✅ GUI workers (Qt threads, PySide6 slots) - PRIMARY USE CASE
+✅ Testing and benchmarking file operations
+✅ One-off file operations in sync contexts (initialization)
 
-    # CLI/TUI mode (uses asyncio.run())
-    content = read_file_sync(path)  # Also works!
+❌ DO NOT USE in production CLI main flow
+❌ DO NOT USE for repeated file operations in CLI (inefficient)
+❌ DO NOT USE when already in async context
 
-    # Or use async directly if preferred
-    io_core = FileIOCore()
-    content = await io_core.read_file(path)
+Best Practices:
+- Production CLI code should use FileIOCore async methods directly
+- GUI contexts should use these sync adapters for thread safety
+- Each sync call in CLI mode creates a new event loop (overhead)
+
+Usage Examples:
+    # Example 1: GUI context (CORRECT)
+    class LogScanWorker(QThread):
+        def run(self):
+            content = read_file_sync(path)  # Uses AsyncBridge
+
+    # Example 2: Testing (CORRECT)
+    def test_file_reading():
+        content = read_file_sync(path)  # Works via asyncio.run()
+
+    # Example 3: CLI production (INCORRECT)
+    def main():
+        content1 = read_file_sync(path1)  # New event loop
+        content2 = read_file_sync(path2)  # New event loop (slow!)
+
+    # Example 4: CLI production (CORRECT - do this instead)
+    async def main():
+        io_core = FileIOCore()
+        content1 = await io_core.read_file(path1)  # Same event loop
+        content2 = await io_core.read_file(path2)  # Much faster!
+
+    if __name__ == "__main__":
+        asyncio.run(main())  # Single event loop at entry point
+
+Reference Implementation:
+    See CLASSIC_ScanLogs.py for async-first CLI pattern
+    See ClassicLib/Interface/Workers.py for GUI worker pattern
+
+Note:
+    The CLI/TUI mode asyncio.run() fallback is intentional for testing
+    and benchmarking. Production CLI code should use async methods directly
+    with FileIOCore for optimal performance.
 """
 
-from pathlib import Path
 
 from ClassicLib.AsyncBridge import create_sync_wrapper
 

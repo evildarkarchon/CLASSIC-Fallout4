@@ -4,14 +4,11 @@ This module tests the GUI application initialization, window setup,
 and component integration for the main CLASSIC interface.
 """
 
-import pytest
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, call
-from typing import Any, TYPE_CHECKING
+from unittest.mock import MagicMock, Mock, patch
 
-if TYPE_CHECKING:
-    from PySide6.QtWidgets import QApplication
+import pytest
 
 # Mark all tests in this module as GUI tests
 pytestmark = [pytest.mark.gui, pytest.mark.unit]
@@ -52,12 +49,12 @@ class TestClassicInterface:
             mock_app_instance.exec.return_value = 0
 
             # Simulate running __main__ block
-            with patch.object(sys, "argv", ["test"]):
-                with patch("CLASSIC_Interface.__name__", "__main__"):
-                    # Import and execute the module
-                    import importlib
-                    import CLASSIC_Interface
-                    importlib.reload(CLASSIC_Interface)
+            with patch.object(sys, "argv", ["test"]), patch("CLASSIC_Interface.__name__", "__main__"):
+                # Import and execute the module
+                import importlib
+
+                import CLASSIC_Interface
+                importlib.reload(CLASSIC_Interface)
 
         # Assert
         mock_setup_coordinator.assert_called_once()
@@ -78,22 +75,22 @@ class TestClassicInterface:
     ) -> None:
         """Test MainWindow initialization and component setup."""
         from PySide6.QtWidgets import QApplication
+
         from CLASSIC_Interface import MainWindow
 
         # Arrange
         app = QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False  # Disable update check
-        mock_global_registry.get_local_dir.return_value = Path(".")
+        mock_global_registry.get_local_dir.return_value = Path()
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"):
-            with patch.object(MainWindow, "setup_backups_tab"):
-                with patch.object(MainWindow, "setup_articles_tab"):
-                    with patch.object(MainWindow, "setup_results_tab"):
-                        with patch.object(MainWindow, "setup_window_geometry"):
-                            with patch.object(MainWindow, "initialize_folder_paths"):
-                                window = MainWindow()
+        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
+            with patch.object(MainWindow, "setup_articles_tab"):
+                with patch.object(MainWindow, "setup_results_tab"):
+                    with patch.object(MainWindow, "setup_window_geometry"):
+                        with patch.object(MainWindow, "initialize_folder_paths"):
+                            window = MainWindow()
 
         # Assert
         assert window.windowTitle() == "Crash Log Auto Scanner & Setup Integrity Checker | 1.0.0"
@@ -108,16 +105,16 @@ class TestClassicInterface:
     def test_main_window_mixins_inheritance(self) -> None:
         """Test that MainWindow properly inherits from all required mixins."""
         from CLASSIC_Interface import MainWindow
-        from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
-        from ClassicLib.Interface.UpdateManager import UpdateManagerMixin
-        from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
         from ClassicLib.Interface.BackupOperations import BackupOperationsMixin
+        from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
+        from ClassicLib.Interface.HelpAndAboutMixin import HelpAndAboutMixin
         from ClassicLib.Interface.PapyrusManager import PapyrusManagerMixin
         from ClassicLib.Interface.PastebinMixin import PastebinMixin
         from ClassicLib.Interface.PathDialogMixin import PathDialogMixin
-        from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
         from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
-        from ClassicLib.Interface.HelpAndAboutMixin import HelpAndAboutMixin
+        from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
+        from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
+        from ClassicLib.Interface.UpdateManager import UpdateManagerMixin
         from ClassicLib.Interface.WindowGeometryMixin import WindowGeometryMixin
 
         # Assert all mixins are properly inherited
@@ -143,25 +140,25 @@ class TestClassicInterface:
         mock_classic_settings: Mock
     ) -> None:
         """Test update check timer initialization."""
-        from PySide6.QtWidgets import QApplication
         from PySide6.QtCore import QTimer
+        from PySide6.QtWidgets import QApplication
+
         from CLASSIC_Interface import MainWindow
 
         # Arrange
         app = QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = True  # Enable update check
-        mock_global_registry.get_local_dir.return_value = Path(".")
+        mock_global_registry.get_local_dir.return_value = Path()
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"):
-            with patch.object(MainWindow, "setup_backups_tab"):
-                with patch.object(MainWindow, "setup_articles_tab"):
-                    with patch.object(MainWindow, "setup_results_tab"):
-                        with patch.object(MainWindow, "setup_window_geometry"):
-                            with patch.object(MainWindow, "initialize_folder_paths"):
-                                with patch.object(QTimer, "singleShot") as mock_timer:
-                                    window = MainWindow()
+        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
+            with patch.object(MainWindow, "setup_articles_tab"):
+                with patch.object(MainWindow, "setup_results_tab"):
+                    with patch.object(MainWindow, "setup_window_geometry"):
+                        with patch.object(MainWindow, "initialize_folder_paths"):
+                            with patch.object(QTimer, "singleShot") as mock_timer:
+                                window = MainWindow()
 
         # Assert
         assert hasattr(window, "update_check_timer")
@@ -182,21 +179,21 @@ class TestClassicInterface:
     ) -> None:
         """Test proper cleanup during window close."""
         from PySide6.QtWidgets import QApplication
+
         from CLASSIC_Interface import MainWindow
 
         # Arrange
         app = QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False
-        mock_global_registry.get_local_dir.return_value = Path(".")
+        mock_global_registry.get_local_dir.return_value = Path()
 
-        with patch.object(MainWindow, "setup_main_tab"):
-            with patch.object(MainWindow, "setup_backups_tab"):
-                with patch.object(MainWindow, "setup_articles_tab"):
-                    with patch.object(MainWindow, "setup_results_tab"):
-                        with patch.object(MainWindow, "setup_window_geometry"):
-                            with patch.object(MainWindow, "initialize_folder_paths"):
-                                window = MainWindow()
+        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
+            with patch.object(MainWindow, "setup_articles_tab"):
+                with patch.object(MainWindow, "setup_results_tab"):
+                    with patch.object(MainWindow, "setup_window_geometry"):
+                        with patch.object(MainWindow, "initialize_folder_paths"):
+                            window = MainWindow()
 
         # Setup mock event
         mock_event = MagicMock()
@@ -218,9 +215,10 @@ class TestClassicInterface:
 
     def test_open_url_static_method(self) -> None:
         """Test the open_url static method."""
-        from PySide6.QtWidgets import QApplication
-        from PySide6.QtGui import QDesktopServices
         from PySide6.QtCore import QUrl
+        from PySide6.QtGui import QDesktopServices
+        from PySide6.QtWidgets import QApplication
+
         from CLASSIC_Interface import MainWindow
 
         # Arrange
@@ -251,13 +249,12 @@ class TestClassicInterface:
         mock_app_instance.exec.side_effect = KeyboardInterrupt()
 
         # Act & Assert
-        with patch("CLASSIC_Interface.MainWindow"):
-            with patch.object(sys, "exit") as mock_exit:
-                with patch.object(sys, "argv", ["test"]):
-                    with patch("CLASSIC_Interface.__name__", "__main__"):
-                        import importlib
-                        import CLASSIC_Interface
-                        importlib.reload(CLASSIC_Interface)
+        with patch("CLASSIC_Interface.MainWindow"), patch.object(sys, "exit") as mock_exit, patch.object(sys, "argv", ["test"]):
+            with patch("CLASSIC_Interface.__name__", "__main__"):
+                import importlib
+
+                import CLASSIC_Interface
+                importlib.reload(CLASSIC_Interface)
 
         # Should exit with code 1 on KeyboardInterrupt
         mock_app_instance.exit.assert_called_once_with(1)
@@ -281,12 +278,12 @@ class TestClassicInterface:
         test_exception = Exception("Test startup error")
 
         # Act
-        with patch("CLASSIC_Interface.MainWindow", side_effect=test_exception):
-            with patch.object(sys, "argv", ["test"]):
-                with patch("CLASSIC_Interface.__name__", "__main__"):
-                    import importlib
-                    import CLASSIC_Interface
-                    importlib.reload(CLASSIC_Interface)
+        with patch("CLASSIC_Interface.MainWindow", side_effect=test_exception), patch.object(sys, "argv", ["test"]):
+            with patch("CLASSIC_Interface.__name__", "__main__"):
+                import importlib
+
+                import CLASSIC_Interface
+                importlib.reload(CLASSIC_Interface)
 
         # Assert
         mock_msg_error.assert_called_once()
@@ -304,22 +301,22 @@ class TestClassicInterface:
     ) -> None:
         """Test that thread manager is properly initialized."""
         from PySide6.QtWidgets import QApplication
+
         from CLASSIC_Interface import MainWindow
 
         # Arrange
         app = QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False
-        mock_global_registry.get_local_dir.return_value = Path(".")
+        mock_global_registry.get_local_dir.return_value = Path()
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"):
-            with patch.object(MainWindow, "setup_backups_tab"):
-                with patch.object(MainWindow, "setup_articles_tab"):
-                    with patch.object(MainWindow, "setup_results_tab"):
-                        with patch.object(MainWindow, "setup_window_geometry"):
-                            with patch.object(MainWindow, "initialize_folder_paths"):
-                                window = MainWindow()
+        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
+            with patch.object(MainWindow, "setup_articles_tab"):
+                with patch.object(MainWindow, "setup_results_tab"):
+                    with patch.object(MainWindow, "setup_window_geometry"):
+                        with patch.object(MainWindow, "initialize_folder_paths"):
+                            window = MainWindow()
 
         # Assert
         assert hasattr(window, "thread_manager")

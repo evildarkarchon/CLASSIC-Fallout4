@@ -5,9 +5,9 @@ Tests that CrashLogsScanWorker and GameFilesScanWorker emit error_occurred signa
 with correct parameters when errors occur during scanning operations.
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import MagicMock, patch
-from PySide6.QtCore import QEventLoop, QTimer
 
 from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorker
 
@@ -143,7 +143,7 @@ class TestGameFilesScanWorkerErrorSignals:
         worker.error_occurred.connect(capture_error)
 
         # Mock the scan to raise an exception
-        test_error = IOError("Failed to read game files")
+        test_error = OSError("Failed to read game files")
         with patch.object(worker, "_process_game_results", side_effect=test_error):
             with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
                 worker.run()

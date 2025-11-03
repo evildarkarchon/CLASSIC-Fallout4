@@ -22,14 +22,12 @@ Options:
 
 import argparse
 import json
-import time
+import shutil
 import subprocess
 import sys
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 from datetime import datetime
-import shutil
-import os
+from pathlib import Path
+from typing import Any
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -67,7 +65,7 @@ class PerformanceReportGenerator:
             timestamp = datetime.now().strftime("%H:%M:%S")
             print(f"[{timestamp}] {level}: {message}")
 
-    def check_rust_availability(self) -> Dict[str, Any]:
+    def check_rust_availability(self) -> dict[str, Any]:
         """Check availability and version of Rust components."""
         self.log("Checking Rust component availability...")
 
@@ -97,7 +95,7 @@ class PerformanceReportGenerator:
                 "error": str(e)
             }
 
-    def run_benchmark_suite(self, include_real_logs: bool = True) -> Dict[str, Any]:
+    def run_benchmark_suite(self, include_real_logs: bool = True) -> dict[str, Any]:
         """Run comprehensive benchmark suite and collect results."""
         self.log("Starting benchmark suite execution...")
 
@@ -136,7 +134,7 @@ class PerformanceReportGenerator:
 
                 # Load results if available
                 if result_file.exists():
-                    with open(result_file, 'r') as f:
+                    with Path(result_file).open() as f:
                         script_results = json.load(f)
                     results[script_name.stem] = script_results
                     self.log(f"✅ {description} completed successfully")
@@ -154,7 +152,7 @@ class PerformanceReportGenerator:
         self.log(f"Benchmark suite completed: {len(results)} scripts executed")
         return results
 
-    def analyze_benchmark_results(self, benchmark_results: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze_benchmark_results(self, benchmark_results: dict[str, Any]) -> dict[str, Any]:
         """Analyze benchmark results and generate insights."""
         self.log("Analyzing benchmark results...")
 
@@ -207,7 +205,7 @@ class PerformanceReportGenerator:
 
         return analysis
 
-    def _analyze_working_benchmarks(self, results: Dict[str, Any], analysis: Dict[str, Any]):
+    def _analyze_working_benchmarks(self, results: dict[str, Any], analysis: dict[str, Any]):
         """Analyze working benchmark results."""
         for component, component_results in results.items():
             if isinstance(component_results, dict) and "error" not in component_results:
@@ -260,22 +258,22 @@ class PerformanceReportGenerator:
                     "status": "WORKING"
                 }
 
-    def _analyze_comprehensive_benchmarks(self, results: Dict[str, Any], analysis: Dict[str, Any]):
+    def _analyze_comprehensive_benchmarks(self, results: dict[str, Any], analysis: dict[str, Any]):
         """Analyze comprehensive benchmark results."""
         # This would analyze the comprehensive benchmark results
         # For now, just mark components as tested
-        for component in results.keys():
+        for component in results:
             if component not in ["error"]:
                 analysis["summary"]["components_tested"].add(component)
 
-    def _analyze_realistic_benchmarks(self, results: Dict[str, Any], analysis: Dict[str, Any]):
+    def _analyze_realistic_benchmarks(self, results: dict[str, Any], analysis: dict[str, Any]):
         """Analyze realistic benchmark results."""
         # This would analyze realistic benchmark results
         # For now, just extract any performance insights
         if "rust_available" in results:
             analysis["summary"]["components_tested"].add("realistic_scenarios")
 
-    def generate_markdown_report(self, analysis: Dict[str, Any]) -> Path:
+    def generate_markdown_report(self, analysis: dict[str, Any]) -> Path:
         """Generate comprehensive markdown performance report."""
         self.log("Generating markdown report...")
 
@@ -289,38 +287,35 @@ class PerformanceReportGenerator:
             shutil.copy2(template_path, output_path)
 
             # Add generation metadata
-            with open(output_path, 'a', encoding='utf-8') as f:
-                f.write(f"\n\n---\n\n")
+            with Path(output_path).open('a', encoding='utf-8') as f:
+                f.write("\n\n---\n\n")
                 f.write(f"**Report Generated:** {self.generation_timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write(f"**Generation Tool:** performance_report_generator.py\n")
+                f.write("**Generation Tool:** performance_report_generator.py\n")
                 f.write(f"**Benchmarks Status:** {analysis['summary']['overall_status']}\n")
                 f.write(f"**Components Tested:** {len(analysis['summary']['components_tested'])}\n")
         else:
             # Generate basic report structure
-            with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(f"# Phase 6 Performance Report\n\n")
+            with Path(output_path).open('w', encoding='utf-8') as f:
+                f.write("# Phase 6 Performance Report\n\n")
                 f.write(f"**Generated:** {self.generation_timestamp}\n")
                 f.write(f"**Status:** {analysis['summary']['overall_status']}\n\n")
 
                 # Add component status
                 f.write("## Component Status\n\n")
-                for component, status in analysis["component_status"].items():
-                    f.write(f"- **{component}**: {status['status']} (Performance: {status['performance']})\n")
+                f.writelines(f"- **{component}**: {status['status']} (Performance: {status['performance']})\n" for component, status in analysis["component_status"].items())
 
                 # Add insights
                 f.write("\n## Performance Insights\n\n")
-                for insight in analysis["performance_insights"]:
-                    f.write(f"- **{insight['component']}**: {insight['insight']} ({insight['level']})\n")
+                f.writelines(f"- **{insight['component']}**: {insight['insight']} ({insight['level']})\n" for insight in analysis["performance_insights"])
 
                 # Add recommendations
                 f.write("\n## Recommendations\n\n")
-                for rec in analysis["recommendations"]:
-                    f.write(f"- **{rec['component']}**: {rec['recommendation']} (Priority: {rec['priority']})\n")
+                f.writelines(f"- **{rec['component']}**: {rec['recommendation']} (Priority: {rec['priority']})\n" for rec in analysis["recommendations"])
 
         self.log(f"✅ Markdown report generated: {output_path}")
         return output_path
 
-    def generate_html_dashboard(self, analysis: Dict[str, Any]) -> Path:
+    def generate_html_dashboard(self, analysis: dict[str, Any]) -> Path:
         """Generate interactive HTML performance dashboard."""
         self.log("Generating HTML dashboard...")
 
@@ -333,7 +328,7 @@ class PerformanceReportGenerator:
             shutil.copy2(template_path, output_path)
 
             # Update dashboard with current data (basic approach)
-            with open(output_path, 'r', encoding='utf-8') as f:
+            with Path(output_path).open(encoding='utf-8') as f:
                 content = f.read()
 
             # Update title and timestamp
@@ -343,11 +338,11 @@ class PerformanceReportGenerator:
                 f"Rust Integration & Optimization - Generated {timestamp_str}"
             )
 
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with Path(output_path).open('w', encoding='utf-8') as f:
                 f.write(content)
         else:
             # Generate basic HTML dashboard
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with Path(output_path).open('w', encoding='utf-8') as f:
                 f.write("""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -370,13 +365,12 @@ class PerformanceReportGenerator:
 """.format(self.generation_timestamp.strftime('%Y-%m-%d %H:%M:%S'), analysis['summary']['overall_status']))
 
                 # Add component metrics
-                for component, status in analysis["component_status"].items():
-                    f.write(f"""
+                f.writelines(f"""
         <div class="metric">
             <strong>{component}:</strong> {status['status']}
             (Performance: {status['performance']})
         </div>
-""")
+""" for component, status in analysis["component_status"].items())
 
                 f.write("""
     </div>
@@ -386,7 +380,7 @@ class PerformanceReportGenerator:
         self.log(f"✅ HTML dashboard generated: {output_path}")
         return output_path
 
-    def generate_json_metrics(self, analysis: Dict[str, Any]) -> Path:
+    def generate_json_metrics(self, analysis: dict[str, Any]) -> Path:
         """Generate machine-readable JSON metrics report."""
         self.log("Generating JSON metrics...")
 
@@ -408,19 +402,19 @@ class PerformanceReportGenerator:
             "raw_benchmark_results": self.benchmark_results
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with Path(output_path).open('w', encoding='utf-8') as f:
             json.dump(metrics, f, indent=2, default=str)
 
         self.log(f"✅ JSON metrics generated: {output_path}")
         return output_path
 
-    def generate_executive_summary(self, analysis: Dict[str, Any]) -> Path:
+    def generate_executive_summary(self, analysis: dict[str, Any]) -> Path:
         """Generate concise executive summary."""
         self.log("Generating executive summary...")
 
         output_path = self.output_dir / f"Phase6_Executive_Summary_{self.generation_timestamp.strftime('%Y%m%d')}.md"
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with Path(output_path).open('w', encoding='utf-8') as f:
             f.write("# Phase 6 Executive Summary\n\n")
             f.write(f"**Date:** {self.generation_timestamp.strftime('%B %d, %Y')}\n")
             f.write(f"**Status:** {analysis['summary']['overall_status']}\n\n")
@@ -465,7 +459,7 @@ class PerformanceReportGenerator:
         self.log(f"✅ Executive summary generated: {output_path}")
         return output_path
 
-    def generate_all_reports(self, run_benchmarks: bool = False, include_real_logs: bool = True) -> Dict[str, Path]:
+    def generate_all_reports(self, run_benchmarks: bool = False, include_real_logs: bool = True) -> dict[str, Path]:
         """Generate all report formats."""
         self.log("Starting comprehensive report generation...")
 
@@ -490,7 +484,7 @@ class PerformanceReportGenerator:
                 file_path = self.project_root / result_file
                 if file_path.exists():
                     try:
-                        with open(file_path, 'r') as f:
+                        with Path(file_path).open() as f:
                             self.benchmark_results[file_path.stem] = json.load(f)
                         self.log(f"✅ Loaded {result_file}")
                     except Exception as e:
@@ -529,14 +523,14 @@ class PerformanceReportGenerator:
         self.log(f"✅ Report generation completed: {len(generated_files)} files generated")
         return generated_files
 
-    def generate_index_file(self, generated_files: Dict[str, Path]) -> Path:
+    def generate_index_file(self, generated_files: dict[str, Path]) -> Path:
         """Generate an index file listing all generated reports."""
         index_path = self.output_dir / "README.md"
 
-        with open(index_path, 'w', encoding='utf-8') as f:
+        with Path(index_path).open('w', encoding='utf-8') as f:
             f.write("# CLASSIC Phase 6 Performance Reports\n\n")
             f.write(f"**Generated:** {self.generation_timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"**Tool:** performance_report_generator.py\n\n")
+            f.write("**Tool:** performance_report_generator.py\n\n")
 
             f.write("## Available Reports\n\n")
 
@@ -629,7 +623,7 @@ Examples:
                 include_real_logs=args.include_real_logs
             )
 
-            print(f"\n✅ Report generation complete!")
+            print("\n✅ Report generation complete!")
             print(f"📁 Output directory: {generator.output_dir}")
             print(f"📄 Generated files: {len(generated_files)}")
 

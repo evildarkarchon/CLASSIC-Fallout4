@@ -5,14 +5,13 @@ parsing, analysis, and report generation using synthetic data based
 on real crash log patterns.
 """
 
-import pytest
+import asyncio
 import tempfile
-import json
 import time
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, AsyncMock
-from typing import Dict, List, Any, Optional
-import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.integration, pytest.mark.e2e, pytest.mark.asyncio]
@@ -125,7 +124,7 @@ class SyntheticCrashLogGenerator:
                 "RBX 0x80ECFDFA90       (void*)",
                 "RSP 0x80ECFDF940       (void*)",
                 "RBP 0x80ECFDFA90       (void*)",
-                "RSI 0x22FCA037A78      (char*) \"WCLINS_PRP_Patch - Main.ba2\"",
+                'RSI 0x22FCA037A78      (char*) "WCLINS_PRP_Patch - Main.ba2"',
                 "RDI 0x0                (NULL)",
                 "R8  0x80ECFDF9C0       (void*)",
                 "R9  0x7FF6F1E59BC0     (void* -> Fallout4.exe+40B9BC0)",
@@ -134,7 +133,7 @@ class SyntheticCrashLogGenerator:
                 "R12 0x80ECFDFBB8       (void*)",
                 "R13 0x80ECFDFD60       (FormManager**)",
                 "R14 0x1                (size_t)",
-                "R15 0x22FCA037A78      (char*) \"WCLINS_PRP_Patch - Main.ba2\"",
+                'R15 0x22FCA037A78      (char*) "WCLINS_PRP_Patch - Main.ba2"',
             ]
             for reg in registers:
                 lines.append(f"\t{reg}")
@@ -144,7 +143,7 @@ class SyntheticCrashLogGenerator:
             stack_memory = [
                 "[RSP+8  ] 0x80ECFDFA90      (void*)",
                 "[RSP+10 ] 0x1AC             (size_t)",
-                "[RSP+18 ] 0x22FCA037A78     (char*) \"WCLINS_PRP_Patch - Main.ba2\"",
+                '[RSP+18 ] 0x22FCA037A78     (char*) "WCLINS_PRP_Patch - Main.ba2"',
                 "[RSP+20 ] 0x0               (NULL)",
                 "[RSP+28 ] 0x80ECFDFB30      (void*)",
                 "[RSP+30 ] 0x22FCA037950     (void*)",
@@ -181,11 +180,11 @@ class TestScanPipelineE2E:
     @pytest.fixture
     async def setup_pipeline(self):
         """Setup the complete pipeline with all components."""
-        from ClassicLib.OrchestratorCore import OrchestratorCore
-        from ClassicLib.FileIOCore import FileIOCore
         from ClassicLib.MessageHandler.MessageHandler import MessageHandler
-        from ClassicLib.GlobalRegistry import GlobalRegistry
+        from ClassicLib.OrchestratorCore import OrchestratorCore
+
         from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.FileIOCore import FileIOCore
 
         # Clear AsyncBridge singleton instances properly
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
@@ -301,7 +300,7 @@ class TestScanPipelineE2E:
             assert total_time < 3.0, f"Pipeline too slow: {total_time}s (expected <3s)"
 
             # Log performance metrics
-            print(f"\nPipeline Performance (1MB log):")
+            print("\nPipeline Performance (1MB log):")
             print(f"  Parse time: {parse_time:.3f}s")
             print(f"  Analyze time: {analyze_time:.3f}s")
             print(f"  Report time: {report_time:.3f}s")
@@ -416,7 +415,7 @@ class TestScanPipelineE2E:
                 )
                 # Should either parse or return safe error
                 assert segments is None or isinstance(segments, dict)
-            except (ValueError, RuntimeError, UnicodeDecodeError, AttributeError) as e:
+            except (ValueError, RuntimeError, UnicodeDecodeError, AttributeError):
                 # Expected exceptions are acceptable
                 pass
             except MemoryError:
@@ -464,6 +463,7 @@ class TestScanPipelineE2E:
     async def test_pipeline_memory_efficiency(self, setup_pipeline):
         """Test pipeline memory efficiency with multiple large logs."""
         import gc
+
         import psutil
 
         process = psutil.Process()
@@ -503,8 +503,8 @@ class TestScanPipelineE2E:
     @pytest.mark.asyncio
     async def test_game_scan_to_integrity_check_pipeline(self, setup_pipeline):
         """Test game scanning to integrity check pipeline."""
-        from ClassicLib.ScanGame.GameScanner import GameScanner
         from ClassicLib.ScanGame.GameIntegrity import GameIntegrityChecker
+        from ClassicLib.ScanGame.GameScanner import GameScanner
 
         # Create synthetic game structure
         with tempfile.TemporaryDirectory(prefix="synthetic_game_") as game_dir:

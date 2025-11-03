@@ -22,48 +22,37 @@ zero functional regression while providing significant performance improvements.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import tempfile
 import time
-from pathlib import Path
 from typing import Any
-from unittest.mock import Mock, patch
 
 import pytest
 
 from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.integration.detector import get_available_components
 from ClassicLib.integration.factory import (
-    get_parser,
     get_formid_analyzer,
+    get_parser,
     get_plugin_analyzer,
     get_record_scanner,
-    get_database_pool,
-    get_file_io,
 )
 from ClassicLib.integration.status import (
     get_rust_component_status,
-    is_rust_accelerated,
 )
-from ClassicLib.integration.detector import get_available_components
 
 RUST_AVAILABLE = get_available_components()["components"]
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.ScanLog.Parser import find_segments
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
 from tests.rust_integration.parity_fixtures import (
-    CrashLogParityGenerator,
-    MockYamlSettingsCache,
     ParityResult,
-    ParityTestRunner,
     ParityValidator,
     normalize_markdown_content,
-    skip_if_rust_unavailable,
     validate_formid_lists,
-    validate_plugin_dictionaries
+    validate_plugin_dictionaries,
 )
 
 logger = logging.getLogger(__name__)
@@ -416,9 +405,9 @@ class TestOutputParity:
                 if "PROBABLE CALL STACK" in line:
                     in_callstack = True
                     continue
-                elif line.startswith("MODULES:") or line.startswith("PLUGINS:"):
+                if line.startswith("MODULES:") or line.startswith("PLUGINS:"):
                     break
-                elif in_callstack and line.strip():
+                if in_callstack and line.strip():
                     callstack.append(line)
 
             if not callstack:
@@ -481,7 +470,7 @@ class TestOutputParity:
                 if line.strip().startswith("PLUGINS:"):
                     in_plugins = True
                     continue
-                elif in_plugins and line.strip():
+                if in_plugins and line.strip():
                     plugins_segment.append(line)
                 elif in_plugins and not line.strip():
                     break
@@ -559,9 +548,9 @@ class TestOutputParity:
                 if "PROBABLE CALL STACK" in line:
                     in_callstack = True
                     continue
-                elif line.startswith("MODULES:") or line.startswith("PLUGINS:"):
+                if line.startswith("MODULES:") or line.startswith("PLUGINS:"):
                     break
-                elif in_callstack and line.strip():
+                if in_callstack and line.strip():
                     callstack.append(line)
 
             if not callstack:

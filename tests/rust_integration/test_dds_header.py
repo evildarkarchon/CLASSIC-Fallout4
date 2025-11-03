@@ -5,8 +5,8 @@ Tests the PyO3-exposed DDSHeader class from classic-file-io-py, which provides
 direct access to DDS texture metadata and validation methods.
 """
 
+
 import pytest
-from pathlib import Path
 
 # Try to import DDSHeader class
 try:
@@ -336,8 +336,9 @@ class TestDDSProcessorIntegration:
 
     def test_dds_processor_rust_backend(self, tmp_path, minimal_dds_bytes):
         """Test that DDSProcessor can use Rust backend."""
-        from ClassicLib.ScanGame.core.dds_processor import DDSProcessor, HAS_RUST_DDS
         import asyncio
+
+        from ClassicLib.ScanGame.core.dds_processor import HAS_RUST_DDS, DDSProcessor
 
         # Check if Rust DDS is available
         assert HAS_RUST_DDS is True
@@ -360,8 +361,9 @@ class TestDDSProcessorIntegration:
 
     def test_validate_dds_for_game_rust(self, tmp_path, power_of_2_dds_bytes, non_power_of_2_dds_bytes):
         """Test validate_dds_for_game using Rust backend."""
-        from ClassicLib.ScanGame.core.dds_processor import DDSProcessor, HAS_RUST_DDS
         import asyncio
+
+        from ClassicLib.ScanGame.core.dds_processor import HAS_RUST_DDS, DDSProcessor
 
         assert HAS_RUST_DDS is True
 
@@ -386,8 +388,9 @@ class TestDDSProcessorIntegration:
     @pytest.mark.asyncio
     async def test_check_dds_batch_async_rust(self, tmp_path, power_of_2_dds_bytes, non_power_of_2_dds_bytes):
         """Test check_dds_batch_async using Rust backend."""
-        from ClassicLib.ScanGame.core.dds_processor import DDSProcessor, HAS_RUST_DDS
         import asyncio
+
+        from ClassicLib.ScanGame.core.dds_processor import HAS_RUST_DDS, DDSProcessor
 
         assert HAS_RUST_DDS is True
 

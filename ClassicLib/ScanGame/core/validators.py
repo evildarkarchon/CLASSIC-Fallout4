@@ -89,19 +89,19 @@ class ScanValidators:
             return self._issue_messages_cache[cache_key]
         base_messages = {
             "tex_dims": [
-                "\n# ⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️\n",
+                "\n**⚠️ DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 ⚠️**\n",
                 "▶️ Any mods that have texture files with incorrect dimensions\n",
                 "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
                 "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
             ],
             "tex_frmt": [
-                "\n# ❓ TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS ❓\n",
+                "\n**❓ TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS ❓**\n",
                 "▶️ Any files with an incorrect file format will not work.\n",
                 "  Mod authors should convert these files to their proper game format.\n",
                 "  If possible, notify the original mod authors about these problems.\n\n",
             ],
             "snd_frmt": [
-                "\n# ❓ SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV ❓\n",
+                "\n**❓ SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV ❓**\n",
                 "▶️ Any files with an incorrect file format will not work.\n",
                 "  Mod authors should convert these files to their proper game format.\n",
                 "  If possible, notify the original mod authors about these problems.\n\n",
@@ -112,33 +112,33 @@ class ScanValidators:
         if mode == "unpacked":
             base_messages.update({
                 "xse_file": [
-                    f"\n# ⚠️ FOLDERS CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
+                    f"\n**⚠️ FOLDERS CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️**\n",
                     "▶️ Any mods with copies of original Script Extender files\n",
                     "  may cause script related problems or crashes.\n\n",
                 ],
                 "previs": [
-                    "\n# ⚠️ FOLDERS CONTAIN LOOSE PRECOMBINE / PREVIS FILES ⚠️\n",
+                    "\n**⚠️ FOLDERS CONTAIN LOOSE PRECOMBINE / PREVIS FILES ⚠️**\n",
                     "▶️ Any mods that contain custom precombine/previs files\n",
                     "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
                     "  Otherwise, see if there is a PRP patch available for these mods.\n\n",
                 ],
                 "animdata": [
-                    "\n# ❓ FOLDERS CONTAIN CUSTOM ANIMATION FILE DATA ❓\n",
+                    "\n**❓ FOLDERS CONTAIN CUSTOM ANIMATION FILE DATA ❓**\n",
                     "▶️ Any mods that have their own custom Animation File Data\n",
                     "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
                     "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n",
                 ],
-                "cleanup": ["\n# 📄 DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' 📄\n"],
+                "cleanup": ["\n**📄 DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' 📄**\n"],
             })
         else:  # archived
             base_messages.update({
                 "xse_file": [
-                    f"\n# ⚠️ BA2 ARCHIVES CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️\n",
+                    f"\n**⚠️ BA2 ARCHIVES CONTAIN COPIES OF *{xse_acronym}* SCRIPT FILES ⚠️**\n",
                     "▶️ Any mods with copies of original Script Extender files\n",
                     "  may cause script related problems or crashes.\n\n",
                 ],
                 "ba2_frmt": [
-                    "\n# ❓ BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 ❓\n",
+                    "\n**❓ BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 ❓**\n",
                     "▶️ Any files with an incorrect file format will not work.\n",
                     "  Mod authors should convert these files to their proper game format.\n",
                     "  If possible, notify the original mod authors about these problems.\n\n",

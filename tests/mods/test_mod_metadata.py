@@ -6,9 +6,9 @@ Tests for mod metadata extraction and important mod detection.
 from typing import Any
 
 import pytest
+from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
 from ClassicLib.ScanLog.DetectMods import detect_mods_important
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
 
 
 class TestImportantModDetection:

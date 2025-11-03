@@ -8,9 +8,8 @@ detection under production-level stress conditions.
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-from statistics import mean, median, stdev
-from unittest.mock import Mock, patch
+from statistics import mean, stdev
+from unittest.mock import patch
 
 import pytest
 
@@ -18,11 +17,6 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
-from tests.stress.stress_test_fixtures import (
-    MemoryTracker,
-    PerformanceProfiler,
-    StressDataGenerator
-)
 
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge

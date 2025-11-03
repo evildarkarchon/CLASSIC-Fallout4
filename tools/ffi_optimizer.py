@@ -35,23 +35,19 @@ from __future__ import annotations
 
 import asyncio
 import functools
-import gc
+import hashlib
 import logging
 import pickle
 import sys
 import threading
 import time
-import weakref
 from collections import defaultdict, deque
-from concurrent.futures import ThreadPoolExecutor
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, TypeVar, Generic
-import hashlib
-import json
+from typing import Any, TypeVar
 
 # Import profiler for optimization analysis
-from tools.ffi_profiler import FFIProfiler, FFICall
+from tools.ffi_profiler import FFIProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -78,11 +74,11 @@ class OptimizationResult:
     data_reduction_pct: float
 
     # Optimization techniques applied
-    techniques_applied: List[str] = field(default_factory=list)
+    techniques_applied: list[str] = field(default_factory=list)
 
     # Warnings and recommendations
-    warnings: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
 class BatchCache:
     """
@@ -105,7 +101,7 @@ class BatchCache:
         self.enable_memory_pressure = enable_memory_pressure
 
         # Thread-safe cache storage
-        self._cache: Dict[str, Tuple[Any, float, int]] = {}  # (value, expiry_time, access_count)
+        self._cache: dict[str, tuple[Any, float, int]] = {}  # (value, expiry_time, access_count)
         self._access_order: deque = deque()  # For LRU
         self._lock = threading.RLock()
 
@@ -114,7 +110,7 @@ class BatchCache:
         self.misses = 0
         self.evictions = 0
 
-    def _make_key(self, args: Tuple, kwargs: Dict) -> str:
+    def _make_key(self, args: tuple, kwargs: dict) -> str:
         """Create a hash key for function arguments."""
         try:
             # Try to create a stable representation
@@ -156,7 +152,7 @@ class BatchCache:
                 del self._cache[lru_key]
                 self.evictions += 1
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache if available and not expired."""
         with self._lock:
             self._cleanup_expired()
@@ -176,15 +172,14 @@ class BatchCache:
 
                     self.hits += 1
                     return value
-                else:
-                    # Expired
-                    del self._cache[key]
-                    self.evictions += 1
+                # Expired
+                del self._cache[key]
+                self.evictions += 1
 
             self.misses += 1
             return None
 
-    def put(self, key: str, value: Any, ttl: Optional[float] = None):
+    def put(self, key: str, value: Any, ttl: float | None = None):
         """Store value in cache with TTL."""
         with self._lock:
             self._evict_lru()
@@ -199,7 +194,7 @@ class BatchCache:
                 pass
             self._access_order.append(key)
 
-    def cache_function(self, ttl: Optional[float] = None):
+    def cache_function(self, ttl: float | None = None):
         """Decorator to cache function results."""
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
@@ -219,7 +214,7 @@ class BatchCache:
             return wrapper
         return decorator
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         total_requests = self.hits + self.misses
         hit_rate = (self.hits / total_requests * 100) if total_requests > 0 else 0
@@ -252,13 +247,13 @@ class BatchProcessor:
         self.enable_adaptive_sizing = enable_adaptive_sizing
 
         # Batch queues for different operation types
-        self._batch_queues: Dict[str, deque] = defaultdict(deque)
-        self._batch_futures: Dict[str, List] = defaultdict(list)
-        self._batch_timers: Dict[str, Optional[threading.Timer]] = {}
+        self._batch_queues: dict[str, deque] = defaultdict(deque)
+        self._batch_futures: dict[str, list] = defaultdict(list)
+        self._batch_timers: dict[str, threading.Timer | None] = {}
         self._lock = threading.RLock()
 
         # Adaptive sizing data
-        self._performance_history: Dict[str, List[Tuple[int, float]]] = defaultdict(list)  # (batch_size, time_per_item)
+        self._performance_history: dict[str, list[tuple[int, float]]] = defaultdict(list)  # (batch_size, time_per_item)
 
     def _get_optimal_batch_size(self, operation_key: str) -> int:
         """Calculate optimal batch size based on performance history."""
@@ -282,12 +277,12 @@ class BatchProcessor:
         current_size = self.default_batch_size
         if best_size > current_size:
             return min(best_size, current_size * 2, self.max_batch_size)
-        elif best_size < current_size:
+        if best_size < current_size:
             return max(best_size, current_size // 2, 10)
 
         return current_size
 
-    def _process_batch(self, operation_key: str, batch_func: Callable, items: List[Any]) -> List[Any]:
+    def _process_batch(self, operation_key: str, batch_func: Callable, items: list[Any]) -> list[Any]:
         """Process a batch of items and update performance metrics."""
         if not items:
             return []
@@ -330,7 +325,7 @@ class BatchProcessor:
             self._batch_futures[operation_key].clear()
 
             # Cancel the timer
-            if operation_key in self._batch_timers and self._batch_timers[operation_key]:
+            if self._batch_timers.get(operation_key):
                 self._batch_timers[operation_key].cancel()
                 self._batch_timers[operation_key] = None
 
@@ -352,7 +347,7 @@ class BatchProcessor:
                 if not future.cancelled():
                     future.set_exception(e)
 
-    def batch_call(self, operation_key: str, batch_func: Callable[[List[T]], List[R]], item: T) -> asyncio.Future[R]:
+    def batch_call(self, operation_key: str, batch_func: Callable[[list[T]], list[R]], item: T) -> asyncio.Future[R]:
         """
         Add an item to be processed in a batch.
 
@@ -382,22 +377,21 @@ class BatchProcessor:
             if should_flush:
                 # Process immediately
                 self._flush_batch(operation_key, batch_func)
-            else:
-                # Set up timer to flush after timeout
-                if operation_key not in self._batch_timers or self._batch_timers[operation_key] is None:
-                    timer = threading.Timer(
-                        self.batch_timeout,
-                        lambda: self._flush_batch(operation_key, batch_func)
-                    )
-                    timer.start()
-                    self._batch_timers[operation_key] = timer
+            # Set up timer to flush after timeout
+            elif operation_key not in self._batch_timers or self._batch_timers[operation_key] is None:
+                timer = threading.Timer(
+                    self.batch_timeout,
+                    lambda: self._flush_batch(operation_key, batch_func)
+                )
+                timer.start()
+                self._batch_timers[operation_key] = timer
 
         return future
 
     def batch_operation(self,
-                       operation_key: Optional[str] = None,
-                       batch_size: Optional[int] = None,
-                       timeout: Optional[float] = None):
+                       operation_key: str | None = None,
+                       batch_size: int | None = None,
+                       timeout: float | None = None):
         """
         Decorator to automatically batch function calls.
 
@@ -406,7 +400,7 @@ class BatchProcessor:
             def parse_log_batch(log_entries: List[str]) -> List[Dict]:
                 return rust_parser.parse_batch(log_entries)
         """
-        def decorator(batch_func: Callable[[List[T]], List[R]]) -> Callable[[T], asyncio.Future[R]]:
+        def decorator(batch_func: Callable[[list[T]], list[R]]) -> Callable[[T], asyncio.Future[R]]:
             nonlocal operation_key
             if operation_key is None:
                 operation_key = f"{batch_func.__module__}.{batch_func.__name__}"
@@ -445,7 +439,7 @@ class DataOptimizer:
         self.optimization_stats = defaultdict(int)
         self._size_reduction_history = []
 
-    def optimize_for_rust_transfer(self, data: Any) -> Tuple[Any, Dict[str, Any]]:
+    def optimize_for_rust_transfer(self, data: Any) -> tuple[Any, dict[str, Any]]:
         """
         Optimize data for transfer to Rust, returning optimized data and metadata.
 
@@ -532,7 +526,7 @@ class DataOptimizer:
 
         return data, metadata
 
-    def reverse_optimization(self, data: Any, metadata: Dict[str, Any]) -> Any:
+    def reverse_optimization(self, data: Any, metadata: dict[str, Any]) -> Any:
         """Reverse the optimization to get back the original data structure."""
         optimizations = metadata.get('optimizations', [])
 
@@ -556,7 +550,7 @@ class DataOptimizer:
 
         return data
 
-    def get_optimization_stats(self) -> Dict[str, Any]:
+    def get_optimization_stats(self) -> dict[str, Any]:
         """Get statistics on optimization effectiveness."""
         avg_reduction = sum(self._size_reduction_history) / len(self._size_reduction_history) if self._size_reduction_history else 0
 
@@ -595,15 +589,15 @@ class FFIOptimizer:
         self.enable_data_optimization = enable_data_optimization
 
         # Optimization tracking
-        self.optimization_history: List[OptimizationResult] = []
-        self._baseline_profiler: Optional[FFIProfiler] = None
-        self._optimized_profiler: Optional[FFIProfiler] = None
+        self.optimization_history: list[OptimizationResult] = []
+        self._baseline_profiler: FFIProfiler | None = None
+        self._optimized_profiler: FFIProfiler | None = None
 
     def analyze_ffi_performance(self,
                                target_function: Callable,
-                               test_data: List[Any],
+                               test_data: list[Any],
                                warmup_runs: int = 3,
-                               measurement_runs: int = 10) -> Tuple[FFIProfiler, FFIProfiler]:
+                               measurement_runs: int = 10) -> tuple[FFIProfiler, FFIProfiler]:
         """
         Analyze FFI performance before and after optimization.
 
@@ -672,8 +666,8 @@ class FFIOptimizer:
         return baseline_profiler, optimized_profiler
 
     def optimize_function(self, func: Callable,
-                         cache_ttl: Optional[float] = None,
-                         batch_key: Optional[str] = None,
+                         cache_ttl: float | None = None,
+                         batch_key: str | None = None,
                          enable_data_opt: bool = None) -> Callable:
         """
         Apply all available optimizations to a function.
@@ -807,7 +801,7 @@ class FFIOptimizer:
         print("🚀 FFI OPTIMIZATION REPORT")
         print("=" * 80)
 
-        print(f"\n📊 PERFORMANCE IMPROVEMENTS:")
+        print("\n📊 PERFORMANCE IMPROVEMENTS:")
         print(f"  FFI Calls         : {result.original_calls:,} → {result.optimized_calls:,} "
               f"({result.call_reduction_pct:+.1f}%)")
         print(f"  Execution Time    : {result.original_time:.3f}s → {result.optimized_time:.3f}s "
@@ -816,34 +810,34 @@ class FFIOptimizer:
               f"({result.data_reduction_pct:+.1f}%)")
 
         if result.techniques_applied:
-            print(f"\n🛠️ OPTIMIZATION TECHNIQUES APPLIED:")
+            print("\n🛠️ OPTIMIZATION TECHNIQUES APPLIED:")
             for technique in result.techniques_applied:
                 print(f"  ✅ {technique}")
 
         if result.warnings:
-            print(f"\n⚠️ WARNINGS:")
+            print("\n⚠️ WARNINGS:")
             for warning in result.warnings:
                 print(f"  ⚠️ {warning}")
 
         if result.recommendations:
-            print(f"\n💡 RECOMMENDATIONS:")
+            print("\n💡 RECOMMENDATIONS:")
             for rec in result.recommendations:
                 print(f"  💡 {rec}")
 
         # Overall assessment
         if result.time_savings_pct > 30:
-            print(f"\n🎯 EXCELLENT: Significant performance improvement achieved!")
+            print("\n🎯 EXCELLENT: Significant performance improvement achieved!")
         elif result.time_savings_pct > 15:
-            print(f"\n✅ GOOD: Moderate performance improvement achieved")
+            print("\n✅ GOOD: Moderate performance improvement achieved")
         elif result.time_savings_pct > 5:
-            print(f"\n📈 MINOR: Small performance improvement achieved")
+            print("\n📈 MINOR: Small performance improvement achieved")
         else:
-            print(f"\n❓ MINIMAL: Limited improvement - investigate other bottlenecks")
+            print("\n❓ MINIMAL: Limited improvement - investigate other bottlenecks")
 
         print("=" * 80)
 
 # Convenience decorators and functions
-def batch_operation(batch_size: int = 100, timeout: float = 0.1, operation_key: Optional[str] = None):
+def batch_operation(batch_size: int = 100, timeout: float = 0.1, operation_key: str | None = None):
     """
     Decorator for automatic batching of operations.
 

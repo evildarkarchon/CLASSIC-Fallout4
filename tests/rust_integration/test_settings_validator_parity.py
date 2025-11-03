@@ -18,7 +18,6 @@ from __future__ import annotations
 import logging
 import time
 from typing import Any
-from unittest.mock import Mock
 
 import pytest
 
@@ -50,7 +49,7 @@ class SettingsValidatorParityValidator(ParityValidator):
 
     def create_rust_implementation(self, yamldata=None, **kwargs) -> Any | None:
         """Create Rust settings validator implementation using factory."""
-        if not RUST_AVAILABLE.get("settings_validator", False):
+        if not RUST_AVAILABLE.get("settings_validator"):
             return None
 
         # Use factory function to get the best implementation

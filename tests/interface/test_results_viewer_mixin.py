@@ -9,10 +9,11 @@ This test module verifies that:
 5. Clipboard operations work correctly
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, mock_open
-from PySide6.QtCore import QObject, Signal
+from unittest.mock import MagicMock, patch
+
+import pytest
+from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QWidget
 
 
@@ -171,9 +172,8 @@ def test_load_report_fallback_uses_rust_file_io():
     with patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync") as mock_read:
         mock_read.return_value = "# Test Report\n\nContent here"
 
-        with patch("ClassicLib.MessageHandler.msg_error"):
-            with patch("ClassicLib.MessageHandler.msg_warning"):
-                result = viewer.load_report(mock_path)
+        with patch("ClassicLib.MessageHandler.msg_error"), patch("ClassicLib.MessageHandler.msg_warning"):
+            result = viewer.load_report(mock_path)
 
         # Verify read_file_sync was called twice
         assert mock_read.call_count == 2, "Should call read_file_sync twice (markdown + fallback)"
