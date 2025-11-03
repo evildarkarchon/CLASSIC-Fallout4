@@ -39,13 +39,29 @@ hiddenimports.extend([
     "ClassicLib.integration.detector",
     # All Rust Python modules (.pyd files from separated architecture)
     # Architecture: *-core crates (pure Rust business logic) + *-py crates (PyO3 bindings)
+    # Foundation Layer
     "classic_shared",      # Foundation (runtime, errors, utilities)
-    "classic_yaml",        # From classic-yaml-py (bindings for yaml-rust2 operations)
-    "classic_database",    # From classic-database-py (bindings for SQLite operations)
-    "classic_file_io",     # From classic-file-io-py (bindings for file I/O + DDS parsing)
-    "classic_scanlog",     # From classic-scanlog-py (bindings for log parsing + analysis)
-    "classic_config",      # From classic-config-py (bindings for YamlData configuration)
-    "classic_core",        # Facade re-exporting Phase 1 components
+    # Business Logic - Core Operations
+    "classic_config",      # YamlData configuration
+    "classic_database",    # SQLite operations
+    "classic_file_io",     # File I/O + DDS parsing
+    "classic_message",     # Message handling
+    "classic_path",        # Path management (10-20x speedup)
+    "classic_perf",        # Performance monitoring
+    "classic_pybridge",    # Async Python bridge
+    "classic_registry",    # Windows registry operations
+    "classic_scangame",    # Game scanning + validation
+    "classic_scanlog",     # Log parsing + analysis
+    "classic_settings",    # Settings cache management
+    "classic_yaml",        # YAML operations (yaml-rust2)
+    # Phase 4 - Constants and Utilities
+    "classic_constants",   # Game constants and enumerations
+    "classic_version",     # Version parsing and comparison
+    "classic_resource",    # Resource file detection
+    "classic_xse",         # Script Extender (XSE) utilities
+    "classic_web",         # Web utilities and URL validation
+    # Phase 5 - Application Coordination
+    "classic_update",      # Auto-update system (GitHub + Nexus)
 ])
 
 # Collect PySide6 dependencies

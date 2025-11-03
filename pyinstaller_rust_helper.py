@@ -39,12 +39,29 @@ import site
 # All Rust Python modules to bundle (.pyd files from *-py crates)
 # These are the standalone Python extension modules that PyInstaller needs to include
 RUST_MODULES = [
+    # Foundation Layer
     "classic_shared",      # Foundation layer (runtime, errors, utilities)
-    "classic_yaml",        # YAML operations (from classic-yaml-py)
+    # Business Logic - Core Operations
+    "classic_config",      # Configuration (from classic-config-py)
     "classic_database",    # SQLite operations (from classic-database-py)
     "classic_file_io",     # File I/O operations (from classic-file-io-py)
+    "classic_message",     # Message handling (from classic-message-py)
+    "classic_path",        # Path management (from classic-path-py) - NEW: 10-20x speedup
+    "classic_perf",        # Performance monitoring (from classic-perf-py)
+    "classic_pybridge",    # Async Python bridge (from classic-pybridge-py)
+    "classic_registry",    # Windows registry (from classic-registry-py)
+    "classic_scangame",    # Game scanning (from classic-scangame-py)
     "classic_scanlog",     # Log parsing (from classic-scanlog-py)
-    "classic_config",      # Configuration (from classic-config-py)
+    "classic_settings",    # Settings cache (from classic-settings-py)
+    "classic_yaml",        # YAML operations (from classic-yaml-py)
+    # Phase 4 - Constants and Utilities
+    "classic_constants",   # Game constants (from classic-constants-py)
+    "classic_version",     # Version parsing (from classic-version-py)
+    "classic_resource",    # Resource detection (from classic-resource-py)
+    "classic_xse",         # Script Extender (from classic-xse-py)
+    "classic_web",         # Web utilities (from classic-web-py)
+    # Phase 5 - Application Coordination
+    "classic_update",      # Auto-update system (from classic-update-py)
 ]
 
 
@@ -76,7 +93,7 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
 
         for module_name in RUST_MODULES:
             # In flattened structure, .pyd files are directly in rust_extensions/
-            # Look for {module_name}.pyd (e.g., classic_core.pyd)
+            # Look for {module_name}.pyd (e.g., classic_yaml.pyd)
             pyd_file = local_rust_dir / f"{module_name}.pyd"
             if pyd_file.exists():
                 modules_found.append(module_name)
