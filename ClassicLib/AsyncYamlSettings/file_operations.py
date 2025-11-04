@@ -5,6 +5,7 @@ on static database files and uses Python-based implementations for preserving
 comments in user-editable files.
 """
 
+import asyncio
 from io import StringIO
 from pathlib import Path
 from typing import Any, ClassVar
@@ -18,7 +19,7 @@ from ClassicLib.Logger import logger
 from ClassicLib.ResourceLoader import ResourceLoader
 
 
-# TODO: Make Static YAML Stores read-only in the future
+# TODO: Make Static YAML Stores read-only in the future  # noqa: FIX002
 # Static stores should not be written to at runtime.
 class YamlFileOperations:
     """
@@ -86,7 +87,7 @@ class YamlFileOperations:
         # Static stores are read-only and don't need comment preservation
         for store in self.STATIC_YAML_STORES:
             try:
-                store_path = self.get_path_for_store(store)
+                store_path = YamlFileOperations.get_path_for_store(store)
 
                 # Exact path match
                 if file_path == store_path:
@@ -97,7 +98,7 @@ class YamlFileOperations:
                 # Check if the resolved paths match (handles relative vs absolute)
                 if file_path.resolve() == store_path.resolve():
                     return True
-            except (ValueError, Exception):
+            except (ValueError, OSError, RuntimeError):
                 # If we can't determine the path for this store, skip it
                 continue
 
@@ -105,7 +106,8 @@ class YamlFileOperations:
         # use Python to preserve comments
         return False
 
-    def get_path_for_store(self, yaml_store: YAML) -> Path:
+    @staticmethod
+    def get_path_for_store(yaml_store: YAML) -> Path:
         """
         Determines the file path for a given YAML store type.
 
@@ -178,7 +180,7 @@ class YamlFileOperations:
             try:
                 result = self.rust_yaml.parse_yaml(content)
                 return result if isinstance(result, dict) else {}
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError) as e:
                 logger.debug(f"Rust YAML parsing failed, falling back to Python: {e}")
 
         # Use Python implementation to preserve comments
@@ -194,7 +196,8 @@ class YamlFileOperations:
             logger.error(f"Failed to parse YAML content: {e}")
             raise
 
-    async def dump_yaml_content(self, data: dict[str, Any]) -> str:
+    @staticmethod
+    async def dump_yaml_content(data: dict[str, Any]) -> str:
         """
         Writes a dictionary as a YAML formatted string while preserving comments from
         the input data. The function applies a specific YAML formatting style
@@ -253,10 +256,9 @@ class YamlFileOperations:
         """
         # Check cache first if enabled
         file_key = str(file_path)
-        if use_cache and hasattr(self, '_file_cache'):
-            if file_key in self._file_cache:
-                logger.debug(f"Loaded {file_path.name} from cache")
-                return self._file_cache[file_key]
+        if use_cache and hasattr(self, '_file_cache') and file_key in self._file_cache:
+            logger.debug(f"Loaded {file_path.name} from cache")
+            return self._file_cache[file_key]
 
         try:
             # Determine if this is a static (read-only) file that can use Rust acceleration
@@ -267,7 +269,7 @@ class YamlFileOperations:
                     result = self.rust_yaml.load_yaml_file(str(file_path))
                     logger.debug(f"Loaded {file_path.name} with Rust acceleration")
                     data = result if isinstance(result, dict) else {}
-                except Exception as e:
+                except (RuntimeError, ValueError, TypeError, OSError) as e:
                     logger.debug(f"Rust YAML loading failed for {file_path.name}, falling back to Python: {e}")
                     # Fall through to Python loading
                     content = await self.io_core.read_file(file_path)
@@ -290,20 +292,20 @@ class YamlFileOperations:
                 logger.debug(f"Loaded {file_path.name} with Python (preserve_comments={preserve_comments})")
                 data = await self.parse_yaml_content(content, preserve_comments=preserve_comments)
 
-            # Cache the result if caching is enabled
+        except FileNotFoundError:
+            logger.debug(f"YAML file not found: {file_path}")
+            return {}
+        except (ruamel.yaml.YAMLError, OSError, ValueError) as e:
+            logger.error(f"Failed to load YAML file {file_path}: {e}")
+            return {}
+        else:
+            # Cache the result if caching is enabled (only on success)
             if use_cache:
                 if not hasattr(self, '_file_cache'):
                     self._file_cache: dict[str, dict[str, Any]] = {}
                 self._file_cache[file_key] = data
 
             return data
-
-        except FileNotFoundError:
-            logger.debug(f"YAML file not found: {file_path}")
-            return {}
-        except Exception as e:
-            logger.error(f"Failed to load YAML file {file_path}: {e}")
-            return {}
 
     async def save_yaml_file(self, file_path: Path, data: dict[str, Any]) -> bool:
         """
@@ -329,11 +331,11 @@ class YamlFileOperations:
             # Use FileIOCore for async file writing
             await self.io_core.write_file(file_path, content)
 
-            return True
-
-        except Exception as e:
+        except (OSError, ValueError, ruamel.yaml.YAMLError) as e:
             logger.error(f"Failed to save YAML file {file_path}: {e}")
             return False
+        else:
+            return True
 
     async def ensure_file_exists(self, file_path: Path) -> None:
         """
@@ -344,9 +346,9 @@ class YamlFileOperations:
         Args:
             file_path (Path): The path to the file that needs to be checked or created.
         """
-        if not file_path.exists():
+        if not await asyncio.to_thread(file_path.exists):
             logger.debug(f"Creating missing YAML file: {file_path}")
-            file_path.parent.mkdir(parents=True, exist_ok=True)
+            await asyncio.to_thread(file_path.parent.mkdir, parents=True, exist_ok=True)
             # Create empty YAML file
             await self.io_core.write_file(file_path, "{}\n")
 
@@ -368,7 +370,7 @@ class YamlFileOperations:
         """
         backup_path = file_path.with_suffix(file_path.suffix + backup_suffix)
 
-        if file_path.exists():
+        if await asyncio.to_thread(file_path.exists):
             content = await self.io_core.read_file(file_path)
             await self.io_core.write_file(backup_path, content)
             logger.debug(f"Created backup: {backup_path}")
@@ -379,49 +381,47 @@ class YamlFileOperations:
 
     async def regenerate_settings_file(self, yaml_store: YAML) -> dict[str, Any]:
         """
-        Regenerates a YAML settings file and reloads it. This method determines the file type to
-        regenerate based on the provided `yaml_store` parameter and uses the appropriate routines
-        from the `FileGeneration` module. If the regeneration is successful, the method loads
-        and returns the contents of the regenerated file.
+        Regenerates a YAML settings file and reloads it.
+
+        This method currently only supports regenerating user-specific files (Ignore and Game_Local).
+        Static database files (Settings, Main, Game) cannot be regenerated as they are shipped with
+        the application.
 
         Args:
             yaml_store (YAML): An enumeration representing the type of YAML file
-                to regenerate. Possible values include YAML.Settings, YAML.Main,
-                and YAML.Game.
+                to regenerate. Supported values: YAML.Ignore, YAML.Game_Local.
 
         Returns:
             dict[str, Any]: A dictionary containing the contents of the regenerated
                 YAML file if successful, or an empty dictionary if the operation
-                fails.
+                fails or the store type is not supported.
         """
         logger.info(f"Regenerating {yaml_store} file")
 
         # Import file generation module
         try:
-            from ClassicLib.FileGeneration import FileGeneration
-
-            file_gen = FileGeneration()
+            from ClassicLib.FileGeneration import FileGenerator
 
             # Determine which file to regenerate
-            if yaml_store == YAML.Settings:
-                success = await file_gen.generate_settings_file()
-            elif yaml_store == YAML.Main:
-                success = await file_gen.generate_main_file()
-            elif yaml_store == YAML.Game:
-                # Game-specific files
-                success = await file_gen.generate_game_files()
-            else:
-                logger.warning(f"Cannot regenerate {yaml_store} file")
-                return {}
+            # Only user-specific files can be regenerated
+            if yaml_store == YAML.Ignore:
+                await FileGenerator.generate_ignore_file_async()
+                file_path = YamlFileOperations.get_path_for_store(yaml_store)
+                return await self.load_yaml_file(file_path)
 
-            if success:
-                # Reload the regenerated file
-                file_path = self.get_path_for_store(yaml_store)
+            if yaml_store == YAML.Game_Local:
+                await FileGenerator.generate_local_yaml_async()
+                file_path = YamlFileOperations.get_path_for_store(yaml_store)
                 return await self.load_yaml_file(file_path)
 
         except ImportError:
             logger.error("FileGeneration module not available")
-        except Exception as e:
+            return {}
+        except (TypeError, OSError, PermissionError) as e:
             logger.error(f"Failed to regenerate {yaml_store} file: {e}")
-
-        return {}
+            return {}
+        else:
+            # Static database files (Settings, Main, Game) cannot be regenerated
+            # They are shipped with the application
+            logger.warning(f"Cannot regenerate {yaml_store} file - static files are read-only")
+            return {}

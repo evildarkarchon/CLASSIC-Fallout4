@@ -24,11 +24,11 @@ def validate_settings_structure(data: dict[str, Any], store_type: str) -> None:
         store_type (str): A string indicating the type of store (e.g., "Settings") being validated.
 
     Raises:
-        ValueError: If the data is not a dictionary or if specific structural requirements are
-            not met based on the store type.
+        TypeError: If the data is not a dictionary.
+        ValueError: If specific structural requirements are not met based on the store type.
     """
     if not isinstance(data, dict):
-        raise ValueError(f"Invalid {store_type} structure: expected dict, got {type(data)}")
+        raise TypeError(f"Invalid {store_type} structure: expected dict, got {type(data)}")
 
     # Store-specific validation
     if store_type == "Settings" and "CLASSIC_Settings" not in data:
@@ -79,7 +79,7 @@ def validate_setting_value(value: Any, expected_type: type) -> bool:
 
     # Type conversion possible
     try:
-        if expected_type in (int, float, str, bool):
+        if expected_type in {int, float, str, bool}:
             expected_type(value)
             return True
     except (ValueError, TypeError):
@@ -113,17 +113,18 @@ def coerce_setting_value(value: Any, expected_type: type) -> Any:
         # Special handling for Path
         if expected_type.__name__ == "Path":
             from pathlib import Path
+
             return Path(value) if value else None
 
         # Basic type coercion
-        if expected_type in (int, float, str, bool):
+        if expected_type in {int, float, str, bool}:
             return expected_type(value)
 
         # List/dict handling
-        if expected_type == list and not isinstance(value, list):
+        if expected_type is list and not isinstance(value, list):
             return [value]
 
-        if expected_type == dict and not isinstance(value, dict):
+        if expected_type is dict and not isinstance(value, dict):
             return {}
 
     except (ValueError, TypeError) as e:

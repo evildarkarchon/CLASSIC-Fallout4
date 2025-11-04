@@ -31,7 +31,7 @@ class RustPluginAnalyzer:
     Achieves 30x performance improvement over pure Python implementation.
     """
 
-    def __init__(self, yamldata: ClassicScanLogsInfo):
+    def __init__(self, yamldata: ClassicScanLogsInfo) -> None:
         """
         Initializes the analyzer by deciding whether to use the Rust implementation of the
         PluginAnalyzer from the classic_core module or a fallback Python implementation.
@@ -77,7 +77,7 @@ class RustPluginAnalyzer:
                 logger.debug("🚀 RustPluginAnalyzer: Using RUST implementation (30x faster)")
             else:
                 logger.debug("⚠️  RustPluginAnalyzer: PluginAnalyzer not found in classic_scanlog")
-        except Exception as e:
+        except (ImportError, RuntimeError, AttributeError) as e:
             logger.error(f"❌ Failed to initialize Rust PluginAnalyzer: {e}")
 
         # Only create Python analyzer if Rust truly unavailable
@@ -125,10 +125,10 @@ class RustPluginAnalyzer:
                     game_version=game_ver_str,
                     version_current=version_cur_str
                 )
-
-                return plugins_dict, plugin_limit_triggered, limit_check_disabled
-            except Exception as e:
+            except (RuntimeError, TypeError, ValueError) as e:
                 logger.warning(f"Rust loadorder scan failed: {e}")
+            else:
+                return plugins_dict, plugin_limit_triggered, limit_check_disabled
 
         # Use Python fallback
         if self._python_analyzer:
@@ -162,7 +162,7 @@ class RustPluginAnalyzer:
         analyzer = PluginAnalyzer(self.yamldata)
         return analyzer.check_plugin_limit(segment_plugins, game_version, version_current)
 
-    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]):
+    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> Any:
         """
         Matches plugins found in crash call stack and generates a suspect report with counts.
 
@@ -180,7 +180,7 @@ class RustPluginAnalyzer:
                 # Rust returns list[str], convert to ReportFragment
                 lines = self._rust_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
                 return ReportFragment.from_lines(lines)
-            except Exception as e:
+            except (RuntimeError, TypeError, ValueError) as e:
                 logger.warning(f"Rust plugin_match failed: {e}, falling back to Python")
 
         # Python fallback
@@ -204,7 +204,7 @@ class RustPluginAnalyzer:
         if self._use_rust and self._rust_analyzer:
             try:
                 return self._rust_analyzer.filter_ignored_plugins(crashlog_plugins)
-            except Exception as e:
+            except (RuntimeError, TypeError, ValueError) as e:
                 logger.warning(f"Rust filter_ignored_plugins failed: {e}, falling back to Python")
 
         # Python fallback
@@ -215,15 +215,16 @@ class RustPluginAnalyzer:
         analyzer = PluginAnalyzer(self.yamldata)
         return analyzer.filter_ignored_plugins(crashlog_plugins)
 
-    def parse_plugin_line(self, line: str) -> tuple[str, str] | None:
+    @staticmethod
+    def parse_plugin_line(line: str) -> tuple[str, str] | None:
         """
         Parses a single line of plugin data and extracts relevant information.
 
-        This function attempts to parse a line containing plugin information, checking
-        for a Rust-based parsing implementation first if available. If Rust parsing
-        is not available or fails, it falls back to a Python-based implementation.
-        The function extracts a hexadecimal ID and associated data from the input
-        line, if possible.
+        This function parses a line containing plugin information, extracting a
+        hexadecimal ID and associated data from the input line if possible.
+
+        Note: This method uses Python regex parsing as the Rust implementation
+        does not provide a corresponding method (it's a simple operation).
 
         Args:
             line (str): The input line containing plugin data to be parsed.
@@ -233,14 +234,7 @@ class RustPluginAnalyzer:
             (as an uppercase string) and the associated data string if parsing is
             successful. Returns None if the line does not match the expected format.
         """
-        if self._use_rust and self._rust_analyzer:
-            try:
-                if hasattr(self._rust_analyzer, "parse_plugin_line"):
-                    return self._rust_analyzer.parse_plugin_line(line)
-            except Exception as e:
-                logger.debug(f"Rust parse_plugin_line failed: {e}")
-
-        # Python fallback
+        # Python implementation (Rust doesn't provide parse_plugin_line)
         import re
         match = re.match(r"\s*\[([0-9A-Fa-f]+)\]\s+(.+)", line)
         if match:

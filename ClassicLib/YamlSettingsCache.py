@@ -322,12 +322,15 @@ class YamlSettingsCache:
                 file_path = self._async_core.file_ops.get_path_for_store(store)
                 # Trigger file load which will cache it (uses lazy bridge initialization)
                 self._get_bridge().run_async(self._async_core.file_ops.load_yaml_file(file_path, use_cache=True))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # Broad catch is intentional: prefetch is best-effort and should never crash.
+                # Possible exceptions: FileNotFoundError, PermissionError, YAML parse errors, etc.
                 # Log but don't fail - some stores might not exist
                 from ClassicLib.Logger import logger
                 logger.debug(f"Could not prefetch {store}: {e}")
 
-    def get_metrics(self) -> dict[str, int]:
+    @staticmethod
+    def get_metrics() -> dict[str, int]:
         """
         Retrieves metrics information as a dictionary.
 
@@ -406,7 +409,7 @@ class YamlSettingsCache:
 _yaml_cache = None
 
 
-def _get_yaml_cache():
+def _get_yaml_cache() -> YamlSettingsCache:
     """
     Retrieves or initializes the singleton instance of the YAML settings cache.
 
@@ -418,7 +421,7 @@ def _get_yaml_cache():
     Returns:
         YamlSettingsCache: The singleton instance of the YAML settings cache.
     """
-    global _yaml_cache
+    global _yaml_cache  # noqa: PLW0603
     if _yaml_cache is None:
         _yaml_cache = YamlSettingsCache.get_instance()
         register(Keys.YAML_CACHE, _yaml_cache)
@@ -436,7 +439,7 @@ class _YamlCacheProxy:
     reliant on the YAML cache.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the class with a placeholder for the YAML cache singleton.
 
@@ -450,7 +453,7 @@ class _YamlCacheProxy:
         if not is_registered(Keys.YAML_CACHE):
             register(Keys.YAML_CACHE, self)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         """
         Handles attribute retrieval for lazy initialization of the YAML cache. This method
         is used to create the actual YAML cache instance on the first access and ensures
@@ -468,14 +471,14 @@ class _YamlCacheProxy:
         register(Keys.YAML_CACHE, real_cache)
         return getattr(real_cache, name)
 
-    def __call__(self):
+    def __call__(self) -> YamlSettingsCache:
         """
         Callable class instance method that retrieves and returns a cached YAML object.
         This method is intended to provide quick access to preprocessed YAML data
         from a private cache.
 
         Returns:
-            object: Cached YAML data.
+            YamlSettingsCache: The singleton YAML cache instance.
         """
         return _get_yaml_cache()
 
@@ -486,6 +489,23 @@ yaml_cache = _YamlCacheProxy()
 # ==========================================
 # Module-level convenience functions
 # ==========================================
+
+
+def _raise_async_context_error(yaml_store: YAML, key_path: str) -> None:
+    """
+    Raises a RuntimeError when yaml_settings is called from an async context.
+
+    Args:
+        yaml_store: The YAML store being accessed.
+        key_path: The key path being requested.
+
+    Raises:
+        RuntimeError: Always raises with details about the invalid call.
+    """
+    raise RuntimeError(
+        "yaml_settings() called from async context. Use 'await yaml_settings_async()' instead.\n"
+        f"Location: yaml_store={yaml_store}, key_path={key_path}"
+    )
 
 
 def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
@@ -514,10 +534,7 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
     try:
         asyncio.get_running_loop()
         # If we get here, we're in an async context
-        raise RuntimeError(
-            "yaml_settings() called from async context. Use 'await yaml_settings_async()' instead.\n"
-            f"Location: yaml_store={yaml_store}, key_path={key_path}"
-        )
+        _raise_async_context_error(yaml_store, key_path)
     except RuntimeError as e:
         # Re-raise our custom error
         if "yaml_settings() called from async context" in str(e):

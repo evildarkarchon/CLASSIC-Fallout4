@@ -1,3 +1,14 @@
+"""
+Audio playback functionality for CLASSIC application notifications.
+
+This module provides the AudioPlayer class for managing sound effects
+used in application notifications. It handles:
+- Error sound playback
+- Notification sound playback
+- Custom sound file playback
+- Audio enable/disable toggling based on settings
+"""
+
 from PySide6.QtCore import QObject, QUrl, Signal
 from PySide6.QtMultimedia import QSoundEffect
 

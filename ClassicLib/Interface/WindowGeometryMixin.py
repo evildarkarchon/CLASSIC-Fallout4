@@ -48,7 +48,7 @@ class WindowGeometryMixin:
 
         def size(self) -> QSize: ...  # noqa: D102
 
-        def windowState(self) -> Qt.WindowState: ...  # noqa: D102
+        def windowState(self) -> Qt.WindowState: ...  # pyright: ignore[reportInvalidTypeForm] # noqa: D102
 
         def showMaximized(self) -> None: ...  # noqa: D102
 
@@ -72,12 +72,6 @@ class WindowGeometryMixin:
         Sets up the window geometry and connects tab change events if a tab widget
         exists within the instance. This ensures window size and state are managed
         when switching tabs.
-
-        Raises:
-            None
-
-        Returns:
-            None
         """
         if not hasattr(self, "tab_widget"):
             logger.warning("Tab widget not found, skipping geometry setup")

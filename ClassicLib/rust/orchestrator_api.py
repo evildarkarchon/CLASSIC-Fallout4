@@ -11,17 +11,26 @@ Phase 3 Integration - Part of the full backend migration plan.
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
-try:
+# Always import for type checking, conditionally at runtime
+if TYPE_CHECKING:
     from classic_config import YamlData
     from classic_scanlog import AnalysisConfig, AnalysisResult, RustOrchestrator
-    RUST_AVAILABLE = True
-except ImportError:
-    RUST_AVAILABLE = False
-    RustOrchestrator = None
-    AnalysisConfig = None
-    AnalysisResult = None
-    YamlData = None
+    RUST_AVAILABLE: bool
+else:
+    # Runtime imports - these will be the actual classes or None
+    try:
+        from classic_config import YamlData
+        from classic_scanlog import AnalysisConfig, AnalysisResult, RustOrchestrator
+        RUST_AVAILABLE = True
+    except ImportError:
+        RUST_AVAILABLE = False
+        # Runtime fallbacks - never used due to RUST_AVAILABLE check
+        YamlData = Any  # type: ignore[misc, assignment]
+        AnalysisConfig = Any  # type: ignore[misc, assignment]
+        AnalysisResult = Any  # type: ignore[misc, assignment]
+        RustOrchestrator = Any  # type: ignore[misc, assignment]
 
 from ClassicLib.integration.factory import get_yamldata
 
@@ -44,11 +53,11 @@ class BatchAnalysisResult:
             process, indicating how many analyses were executed in parallel.
     """
 
-    results: list['AnalysisResult']
+    results: list[AnalysisResult]
     total_time_ms: int
     parallelism_factor: float
 
-    def successful_results(self) -> list['AnalysisResult']:
+    def successful_results(self) -> list[AnalysisResult]:
         """
         Filters and returns a list of successful analysis results.
 
@@ -62,7 +71,7 @@ class BatchAnalysisResult:
         """
         return [r for r in self.results if r.success]
 
-    def failed_results(self) -> list['AnalysisResult']:
+    def failed_results(self) -> list[AnalysisResult]:
         """
         Gets a list of failed analysis results.
 
@@ -99,7 +108,7 @@ class ClassicOrchestrator:
         orchestrator (RustOrchestrator): Rust-driven orchestrator for crash log processing.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the class and sets up the required components for configuration
         and data orchestration.

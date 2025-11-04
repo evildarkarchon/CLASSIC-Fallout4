@@ -11,26 +11,36 @@ components, implementing Phase 5 of the Rust migration plan. It offers:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 # Try to import Rust implementation
-try:
-    import classic_scanlog
+if TYPE_CHECKING:
+    # For type checking, assume types exist
+    from classic_scanlog import ParallelReportProcessor as RustParallelProcessor
+    from classic_scanlog import ReportComposer as RustReportComposer
+    from classic_scanlog import ReportFragment as RustReportFragment
+    from classic_scanlog import ReportGenerator as RustReportGenerator
+    from classic_scanlog import StringPool as RustStringPool
 
-    RustReportFragment = classic_scanlog.ReportFragment
-    RustReportComposer = classic_scanlog.ReportComposer
-    RustReportGenerator = classic_scanlog.ReportGenerator
-    RustStringPool = classic_scanlog.StringPool
-    RustParallelProcessor = classic_scanlog.ParallelReportProcessor
+    RUST_AVAILABLE: bool = True
+else:
+    try:
+        import classic_scanlog
 
-    RUST_AVAILABLE = True
-except (ImportError, AttributeError):
-    RustReportFragment = None  # type: ignore[assignment]
-    RustReportComposer = None  # type: ignore[assignment]
-    RustReportGenerator = None  # type: ignore[assignment]
-    RustStringPool = None  # type: ignore[assignment]
-    RustParallelProcessor = None  # type: ignore[assignment]
-    RUST_AVAILABLE = False
+        RustReportFragment = classic_scanlog.ReportFragment
+        RustReportComposer = classic_scanlog.ReportComposer
+        RustReportGenerator = classic_scanlog.ReportGenerator
+        RustStringPool = classic_scanlog.StringPool
+        RustParallelProcessor = classic_scanlog.ParallelReportProcessor
+
+        RUST_AVAILABLE = True
+    except (ImportError, AttributeError):
+        RustReportFragment = None  # type: ignore[assignment, misc]
+        RustReportComposer = None  # type: ignore[assignment, misc]
+        RustReportGenerator = None  # type: ignore[assignment, misc]
+        RustStringPool = None  # type: ignore[assignment, misc]
+        RustParallelProcessor = None  # type: ignore[assignment, misc]
+        RUST_AVAILABLE = False
 
 # Import Python fallback
 from ClassicLib.ScanLog.fragments.report_composer import ReportComposer as PyReportComposer
@@ -46,7 +56,7 @@ class RustAcceleratedReportFragment:
     automatically falling back to Python if Rust is not available.
     """
 
-    def __init__(self, lines: list[str] | tuple[str, ...] | None = None, check_content: bool = True, use_rust: bool = True):
+    def __init__(self, lines: list[str] | tuple[str, ...] | None = None, check_content: bool = True, use_rust: bool = True) -> None:
         """
         Initializes the object with optional lines of text and configuration for content checking
         and internal Rust implementation usage.
@@ -62,6 +72,7 @@ class RustAcceleratedReportFragment:
         self._use_rust = use_rust and RUST_AVAILABLE
 
         if self._use_rust:
+            assert RustReportFragment is not None, "Rust should be available when _use_rust is True"
             # Use Rust implementation
             if lines is None:
                 self._fragment = RustReportFragment.empty()
@@ -94,6 +105,7 @@ class RustAcceleratedReportFragment:
         instance._use_rust = RUST_AVAILABLE
 
         if instance._use_rust:
+            assert RustReportFragment is not None, "Rust should be available when _use_rust is True"
             instance._fragment = RustReportFragment.empty()
         else:
             instance._fragment = PyReportFragment.empty()
@@ -135,11 +147,13 @@ class RustAcceleratedReportFragment:
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = self._use_rust
 
+        # Convert tuple to list for consistency
+        header_list = list(header_lines) if isinstance(header_lines, tuple) else header_lines
+
         if self._use_rust:
-            header_list = list(header_lines) if isinstance(header_lines, tuple) else header_lines
-            result._fragment = self._fragment.with_header(header_list)
+            result._fragment = self._fragment.with_header(header_list)  # type: ignore[union-attr]
         else:
-            result._fragment = self._fragment.with_header(header_lines)
+            result._fragment = self._fragment.with_header(header_list)
 
         return result
 
@@ -163,20 +177,12 @@ class RustAcceleratedReportFragment:
 
         if result._use_rust:
             # Rust uses combine() method instead of __add__
-            result._fragment = self._fragment.combine(other._fragment)
+            result._fragment = self._fragment.combine(other._fragment)  # type: ignore[union-attr]
         else:
             # Convert to Python if needed
-            if self._use_rust:
-                self_py = PyReportFragment.from_lines(self._fragment.to_list())
-            else:
-                self_py = self._fragment
-
-            if other._use_rust:
-                other_py = PyReportFragment.from_lines(other._fragment.to_list())
-            else:
-                other_py = other._fragment
-
-            result._fragment = self_py + other_py
+            self_py = PyReportFragment.from_lines(self._fragment.to_list()) if self._use_rust else self._fragment  # type: ignore[union-attr,assignment]
+            other_py = PyReportFragment.from_lines(other._fragment.to_list()) if other._use_rust else other._fragment  # type: ignore[union-attr,assignment]
+            result._fragment = self_py + other_py  # type: ignore[assignment,operator]
 
         return result
 
@@ -203,8 +209,8 @@ class RustAcceleratedReportFragment:
         """
         if self._use_rust:
             # Rust doesn't have content property, convert from to_list()
-            return tuple(self._fragment.to_list())
-        return self._fragment.content
+            return tuple(self._fragment.to_list())  # type: ignore[union-attr]
+        return self._fragment.content  # type: ignore[union-attr]
 
     @property
     def has_content(self) -> bool:
@@ -220,8 +226,8 @@ class RustAcceleratedReportFragment:
         """
         if self._use_rust:
             # Rust has is_empty() method, invert it for has_content
-            return not self._fragment.is_empty()
-        return self._fragment.has_content
+            return not self._fragment.is_empty()  # type: ignore[union-attr]
+        return self._fragment.has_content  # type: ignore[union-attr]
 
     def __len__(self) -> int:
         """
@@ -237,8 +243,8 @@ class RustAcceleratedReportFragment:
         """
         if self._use_rust:
             # Rust has len() method
-            return self._fragment.len()
-        return len(self._fragment)
+            return self._fragment.len()  # type: ignore[union-attr]
+        return len(self._fragment)  # type: ignore[arg-type]
 
     def __bool__(self) -> bool:
         """
@@ -252,7 +258,8 @@ class RustAcceleratedReportFragment:
             bool: True if the `_fragment` has content; False otherwise.
         """
         if self._use_rust:
-            return not self._fragment.is_empty()
+            assert RustReportFragment is not None, "Rust should be available when _use_rust is True"
+            return not cast("RustReportFragment", self._fragment).is_empty()  # type: ignore[misc]
         return bool(self._fragment)
 
 
@@ -264,7 +271,7 @@ class RustAcceleratedReportComposer:
     with automatic fallback to Python for compatibility.
     """
 
-    def __init__(self, parallel_threshold: int = 10):
+    def __init__(self, _parallel_threshold: int = 10) -> None:
         """
         Initializes the class with the desired threshold for parallel processing.
 
@@ -272,14 +279,13 @@ class RustAcceleratedReportComposer:
         Python-based composer depending on the availability of Rust.
 
         Args:
-            parallel_threshold: Specifies the threshold at which parallel processing
-                should be implemented. A higher threshold indicates that parallel
-                processing will be applied only when the workload surpasses this
-                value.
+            _parallel_threshold: Reserved for future use. Currently unused as
+                Rust ReportComposer handles parallelization internally.
         """
         self._use_rust = RUST_AVAILABLE
 
         if self._use_rust:
+            assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
             # Rust ReportComposer takes no parameters
             self._composer = RustReportComposer()
         else:
@@ -317,31 +323,31 @@ class RustAcceleratedReportComposer:
             if isinstance(fragment, RustAcceleratedReportFragment):
                 if fragment._use_rust:
                     # Rust add() returns None, we return self for chaining
-                    self._composer.add(fragment._fragment)
+                    self._composer.add(fragment._fragment)  # type: ignore[union-attr]
                 else:
                     # Convert Python to Rust
-                    rust_frag = RustReportFragment.from_lines(fragment._fragment.to_list())
-                    self._composer.add(rust_frag)
+                    rust_frag = RustReportFragment.from_lines(fragment._fragment.to_list())  # type: ignore[union-attr]
+                    self._composer.add(rust_frag)  # type: ignore[union-attr]
             elif isinstance(fragment, PyReportFragment):
-                rust_frag = RustReportFragment.from_lines(fragment.to_list())
-                self._composer.add(rust_frag)
+                rust_frag = RustReportFragment.from_lines(fragment.to_list())  # type: ignore[union-attr]
+                self._composer.add(rust_frag)  # type: ignore[union-attr]
             elif hasattr(fragment, "_fragment"):
                 # Handle wrapped fragments
-                self._composer.add(fragment._fragment)
+                self._composer.add(fragment._fragment)  # type: ignore[union-attr]
             else:
                 # Assume it's a Rust fragment
-                self._composer.add(fragment)
+                self._composer.add(fragment)  # type: ignore[union-attr]
         # Python composer
         elif isinstance(fragment, RustAcceleratedReportFragment):
-            self._composer.add(fragment._fragment)
+            self._composer.add(fragment._fragment)  # type: ignore[arg-type,union-attr]
         elif isinstance(fragment, PyReportFragment):
-            self._composer.add(fragment)
+            self._composer.add(fragment)  # type: ignore[arg-type]
         # Try to convert
         elif hasattr(fragment, "to_list"):
             py_frag = PyReportFragment.from_lines(fragment.to_list())
-            self._composer.add(py_frag)
+            self._composer.add(py_frag)  # type: ignore[arg-type]
         else:
-            self._composer.add(fragment)
+            self._composer.add(fragment)  # type: ignore[arg-type]
 
         return self
 
@@ -361,11 +367,13 @@ class RustAcceleratedReportComposer:
         result._use_rust = self._use_rust
 
         if self._use_rust:
+            assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
+            assert RustReportFragment is not None, "Rust should be available when _use_rust is True"
             # Rust compose_optimized() returns list[str], need to wrap in ReportFragment
-            lines = self._composer.compose_optimized()
-            result._fragment = RustReportFragment.from_lines(lines)
+            lines = cast("RustReportComposer", self._composer).compose_optimized()  # type: ignore[misc]
+            result._fragment = RustReportFragment.from_lines(lines)  # type: ignore[union-attr,assignment]
         else:
-            result._fragment = self._composer.compose()
+            result._fragment = self._composer.compose()  # type: ignore[assignment,union-attr]
 
         return result
 
@@ -392,9 +400,10 @@ class RustAcceleratedReportComposer:
             list[str]: A list of strings representing the composed object.
         """
         if self._use_rust:
+            assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
             # Rust compose_optimized() directly returns list[str]
-            return self._composer.compose_optimized()
-        return self._composer.to_list()
+            return cast("RustReportComposer", self._composer).compose_optimized()  # type: ignore[misc]
+        return self._composer.to_list()  # type: ignore[union-attr]
 
     def build_string(self) -> str:
         """
@@ -409,10 +418,11 @@ class RustAcceleratedReportComposer:
             str: The constructed string from the composer.
         """
         if self._use_rust:
-            return self._composer.build_string()
+            assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
+            return cast("RustReportComposer", self._composer).build_string()  # type: ignore[misc]
 
         # Python fallback
-        lines = self._composer.to_list()
+        lines = self._composer.to_list()  # type: ignore[union-attr]
         return "\n".join(lines)
 
     @property
@@ -425,9 +435,12 @@ class RustAcceleratedReportComposer:
         Returns:
             tuple[int, int, int, int] | None: A tuple containing pool statistics if the
             Rust-based composer is used, otherwise None.
+
+        Note:
+            The Rust ReportComposer does not expose pool statistics directly.
+            This method always returns None.
         """
-        if self._use_rust:
-            return self._composer.pool_stats
+        # Note: ReportComposer doesn't have pool_stats property in Rust implementation
         return None
 
 
@@ -438,7 +451,7 @@ class RustAcceleratedReportGenerator:
     Provides efficient string building and pooling when using Rust implementation.
     """
 
-    def __init__(self, yamldata=None):
+    def __init__(self, yamldata: Any = None) -> None:
         """
         Initializes the object and sets up the report generator based on the availability
         of the Rust implementation. If Rust is not available, a Python-based report
@@ -455,7 +468,7 @@ class RustAcceleratedReportGenerator:
             self._generator = RustReportGenerator()  # type: ignore[misc]
         else:
             self._generator = PyReportGenerator()
-            self._generator.yamldata = yamldata
+            self._generator.yamldata = yamldata  # type: ignore[attr-defined]
 
     def generate_header(self, crashlog_filename: str, version: str = "") -> RustAcceleratedReportFragment:
         """
@@ -486,9 +499,9 @@ class RustAcceleratedReportGenerator:
         self,
         main_error: str,
         crashgen_version: str,
-        version_current,
-        version_latest,
-        version_latest_vr,
+        version_current: Any,
+        version_latest: Any,
+        version_latest_vr: Any,
     ) -> RustAcceleratedReportFragment:
         """
         Generates an error section in the report.
@@ -501,9 +514,9 @@ class RustAcceleratedReportGenerator:
         Args:
             main_error: The main error message to be included in the report.
             crashgen_version: The version of the crash generator used.
-            version_current: The current version of the software.
-            version_latest: The latest supported version of the software.
-            version_latest_vr: The latest VR-compatible version of the software.
+            version_current: The current version of the software (comparable type).
+            version_latest: The latest supported version of the software (comparable type).
+            version_latest_vr: The latest VR-compatible version of the software (comparable type).
 
         Returns:
             RustAcceleratedReportFragment: A fragment object containing the error section.
@@ -512,15 +525,17 @@ class RustAcceleratedReportGenerator:
         result._use_rust = self._use_rust
 
         if self._use_rust:
+            assert RustReportGenerator is not None, "Rust should be available when _use_rust is True"
             # Rust implementation expects different signature - convert parameters
             from ClassicLib import GlobalRegistry
+
             crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
             game_is_vr = GlobalRegistry.get_vr() == "VR"
 
             # Check if version is latest
             is_latest = not (
-                (version_current < version_latest_vr and version_current != version_latest) or
-                (not game_is_vr and version_current < version_latest)
+                (version_current < version_latest_vr and version_current != version_latest)
+                or (not game_is_vr and version_current < version_latest)
             )
 
             warn_outdated = f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***"
@@ -566,7 +581,7 @@ class ParallelReportProcessor:
     Falls back to sequential processing in Python.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes an instance of the class, setting up a processor based on the availability
         of Rust support.
@@ -574,17 +589,18 @@ class ParallelReportProcessor:
         self._use_rust = RUST_AVAILABLE
 
         if self._use_rust:
+            assert RustParallelProcessor is not None, "Rust should be available when _use_rust is True"
             self._processor = RustParallelProcessor()
         else:
             self._processor = None
 
-    def process_reports(self, reports: list[list[str]]) -> list[str]:
+    def process_reports(self, reports: list[list[str]]) -> list[list[str]]:
         """
         Processes a list of report fragments by either utilizing a Rust-based processor
         (if available) or falling back to Python implementation for sequential processing.
 
         This method takes a two-dimensional list of strings, processes each
-        list of lines into a report fragment, and returns a list of processed strings.
+        list of lines into a report fragment, and returns a list of processed report fragments.
         When a Rust-based processor is available, it optimizes the handling of the reports,
         otherwise the processing is completed in Python.
 
@@ -593,16 +609,17 @@ class ParallelReportProcessor:
                 is a list of strings containing lines of a particular report.
 
         Returns:
-            list[str]: A list of processed report strings in their final format.
+            list[list[str]]: A list of processed report fragments (each fragment is a list of strings).
         """
         if self._use_rust and self._processor is not None:
-            return self._processor.process_reports(reports)  # type: ignore[union-attr]
+            from classic_scanlog import ParallelReportProcessor
+            return ParallelReportProcessor.process_batch(reports, processor_fn=None)
 
         # Python fallback - sequential processing
         results = []
         for lines in reports:
             fragment = PyReportFragment.from_lines(lines)
-            results.append("\n".join(fragment.to_list()))
+            results.append(fragment.to_list())
 
         return results
 
@@ -620,8 +637,11 @@ class ParallelReportProcessor:
             represents the combined result of the input fragments.
         """
         if self._use_rust and self._processor is not None and all(f._use_rust for f in fragments):
-            rust_fragments = [f._fragment for f in fragments]
-            result_fragment = self._processor.combine_fragments_parallel(rust_fragments)  # type: ignore[union-attr]
+            from classic_scanlog import ParallelReportProcessor
+            # Extract the Rust ReportFragment instances from the wrappers
+            # Type ignore needed because _fragment is a union type, but we've checked _use_rust
+            rust_fragments = [f._fragment for f in fragments]  # type: ignore[misc]
+            result_fragment = ParallelReportProcessor.combine_fragments(rust_fragments)  # type: ignore[arg-type]
 
             result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
             result._use_rust = True
@@ -634,7 +654,7 @@ class ParallelReportProcessor:
 
         result = fragments[0]
         for fragment in fragments[1:]:
-            result = result + fragment
+            result += fragment
 
         return result
 
@@ -647,29 +667,46 @@ ReportGenerator = RustAcceleratedReportGenerator
 
 # Export the string pool if available
 if RUST_AVAILABLE and RustStringPool is not None:
-    StringPool = RustStringPool
+    StringPool = RustStringPool  # type: ignore[assignment,misc]
 else:
     # Dummy implementation for Python fallback
     class StringPool:
         """Dummy string pool for Python fallback."""
 
-        def __init__(self):
-            self._strings = set()
+        def __init__(self) -> None:
+            """Initialize dummy string pool."""
+            self._strings: set[str] = set()
 
         def intern(self, s: str) -> str:
+            """Intern a string (no-op in dummy implementation).
+
+            Returns:
+                str: The input string unchanged.
+            """
             self._strings.add(s)
             return s
 
         def intern_batch(self, strings: list[str]) -> list[str]:
+            """Intern multiple strings (no-op in dummy implementation).
+
+            Returns:
+                list[str]: The input strings unchanged.
+            """
             for s in strings:
                 self._strings.add(s)
             return strings
 
-        def stats(self) -> tuple[int, int, int, int]:
+        def get_stats(self) -> tuple[int, int, int, int]:
+            """Get pool statistics.
+
+            Returns:
+                tuple[int, int, int, int]: Tuple of (total, unique, saved, current).
+            """
             size = len(self._strings)
             return (size, 0, 0, size)
 
         def clear(self) -> None:
+            """Clear the pool."""
             self._strings.clear()
 
 

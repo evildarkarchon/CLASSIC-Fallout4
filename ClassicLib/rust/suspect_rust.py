@@ -13,7 +13,7 @@ Key API Translations:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -26,7 +26,7 @@ try:
     RustSuspectScanner = classic_scanlog.SuspectScanner
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
-    RustSuspectScanner = None
+    RustSuspectScanner = None  # type: ignore[assignment, misc]
     RUST_AVAILABLE = False
 
 
@@ -53,16 +53,19 @@ class RustAcceleratedSuspectScanner:
         self.yamldata = yamldata
         self._use_rust = RUST_AVAILABLE
 
-        if self._use_rust:
+        # Scanner can be either Rust or Python implementation - use Any for hybrid wrapper
+        self._scanner: Any
+
+        if self._use_rust and RustSuspectScanner is not None:
             # Extract suspects lists from yamldata for Rust constructor
             suspects_error_list = getattr(yamldata, "suspects_error_list", {})
             suspects_stack_list = getattr(yamldata, "suspects_stack_list", {})
-            self._scanner = RustSuspectScanner(suspects_error_list, suspects_stack_list)
+            self._scanner = RustSuspectScanner(suspects_error_list, suspects_stack_list)  # type: ignore[misc]
         else:
             # Fallback to Python implementation
-            from ClassicLib.ScanLog.SuspectScanner import SuspectScanner as PySuspectScanner
+            from ClassicLib.ScanLog.SuspectScanner import SuspectScanner as PySuspectScannerImpl
 
-            self._scanner = PySuspectScanner(yamldata)
+            self._scanner = PySuspectScannerImpl(yamldata)
 
     def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[ReportFragment, bool]:
         """
@@ -80,8 +83,10 @@ class RustAcceleratedSuspectScanner:
         """
         if self._use_rust:
             # Rust returns (list[str], bool), need to convert to (ReportFragment, bool)
-            lines, found_suspect = self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
-            return ReportFragment.from_lines(lines), found_suspect
+            rust_result: tuple[list[str], bool] = self._scanner.suspect_scan_mainerror(
+                crashlog_mainerror, max_warn_length
+            )
+            return ReportFragment.from_lines(rust_result[0]), rust_result[1]
         # Python already returns correct types
         return self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
 
@@ -105,10 +110,10 @@ class RustAcceleratedSuspectScanner:
         """
         if self._use_rust:
             # Rust returns (list[str], bool), need to convert to (ReportFragment, bool)
-            lines, any_suspect_found = self._scanner.suspect_scan_stack(
+            rust_result: tuple[list[str], bool] = self._scanner.suspect_scan_stack(
                 crashlog_mainerror, segment_callstack_intact, max_warn_length
             )
-            return ReportFragment.from_lines(lines), any_suspect_found
+            return ReportFragment.from_lines(rust_result[0]), rust_result[1]
         # Python already returns correct types
         return self._scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, max_warn_length)
 
@@ -131,10 +136,10 @@ class RustAcceleratedSuspectScanner:
             crash log.
 
         """
-        if RUST_AVAILABLE:
+        if RUST_AVAILABLE and RustSuspectScanner is not None:
             # Rust returns list[str], need to convert to ReportFragment
-            lines = RustSuspectScanner.check_dll_crash(crashlog_mainerror)
-            return ReportFragment.from_lines(lines)
+            rust_result: list[str] = RustSuspectScanner.check_dll_crash(crashlog_mainerror)
+            return ReportFragment.from_lines(rust_result)
         # Fallback to Python implementation
         from ClassicLib.ScanLog.SuspectScanner import SuspectScanner as PySuspectScanner
 

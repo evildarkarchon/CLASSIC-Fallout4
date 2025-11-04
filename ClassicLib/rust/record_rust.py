@@ -31,7 +31,7 @@ class RustRecordScanner:
     Achieves 40x performance improvement over pure Python implementation.
     """
 
-    def __init__(self, yamldata: ClassicScanLogsInfo):
+    def __init__(self, yamldata: ClassicScanLogsInfo) -> None:
         """
         Initializes the scanner instance using the provided configuration data from yamldata.
         Determines whether a Rust-based or Python-based scanner implementation should
@@ -66,7 +66,7 @@ class RustRecordScanner:
                 logger.debug("🚀 RustRecordScanner: Using RUST implementation (40x faster)")
             else:
                 logger.debug("⚠️  RustRecordScanner: RecordScanner not found in classic_scanlog")
-        except Exception as e:
+        except (ImportError, RuntimeError, AttributeError) as e:
             logger.error(f"❌ Failed to initialize Rust RecordScanner: {e}")
 
         # Only create Python scanner if Rust truly unavailable
@@ -87,80 +87,106 @@ class RustRecordScanner:
             segment_callstack (list[str]): A list representing the segment call stack to be scanned.
 
         Returns:
-            tuple[Any, list[str]]: A tuple containing the scan result and list of matches.
+            tuple[Any, list[str]]: A tuple containing:
+                - Rust: list[str] of formatted report lines
+                - Python: ReportFragment object
+                - list[str] of matched record names
         """
         if self._use_rust and self._rust_scanner:
             try:
-                # Use Rust scan_named_records method directly
-                fragment, matches = self._rust_scanner.scan_named_records(segment_callstack)
-                return fragment, matches
-            except Exception as e:
+                # Rust returns (list[str], list[str]) - formatted lines and matches
+                report_lines, matches = self._rust_scanner.scan_named_records(segment_callstack)
+            except (RuntimeError, TypeError, ValueError) as e:
                 logger.warning(f"Rust scan_named_records failed: {e}")
+            else:
+                return report_lines, matches
 
-        # Use Python fallback
+        # Use Python fallback - returns (ReportFragment, list[str])
         if self._python_scanner:
             return self._python_scanner.scan_named_records(segment_callstack)
         from ClassicLib.ScanLog.RecordScanner import RecordScanner
         scanner = RecordScanner(self.yamldata)
         return scanner.scan_named_records(segment_callstack)
 
-    def scan_for_pattern(self, lines: list[str], pattern: str) -> list[str]:
+    def extract_records(self, segment_callstack: list[str]) -> list[str]:
         """
-        Scans through a list of strings to find lines that match a given pattern. The
-        method attempts to use a Rust-based scanner if available and falls back to a
-        Python implementation otherwise.
+        Extract records from callstack segment without formatting.
+
+        Extracts all matching records from the callstack without generating
+        formatted report lines. This is faster when you only need the record names.
+
+        Args:
+            segment_callstack: List of callstack lines to scan
+
+        Returns:
+            list[str]: List of matched record names
+        """
+        if self._use_rust and self._rust_scanner:
+            try:
+                return self._rust_scanner.extract_records(segment_callstack)
+            except (RuntimeError, TypeError, ValueError) as e:
+                logger.warning(f"Rust extract_records failed: {e}")
+                # Fall through to Python fallback
+
+        # Python fallback - extract from scan_named_records result
+        if self._python_scanner:
+            _, matches = self._python_scanner.scan_named_records(segment_callstack)
+            return matches
+        from ClassicLib.ScanLog.RecordScanner import RecordScanner
+        scanner = RecordScanner(self.yamldata)
+        _, matches = scanner.scan_named_records(segment_callstack)
+        return matches
+
+    def clear_cache(self) -> None:
+        """
+        Clear the scanner's internal cache.
+
+        Clears any cached data used for optimizing repeated scans. This can be useful
+        when switching between different crash logs or resetting the scanner state.
+        """
+        if self._rust_scanner:
+            try:
+                self._rust_scanner.clear_cache()
+            except (RuntimeError, AttributeError) as e:
+                logger.debug(f"Rust clear_cache failed: {e}")
+
+        if self._python_scanner and hasattr(self._python_scanner, "clear_cache"):
+            self._python_scanner.clear_cache() # pyright: ignore[reportAttributeAccessIssue]
+
+    @staticmethod
+    def scan_for_pattern(lines: list[str], pattern: str) -> list[str]:
+        """
+        Scans through a list of strings to find lines that match a given pattern.
+
+        Note: This method uses Python regex as the Rust implementation
+        does not provide a corresponding method (simple pattern matching).
 
         Args:
             lines (list[str]): List of strings to scan through.
             pattern (str): The regex pattern to match within each line.
 
         Returns:
-            list[str]: A list of strings from the input that match the specified
-            pattern.
+            list[str]: A list of strings from the input that match the specified pattern.
         """
-        if self._use_rust and self._rust_scanner:
-            try:
-                if hasattr(self._rust_scanner, "scan_for_pattern"):
-                    return self._rust_scanner.scan_for_pattern(lines, pattern)
-            except Exception as e:
-                logger.debug(f"Rust scan_for_pattern failed: {e}")
-
-        # Python fallback
         import re
         pattern_re = re.compile(pattern, re.IGNORECASE)
-        matches = []
-        for line in lines:
-            if pattern_re.search(line):
-                matches.append(line)
-        return matches
+        return [line for line in lines if pattern_re.search(line)]
 
     def batch_scan_records(self, segments: list[list[str]]) -> list[tuple[Any, list[str]]]:
         """
-        Scans multiple segments of records either using a Rust implementation (if available) or a Python fallback.
+        Scans multiple segments of records sequentially.
 
-        If a Rust-based implementation is available and fails gracefully, this function falls back to processing
-        segments sequentially using the Python method.
+        Note: This method processes segments sequentially using scan_named_records.
+        The Rust implementation does not provide a batch method as the standalone
+        function scan_records_batch requires different parameters.
 
         Args:
             segments: A list of segments, where each segment is a list of string records.
 
         Returns:
-            A list of tuples, where each tuple contains:
-                - Any: The result of scanning the segment.
-                - list[str]: The processed list of string records.
+            A list of tuples, where each tuple contains the scan result and list of matches.
         """
-        if self._use_rust and self._rust_scanner:
-            try:
-                if hasattr(self._rust_scanner, "batch_scan_records"):
-                    return self._rust_scanner.batch_scan_records(segments)
-            except Exception as e:
-                logger.debug(f"Rust batch_scan_records failed: {e}")
-
-        # Python fallback - process sequentially
-        results = []
-        for segment in segments:
-            results.append(self.scan_named_records(segment))
-        return results
+        return [self.scan_named_records(segment) for segment in segments]
 
     @property
     def is_rust_accelerated(self) -> bool:
@@ -186,17 +212,14 @@ class RustRecordScanner:
         a Rust-based or Python-based implementation, if available. If neither
         scanner is accessible or patterns cannot be fetched, it will return None.
 
-        Returns:
-            list[str] | None: A list of scan patterns or None if patterns are not
-            available.
-        """
-        if self._rust_scanner and hasattr(self._rust_scanner, "get_patterns"):
-            try:
-                return self._rust_scanner.get_patterns()
-            except Exception:
-                pass
+        Note: The Rust implementation does not expose patterns via get_patterns().
+        This property primarily exists for compatibility with Python RecordScanner.
 
+        Returns:
+            list[str] | None: A list of scan patterns or None if patterns are not available.
+        """
+        # Check Python scanner (Rust doesn't expose patterns)
         if self._python_scanner and hasattr(self._python_scanner, "patterns"):
-            return self._python_scanner.patterns
+            return self._python_scanner.patterns # pyright: ignore[reportAttributeAccessIssue]
 
         return None

@@ -201,68 +201,84 @@ class SetupCoordinator:
         Logger calls always execute for diagnostics.
         MessageHandler calls only execute when Debug Messages setting is enabled.
         """
-        # Check if debug messages are enabled for user-facing MessageHandler output
         from ClassicLib.YamlSettingsCache import classic_settings
-        debug_enabled = classic_settings(bool, "Debug Messages")
+        debug_enabled = bool(classic_settings(bool, "Debug Messages"))
+        is_gui = GlobalRegistry.is_gui_mode()
 
         try:
             from ClassicLib.integration.status import get_rust_component_status
-
             status = get_rust_component_status()
-            is_gui = GlobalRegistry.is_gui_mode()
 
-            # Build status message
+            # Handle different acceleration states
             if status["disabled"]:
-                status_msg = "⚠️  Rust acceleration disabled (CLASSIC_DISABLE_RUST is set)"
-                if debug_enabled:
-                    self._display_status_message(status_msg, "WARNING", is_gui)
-                logger.warning("   To enable: unset CLASSIC_DISABLE_RUST environment variable")
-                return
-
-            # Display status based on acceleration level
-            if status["active_count"] > 0:
-                # Show acceleration status with component count
-                status_msg = f"🚀 Rust Acceleration: {status['active_count']}/{status['total_count']} components active ({status['percentage']:.0f}%)"
-                if debug_enabled:
-                    self._display_status_message(status_msg, "INFO", is_gui)
-
-                logger.info(f"Rust Acceleration Status: {status['acceleration_level']}")
-                logger.info(f"   Active Components: {status['active_count']}/{status['total_count']} ({status['percentage']:.1f}%)")
-
-                # Log detailed component info at debug level
-                if status["performance_gains"]:
-                    logger.debug("   Active Rust Components:")
-                    for component, speedup in status["performance_gains"].items():
-                        logger.debug(f"      ✅ {component}: {speedup}")
+                self._log_disabled_status(debug_enabled, is_gui)
+            elif status["active_count"] > 0:
+                self._log_active_acceleration(status, debug_enabled, is_gui)
             else:
-                # No acceleration - provide installation instructions
-                status_msg = "⚠️  No Rust acceleration - using Python fallback (slower performance)"
-                if debug_enabled:
-                    self._display_status_message(status_msg, "WARNING", is_gui)
+                self._log_no_acceleration(debug_enabled, is_gui)
 
-                logger.warning("   To enable: Build and install the Rust extension:")
-                logger.warning("      cd classic-rust")
-                logger.warning("      maturin build --release --out dist")
-                logger.warning("      uv pip install dist/classic-*.whl --force-reinstall")
-
-            # Log version info
+            # Log version info if available
             if status.get("version"):
                 logger.debug(f"   Rust Extension Version: {status['version']}")
 
         except ImportError:
-            # Rust integration module not available - this is expected in pure Python mode
-            status_msg = "Using Python implementation (Rust extension not installed)"
-            is_gui = GlobalRegistry.is_gui_mode()
-            if debug_enabled:
-                self._display_status_message(status_msg, "INFO", is_gui)
-            logger.debug("Rust integration module not available - using pure Python implementation")
-        except Exception as e:
-            # Log but don't fail - Rust acceleration is optional
-            logger.debug(f"Error checking Rust acceleration status: {e}")
-            if debug_enabled and not GlobalRegistry.is_gui_mode():
-                print(f"Note: Could not determine Rust acceleration status ({e})")
+            self._log_import_error(debug_enabled, is_gui)
+        except Exception as e:  # noqa: BLE001 - Rust status check is optional, should not crash app
+            self._log_status_check_error(e, debug_enabled, is_gui)
 
-    def _display_status_message(self, message: str, level: str, is_gui: bool) -> None:
+    @staticmethod
+    def _log_disabled_status(debug_enabled: bool, is_gui: bool) -> None:
+        """Log status when Rust acceleration is explicitly disabled."""
+        status_msg = "⚠️  Rust acceleration disabled (CLASSIC_DISABLE_RUST is set)"
+        if debug_enabled:
+            SetupCoordinator._display_status_message(status_msg, "WARNING", is_gui)
+        logger.warning("   To enable: unset CLASSIC_DISABLE_RUST environment variable")
+
+    @staticmethod
+    def _log_active_acceleration(status: dict[str, Any], debug_enabled: bool, is_gui: bool) -> None:
+        """Log status when Rust acceleration is active."""
+        status_msg = f"🚀 Rust Acceleration: {status['active_count']}/{status['total_count']} components active ({status['percentage']:.0f}%)"
+        if debug_enabled:
+            SetupCoordinator._display_status_message(status_msg, "INFO", is_gui)
+
+        logger.info(f"Rust Acceleration Status: {status['acceleration_level']}")
+        logger.info(f"   Active Components: {status['active_count']}/{status['total_count']} ({status['percentage']:.1f}%)")
+
+        # Log detailed component info at debug level
+        if status["performance_gains"]:
+            logger.debug("   Active Rust Components:")
+            for component, speedup in status["performance_gains"].items():
+                logger.debug(f"      ✅ {component}: {speedup}")
+
+    @staticmethod
+    def _log_no_acceleration(debug_enabled: bool, is_gui: bool) -> None:
+        """Log status when no Rust acceleration is available."""
+        status_msg = "⚠️  No Rust acceleration - using Python fallback (slower performance)"
+        if debug_enabled:
+            SetupCoordinator._display_status_message(status_msg, "WARNING", is_gui)
+
+        logger.warning("   To enable: Build and install the Rust extension:")
+        logger.warning("      cd classic-rust")
+        logger.warning("      maturin build --release --out dist")
+        logger.warning("      uv pip install dist/classic-*.whl --force-reinstall")
+
+    @staticmethod
+    def _log_import_error(debug_enabled: bool, is_gui: bool) -> None:
+        """Log status when Rust integration module is not available."""
+        status_msg = "Using Python implementation (Rust extension not installed)"
+        if debug_enabled:
+            SetupCoordinator._display_status_message(status_msg, "INFO", is_gui)
+        logger.debug("Rust integration module not available - using pure Python implementation")
+
+    @staticmethod
+    def _log_status_check_error(error: Exception, debug_enabled: bool, is_gui: bool) -> None:
+        """Log error when Rust status check fails unexpectedly."""
+        logger.debug(f"Error checking Rust acceleration status: {error}")
+        if debug_enabled and not is_gui:
+            print(f"Note: Could not determine Rust acceleration status ({error})")
+
+    @staticmethod
+    def _display_status_message(message: str, level: str, is_gui: bool) -> None:
         """
         Displays a status message to the user, either via the command-line interface (CLI)
         or a graphical user interface (GUI). The display method and formatting vary

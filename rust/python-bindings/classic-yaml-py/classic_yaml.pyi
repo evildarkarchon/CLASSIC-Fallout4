@@ -153,41 +153,134 @@ class RustYamlOperations:
             >>> yaml_ops.save_yaml_file("output.yaml", {"key": "value"})
         """
 
-    def get_setting(self, key: str, default: Any = None) -> Any:
-        """Get a setting value from cached YAML data.
+    def get_setting(self, data: dict[str, Any], key_path: str) -> Any | None:
+        """Get a setting value from YAML data using dot notation.
 
-        Retrieves a value from the internal YAML cache using a dot-separated
-        key path. Returns the default value if the key is not found.
+        Retrieves a value from YAML data using a dot-separated key path.
+        Returns None if the key path is not found.
 
         Args:
-            key: Setting key to retrieve (supports dot notation for nested keys)
-            default: Default value if key not found (default: None)
+            data: YAML data to extract from
+            key_path: Dot-separated path (e.g., "parent.child.field")
 
         Returns:
-            Setting value or default if not found
+            Setting value or None if not found
 
         Example:
             >>> yaml_ops = RustYamlOperations()
-            >>> yaml_ops.parse_yaml("database:\\n  host: localhost\\n  port: 5432")
-            >>> host = yaml_ops.get_setting("database.host")
+            >>> data = yaml_ops.parse_yaml("database:\\n  host: localhost\\n  port: 5432")
+            >>> host = yaml_ops.get_setting(data, "database.host")
             >>> print(host)
             'localhost'
         """
 
-    def set_setting(self, key: str, value: Any) -> None:
-        """Set a setting value in cached YAML data.
+    def set_setting(self, data: dict[str, Any], key_path: str, value: Any) -> dict[str, Any]:
+        """Set a setting value in YAML data using dot notation.
 
-        Updates a value in the internal YAML cache using a dot-separated key path.
-        Creates intermediate keys if they don't exist.
+        Updates a value in YAML data using a dot-separated key path.
+        Creates intermediate keys if they don't exist. Returns the modified data.
 
         Args:
-            key: Setting key to set (supports dot notation for nested keys)
+            data: YAML data to modify
+            key_path: Dot-separated path (e.g., "parent.child.field")
             value: Value to assign
+
+        Returns:
+            Modified YAML data with the new value
+
+        Raises:
+            ValueError: If the key path is invalid
 
         Example:
             >>> yaml_ops = RustYamlOperations()
-            >>> yaml_ops.set_setting("database.host", "localhost")
-            >>> yaml_ops.set_setting("database.port", 5432)
+            >>> data = yaml_ops.parse_yaml("database: {}")
+            >>> data = yaml_ops.set_setting(data, "database.host", "localhost")
+            >>> data = yaml_ops.set_setting(data, "database.port", 5432)
+        """
+
+    def get_string_value(self, data: dict[str, Any], key_path: str, default: str) -> str:
+        """Extract a string value from YAML using dot notation.
+
+        Convenience method for getting string values from nested YAML structures.
+        Navigates through the YAML document using dot notation and returns the
+        string value or a default if the key doesn't exist or isn't a string.
+
+        Args:
+            data: YAML data to extract from
+            key_path: Dot-separated path (e.g., "parent.child.field")
+            default: Default value if key not found or not a string
+
+        Returns:
+            String value or default
+
+        Example:
+            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_str = '''
+            ... game:
+            ...   name: Fallout4
+            ...   version: "1.10.163"
+            ... '''
+            >>> data = yaml_ops.parse_yaml(yaml_str)
+            >>> name = yaml_ops.get_string_value(data, "game.name", "Unknown")
+            >>> print(name)
+            'Fallout4'
+        """
+
+    def get_vec_value(self, data: dict[str, Any], key_path: str) -> list[str]:
+        """Extract a vector of strings from YAML using dot notation.
+
+        Convenience method for getting string arrays from nested YAML structures.
+        Navigates through the YAML document using dot notation and returns a list
+        of strings, or an empty list if the key doesn't exist or isn't an array.
+
+        Args:
+            data: YAML data to extract from
+            key_path: Dot-separated path (e.g., "parent.child.array")
+
+        Returns:
+            List of strings, or empty list if key not found or not an array
+
+        Example:
+            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_str = '''
+            ... game:
+            ...   plugins:
+            ...     - plugin1.esp
+            ...     - plugin2.esp
+            ...     - plugin3.esp
+            ... '''
+            >>> data = yaml_ops.parse_yaml(yaml_str)
+            >>> plugins = yaml_ops.get_vec_value(data, "game.plugins")
+            >>> print(plugins)
+            ['plugin1.esp', 'plugin2.esp', 'plugin3.esp']
+        """
+
+    def get_hashmap_value(self, data: dict[str, Any], key_path: str) -> dict[str, str]:
+        """Extract a hashmap from YAML using dot notation.
+
+        Convenience method for getting string key-value maps from nested YAML structures.
+        Navigates through the YAML document using dot notation and returns a dict,
+        or an empty dict if the key doesn't exist or isn't a hash.
+
+        Args:
+            data: YAML data to extract from
+            key_path: Dot-separated path (e.g., "parent.child.map")
+
+        Returns:
+            Dictionary of string key-value pairs, or empty dict if key not found or not a hash
+
+        Example:
+            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_str = '''
+            ... game:
+            ...   mods:
+            ...     mod1: "Description 1"
+            ...     mod2: "Description 2"
+            ... '''
+            >>> data = yaml_ops.parse_yaml(yaml_str)
+            >>> mods = yaml_ops.get_hashmap_value(data, "game.mods")
+            >>> print(mods)
+            {'mod1': 'Description 1', 'mod2': 'Description 2'}
         """
 
     def clear_cache(self) -> None:

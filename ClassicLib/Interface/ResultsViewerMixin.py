@@ -31,9 +31,9 @@ from ClassicLib.integration.status import is_rust_accelerated
 
 # Import the widget classes from ResultsViewerWidgets
 from ClassicLib.Interface.ResultsViewerWidgets import (
-    MarkdownViewer,
-    ReportListWidget,
-    ReportMetadataWidget,
+    MarkdownViewer,  # noqa: TC001
+    ReportListWidget,  # noqa: TC001
+    ReportMetadataWidget,  # noqa: TC001
 )
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
@@ -362,9 +362,7 @@ class ResultsViewerMixin:
         else:
             # Reports found - clear any error state and show instructions
             self.markdown_viewer.clear()
-            self.markdown_viewer.setMarkdown(
-                "# Reports Available\n\nSelect a report from the list to view its contents."
-            )
+            self.markdown_viewer.setMarkdown("# Reports Available\n\nSelect a report from the list to view its contents.")
             # Auto-select the first report for better UX
             if self.results_list.count() > 0:
                 self.results_list.setCurrentRow(0)
@@ -417,11 +415,11 @@ class ResultsViewerMixin:
                 content = read_file_sync(report_path)
                 self.markdown_viewer.setPlainText(content)
                 msg_warning("Displayed report as plain text due to markdown error")
-                return True
             except Exception as fallback_e:  # noqa: BLE001
                 logger.error(f"Fallback plain text also failed: {fallback_e}")
                 return False
         else:
+            logger.debug(f"Successfully loaded report: {report_path.name}")
             return True
 
     def _on_report_selected(self) -> None:

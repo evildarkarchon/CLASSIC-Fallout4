@@ -136,6 +136,7 @@ rust/
    - Add PyO3 dependency: `pyo3.workspace = true`
    - Add to workspace in `rust/Cargo.toml` under `# Python Bindings`
    - Add to `rebuild_rust.ps1` and `build_all.ps1`
+   - **MUST create/update `.pyi` stub file** for type hints and IDE support
 
 3. **UI Applications**: Create in `rust/ui-applications/`
    - Standalone applications (CLI/TUI/GUI)
@@ -236,6 +237,10 @@ See `docs/` for detailed guides:
 9. **API Stability Rules** - Production code maintains backward compatibility
    - Tests are exempt from API stability (always use current APIs)
    - Deprecated code ONLY used in tests or `__init__.py` can be deleted
+10. **PyO3 Type Stubs** - All Rust Python bindings (`-py` crates) MUST have `.pyi` stub files
+   - Create stub file when creating new Python binding crate
+   - Update stub file whenever API changes (new functions, classes, or signatures)
+   - Place `.pyi` file in same directory as crate (e.g., `rust/python-bindings/classic-yaml-py/classic_yaml.pyi`)
 
 ### Rust Documentation Standards
 
@@ -488,3 +493,4 @@ All maintain backward compatibility through re-exports.
 - **FCX mode read-only** (2025-10-29): FCX mode now operates in read-only mode - it detects configuration issues but never modifies files. All detected issues are reported with current vs. recommended values. Auto-fix functions (`apply_ini_fix_async`, `apply_all_ini_fixes_async`, `ConfigFileCache.set()`) have been removed. Use new detection functions (`detect_ini_issue_async`, `detect_all_ini_issues_async`, `ConfigFileCache.detect_issue()`) for read-only issue detection.
 - **Rust directory reorganization** (2025-11-01): All Rust crates moved to `rust/` directory with subdirectories: `foundation/`, `business-logic/`, `python-bindings/`, `ui-applications/`. ALL new Rust crates MUST be created in the appropriate subdirectory. Workspace manifest at `rust/Cargo.toml`. Build scripts (`rebuild_rust.ps1`, `build_all.ps1`) updated to reference new paths.
 - **AsyncBridge usage patterns** (2025-11-02): AsyncBridge and `create_sync_wrapper()` are ONLY for GUI workers (Qt threads) and testing. Production CLI code MUST use async-first pattern with single `asyncio.run()` at entry point (see CLASSIC_ScanLogs.py). The `asyncio.run()` fallback in `create_sync_wrapper()` is intentional for testing but creates new event loops (inefficient for production). Shared components should provide separate sync (GUI) and async (CLI) interfaces. YamlSettingsCache now uses lazy AsyncBridge initialization - only creates bridge when needed in GUI contexts.
+- **PyO3 type stubs requirement** (2025-11-04): ALL Python binding crates (`-py` crates) MUST have corresponding `.pyi` stub files for type hints and IDE support. When creating a new Python binding crate or modifying APIs (functions, classes, signatures), the `.pyi` file MUST be created or updated. Stub files are placed in the same directory as the crate (e.g., `rust/python-bindings/classic-yaml-py/classic_yaml.pyi`).

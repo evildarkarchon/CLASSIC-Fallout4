@@ -25,12 +25,11 @@ from itertools import starmap
 from pathlib import Path
 from typing import Any, cast
 
+from ClassicLib.AsyncYamlSettings.cache import YamlCache
+from ClassicLib.AsyncYamlSettings.file_operations import YamlFileOperations
+from ClassicLib.AsyncYamlSettings.types import T
+from ClassicLib.AsyncYamlSettings.validators import validate_setting_value
 from ClassicLib.Constants import YAML
-
-from .cache import YamlCache
-from .file_operations import YamlFileOperations
-from .types import T
-from .validators import validate_setting_value
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ class AsyncYamlSettingsCore:
         file_ops (YamlFileOperations): Helper for file operations.
     """
 
-    def __init__(self, settings_dir: Path | None = None):
+    def __init__(self, settings_dir: Path | None = None) -> None:
         """
         Initializes an instance of the class with specified settings directory, cache, and file
         operations.
@@ -166,9 +165,7 @@ class AsyncYamlSettingsCore:
             self.cache.settings_cache[cache_key] = value
             return value
 
-    async def batch_get_settings(
-        self, requests: list[tuple[type, YAML, str]]
-    ) -> list[Any]:
+    async def batch_get_settings(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
         """
         Executes asynchronous batched settings retrieval based on provided requests.
 
@@ -192,9 +189,7 @@ class AsyncYamlSettingsCore:
         tasks = list(starmap(self.async_yaml_settings, requests))
         return await asyncio.gather(*tasks)
 
-    async def batch_set_settings(
-        self, updates: list[tuple[type, YAML, str, Any]]
-    ) -> list[Any]:
+    async def batch_set_settings(self, updates: list[tuple[type, YAML, str, Any]]) -> list[Any]:
         """
         Updates the settings of multiple YAML configuration files asynchronously.
 
@@ -325,9 +320,10 @@ class AsyncYamlSettingsCore:
         async with file_lock:
             try:
                 await self.file_ops.load_yaml_file(file_path)
-                return True
-            except Exception:
+            except Exception:  # noqa: BLE001 - Validation method: catch all loading failures
                 return False
+            else:
+                return True
 
     async def get_all_settings(self, yaml_store: YAML) -> dict[str, Any]:
         """
@@ -349,9 +345,7 @@ class AsyncYamlSettingsCore:
         async with file_lock:
             return await self.file_ops.load_yaml_file(file_path)
 
-    async def update_settings(
-        self, yaml_store: YAML, updates: dict[str, Any]
-    ) -> None:
+    async def update_settings(self, yaml_store: YAML, updates: dict[str, Any]) -> None:
         """
         Updates the settings in a YAML configuration file.
 
@@ -413,7 +407,7 @@ async def get_async_yaml_core() -> AsyncYamlSettingsCore:
         AsyncYamlSettingsCore: The global instance of the asynchronous YAML
         settings core.
     """
-    global _async_yaml_core
+    global _async_yaml_core  # noqa: PLW0603
 
     if _async_yaml_core is None:
         async with _core_lock:

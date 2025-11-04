@@ -41,6 +41,7 @@ def _cached_formid_lookup(formid: str, plugin: str) -> str | None:
         form ID and plugin, or None if no entry is found.
     """
     from ClassicLib.ScanLog.Util import get_entry
+
     return get_entry(formid, plugin)
 
 
@@ -200,9 +201,6 @@ class PythonFormIDAnalyzer:
                 - The plugin name (str).
                 - The FormID count (int).
             lines (list[str]): A list of strings to which the results of the lookup are appended.
-
-        Returns:
-            None
         """
         if not self.db_pool:
             # Fallback if no database pool available
@@ -240,9 +238,6 @@ class PythonFormIDAnalyzer:
                 reference, form ID suffix, plugin name, and count for each lookup task.
             lines (list[str]): A list to which the method will append formatted output strings containing
                 the results of the lookup operations.
-
-        Returns:
-            None
         """
         for formid_full, formid_suffix, plugin, count in lookup_tasks:
             # Use cached sync database lookup to avoid repeated queries
@@ -278,6 +273,7 @@ class PythonFormIDAnalyzer:
             return await self.db_pool.get_entry(formid, plugin)
         # Fallback to cached sync lookup in thread
         return await asyncio.to_thread(_cached_formid_lookup, formid, plugin)
+
 
 # Alias for compatibility
 FormIDAnalyzer = PythonFormIDAnalyzer

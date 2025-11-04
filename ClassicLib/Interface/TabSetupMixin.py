@@ -103,12 +103,6 @@ class TabSetupMixin:
         designed for user interaction. It includes widgets for folder selection, main control
         buttons, and optional buttons at the bottom. The layout is adjusted to ensure a
         compact and organized display with appropriate margins and spacing.
-
-        Raises:
-            None
-
-        Returns:
-            None
         """
         layout: QVBoxLayout = QVBoxLayout(self.main_tab)
         layout.setContentsMargins(15, 5, 15, 10)  # Minimal top margin to sit close to tab bar
@@ -219,9 +213,6 @@ class TabSetupMixin:
         Raises:
             NotImplementedError: Raised if the method `open_url` is not implemented in
             the associated class.
-
-        Returns:
-            None
         """
         layout: QVBoxLayout = QVBoxLayout(self.articles_tab)
         layout.setContentsMargins(20, 10, 20, 10)
@@ -291,9 +282,6 @@ class TabSetupMixin:
         and options for backup, restore, and removal operations. It also dynamically adds backup sections
         for predefined categories and includes a button to open the backup folder. The content is aligned
         properly within the layout, and existing backups are checked after the layout is set up.
-
-        Returns:
-            None
         """
         layout: QVBoxLayout = QVBoxLayout(self.backups_tab)
         layout.setContentsMargins(20, 10, 20, 10)
@@ -490,7 +478,7 @@ class TabSetupMixin:
 
         # Connect appropriate signal based on whether it's a toggle button or regular
         # Use hasattr to avoid isinstance issues with mocked objects in tests
-        if hasattr(button, 'isCheckable') and button.isCheckable():
+        if hasattr(button, "isCheckable") and button.isCheckable():
             button.toggled.connect(callback)
         else:
             button.clicked.connect(callback)

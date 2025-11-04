@@ -152,7 +152,8 @@ class FileIOCore:
             content = await loop.run_in_executor(None, path.read_text, self.default_encoding, self.default_errors)
             return content.splitlines()
 
-    async def read_bytes(self, path: Path | str) -> bytes:
+    @staticmethod
+    async def read_bytes(path: Path | str) -> bytes:
         """
         Reads the contents of the file located at the specified path as bytes. This
         method uses asynchronous file handling if available, otherwise it falls
@@ -226,7 +227,8 @@ class FileIOCore:
             content += "\n"
         await self.write_file(path, content)
 
-    async def write_bytes(self, path: Path | str, content: bytes) -> None:
+    @staticmethod
+    async def write_bytes(path: Path | str, content: bytes) -> None:
         """
         Writes the given byte content to a specified file path, ensuring the parent
         directory exists. Supports both asynchronous and synchronous file operations
@@ -351,7 +353,7 @@ class FileIOCore:
             path = FileIOCore._ensure_path(path)
             try:
                 content = await self.read_file(path)
-            except Exception as e:
+            except (OSError, ValueError, UnicodeDecodeError) as e:
                 logger.error(f"Error reading {path}: {e}")
                 return path.name, ""
             else:
@@ -372,9 +374,6 @@ class FileIOCore:
         Args:
             files (dict[Path | str, str]): A dictionary where the keys are file paths
                 (as Path or str) and the values are the file content to be written.
-
-        Returns:
-            None
         """
 
         async def write_single(path: Path | str, content: str) -> None:
@@ -392,7 +391,7 @@ class FileIOCore:
             """
             try:
                 await self.write_file(path, content)
-            except Exception as e:
+            except (OSError, ValueError, PermissionError) as e:
                 logger.error(f"Error writing {path}: {e}")
 
         tasks = list(starmap(write_single, files.items()))
@@ -402,7 +401,8 @@ class FileIOCore:
     # Utility Operations
     # ==========================================
 
-    def file_exists(self, path: Path | str) -> bool:  # No longer async because Path.exists() is non-blocking and fast
+    @staticmethod
+    def file_exists(path: Path | str) -> bool:  # No longer async because Path.exists() is non-blocking and fast
         """
         Checks if the given file or directory exists at the specified path.
 
@@ -423,7 +423,8 @@ class FileIOCore:
         # No need for executor overhead - saves ~10-15ms per call
         return path.exists()
 
-    def get_file_size(self, path: Path | str) -> int:  # No longer async because Path.stat() is non-blocking and fast
+    @staticmethod
+    def get_file_size(path: Path | str) -> int:  # No longer async because Path.stat() is non-blocking and fast
         """
         Gets the size of the file located at the specified path.
 

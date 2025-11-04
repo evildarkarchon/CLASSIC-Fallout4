@@ -28,7 +28,7 @@ class RustLogParser:
     Provides 150x performance improvement over pure Python implementation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes an instance of the class, setting up a Rust-based log parser
         if available. If the Rust-based parser is not found or fails to initialize,
@@ -58,7 +58,7 @@ class RustLogParser:
                 logger.debug("🚀 RustLogParser: Using RUST implementation (150x faster)")
             else:
                 logger.debug("⚠️  RustLogParser: LogParser not found in classic_scanlog")
-        except Exception as e:
+        except (ImportError, AttributeError, TypeError) as e:
             logger.error(f"❌ Failed to initialize Rust parser: {e}")
 
         if not self._use_rust:
@@ -110,7 +110,7 @@ class RustLogParser:
                     ]
 
                     # SINGLE FFI CALL - All parsing in one operation
-                    game_version, crashgen_version, main_error, segments = self._rust_parser.parse_complete(
+                    game_version, crashgen_version, main_error, segments = self._rust_parser.parse_complete(  # type: ignore[attr-defined]
                         crash_data, segment_boundaries, xse_acronym
                     )
                     logger.debug("🚀 Using optimized parse_complete (single FFI call)")
@@ -146,11 +146,11 @@ class RustLogParser:
                 if missing_segments > 0:
                     processed_segments.extend([[]] * missing_segments)
 
-                return game_version, crashgen_version, main_error, processed_segments
-
-            except Exception as e:
+            except (RuntimeError, AttributeError, TypeError, ValueError) as e:
                 logger.warning(f"Rust parser failed, falling back to Python: {e}")
                 # Fall through to Python implementation
+            else:
+                return game_version, crashgen_version, main_error, processed_segments
 
         # Use Python fallback
         from ClassicLib.ScanLog.Parser import find_segments
@@ -177,7 +177,7 @@ class RustLogParser:
         if self._use_rust and self._rust_parser:
             try:
                 return self._rust_parser.extract_section(crash_data, start_marker, end_marker)
-            except Exception as e:
+            except (RuntimeError, AttributeError, TypeError, ValueError) as e:
                 logger.debug(f"Rust extract_section failed: {e}")
 
         # Python fallback - extract section manually
@@ -195,7 +195,8 @@ class RustLogParser:
 
         return section or None
 
-    def _parse_crash_header(self, crash_data: list[str], crashgen_name: str, game_root_name: str) -> tuple[str, str, str]:
+    @staticmethod
+    def _parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name: str) -> tuple[str, str, str]:
         """
         Parses the crash header information from the provided crash data to extract the game version,
         CrashGen version, and the main error message. The method looks for specific lines in the crash

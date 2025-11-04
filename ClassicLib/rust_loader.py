@@ -13,6 +13,7 @@ NO pip installation or site-packages required!
 import importlib.util
 import sys
 import warnings
+from importlib.machinery import ModuleSpec
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +32,7 @@ class RustExtensionLoader:
     - Direct Python execution
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes an instance of the class.
 
@@ -45,7 +46,7 @@ class RustExtensionLoader:
         self.load_path = None
         self.search_paths = self._get_search_paths()
 
-    def _get_search_paths(self) -> list[Path]:
+    def _get_search_paths(self) -> list[Path]:  # noqa: PLR6301
         """
         Retrieves search paths for locating rust extension directories.
 
@@ -62,12 +63,10 @@ class RustExtensionLoader:
         paths = []
 
         # 1. PyInstaller _internal directory (highest priority for bundled exe)
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             # Running in PyInstaller bundle
-            bundle_dir = Path(sys._MEIPASS)
-            paths.append(bundle_dir / "_internal" / "rust_extensions")
-            paths.append(bundle_dir / "rust_extensions")
-            paths.append(bundle_dir)
+            bundle_dir = Path(sys._MEIPASS)  # pyright: ignore[reportAttributeAccessIssue]
+            paths.extend((bundle_dir / "_internal" / "rust_extensions", bundle_dir / "rust_extensions", bundle_dir))
 
         # 2. Get the project root (where this file is located)
         current_file = Path(__file__).resolve()
@@ -89,10 +88,8 @@ class RustExtensionLoader:
             paths.append(classiclib_ext)
 
         # 6. Current working directory (fallback)
-        paths.append(Path.cwd() / "rust_extensions")
-
         # 7. Relative to this module
-        paths.append(current_file.parent / "rust_ext")
+        paths.extend((Path.cwd() / "rust_extensions", current_file.parent / "rust_ext"))
 
         return paths
 
@@ -146,8 +143,9 @@ class RustExtensionLoader:
             the extension could not be located or loaded.
 
         Raises:
+            ImportError: If the module spec cannot be created from the extension path.
             ImportWarning: If the Rust extension is not found or if the loading process
-            fails due to an ImportError or other exceptions.
+            fails due to other exceptions.
         """
         if self.loaded_module is not None:
             return self.loaded_module
@@ -155,22 +153,37 @@ class RustExtensionLoader:
         ext_path = self.find_extension()
         if ext_path is None:
             warnings.warn(
-                "Rust extension not found in any of these locations:\n" +
-                "\n".join(f"  - {p}" for p in self.search_paths if p.exists()),
-                ImportWarning
+                "Rust extension not found in any of these locations:\n" + "\n".join(f"  - {p}" for p in self.search_paths if p.exists()),
+                ImportWarning,
+                stacklevel=2,
             )
             return None
 
+        def create_module_spec(path: Path) -> ModuleSpec:
+            """Create module spec or raise ImportError if creation fails.
+
+            Args:
+                path: Path to the extension file to create a spec for.
+
+            Returns:
+                ModuleSpec: The module specification for the extension.
+
+            Raises:
+                ImportError: If the module spec cannot be created from the path.
+            """
+            spec = importlib.util.spec_from_file_location("classic_core._rust", path)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"Could not create spec for {path}")
+            return spec
+
         try:
             # Load the module from the file path
-            spec = importlib.util.spec_from_file_location(
-                "classic_core._rust",
-                ext_path
-            )
-            if spec is None or spec.loader is None:
-                raise ImportError(f"Could not create spec for {ext_path}")
-
+            spec = create_module_spec(ext_path)
             module = importlib.util.module_from_spec(spec)
+
+            # Ensure loader is available (type safety) - runtime check, not assertion
+            if spec.loader is None:
+                raise ImportError(f"Module spec loader is None for {ext_path}")  # noqa: TRY301
 
             # Add the parent directory to sys.path temporarily
             parent_dir = str(ext_path.parent)
@@ -193,11 +206,8 @@ class RustExtensionLoader:
                 if parent_dir in sys.path:
                     sys.path.remove(parent_dir)
 
-        except Exception as e:
-            warnings.warn(
-                f"Failed to load Rust extension from {ext_path}: {e}",
-                ImportWarning
-            )
+        except (ImportError, OSError, AttributeError) as e:
+            warnings.warn(f"Failed to load Rust extension from {ext_path}: {e}", ImportWarning, stacklevel=2)
             return None
 
     def is_loaded(self) -> bool:
@@ -234,7 +244,7 @@ class RustExtensionLoader:
             "loaded": self.is_loaded(),
             "path": str(self.load_path) if self.load_path else None,
             "search_paths": [str(p) for p in self.search_paths if p.exists()],
-            "in_pyinstaller": getattr(sys, 'frozen', False),
+            "in_pyinstaller": getattr(sys, "frozen", False),
         }
 
 
@@ -256,7 +266,7 @@ def load_rust_extensions() -> bool:
     return _rust_loader.load_extension() is not None
 
 
-def get_rust_module():
+def get_rust_module():  # noqa: ANN201
     """
     Retrieves the loaded Rust module, loading it if not already loaded.
 

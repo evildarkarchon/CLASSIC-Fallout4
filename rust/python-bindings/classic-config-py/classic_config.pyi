@@ -22,6 +22,7 @@ Usage:
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 __version__: str
@@ -41,17 +42,27 @@ class YamlData:
     cached and shared across instances for performance.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, yaml_dirs: list[str | Path], game: str, vr_mode: bool) -> None:
         """Create a new YamlData instance by loading all YAML configuration files.
 
-        This constructor:
-        1. Loads YAML files from the standard CLASSIC configuration directory
-        2. Parses and validates all configuration data
-        3. Caches the configuration for fast access
+        Args:
+            yaml_dirs: List of directories containing YAML configuration files.
+                      Accepts both string paths and pathlib.Path objects.
+            game: Game name (e.g., "Fallout4", "Skyrim")
+            vr_mode: Whether to load VR-specific configuration
 
         Raises:
             FileNotFoundError: If required YAML files are missing
             ValueError: If YAML data is malformed or invalid
+
+        Example:
+            >>> from pathlib import Path
+            >>> # Using Path objects
+            >>> yaml_data = YamlData([Path("YAML/Main")], "Fallout4", False)
+            >>> # Using strings
+            >>> yaml_data = YamlData(["YAML/Main"], "Fallout4", False)
+            >>> # Mixed
+            >>> yaml_data = YamlData([Path("YAML/Main"), "YAML/Local"], "Fallout4", False)
         """
 
     # CLASSIC version information
@@ -124,11 +135,11 @@ class YamlData:
         """
 
     @property
-    def crashgen_ignore(self) -> list[str]:
-        """List of crash generator-specific patterns to ignore.
+    def crashgen_ignore(self) -> set[str]:
+        """Set of crash generator-specific patterns to ignore.
 
         Returns:
-            List of ignore pattern strings
+            Set of ignore pattern strings
         """
 
     # Mod detection lists
@@ -233,18 +244,24 @@ class YamlData:
         """
 
     @property
-    def classic_game_hints(self) -> dict[str, Any]:
+    def classic_game_hints(self) -> list[str]:
         """Game-specific hints and tips for CLASSIC usage.
 
         Returns:
-            Dictionary mapping hint categories to hint text
+            List of hint strings
         """
 
-def create_yamldata() -> YamlData:
+def create_yamldata(yaml_dirs: list[str | Path], game: str, vr_mode: bool) -> YamlData:
     """Factory function to create a YamlData instance.
 
     This is a convenience function that creates and returns a new YamlData instance.
     Equivalent to calling YamlData() directly.
+
+    Args:
+        yaml_dirs: List of directories containing YAML configuration files.
+                  Accepts both string paths and pathlib.Path objects.
+        game: Game name (e.g., "Fallout4", "Skyrim")
+        vr_mode: Whether to load VR-specific configuration
 
     Returns:
         Configured YamlData instance with all YAML data loaded
@@ -255,7 +272,9 @@ def create_yamldata() -> YamlData:
 
     Example:
         >>> from classic_config import create_yamldata
-        >>> yaml_data = create_yamldata()
+        >>> from pathlib import Path
+        >>> # Now this won't cause type errors:
+        >>> yaml_data = create_yamldata([Path("YAML/Main")], "Fallout4", False)
         >>> print(yaml_data.classic_version)
         '8.0.0'
     """

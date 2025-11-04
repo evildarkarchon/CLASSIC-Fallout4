@@ -7,8 +7,8 @@ improvements.
 
 Key API Translations:
 - Python: get_gpu_info() standalone function returning dict
-- Rust: GpuDetector.extract_gpu_info() instance method returning GpuInfo object
-- Return type: Convert Rust GpuInfo object to Python dict
+- Rust: GpuDetector.detect_gpu() instance method returning tuple (vendor, model)
+- Return type: Convert Rust tuple to Python dict with computed rival field
 """
 
 from __future__ import annotations
@@ -17,11 +17,9 @@ try:
     import classic_scanlog
 
     RustGpuDetector = classic_scanlog.GpuDetector
-    RustGpuInfo = classic_scanlog.GpuInfo
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RustGpuDetector = None
-    RustGpuInfo = None
     RUST_AVAILABLE = False
 
 
@@ -47,19 +45,11 @@ def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
             - rival: str | None - The name of the rival GPU manufacturer. If not found,
               defaults to None.
     """
-    if RUST_AVAILABLE:
+    if RUST_AVAILABLE and RustGpuDetector is not None:
         # Use Rust implementation
         detector = RustGpuDetector()
         gpu_info = detector.extract_gpu_info(segment_system)
-
-        # Convert Rust GpuInfo object to dict for Python API compatibility
-        # Rust returns GpuInfo with primary, manufacturer, secondary (Option<String>), rival (Option<String>)
-        return {
-            "primary": gpu_info.primary,
-            "secondary": gpu_info.secondary,  # Rust returns None if not present
-            "manufacturer": gpu_info.manufacturer,
-            "rival": gpu_info.rival,  # Rust returns None if not present
-        }
+        return gpu_info.to_dict()
     # Fallback to Python implementation
     from ClassicLib.ScanLog.GPUDetector import get_gpu_info as py_get_gpu_info
 

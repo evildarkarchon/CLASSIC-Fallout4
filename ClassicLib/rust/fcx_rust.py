@@ -12,7 +12,16 @@ Key API Translations:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ClassicLib.ScanLog.fragments import ReportFragment
+
+if TYPE_CHECKING:
+    from classic_scanlog import FcxModeHandler as RustFcxModeHandlerType
+
+    from ClassicLib.ScanLog.FCXModeHandler import (
+        FCXModeHandlerFragments as PythonFcxModeHandlerType,
+    )
 
 try:
     import classic_scanlog
@@ -20,7 +29,7 @@ try:
     RustFcxModeHandler = classic_scanlog.FcxModeHandler
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
-    RustFcxModeHandler = None
+    RustFcxModeHandler = None  # type: ignore[assignment]
     RUST_AVAILABLE = False
 
 
@@ -50,16 +59,17 @@ class RustAcceleratedFcxModeHandler:
         if self._use_rust:
             # Rust doesn't accept None, convert to False
             rust_fcx_mode = fcx_mode if fcx_mode is not None else False
-            self._handler = RustFcxModeHandler(rust_fcx_mode)
+            self._handler: RustFcxModeHandlerType | PythonFcxModeHandlerType = RustFcxModeHandler(rust_fcx_mode)  # type: ignore[misc]
         else:
             # Fallback to Python implementation
             from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 
-            self._handler = FCXModeHandlerFragments(fcx_mode)
+            self._handler: RustFcxModeHandlerType | PythonFcxModeHandlerType = FCXModeHandlerFragments(fcx_mode)
 
         # Initialize instance attributes for Python API compatibility
-        self.game_files_check = None
-        self.main_files_check = None
+        # Note: Rust implementation doesn't use these attributes
+        self.game_files_check: str | None = None
+        self.main_files_check: str | None = None
 
     def check_fcx_mode(self) -> None:
         """
@@ -77,10 +87,10 @@ class RustAcceleratedFcxModeHandler:
             self._handler.check_fcx_mode()
             # Rust stores results differently, but we maintain Python API
         else:
-            self._handler.check_fcx_mode()
+            self._handler.check_fcx_mode()  # type: ignore[attr-defined]
             # Copy results from Python implementation
-            self.main_files_check = self._handler.main_files_check
-            self.game_files_check = self._handler.game_files_check
+            self.main_files_check = self._handler.main_files_check  # type: ignore[attr-defined]
+            self.game_files_check = self._handler.game_files_check  # type: ignore[attr-defined]
 
     def get_fcx_messages(self) -> ReportFragment:
         """
@@ -95,23 +105,26 @@ class RustAcceleratedFcxModeHandler:
             reflecting the current FCX mode status and associated checks.
         """
         if self._use_rust:
-            # Rust returns list[str], need to convert to ReportFragment
-            lines = self._handler.get_fcx_messages()
+            # Rust has method named get_fcx_messages() and returns list[str]
+            # Need to convert to ReportFragment for API compatibility
+            lines: list[str] = self._handler.get_fcx_messages()  # type: ignore[attr-defined]
             return ReportFragment.from_lines(lines)
         # Python already returns ReportFragment
-        return self._handler.get_fcx_messages()
+        return self._handler.get_fcx_messages()  # type: ignore[attr-defined]
 
     @classmethod
     def reset_fcx_checks(cls) -> None:
         """
         Resets the FCX checks state for the current mode, depending on the implementation.
+
         This method provides compatibility between the Rust-based and Python-based
         FCX mode handlers. The Python implementation explicitly resets the state using
         the `FCXModeHandlerFragments` class, while the Rust implementation manages
         the state internally and does not expose this reset functionality directly.
 
-        Returns:
-            None: This method does not return any value.
+        Note:
+            Rust implementation doesn't expose reset_fcx_checks as a class method.
+            The Rust version resets automatically on drop or uses different state management.
         """
         if not RUST_AVAILABLE:
             from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments

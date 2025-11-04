@@ -178,9 +178,6 @@ def _store_metric(name: str, duration: float) -> None:
             for tracking the metric durations.
         duration (float): The duration value associated with the metric. Represents
             the specific performance measurement to record.
-
-    Returns:
-        None
     """
     if name not in _performance_metrics:
         _performance_metrics[name] = []
@@ -276,7 +273,7 @@ class TimedBlock:
             context entry.
     """
 
-    def __init__(self, name: str, log_level: str = "info"):
+    def __init__(self, name: str, log_level: str = "info") -> None:
         """
         Initializes the instance of the class with the provided name and log level.
         The class is responsible for managing logging behavior based on the specified

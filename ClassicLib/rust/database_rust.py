@@ -9,15 +9,21 @@ while leveraging Rust's performance benefits.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
+
+from classic_database import RustDatabasePool
+
+if TYPE_CHECKING:
+    from classic_database import RustDatabasePool as RustDatabasePoolType
+else:
+    RustDatabasePoolType = None  # type: ignore[misc,assignment]
 
 try:
-    import classic_database
-    RustDatabasePool = classic_database.RustDatabasePool
+    from classic_database import RustDatabasePool
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RUST_AVAILABLE = False
-    RustDatabasePool = None
+    RustDatabasePool = None  # type: ignore[assignment]
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS
@@ -71,7 +77,11 @@ class DatabasePoolManager:
         if self._lock is None:
             self.__class__._lock = asyncio.Lock()
 
-        async with self._lock:
+        # mypy now knows _lock is not None after the check above
+        lock = self._lock
+        assert lock is not None  # Type narrowing for mypy
+
+        async with lock:
             if self._pool is None:
                 self._pool = RustAsyncDatabasePool()
                 await self._pool.initialize()
@@ -86,9 +96,6 @@ class DatabasePoolManager:
         it is no longer needed. It utilizes an asynchronous lock to ensure thread-safe
         operation. The pool is set to `None` after closure, and a debug message is
         logged upon successful closure.
-
-        Returns:
-            None: This function does not return any value.
         """
         if self._lock is None:
             return
@@ -115,6 +122,9 @@ class RustAsyncDatabasePool:
         Args:
             max_connections: Maximum number of database connections.
             cache_ttl_seconds: TTL for cache entries in seconds.
+
+        Raises:
+            ImportError: If the Rust database module is not available.
         """
         self.max_connections = max_connections
         self.cache_ttl = cache_ttl_seconds
@@ -122,7 +132,7 @@ class RustAsyncDatabasePool:
         if RUST_AVAILABLE:
             # Get game table from GlobalRegistry
             game_table = GlobalRegistry.get_game()
-            self._rust_pool = RustDatabasePool(max_connections, cache_ttl_seconds, game_table)
+            self._rust_pool: RustDatabasePool = RustDatabasePool(max_connections, cache_ttl_seconds, game_table) # pyright: ignore[reportOptionalCall, reportInvalidTypeForm]
             logger.debug(f"Initialized Rust database pool (max_conn={max_connections}, ttl={cache_ttl_seconds}s, table={game_table})")
         else:
             raise ImportError("Rust database module not available. Please rebuild with maturin.")
@@ -209,7 +219,7 @@ class RustAsyncDatabasePool:
         self._initialized = False
         logger.debug("Rust database pool marked as closed (connections cleaned up on drop)")
 
-    async def get_entry(self, formid: str, plugin: str) -> str | None:
+    async def get_entry(self, formid: str, plugin: str) -> dict[str, Any] | None:
         """
         Asynchronously retrieves an entry from the Rust pool.
 
@@ -222,7 +232,7 @@ class RustAsyncDatabasePool:
             plugin (str): The plugin associated with the requested entry.
 
         Returns:
-            str | None: The entry retrieved from the Rust pool if found, otherwise None.
+            dict[str, Any] | None: The entry retrieved from the Rust pool if found, otherwise None.
         """
         if not self._initialized:
             await self.initialize()
@@ -231,15 +241,13 @@ class RustAsyncDatabasePool:
 
         # Await Rust coroutine - true async, no blocking!
         # Multiple operations can run concurrently via Python's event loop
-        result = await self._rust_pool.get_entry(formid, plugin, game_table)
-
-        return result
+        return await self._rust_pool.get_entry(formid, plugin, game_table)
 
     async def get_entries_batch(
         self,
         formid_plugin_pairs: list[tuple[str, str]],
         batch_size: int = 100
-    ) -> dict[tuple[str, str], str]:
+    ) -> dict[tuple[str, str], dict[str, Any]]:
         """
         Fetches a batch of entries by querying an external Rust-based pool.
 
@@ -258,8 +266,8 @@ class RustAsyncDatabasePool:
                 where the `batch_lookup` method isn't available. Default is 100.
 
         Returns:
-            dict[tuple[str, str], str]: A dictionary mapping each (formid, plugin)
-            pair to its corresponding result string.
+            dict[tuple[str, str], dict[str, Any]]: A dictionary mapping each (formid, plugin)
+            pair to its corresponding database entry dictionary.
 
         Raises:
             AttributeError: If methods necessary for querying the Rust pool
@@ -277,8 +285,7 @@ class RustAsyncDatabasePool:
         # Await Rust coroutine - true async, no blocking!
         try:
             # Try the new batch_lookup method first
-            rust_results = await self._rust_pool.batch_lookup(formid_plugin_pairs, game_table)
-            return rust_results
+            rust_results_batch = await self._rust_pool.batch_lookup(formid_plugin_pairs, game_table)
         except AttributeError:
             # Fall back to get_entries_batch if batch_lookup doesn't exist
             rust_results = await self._rust_pool.get_entries_batch(
@@ -286,15 +293,16 @@ class RustAsyncDatabasePool:
                 game_table,
                 batch_size
             )
-
             # Convert results to expected format
-            results = {}
-            for (formid, plugin) in formid_plugin_pairs:
+            results: dict[tuple[str, str], dict[str, Any]] = {}
+            for formid, plugin in formid_plugin_pairs:
                 key = f"{formid}:{plugin}"
                 if key in rust_results:
                     results[formid, plugin] = rust_results[key]
-
             return results
+        else:
+            # batch_lookup succeeded, return the results directly
+            return rust_results_batch
 
     async def clear_cache(self, expired_only: bool = False) -> int:
         """
@@ -322,9 +330,6 @@ class RustAsyncDatabasePool:
 
         Args:
             seconds (int): The duration in seconds for the cache TTL.
-
-        Returns:
-            None
         """
         self._rust_pool.set_cache_ttl(seconds)
 
@@ -349,10 +354,15 @@ class RustAsyncDatabasePool:
         This method leverages an asynchronous operation to perform optimization
         on specified resources, ensuring improved system performance and efficiency.
 
+        Note:
+            This method is deprecated and may not be available in newer versions
+            of the Rust database pool. It will silently do nothing if not available.
+
         Raises:
             RuntimeError: If the operation fails or encounters issues.
         """
-        await self._rust_pool.optimize()
+        if hasattr(self._rust_pool, 'optimize'):
+            await self._rust_pool.optimize() # pyright: ignore[reportAttributeAccessIssue]
 
     def set_game_table(self, table: str) -> None:
         """
@@ -411,9 +421,10 @@ def get_database_pool_implementation() -> type:
     # Fall back to Python implementation if available
     try:
         from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool as PythonAsyncDatabasePool
-        return PythonAsyncDatabasePool
-    except ImportError:
+    except ImportError as e:
         raise ImportError(
             "Neither Rust nor Python database pool implementation available. "
             "Please rebuild with maturin or check your installation."
-        )
+        ) from e
+    else:
+        return PythonAsyncDatabasePool

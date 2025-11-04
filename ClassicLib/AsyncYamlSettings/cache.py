@@ -14,9 +14,10 @@ Classes:
 import asyncio
 import time
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from ClassicLib.Constants import YAML
+if TYPE_CHECKING:
+    from ClassicLib.Constants import YAML
 
 
 class YamlCache:
@@ -124,7 +125,8 @@ class YamlCache:
             OSError: If the file is inaccessible for other reasons.
         """
         try:
-            current_mod_time = file_path.stat().st_mtime
+            stat_result = await asyncio.to_thread(file_path.stat)
+            current_mod_time = stat_result.st_mtime
         except (FileNotFoundError, OSError):
             # File doesn't exist or can't be accessed
             return True
@@ -165,9 +167,6 @@ class YamlCache:
         Args:
             metric (str): The name of the metric to update.
             increment (int, optional): The value by which to increase the metric. Defaults to 1.
-
-        Returns:
-            None
         """
         if metric in self._metrics:
             self._metrics[metric] += increment
@@ -187,13 +186,13 @@ class YamlCache:
         """
         if store:
             # Clear specific store
-            keys_to_remove = [k for k in self.cache.keys() if k == store]
+            keys_to_remove = [k for k in self.cache.keys() if k == store]  # noqa: SIM118
             for key in keys_to_remove:
                 del self.cache[key]
 
             # Clear related settings cache entries
             settings_keys_to_remove = [
-                k for k in self.settings_cache.keys()
+                k for k in self.settings_cache.keys()  # noqa: SIM118
                 if str(k[1]) == store
             ]
             for key in settings_keys_to_remove:

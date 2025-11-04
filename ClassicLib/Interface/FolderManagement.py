@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
@@ -23,8 +23,10 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 # Try to import Rust path validator for faster path operations
 _RUST_PATH_AVAILABLE = False
+classic_path: Any = None  # Will be the module if import succeeds, None otherwise
 try:
     import classic_path
+
     _RUST_PATH_AVAILABLE = True
     logger.debug("FolderManagement: Using Rust PathValidator for path operations (10-20x faster)")
 except ImportError:
@@ -46,7 +48,6 @@ def _normalize_path(path: str | Path) -> Path:
     if _RUST_PATH_AVAILABLE:
         try:
             # Use Rust for path validation (handles Windows quirks better)
-            import classic_path
             if classic_path.PathValidator.is_valid_path(path_str):
                 # Path is valid, use Python Path for normalization
                 # (Rust PathValidator focuses on validation, not normalization)
@@ -73,7 +74,6 @@ def _is_valid_directory(path: str | Path) -> bool:
     if _RUST_PATH_AVAILABLE:
         try:
             # Use Rust for faster validation
-            import classic_path
             # is_valid_path checks existence and basic validity
             if not classic_path.PathValidator.is_valid_path(path_str):
                 return False
@@ -115,9 +115,6 @@ class FolderManagementMixin:
         Raises:
             QMessageBox: Displays a warning dialog when the selected directory is
             invalid.
-
-        Returns:
-            None
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
@@ -202,12 +199,6 @@ class FolderManagementMixin:
         If a folder is selected, it updates the associated text field with the selected
         folder's path and saves the folder path to the corresponding YAML settings
         key for future use.
-
-        Args:
-            self (object): The instance of the class where this function is called.
-
-        Returns:
-            None
         """
         folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
         if folder:
@@ -222,9 +213,6 @@ class FolderManagementMixin:
         This method initializes the folder paths for 'SCAN Custom Path' and 'MODS Folder Path'
         by fetching their values from the settings and, if they exist, updates the corresponding
         text fields in the user interface.
-
-        Returns:
-            None
         """
         scan_folder: str | None = classic_settings(str, "SCAN Custom Path")
         mods_folder: str | None = classic_settings(str, "MODS Folder Path")
@@ -259,12 +247,6 @@ class FolderManagementMixin:
         the user that the settings file is missing and the application needs
         to be restarted. If the file exists, it will be opened using
         Notepad++.
-
-        Raises:
-            None
-
-        Returns:
-            None
         """
         settings_file: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Settings.yaml"
         if not settings_file.is_file():
@@ -286,12 +268,6 @@ class FolderManagementMixin:
         local directory registered in the `GlobalRegistry`. If the folder exists, it
         will be opened using the default file explorer. If the folder does not exist,
         an error message is displayed.
-
-        Returns:
-            None: This method does not return any value.
-
-        Raises:
-            None: This method does not raise explicit exceptions.
         """
         backup_folder: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup"
         if backup_folder.is_dir():
@@ -309,9 +285,6 @@ class FolderManagementMixin:
         from the GlobalRegistry. If the directory does not exist, it is created with all necessary
         parent directories. After ensuring the existence of the folder, it is opened using the default
         system method for handling folder URLs.
-
-        Returns:
-            None
         """
         crash_logs_folder: Path = cast("Path", GlobalRegistry.get_local_dir()) / "Crash Logs"
         if not crash_logs_folder.is_dir():

@@ -13,7 +13,7 @@ Key API Translations:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 try:
     import classic_scanlog
 
-    RustSettingsValidator = classic_scanlog.SettingsValidator
+    RustSettingsValidator: type[Any] | None = classic_scanlog.SettingsValidator
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RustSettingsValidator = None
@@ -55,11 +55,11 @@ class RustAcceleratedSettingsValidator:
         self.yamldata = yamldata
         self._use_rust = RUST_AVAILABLE
 
-        if self._use_rust:
+        if self._use_rust and RustSettingsValidator is not None:
             # Extract required parameters for Rust constructor
             crashgen_name = getattr(yamldata, "crashgen_name", "Buffout 4")
             crashgen_ignore = getattr(yamldata, "crashgen_ignore", [])
-            self._validator = RustSettingsValidator(crashgen_name, crashgen_ignore)
+            self._validator: Any = RustSettingsValidator(crashgen_name, crashgen_ignore)
         else:
             # Fallback to Python implementation
             from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
@@ -83,13 +83,14 @@ class RustAcceleratedSettingsValidator:
         Returns:
             ReportFragment: A fragment object containing details of the scanned results.
         """
-        if self._use_rust:
+        if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
             crashgen_str = {k: str(v) for k, v in crashgen.items()}
-            lines = self._validator.scan_buffout_achievements_setting(xsemodules, crashgen_str)
+            lines: list[str] = self._validator.scan_buffout_achievements_setting(xsemodules, crashgen_str)
             return ReportFragment.from_lines(lines)
         # Python already returns ReportFragment
-        return self._validator.scan_buffout_achievements_setting(xsemodules, crashgen)
+        result: ReportFragment = self._validator.scan_buffout_achievements_setting(xsemodules, crashgen)
+        return result
 
     def scan_buffout_memorymanagement_settings(
         self,
@@ -120,17 +121,18 @@ class RustAcceleratedSettingsValidator:
             ReportFragment: A processed fragment containing the scan results based on
             the provided Buffout memory management settings.
         """
-        if self._use_rust:
+        if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
             crashgen_str = {k: str(v) for k, v in crashgen.items()}
-            lines = self._validator.scan_buffout_memorymanagement_settings(
+            lines: list[str] = self._validator.scan_buffout_memorymanagement_settings(
                 crashgen_str, has_xcell, has_old_xcell, has_baka_scrapheap
             )
             return ReportFragment.from_lines(lines)
         # Python already returns ReportFragment
-        return self._validator.scan_buffout_memorymanagement_settings(
+        result: ReportFragment = self._validator.scan_buffout_memorymanagement_settings(
             crashgen, has_xcell, has_old_xcell, has_baka_scrapheap
         )
+        return result
 
     def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: Version | None = None) -> ReportFragment:
         """
@@ -151,13 +153,14 @@ class RustAcceleratedSettingsValidator:
             ReportFragment: An object encapsulating the scanned and validated results of the
                 "archivelimit" setting, formatted based on the selected implementation (Rust or Python).
         """
-        if self._use_rust:
+        if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
             crashgen_str = {k: str(v) for k, v in crashgen.items()}
-            lines = self._validator.scan_archivelimit_setting(crashgen_str, crashgen_version)
+            lines: list[str] = self._validator.scan_archivelimit_setting(crashgen_str, crashgen_version)
             return ReportFragment.from_lines(lines)
         # Python already returns ReportFragment
-        return self._validator.scan_archivelimit_setting(crashgen, crashgen_version)
+        result: ReportFragment = self._validator.scan_archivelimit_setting(crashgen, crashgen_version)
+        return result
 
     def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], xsemodules: set[str]) -> ReportFragment:
         """
@@ -180,13 +183,14 @@ class RustAcceleratedSettingsValidator:
             validation and analysis.
 
         """
-        if self._use_rust:
+        if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
             crashgen_str = {k: str(v) for k, v in crashgen.items()}
-            lines = self._validator.scan_buffout_looksmenu_setting(crashgen_str, xsemodules)
+            lines: list[str] = self._validator.scan_buffout_looksmenu_setting(crashgen_str, xsemodules)
             return ReportFragment.from_lines(lines)
         # Python already returns ReportFragment
-        return self._validator.scan_buffout_looksmenu_setting(crashgen, xsemodules)
+        result: ReportFragment = self._validator.scan_buffout_looksmenu_setting(crashgen, xsemodules)
+        return result
 
 
 # Export both the wrapper and components for compatibility

@@ -118,21 +118,14 @@ class SettingsDialog(QDialog):
         self.load_settings()
 
     def _create_tabs(self) -> None:
-        # noinspection PyUnresolvedReferences
         """
-                Creates and initializes tabs for a user interface, storing widget references for
-                settings management and ensuring backward compatibility by maintaining legacy attribute
-                names. Each tab corresponds to a specific category: General, Scanning, Paths, and Updates.
+        Creates and initializes tabs for a user interface, storing widget references for
+        settings management and ensuring backward compatibility by maintaining legacy attribute
+        names. Each tab corresponds to a specific category: General, Scanning, Paths, and Updates.
 
-                Args:
-                    None
-
-                Raises:
-                    None
-
-                Returns:
-                    None
-                """
+        Raises:
+            None
+        """
         # General tab
         general_widget, general_widgets = TabCreator.create_general_tab(self)
         self.settings_widgets.update(general_widgets)
@@ -181,12 +174,6 @@ class SettingsDialog(QDialog):
 
         This method utilizes the path manager to prompt a folder browsing dialog,
         allowing users to select an .ini folder.
-
-        Raises:
-            No exceptions are raised by this method.
-
-        Returns:
-            None
         """
         self.path_manager.browse_ini_folder()
 
@@ -196,9 +183,6 @@ class SettingsDialog(QDialog):
 
         This method interacts with the path manager to reset the INI folder to its
         initial configuration or state.
-
-        Returns:
-            None
         """
         self.path_manager.reset_ini_folder()
 
@@ -221,9 +205,6 @@ class SettingsDialog(QDialog):
         It handles both boolean and string settings, updating checkboxes, combo boxes, and text
         inputs accordingly. Default values or backup configurations are used when invalid or missing
         values are encountered during the loading process.
-
-        Returns:
-            None
 
         Raises:
             TypeError: If the retrieved settings have incorrect types.

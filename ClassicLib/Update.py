@@ -323,7 +323,7 @@ class VersionChecker:
         repo_name (str): The name of the GitHub repository to fetch updates from.
     """
 
-    def __init__(self, quiet: bool, gui_request: bool):
+    def __init__(self, quiet: bool, gui_request: bool) -> None:
         """
         Initializes the class with the given parameters.
 
@@ -392,7 +392,8 @@ class VersionChecker:
             return False
         return True
 
-    def _parse_local_version(self) -> Version | None:
+    @staticmethod
+    def _parse_local_version() -> Version | None:
         """
         Parses the local version from a YAML configuration file and returns it as a Version object.
 
@@ -414,7 +415,8 @@ class VersionChecker:
         parsed_version_str = parts[-1]
         return try_parse_version(parsed_version_str) if parsed_version_str else None
 
-    def _determine_update_sources(self, update_source: str) -> tuple[bool, bool]:
+    @staticmethod
+    def _determine_update_sources(update_source: str) -> tuple[bool, bool]:
         """
         Determines the update sources based on the given update_source parameter and specific settings.
 
@@ -466,7 +468,8 @@ class VersionChecker:
             return version
         return None
 
-    async def _fetch_nexus_version(self, session: aiohttp.ClientSession) -> Version | None:
+    @staticmethod
+    async def _fetch_nexus_version(session: aiohttp.ClientSession) -> Version | None:
         """
         Fetches the Nexus version using the provided HTTP session.
 
@@ -488,8 +491,9 @@ class VersionChecker:
             logger.info(f"Determined Nexus version: {version}")
         return version
 
+    @staticmethod
     def _check_source_failures(
-        self, use_github: bool, use_nexus: bool,
+        use_github: bool, use_nexus: bool,
         github_version: Version | None, nexus_version: Version | None
     ) -> None:
         """
@@ -567,8 +571,9 @@ class VersionChecker:
             raise UpdateCheckError(error_msg) from error
         return False
 
+    @staticmethod
     def _check_if_outdated(
-        self, version_local: Version | None,
+        version_local: Version | None,
         github_version: Version | None, nexus_version: Version | None
     ) -> bool:
         """
@@ -604,8 +609,9 @@ class VersionChecker:
 
         return False
 
+    @staticmethod
     def _format_success_message(
-        self, version_local: Version | None,
+        version_local: Version | None,
         use_github: bool, github_version: Version | None,
         use_nexus: bool, nexus_version: Version | None
     ) -> str:
@@ -706,7 +712,11 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
 
             checker._check_source_failures(use_github, use_nexus, version_github, version_nexus)
 
-    except Exception as e:
+    except (aiohttp.ClientError, UpdateCheckError) as e:
+        return checker._handle_error(e)
+    except Exception as e:  # noqa: BLE001
+        # Catch unexpected exceptions for proper error handling and graceful degradation
+        logger.error(f"Unexpected error during version fetch: {e}", exc_info=True)
         return checker._handle_error(e)
 
     # Check if outdated

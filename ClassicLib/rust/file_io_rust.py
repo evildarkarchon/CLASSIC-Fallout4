@@ -74,7 +74,7 @@ class RustFileIOCore:
                     max_concurrent_io=50
                 )
                 logger.debug("Using Rust FileIOCore")
-            except Exception as e:
+            except (RuntimeError, OSError, ImportError) as e:
                 logger.warning(f"Failed to initialize Rust FileIOCore: {e}")
 
         # Always create Python fallback
@@ -139,7 +139,7 @@ class RustFileIOCore:
             try:
                 # Await Rust coroutine - true async, no blocking!
                 return await self._rust_core.read_file(str(path))
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust read_file failed, falling back: {e}")
 
         # Python fallback
@@ -170,7 +170,7 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 return await self._rust_core.read_lines(str(path))
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust read_lines failed, falling back: {e}")
 
         if self._python_core:
@@ -196,9 +196,9 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                result = await self._rust_core.read_bytes(str(path))
-                return bytes(result)
-            except Exception as e:
+                # Rust returns bytes directly - no wrapper needed
+                return await self._rust_core.read_bytes(str(path))
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust read_bytes failed, falling back: {e}")
 
         if self._python_core:
@@ -224,9 +224,10 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.write_file(str(path), content)
-                return
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust write_file failed, falling back: {e}")
+            else:
+                return
 
         if self._python_core:
             await self._python_core.write_file(path, content)
@@ -249,9 +250,10 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.write_lines(str(path), lines)
-                return
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust write_lines failed, falling back: {e}")
+            else:
+                return
 
         if self._python_core:
             await self._python_core.write_lines(path, lines)
@@ -275,10 +277,12 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                await self._rust_core.write_bytes(str(path), list(content))
-                return
-            except Exception as e:
+                # PyO3 converts bytes to Vec<u8> automatically
+                await self._rust_core.write_bytes(str(path), content)
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust write_bytes failed, falling back: {e}")
+            else:
+                return
 
         if self._python_core:
             await self._python_core.write_bytes(path, content)
@@ -304,9 +308,10 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.append_file(str(path), content)
-                return
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust append_file failed, falling back: {e}")
+            else:
+                return
 
         if self._python_core:
             await self._python_core.append_file(path, content)
@@ -320,33 +325,23 @@ class RustFileIOCore:
     # Advanced Operations (Rust-specific)
     # ==========================================
 
-    async def read_file_mmap(self, path: Path | str, encoding: str | None = None) -> str:
+    async def read_file_mmap(self, path: Path | str) -> str:
         """
         Reads a file using memory-mapped I/O if available, with a fallback to regular
-        file reading. If Rust core is enabled, it attempts to use the Rust-based method
-        for optimal performance, and falls back to a basic Python read if it fails.
+        file reading.
+
+        Note: The Rust implementation doesn't have a separate mmap method, so this
+        falls back to regular read_file which is already highly optimized. The encoding
+        used is the one specified in the constructor.
 
         Args:
             path (Path | str): The path to the file to be read. Can be a Path object
                 or a string.
-            encoding (str | None): The encoding to use for reading the file. If None,
-                the system's default encoding is used.
 
         Returns:
             str: The content of the file as a string.
-
-        Raises:
-            Exception: If an error occurs while reading the file using the Rust-based
-                method and logging the issue for fallback.
-
         """
-        if self._rust_core:
-            try:
-                return await asyncio.to_thread(self._rust_core.read_file_mmap, str(path), encoding)
-            except Exception as e:
-                logger.debug(f"Rust read_file_mmap failed, falling back: {e}")
-
-        # Fallback to regular read
+        # Rust FileIOCore doesn't expose mmap separately - regular read is already optimized
         return await self.read_file(path)
 
     async def read_dds_header(self, path: Path | str) -> tuple[int, int] | None:
@@ -364,9 +359,9 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                result = await asyncio.to_thread(self._rust_core.read_dds_header, str(path))
-                return result or None
-            except Exception as e:
+                # Rust method is synchronous (uses block_on internally)
+                return self._rust_core.read_dds_header(str(path))
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust read_dds_header failed: {e}")
                 return None
 
@@ -376,7 +371,7 @@ class RustFileIOCore:
             processor = DDSProcessor(asyncio.Semaphore(1))
             path = self._ensure_path(path)
             return processor.read_dds_header_mmap(path)
-        except Exception:
+        except (ImportError, OSError, RuntimeError):
             return None
 
     async def read_dds_headers_batch(self, paths: list[Path | str]) -> dict[str, tuple[int, int] | None]:
@@ -402,9 +397,9 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 str_paths = [str(p) for p in paths]
-                result = await asyncio.to_thread(self._rust_core.read_dds_headers_batch, str_paths)
-                return dict(result)
-            except Exception as e:
+                # Rust method is synchronous (uses parallel processing internally)
+                return self._rust_core.read_dds_headers_batch(str_paths)
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"Rust read_dds_headers_batch failed: {e}")
 
         # Python fallback - process sequentially
@@ -445,14 +440,10 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                return await asyncio.to_thread(
-                    self._rust_core.walk_directory,
-                    str(path),
-                    pattern,
-                    max_depth
-                )
-            except Exception as e:
-                logger.debug(f"Rust walk_directory failed: {e}")
+                # Rust method is synchronous (uses parallel processing internally)
+                return self._rust_core.py_walk_directory(str(path), pattern, max_depth)
+            except (RuntimeError, OSError) as e:
+                logger.debug(f"Rust py_walk_directory failed: {e}")
 
         # Python fallback
         import re
@@ -461,7 +452,7 @@ class RustFileIOCore:
         pattern_re = re.compile(pattern) if pattern else None
         results = []
 
-        def walk(p: Path, depth: int = 0):
+        def walk(p: Path, depth: int = 0) -> None:
             if max_depth is not None and depth > max_depth:
                 return
             try:
@@ -505,11 +496,12 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 str_paths = [str(p) for p in paths]
-                result = await self._rust_core.read_multiple_files(str_paths)
+                # Rust method returns coroutine - must await
+                result = await self._rust_core.py_read_multiple_files(str_paths)
                 # Convert paths to filenames for compatibility
                 return {Path(k).name: v for k, v in result.items()}
-            except Exception as e:
-                logger.debug(f"Rust read_multiple_files failed: {e}")
+            except (RuntimeError, OSError) as e:
+                logger.debug(f"Rust py_read_multiple_files failed: {e}")
 
         if self._python_core:
             return await self._python_core.read_multiple_files(paths)
@@ -520,7 +512,7 @@ class RustFileIOCore:
             try:
                 content = await self.read_file(path)
                 results[Path(path).name] = content
-            except Exception as e:
+            except OSError as e:
                 logger.error(f"Error reading {path}: {e}")
                 results[Path(path).name] = ""
         return results
@@ -542,10 +534,12 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 str_files = {str(k): v for k, v in files.items()}
-                await self._rust_core.write_multiple_files(str_files)
+                # Rust method returns coroutine - must await
+                await self._rust_core.py_write_multiple_files(str_files)
+            except (RuntimeError, OSError) as e:
+                logger.debug(f"Rust py_write_multiple_files failed: {e}")
+            else:
                 return
-            except Exception as e:
-                logger.debug(f"Rust write_multiple_files failed: {e}")
 
         if self._python_core:
             await self._python_core.write_multiple_files(files)
@@ -636,9 +630,6 @@ class RustFileIOCore:
             report_lines (list[str]): A list of strings containing the lines
                 to be written into the report. Each line is expected to already
                 end with a newline character.
-
-        Returns:
-            None
         """
         path = self._ensure_path(path)
         report_path = path.with_suffix(".md")
@@ -693,49 +684,51 @@ def create_file_io_sync(encoding: str = "utf-8", errors: str = "ignore") -> Any:
 
     # Wrap async methods for sync usage
     class SyncWrapper:
-        def __init__(self, core):
+        """Synchronous wrapper for RustFileIOCore async methods."""
+
+        def __init__(self, core: RustFileIOCore) -> None:
             self._core = core
 
-        def read_file(self, path):
+        def read_file(self, path: Path | str) -> str:
             return bridge.run_async(self._core.read_file(path))
 
-        def read_lines(self, path):
+        def read_lines(self, path: Path | str) -> list[str]:
             return bridge.run_async(self._core.read_lines(path))
 
-        def read_bytes(self, path):
+        def read_bytes(self, path: Path | str) -> bytes:
             return bridge.run_async(self._core.read_bytes(path))
 
-        def write_file(self, path, content):
+        def write_file(self, path: Path | str, content: str) -> None:
             return bridge.run_async(self._core.write_file(path, content))
 
-        def write_lines(self, path, lines):
+        def write_lines(self, path: Path | str, lines: list[str]) -> None:
             return bridge.run_async(self._core.write_lines(path, lines))
 
-        def write_bytes(self, path, content):
+        def write_bytes(self, path: Path | str, content: bytes) -> None:
             return bridge.run_async(self._core.write_bytes(path, content))
 
-        def append_file(self, path, content):
+        def append_file(self, path: Path | str, content: str) -> None:
             return bridge.run_async(self._core.append_file(path, content))
 
-        def read_crash_log(self, path):
+        def read_crash_log(self, path: Path | str) -> list[str]:
             return bridge.run_async(self._core.read_crash_log(path))
 
-        def write_crash_report(self, path, report_lines):
+        def write_crash_report(self, path: Path | str, report_lines: list[str]) -> None:
             return bridge.run_async(self._core.write_crash_report(path, report_lines))
 
-        def read_multiple_files(self, paths):
+        def read_multiple_files(self, paths: list[Path | str]) -> dict[str, str]:
             return bridge.run_async(self._core.read_multiple_files(paths))
 
-        def write_multiple_files(self, files):
+        def write_multiple_files(self, files: dict[Path | str, str]) -> None:
             return bridge.run_async(self._core.write_multiple_files(files))
 
-        def file_exists(self, path):
+        def file_exists(self, path: Path | str) -> bool:
             return self._core.file_exists(path)
 
-        def get_file_size(self, path):
+        def get_file_size(self, path: Path | str) -> int:
             return self._core.get_file_size(path)
 
-        def clear_cache(self):
+        def clear_cache(self) -> None:
             return self._core.clear_cache()
 
     return SyncWrapper(io_core)

@@ -36,9 +36,6 @@ class HelpAndAboutMixin:
 
         Args:
             self: The instance of the class.
-
-        Returns:
-            None
         """
         dialog: CustomAboutDialog = CustomAboutDialog(self)
         dialog.exec()
@@ -53,9 +50,6 @@ class HelpAndAboutMixin:
 
         Args:
             self: Reference to the current instance of the class.
-
-        Returns:
-            None
         """
         help_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
         QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)

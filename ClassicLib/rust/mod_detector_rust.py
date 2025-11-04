@@ -14,7 +14,10 @@ Performance improvements with Rust:
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from ClassicLib.ScanLog.fragments import ReportFragment
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +57,7 @@ except ImportError as e:
     logger.debug(f"Rust mod detector not available: {e}")
 
 
-def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]):
+def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
     """
     Determines modifications from the provided YAML dictionary and crash log plugins.
     This function attempts to leverage a Rust implementation if available for better
@@ -72,10 +75,12 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     if RUST_AVAILABLE and _rust_detect_single:
         try:
+            # Convert plugins dict to searchable text for Rust
+            plugins_text = " ".join(crashlog_plugins.keys())
             # Rust returns Vec<String>, convert to ReportFragment
-            lines = _rust_detect_single(yaml_dict, crashlog_plugins)
+            lines = _rust_detect_single(plugins_text, yaml_dict)
             return ReportFragment.from_lines(lines)
-        except Exception as e:
+        except (ValueError, RuntimeError) as e:
             logger.warning(f"Rust mod detection failed, falling back to Python: {e}")
 
     # Python fallback implementation
@@ -83,7 +88,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     return py_detect(yaml_dict, crashlog_plugins)
 
 
-def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]):
+def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
     """
     Detects mod conflicts by leveraging Rust-based or Python fallback implementations.
 
@@ -104,10 +109,12 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     if RUST_AVAILABLE and _rust_detect_double:
         try:
+            # Convert plugins dict to searchable text for Rust
+            plugins_text = " ".join(crashlog_plugins.keys())
             # Rust returns Vec<String>, convert to ReportFragment
-            lines = _rust_detect_double(yaml_dict, crashlog_plugins)
+            lines = _rust_detect_double(plugins_text, yaml_dict)
             return ReportFragment.from_lines(lines)
-        except Exception as e:
+        except (ValueError, RuntimeError) as e:
             logger.warning(f"Rust mod conflict detection failed, falling back to Python: {e}")
 
     # Python fallback implementation
@@ -115,7 +122,11 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     return py_detect(yaml_dict, crashlog_plugins)
 
 
-def detect_mods_important(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: str | None):
+def detect_mods_important(
+    yaml_dict: dict[str, str],
+    crashlog_plugins: dict[str, str],
+    gpu_rival: Literal["nvidia", "amd"] | None,
+) -> ReportFragment:
     """
     Detects important modifications (mods) using either Rust or Python implementation.
 
@@ -127,7 +138,7 @@ def detect_mods_important(yaml_dict: dict[str, str], crashlog_plugins: dict[str,
     Args:
         yaml_dict (dict[str, str]): A dictionary containing YAML configuration data.
         crashlog_plugins (dict[str, str]): A dictionary of plugin crash logs.
-        gpu_rival (str | None): An optional string related to GPU rivalry or configuration.
+        gpu_rival (Literal["nvidia", "amd"] | None): GPU vendor for compatibility checking.
 
     Returns:
         ReportFragment: The result of the analysis represented in the form of a
@@ -136,13 +147,16 @@ def detect_mods_important(yaml_dict: dict[str, str], crashlog_plugins: dict[str,
     """
     from ClassicLib.ScanLog.fragments import ReportFragment
 
-    if RUST_AVAILABLE and _rust_detect_important:
+    # Note: Rust implementation doesn't support gpu_rival parameter yet
+    # Only use Rust if gpu_rival is None for now
+    if RUST_AVAILABLE and _rust_detect_important and gpu_rival is None:
         try:
+            # Convert plugins dict to searchable text for Rust
+            plugins_text = " ".join(crashlog_plugins.keys())
             # Rust returns Vec<String>, convert to ReportFragment
-            # Note: Rust function may need xse_modules parameter, pass empty set if needed
-            lines = _rust_detect_important(yaml_dict, crashlog_plugins, gpu_rival, set())
+            lines = _rust_detect_important(plugins_text, yaml_dict)
             return ReportFragment.from_lines(lines, check_content=False) if lines else ReportFragment.empty()
-        except Exception as e:
+        except (ValueError, RuntimeError) as e:
             logger.warning(f"Rust important mod detection failed, falling back to Python: {e}")
 
     # Python fallback implementation

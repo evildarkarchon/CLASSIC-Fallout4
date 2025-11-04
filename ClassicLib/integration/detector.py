@@ -20,16 +20,131 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# Configuration for module component detection
+MODULE_CONFIGS = {
+    "classic_scanlog": {
+        "components": {
+            "LogParser": "parser",
+            "FormIDAnalyzer": "formid_analyzer",
+            "PluginAnalyzer": "plugin_analyzer",
+            "RecordScanner": "record_scanner",
+            "ReportGenerator": "report_generation",
+            "SuspectScanner": "suspect_scanner",
+            "SettingsValidator": "settings_validator",
+            "GpuDetector": "gpu_detector",
+            "FcxModeHandler": "fcx_handler",
+        },
+        "special_checks": [
+            (("detect_mods_batch", "detect_mods_single"), "mod_detector"),
+        ],
+    },
+    "classic_database": {
+        "base_component": "database",
+        "components": {
+            "RustDatabasePool": "database_pool",
+        },
+    },
+    "classic_file_io": {
+        "base_component": "file_io",
+        "components": {
+            "RustFileIOCore": "file_io_core",
+        },
+    },
+    "classic_yaml": {
+        "base_component": "yaml",
+        "components": {
+            "RustYamlOperations": "yaml_operations",
+        },
+    },
+    "classic_path": {
+        "base_component": "path",
+        "components": {
+            "RustPathOperations": "path_operations",
+        },
+    },
+    "classic_config": {
+        "components": {
+            "YamlData": "yamldata",
+        },
+    },
+    "classic_constants": {
+        "base_component": "constants",
+    },
+    "classic_version": {
+        "base_component": "version_utils",
+    },
+    "classic_resource": {
+        "base_component": "resource_mgmt",
+    },
+    "classic_xse": {
+        "base_component": "xse_utils",
+    },
+    "classic_web": {
+        "base_component": "web_utils",
+    },
+}
+
+
+def _check_module_components(module: Any, config: dict[str, Any], components: dict[str, bool]) -> None:
+    """Check and update component availability from a module based on config.
+
+    Args:
+        module: The imported module to check.
+        config: Configuration dict with 'components', 'base_component', and 'special_checks'.
+        components: Dictionary to update with component availability.
+    """
+    # Check base component (the module itself)
+    if "base_component" in config:
+        components[config["base_component"]] = True
+        logger.debug(f"{config['base_component']} module available")
+
+    # Check regular components (attributes)
+    for attr_name, component_key in config.get("components", {}).items():
+        if hasattr(module, attr_name):
+            components[component_key] = True
+            logger.debug(f"{attr_name} component available")
+
+    # Check special conditions (multiple attributes for one component)
+    for attr_names, component_key in config.get("special_checks", []):
+        if any(hasattr(module, attr) for attr in attr_names):
+            components[component_key] = True
+            logger.debug(f"{component_key} functions available")
+
+
+def _try_import_module(module_name: str, config: dict[str, Any], components: dict[str, bool]) -> None:
+    """Try to import a module and check its components.
+
+    Args:
+        module_name: Name of the module to import.
+        config: Configuration dict for component checking.
+        components: Dictionary to update with component availability.
+
+    Note:
+        Catches ImportError for unavailable modules and broad Exception for
+        unexpected errors during component detection. Broad exception catching
+        is necessary to prevent any single module's issues from breaking the
+        entire detection process.
+    """
+    try:
+        module = __import__(module_name)
+        version = getattr(module, "__version__", "unknown")
+        logger.info(f"{module_name} module loaded (version: {version})")
+        _check_module_components(module, config, components)
+    except ImportError as e:
+        logger.warning(f"{module_name} module not available: {e}")
+    except Exception as e:  # noqa: BLE001 - Intentional broad catch for robustness
+        logger.error(f"Error detecting {module_name} components: {e}")
+
 
 def detect_rust_components() -> dict[str, bool]:
     """
     Detects and validates the availability of Rust-based components and modules.
 
     This function determines which Rust-based components are enabled and available
-    for use. It checks various modules and their attributes or functions to identify
-    capabilities within `classic_core`, `classic_scanlog`, and other related imports.
-    The output is a dictionary where component names are the keys, and boolean values
-    indicate whether the component is available (`True`) or unavailable (`False`).
+    for use. It uses a configuration-driven approach to check various modules and
+    their attributes or functions. The output is a dictionary where component names
+    are the keys, and boolean values indicate whether the component is available
+    (`True`) or unavailable (`False`).
 
     The function also respects the environment variable `CLASSIC_DISABLE_RUST` to
     disable Rust acceleration globally when specified.
@@ -38,201 +153,15 @@ def detect_rust_components() -> dict[str, bool]:
         dict[str, bool]: A dictionary indicating the availability of Rust components.
     """
     # Check if Rust is disabled via environment variable
-    if os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in ("1", "true", "yes"):
+    if os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in {"1", "true", "yes"}:
         logger.info("Rust acceleration disabled via CLASSIC_DISABLE_RUST environment variable")
         return _get_empty_component_dict()
 
     components = _get_empty_component_dict()
 
-    # Check classic_scanlog module for scanlog components
-    try:
-        import classic_scanlog
-        logger.info(f"classic_scanlog module loaded (version: {getattr(classic_scanlog, '__version__', 'unknown')})")
-
-        # LogParser
-        if hasattr(classic_scanlog, "LogParser"):
-            components["parser"] = True
-            logger.debug("LogParser component available")
-
-        # FormIDAnalyzer
-        if hasattr(classic_scanlog, "FormIDAnalyzer"):
-            components["formid_analyzer"] = True
-            logger.debug("FormIDAnalyzer component available")
-
-        # PluginAnalyzer
-        if hasattr(classic_scanlog, "PluginAnalyzer"):
-            components["plugin_analyzer"] = True
-            logger.debug("PluginAnalyzer component available")
-
-        # RecordScanner
-        if hasattr(classic_scanlog, "RecordScanner"):
-            components["record_scanner"] = True
-            logger.debug("RecordScanner component available")
-
-        # Report Generation
-        if hasattr(classic_scanlog, "ReportGenerator"):
-            components["report_generation"] = True
-            logger.debug("ReportGenerator component available")
-
-        # Mod Detector functions
-        if hasattr(classic_scanlog, "detect_mods_batch") or hasattr(classic_scanlog, "detect_mods_single"):
-            components["mod_detector"] = True
-            logger.debug("ModDetector functions available")
-
-        # SuspectScanner
-        if hasattr(classic_scanlog, "SuspectScanner"):
-            components["suspect_scanner"] = True
-            logger.debug("SuspectScanner component available")
-
-        # SettingsValidator
-        if hasattr(classic_scanlog, "SettingsValidator"):
-            components["settings_validator"] = True
-            logger.debug("SettingsValidator component available")
-
-        # GpuDetector
-        if hasattr(classic_scanlog, "GpuDetector"):
-            components["gpu_detector"] = True
-            logger.debug("GpuDetector component available")
-
-        # FcxModeHandler
-        if hasattr(classic_scanlog, "FcxModeHandler"):
-            components["fcx_handler"] = True
-            logger.debug("FcxModeHandler component available")
-
-    except ImportError as e:
-        logger.warning(f"classic_scanlog module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting classic_scanlog components: {e}")
-
-    # Check database module components
-    try:
-        import classic_database
-        logger.info(f"classic_database module loaded (version: {getattr(classic_database, '__version__', 'unknown')})")
-        components["database"] = True
-
-        # Database Pool
-        if hasattr(classic_database, "RustDatabasePool"):
-            components["database_pool"] = True
-            logger.debug("DatabasePool component available")
-
-    except ImportError as e:
-        logger.warning(f"classic_database module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting database components: {e}")
-
-    # Check file I/O module components
-    try:
-        import classic_file_io
-        logger.info(f"classic_file_io module loaded (version: {getattr(classic_file_io, '__version__', 'unknown')})")
-        components["file_io"] = True
-
-        # FileIOCore
-        if hasattr(classic_file_io, "RustFileIOCore"):
-            components["file_io_core"] = True
-            logger.debug("FileIOCore component available")
-
-    except ImportError as e:
-        logger.warning(f"classic_file_io module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting file_io components: {e}")
-
-    # Check YAML module components
-    try:
-        import classic_yaml
-        logger.info(f"classic_yaml module loaded (version: {getattr(classic_yaml, '__version__', 'unknown')})")
-        components["yaml"] = True
-
-        # RustYamlOperations
-        if hasattr(classic_yaml, "RustYamlOperations"):
-            components["yaml_operations"] = True
-            logger.debug("RustYamlOperations component available")
-
-    except ImportError as e:
-        logger.warning(f"classic_yaml module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting yaml components: {e}")
-
-    # Check path module components
-    try:
-        import classic_path
-        logger.info(f"classic_path module loaded (version: {getattr(classic_path, '__version__', 'unknown')})")
-        components["path"] = True
-
-        # RustPathOperations
-        if hasattr(classic_path, "RustPathOperations"):
-            components["path_operations"] = True
-            logger.debug("RustPathOperations component available")
-
-    except ImportError as e:
-        logger.warning(f"classic_path module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting path components: {e}")
-
-    # Check classic-config-core (standalone module)
-    try:
-        import classic_config
-        logger.info(f"classic_config module loaded (version: {getattr(classic_config, '__version__', 'unknown')})")
-
-        # YamlData
-        if hasattr(classic_config, "YamlData"):
-            components["yamldata"] = True
-            logger.debug("YamlData component available")
-
-    except ImportError as e:
-        logger.warning(f"classic_config module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting config module: {e}")
-
-    # Phase 4 - Constants and Utilities
-    try:
-        import classic_constants
-        logger.info(f"classic_constants module loaded (version: {getattr(classic_constants, '__version__', 'unknown')})")
-        components["constants"] = True
-        logger.debug("Constants module available")
-    except ImportError as e:
-        logger.warning(f"classic_constants module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting constants module: {e}")
-
-    try:
-        import classic_version
-        logger.info(f"classic_version module loaded (version: {getattr(classic_version, '__version__', 'unknown')})")
-        components["version_utils"] = True
-        logger.debug("Version utilities module available")
-    except ImportError as e:
-        logger.warning(f"classic_version module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting version module: {e}")
-
-    try:
-        import classic_resource
-        logger.info(f"classic_resource module loaded (version: {getattr(classic_resource, '__version__', 'unknown')})")
-        components["resource_mgmt"] = True
-        logger.debug("Resource management module available")
-    except ImportError as e:
-        logger.warning(f"classic_resource module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting resource module: {e}")
-
-    try:
-        import classic_xse
-        logger.info(f"classic_xse module loaded (version: {getattr(classic_xse, '__version__', 'unknown')})")
-        components["xse_utils"] = True
-        logger.debug("XSE utilities module available")
-    except ImportError as e:
-        logger.warning(f"classic_xse module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting xse module: {e}")
-
-    try:
-        import classic_web
-        logger.info(f"classic_web module loaded (version: {getattr(classic_web, '__version__', 'unknown')})")
-        components["web_utils"] = True
-        logger.debug("Web utilities module available")
-    except ImportError as e:
-        logger.warning(f"classic_web module not available: {e}")
-    except Exception as e:
-        logger.error(f"Error detecting web module: {e}")
+    # Iterate through all configured modules and check their components
+    for module_name, config in MODULE_CONFIGS.items():
+        _try_import_module(module_name, config, components)
 
     return components
 
@@ -252,27 +181,32 @@ def get_available_components() -> dict[str, Any]:
             - "disabled": Whether Rust components are disabled, determined by the
               environment variable `CLASSIC_DISABLE_RUST`.
     """
-    disabled = os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in ("1", "true", "yes")
+    disabled = os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in {"1", "true", "yes"}
     versions = {}
 
     if not disabled:
         # Check versions of individual modules
         for module_name in [
-            "classic_scanlog", "classic_database", "classic_file_io", "classic_yaml", "classic_path", "classic_config",
+            "classic_scanlog",
+            "classic_database",
+            "classic_file_io",
+            "classic_yaml",
+            "classic_path",
+            "classic_config",
             # Phase 4 - Constants and Utilities
-            "classic_constants", "classic_version", "classic_resource", "classic_xse", "classic_web"
+            "classic_constants",
+            "classic_version",
+            "classic_resource",
+            "classic_xse",
+            "classic_web",
         ]:
             try:
                 module = __import__(module_name)
-                versions[module_name] = getattr(module, '__version__', 'unknown')
+                versions[module_name] = getattr(module, "__version__", "unknown")
             except ImportError:
                 pass
 
-    return {
-        "components": detect_rust_components(),
-        "versions": versions,
-        "disabled": disabled
-    }
+    return {"components": detect_rust_components(), "versions": versions, "disabled": disabled}
 
 
 def _get_empty_component_dict() -> dict[str, bool]:

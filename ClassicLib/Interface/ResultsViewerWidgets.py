@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path  # noqa: TC003
 
 from PySide6.QtCore import QDateTime, Qt
 from PySide6.QtGui import QBrush, QColor, QFont, QTextCursor
@@ -97,12 +97,6 @@ class ReportListWidget(QListWidget):
         """
         Sets up the initial styling for the widget, including configuring the font size
         and minimum width of the widget for better readability and usability.
-
-        Args:
-            self: An instance of the object calling the method.
-
-        Returns:
-            None
         """
         # Set font for better readability
         font = QFont()
@@ -163,10 +157,7 @@ class ReportListWidget(QListWidget):
 
         # Create item with display text
         # display_text = filename.replace("-AUTOSCAN", "") # looks to be unused.
-        if timestamp_str:
-            display_text = f"{timestamp_str}\n{report_path.name}"
-        else:
-            display_text = report_path.name
+        display_text = f"{timestamp_str}\n{report_path.name}" if timestamp_str else report_path.name
 
         item = QListWidgetItem(display_text)
 
@@ -177,12 +168,10 @@ class ReportListWidget(QListWidget):
         self._apply_status_styling(item, status)
 
         # Store metadata
-        item.setData(Qt.ItemDataRole.UserRole, {
-            "path": report_path,
-            "status": status,
-            "timestamp": timestamp_str,
-            "size": report_path.stat().st_size
-        })
+        item.setData(
+            Qt.ItemDataRole.UserRole,
+            {"path": report_path, "status": status, "timestamp": timestamp_str, "size": report_path.stat().st_size},
+        )
 
         return item
 
@@ -215,8 +204,7 @@ class ReportListWidget(QListWidget):
             second = time[4:6]
 
             try:
-                dt = datetime(int(year), int(month), int(day),
-                            int(hour), int(minute), int(second))
+                dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
                 return dt.strftime("%Y-%m-%d %H:%M:%S")
             except ValueError:
                 pass
@@ -305,8 +293,7 @@ class ReportListWidget(QListWidget):
             item = self.item(i)
             if item:
                 # Check if search text is in item text or tooltip
-                matches = (text.lower() in item.text().lower() or
-                          text.lower() in item.toolTip().lower())
+                matches = text.lower() in item.text().lower() or text.lower() in item.toolTip().lower()
                 item.setHidden(not matches)
 
     @staticmethod
@@ -390,15 +377,11 @@ class MarkdownViewer(QTextBrowser):
 
     def _apply_styling(self) -> None:
         """
-        Applies custom styling for markdown rendering by setting a default stylesheet. The stylesheet
-        specifies aesthetics for various HTML elements such as body, headers, code, lists, tables,
-        and various text formatting classes (e.g., .error, .warning).
+        Applies custom styling for markdown rendering by setting a default stylesheet.
 
-        Raises:
-            None
-
-        Returns:
-            None
+        The stylesheet specifies aesthetics for various HTML elements such as body,
+        headers, code, lists, tables, and various text formatting classes
+        (e.g., .error, .warning).
         """
         # Base stylesheet for markdown rendering
         style = """
@@ -520,9 +503,6 @@ class MarkdownViewer(QTextBrowser):
 
         Args:
             markdown (str): The markdown string to be processed and displayed.
-
-        Returns:
-            None
         """
         # Process markdown for better display (converts **bold** to <b>bold</b>)
         # Qt's markdown parser will preserve the HTML tags we embed
@@ -563,27 +543,13 @@ class MarkdownViewer(QTextBrowser):
 
         # Add margin-top to section headings that come after content
         # This ensures visual separation between sections
-        html = re.sub(
-            r'(<h[123][^>]*>)',
-            r'<div style="margin-top: 20px;"></div>\1',
-            html
-        )
+        html = re.sub(r"(<h[123][^>]*>)", r'<div style="margin-top: 20px;"></div>\1', html)
 
         # Add spacing after lists
-        html = re.sub(
-            r'(</ul>|</ol>)',
-            r'\1<div style="margin-bottom: 12px;"></div>',
-            html
-        )
+        html = re.sub(r"(</ul>|</ol>)", r'\1<div style="margin-bottom: 12px;"></div>', html)
 
         # Add spacing after code blocks
-        html = re.sub(
-            r'(</pre>)',
-            r'\1<div style="margin-bottom: 12px;"></div>',
-            html
-        )
-
-        return html
+        return re.sub(r"(</pre>)", r'\1<div style="margin-bottom: 12px;"></div>', html)
 
     @staticmethod
     def _process_markdown(markdown: str) -> str:
@@ -606,7 +572,7 @@ class MarkdownViewer(QTextBrowser):
         # Find [!] FOUND sections and wrap multiline content in code blocks
         import re
 
-        def wrap_multiline_content(match):
+        def wrap_multiline_content(match: re.Match) -> str:
             header = match.group(1)
             content = match.group(2).rstrip()  # Remove trailing whitespace/newlines
             # Wrap the content in a code block to preserve formatting
@@ -615,51 +581,26 @@ class MarkdownViewer(QTextBrowser):
         # Match [!] FOUND : [XX] followed by multiline content that starts with spaces
         # Stop at the first completely empty line or non-indented line
         # noinspection RegExpRedundantEscape
-        processed = re.sub(
-            r'(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)',
-            wrap_multiline_content,
-            processed
-        )
+        processed = re.sub(r"(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)", wrap_multiline_content, processed)
 
         # Note: Spacing is now handled by HTML rendering in _markdown_to_html()
         # No need for aggressive newline injection
 
         # Highlight error messages
         # noinspection RegExpRedundantEscape
-        processed = re.sub(
-            r'\[!?\s*ERROR\s*\]([^\n]*)',
-            r'<span class="error">[ERROR]\1</span>',
-            processed,
-            flags=re.IGNORECASE
-        )
+        processed = re.sub(r"\[!?\s*ERROR\s*\]([^\n]*)", r'<span class="error">[ERROR]\1</span>', processed, flags=re.IGNORECASE)
 
         # Highlight warnings
         # noinspection RegExpRedundantEscape
-        processed = re.sub(
-            r'\[!?\s*WARNING\s*\]([^\n]*)',
-            r'<span class="warning">[WARNING]\1</span>',
-            processed,
-            flags=re.IGNORECASE
-        )
+        processed = re.sub(r"\[!?\s*WARNING\s*\]([^\n]*)", r'<span class="warning">[WARNING]\1</span>', processed, flags=re.IGNORECASE)
 
         # Highlight success messages
         # noinspection RegExpRedundantEscape
-        processed = re.sub(
-            r'\[!?\s*SOLVED\s*\]([^\n]*)',
-            r'<span class="success">[SOLVED]\1</span>',
-            processed,
-            flags=re.IGNORECASE
-        )
+        processed = re.sub(r"\[!?\s*SOLVED\s*\]([^\n]*)", r'<span class="success">[SOLVED]\1</span>', processed, flags=re.IGNORECASE)
 
         # Convert markdown bold syntax to HTML bold tags
         # This ensures proper rendering in Qt viewer without relying on Qt's markdown parser
-        processed = re.sub(
-            r'\*\*([^*]+)\*\*',
-            r'<b>\1</b>',
-            processed
-        )
-
-        return processed
+        return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", processed)
 
     def zoom_in(self) -> None:
         """
@@ -679,12 +620,6 @@ class MarkdownViewer(QTextBrowser):
         The `zoom_out` method decreases the zoom level of the application by a predefined value,
         but ensures the zoom level does not fall below a specified minimum threshold. It also
         applies the updated zoom level using an internal mechanism.
-
-        Raises:
-            None
-
-        Returns:
-            None
         """
         self._zoom_level = max(50, self._zoom_level - 10)
         self._apply_zoom()
@@ -789,9 +724,6 @@ class ReportMetadataWidget(QGroupBox):
         This method configures the appearance of QGroupBox and QLabel elements by setting
         properties such as font weight, borders, margin, and padding. The styling is
         applied through Qt's setStyleSheet function utilizing cascading style sheets (CSS).
-
-        Returns:
-            None: This method does not return any value.
         """
         self.setStyleSheet("""
             QGroupBox {
@@ -856,11 +788,11 @@ class ReportMetadataWidget(QGroupBox):
             found in the content, or "None found" if no issues are detected.
         """
         # Count various issue indicators
-        errors = len(re.findall(r'\[!?\s*ERROR\s*\]', content, re.IGNORECASE))
-        warnings = len(re.findall(r'\[!?\s*WARNING\s*\]', content, re.IGNORECASE))
+        errors = len(re.findall(r"\[!?\s*ERROR\s*\]", content, re.IGNORECASE))
+        warnings = len(re.findall(r"\[!?\s*WARNING\s*\]", content, re.IGNORECASE))
 
         # Look for issue lists
-        issues = len(re.findall(r'^[-*]\s+.+', content, re.MULTILINE))
+        issues = len(re.findall(r"^[-*]\s+.+", content, re.MULTILINE))
 
         if errors > 0:
             return f"{errors} errors, {warnings} warnings"
@@ -876,9 +808,6 @@ class ReportMetadataWidget(QGroupBox):
 
         This method resets the text content of `date_label`, `size_label`, and
         `issues_label` to indicate that the values are not available.
-
-        Returns:
-            None
         """
         self.date_label.setText("Date: N/A")
         self.size_label.setText("Size: N/A")

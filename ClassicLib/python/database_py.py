@@ -10,6 +10,8 @@ import asyncio
 import logging
 import sqlite3
 from pathlib import Path
+from types import TracebackType
+from typing import Self
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ class PythonDatabasePool:
 
         Raises:
             FileNotFoundError: If the specified database file does not exist.
-            Exception: If an unexpected error occurs during initialization.
+            sqlite3.Error: If a database error occurs during initialization.
         """
         if self._initialized:
             return
@@ -62,11 +64,11 @@ class PythonDatabasePool:
             if self._initialized:  # Double-check after acquiring lock
                 return
 
-            try:
-                # Verify database exists and is accessible
-                if not self.db_path.exists():
-                    raise FileNotFoundError(f"Database not found: {self.db_path}")
+            # Verify database exists and is accessible (before try block to satisfy TRY301)
+            if not self.db_path.exists():
+                raise FileNotFoundError(f"Database not found: {self.db_path}")
 
+            try:
                 # Create initial connections
                 for _ in range(min(self.pool_size, 3)):  # Start with fewer connections
                     conn = await asyncio.to_thread(self._create_connection)
@@ -76,7 +78,7 @@ class PythonDatabasePool:
                 self._initialized = True
                 logger.info(f"Database pool initialized with {len(self.connections)} connections")
 
-            except Exception as e:
+            except sqlite3.Error as e:
                 logger.error(f"Failed to initialize database pool: {e}")
                 raise
 
@@ -95,11 +97,12 @@ class PythonDatabasePool:
         """
         try:
             conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
-            conn.row_factory = sqlite3.Row  # Enable column access by name
-            return conn
-        except Exception as e:
+        except sqlite3.Error as e:
             logger.error(f"Failed to create database connection: {e}")
             return None
+        else:
+            conn.row_factory = sqlite3.Row  # Enable column access by name
+            return conn
 
     async def _get_connection(self) -> sqlite3.Connection:
         """
@@ -162,13 +165,12 @@ class PythonDatabasePool:
         conn = await self._get_connection()
         try:
             # Execute query in thread pool
-            result = await asyncio.to_thread(
+            return await asyncio.to_thread(
                 self._execute_query_single,
                 conn,
                 "SELECT description FROM formids WHERE formid = ? AND plugin = ?",
                 (formid, plugin)
             )
-            return result
         finally:
             await self._return_connection(conn)
 
@@ -226,7 +228,8 @@ class PythonDatabasePool:
         finally:
             await self._return_connection(conn)
 
-    def _execute_query_single(self, conn: sqlite3.Connection, query: str, params: tuple) -> str | None:
+    @staticmethod
+    def _execute_query_single(conn: sqlite3.Connection, query: str, params: tuple) -> str | None:
         """
         Executes a single query on a SQLite database and retrieves the description of the
         first row if available.
@@ -245,11 +248,12 @@ class PythonDatabasePool:
             cursor.execute(query, params)
             row = cursor.fetchone()
             return row["description"] if row else None
-        except Exception as e:
+        except sqlite3.Error as e:
             logger.error(f"Database query error: {e}")
             return None
 
-    def _execute_query_batch(self, conn: sqlite3.Connection, query: str, params: list) -> list[dict]:
+    @staticmethod
+    def _execute_query_batch(conn: sqlite3.Connection, query: str, params: list) -> list[dict]:
         """
         Executes a batch SQL query on the given SQLite connection.
 
@@ -270,7 +274,7 @@ class PythonDatabasePool:
             cursor = conn.cursor()
             cursor.execute(query, params)
             return [dict(row) for row in cursor.fetchall()]
-        except Exception as e:
+        except sqlite3.Error as e:
             logger.error(f"Database batch query error: {e}")
             return []
 
@@ -282,12 +286,6 @@ class PythonDatabasePool:
         the pool is emptied, and its status is updated to reflect that it is no
         longer initialized. It uses an asynchronous lock to prevent concurrent
         access while performing these operations.
-
-        Raises:
-            None
-
-        Returns:
-            None
         """
         async with self.lock:
             for conn in self.connections:
@@ -296,7 +294,7 @@ class PythonDatabasePool:
             self._initialized = False
             logger.info("Database pool closed")
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         """
         Handles asynchronous context management for the class. Ensures proper initialization
         of necessary resources before entering the context.
@@ -308,7 +306,12 @@ class PythonDatabasePool:
         await self.initialize()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None
+    ) -> None:
         """
         Handles the asynchronous exit of an async context manager by performing necessary cleanup actions,
         such as closing connections or resources.

@@ -11,11 +11,12 @@ Usage:
 """
 
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 # Track Rust availability
 _RUST_AVAILABLE = False
-_classic_scangame = None
+_classic_scangame: ModuleType | None = None
 
 try:
     import classic_scangame
@@ -41,6 +42,7 @@ def get_ba2_scanner() -> Any:
         BA2Scanner instance (Rust if available, otherwise Python).
     """
     if _RUST_AVAILABLE:
+        assert _classic_scangame is not None
         return _classic_scangame.BA2Scanner()
     from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
     return BA2Scanner()
@@ -53,6 +55,7 @@ def get_config_duplicate_detector() -> Any:
         ConfigDuplicateDetector instance (Rust if available, otherwise Python).
     """
     if _RUST_AVAILABLE:
+        assert _classic_scangame is not None
         return _classic_scangame.ConfigDuplicateDetector()
     from ClassicLib.ScanGame.core.config_duplicate_fallback import ConfigDuplicateDetector
     return ConfigDuplicateDetector()
@@ -65,6 +68,7 @@ def get_unpacked_scanner() -> Any:
         UnpackedScanner instance (Rust if available, otherwise Python).
     """
     if _RUST_AVAILABLE:
+        assert _classic_scangame is not None
         return _classic_scangame.UnpackedScanner()
     from ClassicLib.ScanGame.core.unpacked_fallback import UnpackedScanner
     return UnpackedScanner()
@@ -86,6 +90,7 @@ def get_log_processor(
         LogProcessor instance (Rust if available, otherwise Python).
     """
     if _RUST_AVAILABLE:
+        assert _classic_scangame is not None
         return _classic_scangame.LogProcessor(catch_errors, ignore_files, ignore_errors)
     from ClassicLib.ScanGame.core.log_fallback import LogProcessor
     return LogProcessor(catch_errors, ignore_files, ignore_errors)
@@ -101,6 +106,7 @@ def get_ini_validator(game_name: str) -> Any:
         IniValidator instance (Rust if available, otherwise Python).
     """
     if _RUST_AVAILABLE:
+        assert _classic_scangame is not None
         return _classic_scangame.IniValidator(game_name)
     from ClassicLib.ScanGame.core.ini_fallback import IniValidator
     return IniValidator(game_name)
@@ -115,11 +121,17 @@ def get_crashgen_checker(plugins_path: Path, crashgen_name: str) -> Any:
 
     Returns:
         CrashgenChecker instance (Rust if available, otherwise Python).
+
+    Note:
+        The Python fallback retrieves plugins_path and crashgen_name from
+        settings internally, so these arguments are only used for Rust.
     """
     if _RUST_AVAILABLE:
+        assert _classic_scangame is not None
         return _classic_scangame.CrashgenChecker(plugins_path, crashgen_name)
     from ClassicLib.ScanGame.CheckCrashgen import CrashgenChecker
-    return CrashgenChecker(plugins_path, crashgen_name)
+    # Python implementation gets these from settings, ignores arguments
+    return CrashgenChecker()
 
 
 def get_xse_checker(
@@ -138,6 +150,7 @@ def get_xse_checker(
         XseChecker instance (Rust if available, otherwise Python).
     """
     if _RUST_AVAILABLE:
+        assert _classic_scangame is not None
         if game_version is None:
             game_version = _classic_scangame.GameVersion.Original
         return _classic_scangame.XseChecker(plugins_path, is_vr_mode, game_version)

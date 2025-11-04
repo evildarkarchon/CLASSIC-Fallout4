@@ -83,9 +83,6 @@ class CrashLogsScanWorker(QObject):
 
         Raises:
             None
-
-        Returns:
-            None
         """
         import time
         from datetime import datetime
@@ -115,7 +112,7 @@ class CrashLogsScanWorker(QObject):
         else:
             logger.debug("Crash log scanning using Python implementation")
 
-        logger.debug(f"Scanner initialization took {(time.perf_counter() - init_start)*1000:.0f}ms")
+        logger.debug(f"Scanner initialization took {(time.perf_counter() - init_start) * 1000:.0f}ms")
 
         async def run_scan() -> None:
             """
@@ -134,7 +131,7 @@ class CrashLogsScanWorker(QObject):
             warmup_start = time.perf_counter()
             logger.debug("Warming up scan resources...")
             await scanner.warm_up()
-            logger.debug(f"Resource warm-up complete - took {(time.perf_counter() - warmup_start)*1000:.0f}ms")
+            logger.debug(f"Resource warm-up complete - took {(time.perf_counter() - warmup_start) * 1000:.0f}ms")
 
             # Run the scan with Rust acceleration if available
             scan_start = time.perf_counter()
@@ -153,9 +150,7 @@ class CrashLogsScanWorker(QObject):
         datetime_elapsed = (end_datetime - start_datetime).total_seconds()
 
         logger.info(
-            f"Scan completed - perf_counter: {perf_elapsed:.2f}s, "
-            f"wall_clock: {wall_elapsed:.2f}s, "
-            f"datetime: {datetime_elapsed:.2f}s"
+            f"Scan completed - perf_counter: {perf_elapsed:.2f}s, wall_clock: {wall_elapsed:.2f}s, datetime: {datetime_elapsed:.2f}s"
         )
 
     def _play_success_notification(self) -> None:
@@ -268,9 +263,6 @@ class GameFilesScanWorker(QObject):
 
         The AsyncBridge handles all event loop management and ensures proper cleanup,
         making this implementation simpler and more reliable than manual loop management.
-
-        Returns:
-            None
         """
         import time
         from datetime import datetime
@@ -404,9 +396,6 @@ class UpdateCheckWorker(QObject):
             RuntimeError: If a runtime-related error occurs.
             OSError: If an operating system-related error occurs.
             ValueError: If a value-related error occurs.
-
-        Returns:
-            None
         """
         try:
             from ClassicLib.AsyncBridge import AsyncBridge

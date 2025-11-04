@@ -27,7 +27,7 @@ __all__ = [
     "update_status",
 ]
 
-from .config import (
+from ClassicLib.integration.config import (
     COMPONENT_CATEGORIES,
     DISABLE_RUST_ENV_VAR,
     PERFORMANCE_MULTIPLIERS,
@@ -35,7 +35,7 @@ from .config import (
     PERFORMANCE_THRESHOLD_GOOD,
     PERFORMANCE_THRESHOLD_PARTIAL,
 )
-from .detector import detect_rust_components, get_available_components
+from ClassicLib.integration.detector import detect_rust_components, get_available_components
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +53,22 @@ _status_info = RUST_STATUS
 # This is dynamically populated from detect_rust_components()
 RUST_AVAILABLE: dict[str, bool] = {}
 
-# Flag to track if initialization has been done
-_initialized = False
+# Flag to track if initialization has been done (using dict to avoid global statement)
+_init_state = {"initialized": False}
+
+
+def _populate_rust_available() -> None:
+    """Populate RUST_AVAILABLE dict without changing initialization state.
+
+    This is called on module import to ensure RUST_AVAILABLE is populated
+    for backward compatibility with code that reads it directly.
+    """
+    if not RUST_AVAILABLE:  # Only populate if empty
+        RUST_AVAILABLE.update(detect_rust_components())
+
+
+# Populate RUST_AVAILABLE on module import for backward compatibility
+_populate_rust_available()
 
 
 def _initialize_rust_available() -> None:
@@ -62,17 +76,16 @@ def _initialize_rust_available() -> None:
     Initializes the availability of Rust components.
 
     This function checks for the presence of necessary Rust components by calling
-    `detect_rust_components` and sets the global variable `RUST_AVAILABLE`
+    `detect_rust_components` and updates the global variable `RUST_AVAILABLE`
     accordingly. It ensures that this initialization is only performed once per
-    runtime by maintaining an `_initialized` state.
+    runtime by maintaining an `_init_state` flag.
 
     Raises:
         ImportError: If the required Rust components cannot be detected.
     """
-    global RUST_AVAILABLE, _initialized
-    if not _initialized:
-        RUST_AVAILABLE = detect_rust_components()
-        _initialized = True
+    if not _init_state["initialized"]:
+        RUST_AVAILABLE.update(detect_rust_components())
+        _init_state["initialized"] = True
 
 
 def _ensure_initialized() -> None:
@@ -85,7 +98,7 @@ def _ensure_initialized() -> None:
     Raises:
         RuntimeError: If the system fails to initialize properly.
     """
-    if not _initialized:
+    if not _init_state["initialized"]:
         _initialize_rust_available()
 
 
@@ -109,7 +122,6 @@ def get_rust_component_status() -> dict[str, Any]:
     info = get_available_components()
 
     # Update RUST_AVAILABLE for backward compatibility
-    global RUST_AVAILABLE
     RUST_AVAILABLE.update(components)
 
     active_count = sum(1 for v in components.values() if v)
@@ -129,11 +141,7 @@ def get_rust_component_status() -> dict[str, Any]:
         acceleration_level = "NO ACCELERATION"
 
     # Get performance gains for active components
-    performance_gains = {
-        comp: PERFORMANCE_MULTIPLIERS.get(comp, "N/A")
-        for comp, active in components.items()
-        if active
-    }
+    performance_gains = {comp: PERFORMANCE_MULTIPLIERS.get(comp, "N/A") for comp, active in components.items() if active}
 
     return {
         "available": components,
@@ -145,7 +153,7 @@ def get_rust_component_status() -> dict[str, Any]:
         "percentage": percentage,
         "acceleration_active": active_count > 0,
         "acceleration_level": acceleration_level,
-        "version": info["version"],
+        "versions": info["versions"],
         "disabled": info["disabled"],
     }
 
@@ -224,10 +232,11 @@ def print_rust_status() -> None:
     # Check if debug messages are enabled
     try:
         from ClassicLib.YamlSettingsCache import classic_settings
+
         debug_enabled = classic_settings(bool, "Debug Messages")
         if not debug_enabled:
             return
-    except Exception:
+    except (ImportError, KeyError, RuntimeError):
         # If we can't check the setting, default to not showing
         return
 
@@ -243,7 +252,12 @@ def print_rust_status() -> None:
         print("=" * 60)
         return
 
-    print(f"\nVersion: {status['version']}")
+    # Display available module versions
+    if status["versions"]:
+        version_str = ", ".join(f"{mod}={ver}" for mod, ver in status["versions"].items())
+        print(f"\nVersions: {version_str}")
+    else:
+        print("\nVersions: No Rust modules loaded")
 
     # Display components by category
     for category_name, component_list in COMPONENT_CATEGORIES.items():
@@ -253,10 +267,7 @@ def print_rust_status() -> None:
             icon = "✅" if is_active else "❌"
             status_text = "ACTIVE" if is_active else "FALLBACK"
 
-            if is_active:
-                speedup = f" ({PERFORMANCE_MULTIPLIERS.get(component, 'N/A')})"
-            else:
-                speedup = ""
+            speedup = f" ({PERFORMANCE_MULTIPLIERS.get(component, 'N/A')})" if is_active else ""
 
             # Check for failure reasons
             failure_reason = ""

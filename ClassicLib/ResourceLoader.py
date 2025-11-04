@@ -33,7 +33,7 @@ class ResourceLoader:
         Returns:
             Path to CLASSIC Data next to executable, or None if not found
         """
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             # Get directory containing the executable
             exe_dir = Path(sys.executable).parent
             data_dir = exe_dir / "CLASSIC Data"
@@ -56,9 +56,9 @@ class ResourceLoader:
             Path to CLASSIC Data in frozen bundle, or None if not found
         """
         # Check if we're running as a PyInstaller frozen executable
-        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
             # PyInstaller extracts data files to sys._MEIPASS
-            bundle_dir = Path(sys._MEIPASS)
+            bundle_dir = Path(sys._MEIPASS)  # pyright: ignore[reportAttributeAccessIssue]
             data_dir = bundle_dir / "CLASSIC Data"
 
             if data_dir.exists():
@@ -85,7 +85,7 @@ class ResourceLoader:
                 data_dir = Path(local_dir) / "CLASSIC Data"
                 if data_dir.exists():
                     logger.debug(f"Using CLASSIC Data from LOCAL_DIR: {data_dir}")
-            except Exception:
+            except (OSError, ValueError, TypeError):
                 return None
             else:
                 return data_dir
@@ -140,16 +140,14 @@ class ResourceLoader:
             # Try both naming conventions
             for package_name in ["classic-fallout4", "classic_fallout4", "classic"]:
                 try:
-                    dist = distribution(package_name)
-                    # Distribution object from importlib.metadata always has location info
-                    return dist
+                    return distribution(package_name)
                 except PackageNotFoundError:
                     continue
 
             logger.debug("Package not installed via pip/setuptools")
             return None  # noqa: TRY300
 
-        except Exception as e:
+        except (ImportError, AttributeError, TypeError) as e:
             logger.debug(f"Error getting distribution: {e}")
             return None
 
@@ -170,27 +168,27 @@ class ResourceLoader:
         try:
             # Get location from the distribution metadata
             # For wheel/installed packages, check the site-packages location
-            if hasattr(dist, '_path') and dist._path:
+            if hasattr(dist, "_path") and dist._path:
                 package_location = Path(dist._path).parent
-            elif hasattr(dist, 'locate_file'):
+            elif hasattr(dist, "locate_file"):
                 # Alternative method for some distributions
-                package_location = Path(str(dist.locate_file('')))
+                package_location = Path(str(dist.locate_file("")))
             else:
                 # Fallback: try to find via files() API
                 try:
-                    pkg_files = files('classic')
+                    pkg_files = files("classic")
                     if pkg_files:
                         package_location = Path(str(pkg_files)).parent
                     else:
                         return None
-                except Exception:
+                except (ImportError, ModuleNotFoundError, AttributeError, TypeError):
                     return None
 
             data_dir = package_location / "CLASSIC Data"
             if data_dir.exists():
                 logger.debug(f"Using CLASSIC Data from package location: {data_dir}")
                 return data_dir
-        except Exception as e:
+        except (OSError, AttributeError, TypeError, ValueError) as e:
             logger.debug(f"Error checking package location: {e}")
         return None
 
@@ -246,7 +244,7 @@ class ResourceLoader:
             if data_dir.exists():
                 logger.debug(f"Using extracted CLASSIC Data: {data_dir}")
                 return data_dir
-        except Exception as e:
+        except (ImportError, ModuleNotFoundError, AttributeError, TypeError, OSError) as e:
             logger.debug(f"Could not extract from package resources: {e}")
 
         return None
@@ -263,7 +261,7 @@ class ResourceLoader:
         Returns:
             Path | None: The path to the "CLASSIC Data" directory if it exists,
             otherwise None.
-        """
+        """  # noqa: RUF002
         module_dir = Path(__file__).parent.parent
         data_dir = module_dir / "CLASSIC Data"
         if data_dir.exists():
@@ -310,7 +308,7 @@ class ResourceLoader:
             if not data_dir.exists():
                 logger.warning(f"Creating CLASSIC Data directory in: {data_dir}")
                 data_dir.mkdir(parents=True, exist_ok=True)
-        except Exception:
+        except (OSError, ValueError, TypeError):
             # Final fallback: current directory
             cwd_data = Path.cwd() / "CLASSIC Data"
             logger.warning("Creating CLASSIC Data in current directory")
@@ -334,11 +332,11 @@ class ResourceLoader:
         # Try each strategy in order
         strategies = [
             ResourceLoader._check_executable_directory,  # Check next to .exe first (production)
-            ResourceLoader._check_local_dir,            # Check user override
+            ResourceLoader._check_local_dir,  # Check user override
             ResourceLoader._check_source_installation,  # Check source directory (development)
-            ResourceLoader._check_current_directory,    # Check current working directory
-            ResourceLoader._check_frozen_bundle,        # Check bundled configs (fallback)
-            ResourceLoader._check_package_installation, # Check installed package
+            ResourceLoader._check_current_directory,  # Check current working directory
+            ResourceLoader._check_frozen_bundle,  # Check bundled configs (fallback)
+            ResourceLoader._check_package_installation,  # Check installed package
         ]
 
         for strategy in strategies:
@@ -401,11 +399,11 @@ class ResourceLoader:
             for file_path in essential_files:
                 try:
                     # Navigate to the resource using the traversable interface
-                    resource_parts = ["CLASSIC Data"] + file_path.split("/")
+                    resource_parts = ["CLASSIC Data", *file_path.split("/")]
                     resource = package_files
 
                     for part in resource_parts:
-                        resource = resource / part
+                        resource /= part
 
                     if resource.is_file():
                         # Read the resource
@@ -421,10 +419,10 @@ class ResourceLoader:
                     else:
                         logger.debug(f"Resource not found: {file_path}")
 
-                except Exception as e:
+                except (AttributeError, TypeError, OSError) as e:
                     logger.warning(f"Could not extract {file_path}: {e}")
 
-        except Exception as e:
+        except (ImportError, ModuleNotFoundError, AttributeError, TypeError, OSError) as e:
             logger.error(f"Failed to extract bundled data: {e}")
 
     @staticmethod
@@ -509,7 +507,7 @@ class ResourceLoader:
                 if path.exists() and path.is_dir():
                     logger.debug(f"Found game path in cache.yaml: {path}")
                     return path
-        except Exception as e:
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.debug(f"Could not read from cache.yaml: {e}")
 
         # Strategy 3: Check traditional Local.yaml
@@ -523,7 +521,7 @@ class ResourceLoader:
                 if path.exists() and path.is_dir():
                     logger.debug(f"Found game path in Local.yaml: {path}")
                     return path
-        except Exception as e:
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.debug(f"Could not read from Local.yaml: {e}")
 
         return None
@@ -570,7 +568,7 @@ class ResourceLoader:
                 if path.exists() and path.is_dir():
                     logger.debug(f"Found docs path in cache.yaml: {path}")
                     return path
-        except Exception as e:
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.debug(f"Could not read from cache.yaml: {e}")
 
         # Strategy 3: Check traditional Local.yaml
@@ -584,7 +582,7 @@ class ResourceLoader:
                 if path.exists() and path.is_dir():
                     logger.debug(f"Found docs path in Local.yaml: {path}")
                     return path
-        except Exception as e:
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.debug(f"Could not read from Local.yaml: {e}")
 
         return None
@@ -615,7 +613,7 @@ class ResourceLoader:
         try:
             await yaml_settings_async(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}", str(path))
             logger.debug(f"Saved {path_type} to cache.yaml")
-        except Exception as e:
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.warning(f"Could not save to cache.yaml: {e}")
 
         # Save to Local.yaml for backward compatibility
@@ -625,7 +623,7 @@ class ResourceLoader:
             elif path_type == "DocsPath":
                 await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs", str(path))
             logger.debug(f"Saved {path_type} to Local.yaml")
-        except Exception as e:
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.warning(f"Could not save to Local.yaml: {e}")
 
     @staticmethod
@@ -648,12 +646,12 @@ class ResourceLoader:
         """
         # Check if we're in an async context
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # If we get here, we're in an async context - run the async version
             logger.debug("Detected async context in save_path_to_cache, using save_path_to_cache_async")
             # Create a task to run the async version
-            asyncio.create_task(ResourceLoader.save_path_to_cache_async(path, path_type, game_name, vr_suffix))
-            return
+            asyncio.create_task(ResourceLoader.save_path_to_cache_async(path, path_type, game_name, vr_suffix))  # noqa: RUF006
+            return  # noqa: TRY300
         except RuntimeError:
             # No running event loop - we're in a sync context, continue with sync version
             pass
@@ -670,7 +668,7 @@ class ResourceLoader:
         try:
             yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}", str(path))
             logger.debug(f"Saved {path_type} to cache.yaml")
-        except Exception as e:
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.warning(f"Could not save to cache.yaml: {e}")
 
         # Save to Local.yaml for backward compatibility
@@ -680,7 +678,7 @@ class ResourceLoader:
             elif path_type == "DocsPath":
                 yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs", str(path))
             logger.debug(f"Saved {path_type} to Local.yaml")
-        except Exception as e:
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.warning(f"Could not save to Local.yaml: {e}")
 
         # Suggest environment variable for faster future runs (disabled - too noisy)
@@ -720,14 +718,14 @@ class ResourceLoader:
                 logger.info("Rust extensions loaded successfully for performance optimization")
             else:
                 logger.info("Rust extensions not available - using pure Python implementation")
-
-            return success
         except ImportError as e:
             logger.debug(f"Could not import rust_loader: {e}")
             return False
-        except Exception as e:
+        except (ModuleNotFoundError, AttributeError, OSError) as e:
             logger.warning(f"Error loading Rust extensions: {e}")
             return False
+        else:
+            return success
 
     @staticmethod
     def get_rust_extension_info() -> dict:
@@ -751,14 +749,15 @@ class ResourceLoader:
         """
         try:
             from ClassicLib.rust_loader import get_rust_info
+
             return get_rust_info()
         except ImportError:
             return {
                 "loaded": False,
                 "path": None,
                 "search_paths": [],
-                "in_pyinstaller": getattr(sys, 'frozen', False),
-                "error": "rust_loader module not available"
+                "in_pyinstaller": getattr(sys, "frozen", False),
+                "error": "rust_loader module not available",
             }
 
 
@@ -792,4 +791,4 @@ def is_frozen() -> bool:
     Returns:
         True if running as PyInstaller frozen executable, False otherwise
     """
-    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+    return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")

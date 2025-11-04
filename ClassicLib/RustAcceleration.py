@@ -61,6 +61,7 @@ class ComponentType(Enum):
         FILE_IO_CORE (str): Represents components handling core file I/O tasks.
         MOD_DETECTOR (str): Represents components detecting modifications or mods.
     """
+
     PARSER = "parser"
     FORMID_ANALYZER = "formid_analyzer"
     PLUGIN_ANALYZER = "plugin_analyzer"
@@ -91,8 +92,9 @@ class OptimizationLevel(Enum):
         ADAPTIVE (int): Dynamically adjusts optimization level based on the
             workload to maintain optimal performance and resource efficiency.
     """
+
     DISABLED = 0  # Component disabled
-    MINIMAL = 1   # Minimal optimization, maximum compatibility
+    MINIMAL = 1  # Minimal optimization, maximum compatibility
     BALANCED = 2  # Balanced performance and resource usage (default)
     AGGRESSIVE = 3  # Maximum performance, higher resource usage
     ADAPTIVE = 4  # Dynamically adjust based on workload
@@ -119,10 +121,11 @@ class ComponentMetrics:
         cache_misses (int): The number of cache misses.
         last_error (str | None): The most recent error message, if any.
     """
+
     name: str
     calls: int = 0
     total_time: float = 0.0
-    min_time: float = float('inf')
+    min_time: float = float("inf")
     max_time: float = 0.0
     errors: int = 0
     cache_hits: int = 0
@@ -168,9 +171,6 @@ class ComponentMetrics:
         Args:
             duration (float): The duration of the function call to be recorded.
             cache_hit (bool, optional): Specifies whether the call was a cache hit. Defaults to False.
-
-        Returns:
-            None
         """
         self.calls += 1
         self.total_time += duration
@@ -217,6 +217,7 @@ class WorkloadCharacteristics:
         extended_metrics (dict[str, Any]): Additional workload metrics, such as
             acceleration percentage, performance timings, or cache metrics.
     """
+
     file_count: int = 0
     total_file_size: int = 0
     formid_count: int = 0
@@ -241,13 +242,13 @@ class WorkloadCharacteristics:
             KeyError: If any required key in `extended_metrics` is missing.
         """
         # Check for component instability first
-        component_errors = self.extended_metrics.get('component_errors', 0)
+        component_errors = self.extended_metrics.get("component_errors", 0)
         if component_errors > 3:
             # Many component errors suggest instability - use minimal optimization
             return OptimizationLevel.MINIMAL
 
         # Check acceleration percentage for Rust availability
-        acceleration_pct = self.extended_metrics.get('acceleration_percentage', 100)
+        acceleration_pct = self.extended_metrics.get("acceleration_percentage", 100)
 
         # Large batch operations with good Rust acceleration
         if self.is_batch_operation and self.file_count > 10 and acceleration_pct > 70:
@@ -255,7 +256,7 @@ class WorkloadCharacteristics:
 
         # High-performance single operations with excellent acceleration
         if not self.is_batch_operation and acceleration_pct > 90:
-            cache_util = self.extended_metrics.get('cache_utilization', 0)
+            cache_util = self.extended_metrics.get("cache_utilization", 0)
             if cache_util > 80:  # Good cache performance
                 return OptimizationLevel.AGGRESSIVE
 
@@ -276,7 +277,7 @@ class WorkloadCharacteristics:
             return OptimizationLevel.AGGRESSIVE
 
         # Consider performance timings
-        parse_time = self.extended_metrics.get('parse_time', 0)
+        parse_time = self.extended_metrics.get("parse_time", 0)
         if parse_time > 2.0 and acceleration_pct < 50:  # Slow parsing without Rust
             return OptimizationLevel.BALANCED  # Don't stress the system further
 
@@ -299,19 +300,19 @@ class WorkloadCharacteristics:
         score = 50.0  # Base score
 
         # Rust acceleration bonus
-        acceleration_pct = self.extended_metrics.get('acceleration_percentage', 0)
+        acceleration_pct = self.extended_metrics.get("acceleration_percentage", 0)
         score += (acceleration_pct / 100) * 30  # Up to 30 points for full acceleration
 
         # Cache utilization bonus
-        cache_util = self.extended_metrics.get('cache_utilization', 0)
+        cache_util = self.extended_metrics.get("cache_utilization", 0)
         score += (cache_util / 100) * 15  # Up to 15 points for excellent caching
 
         # Error penalty
-        component_errors = self.extended_metrics.get('component_errors', 0)
+        component_errors = self.extended_metrics.get("component_errors", 0)
         score -= min(component_errors * 5, 20)  # Up to 20 points penalty for errors
 
         # Performance timing bonus/penalty
-        parse_time = self.extended_metrics.get('parse_time', 1.0)
+        parse_time = self.extended_metrics.get("parse_time", 1.0)
         if parse_time < 0.1:  # Very fast parsing
             score += 5
         elif parse_time > 5.0:  # Slow parsing
@@ -356,19 +357,15 @@ class RustAcceleration:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the RustAcceleration coordinator instance.
 
         The initializer sets up the instance to manage workload characteristics and
         performance metrics for different components. It initializes necessary attributes,
         prepares metrics storage for all component types, and logs the instance status.
-
-        Raises:
-            None
-
         """
-        if hasattr(self, '_initialized'):
+        if hasattr(self, "_initialized"):
             return
 
         self._initialized = True
@@ -386,7 +383,8 @@ class RustAcceleration:
         logger.info("🚀 RustAcceleration coordinator initialized")
         self._log_status()
 
-    def _log_status(self) -> None:
+    @staticmethod
+    def _log_status() -> None:
         """
         Logs the status of Rust components.
 
@@ -395,13 +393,10 @@ class RustAcceleration:
         configured logger. The purpose of this function is to ensure that the user is
         aware of the runtime status of Rust components and any potential fallbacks to
         Python implementations.
-
-        Raises:
-            None
         """
         status = get_rust_component_status()
-        active = status['active_count']
-        total = status['total_count']
+        active = status["active_count"]
+        total = status["total_count"]
 
         # Always log to file
         if active == total:
@@ -413,7 +408,7 @@ class RustAcceleration:
         else:
             logger.warning("⚠️ No Rust acceleration available - using Python implementations")
 
-    def get_component(self, component_type: ComponentType, *args, **kwargs) -> Any:
+    def get_component(self, component_type: ComponentType, *args: Any, **kwargs: Any) -> Any:
         """
         Fetches or creates a specified component based on the component type and caches it for
         future use. The method checks the cache for an existing instance of the component, and if
@@ -468,7 +463,7 @@ class RustAcceleration:
             if component:
                 self._components_cache[cache_key] = component
 
-        except Exception as e:
+        except (ImportError, AttributeError, TypeError, ValueError, RuntimeError) as e:
             logger.error(f"Failed to create component {component_type}: {e}")
             self.metrics[component_type].record_error(str(e))
 
@@ -484,7 +479,7 @@ class RustAcceleration:
         formid_count: int | None = None,
         plugin_count: int | None = None,
         is_batch: bool | None = None,
-        **kwargs  # Accept additional metrics from Phase 6 integration
+        **kwargs: Any,  # Accept additional metrics from Phase 6 integration
     ) -> None:
         """
         Update workload characteristics for optimization decisions with extended metrics support.
@@ -508,65 +503,54 @@ class RustAcceleration:
                 - plugin_analysis_time: Time spent on plugin analysis
                 - unique_plugins: Number of unique plugins encountered
         """
-        # Core workload characteristics
-        if file_count is not None:
-            self.workload.file_count = file_count
-        if formid_count is not None:
-            self.workload.formid_count = formid_count
-        if plugin_count is not None:
-            self.workload.plugin_count = plugin_count
-        if is_batch is not None:
-            self.workload.is_batch_operation = is_batch
+        # Core workload characteristics - using dict to reduce branches
+        core_updates = {
+            "file_count": file_count,
+            "formid_count": formid_count,
+            "plugin_count": plugin_count,
+            "is_batch_operation": is_batch,
+        }
+        for attr, value in core_updates.items():
+            if value is not None:
+                setattr(self.workload, attr, value)
 
-        # Extended metrics from Phase 6 integration
-        extended_metrics = {}
-
-        # Performance metrics
-        if 'parse_time' in kwargs:
-            extended_metrics['parse_time'] = kwargs['parse_time']
-        if 'total_processing_time' in kwargs:
-            extended_metrics['total_processing_time'] = kwargs['total_processing_time']
-        if 'plugin_analysis_time' in kwargs:
-            extended_metrics['plugin_analysis_time'] = kwargs['plugin_analysis_time']
-
-        # Data size metrics
-        if 'log_size' in kwargs:
-            extended_metrics['log_size'] = kwargs['log_size']
-        if 'segments_processed' in kwargs:
-            extended_metrics['segments_processed'] = kwargs['segments_processed']
-        if 'unique_plugins' in kwargs:
-            extended_metrics['unique_plugins'] = kwargs['unique_plugins']
-
-        # Quality metrics
-        if 'acceleration_percentage' in kwargs:
-            extended_metrics['acceleration_percentage'] = kwargs['acceleration_percentage']
-        if 'component_errors' in kwargs:
-            extended_metrics['component_errors'] = kwargs['component_errors']
-        if 'cache_utilization' in kwargs:
-            extended_metrics['cache_utilization'] = kwargs['cache_utilization']
+        # Extended metrics from Phase 6 integration - data-driven approach
+        metric_keys = [
+            "parse_time",
+            "total_processing_time",
+            "plugin_analysis_time",
+            "log_size",
+            "segments_processed",
+            "unique_plugins",
+            "acceleration_percentage",
+            "component_errors",
+            "cache_utilization",
+        ]
+        extended_metrics = {key: kwargs[key] for key in metric_keys if key in kwargs}
 
         # Store extended metrics for optimization decisions
-        if not hasattr(self.workload, 'extended_metrics'):
+        if not hasattr(self.workload, "extended_metrics"):
             self.workload.extended_metrics = {}
         self.workload.extended_metrics.update(extended_metrics)
 
         # Log significant workload updates for debugging
-        if len(extended_metrics) > 0:
+        if extended_metrics:
             logger.debug(f"Updated workload characteristics with {len(extended_metrics)} extended metrics")
 
         # Adapt optimization level based on workload
         if self.optimization_level == OptimizationLevel.ADAPTIVE:
             new_level = self.workload.determine_optimization_level()
             if new_level != self.optimization_level:
-                logger.info(f"Adapting optimization level: {self.optimization_level.name} -> {new_level.name}")
-                # Log the reason for the change
-                if extended_metrics.get('acceleration_percentage', 0) < 50:
-                    logger.info("  Reason: Low Rust acceleration detected")
-                elif extended_metrics.get('component_errors', 0) > 2:
-                    logger.info("  Reason: Component stability issues")
-                elif self.workload.is_batch_operation and self.workload.file_count > 10:
-                    logger.info("  Reason: Large batch operation detected")
+                # Determine reason for change using dict mapping
+                reasons = {
+                    (extended_metrics.get("acceleration_percentage", 0) < 50): "Low Rust acceleration detected",
+                    (extended_metrics.get("component_errors", 0) > 2): "Component stability issues",
+                    (self.workload.is_batch_operation and self.workload.file_count > 10): "Large batch operation detected",
+                }
+                reason = next((msg for condition, msg in reasons.items() if condition), "Workload characteristics changed")
 
+                logger.info(f"Adapting optimization level: {self.optimization_level.name} -> {new_level.name}")
+                logger.info(f"  Reason: {reason}")
                 self.optimization_level = new_level
 
     def set_optimization_level(self, level: OptimizationLevel) -> None:
@@ -600,15 +584,13 @@ class RustAcceleration:
             # Balanced settings (default)
             self._configure_balanced_settings()
 
-    def _configure_aggressive_settings(self) -> None:
+    @staticmethod
+    def _configure_aggressive_settings() -> None:
         """
         Configures aggressive optimization settings within the system.
 
         This method sets parameters intended to optimize performance in a Rust
         component (currently logged as actions without functional implementation).
-
-        Raises:
-            None
         """
         # These would normally configure the Rust components
         # For now, we log the intent
@@ -618,26 +600,22 @@ class RustAcceleration:
         logger.debug("  - Aggressive prefetching")
         logger.debug("  - Parallel I/O operations")
 
-    def _configure_minimal_settings(self) -> None:
+    @staticmethod
+    def _configure_minimal_settings() -> None:
         """
         Configures minimal optimization settings to reduce resource usage.
 
         This method adjusts system settings to employ a lightweight configuration,
         including reducing thread pool size, minimizing cache sizes, and enabling
         serial operation mode.
-
-        Args:
-            None
-
-        Returns:
-            None
         """
         logger.debug("Configuring minimal optimization settings:")
         logger.debug("  - Reduced thread pool size")
         logger.debug("  - Small cache sizes")
         logger.debug("  - Serial operations")
 
-    def _configure_balanced_settings(self) -> None:
+    @staticmethod
+    def _configure_balanced_settings() -> None:
         """
         Adjusts the system to use balanced optimization settings.
 
@@ -645,9 +623,6 @@ class RustAcceleration:
         and resource utilization. It includes settings for thread pool size, cache sizes,
         and selective parallelism. These configurations are designed to provide moderate
         optimization suitable for most general-purpose workloads.
-
-        Returns:
-            None
         """
         logger.debug("Configuring balanced optimization settings:")
         logger.debug("  - Moderate thread pool size")
@@ -677,13 +652,13 @@ class RustAcceleration:
         for comp_type, metrics in self.metrics.items():
             if metrics.calls > 0:
                 component_stats[comp_type.value] = {
-                    'calls': metrics.calls,
-                    'avg_time_ms': metrics.avg_time * 1000,
-                    'min_time_ms': metrics.min_time * 1000,
-                    'max_time_ms': metrics.max_time * 1000,
-                    'cache_hit_rate': metrics.cache_hit_rate,
-                    'errors': metrics.errors,
-                    'accelerated': is_rust_accelerated(comp_type.value),
+                    "calls": metrics.calls,
+                    "avg_time_ms": metrics.avg_time * 1000,
+                    "min_time_ms": metrics.min_time * 1000,
+                    "max_time_ms": metrics.max_time * 1000,
+                    "cache_hit_rate": metrics.cache_hit_rate,
+                    "errors": metrics.errors,
+                    "accelerated": is_rust_accelerated(comp_type.value),
                 }
 
         # Calculate acceleration factor
@@ -691,23 +666,23 @@ class RustAcceleration:
         acceleration_factor = rust_components / len(ComponentType)
 
         return {
-            'uptime_seconds': uptime,
-            'total_calls': total_calls,
-            'total_errors': total_errors,
-            'error_rate': (total_errors / total_calls * 100) if total_calls > 0 else 0,
-            'optimization_level': self.optimization_level.name,
-            'acceleration_factor': acceleration_factor,
-            'rust_components_active': rust_components,
-            'total_components': len(ComponentType),
-            'component_metrics': component_stats,
-            'workload_characteristics': {
-                'file_count': self.workload.file_count,
-                'formid_count': self.workload.formid_count,
-                'plugin_count': self.workload.plugin_count,
-                'is_batch': self.workload.is_batch_operation,
-                'performance_score': self.workload.get_performance_score(),
-                'extended_metrics': getattr(self.workload, 'extended_metrics', {})
-            }
+            "uptime_seconds": uptime,
+            "total_calls": total_calls,
+            "total_errors": total_errors,
+            "error_rate": (total_errors / total_calls * 100) if total_calls > 0 else 0,
+            "optimization_level": self.optimization_level.name,
+            "acceleration_factor": acceleration_factor,
+            "rust_components_active": rust_components,
+            "total_components": len(ComponentType),
+            "component_metrics": component_stats,
+            "workload_characteristics": {
+                "file_count": self.workload.file_count,
+                "formid_count": self.workload.formid_count,
+                "plugin_count": self.workload.plugin_count,
+                "is_batch": self.workload.is_batch_operation,
+                "performance_score": self.workload.get_performance_score(),
+                "extended_metrics": getattr(self.workload, "extended_metrics", {}),
+            },
         }
 
     def print_performance_summary(self) -> None:
@@ -718,9 +693,6 @@ class RustAcceleration:
         statistics, error rates, optimization levels, acceleration metrics, and per-component
         performance details. It is intended for diagnostic and monitoring purposes to analyze
         the efficiency and reliability of the RUST acceleration implementation.
-
-        Returns:
-            None
         """
         report = self.get_performance_report()
 
@@ -737,15 +709,15 @@ class RustAcceleration:
         print("\n🚀 Component Performance:")
         print("-" * 60)
 
-        for comp_name, stats in report['component_metrics'].items():
-            icon = "✅" if stats['accelerated'] else "⚠️"
+        for comp_name, stats in report["component_metrics"].items():
+            icon = "✅" if stats["accelerated"] else "⚠️"
             print(f"\n{icon} {comp_name}:")
             print(f"   Calls: {stats['calls']:,}")
             print(f"   Avg Time: {stats['avg_time_ms']:.2f}ms")
             print(f"   Range: {stats['min_time_ms']:.2f}ms - {stats['max_time_ms']:.2f}ms")
-            if stats['cache_hit_rate'] > 0:
+            if stats["cache_hit_rate"] > 0:
                 print(f"   Cache Hit Rate: {stats['cache_hit_rate']:.1f}%")
-            if stats['errors'] > 0:
+            if stats["errors"] > 0:
                 print(f"   Errors: {stats['errors']}")
 
         print("\n" + "=" * 60)
@@ -761,9 +733,9 @@ class RustAcceleration:
 
         # Check component availability
         status = get_rust_component_status()
-        if status['active_count'] == 0:
+        if status["active_count"] == 0:
             issues.append("No Rust components available")
-        elif status['active_count'] < status['total_count']:
+        elif status["active_count"] < status["total_count"]:
             missing = [k for k, v in RUST_AVAILABLE.items() if not v]
             issues.append(f"Missing components: {', '.join(missing)}")
 
@@ -791,7 +763,11 @@ class RustAcceleration:
 
     @classmethod
     def get_instance(cls) -> RustAcceleration:
-        """Get the singleton instance of RustAcceleration."""
+        """Get the singleton instance of RustAcceleration.
+
+        Returns:
+            RustAcceleration: The singleton instance of the RustAcceleration coordinator.
+        """
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
@@ -799,7 +775,11 @@ class RustAcceleration:
 
 # Module-level convenience functions
 def get_rust_acceleration() -> RustAcceleration:
-    """Get the RustAcceleration singleton instance."""
+    """Get the RustAcceleration singleton instance.
+
+    Returns:
+        RustAcceleration: The singleton instance of the RustAcceleration coordinator.
+    """
     return RustAcceleration.get_instance()
 
 
@@ -811,10 +791,7 @@ def configure_for_batch_processing(file_count: int) -> None:
         file_count: Number of files to be processed
     """
     accelerator = get_rust_acceleration()
-    accelerator.update_workload_characteristics(
-        file_count=file_count,
-        is_batch=True
-    )
+    accelerator.update_workload_characteristics(file_count=file_count, is_batch=True)
     if file_count > 10:
         accelerator.set_optimization_level(OptimizationLevel.AGGRESSIVE)
     else:
@@ -826,10 +803,7 @@ def configure_for_batch_processing(file_count: int) -> None:
 def configure_for_single_file() -> None:
     """Configure Rust acceleration for single file processing."""
     accelerator = get_rust_acceleration()
-    accelerator.update_workload_characteristics(
-        file_count=1,
-        is_batch=False
-    )
+    accelerator.update_workload_characteristics(file_count=1, is_batch=False)
     accelerator.set_optimization_level(OptimizationLevel.BALANCED)
 
     logger.info("Configured for single file processing")

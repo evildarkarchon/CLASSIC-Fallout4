@@ -106,7 +106,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
                 mod_matches[matched_mod] = plugin_id
 
     # Build output lines for all matches
-    for mod_name in sorted(mod_matches.keys(), key=lambda x: len(x), reverse=True):
+    for mod_name in sorted(mod_matches.keys(), key=len, reverse=True):
         mod_warning = mod_lookup[mod_name]
         _validate_warning(mod_name, mod_warning)
 

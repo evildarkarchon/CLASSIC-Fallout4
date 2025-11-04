@@ -46,9 +46,6 @@ class BackupOperationsMixin:
         exist for each category. It examines the folder's existence and checks if the folder
         contains any files or subdirectories. If backups are found for a category, the associated
         restore button is enabled and styled with the defined enabled button style.
-
-        Returns:
-            None
         """
         for category in ["XSE", "RESHADE", "VULKAN", "ENB"]:
             backup_path: Path = Path(f"CLASSIC Backup/Game Files/Backup {category}")

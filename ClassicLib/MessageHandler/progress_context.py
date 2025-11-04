@@ -17,20 +17,17 @@ from typing import TYPE_CHECKING, Any
 from ClassicLib.MessageHandler.cli_progress import CLIProgressBar
 from ClassicLib.MessageHandler.qt_compat import HAS_QT, QProgressDialog, QThread
 
-if TYPE_CHECKING:
-    from ClassicLib.MessageHandler.handler import MessageHandler
-
 # Try to import tqdm for enhanced CLI progress bars
 try:
     # noinspection PyUnresolvedReferences
-    from tqdm import tqdm as TqdmProgress
+    from tqdm import tqdm as TqdmProgress  # type: ignore[assignment]
 
     HAS_TQDM = True
 except ImportError:
     HAS_TQDM = False
 
-    # Define dummy tqdm for type checking when not available
-    class TqdmProgress:  # noqa: D101
+    # Define dummy tqdm for runtime when not available
+    class TqdmProgress:  # type: ignore[no-redef]  # noqa: D101
         def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: D107
             pass
 
@@ -42,6 +39,10 @@ except ImportError:
 
         def close(self) -> None:  # noqa: D102
             pass
+
+
+if TYPE_CHECKING:
+    from ClassicLib.MessageHandler.handler import MessageHandler
 
 
 class ProgressContext:

@@ -1,3 +1,17 @@
+"""
+Papyrus log monitoring functionality for the CLASSIC interface.
+
+This module provides classes for monitoring and analyzing Papyrus logging statistics
+from the game. It includes:
+
+- PapyrusStats: Dataclass for encapsulating Papyrus statistics (dumps, stacks, warnings, errors).
+- PapyrusMonitorWorker: QObject-based worker that runs in a separate thread to monitor
+  Papyrus logs in real-time and emit signals when statistics change.
+
+The monitoring system uses Qt signals and slots for thread-safe communication between
+the worker thread and the main GUI thread.
+"""
+
 from dataclasses import dataclass
 from datetime import datetime
 

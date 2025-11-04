@@ -53,10 +53,8 @@ Note:
     with FileIOCore for optimal performance.
 """
 
-
 from ClassicLib.AsyncBridge import create_sync_wrapper
-
-from .core import FileIOCore
+from ClassicLib.FileIO.core import FileIOCore
 
 # Create a shared FileIOCore instance for sync adapters
 _io_core = FileIOCore()

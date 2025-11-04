@@ -4,8 +4,8 @@ from typing import Any
 
 # Try to import PySide6 for GUI mode
 try:
-    from PySide6.QtCore import QObject, QThread, Signal
-    from PySide6.QtWidgets import QMessageBox, QProgressDialog, QWidget
+    from PySide6.QtCore import QObject, QThread, Signal  # pyright: ignore[reportAssignmentType]
+    from PySide6.QtWidgets import QMessageBox, QProgressDialog, QWidget  # pyright: ignore[reportAssignmentType]
 
     HAS_QT = True
 except ImportError:
@@ -21,7 +21,7 @@ except ImportError:
     class QThread:  # noqa: D101
         # noinspection PyPep8Naming
         @staticmethod
-        def currentThread() -> "QThread":  # noqa: D102
+        def currentThread() -> "QThread":  # pyright: ignore[reportReturnType] # noqa: D102
             pass
 
     # noinspection PyUnusedLocal,PyPep8Naming
