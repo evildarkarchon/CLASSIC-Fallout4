@@ -64,6 +64,171 @@ RUST_MODULES = [
 ]
 
 
+def _process_local_module(
+    module_name: str,
+    local_rust_dir: Path,
+    binaries: list,
+    datas: list,
+) -> bool:
+    """
+    Process a single module from the local rust_extensions directory.
+
+    Args:
+        module_name: Name of the Rust module to process
+        local_rust_dir: Path to the rust_extensions directory
+        binaries: List to append binary tuples to
+        datas: List to append data file tuples to
+
+    Returns:
+        True if module was found and processed, False otherwise
+    """
+    pyd_file = local_rust_dir / f"{module_name}.pyd"
+    if not pyd_file.exists():
+        return False
+
+    binaries.append((str(pyd_file), module_name))
+    print(f"  - {module_name}: {pyd_file.name}")
+
+    # Check for corresponding __init__.py (stored as {module_name}__init__.py)
+    init_file = local_rust_dir / f"{module_name}__init__.py"
+    if init_file.exists():
+        datas.append((str(init_file), module_name))
+
+    # Check for .pyi stub files
+    pyi_file = local_rust_dir / f"{module_name}.pyi"
+    if pyi_file.exists():
+        datas.append((str(pyi_file), module_name))
+
+    return True
+
+
+def _process_sitepackages_module(
+    module_name: str,
+    site_packages: Path,
+    binaries: list,
+    datas: list,
+) -> bool:
+    """
+    Process a single module from site-packages.
+
+    Args:
+        module_name: Name of the Rust module to process
+        site_packages: Path to the site-packages directory
+        binaries: List to append binary tuples to
+        datas: List to append data file tuples to
+
+    Returns:
+        True if module was found and processed, False otherwise
+    """
+    module_dir = site_packages / module_name
+    if not module_dir.exists():
+        return False
+
+    # Add all .pyd files
+    pyd_files = list(module_dir.glob("*.pyd"))
+    if not pyd_files:
+        return False
+
+    for pyd_file in pyd_files:
+        binaries.append((str(pyd_file), module_name))
+        print(f"  - {module_name}: {pyd_file.name}")
+
+    # Add __init__.py if it exists
+    init_file = module_dir / "__init__.py"
+    if init_file.exists():
+        datas.append((str(init_file), module_name))
+
+    # Add .pyi stub files if they exist
+    datas.extend((str(pyi_file), module_name) for pyi_file in module_dir.glob("*.pyi"))
+
+    return True
+
+
+def _try_local_rust_dir(
+    project_root: Path,
+    binaries: list,
+    datas: list,
+) -> list[str]:
+    """
+    Try to find Rust extensions in the local rust_extensions directory.
+
+    Args:
+        project_root: Path to the project root directory
+        binaries: List to append binary tuples to
+        datas: List to append data file tuples to
+
+    Returns:
+        List of module names that were found and processed
+    """
+    local_rust_dir = project_root / "rust_extensions"
+    if not local_rust_dir.exists():
+        return []
+
+    print(f"✓ Found Rust extensions in local build directory (flattened): {local_rust_dir}")
+
+    modules_found = [
+        module_name
+        for module_name in RUST_MODULES
+        if _process_local_module(module_name, local_rust_dir, binaries, datas)
+    ]
+
+    # Add MANIFEST.txt if it exists
+    manifest_file = local_rust_dir / "MANIFEST.txt"
+    if manifest_file.exists():
+        datas.append((str(manifest_file), "."))
+
+    if modules_found:
+        print(f"  Total modules bundled: {len(modules_found)}/{len(RUST_MODULES)}")
+
+    return modules_found
+
+
+def _try_site_packages(
+    binaries: list,
+    datas: list,
+) -> list[str]:
+    """
+    Try to find Rust extensions in site-packages.
+
+    Args:
+        binaries: List to append binary tuples to
+        datas: List to append data file tuples to
+
+    Returns:
+        List of module names that were found and processed
+    """
+    site_packages = Path(site.getsitepackages()[0])
+    print(f"✓ Checking site-packages: {site_packages}")
+
+    modules_found = [
+        module_name
+        for module_name in RUST_MODULES
+        if _process_sitepackages_module(module_name, site_packages, binaries, datas)
+    ]
+
+    if modules_found:
+        print(f"  Total modules bundled from site-packages: {len(modules_found)}/{len(RUST_MODULES)}")
+        print("  Note: Using installed versions. Run build_all.ps1 to use local builds.")
+
+    return modules_found
+
+
+def _print_not_found_warning(project_root: Path) -> None:
+    """Print warning message when no Rust extensions are found."""
+    local_rust_dir = project_root / "rust_extensions"
+    site_packages = Path(site.getsitepackages()[0])
+
+    print("⚠ WARNING: No Rust extensions found!")
+    print("  Checked:")
+    print(f"    - Local build: {local_rust_dir}")
+    print(f"    - Site-packages: {site_packages}")
+    print("  The executable will work but without Rust performance optimizations.")
+    print("  To build Rust extensions, run:")
+    print("    .\\build_all.ps1")
+    print("  Or for development:")
+    print("    .\\rebuild_rust.ps1")
+
+
 def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
     """
     Find Rust extensions for bundling in PyInstaller.
@@ -90,78 +255,17 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
     """
     binaries = []
     datas = []
-    modules_found = []
 
-    # Check local directory first (from build_all.ps1 - flattened structure)
-    local_rust_dir = project_root / "rust_extensions"
-    if local_rust_dir.exists():
-        print(f"✓ Found Rust extensions in local build directory (flattened): {local_rust_dir}")
-
-        for module_name in RUST_MODULES:
-            # In flattened structure, .pyd files are directly in rust_extensions/
-            # Look for {module_name}.pyd (e.g., classic_yaml.pyd)
-            pyd_file = local_rust_dir / f"{module_name}.pyd"
-            if pyd_file.exists():
-                modules_found.append(module_name)
-                binaries.append((str(pyd_file), module_name))
-                print(f"  - {module_name}: {pyd_file.name}")
-
-                # Check for corresponding __init__.py (stored as {module_name}__init__.py)
-                init_file = local_rust_dir / f"{module_name}__init__.py"
-                if init_file.exists():
-                    datas.append((str(init_file), module_name))
-
-                # Check for .pyi stub files
-                pyi_file = local_rust_dir / f"{module_name}.pyi"
-                if pyi_file.exists():
-                    datas.append((str(pyi_file), module_name))
-
-        # Add MANIFEST.txt if it exists
-        manifest_file = local_rust_dir / "MANIFEST.txt"
-        if manifest_file.exists():
-            datas.append((str(manifest_file), "."))
-
-        if modules_found:
-            print(f"  Total modules bundled: {len(modules_found)}/{len(RUST_MODULES)}")
-            return binaries, datas, True
+    # Try local directory first
+    modules_found = _try_local_rust_dir(project_root, binaries, datas)
+    if modules_found:
+        return binaries, datas, True
 
     # Fall back to site-packages
-    site_packages = Path(site.getsitepackages()[0])
-    print(f"✓ Checking site-packages: {site_packages}")
-
-    for module_name in RUST_MODULES:
-        module_dir = site_packages / module_name
-        if module_dir.exists():
-            # Add all .pyd files
-            pyd_files = list(module_dir.glob("*.pyd"))
-            if pyd_files:
-                modules_found.append(module_name)
-                for pyd_file in pyd_files:
-                    binaries.append((str(pyd_file), module_name))
-                    print(f"  - {module_name}: {pyd_file.name}")
-
-            # Add __init__.py if it exists
-            init_file = module_dir / "__init__.py"
-            if init_file.exists():
-                datas.append((str(init_file), module_name))
-
-            # Add .pyi stub files if they exist
-            datas.extend((str(pyi_file), module_name) for pyi_file in module_dir.glob("*.pyi"))
-
+    modules_found = _try_site_packages(binaries, datas)
     if modules_found:
-        print(f"  Total modules bundled from site-packages: {len(modules_found)}/{len(RUST_MODULES)}")
-        print("  Note: Using installed versions. Run build_all.ps1 to use local builds.")
         return binaries, datas, True
 
     # No Rust extensions found
-    print("⚠ WARNING: No Rust extensions found!")
-    print("  Checked:")
-    print(f"    - Local build: {local_rust_dir}")
-    print(f"    - Site-packages: {site_packages}")
-    print("  The executable will work but without Rust performance optimizations.")
-    print("  To build Rust extensions, run:")
-    print("    .\\build_all.ps1")
-    print("  Or for development:")
-    print("    .\\rebuild_rust.ps1")
-
+    _print_not_found_warning(project_root)
     return binaries, datas, False
