@@ -42,6 +42,11 @@ def timed_operation(name: str | None = None, log_level: str = "info") -> Callabl
 
             try:
                 result = func(*args, **kwargs)
+            except Exception as e:
+                elapsed = time.perf_counter() - start
+                logger.error(f"{operation_name} failed after {elapsed:.3f}s: {e}")
+                raise
+            else:
                 elapsed = time.perf_counter() - start
 
                 # Log based on level
@@ -57,10 +62,6 @@ def timed_operation(name: str | None = None, log_level: str = "info") -> Callabl
                 _store_metric(operation_name, elapsed)
 
                 return result
-            except Exception as e:
-                elapsed = time.perf_counter() - start
-                logger.error(f"{operation_name} failed after {elapsed:.3f}s: {e}")
-                raise
 
         return wrapper  # type: ignore
 
@@ -92,6 +93,11 @@ def async_timed_operation(name: str | None = None, log_level: str = "info") -> C
 
             try:
                 result = await func(*args, **kwargs)
+            except Exception as e:
+                elapsed = time.perf_counter() - start
+                logger.error(f"{operation_name} failed after {elapsed:.3f}s: {e}")
+                raise
+            else:
                 elapsed = time.perf_counter() - start
 
                 # Log based on level
@@ -107,10 +113,6 @@ def async_timed_operation(name: str | None = None, log_level: str = "info") -> C
                 _store_metric(operation_name, elapsed)
 
                 return result
-            except Exception as e:
-                elapsed = time.perf_counter() - start
-                logger.error(f"{operation_name} failed after {elapsed:.3f}s: {e}")
-                raise
 
         return wrapper  # type: ignore
 
@@ -253,7 +255,6 @@ def reset_metrics() -> None:
     Raises:
         KeyError: If the global performance metrics storage does not exist.
     """
-    global _performance_metrics
     _performance_metrics.clear()
     logger.debug("Performance metrics reset")
 

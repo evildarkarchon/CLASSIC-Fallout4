@@ -80,9 +80,6 @@ class FileGenerator:
 
         Raises:
             TypeError: If the retrieved default ignore file content is not a string.
-
-        Returns:
-            None
         """
         from ClassicLib.AsyncYamlSettingsCore import yaml_settings_async
         from ClassicLib.FileIOCore import FileIOCore
@@ -109,9 +106,6 @@ class FileGenerator:
 
         Raises:
             TypeError: If the retrieved default YAML content is not a string.
-
-        Returns:
-            None
         """
         from ClassicLib.AsyncYamlSettingsCore import yaml_settings_async
         from ClassicLib.FileIOCore import FileIOCore
@@ -185,9 +179,6 @@ class FileGenerator:
         Generates all files synchronously by invoking an asynchronous method through
         a bridge. This method ensures the generation process is executed within the
         asynchronous context of the AsyncBridge.
-
-        Returns:
-            None
         """
         from ClassicLib.AsyncBridge import AsyncBridge
 

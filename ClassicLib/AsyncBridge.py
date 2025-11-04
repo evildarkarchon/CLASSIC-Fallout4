@@ -242,7 +242,7 @@ class AsyncBridge:
             logger.warning(f"AsyncBridge: Background thread died for thread {self._thread_id}, recreating")
             try:
                 self._loop.close()
-            except Exception as e:
+            except (RuntimeError, OSError, AttributeError) as e:
                 logger.debug(f"AsyncBridge: Error closing dead loop: {e}")
             self._loop = None
             self._thread = None
@@ -294,13 +294,13 @@ class AsyncBridge:
                         f"AsyncBridge: {len(pending)} tasks still pending during shutdown for thread {self._thread_id}. "
                         "This may indicate improper task cleanup at the application level."
                     )
-            except Exception as e:
+            except (RuntimeError, AttributeError) as e:
                 logger.debug(f"AsyncBridge: Error checking pending tasks for thread {self._thread_id}: {e}")
 
             # Close the loop
             try:
                 self._loop.close()
-            except Exception as e:
+            except (RuntimeError, OSError, AttributeError) as e:
                 logger.debug(f"AsyncBridge: Error closing loop for thread {self._thread_id}: {e}")
 
     def run_async(self, coro: Coroutine[Any, Any, T]) -> T:
@@ -355,12 +355,13 @@ class AsyncBridge:
             # Wait for and return the result
             result = future.result()
             success = True
-            return result
 
         except Exception as e:
             error_type = type(e).__name__
             logger.debug(f"AsyncBridge: run_async failed with {error_type}: {e}")
             raise
+        else:
+            return result
 
         finally:
             # Record metrics if callback is configured
@@ -414,14 +415,14 @@ class AsyncBridge:
                 # Use slightly longer timeout to let asyncio.wait_for trigger first
                 result = future.result(timeout=timeout + 1.0)
                 success = True
-                return result
             except FutureTimeoutError as e:
                 # Future timed out - this shouldn't happen if asyncio.wait_for works
                 # but provides defense in depth
                 error_type = "FutureTimeoutError"
                 logger.error(f"AsyncBridge: Future timeout after {timeout} seconds (thread: {self._thread_id})")
                 raise TimeoutError(f"Operation timed out after {timeout} seconds (future level)") from e
-
+            else:
+                return result
         except TimeoutError as e:
             # Asyncio wait_for timeout (expected path)
             error_type = "AsyncioTimeoutError"
@@ -490,7 +491,7 @@ class AsyncBridge:
                             # Close from the current thread (risky but better than leak)
                             self._loop.close()
                             logger.debug(f"AsyncBridge: Forcefully closed loop for thread {self._thread_id}")
-                    except Exception as e:
+                    except (RuntimeError, OSError, AttributeError) as e:
                         print(f"Error forcing loop close: {e}", file=sys.stderr)
                         logger.error(f"AsyncBridge: Error forcing loop close for thread {self._thread_id}: {e}")
                 else:
@@ -556,8 +557,8 @@ class AsyncBridge:
                 try:
                     instance.shutdown()
                     logger.debug(f"AsyncBridge: Successfully cleaned up instance for thread {thread_id}")
-                except Exception as e:
-                    # Log the error but continue cleanup
+                except (RuntimeError, OSError, AttributeError, ValueError) as e:
+                    # Log the error but continue cleanup - must not fail during atexit
                     # Note: Using print since MessageHandler may be shut down
                     print(
                         f"Warning: AsyncBridge cleanup failed for thread {thread_id}: {e}",

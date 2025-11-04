@@ -23,10 +23,11 @@ from ClassicLib.Logger import logger
 
 # Try to import Rust acceleration for path validation
 try:
-    import classic_path
+    import classic_path  # type: ignore[import-not-found]
 
     _HAS_RUST_PATH = True
 except ImportError:
+    classic_path = None  # type: ignore[assignment]
     _HAS_RUST_PATH = False
 
 
@@ -67,10 +68,10 @@ class PathValidator:
             return False
 
         # Use Rust acceleration when available
-        if _HAS_RUST_PATH:
+        if _HAS_RUST_PATH and classic_path is not None:
             try:
-                return classic_path.PathValidator.is_valid_path(str(path))
-            except Exception:
+                return classic_path.PathValidator.is_valid_path(str(path))  # pyright: ignore[reportOptionalMemberAccess]
+            except (ValueError, OSError, RuntimeError):
                 # Fall through to Python implementation on error
                 pass
 
@@ -99,10 +100,10 @@ class PathValidator:
             bool: True if the path is restricted, False otherwise.
         """
         # Use Rust acceleration when available
-        if _HAS_RUST_PATH:
+        if _HAS_RUST_PATH and classic_path is not None:
             try:
-                return classic_path.PathValidator.is_restricted_path(str(path))
-            except Exception:
+                return classic_path.PathValidator.is_restricted_path(str(path))  # pyright: ignore[reportOptionalMemberAccess]
+            except (ValueError, OSError, RuntimeError):
                 # Fall through to Python implementation on error
                 pass
 
@@ -114,7 +115,7 @@ class PathValidator:
             # Use the existing utility function to check if path is valid
             # (returns False for restricted paths)
             return not is_valid_custom_scan_path(path_str)
-        except Exception:
+        except (ValueError, OSError, TypeError):
             # If there's any error checking, consider it restricted
             return True
 
@@ -212,10 +213,7 @@ class PathValidator:
 
             # Check for required files if specified
             if required_files:
-                missing_files = []
-                for filename in required_files:
-                    if not (path_obj / filename).exists():
-                        missing_files.append(filename)
+                missing_files = [filename for filename in required_files if not (path_obj / filename).exists()]
 
                 if missing_files:
                     logger.debug(f"Invalid {path_description} - missing required files: {', '.join(missing_files)}")
@@ -223,13 +221,13 @@ class PathValidator:
                     msg_warning(f"Removed invalid {setting_name} (missing required files): {path}")
                     return False
 
-            return True
-
         except (OSError, ValueError) as e:
             logger.debug(f"Error validating {path_description}: {e}")
             yaml_settings(str, yaml_type, setting_key, "")
             msg_warning(f"Removed invalid {setting_name}: {path}")
             return False
+        else:
+            return True
 
     @staticmethod
     def validate_game_root_path() -> None:
@@ -307,9 +305,6 @@ class PathValidator:
         its validity. If the path is specified, performs additional validation using
         internal utilities, including checks against provided settings and descriptions.
         The mods folder can be empty, so no required files are enforced during validation.
-
-        Returns:
-            None
         """
         from ClassicLib.YamlSettingsCache import classic_settings
 
@@ -364,9 +359,6 @@ class PathValidator:
         for custom scans, game installation, documents, mod manager folders, and INI folders.
         If any path is invalid or misconfigured, this ensures those issues are identified at
         an early stage.
-
-        Returns:
-            None
         """
         logger.debug("Validating all settings paths")
 
