@@ -4,6 +4,10 @@ Report fragment system for functional report generation.
 This module provides a functional approach to report generation where each
 component returns its contribution as a fragment, eliminating the need for
 shared mutable state while maintaining identical output format.
+
+**IMPORTANT**: This module exports Python-only implementations.
+For Rust-accelerated versions (recommended), import from ClassicLib.rust.report_rust:
+    from ClassicLib.rust.report_rust import ReportFragment, ReportComposer, ReportGenerator
 """
 
 from .fragment_collector import FragmentCollector

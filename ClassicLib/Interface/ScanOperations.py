@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QThread, Slot
+from PySide6.QtCore import QThread, QTimer, Slot
 from PySide6.QtWidgets import QMessageBox
 
 from ClassicLib.Interface.Dialogs import CustomErrorDialog
@@ -322,11 +322,15 @@ class ScanOperationsMixin:
         """
         logger.debug(f"Showing error dialog: {title}")
 
-        # Create and show custom error dialog with copy functionality
-        error_dialog = CustomErrorDialog(
-            title=title,
-            message=message,
-            details=details,
-            parent=self,  # type: ignore[arg-type]
-        )
-        error_dialog.exec()
+        # Ensure dialog is created and shown on the main GUI thread
+        # Use QTimer.singleShot to defer execution to the main event loop
+        def show_dialog() -> None:
+            error_dialog = CustomErrorDialog(
+                title=title,
+                message=message,
+                details=details,
+                parent=self,  # type: ignore[arg-type]
+            )
+            error_dialog.exec()
+
+        QTimer.singleShot(0, show_dialog)

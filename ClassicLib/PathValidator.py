@@ -21,14 +21,12 @@ from ClassicLib import GlobalRegistry, msg_warning
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 
-# Try to import Rust acceleration for path validation
-try:
-    import classic_path  # type: ignore[import-not-found]
+# Import factory for Rust acceleration
+from ClassicLib.integration.factory import get_path_operations
 
-    _HAS_RUST_PATH = True
-except ImportError:
-    classic_path = None  # type: ignore[assignment]
-    _HAS_RUST_PATH = False
+# Get Rust module if available, None otherwise
+classic_path = get_path_operations()
+_HAS_RUST_PATH = classic_path is not None
 
 
 class PathValidator:

@@ -24,13 +24,12 @@ from ClassicLib.Logger import logger
 from ClassicLib.Util import remove_readonly
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
-# Try to import Rust acceleration for docs path operations
-try:
-    import classic_path  # type: ignore[import-not-found]
-    _HAS_RUST_PATH = True
-except ImportError:
-    _HAS_RUST_PATH = False
-    logger.debug("Rust classic_path module not available, using pure Python implementation")
+# Import factory for Rust acceleration
+from ClassicLib.integration.factory import get_path_operations
+
+# Get Rust module if available, None otherwise
+classic_path = get_path_operations()
+_HAS_RUST_PATH = classic_path is not None
 
 
 class DocumentsPathManager:

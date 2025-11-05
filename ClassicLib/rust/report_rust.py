@@ -157,23 +157,26 @@ class RustAcceleratedReportFragment:
 
         return result
 
-    def __add__(self, other: RustAcceleratedReportFragment) -> RustAcceleratedReportFragment:
+    def __add__(self, other: RustAcceleratedReportFragment | PyReportFragment) -> RustAcceleratedReportFragment:
         """
-        Adds two RustAcceleratedReportFragment objects together to combine their
+        Adds two report fragments together to combine their
         internal fragments, with Rust acceleration if enabled. If Rust acceleration
         is not supported, it falls back to Python-based implementation for combining
         the fragments.
 
         Args:
-            other (RustAcceleratedReportFragment): Another instance of
-                RustAcceleratedReportFragment to combine with the current instance.
+            other (RustAcceleratedReportFragment | PyReportFragment): Another report fragment
+                to combine with the current instance.
 
         Returns:
             RustAcceleratedReportFragment: A new instance containing the combined
                 result of both fragments.
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = self._use_rust and other._use_rust
+
+        # Check if other is RustAcceleratedReportFragment or PyReportFragment
+        other_use_rust = getattr(other, '_use_rust', False)
+        result._use_rust = self._use_rust and other_use_rust
 
         if result._use_rust:
             # Rust uses combine() method instead of __add__
@@ -181,7 +184,14 @@ class RustAcceleratedReportFragment:
         else:
             # Convert to Python if needed
             self_py = PyReportFragment.from_lines(self._fragment.to_list()) if self._use_rust else self._fragment  # type: ignore[union-attr,assignment]
-            other_py = PyReportFragment.from_lines(other._fragment.to_list()) if other._use_rust else other._fragment  # type: ignore[union-attr,assignment]
+
+            # Handle both RustAcceleratedReportFragment and PyReportFragment
+            if hasattr(other, '_fragment'):
+                other_py = PyReportFragment.from_lines(other._fragment.to_list()) if other_use_rust else other._fragment  # type: ignore[union-attr,assignment]
+            else:
+                # other is already a PyReportFragment
+                other_py = other  # type: ignore[assignment]
+
             result._fragment = self_py + other_py  # type: ignore[assignment,operator]
 
         return result
@@ -570,6 +580,159 @@ class RustAcceleratedReportGenerator:
             result._fragment = self._generator.generate_suspect_section(found_suspects)
         else:
             result._fragment = self._generator.generate_suspect_section(found_suspects)
+
+        return result
+
+    def generate_suspect_section_header(self) -> RustAcceleratedReportFragment:
+        """
+        Generates a section header for reporting known crash messages, errors, and suspects.
+
+        This method is not available in the Rust implementation, so it always uses
+        the Python fallback implementation.
+
+        Returns:
+            RustAcceleratedReportFragment: A fragment containing the section header.
+        """
+        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
+        result._use_rust = False  # Always use Python for this simple static method
+
+        # Use Python implementation for static header
+        result._fragment = PyReportFragment.from_lines([
+            "### Checking for Known Crash Messages, Errors and Suspects\n\n",
+        ])
+
+        return result
+
+    def generate_suspect_found_footer(self, found_suspect: bool) -> RustAcceleratedReportFragment:
+        """
+        Generates a footer message indicating whether suspects were detected.
+
+        This method is not available in the Rust implementation, so it always uses
+        the Python fallback implementation.
+
+        Args:
+            found_suspect: Whether one or more suspects were detected.
+
+        Returns:
+            RustAcceleratedReportFragment: A fragment containing the footer message.
+        """
+        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
+        result._use_rust = False  # Always use Python for this simple static method
+
+        # Use Python implementation for static footer
+        if found_suspect:
+            result._fragment = PyReportFragment.from_lines([
+                "* **ONE OR MORE SUSPECTS DETECTED! CHECK LOG ABOVE FOR MORE INFORMATION!** *\n\n",
+                "---\n\n",
+            ])
+        else:
+            result._fragment = PyReportFragment.from_lines([
+                "* **NO SUSPECTS DETECTED** *\n\n",
+                "---\n\n",
+            ])
+
+        return result
+
+    def generate_settings_section_header(self) -> RustAcceleratedReportFragment:
+        """
+        Generates a section header for reporting settings-related issues.
+
+        This method is not available in the Rust implementation, so it always uses
+        the Python fallback implementation.
+
+        Returns:
+            RustAcceleratedReportFragment: A fragment containing the settings-related issues header.
+        """
+        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
+        result._use_rust = False  # Always use Python for this simple static method
+
+        # Use Python implementation for static header
+        result._fragment = PyReportFragment.from_lines([
+            "### Checking for Settings-related Issues\n\n",
+        ])
+
+        return result
+
+    def generate_mod_check_header(self, check_type: str) -> RustAcceleratedReportFragment:
+        """
+        Generates a report fragment header for mod checks based on the provided check type.
+
+        This method is not available in the Rust implementation, so it always uses
+        the Python fallback implementation.
+
+        Args:
+            check_type: The type of mod check to include in the header.
+
+        Returns:
+            RustAcceleratedReportFragment: A fragment containing the formatted header lines.
+        """
+        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
+        result._use_rust = False  # Always use Python for this simple static method
+
+        # Use Python implementation for static header
+        result._fragment = PyReportFragment.from_lines([
+            f"### Checking For Mods That {check_type}\n\n",
+        ])
+
+        return result
+
+    def generate_plugin_suspect_header(self) -> RustAcceleratedReportFragment:
+        """
+        Generates a header fragment for reports related to plugin-related errors.
+
+        This method is not available in the Rust implementation, so it always uses
+        the Python fallback implementation.
+
+        Returns:
+            RustAcceleratedReportFragment: A fragment containing formatted header information.
+        """
+        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
+        result._use_rust = False  # Always use Python for this simple static method
+
+        # Use Python implementation for static header
+        result._fragment = PyReportFragment.from_lines([
+            "### Checking for Plugin-related Errors\n\n",
+        ])
+
+        return result
+
+    def generate_formid_section_header(self) -> RustAcceleratedReportFragment:
+        """
+        Generates a section header for FormID checks.
+
+        This method is not available in the Rust implementation, so it always uses
+        the Python fallback implementation.
+
+        Returns:
+            RustAcceleratedReportFragment: A segment of the report containing the FormID check header.
+        """
+        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
+        result._use_rust = False  # Always use Python for this simple static method
+
+        # Use Python implementation for static header
+        result._fragment = PyReportFragment.from_lines([
+            "### Checking FormIDs\n\n",
+        ])
+
+        return result
+
+    def generate_record_section_header(self) -> RustAcceleratedReportFragment:
+        """
+        Generates a section header for checking named records.
+
+        This method is not available in the Rust implementation, so it always uses
+        the Python fallback implementation.
+
+        Returns:
+            RustAcceleratedReportFragment: An instance containing the predefined header lines.
+        """
+        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
+        result._use_rust = False  # Always use Python for this simple static method
+
+        # Use Python implementation for static header
+        result._fragment = PyReportFragment.from_lines([
+            "### Checking for Named Records\n\n",
+        ])
 
         return result
 

@@ -35,7 +35,7 @@ $RustModules = @(
 
 Write-Host "🧹 Cleaning old builds..." -ForegroundColor Cyan
 Push-Location rust
-cargo clean --workspace
+cargo clean
 Pop-Location
 
 Write-Host "🗑️  Removing old .pyd files from venv..." -ForegroundColor Cyan

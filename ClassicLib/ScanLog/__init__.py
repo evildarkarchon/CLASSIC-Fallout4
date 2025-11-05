@@ -2,6 +2,33 @@
 ScanLog package initialization.
 
 This package contains modules for scanning and analyzing crash logs.
+
+**IMPORTANT - Rust Acceleration**:
+The classes and functions exported from this `__init__.py` are Python reference
+implementations. For automatic Rust acceleration (10-150x speedups), import from
+the factory module instead:
+
+```python
+# ❌ Python-only (no Rust acceleration)
+from ClassicLib.ScanLog import FormIDAnalyzer, SuspectScanner
+
+# ✅ Automatic Rust acceleration when available
+from ClassicLib.integration.factory import get_formid_analyzer, get_suspect_scanner
+```
+
+Available factory functions with Rust acceleration:
+- `get_plugin_analyzer()` - 30x speedup
+- `get_formid_analyzer()` - 50x speedup
+- `get_suspect_scanner()` - 40x speedup
+- `get_record_scanner()` - 40x speedup
+- `get_settings_validator()` - Rust wrapper
+- `get_report_generator()` - 75x speedup
+- `get_fcx_handler()` - Rust wrapper
+- `get_gpu_detector()` - Rust wrapper
+- `get_parser()` - 150x speedup
+- `get_file_io()` - 10-20x speedup
+
+See `ClassicLib.integration.factory` for complete documentation.
 """
 
 # Core scanning components

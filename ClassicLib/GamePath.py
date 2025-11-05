@@ -28,13 +28,12 @@ from ClassicLib.Logger import logger
 from ClassicLib.Util import get_game_version, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings
 
-# Try to import Rust acceleration for game path operations
-try:
-    import classic_path  # type: ignore[import-not-found]
-    _HAS_RUST_PATH = True
-except ImportError:
-    _HAS_RUST_PATH = False
-    logger.debug("Rust classic_path module not available, using pure Python implementation")
+# Import factory for Rust acceleration
+from ClassicLib.integration.factory import get_path_operations
+
+# Get Rust module if available, None otherwise
+classic_path = get_path_operations()
+_HAS_RUST_PATH = classic_path is not None
 
 if TYPE_CHECKING:
     from packaging.version import Version
@@ -403,7 +402,7 @@ class GamePathFinder:
         from ClassicLib.ResourceLoader import ResourceLoader
         from ClassicLib.YamlSettingsCache import yaml_settings_async
 
-        cached_path = ResourceLoader.get_cached_game_path()
+        cached_path = await ResourceLoader.get_cached_game_path_async()
         if cached_path and cached_path.joinpath(self.exe_name).is_file():
             logger.debug(f"Using cached game path: {cached_path}")
             GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, cached_path)
