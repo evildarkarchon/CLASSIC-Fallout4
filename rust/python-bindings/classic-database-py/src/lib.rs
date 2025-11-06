@@ -79,15 +79,56 @@
 //! ```
 
 use pyo3::prelude::*;
+use pyo3::{create_exception, exceptions::PyException};
+
+// Custom exception types matching Python ClassicLib.integration.exceptions
+create_exception!(classic_database, RustDatabaseError, PyException, "Base for Database Rust errors");
+create_exception!(classic_database, RustDatabaseIOError, RustDatabaseError, "Database I/O errors");
+create_exception!(classic_database, RustDatabaseQueryError, RustDatabaseError, "Database query errors");
 
 mod pool;
 
 pub use pool::PyDatabasePool;
+
+/// Convert DatabaseError to PyErr using custom exception types
+///
+/// Maps Rust DatabaseError variants to Python exception types from
+/// ClassicLib.integration.exceptions for better error handling.
+pub fn to_pyerr(err: classic_database_core::DatabaseError) -> PyErr {
+    use classic_database_core::DatabaseError;
+
+    match err {
+        // I/O errors map to RustDatabaseIOError
+        DatabaseError::OpenError(msg) => {
+            RustDatabaseIOError::new_err(format!("Failed to open database: {}", msg))
+        }
+        DatabaseError::NotFound(msg) => {
+            RustDatabaseIOError::new_err(format!("Database file not found: {}", msg))
+        }
+        DatabaseError::IoError(e) => {
+            RustDatabaseIOError::new_err(format!("I/O error: {}", e))
+        }
+
+        // Query errors map to RustDatabaseQueryError
+        DatabaseError::QueryError(msg) => {
+            RustDatabaseQueryError::new_err(format!("Query error: {}", msg))
+        }
+        DatabaseError::SqlxError(e) => {
+            RustDatabaseQueryError::new_err(format!("Database error: {}", e))
+        }
+    }
+}
 
 /// Python module initialization
 #[pymodule]
 fn classic_database(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyDatabasePool>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
+    // Register custom exception types
+    m.add("RustDatabaseError", m.py().get_type::<RustDatabaseError>())?;
+    m.add("RustDatabaseIOError", m.py().get_type::<RustDatabaseIOError>())?;
+    m.add("RustDatabaseQueryError", m.py().get_type::<RustDatabaseQueryError>())?;
+
     Ok(())
 }

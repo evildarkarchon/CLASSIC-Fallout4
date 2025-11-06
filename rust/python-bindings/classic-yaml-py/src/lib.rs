@@ -87,10 +87,16 @@
 
 use classic_yaml_core::{YamlError, YamlOperations};
 use pyo3::prelude::*;
+use pyo3::{create_exception, exceptions::PyException};
 use pyo3::types::{PyDict, PyList};
 use std::collections::HashMap;
 use std::path::Path;
 use yaml_rust2::Yaml;
+
+// Custom exception types matching Python ClassicLib.integration.exceptions
+create_exception!(classic_yaml, RustYamlError, PyException, "Base for YAML Rust errors");
+create_exception!(classic_yaml, RustYamlIOError, RustYamlError, "YAML I/O errors");
+create_exception!(classic_yaml, RustYamlParseError, RustYamlError, "YAML parse errors");
 
 /// Python-facing YAML operations wrapper
 #[pyclass(name = "RustYamlOperations")]
@@ -399,34 +405,35 @@ fn python_to_yaml(py: Python<'_>, obj: Py<PyAny>) -> PyResult<Yaml> {
     )))
 }
 
-/// Convert YamlError to PyErr
+/// Convert YamlError to PyErr using custom exception types
+///
+/// Maps Rust YamlError variants to Python exception types from
+/// ClassicLib.integration.exceptions for better error handling.
 fn to_pyerr(err: YamlError) -> PyErr {
     match err {
-        YamlError::ParseError(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-            "Failed to parse YAML: {}",
-            msg
-        )),
+        // Parse errors map to RustYamlParseError
+        YamlError::ParseError(msg) => {
+            RustYamlParseError::new_err(format!("Failed to parse YAML: {}", msg))
+        }
         YamlError::SerializeError(msg) => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Serialize error: {}", msg))
+            RustYamlParseError::new_err(format!("Serialize error: {}", msg))
         }
-        YamlError::IoError(e) => {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to read file: {}", e))
-        }
-        YamlError::EmptyDocument => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>("Empty YAML document")
-        }
+        YamlError::EmptyDocument => RustYamlParseError::new_err("Empty YAML document"),
         YamlError::InvalidValue(msg) => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid value: {}", msg))
+            RustYamlParseError::new_err(format!("Invalid value: {}", msg))
         }
-        YamlError::UnresolvedAlias => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>("Unresolved YAML alias")
-        }
+        YamlError::UnresolvedAlias => RustYamlParseError::new_err("Unresolved YAML alias"),
         YamlError::InvalidKeyPath(msg) => {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid key path: {}", msg))
+            RustYamlParseError::new_err(format!("Invalid key path: {}", msg))
         }
-        YamlError::TypeConversionError(msg) => PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-            format!("Type conversion error: {}", msg),
-        ),
+        YamlError::TypeConversionError(msg) => {
+            RustYamlParseError::new_err(format!("Type conversion error: {}", msg))
+        }
+
+        // I/O errors map to RustYamlIOError
+        YamlError::IoError(e) => {
+            RustYamlIOError::new_err(format!("Failed to read file: {}", e))
+        }
     }
 }
 
@@ -435,5 +442,11 @@ fn to_pyerr(err: YamlError) -> PyErr {
 fn classic_yaml(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlOperations>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
+    // Register custom exception types
+    m.add("RustYamlError", m.py().get_type::<RustYamlError>())?;
+    m.add("RustYamlIOError", m.py().get_type::<RustYamlIOError>())?;
+    m.add("RustYamlParseError", m.py().get_type::<RustYamlParseError>())?;
+
     Ok(())
 }

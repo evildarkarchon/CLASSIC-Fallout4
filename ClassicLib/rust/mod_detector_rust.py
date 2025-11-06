@@ -16,6 +16,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Literal
 
+from ClassicLib.integration.exceptions import RustError, RustParseError
+
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -80,8 +82,12 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
             # Rust returns Vec<String>, convert to ReportFragment
             lines = _rust_detect_single(plugins_text, yaml_dict)
             return ReportFragment.from_lines(lines)
-        except (ValueError, RuntimeError) as e:
+        except RustParseError as e:
+            logger.warning(f"Rust parse error in mod detection, falling back to Python: {e}")
+        except RustError as e:
             logger.warning(f"Rust mod detection failed, falling back to Python: {e}")
+        except ValueError as e:
+            logger.warning(f"Rust mod detection error, falling back to Python: {e}")
 
     # Python fallback implementation
     from ClassicLib.python.mod_detector_py import detect_mods_single as py_detect
@@ -114,8 +120,12 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
             # Rust returns Vec<String>, convert to ReportFragment
             lines = _rust_detect_double(plugins_text, yaml_dict)
             return ReportFragment.from_lines(lines)
-        except (ValueError, RuntimeError) as e:
+        except RustParseError as e:
+            logger.warning(f"Rust parse error in mod conflict detection, falling back to Python: {e}")
+        except RustError as e:
             logger.warning(f"Rust mod conflict detection failed, falling back to Python: {e}")
+        except ValueError as e:
+            logger.warning(f"Rust mod conflict detection error, falling back to Python: {e}")
 
     # Python fallback implementation
     from ClassicLib.python.mod_detector_py import detect_mods_double as py_detect
@@ -156,8 +166,12 @@ def detect_mods_important(
             # Rust returns Vec<String>, convert to ReportFragment
             lines = _rust_detect_important(plugins_text, yaml_dict)
             return ReportFragment.from_lines(lines, check_content=False) if lines else ReportFragment.empty()
-        except (ValueError, RuntimeError) as e:
+        except RustParseError as e:
+            logger.warning(f"Rust parse error in important mod detection, falling back to Python: {e}")
+        except RustError as e:
             logger.warning(f"Rust important mod detection failed, falling back to Python: {e}")
+        except ValueError as e:
+            logger.warning(f"Rust important mod detection error, falling back to Python: {e}")
 
     # Python fallback implementation
     from ClassicLib.python.mod_detector_py import detect_mods_important as py_detect

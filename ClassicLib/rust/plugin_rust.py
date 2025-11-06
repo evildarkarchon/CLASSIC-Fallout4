@@ -17,6 +17,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from ClassicLib.integration.exceptions import RustError, RustParseError
+
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
@@ -77,7 +79,9 @@ class RustPluginAnalyzer:
                 logger.debug("🚀 RustPluginAnalyzer: Using RUST implementation (30x faster)")
             else:
                 logger.debug("⚠️  RustPluginAnalyzer: PluginAnalyzer not found in classic_scanlog")
-        except (ImportError, RuntimeError, AttributeError) as e:
+        except RustError as e:
+            logger.error(f"❌ Rust error initializing PluginAnalyzer: {e}")
+        except (ImportError, AttributeError) as e:
             logger.error(f"❌ Failed to initialize Rust PluginAnalyzer: {e}")
 
         # Only create Python analyzer if Rust truly unavailable
@@ -125,8 +129,12 @@ class RustPluginAnalyzer:
                     game_version=game_ver_str,
                     version_current=version_cur_str
                 )
-            except (RuntimeError, TypeError, ValueError) as e:
+            except RustParseError as e:
+                logger.warning(f"Rust parse error in loadorder scan: {e}")
+            except RustError as e:
                 logger.warning(f"Rust loadorder scan failed: {e}")
+            except (TypeError, ValueError) as e:
+                logger.warning(f"Rust loadorder scan error: {e}")
             else:
                 return plugins_dict, plugin_limit_triggered, limit_check_disabled
 
@@ -180,8 +188,12 @@ class RustPluginAnalyzer:
                 # Rust returns list[str], convert to ReportFragment
                 lines = self._rust_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
                 return ReportFragment.from_lines(lines)
-            except (RuntimeError, TypeError, ValueError) as e:
+            except RustParseError as e:
+                logger.warning(f"Rust parse error in plugin_match: {e}, falling back to Python")
+            except RustError as e:
                 logger.warning(f"Rust plugin_match failed: {e}, falling back to Python")
+            except (TypeError, ValueError) as e:
+                logger.warning(f"Rust plugin_match error: {e}, falling back to Python")
 
         # Python fallback
         if self._python_analyzer:
@@ -204,8 +216,12 @@ class RustPluginAnalyzer:
         if self._use_rust and self._rust_analyzer:
             try:
                 return self._rust_analyzer.filter_ignored_plugins(crashlog_plugins)
-            except (RuntimeError, TypeError, ValueError) as e:
+            except RustParseError as e:
+                logger.warning(f"Rust parse error in filter_ignored_plugins: {e}, falling back to Python")
+            except RustError as e:
                 logger.warning(f"Rust filter_ignored_plugins failed: {e}, falling back to Python")
+            except (TypeError, ValueError) as e:
+                logger.warning(f"Rust filter_ignored_plugins error: {e}, falling back to Python")
 
         # Python fallback
         if self._python_analyzer:

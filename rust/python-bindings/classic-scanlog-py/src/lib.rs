@@ -79,6 +79,12 @@
 //! or async tasks. The orchestrator uses Arc internally for safe sharing.
 
 use pyo3::prelude::*;
+use pyo3::{create_exception, exceptions::PyException};
+
+// Custom exception types matching Python ClassicLib.integration.exceptions
+create_exception!(classic_scanlog, RustScanLogError, PyException, "Base for ScanLog Rust errors");
+create_exception!(classic_scanlog, RustParseError, RustScanLogError, "Parse/analysis errors");
+create_exception!(classic_scanlog, RustConfigError, RustScanLogError, "Configuration errors");
 
 // Import all wrapper modules
 pub mod fcx_handler;
@@ -118,9 +124,24 @@ pub use report::{
 pub use settings_validator::PySettingsValidator;
 pub use suspect_scanner::PySuspectScanner;
 
-/// Convert ScanLogError to PyErr
+/// Convert errors to PyErr using custom exception types
+///
+/// Maps errors to Python exception types from ClassicLib.integration.exceptions
+/// for better error handling. Uses error message patterns to determine type.
 pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
-    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(err.to_string())
+    let err_str = err.to_string().to_lowercase();
+
+    // Check error message patterns to determine exception type
+    if err_str.contains("config") || err_str.contains("setting") || err_str.contains("invalid") {
+        RustConfigError::new_err(err.to_string())
+    } else if err_str.contains("parse") || err_str.contains("segment") || err_str.contains("formid")
+        || err_str.contains("analysis") || err_str.contains("detect")
+    {
+        RustParseError::new_err(err.to_string())
+    } else {
+        // Generic ScanLog error
+        RustScanLogError::new_err(err.to_string())
+    }
 }
 
 /// Python module initialization
@@ -181,6 +202,12 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     papyrus::register(m)?;
 
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
+    // Register custom exception types
+    m.add("RustScanLogError", m.py().get_type::<RustScanLogError>())?;
+    m.add("RustParseError", m.py().get_type::<RustParseError>())?;
+    m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;
+
     Ok(())
 }
 

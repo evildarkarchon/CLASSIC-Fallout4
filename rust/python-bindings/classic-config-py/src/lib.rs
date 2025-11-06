@@ -82,8 +82,14 @@
 use classic_config_core::{ConfigError, YamlDataCore};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
+use pyo3::{create_exception, exceptions::PyException};
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::path::PathBuf;
+
+// Custom exception types matching Python ClassicLib.integration.exceptions
+create_exception!(classic_config, RustConfigError, PyException, "Base for Config Rust errors");
+create_exception!(classic_config, RustConfigIOError, RustConfigError, "Config I/O errors");
+create_exception!(classic_config, RustConfigParseError, RustConfigError, "Config parse errors");
 
 /// Python wrapper for YamlDataCore
 ///
@@ -334,13 +340,29 @@ impl PyYamlData {
     }
 }
 
-/// Convert ConfigError to Python exception
+/// Convert ConfigError to PyErr using custom exception types
+///
+/// Maps Rust ConfigError variants to Python exception types from
+/// ClassicLib.integration.exceptions for better error handling.
 fn to_pyerr(err: ConfigError) -> PyErr {
     match err {
-        ConfigError::InvalidInput(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(msg),
-        ConfigError::IOError(msg) => PyErr::new::<pyo3::exceptions::PyIOError, _>(msg),
-        ConfigError::ParseError(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(msg),
-        ConfigError::RuntimeError(msg) => PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(msg),
+        // I/O errors map to RustConfigIOError
+        ConfigError::IOError(msg) => {
+            RustConfigIOError::new_err(format!("I/O error: {}", msg))
+        }
+
+        // Parse errors map to RustConfigParseError
+        ConfigError::ParseError(msg) => {
+            RustConfigParseError::new_err(format!("Parse error: {}", msg))
+        }
+        ConfigError::InvalidInput(msg) => {
+            RustConfigParseError::new_err(format!("Invalid input: {}", msg))
+        }
+
+        // Generic errors map to base RustConfigError
+        ConfigError::RuntimeError(msg) => {
+            RustConfigError::new_err(format!("Runtime error: {}", msg))
+        }
     }
 }
 
@@ -364,6 +386,12 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlData>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
+    // Register custom exception types
+    m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;
+    m.add("RustConfigIOError", m.py().get_type::<RustConfigIOError>())?;
+    m.add("RustConfigParseError", m.py().get_type::<RustConfigParseError>())?;
+
     Ok(())
 }
 
@@ -372,5 +400,11 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
 pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlData>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
+
+    // Register custom exception types
+    m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;
+    m.add("RustConfigIOError", m.py().get_type::<RustConfigIOError>())?;
+    m.add("RustConfigParseError", m.py().get_type::<RustConfigParseError>())?;
+
     Ok(())
 }

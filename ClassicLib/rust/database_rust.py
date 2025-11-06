@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from classic_database import RustDatabasePool
 
+from ClassicLib.integration.exceptions import RustDatabaseError, RustError
+
 if TYPE_CHECKING:
     from classic_database import RustDatabasePool as RustDatabasePoolType
 else:

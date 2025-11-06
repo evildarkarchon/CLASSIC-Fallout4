@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import logging
 
+from ClassicLib.integration.exceptions import RustError, RustParseError
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,6 +60,8 @@ class RustLogParser:
                 logger.debug("🚀 RustLogParser: Using RUST implementation (150x faster)")
             else:
                 logger.debug("⚠️  RustLogParser: LogParser not found in classic_scanlog")
+        except RustError as e:
+            logger.error(f"❌ Rust error initializing parser: {e}")
         except (ImportError, AttributeError, TypeError) as e:
             logger.error(f"❌ Failed to initialize Rust parser: {e}")
 
@@ -146,8 +150,14 @@ class RustLogParser:
                 if missing_segments > 0:
                     processed_segments.extend([[]] * missing_segments)
 
-            except (RuntimeError, AttributeError, TypeError, ValueError) as e:
+            except RustParseError as e:
+                logger.warning(f"Rust parse error, falling back to Python: {e}")
+                # Fall through to Python implementation
+            except RustError as e:
                 logger.warning(f"Rust parser failed, falling back to Python: {e}")
+                # Fall through to Python implementation
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.warning(f"Rust parser error, falling back to Python: {e}")
                 # Fall through to Python implementation
             else:
                 return game_version, crashgen_version, main_error, processed_segments
@@ -177,8 +187,12 @@ class RustLogParser:
         if self._use_rust and self._rust_parser:
             try:
                 return self._rust_parser.extract_section(crash_data, start_marker, end_marker)
-            except (RuntimeError, AttributeError, TypeError, ValueError) as e:
+            except RustParseError as e:
+                logger.debug(f"Rust parse error in extract_section: {e}")
+            except RustError as e:
                 logger.debug(f"Rust extract_section failed: {e}")
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.debug(f"Rust extract_section error: {e}")
 
         # Python fallback - extract section manually
         section = []

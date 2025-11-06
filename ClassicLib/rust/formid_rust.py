@@ -17,6 +17,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from ClassicLib.integration.exceptions import RustDatabaseError, RustError, RustParseError
+
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
@@ -83,7 +85,9 @@ class RustFormIDAnalyzer:
                 logger.debug("🚀 RustFormIDAnalyzer: Using RUST FormIDAnalyzer (50x faster)")
             else:
                 logger.debug("⚠️  RustFormIDAnalyzer: FormIDAnalyzer not found in classic_scanlog")
-        except Exception as e:  # noqa: BLE001 - Rust FFI can raise various exception types
+        except RustError as e:
+            logger.error(f"❌ Rust error initializing FormIDAnalyzer: {e}")
+        except Exception as e:
             logger.error(f"❌ Failed to initialize Rust FormIDAnalyzer: {e}")
 
         # Only create Python analyzer if Rust truly unavailable
@@ -113,8 +117,12 @@ class RustFormIDAnalyzer:
                     return self._rust_core_analyzer.extract_formids_nocopy(segment_callstack)
                 # Fallback to standard method
                 return self._rust_core_analyzer.extract_formids(segment_callstack)
-            except Exception as e:  # noqa: BLE001 - Rust FFI can raise various exception types
+            except RustParseError as e:
+                logger.warning(f"Rust parse error in FormIDAnalyzerCore extraction: {e}")
+            except RustError as e:
                 logger.warning(f"Rust FormIDAnalyzerCore extraction failed: {e}")
+            except Exception as e:
+                logger.warning(f"FormIDAnalyzerCore extraction error: {e}")
         elif self._use_rust and self._rust_analyzer:
             try:
                 # Use simple Rust analyzer
@@ -126,8 +134,12 @@ class RustFormIDAnalyzer:
                     return formids[0] if formids else []
                 # Try direct method if available
                 return self._rust_analyzer.extract_formids(segment_callstack)
-            except Exception as e:  # noqa: BLE001 - Rust FFI can raise various exception types
+            except RustParseError as e:
+                logger.warning(f"Rust parse error in FormID extraction: {e}")
+            except RustError as e:
                 logger.warning(f"Rust FormID extraction failed: {e}")
+            except Exception as e:
+                logger.warning(f"FormID extraction error: {e}")
 
         # Use Python fallback
         if self._python_analyzer:
@@ -178,8 +190,12 @@ class RustFormIDAnalyzer:
                 else:
                     # Use regular formid_match
                     self._rust_core_analyzer.formid_match(formids, plugins, report)
-            except Exception as e:  # noqa: BLE001 - Rust FFI can raise various exception types
+            except RustDatabaseError as e:
+                logger.warning(f"Rust database error in formid_match: {e}, using Python fallback")
+            except RustError as e:
                 logger.warning(f"Rust formid_match failed: {e}, using Python fallback")
+            except Exception as e:
+                logger.warning(f"formid_match error: {e}, using Python fallback")
             else:
                 return
 
@@ -215,8 +231,12 @@ class RustFormIDAnalyzer:
                 if hasattr(classic_scanlog, "extract_formids_batch"):
                     extract_formids_batch = classic_scanlog.extract_formids_batch
                     return extract_formids_batch(segments)
-            except Exception as e:  # noqa: BLE001 - Rust FFI can raise various exception types
+            except RustParseError as e:
+                logger.debug(f"Rust parse error in batch extraction: {e}")
+            except RustError as e:
                 logger.debug(f"Rust batch extraction failed: {e}")
+            except Exception as e:
+                logger.debug(f"Batch extraction error: {e}")
 
         # Python fallback - process sequentially
         return [self.extract_formids(segment) for segment in segments]

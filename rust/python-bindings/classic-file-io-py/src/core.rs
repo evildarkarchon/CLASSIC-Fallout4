@@ -5,46 +5,14 @@
 
 use classic_file_io_core::FileIOCore;
 use classic_shared_core::get_runtime;
-use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3_async_runtimes::tokio::future_into_py;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-/// Convert FileIOError to PyErr
-fn to_pyerr(err: classic_file_io_core::FileIOError) -> PyErr {
-    match err {
-        classic_file_io_core::FileIOError::IoError(e) => PyIOError::new_err(e.to_string()),
-        classic_file_io_core::FileIOError::NotFound(s) => {
-            PyIOError::new_err(format!("File not found: {}", s))
-        }
-        classic_file_io_core::FileIOError::InvalidPath(s) => PyValueError::new_err(s),
-        classic_file_io_core::FileIOError::EncodingError(s) => {
-            PyRuntimeError::new_err(format!("Encoding error: {}", s))
-        }
-        classic_file_io_core::FileIOError::DDSError(s) => {
-            PyRuntimeError::new_err(format!("DDS error: {}", s))
-        }
-        classic_file_io_core::FileIOError::JoinError(s) => {
-            PyRuntimeError::new_err(format!("Task error: {}", s))
-        }
-        classic_file_io_core::FileIOError::CacheError(s) => {
-            PyRuntimeError::new_err(format!("Cache error: {}", s))
-        }
-        classic_file_io_core::FileIOError::Io(s) => PyIOError::new_err(format!("I/O error: {}", s)),
-        classic_file_io_core::FileIOError::WriteError { path, source } => PyIOError::new_err(
-            format!("Failed to write file {}: {}", path.display(), source),
-        ),
-        classic_file_io_core::FileIOError::CreateDirectoryError { path, source } => {
-            PyIOError::new_err(format!(
-                "Failed to create directory {}: {}",
-                path.display(),
-                source
-            ))
-        }
-    }
-}
+// Use the error conversion function from lib.rs
+use crate::to_pyerr;
 
 /// Python wrapper for FileIOCore - THIN ADAPTER ONLY
 #[pyclass(name = "RustFileIOCore")]
@@ -353,13 +321,9 @@ impl PyFileIOCore {
             let results = inner.write_multiple_files(file_pairs).await;
 
             // Check for errors
-            for (path, result) in results {
+            for (_path, result) in results {
                 if let Err(e) = result {
-                    return Err(PyIOError::new_err(format!(
-                        "Failed to write {}: {}",
-                        path.display(),
-                        e
-                    )));
+                    return Err(to_pyerr(e));
                 }
             }
 

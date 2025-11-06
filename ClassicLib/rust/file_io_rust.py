@@ -20,12 +20,15 @@ from pathlib import Path
 from typing import Any
 
 from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.integration.exceptions import RustError, RustIOError, RustParseError
 
 logger = logging.getLogger(__name__)
 
 # Check if Rust module is available
 RUST_AVAILABLE = False
 _rust_io = None
+_rust_io_error = None
+_rust_parse_error = None
 
 try:
     import classic_file_io
@@ -34,8 +37,32 @@ try:
         _rust_io = classic_file_io.RustFileIOCore
         RUST_AVAILABLE = True
         logger.info("✓ Rust FileIOCore available (10-20x speedup)")
+
+    # Import Rust-specific exception types if available
+    if hasattr(classic_file_io, "RustFileIOIOError"):
+        _rust_io_error = classic_file_io.RustFileIOIOError
+    if hasattr(classic_file_io, "RustFileIOParseError"):
+        _rust_parse_error = classic_file_io.RustFileIOParseError
 except ImportError:
     pass
+
+
+def _get_rust_exception_types():
+    """Get tuple of Rust exception types to catch.
+
+    Returns tuple of (IOError types, ParseError types, generic RustError types).
+    """
+    io_errors = (RustIOError,)
+    parse_errors = (RustParseError,)
+    rust_errors = (RustError,)
+
+    # Add module-specific exceptions if available
+    if _rust_io_error:
+        io_errors = (RustIOError, _rust_io_error)
+    if _rust_parse_error:
+        parse_errors = (RustParseError, _rust_parse_error)
+
+    return io_errors, parse_errors, rust_errors
 
 
 class RustFileIOCore:
@@ -74,7 +101,9 @@ class RustFileIOCore:
                     max_concurrent_io=50
                 )
                 logger.debug("Using Rust FileIOCore")
-            except (RuntimeError, OSError, ImportError) as e:
+            except RustError as e:
+                logger.warning(f"Rust initialization error: {e}")
+            except (OSError, ImportError) as e:
                 logger.warning(f"Failed to initialize Rust FileIOCore: {e}")
 
         # Always create Python fallback
@@ -139,7 +168,9 @@ class RustFileIOCore:
             try:
                 # Await Rust coroutine - true async, no blocking!
                 return await self._rust_core.read_file(str(path))
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in read_file, falling back: {e}")
+            except RustError as e:
                 logger.debug(f"Rust read_file failed, falling back: {e}")
 
         # Python fallback
@@ -170,7 +201,9 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 return await self._rust_core.read_lines(str(path))
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in read_lines, falling back: {e}")
+            except RustError as e:
                 logger.debug(f"Rust read_lines failed, falling back: {e}")
 
         if self._python_core:
@@ -198,7 +231,9 @@ class RustFileIOCore:
             try:
                 # Rust returns bytes directly - no wrapper needed
                 return await self._rust_core.read_bytes(str(path))
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in read_bytes, falling back: {e}")
+            except RustError as e:
                 logger.debug(f"Rust read_bytes failed, falling back: {e}")
 
         if self._python_core:
@@ -224,7 +259,9 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.write_file(str(path), content)
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in write_file, falling back: {e}")
+            except RustError as e:
                 logger.debug(f"Rust write_file failed, falling back: {e}")
             else:
                 return
@@ -250,7 +287,9 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.write_lines(str(path), lines)
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in write_lines, falling back: {e}")
+            except RustError as e:
                 logger.debug(f"Rust write_lines failed, falling back: {e}")
             else:
                 return
@@ -279,7 +318,9 @@ class RustFileIOCore:
             try:
                 # PyO3 converts bytes to Vec<u8> automatically
                 await self._rust_core.write_bytes(str(path), content)
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in write_bytes, falling back: {e}")
+            except RustError as e:
                 logger.debug(f"Rust write_bytes failed, falling back: {e}")
             else:
                 return
@@ -308,7 +349,9 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.append_file(str(path), content)
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in append_file, falling back: {e}")
+            except RustError as e:
                 logger.debug(f"Rust append_file failed, falling back: {e}")
             else:
                 return
@@ -361,7 +404,13 @@ class RustFileIOCore:
             try:
                 # Rust method is synchronous (uses block_on internally)
                 return self._rust_core.read_dds_header(str(path))
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in read_dds_header: {e}")
+                return None
+            except RustParseError as e:
+                logger.debug(f"Rust parse error in read_dds_header: {e}")
+                return None
+            except RustError as e:
                 logger.debug(f"Rust read_dds_header failed: {e}")
                 return None
 
@@ -399,7 +448,11 @@ class RustFileIOCore:
                 str_paths = [str(p) for p in paths]
                 # Rust method is synchronous (uses parallel processing internally)
                 return self._rust_core.read_dds_headers_batch(str_paths)
-            except (RuntimeError, OSError) as e:
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in read_dds_headers_batch: {e}")
+            except RustParseError as e:
+                logger.debug(f"Rust parse error in read_dds_headers_batch: {e}")
+            except RustError as e:
                 logger.debug(f"Rust read_dds_headers_batch failed: {e}")
 
         # Python fallback - process sequentially
@@ -442,8 +495,10 @@ class RustFileIOCore:
             try:
                 # Rust method is synchronous (uses parallel processing internally)
                 return self._rust_core.py_walk_directory(str(path), pattern, max_depth)
-            except (RuntimeError, OSError) as e:
-                logger.debug(f"Rust py_walk_directory failed: {e}")
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in walk_directory: {e}")
+            except RustError as e:
+                logger.debug(f"Rust walk_directory failed: {e}")
 
         # Python fallback
         import re
@@ -500,8 +555,10 @@ class RustFileIOCore:
                 result = await self._rust_core.py_read_multiple_files(str_paths)
                 # Convert paths to filenames for compatibility
                 return {Path(k).name: v for k, v in result.items()}
-            except (RuntimeError, OSError) as e:
-                logger.debug(f"Rust py_read_multiple_files failed: {e}")
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in read_multiple_files: {e}")
+            except RustError as e:
+                logger.debug(f"Rust read_multiple_files failed: {e}")
 
         if self._python_core:
             return await self._python_core.read_multiple_files(paths)
@@ -536,8 +593,10 @@ class RustFileIOCore:
                 str_files = {str(k): v for k, v in files.items()}
                 # Rust method returns coroutine - must await
                 await self._rust_core.py_write_multiple_files(str_files)
-            except (RuntimeError, OSError) as e:
-                logger.debug(f"Rust py_write_multiple_files failed: {e}")
+            except RustIOError as e:
+                logger.debug(f"Rust I/O error in write_multiple_files: {e}")
+            except RustError as e:
+                logger.debug(f"Rust write_multiple_files failed: {e}")
             else:
                 return
 

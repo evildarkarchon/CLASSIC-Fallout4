@@ -3,13 +3,16 @@
 //! This module provides Python bindings for the pure Rust DatabasePool.
 //! All business logic is delegated to classic-database-core.
 
-use classic_database_core::{DatabaseError, DatabasePool};
+use classic_database_core::DatabasePool;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use pyo3_async_runtimes::tokio::future_into_py;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
+
+// Use the error conversion function from lib.rs
+use crate::to_pyerr;
 
 /// Python-facing database pool wrapper
 ///
@@ -233,23 +236,5 @@ impl PyDatabasePool {
         }
 
         Ok(result)
-    }
-}
-
-/// Convert DatabaseError to PyErr
-fn to_pyerr(err: DatabaseError) -> PyErr {
-    match err {
-        DatabaseError::OpenError(msg) => PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-            "Failed to open database: {}",
-            msg
-        )),
-        DatabaseError::QueryError(msg) => {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Query error: {}", msg))
-        }
-        DatabaseError::NotFound(msg) => PyErr::new::<pyo3::exceptions::PyFileNotFoundError, _>(msg),
-        DatabaseError::IoError(e) => PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()),
-        DatabaseError::SqlxError(e) => {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Database error: {}", e))
-        }
     }
 }

@@ -13,8 +13,30 @@ The integration layer handles:
 
 from __future__ import annotations
 
-# Note: We don't import submodules here to avoid circular dependencies.
+# Exception types for Rust integration errors
+from ClassicLib.integration.exceptions import (
+    RustError,
+    RustIOError,
+    RustParseError,
+    RustConfigError,
+    RustDatabaseError,
+    RustMemoryError,
+    RustConcurrencyError,
+)
+
+# Note: We don't import other submodules here to avoid circular dependencies.
 # Users should import directly from the submodules:
 #   from ClassicLib.integration.factory import get_parser
 #   from ClassicLib.integration.status import is_rust_accelerated
 #   from ClassicLib.integration.config import ALL_COMPONENTS
+
+__all__ = [
+    # Exception types
+    "RustError",
+    "RustIOError",
+    "RustParseError",
+    "RustConfigError",
+    "RustDatabaseError",
+    "RustMemoryError",
+    "RustConcurrencyError",
+]
