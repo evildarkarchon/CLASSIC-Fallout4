@@ -36,7 +36,7 @@ from ClassicLib.integration.factory import get_formid_analyzer
 from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
 

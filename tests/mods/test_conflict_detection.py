@@ -6,7 +6,7 @@ Tests for detecting conflicts between mods.
 from typing import Any
 
 import pytest
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 from ClassicLib.ScanLog.DetectMods import detect_mods_double
 

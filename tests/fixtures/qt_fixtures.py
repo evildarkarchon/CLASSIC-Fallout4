@@ -44,18 +44,36 @@ def qt_application(qt_application_session):
     - Provides the QApplication instance to tests
     - Processes events after each test to prevent freezing
     - Does NOT quit or delete the app (managed by session fixture)
+    - Cleans up AsyncBridge singleton state to prevent interference between tests
     """
     app = qt_application_session
 
     yield app
 
-    # Clean up after each test - process events but don't quit app
+    # Clean up after each test
     if app:
         # Process any pending events to avoid freezing
         try:
             app.processEvents()
         except:
             pass  # App may be in an invalid state
+
+        # Clean up AsyncBridge singleton to prevent state pollution between tests
+        try:
+            from ClassicLib.AsyncBridge import AsyncBridge
+            # Get the current thread's AsyncBridge instance if it exists
+            import threading
+            thread_id = threading.get_ident()
+            with AsyncBridge._lock:
+                if thread_id in AsyncBridge._instances:
+                    instance = AsyncBridge._instances[thread_id]
+                    try:
+                        instance.shutdown()
+                    except:
+                        pass  # Ignore shutdown errors
+                    del AsyncBridge._instances[thread_id]
+        except:
+            pass  # Ignore if AsyncBridge not yet imported
 
 
 @pytest.fixture(scope="function")

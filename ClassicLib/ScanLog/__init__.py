@@ -55,6 +55,12 @@ from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments as ReportGenerator
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+
+# Backward compatibility imports for tests
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo as ScanLogInfo  # For test imports
+from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
+
 from ClassicLib.ScanLog.ScanLogsExecutor import ClassicScanLogs, ScanLogsExecutor
 from ClassicLib.ScanLog.ScanLogsUtils import (
     complete_scan_with_summary,
@@ -135,4 +141,9 @@ __all__ = [
     "get_path_from_setting",
     "is_valid_custom_scan_path",
     "move_files",
+    # Backward compatibility exports for tests
+    "ScanLogInfo",  # Alias for ClassicScanLogsInfo
+    "ReportFragment",
+    "ConditionalSection",
+    "ReportComposer",
 ]

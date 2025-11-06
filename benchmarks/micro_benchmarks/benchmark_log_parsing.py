@@ -35,7 +35,7 @@ from ClassicLib.integration.factory import get_parser
 from ClassicLib.integration.status import RUST_AVAILABLE
 from ClassicLib.rust.parser_rust import RustLogParser
 from ClassicLib.ScanLog.Parser import find_segments
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
 

@@ -6,8 +6,8 @@ to fragment-based composition maintains identical markdown output.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import pytest
-from ClassicLib.ScanLog.ReportComposition import ConditionalSection, ReportComposer
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments

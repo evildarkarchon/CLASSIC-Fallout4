@@ -33,7 +33,7 @@ import pytest
 from ClassicLib.integration.detector import get_available_components
 
 RUST_AVAILABLE = get_available_components()["components"]
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 from tests.rust_integration.parity_fixtures import ParityResult, ParityValidator, normalize_markdown_content, skip_if_rust_unavailable
 

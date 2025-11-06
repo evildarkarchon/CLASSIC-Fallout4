@@ -77,7 +77,7 @@ class TestScanErrorDialogIntegration:
     @pytest.fixture
     def mock_scan_failure(self):
         """Mock a scan that always fails."""
-        def _perform_scan_mock():
+        def _perform_scan_mock(*args, **kwargs):
             raise RuntimeError("Simulated scan failure")
         return _perform_scan_mock
 
@@ -96,9 +96,13 @@ class TestScanErrorDialogIntegration:
                     # Connect signal to main window's handler
                     worker.error_occurred.connect(main_window._show_scan_error_dialog)
 
-                    # Run worker
-                    worker.run()
-                    qtbot.wait(200)
+                    # Wait for the error_occurred signal using qtbot.waitSignal for reliability
+                    with qtbot.waitSignal(worker.error_occurred, timeout=1000):
+                        # Run worker
+                        worker.run()
+
+                    # Process events to ensure QTimer.singleShot fires
+                    qtbot.wait(100)
 
                     # Verify dialog was created
                     mock_dialog_class.assert_called_once()
@@ -114,10 +118,10 @@ class TestScanErrorDialogIntegration:
 
     def test_game_files_worker_error_triggers_dialog(self, main_window, qtbot):
         """Test that game files worker error triggers error dialog display."""
-        def _process_mock():
+        def _process_mock(*args, **kwargs):
             raise OSError("Failed to write results")
 
-        with patch.object(GameFilesScanWorker, "_process_game_results", _process_mock):
+        with patch.object(GameFilesScanWorker, "_process_game_results_scan", _process_mock):
             with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
                 with patch("ClassicLib.Interface.ScanOperations.CustomErrorDialog") as mock_dialog_class:
                     mock_dialog = MagicMock(spec=CustomErrorDialog)
@@ -127,9 +131,13 @@ class TestScanErrorDialogIntegration:
                     worker = GameFilesScanWorker()
                     worker.error_occurred.connect(main_window._show_scan_error_dialog)
 
-                    # Run worker
-                    worker.run()
-                    qtbot.wait(200)
+                    # Wait for the error_occurred signal
+                    with qtbot.waitSignal(worker.error_occurred, timeout=1000):
+                        # Run worker
+                        worker.run()
+
+                    # Process events to ensure QTimer.singleShot fires
+                    qtbot.wait(100)
 
                     # Verify dialog was created
                     mock_dialog_class.assert_called_once()
@@ -137,7 +145,7 @@ class TestScanErrorDialogIntegration:
 
                     assert call_kwargs["title"] == "Game Files Scan Failed"
                     assert "Failed to write results" in call_kwargs["message"]
-                    assert "IOError: Failed to write results" in call_kwargs["details"]
+                    assert "OSError: Failed to write results" in call_kwargs["details"]
 
                     # Verify dialog was shown
                     mock_dialog.exec.assert_called_once()
@@ -235,7 +243,7 @@ class TestScanErrorDialogIntegration:
             dialog_shown = True
 
         # Mock successful scan
-        def _success_mock():
+        def _success_mock(*args, **kwargs):
             pass
 
         with patch.object(CrashLogsScanWorker, "_perform_crash_logs_scan", _success_mock):
@@ -254,7 +262,7 @@ class TestScanErrorDialogIntegration:
             nonlocal captured_details
             captured_details = details
 
-        def _error_with_location():
+        def _error_with_location(*args, **kwargs):
             # This will show in traceback
             raise ValueError("Test error from specific location")
 

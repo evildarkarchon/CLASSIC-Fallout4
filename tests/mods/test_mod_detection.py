@@ -6,7 +6,7 @@ Tests for finding and identifying mods in crash logs.
 from typing import Any
 
 import pytest
-from ClassicLib.ScanLog.ReportFragment import ReportFragment
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 from ClassicLib.ScanLog.DetectMods import _convert_to_lowercase, _validate_warning, detect_mods_single
 

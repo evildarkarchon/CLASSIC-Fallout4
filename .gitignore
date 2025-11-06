@@ -141,3 +141,4 @@ cprofile*.txt
 CLASSIC Data/databases/Fallout4 FormIDs Main.db-shm
 CLASSIC Data/databases/Fallout4 FormIDs Main.db-wal
 CLASSIC Data/graphics/Scanner 111*.svg
+test-collection.txt

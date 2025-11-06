@@ -155,7 +155,7 @@ class FFIBenchmark:
 
     def benchmark_formid_legacy(self, iterations: int = 10) -> dict[str, Any]:
         """Benchmark legacy FormID extraction."""
-        from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+        from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
         yamldata = ClassicScanLogsInfo()
         analyzer = RustFormIDAnalyzer(yamldata, True, False)
@@ -190,7 +190,7 @@ class FFIBenchmark:
 
     def benchmark_formid_optimized(self, iterations: int = 10) -> dict[str, Any]:
         """Benchmark optimized zero-copy FormID extraction."""
-        from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+        from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
         yamldata = ClassicScanLogsInfo()
         analyzer = RustFormIDAnalyzer(yamldata, True, False)

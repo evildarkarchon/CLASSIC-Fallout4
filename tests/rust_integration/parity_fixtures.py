@@ -27,7 +27,7 @@ from ClassicLib.integration.status import get_rust_component_status
 # Get Rust availability status
 _status = get_rust_component_status()
 RUST_AVAILABLE = _status.get("available", {})
-from ClassicLib.ScanLog.ScanLogInfo import ClassicScanLogsInfo
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 from tests.rust_integration.fixtures.crash_log_factory import CrashLogFactory, CrashLogType
 
 logger = logging.getLogger(__name__)
