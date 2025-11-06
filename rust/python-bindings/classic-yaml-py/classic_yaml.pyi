@@ -17,10 +17,10 @@ Features:
     - Intelligent caching for repeated operations
 
 Usage:
-    from classic_yaml import RustYamlOperations
+    from classic_yaml import YamlOperations
 
     # Create YAML operations handler
-    yaml_ops = RustYamlOperations()
+    yaml_ops = YamlOperations()
 
     # Load YAML file
     data = yaml_ops.load_yaml_file("config.yaml")
@@ -39,14 +39,14 @@ from typing import Any
 
 __version__: str
 
-class RustYamlOperations:
+class YamlOperations:
     """Main YAML operations handler using yaml-rust2.
 
     High-performance YAML parser and manipulator with comprehensive support for
     YAML 1.2 specification. Provides caching for improved performance on
     repeated operations.
 
-    The RustYamlOperations class handles:
+    The YamlOperations class handles:
     - Loading and parsing YAML files
     - Converting between Python objects and YAML
     - Managing cached YAML data for settings
@@ -82,7 +82,7 @@ class RustYamlOperations:
             IOError: If file cannot be read
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> config = yaml_ops.load_yaml_file("config.yaml")
             >>> print(config["setting"])
             'value'
@@ -105,7 +105,7 @@ class RustYamlOperations:
             ValueError: If YAML is malformed or invalid
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> data = yaml_ops.parse_yaml("key: value\\nlist:\\n  - item1\\n  - item2")
             >>> print(data["list"])
             ['item1', 'item2']
@@ -124,7 +124,7 @@ class RustYamlOperations:
             YAML formatted string
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> yaml_str = yaml_ops.dump_yaml({"key": "value", "list": [1, 2, 3]})
             >>> print(yaml_str)
             key: value
@@ -149,7 +149,7 @@ class RustYamlOperations:
             PermissionError: If lacking write permissions
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> yaml_ops.save_yaml_file("output.yaml", {"key": "value"})
         """
 
@@ -167,7 +167,7 @@ class RustYamlOperations:
             Setting value or None if not found
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> data = yaml_ops.parse_yaml("database:\\n  host: localhost\\n  port: 5432")
             >>> host = yaml_ops.get_setting(data, "database.host")
             >>> print(host)
@@ -192,7 +192,7 @@ class RustYamlOperations:
             ValueError: If the key path is invalid
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> data = yaml_ops.parse_yaml("database: {}")
             >>> data = yaml_ops.set_setting(data, "database.host", "localhost")
             >>> data = yaml_ops.set_setting(data, "database.port", 5432)
@@ -214,7 +214,7 @@ class RustYamlOperations:
             String value or default
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> yaml_str = '''
             ... game:
             ...   name: Fallout4
@@ -241,7 +241,7 @@ class RustYamlOperations:
             List of strings, or empty list if key not found or not an array
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> yaml_str = '''
             ... game:
             ...   plugins:
@@ -270,7 +270,7 @@ class RustYamlOperations:
             Dictionary of string key-value pairs, or empty dict if key not found or not a hash
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> yaml_str = '''
             ... game:
             ...   mods:
@@ -290,7 +290,7 @@ class RustYamlOperations:
         after processing large YAML files or when cache data is no longer needed.
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> yaml_ops.load_yaml_file("large_config.yaml")
             >>> # ... use data ...
             >>> yaml_ops.clear_cache()  # Free memory
@@ -308,7 +308,7 @@ class RustYamlOperations:
                 - 'memory_bytes': Estimated memory usage in bytes
 
         Example:
-            >>> yaml_ops = RustYamlOperations()
+            >>> yaml_ops = YamlOperations()
             >>> yaml_ops.load_yaml_file("config.yaml")
             >>> stats = yaml_ops.get_cache_stats()
             >>> print(f"Cached items: {stats['entries']}")

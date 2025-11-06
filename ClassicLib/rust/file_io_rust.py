@@ -10,6 +10,56 @@ Performance improvements with Rust:
 - Memory-mapped file support for large files
 - Parallel directory traversal
 - Zero-copy operations where possible
+
+Async/Sync Behavior:
+    Methods fall into two categories:
+
+    1. **True Async Methods** (marked `async def`):
+       - These methods await Rust coroutines and do NOT block
+       - Examples: read_file(), write_file(), read_lines(), read_bytes()
+       - Use directly in async contexts: `content = await io_core.read_file(path)`
+
+    2. **Blocking Methods** (marked `def`):
+       - These methods call synchronous Rust functions that block on Tokio runtime
+       - Examples: read_dds_header(), walk_directory(), file_exists()
+       - Use directly in CLI/sync contexts: `header = io_core.read_dds_header(path)`
+
+AsyncBridge Usage (GUI Applications Only):
+    For blocking methods in Qt GUI applications, wrap with AsyncBridge:
+
+    ```python
+    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.rust.file_io_rust import FileIOCore
+
+    io_core = FileIOCore()
+    bridge = AsyncBridge.get_instance()
+
+    # For blocking methods (read_dds_header, walk_directory, etc.)
+    result = bridge.run_async(lambda: io_core.read_dds_header(path))
+    files = bridge.run_async(lambda: io_core.walk_directory(path, "*.dds"))
+
+    # For true async methods, use directly in async contexts
+    async def process_files():
+        content = await io_core.read_file(path)  # No AsyncBridge needed
+        await io_core.write_file(path, content)
+    ```
+
+CLI Usage:
+    For CLI applications, use async methods directly with asyncio.run():
+
+    ```python
+    import asyncio
+    from ClassicLib.rust.file_io_rust import FileIOCore
+
+    async def main():
+        io_core = FileIOCore()
+        # Use async methods directly
+        content = await io_core.read_file(path)
+        # Use blocking methods directly (already in sync context)
+        header = io_core.read_dds_header(path)
+
+    asyncio.run(main())
+    ```
 """
 
 from __future__ import annotations
@@ -33,8 +83,8 @@ _rust_parse_error = None
 try:
     import classic_file_io
 
-    if hasattr(classic_file_io, "RustFileIOCore"):
-        _rust_io = classic_file_io.RustFileIOCore
+    if hasattr(classic_file_io, "FileIOCore"):
+        _rust_io = classic_file_io.FileIOCore
         RUST_AVAILABLE = True
         logger.info("✓ Rust FileIOCore available (10-20x speedup)")
 
@@ -65,7 +115,7 @@ def _get_rust_exception_types():
     return io_errors, parse_errors, rust_errors
 
 
-class RustFileIOCore:
+class FileIOCore:
     """
     Rust-accelerated FileIOCore with Python API compatibility.
 
@@ -387,11 +437,19 @@ class RustFileIOCore:
         # Rust FileIOCore doesn't expose mmap separately - regular read is already optimized
         return await self.read_file(path)
 
-    async def read_dds_header(self, path: Path | str) -> tuple[int, int] | None:
+    def read_dds_header(self, path: Path | str) -> tuple[int, int] | None:
         """
         Reads the DDS header from the specified file path and returns the extracted header
         information. This method ensures compatibility by attempting to use a high-performance
         Rust implementation if available, or a Python fallback otherwise.
+
+        Note:
+            This method blocks on Rust's Tokio runtime. For GUI applications, wrap with AsyncBridge:
+            ```python
+            from ClassicLib.AsyncBridge import AsyncBridge
+            bridge = AsyncBridge.get_instance()
+            result = bridge.run_async(lambda: io_core.read_dds_header(path))
+            ```
 
         Args:
             path (Path | str): The file path to the DDS file which header needs to be read.
@@ -402,7 +460,7 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                # Rust method is synchronous (uses block_on internally)
+                # Rust method is synchronous (blocks on Tokio runtime internally)
                 return self._rust_core.read_dds_header(str(path))
             except RustIOError as e:
                 logger.debug(f"Rust I/O error in read_dds_header: {e}")
@@ -423,7 +481,7 @@ class RustFileIOCore:
         except (ImportError, OSError, RuntimeError):
             return None
 
-    async def read_dds_headers_batch(self, paths: list[Path | str]) -> dict[str, tuple[int, int] | None]:
+    def read_dds_headers_batch(self, paths: list[Path | str]) -> dict[str, tuple[int, int] | None]:
         """
         Reads headers from multiple DDS (DirectDraw Surface) files either using a Rust
         core implementation for batch processing or a Python fallback that processes
@@ -433,6 +491,15 @@ class RustFileIOCore:
         optimization. If the Rust implementation is unavailable or fails, the method
         resorts to a Python-based sequential processing approach to extract the
         required data from the files.
+
+        Note:
+            This method blocks on Rust's Tokio runtime with parallel processing. For GUI applications,
+            wrap with AsyncBridge:
+            ```python
+            from ClassicLib.AsyncBridge import AsyncBridge
+            bridge = AsyncBridge.get_instance()
+            result = bridge.run_async(lambda: io_core.read_dds_headers_batch(paths))
+            ```
 
         Args:
             paths (list[Path | str]): A list of file paths to DDS files where each path
@@ -446,7 +513,7 @@ class RustFileIOCore:
         if self._rust_core:
             try:
                 str_paths = [str(p) for p in paths]
-                # Rust method is synchronous (uses parallel processing internally)
+                # Rust method is synchronous (blocks with parallel processing internally)
                 return self._rust_core.read_dds_headers_batch(str_paths)
             except RustIOError as e:
                 logger.debug(f"Rust I/O error in read_dds_headers_batch: {e}")
@@ -458,10 +525,10 @@ class RustFileIOCore:
         # Python fallback - process sequentially
         results = {}
         for path in paths:
-            results[str(path)] = await self.read_dds_header(path)
+            results[str(path)] = self.read_dds_header(path)
         return results
 
-    async def walk_directory(
+    def walk_directory(
         self,
         path: Path | str,
         pattern: str | None = None,
@@ -471,9 +538,18 @@ class RustFileIOCore:
         Recursively walks through a directory to collect the file paths, optionally filtering by
         a pattern and limiting the depth of the search.
 
-        This asynchronous method attempts to use a Rust-based implementation for improved
+        This method attempts to use a Rust-based implementation for improved
         performance when available. If the Rust-based implementation fails or is unavailable,
         it falls back to a Python implementation for traversing the directory structure.
+
+        Note:
+            This method blocks on Rust's Tokio runtime with parallel traversal. For GUI applications,
+            wrap with AsyncBridge:
+            ```python
+            from ClassicLib.AsyncBridge import AsyncBridge
+            bridge = AsyncBridge.get_instance()
+            result = bridge.run_async(lambda: io_core.walk_directory(path, pattern, max_depth))
+            ```
 
         Args:
             path (Path | str): The directory path to start the walk from. Can be provided
@@ -493,7 +569,7 @@ class RustFileIOCore:
         """
         if self._rust_core:
             try:
-                # Rust method is synchronous (uses parallel processing internally)
+                # Rust method is synchronous (blocks with parallel processing internally)
                 return self._rust_core.py_walk_directory(str(path), pattern, max_depth)
             except RustIOError as e:
                 logger.debug(f"Rust I/O error in walk_directory: {e}")
@@ -703,21 +779,21 @@ class RustFileIOCore:
 
 
 # Sync adapter functions for backward compatibility
-def get_rust_file_io() -> RustFileIOCore | None:
+def get_rust_file_io() -> FileIOCore | None:
     """
-    Gets an instance of RustFileIOCore if Rust is available.
+    Gets an instance of FileIOCore if Rust is available.
 
     This function checks whether Rust functionality is available in the current
-    environment. If available, it returns an instance of RustFileIOCore. If not,
+    environment. If available, it returns an instance of FileIOCore. If not,
     it returns None. This is particularly useful for systems that require file I/O
     handling through Rust for performance optimization or specific functionalities.
 
     Returns:
-        RustFileIOCore | None: An instance of RustFileIOCore if Rust is available,
+        FileIOCore | None: An instance of FileIOCore if Rust is available,
         otherwise None.
     """
     if RUST_AVAILABLE:
-        return RustFileIOCore()
+        return FileIOCore()
     return None
 
 
@@ -736,16 +812,16 @@ def create_file_io_sync(encoding: str = "utf-8", errors: str = "ignore") -> Any:
     Returns:
         An instance of a synchronous wrapper for file I/O operations.
     """
-    io_core = RustFileIOCore(encoding, errors)
+    io_core = FileIOCore(encoding, errors)
 
     # Create sync wrappers
     bridge = AsyncBridge.get_instance()
 
     # Wrap async methods for sync usage
     class SyncWrapper:
-        """Synchronous wrapper for RustFileIOCore async methods."""
+        """Synchronous wrapper for FileIOCore async methods."""
 
-        def __init__(self, core: RustFileIOCore) -> None:
+        def __init__(self, core: FileIOCore) -> None:
             self._core = core
 
         def read_file(self, path: Path | str) -> str:

@@ -15,7 +15,7 @@ use pyo3::prelude::*;
 /// # Example
 ///
 /// ```python
-/// from classic_file_io import RustFileIOCore, DDSHeader
+/// from classic_file_io import FileIOCore, DDSHeader
 ///
 /// # Parse DDS header from bytes
 /// with open("texture.dds", "rb") as f:

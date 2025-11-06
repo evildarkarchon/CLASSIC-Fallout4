@@ -76,7 +76,7 @@ class FormIDAnalyzer:
         """
 
 
-class RustFormIDAnalyzer:
+class FormIDAnalyzer:
     """Pure Rust FormID analyzer implementation.
 
     This is a direct Rust implementation without Python fallback,
@@ -583,7 +583,7 @@ class RecordScanner:
 # Orchestration
 # =============================================================================
 
-class RustOrchestrator:
+class Orchestrator:
     """End-to-end crash log analysis orchestration.
 
     Coordinates all analysis components with 10-100x performance improvements
@@ -677,7 +677,7 @@ class AnalysisConfig:
         """Create AnalysisConfig from YamlData.
 
         Converts a YamlData object (from classic_config) into an
-        AnalysisConfig for use with RustOrchestrator.
+        AnalysisConfig for use with Orchestrator.
 
         Args:
             yamldata: YamlData object from classic_config module

@@ -41,19 +41,19 @@ MODULE_CONFIGS = {
     "classic_database": {
         "base_component": "database",
         "components": {
-            "RustDatabasePool": "database_pool",
+            "DatabasePool": "database_pool",
         },
     },
     "classic_file_io": {
         "base_component": "file_io",
         "components": {
-            "RustFileIOCore": "file_io_core",
+            "FileIOCore": "file_io_core",
         },
     },
     "classic_yaml": {
         "base_component": "yaml",
         "components": {
-            "RustYamlOperations": "yaml_operations",
+            "YamlOperations": "yaml_operations",
         },
     },
     "classic_path": {

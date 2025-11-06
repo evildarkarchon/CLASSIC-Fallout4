@@ -16,7 +16,7 @@ use std::path::PathBuf;
 use crate::to_pyerr;
 
 /// Python wrapper for FileIOCore - THIN ADAPTER ONLY
-#[pyclass(name = "RustFileIOCore")]
+#[pyclass(name = "FileIOCore")]
 pub struct PyFileIOCore {
     inner: FileIOCore,
 }
@@ -43,10 +43,10 @@ impl PyFileIOCore {
     ///
     /// ```python
     /// # Create with defaults
-    /// file_io = RustFileIOCore()
+    /// file_io = FileIOCore()
     ///
     /// # Create with custom settings
-    /// file_io = RustFileIOCore(
+    /// file_io = FileIOCore(
     ///     encoding="utf-8",
     ///     errors="strict",
     ///     cache_size=200,

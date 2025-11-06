@@ -205,7 +205,7 @@ impl PyAnalysisResult {
 ///
 /// Coordinates the analysis of crash logs, providing both single-file and batch processing
 /// capabilities with automatic parallelism and GIL release for optimal performance.
-#[pyclass(name = "RustOrchestrator")]
+#[pyclass(name = "Orchestrator")]
 pub struct PyRustOrchestrator {
     /// Inner Rust OrchestratorCore instance
     inner: OrchestratorCore,

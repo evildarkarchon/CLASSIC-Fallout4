@@ -10,6 +10,39 @@ Performance improvements with Rust:
 - Batch processing capabilities for multiple segments
 - Efficient regex pattern matching
 - Memory-efficient processing
+
+Async/Sync Behavior:
+    All methods in FormIDAnalyzer are SYNCHRONOUS (blocking):
+    - extract_formids() - Blocks while extracting FormIDs with Rust
+    - formid_match() - Blocks while matching FormIDs against database
+    - extract_formids_batch() - Blocks with parallel batch processing
+
+    These methods call synchronous Rust functions. Use them directly in sync contexts.
+
+AsyncBridge Usage (GUI Applications Only):
+    For Qt GUI applications, wrap with AsyncBridge:
+
+    ```python
+    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.rust.formid_rust import FormIDAnalyzer
+
+    analyzer = FormIDAnalyzer(yamldata, show_formid_values, formid_db_exists)
+    bridge = AsyncBridge.get_instance()
+
+    # Wrap blocking analyzer calls
+    formids = bridge.run_async(lambda: analyzer.extract_formids(segment_callstack))
+    ```
+
+CLI Usage:
+    For CLI applications, use directly without AsyncBridge:
+
+    ```python
+    from ClassicLib.rust.formid_rust import FormIDAnalyzer
+
+    analyzer = FormIDAnalyzer(yamldata, show_formid_values, formid_db_exists)
+    formids = analyzer.extract_formids(segment_callstack)
+    analyzer.formid_match(formids, plugins, report)
+    ```
 """
 
 from __future__ import annotations
@@ -25,7 +58,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class RustFormIDAnalyzer:
+class FormIDAnalyzer:
     """
     Wrapper for Rust FormIDAnalyzer that provides Python-compatible API.
 
@@ -76,15 +109,15 @@ class RustFormIDAnalyzer:
                     mods_double
                 )
                 self._use_rust_core = True
-                logger.debug("🚀 RustFormIDAnalyzer: Using RUST FormIDAnalyzerCore (zero-copy optimizations)")
+                logger.debug("🚀 FormIDAnalyzer: Using RUST FormIDAnalyzerCore (zero-copy optimizations)")
             elif hasattr(classic_scanlog, "FormIDAnalyzer"):
                 # Fallback to simple FormIDAnalyzer
-                RustFormIDAnalyzerImpl = classic_scanlog.FormIDAnalyzer
-                self._rust_analyzer = RustFormIDAnalyzerImpl()
+                FormIDAnalyzerImpl = classic_scanlog.FormIDAnalyzer
+                self._rust_analyzer = FormIDAnalyzerImpl()
                 self._use_rust = True
-                logger.debug("🚀 RustFormIDAnalyzer: Using RUST FormIDAnalyzer (50x faster)")
+                logger.debug("🚀 FormIDAnalyzer: Using RUST FormIDAnalyzer (50x faster)")
             else:
-                logger.debug("⚠️  RustFormIDAnalyzer: FormIDAnalyzer not found in classic_scanlog")
+                logger.debug("⚠️  FormIDAnalyzer: FormIDAnalyzer not found in classic_scanlog")
         except RustError as e:
             logger.error(f"❌ Rust error initializing FormIDAnalyzer: {e}")
         except Exception as e:
@@ -92,7 +125,7 @@ class RustFormIDAnalyzer:
 
         # Only create Python analyzer if Rust truly unavailable
         if not self._use_rust and not self._use_rust_core:
-            logger.debug("⚠️  RustFormIDAnalyzer: Falling back to Python implementation")
+            logger.debug("⚠️  FormIDAnalyzer: Falling back to Python implementation")
             from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
             self._python_analyzer = FormIDAnalyzer(yamldata, show_formid_values, formid_db_exists)
 

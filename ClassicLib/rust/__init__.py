@@ -32,8 +32,8 @@ try:
         get_database_pool_implementation,
     )
     from ClassicLib.rust.fcx_rust import FCXModeHandler, FcxModeHandler, RustAcceleratedFcxModeHandler
-    from ClassicLib.rust.file_io_rust import RustFileIOCore, create_file_io_sync, get_rust_file_io
-    from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
+    from ClassicLib.rust.file_io_rust import FileIOCore, create_file_io_sync, get_rust_file_io
+    from ClassicLib.rust.formid_rust import FormIDAnalyzer
     from ClassicLib.rust.mod_detector_rust import detect_mods_double, detect_mods_important, detect_mods_single, get_mod_detector_status
     from ClassicLib.rust.parser_rust import RustLogParser
     from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
@@ -65,10 +65,10 @@ except ImportError as e:
 
     # Provide None for missing components
     RustLogParser = None
-    RustFormIDAnalyzer = None
+    FormIDAnalyzer = None
     RustPluginAnalyzer = None
     RustRecordScanner = None
-    RustFileIOCore = None
+    FileIOCore = None
     RustAsyncDatabasePool = None
     RustAcceleratedReportFragment = None
     RustAcceleratedReportComposer = None
@@ -95,7 +95,7 @@ __all__ = [
     "RustLogParser",
 
     # FormID Analyzer
-    "RustFormIDAnalyzer",
+    "FormIDAnalyzer",
 
     # Plugin Analyzer
     "RustPluginAnalyzer",
@@ -104,7 +104,7 @@ __all__ = [
     "RustRecordScanner",
 
     # File I/O
-    "RustFileIOCore",
+    "FileIOCore",
     "get_rust_file_io",
     "create_file_io_sync",
 
@@ -161,10 +161,10 @@ def get_rust_component_summary() -> dict[str, bool]:
     """
     return {
         "parser": RustLogParser is not None,
-        "formid_analyzer": RustFormIDAnalyzer is not None,
+        "formid_analyzer": FormIDAnalyzer is not None,
         "plugin_analyzer": RustPluginAnalyzer is not None,
         "record_scanner": RustRecordScanner is not None,
-        "file_io": RustFileIOCore is not None,
+        "file_io": FileIOCore is not None,
         "database": RustAsyncDatabasePool is not None,
         "report_generation": ReportFragment is not None,
         "mod_detector": "detect_mods_single" in globals(),

@@ -10,6 +10,41 @@ Performance improvements with Rust:
 - Efficient section extraction with zero-copy operations
 - Optimized string matching algorithms
 - Parallel processing capabilities
+
+Async/Sync Behavior:
+    All methods in RustLogParser are SYNCHRONOUS (blocking):
+    - find_segments() - Blocks while parsing crash log data
+    - extract_section() - Blocks while extracting log sections
+
+    These methods call synchronous Rust functions. Use them directly in sync contexts.
+
+AsyncBridge Usage (GUI Applications Only):
+    For Qt GUI applications, wrap with AsyncBridge:
+
+    ```python
+    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.rust.parser_rust import RustLogParser
+
+    parser = RustLogParser()
+    bridge = AsyncBridge.get_instance()
+
+    # Wrap blocking parser calls
+    result = bridge.run_async(lambda: parser.find_segments(
+        crash_data, crashgen_name, xse_acronym, game_root_name
+    ))
+    ```
+
+CLI Usage:
+    For CLI applications, use directly without AsyncBridge:
+
+    ```python
+    from ClassicLib.rust.parser_rust import RustLogParser
+
+    parser = RustLogParser()
+    game_ver, crashgen_ver, error, segments = parser.find_segments(
+        crash_data, crashgen_name, xse_acronym, game_root_name
+    )
+    ```
 """
 
 from __future__ import annotations

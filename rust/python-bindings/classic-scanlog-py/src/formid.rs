@@ -6,7 +6,7 @@ use pyo3::types::PyDict;
 use std::collections::HashMap;
 
 /// Python wrapper for RustFormIDAnalyzer
-#[pyclass(name = "RustFormIDAnalyzer")]
+#[pyclass(name = "FormIDAnalyzer")]
 pub struct PyRustFormIDAnalyzer {
     inner: RustFormIDAnalyzer,
 }

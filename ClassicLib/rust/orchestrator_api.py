@@ -1,11 +1,50 @@
 """
 Python API layer for Rust backend orchestrator.
 
-This module provides a thin wrapper around classic_scanlog's RustOrchestrator,
+This module provides a thin wrapper around classic_scanlog's Orchestrator,
 handling configuration and result processing. Configuration data is
 automatically loaded using classic-config crate (15-30x faster than Python).
 
 Phase 3 Integration - Part of the full backend migration plan.
+
+Async/Sync Behavior:
+    All methods in ClassicOrchestrator are SYNCHRONOUS (blocking):
+    - process_crash_log() - Blocks while processing log with Rust
+    - process_crash_logs_batch() - Blocks with parallel processing in Rust
+
+    These methods call synchronous Rust functions with internal parallelism.
+
+AsyncBridge Usage (GUI Applications Only):
+    For Qt GUI applications, wrap with AsyncBridge:
+
+    ```python
+    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.rust.orchestrator_api import ClassicOrchestrator
+
+    orchestrator = ClassicOrchestrator()
+    bridge = AsyncBridge.get_instance()
+
+    # Wrap blocking orchestrator calls
+    result = bridge.run_async(lambda: orchestrator.process_crash_log(log_path))
+
+    # Or batch processing
+    results = bridge.run_async(lambda: orchestrator.process_crash_logs_batch(
+        log_paths, max_concurrent=10
+    ))
+    ```
+
+CLI Usage:
+    For CLI applications, use directly without AsyncBridge:
+
+    ```python
+    from pathlib import Path
+    from ClassicLib.rust.orchestrator_api import process_crash_log
+
+    # Direct usage - Rust handles parallelism internally
+    result = process_crash_log(Path("crash.log"))
+    print(f"Success: {result.success}")
+    print(f"Time: {result.processing_time_ms}ms")
+    ```
 """
 
 from collections.abc import Callable
@@ -16,13 +55,13 @@ from typing import TYPE_CHECKING, Any
 # Always import for type checking, conditionally at runtime
 if TYPE_CHECKING:
     from classic_config import YamlData
-    from classic_scanlog import AnalysisConfig, AnalysisResult, RustOrchestrator
+    from classic_scanlog import AnalysisConfig, AnalysisResult, Orchestrator
     RUST_AVAILABLE: bool
 else:
     # Runtime imports - these will be the actual classes or None
     try:
         from classic_config import YamlData
-        from classic_scanlog import AnalysisConfig, AnalysisResult, RustOrchestrator
+        from classic_scanlog import AnalysisConfig, AnalysisResult, Orchestrator
         RUST_AVAILABLE = True
     except ImportError:
         RUST_AVAILABLE = False
@@ -30,7 +69,7 @@ else:
         YamlData = Any  # type: ignore[misc, assignment]
         AnalysisConfig = Any  # type: ignore[misc, assignment]
         AnalysisResult = Any  # type: ignore[misc, assignment]
-        RustOrchestrator = Any  # type: ignore[misc, assignment]
+        Orchestrator = Any  # type: ignore[misc, assignment]
 
 from ClassicLib.integration.factory import get_yamldata
 
@@ -105,7 +144,7 @@ class ClassicOrchestrator:
     Attributes:
         yamldata (YamlData): Configuration data loaded from a YAML source.
         config (AnalysisConfig): Parsed analysis configuration created from the YAML data.
-        orchestrator (RustOrchestrator): Rust-driven orchestrator for crash log processing.
+        orchestrator (Orchestrator): Rust-driven orchestrator for crash log processing.
     """
 
     def __init__(self) -> None:
@@ -114,7 +153,7 @@ class ClassicOrchestrator:
         and data orchestration.
 
         The constructor ensures the availability of Rust components and reliably
-        constructs instances of `YamlData`, `AnalysisConfig`, and `RustOrchestrator`.
+        constructs instances of `YamlData`, `AnalysisConfig`, and `Orchestrator`.
         It uses a fallback mechanism to handle scenarios where Rust components are
         not available.
 
@@ -133,8 +172,8 @@ class ClassicOrchestrator:
         # Create AnalysisConfig from YamlData
         self.config = AnalysisConfig.from_yamldata(self.yamldata)
 
-        # Create RustOrchestrator
-        self.orchestrator = RustOrchestrator(self.config)
+        # Create Orchestrator
+        self.orchestrator = Orchestrator(self.config)
 
     def process_crash_log(
         self,
@@ -173,7 +212,7 @@ class ClassicOrchestrator:
         """
         Processes a batch of crash log files in parallel and returns the analysis results.
 
-        This method processes logs in a parallel fashion using the RustOrchestrator tool,
+        This method processes logs in a parallel fashion using the Orchestrator tool,
         which allows for higher efficiency when handling multiple files. It also computes
         the total processing time and evaluates the parallelism factor.
 
@@ -194,7 +233,7 @@ class ClassicOrchestrator:
         # Convert Path objects to strings
         log_paths_str = [str(p) for p in log_paths]
 
-        # Process logs in parallel using RustOrchestrator
+        # Process logs in parallel using Orchestrator
         results = self.orchestrator.process_logs_parallel(
             log_paths=log_paths_str,
             max_concurrent=max_concurrent,

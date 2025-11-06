@@ -18,11 +18,11 @@ Features:
 
 Usage:
     import asyncio
-    from classic_file_io import RustFileIOCore
+    from classic_file_io import FileIOCore
 
     async def main():
         # Create file I/O core
-        io_core = RustFileIOCore()
+        io_core = FileIOCore()
 
         # Read file with auto-detection (async)
         content = await io_core.read_file("config.txt")
@@ -42,13 +42,13 @@ from typing import Any, Coroutine
 
 __version__: str
 
-class RustFileIOCore:
+class FileIOCore:
     """High-performance async file I/O core with caching and encoding detection.
 
     Optimized file operations with 10x speedup over Python I/O through true async
     operations, parallel reading, and intelligent caching.
 
-    The RustFileIOCore provides:
+    The FileIOCore provides:
     - True async I/O (non-blocking coroutines)
     - Automatic text encoding detection
     - Parallel file operations for batch processing
@@ -82,9 +82,9 @@ class RustFileIOCore:
 
         Example:
             >>> # Create with defaults
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> # Create with custom settings
-            >>> io_core = RustFileIOCore(encoding="utf-8", errors="strict", cache_size=200)
+            >>> io_core = FileIOCore(encoding="utf-8", errors="strict", cache_size=200)
         """
 
     def read_file(self, path: str) -> Coroutine[Any, Any, str]:
@@ -108,7 +108,7 @@ class RustFileIOCore:
             UnicodeDecodeError: If encoding is incorrect
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> content = await io_core.read_file("config.txt")
         """
 
@@ -131,7 +131,7 @@ class RustFileIOCore:
             IOError: If read fails
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> lines = await io_core.read_lines("log.txt")
             >>> for line in lines:
             ...     print(line)
@@ -156,7 +156,7 @@ class RustFileIOCore:
             IOError: If read fails
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> data = await io_core.read_bytes("image.png")
             >>> print(f"File size: {len(data)} bytes")
         """
@@ -181,7 +181,7 @@ class RustFileIOCore:
             PermissionError: If lacking write permissions
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> await io_core.write_file("output.txt", "Hello, World!")
         """
 
@@ -205,7 +205,7 @@ class RustFileIOCore:
             PermissionError: If lacking write permissions
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> lines = ["Line 1", "Line 2", "Line 3"]
             >>> await io_core.write_lines("output.txt", lines)
         """
@@ -230,7 +230,7 @@ class RustFileIOCore:
             PermissionError: If lacking write permissions
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> data = b'\\x89PNG\\r\\n\\x1a\\n'
             >>> await io_core.write_bytes("image.png", data)
         """
@@ -255,7 +255,7 @@ class RustFileIOCore:
             PermissionError: If lacking write permissions
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> await io_core.append_file("log.txt", "New log entry\\n")
         """
 
@@ -272,7 +272,7 @@ class RustFileIOCore:
             True if file exists, False otherwise
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> if io_core.file_exists("config.txt"):
             ...     content = await io_core.read_file("config.txt")
         """
@@ -290,7 +290,7 @@ class RustFileIOCore:
             File size in bytes, or -1 if file doesn't exist
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> size = io_core.get_file_size("large_file.dat")
             >>> print(f"Size: {size / 1024 / 1024:.2f} MB")
         """
@@ -308,7 +308,7 @@ class RustFileIOCore:
             Tuple of (width, height) in pixels, or None if invalid
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> header = io_core.read_dds_header("texture.dds")
             >>> if header:
             ...     width, height = header
@@ -330,7 +330,7 @@ class RustFileIOCore:
             None values indicate invalid files
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> texture_files = ["tex1.dds", "tex2.dds", "tex3.dds"]
             >>> headers = io_core.read_dds_headers_batch(texture_files)
             >>> for path, header in headers.items():
@@ -346,7 +346,7 @@ class RustFileIOCore:
         memory after processing many files.
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> # ... read many files ...
             >>> io_core.clear_cache()  # Free cached content
         """
@@ -372,7 +372,7 @@ class RustFileIOCore:
             List of file paths (absolute paths as strings)
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> # Find all Python files
             >>> py_files = io_core.py_walk_directory("src", pattern=r"\.py$")
             >>> print(f"Found {len(py_files)} Python files")
@@ -400,7 +400,7 @@ class RustFileIOCore:
             Empty strings indicate failed reads
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> files = ["config1.txt", "config2.txt", "config3.txt"]
             >>> contents = await io_core.py_read_multiple_files(files)
             >>> for path, content in contents.items():
@@ -428,7 +428,7 @@ class RustFileIOCore:
             IOError: If any write fails
 
         Example:
-            >>> io_core = RustFileIOCore()
+            >>> io_core = FileIOCore()
             >>> writes = {
             ...     "file1.txt": "Content 1",
             ...     "file2.txt": "Content 2",

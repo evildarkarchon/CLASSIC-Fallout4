@@ -185,7 +185,7 @@ class OrchestratorCore:
         Fragment-based async implementation for processing a crash log file.
 
         Uses async file I/O to allow parallel processing of multiple crash logs.
-        When Rust acceleration is available, this uses RustFileIOCore for 10x speedup.
+        When Rust acceleration is available, this uses FileIOCore for 10x speedup.
         Otherwise falls back to Python aiofiles for proper async concurrency.
 
         Args:

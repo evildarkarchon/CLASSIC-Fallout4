@@ -18,11 +18,11 @@ Features:
 
 Usage:
     import asyncio
-    from classic_database import RustDatabasePool
+    from classic_database import DatabasePool
 
     async def main():
         # Create database pool
-        pool = RustDatabasePool(max_connections=8, cache_ttl_seconds=300, game_table="Fallout4")
+        pool = DatabasePool(max_connections=8, cache_ttl_seconds=300, game_table="Fallout4")
 
         # Initialize with database paths
         await pool.initialize(["path/to/db1.db", "path/to/db2.db"])
@@ -47,14 +47,14 @@ from typing import Any
 
 __version__: str
 
-class RustDatabasePool:
+class DatabasePool:
     """High-performance async database pool with TTL caching.
 
     Thread-safe SQLite connection pool optimized for FormID lookups and batch queries.
     Provides automatic connection management, query caching, and performance monitoring.
     All database operations are async and return coroutines that must be awaited.
 
-    The RustDatabasePool manages multiple SQLite connections in a pool, allowing
+    The DatabasePool manages multiple SQLite connections in a pool, allowing
     concurrent database access without blocking. It includes intelligent caching
     with configurable TTL to reduce redundant database queries.
 
@@ -84,7 +84,7 @@ class RustDatabasePool:
             game_table: Database table name for the game (default: "Fallout4")
 
         Example:
-            >>> pool = RustDatabasePool(max_connections=8, cache_ttl_seconds=600, game_table="Skyrim")
+            >>> pool = DatabasePool(max_connections=8, cache_ttl_seconds=600, game_table="Skyrim")
         """
 
     async def initialize(self, db_paths: list[str]) -> None:
@@ -101,7 +101,7 @@ class RustDatabasePool:
             sqlite3.Error: If database is corrupted or invalid
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> await pool.initialize(["formids.db", "extra.db"])
         """
 
@@ -125,7 +125,7 @@ class RustDatabasePool:
             Database entry as dictionary with all fields, or None if not found
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> await pool.initialize(["formids.db"])
             >>> entry = await pool.get_entry("00012E46", "MyPlugin.esp")
             >>> if entry:
@@ -153,7 +153,7 @@ class RustDatabasePool:
             Missing entries will not appear in the result dictionary
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> await pool.initialize(["formids.db"])
             >>> pairs = [("00012E46", "Plugin1.esp"), ("FF000800", "Plugin2.esp")]
             >>> results = await pool.get_entries_batch(pairs, batch_size=100)
@@ -179,7 +179,7 @@ class RustDatabasePool:
             Dictionary mapping (formid, plugin) tuples to their database entries
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> await pool.initialize(["formids.db"])
             >>> pairs = [("00012E46", "Plugin1.esp"), ("FF000800", "Plugin2.esp")]
             >>> results = await pool.batch_lookup(pairs)
@@ -194,7 +194,7 @@ class RustDatabasePool:
             Current game table name (e.g., "Fallout4")
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> print(pool.get_game_table())
             'Fallout4'
         """
@@ -208,7 +208,7 @@ class RustDatabasePool:
             table: Database table name for the game
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> pool.set_game_table("Skyrim")  # Switch to Skyrim database
         """
 
@@ -224,7 +224,7 @@ class RustDatabasePool:
             Number of entries cleared from cache
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> await pool.initialize(["formids.db"])
             >>> # ... perform many queries ...
             >>> cleared = pool.clear_cache()  # Clear all cached results
@@ -241,7 +241,7 @@ class RustDatabasePool:
             seconds: Cache TTL in seconds (0 to disable caching)
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> pool.set_cache_ttl(120)  # Cache for 2 minutes
         """
 
@@ -252,7 +252,7 @@ class RustDatabasePool:
             Maximum number of connections in the pool, or None if auto-calculated
 
         Example:
-            >>> pool = RustDatabasePool(max_connections=8)
+            >>> pool = DatabasePool(max_connections=8)
             >>> print(pool.get_max_connections())
             8
         """
@@ -267,7 +267,7 @@ class RustDatabasePool:
             max_connections: New maximum number of connections
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> pool.set_max_connections(16)  # Increase pool size
         """
 
@@ -278,7 +278,7 @@ class RustDatabasePool:
         the number of available CPU cores and updates the pool configuration.
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> pool.recalculate_max_connections()
         """
 
@@ -298,7 +298,7 @@ class RustDatabasePool:
                 - 'cache_hit_rate': Cache hit rate percentage (0-100)
 
         Example:
-            >>> pool = RustDatabasePool()
+            >>> pool = DatabasePool()
             >>> await pool.initialize(["formids.db"])
             >>> # ... perform queries ...
             >>> stats = pool.get_stats()

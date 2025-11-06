@@ -19,7 +19,7 @@ use crate::to_pyerr;
 /// This wrapper is Send-safe because the inner DatabasePool uses Arc, DashMap,
 /// Mutex, and RwLock - all of which are Send + Sync. Removing `unsendable`
 /// allows Python's GC to safely drop this object on any thread.
-#[pyclass(name = "RustDatabasePool")]
+#[pyclass(name = "DatabasePool")]
 pub struct PyDatabasePool {
     inner: DatabasePool,
 }
@@ -42,10 +42,10 @@ impl PyDatabasePool {
     ///
     /// ```python
     /// # Create with defaults
-    /// pool = RustDatabasePool()
+    /// pool = DatabasePool()
     ///
     /// # Create with custom settings
-    /// pool = RustDatabasePool(max_connections=50, cache_ttl_seconds=600, game_table="Skyrim")
+    /// pool = DatabasePool(max_connections=50, cache_ttl_seconds=600, game_table="Skyrim")
     /// ```
     #[new]
     #[pyo3(signature = (max_connections=None, cache_ttl_seconds=300, game_table=None))]

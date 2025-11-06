@@ -29,7 +29,7 @@ class DatabasePoolManager:
     """
 
     _instance: ClassVar["DatabasePoolManager | None"] = None
-    _pool: Any = None  # Can be RustDatabasePool or AsyncDatabasePool
+    _pool: Any = None  # Can be DatabasePool or AsyncDatabasePool
     _lock: ClassVar[asyncio.Lock | None] = None
     _using_rust: bool = False
 

@@ -4,6 +4,55 @@ Python wrapper for Rust database pool - Phase 4 implementation.
 This module provides a backward-compatible interface for the high-performance
 Rust database pool implementation, maintaining the same API as AsyncDatabasePool
 while leveraging Rust's performance benefits.
+
+Async/Sync Behavior:
+    All database methods are TRUE ASYNC - they await Rust coroutines and do NOT block:
+    - initialize() - Awaits Rust database connection setup
+    - get_entry() - Awaits Rust database query
+    - get_entries_batch() - Awaits parallel Rust batch queries
+
+    These methods can be used directly in async contexts without AsyncBridge:
+
+    ```python
+    async def lookup_formid(formid: str, plugin: str):
+        pool = RustAsyncDatabasePool()
+        await pool.initialize()
+        result = await pool.get_entry(formid, plugin)  # True async, no blocking
+        return result
+    ```
+
+AsyncBridge Usage (GUI Applications Only):
+    For Qt GUI applications, use AsyncBridge only when calling from sync context:
+
+    ```python
+    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.rust.database_rust import RustAsyncDatabasePool
+
+    async def query_database():
+        pool = RustAsyncDatabasePool()
+        await pool.initialize()
+        return await pool.get_entry(formid, plugin)
+
+    # In GUI worker thread
+    bridge = AsyncBridge.get_instance()
+    result = bridge.run_async(query_database())
+    ```
+
+CLI Usage:
+    For CLI applications, use async methods directly with asyncio.run():
+
+    ```python
+    import asyncio
+    from ClassicLib.rust.database_rust import RustAsyncDatabasePool
+
+    async def main():
+        pool = RustAsyncDatabasePool()
+        await pool.initialize()
+        result = await pool.get_entry(formid, plugin)
+        print(result)
+
+    asyncio.run(main())
+    ```
 """
 
 from __future__ import annotations
@@ -11,21 +60,21 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from classic_database import RustDatabasePool
+from classic_database import DatabasePool
 
 from ClassicLib.integration.exceptions import RustDatabaseError, RustError
 
 if TYPE_CHECKING:
-    from classic_database import RustDatabasePool as RustDatabasePoolType
+    from classic_database import DatabasePool as DatabasePoolType
 else:
-    RustDatabasePoolType = None  # type: ignore[misc,assignment]
+    DatabasePoolType = None  # type: ignore[misc,assignment]
 
 try:
-    from classic_database import RustDatabasePool
+    from classic_database import DatabasePool
     RUST_AVAILABLE = True
 except (ImportError, AttributeError):
     RUST_AVAILABLE = False
-    RustDatabasePool = None  # type: ignore[assignment]
+    DatabasePool = None  # type: ignore[assignment]
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS
@@ -34,7 +83,7 @@ from ClassicLib.Logger import logger
 
 class DatabasePoolManager:
     """
-    Singleton manager for RustDatabasePool instances.
+    Singleton manager for DatabasePool instances.
 
     Provides backward compatibility with the existing AsyncDatabasePool
     interface while using the high-performance Rust implementation.
@@ -134,7 +183,7 @@ class RustAsyncDatabasePool:
         if RUST_AVAILABLE:
             # Get game table from GlobalRegistry
             game_table = GlobalRegistry.get_game()
-            self._rust_pool: RustDatabasePool = RustDatabasePool(max_connections, cache_ttl_seconds, game_table) # pyright: ignore[reportOptionalCall, reportInvalidTypeForm]
+            self._rust_pool: DatabasePool = DatabasePool(max_connections, cache_ttl_seconds, game_table) # pyright: ignore[reportOptionalCall, reportInvalidTypeForm]
             logger.debug(f"Initialized Rust database pool (max_conn={max_connections}, ttl={cache_ttl_seconds}s, table={game_table})")
         else:
             raise ImportError("Rust database module not available. Please rebuild with maturin.")

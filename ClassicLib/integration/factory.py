@@ -131,9 +131,9 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
 
         if not _is_rust_disabled() and components.get("file_io_core", False):
             try:
-                from ClassicLib.rust.file_io_rust import RustFileIOCore
+                from ClassicLib.rust.file_io_rust import FileIOCore
                 logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
-                _file_io_instance = RustFileIOCore(encoding, errors)
+                _file_io_instance = FileIOCore(encoding, errors)
                 return _file_io_instance
             except ImportError as e:
                 logger.warning(f"Failed to import Rust FileIOCore: {e}")
@@ -256,7 +256,7 @@ def get_formid_analyzer(
     """
     Gets an appropriate FormIDAnalyzer instance based on available components and runtime configuration.
 
-    This function determines whether the Rust-based `RustFormIDAnalyzer` or
+    This function determines whether the Rust-based `FormIDAnalyzer` or
     the Python implementation `FormIDAnalyzer` should be used for form ID
     analysis, prioritizing the Rust implementation if it is available and
     Rust-based components are not disabled. This provides potential
@@ -276,11 +276,11 @@ def get_formid_analyzer(
 
     if not _is_rust_disabled() and components.get("formid_analyzer", False):
         try:
-            from ClassicLib.rust.formid_rust import RustFormIDAnalyzer
-            logger.debug("Using RustFormIDAnalyzer wrapper (50x speedup potential)")
-            return RustFormIDAnalyzer(yamldata, show_values, db_exists)
+            from ClassicLib.rust.formid_rust import FormIDAnalyzer
+            logger.debug("Using Rust FormIDAnalyzer wrapper (50x speedup potential)")
+            return FormIDAnalyzer(yamldata, show_values, db_exists)
         except ImportError as e:
-            logger.warning(f"Failed to import RustFormIDAnalyzer: {e}")
+            logger.warning(f"Failed to import Rust FormIDAnalyzer: {e}")
 
     # Fall back to Python implementation
     from ClassicLib.python.formid_py import FormIDAnalyzer
@@ -412,9 +412,9 @@ def get_yaml_operations() -> Any:
     if not _is_rust_disabled() and components.get("yaml_operations", False):
         try:
             import classic_yaml
-            if hasattr(classic_yaml, "RustYamlOperations"):
+            if hasattr(classic_yaml, "YamlOperations"):
                 logger.debug("Using Rust YAML Operations (15-30x parsing, 10-20x writing speedup)")
-                return classic_yaml.RustYamlOperations()
+                return classic_yaml.YamlOperations()
         except (ImportError, AttributeError) as e:
             logger.warning(f"Failed to get Rust YAML Operations: {e}")
 

@@ -15,7 +15,7 @@
 //! from classic_core import yaml
 //!
 //! # Create YAML operations handler
-//! ops = yaml.RustYamlOperations()
+//! ops = yaml.YamlOperations()
 //!
 //! # Parse YAML from string
 //! yaml_content = """
@@ -64,14 +64,14 @@
 //!
 //! ## Thread Safety
 //!
-//! The RustYamlOperations wrapper is thread-safe and can be shared across Python threads.
+//! The YamlOperations wrapper is thread-safe and can be shared across Python threads.
 //! Internal caching uses thread-safe data structures (DashMap) for concurrent access.
 //!
 //! ```python
 //! from classic_core import yaml
 //! from threading import Thread
 //!
-//! ops = yaml.RustYamlOperations()
+//! ops = yaml.YamlOperations()
 //!
 //! def worker(file_path):
 //!     # Safe to call from multiple threads
@@ -100,7 +100,7 @@ create_exception!(classic_yaml, RustYamlIOError, RustYamlError, "YAML I/O errors
 create_exception!(classic_yaml, RustYamlParseError, RustYamlError, "YAML parse errors");
 
 /// Python-facing YAML operations wrapper
-#[pyclass(name = "RustYamlOperations")]
+#[pyclass(name = "YamlOperations")]
 pub struct PyYamlOperations {
     inner: YamlOperations,
 }
@@ -233,7 +233,7 @@ impl PyYamlOperations {
     ///
     /// # Example
     /// ```python
-    /// ops = RustYamlOperations()
+    /// ops = YamlOperations()
     /// yaml_str = """
     /// game:
     ///   name: Fallout4
@@ -274,7 +274,7 @@ impl PyYamlOperations {
     ///
     /// # Example
     /// ```python
-    /// ops = RustYamlOperations()
+    /// ops = YamlOperations()
     /// yaml_str = """
     /// game:
     ///   plugins:
@@ -313,7 +313,7 @@ impl PyYamlOperations {
     ///
     /// # Example
     /// ```python
-    /// ops = RustYamlOperations()
+    /// ops = YamlOperations()
     /// yaml_str = """
     /// game:
     ///   mods:
