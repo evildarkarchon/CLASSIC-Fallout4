@@ -16,18 +16,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.integration.detector import detect_component
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
-try:
-    import classic_scanlog
-
-    RustSuspectScanner = classic_scanlog.SuspectScanner
-    RUST_AVAILABLE = True
-except (ImportError, AttributeError):
+# Centralized detection of Rust SuspectScanner
+RUST_AVAILABLE, RustSuspectScanner = detect_component("classic_scanlog", "SuspectScanner")
+if not RUST_AVAILABLE:
     RustSuspectScanner = None  # type: ignore[assignment, misc]
-    RUST_AVAILABLE = False
 
 
 class RustAcceleratedSuspectScanner:

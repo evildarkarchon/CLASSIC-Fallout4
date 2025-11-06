@@ -60,20 +60,17 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from classic_database import DatabasePool
-
 from ClassicLib.integration.exceptions import RustDatabaseError, RustError
+from ClassicLib.integration.detector import detect_component
 
 if TYPE_CHECKING:
     from classic_database import DatabasePool as DatabasePoolType
 else:
     DatabasePoolType = None  # type: ignore[misc,assignment]
 
-try:
-    from classic_database import DatabasePool
-    RUST_AVAILABLE = True
-except (ImportError, AttributeError):
-    RUST_AVAILABLE = False
+# Centralized detection of Rust DatabasePool
+RUST_AVAILABLE, DatabasePool = detect_component("classic_database", "DatabasePool")
+if not RUST_AVAILABLE:
     DatabasePool = None  # type: ignore[assignment]
 
 from ClassicLib import GlobalRegistry

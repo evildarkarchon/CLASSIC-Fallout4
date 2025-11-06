@@ -10,6 +10,9 @@ Functions:
     detect_rust_components: Checks the availability of Rust components.
     get_available_components: Gathers comprehensive details about Rust components,
                               including their version and environmental status.
+    detect_component: Centralized component detection with caching.
+    is_component_available: Check if a component is available.
+    get_component: Get a component or raise ImportError.
 """
 
 from __future__ import annotations
@@ -19,6 +22,9 @@ import os
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+# Cache for component detection results (avoids repeated imports)
+_detection_cache: dict[str, tuple[bool, Any | None]] = {}
 
 # Configuration for module component detection
 MODULE_CONFIGS = {
@@ -250,3 +256,96 @@ def _get_empty_component_dict() -> dict[str, bool]:
         "xse_utils": False,
         "web_utils": False,
     }
+
+
+# ==========================================
+# Centralized Component Detection (Phase 3)
+# ==========================================
+
+
+def detect_component(module_name: str, class_name: str | None = None) -> tuple[bool, Any | None]:
+    """Detect if a Rust component is available.
+
+    This function provides centralized detection with caching to avoid repeated
+    import attempts. Use this instead of module-level try/except blocks in wrappers.
+
+    Args:
+        module_name: Python module name (e.g., "classic_yaml")
+        class_name: Optional class name within module (e.g., "YamlOperations")
+
+    Returns:
+        Tuple of (available: bool, component: Any | None)
+
+    Example:
+        >>> available, YamlOps = detect_component("classic_yaml", "YamlOperations")
+        >>> if available:
+        ...     ops = YamlOps()
+    """
+    cache_key = f"{module_name}:{class_name}" if class_name else module_name
+
+    # Check cache first (avoids repeated imports)
+    if cache_key in _detection_cache:
+        return _detection_cache[cache_key]
+
+    try:
+        # Import the module
+        module = __import__(module_name)
+
+        # Get the class if specified
+        if class_name:
+            if not hasattr(module, class_name):
+                result = (False, None)
+            else:
+                component = getattr(module, class_name)
+                result = (True, component)
+        else:
+            result = (True, module)
+
+    except ImportError:
+        result = (False, None)
+
+    # Cache the result
+    _detection_cache[cache_key] = result
+    return result
+
+
+def is_component_available(module_name: str, class_name: str | None = None) -> bool:
+    """Check if a Rust component is available (convenience method).
+
+    Args:
+        module_name: Python module name
+        class_name: Optional class name within module
+
+    Returns:
+        True if component is available, False otherwise
+
+    Example:
+        >>> if is_component_available("classic_yaml", "YamlOperations"):
+        ...     print("Rust YAML acceleration available")
+    """
+    available, _ = detect_component(module_name, class_name)
+    return available
+
+
+def get_component(module_name: str, class_name: str) -> Any:
+    """Get a Rust component or raise ImportError.
+
+    Args:
+        module_name: Python module name
+        class_name: Class name within module
+
+    Returns:
+        The component class
+
+    Raises:
+        ImportError: If component is not available
+
+    Example:
+        >>> YamlOps = get_component("classic_yaml", "YamlOperations")
+        >>> ops = YamlOps()
+    """
+    available, component = detect_component(module_name, class_name)
+    if not available:
+        msg = f"Rust component {module_name}.{class_name} not available"
+        raise ImportError(msg)
+    return component

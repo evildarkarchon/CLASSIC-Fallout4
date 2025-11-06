@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.integration.detector import detect_component
 
 if TYPE_CHECKING:
     from classic_scanlog import FcxModeHandler as RustFcxModeHandlerType
@@ -23,14 +24,10 @@ if TYPE_CHECKING:
         FCXModeHandlerFragments as PythonFcxModeHandlerType,
     )
 
-try:
-    import classic_scanlog
-
-    RustFcxModeHandler = classic_scanlog.FcxModeHandler
-    RUST_AVAILABLE = True
-except (ImportError, AttributeError):
+# Centralized detection of Rust FcxModeHandler
+RUST_AVAILABLE, RustFcxModeHandler = detect_component("classic_scanlog", "FcxModeHandler")
+if not RUST_AVAILABLE:
     RustFcxModeHandler = None  # type: ignore[assignment]
-    RUST_AVAILABLE = False
 
 
 class RustAcceleratedFcxModeHandler:

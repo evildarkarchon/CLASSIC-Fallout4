@@ -16,20 +16,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.integration.detector import detect_component
 
 if TYPE_CHECKING:
     from packaging.version import Version
 
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
-try:
-    import classic_scanlog
-
-    RustSettingsValidator: type[Any] | None = classic_scanlog.SettingsValidator
-    RUST_AVAILABLE = True
-except (ImportError, AttributeError):
-    RustSettingsValidator = None
-    RUST_AVAILABLE = False
+# Centralized detection of Rust SettingsValidator
+RUST_AVAILABLE, RustSettingsValidator = detect_component("classic_scanlog", "SettingsValidator")
 
 
 class RustAcceleratedSettingsValidator:

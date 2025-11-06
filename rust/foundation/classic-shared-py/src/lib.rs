@@ -171,6 +171,79 @@ where
     py.detach(f)
 }
 
+/// Runtime statistics from Tokio
+///
+/// Provides visibility into the Tokio runtime state for diagnostics and monitoring.
+#[pyclass]
+#[derive(Clone)]
+pub struct RuntimeStats {
+    /// Number of worker threads in the runtime
+    #[pyo3(get)]
+    pub worker_threads: usize,
+
+    /// Whether runtime appears healthy
+    #[pyo3(get)]
+    pub is_healthy: bool,
+}
+
+#[pymethods]
+impl RuntimeStats {
+    fn __repr__(&self) -> String {
+        format!(
+            "RuntimeStats(worker_threads={}, is_healthy={})",
+            self.worker_threads, self.is_healthy
+        )
+    }
+}
+
+/// Get Tokio runtime statistics
+///
+/// Returns basic diagnostic information about the shared Tokio runtime.
+/// Useful for detecting runtime issues in production.
+///
+/// # Examples
+///
+/// ```python
+/// import classic_shared
+///
+/// stats = classic_shared.get_runtime_stats()
+/// print(f"Worker threads: {stats.worker_threads}")
+/// print(f"Healthy: {stats.is_healthy}")
+/// ```
+#[pyfunction]
+fn get_runtime_stats() -> RuntimeStats {
+    // Get the global runtime
+    let runtime = get_runtime();
+
+    // Get metrics from the runtime
+    let metrics = runtime.metrics();
+
+    RuntimeStats {
+        worker_threads: metrics.num_workers(),
+        is_healthy: true, // Simplified check - runtime exists means healthy
+    }
+}
+
+/// Check if Tokio runtime is healthy
+///
+/// Returns `True` if the runtime appears to be functioning normally.
+/// This is a simplified health check - more sophisticated checks could be added.
+///
+/// # Examples
+///
+/// ```python
+/// import classic_shared
+///
+/// if not classic_shared.is_runtime_healthy():
+///     print("Warning: Runtime may have issues!")
+/// ```
+#[pyfunction]
+fn is_runtime_healthy() -> bool {
+    // Simple health check - runtime exists and can provide metrics
+    let runtime = get_runtime();
+    runtime.metrics().num_workers() > 0
+}
+
 /// Python module initialization
 #[pymodule]
 fn classic_shared(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -178,6 +251,11 @@ fn classic_shared(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyStringProcessor>()?;
     m.add_class::<PyPathHandler>()?;
     m.add_class::<PyRustPerformanceMonitor>()?;
+
+    // Add runtime diagnostics
+    m.add_class::<RuntimeStats>()?;
+    m.add_function(wrap_pyfunction!(get_runtime_stats, m)?)?;
+    m.add_function(wrap_pyfunction!(is_runtime_healthy, m)?)?;
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

@@ -13,14 +13,10 @@ Key API Translations:
 
 from __future__ import annotations
 
-try:
-    import classic_scanlog
+from ClassicLib.integration.detector import detect_component
 
-    RustGpuDetector = classic_scanlog.GpuDetector
-    RUST_AVAILABLE = True
-except (ImportError, AttributeError):
-    RustGpuDetector = None
-    RUST_AVAILABLE = False
+# Centralized detection of Rust GpuDetector
+RUST_AVAILABLE, RustGpuDetector = detect_component("classic_scanlog", "GpuDetector")
 
 
 def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:

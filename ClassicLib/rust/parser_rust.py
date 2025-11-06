@@ -52,6 +52,7 @@ from __future__ import annotations
 import logging
 
 from ClassicLib.integration.exceptions import RustError, RustParseError
+from ClassicLib.integration.detector import detect_component
 
 logger = logging.getLogger(__name__)
 
@@ -86,19 +87,17 @@ class RustLogParser:
         self._rust_parser = None
         self._use_rust = False
 
-        try:
-            import classic_scanlog
-            if hasattr(classic_scanlog, "LogParser"):
-                LogParser = classic_scanlog.LogParser
+        # Centralized detection of Rust LogParser
+        rust_available, LogParser = detect_component("classic_scanlog", "LogParser")
+        if rust_available and LogParser:
+            try:
                 self._rust_parser = LogParser()
                 self._use_rust = True
                 logger.debug("🚀 RustLogParser: Using RUST implementation (150x faster)")
-            else:
-                logger.debug("⚠️  RustLogParser: LogParser not found in classic_scanlog")
-        except RustError as e:
-            logger.error(f"❌ Rust error initializing parser: {e}")
-        except (ImportError, AttributeError, TypeError) as e:
-            logger.error(f"❌ Failed to initialize Rust parser: {e}")
+            except RustError as e:
+                logger.error(f"❌ Rust error initializing parser: {e}")
+            except (TypeError, ValueError) as e:
+                logger.error(f"❌ Failed to initialize Rust parser: {e}")
 
         if not self._use_rust:
             logger.debug("⚠️  RustLogParser: Falling back to Python implementation")

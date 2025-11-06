@@ -14,6 +14,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 # Try to import Rust implementation
+from ClassicLib.integration.detector import detect_component
+
 if TYPE_CHECKING:
     # For type checking, assume types exist
     from classic_scanlog import ParallelReportProcessor as RustParallelProcessor
@@ -24,23 +26,21 @@ if TYPE_CHECKING:
 
     RUST_AVAILABLE: bool = True
 else:
-    try:
-        import classic_scanlog
+    # Centralized detection of Rust report components
+    _has_fragment, RustReportFragment = detect_component("classic_scanlog", "ReportFragment")
+    _has_composer, RustReportComposer = detect_component("classic_scanlog", "ReportComposer")
+    _has_generator, RustReportGenerator = detect_component("classic_scanlog", "ReportGenerator")
+    _has_stringpool, RustStringPool = detect_component("classic_scanlog", "StringPool")
+    _has_parallel, RustParallelProcessor = detect_component("classic_scanlog", "ParallelReportProcessor")
 
-        RustReportFragment = classic_scanlog.ReportFragment
-        RustReportComposer = classic_scanlog.ReportComposer
-        RustReportGenerator = classic_scanlog.ReportGenerator
-        RustStringPool = classic_scanlog.StringPool
-        RustParallelProcessor = classic_scanlog.ParallelReportProcessor
+    RUST_AVAILABLE = _has_fragment and _has_composer and _has_generator
 
-        RUST_AVAILABLE = True
-    except (ImportError, AttributeError):
+    if not RUST_AVAILABLE:
         RustReportFragment = None  # type: ignore[assignment, misc]
         RustReportComposer = None  # type: ignore[assignment, misc]
         RustReportGenerator = None  # type: ignore[assignment, misc]
         RustStringPool = None  # type: ignore[assignment, misc]
         RustParallelProcessor = None  # type: ignore[assignment, misc]
-        RUST_AVAILABLE = False
 
 # Import Python fallback
 from ClassicLib.ScanLog.fragments.report_composer import ReportComposer as PyReportComposer

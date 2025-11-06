@@ -52,19 +52,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from ClassicLib.integration.detector import detect_component
+
 # Always import for type checking, conditionally at runtime
 if TYPE_CHECKING:
     from classic_config import YamlData
     from classic_scanlog import AnalysisConfig, AnalysisResult, Orchestrator
     RUST_AVAILABLE: bool
 else:
-    # Runtime imports - these will be the actual classes or None
-    try:
-        from classic_config import YamlData
-        from classic_scanlog import AnalysisConfig, AnalysisResult, Orchestrator
-        RUST_AVAILABLE = True
-    except ImportError:
-        RUST_AVAILABLE = False
+    # Centralized detection of Rust orchestrator components
+    _has_yamldata, YamlData = detect_component("classic_config", "YamlData")
+    _has_config, AnalysisConfig = detect_component("classic_scanlog", "AnalysisConfig")
+    _has_result, AnalysisResult = detect_component("classic_scanlog", "AnalysisResult")
+    _has_orchestrator, Orchestrator = detect_component("classic_scanlog", "Orchestrator")
+
+    RUST_AVAILABLE = _has_yamldata and _has_config and _has_result and _has_orchestrator
+
+    if not RUST_AVAILABLE:
         # Runtime fallbacks - never used due to RUST_AVAILABLE check
         YamlData = Any  # type: ignore[misc, assignment]
         AnalysisConfig = Any  # type: ignore[misc, assignment]

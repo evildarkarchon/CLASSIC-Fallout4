@@ -17,46 +17,29 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal
 
 from ClassicLib.integration.exceptions import RustError, RustParseError
+from ClassicLib.integration.detector import detect_component
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.fragments import ReportFragment
 
 logger = logging.getLogger(__name__)
 
-# Check if Rust mod detector is available
-RUST_AVAILABLE = False
-_rust_detect_single = None
-_rust_detect_double = None
-_rust_detect_important = None
-_rust_detect_batch = None
+# Centralized detection of Rust mod detector functions
+_has_single, _rust_detect_single = detect_component("classic_scanlog", "detect_mods_single")
+_has_double, _rust_detect_double = detect_component("classic_scanlog", "detect_mods_double")
+_has_important, _rust_detect_important = detect_component("classic_scanlog", "detect_mods_important")
+_has_batch, _rust_detect_batch = detect_component("classic_scanlog", "detect_mods_batch")
 
-try:
-    import classic_scanlog
+RUST_AVAILABLE = _has_single or _has_double or _has_important or _has_batch
 
-    if hasattr(classic_scanlog, "detect_mods_single"):
-        _rust_detect_single = classic_scanlog.detect_mods_single
-        RUST_AVAILABLE = True
-        logger.debug("✅ Rust detect_mods_single available (35x speedup)")
-
-    if hasattr(classic_scanlog, "detect_mods_double"):
-        _rust_detect_double = classic_scanlog.detect_mods_double
-        RUST_AVAILABLE = True
-        logger.debug("✅ Rust detect_mods_double available (35x speedup)")
-
-    if hasattr(classic_scanlog, "detect_mods_important"):
-        _rust_detect_important = classic_scanlog.detect_mods_important
-        RUST_AVAILABLE = True
-        logger.debug("✅ Rust detect_mods_important available (35x speedup)")
-
-    if hasattr(classic_scanlog, "detect_mods_batch"):
-        _rust_detect_batch = classic_scanlog.detect_mods_batch
-        RUST_AVAILABLE = True
-        logger.debug("✅ Rust detect_mods_batch available (35x speedup)")
-
-    if not RUST_AVAILABLE:
-        logger.debug("⚠️  Rust mod detector functions not found in classic_scanlog")
-except ImportError as e:
-    logger.debug(f"Rust mod detector not available: {e}")
+if _has_single:
+    logger.debug("✅ Rust detect_mods_single available (35x speedup)")
+if _has_double:
+    logger.debug("✅ Rust detect_mods_double available (35x speedup)")
+if _has_important:
+    logger.debug("✅ Rust detect_mods_important available (35x speedup)")
+if _has_batch:
+    logger.debug("✅ Rust detect_mods_batch available (35x speedup)")
 
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:

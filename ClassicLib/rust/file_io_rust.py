@@ -71,30 +71,18 @@ from typing import Any
 
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.integration.exceptions import RustError, RustIOError, RustParseError
+from ClassicLib.integration.detector import detect_component
 
 logger = logging.getLogger(__name__)
 
-# Check if Rust module is available
-RUST_AVAILABLE = False
-_rust_io = None
-_rust_io_error = None
-_rust_parse_error = None
+# Centralized detection of Rust FileIOCore
+RUST_AVAILABLE, _rust_io = detect_component("classic_file_io", "FileIOCore")
+if RUST_AVAILABLE:
+    logger.info("✓ Rust FileIOCore available (10-20x speedup)")
 
-try:
-    import classic_file_io
-
-    if hasattr(classic_file_io, "FileIOCore"):
-        _rust_io = classic_file_io.FileIOCore
-        RUST_AVAILABLE = True
-        logger.info("✓ Rust FileIOCore available (10-20x speedup)")
-
-    # Import Rust-specific exception types if available
-    if hasattr(classic_file_io, "RustFileIOIOError"):
-        _rust_io_error = classic_file_io.RustFileIOIOError
-    if hasattr(classic_file_io, "RustFileIOParseError"):
-        _rust_parse_error = classic_file_io.RustFileIOParseError
-except ImportError:
-    pass
+# Detect Rust-specific exception types
+_, _rust_io_error = detect_component("classic_file_io", "RustFileIOIOError")
+_, _rust_parse_error = detect_component("classic_file_io", "RustFileIOParseError")
 
 
 def _get_rust_exception_types():

@@ -24,6 +24,20 @@ from ClassicLib.integration.exceptions import (
     RustConcurrencyError,
 )
 
+# Centralized component detection (Phase 3)
+from ClassicLib.integration.detector import (
+    detect_component,
+    is_component_available,
+    get_component,
+)
+
+# Runtime diagnostics (Phase 3)
+from ClassicLib.integration.diagnostics import (
+    get_runtime_stats,
+    is_runtime_healthy,
+    print_runtime_status,
+)
+
 # Note: We don't import other submodules here to avoid circular dependencies.
 # Users should import directly from the submodules:
 #   from ClassicLib.integration.factory import get_parser
@@ -39,4 +53,12 @@ __all__ = [
     "RustDatabaseError",
     "RustMemoryError",
     "RustConcurrencyError",
+    # Centralized detection (Phase 3)
+    "detect_component",
+    "is_component_available",
+    "get_component",
+    # Runtime diagnostics (Phase 3)
+    "get_runtime_stats",
+    "is_runtime_healthy",
+    "print_runtime_status",
 ]
