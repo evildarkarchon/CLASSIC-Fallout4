@@ -4,6 +4,7 @@
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
 use classic_file_io_core::FileIOCore;
+use classic_shared::PathLike;
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -62,11 +63,12 @@ impl PyFileIOCore {
 
     /// Read a file with encoding detection
     ///
+    /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_file")]
-    pub fn py_read_file<'py>(&self, py: Python<'py>, path: String) -> PyResult<Bound<'py, PyAny>> {
+    pub fn py_read_file<'py>(&self, py: Python<'py>, path: PathLike) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
-        let path_buf = PathBuf::from(path);
+        let path_buf: PathBuf = path.into();
 
         // Returns Python coroutine immediately - no blocking!
         future_into_py(py, async move {
@@ -76,16 +78,17 @@ impl PyFileIOCore {
 
     /// Write a file
     ///
+    /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "write_file")]
     pub fn py_write_file<'py>(
         &self,
         py: Python<'py>,
-        path: String,
+        path: PathLike,
         content: String,
     ) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
-        let path_buf = PathBuf::from(path);
+        let path_buf: PathBuf = path.into();
 
         // Returns Python coroutine immediately - no blocking!
         future_into_py(py, async move {
@@ -98,11 +101,12 @@ impl PyFileIOCore {
 
     /// Read file lines with automatic encoding detection
     ///
+    /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_lines")]
-    pub fn py_read_lines<'py>(&self, py: Python<'py>, path: String) -> PyResult<Bound<'py, PyAny>> {
+    pub fn py_read_lines<'py>(&self, py: Python<'py>, path: PathLike) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
-        let path_buf = PathBuf::from(path);
+        let path_buf: PathBuf = path.into();
 
         // Returns Python coroutine immediately - no blocking!
         future_into_py(py, async move {
@@ -112,11 +116,12 @@ impl PyFileIOCore {
 
     /// Read file as bytes
     ///
+    /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_bytes")]
-    pub fn py_read_bytes<'py>(&self, py: Python<'py>, path: String) -> PyResult<Bound<'py, PyAny>> {
+    pub fn py_read_bytes<'py>(&self, py: Python<'py>, path: PathLike) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
-        let path_buf = PathBuf::from(path);
+        let path_buf: PathBuf = path.into();
 
         // Returns Python coroutine immediately - no blocking!
         future_into_py(py, async move {
@@ -126,16 +131,17 @@ impl PyFileIOCore {
 
     /// Write lines to file
     ///
+    /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "write_lines")]
     pub fn py_write_lines<'py>(
         &self,
         py: Python<'py>,
-        path: String,
+        path: PathLike,
         lines: Vec<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
-        let path_buf = PathBuf::from(path);
+        let path_buf: PathBuf = path.into();
 
         // Returns Python coroutine immediately - no blocking!
         future_into_py(py, async move {
@@ -145,16 +151,17 @@ impl PyFileIOCore {
 
     /// Write bytes to file
     ///
+    /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "write_bytes")]
     pub fn py_write_bytes<'py>(
         &self,
         py: Python<'py>,
-        path: String,
+        path: PathLike,
         content: Vec<u8>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
-        let path_buf = PathBuf::from(path);
+        let path_buf: PathBuf = path.into();
 
         // Returns Python coroutine immediately - no blocking!
         future_into_py(py, async move {
@@ -167,16 +174,17 @@ impl PyFileIOCore {
 
     /// Append content to file
     ///
+    /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "append_file")]
     pub fn py_append_file<'py>(
         &self,
         py: Python<'py>,
-        path: String,
+        path: PathLike,
         content: String,
     ) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
-        let path_buf = PathBuf::from(path);
+        let path_buf: PathBuf = path.into();
 
         // Returns Python coroutine immediately - no blocking!
         future_into_py(py, async move {
@@ -196,14 +204,18 @@ impl PyFileIOCore {
     }
 
     /// Check if file exists (fast, non-blocking)
-    pub fn file_exists(&self, _py: Python<'_>, path: String) -> bool {
-        let path_buf = PathBuf::from(path);
+    ///
+    /// Accepts both string paths and pathlib.Path objects.
+    pub fn file_exists(&self, _py: Python<'_>, path: PathLike) -> bool {
+        let path_buf: PathBuf = path.into();
         self.inner.file_exists(&path_buf)
     }
 
     /// Get file size in bytes
-    pub fn get_file_size(&self, _py: Python<'_>, path: String) -> i64 {
-        let path_buf = PathBuf::from(path);
+    ///
+    /// Accepts both string paths and pathlib.Path objects.
+    pub fn get_file_size(&self, _py: Python<'_>, path: PathLike) -> i64 {
+        let path_buf: PathBuf = path.into();
         self.inner
             .get_file_size(&path_buf)
             .map(|s| s as i64)
@@ -211,8 +223,10 @@ impl PyFileIOCore {
     }
 
     /// Parse DDS header with zero-copy operations
-    pub fn read_dds_header(&self, _py: Python<'_>, path: String) -> PyResult<Option<(u32, u32)>> {
-        let path_buf = PathBuf::from(path);
+    ///
+    /// Accepts both string paths and pathlib.Path objects.
+    pub fn read_dds_header(&self, _py: Python<'_>, path: PathLike) -> PyResult<Option<(u32, u32)>> {
+        let path_buf: PathBuf = path.into();
         get_runtime().block_on(async {
             match self.inner.read_dds_header(&path_buf).await {
                 Ok(Some(header)) => Ok(Some((header.width, header.height))),
@@ -246,14 +260,16 @@ impl PyFileIOCore {
     }
 
     /// Parallel directory traversal
+    ///
+    /// Accepts both string paths and pathlib.Path objects for the directory path.
     pub fn py_walk_directory(
         &self,
         py: Python<'_>,
-        path: String,
+        path: PathLike,
         pattern: Option<String>,
         max_depth: Option<usize>,
     ) -> PyResult<Py<PyList>> {
-        let path_buf = PathBuf::from(path);
+        let path_buf: PathBuf = path.into();
         let files = self
             .inner
             .walk_directory(&path_buf, pattern.as_deref(), max_depth)

@@ -13,11 +13,13 @@ use pyo3::exceptions::{
 use pyo3::prelude::*;
 
 // Module declarations
+pub mod path;
 pub mod path_py;
 pub mod performance_py;
 pub mod strings_py;
 
 // Re-export for Rust usage
+pub use path::PathLike;
 pub use path_py::PyPathHandler;
 pub use performance_py::PyRustPerformanceMonitor;
 pub use strings_py::PyStringProcessor;

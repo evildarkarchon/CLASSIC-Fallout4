@@ -85,12 +85,13 @@
 //!     t.join()
 //! ```
 
+use classic_shared::PathLike;
 use classic_yaml_core::{YamlError, YamlOperations};
 use pyo3::prelude::*;
 use pyo3::{create_exception, exceptions::PyException};
 use pyo3::types::{PyDict, PyList};
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::PathBuf;
 use yaml_rust2::Yaml;
 
 // Custom exception types matching Python ClassicLib.integration.exceptions
@@ -128,21 +129,48 @@ impl PyYamlOperations {
     }
 
     /// Load YAML file with caching
+    ///
+    /// Accepts both string paths and pathlib.Path objects without requiring manual conversion.
+    ///
+    /// # Arguments
+    /// * `path` - Path to YAML file (str or pathlib.Path)
+    ///
+    /// # Examples
+    /// ```python
+    /// # Both work without conversion:
+    /// data = ops.load_yaml_file("config.yaml")           # str
+    /// data = ops.load_yaml_file(Path("config.yaml"))     # pathlib.Path
+    /// ```
     #[pyo3(signature = (path))]
-    fn load_yaml_file(&self, py: Python<'_>, path: &str) -> PyResult<Py<PyAny>> {
+    fn load_yaml_file(&self, py: Python<'_>, path: PathLike) -> PyResult<Py<PyAny>> {
+        let path_buf: PathBuf = path.into();
         let yaml = self
             .inner
-            .load_yaml_file(Path::new(path))
+            .load_yaml_file(&path_buf)
             .map_err(to_pyerr)?;
         yaml_to_python(py, &yaml)
     }
 
     /// Save data to YAML file with atomic write
+    ///
+    /// Accepts both string paths and pathlib.Path objects without requiring manual conversion.
+    ///
+    /// # Arguments
+    /// * `path` - Path to YAML file (str or pathlib.Path)
+    /// * `data` - YAML data to save
+    ///
+    /// # Examples
+    /// ```python
+    /// # Both work without conversion:
+    /// ops.save_yaml_file("config.yaml", data)           # str
+    /// ops.save_yaml_file(Path("config.yaml"), data)     # pathlib.Path
+    /// ```
     #[pyo3(signature = (path, data))]
-    fn save_yaml_file(&self, py: Python<'_>, path: &str, data: Py<PyAny>) -> PyResult<()> {
+    fn save_yaml_file(&self, py: Python<'_>, path: PathLike, data: Py<PyAny>) -> PyResult<()> {
+        let path_buf: PathBuf = path.into();
         let yaml = python_to_yaml(py, data)?;
         self.inner
-            .save_yaml_file(Path::new(path), &yaml)
+            .save_yaml_file(&path_buf, &yaml)
             .map_err(to_pyerr)
     }
 
