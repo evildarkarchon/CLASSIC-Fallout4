@@ -86,6 +86,13 @@ class BridgeMetrics:
     loops_created: int
     loops_cleaned: int
 
+    def __repr__(self) -> str:
+        """Return the debug representation of this BridgeMetrics.
+
+        Returns:
+            A string representation suitable for debugging.
+        """
+
 
 class RuntimeInfo:
     """Runtime information.
@@ -99,6 +106,13 @@ class RuntimeInfo:
 
     available: bool
     worker_threads: int
+
+    def __repr__(self) -> str:
+        """Return the debug representation of this RuntimeInfo.
+
+        Returns:
+            A string representation suitable for debugging.
+        """
 
 
 def record_operation(

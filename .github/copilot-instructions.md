@@ -294,7 +294,7 @@ def scan_log_async(log_path: Path, *, max_errors: int | None = None) -> ScanResu
 ### Rust Documentation
 - **All public items require `///` doc comments**
 - **Missing docs = compilation error**
-- Follow [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html)
+- Follow Rust API Guidelines for documentation
 
 ```rust
 /// Parses crash log segments and extracts version information.

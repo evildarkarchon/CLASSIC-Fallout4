@@ -84,6 +84,20 @@ class MessageType(IntEnum):
             'Warning'
         """
 
+    def __repr__(self) -> str:
+        """Return the debug representation of this MessageType.
+
+        Returns:
+            A string representation suitable for debugging.
+        """
+
+    def __str__(self) -> str:
+        """Return the string representation of this MessageType.
+
+        Returns:
+            The name of the message type.
+        """
+
 
 class MessageTarget(IntEnum):
     """Message target enumeration for routing messages.
@@ -151,6 +165,20 @@ class MessageTarget(IntEnum):
             >>> target = MessageTarget.LOG_ONLY
             >>> target.should_display()
             False
+        """
+
+    def __repr__(self) -> str:
+        """Return the debug representation of this MessageTarget.
+
+        Returns:
+            A string representation suitable for debugging.
+        """
+
+    def __str__(self) -> str:
+        """Return the string representation of this MessageTarget.
+
+        Returns:
+            The name of the message target.
         """
 
 
@@ -311,6 +339,20 @@ class Message:
 
         Args:
             details: The new details for the message, or None to clear them.
+        """
+
+    def __repr__(self) -> str:
+        """Return the debug representation of this Message.
+
+        Returns:
+            A string representation suitable for debugging.
+        """
+
+    def __str__(self) -> str:
+        """Return the string representation of this Message.
+
+        Returns:
+            The message content.
         """
 
 

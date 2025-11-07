@@ -143,6 +143,13 @@ class Timer:
             >>> timer.finish()
         """
 
+    def __repr__(self) -> str:
+        """Return the debug representation of this Timer.
+
+        Returns:
+            A string representation suitable for debugging.
+        """
+
 
 def record_timing(name: str, duration_secs: float) -> None:
     """Record a timing measurement.

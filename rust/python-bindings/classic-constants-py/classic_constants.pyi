@@ -137,6 +137,20 @@ class YamlFile:
             Hash value suitable for use in sets and dicts.
         """
 
+    def __repr__(self) -> str:
+        """Return the debug representation of this YamlFile.
+
+        Returns:
+            A string representation suitable for debugging.
+        """
+
+    def __str__(self) -> str:
+        """Return the string representation of this YamlFile.
+
+        Returns:
+            The variant name as a string.
+        """
+
 
 class GameId:
     """Game identifiers for supported Bethesda games.
@@ -222,6 +236,20 @@ class GameId:
 
         Returns:
             Hash value suitable for use in sets and dicts.
+        """
+
+    def __repr__(self) -> str:
+        """Return the debug representation of this GameId.
+
+        Returns:
+            A string representation suitable for debugging.
+        """
+
+    def __str__(self) -> str:
+        """Return the string representation of this GameId.
+
+        Returns:
+            The game identifier as a string.
         """
 
 
