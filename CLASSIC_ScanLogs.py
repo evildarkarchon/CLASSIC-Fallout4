@@ -12,7 +12,6 @@ The main() function is async and uses asyncio.run() only at the entry point.
 """
 
 import asyncio
-import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -155,7 +154,6 @@ async def main() -> None:
     # Ensure all output is flushed before pause
     sys.stdout.flush()
     sys.stderr.flush()
-    os.system("pause")  # Sync call in async context is fine
 
 
 if __name__ == "__main__":
