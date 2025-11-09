@@ -50,9 +50,9 @@ class TestSetupInitialization:
         """Test application initialization in GUI mode."""
         # Mock batch_get_settings to return values for GUI mode
         mock_batch_get.return_value = [
-            False,          # VR Mode disabled
-            "Fallout 4",    # Managed Game
-            False,          # is_prerelease False
+            False,  # VR Mode disabled
+            "Fallout 4",  # Managed Game
+            False,  # is_prerelease False
         ]
 
         # Initialize application
@@ -82,9 +82,9 @@ class TestSetupInitialization:
         """Test application initialization in GUI mode with parent widget."""
         # Mock batch_get_settings to return values
         mock_batch_get.return_value = [
-            False,          # VR Mode disabled
-            "Fallout 4",    # Managed Game
-            False,          # is_prerelease False
+            False,  # VR Mode disabled
+            "Fallout 4",  # Managed Game
+            False,  # is_prerelease False
         ]
 
         # Create a mock parent widget
@@ -114,9 +114,9 @@ class TestSetupInitialization:
         """Test application initialization in CLI mode."""
         # Mock batch_get_settings to return values for CLI mode
         mock_batch_get.return_value = [
-            True,           # VR Mode enabled
-            "Skyrim SE",    # Managed Game
-            True,           # is_prerelease
+            True,  # VR Mode enabled
+            "Skyrim SE",  # Managed Game
+            True,  # is_prerelease
         ]
 
         # Initialize application
@@ -148,9 +148,9 @@ class TestSetupInitialization:
         """Test application initialization for frozen executable."""
         # Mock batch_get_settings to return values
         mock_batch_get.return_value = [
-            False,          # VR Mode disabled
-            "Fallout 4",    # Managed Game
-            False,          # is_prerelease False
+            False,  # VR Mode disabled
+            "Fallout 4",  # Managed Game
+            False,  # is_prerelease False
         ]
 
         # Mock frozen state
@@ -178,9 +178,9 @@ class TestSetupInitialization:
         """Test application initialization in source mode (not frozen)."""
         # Mock batch_get_settings to return values
         mock_batch_get.return_value = [
-            False,          # VR Mode disabled
-            "Fallout 4",    # Managed Game
-            False,          # is_prerelease False
+            False,  # VR Mode disabled
+            "Fallout 4",  # Managed Game
+            False,  # is_prerelease False
         ]
 
         # Ensure not frozen
@@ -211,7 +211,7 @@ class TestSetupInitialization:
         # Mock batch_get_settings with None game
         mock_batch_get.return_value = [
             False,  # VR Mode disabled
-            None,   # Managed Game (None)
+            None,  # Managed Game (None)
             False,  # is_prerelease False
         ]
 
@@ -238,9 +238,9 @@ class TestSetupInitialization:
         """Test that YAML files are preloaded during initialization."""
         # Mock batch_get_settings to return values
         mock_batch_get.return_value = [
-            False,          # VR Mode disabled
-            "Fallout 4",    # Managed Game
-            False,          # not prerelease
+            False,  # VR Mode disabled
+            "Fallout 4",  # Managed Game
+            False,  # not prerelease
         ]
 
         # Initialize application

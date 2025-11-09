@@ -4,10 +4,11 @@ This script verifies that both str and pathlib.Path objects work
 seamlessly with Rust Python bindings without manual conversions.
 """
 
-from pathlib import Path
 import tempfile
-import classic_yaml
+from pathlib import Path
+
 import classic_file_io
+import classic_yaml
 
 print("=" * 60)
 print("Testing PathLike Support in Rust Modules")
@@ -32,7 +33,7 @@ except Exception as e:
 
 # Test 3: Actually load a file with both str and Path
 print("\n✓ Test 3: classic_yaml load/save with actual file")
-with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
     test_yaml_path = f.name
     f.write("test_key: test_value\nnested:\n  key: value\n")
 
@@ -47,11 +48,11 @@ try:
 
     # Save with str
     ops.save_yaml_file(test_yaml_path, data_str)
-    print(f"  Saved with str path: OK")
+    print("  Saved with str path: OK")
 
     # Save with Path
     ops.save_yaml_file(Path(test_yaml_path), data_path)
-    print(f"  Saved with Path object: OK")
+    print("  Saved with Path object: OK")
 finally:
     Path(test_yaml_path).unlink(missing_ok=True)
 
@@ -59,10 +60,11 @@ finally:
 print("\n✓ Test 4: classic_file_io.RustFileIOCore with str and Path")
 import asyncio
 
+
 async def test_file_io():
     io_core = classic_file_io.RustFileIOCore()
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
         test_file_path = f.name
         f.write("test content\n")
 
@@ -77,11 +79,11 @@ async def test_file_io():
 
         # Write with str
         await io_core.write_file(test_file_path, "new content\n")
-        print(f"  Write with str path: OK")
+        print("  Write with str path: OK")
 
         # Write with Path
         await io_core.write_file(Path(test_file_path), "final content\n")
-        print(f"  Write with Path object: OK")
+        print("  Write with Path object: OK")
 
         # Verify sync methods work too
         exists_str = io_core.file_exists(test_file_path)
@@ -96,6 +98,7 @@ async def test_file_io():
 
     finally:
         Path(test_file_path).unlink(missing_ok=True)
+
 
 asyncio.run(test_file_io())
 

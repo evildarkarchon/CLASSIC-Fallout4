@@ -20,8 +20,7 @@ from ClassicLib.ScanGame.core.dds_analyzer import (
 @pytest.fixture
 def analyzer():
     """Create analyzer instance without library dependencies."""
-    with patch("ClassicLib.ScanGame.core.dds_analyzer.HAS_PYFFI", False), \
-         patch("ClassicLib.ScanGame.core.dds_analyzer.HAS_PIL_DDS", False):
+    with patch("ClassicLib.ScanGame.core.dds_analyzer.HAS_PYFFI", False), patch("ClassicLib.ScanGame.core.dds_analyzer.HAS_PIL_DDS", False):
         return EnhancedDDSAnalyzer(use_libraries=False)
 
 
@@ -57,9 +56,9 @@ def valid_dds_data():
 
     # Pixel format at offset 76
     pf_offset = 76
-    header[pf_offset:pf_offset + 4] = struct.pack("<I", 32)  # Size
-    header[pf_offset + 4:pf_offset + 8] = struct.pack("<I", DDSPixelFlags.FOURCC)  # Flags
-    header[pf_offset + 8:pf_offset + 12] = b"DXT5"  # FourCC
+    header[pf_offset : pf_offset + 4] = struct.pack("<I", 32)  # Size
+    header[pf_offset + 4 : pf_offset + 8] = struct.pack("<I", DDSPixelFlags.FOURCC)  # Flags
+    header[pf_offset + 8 : pf_offset + 12] = b"DXT5"  # FourCC
 
     # Caps
     header[108:112] = struct.pack("<I", 0x1000)  # DDSCAPS_TEXTURE
@@ -183,42 +182,23 @@ class TestEnhancedDDSAnalyzer:
     def test_validate_for_game_fallout4(self, analyzer):
         """Test Fallout 4 specific validation."""
         # Valid texture
-        info = DDSInfo(
-            width=2048,
-            height=2048,
-            format_fourcc="DXT5",
-            is_compressed=True
-        )
+        info = DDSInfo(width=2048, height=2048, format_fourcc="DXT5", is_compressed=True)
         issues = analyzer.validate_for_game(info, "Fallout4")
         assert len(issues) == 0
 
         # Non-power-of-2 with mipmaps
-        info = DDSInfo(
-            width=1023,
-            height=1023,
-            mipmap_count=5,
-            is_compressed=True
-        )
+        info = DDSInfo(width=1023, height=1023, mipmap_count=5, is_compressed=True)
         issues = analyzer.validate_for_game(info, "Fallout4")
         assert any("Non-power-of-2" in issue for issue in issues)
         assert any("multiple of 4" in issue for issue in issues)
 
         # Too large for Fallout 4
-        info = DDSInfo(
-            width=8192,
-            height=8192
-        )
+        info = DDSInfo(width=8192, height=8192)
         issues = analyzer.validate_for_game(info, "Fallout4")
         assert any("4096" in issue for issue in issues)
 
         # DXT1 with alpha warning
-        info = DDSInfo(
-            width=1024,
-            height=1024,
-            format_fourcc="DXT1",
-            has_alpha=True,
-            is_compressed=True
-        )
+        info = DDSInfo(width=1024, height=1024, format_fourcc="DXT1", has_alpha=True, is_compressed=True)
         issues = analyzer.validate_for_game(info, "Fallout4")
         assert any("DXT1 with alpha" in issue for issue in issues)
 
@@ -263,10 +243,7 @@ class TestIntegration:
         processor = DDSProcessor(semaphore, use_enhanced=False)  # Test basic mode
 
         # Test batch checking
-        dds_files = [
-            (valid_dds, mod_dir),
-            (odd_dds, mod_dir)
-        ]
+        dds_files = [(valid_dds, mod_dir), (odd_dds, mod_dir)]
         issue_lists = {"tex_dims": []}
         issue_locks = {"tex_dims": asyncio.Lock()}
 

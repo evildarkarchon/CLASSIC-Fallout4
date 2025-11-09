@@ -49,7 +49,7 @@ def init_message_handler_fixture() -> Generator[MessageHandler, None, None]:
         old_handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
 
         # Track if this thread already has a handler to prevent double initialization
-        if not hasattr(_handler_states, 'handler_stack'):
+        if not hasattr(_handler_states, "handler_stack"):
             _handler_states.handler_stack = []
 
         _handler_states.handler_stack.append(old_handler)
@@ -103,7 +103,7 @@ def ensure_message_handler_cleanup() -> Generator[None, None, None]:
             handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
             if handler is not None:
                 # Only clean up if not managed by another fixture
-                if not hasattr(_handler_states, 'handler_stack') or not _handler_states.handler_stack:
+                if not hasattr(_handler_states, "handler_stack") or not _handler_states.handler_stack:
                     ClassicLib.MessageHandler._message_handler = None
 
                     # Clear cached references
@@ -142,7 +142,7 @@ def async_bridge() -> Generator[Any, None, None]:
         original_instance = AsyncBridge._instances.get(thread_id)
 
         # Track bridge state
-        if not hasattr(_bridge_states, 'instance_stack'):
+        if not hasattr(_bridge_states, "instance_stack"):
             _bridge_states.instance_stack = []
 
         _bridge_states.instance_stack.append(original_instance)
@@ -190,7 +190,7 @@ def ensure_async_bridge_cleanup() -> Generator[None, None, None]:
         thread_id = threading.get_ident()
 
         # Only clean up if not managed by another fixture
-        if not hasattr(_bridge_states, 'instance_stack') or not _bridge_states.instance_stack:
+        if not hasattr(_bridge_states, "instance_stack") or not _bridge_states.instance_stack:
             if thread_id in AsyncBridge._instances:
                 instance = AsyncBridge._instances[thread_id]
                 # Shutdown and remove
@@ -341,6 +341,7 @@ def setup_global_registry_session() -> Generator[None, None, None]:
         # Check if yaml_cache already exists in the module to avoid re-initialization issues
         try:
             from ClassicLib.YamlSettingsCache import yaml_cache
+
             # Re-register the existing instance
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
         except ImportError:
@@ -388,6 +389,7 @@ def setup_global_registry() -> Generator[None, None, None]:
     if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
         try:
             from ClassicLib.YamlSettingsCache import yaml_cache
+
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
         except (ImportError, TypeError):
             # If we can't import or yaml_cache initialization failed, create a new one
@@ -434,11 +436,11 @@ def clean_yaml_cache_singleton() -> Generator[Any, None, None]:
 
     with _yaml_cache_lock:
         # Store the original singleton instance if it exists
-        original_instance = YamlSettingsCache._instance if hasattr(YamlSettingsCache, '_instance') else None
-        original_module_cache = getattr(ClassicLib.YamlSettingsCache, 'yaml_cache', None)
+        original_instance = YamlSettingsCache._instance if hasattr(YamlSettingsCache, "_instance") else None
+        original_module_cache = getattr(ClassicLib.YamlSettingsCache, "yaml_cache", None)
 
         # Track cache state
-        if not hasattr(_yaml_cache_states, 'instance_stack'):
+        if not hasattr(_yaml_cache_states, "instance_stack"):
             _yaml_cache_states.instance_stack = []
 
         _yaml_cache_states.instance_stack.append((original_instance, original_module_cache))
@@ -458,10 +460,10 @@ def clean_yaml_cache_singleton() -> Generator[Any, None, None]:
             yield cache
         finally:
             # Clear any cached data in the instance
-            if hasattr(cache, '_async_core') and hasattr(cache._async_core, 'cache'):
+            if hasattr(cache, "_async_core") and hasattr(cache._async_core, "cache"):
                 cache._async_core.cache.settings_cache.clear()
                 cache._async_core.cache.file_mod_times.clear()
-                if hasattr(cache._async_core.cache, 'path_cache'):
+                if hasattr(cache._async_core.cache, "path_cache"):
                     cache._async_core.cache.path_cache.clear()
 
             # Restore or clear singleton
@@ -474,8 +476,8 @@ def clean_yaml_cache_singleton() -> Generator[Any, None, None]:
                         GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, prev_module_cache)
             else:
                 YamlSettingsCache._instance = None
-                if hasattr(ClassicLib.YamlSettingsCache, 'yaml_cache'):
-                    delattr(ClassicLib.YamlSettingsCache, 'yaml_cache')
+                if hasattr(ClassicLib.YamlSettingsCache, "yaml_cache"):
+                    delattr(ClassicLib.YamlSettingsCache, "yaml_cache")
 
             # Force garbage collection
             gc.collect()
@@ -503,7 +505,7 @@ def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
     import ClassicLib.YamlSettingsCache
 
     # Save the original yaml_cache if it exists
-    original_cache = getattr(ClassicLib.YamlSettingsCache, 'yaml_cache', None)
+    original_cache = getattr(ClassicLib.YamlSettingsCache, "yaml_cache", None)
 
     # Create a mock async core that doesn't need actual files
     mock_async_core = MagicMock()
@@ -512,14 +514,14 @@ def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
     mock_async_core.cache.file_mod_times = {}
 
     # Create a mock YamlSettingsCache that doesn't initialize AsyncBridge
-    with patch('ClassicLib.YamlSettingsCache.AsyncBridge') as mock_bridge_class:
+    with patch("ClassicLib.YamlSettingsCache.AsyncBridge") as mock_bridge_class:
         mock_bridge = MagicMock()
         mock_bridge_class.get_instance.return_value = mock_bridge
 
         # Make run_async return values directly (not coroutines)
         def run_async_side_effect(coro):
             # If it's already a value, return it
-            if not hasattr(coro, '__await__'):
+            if not hasattr(coro, "__await__"):
                 return coro
             # Otherwise mock it as returning the mock_async_core
             return mock_async_core
@@ -528,6 +530,7 @@ def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
 
         # Create a new cache instance
         from ClassicLib.YamlSettingsCache import YamlSettingsCache
+
         test_cache = YamlSettingsCache()
         test_cache._async_core = mock_async_core
 
@@ -535,9 +538,9 @@ def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
         def async_yaml_settings_side_effect(_type, yaml_store, key_path, new_value=None):
             # Return sensible defaults for common settings
             defaults = {
-                'FCX Mode': False,
-                'Game_Info.CRASHGEN_LogName': 'Buffout 4',
-                'Game_Info.XSE_Acronym': 'F4SE',
+                "FCX Mode": False,
+                "Game_Info.CRASHGEN_LogName": "Buffout 4",
+                "Game_Info.XSE_Acronym": "F4SE",
             }
             return defaults.get(key_path)
 
@@ -558,8 +561,8 @@ def yaml_cache_fixture(tmp_path) -> Generator[Any, None, None]:
                 GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, original_cache)
             else:
                 # Clean up if there was no original
-                if hasattr(ClassicLib.YamlSettingsCache, 'yaml_cache'):
-                    delattr(ClassicLib.YamlSettingsCache, 'yaml_cache')
+                if hasattr(ClassicLib.YamlSettingsCache, "yaml_cache"):
+                    delattr(ClassicLib.YamlSettingsCache, "yaml_cache")
                 if GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
                     GlobalRegistry._registry.pop(GlobalRegistry.Keys.YAML_CACHE, None)
 
@@ -583,12 +586,12 @@ def mock_yaml_settings(monkeypatch) -> Generator[Any, None, None]:
     def yaml_side_effect(_type, yaml_store, key_path, new_value=None):
         # Provide sensible defaults for common settings
         defaults = {
-            'Game_Info.CRASHGEN_LogName': 'Buffout 4',
-            'Game_Info.XSE_Acronym': 'F4SE',
-            'exclude_log_records': (),
-            'exclude_log_files': [],
-            'exclude_log_errors': [],
-            'catch_log_errors': ['error', 'warning', 'critical'],
+            "Game_Info.CRASHGEN_LogName": "Buffout 4",
+            "Game_Info.XSE_Acronym": "F4SE",
+            "exclude_log_records": (),
+            "exclude_log_files": [],
+            "exclude_log_errors": [],
+            "catch_log_errors": ["error", "warning", "critical"],
         }
 
         if key_path in defaults:
@@ -599,6 +602,7 @@ def mock_yaml_settings(monkeypatch) -> Generator[Any, None, None]:
 
     # yaml_settings is a module-level function, not a class attribute
     import ClassicLib.YamlSettingsCache
+
     with monkeypatch.context() as m:
         m.setattr(ClassicLib.YamlSettingsCache, "yaml_settings", mock)
         yield mock
@@ -620,14 +624,14 @@ def ensure_yaml_cache_cleanup() -> Generator[None, None, None]:
 
         # Clear singleton instance to ensure fresh state for next test
         # This is critical for parallel testing with pytest-xdist
-        if hasattr(YamlSettingsCache, '_instance'):
+        if hasattr(YamlSettingsCache, "_instance"):
             YamlSettingsCache._instance = None
 
         # Also clear the module-level yaml_cache reference
-        if hasattr(ClassicLib.YamlSettingsCache, 'yaml_cache'):
+        if hasattr(ClassicLib.YamlSettingsCache, "yaml_cache"):
             cache = ClassicLib.YamlSettingsCache.yaml_cache
             # Clear internal caches if they exist
-            if hasattr(cache, '_async_core') and hasattr(cache._async_core, 'cache'):
+            if hasattr(cache, "_async_core") and hasattr(cache._async_core, "cache"):
                 cache._async_core.cache.settings_cache.clear()
                 cache._async_core.cache.file_mod_times.clear()
                 cache._async_core.cache.path_cache.clear()

@@ -1,4 +1,3 @@
-
 """Integration tests for TabSetupMixin.
 
 Tests TabSetupMixin with minimal mocking to verify component interactions.
@@ -83,12 +82,13 @@ class TestMainTabIntegration:
 
     def test_complete_main_tab_setup(self, integrated_tab_setup, gui_message_handler):
         """Test complete main tab setup workflow."""
-        with patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder, \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class, \
-             patch("ClassicLib.Interface.UIHelpers.supports_add_layout", return_value=True), \
-             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder,
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class,
+            patch("ClassicLib.Interface.UIHelpers.supports_add_layout", return_value=True),
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox,
+        ):
             # Mock layout creation
             mock_vbox.return_value = MagicMock()
             mock_hbox.return_value = MagicMock()
@@ -179,11 +179,13 @@ class TestArticlesTabIntegration:
         # Create a proper mock widget for articles_tab
         integrated_tab_setup.articles_tab = create_qt_widget_mock()
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class, \
-             patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial, \
-             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid_class, \
-             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label:
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class,
+            patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial,
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid_class,
+            patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label,
+        ):
 
             def capture_button_config(text):
                 btn = MagicMock(spec=QPushButton)
@@ -207,6 +209,7 @@ class TestArticlesTabIntegration:
                 m = MagicMock()
                 m.__class__ = QVBoxLayout
                 return m
+
             mock_vbox.side_effect = create_vbox
             mock_vbox.__or__ = lambda self, other: (QVBoxLayout, QHBoxLayout)
 
@@ -231,7 +234,7 @@ class TestArticlesTabIntegration:
                 "CLASSIC GITHUB",
                 "DDS TEXTURE SCANNER",
                 "BETHINI PIE",
-                "WRYE BASH"
+                "WRYE BASH",
             ]
 
             actual_texts = [cfg["text"] for cfg in captured_configs]
@@ -247,10 +250,11 @@ class TestArticlesTabIntegration:
         # Create a proper mock widget for articles_tab
         integrated_tab_setup.articles_tab = create_qt_widget_mock()
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid_class, \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid_class,
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class,
+        ):
             mock_grid = MagicMock()
             mock_grid_class.return_value = mock_grid
 
@@ -267,6 +271,7 @@ class TestArticlesTabIntegration:
                 m = MagicMock()
                 m.__class__ = QVBoxLayout
                 return m
+
             mock_vbox.side_effect = create_vbox
             mock_vbox.__or__ = lambda self, other: (QVBoxLayout, QHBoxLayout)
 
@@ -291,11 +296,12 @@ class TestBackupsTabIntegration:
         # Create a proper mock widget for backups_tab
         integrated_tab_setup.backups_tab = create_qt_widget_mock()
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label_class, \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label_class,
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class,
+        ):
             labels_created = []
             buttons_created = []
 
@@ -328,9 +334,7 @@ class TestBackupsTabIntegration:
             # Verify backup sections for each category
             categories = ["XSE", "RESHADE", "VULKAN", "ENB"]
             for category in categories:
-                integrated_tab_setup.add_backup_section.assert_any_call(
-                    mock.ANY, category, category
-                )
+                integrated_tab_setup.add_backup_section.assert_any_call(mock.ANY, category, category)
 
             # Verify open backups button
             assert "OPEN CLASSIC BACKUPS" in buttons_created
@@ -351,6 +355,7 @@ class TestButtonBehaviorIntegration:
         def track_callback(name):
             def callback():
                 callbacks_tested.append(name)
+
             return callback
 
         # Replace callbacks with tracking versions
@@ -371,9 +376,7 @@ class TestButtonBehaviorIntegration:
             mock_button_class.side_effect = create_button
 
             # Create a button using _create_button
-            about_btn = integrated_tab_setup._create_button(
-                "ABOUT", "About tooltip", integrated_tab_setup.show_about
-            )
+            about_btn = integrated_tab_setup._create_button("ABOUT", "About tooltip", integrated_tab_setup.show_about)
 
             # Verify button created
             assert about_btn is not None
@@ -388,9 +391,7 @@ class TestButtonBehaviorIntegration:
             mock_button.isCheckable.return_value = True
             mock_button_class.return_value = mock_button
 
-            result = integrated_tab_setup._create_button(
-                "TOGGLE", "Toggle tooltip", toggle_callback
-            )
+            result = integrated_tab_setup._create_button("TOGGLE", "Toggle tooltip", toggle_callback)
 
             # Should use toggled for checkable buttons
             mock_button.toggled.connect.assert_called_with(toggle_callback)
@@ -409,12 +410,13 @@ class TestURLHandlingIntegration:
         # Create a proper mock widget for articles_tab
         integrated_tab_setup.articles_tab = create_qt_widget_mock()
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class, \
-             patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial, \
-             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid_class, \
-             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button_class,
+            patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial,
+            patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid_class,
+            patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label,
+        ):
             button_index = 0
 
             def create_button(text):
@@ -438,6 +440,7 @@ class TestURLHandlingIntegration:
                 m = MagicMock()
                 m.__class__ = QVBoxLayout
                 return m
+
             mock_vbox.side_effect = create_vbox
             mock_vbox.__or__ = lambda self, other: (QVBoxLayout, QHBoxLayout)
 
@@ -477,14 +480,15 @@ class TestCompleteWorkflowIntegration:
         integrated_tab_setup.articles_tab = create_qt_widget_mock()
         integrated_tab_setup.backups_tab = create_qt_widget_mock()
 
-        with patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
-             patch("ClassicLib.Interface.TabSetupMixin.QLabel"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout"), \
-             patch("ClassicLib.Interface.UIHelpers.supports_add_layout", return_value=True), \
-             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section"),
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button,
+            patch("ClassicLib.Interface.TabSetupMixin.QLabel"),
+            patch("ClassicLib.Interface.TabSetupMixin.QGridLayout"),
+            patch("ClassicLib.Interface.UIHelpers.supports_add_layout", return_value=True),
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox,
+        ):
             # Mock layout creation
             mock_vbox.return_value = MagicMock()
             mock_hbox.return_value = MagicMock()

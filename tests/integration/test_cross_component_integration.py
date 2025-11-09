@@ -87,7 +87,7 @@ class TestGUIToRustIntegration:
         # Create synthetic crash log
         crash_log = IntegrationTestHelpers.create_synthetic_crash_log()
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
             f.write(crash_log)
             log_path = Path(f.name)
 
@@ -171,9 +171,7 @@ class TestGUIToRustIntegration:
             tasks = []
             for i, log in enumerate(logs):
                 lines = log.splitlines()
-                task = asyncio.create_task(
-                    asyncio.to_thread(parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe")
-                )
+                task = asyncio.create_task(asyncio.to_thread(parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"))
                 tasks.append(task)
 
             # Gather returns tuples of (game_ver, crashgen_ver, error, segments)
@@ -205,7 +203,7 @@ class TestTUIAsyncIntegration:
         bridge = AsyncBridge.get_instance()
 
         # Create test file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
             f.write("Test log content\nLine 2\nLine 3")
             test_path = Path(f.name)
 
@@ -220,7 +218,7 @@ class TestTUIAsyncIntegration:
 
             assert content is not None
             assert "Test log content" in content
-            assert content.count('\n') >= 2
+            assert content.count("\n") >= 2
 
         finally:
             test_path.unlink(missing_ok=True)
@@ -232,7 +230,7 @@ class TestTUIAsyncIntegration:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
             f.write("Initial content\n")
             log_path = Path(f.name)
 
@@ -257,11 +255,11 @@ class TestTUIAsyncIntegration:
 
             # Simulate log updates
             await asyncio.sleep(0.1)
-            with Path(log_path).open('a') as f:
+            with Path(log_path).open("a") as f:
                 f.write("New line 1\n")
 
             await asyncio.sleep(0.1)
-            with Path(log_path).open('a') as f:
+            with Path(log_path).open("a") as f:
                 f.write("New line 2\n")
 
             await monitor_task
@@ -345,10 +343,7 @@ class TestCLIBatchProcessing:
                     game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
                         parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
                     )
-                    results.append({
-                        "file": log_path.name,
-                        "result": segments
-                    })
+                    results.append({"file": log_path.name, "result": segments})
                 return results
 
             # Process batch
@@ -377,7 +372,7 @@ class TestCLIBatchProcessing:
         output_formats = ["text", "json", "markdown", "html"]
 
         for format_type in output_formats:
-            with patch.object(report_gen, 'generate') as mock_generate:
+            with patch.object(report_gen, "generate") as mock_generate:
                 # Mock different format outputs
                 if format_type == "json":
                     mock_generate.return_value = '{"crash": "data"}'
@@ -406,9 +401,7 @@ class TestCLIBatchProcessing:
         # Process in parallel using ThreadPoolExecutor
         def process_log(log_content):
             lines = log_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             return segments
 
         start_time = time.time()
@@ -528,16 +521,13 @@ class TestComponentCommunication:
         test_data = {
             "plugins": ["Fallout4.esm", "DLCRobot.esm"],
             "formids": ["00000014", "FE000800"],
-            "stack_trace": ["0x7FF6EF4C3512", "0x7FF6EF4C145E"]
+            "stack_trace": ["0x7FF6EF4C3512", "0x7FF6EF4C145E"],
         }
 
         # Async function
         async def async_processor(data: dict) -> dict:
             await asyncio.sleep(0.01)  # Simulate async work
-            return {
-                "processed": True,
-                "item_count": sum(len(v) for v in data.values())
-            }
+            return {"processed": True, "item_count": sum(len(v) for v in data.values())}
 
         # Sync function calling async
         def sync_wrapper(data: dict) -> dict:
@@ -694,5 +684,5 @@ class TestResourceManagement:
         # Check proper ordering (acquire before release)
         for i in range(0, len(resource_access_log), 2):
             assert resource_access_log[i][1] == "acquired"
-            assert resource_access_log[i+1][1] == "released"
-            assert resource_access_log[i][0] == resource_access_log[i+1][0]
+            assert resource_access_log[i + 1][1] == "released"
+            assert resource_access_log[i][0] == resource_access_log[i + 1][0]

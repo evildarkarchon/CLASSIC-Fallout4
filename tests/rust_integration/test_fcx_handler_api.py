@@ -22,7 +22,6 @@ Note:
 """
 
 import pytest
-from typing import Any
 
 
 @pytest.mark.rust
@@ -55,18 +54,14 @@ def test_fcx_handler_get_fcx_messages() -> None:
         messages = handler.get_fcx_messages()
 
         # Verify return type is ReportFragment (wrapper converts list[str] to ReportFragment)
-        assert isinstance(messages, ReportFragment), (
-            f"get_fcx_messages should return ReportFragment, got {type(messages).__name__}"
-        )
+        assert isinstance(messages, ReportFragment), f"get_fcx_messages should return ReportFragment, got {type(messages).__name__}"
 
         # Verify the fragment has content attribute
-        assert hasattr(messages, 'content'), "ReportFragment should have 'content' attribute"
+        assert hasattr(messages, "content"), "ReportFragment should have 'content' attribute"
 
         # Verify all items in content are strings (FCX messages are text)
         for i, msg in enumerate(messages.content):
-            assert isinstance(msg, str), (
-                f"Message at index {i} should be string, got {type(msg).__name__}: {msg!r}"
-            )
+            assert isinstance(msg, str), f"Message at index {i} should be string, got {type(msg).__name__}: {msg!r}"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -95,14 +90,11 @@ def test_fcx_handler_method_not_get_messages() -> None:
 
         # Verify the INCORRECT method name does not exist
         assert not hasattr(handler, "get_messages"), (
-            "Handler should not have get_messages() method - "
-            "correct method name is get_fcx_messages()"
+            "Handler should not have get_messages() method - correct method name is get_fcx_messages()"
         )
 
         # Verify the CORRECT method name exists
-        assert hasattr(handler, "get_fcx_messages"), (
-            "Handler must have get_fcx_messages() method"
-        )
+        assert hasattr(handler, "get_fcx_messages"), "Handler must have get_fcx_messages() method"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -141,9 +133,7 @@ def test_fcx_handler_integration_scenario() -> None:
         messages = handler.get_fcx_messages()
 
         # Verify return type is ReportFragment
-        assert isinstance(messages, ReportFragment), (
-            "get_fcx_messages should return ReportFragment after check_fcx_mode()"
-        )
+        assert isinstance(messages, ReportFragment), "get_fcx_messages should return ReportFragment after check_fcx_mode()"
 
         # Messages may be empty if no FCX issues detected, but should be a ReportFragment
         # Each message in content should be a non-empty string
@@ -183,14 +173,10 @@ def test_fcx_handler_empty_messages() -> None:
         messages = handler.get_fcx_messages()
 
         # Verify ReportFragment is returned
-        assert isinstance(messages, ReportFragment), (
-            "get_fcx_messages should always return ReportFragment, even if empty"
-        )
+        assert isinstance(messages, ReportFragment), "get_fcx_messages should always return ReportFragment, even if empty"
 
         # May be empty before check_fcx_mode is called
-        assert isinstance(messages.content, tuple), (
-            f"ReportFragment.content should be tuple, got {type(messages.content).__name__}"
-        )
+        assert isinstance(messages.content, tuple), f"ReportFragment.content should be tuple, got {type(messages.content).__name__}"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -220,20 +206,12 @@ def test_fcx_handler_factory_consistency() -> None:
         handler2 = get_fcx_handler(fcx_mode=False)
 
         # Both should have the correct method
-        assert hasattr(handler1, "get_fcx_messages"), (
-            "Factory handler should have get_fcx_messages()"
-        )
-        assert hasattr(handler2, "get_fcx_messages"), (
-            "Factory handler should have get_fcx_messages()"
-        )
+        assert hasattr(handler1, "get_fcx_messages"), "Factory handler should have get_fcx_messages()"
+        assert hasattr(handler2, "get_fcx_messages"), "Factory handler should have get_fcx_messages()"
 
         # Neither should have the incorrect method
-        assert not hasattr(handler1, "get_messages"), (
-            "Factory handler should not have get_messages()"
-        )
-        assert not hasattr(handler2, "get_messages"), (
-            "Factory handler should not have get_messages()"
-        )
+        assert not hasattr(handler1, "get_messages"), "Factory handler should not have get_messages()"
+        assert not hasattr(handler2, "get_messages"), "Factory handler should not have get_messages()"
 
         # Both should be callable and return ReportFragments
         from ClassicLib.ScanLog.fragments import ReportFragment
@@ -241,12 +219,8 @@ def test_fcx_handler_factory_consistency() -> None:
         messages1 = handler1.get_fcx_messages()
         messages2 = handler2.get_fcx_messages()
 
-        assert isinstance(messages1, ReportFragment), (
-            "Factory handler should return ReportFragment"
-        )
-        assert isinstance(messages2, ReportFragment), (
-            "Factory handler should return ReportFragment"
-        )
+        assert isinstance(messages1, ReportFragment), "Factory handler should return ReportFragment"
+        assert isinstance(messages2, ReportFragment), "Factory handler should return ReportFragment"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")

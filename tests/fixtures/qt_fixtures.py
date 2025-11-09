@@ -60,9 +60,11 @@ def qt_application(qt_application_session):
 
         # Clean up AsyncBridge singleton to prevent state pollution between tests
         try:
-            from ClassicLib.AsyncBridge import AsyncBridge
             # Get the current thread's AsyncBridge instance if it exists
             import threading
+
+            from ClassicLib.AsyncBridge import AsyncBridge
+
             thread_id = threading.get_ident()
             with AsyncBridge._lock:
                 if thread_id in AsyncBridge._instances:
@@ -173,8 +175,4 @@ def mock_qt_dialogs(monkeypatch):
     monkeypatch.setattr(QInputDialog, "getText", mock_input_dialog.getText)
     monkeypatch.setattr(QInputDialog, "getInt", mock_input_dialog.getInt)
 
-    return {
-        "msgbox": mock_msgbox,
-        "file_dialog": mock_file_dialog,
-        "input_dialog": mock_input_dialog
-    }
+    return {"msgbox": mock_msgbox, "file_dialog": mock_file_dialog, "input_dialog": mock_input_dialog}

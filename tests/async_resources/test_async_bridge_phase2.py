@@ -18,6 +18,7 @@ from ClassicLib.AsyncBridge import (
 
 pytestmark = pytest.mark.unit
 
+
 @pytest.fixture(autouse=True)
 def cleanup_registry():
     """Clear GlobalRegistry before each test."""
@@ -135,6 +136,7 @@ class TestCreateSyncWrapper:
 
     def test_sync_wrapper_preserves_metadata(self):
         """Test sync wrapper preserves function metadata."""
+
         async def my_function():
             """My docstring."""
             return "result"
@@ -359,4 +361,4 @@ class TestErrorHandling:
             raise ValueError("Test error")
 
         with pytest.raises(ValueError, match="Test error"):
-            failing_function() # type: ignore
+            failing_function()  # type: ignore

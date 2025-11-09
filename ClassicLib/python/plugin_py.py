@@ -183,9 +183,7 @@ class PythonPluginAnalyzer:
         plugin_limit_triggered = False
         limit_check_disabled = False
         if game_version and version_current:
-            plugin_limit_triggered, limit_check_disabled = self.check_plugin_limit(
-                segment_plugins, game_version, version_current
-            )
+            plugin_limit_triggered, limit_check_disabled = self.check_plugin_limit(segment_plugins, game_version, version_current)
 
         # Process each plugin entry (universal parsing logic)
         for entry in segment_plugins:
@@ -288,6 +286,7 @@ class PythonPluginAnalyzer:
                 del crashlog_plugins[original_key]
 
         return crashlog_plugins
+
 
 # Alias for compatibility
 PluginAnalyzer = PythonPluginAnalyzer

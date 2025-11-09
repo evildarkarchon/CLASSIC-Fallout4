@@ -4,6 +4,7 @@ Pipeline performance baseline tests for async operations.
 This module establishes baseline performance metrics specifically for pipeline processing,
 including scalability testing and throughput measurements.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import time
 from pathlib import Path
@@ -92,9 +93,7 @@ class TestAsyncPerformancePipeline:
 
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_async_pipeline_scalability_baseline(
-        self, tmp_path: Path, mock_yamldata: MagicMock
-    ) -> None:
+    async def test_async_pipeline_scalability_baseline(self, tmp_path: Path, mock_yamldata: MagicMock) -> None:
         """Baseline: Async pipeline scalability with different log counts."""
         test_counts = [5, 10, 25]
         results = []
@@ -119,9 +118,7 @@ class TestAsyncPerformancePipeline:
                 mock_load.return_value = {f.name: ["content"] for f in test_files}
 
                 mock_orchestrator = AsyncMock()
-                mock_orchestrator.process_crash_logs_batch.return_value = [
-                    (f, ["report"], False, {}) for f in test_files
-                ]
+                mock_orchestrator.process_crash_logs_batch.return_value = [(f, ["report"], False, {}) for f in test_files]
                 mock_orch.return_value.__aenter__.return_value = mock_orchestrator
                 mock_orch.return_value.__aexit__.return_value = None
 
@@ -137,10 +134,7 @@ class TestAsyncPerformancePipeline:
 
         print("\n=== PIPELINE SCALABILITY BASELINE ===")
         for result in results:
-            print(
-                f"{result['count']:3d} logs: {result['time']:.3f}s "
-                f"({result['logs_per_second']:.1f} logs/sec)"
-            )
+            print(f"{result['count']:3d} logs: {result['time']:.3f}s ({result['logs_per_second']:.1f} logs/sec)")
 
         # Verify scalability (time should increase sublinearly with count)
         if len(results) >= 2:

@@ -37,5 +37,5 @@ __all__ = [
     "StressTestReporter",
     "TestMetric",
     "TestSectionResult",
-    "SystemSpecs"
+    "SystemSpecs",
 ]

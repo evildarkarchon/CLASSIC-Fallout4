@@ -5,8 +5,8 @@ This module provides high-performance async processing capabilities
 for crash log analysis.
 """
 
-from .async_crash_log_pipeline import AsyncCrashLogPipeline, run_async_crash_log_scan
-from .async_performance_monitor import AsyncPerformanceMonitor, benchmark_async_pipeline
+from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline, run_async_crash_log_scan
+from ClassicLib.ScanLog.pipeline.async_performance_monitor import AsyncPerformanceMonitor, benchmark_async_pipeline
 
 __all__ = [
     "AsyncCrashLogPipeline",

@@ -11,6 +11,7 @@ from ClassicLib.Interface.SettingsDialog import SettingsDialog
 
 pytestmark = pytest.mark.e2e
 
+
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
@@ -18,7 +19,7 @@ class TestEdgeCases:
         """Test that dialog works without a parent widget."""
         dialog = SettingsDialog(None, yaml_store=YAML.TEST)
         assert dialog is not None
-        assert dialog.windowTitle() == 'CLASSIC Settings'
+        assert dialog.windowTitle() == "CLASSIC Settings"
         dialog.close()
 
     def test_multiple_dialog_instances(self, app):
@@ -35,7 +36,8 @@ class TestEdgeCases:
     def test_default_values_created(self, app):
         """Test that default values are created for missing settings."""
         from ClassicLib.YamlSettingsCache import yaml_settings
-        yaml_settings(str, YAML.TEST, 'CLASSIC_Settings.Update Source', None)
+
+        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", None)
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        assert dialog.update_source_combo.currentText() == 'Both'
+        assert dialog.update_source_combo.currentText() == "Both"
         dialog.close()

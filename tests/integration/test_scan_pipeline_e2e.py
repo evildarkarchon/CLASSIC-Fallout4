@@ -229,9 +229,7 @@ class TestScanPipelineE2E:
         )
 
         # Create temporary log file
-        with tempfile.NamedTemporaryFile(
-            mode='w', suffix='.log', delete=False, encoding='utf-8'
-        ) as temp_log:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False, encoding="utf-8") as temp_log:
             temp_log.write(crash_log_content)
             log_path = Path(temp_log.name)
 
@@ -240,14 +238,13 @@ class TestScanPipelineE2E:
 
             # Phase 1: Parse crash log
             from ClassicLib.integration.factory import get_parser
+
             parser = get_parser()
 
             # Parse the log (should use Rust if available for 10x speedup)
             # Use find_segments which is the actual API
             crash_lines = crash_log_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                crash_lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
             parse_time = time.time() - start_time
 
             # Validate parsing - check that segments were found
@@ -256,6 +253,7 @@ class TestScanPipelineE2E:
 
             # Phase 2: Analyze FormIDs
             from ClassicLib.integration.factory import get_formid_analyzer
+
             mock_yamldata = MagicMock()
             mock_yamldata.formid_keywords = ["crash", "error", "exception"]
 
@@ -271,6 +269,7 @@ class TestScanPipelineE2E:
 
             # Phase 3: Generate report
             from ClassicLib.integration.factory import get_report_generator
+
             report_gen = get_report_generator()
 
             report_data = {
@@ -324,22 +323,19 @@ class TestScanPipelineE2E:
             include_memory_dump=True,
         )
 
-        with tempfile.NamedTemporaryFile(
-            mode='w', suffix='.log', delete=False, encoding='utf-8'
-        ) as temp_log:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False, encoding="utf-8") as temp_log:
             temp_log.write(crash_log_content)
             log_path = Path(temp_log.name)
 
         try:
             # Process through complete pipeline
             from ClassicLib.integration.factory import get_parser
+
             parser = get_parser()
 
             start_time = time.time()
             crash_lines = crash_log_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                crash_lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
             parse_time = time.time() - start_time
 
             # Should handle 2MB log efficiently
@@ -368,14 +364,13 @@ class TestScanPipelineE2E:
         )
 
         from ClassicLib.integration.factory import get_parser, get_report_generator
+
         parser = get_parser()
         report_gen = get_report_generator()
 
         # Should handle missing plugin list gracefully
         crash_lines = crash_log_content.splitlines()
-        game_ver, crashgen_ver, error, segments = parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout4.exe"
-        )
+        game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
         assert segments is not None
 
         # Generate report even without plugins
@@ -410,9 +405,7 @@ class TestScanPipelineE2E:
             try:
                 # Use find_segments which is the actual API
                 lines = malformed_log.splitlines() if isinstance(malformed_log, str) else [malformed_log]
-                game_ver, crashgen_ver, error, segments = parser.find_segments(
-                    lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                )
+                game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 # Should either parse or return safe error
                 assert segments is None or isinstance(segments, dict)
             except (ValueError, RuntimeError, UnicodeDecodeError, AttributeError):
@@ -429,10 +422,7 @@ class TestScanPipelineE2E:
         from ClassicLib.integration.factory import get_parser
 
         # Generate multiple synthetic logs
-        logs = [
-            generator.generate_complete_crash_log(size_mb=0.5)
-            for _ in range(5)
-        ]
+        logs = [generator.generate_complete_crash_log(size_mb=0.5) for _ in range(5)]
 
         parser = get_parser()
 
@@ -440,9 +430,7 @@ class TestScanPipelineE2E:
             """Scan a single log asynchronously."""
             await asyncio.sleep(0)  # Yield to event loop
             lines = log_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             return {"id": log_id, "result": segments}
 
         # Run concurrent scans
@@ -471,15 +459,14 @@ class TestScanPipelineE2E:
 
         generator = SyntheticCrashLogGenerator()
         from ClassicLib.integration.factory import get_parser
+
         parser = get_parser()
 
         # Process multiple logs sequentially
         for i in range(10):
             log = generator.generate_complete_crash_log(size_mb=1.5)
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Explicitly delete to test cleanup
             del log
@@ -519,12 +506,14 @@ class TestScanPipelineE2E:
             # Mock scanner and checker
             with patch("ClassicLib.ScanGame.GameScanner.GameScanner") as MockScanner:
                 scanner_instance = MockScanner.return_value
-                scanner_instance.scan_game_directory = AsyncMock(return_value={
-                    "masters": ["Fallout4.esm", "DLCRobot.esm"],
-                    "plugins": ["SyntheticMod.esp"],
-                    "archives": [],
-                    "issues": []
-                })
+                scanner_instance.scan_game_directory = AsyncMock(
+                    return_value={
+                        "masters": ["Fallout4.esm", "DLCRobot.esm"],
+                        "plugins": ["SyntheticMod.esp"],
+                        "archives": [],
+                        "issues": [],
+                    }
+                )
 
                 # Run game scan pipeline
                 scanner = GameScanner(str(game_path))
@@ -548,21 +537,17 @@ class TestScanPipelineE2E:
 
         # Create synthetic plugin data with conflicts
         plugin_data = {
-            "SS2.esm": {
-                "formids": ["0A001000", "0A001001", "0A001002"],
-                "masters": ["Fallout4.esm"],
-                "index": "0A"
-            },
+            "SS2.esm": {"formids": ["0A001000", "0A001001", "0A001002"], "masters": ["Fallout4.esm"], "index": "0A"},
             "SS2_Addon.esp": {
                 "formids": ["0B001000", "0A001001"],  # Conflicts with SS2.esm
                 "masters": ["Fallout4.esm", "SS2.esm"],
-                "index": "0B"
+                "index": "0B",
             },
             "PRP.esp": {
                 "formids": ["FE000800", "FE000801"],  # Light plugin
                 "masters": ["Fallout4.esm"],
-                "index": "FE:003"
-            }
+                "index": "FE:003",
+            },
         }
 
         with patch("ClassicLib.integration.plugin_analyzer.load_plugins", return_value=plugin_data):
@@ -576,11 +561,7 @@ class TestScanPipelineE2E:
                         # Check for FormID conflicts
                         common_formids = set(data["formids"]) & set(other_data["formids"])
                         if common_formids:
-                            conflicts.append({
-                                "plugin1": plugin_name,
-                                "plugin2": other_plugin,
-                                "conflicting_formids": list(common_formids)
-                            })
+                            conflicts.append({"plugin1": plugin_name, "plugin2": other_plugin, "conflicting_formids": list(common_formids)})
 
             # Should detect conflict between SS2.esm and SS2_Addon.esp
             assert len(conflicts) > 0
@@ -589,10 +570,7 @@ class TestScanPipelineE2E:
             # Generate resolution suggestions
             resolutions = []
             for conflict in conflicts:
-                resolutions.append({
-                    "conflict": conflict,
-                    "suggestion": f"Load {conflict['plugin2']} after {conflict['plugin1']}"
-                })
+                resolutions.append({"conflict": conflict, "suggestion": f"Load {conflict['plugin2']} after {conflict['plugin1']}"})
 
             assert len(resolutions) > 0
 
@@ -633,7 +611,7 @@ class TestScanPipelineE2E:
             baselines[f"{size}MB"] = {
                 "avg_time": avg_time,
                 "using_rust": using_rust,
-                "expected_time": size * 0.5 if using_rust else size * 2.0
+                "expected_time": size * 0.5 if using_rust else size * 2.0,
             }
 
         # Validate against expected performance

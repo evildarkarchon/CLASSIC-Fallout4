@@ -2,8 +2,8 @@
 Shared fixtures for mod detection and analysis tests.
 """
 
-
 import pytest
+
 from ClassicLib.ScanLog.fragments import ReportFragment
 
 

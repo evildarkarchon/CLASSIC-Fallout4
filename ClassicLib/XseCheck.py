@@ -12,6 +12,7 @@ The primary purposes of this module are:
 - To verify the presence and validity of required dependencies, such as Address Library.
 - To check for mismatches in hashes for script files.
 """
+
 import hashlib
 from collections.abc import Iterable
 from pathlib import Path
@@ -37,6 +38,7 @@ class Tokens:
         XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED (bool): Indicates whether a type error
             was raised in the context of hashed scripts processing.
     """
+
     XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED: bool = False
 
 
@@ -172,6 +174,7 @@ def _check_xse_installation(
     """
     if not isinstance(log_file, str | Path):
         from ClassicLib import GlobalRegistry
+
         game_name = GlobalRegistry.get_game()
         messages.append(f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
         return
@@ -281,9 +284,7 @@ def _get_scripts_folder_path() -> str:
     Returns:
         str: The path of the game's scripts folder.
     """
-    game_folder_scripts: str | None = yaml_settings(
-        str, YAML.Game_Local, f"Game{get_vr()}_Info.Game_Folder_Scripts"
-    )
+    game_folder_scripts: str | None = yaml_settings(str, YAML.Game_Local, f"Game{get_vr()}_Info.Game_Folder_Scripts")
     if game_folder_scripts is None:
         raise ValueError("Game scripts folder path cannot be None")
     return game_folder_scripts

@@ -35,11 +35,9 @@ class TestQtCompatibility:
         mock_pyside_widgets.QProgressDialog = MagicMock
         mock_pyside_widgets.QWidget = MagicMock
 
-        with patch.dict('sys.modules', {
-            'PySide6': MagicMock(),
-            'PySide6.QtCore': mock_pyside_core,
-            'PySide6.QtWidgets': mock_pyside_widgets
-        }):
+        with patch.dict(
+            "sys.modules", {"PySide6": MagicMock(), "PySide6.QtCore": mock_pyside_core, "PySide6.QtWidgets": mock_pyside_widgets}
+        ):
             # Import the module (this will trigger the try/except block)
             from ClassicLib.MessageHandler.qt_compat import HAS_QT, QObject, QWidget
 
@@ -102,9 +100,9 @@ class TestQtCompatibility:
             pytest.skip("Skipping dummy class test when real Qt is available")
 
         # Test Icon enum
-        assert hasattr(QMessageBox.Icon, 'Information')
-        assert hasattr(QMessageBox.Icon, 'Warning')
-        assert hasattr(QMessageBox.Icon, 'Critical')
+        assert hasattr(QMessageBox.Icon, "Information")
+        assert hasattr(QMessageBox.Icon, "Warning")
+        assert hasattr(QMessageBox.Icon, "Critical")
         assert QMessageBox.Icon.Information == 0
         assert QMessageBox.Icon.Warning == 1
         assert QMessageBox.Icon.Critical == 2
@@ -114,12 +112,7 @@ class TestQtCompatibility:
         assert msgbox is not None
 
         # Test creation with all parameters
-        msgbox_full = QMessageBox(
-            icon=QMessageBox.Icon.Information,
-            title="Test Title",
-            text="Test Message",
-            parent=None
-        )
+        msgbox_full = QMessageBox(icon=QMessageBox.Icon.Information, title="Test Title", text="Test Message", parent=None)
         assert msgbox_full is not None
 
         # Test method calls don't raise errors
@@ -143,13 +136,7 @@ class TestQtCompatibility:
         assert progress is not None
 
         # Test creation with all parameters
-        progress_full = QProgressDialog(
-            labelText="Processing...",
-            cancelButtonText="Cancel",
-            minimum=0,
-            maximum=100,
-            parent=None
-        )
+        progress_full = QProgressDialog(labelText="Processing...", cancelButtonText="Cancel", minimum=0, maximum=100, parent=None)
         assert progress_full is not None
 
         # Test all method calls don't raise errors
@@ -239,34 +226,20 @@ class TestQtCompatibility:
             msgbox = QMessageBox()
             assert msgbox is not None
 
-            progress = QProgressDialog(
-                "label", "cancel", 0, 100, None
-            )
+            progress = QProgressDialog("label", "cancel", 0, 100, None)
             assert progress is not None
 
             signal = Signal(str, int)  # Real Signal only accepts types, not kwargs
             assert signal is not None
         else:
             # Dummy classes accept arbitrary arguments
-            msgbox = QMessageBox(
-                "extra", "args",
-                unexpected_kwarg="value",
-                another_arg=123
-            )
+            msgbox = QMessageBox("extra", "args", unexpected_kwarg="value", another_arg=123)
             assert msgbox is not None
 
-            progress = QProgressDialog(
-                "label", "cancel", 0, 100, None,
-                "extra", "args",
-                unexpected_kwarg="value"
-            )
+            progress = QProgressDialog("label", "cancel", 0, 100, None, "extra", "args", unexpected_kwarg="value")
             assert progress is not None
 
-            signal = Signal(
-                "arg1", "arg2",
-                custom_signal=True,
-                signal_type="custom"
-            )
+            signal = Signal("arg1", "arg2", custom_signal=True, signal_type="custom")
             assert signal is not None
 
     def test_compatibility_layer_isolation(self):
@@ -374,8 +347,10 @@ class TestQtCompatibility:
         mock_msgbox_class.side_effect = create_mock_msgbox
         mock_progress_class.side_effect = create_mock_progress
 
-        with patch("ClassicLib.MessageHandler.qt_compat.QMessageBox", mock_msgbox_class), \
-             patch("ClassicLib.MessageHandler.qt_compat.QProgressDialog", mock_progress_class):
+        with (
+            patch("ClassicLib.MessageHandler.qt_compat.QMessageBox", mock_msgbox_class),
+            patch("ClassicLib.MessageHandler.qt_compat.QProgressDialog", mock_progress_class),
+        ):
             from ClassicLib.MessageHandler.qt_compat import QMessageBox, QProgressDialog
 
             # Create many instances to test memory efficiency
@@ -390,7 +365,7 @@ class TestQtCompatibility:
 
             # Each instance should be callable without showing real dialogs
             for instance in instances:
-                if hasattr(instance, 'exec'):
+                if hasattr(instance, "exec"):
                     instance.exec()  # Just verify it's callable
-                if hasattr(instance, 'show'):
+                if hasattr(instance, "show"):
                     instance.show()  # Mock does nothing

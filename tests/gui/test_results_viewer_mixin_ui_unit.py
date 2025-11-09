@@ -18,9 +18,10 @@ from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noq
 @pytest.fixture
 def mock_qt_components():
     """Mock Qt components for testing."""
-    with patch("ClassicLib.Interface.ResultsViewerMixin.QFileSystemWatcher") as mock_watcher, \
-         patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer:
-
+    with (
+        patch("ClassicLib.Interface.ResultsViewerMixin.QFileSystemWatcher") as mock_watcher,
+        patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer,
+    ):
         # Setup watcher mock
         watcher_instance = MagicMock(spec=QFileSystemWatcher)
         watcher_instance.directories.return_value = []
@@ -30,12 +31,7 @@ def mock_qt_components():
         timer_instance = MagicMock(spec=QTimer)
         mock_timer.return_value = timer_instance
 
-        yield {
-            "watcher": watcher_instance,
-            "timer": timer_instance,
-            "watcher_class": mock_watcher,
-            "timer_class": mock_timer
-        }
+        yield {"watcher": watcher_instance, "timer": timer_instance, "watcher_class": mock_watcher, "timer_class": mock_timer}
 
 
 @pytest.fixture
@@ -130,10 +126,11 @@ class TestReportDeletion:
         viewer_mixin.results_list.get_report_path.return_value = mock_report_path
         viewer_mixin.current_report_path = mock_report_path
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info, \
-             patch.object(viewer_mixin, "refresh_reports_list") as mock_refresh:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info,
+            patch.object(viewer_mixin, "refresh_reports_list") as mock_refresh,
+        ):
             # Set up StandardButton enum on the mock
             mock_msgbox.StandardButton = QMessageBox.StandardButton
             mock_msgbox.question.return_value = QMessageBox.StandardButton.Yes
@@ -190,9 +187,7 @@ class TestReportOperations:
 
         viewer_mixin.current_report_path = report_path
 
-        with patch("PySide6.QtWidgets.QApplication") as mock_app, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info:
-
+        with patch("PySide6.QtWidgets.QApplication") as mock_app, patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info:
             mock_clipboard = MagicMock()
             mock_app.clipboard.return_value = mock_clipboard
 
@@ -215,9 +210,10 @@ class TestReportOperations:
         report_path = tmp_path / "test-AUTOSCAN.md"
         viewer_mixin.current_report_path = report_path
 
-        with patch.object(Path, "read_text", side_effect=OSError("Read error")), \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error:
-
+        with (
+            patch.object(Path, "read_text", side_effect=OSError("Read error")),
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
+        ):
             viewer_mixin._copy_report()
 
             mock_error.assert_called_once()
@@ -227,9 +223,10 @@ class TestReportOperations:
         crash_logs_dir = tmp_path / "Crash Logs"
         crash_logs_dir.mkdir()
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("PySide6.QtGui.QDesktopServices") as mock_desktop:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("PySide6.QtGui.QDesktopServices") as mock_desktop,
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
 
             viewer_mixin._open_reports_folder()
@@ -238,9 +235,10 @@ class TestReportOperations:
 
     def test_open_reports_folder_no_local_dir(self, viewer_mixin, gui_message_handler):
         """Should show warning when local directory not configured."""
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning,
+        ):
             mock_registry.get_local_dir.return_value = None
 
             viewer_mixin._open_reports_folder()
@@ -249,9 +247,10 @@ class TestReportOperations:
 
     def test_open_reports_folder_not_exists(self, viewer_mixin, tmp_path, gui_message_handler):
         """Should show warning when Crash Logs folder doesn't exist."""
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning,
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
             # Crash Logs directory not created
 
@@ -272,9 +271,10 @@ class TestContextMenu:
 
         viewer_mixin.results_list.itemAt.return_value = mock_item
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.QMenu") as mock_menu_class, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.QAction") as mock_action_class:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.QMenu") as mock_menu_class,
+            patch("ClassicLib.Interface.ResultsViewerMixin.QAction") as mock_action_class,
+        ):
             mock_menu = MagicMock()
             mock_menu_class.return_value = mock_menu
 

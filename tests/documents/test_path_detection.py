@@ -18,6 +18,7 @@ def init_message_handler_fixture():
     yield
     # Clean up the global message handler after tests
     import ClassicLib.MessageHandler
+
     ClassicLib.MessageHandler._message_handler = None
 
 

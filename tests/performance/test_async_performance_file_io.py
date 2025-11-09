@@ -4,6 +4,7 @@ File I/O performance baseline tests for async operations.
 This module establishes baseline performance metrics specifically for file I/O operations,
 including single file processing and batch operations.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
 import time
@@ -114,7 +115,7 @@ class TestAsyncPerformanceFileIO:
 
             try:
                 # Test single file loading
-                with patch('ClassicLib.ScanLog.AsyncFileIO.load_crash_logs_async_optimized') as mock_load:
+                with patch("ClassicLib.ScanLog.AsyncFileIO.load_crash_logs_async_optimized") as mock_load:
                     mock_load.return_value = (["Mock content"], [])
 
                     result = await load_crash_logs_async_optimized([log_file])
@@ -165,7 +166,7 @@ class TestAsyncPerformanceFileIO:
 
             try:
                 # Test batch loading with different strategies
-                with patch('ClassicLib.ScanLog.AsyncFileIO.load_crash_logs_async_optimized') as mock_load:
+                with patch("ClassicLib.ScanLog.AsyncFileIO.load_crash_logs_async_optimized") as mock_load:
                     mock_load.return_value = (["Mock content"] * batch_size, [])
 
                     # Concurrent batch loading

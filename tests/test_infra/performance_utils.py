@@ -55,11 +55,7 @@ class PerformanceTimer:
     @property
     def result(self) -> PerformanceResult:
         """Get the performance result."""
-        return PerformanceResult(
-            name=self.name,
-            duration=self.duration,
-            iterations=self.iterations
-        )
+        return PerformanceResult(name=self.name, duration=self.duration, iterations=self.iterations)
 
 
 @contextmanager

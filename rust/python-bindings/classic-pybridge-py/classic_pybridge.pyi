@@ -39,7 +39,6 @@ from enum import Enum
 
 __version__: str
 
-
 class BridgeOperationType(Enum):
     """Bridge operation type for metrics tracking.
 
@@ -54,7 +53,6 @@ class BridgeOperationType(Enum):
     RunAsyncWithTimeout = ...
     LoopCreation = ...
     LoopCleanup = ...
-
 
 class BridgeMetrics:
     """Bridge metrics summary.
@@ -93,7 +91,6 @@ class BridgeMetrics:
             A string representation suitable for debugging.
         """
 
-
 class RuntimeInfo:
     """Runtime information.
 
@@ -114,12 +111,7 @@ class RuntimeInfo:
             A string representation suitable for debugging.
         """
 
-
-def record_operation(
-    operation: BridgeOperationType,
-    duration_secs: float,
-    success: bool
-) -> None:
+def record_operation(operation: BridgeOperationType, duration_secs: float, success: bool) -> None:
     """Record a bridge operation for metrics.
 
     This function records timing and success/failure information for
@@ -138,7 +130,6 @@ def record_operation(
         ... )
     """
 
-
 def get_metrics() -> BridgeMetrics:
     """Get bridge metrics summary.
 
@@ -154,7 +145,6 @@ def get_metrics() -> BridgeMetrics:
         >>> print(f"Success rate: {metrics.run_async_success}/{metrics.run_async_count}")
     """
 
-
 def clear_metrics() -> None:
     """Clear all bridge metrics.
 
@@ -168,7 +158,6 @@ def clear_metrics() -> None:
         0
     """
 
-
 def is_runtime_available() -> bool:
     """Check if runtime is available.
 
@@ -179,7 +168,6 @@ def is_runtime_available() -> bool:
         >>> is_runtime_available()
         True
     """
-
 
 def get_runtime_info() -> RuntimeInfo:
     """Get runtime information.

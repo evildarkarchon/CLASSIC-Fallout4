@@ -52,9 +52,10 @@ class TestAsyncYamlCaching:
             data = yaml.load(content)
         data["test_settings"]["string_value"] = "modified"
         from io import StringIO
+
         stream = StringIO()
         yaml.dump(data, stream)
-        async with aiofiles.open(temp_yaml_file, mode='w') as f:
+        async with aiofiles.open(temp_yaml_file, mode="w") as f:
             await f.write(stream.getvalue())
 
         # Clear cache to force reload
@@ -73,6 +74,7 @@ class TestAsyncYamlCaching:
         # Mock get_path_for_store to return our test file
         def mock_get_path(store):
             return temp_yaml_file
+
         monkeypatch.setattr(async_yaml_core.file_ops, "get_path_for_store", mock_get_path)
 
         # Prime the cache

@@ -138,6 +138,7 @@ def time_async_operation(operation_name: str) -> Callable:
             the enhanced version of that function wrapped with timing functionality.
 
     """
+
     def decorator(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
         async def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
             import time
@@ -203,9 +204,6 @@ async def write_report_async(crashlog_file: Path, autoscan_report: list[str]) ->
             report.
         autoscan_report (list[str]): A list of strings containing the lines of the autoscan
             report to be written.
-
-    Returns:
-        None
     """
     autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
     autoscan_output: str = "".join(autoscan_report)
@@ -242,5 +240,3 @@ async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> No
 
     await asyncio.gather(*tasks, return_exceptions=True)
     logger.debug(f"Wrote {len(reports)} reports using FileIOCore batch I/O")
-
-

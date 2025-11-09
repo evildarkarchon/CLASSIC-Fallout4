@@ -81,11 +81,10 @@ class PluginParityValidator(ParityValidator):
                     "\t[05] DLCworkshop03.esm",
                     "\t[06] DLCNukaWorld.esm",
                     "\t[07] Unofficial Fallout 4 Patch.esp",
-                    "\t[08] TestMod.esp"
+                    "\t[08] TestMod.esp",
                 ],
-                "expected_count": 9
+                "expected_count": 9,
             },
-
             # ESL plugins mixed with regular plugins
             {
                 "name": "esl_plugins_mixed",
@@ -96,24 +95,19 @@ class PluginParityValidator(ParityValidator):
                     "\t[FE:001] ESLMod2.esl",
                     "\t[02] RegularMod.esp",
                     "\t[FE:002] ESLMod3.esl",
-                    "\t[03] AnotherMod.esp"
+                    "\t[03] AnotherMod.esp",
                 ],
                 "expected_count": 7,
-                "expected_esl_count": 3
+                "expected_esl_count": 3,
             },
-
             # Plugin limit scenario (255 ESP/ESM + ESLs)
             {
                 "name": "plugin_limit_scenario",
-                "plugins_segment": [
-                    f"\t[{i:02X}] Plugin{i}.esp" for i in range(255)
-                ] + [
-                    f"\t[FE:{i:03X}] ESLMod{i}.esl" for i in range(100)
-                ],
+                "plugins_segment": [f"\t[{i:02X}] Plugin{i}.esp" for i in range(255)]
+                + [f"\t[FE:{i:03X}] ESLMod{i}.esl" for i in range(100)],
                 "expected_count": 355,
-                "expected_limit_triggered": True
+                "expected_limit_triggered": True,
             },
-
             # Malformed plugin entries
             {
                 "name": "malformed_plugin_entries",
@@ -125,25 +119,14 @@ class PluginParityValidator(ParityValidator):
                     "\t[] NoIndex.esp",  # Missing index
                     "\t[02] ValidMod2.esp",
                     "\t[FE:INVALID] BadESL.esl",  # Invalid ESL index
-                    "\t[FE:001] ValidESL.esl"
+                    "\t[FE:001] ValidESL.esl",
                 ],
                 "expected_count": 4,  # Only valid entries should be counted
-                "expected_valid_indices": ["00", "01", "02", "FE:001"]
+                "expected_valid_indices": ["00", "01", "02", "FE:001"],
             },
-
             # Empty and edge cases
-            {
-                "name": "empty_plugin_list",
-                "plugins_segment": [],
-                "expected_count": 0
-            },
-
-            {
-                "name": "single_plugin",
-                "plugins_segment": ["\t[00] Fallout4.esm"],
-                "expected_count": 1
-            },
-
+            {"name": "empty_plugin_list", "plugins_segment": [], "expected_count": 0},
+            {"name": "single_plugin", "plugins_segment": ["\t[00] Fallout4.esm"], "expected_count": 1},
             # Large load order (performance test)
             {
                 "name": "large_load_order_performance",
@@ -154,16 +137,13 @@ class PluginParityValidator(ParityValidator):
                     "\t[03] DLCCoast.esm",
                     "\t[04] DLCworkshop02.esm",
                     "\t[05] DLCworkshop03.esm",
-                    "\t[06] DLCNukaWorld.esm"
-                ] + [
-                    f"\t[{i:02X}] Mod{i:03d}.esp" for i in range(7, 255)
-                ] + [
-                    f"\t[FE:{i:03X}] ESLMod{i:03d}.esl" for i in range(500)
-                ],
+                    "\t[06] DLCNukaWorld.esm",
+                ]
+                + [f"\t[{i:02X}] Mod{i:03d}.esp" for i in range(7, 255)]
+                + [f"\t[FE:{i:03X}] ESLMod{i:03d}.esl" for i in range(500)],
                 "expected_count": 755,
-                "performance_critical": True
+                "performance_critical": True,
             },
-
             # Problematic plugins pattern
             {
                 "name": "problematic_plugins",
@@ -174,12 +154,11 @@ class PluginParityValidator(ParityValidator):
                     "\t[03] PlaceEverywhere.esp",  # Known problematic
                     "\t[04] SafeMod.esp",
                     "\t[05] Arbitration.esp",  # Potentially problematic
-                    "\t[06] CompanionsGoneWild.esp"  # Known problematic
+                    "\t[06] CompanionsGoneWild.esp",  # Known problematic
                 ],
                 "expected_count": 7,
-                "has_problematic": True
+                "has_problematic": True,
             },
-
             # Unicode and special characters
             {
                 "name": "unicode_plugin_names",
@@ -188,11 +167,10 @@ class PluginParityValidator(ParityValidator):
                     "\t[01] Tëst Mød.esp",  # Unicode characters
                     "\t[02] Мод на русском.esp",  # Cyrillic
                     "\t[03] 日本語Mod.esp",  # Japanese
-                    "\t[04] NormalMod.esp"
+                    "\t[04] NormalMod.esp",
                 ],
-                "expected_count": 5
+                "expected_count": 5,
             },
-
             # Mixed case and whitespace
             {
                 "name": "mixed_case_whitespace",
@@ -201,10 +179,10 @@ class PluginParityValidator(ParityValidator):
                     "\t[01]   SpacedMod.esp  ",  # Extra whitespace
                     "\t[02]NOSPACE.ESP",  # No space after index
                     "\t[03] MixedCase.ESP",  # Mixed case extension
-                    "\t[04] normal.esp"
+                    "\t[04] normal.esp",
                 ],
-                "expected_count": 5
-            }
+                "expected_count": 5,
+            },
         ]
 
 
@@ -295,7 +273,9 @@ class TestPluginParity:
                         is_identical = False
 
                     if python_esl_count != expected_esl_count:
-                        differences.append(f"Python ESL count doesn't match expected: got {python_esl_count}, expected {expected_esl_count}")
+                        differences.append(
+                            f"Python ESL count doesn't match expected: got {python_esl_count}, expected {expected_esl_count}"
+                        )
                         is_identical = False
 
                 # Validate specific indices for malformed entries test
@@ -328,8 +308,8 @@ class TestPluginParity:
                         "expected_count": expected_count,
                         "rust_plugin_count": len(rust_plugins),
                         "python_plugin_count": len(python_plugins),
-                        "performance_critical": test_case.get("performance_critical", False)
-                    }
+                        "performance_critical": test_case.get("performance_critical", False),
+                    },
                 )
 
                 results.append(result)
@@ -341,14 +321,16 @@ class TestPluginParity:
 
             except Exception as e:
                 logger.error(f"Plugin parsing test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="plugin_analyzer",
-                    method_name="loadorder_scan_log",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="plugin_analyzer",
+                        method_name="loadorder_scan_log",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -388,9 +370,8 @@ class TestPluginParity:
                 "game_version": "Fallout 4 v1.10.163",
                 "version_current": "1.10.163",
                 "expected_limit_triggered": False,
-                "expected_limit_disabled": False
+                "expected_limit_disabled": False,
             },
-
             # At ESP limit (255)
             {
                 "name": "at_esp_limit",
@@ -398,23 +379,18 @@ class TestPluginParity:
                 "game_version": "Fallout 4 v1.10.163",
                 "version_current": "1.10.163",
                 "expected_limit_triggered": True,
-                "expected_limit_disabled": False
+                "expected_limit_disabled": False,
             },
-
             # ESLs don't count toward ESP limit
             {
                 "name": "esls_dont_count_toward_limit",
-                "plugins_segment": [
-                    f"\t[{i:02X}] Plugin{i}.esp" for i in range(254)
-                ] + [
-                    f"\t[FE:{i:03X}] ESLMod{i}.esl" for i in range(100)
-                ],
+                "plugins_segment": [f"\t[{i:02X}] Plugin{i}.esp" for i in range(254)]
+                + [f"\t[FE:{i:03X}] ESLMod{i}.esl" for i in range(100)],
                 "game_version": "Fallout 4 v1.10.163",
                 "version_current": "1.10.163",
                 "expected_limit_triggered": False,
-                "expected_limit_disabled": False
+                "expected_limit_disabled": False,
             },
-
             # Old game version without ESL support
             {
                 "name": "old_version_without_esl",
@@ -422,8 +398,8 @@ class TestPluginParity:
                 "game_version": "Fallout 4 v1.6.0",
                 "version_current": "1.6.0",
                 "expected_limit_triggered": False,
-                "expected_limit_disabled": True  # Limit check disabled for old versions
-            }
+                "expected_limit_disabled": True,  # Limit check disabled for old versions
+            },
         ]
 
         results = []
@@ -445,16 +421,12 @@ class TestPluginParity:
 
                 # Time Rust limit detection
                 start_time = time.perf_counter()
-                rust_result = rust_analyzer.loadorder_scan_log(
-                    plugins_segment, game_version, version_current
-                )
+                rust_result = rust_analyzer.loadorder_scan_log(plugins_segment, game_version, version_current)
                 rust_time = time.perf_counter() - start_time
 
                 # Time Python limit detection
                 start_time = time.perf_counter()
-                python_result = python_analyzer.loadorder_scan_log(
-                    plugins_segment, game_version, version_current
-                )
+                python_result = python_analyzer.loadorder_scan_log(plugins_segment, game_version, version_current)
                 python_time = time.perf_counter() - start_time
 
                 # Extract limit detection results
@@ -481,19 +453,27 @@ class TestPluginParity:
                 expected_disabled = test_case.get("expected_limit_disabled", False)
 
                 if rust_limit_triggered != expected_triggered:
-                    differences.append(f"Rust limit triggered doesn't match expected: got {rust_limit_triggered}, expected {expected_triggered}")
+                    differences.append(
+                        f"Rust limit triggered doesn't match expected: got {rust_limit_triggered}, expected {expected_triggered}"
+                    )
                     is_identical = False
 
                 if rust_limit_disabled != expected_disabled:
-                    differences.append(f"Rust limit disabled doesn't match expected: got {rust_limit_disabled}, expected {expected_disabled}")
+                    differences.append(
+                        f"Rust limit disabled doesn't match expected: got {rust_limit_disabled}, expected {expected_disabled}"
+                    )
                     is_identical = False
 
                 if python_limit_triggered != expected_triggered:
-                    differences.append(f"Python limit triggered doesn't match expected: got {python_limit_triggered}, expected {expected_triggered}")
+                    differences.append(
+                        f"Python limit triggered doesn't match expected: got {python_limit_triggered}, expected {expected_triggered}"
+                    )
                     is_identical = False
 
                 if python_limit_disabled != expected_disabled:
-                    differences.append(f"Python limit disabled doesn't match expected: got {python_limit_disabled}, expected {expected_disabled}")
+                    differences.append(
+                        f"Python limit disabled doesn't match expected: got {python_limit_disabled}, expected {expected_disabled}"
+                    )
                     is_identical = False
 
                 result = ParityResult(
@@ -511,22 +491,24 @@ class TestPluginParity:
                         "plugin_count": len(plugins_segment),
                         "game_version": game_version,
                         "expected_triggered": expected_triggered,
-                        "expected_disabled": expected_disabled
-                    }
+                        "expected_disabled": expected_disabled,
+                    },
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Plugin limit detection test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="plugin_analyzer",
-                    method_name="plugin_limit_detection",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="plugin_analyzer",
+                        method_name="plugin_limit_detection",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate results
         passed_tests = sum(1 for r in results if r.passed)
@@ -551,13 +533,9 @@ class TestPluginParity:
                 "ScrapEverything.esp": "Known to cause crashes with settlement building",
                 "PlaceEverywhere.esp": "Can cause object placement issues",
                 "Arbitration.esp": "Combat overhaul that may conflict with other mods",
-                "CompanionsGoneWild.esp": "Companion behavior mod with known issues"
+                "CompanionsGoneWild.esp": "Companion behavior mod with known issues",
             },
-            "warning_patterns": [
-                "ScrapEverything",
-                "PlaceEverywhere",
-                "CompanionsGoneWild"
-            ]
+            "warning_patterns": ["ScrapEverything", "PlaceEverywhere", "CompanionsGoneWild"],
         }
 
         # Mock the YAML data access
@@ -573,7 +551,7 @@ class TestPluginParity:
             "AnotherSafeMod.esp",
             "Arbitration.esp",  # Problematic
             "CompanionsGoneWild.esp",  # Problematic
-            "FinalMod.esp"
+            "FinalMod.esp",
         ]
 
         validator = PluginParityValidator()
@@ -645,8 +623,8 @@ class TestPluginParity:
                 python_execution_time=python_time,
                 metadata={
                     "test_plugins_count": len(test_plugins),
-                    "expected_problematic_count": 4  # ScrapEverything, PlaceEverywhere, Arbitration, CompanionsGoneWild
-                }
+                    "expected_problematic_count": 4,  # ScrapEverything, PlaceEverywhere, Arbitration, CompanionsGoneWild
+                },
             )
 
             assert result.passed, f"Problematic plugin matching parity failed: {result.differences}"
@@ -659,7 +637,9 @@ class TestPluginParity:
                 if call.args:  # Get the plugin name from the call
                     detected_plugins.add(call.args[0])
 
-            assert expected_problematic.issubset(detected_plugins), f"Not all expected problematic plugins detected: missing {expected_problematic - detected_plugins}"
+            assert expected_problematic.issubset(detected_plugins), (
+                f"Not all expected problematic plugins detected: missing {expected_problematic - detected_plugins}"
+            )
 
         except Exception as e:
             logger.error(f"Problematic plugin matching test failed: {e}")
@@ -672,19 +652,19 @@ class TestPluginParity:
         while maintaining complete functional parity.
         """
         # Create large plugin list for performance measurement
-        large_plugin_list = [
-            "\t[00] Fallout4.esm",
-            "\t[01] DLCRobot.esm",
-            "\t[02] DLCworkshop01.esm",
-            "\t[03] DLCCoast.esm",
-            "\t[04] DLCworkshop02.esm",
-            "\t[05] DLCworkshop03.esm",
-            "\t[06] DLCNukaWorld.esm"
-        ] + [
-            f"\t[{i:02X}] Mod{i:03d}.esp" for i in range(7, 255)
-        ] + [
-            f"\t[FE:{i:03X}] ESLMod{i:03d}.esl" for i in range(1000)
-        ]
+        large_plugin_list = (
+            [
+                "\t[00] Fallout4.esm",
+                "\t[01] DLCRobot.esm",
+                "\t[02] DLCworkshop01.esm",
+                "\t[03] DLCCoast.esm",
+                "\t[04] DLCworkshop02.esm",
+                "\t[05] DLCworkshop03.esm",
+                "\t[06] DLCNukaWorld.esm",
+            ]
+            + [f"\t[{i:02X}] Mod{i:03d}.esp" for i in range(7, 255)]
+            + [f"\t[FE:{i:03X}] ESLMod{i:03d}.esl" for i in range(1000)]
+        )
 
         validator = PluginParityValidator()
 

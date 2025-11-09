@@ -54,7 +54,7 @@ class TestOrchestratorPerformance:
 
             # Generate realistic crash log content
             content = f"""Buffout 4 v1.26.2
-Crash Log Generated On: 2024-01-{i+1:02d} 14:23:45
+Crash Log Generated On: 2024-01-{i + 1:02d} 14:23:45
 
 SYSTEM SPECS:
     OS: Windows 10
@@ -65,7 +65,7 @@ SYSTEM SPECS:
 PROBABLE CALL STACK:
     [0] 0x7FF6AB{i:06X}+0x123 (Fallout4.exe+0x123)
     [1] FormID 0x00{i:06X} (Plugin{i}.esp)
-    [2] 0x7FF6AB{i+1:06X}+0x456 (Fallout4.exe+0x456)
+    [2] 0x7FF6AB{i + 1:06X}+0x456 (Fallout4.exe+0x456)
 
 ALL MODULES:
     Fallout4.exe
@@ -196,12 +196,12 @@ PLUGINS:
             speedup = python_time / hybrid_time if hybrid_time > 0 else 1.0
 
             # Print results for CI/CD tracking
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print("SINGLE LOG PROCESSING BENCHMARK:")
-            print(f"  Python time : {python_time*1000:.2f}ms")
-            print(f"  Hybrid time : {hybrid_time*1000:.2f}ms")
+            print(f"  Python time : {python_time * 1000:.2f}ms")
+            print(f"  Hybrid time : {hybrid_time * 1000:.2f}ms")
             print(f"  Speedup     : {speedup:.2f}x")
-            print(f"{'='*60}\n")
+            print(f"{'=' * 60}\n")
 
             # Note: Single-log processing may not show significant speedup
             # because Python orchestrator has complex logic that Rust doesn't
@@ -213,7 +213,7 @@ PLUGINS:
             results_file.parent.mkdir(parents=True, exist_ok=True)
             with results_file.open("a", encoding="utf-8") as f:
                 f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')},")
-                f.write(f"{python_time*1000:.2f},{hybrid_time*1000:.2f},{speedup:.2f}\n")
+                f.write(f"{python_time * 1000:.2f},{hybrid_time * 1000:.2f},{speedup:.2f}\n")
         else:
             print("\n⚠️  Rust orchestrator not available - skipping performance test\n")
             pytest.skip("Rust orchestrator not available")
@@ -270,20 +270,19 @@ PLUGINS:
             speedup = python_time / hybrid_time if hybrid_time > 0 else 1.0
 
             # Print results for CI/CD tracking
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print("BATCH PROCESSING BENCHMARK (20 logs):")
-            print(f"  Python time      : {python_time:.2f}s ({python_time/len(batch_logs)*1000:.2f}ms per log)")
-            print(f"  Hybrid time      : {hybrid_time:.2f}s ({hybrid_time/len(batch_logs)*1000:.2f}ms per log)")
+            print(f"  Python time      : {python_time:.2f}s ({python_time / len(batch_logs) * 1000:.2f}ms per log)")
+            print(f"  Hybrid time      : {hybrid_time:.2f}s ({hybrid_time / len(batch_logs) * 1000:.2f}ms per log)")
             print(f"  Speedup          : {speedup:.2f}x")
-            print(f"  Python strategy  : batch_size=10 (limited parallelism)")
-            print(f"  Hybrid strategy  : Rust unbounded parallelism")
-            print(f"{'='*60}\n")
+            print("  Python strategy  : batch_size=10 (limited parallelism)")
+            print("  Hybrid strategy  : Rust unbounded parallelism")
+            print(f"{'=' * 60}\n")
 
             # Expected: 10-20x speedup for batch processing
             # Minimum: 5x speedup (conservative estimate)
             assert speedup >= 5.0, (
-                f"Expected 5x+ speedup for batch processing, got {speedup:.2f}x. "
-                f"Python: {python_time:.2f}s, Hybrid: {hybrid_time:.2f}s"
+                f"Expected 5x+ speedup for batch processing, got {speedup:.2f}x. Python: {python_time:.2f}s, Hybrid: {hybrid_time:.2f}s"
             )
 
             # Write results to file for tracking
@@ -317,8 +316,9 @@ PLUGINS:
             sample_logs: Sample crash log files
         """
         try:
-            import psutil
             import os
+
+            import psutil
         except ImportError:
             pytest.skip("psutil not installed - cannot measure memory usage")
             return
@@ -332,6 +332,7 @@ PLUGINS:
 
         # Force garbage collection
         import gc
+
         gc.collect()
         await asyncio.sleep(0.1)
 
@@ -340,14 +341,14 @@ PLUGINS:
         await hybrid_orchestrator.process_crash_logs_batch(sample_logs)
         hybrid_mem = process.memory_info().rss / 1024 / 1024 - initial_mem
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("MEMORY USAGE COMPARISON (20 logs):")
         print(f"  Python memory : {python_mem:.2f} MB")
         print(f"  Hybrid memory : {hybrid_mem:.2f} MB")
         if hybrid_mem > 0:
             reduction = python_mem / hybrid_mem
             print(f"  Reduction     : {reduction:.2f}x")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # Note: Memory comparison is informational only
         # Actual reduction depends on GC timing and system state
@@ -395,16 +396,16 @@ PLUGINS:
         # Calculate parallelism factor
         parallelism_factor = sequential_total / parallel_total if parallel_total > 0 else 1.0
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"PARALLELISM FACTOR ({len(batch_logs)} logs):")
         print(f"  Sequential time  : {sequential_total:.2f}s")
         print(f"  Parallel time    : {parallel_total:.2f}s")
         print(f"  Parallelism      : {parallelism_factor:.2f}x")
-        print(f"  CPU cores        : {hybrid_orchestrator._rust_orch.orchestrator.config().game if hasattr(hybrid_orchestrator, '_rust_orch') and hybrid_orchestrator._rust_orch else 'N/A'}")
-        print(f"{'='*60}\n")
+        print(
+            f"  CPU cores        : {hybrid_orchestrator._rust_orch.orchestrator.config().game if hasattr(hybrid_orchestrator, '_rust_orch') and hybrid_orchestrator._rust_orch else 'N/A'}"
+        )
+        print(f"{'=' * 60}\n")
 
         # Expected: parallelism factor close to CPU core count
         # Minimum: 2x parallelism (at least using 2 cores effectively)
-        assert parallelism_factor >= 2.0, (
-            f"Expected 2x+ parallelism factor, got {parallelism_factor:.2f}x"
-        )
+        assert parallelism_factor >= 2.0, f"Expected 2x+ parallelism factor, got {parallelism_factor:.2f}x"

@@ -66,9 +66,10 @@ class TestAsyncConvenienceFunctions:
         data = {"CLASSIC_Settings": {"Test Setting": "test value"}}
         yaml = ruamel.yaml.YAML()
         from io import StringIO
+
         stream = StringIO()
         yaml.dump(data, stream)
-        async with aiofiles.open(temp_yaml_file, mode='w') as f:
+        async with aiofiles.open(temp_yaml_file, mode="w") as f:
             await f.write(stream.getvalue())
 
         with patch("ClassicLib.AsyncYamlSettings.core.get_async_yaml_core", return_value=core):

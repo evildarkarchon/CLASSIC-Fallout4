@@ -16,6 +16,7 @@ from PySide6.QtCore import QObject, QThread
 
 # Test worker initialization
 
+
 @pytest.mark.unit
 def test_crash_logs_worker_exists():
     """Test that CrashLogsScanWorker can be imported."""
@@ -41,6 +42,7 @@ def test_worker_signals():
 
 
 # Test AsyncBridge integration
+
 
 @pytest.mark.unit
 def test_worker_uses_async_bridge():
@@ -70,6 +72,7 @@ def test_worker_uses_async_bridge():
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", mock_async_func):
             # Import FCXModeHandler and patch it directly
             from ClassicLib.ScanLog import FCXModeHandler
+
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
                     with patch.object(AsyncBridge, "get_instance") as mock_bridge_get:
@@ -109,6 +112,7 @@ def test_no_manual_event_loop_creation():
     with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
             from ClassicLib.ScanLog import FCXModeHandler
+
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
                     with patch("ClassicLib.AsyncBridge.AsyncBridge"):
@@ -123,6 +127,7 @@ def test_no_manual_event_loop_creation():
 
 
 # Test Rust acceleration detection
+
 
 @pytest.mark.unit
 @pytest.mark.rust
@@ -152,6 +157,7 @@ def test_rust_status_logging():
     with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
             from ClassicLib.ScanLog import FCXModeHandler
+
             with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.AsyncBridge.AsyncBridge"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
                     with patch.object(logger, "info") as mock_log_info:
@@ -172,6 +178,7 @@ def test_rust_status_logging():
 
 
 # Test signal emissions
+
 
 @pytest.mark.unit
 def test_success_signal_emission():
@@ -230,6 +237,7 @@ def test_error_signal_emission():
 
 # Test error handling
 
+
 @pytest.mark.unit
 def test_error_handling_with_audio_disabled():
     """Test that errors are re-raised when audio notifications are disabled."""
@@ -271,6 +279,7 @@ def test_finished_signal_always_emitted():
 
 # Test performance logging
 
+
 @pytest.mark.unit
 def test_performance_metrics_logged():
     """Test that performance metrics are logged."""
@@ -283,6 +292,7 @@ def test_performance_metrics_logged():
     with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
             from ClassicLib.ScanLog import FCXModeHandler
+
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
                     with patch("ClassicLib.AsyncBridge.AsyncBridge"):
@@ -307,6 +317,7 @@ def test_performance_metrics_logged():
 
 
 # Test thread safety
+
 
 @pytest.mark.unit
 def test_worker_is_qobject():

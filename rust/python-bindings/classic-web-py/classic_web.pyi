@@ -35,14 +35,11 @@ Usage:
 
 from __future__ import annotations
 
-from typing import List, Tuple
-
 __version__: str
 
 # Constants
 CLASSIC_VERSION: str
 USER_AGENT_PREFIX: str
-
 
 class ModSite:
     """Mod site enumeration for Python.
@@ -102,7 +99,6 @@ class ModSite:
             The mod site name as a string.
         """
 
-
 def get_user_agent() -> str:
     """Get the default user agent string for CLASSIC.
 
@@ -113,7 +109,6 @@ def get_user_agent() -> str:
         >>> ua = get_user_agent()
         >>> assert ua.startswith("CLASSIC/")
     """
-
 
 def get_user_agent_with_suffix(suffix: str) -> str:
     """Get a user agent string with a custom suffix.
@@ -128,7 +123,6 @@ def get_user_agent_with_suffix(suffix: str) -> str:
         >>> ua = get_user_agent_with_suffix("NexusMods")
         >>> assert "NexusMods" in ua
     """
-
 
 def validate_url(url_str: str) -> str:
     """Validate and parse a URL string.
@@ -147,7 +141,6 @@ def validate_url(url_str: str) -> str:
         >>> assert url == "https://www.nexusmods.com/"
     """
 
-
 def is_valid_url(url_str: str) -> bool:
     """Check if a URL string is valid.
 
@@ -161,7 +154,6 @@ def is_valid_url(url_str: str) -> bool:
         >>> assert is_valid_url("https://www.nexusmods.com")
         >>> assert not is_valid_url("not a url")
     """
-
 
 def extract_domain(url_str: str) -> str:
     """Extract the domain from a URL.
@@ -179,7 +171,6 @@ def extract_domain(url_str: str) -> str:
         >>> domain = extract_domain("https://www.nexusmods.com/fallout4/mods/123")
         >>> assert domain == "www.nexusmods.com"
     """
-
 
 def join_url(base: str, path: str) -> str:
     """Join a base URL with a path.
@@ -199,8 +190,7 @@ def join_url(base: str, path: str) -> str:
         >>> assert url == "https://www.nexusmods.com/fallout4/mods"
     """
 
-
-def build_url_with_query(base: str, params: List[Tuple[str, str]]) -> str:
+def build_url_with_query(base: str, params: list[tuple[str, str]]) -> str:
     """Build a URL with query parameters.
 
     Args:

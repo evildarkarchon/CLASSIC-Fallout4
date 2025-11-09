@@ -19,6 +19,7 @@ from PySide6.QtCore import QObject, QThread
 
 # Test worker initialization
 
+
 @pytest.mark.unit
 def test_papyrus_monitor_worker_exists():
     """Test that PapyrusMonitorWorker can be imported."""
@@ -58,6 +59,7 @@ def test_worker_initialization():
 
 
 # Test Rust acceleration detection
+
 
 @pytest.mark.unit
 @pytest.mark.rust
@@ -105,6 +107,7 @@ def test_rust_status_logging():
 
 
 # Test papyrus_logging function with Rust file I/O
+
 
 @pytest.mark.unit
 def test_papyrus_logging_uses_rust_file_io():
@@ -189,6 +192,7 @@ def test_papyrus_logging_handles_none_path():
 
 # Test stats parsing
 
+
 @pytest.mark.unit
 def test_parse_stats():
     """Test that _parse_stats correctly parses log message."""
@@ -227,6 +231,7 @@ def test_parse_stats_zero_dumps():
 
 
 # Test monitoring loop
+
 
 @pytest.mark.unit
 def test_monitoring_loop_emits_stats_signal():
@@ -311,6 +316,7 @@ def test_monitoring_loop_emits_error_signal():
 
 # Test stop mechanism
 
+
 @pytest.mark.unit
 def test_stop_mechanism():
     """Test that stop() safely stops the monitoring loop."""
@@ -346,6 +352,7 @@ def test_stop_is_thread_safe():
 
 # Test thread safety
 
+
 @pytest.mark.unit
 def test_worker_is_qobject():
     """Test that worker is a QObject and can be moved to thread."""
@@ -366,6 +373,7 @@ def test_worker_is_qobject():
 
 
 # Test PapyrusStats dataclass
+
 
 @pytest.mark.unit
 def test_papyrus_stats_equality():

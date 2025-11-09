@@ -23,8 +23,7 @@ class PerformanceTestFixtures:
     """
 
     @staticmethod
-    def generate_scalable_crash_data(base_size: int = 100,
-                                   scale_factors: list[int] = None) -> dict[str, list[str]]:
+    def generate_scalable_crash_data(base_size: int = 100, scale_factors: list[int] = None) -> dict[str, list[str]]:
         """
         Generate crash log data at multiple scales for performance testing.
 
@@ -45,12 +44,7 @@ class PerformanceTestFixtures:
             scale_name = f"scale_{factor}x"
 
             # Generate crash log data
-            data = [
-                "Fallout 4 v1.10.163",
-                "Buffout 4 v1.28.6",
-                "",
-                "PROBABLE CALL STACK:"
-            ]
+            data = ["Fallout 4 v1.10.163", "Buffout 4 v1.28.6", "", "PROBABLE CALL STACK:"]
 
             # Generate call stack entries
             for i in range(size):
@@ -59,10 +53,7 @@ class PerformanceTestFixtures:
                 plugin = f"TestPlugin{(i % 100):03d}.esp"
                 data.append(f"\t[{i}] {addr:#018X} -> FormID: {formid} ({plugin})")
 
-            data.extend([
-                "",
-                "PLUGINS:"
-            ])
+            data.extend(["", "PLUGINS:"])
 
             # Generate plugin list
             for i in range(min(size // 4, 255)):  # Quarter as many plugins as FormIDs
@@ -74,11 +65,7 @@ class PerformanceTestFixtures:
 
     @staticmethod
     def create_performance_benchmark(
-        operation_name: str,
-        target_function: Callable,
-        test_data: Any,
-        iterations: int = 5,
-        warmup_iterations: int = 2
+        operation_name: str, target_function: Callable, test_data: Any, iterations: int = 5, warmup_iterations: int = 2
     ) -> dict[str, Any]:
         """
         Create a performance benchmark for a specific operation.
@@ -141,15 +128,13 @@ class PerformanceTestFixtures:
                 "min_time": min_time,
                 "max_time": max_time,
                 "std_time": std_time,
-                "success_rate": (iterations - len(errors)) / iterations if iterations > 0 else 0.0
-            }
+                "success_rate": (iterations - len(errors)) / iterations if iterations > 0 else 0.0,
+            },
         }
 
     @staticmethod
     def validate_performance_targets(
-        benchmark_results: dict[str, Any],
-        performance_targets: dict[str, float],
-        scale_factor: float | None = None
+        benchmark_results: dict[str, Any], performance_targets: dict[str, float], scale_factor: float | None = None
     ) -> dict[str, bool]:
         """
         Validate benchmark results against performance targets.
@@ -182,9 +167,7 @@ class PerformanceTestFixtures:
         return validation_results
 
     @staticmethod
-    def analyze_scaling_characteristics(
-        benchmark_results: dict[str, dict[str, Any]]
-    ) -> dict[str, Any]:
+    def analyze_scaling_characteristics(benchmark_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
         """
         Analyze scaling characteristics across different data sizes.
 
@@ -222,8 +205,8 @@ class PerformanceTestFixtures:
         # Calculate scaling metrics
         scaling_ratios = []
         for i in range(1, len(avg_times)):
-            size_ratio = scale_factors[i] / scale_factors[i-1]
-            time_ratio = avg_times[i] / avg_times[i-1]
+            size_ratio = scale_factors[i] / scale_factors[i - 1]
+            time_ratio = avg_times[i] / avg_times[i - 1]
             scaling_ratio = time_ratio / size_ratio
             scaling_ratios.append(scaling_ratio)
 
@@ -246,7 +229,7 @@ class PerformanceTestFixtures:
             "avg_scaling_ratio": avg_scaling_ratio,
             "scaling_type": scaling_type,
             "throughput_at_base": 1.0 / avg_times[0] if avg_times[0] > 0 else 0.0,
-            "throughput_at_max": 1.0 / avg_times[-1] if avg_times[-1] > 0 else 0.0
+            "throughput_at_max": 1.0 / avg_times[-1] if avg_times[-1] > 0 else 0.0,
         }
 
     @staticmethod
@@ -275,7 +258,7 @@ class PerformanceTestFixtures:
                     "initial_vms": initial_memory.vms,
                     "peak_rss": initial_memory.rss,
                     "peak_vms": initial_memory.vms,
-                    "samples": samples
+                    "samples": samples,
                 }
 
                 try:
@@ -286,7 +269,7 @@ class PerformanceTestFixtures:
                         "final_rss": final_memory.rss,
                         "final_vms": final_memory.vms,
                         "rss_growth": final_memory.rss - initial_memory.rss,
-                        "vms_growth": final_memory.vms - initial_memory.vms
+                        "vms_growth": final_memory.vms - initial_memory.vms,
                     })
 
             return memory_tracker
@@ -304,7 +287,7 @@ class PerformanceTestFixtures:
                     "final_vms": 102 * 1024 * 1024,  # 102MB mock
                     "rss_growth": 2 * 1024 * 1024,  # 2MB growth mock
                     "vms_growth": 2 * 1024 * 1024,  # 2MB growth mock
-                    "samples": []
+                    "samples": [],
                 }
                 yield memory_info
 
@@ -321,23 +304,20 @@ class PerformanceTestFixtures:
         Returns:
             Function that calculates throughput from benchmark results
         """
+
         def calculate_throughput(test_data: Any, benchmark_results: dict[str, Any]) -> dict[str, float]:
             """Calculate throughput metrics from benchmark results."""
             data_size = data_size_func(test_data)
             avg_time = benchmark_results["statistics"]["avg_time"]
 
             if avg_time <= 0:
-                return {
-                    "items_per_second": 0.0,
-                    "data_size": data_size,
-                    "processing_time": avg_time
-                }
+                return {"items_per_second": 0.0, "data_size": data_size, "processing_time": avg_time}
 
             return {
                 "items_per_second": data_size / avg_time,
                 "data_size": data_size,
                 "processing_time": avg_time,
-                "throughput_mbps": (data_size * 8) / (avg_time * 1024 * 1024) if avg_time > 0 else 0.0
+                "throughput_mbps": (data_size * 8) / (avg_time * 1024 * 1024) if avg_time > 0 else 0.0,
             }
 
         return calculate_throughput
@@ -353,9 +333,10 @@ class PerformanceTestFixtures:
         Returns:
             Function that detects performance regressions
         """
+
         def detect_regression(
             current_results: dict[str, Any],
-            regression_threshold: float = 1.2  # 20% slowdown threshold
+            regression_threshold: float = 1.2,  # 20% slowdown threshold
         ) -> dict[str, Any]:
             """Detect performance regression compared to baseline."""
 
@@ -363,10 +344,7 @@ class PerformanceTestFixtures:
             current_time = current_results["statistics"]["avg_time"]
 
             if baseline_time <= 0:
-                return {
-                    "regression_detected": False,
-                    "reason": "Invalid baseline time"
-                }
+                return {"regression_detected": False, "reason": "Invalid baseline time"}
 
             performance_ratio = current_time / baseline_time
             regression_detected = performance_ratio > regression_threshold
@@ -379,20 +357,21 @@ class PerformanceTestFixtures:
                 "regression_threshold": regression_threshold,
                 "performance_change_percent": (performance_ratio - 1.0) * 100,
                 "regression_severity": (
-                    "critical" if performance_ratio > 2.0 else
-                    "major" if performance_ratio > 1.5 else
-                    "minor" if performance_ratio > regression_threshold else
-                    "none"
-                )
+                    "critical"
+                    if performance_ratio > 2.0
+                    else "major"
+                    if performance_ratio > 1.5
+                    else "minor"
+                    if performance_ratio > regression_threshold
+                    else "none"
+                ),
             }
 
         return detect_regression
 
     @staticmethod
     def generate_concurrent_test_scenarios(
-        base_operation: Callable,
-        thread_counts: list[int] = None,
-        iterations_per_thread: int = 10
+        base_operation: Callable, thread_counts: list[int] = None, iterations_per_thread: int = 10
     ) -> dict[str, Callable]:
         """
         Generate concurrent test scenarios for performance testing.
@@ -413,6 +392,7 @@ class PerformanceTestFixtures:
         scenarios = {}
 
         for num_threads in thread_counts:
+
             def create_concurrent_test(threads):
                 def concurrent_test(test_data):
                     def worker(thread_id, data):
@@ -430,10 +410,7 @@ class PerformanceTestFixtures:
                         return worker(0, test_data)
                     # Concurrent execution
                     with ThreadPoolExecutor(max_workers=threads) as executor:
-                        futures = [
-                            executor.submit(worker, i, test_data)
-                            for i in range(threads)
-                        ]
+                        futures = [executor.submit(worker, i, test_data) for i in range(threads)]
                         all_results = []
                         for future in as_completed(futures):
                             all_results.extend(future.result())
@@ -453,19 +430,15 @@ class PerformanceTestFixtures:
         Returns:
             Function that generates formatted performance reports
         """
+
         def generate_report(
             benchmark_results: dict[str, dict[str, Any]],
             scaling_analysis: dict[str, Any] | None = None,
-            regression_results: dict[str, Any] | None = None
+            regression_results: dict[str, Any] | None = None,
         ) -> str:
             """Generate a formatted performance report."""
 
-            report_lines = [
-                "=" * 60,
-                "PERFORMANCE TEST REPORT",
-                "=" * 60,
-                ""
-            ]
+            report_lines = ["=" * 60, "PERFORMANCE TEST REPORT", "=" * 60, ""]
 
             # Summary section
             report_lines.append("SUMMARY:")
@@ -477,9 +450,7 @@ class PerformanceTestFixtures:
                 avg_times.append(avg_time)
                 success_rate = results["statistics"]["success_rate"]
 
-                report_lines.append(
-                    f"  {operation_name:<30}: {avg_time:.3f}s avg, {success_rate*100:.1f}% success"
-                )
+                report_lines.append(f"  {operation_name:<30}: {avg_time:.3f}s avg, {success_rate * 100:.1f}% success")
 
             if avg_times:
                 overall_avg = statistics.mean(avg_times)

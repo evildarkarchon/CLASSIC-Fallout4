@@ -52,13 +52,7 @@ class UnpackedIssues:
         Returns:
             True if any issues detected, False otherwise.
         """
-        return bool(
-            self.animdata
-            or self.tex_frmt
-            or self.snd_frmt
-            or self.xse_file
-            or self.previs
-        )
+        return bool(self.animdata or self.tex_frmt or self.snd_frmt or self.xse_file or self.previs)
 
     def total_count(self) -> int:
         """Get total count of all issues.
@@ -66,13 +60,7 @@ class UnpackedIssues:
         Returns:
             Total number of detected issues.
         """
-        return (
-            len(self.animdata)
-            + len(self.tex_frmt)
-            + len(self.snd_frmt)
-            + len(self.xse_file)
-            + len(self.previs)
-        )
+        return len(self.animdata) + len(self.tex_frmt) + len(self.snd_frmt) + len(self.xse_file) + len(self.previs)
 
 
 class UnpackedScanner:
@@ -90,7 +78,8 @@ class UnpackedScanner:
     def __init__(self) -> None:
         """Initialize UnpackedScanner."""
 
-    def scan_directory(self, root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:
+    @staticmethod
+    def scan_directory(root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:
         """Scan a directory for unpacked file issues.
 
         Args:

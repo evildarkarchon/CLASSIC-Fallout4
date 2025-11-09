@@ -5,6 +5,7 @@ This module provides comprehensive test coverage for the PapyrusMonitorDialog cl
 including UI initialization, statistics updating, status indicators, message handling,
 and dialog lifecycle with properly mocked Qt components.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841, F401, DOC201
 from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
@@ -24,6 +25,7 @@ class TestPapyrusMonitorDialog:
     def mock_parent_widget(self, qt_application):
         """Create a real Qt parent widget for testing."""
         from PySide6.QtWidgets import QWidget
+
         widget = QWidget()
         yield widget
         widget.close()
@@ -32,14 +34,15 @@ class TestPapyrusMonitorDialog:
     @pytest.fixture
     def mock_dialog(self, mock_parent_widget, qt_application):
         """Create a PapyrusMonitorDialog with mocked dependencies."""
-        with patch("ClassicLib.Interface.PapyrusDialog.QDialog.__init__") as mock_init, \
-             patch("ClassicLib.Interface.PapyrusDialog.QVBoxLayout") as mock_vlayout, \
-             patch("ClassicLib.Interface.PapyrusDialog.QHBoxLayout") as mock_hlayout, \
-             patch("ClassicLib.Interface.PapyrusDialog.QGridLayout") as mock_gridlayout, \
-             patch("ClassicLib.Interface.PapyrusDialog.QLabel") as mock_label, \
-             patch("ClassicLib.Interface.PapyrusDialog.QPushButton") as mock_button, \
-             patch("ClassicLib.Interface.PapyrusDialog.QFont") as mock_font:
-
+        with (
+            patch("ClassicLib.Interface.PapyrusDialog.QDialog.__init__") as mock_init,
+            patch("ClassicLib.Interface.PapyrusDialog.QVBoxLayout") as mock_vlayout,
+            patch("ClassicLib.Interface.PapyrusDialog.QHBoxLayout") as mock_hlayout,
+            patch("ClassicLib.Interface.PapyrusDialog.QGridLayout") as mock_gridlayout,
+            patch("ClassicLib.Interface.PapyrusDialog.QLabel") as mock_label,
+            patch("ClassicLib.Interface.PapyrusDialog.QPushButton") as mock_button,
+            patch("ClassicLib.Interface.PapyrusDialog.QFont") as mock_font,
+        ):
             # Configure mocks
             mock_layout_instance = MagicMock()
             mock_vlayout.return_value = mock_layout_instance
@@ -81,26 +84,12 @@ class TestPapyrusMonitorDialog:
     @pytest.fixture
     def sample_stats(self):
         """Create sample PapyrusStats for testing."""
-        return PapyrusStats(
-            timestamp=datetime(2024, 1, 15, 10, 30, 45),
-            dumps=5,
-            stacks=10,
-            warnings=2,
-            errors=1,
-            ratio=0.5
-        )
+        return PapyrusStats(timestamp=datetime(2024, 1, 15, 10, 30, 45), dumps=5, stacks=10, warnings=2, errors=1, ratio=0.5)
 
     @pytest.fixture
     def zero_stats(self):
         """Create zero PapyrusStats for testing initial state."""
-        return PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=0,
-            stacks=0,
-            warnings=0,
-            errors=0,
-            ratio=0.0
-        )
+        return PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
 
 
 @pytest.mark.unit
@@ -112,6 +101,7 @@ class TestDialogInitialization:
     def mock_parent_widget(self, qt_application):
         """Create a real Qt parent widget for testing."""
         from PySide6.QtWidgets import QWidget
+
         widget = QWidget()
         yield widget
         widget.close()
@@ -124,7 +114,7 @@ class TestDialogInitialization:
         dialog = PapyrusMonitorDialog(mock_parent_widget)
 
         # Verify dialog was created successfully
-        assert hasattr(dialog, 'stop_monitoring')
+        assert hasattr(dialog, "stop_monitoring")
         # Check that the window title was set
         assert dialog.windowTitle() == "Papyrus Log Monitor"
         # Clean up
@@ -138,7 +128,7 @@ class TestDialogInitialization:
         dialog = PapyrusMonitorDialog(None)
 
         # Verify dialog was created successfully
-        assert hasattr(dialog, 'stop_monitoring')
+        assert hasattr(dialog, "stop_monitoring")
         # Check that the window title was set
         assert dialog.windowTitle() == "Papyrus Log Monitor"
         # Clean up
@@ -165,7 +155,7 @@ class TestDialogInitialization:
         dialog = PapyrusMonitorDialog(mock_parent_widget)
 
         # Verify that the stop_button exists and has connections
-        assert hasattr(dialog, 'stop_button')
+        assert hasattr(dialog, "stop_button")
         # Check that the button has the expected text
         assert dialog.stop_button.text() == "Stop Monitoring"
 
@@ -175,7 +165,7 @@ class TestDialogInitialization:
 
     def test_initial_stats_setup(self, mock_parent_widget, qt_application):
         """Test that dialog initializes with default stats."""
-        with patch.object(PapyrusMonitorDialog, 'update_stats') as mock_update_stats:
+        with patch.object(PapyrusMonitorDialog, "update_stats") as mock_update_stats:
             # Create the dialog normally
             dialog = PapyrusMonitorDialog(mock_parent_widget)
 
@@ -232,26 +222,12 @@ class TestStatsUpdateFunctionality:
     @pytest.fixture
     def sample_stats(self):
         """Create sample PapyrusStats for testing."""
-        return PapyrusStats(
-            timestamp=datetime(2024, 1, 15, 10, 30, 45),
-            dumps=5,
-            stacks=10,
-            warnings=2,
-            errors=1,
-            ratio=0.5
-        )
+        return PapyrusStats(timestamp=datetime(2024, 1, 15, 10, 30, 45), dumps=5, stacks=10, warnings=2, errors=1, ratio=0.5)
 
     @pytest.fixture
     def zero_stats(self):
         """Create zero PapyrusStats for testing initial state."""
-        return PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=0,
-            stacks=0,
-            warnings=0,
-            errors=0,
-            ratio=0.0
-        )
+        return PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
 
     def test_update_stats_timestamp(self, mock_dialog, sample_stats):
         """Test that timestamp is updated correctly."""
@@ -267,13 +243,7 @@ class TestStatsUpdateFunctionality:
         mock_dialog.update_stats(sample_stats)
 
         # Verify all stat values were updated
-        expected_updates = {
-            "dumps": "5",
-            "stacks": "10",
-            "dumps_stacks_ratio": "0.500",
-            "warnings": "2",
-            "errors": "1"
-        }
+        expected_updates = {"dumps": "5", "stacks": "10", "dumps_stacks_ratio": "0.500", "warnings": "2", "errors": "1"}
 
         for key, expected_value in expected_updates.items():
             mock_label = mock_dialog.stat_value_labels[key]
@@ -284,13 +254,7 @@ class TestStatsUpdateFunctionality:
         mock_dialog.update_stats(zero_stats)
 
         # Verify zero values are displayed correctly
-        expected_updates = {
-            "dumps": "0",
-            "stacks": "0",
-            "dumps_stacks_ratio": "0.000",
-            "warnings": "0",
-            "errors": "0"
-        }
+        expected_updates = {"dumps": "0", "stacks": "0", "dumps_stacks_ratio": "0.000", "warnings": "0", "errors": "0"}
 
         for key, expected_value in expected_updates.items():
             mock_label = mock_dialog.stat_value_labels[key]
@@ -298,9 +262,10 @@ class TestStatsUpdateFunctionality:
 
     def test_update_stats_calls_status_indicators(self, mock_dialog, sample_stats):
         """Test that status indicators are updated."""
-        with patch.object(mock_dialog, '_update_status_indicators') as mock_status, \
-             patch.object(mock_dialog, '_update_message') as mock_message:
-
+        with (
+            patch.object(mock_dialog, "_update_status_indicators") as mock_status,
+            patch.object(mock_dialog, "_update_message") as mock_message,
+        ):
             mock_dialog.update_stats(sample_stats)
 
             # Verify helper methods were called
@@ -309,20 +274,10 @@ class TestStatsUpdateFunctionality:
 
     def test_update_stats_high_ratio_precision(self, mock_dialog):
         """Test ratio display precision with various values."""
-        test_ratios = [
-            (0.123456789, "0.123"),
-            (0.999, "0.999"),
-            (1.0, "1.000"),
-            (0.0, "0.000"),
-            (0.5, "0.500")
-        ]
+        test_ratios = [(0.123456789, "0.123"), (0.999, "0.999"), (1.0, "1.000"), (0.0, "0.000"), (0.5, "0.500")]
 
         for ratio, expected in test_ratios:
-            stats = PapyrusStats(
-                timestamp=datetime.now(),
-                dumps=1, stacks=2, warnings=0, errors=0,
-                ratio=ratio
-            )
+            stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=2, warnings=0, errors=0, ratio=ratio)
 
             mock_dialog.update_stats(stats)
 
@@ -361,8 +316,11 @@ class TestStatusIndicatorUpdates:
         """Test status indicators with good ratio (< 0.5)."""
         good_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=1, stacks=5, warnings=0, errors=0,
-            ratio=0.2  # Good ratio
+            dumps=1,
+            stacks=5,
+            warnings=0,
+            errors=0,
+            ratio=0.2,  # Good ratio
         )
 
         mock_dialog._update_status_indicators(good_stats)
@@ -385,8 +343,11 @@ class TestStatusIndicatorUpdates:
         """Test status indicators with warning ratio (0.5 - 0.8)."""
         warning_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=6, stacks=10, warnings=0, errors=0,
-            ratio=0.6  # Warning ratio
+            dumps=6,
+            stacks=10,
+            warnings=0,
+            errors=0,
+            ratio=0.6,  # Warning ratio
         )
 
         mock_dialog._update_status_indicators(warning_stats)
@@ -400,8 +361,11 @@ class TestStatusIndicatorUpdates:
         """Test status indicators with critical ratio (> 0.8)."""
         critical_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=9, stacks=10, warnings=0, errors=0,
-            ratio=0.9  # Critical ratio
+            dumps=9,
+            stacks=10,
+            warnings=0,
+            errors=0,
+            ratio=0.9,  # Critical ratio
         )
 
         mock_dialog._update_status_indicators(critical_stats)
@@ -413,11 +377,7 @@ class TestStatusIndicatorUpdates:
 
     def test_update_status_indicators_with_warnings(self, mock_dialog):
         """Test status indicators when warnings are present."""
-        warning_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=5, warnings=3, errors=0,
-            ratio=0.2
-        )
+        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=3, errors=0, ratio=0.2)
 
         mock_dialog._update_status_indicators(warning_stats)
 
@@ -433,11 +393,7 @@ class TestStatusIndicatorUpdates:
 
     def test_update_status_indicators_with_errors(self, mock_dialog):
         """Test status indicators when errors are present."""
-        error_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=5, warnings=0, errors=2,
-            ratio=0.2
-        )
+        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=0, errors=2, ratio=0.2)
 
         mock_dialog._update_status_indicators(error_stats)
 
@@ -450,8 +406,11 @@ class TestStatusIndicatorUpdates:
         """Test status indicators with multiple issues."""
         multi_issue_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=8, stacks=10, warnings=5, errors=3,
-            ratio=0.8  # Exactly at threshold
+            dumps=8,
+            stacks=10,
+            warnings=5,
+            errors=3,
+            ratio=0.8,  # Exactly at threshold
         )
 
         mock_dialog._update_status_indicators(multi_issue_stats)
@@ -495,11 +454,7 @@ class TestMessageUpdates:
 
     def test_update_message_with_errors(self, mock_dialog):
         """Test message when errors are present."""
-        error_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=5, warnings=2, errors=3,
-            ratio=0.2
-        )
+        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=2, errors=3, ratio=0.2)
 
         mock_dialog._update_message(error_stats)
 
@@ -509,11 +464,7 @@ class TestMessageUpdates:
 
     def test_update_message_with_warnings_no_errors(self, mock_dialog):
         """Test message when warnings are present but no errors."""
-        warning_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=5, warnings=4, errors=0,
-            ratio=0.2
-        )
+        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=4, errors=0, ratio=0.2)
 
         mock_dialog._update_message(warning_stats)
 
@@ -525,8 +476,11 @@ class TestMessageUpdates:
         """Test message with high ratio but no errors/warnings."""
         high_ratio_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=9, stacks=10, warnings=0, errors=0,
-            ratio=0.9  # High ratio
+            dumps=9,
+            stacks=10,
+            warnings=0,
+            errors=0,
+            ratio=0.9,  # High ratio
         )
 
         mock_dialog._update_message(high_ratio_stats)
@@ -539,8 +493,11 @@ class TestMessageUpdates:
         """Test message with medium ratio but no other issues."""
         medium_ratio_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=6, stacks=10, warnings=0, errors=0,
-            ratio=0.6  # Medium ratio
+            dumps=6,
+            stacks=10,
+            warnings=0,
+            errors=0,
+            ratio=0.6,  # Medium ratio
         )
 
         mock_dialog._update_message(medium_ratio_stats)
@@ -553,8 +510,11 @@ class TestMessageUpdates:
         """Test message when all stats are good."""
         good_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=1, stacks=10, warnings=0, errors=0,
-            ratio=0.1  # Good ratio
+            dumps=1,
+            stacks=10,
+            warnings=0,
+            errors=0,
+            ratio=0.1,  # Good ratio
         )
 
         mock_dialog._update_message(good_stats)
@@ -568,8 +528,11 @@ class TestMessageUpdates:
         # Test that errors take priority over all else
         all_issues_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=9, stacks=10, warnings=5, errors=2,
-            ratio=0.9  # High ratio, warnings, AND errors
+            dumps=9,
+            stacks=10,
+            warnings=5,
+            errors=2,
+            ratio=0.9,  # High ratio, warnings, AND errors
         )
 
         mock_dialog._update_message(all_issues_stats)
@@ -584,8 +547,11 @@ class TestMessageUpdates:
         # Test exactly at 0.5 boundary
         edge_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=5, stacks=10, warnings=0, errors=0,
-            ratio=0.5  # Exactly at boundary
+            dumps=5,
+            stacks=10,
+            warnings=0,
+            errors=0,
+            ratio=0.5,  # Exactly at boundary
         )
 
         mock_dialog._update_message(edge_stats)
@@ -596,8 +562,11 @@ class TestMessageUpdates:
         # Test exactly at 0.8 boundary
         edge_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=8, stacks=10, warnings=0, errors=0,
-            ratio=0.8  # Exactly at boundary
+            dumps=8,
+            stacks=10,
+            warnings=0,
+            errors=0,
+            ratio=0.8,  # Exactly at boundary
         )
 
         mock_dialog._update_message(edge_stats)
@@ -632,7 +601,7 @@ class TestDialogActions:
 
     def test_on_stop_clicked_emits_signal(self, mock_dialog):
         """Test that stop button click emits signal and closes dialog."""
-        with patch.object(mock_dialog, 'accept') as mock_accept:
+        with patch.object(mock_dialog, "accept") as mock_accept:
             # Mock the signal emission
             mock_dialog.stop_monitoring = MagicMock()
             mock_dialog.stop_monitoring.emit = MagicMock()
@@ -729,15 +698,12 @@ class TestDialogIntegrationScenarios:
     def test_complete_stats_update_cycle(self, mock_dialog):
         """Test complete statistics update cycle with various scenarios."""
         # Scenario 1: Normal operation
-        normal_stats = PapyrusStats(
-            timestamp=datetime(2024, 1, 15, 12, 0, 0),
-            dumps=2, stacks=20, warnings=0, errors=0,
-            ratio=0.1
-        )
+        normal_stats = PapyrusStats(timestamp=datetime(2024, 1, 15, 12, 0, 0), dumps=2, stacks=20, warnings=0, errors=0, ratio=0.1)
 
-        with patch.object(mock_dialog, '_update_status_indicators') as mock_status, \
-             patch.object(mock_dialog, '_update_message') as mock_message:
-
+        with (
+            patch.object(mock_dialog, "_update_status_indicators") as mock_status,
+            patch.object(mock_dialog, "_update_message") as mock_message,
+        ):
             mock_dialog.update_stats(normal_stats)
 
             # Verify all components were updated
@@ -746,11 +712,7 @@ class TestDialogIntegrationScenarios:
             mock_message.assert_called_once_with(normal_stats)
 
         # Scenario 2: Problem detected
-        problem_stats = PapyrusStats(
-            timestamp=datetime(2024, 1, 15, 12, 5, 0),
-            dumps=15, stacks=20, warnings=3, errors=1,
-            ratio=0.75
-        )
+        problem_stats = PapyrusStats(timestamp=datetime(2024, 1, 15, 12, 5, 0), dumps=15, stacks=20, warnings=3, errors=1, ratio=0.75)
 
         mock_dialog.update_stats(problem_stats)
 
@@ -760,25 +722,17 @@ class TestDialogIntegrationScenarios:
     def test_dialog_lifecycle_with_monitoring(self, mock_dialog):
         """Test complete dialog lifecycle with monitoring start/stop."""
         # Simulate monitoring start
-        initial_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=0, stacks=0, warnings=0, errors=0,
-            ratio=0.0
-        )
+        initial_stats = PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
 
         mock_dialog.update_stats(initial_stats)
 
         # Simulate some monitoring activity
-        active_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=5, stacks=15, warnings=1, errors=0,
-            ratio=0.33
-        )
+        active_stats = PapyrusStats(timestamp=datetime.now(), dumps=5, stacks=15, warnings=1, errors=0, ratio=0.33)
 
         mock_dialog.update_stats(active_stats)
 
         # Simulate stopping monitoring
-        with patch.object(mock_dialog, 'accept') as mock_accept:
+        with patch.object(mock_dialog, "accept") as mock_accept:
             mock_dialog.stop_monitoring = MagicMock()
             mock_dialog.stop_monitoring.emit = MagicMock()
 
@@ -791,17 +745,10 @@ class TestDialogIntegrationScenarios:
     def test_rapid_stats_updates(self, mock_dialog):
         """Test handling of rapid statistics updates."""
         # Simulate rapid updates
-        timestamps = [
-            datetime(2024, 1, 15, 12, 0, i)
-            for i in range(10)
-        ]
+        timestamps = [datetime(2024, 1, 15, 12, 0, i) for i in range(10)]
 
         for i, timestamp in enumerate(timestamps):
-            stats = PapyrusStats(
-                timestamp=timestamp,
-                dumps=i, stacks=i*2, warnings=i//3, errors=i//5,
-                ratio=min(i/10.0, 1.0)
-            )
+            stats = PapyrusStats(timestamp=timestamp, dumps=i, stacks=i * 2, warnings=i // 3, errors=i // 5, ratio=min(i / 10.0, 1.0))
 
             mock_dialog.update_stats(stats)
 
@@ -815,20 +762,13 @@ class TestDialogIntegrationScenarios:
         mock_dialog.handle_error("Initial connection error")
 
         # Verify error was displayed
-        error_calls = [call for call in mock_dialog.message_label.setText.call_args_list
-                      if "Error:" in str(call)]
+        error_calls = [call for call in mock_dialog.message_label.setText.call_args_list if "Error:" in str(call)]
         assert len(error_calls) > 0
 
         # Recovery with normal stats
-        recovery_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=10, warnings=0, errors=0,
-            ratio=0.1
-        )
+        recovery_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
 
-        with patch.object(mock_dialog, '_update_status_indicators'), \
-             patch.object(mock_dialog, '_update_message'):
-
+        with patch.object(mock_dialog, "_update_status_indicators"), patch.object(mock_dialog, "_update_message"):
             mock_dialog.update_stats(recovery_stats)
 
             # Normal update should override error message
@@ -837,11 +777,7 @@ class TestDialogIntegrationScenarios:
     def test_boundary_condition_handling(self, mock_dialog):
         """Test handling of boundary conditions in statistics."""
         # Test with maximum reasonable values
-        max_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=999999, stacks=1000000, warnings=50000, errors=10000,
-            ratio=0.999999
-        )
+        max_stats = PapyrusStats(timestamp=datetime.now(), dumps=999999, stacks=1000000, warnings=50000, errors=10000, ratio=0.999999)
 
         mock_dialog.update_stats(max_stats)
 
@@ -852,8 +788,11 @@ class TestDialogIntegrationScenarios:
         # Test with zero denominators (edge case for ratio)
         zero_denominator_stats = PapyrusStats(
             timestamp=datetime.now(),
-            dumps=5, stacks=0, warnings=0, errors=0,
-            ratio=float('inf')  # This could happen with zero stacks
+            dumps=5,
+            stacks=0,
+            warnings=0,
+            errors=0,
+            ratio=float("inf"),  # This could happen with zero stacks
         )
 
         # Should handle infinite ratio gracefully
@@ -901,24 +840,16 @@ class TestDialogAccessibilityAndUsability:
     def test_timestamp_format_readability(self, mock_dialog):
         """Test that timestamp is formatted for readability."""
         test_times = [
-            datetime(2024, 1, 15, 9, 5, 3),    # Single digit minutes/seconds
+            datetime(2024, 1, 15, 9, 5, 3),  # Single digit minutes/seconds
             datetime(2024, 1, 15, 23, 59, 59),  # Late night
-            datetime(2024, 1, 15, 0, 0, 0),     # Midnight
+            datetime(2024, 1, 15, 0, 0, 0),  # Midnight
             datetime(2024, 1, 15, 12, 30, 45),  # Noon
         ]
 
-        expected_formats = [
-            "09:05:03",
-            "23:59:59",
-            "00:00:00",
-            "12:30:45"
-        ]
+        expected_formats = ["09:05:03", "23:59:59", "00:00:00", "12:30:45"]
 
         for test_time, expected in zip(test_times, expected_formats, strict=False):
-            stats = PapyrusStats(
-                timestamp=test_time,
-                dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0
-            )
+            stats = PapyrusStats(timestamp=test_time, dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
 
             mock_dialog.update_stats(stats)
 
@@ -929,11 +860,7 @@ class TestDialogAccessibilityAndUsability:
     def test_status_indicator_symbols(self, mock_dialog):
         """Test that status indicators use appropriate symbols."""
         # Test good status symbols
-        good_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=10, warnings=0, errors=0,
-            ratio=0.1
-        )
+        good_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
 
         mock_dialog._update_status_indicators(good_stats)
 
@@ -943,11 +870,7 @@ class TestDialogAccessibilityAndUsability:
             label.setText.assert_called_with("✓")
 
         # Test warning symbols
-        warning_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=6, stacks=10, warnings=2, errors=0,
-            ratio=0.6
-        )
+        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=6, stacks=10, warnings=2, errors=0, ratio=0.6)
 
         mock_dialog._update_status_indicators(warning_stats)
 
@@ -959,11 +882,7 @@ class TestDialogAccessibilityAndUsability:
         ratio_label.setText.assert_called_with("⚠️")
 
         # Test error symbols
-        error_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=9, stacks=10, warnings=0, errors=3,
-            ratio=0.9
-        )
+        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=9, stacks=10, warnings=0, errors=3, ratio=0.9)
 
         mock_dialog._update_status_indicators(error_stats)
 
@@ -977,41 +896,25 @@ class TestDialogAccessibilityAndUsability:
     def test_message_color_coding_consistency(self, mock_dialog):
         """Test that message colors are consistent with severity."""
         # Test error colors (highest severity)
-        error_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=5, warnings=0, errors=1,
-            ratio=0.2
-        )
+        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=0, errors=1, ratio=0.2)
 
         mock_dialog._update_message(error_stats)
         mock_dialog.message_label.setStyleSheet.assert_called_with("color: red; font-weight: bold;")
 
         # Test warning colors (medium severity)
-        warning_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=5, warnings=1, errors=0,
-            ratio=0.2
-        )
+        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=1, errors=0, ratio=0.2)
 
         mock_dialog._update_message(warning_stats)
         mock_dialog.message_label.setStyleSheet.assert_called_with("color: orange; font-weight: bold;")
 
         # Test caution colors (low severity)
-        caution_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=6, stacks=10, warnings=0, errors=0,
-            ratio=0.6
-        )
+        caution_stats = PapyrusStats(timestamp=datetime.now(), dumps=6, stacks=10, warnings=0, errors=0, ratio=0.6)
 
         mock_dialog._update_message(caution_stats)
         mock_dialog.message_label.setStyleSheet.assert_called_with("color: orange;")
 
         # Test normal colors (no issues)
-        normal_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=1, stacks=10, warnings=0, errors=0,
-            ratio=0.1
-        )
+        normal_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
 
         mock_dialog._update_message(normal_stats)
         mock_dialog.message_label.setStyleSheet.assert_called_with("color: green;")

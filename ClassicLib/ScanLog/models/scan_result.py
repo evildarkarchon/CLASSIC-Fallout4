@@ -47,9 +47,6 @@ class ScanResult:
         Raises:
             AttributeError: If `self.stats` does not have a `get_scan_duration` method, resulting
             in the inability to calculate the scan time.
-
-        Returns:
-            None
         """
         # Calculate scan time if not provided
         if self.scan_time == 0.0:
@@ -62,9 +59,6 @@ class ScanResult:
 
         Args:
             log_name (str): The name of the log to be added to the failed logs list.
-
-        Returns:
-            None
         """
         if log_name not in self.failed_logs:
             self.failed_logs.append(log_name)

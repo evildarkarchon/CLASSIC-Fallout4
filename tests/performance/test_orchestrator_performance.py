@@ -252,9 +252,9 @@ class TestOrchestratorPerformance:
         with patch("ClassicLib.ScanLog.OrchestratorCore.find_segments") as mock_find:
             mock_find.return_value = (
                 "1.10.163",  # gameversion
-                "1.28.6",    # crashgen version
-                "Error",     # main error
-                ([], [], [], [], [], [])  # segments
+                "1.28.6",  # crashgen version
+                "Error",  # main error
+                ([], [], [], [], [], []),  # segments
             )
 
             async with orchestrator:

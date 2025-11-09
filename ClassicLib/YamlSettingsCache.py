@@ -128,12 +128,11 @@ class YamlSettingsCache:
         Returns:
             AsyncYamlSettingsCore: The async core instance for this cache.
         """
+        # No lock needed in async context - await is atomic enough
+        # and we're running in single-threaded async context
         if self._async_core is None:
-            # No lock needed in async context - await is atomic enough
-            # and we're running in single-threaded async context
-            if self._async_core is None:
-                # Directly await initialization without AsyncBridge
-                self._async_core = await get_async_yaml_core()
+            # Directly await initialization without AsyncBridge
+            self._async_core = await get_async_yaml_core()
         return self._async_core
 
     @classmethod
@@ -364,6 +363,7 @@ class YamlSettingsCache:
                 # Possible exceptions: FileNotFoundError, PermissionError, YAML parse errors, etc.
                 # Log but don't fail - some stores might not exist
                 from ClassicLib.Logger import logger
+
                 logger.debug(f"Could not prefetch {store}: {e}")
 
     @staticmethod
@@ -518,6 +518,7 @@ class _YamlCacheProxy:
             YamlSettingsCache: The singleton YAML cache instance.
         """
         return _get_yaml_cache()
+
 
 # Create module-level instance that acts like the original yaml_cache
 yaml_cache = _YamlCacheProxy()

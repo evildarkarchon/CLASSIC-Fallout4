@@ -6,6 +6,7 @@ stack counts, error and warning counts, and the dumps-to-stacks ratio, in a user
 interface. The dialog updates in real-time and includes mechanisms for halting the
 monitoring process and visually indicating the status of metrics.
 """
+
 from datetime import datetime
 
 from PySide6.QtCore import Qt, Signal

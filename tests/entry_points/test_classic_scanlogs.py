@@ -32,10 +32,7 @@ class TestClassicScanLogs:
             assert "new.module.location" in str(w[0].message)
 
     @patch("CLASSIC_ScanLogs.ScanLogsExecutor")
-    def test_classic_scanlogs_backward_compatibility_wrapper(
-        self,
-        mock_executor_class: Mock
-    ) -> None:
+    def test_classic_scanlogs_backward_compatibility_wrapper(self, mock_executor_class: Mock) -> None:
         """Test ClassicScanLogs backward compatibility wrapper."""
         from CLASSIC_ScanLogs import ClassicScanLogs
 
@@ -75,10 +72,7 @@ class TestClassicScanLogs:
 
     @pytest.mark.asyncio
     @patch("CLASSIC_ScanLogs.ScanLogsExecutor")
-    async def test_process_crashlog_async_backward_compatibility(
-        self,
-        mock_executor_class: Mock
-    ) -> None:
+    async def test_process_crashlog_async_backward_compatibility(self, mock_executor_class: Mock) -> None:
         """Test process_crashlog_async backward compatibility method."""
         from CLASSIC_ScanLogs import ClassicScanLogs
 
@@ -88,12 +82,7 @@ class TestClassicScanLogs:
         mock_executor.statistics.to_counter.return_value = Counter()
 
         # Setup async method mock
-        expected_result = (
-            Path("test.log"),
-            ["report line 1", "report line 2"],
-            False,
-            Counter({"processed": 1})
-        )
+        expected_result = (Path("test.log"), ["report line 1", "report line 2"], False, Counter({"processed": 1}))
         mock_executor._process_crashlog_async = AsyncMock(return_value=expected_result)
 
         # Act
@@ -109,10 +98,7 @@ class TestClassicScanLogs:
         mock_executor._process_crashlog_async.assert_called_once_with(Path("test.log"), orchestrator)
 
     @patch("CLASSIC_ScanLogs._write_report_to_file")
-    def test_write_report_to_file_backward_compatibility(
-        self,
-        mock_write_func: Mock
-    ) -> None:
+    def test_write_report_to_file_backward_compatibility(self, mock_write_func: Mock) -> None:
         """Test write_report_to_file backward compatibility function."""
         from CLASSIC_ScanLogs import ClassicScanLogs, write_report_to_file
 
@@ -133,10 +119,7 @@ class TestClassicScanLogs:
         mock_write_func.assert_called_once_with(crashlog, report, False, scanner._executor)
 
     @patch("CLASSIC_ScanLogs._move_unsolved_logs")
-    def test_move_unsolved_logs_backward_compatibility(
-        self,
-        mock_move_func: Mock
-    ) -> None:
+    def test_move_unsolved_logs_backward_compatibility(self, mock_move_func: Mock) -> None:
         """Test move_unsolved_logs backward compatibility function."""
         from CLASSIC_ScanLogs import move_unsolved_logs
 
@@ -154,10 +137,7 @@ class TestClassicScanLogs:
         mock_move_func.assert_called_once_with(crashlog)
 
     @patch("CLASSIC_ScanLogs._crashlogs_scan")
-    def test_crashlogs_scan_main_entry(
-        self,
-        mock_scan_func: Mock
-    ) -> None:
+    def test_crashlogs_scan_main_entry(self, mock_scan_func: Mock) -> None:
         """Test crashlogs_scan main entry point."""
         from CLASSIC_ScanLogs import crashlogs_scan
 
@@ -169,10 +149,7 @@ class TestClassicScanLogs:
 
     @patch("CLASSIC_ScanLogs._func")
     @pytest.mark.asyncio
-    async def test_crashlogs_scan_async_pure_with_qt(
-        self,
-        mock_func: Mock
-    ) -> None:
+    async def test_crashlogs_scan_async_pure_with_qt(self, mock_func: Mock) -> None:
         """Test crashlogs_scan_async_pure_with_qt backward compatibility."""
         from CLASSIC_ScanLogs import ClassicScanLogs, crashlogs_scan_async_pure_with_qt
 
@@ -235,10 +212,7 @@ class TestClassicScanLogs:
         mock_async_func.assert_called_once_with(crashlog, report, True, scanner._executor)
 
     @patch("CLASSIC_ScanLogs._func")
-    def test_complete_scan_with_summary(
-        self,
-        mock_func: Mock
-    ) -> None:
+    def test_complete_scan_with_summary(self, mock_func: Mock) -> None:
         """Test _complete_scan_with_summary backward compatibility."""
         from CLASSIC_ScanLogs import ClassicScanLogs, _complete_scan_with_summary
 
@@ -296,10 +270,7 @@ class TestClassicScanLogs:
         assert SetupCoordinator is not None
 
     @patch("CLASSIC_ScanLogs.ScanLogsExecutor")
-    def test_executor_wrapper_uses_correct_instance(
-        self,
-        mock_executor_class: Mock
-    ) -> None:
+    def test_executor_wrapper_uses_correct_instance(self, mock_executor_class: Mock) -> None:
         """Test that ClassicScanLogs properly wraps ScanLogsExecutor instance."""
         from CLASSIC_ScanLogs import ClassicScanLogs
         from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
@@ -323,8 +294,8 @@ class TestClassicScanLogs:
         """Test that the module can be executed as __main__."""
         with patch("CLASSIC_ScanLogs.crashlogs_scan") as mock_scan, patch("CLASSIC_ScanLogs.__name__", "__main__"):
             pass
-                # Module doesn't have __main__ block, but crashlogs_scan would be called
-                # if it did have one
+            # Module doesn't have __main__ block, but crashlogs_scan would be called
+            # if it did have one
 
         # The module doesn't actually have a __main__ block,
         # but we're testing that it could be added without issues

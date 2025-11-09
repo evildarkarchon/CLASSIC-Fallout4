@@ -44,8 +44,8 @@ class TestAsyncDatabasePool:
 
         assert pool is not None
         # Mock pool has these attributes mocked
-        assert hasattr(pool, 'connections')
-        assert hasattr(pool, 'query_cache')
+        assert hasattr(pool, "connections")
+        assert hasattr(pool, "query_cache")
 
     @pytest.mark.asyncio
     async def test_database_pool_initialization(self) -> None:
@@ -156,10 +156,12 @@ class TestAsyncDatabasePool:
 
             # Track execute calls for cache testing
             execute_call_count = 0
+
             def mock_execute(*args, **kwargs):
                 nonlocal execute_call_count
                 execute_call_count += 1
                 return mock_cursor
+
             mock_conn.execute = mock_execute
 
             # Create an async function that returns the mock connection
@@ -202,6 +204,7 @@ class TestAsyncDatabasePool:
             async def mock_connect_error(_path: Path):
                 # Raise aiosqlite.Error which the code specifically catches
                 import aiosqlite
+
                 raise aiosqlite.Error("Database connection failed")
 
             with (

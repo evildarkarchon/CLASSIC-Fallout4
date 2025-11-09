@@ -12,6 +12,7 @@ def create_layout_mock_factory(base_class):
     This approach keeps the original class reference for union type operations
     while returning mock instances when the class is instantiated.
     """
+
     def mock_factory(*args, **kwargs):
         """Factory function that returns a mock instance."""
         mock = MagicMock()

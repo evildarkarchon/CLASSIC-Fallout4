@@ -4,6 +4,7 @@ Real-world crash log processing performance tests.
 This module contains performance tests for processing actual crash logs,
 measuring pipeline performance with realistic data loads.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
 import json
@@ -176,9 +177,7 @@ class TestRealWorldCrashLogProcessing:
 
         # Compare results
         print("\n--- PERFORMANCE COMPARISON ---")
-        comparison = AsyncPerformanceMonitor.compare_performance(
-            async_stats, sync_total_time, len(crash_log_files)
-        )
+        comparison = AsyncPerformanceMonitor.compare_performance(async_stats, sync_total_time, len(crash_log_files))
 
         print(f"Speedup factor:      {comparison['speedup_factor']:.2f}x")
         print(f"Improvement:         {comparison['improvement_percent']:.1f}%")
@@ -190,9 +189,7 @@ class TestRealWorldCrashLogProcessing:
         assert async_stats.get("total_time", 0) > 0
 
         # Save performance data
-        self.save_performance_baseline(
-            crash_log_files, total_size, sync_stats, async_stats, full_test_time, comparison
-        )
+        self.save_performance_baseline(crash_log_files, total_size, sync_stats, async_stats, full_test_time, comparison)
 
     def save_performance_baseline(
         self,

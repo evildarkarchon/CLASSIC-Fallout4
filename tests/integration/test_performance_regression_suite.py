@@ -68,7 +68,7 @@ class PerformanceMetrics:
             "mean": statistics.mean(values),
             "median": statistics.median(values),
             "stdev": statistics.stdev(values) if len(values) > 1 else 0,
-            "count": len(values)
+            "count": len(values),
         }
 
     def check_regression(self, name: str, threshold: float = 1.5) -> bool:
@@ -109,7 +109,7 @@ class SyntheticDataGenerator:
                 elif i < 50:
                     lines.append(f"\t[{i:02X}] Regular_{i}.esp")
                 else:
-                    lines.append(f"\t[FE:{i-50:03X}] Light_{i}.esl")
+                    lines.append(f"\t[FE:{i - 50:03X}] Light_{i}.esl")
             lines.append("")
 
         if complexity == "high":
@@ -172,8 +172,8 @@ class SyntheticDataGenerator:
 
             plugins[plugin_name] = {
                 "formids": formids,
-                "index": f"{plugin_index:02X}" if plugin_index < 0xFE else f"FE:{i-50:03X}",
-                "masters": ["Fallout4.esm"] if i > 0 else []
+                "index": f"{plugin_index:02X}" if plugin_index < 0xFE else f"FE:{i - 50:03X}",
+                "masters": ["Fallout4.esm"] if i > 0 else [],
             }
         return plugins
 
@@ -208,9 +208,11 @@ class TestLogParsingPerformance:
 
         # Measure performance
         for i, log in enumerate(logs):
+
             def parse_log():
                 lines = log.splitlines()
                 return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+
             _, elapsed = metrics.measure(f"parse_small_{i}", parse_log)
 
         stats = metrics.get_statistics("parse_small_0")
@@ -219,11 +221,11 @@ class TestLogParsingPerformance:
         if using_rust:
             # With Rust: 0.5MB should parse in <100ms
             assert stats["median"] < 0.1, f"Small log parsing slow with Rust: {stats['median']:.3f}s"
-            print(f"\n[RUST] Small log (0.5MB) parse time: {stats['median']*1000:.1f}ms")
+            print(f"\n[RUST] Small log (0.5MB) parse time: {stats['median'] * 1000:.1f}ms")
         else:
             # Python fallback: 0.5MB in <1s
             assert stats["median"] < 1.0, f"Small log parsing slow with Python: {stats['median']:.3f}s"
-            print(f"\n[Python] Small log (0.5MB) parse time: {stats['median']*1000:.1f}ms")
+            print(f"\n[Python] Small log (0.5MB) parse time: {stats['median'] * 1000:.1f}ms")
 
     def test_parser_performance_medium_logs(self, metrics, generator):
         """Test parser performance on medium logs (1.5MB)."""
@@ -238,9 +240,11 @@ class TestLogParsingPerformance:
 
         # Measure performance
         for i, log in enumerate(logs):
+
             def parse_log():
                 lines = log.splitlines()
                 return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+
             _, elapsed = metrics.measure(f"parse_medium_{i}", parse_log)
 
         # Calculate statistics
@@ -254,11 +258,11 @@ class TestLogParsingPerformance:
         if using_rust:
             # With Rust: 1.5MB should parse in <300ms (10x faster than Python)
             assert median_time < 0.3, f"Medium log parsing slow with Rust: {median_time:.3f}s"
-            print(f"\n[RUST] Medium log (1.5MB) parse time: {median_time*1000:.1f}ms")
+            print(f"\n[RUST] Medium log (1.5MB) parse time: {median_time * 1000:.1f}ms")
         else:
             # Python fallback: 1.5MB in <3s
             assert median_time < 3.0, f"Medium log parsing slow with Python: {median_time:.3f}s"
-            print(f"\n[Python] Medium log (1.5MB) parse time: {median_time*1000:.1f}ms")
+            print(f"\n[Python] Medium log (1.5MB) parse time: {median_time * 1000:.1f}ms")
 
     def test_parser_performance_complex_logs(self, metrics, generator):
         """Test parser performance on complex logs with many sections."""
@@ -275,17 +279,18 @@ class TestLogParsingPerformance:
         def parse_complex():
             lines = complex_log.splitlines()
             return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+
         _, elapsed = metrics.measure("parse_complex", parse_complex)
 
         # Performance expectations
         if using_rust:
             # With Rust: 2MB complex should parse in <500ms
             assert elapsed < 0.5, f"Complex log parsing slow with Rust: {elapsed:.3f}s"
-            print(f"\n[RUST] Complex log (2MB) parse time: {elapsed*1000:.1f}ms")
+            print(f"\n[RUST] Complex log (2MB) parse time: {elapsed * 1000:.1f}ms")
         else:
             # Python fallback: 2MB complex in <5s
             assert elapsed < 5.0, f"Complex log parsing slow with Python: {elapsed:.3f}s"
-            print(f"\n[Python] Complex log (2MB) parse time: {elapsed*1000:.1f}ms")
+            print(f"\n[Python] Complex log (2MB) parse time: {elapsed * 1000:.1f}ms")
 
     def test_parser_scaling_performance(self, metrics, generator):
         """Test parser performance scaling with log size."""
@@ -300,9 +305,11 @@ class TestLogParsingPerformance:
 
         for size in sizes:
             log = generator.generate_crash_log(size, "medium")
+
             def parse_log():
                 lines = log.splitlines()
                 return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+
             _, elapsed = metrics.measure(f"scale_{size}MB", parse_log)
             times.append(elapsed)
 
@@ -359,11 +366,11 @@ class TestFormIDAnalysisPerformance:
         if using_rust:
             # With Rust: Should analyze 1000 FormIDs in <10ms total (25x speedup)
             assert elapsed < 0.01, f"FormID analysis slow with Rust: {elapsed:.3f}s for 1000 IDs"
-            print(f"[RUST] Performance: {1000/elapsed:.0f} FormIDs/second")
+            print(f"[RUST] Performance: {1000 / elapsed:.0f} FormIDs/second")
         else:
             # Python fallback: 1000 FormIDs in <250ms
             assert elapsed < 0.25, f"FormID analysis slow with Python: {elapsed:.3f}s for 1000 IDs"
-            print(f"[Python] Performance: {1000/elapsed:.0f} FormIDs/second")
+            print(f"[Python] Performance: {1000 / elapsed:.0f} FormIDs/second")
 
     def test_formid_pattern_matching(self, metrics, generator):
         """Test FormID pattern matching performance."""
@@ -383,8 +390,7 @@ class TestFormIDAnalysisPerformance:
             formids.append(f"{random.randint(0x01, 0x7F)}{i:06X}")  # Regular plugins
 
         # Measure pattern matching using extract_formids
-        _, elapsed = metrics.measure("pattern_match",
-                                    lambda: analyzer.extract_formids(formids))
+        _, elapsed = metrics.measure("pattern_match", lambda: analyzer.extract_formids(formids))
 
         print(f"\nPattern matching {len(formids)} FormIDs: {elapsed:.3f}s")
 
@@ -488,10 +494,7 @@ class TestPluginAnalysisPerformance:
         from ClassicLib.integration.factory import get_plugin_analyzer
 
         # Generate synthetic plugin data
-        plugin_data = generator.generate_plugin_data(
-            num_plugins=100,
-            formids_per_plugin=100
-        )
+        plugin_data = generator.generate_plugin_data(num_plugins=100, formids_per_plugin=100)
 
         with patch("ClassicLib.integration.plugin_analyzer.load_plugins", return_value=plugin_data):
             analyzer = get_plugin_analyzer()
@@ -531,9 +534,9 @@ class TestPluginAnalysisPerformance:
                 # Each plugin depends on previous ones
                 deps.append("Fallout4.esm")
                 if i > 1:
-                    deps.append(f"Plugin_{i-1}.esp")
+                    deps.append(f"Plugin_{i - 1}.esp")
                 if i > 10:
-                    deps.append(f"Plugin_{i-10}.esp")
+                    deps.append(f"Plugin_{i - 10}.esp")
             dependencies[plugin_name] = deps
 
         # Measure dependency resolution
@@ -553,11 +556,7 @@ class TestPluginAnalysisPerformance:
 
             return result
 
-        _, elapsed = metrics.measure(
-            "dependency_resolve",
-            resolve_dependencies,
-            "Plugin_49.esp"
-        )
+        _, elapsed = metrics.measure("dependency_resolve", resolve_dependencies, "Plugin_49.esp")
 
         print(f"\nDependency chain resolution: {elapsed:.3f}s")
 
@@ -591,9 +590,7 @@ class TestMemoryPerformance:
         for i in range(5):
             log = generator.generate_crash_log(2.0, "high")
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Explicitly clean up
             del log
@@ -627,9 +624,7 @@ class TestMemoryPerformance:
         for i in range(10):
             log = generator.generate_crash_log(0.5, "simple")
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Try to track the result
             try:
@@ -664,9 +659,9 @@ class TestRegressionBaselines:
 
         # Establish baselines (with Rust acceleration expected)
         m.baselines = {
-            "parse_1mb": 0.2,      # 200ms for 1MB log with Rust
-            "parse_2mb": 0.5,      # 500ms for 2MB log with Rust
-            "formid_1000": 0.01,   # 10ms for 1000 FormIDs with Rust
+            "parse_1mb": 0.2,  # 200ms for 1MB log with Rust
+            "parse_2mb": 0.5,  # 500ms for 2MB log with Rust
+            "formid_1000": 0.01,  # 10ms for 1000 FormIDs with Rust
             "file_read_100kb": 0.005,  # 5ms per 100KB file with Rust
             "conflict_check_100": 1.0,  # 1s for 100 plugins
         }
@@ -685,9 +680,11 @@ class TestRegressionBaselines:
 
         # Test 1MB parsing
         log_1mb = generator.generate_crash_log(1.0, "medium")
+
         def parse_1mb():
             lines = log_1mb.splitlines()
             return parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+
         _, elapsed = metrics.measure("parse_1mb", parse_1mb)
 
         # Check for regression
@@ -696,8 +693,7 @@ class TestRegressionBaselines:
         else:
             stats = metrics.get_statistics("parse_1mb")
             baseline = metrics.baselines["parse_1mb"]
-            pytest.fail(f"Performance regression: 1MB parsing took {stats['median']:.3f}s "
-                       f"(baseline: {baseline:.3f}s)")
+            pytest.fail(f"Performance regression: 1MB parsing took {stats['median']:.3f}s (baseline: {baseline:.3f}s)")
 
     def test_no_regression_in_formid_analysis(self, metrics, generator):
         """Test that FormID analysis performance hasn't regressed."""
@@ -720,8 +716,7 @@ class TestRegressionBaselines:
             print(f"\n✓ No regression in FormID analysis: {elapsed:.3f}s for 1000 IDs")
         else:
             baseline = metrics.baselines["formid_1000"]
-            pytest.fail(f"Performance regression: FormID analysis took {elapsed:.3f}s "
-                       f"(baseline: {baseline:.3f}s)")
+            pytest.fail(f"Performance regression: FormID analysis took {elapsed:.3f}s (baseline: {baseline:.3f}s)")
 
     def test_performance_summary(self, metrics, generator):
         """Generate performance summary report."""
@@ -737,7 +732,7 @@ class TestRegressionBaselines:
         print(f"  Active: {rust_status['acceleration_active']}")
         print(f"  Components: {rust_status['active_count']}/{rust_status['total_count']}")
 
-        if rust_status['acceleration_active']:
+        if rust_status["acceleration_active"]:
             print("\n✓ Rust acceleration is ACTIVE - expecting high performance")
             print("\nExpected speedups over Python:")
             print("  • Log Parsing: 10x faster")

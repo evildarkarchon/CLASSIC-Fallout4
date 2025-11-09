@@ -16,7 +16,6 @@ Mock fixtures are used to avoid actual database connections during unit tests.
 # 3. Never use AsyncMock for methods called through AsyncBridge
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
-
 from unittest.mock import MagicMock
 
 import pytest
@@ -24,6 +23,7 @@ import pytest
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -56,7 +56,9 @@ class TestOrchestratorCore:
         OrchestratorCore no longer requires crashlogs parameter and reads files directly.
         """
         # Test with FormID database disabled
-        async with OrchestratorCore(yamldata=mock_yamldata, fcx_mode=True, show_formid_values=False, formid_db_exists=False) as orchestrator:
+        async with OrchestratorCore(
+            yamldata=mock_yamldata, fcx_mode=True, show_formid_values=False, formid_db_exists=False
+        ) as orchestrator:
             assert orchestrator is not None
             assert orchestrator.fcx_handler is not None  # FCX handler created with fcx_mode=True
             assert orchestrator.show_formid_values is False

@@ -53,6 +53,7 @@ import psutil
 
 try:
     from scipy import stats
+
     SCIPY_AVAILABLE = True
 except ImportError:
     SCIPY_AVAILABLE = False
@@ -62,6 +63,7 @@ except ImportError:
 try:
     import matplotlib.pyplot as plt
     from matplotlib import patches
+
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
@@ -71,6 +73,7 @@ except ImportError:
 from tools.ffi_profiler import FFIProfiler
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class PerformanceMetrics:
@@ -110,6 +113,7 @@ class PerformanceMetrics:
     test_name: str = ""
     timestamp: float = field(default_factory=time.time)
 
+
 @dataclass
 class ComparisonResult:
     """Results of comparing two implementations."""
@@ -140,12 +144,12 @@ class ComparisonResult:
     recommendations: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
+
 class StatisticalAnalyzer:
     """Statistical analysis tools for performance data."""
 
     @staticmethod
-    def calculate_confidence_interval(data: list[float],
-                                    confidence: float = 0.95) -> tuple[float, float, float]:
+    def calculate_confidence_interval(data: list[float], confidence: float = 0.95) -> tuple[float, float, float]:
         """
         Calculate confidence interval for performance data.
 
@@ -184,9 +188,7 @@ class StatisticalAnalyzer:
         return mean, mean - margin_of_error, mean + margin_of_error
 
     @staticmethod
-    def welch_t_test(sample1: list[float],
-                     sample2: list[float],
-                     alpha: float = 0.05) -> tuple[bool, float]:
+    def welch_t_test(sample1: list[float], sample2: list[float], alpha: float = 0.05) -> tuple[bool, float]:
         """
         Perform Welch's t-test to determine if performance difference is significant.
 
@@ -211,10 +213,10 @@ class StatisticalAnalyzer:
         var2 = statistics.variance(sample2)
 
         # Welch's t-statistic
-        t_stat = (mean1 - mean2) / math.sqrt(var1/n1 + var2/n2)
+        t_stat = (mean1 - mean2) / math.sqrt(var1 / n1 + var2 / n2)
 
         # Approximate degrees of freedom (Welch-Satterthwaite equation)
-        df = (var1/n1 + var2/n2)**2 / (var1**2/(n1**2*(n1-1)) + var2**2/(n2**2*(n2-1)))
+        df = (var1 / n1 + var2 / n2) ** 2 / (var1**2 / (n1**2 * (n1 - 1)) + var2**2 / (n2**2 * (n2 - 1)))
 
         # Rough p-value approximation (conservative)
         # This is a simplified approximation
@@ -264,6 +266,7 @@ class StatisticalAnalyzer:
 
         return [False] * len(data)
 
+
 class PerformanceBenchmark:
     """
     High-precision benchmarking tool for performance measurements.
@@ -274,11 +277,9 @@ class PerformanceBenchmark:
         self.measurement_runs = measurement_runs
         self._process = psutil.Process()
 
-    def benchmark_function(self,
-                          func: Callable,
-                          test_data: list[Any],
-                          test_name: str = "",
-                          enable_ffi_profiling: bool = True) -> PerformanceMetrics:
+    def benchmark_function(
+        self, func: Callable, test_data: list[Any], test_name: str = "", enable_ffi_profiling: bool = True
+    ) -> PerformanceMetrics:
         """
         Benchmark a function with comprehensive performance measurements.
 
@@ -298,7 +299,7 @@ class PerformanceBenchmark:
         # Warmup runs to stabilize performance
         logger.debug(f"Running {self.warmup_runs} warmup runs for {test_name}")
         for _ in range(self.warmup_runs):
-            for data in test_data[:min(10, len(test_data))]:  # Use subset for warmup
+            for data in test_data[: min(10, len(test_data))]:  # Use subset for warmup
                 try:
                     func(data)
                 except Exception as e:
@@ -340,8 +341,9 @@ class PerformanceBenchmark:
                         run_data_size += sys.getsizeof(data)
 
                         # Handle async results
-                        if hasattr(result, '__await__'):
+                        if hasattr(result, "__await__"):
                             import asyncio
+
                             loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
                             try:
@@ -427,13 +429,12 @@ class PerformanceBenchmark:
             thread_count=1,  # Single-threaded benchmark
             gil_contention=gil_contention,
             test_name=test_name or func.__name__,
-            timestamp=time.time()
+            timestamp=time.time(),
         )
 
-    def benchmark_with_multiple_datasets(self,
-                                       func: Callable,
-                                       datasets: dict[str, list[Any]],
-                                       test_name: str = "") -> dict[str, PerformanceMetrics]:
+    def benchmark_with_multiple_datasets(
+        self, func: Callable, datasets: dict[str, list[Any]], test_name: str = ""
+    ) -> dict[str, PerformanceMetrics]:
         """
         Benchmark a function with multiple different datasets.
 
@@ -459,6 +460,7 @@ class PerformanceBenchmark:
 
         return results
 
+
 class PerformanceAnalyzer:
     """
     Main performance analysis coordinator providing comprehensive analysis capabilities.
@@ -473,13 +475,15 @@ class PerformanceAnalyzer:
         self.analysis_history: list[ComparisonResult] = []
         self.baseline_results: dict[str, list[PerformanceMetrics]] = defaultdict(list)
 
-    def compare_implementations(self,
-                              baseline_func: Callable,
-                              optimized_func: Callable,
-                              test_data: list[Any],
-                              baseline_name: str = "Python",
-                              optimized_name: str = "Rust",
-                              runs_per_implementation: int = 10) -> ComparisonResult:
+    def compare_implementations(
+        self,
+        baseline_func: Callable,
+        optimized_func: Callable,
+        test_data: list[Any],
+        baseline_name: str = "Python",
+        optimized_name: str = "Rust",
+        runs_per_implementation: int = 10,
+    ) -> ComparisonResult:
         """
         Compare two implementations with statistical analysis.
 
@@ -503,9 +507,7 @@ class PerformanceAnalyzer:
         try:
             # Benchmark baseline implementation
             logger.info(f"Benchmarking {baseline_name} implementation...")
-            baseline_metrics = self.benchmark.benchmark_function(
-                baseline_func, test_data, f"{baseline_name}_implementation"
-            )
+            baseline_metrics = self.benchmark.benchmark_function(baseline_func, test_data, f"{baseline_name}_implementation")
 
             # Brief pause between implementations
             time.sleep(0.5)
@@ -513,21 +515,22 @@ class PerformanceAnalyzer:
 
             # Benchmark optimized implementation
             logger.info(f"Benchmarking {optimized_name} implementation...")
-            optimized_metrics = self.benchmark.benchmark_function(
-                optimized_func, test_data, f"{optimized_name}_implementation"
-            )
+            optimized_metrics = self.benchmark.benchmark_function(optimized_func, test_data, f"{optimized_name}_implementation")
 
             # Calculate improvements
-            speedup_factor = (baseline_metrics.wall_time / optimized_metrics.wall_time
-                            if optimized_metrics.wall_time > 0 else float('inf'))
+            speedup_factor = baseline_metrics.wall_time / optimized_metrics.wall_time if optimized_metrics.wall_time > 0 else float("inf")
 
-            memory_improvement_pct = ((baseline_metrics.memory_delta - optimized_metrics.memory_delta)
-                                    / baseline_metrics.memory_delta * 100
-                                    if baseline_metrics.memory_delta != 0 else 0)
+            memory_improvement_pct = (
+                (baseline_metrics.memory_delta - optimized_metrics.memory_delta) / baseline_metrics.memory_delta * 100
+                if baseline_metrics.memory_delta != 0
+                else 0
+            )
 
-            throughput_improvement_pct = ((optimized_metrics.items_per_second - baseline_metrics.items_per_second)
-                                        / baseline_metrics.items_per_second * 100
-                                        if baseline_metrics.items_per_second > 0 else 0)
+            throughput_improvement_pct = (
+                (optimized_metrics.items_per_second - baseline_metrics.items_per_second) / baseline_metrics.items_per_second * 100
+                if baseline_metrics.items_per_second > 0
+                else 0
+            )
 
             # Statistical significance testing (would need multiple runs for proper analysis)
             # For now, we'll use a simplified approach
@@ -570,7 +573,7 @@ class PerformanceAnalyzer:
                 sample_size=runs_per_implementation,
                 test_duration=baseline_metrics.wall_time + optimized_metrics.wall_time,
                 recommendations=recommendations,
-                warnings=warnings
+                warnings=warnings,
             )
 
             # Store result
@@ -582,11 +585,9 @@ class PerformanceAnalyzer:
             # Restore original settings
             self.benchmark.measurement_runs = original_runs
 
-    def analyze_scaling_behavior(self,
-                                func: Callable,
-                                base_data: Any,
-                                scale_factors: list[int],
-                                func_name: str = "function") -> dict[str, Any]:
+    def analyze_scaling_behavior(
+        self, func: Callable, base_data: Any, scale_factors: list[int], func_name: str = "function"
+    ) -> dict[str, Any]:
         """
         Analyze how function performance scales with input size.
 
@@ -617,17 +618,17 @@ class PerformanceAnalyzer:
             metrics = self.benchmark.benchmark_function(func, scaled_data, test_name)
 
             scaling_results[scale_factor] = {
-                'metrics': metrics,
-                'time_per_item': metrics.wall_time / metrics.items_processed if metrics.items_processed > 0 else 0,
-                'memory_per_item': metrics.memory_delta / metrics.items_processed if metrics.items_processed > 0 else 0
+                "metrics": metrics,
+                "time_per_item": metrics.wall_time / metrics.items_processed if metrics.items_processed > 0 else 0,
+                "memory_per_item": metrics.memory_delta / metrics.items_processed if metrics.items_processed > 0 else 0,
             }
 
             logger.debug(f"Scale {scale_factor}: {metrics.wall_time:.3f}s, {metrics.items_per_second:.1f} items/s")
 
         # Analyze scaling characteristics
         scale_factors_sorted = sorted(scale_factors)
-        times = [scaling_results[sf]['metrics'].wall_time for sf in scale_factors_sorted]
-        items = [scaling_results[sf]['metrics'].items_processed for sf in scale_factors_sorted]
+        times = [scaling_results[sf]["metrics"].wall_time for sf in scale_factors_sorted]
+        items = [scaling_results[sf]["metrics"].items_processed for sf in scale_factors_sorted]
 
         # Calculate complexity (rough estimate)
         complexity_estimate = "Unknown"
@@ -636,8 +637,8 @@ class PerformanceAnalyzer:
             # This is a rough approximation
             time_ratios = []
             for i in range(1, len(scale_factors_sorted)):
-                sf_ratio = scale_factors_sorted[i] / scale_factors_sorted[i-1]
-                time_ratio = times[i] / times[i-1]
+                sf_ratio = scale_factors_sorted[i] / scale_factors_sorted[i - 1]
+                time_ratio = times[i] / times[i - 1]
                 time_ratios.append(time_ratio / sf_ratio)
 
             avg_ratio = statistics.mean(time_ratios)
@@ -652,17 +653,15 @@ class PerformanceAnalyzer:
                 complexity_estimate = "O(n³+) - Polynomial or worse"
 
         return {
-            'scaling_results': scaling_results,
-            'complexity_estimate': complexity_estimate,
-            'max_throughput': max(r['metrics'].items_per_second for r in scaling_results.values()),
-            'memory_efficiency': min(r['memory_per_item'] for r in scaling_results.values() if r['memory_per_item'] > 0)
+            "scaling_results": scaling_results,
+            "complexity_estimate": complexity_estimate,
+            "max_throughput": max(r["metrics"].items_per_second for r in scaling_results.values()),
+            "memory_efficiency": min(r["memory_per_item"] for r in scaling_results.values() if r["memory_per_item"] > 0),
         }
 
-    def regression_analysis(self,
-                          func: Callable,
-                          test_data: list[Any],
-                          baseline_metrics: PerformanceMetrics,
-                          tolerance_pct: float = 5.0) -> dict[str, Any]:
+    def regression_analysis(
+        self, func: Callable, test_data: list[Any], baseline_metrics: PerformanceMetrics, tolerance_pct: float = 5.0
+    ) -> dict[str, Any]:
         """
         Detect performance regressions by comparing current performance to baseline.
 
@@ -681,14 +680,23 @@ class PerformanceAnalyzer:
         current_metrics = self.benchmark.benchmark_function(func, test_data, "regression_test")
 
         # Calculate changes
-        time_change_pct = ((current_metrics.wall_time - baseline_metrics.wall_time)
-                          / baseline_metrics.wall_time * 100) if baseline_metrics.wall_time > 0 else 0
+        time_change_pct = (
+            ((current_metrics.wall_time - baseline_metrics.wall_time) / baseline_metrics.wall_time * 100)
+            if baseline_metrics.wall_time > 0
+            else 0
+        )
 
-        memory_change_pct = ((current_metrics.memory_delta - baseline_metrics.memory_delta)
-                           / baseline_metrics.memory_delta * 100) if baseline_metrics.memory_delta != 0 else 0
+        memory_change_pct = (
+            ((current_metrics.memory_delta - baseline_metrics.memory_delta) / baseline_metrics.memory_delta * 100)
+            if baseline_metrics.memory_delta != 0
+            else 0
+        )
 
-        throughput_change_pct = ((current_metrics.items_per_second - baseline_metrics.items_per_second)
-                               / baseline_metrics.items_per_second * 100) if baseline_metrics.items_per_second > 0 else 0
+        throughput_change_pct = (
+            ((current_metrics.items_per_second - baseline_metrics.items_per_second) / baseline_metrics.items_per_second * 100)
+            if baseline_metrics.items_per_second > 0
+            else 0
+        )
 
         # Detect regressions
         regressions = []
@@ -711,20 +719,19 @@ class PerformanceAnalyzer:
             status = "REGRESSION"
 
         return {
-            'status': status,
-            'current_metrics': current_metrics,
-            'baseline_metrics': baseline_metrics,
-            'time_change_pct': time_change_pct,
-            'memory_change_pct': memory_change_pct,
-            'throughput_change_pct': throughput_change_pct,
-            'regressions': regressions,
-            'tolerance_pct': tolerance_pct
+            "status": status,
+            "current_metrics": current_metrics,
+            "baseline_metrics": baseline_metrics,
+            "time_change_pct": time_change_pct,
+            "memory_change_pct": memory_change_pct,
+            "throughput_change_pct": throughput_change_pct,
+            "regressions": regressions,
+            "tolerance_pct": tolerance_pct,
         }
 
-    def generate_report(self,
-                       comparison_result: ComparisonResult,
-                       output_file: str | Path | None = None,
-                       include_charts: bool = True) -> str:
+    def generate_report(
+        self, comparison_result: ComparisonResult, output_file: str | Path | None = None, include_charts: bool = True
+    ) -> str:
         """
         Generate a comprehensive HTML performance report.
 
@@ -771,10 +778,10 @@ class PerformanceAnalyzer:
         <div class="summary">
             <strong>{comparison_result.optimized_name}</strong> vs <strong>{comparison_result.baseline_name}</strong>
             <br>
-            <span class="{'improvement' if comparison_result.speedup_factor > 1 else 'degradation'}">
+            <span class="{"improvement" if comparison_result.speedup_factor > 1 else "degradation"}">
                 {comparison_result.speedup_factor:.2f}x speedup
             </span>
-            {'✓ Statistically significant' if comparison_result.is_significant else '? Statistical significance uncertain'}
+            {"✓ Statistically significant" if comparison_result.is_significant else "? Statistical significance uncertain"}
         </div>
 
         <h2>📊 Performance Metrics</h2>
@@ -783,8 +790,8 @@ class PerformanceAnalyzer:
                 <h3>⏱️ Execution Time</h3>
                 <p><strong>{comparison_result.baseline_name}:</strong> {baseline.wall_time:.3f}s</p>
                 <p><strong>{comparison_result.optimized_name}:</strong> {optimized.wall_time:.3f}s</p>
-                <p><span class="{'improvement' if comparison_result.speedup_factor > 1 else 'degradation'}">
-                    {comparison_result.speedup_factor:.2f}x {'faster' if comparison_result.speedup_factor > 1 else 'slower'}
+                <p><span class="{"improvement" if comparison_result.speedup_factor > 1 else "degradation"}">
+                    {comparison_result.speedup_factor:.2f}x {"faster" if comparison_result.speedup_factor > 1 else "slower"}
                 </span></p>
             </div>
 
@@ -792,7 +799,7 @@ class PerformanceAnalyzer:
                 <h3>🧠 Memory Usage</h3>
                 <p><strong>{comparison_result.baseline_name}:</strong> {baseline.memory_delta:+.2f}MB</p>
                 <p><strong>{comparison_result.optimized_name}:</strong> {optimized.memory_delta:+.2f}MB</p>
-                <p><span class="{'improvement' if comparison_result.memory_improvement_pct > 0 else 'degradation' if comparison_result.memory_improvement_pct < 0 else 'neutral'}">
+                <p><span class="{"improvement" if comparison_result.memory_improvement_pct > 0 else "degradation" if comparison_result.memory_improvement_pct < 0 else "neutral"}">
                     {comparison_result.memory_improvement_pct:+.1f}% change
                 </span></p>
             </div>
@@ -801,7 +808,7 @@ class PerformanceAnalyzer:
                 <h3>📈 Throughput</h3>
                 <p><strong>{comparison_result.baseline_name}:</strong> {baseline.items_per_second:.1f} items/s</p>
                 <p><strong>{comparison_result.optimized_name}:</strong> {optimized.items_per_second:.1f} items/s</p>
-                <p><span class="{'improvement' if comparison_result.throughput_improvement_pct > 0 else 'degradation' if comparison_result.throughput_improvement_pct < 0 else 'neutral'}">
+                <p><span class="{"improvement" if comparison_result.throughput_improvement_pct > 0 else "degradation" if comparison_result.throughput_improvement_pct < 0 else "neutral"}">
                     {comparison_result.throughput_improvement_pct:+.1f}% change
                 </span></p>
             </div>
@@ -829,19 +836,19 @@ class PerformanceAnalyzer:
                     <td>Wall Time</td>
                     <td>{baseline.wall_time:.3f}s</td>
                     <td>{optimized.wall_time:.3f}s</td>
-                    <td class="{'improvement' if comparison_result.speedup_factor > 1 else 'degradation'}">{comparison_result.speedup_factor:.2f}x</td>
+                    <td class="{"improvement" if comparison_result.speedup_factor > 1 else "degradation"}">{comparison_result.speedup_factor:.2f}x</td>
                 </tr>
                 <tr>
                     <td>CPU Time</td>
                     <td>{baseline.cpu_time:.3f}s</td>
                     <td>{optimized.cpu_time:.3f}s</td>
-                    <td class="{'improvement' if baseline.cpu_time > optimized.cpu_time else 'degradation'}">{baseline.cpu_time/optimized.cpu_time if optimized.cpu_time > 0 else float('inf'):.2f}x</td>
+                    <td class="{"improvement" if baseline.cpu_time > optimized.cpu_time else "degradation"}">{baseline.cpu_time / optimized.cpu_time if optimized.cpu_time > 0 else float("inf"):.2f}x</td>
                 </tr>
                 <tr>
                     <td>Peak Memory</td>
                     <td>{baseline.memory_peak:.2f}MB</td>
                     <td>{optimized.memory_peak:.2f}MB</td>
-                    <td class="{'improvement' if baseline.memory_peak > optimized.memory_peak else 'degradation'}">{((baseline.memory_peak - optimized.memory_peak) / baseline.memory_peak * 100):+.1f}%</td>
+                    <td class="{"improvement" if baseline.memory_peak > optimized.memory_peak else "degradation"}">{((baseline.memory_peak - optimized.memory_peak) / baseline.memory_peak * 100):+.1f}%</td>
                 </tr>
                 <tr>
                     <td>Items Processed</td>
@@ -853,7 +860,7 @@ class PerformanceAnalyzer:
                     <td>Error Rate</td>
                     <td>{100 - baseline.success_rate:.1f}%</td>
                     <td>{100 - optimized.success_rate:.1f}%</td>
-                    <td class="{'improvement' if optimized.success_rate > baseline.success_rate else 'degradation' if optimized.success_rate < baseline.success_rate else 'neutral'}">{(optimized.success_rate - baseline.success_rate):+.1f}pp</td>
+                    <td class="{"improvement" if optimized.success_rate > baseline.success_rate else "degradation" if optimized.success_rate < baseline.success_rate else "neutral"}">{(optimized.success_rate - baseline.success_rate):+.1f}pp</td>
                 </tr>
             </tbody>
         </table>
@@ -876,9 +883,9 @@ class PerformanceAnalyzer:
         <h2>📄 Analysis Details</h2>
         <p><strong>Sample Size:</strong> {comparison_result.sample_size} runs per implementation</p>
         <p><strong>Total Test Duration:</strong> {comparison_result.test_duration:.2f}s</p>
-        <p><strong>Confidence Level:</strong> {comparison_result.confidence_level*100:.0f}%</p>
-        <p><strong>Statistical Significance:</strong> {'Yes' if comparison_result.is_significant else 'No'} (p={comparison_result.p_value:.3f})</p>
-        <p><strong>Generated:</strong> {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p><strong>Confidence Level:</strong> {comparison_result.confidence_level * 100:.0f}%</p>
+        <p><strong>Statistical Significance:</strong> {"Yes" if comparison_result.is_significant else "No"} (p={comparison_result.p_value:.3f})</p>
+        <p><strong>Generated:</strong> {time.strftime("%Y-%m-%d %H:%M:%S")}</p>
 
     </div>
 </body>
@@ -888,7 +895,7 @@ class PerformanceAnalyzer:
         # Save to file if requested
         if output_file:
             output_path = Path(output_file)
-            with Path(output_path).open('w', encoding='utf-8') as f:
+            with Path(output_path).open("w", encoding="utf-8") as f:
                 f.write(html)
             logger.info(f"Performance report saved to {output_path}")
 
@@ -908,7 +915,9 @@ class PerformanceAnalyzer:
         print("\n⏱️ EXECUTION TIME:")
         print(f"   {result.baseline_name:12s}: {result.baseline_metrics.wall_time:.3f}s")
         print(f"   {result.optimized_name:12s}: {result.optimized_metrics.wall_time:.3f}s")
-        print(f"   Speedup Factor: {result.speedup_factor:.2f}x {'🚀' if result.speedup_factor > 2 else '✅' if result.speedup_factor > 1.1 else '⚠️'}")
+        print(
+            f"   Speedup Factor: {result.speedup_factor:.2f}x {'🚀' if result.speedup_factor > 2 else '✅' if result.speedup_factor > 1.1 else '⚠️'}"
+        )
 
         print("\n🧠 MEMORY USAGE:")
         print(f"   {result.baseline_name:12s}: {result.baseline_metrics.memory_delta:+.2f}MB")
@@ -933,7 +942,7 @@ class PerformanceAnalyzer:
         print("\n📊 STATISTICAL ANALYSIS:")
         print(f"   Significant: {'Yes ✅' if result.is_significant else 'No ❓'}")
         print(f"   P-value: {result.p_value:.3f}")
-        print(f"   Confidence: {result.confidence_level*100:.0f}%")
+        print(f"   Confidence: {result.confidence_level * 100:.0f}%")
 
         # Warnings and recommendations
         if result.warnings:
@@ -960,6 +969,7 @@ class PerformanceAnalyzer:
 
         print("=" * 80)
 
+
 # Example usage and testing
 if __name__ == "__main__":
     print("Performance Analyzer - Test Mode")
@@ -983,12 +993,7 @@ if __name__ == "__main__":
 
     # Run comparison
     print("Running performance comparison...")
-    result = analyzer.compare_implementations(
-        python_implementation,
-        rust_implementation,
-        test_data,
-        runs_per_implementation=5
-    )
+    result = analyzer.compare_implementations(python_implementation, rust_implementation, test_data, runs_per_implementation=5)
 
     # Print results
     analyzer.print_comparison_summary(result)

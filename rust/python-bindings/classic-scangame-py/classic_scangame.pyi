@@ -44,11 +44,9 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
 
 __version__: str
 __debug_registered__: bool
-
 
 # ============================================================================
 # BA2 Archive Handling
@@ -64,10 +62,10 @@ class BA2Issues:
         xse_file: XSE script files detected in archive.
     """
 
-    tex_dims: List[str]
-    tex_frmt: List[str]
-    snd_frmt: List[str]
-    xse_file: List[str]
+    tex_dims: list[str]
+    tex_frmt: list[str]
+    snd_frmt: list[str]
+    xse_file: list[str]
 
     def has_issues(self) -> bool:
         """Check if any issues were found.
@@ -82,7 +80,6 @@ class BA2Issues:
         Returns:
             Sum of all issue list lengths.
         """
-
 
 class BA2Scanner:
     """Scans BA2 archive files for issues and validates their contents.
@@ -101,7 +98,7 @@ class BA2Scanner:
     def __init__(self) -> None:
         """Create a new BA2Scanner instance."""
 
-    def find_ba2_files(self, root_path: Path) -> List[Path]:
+    def find_ba2_files(self, root_path: Path) -> list[Path]:
         """Find all BA2 archive files in a directory.
 
         Args:
@@ -121,7 +118,7 @@ class BA2Scanner:
             BA2Issues object containing lists of problematic entries.
         """
 
-    def scan_archives_batch(self, archive_paths: List[Path]) -> List[Tuple[Path, BA2Issues]]:
+    def scan_archives_batch(self, archive_paths: list[Path]) -> list[tuple[Path, BA2Issues]]:
         """Scan multiple BA2 archives in batch.
 
         Args:
@@ -131,8 +128,7 @@ class BA2Scanner:
             List of tuples (archive_path, BA2Issues) for each archive.
         """
 
-
-def scan_all_ba2_archives(root_path: Path) -> List[Tuple[Path, BA2Issues]]:
+def scan_all_ba2_archives(root_path: Path) -> list[tuple[Path, BA2Issues]]:
     """Convenience function to find and scan all BA2 archives in a directory.
 
     Args:
@@ -141,7 +137,6 @@ def scan_all_ba2_archives(root_path: Path) -> List[Tuple[Path, BA2Issues]]:
     Returns:
         List of tuples (archive_path, BA2Issues) for all BA2 files found.
     """
-
 
 # ============================================================================
 # Config Duplicate Detection
@@ -156,8 +151,7 @@ class DuplicateGroup:
     """
 
     original: Path
-    duplicates: List[Path]
-
+    duplicates: list[Path]
 
 class ConfigDuplicateDetector:
     """Detects duplicate configuration files in a directory tree.
@@ -176,7 +170,7 @@ class ConfigDuplicateDetector:
     def __init__(self) -> None:
         """Create a new ConfigDuplicateDetector instance."""
 
-    def detect_duplicates(self, root_path: Path) -> List[DuplicateGroup]:
+    def detect_duplicates(self, root_path: Path) -> list[DuplicateGroup]:
         """Detect duplicate configuration files in the specified directory.
 
         Args:
@@ -186,7 +180,7 @@ class ConfigDuplicateDetector:
             List of DuplicateGroup objects containing original and duplicate paths.
         """
 
-    def get_duplicate_map(self, root_path: Path) -> Dict[str, List[Path]]:
+    def get_duplicate_map(self, root_path: Path) -> dict[str, list[Path]]:
         """Get dictionary mapping of lowercase filenames to lists of paths.
 
         Args:
@@ -196,8 +190,7 @@ class ConfigDuplicateDetector:
             Dictionary where keys are lowercase filenames and values are lists of paths.
         """
 
-
-def detect_config_duplicates(root_path: Path) -> List[DuplicateGroup]:
+def detect_config_duplicates(root_path: Path) -> list[DuplicateGroup]:
     """Convenience function to detect duplicates without creating detector instance.
 
     Args:
@@ -206,7 +199,6 @@ def detect_config_duplicates(root_path: Path) -> List[DuplicateGroup]:
     Returns:
         List of DuplicateGroup objects.
     """
-
 
 # ============================================================================
 # Unpacked File Scanning
@@ -224,12 +216,12 @@ class UnpackedIssues:
         dds_files: DDS files found (for batch dimension checking).
     """
 
-    animdata: List[str]
-    tex_frmt: List[str]
-    snd_frmt: List[str]
-    xse_file: List[str]
-    previs: List[str]
-    dds_files: List[Path]
+    animdata: list[str]
+    tex_frmt: list[str]
+    snd_frmt: list[str]
+    xse_file: list[str]
+    previs: list[str]
+    dds_files: list[Path]
 
     def has_issues(self) -> bool:
         """Check if any issues were found.
@@ -244,7 +236,6 @@ class UnpackedIssues:
         Returns:
             Sum of all issue list lengths (excluding dds_files).
         """
-
 
 class UnpackedScanner:
     """Scans directories for unpacked files that should be in BA2 archives.
@@ -261,7 +252,7 @@ class UnpackedScanner:
     def __init__(self) -> None:
         """Create a new UnpackedScanner instance."""
 
-    def scan_directory(self, root_path: Path, xse_scriptfiles: List[str]) -> UnpackedIssues:
+    def scan_directory(self, root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:
         """Scan a directory for unpacked file issues.
 
         Args:
@@ -272,8 +263,7 @@ class UnpackedScanner:
             UnpackedIssues object containing lists of problematic files.
         """
 
-
-def scan_unpacked_files(root_path: Path, xse_scriptfiles: List[str]) -> UnpackedIssues:
+def scan_unpacked_files(root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:
     """Convenience function to scan unpacked files without creating scanner instance.
 
     Args:
@@ -283,7 +273,6 @@ def scan_unpacked_files(root_path: Path, xse_scriptfiles: List[str]) -> Unpacked
     Returns:
         UnpackedIssues object.
     """
-
 
 # ============================================================================
 # Log Processing
@@ -299,9 +288,8 @@ class LogErrorEntry:
     """
 
     file_path: Path
-    errors: List[str]
+    errors: list[str]
     total_errors: int
-
 
 class LogProcessor:
     """Scans directories for log files and detects errors based on configurable patterns.
@@ -316,12 +304,7 @@ class LogProcessor:
         >>> print(report)
     """
 
-    def __init__(
-        self,
-        catch_errors: List[str],
-        ignore_files: List[str],
-        ignore_errors: List[str]
-    ) -> None:
+    def __init__(self, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]) -> None:
         """Create a new LogProcessor instance.
 
         Args:
@@ -340,13 +323,7 @@ class LogProcessor:
             Formatted error report as string.
         """
 
-
-def process_logs(
-    log_dir: Path,
-    catch_errors: List[str],
-    ignore_files: List[str],
-    ignore_errors: List[str]
-) -> str:
+def process_logs(log_dir: Path, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]) -> str:
     """Convenience function to process logs without creating processor instance.
 
     Args:
@@ -359,7 +336,6 @@ def process_logs(
         Formatted error report as string.
     """
 
-
 # ============================================================================
 # INI Validation
 # ============================================================================
@@ -370,7 +346,6 @@ class IssueSeverity(Enum):
     Info = "Info"
     Warning = "Warning"
     Error = "Error"
-
 
 class ConfigIssue:
     """Configuration issue found in INI file.
@@ -392,7 +367,6 @@ class ConfigIssue:
     recommended_value: str
     description: str
     severity: IssueSeverity
-
 
 class IniValidator:
     """Validates game configuration INI files for common issues.
@@ -422,7 +396,7 @@ class IniValidator:
             Formatted validation report string.
         """
 
-    def detect_all_issues(self, config_files: Dict[str, Path]) -> List[ConfigIssue]:
+    def detect_all_issues(self, config_files: dict[str, Path]) -> list[ConfigIssue]:
         """Detect all configuration issues in the loaded files.
 
         Args:
@@ -431,7 +405,6 @@ class IniValidator:
         Returns:
             List of ConfigIssue objects.
         """
-
 
 # ============================================================================
 # TOML/Crashgen Validation
@@ -443,7 +416,6 @@ class TomlIssueSeverity(Enum):
     Info = "Info"
     Warning = "Warning"
     Error = "Error"
-
 
 class TomlConfigIssue:
     """TOML configuration issue found.
@@ -466,7 +438,6 @@ class TomlConfigIssue:
     description: str
     severity: TomlIssueSeverity
 
-
 class CrashgenChecker:
     """Validates Buffout4/crash generator TOML configuration files.
 
@@ -486,15 +457,14 @@ class CrashgenChecker:
             crashgen_name: Name of crash generator (e.g., "Buffout4").
         """
 
-    def check(self) -> Tuple[str, List[TomlConfigIssue]]:
+    def check(self) -> tuple[str, list[TomlConfigIssue]]:
         """Check TOML configuration for issues.
 
         Returns:
             Tuple of (message_string, list of TomlConfigIssue objects).
         """
 
-
-def check_crashgen_config(plugins_path: Path, crashgen_name: str) -> Tuple[str, List[TomlConfigIssue]]:
+def check_crashgen_config(plugins_path: Path, crashgen_name: str) -> tuple[str, list[TomlConfigIssue]]:
     """Convenience function to check crashgen config without creating checker instance.
 
     Args:
@@ -504,7 +474,6 @@ def check_crashgen_config(plugins_path: Path, crashgen_name: str) -> Tuple[str, 
     Returns:
         Tuple of (message_string, list of TomlConfigIssue objects).
     """
-
 
 # ============================================================================
 # XSE Plugin Checking
@@ -518,7 +487,6 @@ class GameVersion(Enum):
     NextGen = "NextGen"
     Vr = "Vr"
 
-
 class ValidationResult(Enum):
     """Result of XSE plugin validation."""
 
@@ -527,7 +495,6 @@ class ValidationResult(Enum):
     NotFound = "NotFound"
     VersionNotDetected = "VersionNotDetected"
     PluginsPathNotFound = "PluginsPathNotFound"
-
 
 class AddressLibInfo:
     """Information about Address Library for a specific game version.
@@ -568,7 +535,6 @@ class AddressLibInfo:
             AddressLibInfo for Next-Gen.
         """
 
-
 class XseChecker:
     """Validates Address Library installation for F4SE/SKSE plugins.
 
@@ -587,12 +553,7 @@ class XseChecker:
         ... )
     """
 
-    def __init__(
-        self,
-        plugins_path: Path,
-        is_vr_mode: bool = False,
-        game_version: GameVersion = GameVersion.Original
-    ) -> None:
+    def __init__(self, plugins_path: Path, is_vr_mode: bool = False, game_version: GameVersion = GameVersion.Original) -> None:
         """Create a new XseChecker instance.
 
         Args:
@@ -615,12 +576,7 @@ class XseChecker:
             Formatted validation message string.
         """
 
-
-def check_xse_plugins(
-    plugins_path: Path,
-    is_vr_mode: bool,
-    game_version: GameVersion
-) -> str:
+def check_xse_plugins(plugins_path: Path, is_vr_mode: bool, game_version: GameVersion) -> str:
     """Convenience function to validate XSE plugins without creating checker instance.
 
     Args:
@@ -631,7 +587,6 @@ def check_xse_plugins(
     Returns:
         Formatted validation message.
     """
-
 
 # ============================================================================
 # Game Integrity Checking
@@ -654,7 +609,6 @@ class CheckType:
     def is_installation_location(self) -> bool:
         """Check if this is an InstallationLocation check."""
 
-
 class IntegrityCheckResult:
     """Result of a single integrity check.
 
@@ -668,7 +622,6 @@ class IntegrityCheckResult:
     is_valid: bool
     message: str
 
-
 class IntegrityConfig:
     """Configuration for game integrity checking.
 
@@ -676,13 +629,7 @@ class IntegrityConfig:
     including executable verification, INI validation, and version detection.
     """
 
-    def __init__(
-        self,
-        executable_path: Path,
-        old_hash: str,
-        new_hash: str,
-        game_name: str
-    ) -> None:
+    def __init__(self, executable_path: Path, old_hash: str, new_hash: str, game_name: str) -> None:
         """Create a new integrity check configuration.
 
         Args:
@@ -701,7 +648,6 @@ class IntegrityConfig:
         Returns:
             Self for method chaining.
         """
-
 
 class GameIntegrityChecker:
     """Game integrity checker for comprehensive game validation.

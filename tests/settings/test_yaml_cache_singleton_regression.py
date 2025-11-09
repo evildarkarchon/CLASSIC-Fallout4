@@ -120,7 +120,7 @@ class TestSingletonBehavior:
         assert instance is not None
 
         # Mock the lock to verify it's not acquired on fast path
-        with patch.object(YamlSettingsCache, '_lock') as mock_lock:
+        with patch.object(YamlSettingsCache, "_lock") as mock_lock:
             # Getting existing instance should not acquire lock
             instance2 = YamlSettingsCache.get_instance()
             assert instance2 is instance
@@ -194,8 +194,8 @@ class TestFixtureIsolation:
         assert YamlSettingsCache.get_instance() is clean_yaml_cache_singleton
 
         # Add some test data to verify cleanup
-        if hasattr(clean_yaml_cache_singleton, '_async_core'):
-            clean_yaml_cache_singleton._async_core.cache.settings_cache['test_key'] = 'test_value'
+        if hasattr(clean_yaml_cache_singleton, "_async_core"):
+            clean_yaml_cache_singleton._async_core.cache.settings_cache["test_key"] = "test_value"
 
     def test_fixture_nested_usage(self, clean_yaml_cache_singleton) -> None:
         """
@@ -208,7 +208,7 @@ class TestFixtureIsolation:
         outer_instance = clean_yaml_cache_singleton
 
         # Simulate nested fixture usage
-        with patch('ClassicLib.YamlSettingsCache.YamlSettingsCache._instance', None):
+        with patch("ClassicLib.YamlSettingsCache.YamlSettingsCache._instance", None):
             # Create a new instance in nested context
             nested_instance = YamlSettingsCache.get_instance()
             assert nested_instance is not outer_instance
@@ -226,11 +226,11 @@ class TestFixtureIsolation:
         cache = clean_yaml_cache_singleton
 
         # Add data to internal caches
-        if hasattr(cache, '_async_core') and hasattr(cache._async_core, 'cache'):
-            cache._async_core.cache.settings_cache['test_setting'] = 'value'
-            cache._async_core.cache.file_mod_times['test_file'] = 123456
-            if hasattr(cache._async_core.cache, 'path_cache'):
-                cache._async_core.cache.path_cache[YAML.TEST] = Path('/test/path')
+        if hasattr(cache, "_async_core") and hasattr(cache._async_core, "cache"):
+            cache._async_core.cache.settings_cache["test_setting"] = "value"
+            cache._async_core.cache.file_mod_times["test_file"] = 123456
+            if hasattr(cache._async_core.cache, "path_cache"):
+                cache._async_core.cache.path_cache[YAML.TEST] = Path("/test/path")
 
         # In actual fixture cleanup, these would be cleared
         # Here we verify they can be accessed and modified
@@ -257,13 +257,13 @@ class TestThreadSafetyParallel:
                 instance = YamlSettingsCache.get_instance()
 
                 # Perform some operations
-                if hasattr(instance, '_async_core'):
+                if hasattr(instance, "_async_core"):
                     # Simulate cache operations
-                    cache_key = f'worker_{worker_id}_key'
-                    instance._async_core.cache.settings_cache[cache_key] = f'value_{worker_id}'
+                    cache_key = f"worker_{worker_id}_key"
+                    instance._async_core.cache.settings_cache[cache_key] = f"value_{worker_id}"
 
                     # Verify write was successful
-                    assert instance._async_core.cache.settings_cache[cache_key] == f'value_{worker_id}'
+                    assert instance._async_core.cache.settings_cache[cache_key] == f"value_{worker_id}"
 
                 results[worker_id] = id(instance)
             except Exception as e:
@@ -303,10 +303,10 @@ class TestThreadSafetyParallel:
             try:
                 for i in range(iterations):
                     # Write operation
-                    key = f'thread_{thread_id}_item_{i}'
-                    value = f'value_{thread_id}_{i}'
+                    key = f"thread_{thread_id}_item_{i}"
+                    value = f"value_{thread_id}_{i}"
 
-                    if hasattr(cache, '_async_core'):
+                    if hasattr(cache, "_async_core"):
                         cache._async_core.cache.settings_cache[key] = value
 
                         # Read operation - verify our write
@@ -314,7 +314,7 @@ class TestThreadSafetyParallel:
                         assert read_value == value, f"Data corruption: expected {value}, got {read_value}"
 
                         # Read other thread's data (if exists)
-                        other_key = f'thread_{(thread_id + 1) % 5}_item_{i}'
+                        other_key = f"thread_{(thread_id + 1) % 5}_item_{i}"
                         _ = cache._async_core.cache.settings_cache.get(other_key)
 
             except Exception as e:
@@ -335,11 +335,11 @@ class TestThreadSafetyParallel:
         assert len(errors) == 0, f"Errors during concurrent operations: {errors}"
 
         # Verify all data was written correctly
-        if hasattr(cache, '_async_core'):
+        if hasattr(cache, "_async_core"):
             for thread_id in range(5):
                 for i in range(iterations):
-                    key = f'thread_{thread_id}_item_{i}'
-                    expected_value = f'value_{thread_id}_{i}'
+                    key = f"thread_{thread_id}_item_{i}"
+                    expected_value = f"value_{thread_id}_{i}"
                     actual_value = cache._async_core.cache.settings_cache.get(key)
                     assert actual_value == expected_value
 
@@ -372,10 +372,10 @@ class TestThreadSafetyParallel:
 
             # Cache should be the same, bridge may be different (thread-local)
             results.append({
-                'thread_id': threading.get_ident(),
-                'cache_id': id(cache),
-                'bridge_id': id(bridge),
-                'cache_bridge_id': id(cache._bridge)
+                "thread_id": threading.get_ident(),
+                "cache_id": id(cache),
+                "bridge_id": id(bridge),
+                "cache_bridge_id": id(cache._bridge),
             })
 
         threads = [threading.Thread(target=test_thread) for _ in range(10)]
@@ -385,7 +385,7 @@ class TestThreadSafetyParallel:
             t.join()
 
         # Verify all threads saw the same YamlCache instance
-        cache_ids = set(r['cache_id'] for r in results)
+        cache_ids = set(r["cache_id"] for r in results)
         assert len(cache_ids) == 1, "YamlSettingsCache should be a true singleton"
 
         # AsyncBridge is thread-local, so different threads might have different instances
@@ -407,24 +407,22 @@ class TestBackwardCompatibility:
         test_data = {"test": {"key": "value", "number": 42}}
 
         import ruamel.yaml
+
         yaml_obj = ruamel.yaml.YAML()
-        with Path(test_file).open('w') as f:
+        with Path(test_file).open("w") as f:
             yaml_obj.dump(test_data, f)
 
         # Mock yaml_cache which is used by yaml_settings function
         mock_cache = Mock(spec=YamlSettingsCache)
-        mock_cache.async_yaml_settings.side_effect = lambda t, s, k, v=None: {
-            'test.key': 'value',
-            'test.number': 42
-        }.get(k)
+        mock_cache.async_yaml_settings.side_effect = lambda t, s, k, v=None: {"test.key": "value", "test.number": 42}.get(k)
 
         # Patch the module-level yaml_cache
-        with patch('ClassicLib.YamlSettingsCache.yaml_cache', mock_cache):
+        with patch("ClassicLib.YamlSettingsCache.yaml_cache", mock_cache):
             # Test yaml_settings function
-            result = yaml_settings(str, YAML.TEST, 'test.key')
-            assert result == 'value'
+            result = yaml_settings(str, YAML.TEST, "test.key")
+            assert result == "value"
 
-            result = yaml_settings(int, YAML.TEST, 'test.number')
+            result = yaml_settings(int, YAML.TEST, "test.number")
             assert result == 42
 
     def test_global_registry_integration(self) -> None:
@@ -459,7 +457,7 @@ class TestBackwardCompatibility:
 
         # The mock should intercept calls when patched properly
         # The mock_yaml_settings fixture patches the module function
-        result = mock_yaml_settings(str, YAML.TEST, 'any.key')
+        result = mock_yaml_settings(str, YAML.TEST, "any.key")
         assert result == "mocked_value"
 
     def test_cache_property_access(self) -> None:
@@ -472,13 +470,13 @@ class TestBackwardCompatibility:
         cache = YamlSettingsCache.get_instance()
 
         # These properties should be accessible
-        assert hasattr(cache, 'cache')
-        assert hasattr(cache, 'path_cache')
-        assert hasattr(cache, 'settings_cache')
-        assert hasattr(cache, 'file_mod_times')
+        assert hasattr(cache, "cache")
+        assert hasattr(cache, "path_cache")
+        assert hasattr(cache, "settings_cache")
+        assert hasattr(cache, "file_mod_times")
 
         # They should return the correct objects
-        if hasattr(cache, '_async_core'):
+        if hasattr(cache, "_async_core"):
             assert cache.cache is cache._async_core.cache
             assert cache.settings_cache is cache._async_core.cache.settings_cache
             assert cache.file_mod_times is cache._async_core.cache.file_mod_times
@@ -577,7 +575,7 @@ class TestEdgeCases:
         assert total_time < 2.0, f"Took too long: {total_time:.2f} seconds"
 
         print(f"Stress test completed in {total_time:.2f}s")
-        print(f"Average time per thread: {sum(creation_times)/len(creation_times):.4f}s")
+        print(f"Average time per thread: {sum(creation_times) / len(creation_times):.4f}s")
 
     @pytest.mark.asyncio
     async def test_async_operations_with_singleton(self) -> None:
@@ -591,22 +589,23 @@ class TestEdgeCases:
 
         # Test batch operations (uses async internally)
         requests = [
-            (str, YAML.TEST, 'test.key1'),
-            (int, YAML.TEST, 'test.key2'),
-            (bool, YAML.TEST, 'test.key3'),
+            (str, YAML.TEST, "test.key1"),
+            (int, YAML.TEST, "test.key2"),
+            (bool, YAML.TEST, "test.key3"),
         ]
 
         # Mock the async core to return test values
-        if hasattr(cache, '_async_core'):
+        if hasattr(cache, "_async_core"):
+
             async def mock_batch_get(reqs):
-                return ['value1', 42, True]
+                return ["value1", 42, True]
 
             cache._async_core.batch_get_settings = mock_batch_get
 
         # This should work without issues
-        with patch.object(cache, 'batch_get_settings', return_value=['value1', 42, True]):
+        with patch.object(cache, "batch_get_settings", return_value=["value1", 42, True]):
             results = cache.batch_get_settings(requests)
-            assert results == ['value1', 42, True]
+            assert results == ["value1", 42, True]
 
     @pytest.mark.skip(reason="Multiprocessing test fails on Windows due to pickling issues")
     def test_singleton_in_multiprocessing_context(self) -> None:
@@ -641,8 +640,8 @@ class TestRegressionScenarios:
             instance = YamlSettingsCache.get_instance()
 
             # Use it
-            if hasattr(instance, '_async_core'):
-                instance._async_core.cache.settings_cache['temp'] = 'data'
+            if hasattr(instance, "_async_core"):
+                instance._async_core.cache.settings_cache["temp"] = "data"
 
             # Clear it (simulate fixture cleanup)
             YamlSettingsCache._instance = None
@@ -696,7 +695,7 @@ class TestRegressionScenarios:
         cache = clean_yaml_cache_singleton
 
         # Should have AsyncBridge
-        assert hasattr(cache, '_bridge')
+        assert hasattr(cache, "_bridge")
         assert cache._bridge is not None
 
         # Test async operation through bridge
@@ -728,7 +727,7 @@ class TestRegressionScenarios:
                 raise RuntimeError("Simulated initialization failure")
             original_init(self)
 
-        with patch.object(YamlSettingsCache, '__init__', mock_init):
+        with patch.object(YamlSettingsCache, "__init__", mock_init):
             # First call should fail
             with pytest.raises(RuntimeError):
                 YamlSettingsCache.get_instance()
@@ -768,9 +767,9 @@ def test_execution_plan_summary():
     - No test pollution between parallel workers
     - Consistent behavior across different execution modes
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("YAMLSETTINGSCACHE SINGLETON REFACTORING TEST PLAN")
-    print("="*60)
+    print("=" * 60)
 
     test_categories = [
         ("Singleton Behavior", TestSingletonBehavior),
@@ -782,14 +781,14 @@ def test_execution_plan_summary():
     ]
 
     for category_name, category_class in test_categories:
-        test_methods = [m for m in dir(category_class) if m.startswith('test_')]
+        test_methods = [m for m in dir(category_class) if m.startswith("test_")]
         print(f"\n{category_name} ({len(test_methods)} tests):")
         for method in test_methods:
             print(f"  - {method}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Run with: pytest tests/settings/test_yaml_cache_singleton_regression.py -v")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":

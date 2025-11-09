@@ -9,12 +9,14 @@ underlying scanning infrastructure.
 import asyncio
 import random
 from collections import Counter
+from collections.abc import Iterator
 from pathlib import Path
 
 from ClassicLib import GlobalRegistry, MessageTarget, msg_info, msg_progress_context
 from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
+from ClassicLib.MessageHandler.progress_context import ProgressContext
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
@@ -94,6 +96,7 @@ class ScanLogsExecutor:
         # Warm up database pool if database exists
         if self.config.formid_db_exists:
             from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
+
             pool_manager = DatabasePoolManager()
             await pool_manager.get_pool()
             logger.debug("Warmed up database connection pool")
@@ -146,27 +149,20 @@ class ScanLogsExecutor:
         """
         logger.info("Starting crash log scan execution")
 
-        # Initialize yamldata here using async factory (no AsyncBridge overhead)
-        # If eager_load was set, warm_up() should have been called already
-        if self.yamldata is None:
-            if self._eager_load:
-                logger.warning("Eager load requested but warm_up() was not called - loading now")
-            self.yamldata = await ClassicScanLogsInfo.create_async()
-            logger.debug("Initialized ClassicScanLogsInfo (async, no blocking)")
+        # Initialize resources
+        await self._initialize_scan_resources()
 
         # Create result object
         result = ScanResult(stats=self.statistics)
 
         msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
 
-        # Ensure game paths are generated before creating orchestrator
-        # This is required for FCX mode checks which need Game_Folder_Scripts and other inferred paths
-        from ClassicLib.GamePath import game_generate_paths_async, game_path_find_async
-        await game_path_find_async()
-        await game_generate_paths_async()
+        # Ensure yamldata is initialized
+        if self.yamldata is None:
+            msg = "YAML data not initialized after resource setup"
+            raise RuntimeError(msg)
 
         # Create async orchestrator with context manager for proper resource management
-        # Reformatting happens inline during processing - no blocking preload
         async with OrchestratorCore(
             self.yamldata, self.config.fcx_mode, self.config.show_formid_values, self.config.formid_db_exists, self.config.remove_list
         ) as orchestrator:
@@ -174,93 +170,8 @@ class ScanLogsExecutor:
             if self.config.fcx_mode:
                 await orchestrator.fcx_handler.check_fcx_mode_async()
 
-            # Use semaphore to limit concurrent operations
-            max_concurrent = min(self.config.max_concurrent, len(self.crashlog_list))
-            semaphore = asyncio.Semaphore(max_concurrent)
-
-            # Process with progress tracking - create tasks on-demand
-            total_logs = len(self.crashlog_list)
-            completed = 0
-            log_iter = iter(self.crashlog_list)
-            active_tasks: set[asyncio.Task] = set()
-
-            with msg_progress_context("Processing Crash Logs", total_logs) as progress:
-                # Start initial batch of tasks
-                for _ in range(max_concurrent):
-                    try:
-                        log = next(log_iter)
-                        task = asyncio.create_task(self._process_crashlog_async(log, orchestrator))
-                        active_tasks.add(task)
-                    except StopIteration:
-                        break
-
-                # Process tasks as they complete, creating new ones on-demand
-                while active_tasks:
-                    # Check for cancellation
-                    if progress.was_cancelled():
-                        logger.info("User cancelled scan operation - stopping immediately")
-                        # Cancel all active tasks
-                        for task in active_tasks:
-                            task.cancel()
-                        break
-
-                    # Wait for next task to complete with short timeout for responsiveness
-                    done, active_tasks = await asyncio.wait(
-                        active_tasks,
-                        return_when=asyncio.FIRST_COMPLETED,
-                        timeout=0.1  # Check cancellation every 100ms
-                    )
-
-                    # Process completed tasks
-                    for task in done:
-                        try:
-                            task_result = task.result()
-
-                            # Unpack result
-                            crashlog_file, autoscan_report, trigger_scan_failed, local_stats = task_result
-
-                            # Update statistics
-                            if isinstance(local_stats, Counter):
-                                self.statistics.update_from_counter(local_stats)
-
-                            # Add to processed files
-                            result.add_processed_file(crashlog_file)
-
-                            # Write report
-                            from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file_async
-
-                            await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, self)
-
-                            # Track failed scans
-                            if trigger_scan_failed:
-                                result.add_failed_log(crashlog_file.name)
-
-                            completed += 1
-                            progress.update(1, f"Processed: {crashlog_file.name}")
-
-                            # Start next task if not cancelled
-                            if not progress.was_cancelled():
-                                try:
-                                    log = next(log_iter)
-                                    new_task = asyncio.create_task(self._process_crashlog_async(log, orchestrator))
-                                    active_tasks.add(new_task)
-                                except StopIteration:
-                                    pass  # No more logs to process
-
-                        except asyncio.CancelledError:
-                            logger.debug("Task cancelled by user")
-
-                        except (RuntimeError, ImportError, OSError) as e:
-                            error_msg = f"Error processing crash log: {e}"
-                            logger.error(error_msg)
-                            result.add_error_message(error_msg)
-                            self.statistics.increment_failed()
-                            progress.update(1, "Failed: Error during processing")
-
-                # Wait for any remaining tasks to finish (already cancelled if user cancelled)
-                if active_tasks:
-                    logger.info(f"Waiting for {len(active_tasks)} tasks to complete...")
-                    await asyncio.gather(*active_tasks, return_exceptions=True)
+            # Process crash logs with progress tracking
+            await self._process_crashlogs_with_progress(orchestrator, result)
 
         # Update final scan time
         result.scan_time = self.statistics.get_scan_duration()
@@ -270,10 +181,151 @@ class ScanLogsExecutor:
 
         return result
 
+    async def _initialize_scan_resources(self) -> None:
+        """
+        Initialize scan resources including YAML data and game paths.
+
+        This method ensures that all necessary resources are loaded before
+        starting the scan process.
+
+        Raises:
+            RuntimeError: If resource initialization fails.
+        """
+        # Initialize yamldata here using async factory (no AsyncBridge overhead)
+        # If eager_load was set, warm_up() should have been called already
+        if self.yamldata is None:
+            if self._eager_load:
+                logger.warning("Eager load requested but warm_up() was not called - loading now")
+            self.yamldata = await ClassicScanLogsInfo.create_async()
+            logger.debug("Initialized ClassicScanLogsInfo (async, no blocking)")
+
+        # Ensure game paths are generated before creating orchestrator
+        # This is required for FCX mode checks which need Game_Folder_Scripts and other inferred paths
+        from ClassicLib.GamePath import game_generate_paths_async, game_path_find_async
+
+        await game_path_find_async()
+        await game_generate_paths_async()
+
+    async def _process_crashlogs_with_progress(self, orchestrator: OrchestratorCore, result: ScanResult) -> None:
+        """
+        Process all crash logs with progress tracking and concurrency control.
+
+        Args:
+            orchestrator: The orchestrator instance for processing logs.
+            result: The scan result object to update with processing outcomes.
+
+        Raises:
+            asyncio.CancelledError: If the operation is cancelled by the user.
+        """
+        # Use semaphore to limit concurrent operations
+        max_concurrent = min(self.config.max_concurrent, len(self.crashlog_list))
+        total_logs = len(self.crashlog_list)
+        log_iter = iter(self.crashlog_list)
+        active_tasks: set[asyncio.Task] = set()
+
+        with msg_progress_context("Processing Crash Logs", total_logs) as progress:
+            # Start initial batch of tasks
+            for _ in range(max_concurrent):
+                try:
+                    log = next(log_iter)
+                    task = asyncio.create_task(self._process_crashlog_async(log, orchestrator))
+                    active_tasks.add(task)
+                except StopIteration:
+                    break
+
+            # Process tasks as they complete, creating new ones on-demand
+            while active_tasks:
+                # Check for cancellation
+                if progress.was_cancelled():
+                    logger.info("User cancelled scan operation - stopping immediately")
+                    for task in active_tasks:
+                        task.cancel()
+                    break
+
+                # Wait for next task to complete with short timeout for responsiveness
+                done, active_tasks = await asyncio.wait(
+                    active_tasks,
+                    return_when=asyncio.FIRST_COMPLETED,
+                    timeout=0.1,  # Check cancellation every 100ms
+                )
+
+                # Process completed tasks
+                for task in done:
+                    await self._handle_task_result(task, result, progress, log_iter, active_tasks, orchestrator)
+
+            # Wait for any remaining tasks to finish (already cancelled if user cancelled)
+            if active_tasks:
+                logger.info(f"Waiting for {len(active_tasks)} tasks to complete...")
+                await asyncio.gather(*active_tasks, return_exceptions=True)
+
+    async def _handle_task_result(
+        self,
+        task: asyncio.Task,
+        result: ScanResult,
+        progress: ProgressContext,
+        log_iter: Iterator[Path],
+        active_tasks: set[asyncio.Task],
+        orchestrator: OrchestratorCore,
+    ) -> None:
+        """
+        Handle the result of a completed task.
+
+        Args:
+            task: The completed asyncio task.
+            result: The scan result object to update.
+            progress: The progress context for UI updates.
+            log_iter: Iterator over remaining crash logs.
+            active_tasks: Set of currently active tasks.
+            orchestrator: The orchestrator instance for processing new logs.
+
+        Raises:
+            None: All exceptions are caught and logged.
+        """
+        try:
+            task_result = task.result()
+
+            # Unpack result
+            crashlog_file, autoscan_report, trigger_scan_failed, local_stats = task_result
+
+            # Update statistics
+            if isinstance(local_stats, Counter):
+                self.statistics.update_from_counter(local_stats)
+
+            # Add to processed files
+            result.add_processed_file(crashlog_file)
+
+            # Write report
+            from ClassicLib.ScanLog.ScanLogsUtils import write_report_to_file_async
+
+            await write_report_to_file_async(crashlog_file, autoscan_report, trigger_scan_failed, self)
+
+            # Track failed scans
+            if trigger_scan_failed:
+                result.add_failed_log(crashlog_file.name)
+
+            progress.update(1, f"Processed: {crashlog_file.name}")
+
+            # Start next task if not cancelled
+            if not progress.was_cancelled():
+                try:
+                    log = next(log_iter)
+                    new_task = asyncio.create_task(self._process_crashlog_async(log, orchestrator))
+                    active_tasks.add(new_task)
+                except StopIteration:
+                    pass  # No more logs to process
+
+        except asyncio.CancelledError:
+            logger.debug("Task cancelled by user")
+
+        except (RuntimeError, ImportError, OSError) as e:
+            error_msg = f"Error processing crash log: {e}"
+            logger.error(error_msg)
+            result.add_error_message(error_msg)
+            self.statistics.increment_failed()
+            progress.update(1, "Failed: Error during processing")
+
     @staticmethod
-    async def _process_crashlog_async(
-            crashlog_file: Path, orchestrator: OrchestratorCore
-    ) -> tuple[Path, list[str], bool, Counter[str]]:
+    async def _process_crashlog_async(crashlog_file: Path, orchestrator: OrchestratorCore) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Process a crash log with async database operations for FormID lookups.
 
@@ -288,8 +340,7 @@ class ScanLogsExecutor:
         """
         try:
             # OrchestratorCore uses the base method name
-            result = await orchestrator.process_crash_log(crashlog_file)
-            return result
+            return await orchestrator.process_crash_log(crashlog_file)
         except (RuntimeError, ImportError, OSError) as e:
             logger.error(f"Error processing crash log {crashlog_file}: {e}")
             # Return failure result
@@ -321,7 +372,7 @@ class ScanLogsExecutor:
         ]
 
         # Add random hint
-        if hasattr(self.yamldata, "classic_game_hints") and self.yamldata.classic_game_hints:
+        if self.yamldata and hasattr(self.yamldata, "classic_game_hints") and self.yamldata.classic_game_hints:
             summary_lines.append(random.choice(self.yamldata.classic_game_hints))
 
         # Add game-specific text
@@ -331,7 +382,7 @@ class ScanLogsExecutor:
                 "-----",
                 "",
             ])
-            if hasattr(self.yamldata, "autoscan_text"):
+            if self.yamldata and hasattr(self.yamldata, "autoscan_text"):
                 summary_lines.append(self.yamldata.autoscan_text)
 
         return "\n".join(summary_lines)

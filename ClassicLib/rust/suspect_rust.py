@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.ScanLog.fragments import ReportFragment
 from ClassicLib.integration.detector import detect_component
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
@@ -80,9 +80,7 @@ class RustAcceleratedSuspectScanner:
         """
         if self._use_rust:
             # Rust returns (list[str], bool), need to convert to (ReportFragment, bool)
-            rust_result: tuple[list[str], bool] = self._scanner.suspect_scan_mainerror(
-                crashlog_mainerror, max_warn_length
-            )
+            rust_result: tuple[list[str], bool] = self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
             return ReportFragment.from_lines(rust_result[0]), rust_result[1]
         # Python already returns correct types
         return self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)

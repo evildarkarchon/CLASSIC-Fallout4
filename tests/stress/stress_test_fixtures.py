@@ -62,7 +62,7 @@ class MemoryTracker:
             "growth_mb": final_memory - self._initial_memory,
             "measurements": self._measurements,
             "potential_leak": final_memory > self._initial_memory * 1.5,
-            "memory_efficiency": (final_memory / max(self._peak_memory, 1)) * 100
+            "memory_efficiency": (final_memory / max(self._peak_memory, 1)) * 100,
         }
 
     def take_measurement(self, label: str = "") -> float:
@@ -81,11 +81,7 @@ class MemoryTracker:
         current = self._get_current_memory()
         self._peak_memory = max(self._peak_memory, current)
 
-        self._measurements.append({
-            "timestamp": time.time(),
-            "memory_mb": current,
-            "label": label
-        })
+        self._measurements.append({"timestamp": time.time(), "memory_mb": current, "label": label})
 
         return current
 
@@ -109,11 +105,9 @@ class ConcurrencyTestHelper:
         self._lock = threading.Lock()
         self._error_collector = []
 
-    def create_contention_scenario(self,
-                                 target_func: callable,
-                                 num_threads: int = 20,
-                                 iterations_per_thread: int = 100,
-                                 shared_data: Any = None) -> dict[str, Any]:
+    def create_contention_scenario(
+        self, target_func: callable, num_threads: int = 20, iterations_per_thread: int = 100, shared_data: Any = None
+    ) -> dict[str, Any]:
         """
         Create a high-contention scenario to test thread safety.
 
@@ -137,11 +131,7 @@ class ConcurrencyTestHelper:
                     result = target_func(thread_id, i, shared_data)
                     thread_results.append(result)
             except Exception as e:
-                self._error_collector.append({
-                    "thread_id": thread_id,
-                    "error": str(e),
-                    "traceback": traceback.format_exc()
-                })
+                self._error_collector.append({"thread_id": thread_id, "error": str(e), "traceback": traceback.format_exc()})
             return thread_results
 
         start_time = time.time()
@@ -153,10 +143,7 @@ class ConcurrencyTestHelper:
                 try:
                     results.append(future.result())
                 except Exception as e:
-                    self._error_collector.append({
-                        "error": str(e),
-                        "traceback": traceback.format_exc()
-                    })
+                    self._error_collector.append({"error": str(e), "traceback": traceback.format_exc()})
 
         duration = time.time() - start_time
 
@@ -166,12 +153,10 @@ class ConcurrencyTestHelper:
             "total_operations": num_threads * iterations_per_thread,
             "duration_seconds": duration,
             "operations_per_second": (num_threads * iterations_per_thread) / duration,
-            "error_rate": len(self._error_collector) / max(len(results), 1)
+            "error_rate": len(self._error_collector) / max(len(results), 1),
         }
 
-    def detect_race_conditions(self,
-                             operations: list[callable],
-                             num_iterations: int = 1000) -> dict[str, Any]:
+    def detect_race_conditions(self, operations: list[callable], num_iterations: int = 1000) -> dict[str, Any]:
         """
         Detect potential race conditions by running operations many times.
 
@@ -195,17 +180,13 @@ class ConcurrencyTestHelper:
 
             # Check for inconsistent state
             if self._is_state_inconsistent():
-                inconsistencies.append({
-                    "iteration": iteration,
-                    "state": dict(self._shared_state),
-                    "results": results
-                })
+                inconsistencies.append({"iteration": iteration, "state": dict(self._shared_state), "results": results})
 
         return {
             "total_iterations": num_iterations,
             "inconsistencies_found": len(inconsistencies),
             "race_condition_rate": len(inconsistencies) / num_iterations,
-            "sample_inconsistencies": inconsistencies[:5]  # First 5 examples
+            "sample_inconsistencies": inconsistencies[:5],  # First 5 examples
         }
 
     def _is_state_inconsistent(self) -> bool:
@@ -223,9 +204,7 @@ class StressDataGenerator:
     """
 
     @staticmethod
-    def generate_large_crash_log(size_mb: int = 100,
-                               plugin_count: int = 500,
-                               formid_count: int = 10000) -> str:
+    def generate_large_crash_log(size_mb: int = 100, plugin_count: int = 500, formid_count: int = 10000) -> str:
         """
         Generate a very large crash log for memory stress testing.
 
@@ -251,7 +230,7 @@ class StressDataGenerator:
             "\tCPU: AMD Ryzen 9 7950X3D 16-Core Processor",
             "\tGPU #1: Nvidia RTX 4090",
             "\tRAM: 64GB DDR5-6000",
-            ""
+            "",
         ])
 
         # Massive plugin list
@@ -266,14 +245,14 @@ class StressDataGenerator:
         for i in range(formid_count // 10):  # Spread FormIDs across stack frames
             formid = f"0x{(0x14000000 + i):08X}"
             lines.extend([
-                f"\t{i:04d} Fallout4.exe+{0x500000 + i*16:07X}",
+                f"\t{i:04d} Fallout4.exe+{0x500000 + i * 16:07X}",
                 f"\t     FormID: {formid} PluginIndex: {i % plugin_count:03d}",
                 f"\t     Function: stress_test_function_{i % 100}()",
             ])
 
         # Add filler content to reach target size
         current_content = "\n".join(lines)
-        current_size_mb = len(current_content.encode('utf-8')) / 1024 / 1024
+        current_size_mb = len(current_content.encode("utf-8")) / 1024 / 1024
 
         if current_size_mb < size_mb:
             # Add repeated sections to reach target size
@@ -285,7 +264,7 @@ class StressDataGenerator:
                     f"\tSize: {4096 + section % 8192} bytes",
                     f"\tStatus: {'COMMITTED' if section % 3 == 0 else 'RESERVED'}",
                     f"\tProtection: {'PAGE_READWRITE' if section % 2 == 0 else 'PAGE_READONLY'}",
-                    ""
+                    "",
                 ])
             lines.extend(filler_lines)
 
@@ -312,7 +291,7 @@ class StressDataGenerator:
             "DLCworkshop02.esm",
             "DLCworkshop03.esm",
             "DLCCoast.esm",
-            "DLCNukaWorld.esm"
+            "DLCNukaWorld.esm",
         ]
         plugins.extend(essential)
 
@@ -393,7 +372,7 @@ class PerformanceProfiler:
             Dict containing detailed performance metrics
         """
         self._monitoring = False
-        if hasattr(self, '_monitor_thread'):
+        if hasattr(self, "_monitor_thread"):
             self._monitor_thread.join(timeout=1)
 
         duration = time.time() - self._start_time if self._start_time else 0
@@ -407,7 +386,7 @@ class PerformanceProfiler:
             "cpu_stats": cpu_stats,
             "io_stats": io_stats,
             "measurements": self._measurements,
-            "performance_degradation": self._detect_degradation()
+            "performance_degradation": self._detect_degradation(),
         }
 
     def record_operation(self, operation_name: str, duration: float, memory_used: float = 0):
@@ -416,19 +395,16 @@ class PerformanceProfiler:
             "timestamp": time.time(),
             "operation": operation_name,
             "duration_ms": duration * 1000,
-            "memory_mb": memory_used
+            "memory_mb": memory_used,
         })
 
     def _background_monitor(self):
         """Background monitoring of system resources."""
-        while getattr(self, '_monitoring', False):
+        while getattr(self, "_monitoring", False):
             try:
                 # CPU usage
                 cpu_percent = psutil.cpu_percent(interval=0.1)
-                self._cpu_measurements.append({
-                    "timestamp": time.time(),
-                    "cpu_percent": cpu_percent
-                })
+                self._cpu_measurements.append({"timestamp": time.time(), "cpu_percent": cpu_percent})
 
                 # I/O statistics
                 process = psutil.Process()
@@ -436,7 +412,7 @@ class PerformanceProfiler:
                 self._io_measurements.append({
                     "timestamp": time.time(),
                     "read_bytes": io_counters.read_bytes,
-                    "write_bytes": io_counters.write_bytes
+                    "write_bytes": io_counters.write_bytes,
                 })
 
                 time.sleep(0.1)  # Sample every 100ms
@@ -450,11 +426,7 @@ class PerformanceProfiler:
             return {}
 
         cpu_values = [m["cpu_percent"] for m in self._cpu_measurements]
-        return {
-            "average_percent": sum(cpu_values) / len(cpu_values),
-            "peak_percent": max(cpu_values),
-            "min_percent": min(cpu_values)
-        }
+        return {"average_percent": sum(cpu_values) / len(cpu_values), "peak_percent": max(cpu_values), "min_percent": min(cpu_values)}
 
     def _calculate_io_stats(self) -> dict[str, Any]:
         """Calculate I/O statistics."""
@@ -472,7 +444,7 @@ class PerformanceProfiler:
             "read_rate_bytes_per_sec": read_rate,
             "write_rate_bytes_per_sec": write_rate,
             "total_read_bytes": last["read_bytes"] - first["read_bytes"],
-            "total_write_bytes": last["write_bytes"] - first["write_bytes"]
+            "total_write_bytes": last["write_bytes"] - first["write_bytes"],
         }
 
     def _detect_degradation(self) -> dict[str, Any]:
@@ -481,8 +453,8 @@ class PerformanceProfiler:
             return {"degradation_detected": False}
 
         # Analyze operation durations over time
-        early_ops = self._measurements[:len(self._measurements)//3]
-        late_ops = self._measurements[-len(self._measurements)//3:]
+        early_ops = self._measurements[: len(self._measurements) // 3]
+        late_ops = self._measurements[-len(self._measurements) // 3 :]
 
         early_avg = sum(op["duration_ms"] for op in early_ops) / len(early_ops)
         late_avg = sum(op["duration_ms"] for op in late_ops) / len(late_ops)
@@ -493,7 +465,7 @@ class PerformanceProfiler:
             "degradation_detected": degradation_factor > 1.5,
             "degradation_factor": degradation_factor,
             "early_avg_ms": early_avg,
-            "late_avg_ms": late_avg
+            "late_avg_ms": late_avg,
         }
 
 
@@ -533,7 +505,7 @@ def large_crash_log(tmp_path, stress_data_generator):
     """Generate a large crash log file for memory stress testing."""
     log_content = stress_data_generator.generate_large_crash_log(size_mb=50)
     log_file = tmp_path / "large_crash.log"
-    log_file.write_text(log_content, encoding='utf-8')
+    log_file.write_text(log_content, encoding="utf-8")
     return log_file
 
 
@@ -560,10 +532,10 @@ def temp_crash_logs_dir(tmp_path, stress_data_generator):
         log_content = stress_data_generator.generate_large_crash_log(
             size_mb=10,  # Smaller individual files
             plugin_count=100,
-            formid_count=1000
+            formid_count=1000,
         )
         log_file = logs_dir / f"stress_crash_{i:03d}.log"
-        log_file.write_text(log_content, encoding='utf-8')
+        log_file.write_text(log_content, encoding="utf-8")
 
     return logs_dir
 
@@ -580,7 +552,8 @@ def cleanup_after_test():
     try:
         # Clear Rust caches if available
         import classic_scanlog
-        if hasattr(classic_scanlog, 'clear_all_caches'):
+
+        if hasattr(classic_scanlog, "clear_all_caches"):
             classic_scanlog.clear_all_caches()
     except ImportError:
         pass
@@ -590,6 +563,7 @@ def cleanup_after_test():
 @pytest.fixture
 def failing_database_pool():
     """Mock database pool that fails after some operations."""
+
     class FailingPool:
         def __init__(self, fail_after: int = 100):
             self.operations = 0
@@ -607,6 +581,7 @@ def failing_database_pool():
 @pytest.fixture
 def resource_exhaustion_simulator():
     """Simulator for resource exhaustion scenarios."""
+
     class ResourceSimulator:
         def __init__(self):
             self.file_handles = 0

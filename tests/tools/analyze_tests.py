@@ -20,6 +20,7 @@ from typing import Any
 @dataclass
 class TestInfo:
     """Information about a single test function."""
+
     name: str
     line_number: int
     category: str
@@ -31,6 +32,7 @@ class TestInfo:
 @dataclass
 class FileAnalysis:
     """Analysis results for a test file."""
+
     file_path: Path
     total_lines: int
     total_tests: int
@@ -75,7 +77,7 @@ class TestCategorizer(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
         """Analyze test functions."""
-        if node.name.startswith('test_'):
+        if node.name.startswith("test_"):
             test_name = f"{self.current_class}.{node.name}" if self.current_class else node.name
 
             # Extract fixtures from function signature
@@ -96,7 +98,7 @@ class TestCategorizer(ast.NodeVisitor):
                 category=category,
                 reasons=reasons,
                 has_async=isinstance(node, ast.AsyncFunctionDef),
-                uses_fixtures=bool(fixtures)
+                uses_fixtures=bool(fixtures),
             )
 
             self.tests.append(test_info)
@@ -105,7 +107,7 @@ class TestCategorizer(ast.NodeVisitor):
         """Handle async test functions."""
         self.visit_FunctionDef(node)
 
-    def _check_performance_test(self, analyzer: 'TestBodyAnalyzer', reasons: list[str]) -> bool:
+    def _check_performance_test(self, analyzer: "TestBodyAnalyzer", reasons: list[str]) -> bool:
         """Check if this is a performance test."""
         if analyzer.is_performance_test or self.is_performance_file:
             if analyzer.performance_indicators:
@@ -115,7 +117,7 @@ class TestCategorizer(ast.NodeVisitor):
             return True
         return False
 
-    def _calculate_unit_indicators(self, analyzer: 'TestBodyAnalyzer', reasons: list[str]) -> int:
+    def _calculate_unit_indicators(self, analyzer: "TestBodyAnalyzer", reasons: list[str]) -> int:
         """Calculate unit test indicators."""
         indicators = 0
         if analyzer.has_mocks:
@@ -132,7 +134,7 @@ class TestCategorizer(ast.NodeVisitor):
             reasons.append("Simple logic testing")
         return indicators
 
-    def _calculate_integration_indicators(self, analyzer: 'TestBodyAnalyzer', fixtures: list[str], reasons: list[str]) -> int:
+    def _calculate_integration_indicators(self, analyzer: "TestBodyAnalyzer", fixtures: list[str], reasons: list[str]) -> int:
         """Calculate integration test indicators."""
         indicators = 0
         if analyzer.has_file_io and not analyzer.has_entry_points:
@@ -149,7 +151,7 @@ class TestCategorizer(ast.NodeVisitor):
             reasons.append("Uses temporary file fixtures")
         return indicators
 
-    def _calculate_e2e_indicators(self, analyzer: 'TestBodyAnalyzer', reasons: list[str]) -> int:
+    def _calculate_e2e_indicators(self, analyzer: "TestBodyAnalyzer", reasons: list[str]) -> int:
         """Calculate E2E test indicators."""
         indicators = 0
         if analyzer.has_entry_points:
@@ -163,7 +165,7 @@ class TestCategorizer(ast.NodeVisitor):
             reasons.append("Has GUI interactions")
         return indicators
 
-    def _categorize_test(self, analyzer: 'TestBodyAnalyzer', fixtures: list[str]) -> tuple[str, list[str]]:
+    def _categorize_test(self, analyzer: "TestBodyAnalyzer", fixtures: list[str]) -> tuple[str, list[str]]:
         """Categorize a test based on its characteristics."""
         reasons = []
 
@@ -217,70 +219,89 @@ class TestBodyAnalyzer(ast.NodeVisitor):
 
     def _check_mock_usage(self, func_name: str) -> None:
         """Check for mock usage patterns."""
-        mock_terms = ['mock', 'patch', 'magicmock']
+        mock_terms = ["mock", "patch", "magicmock"]
         if any(term in func_name.lower() for term in mock_terms):
             self.has_mocks = True
 
     def _check_file_io(self, node: ast.Call, func_name: str) -> None:
         """Check for file I/O operations."""
         file_io_patterns = [
-            'open(', 'read_text', 'write_text', 'read_bytes', 'write_bytes',
-            'Path(', '.read()', '.write()', 'file.', 'save_to_file', 'load_from_file'
+            "open(",
+            "read_text",
+            "write_text",
+            "read_bytes",
+            "write_bytes",
+            "Path(",
+            ".read()",
+            ".write()",
+            "file.",
+            "save_to_file",
+            "load_from_file",
         ]
-        mock_terms = ['mock', 'patch']
+        mock_terms = ["mock", "patch"]
         if any(io_pattern in str(node) for io_pattern in file_io_patterns):
             if not any(term in func_name.lower() for term in mock_terms):
                 self.has_file_io = True
 
     def _check_database_calls(self, func_name: str) -> None:
         """Check for database operations."""
-        db_terms = ['database', 'sql', 'query', 'execute', 'fetch']
+        db_terms = ["database", "sql", "query", "execute", "fetch"]
         if any(term in func_name.lower() for term in db_terms):
             self.has_database_calls = True
 
     def _check_gui_interactions(self, func_name: str) -> None:
         """Check for GUI interactions."""
-        gui_terms = ['show', 'click', 'press', 'dialog', 'widget']
+        gui_terms = ["show", "click", "press", "dialog", "widget"]
         if any(term in func_name.lower() for term in gui_terms):
             self.has_gui_interactions = True
 
     def _check_entry_points(self, node: ast.Call, func_name: str) -> None:
         """Check for application entry points."""
-        entry_patterns = [
-            'app.run', 'application.run', 'main(', '__main__',
-            'scanner.process_crashlog', 'scanner.scan', 'app.start'
-        ]
-        entry_functions = ['main', 'start_application', 'run_app']
+        entry_patterns = ["app.run", "application.run", "main(", "__main__", "scanner.process_crashlog", "scanner.scan", "app.start"]
+        entry_functions = ["main", "start_application", "run_app"]
 
-        if any(entry in str(node) for entry in entry_patterns) or (func_name in entry_functions and 'run_async' not in func_name):
+        if any(entry in str(node) for entry in entry_patterns) or (func_name in entry_functions and "run_async" not in func_name):
             self.has_entry_points = True
 
     def _check_performance_patterns(self, node: ast.Call, func_name: str) -> None:
         """Check for performance test patterns."""
         # Pattern dictionaries for different performance checks
         performance_patterns = {
-            'function': ['perf_counter', 'benchmark', 'measure_time', 'measure_performance',
-                        'performance_test', 'baseline', 'memory_info', 'scalability_test',
-                        'throughput', 'latency', 'cpu_usage', 'memory_usage', 'profile', 'metric'],
-            'timing': ['time.perf_counter', 'time.process_time', 'time.monotonic', 'timeit.'],
-            'memory': ['memory_info', 'memory_usage', 'psutil', 'resource.getrusage']
+            "function": [
+                "perf_counter",
+                "benchmark",
+                "measure_time",
+                "measure_performance",
+                "performance_test",
+                "baseline",
+                "memory_info",
+                "scalability_test",
+                "throughput",
+                "latency",
+                "cpu_usage",
+                "memory_usage",
+                "profile",
+                "metric",
+            ],
+            "timing": ["time.perf_counter", "time.process_time", "time.monotonic", "timeit."],
+            "memory": ["memory_info", "memory_usage", "psutil", "resource.getrusage"],
         }
 
         # Check function name patterns
-        if any(perf in func_name.lower() for perf in performance_patterns['function']):
+        if any(perf in func_name.lower() for perf in performance_patterns["function"]):
             self.is_performance_test = True
             self.performance_indicators.append(f"Performance function: {func_name}")
-        elif 'perf_counter' in func_name or 'process_time' in func_name:
+        elif "perf_counter" in func_name or "process_time" in func_name:
             self.is_performance_test = True
             self.performance_indicators.append(f"Timing measurement: {func_name}")
 
         # Check timing calls
-        if any(timing in str(node) for timing in performance_patterns['timing']):
+        if any(timing in str(node) for timing in performance_patterns["timing"]):
             self.is_performance_test = True
             self.performance_indicators.append(f"Timing measurement: {func_name}")
 
         # Check memory monitoring
-        if any(mem in func_name for mem in performance_patterns['memory']):
+        if any(mem in func_name for mem in performance_patterns["memory"]):
             self.is_performance_test = True
             self.performance_indicators.append(f"Memory monitoring: {func_name}")
 
@@ -316,7 +337,7 @@ class TestBodyAnalyzer(ast.NodeVisitor):
 def _detect_performance_file(file_path: Path, content: str) -> bool:
     """Detect if this is a performance test file based on file-level indicators."""
     # Check file path
-    path_indicators = ['performance', 'benchmark', 'speed', 'timing', 'baseline']
+    path_indicators = ["performance", "benchmark", "speed", "timing", "baseline"]
     if any(indicator in str(file_path).lower() for indicator in path_indicators):
         return True
 
@@ -325,9 +346,16 @@ def _detect_performance_file(file_path: Path, content: str) -> bool:
 
     # Performance imports
     performance_imports = [
-        'time.perf_counter', 'time.process_time', 'time.monotonic',
-        'psutil', 'memory_profiler', 'cProfile', 'profile',
-        'benchmark', 'timeit', 'performance'
+        "time.perf_counter",
+        "time.process_time",
+        "time.monotonic",
+        "psutil",
+        "memory_profiler",
+        "cProfile",
+        "profile",
+        "benchmark",
+        "timeit",
+        "performance",
     ]
 
     if any(imp in content_lower for imp in performance_imports):
@@ -335,18 +363,20 @@ def _detect_performance_file(file_path: Path, content: str) -> bool:
 
     # Performance markers
     performance_markers = [
-        '@pytest.mark.performance', '@pytest.mark.benchmark', '@pytest.mark.slow',
-        'performance test', 'benchmark test', 'baseline test', 'speed test'
+        "@pytest.mark.performance",
+        "@pytest.mark.benchmark",
+        "@pytest.mark.slow",
+        "performance test",
+        "benchmark test",
+        "baseline test",
+        "speed test",
     ]
 
     if any(marker in content_lower for marker in performance_markers):
         return True
 
     # Performance-related docstrings/comments
-    performance_docs = [
-        'performance', 'benchmark', 'baseline', 'timing', 'speed',
-        'memory usage', 'cpu usage', 'scalability', 'throughput'
-    ]
+    performance_docs = ["performance", "benchmark", "baseline", "timing", "speed", "memory usage", "cpu usage", "scalability", "throughput"]
 
     # Count performance-related terms
     performance_count = sum(content_lower.count(term) for term in performance_docs)
@@ -359,7 +389,7 @@ def _detect_performance_file(file_path: Path, content: str) -> bool:
 def analyze_file(file_path: Path) -> FileAnalysis:
     """Analyze a single test file."""
     try:
-        content = file_path.read_text(encoding='utf-8')
+        content = file_path.read_text(encoding="utf-8")
         lines = content.splitlines()
 
         # Check for file-level performance indicators
@@ -393,11 +423,7 @@ def analyze_file(file_path: Path) -> FileAnalysis:
                 violations.append("Performance file exceeds 300 lines (consider splitting by functional scope)")
         else:
             # Regular test type checking
-            type_count = sum([
-                1 if unit_tests else 0,
-                1 if integration_tests else 0,
-                1 if e2e_tests else 0
-            ])
+            type_count = sum([1 if unit_tests else 0, 1 if integration_tests else 0, 1 if e2e_tests else 0])
 
             needs_split = type_count > 1 or len(lines) > 300
 
@@ -417,7 +443,7 @@ def analyze_file(file_path: Path) -> FileAnalysis:
             fixtures_used=categorizer.fixtures_used,
             needs_split=needs_split,
             violations=violations,
-            is_performance_file=is_performance_file
+            is_performance_file=is_performance_file,
         )
 
     except Exception as e:
@@ -435,7 +461,7 @@ def analyze_file(file_path: Path) -> FileAnalysis:
             fixtures_used=set(),
             needs_split=False,
             violations=[f"Parse error: {e}"],
-            is_performance_file=False
+            is_performance_file=False,
         )
 
 
@@ -451,13 +477,13 @@ def _print_test_section(tests: list[TestInfo], title: str, icon: str) -> None:
 
 def _print_file_header(analysis: FileAnalysis) -> None:
     """Print the file header section."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     try:
         relative_path = analysis.file_path.relative_to(Path.cwd())
         print(f"File: {relative_path}")
     except ValueError:
         print(f"File: {analysis.file_path}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Total lines: {analysis.total_lines}")
     print(f"Total tests: {analysis.total_tests}")
 
@@ -496,7 +522,7 @@ def print_analysis(analysis: FileAnalysis) -> None:
         (analysis.integration_tests, "Integration tests", "🔗"),
         (analysis.e2e_tests, "E2E tests", "🔄"),
         (analysis.performance_tests, "Performance tests", "⚡"),
-        (analysis.unknown_tests, "Unknown tests", "❓")
+        (analysis.unknown_tests, "Unknown tests", "❓"),
     ]
 
     for tests, title, icon in test_sections:
@@ -523,14 +549,14 @@ def main():
     files_to_analyze = []
 
     if path.is_file():
-        if path.name.startswith('test_') and path.suffix == '.py':
+        if path.name.startswith("test_") and path.suffix == ".py":
             files_to_analyze.append(path)
         else:
             print(f"Error: {path} is not a test file")
             sys.exit(1)
     else:
         # Find all test files in directory
-        files_to_analyze = list(path.rglob('test_*.py'))
+        files_to_analyze = list(path.rglob("test_*.py"))
         if not files_to_analyze:
             print(f"No test files found in {path}")
             sys.exit(1)
@@ -550,9 +576,9 @@ def main():
         total_tests = sum(a.total_tests for a in all_analyses)
         total_lines = sum(a.total_lines for a in all_analyses)
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("SUMMARY REPORT")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Total files analyzed: {total_files}")
         print(f"Files needing split: {files_needing_split}")
         print(f"Total tests: {total_tests}")

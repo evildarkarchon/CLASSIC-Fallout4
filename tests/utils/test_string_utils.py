@@ -7,6 +7,7 @@ and text similarity functions.
 IMPORTANT: The crashgen_version_gen function uses @lru_cache for performance.
 The clean_version_caches autouse fixture ensures cache is cleared between tests.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841
 import math
 from pathlib import Path

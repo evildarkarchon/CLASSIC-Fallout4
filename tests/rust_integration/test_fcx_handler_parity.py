@@ -186,21 +186,23 @@ class TestFcxHandlerParity:
                         "fcx_mode": fcx_mode,
                         "rust_content_length": len(rust_content),
                         "python_content_length": len(python_content),
-                    }
+                    },
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"FCX handler test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="fcx_handler",
-                    method_name="get_fcx_messages",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="fcx_handler",
+                        method_name="get_fcx_messages",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -251,14 +253,15 @@ class TestFcxHandlerParity:
         python_fragment2 = python_handler2.get_fcx_messages()
 
         # Validate consistency
-        assert rust_fragment1.fragment_content == rust_fragment2.fragment_content, \
-            "Rust handler state is inconsistent between instances"
+        assert rust_fragment1.fragment_content == rust_fragment2.fragment_content, "Rust handler state is inconsistent between instances"
 
-        assert python_fragment1.fragment_content == python_fragment2.fragment_content, \
+        assert python_fragment1.fragment_content == python_fragment2.fragment_content, (
             "Python handler state is inconsistent between instances"
+        )
 
-        assert rust_fragment1.fragment_content == python_fragment1.fragment_content, \
+        assert rust_fragment1.fragment_content == python_fragment1.fragment_content, (
             "Rust and Python handlers produce different content for enabled mode"
+        )
 
         # Test disabled mode consistency
         rust_handler3 = validator.create_rust_implementation(fcx_mode=False)
@@ -267,8 +270,9 @@ class TestFcxHandlerParity:
         rust_fragment3 = rust_handler3.get_fcx_messages()
         python_fragment3 = python_handler3.get_fcx_messages()
 
-        assert rust_fragment3.fragment_content == python_fragment3.fragment_content, \
+        assert rust_fragment3.fragment_content == python_fragment3.fragment_content, (
             "Rust and Python handlers produce different content for disabled mode"
+        )
 
     @pytest.mark.performance
     async def test_fcx_handler_performance_regression(self):
@@ -304,8 +308,7 @@ class TestFcxHandlerParity:
         rust_final = rust_handler.get_fcx_messages()
         python_final = python_handler.get_fcx_messages()
 
-        assert rust_final.fragment_content == python_final.fragment_content, \
-            "Results differ in performance test"
+        assert rust_final.fragment_content == python_final.fragment_content, "Results differ in performance test"
 
         # Validate performance improvement
         if python_time > 0 and rust_time > 0:
@@ -352,12 +355,10 @@ class TestFcxHandlerParity:
 
         # Verify file was NOT modified
         final_mtime = test_ini_path.stat().st_mtime
-        assert final_mtime == initial_mtime, \
-            "FCX handler modified file - read-only contract violated"
+        assert final_mtime == initial_mtime, "FCX handler modified file - read-only contract violated"
 
         # Verify content unchanged
         final_content = test_ini_path.read_text(encoding="utf-8")
-        assert final_content == "[Main]\nHotKey = ; F10\n", \
-            "File content was modified by FCX handler"
+        assert final_content == "[Main]\nHotKey = ; F10\n", "File content was modified by FCX handler"
 
         logger.info("FCX handler read-only behavior verified: no file modifications")

@@ -363,9 +363,7 @@ class VersionChecker:
             bool: True if the update check feature is enabled, otherwise False.
         """
         if not (self.gui_request or classic_settings(bool, "Update Check")):
-            self._log_if_not_quiet(
-                "\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n" + "=" * 79
-            )
+            self._log_if_not_quiet("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n" + "=" * 79)
             return False
         return True
 
@@ -386,9 +384,7 @@ class VersionChecker:
             bool: True if the `update_source` is valid, otherwise False.
         """
         if update_source not in {"Both", "GitHub", "Nexus"}:
-            self._log_if_not_quiet(
-                "\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n\n" + "=" * 79
-            )
+            self._log_if_not_quiet("\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n\n" + "=" * 79)
             return False
         return True
 
@@ -492,10 +488,7 @@ class VersionChecker:
         return version
 
     @staticmethod
-    def _check_source_failures(
-        use_github: bool, use_nexus: bool,
-        github_version: Version | None, nexus_version: Version | None
-    ) -> None:
+    def _check_source_failures(use_github: bool, use_nexus: bool, github_version: Version | None, nexus_version: Version | None) -> None:
         """
         Checks for failures in fetching version information from specified sources.
 
@@ -520,12 +513,12 @@ class VersionChecker:
         nexus_failed = use_nexus and nexus_version is None
 
         error_conditions = [
-            (use_github and not use_nexus and github_failed,
-             "Unable to fetch version information from GitHub (selected as only source)."),
-            (use_nexus and not use_github and nexus_failed,
-             "Unable to fetch version information from Nexus (selected as only source)."),
-            (use_github and use_nexus and github_failed and nexus_failed,
-             "Unable to fetch version information from both GitHub and Nexus."),
+            (use_github and not use_nexus and github_failed, "Unable to fetch version information from GitHub (selected as only source)."),
+            (use_nexus and not use_github and nexus_failed, "Unable to fetch version information from Nexus (selected as only source)."),
+            (
+                use_github and use_nexus and github_failed and nexus_failed,
+                "Unable to fetch version information from both GitHub and Nexus.",
+            ),
         ]
 
         for condition, message in error_conditions:
@@ -572,10 +565,7 @@ class VersionChecker:
         return False
 
     @staticmethod
-    def _check_if_outdated(
-        version_local: Version | None,
-        github_version: Version | None, nexus_version: Version | None
-    ) -> bool:
+    def _check_if_outdated(version_local: Version | None, github_version: Version | None, nexus_version: Version | None) -> bool:
         """
         Checks if the local version is outdated compared to the remote sources: GitHub or Nexus.
 
@@ -597,10 +587,7 @@ class VersionChecker:
             msg_warning("Local version is unknown. Assuming update is needed or there's an issue.")
             return bool(github_version or nexus_version)
 
-        remote_versions = [
-            (github_version, "GitHub"),
-            (nexus_version, "Nexus")
-        ]
+        remote_versions = [(github_version, "GitHub"), (nexus_version, "Nexus")]
 
         for remote_version, source in remote_versions:
             if remote_version and version_local < remote_version:
@@ -611,9 +598,7 @@ class VersionChecker:
 
     @staticmethod
     def _format_success_message(
-        version_local: Version | None,
-        use_github: bool, github_version: Version | None,
-        use_nexus: bool, nexus_version: Version | None
+        version_local: Version | None, use_github: bool, github_version: Version | None, use_nexus: bool, nexus_version: Version | None
     ) -> str:
         """
         Formats a success message string indicating the current local version of CLASSIC and
@@ -637,10 +622,7 @@ class VersionChecker:
         """
         message_parts = [f"Your CLASSIC Version: {version_local or 'Unknown'}"]
 
-        source_info = [
-            (use_github, github_version, "GitHub"),
-            (use_nexus, nexus_version, "Nexus")
-        ]
+        source_info = [(use_github, github_version, "GitHub"), (use_nexus, nexus_version, "Nexus")]
 
         for should_check, version, source in source_info:
             if should_check:
@@ -734,9 +716,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
 
     # Show success message
     if not quiet:
-        success_msg = checker._format_success_message(
-            version_local, use_github, version_github, use_nexus, version_nexus
-        )
+        success_msg = checker._format_success_message(version_local, use_github, version_github, use_nexus, version_nexus)
         msg_success(success_msg)
 
     return True

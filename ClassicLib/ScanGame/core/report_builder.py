@@ -32,9 +32,7 @@ class ScanReportBuilder:
         """
         self.validators = validators
 
-    def build_unpacked_report(
-        self, issue_lists: dict[str, set[str]], xse_acronym: str
-    ) -> str:
+    def build_unpacked_report(self, issue_lists: dict[str, set[str]], xse_acronym: str) -> str:
         """
         Build report for unpacked (loose) mod file scan.
 
@@ -79,9 +77,7 @@ class ScanReportBuilder:
 
         return output.getvalue()
 
-    def build_archived_report(
-        self, issue_lists: dict[str, set[str]], xse_acronym: str
-    ) -> str:
+    def build_archived_report(self, issue_lists: dict[str, set[str]], xse_acronym: str) -> str:
         """
         Build report for archived (BA2) mod file scan.
 

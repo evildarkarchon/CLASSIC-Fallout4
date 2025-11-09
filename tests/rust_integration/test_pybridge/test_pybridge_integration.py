@@ -39,16 +39,12 @@ class TestPybridgeImport:
             "get_runtime_info",
         }
 
-        actual_exports = {
-            name for name in dir(classic_pybridge) if not name.startswith("_")
-        }
+        actual_exports = {name for name in dir(classic_pybridge) if not name.startswith("_")}
 
         # Remove submodule if present
         actual_exports.discard("classic_pybridge")
 
-        assert expected_exports.issubset(
-            actual_exports
-        ), f"Missing exports: {expected_exports - actual_exports}"
+        assert expected_exports.issubset(actual_exports), f"Missing exports: {expected_exports - actual_exports}"
 
 
 @pytest.mark.rust
@@ -378,10 +374,7 @@ class TestThreadSafety:
         # Verify total count
         metrics = get_metrics()
         assert metrics.run_async_count == 400  # 4 threads * 100 operations
-        assert (
-            metrics.run_async_success + metrics.run_async_failure
-            == metrics.run_async_count
-        )
+        assert metrics.run_async_success + metrics.run_async_failure == metrics.run_async_count
 
     def test_concurrent_types(self):
         """Test concurrent recording of different operation types."""
@@ -485,18 +478,13 @@ class TestRustAcceleration:
             # For packages, check the directory for .pyd/.so/.dylib files
             package_file = classic_pybridge.__file__
             package_dir = Path(package_file).parent
-            rust_files = list(package_dir.glob("*.pyd")) + \
-                        list(package_dir.glob("*.so")) + \
-                        list(package_dir.glob("*.dylib"))
+            rust_files = list(package_dir.glob("*.pyd")) + list(package_dir.glob("*.so")) + list(package_dir.glob("*.dylib"))
             assert len(rust_files) > 0, f"No Rust extension found in {package_dir}"
             module_file = str(rust_files[0])
 
         assert module_file is not None
         # Windows: .pyd, Linux: .so, Mac: .dylib
-        assert any(
-            ext in module_file.lower()
-            for ext in [".pyd", ".so", ".dylib"]
-        ), f"Module file {module_file} is not a Rust extension"
+        assert any(ext in module_file.lower() for ext in [".pyd", ".so", ".dylib"]), f"Module file {module_file} is not a Rust extension"
 
 
 if __name__ == "__main__":

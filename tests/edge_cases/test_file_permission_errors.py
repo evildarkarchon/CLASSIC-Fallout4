@@ -45,6 +45,7 @@ class PermissionErrorSimulator:
             try:
                 import win32api
                 import win32con
+
                 win32api.SetFileAttributes(str(path), win32con.FILE_ATTRIBUTE_HIDDEN)
             except ImportError:
                 # Fallback if pywin32 not available
@@ -76,7 +77,7 @@ class TestReadPermissionErrors:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             f.write("Read-only content")
             temp_path = Path(f.name)
 
@@ -99,7 +100,7 @@ class TestReadPermissionErrors:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             f.write("Write-only content")
             temp_path = Path(f.name)
 
@@ -121,7 +122,7 @@ class TestReadPermissionErrors:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             f.write("No access content")
             temp_path = Path(f.name)
 
@@ -156,7 +157,7 @@ class TestWritePermissionErrors:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             f.write("Original content")
             temp_path = Path(f.name)
 
@@ -192,7 +193,7 @@ class TestWritePermissionErrors:
                 if sys.platform == "win32":
                     # Windows: Harder to make directory truly read-only
                     # Mock the permission error instead
-                    with patch('pathlib.Path.write_text', side_effect=PermissionError("Access denied")):
+                    with patch("pathlib.Path.write_text", side_effect=PermissionError("Access denied")):
                         with pytest.raises(PermissionError):
                             file_path.write_text("content")
                 else:
@@ -216,7 +217,7 @@ class TestWritePermissionErrors:
             file_path.write_text("Original")
 
             # Mock atomic write failure
-            with patch.object(io_core, '_atomic_write', side_effect=PermissionError("Cannot create temp file")):
+            with patch.object(io_core, "_atomic_write", side_effect=PermissionError("Cannot create temp file")):
                 with pytest.raises(PermissionError):
                     await io_core.write_file(str(file_path), "New content")
 
@@ -251,7 +252,7 @@ class TestDirectoryPermissionErrors:
                         list(temp_path.iterdir())
                 else:
                     # Windows: Mock the error
-                    with patch('pathlib.Path.iterdir', side_effect=PermissionError("Access denied")):
+                    with patch("pathlib.Path.iterdir", side_effect=PermissionError("Access denied")):
                         with pytest.raises(PermissionError):
                             list(temp_path.iterdir())
             finally:
@@ -303,7 +304,7 @@ class TestFileLockingScenarios:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             f.write("Locked content")
             temp_path = Path(f.name)
 
@@ -311,7 +312,7 @@ class TestFileLockingScenarios:
             # Simulate file being locked
             if sys.platform == "win32":
                 # Windows file locking
-                with patch('builtins.open', side_effect=PermissionError("File is being used by another process")):
+                with patch("builtins.open", side_effect=PermissionError("File is being used by another process")):
                     with pytest.raises(PermissionError):
                         await io_core.read_file(str(temp_path))
             else:
@@ -328,7 +329,7 @@ class TestFileLockingScenarios:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             temp_path = Path(f.name)
 
         try:
@@ -372,7 +373,7 @@ class TestQuotaAndSpaceErrors:
         io_core = FileIOCore()
 
         # Mock disk full error
-        with patch('pathlib.Path.write_text', side_effect=OSError(28, "No space left on device")):
+        with patch("pathlib.Path.write_text", side_effect=OSError(28, "No space left on device")):
             with tempfile.NamedTemporaryFile(delete=False) as f:
                 temp_path = Path(f.name)
 
@@ -394,7 +395,7 @@ class TestQuotaAndSpaceErrors:
         io_core = FileIOCore()
 
         # Mock quota exceeded error
-        with patch('pathlib.Path.write_text', side_effect=OSError(122, "Disk quota exceeded")):
+        with patch("pathlib.Path.write_text", side_effect=OSError(122, "Disk quota exceeded")):
             with tempfile.NamedTemporaryFile(delete=False) as f:
                 temp_path = Path(f.name)
 
@@ -539,7 +540,7 @@ class TestPermissionRecoveryStrategies:
         def capture_error(msg: str):
             error_messages.append(msg)
 
-        with patch.object(msg_handler, 'msg_error', side_effect=capture_error):
+        with patch.object(msg_handler, "msg_error", side_effect=capture_error):
             # Simulate permission error
             try:
                 raise PermissionError("Cannot write to C:\\Program Files\\test.log")

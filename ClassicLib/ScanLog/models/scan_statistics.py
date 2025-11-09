@@ -41,9 +41,6 @@ class ScanStatistics:
         This method updates an internal counter that tracks the total number
         of scanned items. It is primarily used to maintain a record of the
         scanned operations.
-
-        Returns:
-            None: This method does not return any value.
         """
         self.scanned += 1
 
@@ -54,9 +51,6 @@ class ScanStatistics:
         This method increases the value of the `incomplete` attribute by one
         every time it is invoked. It is typically used to track or manage the
         number of incomplete tasks or items in a system.
-
-        Returns:
-            None
         """
         self.incomplete += 1
 
@@ -66,7 +60,6 @@ class ScanStatistics:
 
         The method updates the `failed` attribute by incrementing its value by 1.
         This allows for keeping a record of failure occurrences.
-
         """
         self.failed += 1
 

@@ -43,6 +43,7 @@ def full_tab_setup(init_message_handler_fixture, qt_application):
                 def wrapper(*args, **kwargs):
                     self.method_calls.append(method_name)
                     return MagicMock()
+
                 return wrapper
 
             self.select_folder_mods = track_call("select_folder_mods")
@@ -62,12 +63,7 @@ def full_tab_setup(init_message_handler_fixture, qt_application):
             self.add_backup_section = track_call("add_backup_section")
 
             # Track widget creation
-            self.created_widgets = {
-                "buttons": [],
-                "layouts": [],
-                "labels": [],
-                "edits": []
-            }
+            self.created_widgets = {"buttons": [], "layouts": [], "labels": [], "edits": []}
 
     return FullTabSetup()
 
@@ -79,16 +75,17 @@ class TestCompleteTabSetupWorkflow:
 
     def test_full_application_tab_initialization(self, full_tab_setup):
         """Test complete initialization of all tabs in application startup sequence."""
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid, \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
-             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label, \
-             patch("ClassicLib.Interface.TabSetupMixin.QWidget") as mock_widget, \
-             patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder, \
-             patch("ClassicLib.Interface.TabSetupMixin.add_main_button") as mock_add_main, \
-             patch("ClassicLib.Interface.TabSetupMixin.supports_add_layout", return_value=True):
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid,
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button,
+            patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label,
+            patch("ClassicLib.Interface.TabSetupMixin.QWidget") as mock_widget,
+            patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder,
+            patch("ClassicLib.Interface.TabSetupMixin.add_main_button") as mock_add_main,
+            patch("ClassicLib.Interface.TabSetupMixin.supports_add_layout", return_value=True),
+        ):
             # Setup mock returns
             mock_vbox.return_value = MagicMock()
             mock_hbox.return_value = MagicMock()
@@ -98,12 +95,14 @@ class TestCompleteTabSetupWorkflow:
 
             # Track button creation
             created_buttons = []
+
             def create_button(text):
                 btn = MagicMock()
                 btn.text = text
                 btn.isCheckable.return_value = "PAPYRUS" in text
                 created_buttons.append(btn)
                 return btn
+
             mock_button.side_effect = create_button
 
             # Setup folder returns
@@ -151,12 +150,8 @@ class TestCompleteTabSetupWorkflow:
             mock_button_class.side_effect = create_interactive_button
 
             # Create buttons through _create_button
-            scan_btn = full_tab_setup._create_button(
-                "SCAN CRASH LOGS", "Tooltip", full_tab_setup.crash_logs_scan
-            )
-            settings_btn = full_tab_setup._create_button(
-                "SETTINGS", "Tooltip", full_tab_setup.open_settings
-            )
+            scan_btn = full_tab_setup._create_button("SCAN CRASH LOGS", "Tooltip", full_tab_setup.crash_logs_scan)
+            settings_btn = full_tab_setup._create_button("SETTINGS", "Tooltip", full_tab_setup.open_settings)
 
             # Simulate user interactions
             scan_btn.click()
@@ -185,9 +180,7 @@ class TestPapyrusMonitoringWorkflow:
 
             # Create button
             full_tab_setup.papyrus_button = full_tab_setup._create_button(
-                "START PAPYRUS MONITORING",
-                "Toggle monitoring",
-                full_tab_setup.toggle_papyrus_worker
+                "START PAPYRUS MONITORING", "Toggle monitoring", full_tab_setup.toggle_papyrus_worker
             )
 
             # Initial state - not monitoring
@@ -236,12 +229,13 @@ class TestFolderSelectionWorkflow:
 
     def test_folder_selection_complete_workflow(self, full_tab_setup):
         """Test complete folder selection workflow."""
-        with patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder, \
-             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QWidget"), \
-             patch.object(full_tab_setup, "setup_main_buttons"), \
-             patch.object(full_tab_setup, "setup_bottom_buttons"):
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder,
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QWidget"),
+            patch.object(full_tab_setup, "setup_main_buttons"),
+            patch.object(full_tab_setup, "setup_bottom_buttons"),
+        ):
             # Create mock edit widgets
             mods_edit = MagicMock()
             mods_edit.text = MagicMock(return_value="")
@@ -284,11 +278,12 @@ class TestFolderSelectionWorkflow:
 
             mock_folder.side_effect = folder_section_impl
 
-            with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"), \
-                 patch("ClassicLib.Interface.TabSetupMixin.QWidget"), \
-                 patch.object(full_tab_setup, "setup_main_buttons"), \
-                 patch.object(full_tab_setup, "setup_bottom_buttons"):
-
+            with (
+                patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"),
+                patch("ClassicLib.Interface.TabSetupMixin.QWidget"),
+                patch.object(full_tab_setup, "setup_main_buttons"),
+                patch.object(full_tab_setup, "setup_bottom_buttons"),
+            ):
                 full_tab_setup.setup_main_tab()
 
                 # Simulate browse button clicks
@@ -310,19 +305,17 @@ class TestBackupWorkflow:
 
     def test_backup_restoration_workflow(self, full_tab_setup):
         """Test complete backup and restoration workflow."""
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QLabel"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QLabel"),
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button,
+        ):
             # Track backup operations
             backup_operations = []
 
             def track_backup_section(layout, title, backup_type):
-                backup_operations.append({
-                    "title": title,
-                    "type": backup_type
-                })
+                backup_operations.append({"title": title, "type": backup_type})
 
             full_tab_setup.add_backup_section = track_backup_section
 
@@ -341,12 +334,7 @@ class TestBackupWorkflow:
     def test_backup_button_states_based_on_existing_backups(self, full_tab_setup):
         """Test backup button states change based on existing backups."""
         # Pre-set the existing backups before setup
-        full_tab_setup.existing_backups = {
-            "XSE": True,
-            "RESHADE": False,
-            "VULKAN": True,
-            "ENB": False
-        }
+        full_tab_setup.existing_backups = {"XSE": True, "RESHADE": False, "VULKAN": True, "ENB": False}
 
         # Mock check_existing_backups to not override our pre-set values
         def check_backups_impl():
@@ -355,21 +343,19 @@ class TestBackupWorkflow:
 
         full_tab_setup.check_existing_backups = check_backups_impl
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QLabel"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton"):
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QLabel"),
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton"),
+        ):
             # Track button states
             button_states = {}
 
             def add_backup_impl(layout, title, backup_type):
                 # Record whether restore should be enabled based on existing backups
                 has_backup = getattr(full_tab_setup, "existing_backups", {}).get(backup_type, False)
-                button_states[backup_type] = {
-                    "restore_enabled": has_backup,
-                    "backup_enabled": not has_backup
-                }
+                button_states[backup_type] = {"restore_enabled": has_backup, "backup_enabled": not has_backup}
 
             full_tab_setup.add_backup_section = add_backup_impl
 
@@ -399,12 +385,13 @@ class TestArticleNavigationWorkflow:
 
         full_tab_setup.open_url = track_url
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QLabel"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
-             patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QLabel"),
+            patch("ClassicLib.Interface.TabSetupMixin.QGridLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button,
+            patch("ClassicLib.Interface.TabSetupMixin.partial") as mock_partial,
+        ):
             # Track partial creations
             url_callbacks = {}
 
@@ -446,17 +433,14 @@ class TestMultiTabInteraction:
     def test_scan_results_affect_multiple_tabs(self, full_tab_setup):
         """Test how scan results affect multiple tabs."""
         # Setup scan results that should affect other tabs
-        scan_results = {
-            "errors_found": True,
-            "backup_needed": ["XSE", "ENB"],
-            "articles_relevant": ["BUFFOUT 4 INSTALLATION"]
-        }
+        scan_results = {"errors_found": True, "backup_needed": ["XSE", "ENB"], "articles_relevant": ["BUFFOUT 4 INSTALLATION"]}
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout"), \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
-             patch("ClassicLib.Interface.TabSetupMixin.add_main_button") as mock_add_main:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout"),
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button,
+            patch("ClassicLib.Interface.TabSetupMixin.add_main_button") as mock_add_main,
+        ):
             # Create scan button
             scan_button = MagicMock()
             mock_add_main.return_value = scan_button
@@ -478,11 +462,12 @@ class TestMultiTabInteraction:
 
             full_tab_setup.crash_logs_scan = simulate_scan
 
-            with patch.object(full_tab_setup, "setup_main_buttons"), \
-                 patch.object(full_tab_setup, "setup_bottom_buttons"), \
-                 patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section"), \
-                 patch("ClassicLib.Interface.TabSetupMixin.QWidget"):
-
+            with (
+                patch.object(full_tab_setup, "setup_main_buttons"),
+                patch.object(full_tab_setup, "setup_bottom_buttons"),
+                patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section"),
+                patch("ClassicLib.Interface.TabSetupMixin.QWidget"),
+            ):
                 full_tab_setup.setup_main_tab()
 
                 # Trigger scan
@@ -502,10 +487,11 @@ class TestErrorRecoveryWorkflow:
         """Test tab setup can recover from partial failures."""
         setup_stages = []
 
-        with patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox, \
-             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button, \
-             patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder:
-
+        with (
+            patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox,
+            patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button,
+            patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section") as mock_folder,
+        ):
             # First folder setup fails
             def folder_setup(layout, label, key, callback, tooltip=""):
                 if len(setup_stages) == 0:
@@ -518,10 +504,11 @@ class TestErrorRecoveryWorkflow:
             mock_vbox.return_value = MagicMock()
             mock_button.return_value = MagicMock()
 
-            with patch.object(full_tab_setup, "setup_main_buttons"), \
-                 patch.object(full_tab_setup, "setup_bottom_buttons"), \
-                 patch("ClassicLib.Interface.TabSetupMixin.QWidget"):
-
+            with (
+                patch.object(full_tab_setup, "setup_main_buttons"),
+                patch.object(full_tab_setup, "setup_bottom_buttons"),
+                patch("ClassicLib.Interface.TabSetupMixin.QWidget"),
+            ):
                 # Should complete despite first folder failure
                 full_tab_setup.setup_main_tab()
 

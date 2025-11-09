@@ -4,6 +4,7 @@ Real-world performance baseline management utilities.
 This module contains utilities for saving and managing performance baseline
 data for future regression testing and performance tracking.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import json
 import time

@@ -5,6 +5,7 @@ This module provides a thread-safe SQLite connection pool, utilities for managin
 and functions to validate and handle paths used for application configuration, especially related to crash
 logs and custom scan directories.
 """
+
 import contextlib
 import shutil
 import sqlite3
@@ -304,11 +305,7 @@ def _crashlogs_get_files_rust() -> list[Path]:
     custom_folder_str = str(custom_folder) if custom_folder else None
 
     # Create LogCollector
-    collector = classic_file_io.PyLogCollector(
-        base_folder=base_folder_str,
-        xse_folder=xse_folder_str,
-        custom_folder=custom_folder_str
-    )
+    collector = classic_file_io.PyLogCollector(base_folder=base_folder_str, xse_folder=xse_folder_str, custom_folder=custom_folder_str)
 
     # Collect all crash logs (async operation handled by Rust runtime)
     log_paths: list[str] = collector.collect_all()

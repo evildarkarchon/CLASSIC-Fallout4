@@ -12,15 +12,16 @@ from ClassicLib.PathValidator import PathValidator
 
 pytestmark = pytest.mark.integration
 
+
 class TestPathValidator:
     """Tests for the PathValidator class."""
 
     def test_is_valid_path_relative(self, tmp_path: Path, monkeypatch) -> None:
         """Test is_valid_path with relative paths."""
         monkeypatch.chdir(tmp_path)
-        test_file = Path('test.txt')
-        test_file.write_text('content')
-        assert PathValidator.is_valid_path('test.txt') is True
-        assert PathValidator.is_valid_path('./test.txt') is True
+        test_file = Path("test.txt")
+        test_file.write_text("content")
+        assert PathValidator.is_valid_path("test.txt") is True
+        assert PathValidator.is_valid_path("./test.txt") is True
         assert PathValidator.is_valid_path(test_file) is True
-        assert PathValidator.is_valid_path('nonexistent.txt') is False
+        assert PathValidator.is_valid_path("nonexistent.txt") is False

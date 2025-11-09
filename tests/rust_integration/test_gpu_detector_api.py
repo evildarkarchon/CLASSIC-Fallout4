@@ -23,7 +23,6 @@ Note:
 """
 
 import pytest
-from typing import Any
 
 
 @pytest.mark.rust
@@ -60,16 +59,12 @@ def test_gpu_detector_get_gpu_info() -> None:
         result = detector_module.get_gpu_info(segment_system)
 
         # Verify return type is dict (wrapper converts internally)
-        assert isinstance(result, dict), (
-            f"get_gpu_info should return dict, got {type(result).__name__}"
-        )
+        assert isinstance(result, dict), f"get_gpu_info should return dict, got {type(result).__name__}"
 
         # Verify dict has expected keys
         expected_keys = {"primary", "secondary", "manufacturer", "rival"}
         actual_keys = set(result.keys())
-        assert actual_keys == expected_keys, (
-            f"Expected keys {expected_keys}, got {actual_keys}"
-        )
+        assert actual_keys == expected_keys, f"Expected keys {expected_keys}, got {actual_keys}"
 
         # Verify GPU field is present (may be "Unknown" if detection fails)
         primary = result["primary"]
@@ -79,9 +74,7 @@ def test_gpu_detector_get_gpu_info() -> None:
         # Verify manufacturer field is present
         manufacturer = result["manufacturer"]
         assert manufacturer is not None, "Manufacturer field should not be None"
-        assert isinstance(manufacturer, str), (
-            f"Manufacturer should be string, got {type(manufacturer).__name__}"
-        )
+        assert isinstance(manufacturer, str), f"Manufacturer should be string, got {type(manufacturer).__name__}"
 
         # Note: GPU detection accuracy is tested elsewhere; this test verifies API compliance
         # The wrapper correctly returns dict with expected structure
@@ -112,20 +105,15 @@ def test_gpu_detector_function_not_detect_gpu() -> None:
         detector_module = get_gpu_detector()
 
         # Verify module has the CORRECT function name
-        assert hasattr(detector_module, "get_gpu_info"), (
-            "Module must have get_gpu_info() function"
-        )
+        assert hasattr(detector_module, "get_gpu_info"), "Module must have get_gpu_info() function"
 
         # Verify module does NOT have the INCORRECT old function name
         assert not hasattr(detector_module, "detect_gpu"), (
-            "Module should not have detect_gpu() function - "
-            "correct function name is get_gpu_info()"
+            "Module should not have detect_gpu() function - correct function name is get_gpu_info()"
         )
 
         # Verify the function is callable
-        assert callable(detector_module.get_gpu_info), (
-            "get_gpu_info should be a callable function"
-        )
+        assert callable(detector_module.get_gpu_info), "get_gpu_info should be a callable function"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -159,22 +147,16 @@ def test_gpu_detector_handles_no_gpu() -> None:
         result = detector_module.get_gpu_info(segment_system)
 
         # Should return dict even for empty segment (wrapper handles conversion)
-        assert isinstance(result, dict), (
-            "get_gpu_info should return dict even for empty segment"
-        )
+        assert isinstance(result, dict), "get_gpu_info should return dict even for empty segment"
 
         # Should still have all expected keys
         expected_keys = {"primary", "secondary", "manufacturer", "rival"}
-        assert set(result.keys()) == expected_keys, (
-            f"Should have all keys even when no GPU detected"
-        )
+        assert set(result.keys()) == expected_keys, "Should have all keys even when no GPU detected"
 
         # Values may be None when no GPU detected
         # This is valid behavior
         primary = result.get("primary")
-        assert primary is None or isinstance(primary, str), (
-            f"Primary should be None or string, got {type(primary).__name__}"
-        )
+        assert primary is None or isinstance(primary, str), f"Primary should be None or string, got {type(primary).__name__}"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -212,14 +194,10 @@ def test_gpu_detector_multiple_gpus() -> None:
         result = detector_module.get_gpu_info(segment_system)
 
         # Should return dict (wrapper handles conversion)
-        assert isinstance(result, dict), (
-            "get_gpu_info should return dict for multi-GPU"
-        )
+        assert isinstance(result, dict), "get_gpu_info should return dict for multi-GPU"
 
         # Should detect primary GPU
-        assert result["primary"] is not None, (
-            "Should detect primary GPU in multi-GPU system"
-        )
+        assert result["primary"] is not None, "Should detect primary GPU in multi-GPU system"
 
         # Primary should contain GPU information
         primary = result["primary"]
@@ -265,9 +243,7 @@ def test_gpu_detector_amd_gpu() -> None:
         result = detector_module.get_gpu_info(segment_system)
 
         # Should return dict (wrapper handles conversion)
-        assert isinstance(result, dict), (
-            "get_gpu_info should return dict for AMD GPU"
-        )
+        assert isinstance(result, dict), "get_gpu_info should return dict for AMD GPU"
 
         # Verify primary field is present (may be "Unknown" if detection fails)
         primary = result["primary"]
@@ -315,9 +291,7 @@ def test_gpu_detector_intel_gpu() -> None:
         result = detector_module.get_gpu_info(segment_system)
 
         # Should return dict (wrapper handles conversion)
-        assert isinstance(result, dict), (
-            "get_gpu_info should return dict for Intel GPU"
-        )
+        assert isinstance(result, dict), "get_gpu_info should return dict for Intel GPU"
 
         # Verify primary field is present (may be "Unknown" if detection fails)
         primary = result["primary"]
@@ -355,20 +329,12 @@ def test_gpu_detector_factory_consistency() -> None:
         detector_module2 = get_gpu_detector()
 
         # Both should have the correct function
-        assert hasattr(detector_module1, "get_gpu_info"), (
-            "Factory should return module with get_gpu_info()"
-        )
-        assert hasattr(detector_module2, "get_gpu_info"), (
-            "Factory should return module with get_gpu_info()"
-        )
+        assert hasattr(detector_module1, "get_gpu_info"), "Factory should return module with get_gpu_info()"
+        assert hasattr(detector_module2, "get_gpu_info"), "Factory should return module with get_gpu_info()"
 
         # Neither should have the incorrect function name
-        assert not hasattr(detector_module1, "detect_gpu"), (
-            "Module should not have detect_gpu() function"
-        )
-        assert not hasattr(detector_module2, "detect_gpu"), (
-            "Module should not have detect_gpu() function"
-        )
+        assert not hasattr(detector_module1, "detect_gpu"), "Module should not have detect_gpu() function"
+        assert not hasattr(detector_module2, "detect_gpu"), "Module should not have detect_gpu() function"
 
         # Both should be callable and return dicts
         test_segment = ["GPU: Test GPU"]
@@ -416,20 +382,14 @@ def test_gpu_detector_dict_structure_complete() -> None:
 
         # Verify complete structure
         expected_keys = {"primary", "secondary", "manufacturer", "rival"}
-        assert set(result.keys()) == expected_keys, (
-            f"Dict should have exactly these keys: {expected_keys}"
-        )
+        assert set(result.keys()) == expected_keys, f"Dict should have exactly these keys: {expected_keys}"
 
         # Verify value types
         for key, value in result.items():
-            assert value is None or isinstance(value, str), (
-                f"Key '{key}' should be string or None, got {type(value).__name__}"
-            )
+            assert value is None or isinstance(value, str), f"Key '{key}' should be string or None, got {type(value).__name__}"
 
         # No extra keys
-        assert len(result) == 4, (
-            f"Dict should have exactly 4 keys, got {len(result)}"
-        )
+        assert len(result) == 4, f"Dict should have exactly 4 keys, got {len(result)}"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")

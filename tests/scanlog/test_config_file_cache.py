@@ -28,8 +28,7 @@ class TestConfigFileCacheReadOnly:
         completely removed as part of the read-only conversion.
         """
         cache = ConfigFileCache()
-        assert not hasattr(cache, "set"), \
-            "set() method should be removed - ConfigFileCache must be read-only"
+        assert not hasattr(cache, "set"), "set() method should be removed - ConfigFileCache must be read-only"
 
     def test_detect_issue_method_exists(self):
         """
@@ -39,8 +38,7 @@ class TestConfigFileCacheReadOnly:
         has been implemented correctly.
         """
         cache = ConfigFileCache()
-        assert hasattr(cache, "detect_issue"), \
-            "detect_issue() method should exist for read-only detection"
+        assert hasattr(cache, "detect_issue"), "detect_issue() method should exist for read-only detection"
 
     @pytest.mark.asyncio
     async def test_detect_issue_returns_correct_structure(self, tmp_path: Path):
@@ -63,17 +61,12 @@ class TestConfigFileCacheReadOnly:
 
         # Detect issue
         issue = cache.detect_issue(
-            file_name_lower="test.ini",
-            section="Main",
-            setting="TestKey",
-            expected_value="good_value",
-            description="Test issue description"
+            file_name_lower="test.ini", section="Main", setting="TestKey", expected_value="good_value", description="Test issue description"
         )
 
         # Verify return type
         if issue is not None:
-            assert isinstance(issue, ConfigIssue), \
-                f"Expected ConfigIssue or None, got {type(issue)}"
+            assert isinstance(issue, ConfigIssue), f"Expected ConfigIssue or None, got {type(issue)}"
             assert issue.setting == "TestKey"
             assert issue.section == "Main"
             assert issue.current_value == "bad_value"
@@ -171,10 +164,8 @@ class TestConfigFileCacheReadOnly:
         assert file_path == test_ini
 
         # Verify file unchanged
-        assert test_ini.stat().st_mtime == initial_mtime, \
-            "File modification time changed - write operation may have occurred"
-        assert test_ini.read_text(encoding="utf-8") == initial_content, \
-            "File content changed - write operation occurred"
+        assert test_ini.stat().st_mtime == initial_mtime, "File modification time changed - write operation may have occurred"
+        assert test_ini.read_text(encoding="utf-8") == initial_content, "File content changed - write operation occurred"
 
     def test_get_method_read_only(self, tmp_path: Path):
         """
@@ -185,13 +176,7 @@ class TestConfigFileCacheReadOnly:
         """
         # Create test configuration
         test_ini = tmp_path / "test.ini"
-        test_ini.write_text(
-            "[Section1]\n"
-            "Key1 = Value1\n"
-            "[Section2]\n"
-            "Key2 = Value2\n",
-            encoding="utf-8"
-        )
+        test_ini.write_text("[Section1]\nKey1 = Value1\n[Section2]\nKey2 = Value2\n", encoding="utf-8")
 
         initial_mtime = test_ini.stat().st_mtime
 

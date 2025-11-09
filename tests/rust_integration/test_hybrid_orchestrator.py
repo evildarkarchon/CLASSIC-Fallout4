@@ -5,7 +5,6 @@ Tests the hybrid orchestration strategy that uses Python for single-log
 processing and Rust for batch parallelism.
 """
 
-import asyncio
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -39,7 +38,7 @@ class TestHybridOrchestratorIntegration:
         for i in range(10):
             log_path = tmp_path / f"crash-{i:02d}.log"
             content = f"""Buffout 4 v1.26.2
-Crash Log On: 2024-01-{i+1:02d}
+Crash Log On: 2024-01-{i + 1:02d}
 
 SYSTEM SPECS:
     OS: Windows 10
@@ -89,14 +88,12 @@ PLUGINS:
         if is_rust_accelerated("orchestrator"):
             assert isinstance(orch, HybridOrchestrator)
             assert orch._rust_orch is not None
-            print(f"✅ Using HybridOrchestrator with Rust acceleration")
+            print("✅ Using HybridOrchestrator with Rust acceleration")
         else:
             assert isinstance(orch, OrchestratorCore)
-            print(f"⚠️  Using Python OrchestratorCore (Rust unavailable)")
+            print("⚠️  Using Python OrchestratorCore (Rust unavailable)")
 
-    async def test_single_log_processing(
-        self, hybrid_orch: HybridOrchestrator, sample_logs: list[Path]
-    ) -> None:
+    async def test_single_log_processing(self, hybrid_orch: HybridOrchestrator, sample_logs: list[Path]) -> None:
         """Test single log processing uses Python orchestrator."""
         result = await hybrid_orch.process_crash_log(sample_logs[0])
 
@@ -116,9 +113,7 @@ PLUGINS:
 
         print(f"✅ Single log processed: {len(report_lines)} report lines")
 
-    async def test_batch_processing_small(
-        self, hybrid_orch: HybridOrchestrator, sample_logs: list[Path]
-    ) -> None:
+    async def test_batch_processing_small(self, hybrid_orch: HybridOrchestrator, sample_logs: list[Path]) -> None:
         """Test small batch (< 5 logs) uses Python orchestrator."""
         small_batch = sample_logs[:3]
         results = await hybrid_orch.process_crash_logs_batch(small_batch)
@@ -137,9 +132,7 @@ PLUGINS:
 
         print(f"✅ Small batch ({len(small_batch)} logs) processed via Python")
 
-    async def test_batch_processing_large(
-        self, hybrid_orch: HybridOrchestrator, sample_logs: list[Path]
-    ) -> None:
+    async def test_batch_processing_large(self, hybrid_orch: HybridOrchestrator, sample_logs: list[Path]) -> None:
         """Test large batch (5+ logs) uses Rust orchestrator if available."""
         large_batch = sample_logs[:8]
         results = await hybrid_orch.process_crash_logs_batch(large_batch)
@@ -183,9 +176,7 @@ PLUGINS:
                 assert e is not None
                 print(f"✅ Handled corrupt log gracefully: {type(e).__name__}")
 
-    async def test_context_manager_lifecycle(
-        self, yamldata: Any, sample_logs: list[Path]
-    ) -> None:
+    async def test_context_manager_lifecycle(self, yamldata: Any, sample_logs: list[Path]) -> None:
         """Test async context manager properly initializes and cleans up."""
         # Create orchestrator in context
         async with get_orchestrator(
@@ -234,9 +225,7 @@ PLUGINS:
 
         print(f"✅ Repr: {repr_str}")
 
-    async def test_write_reports_batch(
-        self, hybrid_orch: HybridOrchestrator, sample_logs: list[Path], tmp_path: Path
-    ) -> None:
+    async def test_write_reports_batch(self, hybrid_orch: HybridOrchestrator, sample_logs: list[Path], tmp_path: Path) -> None:
         """Test batch report writing."""
         # Process logs
         results = await hybrid_orch.process_crash_logs_batch(sample_logs[:3])
@@ -250,7 +239,8 @@ PLUGINS:
 
         # Temporarily change working directory for write_reports_batch
         import os
-        orig_cwd = os.getcwd()
+
+        orig_cwd = Path.cwd()
         try:
             os.chdir(tmp_path)
 
@@ -306,7 +296,7 @@ class TestFactoryPattern:
 
     async def test_factory_with_remove_list(self, yamldata: Any) -> None:
         """Test factory with custom remove list."""
-        remove_list = ["Test1", "Test2"]
+        remove_list = ("Test1", "Test2")
 
         orch = get_orchestrator(
             yamldata=yamldata,
@@ -358,9 +348,7 @@ class TestRustConversion:
         """Load YAML configuration."""
         return get_yamldata()
 
-    async def test_result_conversion_format(
-        self, yamldata: Any, tmp_path: Path
-    ) -> None:
+    async def test_result_conversion_format(self, yamldata: Any, tmp_path: Path) -> None:
         """Test Rust results are correctly converted to Python tuple format."""
         # Skip if Rust not available
         if not is_rust_accelerated("orchestrator"):

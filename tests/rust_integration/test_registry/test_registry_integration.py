@@ -23,6 +23,7 @@ try:
         register,
         set_game,
     )
+
     REGISTRY_AVAILABLE = True
 except ImportError as e:
     REGISTRY_AVAILABLE = False
@@ -225,6 +226,7 @@ class TestPythonObjectStorage:
     @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
     def test_store_class_instance(self):
         """Test storing a custom class instance."""
+
         class TestClass:
             def __init__(self, value):
                 self.value = value

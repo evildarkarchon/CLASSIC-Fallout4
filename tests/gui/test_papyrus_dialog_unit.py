@@ -34,14 +34,7 @@ class TestPapyrusMonitorDialog:
     @pytest.fixture
     def mock_stats(self):
         """Create mock PapyrusStats for testing."""
-        return PapyrusStats(
-            timestamp=datetime(2024, 1, 15, 14, 30, 45),
-            dumps=10,
-            stacks=20,
-            warnings=2,
-            errors=1,
-            ratio=0.5
-        )
+        return PapyrusStats(timestamp=datetime(2024, 1, 15, 14, 30, 45), dumps=10, stacks=20, warnings=2, errors=1, ratio=0.5)
 
     def test_dialog_initialization(self, dialog):
         """Test proper initialization of the dialog."""
@@ -52,7 +45,7 @@ class TestPapyrusMonitorDialog:
         assert dialog.windowFlags() & Qt.WindowType.Dialog
 
         # Verify stop_monitoring signal exists
-        assert hasattr(dialog, 'stop_monitoring')
+        assert hasattr(dialog, "stop_monitoring")
         assert dialog.stop_monitoring is not None
 
     def test_dialog_layout_structure(self, dialog):
@@ -62,19 +55,19 @@ class TestPapyrusMonitorDialog:
         assert isinstance(main_layout, QVBoxLayout)
 
         # Verify essential components exist
-        assert hasattr(dialog, 'timestamp_label')
+        assert hasattr(dialog, "timestamp_label")
         assert isinstance(dialog.timestamp_label, QLabel)
 
-        assert hasattr(dialog, 'stat_value_labels')
+        assert hasattr(dialog, "stat_value_labels")
         assert isinstance(dialog.stat_value_labels, dict)
 
-        assert hasattr(dialog, 'stat_status_labels')
+        assert hasattr(dialog, "stat_status_labels")
         assert isinstance(dialog.stat_status_labels, dict)
 
-        assert hasattr(dialog, 'message_label')
+        assert hasattr(dialog, "message_label")
         assert isinstance(dialog.message_label, QLabel)
 
-        assert hasattr(dialog, 'stop_button')
+        assert hasattr(dialog, "stop_button")
         assert isinstance(dialog.stop_button, QPushButton)
 
     def test_stat_labels_initialization(self, dialog):
@@ -103,7 +96,7 @@ class TestPapyrusMonitorDialog:
         assert dialog.stop_button.text() == "Stop Monitoring"
 
         # Test button click connection
-        with patch.object(dialog, 'on_stop_clicked') as mock_stop:
+        with patch.object(dialog, "on_stop_clicked") as mock_stop:
             dialog.stop_button.click()
             mock_stop.assert_called_once()
 
@@ -124,9 +117,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_stats_calls_helper_methods(self, dialog, mock_stats):
         """Test that update_stats calls appropriate helper methods."""
-        with patch.object(dialog, '_update_status_indicators') as mock_status, \
-             patch.object(dialog, '_update_message') as mock_message:
-
+        with patch.object(dialog, "_update_status_indicators") as mock_status, patch.object(dialog, "_update_message") as mock_message:
             dialog.update_stats(mock_stats)
 
             mock_status.assert_called_once_with(mock_stats)
@@ -134,10 +125,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_status_indicators_ratio_high(self, dialog):
         """Test status indicators with high ratio (> 0.8)."""
-        high_ratio_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=90, stacks=100, warnings=0, errors=0, ratio=0.9
-        )
+        high_ratio_stats = PapyrusStats(timestamp=datetime.now(), dumps=90, stacks=100, warnings=0, errors=0, ratio=0.9)
 
         dialog._update_status_indicators(high_ratio_stats)
 
@@ -148,10 +136,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_status_indicators_ratio_medium(self, dialog):
         """Test status indicators with medium ratio (0.5 < ratio <= 0.8)."""
-        medium_ratio_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=60, stacks=100, warnings=0, errors=0, ratio=0.6
-        )
+        medium_ratio_stats = PapyrusStats(timestamp=datetime.now(), dumps=60, stacks=100, warnings=0, errors=0, ratio=0.6)
 
         dialog._update_status_indicators(medium_ratio_stats)
 
@@ -162,10 +147,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_status_indicators_ratio_low(self, dialog):
         """Test status indicators with low ratio (<= 0.5)."""
-        low_ratio_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=30, stacks=100, warnings=0, errors=0, ratio=0.3
-        )
+        low_ratio_stats = PapyrusStats(timestamp=datetime.now(), dumps=30, stacks=100, warnings=0, errors=0, ratio=0.3)
 
         dialog._update_status_indicators(low_ratio_stats)
 
@@ -176,10 +158,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_status_indicators_warnings_present(self, dialog):
         """Test status indicators when warnings are present."""
-        warning_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=10, stacks=20, warnings=5, errors=0, ratio=0.5
-        )
+        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=10, stacks=20, warnings=5, errors=0, ratio=0.5)
 
         dialog._update_status_indicators(warning_stats)
 
@@ -190,10 +169,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_status_indicators_no_warnings(self, dialog):
         """Test status indicators when no warnings are present."""
-        no_warning_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=10, stacks=20, warnings=0, errors=0, ratio=0.5
-        )
+        no_warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=10, stacks=20, warnings=0, errors=0, ratio=0.5)
 
         dialog._update_status_indicators(no_warning_stats)
 
@@ -204,10 +180,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_status_indicators_errors_present(self, dialog):
         """Test status indicators when errors are present."""
-        error_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=10, stacks=20, warnings=0, errors=3, ratio=0.5
-        )
+        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=10, stacks=20, warnings=0, errors=3, ratio=0.5)
 
         dialog._update_status_indicators(error_stats)
 
@@ -218,10 +191,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_status_indicators_no_errors(self, dialog):
         """Test status indicators when no errors are present."""
-        no_error_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=10, stacks=20, warnings=0, errors=0, ratio=0.5
-        )
+        no_error_stats = PapyrusStats(timestamp=datetime.now(), dumps=10, stacks=20, warnings=0, errors=0, ratio=0.5)
 
         dialog._update_status_indicators(no_error_stats)
 
@@ -232,10 +202,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_message_errors_priority(self, dialog):
         """Test message update when errors are present (highest priority)."""
-        error_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=10, stacks=20, warnings=5, errors=2, ratio=0.9
-        )
+        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=10, stacks=20, warnings=5, errors=2, ratio=0.9)
 
         dialog._update_message(error_stats)
 
@@ -246,10 +213,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_message_warnings_priority(self, dialog):
         """Test message update when warnings are present (no errors)."""
-        warning_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=10, stacks=20, warnings=3, errors=0, ratio=0.9
-        )
+        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=10, stacks=20, warnings=3, errors=0, ratio=0.9)
 
         dialog._update_message(warning_stats)
 
@@ -260,10 +224,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_message_high_ratio_warning(self, dialog):
         """Test message update for high ratio warning (no errors/warnings)."""
-        high_ratio_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=90, stacks=100, warnings=0, errors=0, ratio=0.9
-        )
+        high_ratio_stats = PapyrusStats(timestamp=datetime.now(), dumps=90, stacks=100, warnings=0, errors=0, ratio=0.9)
 
         dialog._update_message(high_ratio_stats)
 
@@ -274,10 +235,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_message_medium_ratio_caution(self, dialog):
         """Test message update for medium ratio caution."""
-        medium_ratio_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=60, stacks=100, warnings=0, errors=0, ratio=0.6
-        )
+        medium_ratio_stats = PapyrusStats(timestamp=datetime.now(), dumps=60, stacks=100, warnings=0, errors=0, ratio=0.6)
 
         dialog._update_message(medium_ratio_stats)
 
@@ -287,10 +245,7 @@ class TestPapyrusMonitorDialog:
 
     def test_update_message_normal_status(self, dialog):
         """Test message update for normal status."""
-        normal_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=30, stacks=100, warnings=0, errors=0, ratio=0.3
-        )
+        normal_stats = PapyrusStats(timestamp=datetime.now(), dumps=30, stacks=100, warnings=0, errors=0, ratio=0.3)
 
         dialog._update_message(normal_stats)
 
@@ -300,7 +255,7 @@ class TestPapyrusMonitorDialog:
 
     def test_on_stop_clicked(self, dialog):
         """Test on_stop_clicked method behavior."""
-        with patch.object(dialog, 'accept') as mock_accept:
+        with patch.object(dialog, "accept") as mock_accept:
             # Mock the signal emit
             dialog.stop_monitoring = Mock()
 
@@ -385,14 +340,7 @@ class TestPapyrusMonitorDialog:
     def test_comprehensive_stats_update_workflow(self, dialog):
         """Test complete statistics update workflow."""
         # Create stats with various conditions
-        complex_stats = PapyrusStats(
-            timestamp=datetime(2024, 3, 15, 16, 45, 30),
-            dumps=75,
-            stacks=100,
-            warnings=3,
-            errors=1,
-            ratio=0.75
-        )
+        complex_stats = PapyrusStats(timestamp=datetime(2024, 3, 15, 16, 45, 30), dumps=75, stacks=100, warnings=3, errors=1, ratio=0.75)
 
         dialog.update_stats(complex_stats)
 
@@ -416,10 +364,7 @@ class TestPapyrusMonitorDialog:
 
     def test_edge_case_zero_stats(self, dialog):
         """Test handling of all-zero statistics."""
-        zero_stats = PapyrusStats(
-            timestamp=datetime.now(),
-            dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0
-        )
+        zero_stats = PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
 
         dialog.update_stats(zero_stats)
 
@@ -444,6 +389,7 @@ class TestPapyrusMonitorDialog:
 
         # Mock the signal to track emissions
         signal_emitted = False
+
         def signal_handler():
             nonlocal signal_emitted
             signal_emitted = True

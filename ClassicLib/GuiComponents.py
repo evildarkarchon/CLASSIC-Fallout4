@@ -8,6 +8,7 @@ are updated in a settings YAML file. Invalid paths trigger signals requesting ne
 Classes:
     ManualDocsPath: Handles validation and updating of manual documentation paths and game paths.
 """
+
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
@@ -30,6 +31,7 @@ class ManualDocsPath(QObject):
         game_path_signal (Signal): Signal emitted to request a new game directory path when the provided
             path is invalid.
     """
+
     manual_docs_path_signal: Signal = Signal()
     game_path_signal: Signal = Signal()
 

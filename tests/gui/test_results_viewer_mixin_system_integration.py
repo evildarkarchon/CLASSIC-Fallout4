@@ -81,9 +81,10 @@ class TestReportScanningIntegration:
         time.sleep(0.01)
         backup_report.write_text("Backup")
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)), \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None):
-
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             reports = integrated_viewer.scan_for_reports()
 
             # Should find all reports
@@ -107,9 +108,10 @@ class TestReportScanningIntegration:
         crash_report.write_text("Crash")
         custom_report.write_text("Custom")
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)), \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=str(custom_dir)):
-
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=str(custom_dir)),
+        ):
             reports = integrated_viewer.scan_for_reports()
 
             # Should find reports from both locations
@@ -124,15 +126,14 @@ class TestReportScanningIntegration:
         report = integrated_viewer.crash_logs_dir / "test-AUTOSCAN.md"
         report.write_text("Test")
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)), \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None):
-
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             integrated_viewer.scan_for_reports()
 
             # Should add crash logs directory to watcher
-            integrated_viewer.file_watcher.addPath.assert_called_with(
-                str(integrated_viewer.crash_logs_dir)
-            )
+            integrated_viewer.file_watcher.addPath.assert_called_with(str(integrated_viewer.crash_logs_dir))
 
 
 @pytest.mark.integration
@@ -152,9 +153,10 @@ class TestFileWatcherIntegration:
         crash_report.write_text("Crash")
         custom_report.write_text("Custom")
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)), \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=str(custom_dir)):
-
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=str(custom_dir)),
+        ):
             integrated_viewer.scan_for_reports()
 
             # Both directories should be added to watcher
@@ -171,9 +173,10 @@ class TestAutoRefreshIntegration:
 
     def test_auto_refresh_workflow(self, integrated_viewer, tmp_path, gui_message_handler):
         """Test auto-refresh detecting new reports."""
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)), \
-             patch("ClassicLib.Interface.ResultsViewerMixin.yaml_settings") as mock_settings:
-
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.yaml_settings") as mock_settings,
+        ):
             # Configure auto-refresh
             mock_settings.side_effect = [True, 1000]  # Enabled, 1 second interval
 
@@ -262,9 +265,10 @@ class TestSettingsIntegration:
         custom_report = custom_dir / "custom-AUTOSCAN.md"
         custom_report.write_text("Custom scan")
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=None), \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=str(custom_dir)):
-
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=None),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=str(custom_dir)),
+        ):
             reports = integrated_viewer.scan_for_reports()
 
             # Should find report from custom path
@@ -288,9 +292,10 @@ class TestContextMenuIntegration:
         integrated_viewer.results_list.get_report_path.return_value = report_path
         integrated_viewer.current_report_path = report_path
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.QMenu") as mock_menu_class, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.QAction") as mock_action_class:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.QMenu") as mock_menu_class,
+            patch("ClassicLib.Interface.ResultsViewerMixin.QAction") as mock_action_class,
+        ):
             mock_menu = MagicMock()
             mock_menu_class.return_value = mock_menu
 

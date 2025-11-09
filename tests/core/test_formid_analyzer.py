@@ -7,6 +7,7 @@ in the async crash log processing pipeline.
 IMPORTANT: These tests use mocked AsyncDatabasePool to avoid actual database connections.
 The clean_database_pool_manager fixture ensures proper singleton isolation.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 from unittest.mock import AsyncMock, MagicMock
 
@@ -81,9 +82,9 @@ class TestFormIDAnalyzerCore:
 
         callstack: list[str] = [
             "Form ID: 0x00ABCDEF",  # Standard format
-            "Form ID: 0xABCDEF",    # Without leading zeros
-            "Form ID: ABCDEF",      # Without 0x prefix (won't match pattern)
-            "FormID: 0x12345678",   # Without space (won't match pattern)
+            "Form ID: 0xABCDEF",  # Without leading zeros
+            "Form ID: ABCDEF",  # Without 0x prefix (won't match pattern)
+            "FormID: 0x12345678",  # Without space (won't match pattern)
             "Form ID: 0xFE000001",  # FE prefix (should be kept)
             "Form ID: 0xFF000001",  # FF prefix (should be skipped)
             "Form ID: 0x00000000",  # NULL FormID (intentionally extracted to show errors)
@@ -113,10 +114,7 @@ class TestFormIDAnalyzerCore:
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         # FormIDAnalyzerCore uses batch queries for performance
         # Mock the batch query method to return a dictionary of results
-        mock_batch_results = {
-            ("12345678", "TestPlugin.esp"): "Test Entry 1",
-            ("87654321", "AnotherPlugin.esp"): "Test Entry 2"
-        }
+        mock_batch_results = {("12345678", "TestPlugin.esp"): "Test Entry 1", ("87654321", "AnotherPlugin.esp"): "Test Entry 2"}
         mock_pool.get_entries_batch = AsyncMock(return_value=mock_batch_results)
 
         analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(mock_yamldata, True, True, mock_pool)
@@ -168,10 +166,7 @@ class TestFormIDAnalyzerCore:
 
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         # FormIDAnalyzerCore uses batch queries for performance
-        mock_batch_results = {
-            ("12345678", "TestPlugin.esp"): "Test Entry 1",
-            ("87654321", "IgnoredPlugin.esp"): "Test Entry 2"
-        }
+        mock_batch_results = {("12345678", "TestPlugin.esp"): "Test Entry 1", ("87654321", "IgnoredPlugin.esp"): "Test Entry 2"}
         mock_pool.get_entries_batch = AsyncMock(return_value=mock_batch_results)
 
         # Set ignored plugins

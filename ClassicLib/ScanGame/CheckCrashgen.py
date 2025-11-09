@@ -6,6 +6,7 @@ the configuration files for Buffout4 and ensure that the settings are appropriat
 based on the installed plugins and given requirements. The class also handles the
 detection of installed plugins and evaluates the correctness of the configuration.
 """
+
 from pathlib import Path
 from typing import Any, cast
 
@@ -326,11 +327,7 @@ class CrashgenChecker:
 
         for setting in self._get_settings_to_check():
             # Get current setting value (read-only operation)
-            current_value: Any | None = mod_toml_config(
-                config_file,
-                cast("str", setting["section"]),
-                cast("str", setting["key"])
-            )
+            current_value: Any | None = mod_toml_config(config_file, cast("str", setting["section"]), cast("str", setting["key"]))
 
             # Special case for BakaScrapHeap with MemoryManager
             if setting.get("special_case") == "bakascrapheap" and has_bakascrapheap and current_value:
@@ -341,7 +338,7 @@ class CrashgenChecker:
                     current_value=str(current_value),
                     recommended_value=str(setting["desired_value"]),
                     description=f"The Baka ScrapHeap Mod is installed, but is redundant with {self.crashgen_name}. "
-                               f"Uninstall the Baka ScrapHeap Mod to prevent conflicts with {self.crashgen_name}.",
+                    f"Uninstall the Baka ScrapHeap Mod to prevent conflicts with {self.crashgen_name}.",
                     severity="error",
                 )
                 issues.append(issue)

@@ -3,6 +3,7 @@ Test suite for logging utility functions in ClassicLib/Util.py.
 
 This module contains tests for logging configuration and management.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841
 import logging
 from unittest.mock import MagicMock, patch

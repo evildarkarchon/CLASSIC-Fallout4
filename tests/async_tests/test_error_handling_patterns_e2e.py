@@ -12,7 +12,6 @@ This file contains e2e tests that test complete workflows from entry to output.
 # 3. Never use AsyncMock for methods called through AsyncBridge
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
-
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -44,6 +43,7 @@ class ErrorRecord:
     context: dict
     timestamp: datetime
 
+
 class TestStandardErrorHandling:
     """Test standard Python error handling patterns"""
 
@@ -52,7 +52,6 @@ class TestStandardErrorHandling:
         """Test error logging with context"""
 
         class ErrorLogger:
-
             def __init__(self):
                 self.errors = []
 
@@ -61,18 +60,20 @@ class TestStandardErrorHandling:
                 self.errors.append(record)
                 logger = logging.getLogger(__name__)
                 log_method = getattr(logger, severity.value, logger.error)
-                log_method(f'{record.message} - Context: {context}')
+                log_method(f"{record.message} - Context: {context}")
 
             def get_errors_by_severity(self, severity: ErrorSeverity):
                 return [e for e in self.errors if e.severity == severity]
+
         logger = ErrorLogger()
-        logger.log_error(ValueError('Warning'), {'component': 'test'}, ErrorSeverity.WARNING)
-        logger.log_error(RuntimeError('Error'), {'component': 'test'}, ErrorSeverity.ERROR)
-        logger.log_error(Exception('Critical'), {'component': 'test'}, ErrorSeverity.CRITICAL)
+        logger.log_error(ValueError("Warning"), {"component": "test"}, ErrorSeverity.WARNING)
+        logger.log_error(RuntimeError("Error"), {"component": "test"}, ErrorSeverity.ERROR)
+        logger.log_error(Exception("Critical"), {"component": "test"}, ErrorSeverity.CRITICAL)
         assert len(logger.errors) == 3
         assert len(logger.get_errors_by_severity(ErrorSeverity.WARNING)) == 1
         assert len(logger.get_errors_by_severity(ErrorSeverity.ERROR)) == 1
         assert len(logger.get_errors_by_severity(ErrorSeverity.CRITICAL)) == 1
+
 
 class TestRetryPatterns:
     """Test retry patterns without AsyncCore"""
@@ -94,9 +95,11 @@ class TestRetryPatterns:
                     raise
 
         async def function_with_different_errors():
-            raise RuntimeError('Different error')
+            raise RuntimeError("Different error")
+
         with pytest.raises(RuntimeError):
             await selective_retry(function_with_different_errors)
+
 
 class TestCircuitBreakerPattern:
     """Test circuit breaker pattern implementation"""
@@ -106,34 +109,34 @@ class TestCircuitBreakerPattern:
         """Test simple circuit breaker implementation"""
 
         class CircuitBreaker:
-
             def __init__(self, failure_threshold=3, timeout=1.0):
                 self.failure_threshold = failure_threshold
                 self.timeout = timeout
                 self.failure_count = 0
                 self.last_failure_time = None
-                self.state = 'closed'
+                self.state = "closed"
 
             async def call(self, func, *args, **kwargs):
-                if self.state == 'open':
+                if self.state == "open":
                     if self.last_failure_time:
                         elapsed = asyncio.get_event_loop().time() - self.last_failure_time
                         if elapsed > self.timeout:
-                            self.state = 'half-open'
+                            self.state = "half-open"
                         else:
-                            raise RuntimeError('Circuit breaker is open')
+                            raise RuntimeError("Circuit breaker is open")
                 try:
                     result = await func(*args, **kwargs)
-                    if self.state == 'half-open':
-                        self.state = 'closed'
+                    if self.state == "half-open":
+                        self.state = "closed"
                         self.failure_count = 0
                     return result
                 except Exception as e:
                     self.failure_count += 1
                     self.last_failure_time = asyncio.get_event_loop().time()
                     if self.failure_count >= self.failure_threshold:
-                        self.state = 'open'
+                        self.state = "open"
                     raise e
+
         breaker = CircuitBreaker(failure_threshold=2, timeout=0.1)
         call_count = 0
 
@@ -141,16 +144,17 @@ class TestCircuitBreakerPattern:
             nonlocal call_count
             call_count += 1
             if call_count <= 2:
-                raise ValueError('Service error')
-            return 'Success'
+                raise ValueError("Service error")
+            return "Success"
+
         for _ in range(2):
             with pytest.raises(ValueError):
                 await breaker.call(unreliable_service)
-        assert breaker.state == 'open'
+        assert breaker.state == "open"
         with pytest.raises(RuntimeError) as exc_info:
             await breaker.call(unreliable_service)
-        assert 'Circuit breaker is open' in str(exc_info.value)
+        assert "Circuit breaker is open" in str(exc_info.value)
         await asyncio.sleep(0.11)
         result = await breaker.call(unreliable_service)
-        assert result == 'Success'
-        assert breaker.state == 'closed'
+        assert result == "Success"
+        assert breaker.state == "closed"

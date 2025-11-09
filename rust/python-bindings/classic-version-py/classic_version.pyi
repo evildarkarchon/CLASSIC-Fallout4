@@ -39,13 +39,10 @@ Usage:
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
-
 __version__: str
 
 # Type alias for version tuples
-Version = Tuple[int, int, int]
-
+Version = tuple[int, int, int]
 
 def parse_version(version_str: str) -> Version:
     """Parse a version string into a semantic version.
@@ -73,8 +70,7 @@ def parse_version(version_str: str) -> Version:
         >>> assert version == (1, 2, 3)
     """
 
-
-def try_parse_version(version_str: str) -> Optional[Version]:
+def try_parse_version(version_str: str) -> Version | None:
     """Try to parse a version string, returning None if parsing fails.
 
     This is a non-throwing version of `parse_version()` that returns None
@@ -93,7 +89,6 @@ def try_parse_version(version_str: str) -> Optional[Version]:
         >>> version = classic_version.try_parse_version("invalid")
         >>> assert version is None
     """
-
 
 def compare_versions(v1: Version, v2: Version) -> int:
     """Compare two semantic versions.
@@ -117,7 +112,6 @@ def compare_versions(v1: Version, v2: Version) -> int:
         >>> assert result == 1
     """
 
-
 def is_known_fallout4_version(version: Version) -> bool:
     """Check if a version is a known Fallout 4 version.
 
@@ -133,7 +127,6 @@ def is_known_fallout4_version(version: Version) -> bool:
         >>> assert classic_version.is_known_fallout4_version((1, 10, 984))
         >>> assert not classic_version.is_known_fallout4_version((9, 9, 9))
     """
-
 
 def is_known_f4se_version(version: Version) -> bool:
     """Check if a version is a known F4SE version.
@@ -151,8 +144,7 @@ def is_known_f4se_version(version: Version) -> bool:
         >>> assert not classic_version.is_known_f4se_version((9, 9, 9))
     """
 
-
-def extract_version_from_filename(filename: str) -> Optional[Version]:
+def extract_version_from_filename(filename: str) -> Version | None:
     """Extract a version from a filename.
 
     Looks for version patterns like:
@@ -176,8 +168,7 @@ def extract_version_from_filename(filename: str) -> Optional[Version]:
         >>> assert version is None
     """
 
-
-def extract_version_from_log(log_content: str) -> Optional[Version]:
+def extract_version_from_log(log_content: str) -> Version | None:
     """Extract a version from log content.
 
     Searches for version patterns in log file content, typically looking
@@ -196,8 +187,7 @@ def extract_version_from_log(log_content: str) -> Optional[Version]:
         >>> assert version == (1, 10, 163)
     """
 
-
-def extract_all_versions(content: str) -> List[Version]:
+def extract_all_versions(content: str) -> list[Version]:
     """Extract all versions from a text content.
 
     Finds all version patterns in the given text and returns them as a list.
@@ -215,8 +205,7 @@ def extract_all_versions(content: str) -> List[Version]:
         >>> assert versions == [(1, 2, 3), (4, 5, 6)]
     """
 
-
-def format_version(version: Version, prefix: Optional[str] = None) -> str:
+def format_version(version: Version, prefix: str | None = None) -> str:
     """Format a version with optional prefix.
 
     Args:

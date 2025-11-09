@@ -72,12 +72,10 @@ class TestMemoryLeakDetection:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Memory growth should be minimal (< 10MB for this test)
-        assert memory_stats["growth_mb"] < 10, \
-            f"Memory grew by {memory_stats['growth_mb']:.1f}MB, indicating potential leak"
+        assert memory_stats["growth_mb"] < 10, f"Memory grew by {memory_stats['growth_mb']:.1f}MB, indicating potential leak"
 
         # Should not be flagged as potential leak
-        assert not memory_stats["potential_leak"], \
-            "Memory tracker detected potential leak in Rust string processing"
+        assert not memory_stats["potential_leak"], "Memory tracker detected potential leak in Rust string processing"
 
     def test_rust_log_processor_memory_stability(self, fresh_memory_tracker, stress_data_generator):
         """
@@ -94,7 +92,7 @@ class TestMemoryLeakDetection:
         large_log = stress_data_generator.generate_large_crash_log(
             size_mb=20,  # 20MB log
             plugin_count=200,
-            formid_count=5000
+            formid_count=5000,
         )
 
         # Process the same log multiple times
@@ -124,8 +122,7 @@ class TestMemoryLeakDetection:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Memory growth should be reasonable (< 50MB for processing 200MB)
-        assert memory_stats["growth_mb"] < 50, \
-            f"Memory grew by {memory_stats['growth_mb']:.1f}MB processing large logs"
+        assert memory_stats["growth_mb"] < 50, f"Memory grew by {memory_stats['growth_mb']:.1f}MB processing large logs"
 
     def test_file_io_memory_management(self, fresh_memory_tracker, temp_crash_logs_dir):
         """
@@ -153,8 +150,8 @@ class TestMemoryLeakDetection:
                     assert len(content) > 1000  # Should be substantial content
 
                     # Process content to ensure it's actually loaded
-                    lines = content.split('\n')
-                    filtered_lines = [line for line in lines if 'FormID' in line]
+                    lines = content.split("\n")
+                    filtered_lines = [line for line in lines if "FormID" in line]
 
                     # Clear references
                     del content, lines, filtered_lines
@@ -166,8 +163,7 @@ class TestMemoryLeakDetection:
             memory_stats = fresh_memory_tracker.stop_tracking()
 
             # Should not accumulate file content in memory
-            assert memory_stats["growth_mb"] < 30, \
-                f"File I/O accumulated {memory_stats['growth_mb']:.1f}MB in memory"
+            assert memory_stats["growth_mb"] < 30, f"File I/O accumulated {memory_stats['growth_mb']:.1f}MB in memory"
 
     def test_yaml_cache_memory_efficiency(self, fresh_memory_tracker):
         """
@@ -190,7 +186,7 @@ class TestMemoryLeakDetection:
                 keys_batch.append((str, "TEST", key, f"value_{i}"))
 
             # Batch load many settings (this creates cache entries)
-            with patch.object(yaml_cache, '_load_yaml_file', return_value={"TEST": {}}):
+            with patch.object(yaml_cache, "_load_yaml_file", return_value={"TEST": {}}):
                 results = yaml_cache.batch_get_settings(keys_batch)
 
             assert len(results) == 100
@@ -208,8 +204,7 @@ class TestMemoryLeakDetection:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Memory should be efficiently managed
-        assert memory_stats["growth_mb"] < 20, \
-            f"YAML cache used excessive memory: {memory_stats['growth_mb']:.1f}MB"
+        assert memory_stats["growth_mb"] < 20, f"YAML cache used excessive memory: {memory_stats['growth_mb']:.1f}MB"
 
 
 @pytest.mark.stress
@@ -236,12 +231,12 @@ class TestLargeDatasetProcessing:
         massive_log_content = stress_data_generator.generate_large_crash_log(
             size_mb=100,  # 100MB crash log
             plugin_count=500,
-            formid_count=20000
+            formid_count=20000,
         )
 
         # Write to file
         massive_log_file = tmp_path / "massive_crash.log"
-        massive_log_file.write_text(massive_log_content, encoding='utf-8')
+        massive_log_file.write_text(massive_log_content, encoding="utf-8")
 
         fresh_memory_tracker.take_measurement("log_file_created")
 
@@ -267,7 +262,7 @@ class TestLargeDatasetProcessing:
             fresh_memory_tracker.take_measurement("plugins_extracted")
 
             # Process lines in parallel
-            lines = content.split('\n')
+            lines = content.split("\n")
             processed_lines = processor.process_lines_parallel(lines[:10000], "upper")  # Limit to avoid timeout
             assert len(processed_lines) == 10000
             fresh_memory_tracker.take_measurement("lines_processed")
@@ -280,8 +275,7 @@ class TestLargeDatasetProcessing:
             memory_stats = fresh_memory_tracker.stop_tracking()
 
             # Peak memory should be reasonable (< 200MB for processing 100MB log)
-            assert memory_stats["peak_mb"] < 200, \
-                f"Peak memory usage {memory_stats['peak_mb']:.1f}MB too high for 100MB log"
+            assert memory_stats["peak_mb"] < 200, f"Peak memory usage {memory_stats['peak_mb']:.1f}MB too high for 100MB log"
 
     def test_thousands_of_formids_processing(self, fresh_memory_tracker, stress_data_generator):
         """
@@ -304,14 +298,14 @@ class TestLargeDatasetProcessing:
         total_processed = 0
 
         for i in range(0, len(formids), batch_size):
-            batch = formids[i:i + batch_size]
+            batch = formids[i : i + batch_size]
             results = processor.process_batch(batch)
 
             # Count valid results
             valid_results = sum(1 for r in results if r is not None)
             total_processed += valid_results
 
-            fresh_memory_tracker.take_measurement(f"batch_{i//batch_size}_processed")
+            fresh_memory_tracker.take_measurement(f"batch_{i // batch_size}_processed")
 
             # Clear batch results
             del results
@@ -321,8 +315,7 @@ class TestLargeDatasetProcessing:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Memory usage should be efficient for processing 50k FormIDs
-        assert memory_stats["peak_mb"] < 100, \
-            f"Peak memory {memory_stats['peak_mb']:.1f}MB too high for FormID processing"
+        assert memory_stats["peak_mb"] < 100, f"Peak memory {memory_stats['peak_mb']:.1f}MB too high for FormID processing"
 
     def test_massive_plugin_load_order_analysis(self, fresh_memory_tracker, massive_plugin_list):
         """
@@ -336,9 +329,9 @@ class TestLargeDatasetProcessing:
         # Analyze plugin list multiple times
         for analysis_round in range(10):
             # Simulate plugin analysis operations
-            esp_plugins = [p for p in massive_plugin_list if p.endswith('.esp')]
-            esm_plugins = [p for p in massive_plugin_list if p.endswith('.esm')]
-            esl_plugins = [p for p in massive_plugin_list if p.endswith('.esl')]
+            esp_plugins = [p for p in massive_plugin_list if p.endswith(".esp")]
+            esm_plugins = [p for p in massive_plugin_list if p.endswith(".esm")]
+            esl_plugins = [p for p in massive_plugin_list if p.endswith(".esl")]
 
             assert len(esp_plugins) > 200, "Should have many ESP files"
             assert len(esm_plugins) > 10, "Should have some ESM files"
@@ -364,8 +357,7 @@ class TestLargeDatasetProcessing:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Should handle large plugin lists efficiently
-        assert memory_stats["growth_mb"] < 50, \
-            f"Plugin analysis grew memory by {memory_stats['growth_mb']:.1f}MB"
+        assert memory_stats["growth_mb"] < 50, f"Plugin analysis grew memory by {memory_stats['growth_mb']:.1f}MB"
 
 
 @pytest.mark.stress
@@ -405,7 +397,7 @@ class TestMemoryLimitHandling:
 
                     # Verify processing succeeded
                     assert result is not None
-                    if hasattr(result, 'formids'):
+                    if hasattr(result, "formids"):
                         assert len(result.formids) >= 0  # Should have some FormIDs
 
                     fresh_memory_tracker.take_measurement(f"processed_{log_file.name}")
@@ -416,8 +408,7 @@ class TestMemoryLimitHandling:
             memory_stats = fresh_memory_tracker.stop_tracking()
 
             # Orchestrator should manage memory efficiently
-            assert memory_stats["growth_mb"] < 100, \
-                f"Orchestrator memory growth {memory_stats['growth_mb']:.1f}MB too high"
+            assert memory_stats["growth_mb"] < 100, f"Orchestrator memory growth {memory_stats['growth_mb']:.1f}MB too high"
 
     def test_concurrent_large_file_processing(self, fresh_memory_tracker, tmp_path, stress_data_generator):
         """
@@ -434,10 +425,10 @@ class TestMemoryLimitHandling:
             content = stress_data_generator.generate_large_crash_log(
                 size_mb=20,  # 20MB each = 100MB total
                 plugin_count=100,
-                formid_count=2000
+                formid_count=2000,
             )
             file_path = tmp_path / f"concurrent_test_{i}.log"
-            file_path.write_text(content, encoding='utf-8')
+            file_path.write_text(content, encoding="utf-8")
             large_files.append(file_path)
 
         fresh_memory_tracker.take_measurement("files_created")
@@ -455,12 +446,7 @@ class TestMemoryLimitHandling:
                 formids = processor.extract_formids(content)
                 plugins = processor.extract_plugins(content)
 
-                return {
-                    'file': file_path.name,
-                    'formid_count': len(formids),
-                    'plugin_count': len(plugins),
-                    'content_size': len(content)
-                }
+                return {"file": file_path.name, "formid_count": len(formids), "plugin_count": len(plugins), "content_size": len(content)}
 
             # Process all files concurrently
             tasks = [process_file_async(f) for f in large_files]
@@ -476,15 +462,14 @@ class TestMemoryLimitHandling:
             # Verify all files were processed
             assert len(results) == 5
             for result in results:
-                assert result['formid_count'] > 100  # Should find FormIDs
-                assert result['plugin_count'] > 10   # Should find plugins
-                assert result['content_size'] > 1000000  # Should be large
+                assert result["formid_count"] > 100  # Should find FormIDs
+                assert result["plugin_count"] > 10  # Should find plugins
+                assert result["content_size"] > 1000000  # Should be large
 
             memory_stats = fresh_memory_tracker.stop_tracking()
 
             # Memory should be managed efficiently even with concurrent processing
-            assert memory_stats["peak_mb"] < 300, \
-                f"Concurrent processing used {memory_stats['peak_mb']:.1f}MB peak memory"
+            assert memory_stats["peak_mb"] < 300, f"Concurrent processing used {memory_stats['peak_mb']:.1f}MB peak memory"
 
     def test_memory_pressure_recovery(self, fresh_memory_tracker, stress_data_generator):
         """
@@ -503,7 +488,7 @@ class TestMemoryLimitHandling:
             dataset = stress_data_generator.generate_large_crash_log(
                 size_mb=10,  # 10MB each = 100MB total
                 plugin_count=50,
-                formid_count=1000
+                formid_count=1000,
             )
             large_datasets.append(dataset)
             fresh_memory_tracker.take_measurement(f"dataset_{i}_created")
@@ -528,7 +513,7 @@ class TestMemoryLimitHandling:
         small_dataset = stress_data_generator.generate_large_crash_log(
             size_mb=1,  # Small dataset
             plugin_count=10,
-            formid_count=100
+            formid_count=100,
         )
 
         small_formids = processor.extract_formids(small_dataset)
@@ -540,12 +525,10 @@ class TestMemoryLimitHandling:
 
         # Memory should recover significantly after releasing large datasets
         memory_recovery = peak_memory_point - final_memory
-        assert memory_recovery > 50, \
-            f"Memory recovery insufficient: {memory_recovery:.1f}MB recovered"
+        assert memory_recovery > 50, f"Memory recovery insufficient: {memory_recovery:.1f}MB recovered"
 
         # Final memory should not be excessive
-        assert memory_stats["final_mb"] < memory_stats["peak_mb"] * 0.7, \
-            "Memory did not recover sufficiently after pressure relief"
+        assert memory_stats["final_mb"] < memory_stats["peak_mb"] * 0.7, "Memory did not recover sufficiently after pressure relief"
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ import pytest
 
 try:
     import classic_yaml
+
     RustYamlOperations = classic_yaml.RustYamlOperations
     RUST_AVAILABLE = True
 except ImportError:
@@ -31,6 +32,7 @@ except ImportError:
 # ============================================================================
 # Basic Parsing Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust YAML operations not available")
@@ -146,6 +148,7 @@ servers:
 # Dumping Tests
 # ============================================================================
 
+
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust YAML operations not available")
 class TestDumpYaml:
@@ -214,6 +217,7 @@ settings:
 # ============================================================================
 # File Operations Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust YAML operations not available")
@@ -318,6 +322,7 @@ features:
 # Caching Tests
 # ============================================================================
 
+
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust YAML operations not available")
 class TestCaching:
@@ -416,6 +421,7 @@ class TestCaching:
 # ============================================================================
 # Settings Navigation Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust YAML operations not available")
@@ -567,6 +573,7 @@ server:
 # Python Type Conversion Tests
 # ============================================================================
 
+
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust YAML operations not available")
 class TestPythonTypeConversion:
@@ -614,6 +621,7 @@ class TestPythonTypeConversion:
 # ============================================================================
 # Integration Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust YAML operations not available")

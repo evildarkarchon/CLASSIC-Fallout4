@@ -64,6 +64,8 @@ class GameFilesManagerCore:
                 valid directory.
             PermissionError: If there are file permission issues preventing the
                 operation from completing.
+            OSError: If a system-related error occurs during file operations.
+            IsADirectoryError: If a directory is encountered where a file is expected.
         """
         # Constants
         # noinspection PyPep8Naming
@@ -138,6 +140,66 @@ class GameFilesManagerCore:
         # MORE than the actual operation time. Running directly saves ~5-10ms per call.
         path.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    def _glob_sync(path: Path, pattern: str) -> list[Path]:
+        """
+        Synchronously performs a glob operation.
+
+        Args:
+            path: The Path object to perform the glob operation on.
+            pattern: The glob pattern to match (e.g., "*", "*.txt").
+
+        Returns:
+            A list of Path objects matching the pattern.
+        """
+        return list(path.glob(pattern))
+
+    async def _glob_async(self, path: Path, pattern: str) -> list[Path]:
+        """
+        Asynchronously performs a glob operation on the given path.
+
+        This method executes the blocking Path.glob() operation in a thread pool
+        to avoid blocking the async event loop.
+
+        Args:
+            path: The Path object to perform the glob operation on.
+            pattern: The glob pattern to match (e.g., "*", "*.txt").
+
+        Returns:
+            A list of Path objects matching the pattern.
+        """
+        # Run blocking glob operation in thread pool to avoid blocking event loop
+        return await asyncio.to_thread(self._glob_sync, path, pattern)
+
+    @staticmethod
+    def _exists_sync(path: Path) -> bool:
+        """
+        Synchronously checks if a path exists.
+
+        Args:
+            path: The Path object to check for existence.
+
+        Returns:
+            True if the path exists, False otherwise.
+        """
+        return path.exists()
+
+    async def _exists_async(self, path: Path) -> bool:
+        """
+        Asynchronously checks if a path exists.
+
+        This method executes the blocking Path.exists() operation in a thread pool
+        to avoid blocking the async event loop.
+
+        Args:
+            path: The Path object to check for existence.
+
+        Returns:
+            True if the path exists, False otherwise.
+        """
+        # Run blocking exists check in thread pool to avoid blocking event loop
+        return await asyncio.to_thread(self._exists_sync, path)
+
     async def _backup_files_async(self, game_path: Path, backup_path: Path, manage_list: list[str], list_name: str) -> None:
         """
         Creates a backup of specified game files asynchronously.
@@ -155,8 +217,9 @@ class GameFilesManagerCore:
         """
         msg_info(f"CREATING A BACKUP OF {list_name} FILES, PLEASE WAIT...")
 
-        # Get all matching files
-        matching_files = [file for file in game_path.glob("*") if self._matches_managed_file(file.name, manage_list)]
+        # Get all matching files asynchronously
+        all_files = await self._glob_async(game_path, "*")
+        matching_files = [file for file in all_files if self._matches_managed_file(file.name, manage_list)]
 
         # Process files concurrently with semaphore to limit concurrent operations
         semaphore = asyncio.Semaphore(8)  # Limit concurrent file operations
@@ -190,14 +253,15 @@ class GameFilesManagerCore:
         """
         msg_info(f"RESTORING {list_name} FILES FROM A BACKUP, PLEASE WAIT...")
 
-        # Get all matching files that have backups
+        # Get all matching files that have backups asynchronously
         restore_tasks = []
         semaphore = asyncio.Semaphore(8)  # Limit concurrent file operations
 
-        for file in game_path.glob("*"):
+        all_files = await self._glob_async(game_path, "*")
+        for file in all_files:
             if self._matches_managed_file(file.name, manage_list):
                 source_file = backup_path / file.name
-                if source_file.exists():
+                if await self._exists_async(source_file):
                     restore_tasks.append(self._copy_file_with_semaphore(semaphore, source_file, file))
 
         if restore_tasks:
@@ -227,8 +291,9 @@ class GameFilesManagerCore:
         """
         msg_info(f"REMOVING {list_name} FILES FROM YOUR GAME FOLDER, PLEASE WAIT...")
 
-        # Get all matching files
-        matching_files = [file for file in game_path.glob("*") if self._matches_managed_file(file.name, manage_list)]
+        # Get all matching files asynchronously
+        all_files = await self._glob_async(game_path, "*")
+        matching_files = [file for file in all_files if self._matches_managed_file(file.name, manage_list)]
 
         # Process files concurrently with semaphore to limit concurrent operations
         semaphore = asyncio.Semaphore(8)  # Limit concurrent file operations

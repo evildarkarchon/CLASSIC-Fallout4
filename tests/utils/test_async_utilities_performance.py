@@ -34,6 +34,7 @@ class TestPerformanceCharacteristics:
     @pytest.mark.asyncio
     async def test_gather_concurrency_scaling(self):
         """Test how gather_with_concurrency scales with different limits."""
+
         async def work_unit(n: int) -> int:
             await asyncio.sleep(0.01)  # Simulate I/O
             return n * 2
@@ -64,6 +65,7 @@ class TestPerformanceCharacteristics:
     @pytest.mark.asyncio
     async def test_batch_process_optimal_batch_size(self):
         """Test finding optimal batch size for batch_process."""
+
         async def process_item(item: int) -> int:
             # Simulate variable processing time
             await asyncio.sleep(0.001 + (item % 10) * 0.0001)
@@ -75,11 +77,7 @@ class TestPerformanceCharacteristics:
 
         for batch_size in batch_sizes:
             start = time.perf_counter()
-            results = await batch_process(
-                items, process_item,
-                batch_size=batch_size,
-                max_concurrent=10
-            )
+            results = await batch_process(items, process_item, batch_size=batch_size, max_concurrent=10)
             elapsed = time.perf_counter() - start
             timings[batch_size] = elapsed
 
@@ -104,11 +102,7 @@ class TestPerformanceCharacteristics:
         large_dataset = list(range(10000))
 
         async with AsyncTimer() as timer:
-            results = await async_map(
-                light_processor,
-                large_dataset,
-                max_concurrent=100
-            )
+            results = await async_map(light_processor, large_dataset, max_concurrent=100)
 
         assert len(results) == 10000
         assert timer.elapsed < 5.0  # Should complete quickly
@@ -119,32 +113,19 @@ class TestPerformanceCharacteristics:
     @pytest.mark.asyncio
     async def test_async_filter_performance_with_complex_predicate(self):
         """Test async_filter performance with complex predicates."""
+
         async def complex_predicate(item: dict) -> bool:
             # Simulate complex validation
             await asyncio.sleep(0.001)
-            return (
-                item["value"] % 2 == 0 and
-                item["value"] < 500 and
-                len(item["tag"]) > 3
-            )
+            return item["value"] % 2 == 0 and item["value"] < 500 and len(item["tag"]) > 3
 
         # Create test dataset
-        items = [
-            {"value": i, "tag": f"tag_{i:04d}"}
-            for i in range(1000)
-        ]
+        items = [{"value": i, "tag": f"tag_{i:04d}"} for i in range(1000)]
 
         async with AsyncTimer() as timer:
-            filtered = await async_filter(
-                complex_predicate,
-                items,
-                max_concurrent=50
-            )
+            filtered = await async_filter(complex_predicate, items, max_concurrent=50)
 
-        expected_count = len([
-            i for i in items
-            if i["value"] % 2 == 0 and i["value"] < 500
-        ])
+        expected_count = len([i for i in items if i["value"] % 2 == 0 and i["value"] < 500])
         assert len(filtered) == expected_count
         assert timer.elapsed < 5.0
 
@@ -167,7 +148,7 @@ class TestStressConditions:
         items = list(range(1000))
         results = await gather_with_concurrency(
             500,  # Very high concurrency
-            *[increment_counter(i) for i in items]
+            *[increment_counter(i) for i in items],
         )
 
         assert len(results) == 1000
@@ -225,10 +206,7 @@ class TestStressConditions:
         # Mix of durations, some will timeout
         durations = [0.01, 0.1, 0.02, 0.2, 0.03, 0.15] * 10
 
-        results = await asyncio.gather(
-            *[process_with_timeout(d) for d in durations],
-            return_exceptions=False
-        )
+        results = await asyncio.gather(*[process_with_timeout(d) for d in durations], return_exceptions=False)
 
         assert success_count > 0
         assert timeout_count > 0
@@ -294,6 +272,7 @@ class TestMemoryAndResourceManagement:
     @pytest.mark.asyncio
     async def test_no_memory_leak_in_repeated_operations(self):
         """Test that repeated operations don't leak memory."""
+
         async def simple_operation(x: int) -> int:
             return x * 2
 
@@ -314,6 +293,7 @@ class TestMemoryAndResourceManagement:
     @pytest.mark.asyncio
     async def test_executor_cleanup(self):
         """Test that run_in_executor properly cleans up resources."""
+
         def cpu_bound_task(n: int) -> int:
             return sum(i * i for i in range(n))
 
@@ -363,12 +343,7 @@ class TestMemoryAndResourceManagement:
         items = list(range(10))
 
         with pytest.raises(ValueError, match="Item 5 fails"):
-            await batch_process(
-                items,
-                sometimes_failing_processor,
-                batch_size=3,
-                max_concurrent=2
-            )
+            await batch_process(items, sometimes_failing_processor, batch_size=3, max_concurrent=2)
 
         # Some items were processed before failure
         assert process_count > 0
@@ -381,6 +356,7 @@ class TestEdgeCasePerformance:
     @pytest.mark.asyncio
     async def test_single_item_performance(self):
         """Test that single item doesn't have unnecessary overhead."""
+
         async def process(item: int) -> int:
             return item * 2
 
@@ -394,6 +370,7 @@ class TestEdgeCasePerformance:
     @pytest.mark.asyncio
     async def test_empty_input_performance(self):
         """Test that empty inputs return quickly."""
+
         async def process(item: Any) -> Any:
             return item
 
@@ -414,15 +391,12 @@ class TestEdgeCasePerformance:
     @pytest.mark.asyncio
     async def test_immediate_timeout_performance(self):
         """Test that immediate timeouts fail quickly."""
+
         async def never_completes():
             await asyncio.sleep(10)
 
         async with AsyncTimer() as timer:
-            wrapper = run_with_timeout(
-                never_completes(),
-                0.001,
-                default="timeout"
-            )
+            wrapper = run_with_timeout(never_completes(), 0.001, default="timeout")
             result = await wrapper()
 
         assert result == "timeout"

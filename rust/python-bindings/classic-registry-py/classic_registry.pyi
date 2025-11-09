@@ -39,7 +39,7 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 __version__: str
 
@@ -80,7 +80,6 @@ class Keys:
     LOCAL_DIR: str
     IS_PRERELEASE: str
 
-
 def register(key: str, value: Any) -> None:
     """Register a value in the global registry.
 
@@ -98,7 +97,6 @@ def register(key: str, value: Any) -> None:
         >>> register("custom_key", {"data": 123})
     """
 
-
 def is_registered(key: str) -> bool:
     """Check if a key is registered.
 
@@ -114,8 +112,7 @@ def is_registered(key: str) -> bool:
         ...     print("Game is registered")
     """
 
-
-def get(key: str) -> Optional[Any]:
+def get(key: str) -> Any | None:
     """Retrieve a value from the global registry.
 
     Args:
@@ -131,7 +128,6 @@ def get(key: str) -> Optional[Any]:
         ...     print(f"Current game: {game}")
     """
 
-
 def clear_all() -> None:
     """Clear all entries from the registry.
 
@@ -145,7 +141,6 @@ def clear_all() -> None:
         >>> clear_all()
     """
 
-
 def get_game() -> str:
     """Get the current game name.
 
@@ -158,7 +153,6 @@ def get_game() -> str:
         >>> print(f"Current game: {game}")
     """
 
-
 def set_game(game_name: str) -> None:
     """Set the current game name.
 
@@ -169,7 +163,6 @@ def set_game(game_name: str) -> None:
         >>> from classic_registry import set_game
         >>> set_game("Skyrim")
     """
-
 
 def is_gui_mode() -> bool:
     """Check if the application is running in GUI mode.
@@ -185,8 +178,7 @@ def is_gui_mode() -> bool:
         ...     print("Running in CLI mode")
     """
 
-
-def get_yaml_cache() -> Optional[Any]:
+def get_yaml_cache() -> Any | None:
     """Get the YAML settings cache instance.
 
     Returns:
@@ -199,8 +191,7 @@ def get_yaml_cache() -> Optional[Any]:
         ...     settings = cache.get_settings(...)
     """
 
-
-def get_manual_docs_gui() -> Optional[Any]:
+def get_manual_docs_gui() -> Any | None:
     """Get the manual documents GUI widget reference.
 
     Returns:
@@ -213,8 +204,7 @@ def get_manual_docs_gui() -> Optional[Any]:
         ...     widget.update_content(...)
     """
 
-
-def get_game_path_gui() -> Optional[Any]:
+def get_game_path_gui() -> Any | None:
     """Get the game path GUI widget reference.
 
     Returns:
@@ -226,7 +216,6 @@ def get_game_path_gui() -> Optional[Any]:
         >>> if widget is not None:
         ...     widget.set_path(...)
     """
-
 
 def get_vr() -> str:
     """Get the VR game variant identifier.
@@ -240,7 +229,6 @@ def get_vr() -> str:
         >>> if vr:
         ...     print(f"VR variant: {vr}")
     """
-
 
 def get_local_dir() -> str:
     """Get the local application directory.

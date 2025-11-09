@@ -32,7 +32,7 @@ def test_centralized_detection_basic():
 @pytest.mark.rust
 def test_centralized_detection_caching():
     """Test that detection results are cached."""
-    from ClassicLib.integration.detector import detect_component, _detection_cache
+    from ClassicLib.integration.detector import _detection_cache, detect_component
 
     # Clear cache
     _detection_cache.clear()
@@ -115,16 +115,16 @@ def test_runtime_diagnostics_print(capsys):
 def test_wrapper_modules_use_centralized_detection():
     """Verify wrapper modules use centralized detection."""
     # Import all wrapper modules and check they work
-    from ClassicLib.rust.file_io_rust import RUST_AVAILABLE as file_io_avail
-    from ClassicLib.rust.parser_rust import RustLogParser
-    from ClassicLib.rust.settings_rust import RUST_AVAILABLE as settings_avail
     from ClassicLib.rust.database_rust import RUST_AVAILABLE as database_avail
-    from ClassicLib.rust.gpu_rust import RUST_AVAILABLE as gpu_avail
     from ClassicLib.rust.fcx_rust import RUST_AVAILABLE as fcx_avail
+    from ClassicLib.rust.file_io_rust import RUST_AVAILABLE as file_io_avail
+    from ClassicLib.rust.gpu_rust import RUST_AVAILABLE as gpu_avail
     from ClassicLib.rust.mod_detector_rust import RUST_AVAILABLE as mod_avail
-    from ClassicLib.rust.report_rust import RUST_AVAILABLE as report_avail
-    from ClassicLib.rust.suspect_rust import RUST_AVAILABLE as suspect_avail
     from ClassicLib.rust.orchestrator_api import RUST_AVAILABLE as orch_avail
+    from ClassicLib.rust.parser_rust import RustLogParser
+    from ClassicLib.rust.report_rust import RUST_AVAILABLE as report_avail
+    from ClassicLib.rust.settings_rust import RUST_AVAILABLE as settings_avail
+    from ClassicLib.rust.suspect_rust import RUST_AVAILABLE as suspect_avail
 
     # All should be True in test environment with Rust built
     assert file_io_avail is True
@@ -148,9 +148,9 @@ def test_integration_exports():
     """Test that all Phase 3 functions are exported from integration module."""
     from ClassicLib.integration import (
         detect_component,
-        is_component_available,
         get_component,
         get_runtime_stats,
+        is_component_available,
         is_runtime_healthy,
         print_runtime_status,
     )

@@ -17,21 +17,24 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.exceptions import RustError, RustParseError
 from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.exceptions import RustError, RustParseError
 
 # Detect Rust-specific exception types for classic_scanlog
 _, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
 _, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
 
 
-def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
+def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[type[BaseException], ...]]:
     """Get tuple of Rust exception types to catch.
 
-    Returns tuple of (ParseError types, generic RustError types).
+    Returns:
+        A tuple containing two tuples of exception types:
+            - ParseError types (RustParseError and module-specific parse errors)
+            - Generic RustError types (RustError and module-specific scan log errors)
     """
-    parse_errors = (RustParseError,)
-    rust_errors = (RustError,)
+    parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
+    rust_errors: tuple[type[BaseException], ...] = (RustError,)
 
     # Add module-specific exceptions if available
     if _rust_parse_error:
@@ -43,6 +46,8 @@ def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
 
 
 # Get exception type tuples at module level for use in exception handlers
+parse_errors: tuple[type[BaseException], ...]
+rust_errors: tuple[type[BaseException], ...]
 parse_errors, rust_errors = _get_rust_exception_types()
 
 if TYPE_CHECKING:
@@ -77,6 +82,7 @@ class RustRecordScanner:
 
         try:
             import classic_scanlog
+
             if hasattr(classic_scanlog, "RecordScanner"):
                 RustRecordScannerImpl = classic_scanlog.RecordScanner
 
@@ -85,11 +91,7 @@ class RustRecordScanner:
                 ignore_records = getattr(yamldata, "game_ignore_records", [])
                 crashgen_name = getattr(yamldata, "crashgen_name", "")
 
-                self._rust_scanner = RustRecordScannerImpl(
-                    target_records,
-                    ignore_records,
-                    crashgen_name
-                )
+                self._rust_scanner = RustRecordScannerImpl(target_records, ignore_records, crashgen_name)
                 self._use_rust = True
                 logger.debug("🚀 RustRecordScanner: Using RUST implementation (40x faster)")
             else:
@@ -103,6 +105,7 @@ class RustRecordScanner:
         if not self._use_rust:
             logger.debug("⚠️  RustRecordScanner: Falling back to Python implementation")
             from ClassicLib.ScanLog.RecordScanner import RecordScanner
+
             self._python_scanner = RecordScanner(yamldata)
 
     def scan_named_records(self, segment_callstack: list[str]) -> tuple[Any, list[str]]:
@@ -139,6 +142,7 @@ class RustRecordScanner:
         if self._python_scanner:
             return self._python_scanner.scan_named_records(segment_callstack)
         from ClassicLib.ScanLog.RecordScanner import RecordScanner
+
         scanner = RecordScanner(self.yamldata)
         return scanner.scan_named_records(segment_callstack)
 
@@ -173,6 +177,7 @@ class RustRecordScanner:
             _, matches = self._python_scanner.scan_named_records(segment_callstack)
             return matches
         from ClassicLib.ScanLog.RecordScanner import RecordScanner
+
         scanner = RecordScanner(self.yamldata)
         _, matches = scanner.scan_named_records(segment_callstack)
         return matches
@@ -193,7 +198,7 @@ class RustRecordScanner:
                 logger.debug(f"Rust clear_cache not available: {e}")
 
         if self._python_scanner and hasattr(self._python_scanner, "clear_cache"):
-            self._python_scanner.clear_cache() # pyright: ignore[reportAttributeAccessIssue]
+            self._python_scanner.clear_cache()  # pyright: ignore[reportAttributeAccessIssue]
 
     @staticmethod
     def scan_for_pattern(lines: list[str], pattern: str) -> list[str]:
@@ -211,6 +216,7 @@ class RustRecordScanner:
             list[str]: A list of strings from the input that match the specified pattern.
         """
         import re
+
         pattern_re = re.compile(pattern, re.IGNORECASE)
         return [line for line in lines if pattern_re.search(line)]
 
@@ -262,6 +268,6 @@ class RustRecordScanner:
         """
         # Check Python scanner (Rust doesn't expose patterns)
         if self._python_scanner and hasattr(self._python_scanner, "patterns"):
-            return self._python_scanner.patterns # pyright: ignore[reportAttributeAccessIssue]
+            return self._python_scanner.patterns  # pyright: ignore[reportAttributeAccessIssue]
 
         return None

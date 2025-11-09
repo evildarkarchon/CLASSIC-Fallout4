@@ -57,7 +57,8 @@ class BA2Scanner:
     def __init__(self) -> None:
         """Initialize BA2Scanner."""
 
-    def scan_archive(self, archive_path: Path) -> BA2Issues:
+    @staticmethod
+    def scan_archive(archive_path: Path) -> BA2Issues:
         """Scan a single BA2 archive for issues.
 
         This is a simplified Python implementation. For production use,
@@ -86,7 +87,8 @@ class BA2Scanner:
         # This is intentionally simplified - use Rust version for full scanning
         return issues
 
-    def scan_archives_batch(self, archive_paths: list[Path]) -> list[tuple[Path, BA2Issues]]:
+    @staticmethod
+    def scan_archives_batch(archive_paths: list[Path]) -> list[tuple[Path, BA2Issues]]:
         """Scan multiple BA2 archives in batch.
 
         Args:
@@ -103,6 +105,6 @@ class BA2Scanner:
         """
         results: list[tuple[Path, BA2Issues]] = []
         for path in archive_paths:
-            issues = self.scan_archive(path)
+            issues = BA2Scanner.scan_archive(path)
             results.append((path, issues))
         return results

@@ -16,6 +16,7 @@ import pytest
 # resource module is Unix-only
 try:
     import resource
+
     RESOURCE_AVAILABLE = True
 except ImportError:
     RESOURCE_AVAILABLE = False
@@ -109,14 +110,10 @@ class SyntheticDataGenerator:
             "header": "SYNTH_PLUGIN_V1",
             "formids": SyntheticDataGenerator.generate_formid_batch(num_records),
             "records": [
-                {
-                    "type": random.choice(["NPC_", "WEAP", "ARMO", "CELL"]),
-                    "formid": f"{i:08X}",
-                    "data": "x" * random.randint(10, 100)
-                }
+                {"type": random.choice(["NPC_", "WEAP", "ARMO", "CELL"]), "formid": f"{i:08X}", "data": "x" * random.randint(10, 100)}
                 for i in range(min(num_records, 1000))
             ],
-            "size": size_kb * 1024
+            "size": size_kb * 1024,
         }
 
 
@@ -129,6 +126,7 @@ class TestMemorySafetyStress:
         self.rust_available = False
         try:
             import classic_scanlog
+
             self.rust_available = True
         except ImportError:
             pass
@@ -157,9 +155,7 @@ class TestMemorySafetyStress:
 
             # Parse it (causes Rust allocation) using find_segments
             lines = large_log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Explicitly delete to trigger deallocation
             del large_log
@@ -207,9 +203,7 @@ class TestMemorySafetyStress:
                         # Parse log using find_segments
                         log = generator.generate_large_log(random.uniform(0.5, 2))
                         lines = log.splitlines()
-                        game_ver, crashgen_ver, error, segments = parser.find_segments(
-                            lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                        )
+                        game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                         del segments
                     else:
                         # Analyze FormIDs using extract_formids
@@ -226,10 +220,7 @@ class TestMemorySafetyStress:
 
         # Launch concurrent workers
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [
-                executor.submit(worker, i, 50)
-                for i in range(10)
-            ]
+            futures = [executor.submit(worker, i, 50) for i in range(10)]
 
             # Wait for completion
             for future in as_completed(futures):
@@ -263,9 +254,7 @@ class TestMemorySafetyStress:
             # Create synthetic data
             data = generator.generate_large_log(1)
             lines = data.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Create weak reference to result
             try:
@@ -307,9 +296,7 @@ class TestMemorySafetyStress:
             # Very small synthetic data (< 1KB)
             tiny_log = f"Line {i}: FormID: {i:08X}"
             lines = tiny_log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             small_results.append(segments)
 
             # Delete some to create fragmentation
@@ -319,9 +306,7 @@ class TestMemorySafetyStress:
         # Now try large allocation
         large_log = generator.generate_large_log(10)
         lines = large_log.splitlines()
-        game_ver, crashgen_ver, error, large_result = parser.find_segments(
-            lines, "Buffout 4", "F4SE", "Fallout4.exe"
-        )
+        game_ver, crashgen_ver, error, large_result = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
         # Should succeed without excessive memory use
         current_memory = monitor.sample()
@@ -345,9 +330,7 @@ class TestMemorySafetyStress:
             # Create 100MB synthetic log
             huge_log = generator.generate_large_log(100)
             lines = huge_log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             del segments
             del huge_log
         except MemoryError:
@@ -364,9 +347,7 @@ class TestMemorySafetyStress:
         # Should still be able to work after near-OOM
         small_log = "Test after OOM"
         lines = small_log.splitlines()
-        game_ver, crashgen_ver, error, segments = parser.find_segments(
-            lines, "Buffout 4", "F4SE", "Fallout4.exe"
-        )
+        game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
         assert segments is not None
 
     def test_cyclic_reference_detection(self):
@@ -429,17 +410,18 @@ class TestMemorySafetyStress:
 
         for i in range(1000):
             # Log with many repeated strings
-            log = f"""
+            log = (
+                f"""
             FormID: {repeated_formid} from {repeated_plugin}
             FormID: {repeated_formid} from {repeated_plugin}
             FormID: {repeated_formid} from {repeated_plugin}
             Error in {repeated_plugin} at FormID {repeated_formid}
-            """ * 10
+            """
+                * 10
+            )
 
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             del segments
 
         # Memory usage should be reasonable due to string interning
@@ -465,16 +447,14 @@ class TestMemorySafetyStress:
         malformed_inputs = [
             "\x00" * 1000000,  # Null bytes
             "💥" * 1000000,  # Emoji spam
-            "\xFF\xFE" * 500000,  # Invalid UTF-8
+            "\xff\xfe" * 500000,  # Invalid UTF-8
             "A" * 100000000,  # Extremely long single line
         ]
 
         for malformed in malformed_inputs:
             try:
                 lines = malformed.splitlines() if isinstance(malformed, str) else [malformed]
-                game_ver, crashgen_ver, error, segments = parser.find_segments(
-                    lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                )
+                game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 del segments
             except Exception:
                 # Expected - Rust might panic or return error
@@ -499,14 +479,13 @@ class TestMemorySafetyStress:
         def worker_process(size_mb):
             """Worker process that allocates memory."""
             from ClassicLib.integration.factory import get_parser
+
             generator = SyntheticDataGenerator()
 
             parser = get_parser()
             log = generator.generate_large_log(size_mb)
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Return size of result
             return len(str(segments)) if segments else 0
@@ -517,10 +496,7 @@ class TestMemorySafetyStress:
 
         # Launch workers in separate processes
         with ProcessPoolExecutor(max_workers=4) as executor:
-            futures = [
-                executor.submit(worker_process, 10)
-                for _ in range(20)
-            ]
+            futures = [executor.submit(worker_process, 10) for _ in range(20)]
 
             results = [f.result() for f in as_completed(futures)]
 
@@ -550,9 +526,7 @@ class TestMemorySafetyStress:
             size_mb = i * 0.5
             log = generator.generate_large_log(size_mb)
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             allocations.append(segments)
 
             # Get current memory usage

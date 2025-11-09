@@ -23,6 +23,7 @@ from analyze_tests import analyze_file
 @dataclass
 class ValidationResult:
     """Results of validating the test suite structure."""
+
     total_files: int
     compliant_files: int
     oversized_files: list[tuple[Path, int]]
@@ -36,7 +37,7 @@ class ValidationResult:
 def check_file_size(file_path: Path, max_lines: int = 300) -> tuple[bool, int]:
     """Check if file exceeds the line limit."""
     try:
-        lines = file_path.read_text(encoding='utf-8').splitlines()
+        lines = file_path.read_text(encoding="utf-8").splitlines()
         line_count = len(lines)
         return line_count <= max_lines, line_count
     except Exception:
@@ -48,15 +49,15 @@ def check_naming_convention(file_path: Path) -> tuple[bool, str]:
     filename = file_path.name
 
     # Skip special files
-    if filename in ['conftest.py', '__init__.py']:
+    if filename in ["conftest.py", "__init__.py"]:
         return True, "Special file"
 
     # Must start with test_
-    if not filename.startswith('test_'):
+    if not filename.startswith("test_"):
         return False, "Must start with 'test_'"
 
     # Must end with .py
-    if not filename.endswith('.py'):
+    if not filename.endswith(".py"):
         return False, "Must be a Python file"
 
     # Extract component and type
@@ -64,7 +65,7 @@ def check_naming_convention(file_path: Path) -> tuple[bool, str]:
     name_without_test = name_without_ext[5:]  # Remove test_
 
     # Check for type suffix
-    valid_types = ['_unit', '_integration', '_e2e']
+    valid_types = ["_unit", "_integration", "_e2e"]
     has_type_suffix = any(name_without_test.endswith(suffix) for suffix in valid_types)
 
     if not has_type_suffix:
@@ -92,7 +93,7 @@ def check_directory_placement(file_path: Path, test_root: Path) -> tuple[bool, s
 
     # Files should not be in root tests/ directory
     if len(relative_path.parts) == 1:
-        if relative_path.name not in ['conftest.py', '__init__.py']:
+        if relative_path.name not in ["conftest.py", "__init__.py"]:
             return False, "Test files should be in subdirectories"
 
     return True, "Properly placed"
@@ -121,7 +122,7 @@ def validate_test_suite(test_dir: Path, verbose: bool = False) -> ValidationResu
         print(f"🔍 Scanning test files in {test_dir}")
 
     # Find all test files
-    test_files = list(test_dir.rglob('test_*.py'))
+    test_files = list(test_dir.rglob("test_*.py"))
 
     if verbose:
         print(f"Found {len(test_files)} test files")
@@ -190,15 +191,15 @@ def validate_test_suite(test_dir: Path, verbose: bool = False) -> ValidationResu
         badly_named_files=badly_named_files,
         misplaced_files=misplaced_files,
         violations=violations,
-        compliance_percentage=compliance_percentage
+        compliance_percentage=compliance_percentage,
     )
 
 
 def _print_header() -> None:
     """Print report header."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("TEST SUITE STRUCTURE VALIDATION REPORT")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
 def _print_overview(result: ValidationResult) -> None:
@@ -210,8 +211,7 @@ def _print_overview(result: ValidationResult) -> None:
     print(f"   Compliance rate: {result.compliance_percentage:.1f}%")
 
 
-def _print_violation_section(items: list, title: str, icon: str, test_dir: Path,
-                            format_func=None) -> None:
+def _print_violation_section(items: list, title: str, icon: str, test_dir: Path, format_func=None) -> None:
     """Print a violation section."""
     if items:
         print(f"\n{icon} {title} ({len(items)}):")
@@ -267,7 +267,7 @@ def print_validation_report(result: ValidationResult, test_dir: Path) -> None:
         (result.oversized_files, "Files exceeding 300 lines", "❌"),
         (result.mixed_type_files, "Files with mixed test types", "🔀"),
         (result.badly_named_files, "Files with naming violations", "📛"),
-        (result.misplaced_files, "Misplaced files", "📂")
+        (result.misplaced_files, "Misplaced files", "📂"),
     ]
 
     for items, title, icon in violations:
@@ -297,10 +297,10 @@ def suggest_fixes(result: ValidationResult, test_dir: Path) -> None:
 
 def main():
     """Main script entry point."""
-    parser = argparse.ArgumentParser(description='Validate test suite structure compliance')
-    parser.add_argument('--test-dir', default='tests', help='Test directory to validate (default: tests)')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
-    parser.add_argument('--suggest-fixes', action='store_true', help='Suggest specific commands to fix violations')
+    parser = argparse.ArgumentParser(description="Validate test suite structure compliance")
+    parser.add_argument("--test-dir", default="tests", help="Test directory to validate (default: tests)")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    parser.add_argument("--suggest-fixes", action="store_true", help="Suggest specific commands to fix violations")
 
     args = parser.parse_args()
 

@@ -42,6 +42,7 @@ class NetworkFailureSimulator:
     async def simulate_intermittent_failure(success_rate: float = 0.5):
         """Simulate intermittent network failures."""
         import random
+
         if random.random() > success_rate:
             raise aiohttp.ClientError("Network temporarily unavailable")
         return {"status": "success"}
@@ -62,7 +63,7 @@ class NetworkFailureSimulator:
     @staticmethod
     def simulate_corrupted_response():
         """Simulate corrupted/malformed response data."""
-        return b'{"status": "ok", "data": \xFF\xFE corrupted json here'
+        return b'{"status": "ok", "data": \xff\xfe corrupted json here'
 
 
 class TestUpdateManagerNetworkResilience:
@@ -80,7 +81,7 @@ class TestUpdateManagerNetworkResilience:
         update_manager = UpdateManager()
         simulator = NetworkFailureSimulator()
 
-        with patch.object(update_manager, '_fetch_update_info') as mock_fetch:
+        with patch.object(update_manager, "_fetch_update_info") as mock_fetch:
             mock_fetch.side_effect = simulator.simulate_timeout
 
             # Should handle timeout gracefully
@@ -99,7 +100,7 @@ class TestUpdateManagerNetworkResilience:
 
         update_manager = UpdateManager()
 
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch("aiohttp.ClientSession.get") as mock_get:
             mock_get.side_effect = aiohttp.ClientConnectionError("Connection refused")
 
             # Should handle connection refused
@@ -117,7 +118,7 @@ class TestUpdateManagerNetworkResilience:
         update_manager = UpdateManager()
         simulator = NetworkFailureSimulator()
 
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch("aiohttp.ClientSession.get") as mock_get:
             mock_get.side_effect = simulator.simulate_dns_failure
 
             # Should handle DNS failure
@@ -142,7 +143,7 @@ class TestUpdateManagerNetworkResilience:
                 raise aiohttp.ClientError("Network error")
             return {"version": "1.0.0", "url": "http://example.com"}
 
-        with patch.object(update_manager, '_fetch_update_info', side_effect=failing_then_success):
+        with patch.object(update_manager, "_fetch_update_info", side_effect=failing_then_success):
             # Should retry and eventually succeed
             result = await update_manager.check_for_updates()
 
@@ -167,12 +168,10 @@ class TestUpdateManagerNetworkResilience:
 
         # Test 10 attempts with 50% failure rate
         for _ in range(10):
-            with patch('aiohttp.ClientSession.get') as mock_get:
+            with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 try:
-                    mock_response.json = AsyncMock(
-                        side_effect=lambda: simulator.simulate_intermittent_failure(0.5)
-                    )
+                    mock_response.json = AsyncMock(side_effect=lambda: simulator.simulate_intermittent_failure(0.5))
                     mock_get.return_value.__aenter__.return_value = mock_response
 
                     result = await update_manager.check_for_updates()
@@ -197,16 +196,14 @@ class TestUpdateManagerNetworkResilience:
         update_manager = UpdateManager()
         simulator = NetworkFailureSimulator()
 
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch("aiohttp.ClientSession.get") as mock_get:
             mock_response = AsyncMock()
-            mock_response.json = AsyncMock(
-                side_effect=lambda: simulator.simulate_slow_response(10.0)
-            )
+            mock_response.json = AsyncMock(side_effect=lambda: simulator.simulate_slow_response(10.0))
             mock_get.return_value.__aenter__.return_value = mock_response
 
             # Should timeout before 10 seconds
             start = time.time()
-            with patch('asyncio.wait_for', side_effect=asyncio.TimeoutError):
+            with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
                 result = await update_manager.check_for_updates()
             elapsed = time.time() - start
 
@@ -225,7 +222,7 @@ class TestUpdateManagerNetworkResilience:
         update_manager = UpdateManager()
         simulator = NetworkFailureSimulator()
 
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch("aiohttp.ClientSession.get") as mock_get:
             mock_response = AsyncMock()
             mock_response.json = AsyncMock(side_effect=simulator.simulate_partial_response)
             mock_get.return_value.__aenter__.return_value = mock_response
@@ -245,11 +242,9 @@ class TestUpdateManagerNetworkResilience:
         update_manager = UpdateManager()
         simulator = NetworkFailureSimulator()
 
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch("aiohttp.ClientSession.get") as mock_get:
             mock_response = AsyncMock()
-            mock_response.text = AsyncMock(
-                return_value=simulator.simulate_corrupted_response().decode('utf-8', errors='ignore')
-            )
+            mock_response.text = AsyncMock(return_value=simulator.simulate_corrupted_response().decode("utf-8", errors="ignore"))
             mock_get.return_value.__aenter__.return_value = mock_response
 
             # Should handle corrupted JSON gracefully
@@ -271,22 +266,20 @@ class TestDownloadResilience:
         partial_content = b"First part of file content"
         full_content = partial_content + b" Second part of file content"
 
-        with tempfile.NamedTemporaryFile(delete=False, mode='wb') as f:
+        with tempfile.NamedTemporaryFile(delete=False, mode="wb") as f:
             f.write(partial_content)
             temp_path = Path(f.name)
 
         try:
             # Mock resume download
-            with patch('aiohttp.ClientSession.get') as mock_get:
+            with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
-                mock_response.content.read = AsyncMock(
-                    return_value=b" Second part of file content"
-                )
-                mock_response.headers = {'Content-Range': f'bytes {len(partial_content)}-{len(full_content)}'}
+                mock_response.content.read = AsyncMock(return_value=b" Second part of file content")
+                mock_response.headers = {"Content-Range": f"bytes {len(partial_content)}-{len(full_content)}"}
                 mock_get.return_value.__aenter__.return_value = mock_response
 
                 # Should be able to append to partial file
-                with Path(temp_path).open('ab') as f:
+                with Path(temp_path).open("ab") as f:
                     f.write(b" Second part of file content")
 
                 # Verify complete file
@@ -347,10 +340,8 @@ class TestDownloadResilience:
     @pytest.mark.asyncio
     async def test_bandwidth_throttling(self):
         """Test download with bandwidth throttling."""
-        async def download_with_throttle(
-            size_mb: float,
-            bandwidth_mbps: float
-        ) -> float:
+
+        async def download_with_throttle(size_mb: float, bandwidth_mbps: float) -> float:
             """Simulate throttled download."""
             size_bytes = size_mb * 1024 * 1024
             bandwidth_bytes_per_sec = bandwidth_mbps * 1024 * 1024 / 8
@@ -372,7 +363,7 @@ class TestDownloadResilience:
 
         # Test 10MB download at 1Mbps (should take ~80 seconds)
         # But we'll simulate it faster for testing
-        with patch('asyncio.sleep', return_value=None):
+        with patch("asyncio.sleep", return_value=None):
             download_time = await download_with_throttle(10, 1)
             assert download_time < 1.0  # Mocked, so should be fast
 
@@ -393,9 +384,9 @@ class TestCacheNetworkFallback:
 
         # Pre-populate cache
         test_data = {"version": "1.0.0", "settings": {"key": "value"}}
-        with patch.object(cache, '_cache', {"test_key": test_data}):
+        with patch.object(cache, "_cache", {"test_key": test_data}):
             # Simulate network failure for refresh
-            with patch.object(cache, 'refresh_cache', side_effect=aiohttp.ClientError("Network down")):
+            with patch.object(cache, "refresh_cache", side_effect=aiohttp.ClientError("Network down")):
                 # Should return cached data
                 result = cache.get_setting("test_key")
                 assert result == test_data
@@ -416,8 +407,8 @@ class TestCacheNetworkFallback:
         old_timestamp = datetime.datetime.now() - datetime.timedelta(hours=25)
         cached_data = {"data": "old", "timestamp": old_timestamp.isoformat()}
 
-        with patch.object(cache, '_cache', {"expired_key": cached_data}):
-            with patch.object(cache, 'refresh_cache', side_effect=aiohttp.ClientError("Network down")):
+        with patch.object(cache, "_cache", {"expired_key": cached_data}):
+            with patch.object(cache, "refresh_cache", side_effect=aiohttp.ClientError("Network down")):
                 # Should still return stale data rather than nothing
                 result = cache.get_setting("expired_key")
                 # Behavior depends on implementation - either stale data or None
@@ -434,7 +425,7 @@ class TestCacheNetworkFallback:
         cache = YamlSettingsCache()
 
         # Should be able to write to local cache even without network
-        with patch('aiohttp.ClientSession.post', side_effect=aiohttp.ClientError("Network down")):
+        with patch("aiohttp.ClientSession.post", side_effect=aiohttp.ClientError("Network down")):
             # Local cache write should still work
             cache._cache["local_only"] = {"value": "offline_data"}
             result = cache.get_setting("local_only")
@@ -447,14 +438,12 @@ class TestNetworkRecoveryPatterns:
     @pytest.mark.asyncio
     async def test_exponential_backoff(self):
         """Test exponential backoff retry strategy."""
-        async def retry_with_backoff(
-            max_retries: int = 5,
-            base_delay: float = 1.0
-        ) -> list[float]:
+
+        async def retry_with_backoff(max_retries: int = 5, base_delay: float = 1.0) -> list[float]:
             """Implement exponential backoff retry."""
             delays = []
             for attempt in range(max_retries):
-                delay = base_delay * (2 ** attempt)
+                delay = base_delay * (2**attempt)
                 delays.append(delay)
                 await asyncio.sleep(0.001)  # Simulate minimal delay for testing
             return delays
@@ -467,6 +456,7 @@ class TestNetworkRecoveryPatterns:
     @pytest.mark.asyncio
     async def test_circuit_breaker_pattern(self):
         """Test circuit breaker pattern for network failures."""
+
         class CircuitBreaker:
             def __init__(self, failure_threshold: int = 3, recovery_timeout: float = 5.0):
                 self.failure_count = 0
@@ -516,6 +506,7 @@ class TestNetworkRecoveryPatterns:
     @pytest.mark.asyncio
     async def test_graceful_degradation(self):
         """Test graceful degradation when network services are unavailable."""
+
         class ServiceWithDegradation:
             def __init__(self):
                 self.online_mode = True

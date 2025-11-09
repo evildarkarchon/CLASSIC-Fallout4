@@ -10,10 +10,12 @@ The module includes functionalities to:
 - Apply specific fixes to ensure compatibility and performance.
 - Detect duplicate configuration files and notify users.
 """
+
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.ScanGame.Config import ConfigFileCache
+from ClassicLib.ScanGame.models.fcx_issue import ConfigIssueSeverity
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -59,7 +61,7 @@ async def scan_mod_inis_async() -> str:
     #     pass
 
     # Check for console command settings that might slow down startup
-    await check_starting_console_command_async(config_files, message_list)
+    check_starting_console_command_async(config_files, message_list)
 
     # Check for VSync settings in various files
     vsync_list: list[str] = await check_vsync_settings_async(config_files)
@@ -98,14 +100,17 @@ def scan_mod_inis() -> str:
 
 
 def check_starting_console_command(config_files: ConfigFileCache, message_list: list[str]) -> None:
-    """Sync wrapper for backward compatibility."""
-    from ClassicLib.AsyncBridge import AsyncBridge
+    """Sync wrapper for backward compatibility.
 
-    bridge = AsyncBridge.get_instance()
-    return bridge.run_async(check_starting_console_command_async(config_files, message_list))
+    Args:
+        config_files: A cache of configuration files containing file paths and their settings.
+        message_list: A list of messages to be updated with notices if configuration files
+            contain the specific console command setting.
+    """
+    return check_starting_console_command_async(config_files, message_list)
 
 
-async def check_starting_console_command_async(config_files: ConfigFileCache, message_list: list[str]) -> None:
+def check_starting_console_command_async(config_files: ConfigFileCache, message_list: list[str]) -> None:
     """
     Checks for the presence of a specific console command setting in configuration files
     matching the current game's name, and updates the message list with relevant notices.
@@ -127,7 +132,15 @@ async def check_starting_console_command_async(config_files: ConfigFileCache, me
 
 
 def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
-    """Sync wrapper for backward compatibility."""
+    """Sync wrapper for backward compatibility.
+
+    Args:
+        config_files: A cache object containing the configuration files and their settings.
+
+    Returns:
+        list[str]: A list containing formatted strings that indicate which configuration
+        files have VSync settings enabled.
+    """
     from ClassicLib.AsyncBridge import AsyncBridge
 
     bridge = AsyncBridge.get_instance()
@@ -173,7 +186,7 @@ async def detect_ini_issue_async(
     recommended_value: Any,
     condition_check: Any,
     description: str,
-    severity: str = "warning",
+    severity: ConfigIssueSeverity = "warning",
 ) -> Any | None:
     """
     Detect a configuration issue in an INI file without modifying it.

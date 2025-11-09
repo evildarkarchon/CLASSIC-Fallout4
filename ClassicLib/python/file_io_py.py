@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 try:
     import aiofiles
+
     AIOFILES_AVAILABLE = True
 except ImportError:
     aiofiles = None  # type: ignore[assignment]
@@ -88,6 +89,7 @@ class PythonFileIO:
         # Try to use async encoding detection if available
         try:
             from ClassicLib.AsyncUtil import read_file_with_encoding_async
+
             return await read_file_with_encoding_async(path)
         except ImportError:
             pass
@@ -317,6 +319,7 @@ class PythonFileIO:
             and its content will be set to an empty string, but no exception is
             propagated to the caller.
         """
+
         async def read_single(path: Path | str) -> tuple[str, str]:
             """
             Reads the content of a single file asynchronously.
@@ -361,6 +364,7 @@ class PythonFileIO:
         Raises:
             Exception: Logged if any error occurs during the writing process.
         """
+
         async def write_single(path: Path | str, content: str) -> None:
             """
             Writes content to a specified file asynchronously. If there is an error during the write
@@ -413,6 +417,7 @@ class PythonFileIO:
             return path.stat().st_size
         except (OSError, FileNotFoundError):
             return -1
+
 
 # Alias for compatibility
 FileIOCore = PythonFileIO

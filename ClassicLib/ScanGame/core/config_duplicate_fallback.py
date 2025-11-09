@@ -45,10 +45,8 @@ class ConfigDuplicateDetector:
         ...         print(f"  Duplicate: {dup}")
     """
 
-    def __init__(self) -> None:
-        """Initialize ConfigDuplicateDetector."""
-
-    def detect_duplicates(self, root_path: Path) -> list[DuplicateGroup]:
+    @staticmethod
+    def detect_duplicates(root_path: Path) -> list[DuplicateGroup]:
         """Detect duplicate configuration files in the specified directory.
 
         Scans the directory tree for configuration files (.ini, .conf) and
@@ -100,7 +98,8 @@ class ConfigDuplicateDetector:
 
         return duplicate_groups
 
-    def get_duplicate_map(self, root_path: Path) -> dict[str, list[Path]]:
+    @staticmethod
+    def get_duplicate_map(root_path: Path) -> dict[str, list[Path]]:
         """Get dictionary mapping of lowercase filenames to lists of paths.
 
         Args:
@@ -116,13 +115,13 @@ class ConfigDuplicateDetector:
             >>> for filename, paths in dup_map.items():
             ...     print(f"{filename}: {len(paths)} copies")
         """
-        groups = self.detect_duplicates(root_path)
+        groups = ConfigDuplicateDetector.detect_duplicates(root_path)
 
         # Build map of filename -> all paths (canonical + duplicates)
         result: dict[str, list[Path]] = {}
         for group in groups:
             filename_lower = group.original.name.lower()
-            all_paths = [group.original] + group.duplicates
+            all_paths = [group.original, *group.duplicates]
             result[filename_lower] = all_paths
 
         return result

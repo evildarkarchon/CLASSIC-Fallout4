@@ -47,22 +47,17 @@ class TestMalformedDataHandling:
         # Generate different types of corrupted logs
         corrupted_logs = [
             # Binary data mixed with text
-            b"Fallout 4 v1.10.163\x00\x01\x02\x03\nPlugins:\n[001] Test.esm\xFF\xFE".decode('utf-8', errors='ignore'),
-
+            b"Fallout 4 v1.10.163\x00\x01\x02\x03\nPlugins:\n[001] Test.esm\xff\xfe".decode("utf-8", errors="ignore"),
             # Extremely long lines
             "Fallout 4 v1.10.163\n" + "A" * 100000 + "\nFormID: 0x12345678\n",
-
             # Invalid encoding sequences
-            "Fallout 4 v1.10.163\nFormID: 0x12345678\n" + "\uFFFD" * 1000,
-
+            "Fallout 4 v1.10.163\nFormID: 0x12345678\n" + "\ufffd" * 1000,
             # Malformed structure
             "Random text without any structure\n" * 1000,
-
             # Empty sections
             "Fallout 4 v1.10.163\n\n\n\nPLUGINS:\n\n\nSTACK TRACE:\n\n\n",
-
             # Unicode issues
-            "Fallout 4 v1.10.163\nPlugin: Tëst_Mød_Ñamé.esp\nFormID: 0x12345678\n" * 100
+            "Fallout 4 v1.10.163\nPlugin: Tëst_Mød_Ñamé.esp\nFormID: 0x12345678\n" * 100,
         ]
 
         error_counts = []
@@ -85,31 +80,23 @@ class TestMalformedDataHandling:
                 processing_time = time.time() - start_time
 
                 processing_results.append({
-                    'log_type': f'corrupted_{i}',
-                    'formids_found': len(formids),
-                    'plugins_found': len(plugins),
-                    'patterns_matched': len(matches),
-                    'processing_time': processing_time,
-                    'error': None
+                    "log_type": f"corrupted_{i}",
+                    "formids_found": len(formids),
+                    "plugins_found": len(plugins),
+                    "patterns_matched": len(matches),
+                    "processing_time": processing_time,
+                    "error": None,
                 })
 
             except Exception as e:
-                processing_results.append({
-                    'log_type': f'corrupted_{i}',
-                    'error': str(e),
-                    'error_type': type(e).__name__
-                })
+                processing_results.append({"log_type": f"corrupted_{i}", "error": str(e), "error_type": type(e).__name__})
 
-            performance_profiler.record_operation(
-                f"corrupted_log_{i}",
-                processing_time if 'processing_time' in locals() else 0.0,
-                0
-            )
+            performance_profiler.record_operation(f"corrupted_log_{i}", processing_time if "processing_time" in locals() else 0.0, 0)
 
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze error handling
-        successful_processing = sum(1 for r in processing_results if r['error'] is None)
+        successful_processing = sum(1 for r in processing_results if r["error"] is None)
         total_attempts = len(processing_results)
 
         # Most corrupted logs should be processed without crashing
@@ -117,8 +104,7 @@ class TestMalformedDataHandling:
         assert success_rate > 0.7, f"Too many failures processing corrupted logs: {success_rate:.1%}"
 
         # No critical system errors should occur
-        critical_errors = [r for r in processing_results
-                          if r.get('error') and 'system' in r['error'].lower()]
+        critical_errors = [r for r in processing_results if r.get("error") and "system" in r["error"].lower()]
         assert len(critical_errors) == 0, f"Critical system errors occurred: {critical_errors}"
 
     def test_malformed_formid_batch_processing(self, performance_profiler):
@@ -164,7 +150,7 @@ class TestMalformedDataHandling:
         total_errors = 0
 
         for i in range(0, len(malformed_formids), batch_size):
-            batch = malformed_formids[i:i + batch_size]
+            batch = malformed_formids[i : i + batch_size]
 
             start_time = time.time()
 
@@ -179,43 +165,37 @@ class TestMalformedDataHandling:
                 invalid_results = len(results) - valid_results
 
                 batch_results.append({
-                    'batch_index': i // batch_size,
-                    'total_items': len(batch),
-                    'valid_results': valid_results,
-                    'invalid_results': invalid_results,
-                    'processing_time': processing_time,
-                    'error': None
+                    "batch_index": i // batch_size,
+                    "total_items": len(batch),
+                    "valid_results": valid_results,
+                    "invalid_results": invalid_results,
+                    "processing_time": processing_time,
+                    "error": None,
                 })
 
                 total_processed += len(results)
 
             except Exception as e:
-                batch_results.append({
-                    'batch_index': i // batch_size,
-                    'error': str(e),
-                    'error_type': type(e).__name__
-                })
+                batch_results.append({"batch_index": i // batch_size, "error": str(e), "error_type": type(e).__name__})
                 total_errors += 1
 
             performance_profiler.record_operation(
-                f"malformed_formid_batch_{i//batch_size}",
-                processing_time if 'processing_time' in locals() else 0.0,
-                0
+                f"malformed_formid_batch_{i // batch_size}", processing_time if "processing_time" in locals() else 0.0, 0
             )
 
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze batch processing results
-        successful_batches = sum(1 for r in batch_results if r.get('error') is None)
+        successful_batches = sum(1 for r in batch_results if r.get("error") is None)
         total_batches = len(batch_results)
 
         # Most batches should process successfully despite malformed data
-        assert successful_batches / total_batches > 0.9, \
-            f"Too many batch processing failures: {successful_batches}/{total_batches}"
+        assert successful_batches / total_batches > 0.9, f"Too many batch processing failures: {successful_batches}/{total_batches}"
 
         # Should process a reasonable number of items
-        assert total_processed > len(malformed_formids) * 0.8, \
+        assert total_processed > len(malformed_formids) * 0.8, (
             f"Processed fewer items than expected: {total_processed}/{len(malformed_formids)}"
+        )
 
     def test_invalid_plugin_data_handling(self, tmp_path, performance_profiler):
         """
@@ -237,7 +217,6 @@ PLUGINS:
 [002] DLCRobot.esm
 [003 TestMod.esp   # Missing closing bracket
             """,
-
             # Invalid plugin indexes
             """Fallout 4 v1.10.163
 PLUGINS:
@@ -245,22 +224,25 @@ PLUGINS:
 [-01] DLCRobot.esm
 [abc] TestMod.esp
             """,
-
             # Extremely long plugin names
             """Fallout 4 v1.10.163
 PLUGINS:
-[001] """ + "A" * 10000 + """.esp
-[002] """ + "B" * 5000 + """.esm
+[001] """
+            + "A" * 10000
+            + """.esp
+[002] """
+            + "B" * 5000
+            + """.esm
             """,
-
             # Mixed encoding in plugin names
             """Fallout 4 v1.10.163
 PLUGINS:
 [001] Fallout4.esm
 [002] Tëst_Mød_Ñamé_Wïth_Ûnïcødé.esp
-[003] """ + "\uFFFD" * 100 + """.esp
+[003] """
+            + "\ufffd" * 100
+            + """.esp
             """,
-
             # Duplicate plugin indexes
             """Fallout 4 v1.10.163
 PLUGINS:
@@ -285,31 +267,22 @@ PLUGINS:
                 processing_time = time.time() - start_time
 
                 processing_results.append({
-                    'log_index': i,
-                    'plugins_extracted': len(plugins),
-                    'formids_extracted': len(formids),
-                    'processing_time': processing_time,
-                    'success': True
+                    "log_index": i,
+                    "plugins_extracted": len(plugins),
+                    "formids_extracted": len(formids),
+                    "processing_time": processing_time,
+                    "success": True,
                 })
 
             except Exception as e:
-                processing_results.append({
-                    'log_index': i,
-                    'error': str(e),
-                    'error_type': type(e).__name__,
-                    'success': False
-                })
+                processing_results.append({"log_index": i, "error": str(e), "error_type": type(e).__name__, "success": False})
 
-            performance_profiler.record_operation(
-                f"invalid_plugin_log_{i}",
-                processing_time if 'processing_time' in locals() else 0.0,
-                0
-            )
+            performance_profiler.record_operation(f"invalid_plugin_log_{i}", processing_time if "processing_time" in locals() else 0.0, 0)
 
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze plugin parsing error handling
-        successful_extractions = sum(1 for r in processing_results if r['success'])
+        successful_extractions = sum(1 for r in processing_results if r["success"])
         total_attempts = len(processing_results)
 
         # Should handle most invalid plugin structures gracefully
@@ -317,9 +290,9 @@ PLUGINS:
         assert success_rate > 0.8, f"Plugin parsing too fragile: {success_rate:.1%} success rate"
 
         # Processing times should remain reasonable even with invalid data
-        successful_results = [r for r in processing_results if r['success']]
+        successful_results = [r for r in processing_results if r["success"]]
         if successful_results:
-            avg_processing_time = sum(r['processing_time'] for r in successful_results) / len(successful_results)
+            avg_processing_time = sum(r["processing_time"] for r in successful_results) / len(successful_results)
             assert avg_processing_time < 1.0, f"Invalid plugin processing too slow: {avg_processing_time:.2f}s"
 
 
@@ -353,8 +326,8 @@ class TestResourceFailureRecovery:
             for i in range(5):
                 content = f"Valid crash log content {i}\nFormID: 0x{i:08X}\n"
                 file_path = tmp_path / f"valid_{i}.log"
-                file_path.write_text(content, encoding='utf-8')
-                test_files.append(('valid', file_path))
+                file_path.write_text(content, encoding="utf-8")
+                test_files.append(("valid", file_path))
 
             # Create files that will cause I/O issues
             # Locked file (simulate by creating and keeping handle open)
@@ -368,69 +341,55 @@ class TestResourceFailureRecovery:
             # Non-existent file
             nonexistent_file = tmp_path / "does_not_exist.log"
 
-            test_files.extend([
-                ('locked', locked_file),
-                ('permission', permission_file),
-                ('nonexistent', nonexistent_file)
-            ])
+            test_files.extend([("locked", locked_file), ("permission", permission_file), ("nonexistent", nonexistent_file)])
 
             def file_operation_with_recovery(thread_id: int, iteration: int, shared_data: list):
                 """Test file operations with error recovery."""
-                results = {'successful': 0, 'failed': 0, 'errors': []}
+                results = {"successful": 0, "failed": 0, "errors": []}
 
                 for file_type, file_path in test_files:
                     try:
-                        if file_type == 'locked':
+                        if file_type == "locked":
                             # Simulate locked file by trying to open with exclusive access
-                            with Path(file_path).open('r+') as f:
+                            with Path(file_path).open("r+") as f:
                                 content = bridge.run_async(io_core.read_file(file_path))
-                        elif file_type == 'permission':
+                        elif file_type == "permission":
                             # Make file read-only to simulate permission issues
                             if iteration == 0:  # Only on first iteration
                                 Path(file_path).chmod(0o444)  # Read-only
                             content = bridge.run_async(io_core.read_file(file_path))
-                        elif file_type == 'nonexistent':
+                        elif file_type == "nonexistent":
                             # Try to read non-existent file
                             content = bridge.run_async(io_core.read_file(file_path))
                         else:
                             # Normal file read
                             content = bridge.run_async(io_core.read_file(file_path))
 
-                        results['successful'] += 1
+                        results["successful"] += 1
 
                     except Exception as e:
-                        results['failed'] += 1
-                        results['errors'].append({
-                            'file_type': file_type,
-                            'error': str(e),
-                            'error_type': type(e).__name__
-                        })
+                        results["failed"] += 1
+                        results["errors"].append({"file_type": file_type, "error": str(e), "error_type": type(e).__name__})
 
                 shared_data.append(results)
-                return results['successful']
+                return results["successful"]
 
             # Run concurrent file operations with failures
             shared_results = []
             concurrency_results = concurrency_helper.create_contention_scenario(
-                target_func=file_operation_with_recovery,
-                num_threads=10,
-                iterations_per_thread=3,
-                shared_data=shared_results
+                target_func=file_operation_with_recovery, num_threads=10, iterations_per_thread=3, shared_data=shared_results
             )
 
             performance_stats = performance_profiler.stop_profiling()
 
             # Analyze recovery behavior
-            total_successful = sum(r['successful'] for r in shared_results)
-            total_failed = sum(r['failed'] for r in shared_results)
+            total_successful = sum(r["successful"] for r in shared_results)
+            total_failed = sum(r["failed"] for r in shared_results)
             total_attempts = total_successful + total_failed
 
             # Valid files should mostly succeed
             expected_successful = 10 * 3 * 5  # 10 threads * 3 iterations * 5 valid files
-            actual_successful_valid = sum(
-                sum(1 for error in r['errors'] if error.get('file_type') != 'valid')
-                for r in shared_results
-            )
+            actual_successful_valid = sum(sum(1 for error in r["errors"] if error.get("file_type") != "valid") for r in shared_results)
 
             # Most valid file operations should succeed
             valid_success_rate = (expected_successful - actual_successful_valid) / expected_successful
@@ -461,32 +420,18 @@ class TestResourceFailureRecovery:
                 result = pool.execute_query(f"SELECT * FROM logs WHERE id = {i}")
 
                 operation_time = time.time() - start_time
-                operation_results.append({
-                    'operation_id': i,
-                    'success': True,
-                    'time': operation_time,
-                    'error': None
-                })
+                operation_results.append({"operation_id": i, "success": True, "time": operation_time, "error": None})
 
             except Exception as e:
-                operation_results.append({
-                    'operation_id': i,
-                    'success': False,
-                    'error': str(e),
-                    'error_type': type(e).__name__
-                })
+                operation_results.append({"operation_id": i, "success": False, "error": str(e), "error_type": type(e).__name__})
 
-            performance_profiler.record_operation(
-                f"db_operation_{i}",
-                operation_time if 'operation_time' in locals() else 0.0,
-                0
-            )
+            performance_profiler.record_operation(f"db_operation_{i}", operation_time if "operation_time" in locals() else 0.0, 0)
 
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze failure and recovery patterns
-        successful_ops = [r for r in operation_results if r['success']]
-        failed_ops = [r for r in operation_results if not r['success']]
+        successful_ops = [r for r in operation_results if r["success"]]
+        failed_ops = [r for r in operation_results if not r["success"]]
 
         # Should have initial successes before failure
         assert len(successful_ops) >= 80, f"Too few successful operations: {len(successful_ops)}"
@@ -525,41 +470,22 @@ class TestResourceFailureRecovery:
                 processed = processor.process_batch(large_strings, "upper")
 
                 operation_time = time.time() - start_time
-                allocation_results.append({
-                    'operation_id': i,
-                    'success': True,
-                    'time': operation_time,
-                    'processed_count': len(processed)
-                })
+                allocation_results.append({"operation_id": i, "success": True, "time": operation_time, "processed_count": len(processed)})
 
                 # Clean up
                 simulator.release_memory(50 * 1024 * 1024)
                 del memory_chunk, large_strings, processed
 
             except MemoryError as e:
-                allocation_results.append({
-                    'operation_id': i,
-                    'success': False,
-                    'error': 'MemoryError',
-                    'message': str(e)
-                })
+                allocation_results.append({"operation_id": i, "success": False, "error": "MemoryError", "message": str(e)})
 
                 # Try to free some memory and continue
                 simulator.release_memory(25 * 1024 * 1024)  # Release some memory
 
             except Exception as e:
-                allocation_results.append({
-                    'operation_id': i,
-                    'success': False,
-                    'error': type(e).__name__,
-                    'message': str(e)
-                })
+                allocation_results.append({"operation_id": i, "success": False, "error": type(e).__name__, "message": str(e)})
 
-            performance_profiler.record_operation(
-                f"memory_pressure_{i}",
-                operation_time if 'operation_time' in locals() else 0.0,
-                0
-            )
+            performance_profiler.record_operation(f"memory_pressure_{i}", operation_time if "operation_time" in locals() else 0.0, 0)
 
             fresh_memory_tracker.take_measurement(f"operation_{i}")
 
@@ -567,8 +493,8 @@ class TestResourceFailureRecovery:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze memory pressure recovery
-        successful_ops = [r for r in allocation_results if r['success']]
-        memory_errors = [r for r in allocation_results if r.get('error') == 'MemoryError']
+        successful_ops = [r for r in allocation_results if r["success"]]
+        memory_errors = [r for r in allocation_results if r.get("error") == "MemoryError"]
 
         # Should have some successful operations before hitting memory limits
         assert len(successful_ops) > 10, f"Too few successful operations under memory pressure: {len(successful_ops)}"
@@ -609,19 +535,15 @@ class TestPartialFailureHandling:
 
             # Good files
             for i in range(10):
-                content = stress_data_generator.generate_large_crash_log(
-                    size_mb=1,
-                    plugin_count=20,
-                    formid_count=100
-                )
+                content = stress_data_generator.generate_large_crash_log(size_mb=1, plugin_count=20, formid_count=100)
                 file_path = tmp_path / f"good_file_{i}.log"
-                file_path.write_text(content, encoding='utf-8')
-                batch_files.append(('good', file_path))
+                file_path.write_text(content, encoding="utf-8")
+                batch_files.append(("good", file_path))
 
             # Problematic files
             problematic_files = [
                 # Corrupted content
-                ("Corrupted binary data: \x00\x01\x02\x03\xFF\xFE" * 1000, "corrupted_1.log"),
+                ("Corrupted binary data: \x00\x01\x02\x03\xff\xfe" * 1000, "corrupted_1.log"),
                 # Empty file
                 ("", "empty.log"),
                 # Extremely large file with minimal content
@@ -629,19 +551,19 @@ class TestPartialFailureHandling:
                 # File with only invalid FormIDs
                 ("FormID: 0xINVALID\nFormID: 0xBADDATA\n" * 1000, "invalid_formids.log"),
                 # Mixed encoding issues
-                ("Fallout 4\n" + "Tëst_Ñamé\uFFFD" * 500 + "\nFormID: 0x12345678", "encoding_issues.log")
+                ("Fallout 4\n" + "Tëst_Ñamé\ufffd" * 500 + "\nFormID: 0x12345678", "encoding_issues.log"),
             ]
 
             for content, filename in problematic_files:
                 file_path = tmp_path / filename
-                file_path.write_text(content, encoding='utf-8', errors='ignore')
-                batch_files.append(('problematic', file_path))
+                file_path.write_text(content, encoding="utf-8", errors="ignore")
+                batch_files.append(("problematic", file_path))
 
             # Process mixed batch
             processing_results = []
 
             for file_type, file_path in batch_files:
-                result = {'file_type': file_type, 'filename': file_path.name}
+                result = {"file_type": file_type, "filename": file_path.name}
 
                 try:
                     start_time = time.time()
@@ -656,36 +578,30 @@ class TestPartialFailureHandling:
                     processing_time = time.time() - start_time
 
                     result.update({
-                        'success': True,
-                        'processing_time': processing_time,
-                        'formids_found': len(formids),
-                        'plugins_found': len(plugins),
-                        'content_size': len(content)
+                        "success": True,
+                        "processing_time": processing_time,
+                        "formids_found": len(formids),
+                        "plugins_found": len(plugins),
+                        "content_size": len(content),
                     })
 
                 except Exception as e:
-                    result.update({
-                        'success': False,
-                        'error': str(e),
-                        'error_type': type(e).__name__
-                    })
+                    result.update({"success": False, "error": str(e), "error_type": type(e).__name__})
 
                 processing_results.append(result)
 
                 performance_profiler.record_operation(
-                    f"mixed_batch_{file_type}",
-                    processing_time if 'processing_time' in locals() else 0.0,
-                    0
+                    f"mixed_batch_{file_type}", processing_time if "processing_time" in locals() else 0.0, 0
                 )
 
             performance_stats = performance_profiler.stop_profiling()
 
             # Analyze partial failure handling
-            good_results = [r for r in processing_results if r['file_type'] == 'good']
-            problematic_results = [r for r in processing_results if r['file_type'] == 'problematic']
+            good_results = [r for r in processing_results if r["file_type"] == "good"]
+            problematic_results = [r for r in processing_results if r["file_type"] == "problematic"]
 
             # Most good files should process successfully
-            successful_good = sum(1 for r in good_results if r['success'])
+            successful_good = sum(1 for r in good_results if r["success"])
             good_success_rate = successful_good / len(good_results) if good_results else 0
 
             assert good_success_rate > 0.9, f"Good files success rate too low: {good_success_rate:.1%}"
@@ -695,8 +611,7 @@ class TestPartialFailureHandling:
             processed_count = len(processing_results)
             expected_count = len(batch_files)
 
-            assert processed_count == expected_count, \
-                f"Partial failures caused processing to stop: {processed_count}/{expected_count}"
+            assert processed_count == expected_count, f"Partial failures caused processing to stop: {processed_count}/{expected_count}"
 
     def test_concurrent_partial_failures(self, performance_profiler, concurrency_helper):
         """
@@ -714,17 +629,16 @@ class TestPartialFailureHandling:
             # Valid content
             "Fallout 4 v1.10.163\nFormID: 0x12345678\nPlugin: Test.esp\n" * 100,
             "Fallout 4 v1.10.163\nFormID: 0xABCDEF01\nPlugin: Another.esp\n" * 100,
-
             # Invalid content that should cause processing issues
-            "\x00\x01\x02\xFF\xFE" * 1000,  # Binary data
-            "FormID: 0xINVALID\n" * 1000,   # Invalid FormIDs
+            "\x00\x01\x02\xff\xfe" * 1000,  # Binary data
+            "FormID: 0xINVALID\n" * 1000,  # Invalid FormIDs
             "",  # Empty content
             "A" * 1000000,  # Extremely large content
         ]
 
         def concurrent_operation_with_failures(thread_id: int, iteration: int, shared_data: list):
             """Operation that may encounter failures."""
-            results = {'processed': 0, 'failed': 0, 'errors': []}
+            results = {"processed": 0, "failed": 0, "errors": []}
 
             for i, content in enumerate(test_contents):
                 try:
@@ -732,32 +646,29 @@ class TestPartialFailureHandling:
                     formids = processor.extract_formids(content)
                     plugins = processor.extract_plugins(content)
 
-                    results['processed'] += 1
+                    results["processed"] += 1
 
                 except Exception as e:
-                    results['failed'] += 1
-                    results['errors'].append({
-                        'content_index': i,
-                        'error': str(e)[:100],  # Limit error message length
-                        'error_type': type(e).__name__
+                    results["failed"] += 1
+                    results["errors"].append({
+                        "content_index": i,
+                        "error": str(e)[:100],  # Limit error message length
+                        "error_type": type(e).__name__,
                     })
 
             shared_data.append(results)
-            return results['processed']
+            return results["processed"]
 
         shared_results = []
         concurrency_results = concurrency_helper.create_contention_scenario(
-            target_func=concurrent_operation_with_failures,
-            num_threads=15,
-            iterations_per_thread=5,
-            shared_data=shared_results
+            target_func=concurrent_operation_with_failures, num_threads=15, iterations_per_thread=5, shared_data=shared_results
         )
 
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze concurrent partial failure handling
-        total_processed = sum(r['processed'] for r in shared_results)
-        total_failed = sum(r['failed'] for r in shared_results)
+        total_processed = sum(r["processed"] for r in shared_results)
+        total_failed = sum(r["failed"] for r in shared_results)
         total_operations = total_processed + total_failed
 
         # Should process valid content successfully
@@ -789,37 +700,33 @@ class TestPartialFailureHandling:
 
             # Good files that should process successfully
             for i in range(8):
-                content = stress_data_generator.generate_large_crash_log(
-                    size_mb=2,
-                    plugin_count=30,
-                    formid_count=200
-                )
+                content = stress_data_generator.generate_large_crash_log(size_mb=2, plugin_count=30, formid_count=200)
                 file_path = tmp_path / f"orchestrator_good_{i}.log"
-                file_path.write_text(content, encoding='utf-8')
-                test_files.append(('good', file_path))
+                file_path.write_text(content, encoding="utf-8")
+                test_files.append(("good", file_path))
 
             # Problematic files that may cause processing issues
             problematic_contents = [
                 # File with encoding issues
-                "Fallout 4 v1.10.163\n" + "\uFFFD" * 1000 + "\nFormID: 0x12345678\n",
+                "Fallout 4 v1.10.163\n" + "\ufffd" * 1000 + "\nFormID: 0x12345678\n",
                 # File with malformed structure
                 "Not a crash log\nRandom content\nNo structure\n" * 1000,
                 # Empty file
                 "",
                 # File with only invalid data
-                "0xINVALID\n" * 10000
+                "0xINVALID\n" * 10000,
             ]
 
             for i, content in enumerate(problematic_contents):
                 file_path = tmp_path / f"orchestrator_problem_{i}.log"
-                file_path.write_text(content, encoding='utf-8', errors='ignore')
-                test_files.append(('problematic', file_path))
+                file_path.write_text(content, encoding="utf-8", errors="ignore")
+                test_files.append(("problematic", file_path))
 
             # Process files individually to test orchestrator resilience
             orchestrator_results = []
 
             for file_type, file_path in test_files:
-                result = {'file_type': file_type, 'filename': file_path.name}
+                result = {"file_type": file_type, "filename": file_path.name}
 
                 try:
                     start_time = time.time()
@@ -829,50 +736,38 @@ class TestPartialFailureHandling:
 
                     processing_time = time.time() - start_time
 
-                    result.update({
-                        'success': True,
-                        'processing_time': processing_time,
-                        'result_available': processing_result is not None
-                    })
+                    result.update({"success": True, "processing_time": processing_time, "result_available": processing_result is not None})
 
                     # Try to extract some information if result is available
-                    if processing_result and hasattr(processing_result, 'formids'):
-                        result['formids_found'] = len(processing_result.formids)
+                    if processing_result and hasattr(processing_result, "formids"):
+                        result["formids_found"] = len(processing_result.formids)
 
                 except Exception as e:
-                    result.update({
-                        'success': False,
-                        'error': str(e),
-                        'error_type': type(e).__name__
-                    })
+                    result.update({"success": False, "error": str(e), "error_type": type(e).__name__})
 
                 orchestrator_results.append(result)
 
                 performance_profiler.record_operation(
-                    f"orchestrator_{file_type}",
-                    processing_time if 'processing_time' in locals() else 0.0,
-                    0
+                    f"orchestrator_{file_type}", processing_time if "processing_time" in locals() else 0.0, 0
                 )
 
             performance_stats = performance_profiler.stop_profiling()
 
             # Analyze orchestrator partial failure handling
-            good_files = [r for r in orchestrator_results if r['file_type'] == 'good']
-            problematic_files = [r for r in orchestrator_results if r['file_type'] == 'problematic']
+            good_files = [r for r in orchestrator_results if r["file_type"] == "good"]
+            problematic_files = [r for r in orchestrator_results if r["file_type"] == "problematic"]
 
             # Good files should mostly process successfully
-            successful_good = sum(1 for r in good_files if r['success'])
+            successful_good = sum(1 for r in good_files if r["success"])
             good_success_rate = successful_good / len(good_files) if good_files else 0
 
-            assert good_success_rate > 0.8, \
-                f"Orchestrator good file success rate too low: {good_success_rate:.1%}"
+            assert good_success_rate > 0.8, f"Orchestrator good file success rate too low: {good_success_rate:.1%}"
 
             # Orchestrator should handle all files (not stop on first failure)
             total_processed = len(orchestrator_results)
             total_expected = len(test_files)
 
-            assert total_processed == total_expected, \
-                f"Orchestrator stopped processing after failures: {total_processed}/{total_expected}"
+            assert total_processed == total_expected, f"Orchestrator stopped processing after failures: {total_processed}/{total_expected}"
 
             # No system crashes should occur
             # This is validated by the test completing successfully
@@ -904,12 +799,12 @@ class TestCascadingFailureRecovery:
         def resource_intensive_operation(thread_id: int, iteration: int, shared_data: dict):
             """Operation that consumes multiple resource types."""
             operation_result = {
-                'thread_id': thread_id,
-                'iteration': iteration,
-                'file_handles_used': 0,
-                'memory_allocated': 0,
-                'success': False,
-                'errors': []
+                "thread_id": thread_id,
+                "iteration": iteration,
+                "file_handles_used": 0,
+                "memory_allocated": 0,
+                "success": False,
+                "errors": [],
             }
 
             try:
@@ -918,19 +813,19 @@ class TestCascadingFailureRecovery:
                 for i in range(5):  # Try to allocate 5 handles
                     handle = simulator.allocate_file_handle()
                     handles.append(handle)
-                    operation_result['file_handles_used'] += 1
+                    operation_result["file_handles_used"] += 1
 
                 # Try to allocate memory
                 memory_chunks = []
                 for i in range(3):  # Try to allocate 3 chunks
                     chunk = simulator.allocate_memory(10 * 1024 * 1024)  # 10MB each
                     memory_chunks.append(chunk)
-                    operation_result['memory_allocated'] += 10 * 1024 * 1024
+                    operation_result["memory_allocated"] += 10 * 1024 * 1024
 
                 # Simulate processing work
                 time.sleep(0.01)  # Brief processing time
 
-                operation_result['success'] = True
+                operation_result["success"] = True
 
                 # Clean up resources
                 for _ in handles:
@@ -940,44 +835,42 @@ class TestCascadingFailureRecovery:
                     simulator.release_memory(10 * 1024 * 1024)
 
             except Exception as e:
-                operation_result['errors'].append({
-                    'error_type': type(e).__name__,
-                    'message': str(e)
-                })
+                operation_result["errors"].append({"error_type": type(e).__name__, "message": str(e)})
 
                 # Try to clean up any allocated resources
                 try:
-                    for _ in range(operation_result['file_handles_used']):
+                    for _ in range(operation_result["file_handles_used"]):
                         simulator.release_handle()
 
-                    if operation_result['memory_allocated'] > 0:
-                        simulator.release_memory(operation_result['memory_allocated'])
+                    if operation_result["memory_allocated"] > 0:
+                        simulator.release_memory(operation_result["memory_allocated"])
                 except:
                     pass  # Ignore cleanup errors
 
             # Store result in shared data with thread safety
             import threading
-            with threading.Lock():
-                if 'results' not in shared_data:
-                    shared_data['results'] = []
-                shared_data['results'].append(operation_result)
 
-            return 1 if operation_result['success'] else 0
+            with threading.Lock():
+                if "results" not in shared_data:
+                    shared_data["results"] = []
+                shared_data["results"].append(operation_result)
+
+            return 1 if operation_result["success"] else 0
 
         shared_state = {}
         results = concurrency_helper.create_contention_scenario(
             target_func=resource_intensive_operation,
             num_threads=20,  # High contention for resources
             iterations_per_thread=10,
-            shared_data=shared_state
+            shared_data=shared_state,
         )
 
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze cascading failure patterns
-        operation_results = shared_state.get('results', [])
+        operation_results = shared_state.get("results", [])
 
-        successful_operations = sum(1 for r in operation_results if r['success'])
+        successful_operations = sum(1 for r in operation_results if r["success"])
         failed_operations = len(operation_results) - successful_operations
 
         # Should have some successful operations before resource exhaustion
@@ -989,8 +882,8 @@ class TestCascadingFailureRecovery:
         # Collect error types to analyze cascading patterns
         error_types = {}
         for result in operation_results:
-            for error in result.get('errors', []):
-                error_type = error['error_type']
+            for error in result.get("errors", []):
+                error_type = error["error_type"]
                 error_types[error_type] = error_types.get(error_type, 0) + 1
 
         # Should see resource exhaustion errors
@@ -1013,41 +906,39 @@ class TestCascadingFailureRecovery:
             processor = classic_scanlog.utils.LogProcessor()
 
             # Create scenario with deliberate error injection
-            error_injection_points = [
-                'file_read',
-                'formid_extraction',
-                'plugin_extraction',
-                'pattern_matching'
-            ]
+            error_injection_points = ["file_read", "formid_extraction", "plugin_extraction", "pattern_matching"]
 
             containment_results = []
 
             for error_point in error_injection_points:
                 test_result = {
-                    'error_injection_point': error_point,
-                    'operations_attempted': 0,
-                    'operations_succeeded': 0,
-                    'contained_errors': 0,
-                    'system_errors': 0
+                    "error_injection_point": error_point,
+                    "operations_attempted": 0,
+                    "operations_succeeded": 0,
+                    "contained_errors": 0,
+                    "system_errors": 0,
                 }
 
                 # Create test file
-                test_content = f"""Fallout 4 v1.10.163
+                test_content = (
+                    f"""Fallout 4 v1.10.163
 FormID: 0x12345678
 Plugin: TestMod.esp
 Error injection point: {error_point}
-""" * 100
+"""
+                    * 100
+                )
 
                 test_file = tmp_path / f"error_injection_{error_point}.log"
-                test_file.write_text(test_content, encoding='utf-8')
+                test_file.write_text(test_content, encoding="utf-8")
 
                 # Attempt operations with error injection
                 for operation_id in range(20):  # 20 operations per injection point
-                    test_result['operations_attempted'] += 1
+                    test_result["operations_attempted"] += 1
 
                     try:
                         # File reading
-                        if error_point == 'file_read':
+                        if error_point == "file_read":
                             # Simulate file read error by trying to read non-existent file occasionally
                             if operation_id % 5 == 0:
                                 content = bridge.run_async(io_core.read_file(tmp_path / "nonexistent.log"))
@@ -1057,7 +948,7 @@ Error injection point: {error_point}
                             content = bridge.run_async(io_core.read_file(test_file))
 
                         # FormID extraction
-                        if error_point == 'formid_extraction':
+                        if error_point == "formid_extraction":
                             # Inject corrupted content for FormID extraction
                             if operation_id % 5 == 0:
                                 formids = processor.extract_formids("CORRUPTED_FORMID_DATA_0xINVALID")
@@ -1067,7 +958,7 @@ Error injection point: {error_point}
                             formids = processor.extract_formids(content)
 
                         # Plugin extraction
-                        if error_point == 'plugin_extraction':
+                        if error_point == "plugin_extraction":
                             # Inject corrupted content for plugin extraction
                             if operation_id % 5 == 0:
                                 plugins = processor.extract_plugins("CORRUPTED_PLUGIN_DATA")
@@ -1077,7 +968,7 @@ Error injection point: {error_point}
                             plugins = processor.extract_plugins(content)
 
                         # Pattern matching
-                        if error_point == 'pattern_matching':
+                        if error_point == "pattern_matching":
                             # Use invalid patterns occasionally
                             if operation_id % 5 == 0:
                                 patterns = ["\x00\x01\x02"]  # Invalid regex patterns
@@ -1089,20 +980,20 @@ Error injection point: {error_point}
                             patterns = ["FormID", "Plugin"]
                             matches = processor.find_all_patterns(content, patterns)
 
-                        test_result['operations_succeeded'] += 1
+                        test_result["operations_succeeded"] += 1
 
                     except Exception as e:
                         # Categorize error as contained vs system error
                         error_message = str(e).lower()
-                        if any(keyword in error_message for keyword in ['file', 'formid', 'plugin', 'pattern']):
-                            test_result['contained_errors'] += 1
+                        if any(keyword in error_message for keyword in ["file", "formid", "plugin", "pattern"]):
+                            test_result["contained_errors"] += 1
                         else:
-                            test_result['system_errors'] += 1
+                            test_result["system_errors"] += 1
 
                     performance_profiler.record_operation(
                         f"error_containment_{error_point}_{operation_id}",
                         0.001,  # Minimal time for error cases
-                        0
+                        0,
                     )
 
                 containment_results.append(test_result)
@@ -1111,26 +1002,24 @@ Error injection point: {error_point}
 
             # Analyze error containment
             for result in containment_results:
-                error_point = result['error_injection_point']
+                error_point = result["error_injection_point"]
 
                 # Should have attempted all operations
-                assert result['operations_attempted'] == 20, \
-                    f"Not all operations attempted for {error_point}"
+                assert result["operations_attempted"] == 20, f"Not all operations attempted for {error_point}"
 
                 # Should have some successful operations (error injection is intermittent)
-                assert result['operations_succeeded'] > 10, \
+                assert result["operations_succeeded"] > 10, (
                     f"Too few successful operations for {error_point}: {result['operations_succeeded']}"
+                )
 
                 # Errors should be contained (not propagate to system level)
-                total_errors = result['contained_errors'] + result['system_errors']
+                total_errors = result["contained_errors"] + result["system_errors"]
                 if total_errors > 0:
-                    containment_rate = result['contained_errors'] / total_errors
-                    assert containment_rate > 0.8, \
-                        f"Poor error containment for {error_point}: {containment_rate:.1%}"
+                    containment_rate = result["contained_errors"] / total_errors
+                    assert containment_rate > 0.8, f"Poor error containment for {error_point}: {containment_rate:.1%}"
 
                 # System errors should be minimal
-                assert result['system_errors'] < 5, \
-                    f"Too many system errors for {error_point}: {result['system_errors']}"
+                assert result["system_errors"] < 5, f"Too many system errors for {error_point}: {result['system_errors']}"
 
 
 if __name__ == "__main__":

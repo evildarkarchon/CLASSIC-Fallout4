@@ -53,11 +53,7 @@ class TestMainWindow(ScanOperationsMixin, QMainWindow):
 
     def _show_scan_error_dialog(self, title, message, details):
         """Override to track dialog creation."""
-        self.last_error_dialog = {
-            "title": title,
-            "message": message,
-            "details": details
-        }
+        self.last_error_dialog = {"title": title, "message": message, "details": details}
         # Call parent to test actual dialog creation
         super()._show_scan_error_dialog(title, message, details)
 
@@ -77,8 +73,10 @@ class TestScanErrorDialogIntegration:
     @pytest.fixture
     def mock_scan_failure(self):
         """Mock a scan that always fails."""
+
         def _perform_scan_mock(*args, **kwargs):
             raise RuntimeError("Simulated scan failure")
+
         return _perform_scan_mock
 
     def test_crash_logs_worker_error_triggers_dialog(self, main_window, qtbot, mock_scan_failure):
@@ -118,6 +116,7 @@ class TestScanErrorDialogIntegration:
 
     def test_game_files_worker_error_triggers_dialog(self, main_window, qtbot):
         """Test that game files worker error triggers error dialog display."""
+
         def _process_mock(*args, **kwargs):
             raise OSError("Failed to write results")
 

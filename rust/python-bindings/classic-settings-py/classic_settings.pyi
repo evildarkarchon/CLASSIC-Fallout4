@@ -34,12 +34,11 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import Any
 
 __version__: str
 
-
-def load_settings_sync(key: str, path: str) -> List[dict[str, Any]]:
+def load_settings_sync(key: str, path: str) -> list[dict[str, Any]]:
     """Load YAML settings synchronously.
 
     Loads a YAML file, caches it with the given key, and returns the parsed
@@ -62,8 +61,7 @@ def load_settings_sync(key: str, path: str) -> List[dict[str, Any]]:
         'value'
     """
 
-
-async def load_settings_async(key: str, path: str) -> List[dict[str, Any]]:
+async def load_settings_async(key: str, path: str) -> list[dict[str, Any]]:
     """Load YAML settings asynchronously.
 
     Loads a YAML file asynchronously, caches it with the given key, and returns
@@ -87,8 +85,7 @@ async def load_settings_async(key: str, path: str) -> List[dict[str, Any]]:
         'value'
     """
 
-
-def load_batch_sync(paths: List[str]) -> int:
+def load_batch_sync(paths: list[str]) -> int:
     """Load multiple YAML files in batch (synchronous).
 
     Loads multiple YAML files and caches them. Each path becomes its own cache key.
@@ -109,8 +106,7 @@ def load_batch_sync(paths: List[str]) -> int:
         Loaded 2 files
     """
 
-
-async def load_batch_async(paths: List[str]) -> int:
+async def load_batch_async(paths: list[str]) -> int:
     """Load multiple YAML files in batch (asynchronous).
 
     Loads multiple YAML files concurrently and caches them. Each path becomes
@@ -132,8 +128,7 @@ async def load_batch_async(paths: List[str]) -> int:
         Loaded 2 files
     """
 
-
-def get_cached(key: str) -> Optional[List[dict[str, Any]]]:
+def get_cached(key: str) -> list[dict[str, Any]] | None:
     """Get cached settings by key.
 
     Retrieves cached YAML documents by key. Returns None if the key is not in the cache.
@@ -151,7 +146,6 @@ def get_cached(key: str) -> Optional[List[dict[str, Any]]]:
         True
     """
 
-
 def is_cached(key: str) -> bool:
     """Check if a key exists in the cache.
 
@@ -168,7 +162,6 @@ def is_cached(key: str) -> bool:
         >>> is_cached("nonexistent")
         False
     """
-
 
 def invalidate(key: str) -> bool:
     """Invalidate (remove) a cached entry.
@@ -189,7 +182,6 @@ def invalidate(key: str) -> bool:
         False
     """
 
-
 def clear_cache() -> None:
     """Clear all cached settings.
 
@@ -203,7 +195,6 @@ def clear_cache() -> None:
         0
     """
 
-
 def cache_size() -> int:
     """Get the number of cached entries.
 
@@ -216,8 +207,7 @@ def cache_size() -> int:
         1
     """
 
-
-def cache_keys() -> List[str]:
+def cache_keys() -> list[str]:
     """Get all cache keys.
 
     Returns:

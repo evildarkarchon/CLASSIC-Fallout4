@@ -10,6 +10,7 @@ from ClassicLib.AsyncUtil import get_encoding_detection_available
 
 pytestmark = pytest.mark.unit
 
+
 class TestAsyncEncodingDetection:
     """Test cases for async encoding detection utilities."""
 

@@ -20,6 +20,7 @@ _classic_scangame: ModuleType | None = None
 
 try:
     import classic_scangame
+
     _classic_scangame = classic_scangame
     _RUST_AVAILABLE = True
 except ImportError:
@@ -45,6 +46,7 @@ def get_ba2_scanner() -> Any:
         assert _classic_scangame is not None
         return _classic_scangame.BA2Scanner()
     from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+
     return BA2Scanner()
 
 
@@ -58,6 +60,7 @@ def get_config_duplicate_detector() -> Any:
         assert _classic_scangame is not None
         return _classic_scangame.ConfigDuplicateDetector()
     from ClassicLib.ScanGame.core.config_duplicate_fallback import ConfigDuplicateDetector
+
     return ConfigDuplicateDetector()
 
 
@@ -71,14 +74,11 @@ def get_unpacked_scanner() -> Any:
         assert _classic_scangame is not None
         return _classic_scangame.UnpackedScanner()
     from ClassicLib.ScanGame.core.unpacked_fallback import UnpackedScanner
+
     return UnpackedScanner()
 
 
-def get_log_processor(
-    catch_errors: list[str],
-    ignore_files: list[str],
-    ignore_errors: list[str]
-) -> Any:
+def get_log_processor(catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]) -> Any:
     """Get LogProcessor implementation (Rust or Python fallback).
 
     Args:
@@ -93,6 +93,7 @@ def get_log_processor(
         assert _classic_scangame is not None
         return _classic_scangame.LogProcessor(catch_errors, ignore_files, ignore_errors)
     from ClassicLib.ScanGame.core.log_fallback import LogProcessor
+
     return LogProcessor(catch_errors, ignore_files, ignore_errors)
 
 
@@ -109,6 +110,7 @@ def get_ini_validator(game_name: str) -> Any:
         assert _classic_scangame is not None
         return _classic_scangame.IniValidator(game_name)
     from ClassicLib.ScanGame.core.ini_fallback import IniValidator
+
     return IniValidator(game_name)
 
 
@@ -130,15 +132,12 @@ def get_crashgen_checker(plugins_path: Path, crashgen_name: str) -> Any:
         assert _classic_scangame is not None
         return _classic_scangame.CrashgenChecker(plugins_path, crashgen_name)
     from ClassicLib.ScanGame.CheckCrashgen import CrashgenChecker
+
     # Python implementation gets these from settings, ignores arguments
     return CrashgenChecker()
 
 
-def get_xse_checker(
-    plugins_path: Path,
-    is_vr_mode: bool = False,
-    game_version: Any = None
-) -> Any:
+def get_xse_checker(plugins_path: Path, is_vr_mode: bool = False, game_version: Any = None) -> Any:
     """Get XseChecker implementation (Rust or Python fallback).
 
     Args:
@@ -155,6 +154,7 @@ def get_xse_checker(
             game_version = _classic_scangame.GameVersion.Original
         return _classic_scangame.XseChecker(plugins_path, is_vr_mode, game_version)
     from ClassicLib.ScanGame.core.xse_fallback import GameVersion, XseChecker
+
     if game_version is None:
         game_version = GameVersion.Original
     return XseChecker(plugins_path, is_vr_mode, game_version)
@@ -170,11 +170,7 @@ def get_rust_status() -> dict[str, Any]:
         - components: list[str] - Available Rust components
     """
     if not _RUST_AVAILABLE:
-        return {
-            "available": False,
-            "version": None,
-            "components": []
-        }
+        return {"available": False, "version": None, "components": []}
 
     components = [
         "BA2Scanner",
@@ -183,11 +179,7 @@ def get_rust_status() -> dict[str, Any]:
         "LogProcessor",
         "IniValidator",
         "CrashgenChecker",
-        "XseChecker"
+        "XseChecker",
     ]
 
-    return {
-        "available": True,
-        "version": getattr(_classic_scangame, "__version__", "unknown"),
-        "components": components
-    }
+    return {"available": True, "version": getattr(_classic_scangame, "__version__", "unknown"), "components": components}

@@ -6,6 +6,7 @@ This module includes functionality to determine the correct Address Library vers
 game mode (VR or non-VR) and to validate the presence of the appropriate plugins for the game.
 It provides user-friendly messages to guide the resolution of compatibility issues.
 """
+
 from pathlib import Path
 from typing import TypedDict
 
@@ -31,6 +32,7 @@ class AddressLibVersionInfo(TypedDict):
         url (str): The URL with more information about the library or its
             version.
     """
+
     version_const: Version
     filename: str
     description: str

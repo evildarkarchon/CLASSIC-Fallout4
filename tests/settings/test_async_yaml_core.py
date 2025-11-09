@@ -151,5 +151,5 @@ class TestAsyncYamlSettingsCore:
         """Test performance metrics tracking."""
         # Metrics tracking is not implemented in the core
         # This test should check cache state instead
-        assert hasattr(async_yaml_core, 'cache')
-        assert hasattr(async_yaml_core.cache, 'settings_cache')
+        assert hasattr(async_yaml_core, "cache")
+        assert hasattr(async_yaml_core.cache, "settings_cache")

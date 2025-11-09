@@ -218,9 +218,7 @@ class PluginAnalyzer:
         plugin_limit_triggered = False
         limit_check_disabled = False
         if game_version and version_current:
-            plugin_limit_triggered, limit_check_disabled = self.check_plugin_limit(
-                segment_plugins, game_version, version_current
-            )
+            plugin_limit_triggered, limit_check_disabled = self.check_plugin_limit(segment_plugins, game_version, version_current)
 
         # Process each plugin entry (universal parsing logic)
         for entry in segment_plugins:
@@ -275,9 +273,7 @@ class PluginAnalyzer:
         relevant_lines: list[str] = [line for line in segment_callstack_lower if "modified by:" not in line]
 
         # Filter out ignored plugins before pattern compilation
-        plugins_to_match = frozenset(
-            plugin for plugin in crashlog_plugins_lower if plugin not in self.lower_plugins_ignore
-        )
+        plugins_to_match = frozenset(plugin for plugin in crashlog_plugins_lower if plugin not in self.lower_plugins_ignore)
 
         # Early return if no plugins to match
         if not plugins_to_match:

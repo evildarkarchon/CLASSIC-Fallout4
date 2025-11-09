@@ -51,6 +51,7 @@ def settings_dialog(app):
 
     # Clean up message handler
 
+
 @pytest.fixture
 def reset_settings():
     """Reset settings to default values after test."""

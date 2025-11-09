@@ -193,12 +193,6 @@ class UpdateManagerMixin:
 
         Args:
             is_up_to_date: A boolean value indicating whether the current version is up to date.
-
-        Raises:
-            None
-
-        Returns:
-            None
         """
         if is_up_to_date:
             QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)

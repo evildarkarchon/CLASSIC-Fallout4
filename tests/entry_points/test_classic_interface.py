@@ -29,11 +29,7 @@ class TestClassicInterface:
 
     @patch("CLASSIC_Interface.SetupCoordinator")
     @patch("CLASSIC_Interface.QApplication")
-    def test_main_entry_point_initialization(
-        self,
-        mock_qapp: Mock,
-        mock_setup_coordinator: Mock
-    ) -> None:
+    def test_main_entry_point_initialization(self, mock_qapp: Mock, mock_setup_coordinator: Mock) -> None:
         """Test that the main entry point initializes correctly."""
         # Arrange
         mock_app_instance = MagicMock()
@@ -54,6 +50,7 @@ class TestClassicInterface:
                 import importlib
 
                 import CLASSIC_Interface
+
                 importlib.reload(CLASSIC_Interface)
 
         # Assert
@@ -67,11 +64,7 @@ class TestClassicInterface:
     @patch("CLASSIC_Interface.yaml_settings")
     @patch("CLASSIC_Interface.classic_settings")
     def test_main_window_initialization(
-        self,
-        mock_classic_settings: Mock,
-        mock_yaml_settings: Mock,
-        mock_init_msg_handler: Mock,
-        mock_global_registry: Mock
+        self, mock_classic_settings: Mock, mock_yaml_settings: Mock, mock_init_msg_handler: Mock, mock_global_registry: Mock
     ) -> None:
         """Test MainWindow initialization and component setup."""
         from PySide6.QtWidgets import QApplication
@@ -134,10 +127,7 @@ class TestClassicInterface:
     @patch("CLASSIC_Interface.yaml_settings")
     @patch("CLASSIC_Interface.GlobalRegistry")
     def test_main_window_update_check_timer(
-        self,
-        mock_global_registry: Mock,
-        mock_yaml_settings: Mock,
-        mock_classic_settings: Mock
+        self, mock_global_registry: Mock, mock_yaml_settings: Mock, mock_classic_settings: Mock
     ) -> None:
         """Test update check timer initialization."""
         from PySide6.QtCore import QTimer
@@ -171,11 +161,7 @@ class TestClassicInterface:
     @patch("CLASSIC_Interface.yaml_settings")
     @patch("CLASSIC_Interface.GlobalRegistry")
     def test_main_window_close_event(
-        self,
-        mock_global_registry: Mock,
-        mock_yaml_settings: Mock,
-        mock_classic_settings: Mock,
-        mock_logger: Mock
+        self, mock_global_registry: Mock, mock_yaml_settings: Mock, mock_classic_settings: Mock, mock_logger: Mock
     ) -> None:
         """Test proper cleanup during window close."""
         from PySide6.QtWidgets import QApplication
@@ -237,11 +223,7 @@ class TestClassicInterface:
 
     @patch("CLASSIC_Interface.SetupCoordinator")
     @patch("CLASSIC_Interface.QApplication")
-    def test_keyboard_interrupt_handling(
-        self,
-        mock_qapp: Mock,
-        mock_setup_coordinator: Mock
-    ) -> None:
+    def test_keyboard_interrupt_handling(self, mock_qapp: Mock, mock_setup_coordinator: Mock) -> None:
         """Test proper handling of keyboard interrupt."""
         # Arrange
         mock_app_instance = MagicMock()
@@ -254,6 +236,7 @@ class TestClassicInterface:
                 import importlib
 
                 import CLASSIC_Interface
+
                 importlib.reload(CLASSIC_Interface)
 
         # Should exit with code 1 on KeyboardInterrupt
@@ -264,11 +247,7 @@ class TestClassicInterface:
     @patch("CLASSIC_Interface.SetupCoordinator")
     @patch("CLASSIC_Interface.QApplication")
     def test_unhandled_exception_handling(
-        self,
-        mock_qapp: Mock,
-        mock_setup_coordinator: Mock,
-        mock_msgbox: Mock,
-        mock_msg_error: Mock
+        self, mock_qapp: Mock, mock_setup_coordinator: Mock, mock_msgbox: Mock, mock_msg_error: Mock
     ) -> None:
         """Test proper handling of unhandled exceptions during startup."""
         # Arrange
@@ -283,6 +262,7 @@ class TestClassicInterface:
                 import importlib
 
                 import CLASSIC_Interface
+
                 importlib.reload(CLASSIC_Interface)
 
         # Assert
@@ -293,12 +273,7 @@ class TestClassicInterface:
     @patch("CLASSIC_Interface.GlobalRegistry")
     @patch("CLASSIC_Interface.classic_settings")
     @patch("CLASSIC_Interface.yaml_settings")
-    def test_thread_manager_initialization(
-        self,
-        mock_yaml_settings: Mock,
-        mock_classic_settings: Mock,
-        mock_global_registry: Mock
-    ) -> None:
+    def test_thread_manager_initialization(self, mock_yaml_settings: Mock, mock_classic_settings: Mock, mock_global_registry: Mock) -> None:
         """Test that thread manager is properly initialized."""
         from PySide6.QtWidgets import QApplication
 

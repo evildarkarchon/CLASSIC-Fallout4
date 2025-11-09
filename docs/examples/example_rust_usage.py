@@ -41,12 +41,12 @@ def main():
     print(f"  Loaded: {rust_info.get('loaded', False)}")
     print(f"  In PyInstaller: {rust_info.get('in_pyinstaller', False)}")
 
-    if rust_info.get('path'):
+    if rust_info.get("path"):
         print(f"  Extension Path: {rust_info['path']}")
 
-    if rust_info.get('search_paths'):
+    if rust_info.get("search_paths"):
         print("  Search Paths Checked:")
-        for path in rust_info['search_paths']:
+        for path in rust_info["search_paths"]:
             print(f"    - {path}")
 
     print()

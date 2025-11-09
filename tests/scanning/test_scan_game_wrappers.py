@@ -92,6 +92,7 @@ class TestSyncWrappers:
 
                 # Call the sync adapter
                 import CLASSIC_ScanGame
+
                 result = CLASSIC_ScanGame.scan_mods_archived()
 
                 # Verify core was instantiated

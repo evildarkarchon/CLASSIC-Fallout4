@@ -278,7 +278,9 @@ class TestRustFileIOCore:
         assert "Large file content" in content
         assert len(content) > 10_000_000  # Should be ~11MB
 
-    @pytest.mark.skip(reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing.")
+    @pytest.mark.skip(
+        reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing."
+    )
     @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_header_parsing(self, mock_dds_file):
@@ -298,7 +300,9 @@ class TestRustFileIOCore:
         assert dimensions is not None
         assert dimensions == (2048, 1024)  # (width, height)
 
-    @pytest.mark.skip(reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing.")
+    @pytest.mark.skip(
+        reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing."
+    )
     @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_header_invalid_dimensions(self, mock_invalid_dds_file):
@@ -316,7 +320,9 @@ class TestRustFileIOCore:
         assert dimensions is not None
         assert dimensions == (2047, 1023)  # Odd dimensions
 
-    @pytest.mark.skip(reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing.")
+    @pytest.mark.skip(
+        reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing."
+    )
     @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_batch_processing(self, tmp_path):

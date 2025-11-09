@@ -5,6 +5,7 @@ detailed guidance and warnings based on parsed data and configuration settings.
 This module includes functions for scanning the Wrye Bash report, parsing the content,
 and presenting summarized or actionable information for users regarding their plugins.
 """
+
 from pathlib import Path
 
 # noinspection PyProtectedMember

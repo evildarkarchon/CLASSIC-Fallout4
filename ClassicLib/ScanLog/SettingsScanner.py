@@ -5,6 +5,7 @@ This module provides fragment-returning versions of all settings scanning functi
 replacing the mutable list pattern with immutable fragment composition.
 """
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ClassicLib.ScanLog.fragments import ReportFragment
@@ -90,10 +91,9 @@ class SettingsScannerFragments:
             )
 
         # Validate main memory manager configuration
-        mem_manager_enabled = crashgen.get("MemoryManager", False)
+        mem_manager_enabled = bool(crashgen.get("MemoryManager"))
         self._validate_memory_config(
-            mem_manager_enabled, has_xcell, has_baka_scrapheap,
-            self.yamldata.crashgen_name, add_success, add_warning
+            mem_manager_enabled, has_xcell, has_baka_scrapheap, self.yamldata.crashgen_name, add_success, add_warning
         )
 
         # Check X-Cell specific settings
@@ -102,9 +102,9 @@ class SettingsScannerFragments:
 
         return ReportFragment.from_lines(lines)
 
+    @staticmethod
     def _validate_memory_config(
-        self, mem_enabled: bool, has_xcell: bool, has_baka: bool,
-        crashgen_name: str, add_success: callable, add_warning: callable
+        mem_enabled: bool, has_xcell: bool, has_baka: bool, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]
     ) -> None:
         """Validate memory manager configuration based on installed mods."""
         # Create configuration tuple for cleaner logic
@@ -114,25 +114,25 @@ class SettingsScannerFragments:
         config_handlers = {
             (True, True, False): lambda: add_warning(
                 "X-Cell is installed, but MemoryManager parameter is set to TRUE",
-                f"Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell."
+                f"Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.",
             ),
             (True, False, True): lambda: add_warning(
                 f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
-                f"Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}."
+                f"Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}.",
             ),
             (True, False, False): lambda: add_success(
                 f"Memory Manager parameter is correctly configured in your {crashgen_name} settings!"
             ),
             (False, True, True): lambda: add_warning(
                 "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell",
-                "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell."
+                "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.",
             ),
             (False, True, False): lambda: add_success(
                 f"Memory Manager parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
             ),
             (False, False, True): lambda: add_warning(
                 f"The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}",
-                f"Uninstall the Baka ScrapHeap Mod and open {crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance."
+                f"Uninstall the Baka ScrapHeap Mod and open {crashgen_name}'s TOML file and change MemoryManager to TRUE, this improves performance.",
             ),
         }
 
@@ -141,9 +141,8 @@ class SettingsScannerFragments:
         if handler:
             handler()
 
-    def _validate_xcell_settings(
-        self, crashgen: dict, crashgen_name: str, add_success: callable, add_warning: callable
-    ) -> None:
+    @staticmethod
+    def _validate_xcell_settings(crashgen: dict, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]) -> None:
         """Validate X-Cell specific memory settings."""
         memory_settings = {
             "HavokMemorySystem": "Havok Memory System",
@@ -156,12 +155,10 @@ class SettingsScannerFragments:
             if crashgen.get(setting_key):
                 add_warning(
                     f"X-Cell is installed, but {setting_key} parameter is set to TRUE",
-                    f"Open {crashgen_name}'s TOML file and change {setting_key} to FALSE, this prevents conflicts with X-Cell."
+                    f"Open {crashgen_name}'s TOML file and change {setting_key} to FALSE, this prevents conflicts with X-Cell.",
                 )
             else:
-                add_success(
-                    f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
-                )
+                add_success(f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!")
 
     def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: "Version | None" = None) -> ReportFragment:
         """

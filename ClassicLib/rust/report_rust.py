@@ -175,7 +175,7 @@ class RustAcceleratedReportFragment:
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
 
         # Check if other is RustAcceleratedReportFragment or PyReportFragment
-        other_use_rust = getattr(other, '_use_rust', False)
+        other_use_rust = getattr(other, "_use_rust", False)
         result._use_rust = self._use_rust and other_use_rust
 
         if result._use_rust:
@@ -186,7 +186,7 @@ class RustAcceleratedReportFragment:
             self_py = PyReportFragment.from_lines(self._fragment.to_list()) if self._use_rust else self._fragment  # type: ignore[union-attr,assignment]
 
             # Handle both RustAcceleratedReportFragment and PyReportFragment
-            if hasattr(other, '_fragment'):
+            if hasattr(other, "_fragment"):
                 other_py = PyReportFragment.from_lines(other._fragment.to_list()) if other_use_rust else other._fragment  # type: ignore[union-attr,assignment]
             else:
                 # other is already a PyReportFragment
@@ -550,9 +550,7 @@ class RustAcceleratedReportGenerator:
 
             warn_outdated = f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***"
 
-            result._fragment = self._generator.generate_error_section(
-                main_error, crashgen_version, crashgen_name, is_latest, warn_outdated
-            )
+            result._fragment = self._generator.generate_error_section(main_error, crashgen_version, crashgen_name, is_latest, warn_outdated)
         else:
             # Python implementation uses the original signature
             result._fragment = self._generator.generate_error_section(
@@ -583,7 +581,8 @@ class RustAcceleratedReportGenerator:
 
         return result
 
-    def generate_suspect_section_header(self) -> RustAcceleratedReportFragment:
+    @staticmethod
+    def generate_suspect_section_header() -> RustAcceleratedReportFragment:
         """
         Generates a section header for reporting known crash messages, errors, and suspects.
 
@@ -603,7 +602,8 @@ class RustAcceleratedReportGenerator:
 
         return result
 
-    def generate_suspect_found_footer(self, found_suspect: bool) -> RustAcceleratedReportFragment:
+    @staticmethod
+    def generate_suspect_found_footer(found_suspect: bool) -> RustAcceleratedReportFragment:
         """
         Generates a footer message indicating whether suspects were detected.
 
@@ -633,7 +633,8 @@ class RustAcceleratedReportGenerator:
 
         return result
 
-    def generate_settings_section_header(self) -> RustAcceleratedReportFragment:
+    @staticmethod
+    def generate_settings_section_header() -> RustAcceleratedReportFragment:
         """
         Generates a section header for reporting settings-related issues.
 
@@ -653,7 +654,8 @@ class RustAcceleratedReportGenerator:
 
         return result
 
-    def generate_mod_check_header(self, check_type: str) -> RustAcceleratedReportFragment:
+    @staticmethod
+    def generate_mod_check_header(check_type: str) -> RustAcceleratedReportFragment:
         """
         Generates a report fragment header for mod checks based on the provided check type.
 
@@ -676,7 +678,8 @@ class RustAcceleratedReportGenerator:
 
         return result
 
-    def generate_plugin_suspect_header(self) -> RustAcceleratedReportFragment:
+    @staticmethod
+    def generate_plugin_suspect_header() -> RustAcceleratedReportFragment:
         """
         Generates a header fragment for reports related to plugin-related errors.
 
@@ -696,7 +699,8 @@ class RustAcceleratedReportGenerator:
 
         return result
 
-    def generate_formid_section_header(self) -> RustAcceleratedReportFragment:
+    @staticmethod
+    def generate_formid_section_header() -> RustAcceleratedReportFragment:
         """
         Generates a section header for FormID checks.
 
@@ -716,7 +720,8 @@ class RustAcceleratedReportGenerator:
 
         return result
 
-    def generate_record_section_header(self) -> RustAcceleratedReportFragment:
+    @staticmethod
+    def generate_record_section_header() -> RustAcceleratedReportFragment:
         """
         Generates a section header for checking named records.
 
@@ -776,6 +781,7 @@ class ParallelReportProcessor:
         """
         if self._use_rust and self._processor is not None:
             from classic_scanlog import ParallelReportProcessor
+
             return ParallelReportProcessor.process_batch(reports, processor_fn=None)
 
         # Python fallback - sequential processing
@@ -801,6 +807,7 @@ class ParallelReportProcessor:
         """
         if self._use_rust and self._processor is not None and all(f._use_rust for f in fragments):
             from classic_scanlog import ParallelReportProcessor
+
             # Extract the Rust ReportFragment instances from the wrappers
             # Type ignore needed because _fragment is a union type, but we've checked _use_rust
             rust_fragments = [f._fragment for f in fragments]  # type: ignore[misc]

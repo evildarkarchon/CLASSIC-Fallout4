@@ -93,9 +93,7 @@ class TestMessage:
 
     def test_message_with_target(self):
         """Test message creation with target."""
-        msg = classic_message.Message.with_target(
-            "GUI message", classic_message.MessageType.Info, classic_message.MessageTarget.Gui
-        )
+        msg = classic_message.Message.with_target("GUI message", classic_message.MessageType.Info, classic_message.MessageTarget.Gui)
         assert msg.content() == "GUI message"
         assert msg.target() == classic_message.MessageTarget.Gui
 
@@ -212,9 +210,7 @@ class TestIntegration:
     def test_message_routing_workflow(self):
         """Test complete message routing workflow."""
         # Create messages for different targets
-        gui_msg = classic_message.Message.with_target(
-            "GUI message", classic_message.MessageType.Info, classic_message.MessageTarget.Gui
-        )
+        gui_msg = classic_message.Message.with_target("GUI message", classic_message.MessageType.Info, classic_message.MessageTarget.Gui)
         cli_msg = classic_message.Message.with_target(
             "CLI message", classic_message.MessageType.Info, classic_message.MessageTarget.Console
         )

@@ -12,12 +12,12 @@ This file contains e2e tests that test complete workflows from entry to output.
 # 3. Never use AsyncMock for methods called through AsyncBridge
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
-
 import asyncio
 
 import pytest
 
 pytestmark = pytest.mark.e2e
+
 
 class TestAsyncProcessingPattern:
     """Test async processing patterns"""
@@ -27,7 +27,6 @@ class TestAsyncProcessingPattern:
         """Test concurrent processing with semaphore for rate limiting"""
 
         class AsyncProcessor:
-
             def __init__(self, max_concurrent=3):
                 self.semaphore = asyncio.Semaphore(max_concurrent)
                 self.processed_count = 0
@@ -41,6 +40,7 @@ class TestAsyncProcessingPattern:
             async def process_batch(self, items):
                 tasks = [self.process_item(item) for item in items]
                 return await asyncio.gather(*tasks)
+
         processor = AsyncProcessor(max_concurrent=2)
         items = [1, 2, 3, 4, 5]
         results = await processor.process_batch(items)
@@ -55,11 +55,13 @@ class TestAsyncProcessingPattern:
 
             async def process_item(item):
                 if item == 3:
-                    raise ValueError(f'Error processing {item}')
+                    raise ValueError(f"Error processing {item}")
                 return item * 2
+
             tasks = [process_item(item) for item in items]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             return [r for r in results if not isinstance(r, Exception)]
+
         items = [1, 2, 3, 4, 5]
         results = await process_with_errors(items)
         assert results == [2, 4, 8, 10]
@@ -69,7 +71,6 @@ class TestAsyncProcessingPattern:
         """Test progress tracking in async processing"""
 
         class ProgressProcessor:
-
             def __init__(self):
                 self.progress = 0
                 self.total = 0
@@ -88,16 +89,19 @@ class TestAsyncProcessingPattern:
                 self.total = len(items)
                 tasks = [self.process_item(item) for item in items]
                 return await asyncio.gather(*tasks)
+
         processor = ProgressProcessor()
         progress_updates = []
 
         async def track_progress(current, total):
             progress_updates.append((current, total))
+
         processor.progress_callback = track_progress
         results = await processor.process_all([1, 2, 3])
         assert results == [2, 4, 6]
         assert len(progress_updates) > 0
         assert progress_updates[-1] == (3, 3)
+
 
 class TestAsyncUtilityPatterns:
     """Test async utility patterns"""
@@ -109,7 +113,7 @@ class TestAsyncUtilityPatterns:
         async def process_in_batches(items, processor, batch_size=2):
             results = []
             for i in range(0, len(items), batch_size):
-                batch = items[i:i + batch_size]
+                batch = items[i : i + batch_size]
                 batch_tasks = [processor(item) for item in batch]
                 batch_results = await asyncio.gather(*batch_tasks)
                 results.extend(batch_results)
@@ -118,6 +122,7 @@ class TestAsyncUtilityPatterns:
         async def process_item(item):
             await asyncio.sleep(0.01)
             return item * 2
+
         items = [1, 2, 3, 4, 5]
         results = await process_in_batches(items, process_item, batch_size=2)
         assert results == [2, 4, 6, 8, 10]

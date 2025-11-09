@@ -58,6 +58,7 @@ from ClassicLib.integration.detector import detect_component
 if TYPE_CHECKING:
     from classic_config import YamlData
     from classic_scanlog import AnalysisConfig, AnalysisResult, Orchestrator
+
     RUST_AVAILABLE: bool
 else:
     # Centralized detection of Rust orchestrator components
@@ -166,9 +167,7 @@ class ClassicOrchestrator:
             instructions to install required modules.
         """
         if not RUST_AVAILABLE:
-            raise RuntimeError(
-                "Rust components not available. Install classic_scanlog and classic_config modules."
-            )
+            raise RuntimeError("Rust components not available. Install classic_scanlog and classic_config modules.")
 
         # Get YamlData from factory (uses Rust if available, Python fallback otherwise)
         self.yamldata = get_yamldata()
@@ -210,8 +209,8 @@ class ClassicOrchestrator:
     def process_crash_logs_batch(
         self,
         log_paths: list[Path],
-        max_concurrent: int = 10,
-        progress_callback: Callable[[str], None] | None = None,
+        max_concurrent: int = 10,  # noqa: ARG002
+        progress_callback: Callable[[str], None] | None = None,  # noqa: ARG002
     ) -> BatchAnalysisResult:
         """
         Processes a batch of crash log files in parallel and returns the analysis results.
@@ -222,13 +221,19 @@ class ClassicOrchestrator:
 
         Args:
             log_paths (List[Path]): A list of Path objects representing the paths to the crash logs.
-            max_concurrent (int): Maximum number of concurrent processes allowed during analysis.
-            progress_callback (Optional[Callable[[str], None]]): Optional callback function to provide
-                progress updates. The function takes a single string argument.
+            max_concurrent (int): Reserved for future use. Currently, Rust Orchestrator determines
+                parallelism automatically based on CPU count.
+            progress_callback (Optional[Callable[[str], None]]): Reserved for future use. Progress
+                tracking will be implemented in a future version.
 
         Returns:
             BatchAnalysisResult: An object containing the processed results for each log, the total
             processing time (in milliseconds), and the parallelism factor.
+
+        Note:
+            The Rust Orchestrator currently handles parallelism internally based on available CPU cores.
+            The max_concurrent and progress_callback parameters are reserved for future enhancements
+            and are kept in the signature for API stability.
         """
         import time
 
@@ -239,7 +244,6 @@ class ClassicOrchestrator:
 
         # Process logs in parallel using Orchestrator
         # Note: Rust Orchestrator handles parallelism internally based on CPU count
-        # max_concurrent and progress_callback are not yet supported in Rust implementation
         results = self.orchestrator.process_logs_batch(log_paths_str)
 
         total_time_ms = int((time.perf_counter() - start) * 1000)
@@ -276,11 +280,7 @@ class ClassicOrchestrator:
             str: A string that contains a readable summary of key attributes of the
             ClassicOrchestrator instance.
         """
-        return (
-            f"ClassicOrchestrator(game='{self.config.game}', "
-            f"vr_mode={self.config.vr_mode}, "
-            f"rust_available={RUST_AVAILABLE})"
-        )
+        return f"ClassicOrchestrator(game='{self.config.game}', vr_mode={self.config.vr_mode}, rust_available={RUST_AVAILABLE})"
 
 
 # Convenience function for quick processing

@@ -34,7 +34,7 @@ class MockRustModule:
             raise TypeError(f"Expected str, got {type(content)}")
         if len(content) > 1000000:  # 1MB limit
             raise self.FFIError("Content too large")
-        return {"parsed": True, "lines": content.count('\n')}
+        return {"parsed": True, "lines": content.count("\n")}
 
     def analyze_formid(self, formid: str, context: dict) -> dict:
         """Mock FormID analyzer."""
@@ -54,6 +54,7 @@ class TestFFIErrorConditions:
         self.rust_available = False
         try:
             import classic_scanlog
+
             self.rust_available = True
             self.rust_module = classic_scanlog
         except ImportError:
@@ -70,9 +71,7 @@ class TestFFIErrorConditions:
             parser.find_segments(None, "Buffout 4", "F4SE", "Fallout4.exe")
 
         # Test with empty values
-        game_ver, crashgen_ver, error, segments = parser.find_segments(
-            [], "Buffout 4", "F4SE", "Fallout4.exe"
-        )
+        game_ver, crashgen_ver, error, segments = parser.find_segments([], "Buffout 4", "F4SE", "Fallout4.exe")
         assert segments is not None  # Should return empty result, not crash
 
     def test_invalid_utf8_handling(self):
@@ -82,7 +81,7 @@ class TestFFIErrorConditions:
         io_core = get_file_io_core()
 
         # Create synthetic invalid UTF-8 data
-        invalid_utf8 = b'\xff\xfe\xfd\xfc'
+        invalid_utf8 = b"\xff\xfe\xfd\xfc"
 
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             temp_file.write(invalid_utf8)
@@ -111,9 +110,7 @@ class TestFFIErrorConditions:
         # Should handle large input gracefully
         try:
             lines = large_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             # Should either parse or raise memory error
             assert segments is not None
         except (MemoryError, RuntimeError, ValueError) as e:
@@ -160,9 +157,7 @@ class TestFFIErrorConditions:
                 # Each worker processes different synthetic data
                 content = f"Worker {worker_id} log line\n" * 100
                 lines = content.splitlines()
-                game_ver, crashgen_ver, error, segments = parser.find_segments(
-                    lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                )
+                game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 results.append((worker_id, segments))
             except Exception as e:
                 errors.append((worker_id, e))
@@ -179,9 +174,7 @@ class TestFFIErrorConditions:
             thread.join()
 
         # Should complete without crashes
-        assert len(errors) == 0 or all(
-            isinstance(e[1], (RuntimeError, ValueError)) for e in errors
-        )
+        assert len(errors) == 0 or all(isinstance(e[1], (RuntimeError, ValueError)) for e in errors)
         # At least some should succeed
         assert len(results) > 0
 
@@ -230,9 +223,7 @@ class TestFFIErrorConditions:
         for test_str in test_strings:
             try:
                 lines = test_str.splitlines() if test_str else []
-                game_ver, crashgen_ver, error, segments = parser.find_segments(
-                    lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                )
+                game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 # Should handle all string types
                 assert segments is not None
             except (ValueError, UnicodeDecodeError):
@@ -273,7 +264,7 @@ class TestFFIErrorConditions:
         def failing_callback(data):
             raise RuntimeError("Callback failed")
 
-        with patch.object(parser, 'set_callback', create=True) as mock_set:
+        with patch.object(parser, "set_callback", create=True) as mock_set:
             try:
                 parser.set_callback(failing_callback)
                 # Process data that would trigger callback
@@ -362,9 +353,7 @@ class TestFFIErrorConditions:
 
             # Parser should still work after interruption
             lines = ["test"]
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             assert segments is not None
 
     def test_dll_injection_prevention(self):
@@ -402,9 +391,7 @@ class TestFFIErrorConditions:
 
         try:
             lines = nested_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             # Should handle deep nesting without stack overflow
             assert segments is not None
         except (RecursionError, RuntimeError, ValueError) as e:

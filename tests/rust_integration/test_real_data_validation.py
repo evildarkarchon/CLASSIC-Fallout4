@@ -69,7 +69,7 @@ class TestRealCrashLogValidation:
             for log_file in log_files:
                 try:
                     # Read first few lines to categorize
-                    with Path(log_file).open('r', encoding='utf-8', errors='ignore') as f:
+                    with Path(log_file).open("r", encoding="utf-8", errors="ignore") as f:
                         first_lines = [f.readline().strip() for _ in range(10)]
 
                     # Determine crash log type based on content
@@ -146,14 +146,39 @@ class TestRealCrashLogValidation:
 
         # Comprehensive record patterns (real Fallout 4 record types)
         mock_yaml.record_patterns = [
-            "TESForm", "BGSKeyword", "TESObjectSTAT", "TESObjectREFR",
-            "BGSConstructibleObject", "TESQuest", "BGSScene", "BGSStoryManagerBranchNode",
-            "BGSStoryManagerQuestNode", "BGSStoryManagerEventNode", "TESFaction",
-            "TESRace", "TESClass", "TESNPC", "TESObjectWEAP", "TESObjectARMO",
-            "TESObjectMISC", "TESAmmo", "BGSNote", "TESKey", "AlchemyItem",
-            "BGSIdleMarker", "BGSConstructibleObject", "BGSHeadPart", "TESEyes",
-            "TESPackage", "BGSPerk", "BGSBodyPartData", "BGSAddonNode",
-            "ActorValueInfo", "BGSRadiationStage", "BGSCameraShot", "BGSCameraPath"
+            "TESForm",
+            "BGSKeyword",
+            "TESObjectSTAT",
+            "TESObjectREFR",
+            "BGSConstructibleObject",
+            "TESQuest",
+            "BGSScene",
+            "BGSStoryManagerBranchNode",
+            "BGSStoryManagerQuestNode",
+            "BGSStoryManagerEventNode",
+            "TESFaction",
+            "TESRace",
+            "TESClass",
+            "TESNPC",
+            "TESObjectWEAP",
+            "TESObjectARMO",
+            "TESObjectMISC",
+            "TESAmmo",
+            "BGSNote",
+            "TESKey",
+            "AlchemyItem",
+            "BGSIdleMarker",
+            "BGSConstructibleObject",
+            "BGSHeadPart",
+            "TESEyes",
+            "TESPackage",
+            "BGSPerk",
+            "BGSBodyPartData",
+            "BGSAddonNode",
+            "ActorValueInfo",
+            "BGSRadiationStage",
+            "BGSCameraShot",
+            "BGSCameraPath",
         ]
 
         return mock_yaml
@@ -246,8 +271,8 @@ PLUGINS:
     def _read_crash_log(self, log_path: Path) -> list[str]:
         """Read a crash log file and return it as a list of lines."""
         try:
-            with Path(log_path).open('r', encoding='utf-8', errors='ignore') as f:
-                return [line.rstrip('\n\r') for line in f]
+            with Path(log_path).open("r", encoding="utf-8", errors="ignore") as f:
+                return [line.rstrip("\n\r") for line in f]
         except Exception as e:
             pytest.skip(f"Could not read crash log {log_path}: {e}")
 
@@ -264,7 +289,7 @@ PLUGINS:
         formid_analyzer = get_formid_analyzer(mock_yamldata, True, True)
 
         # Pattern to match valid FormIDs
-        formid_pattern = re.compile(r'0x[0-9A-Fa-f]{8}')
+        formid_pattern = re.compile(r"0x[0-9A-Fa-f]{8}")
 
         for log_category, log_path in real_crash_logs.items():
             crash_data = self._read_crash_log(log_path)
@@ -287,8 +312,7 @@ PLUGINS:
                         try:
                             formid_int = int(hex_value, 16)
                             # FormIDs should be in valid range (0x00000000 to 0xFFFFFFFF)
-                            assert 0 <= formid_int <= 0xFFFFFFFF, \
-                                f"FormID out of range: {hex_value}"
+                            assert 0 <= formid_int <= 0xFFFFFFFF, f"FormID out of range: {hex_value}"
                         except ValueError:
                             pytest.fail(f"Invalid hexadecimal FormID: {hex_value}")
 
@@ -298,8 +322,7 @@ PLUGINS:
 
                 # At least 70% of extracted FormIDs should be valid
                 validity_ratio = valid_formids / len(formids) if formids else 0
-                assert validity_ratio >= 0.7, \
-                    f"Low FormID validity ratio for {log_category}: {validity_ratio:.2f}"
+                assert validity_ratio >= 0.7, f"Low FormID validity ratio for {log_category}: {validity_ratio:.2f}"
 
     def test_plugin_analysis_with_real_load_orders(self, real_crash_logs, mock_yamldata):
         """
@@ -314,7 +337,7 @@ PLUGINS:
         plugin_analyzer = get_plugin_analyzer(mock_yamldata)
 
         # Expected file extensions for Fallout 4 plugins
-        valid_extensions = {'.esm', '.esp', '.esl'}
+        valid_extensions = {".esm", ".esp", ".esl"}
 
         for log_category, log_path in real_crash_logs.items():
             crash_data = self._read_crash_log(log_path)
@@ -335,8 +358,7 @@ PLUGINS:
 
                     # Plugin name should have valid extension
                     plugin_path = Path(plugin_name)
-                    assert plugin_path.suffix.lower() in valid_extensions, \
-                        f"Invalid plugin extension: {plugin_name}"
+                    assert plugin_path.suffix.lower() in valid_extensions, f"Invalid plugin extension: {plugin_name}"
 
                     # Essential plugins should be present
                     if len(plugins_dict) > 5:  # Only check substantial load orders
@@ -344,8 +366,9 @@ PLUGINS:
                         plugin_names = list(plugins_dict.values())
 
                         for essential in essential_plugins:
-                            assert any(essential in plugin for plugin in plugin_names), \
+                            assert any(essential in plugin for plugin in plugin_names), (
                                 f"Missing essential plugin {essential} in {log_category}"
+                            )
 
                 # Validate load order structure
                 hex_ids = [int(hex_id, 16) for hex_id in plugins_dict.keys() if hex_id != "FE"]
@@ -389,8 +412,7 @@ PLUGINS:
                 # Most matches should be valid record types
                 if len(matches) > 0:
                     validity_ratio = valid_records / len(matches)
-                    assert validity_ratio >= 0.5, \
-                        f"Low record validity ratio for {log_category}: {validity_ratio:.2f}"
+                    assert validity_ratio >= 0.5, f"Low record validity ratio for {log_category}: {validity_ratio:.2f}"
 
     def test_cross_validation_rust_python(self, real_crash_logs, mock_yamldata):
         """
@@ -407,8 +429,7 @@ PLUGINS:
             pytest.skip("No Rust components available for cross-validation")
 
         # Use first substantial crash log for detailed comparison
-        substantial_logs = {k: v for k, v in real_crash_logs.items()
-                           if v.stat().st_size > 10000}  # > 10KB
+        substantial_logs = {k: v for k, v in real_crash_logs.items() if v.stat().st_size > 10000}  # > 10KB
 
         if not substantial_logs:
             pytest.skip("No substantial crash logs available for cross-validation")
@@ -427,26 +448,26 @@ PLUGINS:
                 crash_data=crash_data,
                 crashgen_name=mock_yamldata.crashgen_name,
                 xse_acronym=mock_yamldata.xse_acronym,
-                game_root_name=mock_yamldata.game_root_name
+                game_root_name=mock_yamldata.game_root_name,
             )
 
             # Get Python results by forcing fallback
-            with patch.object(rust_parser, '_use_rust', False):
+            with patch.object(rust_parser, "_use_rust", False):
                 python_result = rust_parser.find_segments(
                     crash_data=crash_data,
                     crashgen_name=mock_yamldata.crashgen_name,
                     xse_acronym=mock_yamldata.xse_acronym,
-                    game_root_name=mock_yamldata.game_root_name
+                    game_root_name=mock_yamldata.game_root_name,
                 )
 
             # Compare structural consistency
-            assert len(rust_result) == len(python_result), \
-                "Rust and Python parser results have different structure"
+            assert len(rust_result) == len(python_result), "Rust and Python parser results have different structure"
 
             rust_segments = rust_result[3]
             python_segments = python_result[3]
-            assert len(rust_segments) == len(python_segments), \
+            assert len(rust_segments) == len(python_segments), (
                 f"Different segment counts: Rust={len(rust_segments)}, Python={len(python_segments)}"
+            )
 
             # Compare segment sizes (should be similar, allowing for minor differences)
             for i, (rust_seg, python_seg) in enumerate(zip(rust_segments, python_segments)):
@@ -455,8 +476,7 @@ PLUGINS:
 
                 if max_size > 0:
                     diff_ratio = size_diff / max_size
-                    assert diff_ratio < 0.2, \
-                        f"Segment {i} size difference too large: {diff_ratio:.2f}"
+                    assert diff_ratio < 0.2, f"Segment {i} size difference too large: {diff_ratio:.2f}"
 
     def test_edge_cases_and_malformed_data(self, real_crash_logs, mock_yamldata):
         """
@@ -477,17 +497,15 @@ PLUGINS:
             # Introduce various types of corruption to test robustness
             corrupted_variants = [
                 crash_data,  # Original
-                crash_data[:len(crash_data)//2],  # Truncated
+                crash_data[: len(crash_data) // 2],  # Truncated
                 ["CORRUPTED"] + crash_data[1:],  # Corrupted header
                 crash_data + ["EXTRA_GARBAGE", "MORE_CORRUPTION"],  # Extra data
                 [line.replace("FormID:", "CorruptedFormID:") for line in crash_data],  # Corrupted FormIDs
             ]
 
             for variant_name, variant_data in zip(
-                ["original", "truncated", "corrupt_header", "extra_data", "corrupt_formids"],
-                corrupted_variants
+                ["original", "truncated", "corrupt_header", "extra_data", "corrupt_formids"], corrupted_variants
             ):
-
                 # Test each available component with corrupted data
                 for component in available_components:
                     try:
@@ -497,7 +515,7 @@ PLUGINS:
                                 crash_data=variant_data,
                                 crashgen_name=mock_yamldata.crashgen_name,
                                 xse_acronym=mock_yamldata.xse_acronym,
-                                game_root_name=mock_yamldata.game_root_name
+                                game_root_name=mock_yamldata.game_root_name,
                             )
                             # Should return structured data even with corruption
                             assert len(result) == 4, f"Parser should return 4-tuple for {variant_name}"
@@ -528,10 +546,7 @@ PLUGINS:
 
                         is_controlled_error = any(keyword in error_msg for keyword in acceptable_errors)
                         if not is_controlled_error:
-                            pytest.fail(
-                                f"Component {component} crashed uncontrollably on {variant_name} "
-                                f"variant of {log_category}: {e}"
-                            )
+                            pytest.fail(f"Component {component} crashed uncontrollably on {variant_name} variant of {log_category}: {e}")
 
     def test_performance_with_varying_log_sizes(self, real_crash_logs, mock_yamldata):
         """
@@ -579,7 +594,7 @@ PLUGINS:
                             crash_data=crash_data,
                             crashgen_name=mock_yamldata.crashgen_name,
                             xse_acronym=mock_yamldata.xse_acronym,
-                            game_root_name=mock_yamldata.game_root_name
+                            game_root_name=mock_yamldata.game_root_name,
                         )
                     elif component == "formid_analyzer":
                         analyzer = get_formid_analyzer(mock_yamldata, True, True)
@@ -589,11 +604,7 @@ PLUGINS:
                         analyzer.loadorder_scan_log(crash_data)
 
                 key = f"{component}_{size_cat}"
-                performance_results[key] = {
-                    "time": timer.elapsed,
-                    "size_kb": size_kb,
-                    "lines": len(crash_data)
-                }
+                performance_results[key] = {"time": timer.elapsed, "size_kb": size_kb, "lines": len(crash_data)}
 
                 # Performance targets based on size
                 if size_cat == "small":
@@ -601,12 +612,11 @@ PLUGINS:
                 elif size_cat == "medium":
                     max_time = 0.05  # 50ms for medium logs
                 elif size_cat == "large":
-                    max_time = 0.2   # 200ms for large logs
+                    max_time = 0.2  # 200ms for large logs
                 else:  # xlarge
-                    max_time = 0.5   # 500ms for extra large logs
+                    max_time = 0.5  # 500ms for extra large logs
 
-                assert timer.elapsed < max_time, \
-                    f"{component} too slow for {size_cat} log: {timer.elapsed:.3f}s > {max_time}s"
+                assert timer.elapsed < max_time, f"{component} too slow for {size_cat} log: {timer.elapsed:.3f}s > {max_time}s"
 
         # Log performance summary
         logging.info("Performance results:")
@@ -639,11 +649,11 @@ class TestRealDataAccuracy:
 
         # Known FormID patterns to look for
         known_patterns = {
-            "base_game": re.compile(r'0x00[0-9A-Fa-f]{6}'),  # Base game FormIDs
-            "dlc_robot": re.compile(r'0x01[0-9A-Fa-f]{6}'),  # DLCRobot.esm
-            "dlc_workshop": re.compile(r'0x02[0-9A-Fa-f]{6}'), # DLCworkshop01.esm
-            "esl_formids": re.compile(r'0xFE[0-9A-Fa-f]{6}'), # ESL FormIDs
-            "high_id_esp": re.compile(r'0x[0-9A-Fa-f][1-9A-Fa-f][0-9A-Fa-f]{6}') # High ID ESPs
+            "base_game": re.compile(r"0x00[0-9A-Fa-f]{6}"),  # Base game FormIDs
+            "dlc_robot": re.compile(r"0x01[0-9A-Fa-f]{6}"),  # DLCRobot.esm
+            "dlc_workshop": re.compile(r"0x02[0-9A-Fa-f]{6}"),  # DLCworkshop01.esm
+            "esl_formids": re.compile(r"0xFE[0-9A-Fa-f]{6}"),  # ESL FormIDs
+            "high_id_esp": re.compile(r"0x[0-9A-Fa-f][1-9A-Fa-f][0-9A-Fa-f]{6}"),  # High ID ESPs
         }
 
         pattern_counts = dict.fromkeys(known_patterns, 0)
@@ -668,8 +678,7 @@ class TestRealDataAccuracy:
 
         # Should find at least base game FormIDs in most substantial logs
         if total_logs_processed > 0:
-            assert pattern_counts["base_game"] > 0, \
-                "Should find base game FormIDs in real crash logs"
+            assert pattern_counts["base_game"] > 0, "Should find base game FormIDs in real crash logs"
 
     def test_known_plugin_patterns(self, real_crash_logs, mock_yamldata):
         """
@@ -719,8 +728,7 @@ class TestRealDataAccuracy:
         # Should find base game in most load orders
         if total_load_orders > 0:
             base_game_ratio = pattern_findings["base_game"] / total_load_orders
-            assert base_game_ratio >= 0.8, \
-                f"Should find base game in most load orders: {base_game_ratio:.2f}"
+            assert base_game_ratio >= 0.8, f"Should find base game in most load orders: {base_game_ratio:.2f}"
 
     def test_crash_cause_correlation(self, real_crash_logs, mock_yamldata):
         """
@@ -769,13 +777,12 @@ class TestRealDataAccuracy:
                     "problematic_plugins": problematic_found,
                     "limit_triggered": limit_triggered,
                     "high_formid_count": high_formid_count,
-                    "high_plugin_count": high_plugin_count
+                    "high_plugin_count": high_plugin_count,
                 })
 
         # Analyze correlations
         if correlation_data:
-            logs_with_issues = sum(1 for data in correlation_data
-                                 if data["problematic_plugins"] or data["limit_triggered"])
+            logs_with_issues = sum(1 for data in correlation_data if data["problematic_plugins"] or data["limit_triggered"])
 
             logging.info("Crash cause correlation analysis:")
             logging.info(f"  Total logs analyzed: {len(correlation_data)}")
@@ -783,11 +790,13 @@ class TestRealDataAccuracy:
 
             for data in correlation_data:
                 if data["problematic_plugins"] or data["limit_triggered"]:
-                    logging.info(f"    {data['log_category']}: "
-                               f"FormIDs={data['formid_count']}, "
-                               f"Plugins={data['plugin_count']}, "
-                               f"Problematic={data['problematic_plugins']}, "
-                               f"LimitTriggered={data['limit_triggered']}")
+                    logging.info(
+                        f"    {data['log_category']}: "
+                        f"FormIDs={data['formid_count']}, "
+                        f"Plugins={data['plugin_count']}, "
+                        f"Problematic={data['problematic_plugins']}, "
+                        f"LimitTriggered={data['limit_triggered']}"
+                    )
 
         # Should be able to identify potential issues in substantial logs
         substantial_logs = [d for d in correlation_data if d["plugin_count"] > 10]

@@ -12,7 +12,6 @@ This file contains unit tests that test individual functions with mocked depende
 # 3. Never use AsyncMock for methods called through AsyncBridge
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
-
 import asyncio
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock
@@ -20,6 +19,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 class TestAsyncContextPattern:
     """Test async context manager patterns"""
@@ -29,7 +29,6 @@ class TestAsyncContextPattern:
         """Test custom async context manager implementation"""
 
         class AsyncComponent:
-
             def __init__(self):
                 self.initialized = False
                 self.cleaned_up = False
@@ -47,7 +46,7 @@ class TestAsyncContextPattern:
 
             async def cleanup(self):
                 for resource in self.resources:
-                    if hasattr(resource, 'close'):
+                    if hasattr(resource, "close"):
                         if asyncio.iscoroutinefunction(resource.close):
                             await resource.close()
                         else:
@@ -57,6 +56,7 @@ class TestAsyncContextPattern:
 
             def add_resource(self, resource):
                 self.resources.append(resource)
+
         async with AsyncComponent() as component:
             assert component.initialized
             mock_resource = AsyncMock()
@@ -73,20 +73,22 @@ class TestAsyncContextPattern:
 
         @asynccontextmanager
         async def managed_resource():
-            resource = {'active': True}
+            resource = {"active": True}
             try:
                 yield resource
             finally:
                 nonlocal cleanup_called
                 cleanup_called = True
-                resource['active'] = False
+                resource["active"] = False
+
         try:
             async with managed_resource() as resource:
-                assert resource['active']
-                raise ValueError('Test error')
+                assert resource["active"]
+                raise ValueError("Test error")
         except ValueError:
             pass
         assert cleanup_called
+
 
 class TestAsyncUtilityPatterns:
     """Test async utility patterns"""
@@ -101,11 +103,13 @@ class TestAsyncUtilityPatterns:
             async def bounded_task(task):
                 async with semaphore:
                     return await task
+
             return await asyncio.gather(*[bounded_task(t) for t in tasks])
 
         async def work_task(n):
             await asyncio.sleep(0.01)
             return n * 2
+
         tasks = [work_task(i) for i in range(5)]
         results = await gather_with_limit(tasks, limit=2)
         assert results == [0, 2, 4, 6, 8]
@@ -115,7 +119,6 @@ class TestAsyncUtilityPatterns:
         """Test async resource pool pattern"""
 
         class AsyncResourcePool:
-
             def __init__(self, factory, max_size=3):
                 self.factory = factory
                 self.max_size = max_size
@@ -149,12 +152,14 @@ class TestAsyncUtilityPatterns:
                     yield resource
                 finally:
                     await self.release(resource)
+
         resource_counter = 0
 
         async def create_resource():
             nonlocal resource_counter
             resource_counter += 1
-            return {'id': resource_counter}
+            return {"id": resource_counter}
+
         pool = AsyncResourcePool(create_resource, max_size=2)
         async with pool.get_resource() as resource1:
             assert resource1 is not None
@@ -167,7 +172,6 @@ class TestAsyncUtilityPatterns:
         """Test async caching pattern"""
 
         class AsyncCache:
-
             def __init__(self):
                 self.cache = {}
                 self.locks = {}
@@ -186,6 +190,7 @@ class TestAsyncUtilityPatterns:
                         value = compute_func()
                     self.cache[key] = value
                     return value
+
         cache = AsyncCache()
         compute_count = 0
 
@@ -193,13 +198,14 @@ class TestAsyncUtilityPatterns:
             nonlocal compute_count
             compute_count += 1
             await asyncio.sleep(0.01)
-            return 'computed_value'
-        result1 = await cache.get_or_compute('key1', expensive_computation)
-        assert result1 == 'computed_value'
+            return "computed_value"
+
+        result1 = await cache.get_or_compute("key1", expensive_computation)
+        assert result1 == "computed_value"
         assert compute_count == 1
-        result2 = await cache.get_or_compute('key1', expensive_computation)
-        assert result2 == 'computed_value'
+        result2 = await cache.get_or_compute("key1", expensive_computation)
+        assert result2 == "computed_value"
         assert compute_count == 1
-        result3 = await cache.get_or_compute('key2', expensive_computation)
-        assert result3 == 'computed_value'
+        result3 = await cache.get_or_compute("key2", expensive_computation)
+        assert result3 == "computed_value"
         assert compute_count == 2

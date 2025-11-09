@@ -149,8 +149,7 @@ class LogProcessor:
             f"\nLOG PATH > {log_file}\n\n",
         ]
 
-        for error in errors:
-            report.append(f"ERROR > {error}\n")
+        report.extend(f"ERROR > {error}\n" for error in errors)
 
         report.append(f"\n* TOTAL NUMBER OF DETECTED LOG ERRORS * : {len(errors)}\n\n")
 

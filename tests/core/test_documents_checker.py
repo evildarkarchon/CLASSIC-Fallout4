@@ -4,6 +4,7 @@ Test suite for ClassicLib/DocumentsChecker.py documents folder checking function
 This module contains tests for the DocumentsChecker class which validates
 game documents folder and configuration files.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 from unittest.mock import MagicMock, patch
 

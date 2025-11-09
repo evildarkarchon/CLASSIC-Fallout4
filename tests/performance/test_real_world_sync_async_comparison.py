@@ -4,6 +4,7 @@ Real-world sync vs async comparison performance tests.
 This module contains performance tests that directly compare synchronous and
 asynchronous processing patterns using real crash log data.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
 import time

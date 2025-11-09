@@ -15,7 +15,7 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 import classic_scanlog
 
 # Skip if utils module not yet implemented
-if not hasattr(classic_scanlog, 'utils'):
+if not hasattr(classic_scanlog, "utils"):
     pytest.skip("classic_scanlog.utils not yet implemented", allow_module_level=True)
 
 # Access utils as an attribute, not a submodule
@@ -25,7 +25,7 @@ StringProcessor = classic_scanlog.utils.StringProcessor
 
 # LogProcessor is not yet implemented - skip related tests
 LogProcessor = None
-if hasattr(classic_scanlog.utils, 'LogProcessor'):
+if hasattr(classic_scanlog.utils, "LogProcessor"):
     LogProcessor = classic_scanlog.utils.LogProcessor
 
 
@@ -294,11 +294,7 @@ class TestRustLogProcessor:
         assert all("ERROR" not in line for line in filtered)
 
         # Include WARNING and INFO, exclude DEBUG
-        filtered = processor.filter_lines(
-            lines,
-            include=["WARNING", "INFO"],
-            exclude=["DEBUG"]
-        )
+        filtered = processor.filter_lines(lines, include=["WARNING", "INFO"], exclude=["DEBUG"])
         assert len(filtered) == 2
 
     def test_segment_parsing(self, processor):
@@ -419,8 +415,7 @@ class TestRustPerformance:
         processor = LogProcessor()
 
         # Generate test data
-        lines = [f"ERROR: Message {i}" if i % 10 == 0 else f"INFO: Message {i}"
-                 for i in range(10000)]
+        lines = [f"ERROR: Message {i}" if i % 10 == 0 else f"INFO: Message {i}" for i in range(10000)]
 
         # Measure filtering time
         start = time.perf_counter()
@@ -490,18 +485,18 @@ class TestRustCoreClasses:
 
         # Test batch processing with validation
         formids = [
-            "0x12345678",    # Valid 8 hex digits with prefix
-            "0xABCDEF01",    # Valid 8 hex digits with prefix
-            "87654321",      # Valid 8 hex digits without prefix
-            "0xFF001234",    # Valid save file FormID (FF prefix)
-            "FF999999",      # Valid save file FormID without 0x
-            "123456789",     # Invalid: 9 hex digits (too long)
-            "0x123456789",   # Invalid: 9 hex digits with prefix (too long)
-            "FFFFFFFFF",     # Invalid: 9 hex digits (too long)
-            "invalid",       # Invalid: non-hex chars
-            "GHIJK",         # Invalid: non-hex chars
-            "0xZZZZ",        # Invalid: non-hex chars
-            "",              # Invalid: empty string
+            "0x12345678",  # Valid 8 hex digits with prefix
+            "0xABCDEF01",  # Valid 8 hex digits with prefix
+            "87654321",  # Valid 8 hex digits without prefix
+            "0xFF001234",  # Valid save file FormID (FF prefix)
+            "FF999999",  # Valid save file FormID without 0x
+            "123456789",  # Invalid: 9 hex digits (too long)
+            "0x123456789",  # Invalid: 9 hex digits with prefix (too long)
+            "FFFFFFFFF",  # Invalid: 9 hex digits (too long)
+            "invalid",  # Invalid: non-hex chars
+            "GHIJK",  # Invalid: non-hex chars
+            "0xZZZZ",  # Invalid: non-hex chars
+            "",  # Invalid: empty string
         ]
         results = processor.process_batch(formids)
 
@@ -548,12 +543,12 @@ class TestRustCoreClasses:
         processor = classic_scanlog.FormIDProcessor()
 
         formids = [
-            "0xFF001234",    # Save file FormID
-            "0x12345678",    # Regular FormID
-            "FF999999",      # Save file FormID without 0x
-            "87654321",      # Regular FormID without 0x
-            "123456789",     # Invalid: too long
-            "invalid",       # Invalid: non-hex
+            "0xFF001234",  # Save file FormID
+            "0x12345678",  # Regular FormID
+            "FF999999",  # Save file FormID without 0x
+            "87654321",  # Regular FormID without 0x
+            "123456789",  # Invalid: too long
+            "invalid",  # Invalid: non-hex
         ]
 
         results = processor.process_batch_with_metadata(formids)

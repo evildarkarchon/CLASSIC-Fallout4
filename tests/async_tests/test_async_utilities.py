@@ -48,7 +48,7 @@ PLUGINS:
 
     files: list[Path] = []
     for i in range(3):
-        log_file: Path = crash_logs_dir / f"crash-2023-01-{i+10:02d}-12-00-00.log"
+        log_file: Path = crash_logs_dir / f"crash-2023-01-{i + 10:02d}-12-00-00.log"
         log_file.write_text(content)
         files.append(log_file)
 
@@ -155,6 +155,7 @@ class TestAsyncUtilityFunctions:
         # Test concurrent processing
         async def process_file(file_path: Path) -> list[str]:
             import aiofiles
+
             async with aiofiles.open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = await f.read()
                 return content.splitlines()

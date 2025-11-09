@@ -34,11 +34,12 @@ class TestAsyncINIScanning:
             MockConfigCache.return_value = mock_cache
 
             # Mock the async helper functions
-            with patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=AsyncMock), \
-                 patch("ClassicLib.ScanGame.ScanModInis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync, \
-                 patch("ClassicLib.ScanGame.ScanModInis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect, \
-                 patch("ClassicLib.ScanGame.ScanModInis.check_duplicate_files"):
-
+            with (
+                patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=AsyncMock),
+                patch("ClassicLib.ScanGame.ScanModInis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync,
+                patch("ClassicLib.ScanGame.ScanModInis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect,
+                patch("ClassicLib.ScanGame.ScanModInis.check_duplicate_files"),
+            ):
                 mock_vsync.return_value = []
                 mock_detect.return_value = []  # No issues detected
                 result = await scan_mod_inis_async()
@@ -56,11 +57,12 @@ class TestAsyncINIScanning:
             mock_cache.duplicate_files = {}
             MockConfigCache.return_value = mock_cache
 
-            with patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=AsyncMock), \
-                 patch("ClassicLib.ScanGame.ScanModInis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync, \
-                 patch("ClassicLib.ScanGame.ScanModInis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect, \
-                 patch("ClassicLib.ScanGame.ScanModInis.check_duplicate_files"):
-
+            with (
+                patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=AsyncMock),
+                patch("ClassicLib.ScanGame.ScanModInis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync,
+                patch("ClassicLib.ScanGame.ScanModInis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect,
+                patch("ClassicLib.ScanGame.ScanModInis.check_duplicate_files"),
+            ):
                 # Mock VSync settings found
                 mock_vsync.return_value = ["enblocal.ini | SETTING: ForceVSync\n"]
                 mock_detect.return_value = []  # No issues detected
@@ -176,7 +178,7 @@ class TestConfigFileCacheAsync:
             mock_loop.run_in_executor.side_effect = [
                 b"[section]\nkey=value",  # File bytes
                 "utf-8",  # Encoding detection
-                (mock_config, "[section]\nkey=value")  # Config parsing result
+                (mock_config, "[section]\nkey=value"),  # Config parsing result
             ]
 
             await cache._load_config_async("test.ini")
@@ -262,9 +264,7 @@ class TestScanGameOptimizations:
             mock_get_loop.return_value = mock_loop
 
             # Mock executor to call our function directly
-            mock_loop.run_in_executor = AsyncMock(
-                side_effect=lambda executor, func: func()
-            )
+            mock_loop.run_in_executor = AsyncMock(side_effect=lambda executor, func: func())
 
             await core._check_dds_batch_async(dds_files[:10], issue_lists, issue_locks)
 

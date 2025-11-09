@@ -50,12 +50,14 @@ import psutil
 # Try to import memory profiler for advanced memory tracking
 try:
     from memory_profiler import memory_usage
+
     MEMORY_PROFILER_AVAILABLE = True
 except ImportError:
     MEMORY_PROFILER_AVAILABLE = False
     memory_usage = None
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class FFICall:
@@ -69,28 +71,29 @@ class FFICall:
 
     # Performance measurements
     wall_time: float = 0.0  # Total wall clock time
-    cpu_time: float = 0.0   # CPU time spent
+    cpu_time: float = 0.0  # CPU time spent
     gil_wait_time: float = 0.0  # Time waiting for GIL
 
     # Data transfer measurements
-    input_size: int = 0     # Size of input data in bytes
-    output_size: int = 0    # Size of output data in bytes
-    input_type: str = ""    # Type of input data (str, list, dict, etc.)
-    output_type: str = ""   # Type of output data
+    input_size: int = 0  # Size of input data in bytes
+    output_size: int = 0  # Size of output data in bytes
+    input_type: str = ""  # Type of input data (str, list, dict, etc.)
+    output_type: str = ""  # Type of output data
 
     # Memory measurements
     memory_before: float = 0.0  # Memory usage before call (MB)
-    memory_after: float = 0.0   # Memory usage after call (MB)
-    memory_peak: float = 0.0    # Peak memory during call (MB)
+    memory_after: float = 0.0  # Memory usage after call (MB)
+    memory_peak: float = 0.0  # Peak memory during call (MB)
 
     # Context information
-    call_stack_depth: int = 0   # Python call stack depth
+    call_stack_depth: int = 0  # Python call stack depth
     is_batch_operation: bool = False  # Whether this is a batch call
-    batch_size: int = 0         # Size of batch if applicable
+    batch_size: int = 0  # Size of batch if applicable
 
     # Error tracking
     error: str | None = None  # Error message if call failed
-    success: bool = True         # Whether call completed successfully
+    success: bool = True  # Whether call completed successfully
+
 
 @dataclass
 class FFIProfileStats:
@@ -127,6 +130,7 @@ class FFIProfileStats:
     batch_opportunities: list[str] = field(default_factory=list)
     inefficient_transfers: list[str] = field(default_factory=list)
 
+
 class FFIProfiler:
     """
     Comprehensive FFI profiler for analyzing Python↔Rust boundary performance.
@@ -138,11 +142,13 @@ class FFIProfiler:
     4. Data marshaling cost analysis
     """
 
-    def __init__(self,
-                 rust_module_patterns: list[str] | None = None,
-                 memory_sampling_interval: float = 0.01,
-                 enable_gil_monitoring: bool = True,
-                 max_call_history: int = 10000):
+    def __init__(
+        self,
+        rust_module_patterns: list[str] | None = None,
+        memory_sampling_interval: float = 0.01,
+        enable_gil_monitoring: bool = True,
+        max_call_history: int = 10000,
+    ):
         """
         Initialize the FFI profiler.
 
@@ -153,9 +159,7 @@ class FFIProfiler:
             max_call_history: Maximum number of calls to store in history
         """
         # Configuration
-        self.rust_module_patterns = rust_module_patterns or [
-            "classic_core", "_rust", "rust_", "pyo3_", "maturin_"
-        ]
+        self.rust_module_patterns = rust_module_patterns or ["classic_core", "_rust", "rust_", "pyo3_", "maturin_"]
         self.memory_sampling_interval = memory_sampling_interval
         self.enable_gil_monitoring = enable_gil_monitoring
         self.max_call_history = max_call_history
@@ -196,19 +200,19 @@ class FFIProfiler:
         """
         try:
             # Check module name
-            module_name = frame.f_globals.get('__name__', '')
+            module_name = frame.f_globals.get("__name__", "")
             for pattern in self.rust_module_patterns:
                 if pattern in module_name:
                     return True
 
             # Check file path for compiled extensions
             filename = frame.f_code.co_filename
-            if filename.endswith(('.pyd', '.so', '.dylib')):
+            if filename.endswith((".pyd", ".so", ".dylib")):
                 return True
 
             # Check for PyO3/maturin indicators in function names
             func_name = frame.f_code.co_name
-            if any(indicator in func_name.lower() for indicator in ['rust_', 'pyo3_', '_rust']):
+            if any(indicator in func_name.lower() for indicator in ["rust_", "pyo3_", "_rust"]):
                 return True
 
             return False
@@ -234,7 +238,7 @@ class FFIProfiler:
                     size += self._get_data_size(k) + self._get_data_size(v)
             elif isinstance(obj, str):
                 # String marshaling has specific overhead
-                size += len(obj.encode('utf-8', errors='ignore'))
+                size += len(obj.encode("utf-8", errors="ignore"))
 
             return size
         except (RecursionError, MemoryError):
@@ -252,7 +256,7 @@ class FFIProfiler:
             obj_type += f"{{{len(obj)}}}"
         elif isinstance(obj, str):
             obj_type += f"({len(obj)}chars)"
-        elif hasattr(obj, '__len__'):
+        elif hasattr(obj, "__len__"):
             try:
                 obj_type += f"[{len(obj)}]"
             except:
@@ -325,7 +329,7 @@ class FFIProfiler:
             return None
 
         try:
-            if event == 'call' and self._is_rust_call(frame):
+            if event == "call" and self._is_rust_call(frame):
                 # Start of a Rust call
                 call_start = time.perf_counter()
                 call_start_cpu = time.process_time()
@@ -335,7 +339,7 @@ class FFIProfiler:
 
                 # Extract call information
                 func_name = frame.f_code.co_name
-                module_name = frame.f_globals.get('__name__', 'unknown')
+                module_name = frame.f_globals.get("__name__", "unknown")
                 thread_id = threading.get_ident()
                 call_stack_depth = len(traceback.extract_stack())
 
@@ -346,7 +350,7 @@ class FFIProfiler:
                 try:
                     # Look at function arguments in frame locals
                     for name, value in frame.f_locals.items():
-                        if not name.startswith('_'):  # Skip private variables
+                        if not name.startswith("_"):  # Skip private variables
                             input_size += self._get_data_size(value)
                             input_types.append(self._get_data_type(value))
                 except:
@@ -354,18 +358,18 @@ class FFIProfiler:
 
                 # Store call start info in frame for retrieval on return
                 frame.ffi_profile_data = {
-                    'start_time': call_start,
-                    'start_cpu': call_start_cpu,
-                    'memory_before': memory_before,
-                    'func_name': func_name,
-                    'module_name': module_name,
-                    'thread_id': thread_id,
-                    'input_size': input_size,
-                    'input_types': input_types,
-                    'call_stack_depth': call_stack_depth
+                    "start_time": call_start,
+                    "start_cpu": call_start_cpu,
+                    "memory_before": memory_before,
+                    "func_name": func_name,
+                    "module_name": module_name,
+                    "thread_id": thread_id,
+                    "input_size": input_size,
+                    "input_types": input_types,
+                    "call_stack_depth": call_stack_depth,
                 }
 
-            elif event == 'return' and hasattr(frame, 'ffi_profile_data'):
+            elif event == "return" and hasattr(frame, "ffi_profile_data"):
                 # End of a Rust call
                 call_end = time.perf_counter()
                 call_end_cpu = time.process_time()
@@ -375,8 +379,8 @@ class FFIProfiler:
                 profile_data = frame.ffi_profile_data
 
                 # Calculate timings
-                wall_time = call_end - profile_data['start_time']
-                cpu_time = call_end_cpu - profile_data['start_cpu']
+                wall_time = call_end - profile_data["start_time"]
+                cpu_time = call_end_cpu - profile_data["start_cpu"]
 
                 # Estimate output data size
                 output_size = 0
@@ -386,40 +390,39 @@ class FFIProfiler:
                     output_type = self._get_data_type(arg)
 
                 # Check for batch operations (heuristic: large input or multiple items)
-                is_batch = profile_data['input_size'] > 10000 or any(
-                    '[' in t and int(t.split('[')[1].split(']')[0]) > 10
-                    for t in profile_data['input_types'] if '[' in t
+                is_batch = profile_data["input_size"] > 10000 or any(
+                    "[" in t and int(t.split("[")[1].split("]")[0]) > 10 for t in profile_data["input_types"] if "[" in t
                 )
 
                 batch_size = 0
                 if is_batch:
                     # Try to estimate batch size from input types
-                    for input_type in profile_data['input_types']:
-                        if '[' in input_type:
+                    for input_type in profile_data["input_types"]:
+                        if "[" in input_type:
                             try:
-                                size_str = input_type.split('[')[1].split(']')[0]
+                                size_str = input_type.split("[")[1].split("]")[0]
                                 batch_size = max(batch_size, int(size_str))
                             except (ValueError, IndexError):
                                 pass
 
                 # Create FFI call record
                 ffi_call = FFICall(
-                    function_name=profile_data['func_name'],
-                    module_name=profile_data['module_name'],
-                    call_timestamp=profile_data['start_time'],
-                    thread_id=profile_data['thread_id'],
+                    function_name=profile_data["func_name"],
+                    module_name=profile_data["module_name"],
+                    call_timestamp=profile_data["start_time"],
+                    thread_id=profile_data["thread_id"],
                     wall_time=wall_time,
                     cpu_time=cpu_time,
-                    input_size=profile_data['input_size'],
+                    input_size=profile_data["input_size"],
                     output_size=output_size,
-                    input_type=', '.join(profile_data['input_types']) if profile_data['input_types'] else "unknown",
+                    input_type=", ".join(profile_data["input_types"]) if profile_data["input_types"] else "unknown",
                     output_type=output_type,
-                    memory_before=profile_data['memory_before'],
+                    memory_before=profile_data["memory_before"],
                     memory_after=memory_after,
-                    call_stack_depth=profile_data['call_stack_depth'],
+                    call_stack_depth=profile_data["call_stack_depth"],
                     is_batch_operation=is_batch,
                     batch_size=batch_size,
-                    success=True
+                    success=True,
                 )
 
                 # Record the call
@@ -430,7 +433,7 @@ class FFIProfiler:
                     self.call_times[func_key].append(wall_time)
 
                 # Clean up frame data
-                delattr(frame, 'ffi_profile_data')
+                delattr(frame, "ffi_profile_data")
 
         except Exception as e:
             # Don't let profiling errors break the application
@@ -469,15 +472,11 @@ class FFIProfiler:
         # Start monitoring threads
         self._stop_monitoring.clear()
 
-        self._memory_monitor_thread = threading.Thread(
-            target=self._memory_monitor, daemon=True
-        )
+        self._memory_monitor_thread = threading.Thread(target=self._memory_monitor, daemon=True)
         self._memory_monitor_thread.start()
 
         if self.enable_gil_monitoring:
-            self._gil_monitor_thread = threading.Thread(
-                target=self._gil_monitor, daemon=True
-            )
+            self._gil_monitor_thread = threading.Thread(target=self._gil_monitor, daemon=True)
             self._gil_monitor_thread.start()
 
         logger.info("FFI profiling started successfully")
@@ -573,10 +572,7 @@ class FFIProfiler:
         # Identify optimization opportunities
         # High frequency calls (called more than 100 times or >10% of total calls)
         high_frequency_threshold = max(100, total_calls * 0.1)
-        high_frequency_calls = [
-            func for func, count in self.call_counts.items()
-            if count >= high_frequency_threshold
-        ]
+        high_frequency_calls = [func for func, count in self.call_counts.items() if count >= high_frequency_threshold]
 
         # Expensive calls (>95th percentile in time)
         expensive_calls = []
@@ -634,7 +630,7 @@ class FFIProfiler:
             high_frequency_calls=high_frequency_calls,
             expensive_calls=expensive_calls,
             batch_opportunities=batch_opportunities,
-            inefficient_transfers=inefficient_transfers
+            inefficient_transfers=inefficient_transfers,
         )
 
     def print_report(self, detailed: bool = True) -> None:
@@ -663,17 +659,17 @@ class FFIProfiler:
         print(f"  Total Wall Time    : {stats.total_wall_time:.3f}s")
         print(f"  Total CPU Time     : {stats.total_cpu_time:.3f}s")
         print(f"  Total GIL Wait     : {stats.total_gil_wait_time:.3f}s")
-        print(f"  Average Call Time  : {stats.average_call_time*1000:.2f}ms")
-        print(f"  Median Call Time   : {stats.median_call_time*1000:.2f}ms")
-        print(f"  95th Percentile    : {stats.p95_call_time*1000:.2f}ms")
-        print(f"  99th Percentile    : {stats.p99_call_time*1000:.2f}ms")
+        print(f"  Average Call Time  : {stats.average_call_time * 1000:.2f}ms")
+        print(f"  Median Call Time   : {stats.median_call_time * 1000:.2f}ms")
+        print(f"  95th Percentile    : {stats.p95_call_time * 1000:.2f}ms")
+        print(f"  99th Percentile    : {stats.p99_call_time * 1000:.2f}ms")
 
         # Data transfer analysis
         print("\n💾 DATA TRANSFER ANALYSIS:")
-        print(f"  Total Data Transfer: {stats.total_data_transferred:,} bytes ({stats.total_data_transferred/1024/1024:.2f}MB)")
+        print(f"  Total Data Transfer: {stats.total_data_transferred:,} bytes ({stats.total_data_transferred / 1024 / 1024:.2f}MB)")
         print(f"  Average Transfer   : {stats.average_transfer_size:.0f} bytes")
         print(f"  Largest Transfer   : {stats.largest_transfer:,} bytes")
-        print(f"  Transfer Efficiency: {stats.transfer_efficiency/1024/1024:.2f} MB/s")
+        print(f"  Transfer Efficiency: {stats.transfer_efficiency / 1024 / 1024:.2f} MB/s")
 
         # Memory analysis
         print("\n🧠 MEMORY ANALYSIS:")
@@ -689,14 +685,14 @@ class FFIProfiler:
             for func in stats.high_frequency_calls[:5]:  # Show top 5
                 count = self.call_counts[func]
                 avg_time = sum(self.call_times[func]) / len(self.call_times[func])
-                print(f"    • {func}: {count:,} calls, {avg_time*1000:.2f}ms avg")
+                print(f"    • {func}: {count:,} calls, {avg_time * 1000:.2f}ms avg")
 
         if stats.expensive_calls:
             print(f"  Expensive Calls ({len(stats.expensive_calls)}):")
             for func in stats.expensive_calls[:5]:
                 if func in self.call_times:
                     max_time = max(self.call_times[func])
-                    print(f"    • {func}: max {max_time*1000:.2f}ms")
+                    print(f"    • {func}: max {max_time * 1000:.2f}ms")
 
         if stats.batch_opportunities:
             print(f"  Batching Opportunities ({len(stats.batch_opportunities)}):")
@@ -715,9 +711,11 @@ class FFIProfiler:
             sorted_calls = sorted(self.ffi_calls, key=lambda c: c.wall_time, reverse=True)
             for i, call in enumerate(sorted_calls[:10], 1):
                 print(f"  {i:2d}. {call.module_name}.{call.function_name}")
-                print(f"      Time: {call.wall_time*1000:.2f}ms | "
-                      f"Data: {call.input_size + call.output_size:,}B | "
-                      f"Memory Δ: {call.memory_after - call.memory_before:+.2f}MB")
+                print(
+                    f"      Time: {call.wall_time * 1000:.2f}ms | "
+                    f"Data: {call.input_size + call.output_size:,}B | "
+                    f"Memory Δ: {call.memory_after - call.memory_before:+.2f}MB"
+                )
 
         # FFI efficiency analysis
         print("\n📈 FFI EFFICIENCY ANALYSIS:")
@@ -751,47 +749,45 @@ class FFIProfiler:
 
         # Convert data to serializable format
         export_data = {
-            'metadata': {
-                'start_time': self._start_time,
-                'end_time': self._end_time,
-                'duration': self.get_profile_duration(),
-                'rust_module_patterns': self.rust_module_patterns,
-                'memory_profiler_available': MEMORY_PROFILER_AVAILABLE,
-                'baseline_memory': self._baseline_memory
+            "metadata": {
+                "start_time": self._start_time,
+                "end_time": self._end_time,
+                "duration": self.get_profile_duration(),
+                "rust_module_patterns": self.rust_module_patterns,
+                "memory_profiler_available": MEMORY_PROFILER_AVAILABLE,
+                "baseline_memory": self._baseline_memory,
             },
-            'calls': [
+            "calls": [
                 {
-                    'function_name': call.function_name,
-                    'module_name': call.module_name,
-                    'call_timestamp': call.call_timestamp,
-                    'thread_id': call.thread_id,
-                    'wall_time': call.wall_time,
-                    'cpu_time': call.cpu_time,
-                    'input_size': call.input_size,
-                    'output_size': call.output_size,
-                    'input_type': call.input_type,
-                    'output_type': call.output_type,
-                    'memory_before': call.memory_before,
-                    'memory_after': call.memory_after,
-                    'is_batch_operation': call.is_batch_operation,
-                    'batch_size': call.batch_size,
-                    'success': call.success,
-                    'error': call.error
+                    "function_name": call.function_name,
+                    "module_name": call.module_name,
+                    "call_timestamp": call.call_timestamp,
+                    "thread_id": call.thread_id,
+                    "wall_time": call.wall_time,
+                    "cpu_time": call.cpu_time,
+                    "input_size": call.input_size,
+                    "output_size": call.output_size,
+                    "input_type": call.input_type,
+                    "output_type": call.output_type,
+                    "memory_before": call.memory_before,
+                    "memory_after": call.memory_after,
+                    "is_batch_operation": call.is_batch_operation,
+                    "batch_size": call.batch_size,
+                    "success": call.success,
+                    "error": call.error,
                 }
                 for call in self.ffi_calls
             ],
-            'memory_timeline': self.memory_timeline,
-            'gil_contention': self.gil_contention_events,
-            'statistics': {
-                'call_counts': dict(self.call_counts),
-                'call_times': {k: list(v) for k, v in self.call_times.items()}
-            }
+            "memory_timeline": self.memory_timeline,
+            "gil_contention": self.gil_contention_events,
+            "statistics": {"call_counts": dict(self.call_counts), "call_times": {k: list(v) for k, v in self.call_times.items()}},
         }
 
-        with Path(filepath).open('w', encoding='utf-8') as f:
+        with Path(filepath).open("w", encoding="utf-8") as f:
             json.dump(export_data, f, indent=2, default=str)
 
         logger.info(f"FFI profiling data exported to {filepath}")
+
 
 # Convenience functions for quick profiling
 def profile_ffi_function(func: Callable) -> Callable:
@@ -803,6 +799,7 @@ def profile_ffi_function(func: Callable) -> Callable:
         def my_rust_calling_function():
             return rust_module.expensive_operation()
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         profiler = FFIProfiler()
@@ -814,6 +811,7 @@ def profile_ffi_function(func: Callable) -> Callable:
         return result
 
     return wrapper
+
 
 def quick_profile_context():
     """
@@ -834,6 +832,7 @@ def quick_profile_context():
         profiler.print_report(detailed=False)
 
     return profile_context()
+
 
 if __name__ == "__main__":
     # Example usage and testing

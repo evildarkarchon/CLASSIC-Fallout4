@@ -14,8 +14,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ClassicLib.ScanLog.fragments import ReportFragment
 from ClassicLib.integration.detector import detect_component
+from ClassicLib.ScanLog.fragments import ReportFragment
 
 if TYPE_CHECKING:
     from classic_scanlog import FcxModeHandler as RustFcxModeHandlerType

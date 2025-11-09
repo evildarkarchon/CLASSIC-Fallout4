@@ -28,6 +28,7 @@ def mock_settings():
         patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache,
         patch("ClassicLib.ScanGame.ScanGameCore.yaml_settings") as mock_yaml_core,
     ):
+
         def yaml_side_effect(type_, yaml_key, setting_path, default=None):
             settings_map = {
                 "catch_log_errors": ["error", "warning", "critical"],
@@ -114,8 +115,8 @@ class TestScanModsArchived:
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_with_valid_ba2(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test scanning valid BA2 archives."""
         # Create test BA2 files
         ba2_file1 = mock_paths["mods"] / "test1.ba2"
@@ -141,8 +142,8 @@ class TestScanModsArchived:
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_with_invalid_ba2(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test scanning invalid BA2 archives."""
         # Create test BA2 file with invalid header
         ba2_file = mock_paths["mods"] / "invalid.ba2"
@@ -157,8 +158,8 @@ class TestScanModsArchived:
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_concurrency_limit(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test that concurrency is limited by semaphore."""
         # Create multiple BA2 files
         ba2_files = []
@@ -204,8 +205,8 @@ class TestScanModsArchived:
 
     @pytest.mark.asyncio
     async def test_scan_mods_archived_timeout_handling(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test timeout handling for BSArch subprocess."""
         # Create test BA2 file
         ba2_file = mock_paths["mods"] / "timeout.ba2"

@@ -30,48 +30,23 @@ def fcx_test_config(tmp_path: Path) -> ConfigFileCache:
     """
     # Create espexplorer.ini with commented hotkey
     espexplorer_ini = tmp_path / "espexplorer.ini"
-    espexplorer_ini.write_text(
-        "[Main]\n"
-        "; Hotkey to open ESPExplorer\n"
-        "HotKey = ; F10\n",
-        encoding="utf-8"
-    )
+    espexplorer_ini.write_text("[Main]\n; Hotkey to open ESPExplorer\nHotKey = ; F10\n", encoding="utf-8")
 
     # Create epo.ini with high particle count
     epo_ini = tmp_path / "epo.ini"
-    epo_ini.write_text(
-        "[Particles]\n"
-        "iMaxDesired = 7500\n"
-        "iMaxActive = 7500\n",
-        encoding="utf-8"
-    )
+    epo_ini.write_text("[Particles]\niMaxDesired = 7500\niMaxActive = 7500\n", encoding="utf-8")
 
     # Create f4ee.ini with locked settings
     f4ee_ini = tmp_path / "f4ee.ini"
-    f4ee_ini.write_text(
-        "[HeadParts]\n"
-        "bUnlockHeadParts = 0\n"
-        "bUnlockTints = 0\n",
-        encoding="utf-8"
-    )
+    f4ee_ini.write_text("[HeadParts]\nbUnlockHeadParts = 0\nbUnlockTints = 0\n", encoding="utf-8")
 
     # Create highfpsphysicsfix.ini with low loading screen FPS
     highfps_ini = tmp_path / "highfpsphysicsfix.ini"
-    highfps_ini.write_text(
-        "[Limiter]\n"
-        "LoadingScreenFPS = 60.0\n"
-        "GameFPS = 0.0\n",
-        encoding="utf-8"
-    )
+    highfps_ini.write_text("[Limiter]\nLoadingScreenFPS = 60.0\nGameFPS = 0.0\n", encoding="utf-8")
 
     # Create enblocal.ini with VSync enabled
     enblocal_ini = tmp_path / "enblocal.ini"
-    enblocal_ini.write_text(
-        "[ENGINE]\n"
-        "ForceVSync = 1\n"
-        "iPresentInterval = 1\n",
-        encoding="utf-8"
-    )
+    enblocal_ini.write_text("[ENGINE]\nForceVSync = 1\niPresentInterval = 1\n", encoding="utf-8")
 
     # Create ConfigFileCache with test files
     cache = ConfigFileCache()
@@ -126,8 +101,7 @@ def assert_no_file_modifications(tmp_path: Path) -> Generator[dict[Path, float],
             continue  # File was deleted (which is also a modification, but handle separately)
 
         current_mtime = file_path.stat().st_mtime
-        assert current_mtime == initial_mtime, \
-            f"File {file_path} was modified (mtime changed from {initial_mtime} to {current_mtime})"
+        assert current_mtime == initial_mtime, f"File {file_path} was modified (mtime changed from {initial_mtime} to {current_mtime})"
 
 
 @pytest.fixture
@@ -150,9 +124,8 @@ def sample_config_issues(tmp_path: Path) -> list[ConfigIssue]:
             current_value="; F10",
             recommended_value="0x79",
             description="Hotkey is commented out and won't work. Change to hex code 0x79 for F10.",
-            severity="warning"
+            severity="warning",
         ),
-
         # EPO particle count issue
         ConfigIssue(
             file_path=tmp_path / "epo.ini",
@@ -161,9 +134,8 @@ def sample_config_issues(tmp_path: Path) -> list[ConfigIssue]:
             current_value="7500",
             recommended_value="5000",
             description="High particle count can cause performance issues and crashes.",
-            severity="warning"
+            severity="warning",
         ),
-
         # F4EE head parts issue
         ConfigIssue(
             file_path=tmp_path / "f4ee.ini",
@@ -172,9 +144,8 @@ def sample_config_issues(tmp_path: Path) -> list[ConfigIssue]:
             current_value="0",
             recommended_value="1",
             description="Head parts are locked. Set to 1 to unlock all head parts.",
-            severity="warning"
+            severity="warning",
         ),
-
         # F4EE face tints issue
         ConfigIssue(
             file_path=tmp_path / "f4ee.ini",
@@ -183,9 +154,8 @@ def sample_config_issues(tmp_path: Path) -> list[ConfigIssue]:
             current_value="0",
             recommended_value="1",
             description="Face tints are locked. Set to 1 to unlock all face tints.",
-            severity="warning"
+            severity="warning",
         ),
-
         # High FPS Physics Fix loading screen FPS issue
         ConfigIssue(
             file_path=tmp_path / "highfpsphysicsfix.ini",
@@ -194,9 +164,8 @@ def sample_config_issues(tmp_path: Path) -> list[ConfigIssue]:
             current_value="60.0",
             recommended_value="600.0",
             description="Loading screen FPS is too low. Increase to 600.0 to prevent physics issues.",
-            severity="warning"
+            severity="warning",
         ),
-
         # VSync enabled issue
         ConfigIssue(
             file_path=tmp_path / "enblocal.ini",
@@ -205,9 +174,8 @@ def sample_config_issues(tmp_path: Path) -> list[ConfigIssue]:
             current_value="1",
             recommended_value="0",
             description="VSync is enabled. Disable iPresentInterval for better performance with high FPS mods.",
-            severity="info"
+            severity="info",
         ),
-
         # Critical issue example
         ConfigIssue(
             file_path=tmp_path / "critical.ini",
@@ -216,7 +184,7 @@ def sample_config_issues(tmp_path: Path) -> list[ConfigIssue]:
             current_value="bad_value",
             recommended_value="good_value",
             description="Critical configuration error that may cause crashes.",
-            severity="error"
+            severity="error",
         ),
     ]
 
@@ -267,13 +235,7 @@ def track_file_modifications(file_paths: list[Path]) -> Generator[dict[Path, tup
         current_hash = get_file_hash(path)
 
         if current_mtime != initial_mtime:
-            raise AssertionError(
-                f"File {path} modification time changed: "
-                f"{initial_mtime} -> {current_mtime}"
-            )
+            raise AssertionError(f"File {path} modification time changed: {initial_mtime} -> {current_mtime}")
 
         if current_hash != initial_hash:
-            raise AssertionError(
-                f"File {path} content changed (hash mismatch): "
-                f"{initial_hash[:8]}... -> {current_hash[:8]}..."
-            )
+            raise AssertionError(f"File {path} content changed (hash mismatch): {initial_hash[:8]}... -> {current_hash[:8]}...")

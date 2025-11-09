@@ -76,7 +76,7 @@ class OrchestratorCore:
         fcx_mode: bool | None,
         show_formid_values: bool | None,
         formid_db_exists: bool,
-        remove_list: tuple[str] | None = None,
+        remove_list: tuple[str, ...] | None = None,
     ) -> None:
         """
         Initializes an instance of the class with necessary dependencies and configurations.
@@ -95,6 +95,8 @@ class OrchestratorCore:
                 should be displayed.
             formid_db_exists: Boolean indicating whether the FormID database is
                 available.
+            remove_list: Optional tuple of strings to filter out during processing.
+                Loaded from YAML settings in __aenter__. Defaults to None.
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
         self.show_formid_values = show_formid_values
@@ -141,15 +143,9 @@ class OrchestratorCore:
         self._state_lock = asyncio.Lock()
 
         # Load YAML settings asynchronously (deferred from __init__)
-        self.remove_list = (
-            self._remove_list_param
-            or await yaml_settings_async(tuple, YAML.Main, "exclude_log_records")
-            or ("",)
-        )
+        self.remove_list = self._remove_list_param or await yaml_settings_async(tuple, YAML.Main, "exclude_log_records") or ("",)
         self.simplify_logs = await classic_settings_async(bool, "Simplify Logs") or False
-        self.game_root_name = await yaml_settings_async(
-            str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name"
-        )
+        self.game_root_name = await yaml_settings_async(str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name")
 
         # Lazy database pool initialization - only if database exists
         if self.formid_db_exists:
@@ -406,7 +402,6 @@ class OrchestratorCore:
 
         # Run mod detection based on plugins loaded status
         if trigger_plugins_loaded:
-
             # Check for conflicting mods with conditional header
             conflict_fragment = ConditionalSection.with_header(
                 lambda: detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins_lower), "CONFLICT (TOGETHER)"
@@ -447,7 +442,6 @@ class OrchestratorCore:
 
         # Plugin suspect scanning (plugins found in crash stack)
         if trigger_plugins_loaded and crashlog_plugins_lower:
-
             # Convert callstack to lowercase for matching
             segment_callstack_lower = [line.lower() for line in segment_callstack]
             # Create set of plugin names from already-lowercased dict
@@ -463,7 +457,6 @@ class OrchestratorCore:
 
         # Use async FormID analyzer if available
         if self._async_formid_analyzer and self._last_formids:
-
             # Add FormID section header and results
             composer.add(self.report_generator.generate_formid_section_header())
             formid_fragment = await self._async_formid_analyzer.formid_match(self._last_formids, crashlog_plugins)
@@ -577,7 +570,7 @@ class OrchestratorCore:
         composer.add(self.report_generator.generate_record_section_header())
 
         # Scan for named records
-        record_fragment, records_matches = self.record_scanner.scan_named_records(segment_callstack)
+        record_fragment, _ = self.record_scanner.scan_named_records(segment_callstack)
         composer.add(record_fragment)
 
         return composer.build()
@@ -629,12 +622,12 @@ class OrchestratorCore:
         if loadorder_exists:
             # Use async file reading for loadorder.txt (30-40% reduction in blocking)
             loadorder_plugins, trigger_plugins_loaded, _loadorder_fragment = await self._load_loadorder_async(loadorder_path)
-            plugins = plugins | loadorder_plugins
+            plugins |= loadorder_plugins
         else:
             log_plugins, plugin_limit, limit_check_disabled = self.plugin_analyzer.loadorder_scan_log(
                 segment_plugins, game_version, version_current
             )
-            plugins = plugins | log_plugins
+            plugins |= log_plugins
             trigger_plugin_limit = plugin_limit
             trigger_limit_check_disabled = limit_check_disabled
 
@@ -645,7 +638,8 @@ class OrchestratorCore:
 
         return plugins, trigger_plugin_limit, trigger_limit_check_disabled, trigger_plugins_loaded
 
-    async def _load_loadorder_async(self, loadorder_path: Path) -> tuple[dict[str, str], bool, Any]:
+    @staticmethod
+    async def _load_loadorder_async(loadorder_path: Path) -> tuple[dict[str, str], bool, Any]:
         """
         Asynchronously loads plugin information from loadorder.txt file.
 
@@ -681,7 +675,7 @@ class OrchestratorCore:
             if is_rust_accelerated("file_io_core"):
                 try:
                     rust_file_io = get_file_io()
-                    if rust_file_io and hasattr(rust_file_io, 'read_file_async'):
+                    if rust_file_io and hasattr(rust_file_io, "read_file_async"):
                         content = await rust_file_io.read_file_async(loadorder_path)
                         loadorder_data = content.splitlines()
                         logging.getLogger(__name__).debug("🚀 Used Rust-accelerated file I/O for loadorder.txt")

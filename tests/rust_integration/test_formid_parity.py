@@ -69,7 +69,7 @@ class FormIDParityValidator(ParityValidator):
 
         # Set database pool if provided
         db_pool = kwargs.get("db_pool")
-        if db_pool and hasattr(analyzer, 'db_pool'):
+        if db_pool and hasattr(analyzer, "db_pool"):
             analyzer.db_pool = db_pool
 
         return analyzer
@@ -91,11 +91,10 @@ class FormIDParityValidator(ParityValidator):
                 "callstack": [
                     "\t[0] 0x7FF66DF19300 -> FormID: 0x00000014 (Fallout4.esm)",
                     "\t[1] 0x7FF66DF19400 -> FormID: 0x01002A34 (DLCRobot.esm)",
-                    "\t[2] 0x7FF66DF19500 -> FormID: 0xFE000801 (TestMod.esl)"
+                    "\t[2] 0x7FF66DF19500 -> FormID: 0xFE000801 (TestMod.esl)",
                 ],
-                "expected_formids": ["0x00000014", "0x01002A34", "0xFE000801"]
+                "expected_formids": ["0x00000014", "0x01002A34", "0xFE000801"],
             },
-
             # Various FormID formats
             {
                 "name": "formid_format_variations",
@@ -104,11 +103,10 @@ class FormIDParityValidator(ParityValidator):
                     "\t[1] Form ID: 0x01002A34",
                     "\t[2] FormID 0x12345678",
                     "\t[3] -> FormID: 0xABCDEF12",
-                    "\t[4] (FormID: 0x98765432)"
+                    "\t[4] (FormID: 0x98765432)",
                 ],
-                "expected_formids": ["0x00000014", "0x01002A34", "0x12345678", "0xABCDEF12", "0x98765432"]
+                "expected_formids": ["0x00000014", "0x01002A34", "0x12345678", "0xABCDEF12", "0x98765432"],
             },
-
             # Edge cases and malformed data
             {
                 "name": "malformed_formids",
@@ -117,49 +115,40 @@ class FormIDParityValidator(ParityValidator):
                     "\t[1] FormID: 0x123456789",  # Too long
                     "\t[2] FormID: 0x",  # Empty
                     "\t[3] FormID: INVALID",  # Not hex
-                    "\t[4] FormID: 0x00000014 (Valid.esm)"  # Valid one
+                    "\t[4] FormID: 0x00000014 (Valid.esm)",  # Valid one
                 ],
-                "expected_formids": ["0x00000014"]  # Only valid FormID should be extracted
+                "expected_formids": ["0x00000014"],  # Only valid FormID should be extracted
             },
-
             # ESL FormIDs
             {
                 "name": "esl_formids",
                 "callstack": [
                     "\t[0] FormID: 0xFE000801 (ESLMod1.esl)",
                     "\t[1] FormID: 0xFE001234 (ESLMod2.esl)",
-                    "\t[2] FormID: 0xFE00FFFF (ESLMod3.esl)"
+                    "\t[2] FormID: 0xFE00FFFF (ESLMod3.esl)",
                 ],
-                "expected_formids": ["0xFE000801", "0xFE001234", "0xFE00FFFF"]
+                "expected_formids": ["0xFE000801", "0xFE001234", "0xFE00FFFF"],
             },
-
             # Large callstack (performance test)
             {
                 "name": "large_callstack_performance",
                 "callstack": [
-                    f"\t[{i}] 0x{0x7FF66DF19300 + i*0x100:016X} -> FormID: 0x{random.randint(0x00000001, 0xFFFFFFFE):08X} (Mod{i%50}.esp)"
+                    f"\t[{i}] 0x{0x7FF66DF19300 + i * 0x100:016X} -> FormID: 0x{random.randint(0x00000001, 0xFFFFFFFE):08X} (Mod{i % 50}.esp)"
                     for i in range(500)
                 ],
-                "expected_formids": None  # Will be calculated dynamically
+                "expected_formids": None,  # Will be calculated dynamically
             },
-
             # Empty and minimal cases
-            {
-                "name": "empty_callstack",
-                "callstack": [],
-                "expected_formids": []
-            },
-
+            {"name": "empty_callstack", "callstack": [], "expected_formids": []},
             {
                 "name": "no_formids",
                 "callstack": [
                     "\t[0] 0x7FF66DF19300 -> No FormID information",
                     "\t[1] 0x7FF66DF19400 -> Some other data",
-                    "\t[2] Random callstack entry"
+                    "\t[2] Random callstack entry",
                 ],
-                "expected_formids": []
+                "expected_formids": [],
             },
-
             # Mixed content with partial FormID information
             {
                 "name": "mixed_content",
@@ -168,10 +157,10 @@ class FormIDParityValidator(ParityValidator):
                     "\t[1] Regular callstack entry without FormID",
                     "\t[2] 0x7FF66DF19500 -> Some function call",
                     "\t[3] 0x7FF66DF19600 -> FormID: 0x01002A34 (DLCRobot.esm)",
-                    "\t[4] Another regular entry"
+                    "\t[4] Another regular entry",
                 ],
-                "expected_formids": ["0x00000014", "0x01002A34"]
-            }
+                "expected_formids": ["0x00000014", "0x01002A34"],
+            },
         ]
 
 
@@ -212,7 +201,7 @@ class TestFormIDParity:
                 # For large callstack test, calculate expected FormIDs dynamically
                 if test_case["name"] == "large_callstack_performance" and expected_formids is None:
                     # Extract FormIDs using regex (reference implementation)
-                    formid_pattern = re.compile(r'FormID:\s*0x([0-9A-Fa-f]{1,8})')
+                    formid_pattern = re.compile(r"FormID:\s*0x([0-9A-Fa-f]{1,8})")
                     expected_formids = []
                     for line in callstack:
                         match = formid_pattern.search(line)
@@ -242,11 +231,15 @@ class TestFormIDParity:
                     python_set = set(python_formids)
 
                     if rust_set != expected_set:
-                        differences.append(f"Rust FormIDs don't match expected: missing={expected_set - rust_set}, extra={rust_set - expected_set}")
+                        differences.append(
+                            f"Rust FormIDs don't match expected: missing={expected_set - rust_set}, extra={rust_set - expected_set}"
+                        )
                         is_identical = False
 
                     if python_set != expected_set:
-                        differences.append(f"Python FormIDs don't match expected: missing={expected_set - python_set}, extra={python_set - expected_set}")
+                        differences.append(
+                            f"Python FormIDs don't match expected: missing={expected_set - python_set}, extra={python_set - expected_set}"
+                        )
                         is_identical = False
 
                 result = ParityResult(
@@ -264,8 +257,8 @@ class TestFormIDParity:
                         "callstack_size": len(callstack),
                         "expected_formids_count": len(expected_formids) if expected_formids else 0,
                         "rust_formids_count": len(rust_formids),
-                        "python_formids_count": len(python_formids)
-                    }
+                        "python_formids_count": len(python_formids),
+                    },
                 )
 
                 results.append(result)
@@ -277,14 +270,16 @@ class TestFormIDParity:
 
             except Exception as e:
                 logger.error(f"FormID extraction test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="formid_analyzer",
-                    method_name="extract_formids",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="formid_analyzer",
+                        method_name="extract_formids",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -324,7 +319,6 @@ class TestFormIDParity:
             ("0xFE000801", True, "ESL FormID"),
             ("0xFFFFFFFF", True, "Maximum FormID"),
             ("0x00000001", True, "Minimum valid FormID"),
-
             # Invalid FormIDs
             ("0xGGGGGGGG", False, "Invalid hex characters"),
             ("0x123456789", False, "Too long"),
@@ -332,7 +326,6 @@ class TestFormIDParity:
             ("INVALID", False, "Not hex format"),
             ("", False, "Empty string"),
             ("0x00000000", False, "Null FormID"),
-
             # Edge cases
             ("0x0000001", True, "Short but valid"),
             ("0X00000014", True, "Uppercase X"),
@@ -346,7 +339,7 @@ class TestFormIDParity:
         try:
             # Use factory to get analyzer and check for validation methods
             analyzer = get_formid_analyzer(mock_scanlog_info, True, False)
-            if hasattr(analyzer, 'is_valid_formid'):
+            if hasattr(analyzer, "is_valid_formid"):
                 rust_is_valid_formid = analyzer.is_valid_formid
                 rust_available = True
             else:
@@ -364,11 +357,7 @@ class TestFormIDParity:
             if not formid:
                 return False
 
-            cleaned = (formid.strip()
-                      .replace("Form ID:", "")
-                      .replace("0x", "")
-                      .replace("0X", "")
-                      .strip())
+            cleaned = formid.strip().replace("Form ID:", "").replace("0x", "").replace("0X", "").strip()
 
             if len(cleaned) > 8 or len(cleaned) == 0:
                 return False
@@ -419,21 +408,23 @@ class TestFormIDParity:
                     differences=differences,
                     rust_execution_time=rust_time,
                     python_execution_time=python_time,
-                    metadata={"description": description, "expected": expected}
+                    metadata={"description": description, "expected": expected},
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"FormID validation test failed for '{formid}': {e}")
-                results.append(ParityResult(
-                    component_name="formid_analyzer",
-                    method_name="is_valid_formid",
-                    test_case=f"validate_{formid}",
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="formid_analyzer",
+                        method_name="is_valid_formid",
+                        test_case=f"validate_{formid}",
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate results
         passed_tests = sum(1 for r in results if r.passed)
@@ -455,29 +446,20 @@ class TestFormIDParity:
         """
         # Create test data for batch processing
         test_callstacks = [
-            [
-                "\t[0] FormID: 0x00000014 (Fallout4.esm)",
-                "\t[1] FormID: 0x01002A34 (DLCRobot.esm)"
-            ],
-            [
-                "\t[0] FormID: 0xFE000801 (ESLMod.esl)",
-                "\t[1] FormID: 0x12345678 (TestMod.esp)"
-            ],
-            [
-                "\t[0] No FormID here",
-                "\t[1] FormID: 0x99999999 (AnotherMod.esp)"
-            ],
+            ["\t[0] FormID: 0x00000014 (Fallout4.esm)", "\t[1] FormID: 0x01002A34 (DLCRobot.esm)"],
+            ["\t[0] FormID: 0xFE000801 (ESLMod.esl)", "\t[1] FormID: 0x12345678 (TestMod.esp)"],
+            ["\t[0] No FormID here", "\t[1] FormID: 0x99999999 (AnotherMod.esp)"],
             [],  # Empty callstack
             [
                 "\t[0] FormID: 0xINVALID (BadMod.esp)",  # Invalid FormID
-                "\t[1] FormID: 0xABCDEF12 (ValidMod.esp)"
-            ]
+                "\t[1] FormID: 0xABCDEF12 (ValidMod.esp)",
+            ],
         ]
 
         try:
             # Try to get FormID analyzer with batch processing capabilities
             analyzer = get_formid_analyzer(mock_scanlog_info, True, False)
-            if hasattr(analyzer, 'extract_formids_batch'):
+            if hasattr(analyzer, "extract_formids_batch"):
                 rust_extract_batch = analyzer.extract_formids_batch
                 rust_available = True
             else:
@@ -542,8 +524,9 @@ class TestFormIDParity:
             if rust_batch_time > 0 and python_sequential_time > 0:
                 batch_speedup = python_sequential_time / rust_batch_time
                 sequential_speedup = python_sequential_time / rust_sequential_time
-                logger.info(f"Batch processing performance: {batch_speedup:.1f}x vs Python, "
-                          f"sequential Rust: {sequential_speedup:.1f}x vs Python")
+                logger.info(
+                    f"Batch processing performance: {batch_speedup:.1f}x vs Python, sequential Rust: {sequential_speedup:.1f}x vs Python"
+                )
 
             assert overall_parity, f"Batch FormID processing parity failed: {differences}"
 
@@ -570,7 +553,7 @@ class TestFormIDParity:
             ("0x00000014", "Fallout4.esm"): "Player Character",
             ("0x01002A34", "DLCRobot.esm"): "Robot Workshop",
             ("0x12345678", "TestMod.esp"): "Test Item",
-            ("0xFE000801", "ESLMod.esl"): "ESL Item"
+            ("0xFE000801", "ESLMod.esl"): "ESL Item",
         }
 
         async def mock_lookup(formid: str, plugin: str) -> str | None:
@@ -581,32 +564,22 @@ class TestFormIDParity:
 
         # Create analyzers with database pool
         validator = FormIDParityValidator()
-        rust_analyzer = validator.create_rust_implementation(
-            mock_scanlog_info,
-            db_pool=mock_db_pool
-        )
-        python_analyzer = validator.create_python_implementation(
-            mock_scanlog_info,
-            db_pool=mock_db_pool
-        )
+        rust_analyzer = validator.create_rust_implementation(mock_scanlog_info, db_pool=mock_db_pool)
+        python_analyzer = validator.create_python_implementation(mock_scanlog_info, db_pool=mock_db_pool)
 
         if not rust_analyzer:
             pytest.skip("Rust FormID analyzer not available")
 
         # Test formid_match operations instead of lookup
         # Create mock plugin mapping
-        plugins = {
-            "00": "Fallout4.esm",
-            "01": "DLCRobot.esm",
-            "12": "TestMod.esp",
-            "FE:000": "ESLMod.esl"
-        }
+        plugins = {"00": "Fallout4.esm", "01": "DLCRobot.esm", "12": "TestMod.esp", "FE:000": "ESLMod.esl"}
 
         # FormIDs to test
         test_formids = ["00000014", "01002A34", "12345678", "FE000801"]
 
         # Mock report objects
         from unittest.mock import MagicMock
+
         rust_report = MagicMock()
         python_report = MagicMock()
 
@@ -647,7 +620,7 @@ class TestFormIDParity:
         for i in range(1000):
             formid = f"0x{random.randint(0x00000001, 0xFFFFFFFE):08X}"
             plugin = f"TestMod{i % 100}.esp"
-            line = f"\t[{i}] 0x{0x7FF66DF19300 + i*0x100:016X} -> FormID: {formid} ({plugin})"
+            line = f"\t[{i}] 0x{0x7FF66DF19300 + i * 0x100:016X} -> FormID: {formid} ({plugin})"
             large_callstack.append(line)
             expected_formids.append(formid)
 
@@ -688,4 +661,6 @@ class TestFormIDParity:
 
         assert rust_set == expected_set, "Rust extracted FormIDs don't match expected"
         assert python_set == expected_set, "Python extracted FormIDs don't match expected"
-        assert len(rust_formids) == len(expected_formids), f"Rust FormID count mismatch: got {len(rust_formids)}, expected {len(expected_formids)}"
+        assert len(rust_formids) == len(expected_formids), (
+            f"Rust FormID count mismatch: got {len(rust_formids)}, expected {len(expected_formids)}"
+        )

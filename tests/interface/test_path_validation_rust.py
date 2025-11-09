@@ -17,12 +17,14 @@ import pytest
 
 # Test Rust availability
 
+
 @pytest.mark.unit
 @pytest.mark.rust
 def test_rust_path_available():
     """Test that Rust path module is available."""
     try:
         import classic_path
+
         assert hasattr(classic_path, "PathValidator"), "PathValidator class should be available"
 
         # Verify it has expected methods
@@ -42,6 +44,7 @@ def test_folder_management_detects_rust():
 
 
 # Test path validation functions
+
 
 @pytest.mark.unit
 @pytest.mark.rust
@@ -118,6 +121,7 @@ def test_normalize_path_fallback():
 
 # Test FolderManagementMixin integration
 
+
 @pytest.mark.unit
 def test_folder_management_mixin_exists():
     """Test that FolderManagementMixin can be imported."""
@@ -128,6 +132,7 @@ def test_folder_management_mixin_exists():
 
 
 # Test edge cases
+
 
 @pytest.mark.unit
 def test_empty_path():
@@ -173,6 +178,7 @@ def test_path_with_spaces():
 
 # Test Windows-specific behavior
 
+
 @pytest.mark.unit
 @pytest.mark.skipif(os.name != "nt", reason="Windows-specific test")
 def test_windows_drive_letter():
@@ -203,6 +209,7 @@ def test_windows_unc_path():
 
 # Test performance (basic check)
 
+
 @pytest.mark.unit
 @pytest.mark.rust
 def test_rust_validation_performance():
@@ -218,11 +225,12 @@ def test_rust_validation_performance():
     elapsed = time.perf_counter() - start
 
     # Should be very fast (< 100ms for 100 validations)
-    print(f"100 validations took {elapsed:.4f}s ({elapsed*10:.2f}ms each)")
+    print(f"100 validations took {elapsed:.4f}s ({elapsed * 10:.2f}ms each)")
     # Don't assert on performance for CI stability, just log it
 
 
 # Test error handling
+
 
 @pytest.mark.unit
 def test_invalid_path_characters():
@@ -256,6 +264,7 @@ def test_very_long_path():
 
 # Test integration with actual paths
 
+
 @pytest.mark.unit
 def test_common_windows_directories():
     """Test validation of common Windows system directories."""
@@ -284,6 +293,7 @@ def test_temp_directory():
 
 
 # Test Rust PathValidator directly
+
 
 @pytest.mark.unit
 @pytest.mark.rust

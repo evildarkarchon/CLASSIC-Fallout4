@@ -10,11 +10,11 @@ For Rust-accelerated versions (recommended), import from ClassicLib.rust.report_
     from ClassicLib.rust.report_rust import ReportFragment, ReportComposer, ReportGenerator
 """
 
-from .fragment_collector import FragmentCollector
-from .mod_detection import detect_mods_single_fragment, generate_mod_check_header_fragment
-from .report_composer import ReportComposer
-from .report_fragment import ReportFragment
-from .report_generator_functional import ReportGeneratorFunctional
+from ClassicLib.ScanLog.fragments.fragment_collector import FragmentCollector
+from ClassicLib.ScanLog.fragments.mod_detection import detect_mods_single_fragment, generate_mod_check_header_fragment
+from ClassicLib.ScanLog.fragments.report_composer import ReportComposer
+from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment
+from ClassicLib.ScanLog.fragments.report_generator_functional import ReportGeneratorFunctional
 
 __all__ = [
     "FragmentCollector",

@@ -177,9 +177,10 @@ class TestGenerateGameCombinedResultTuple:
         from ClassicLib.ScanGame import generate_game_combined_result_async
 
         # Mock settings to return None (early return path)
-        with patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings, \
-             patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry:
-
+        with (
+            patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings,
+            patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry,
+        ):
             mock_yaml_settings.return_value = None
             mock_global_registry.get_vr.return_value = ""
 
@@ -201,9 +202,10 @@ class TestGenerateGameCombinedResultTuple:
         from ClassicLib.ScanGame import generate_game_combined_result
 
         # Mock settings to return None (early return path)
-        with patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings, \
-             patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry:
-
+        with (
+            patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings,
+            patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry,
+        ):
             mock_yaml_settings.return_value = None
             mock_global_registry.get_vr.return_value = ""
 
@@ -251,9 +253,10 @@ class TestFCXModeHandlerPhase5Integration:
         FCXModeHandlerFragments.reset_fcx_checks()
 
         # Mock coordinator (patching at the import location inside the method)
-        with patch("ClassicLib.SetupCoordinator.SetupCoordinator") as mock_coordinator_class, \
-             patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_generate:
-
+        with (
+            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as mock_coordinator_class,
+            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_generate,
+        ):
             mock_coordinator = Mock()
             mock_coordinator.generate_combined_results.return_value = "Main files OK\n"
             mock_coordinator_class.return_value = mock_coordinator
@@ -266,7 +269,7 @@ class TestFCXModeHandlerPhase5Integration:
                 current_value="0",
                 recommended_value="1",
                 description="Test configuration issue",
-                severity="warning"
+                severity="warning",
             )
             mock_generate.return_value = ("Game files OK\n", [test_issue])
 
@@ -296,9 +299,10 @@ class TestFCXModeHandlerPhase5Integration:
         # Reset state
         FCXModeHandlerFragments.reset_fcx_checks()
 
-        with patch("ClassicLib.SetupCoordinator.SetupCoordinator") as mock_coordinator_class, \
-             patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_generate:
-
+        with (
+            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as mock_coordinator_class,
+            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_generate,
+        ):
             mock_coordinator = Mock()
             mock_coordinator.generate_combined_results.return_value = "Main files OK\n"
             mock_coordinator_class.return_value = mock_coordinator

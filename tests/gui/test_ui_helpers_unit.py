@@ -45,6 +45,7 @@ def init_message_handler_fixture():
     yield
     # Clean up the global message handler after tests
     import ClassicLib.MessageHandler
+
     ClassicLib.MessageHandler._message_handler = None
 
 
@@ -92,8 +93,10 @@ class TestCreateCheckbox:
     @pytest.fixture
     def mock_settings(self):
         """Mock settings functions."""
-        with patch("ClassicLib.Interface.UIHelpers.classic_settings") as mock_classic, \
-             patch("ClassicLib.Interface.UIHelpers.yaml_settings") as mock_yaml:
+        with (
+            patch("ClassicLib.Interface.UIHelpers.classic_settings") as mock_classic,
+            patch("ClassicLib.Interface.UIHelpers.yaml_settings") as mock_yaml,
+        ):
             yield mock_classic, mock_yaml
 
     def test_create_checkbox_with_existing_setting(self, qt_application, mock_settings):
@@ -125,9 +128,7 @@ class TestCreateCheckbox:
         assert checkbox.isChecked() is False
 
         # Verify default setting was created
-        mock_yaml.assert_called_once_with(
-            bool, ANY, "CLASSIC_Settings.new_setting", False
-        )
+        mock_yaml.assert_called_once_with(bool, ANY, "CLASSIC_Settings.new_setting", False)
 
     def test_create_checkbox_state_change_updates_setting(self, qt_application, mock_settings):
         """Test that checkbox state changes update the setting."""
@@ -199,9 +200,7 @@ class TestSetupFolderSection:
         layout = QVBoxLayout()
         callback = Mock()
 
-        line_edit = setup_folder_section(
-            layout, "Test Folder:", "test_folder", callback, "Select test folder"
-        )
+        line_edit = setup_folder_section(layout, "Test Folder:", "test_folder", callback, "Select test folder")
 
         # Verify line edit was returned
         assert isinstance(line_edit, QLineEdit)
@@ -265,12 +264,11 @@ class TestSetupFolderSection:
         mock_layout = MagicMock(spec=QBoxLayout)
         callback = Mock()
 
-        with patch("ClassicLib.Interface.UIHelpers.isinstance", return_value=False), \
-             patch("ClassicLib.Interface.UIHelpers.msg_warning") as mock_warning:
-
-            result = setup_folder_section(
-                mock_layout, "Test:", "test", callback
-            )
+        with (
+            patch("ClassicLib.Interface.UIHelpers.isinstance", return_value=False),
+            patch("ClassicLib.Interface.UIHelpers.msg_warning") as mock_warning,
+        ):
+            result = setup_folder_section(mock_layout, "Test:", "test", callback)
 
             # Verify warning was issued
             mock_warning.assert_called_once()
@@ -433,12 +431,7 @@ class TestOpenUrl:
     def test_open_url_various_protocols(self):
         """Test opening URLs with various protocols."""
         with patch("ClassicLib.Interface.UIHelpers.QDesktopServices.openUrl") as mock_open:
-            urls = [
-                "http://example.com",
-                "https://secure.example.com",
-                "file:///C:/path/to/file.txt",
-                "mailto:test@example.com"
-            ]
+            urls = ["http://example.com", "https://secure.example.com", "file:///C:/path/to/file.txt", "mailto:test@example.com"]
 
             for url in urls:
                 mock_open.reset_mock()
@@ -464,9 +457,7 @@ class TestIntegrationScenarios:
 
         # Add folder section
         folder_callback = Mock()
-        folder_edit = setup_folder_section(
-            main_layout, "Output Folder:", "output_folder", folder_callback
-        )
+        folder_edit = setup_folder_section(main_layout, "Output Folder:", "output_folder", folder_callback)
 
         # Add separator
         separator2 = create_separator()

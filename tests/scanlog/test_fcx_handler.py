@@ -35,9 +35,10 @@ class TestFCXModeHandlerReadOnly:
         initial_content = ini_path.read_text(encoding="utf-8")
 
         # Mock the necessary components - patch in the correct module
-        with patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup, \
-             patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result:
-
+        with (
+            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup,
+            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result,
+        ):
             # Configure mocks
             mock_coordinator = MagicMock()
             mock_coordinator.generate_combined_results.return_value = ""
@@ -65,11 +66,7 @@ class TestFCXModeHandlerReadOnly:
 
         # Create test configuration
         espexplorer_ini = tmp_path / "espexplorer.ini"
-        espexplorer_ini.write_text(
-            "[Main]\n"
-            "HotKey = ; F10\n",
-            encoding="utf-8"
-        )
+        espexplorer_ini.write_text("[Main]\nHotKey = ; F10\n", encoding="utf-8")
 
         # Create ConfigFileCache with test file
         cache = ConfigFileCache()
@@ -79,10 +76,7 @@ class TestFCXModeHandlerReadOnly:
         issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
-        hotkey_issues = [
-            issue for issue in issues
-            if issue.setting == "HotKey" and issue.section == "Main"
-        ]
+        hotkey_issues = [issue for issue in issues if issue.setting == "HotKey" and issue.section == "Main"]
 
         assert len(hotkey_issues) == 1, "ESPExplorer hotkey issue not detected"
         issue = hotkey_issues[0]
@@ -103,11 +97,7 @@ class TestFCXModeHandlerReadOnly:
 
         # Create test configuration with high particle count
         epo_ini = tmp_path / "epo.ini"
-        epo_ini.write_text(
-            "[Particles]\n"
-            "iMaxDesired = 7500\n",
-            encoding="utf-8"
-        )
+        epo_ini.write_text("[Particles]\niMaxDesired = 7500\n", encoding="utf-8")
 
         cache = ConfigFileCache()
         cache._config_files = {"epo.ini": epo_ini}
@@ -116,10 +106,7 @@ class TestFCXModeHandlerReadOnly:
         issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
-        particle_issues = [
-            issue for issue in issues
-            if issue.setting == "iMaxDesired" and issue.section == "Particles"
-        ]
+        particle_issues = [issue for issue in issues if issue.setting == "iMaxDesired" and issue.section == "Particles"]
 
         assert len(particle_issues) == 1, "EPO particle count issue not detected"
         issue = particle_issues[0]
@@ -140,11 +127,7 @@ class TestFCXModeHandlerReadOnly:
 
         # Create test configuration with locked head parts
         f4ee_ini = tmp_path / "f4ee.ini"
-        f4ee_ini.write_text(
-            "[HeadParts]\n"
-            "bUnlockHeadParts = 0\n",
-            encoding="utf-8"
-        )
+        f4ee_ini.write_text("[HeadParts]\nbUnlockHeadParts = 0\n", encoding="utf-8")
 
         cache = ConfigFileCache()
         cache._config_files = {"f4ee.ini": f4ee_ini}
@@ -153,10 +136,7 @@ class TestFCXModeHandlerReadOnly:
         issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
-        headparts_issues = [
-            issue for issue in issues
-            if issue.setting == "bUnlockHeadParts"
-        ]
+        headparts_issues = [issue for issue in issues if issue.setting == "bUnlockHeadParts"]
 
         assert len(headparts_issues) == 1, "F4EE head parts issue not detected"
         issue = headparts_issues[0]
@@ -177,11 +157,7 @@ class TestFCXModeHandlerReadOnly:
 
         # Create test configuration with locked face tints
         f4ee_ini = tmp_path / "f4ee.ini"
-        f4ee_ini.write_text(
-            "[HeadParts]\n"
-            "bUnlockTints = 0\n",
-            encoding="utf-8"
-        )
+        f4ee_ini.write_text("[HeadParts]\nbUnlockTints = 0\n", encoding="utf-8")
 
         cache = ConfigFileCache()
         cache._config_files = {"f4ee.ini": f4ee_ini}
@@ -190,10 +166,7 @@ class TestFCXModeHandlerReadOnly:
         issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
-        tints_issues = [
-            issue for issue in issues
-            if issue.setting == "bUnlockTints"
-        ]
+        tints_issues = [issue for issue in issues if issue.setting == "bUnlockTints"]
 
         assert len(tints_issues) == 1, "F4EE face tints issue not detected"
         issue = tints_issues[0]
@@ -214,11 +187,7 @@ class TestFCXModeHandlerReadOnly:
 
         # Create test configuration with low loading screen FPS
         highfps_ini = tmp_path / "highfpsphysicsfix.ini"
-        highfps_ini.write_text(
-            "[Limiter]\n"
-            "LoadingScreenFPS = 60.0\n",
-            encoding="utf-8"
-        )
+        highfps_ini.write_text("[Limiter]\nLoadingScreenFPS = 60.0\n", encoding="utf-8")
 
         cache = ConfigFileCache()
         cache._config_files = {"highfpsphysicsfix.ini": highfps_ini}
@@ -227,10 +196,7 @@ class TestFCXModeHandlerReadOnly:
         issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
-        fps_issues = [
-            issue for issue in issues
-            if issue.setting == "LoadingScreenFPS"
-        ]
+        fps_issues = [issue for issue in issues if issue.setting == "LoadingScreenFPS"]
 
         assert len(fps_issues) == 1, "High FPS loading screen issue not detected"
         issue = fps_issues[0]
@@ -266,9 +232,10 @@ class TestFCXModeHandlerReadOnly:
 
         Tests that reset_fcx_checks() properly clears state between scans.
         """
-        with patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup, \
-             patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result:
-
+        with (
+            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup,
+            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result,
+        ):
             # Configure mocks
             mock_coordinator = MagicMock()
             mock_coordinator.generate_combined_results.return_value = ""
@@ -313,9 +280,10 @@ class TestFCXModeHandlerReadOnly:
         Tests that when FCX mode is enabled, the handler generates
         appropriate notice messages about requiring original user execution.
         """
-        with patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup, \
-             patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result:
-
+        with (
+            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup,
+            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result,
+        ):
             # Configure mocks
             mock_coordinator = MagicMock()
             mock_coordinator.generate_combined_results.return_value = ""
@@ -353,10 +321,7 @@ class TestFCXModeHandlerReadOnly:
         epo_ini.write_text("[Particles]\niMaxDesired = 7500\n", encoding="utf-8")
 
         f4ee_ini = tmp_path / "f4ee.ini"
-        f4ee_ini.write_text(
-            "[HeadParts]\nbUnlockHeadParts = 0\nbUnlockTints = 0\n",
-            encoding="utf-8"
-        )
+        f4ee_ini.write_text("[HeadParts]\nbUnlockHeadParts = 0\nbUnlockTints = 0\n", encoding="utf-8")
 
         cache = ConfigFileCache()
         cache._config_files = {
@@ -375,8 +340,9 @@ class TestFCXModeHandlerReadOnly:
         settings_detected = {issue.setting for issue in issues}
         expected_settings = {"HotKey", "iMaxDesired", "bUnlockHeadParts", "bUnlockTints"}
 
-        assert expected_settings.issubset(settings_detected), \
+        assert expected_settings.issubset(settings_detected), (
             f"Missing expected settings. Got: {settings_detected}, Expected: {expected_settings}"
+        )
 
     def test_fcx_handler_with_no_issues(self):
         """
@@ -385,9 +351,10 @@ class TestFCXModeHandlerReadOnly:
         Tests that the handler generates appropriate messages when all
         configuration files are correctly configured.
         """
-        with patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup, \
-             patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result:
-
+        with (
+            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup,
+            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result,
+        ):
             # Configure mocks
             mock_coordinator = MagicMock()
             mock_coordinator.generate_combined_results.return_value = ""

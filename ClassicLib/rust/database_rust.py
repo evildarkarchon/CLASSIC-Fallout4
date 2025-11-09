@@ -60,8 +60,11 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from ClassicLib.integration.exceptions import RustDatabaseError, RustError
+from ClassicLib import GlobalRegistry
+from ClassicLib.Constants import DB_PATHS
 from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.exceptions import RustDatabaseError, RustError
+from ClassicLib.Logger import logger
 
 if TYPE_CHECKING:
     from classic_database import DatabasePool as DatabasePoolType
@@ -82,7 +85,11 @@ _, _rust_db_query_error = detect_component("classic_database", "RustDatabaseQuer
 def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...], tuple[type, ...]]:
     """Get tuple of Rust exception types to catch.
 
-    Returns tuple of (DatabaseError types, IOError types, QueryError types).
+    Returns:
+        A tuple containing three tuples of exception types:
+        - DatabaseError types (RustDatabaseError and module-specific variants)
+        - IOError types (RustError and RustDatabaseIOError variants)
+        - QueryError types (RustError and RustDatabaseQueryError variants)
     """
     db_errors = (RustDatabaseError,)
     io_errors = (RustError,)  # RustDatabaseIOError inherits from RustDatabaseError
@@ -101,10 +108,6 @@ def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...], tup
 
 # Get exception type tuples at module level for use in exception handlers
 db_errors, io_errors, query_errors = _get_rust_exception_types()
-
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import DB_PATHS
-from ClassicLib.Logger import logger
 
 
 class DatabasePoolManager:
@@ -209,7 +212,7 @@ class RustAsyncDatabasePool:
         if RUST_AVAILABLE:
             # Get game table from GlobalRegistry
             game_table = GlobalRegistry.get_game()
-            self._rust_pool: DatabasePool = DatabasePool(max_connections, cache_ttl_seconds, game_table) # pyright: ignore[reportOptionalCall, reportInvalidTypeForm]
+            self._rust_pool: DatabasePool = DatabasePool(max_connections, cache_ttl_seconds, game_table)  # pyright: ignore[reportOptionalCall, reportInvalidTypeForm]
             logger.debug(f"Initialized Rust database pool (max_conn={max_connections}, ttl={cache_ttl_seconds}s, table={game_table})")
         else:
             raise ImportError("Rust database module not available. Please rebuild with maturin.")
@@ -321,9 +324,7 @@ class RustAsyncDatabasePool:
         return await self._rust_pool.get_entry(formid, plugin, game_table)
 
     async def get_entries_batch(
-        self,
-        formid_plugin_pairs: list[tuple[str, str]],
-        batch_size: int = 100
+        self, formid_plugin_pairs: list[tuple[str, str]], batch_size: int = 100
     ) -> dict[tuple[str, str], dict[str, Any]]:
         """
         Fetches a batch of entries by querying an external Rust-based pool.
@@ -365,11 +366,7 @@ class RustAsyncDatabasePool:
             rust_results_batch = await self._rust_pool.batch_lookup(formid_plugin_pairs, game_table)
         except AttributeError:
             # Fall back to get_entries_batch if batch_lookup doesn't exist
-            rust_results = await self._rust_pool.get_entries_batch(
-                formid_plugin_pairs,
-                game_table,
-                batch_size
-            )
+            rust_results = await self._rust_pool.get_entries_batch(formid_plugin_pairs, game_table, batch_size)
             # Convert results to expected format
             results: dict[tuple[str, str], dict[str, Any]] = {}
             for formid, plugin in formid_plugin_pairs:
@@ -438,8 +435,8 @@ class RustAsyncDatabasePool:
         Raises:
             RuntimeError: If the operation fails or encounters issues.
         """
-        if hasattr(self._rust_pool, 'optimize'):
-            await self._rust_pool.optimize() # pyright: ignore[reportAttributeAccessIssue]
+        if hasattr(self._rust_pool, "optimize"):
+            await self._rust_pool.optimize()  # pyright: ignore[reportAttributeAccessIssue]
 
     def set_game_table(self, table: str) -> None:
         """
@@ -454,7 +451,7 @@ class RustAsyncDatabasePool:
         Args:
             table (str): The name of the game table to be set.
         """
-        if hasattr(self._rust_pool, 'set_game_table'):
+        if hasattr(self._rust_pool, "set_game_table"):
             self._rust_pool.set_game_table(table)
             logger.debug(f"Set game table to: {table}")
 
@@ -470,7 +467,7 @@ class RustAsyncDatabasePool:
         Returns:
             str: The current active game table.
         """
-        if hasattr(self._rust_pool, 'get_game_table'):
+        if hasattr(self._rust_pool, "get_game_table"):
             return self._rust_pool.get_game_table()
         return GlobalRegistry.get_game()
 
@@ -500,8 +497,7 @@ def get_database_pool_implementation() -> type:
         from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool as PythonAsyncDatabasePool
     except ImportError as e:
         raise ImportError(
-            "Neither Rust nor Python database pool implementation available. "
-            "Please rebuild with maturin or check your installation."
+            "Neither Rust nor Python database pool implementation available. Please rebuild with maturin or check your installation."
         ) from e
     else:
         return PythonAsyncDatabasePool

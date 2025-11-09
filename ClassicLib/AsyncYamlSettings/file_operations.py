@@ -62,9 +62,12 @@ class YamlFileOperations:
         self.rust_yaml: Any | None = None
         try:
             from ClassicLib.integration.factory import get_yaml_operations
+
             self.rust_yaml = get_yaml_operations()
             if self.rust_yaml:
-                logger.debug("YamlFileOperations: Rust available for static database files (user files use Python for comment preservation)")
+                logger.debug(
+                    "YamlFileOperations: Rust available for static database files (user files use Python for comment preservation)"
+                )
         except ImportError:
             logger.debug("YamlFileOperations: Rust YAML operations not available, using Python for all files")
 
@@ -149,6 +152,7 @@ class YamlFileOperations:
                 # This uses the user's config directory which persists across uvx invocations
                 try:
                     import appdirs
+
                     cache_dir = Path(appdirs.user_config_dir("CLASSIC-Fallout4", "CLASSIC"))
                     cache_dir.mkdir(parents=True, exist_ok=True)
                     return cache_dir / "cache.yaml"
@@ -256,7 +260,7 @@ class YamlFileOperations:
         """
         # Check cache first if enabled
         file_key = str(file_path)
-        if use_cache and hasattr(self, '_file_cache') and file_key in self._file_cache:
+        if use_cache and hasattr(self, "_file_cache") and file_key in self._file_cache:
             logger.debug(f"Loaded {file_path.name} from cache")
             return self._file_cache[file_key]
 
@@ -301,7 +305,7 @@ class YamlFileOperations:
         else:
             # Cache the result if caching is enabled (only on success)
             if use_cache:
-                if not hasattr(self, '_file_cache'):
+                if not hasattr(self, "_file_cache"):
                     self._file_cache: dict[str, dict[str, Any]] = {}
                 self._file_cache[file_key] = data
 

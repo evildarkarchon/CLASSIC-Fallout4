@@ -33,6 +33,7 @@ from typing import Any
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+
 class PerformanceReportGenerator:
     """
     Comprehensive performance report generator for CLASSIC Phase 6.
@@ -74,26 +75,20 @@ class PerformanceReportGenerator:
 
             availability = {
                 "rust_available": True,
-                "classic_core_version": getattr(classic_core, '__version__', 'unknown'),
-                "available_modules": [attr for attr in dir(classic_core) if not attr.startswith('_')],
-                "scanlog_available": hasattr(classic_core, 'scanlog'),
+                "classic_core_version": getattr(classic_core, "__version__", "unknown"),
+                "available_modules": [attr for attr in dir(classic_core) if not attr.startswith("_")],
+                "scanlog_available": hasattr(classic_core, "scanlog"),
             }
 
             if availability["scanlog_available"]:
-                availability["scanlog_components"] = [
-                    attr for attr in dir(classic_core.scanlog)
-                    if not attr.startswith('_')
-                ]
+                availability["scanlog_components"] = [attr for attr in dir(classic_core.scanlog) if not attr.startswith("_")]
 
             self.log(f"✅ Rust components available: {len(availability['available_modules'])} modules")
             return availability
 
         except ImportError as e:
             self.log(f"❌ Rust components not available: {e}", "WARNING")
-            return {
-                "rust_available": False,
-                "error": str(e)
-            }
+            return {"rust_available": False, "error": str(e)}
 
     def run_benchmark_suite(self, include_real_logs: bool = True) -> dict[str, Any]:
         """Run comprehensive benchmark suite and collect results."""
@@ -106,9 +101,7 @@ class PerformanceReportGenerator:
 
         # Add realistic benchmarks if requested
         if include_real_logs:
-            benchmark_scripts.append(
-                ("benchmark_report_generation_realistic.py", "Realistic scenario benchmarks")
-            )
+            benchmark_scripts.append(("benchmark_report_generation_realistic.py", "Realistic scenario benchmarks"))
 
         results = {}
 
@@ -123,12 +116,7 @@ class PerformanceReportGenerator:
             try:
                 # Run benchmark script and capture output
                 result_file = self.output_dir / f"{script_name.stem}_results.json"
-                cmd = [
-                    sys.executable,
-                    str(script_path),
-                    "--output",
-                    str(result_file)
-                ]
+                cmd = [sys.executable, str(script_path), "--output", str(result_file)]
 
                 subprocess.run(cmd, cwd=str(self.project_root), check=True)
 
@@ -163,11 +151,11 @@ class PerformanceReportGenerator:
                 "successful_benchmarks": 0,
                 "failed_benchmarks": 0,
                 "components_tested": set(),
-                "overall_status": "UNKNOWN"
+                "overall_status": "UNKNOWN",
             },
             "performance_insights": [],
             "recommendations": [],
-            "component_status": {}
+            "component_status": {},
         }
 
         # Analyze each benchmark result
@@ -186,10 +174,7 @@ class PerformanceReportGenerator:
                 analysis["summary"]["failed_benchmarks"] += 1
 
         # Determine overall status
-        success_rate = (
-            analysis["summary"]["successful_benchmarks"] /
-            len(benchmark_results) if benchmark_results else 0
-        )
+        success_rate = analysis["summary"]["successful_benchmarks"] / len(benchmark_results) if benchmark_results else 0
 
         if success_rate >= 0.8:
             analysis["summary"]["overall_status"] = "EXCELLENT"
@@ -219,26 +204,26 @@ class PerformanceReportGenerator:
                         analysis["performance_insights"].append({
                             "component": component,
                             "insight": f"Excellent performance: {speedup:.2f}x speedup",
-                            "level": "EXCELLENT"
+                            "level": "EXCELLENT",
                         })
                     elif speedup >= 1.2:
                         analysis["performance_insights"].append({
                             "component": component,
                             "insight": f"Good performance: {speedup:.2f}x speedup",
-                            "level": "GOOD"
+                            "level": "GOOD",
                         })
                     else:
                         analysis["performance_insights"].append({
                             "component": component,
                             "insight": f"Limited performance: {speedup:.2f}x speedup (FFI overhead likely)",
-                            "level": "LIMITED"
+                            "level": "LIMITED",
                         })
 
                         # Add recommendation for FFI overhead
                         analysis["recommendations"].append({
                             "component": component,
                             "recommendation": "Consider batch processing APIs to reduce FFI overhead",
-                            "priority": "HIGH"
+                            "priority": "HIGH",
                         })
 
                 # Analyze memory efficiency
@@ -248,14 +233,14 @@ class PerformanceReportGenerator:
                         analysis["performance_insights"].append({
                             "component": component,
                             "insight": f"Exceptional memory efficiency: {reduction:.1f}% reduction",
-                            "level": "EXCEPTIONAL"
+                            "level": "EXCEPTIONAL",
                         })
 
                 # Component status
                 analysis["component_status"][component] = {
                     "functional": True,
                     "performance": component_results.get("speedup", "N/A"),
-                    "status": "WORKING"
+                    "status": "WORKING",
                 }
 
     def _analyze_comprehensive_benchmarks(self, results: dict[str, Any], analysis: dict[str, Any]):
@@ -287,7 +272,7 @@ class PerformanceReportGenerator:
             shutil.copy2(template_path, output_path)
 
             # Add generation metadata
-            with Path(output_path).open('a', encoding='utf-8') as f:
+            with Path(output_path).open("a", encoding="utf-8") as f:
                 f.write("\n\n---\n\n")
                 f.write(f"**Report Generated:** {self.generation_timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n")
                 f.write("**Generation Tool:** performance_report_generator.py\n")
@@ -295,22 +280,31 @@ class PerformanceReportGenerator:
                 f.write(f"**Components Tested:** {len(analysis['summary']['components_tested'])}\n")
         else:
             # Generate basic report structure
-            with Path(output_path).open('w', encoding='utf-8') as f:
+            with Path(output_path).open("w", encoding="utf-8") as f:
                 f.write("# Phase 6 Performance Report\n\n")
                 f.write(f"**Generated:** {self.generation_timestamp}\n")
                 f.write(f"**Status:** {analysis['summary']['overall_status']}\n\n")
 
                 # Add component status
                 f.write("## Component Status\n\n")
-                f.writelines(f"- **{component}**: {status['status']} (Performance: {status['performance']})\n" for component, status in analysis["component_status"].items())
+                f.writelines(
+                    f"- **{component}**: {status['status']} (Performance: {status['performance']})\n"
+                    for component, status in analysis["component_status"].items()
+                )
 
                 # Add insights
                 f.write("\n## Performance Insights\n\n")
-                f.writelines(f"- **{insight['component']}**: {insight['insight']} ({insight['level']})\n" for insight in analysis["performance_insights"])
+                f.writelines(
+                    f"- **{insight['component']}**: {insight['insight']} ({insight['level']})\n"
+                    for insight in analysis["performance_insights"]
+                )
 
                 # Add recommendations
                 f.write("\n## Recommendations\n\n")
-                f.writelines(f"- **{rec['component']}**: {rec['recommendation']} (Priority: {rec['priority']})\n" for rec in analysis["recommendations"])
+                f.writelines(
+                    f"- **{rec['component']}**: {rec['recommendation']} (Priority: {rec['priority']})\n"
+                    for rec in analysis["recommendations"]
+                )
 
         self.log(f"✅ Markdown report generated: {output_path}")
         return output_path
@@ -328,22 +322,23 @@ class PerformanceReportGenerator:
             shutil.copy2(template_path, output_path)
 
             # Update dashboard with current data (basic approach)
-            with Path(output_path).open(encoding='utf-8') as f:
+            with Path(output_path).open(encoding="utf-8") as f:
                 content = f.read()
 
             # Update title and timestamp
-            timestamp_str = self.generation_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            timestamp_str = self.generation_timestamp.strftime("%Y-%m-%d %H:%M:%S")
             content = content.replace(
                 "Rust Integration & Optimization - Complete Performance Analysis",
-                f"Rust Integration & Optimization - Generated {timestamp_str}"
+                f"Rust Integration & Optimization - Generated {timestamp_str}",
             )
 
-            with Path(output_path).open('w', encoding='utf-8') as f:
+            with Path(output_path).open("w", encoding="utf-8") as f:
                 f.write(content)
         else:
             # Generate basic HTML dashboard
-            with Path(output_path).open('w', encoding='utf-8') as f:
-                f.write("""<!DOCTYPE html>
+            with Path(output_path).open("w", encoding="utf-8") as f:
+                f.write(
+                    """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -362,15 +357,19 @@ class PerformanceReportGenerator:
         <p>Status: {}</p>
     </div>
     <div class="metrics">
-""".format(self.generation_timestamp.strftime('%Y-%m-%d %H:%M:%S'), analysis['summary']['overall_status']))
+""".format(self.generation_timestamp.strftime("%Y-%m-%d %H:%M:%S"), analysis["summary"]["overall_status"])
+                )
 
                 # Add component metrics
-                f.writelines(f"""
+                f.writelines(
+                    f"""
         <div class="metric">
-            <strong>{component}:</strong> {status['status']}
-            (Performance: {status['performance']})
+            <strong>{component}:</strong> {status["status"]}
+            (Performance: {status["performance"]})
         </div>
-""" for component, status in analysis["component_status"].items())
+"""
+                    for component, status in analysis["component_status"].items()
+                )
 
                 f.write("""
     </div>
@@ -393,16 +392,16 @@ class PerformanceReportGenerator:
                 "generator_tool": "performance_report_generator.py",
                 "phase": "Phase 6 - Integration & Optimization",
                 "project": "CLASSIC",
-                "version": "6.0.0"
+                "version": "6.0.0",
             },
             "summary": analysis["summary"],
             "component_status": analysis["component_status"],
             "performance_insights": analysis["performance_insights"],
             "recommendations": analysis["recommendations"],
-            "raw_benchmark_results": self.benchmark_results
+            "raw_benchmark_results": self.benchmark_results,
         }
 
-        with Path(output_path).open('w', encoding='utf-8') as f:
+        with Path(output_path).open("w", encoding="utf-8") as f:
             json.dump(metrics, f, indent=2, default=str)
 
         self.log(f"✅ JSON metrics generated: {output_path}")
@@ -414,19 +413,20 @@ class PerformanceReportGenerator:
 
         output_path = self.output_dir / f"Phase6_Executive_Summary_{self.generation_timestamp.strftime('%Y%m%d')}.md"
 
-        with Path(output_path).open('w', encoding='utf-8') as f:
+        with Path(output_path).open("w", encoding="utf-8") as f:
             f.write("# Phase 6 Executive Summary\n\n")
             f.write(f"**Date:** {self.generation_timestamp.strftime('%B %d, %Y')}\n")
             f.write(f"**Status:** {analysis['summary']['overall_status']}\n\n")
 
             f.write("## Key Achievements\n\n")
             f.write(f"- **Components Working:** {len(analysis['summary']['components_tested'])}\n")
-            f.write(f"- **Benchmark Success Rate:** {analysis['summary']['successful_benchmarks']}/{analysis['summary']['benchmarks_run']}\n")
+            f.write(
+                f"- **Benchmark Success Rate:** {analysis['summary']['successful_benchmarks']}/{analysis['summary']['benchmarks_run']}\n"
+            )
 
             # Outstanding insights
             excellent_insights = [
-                insight for insight in analysis["performance_insights"]
-                if insight.get("level") in ["EXCELLENT", "EXCEPTIONAL"]
+                insight for insight in analysis["performance_insights"] if insight.get("level") in ["EXCELLENT", "EXCEPTIONAL"]
             ]
 
             if excellent_insights:
@@ -435,10 +435,7 @@ class PerformanceReportGenerator:
                     f.write(f"- **{insight['component']}**: {insight['insight']}\n")
 
             # High priority recommendations
-            high_priority_recs = [
-                rec for rec in analysis["recommendations"]
-                if rec.get("priority") == "HIGH"
-            ]
+            high_priority_recs = [rec for rec in analysis["recommendations"] if rec.get("priority") == "HIGH"]
 
             if high_priority_recs:
                 f.write("\n## Priority Actions\n\n")
@@ -447,7 +444,7 @@ class PerformanceReportGenerator:
 
             # Conclusion
             f.write("\n## Recommendation\n\n")
-            if analysis['summary']['overall_status'] in ["EXCELLENT", "GOOD"]:
+            if analysis["summary"]["overall_status"] in ["EXCELLENT", "GOOD"]:
                 f.write("✅ **APPROVED FOR PRODUCTION DEPLOYMENT**\n\n")
                 f.write("Phase 6 has successfully achieved its integration and optimization goals. ")
                 f.write("The system is stable, performant, and ready for production use.")
@@ -527,7 +524,7 @@ class PerformanceReportGenerator:
         """Generate an index file listing all generated reports."""
         index_path = self.output_dir / "README.md"
 
-        with Path(index_path).open('w', encoding='utf-8') as f:
+        with Path(index_path).open("w", encoding="utf-8") as f:
             f.write("# CLASSIC Phase 6 Performance Reports\n\n")
             f.write(f"**Generated:** {self.generation_timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write("**Tool:** performance_report_generator.py\n\n")
@@ -568,49 +565,27 @@ Examples:
   python performance_report_generator.py --run-benchmarks --verbose
   python performance_report_generator.py --format html --output-dir ./custom_reports
   python performance_report_generator.py --include-real-logs
-        """
+        """,
+    )
+
+    parser.add_argument("--output-dir", type=Path, default=None, help="Directory for generated reports (default: reports/)")
+
+    parser.add_argument("--run-benchmarks", action="store_true", help="Run fresh benchmarks before generating reports")
+
+    parser.add_argument(
+        "--include-real-logs", action="store_true", default=True, help="Include real crash log testing (requires D:/Crash Logs)"
     )
 
     parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=None,
-        help="Directory for generated reports (default: reports/)"
+        "--format", choices=["markdown", "html", "json", "summary", "all"], default="all", help="Output format to generate (default: all)"
     )
 
-    parser.add_argument(
-        "--run-benchmarks",
-        action="store_true",
-        help="Run fresh benchmarks before generating reports"
-    )
-
-    parser.add_argument(
-        "--include-real-logs",
-        action="store_true",
-        default=True,
-        help="Include real crash log testing (requires D:/Crash Logs)"
-    )
-
-    parser.add_argument(
-        "--format",
-        choices=["markdown", "html", "json", "summary", "all"],
-        default="all",
-        help="Output format to generate (default: all)"
-    )
-
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Detailed logging during generation"
-    )
+    parser.add_argument("--verbose", action="store_true", help="Detailed logging during generation")
 
     args = parser.parse_args()
 
     # Initialize generator
-    generator = PerformanceReportGenerator(
-        output_dir=args.output_dir,
-        verbose=args.verbose
-    )
+    generator = PerformanceReportGenerator(output_dir=args.output_dir, verbose=args.verbose)
 
     print("🚀 CLASSIC Performance Report Generator")
     print("=" * 50)
@@ -618,10 +593,7 @@ Examples:
     try:
         if args.format == "all":
             # Generate all report types
-            generated_files = generator.generate_all_reports(
-                run_benchmarks=args.run_benchmarks,
-                include_real_logs=args.include_real_logs
-            )
+            generated_files = generator.generate_all_reports(run_benchmarks=args.run_benchmarks, include_real_logs=args.include_real_logs)
 
             print("\n✅ Report generation complete!")
             print(f"📁 Output directory: {generator.output_dir}")
@@ -656,6 +628,7 @@ Examples:
         print(f"\n❌ Report generation failed: {e}")
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 

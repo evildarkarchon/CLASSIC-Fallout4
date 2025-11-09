@@ -36,10 +36,7 @@ Usage:
 
 from __future__ import annotations
 
-from typing import List, Optional
-
 __version__: str
-
 
 class GithubAsset:
     """GitHub release asset information.
@@ -59,7 +56,6 @@ class GithubAsset:
     browser_download_url: str
     content_type: str
     download_count: int
-
 
 class GithubRelease:
     """GitHub release information.
@@ -90,10 +86,9 @@ class GithubRelease:
     prerelease: bool
     draft: bool
     html_url: str
-    assets: List[GithubAsset]
+    assets: list[GithubAsset]
     created_at: str
-    published_at: Optional[str]
-
+    published_at: str | None
 
 class GithubClient:
     """GitHub API client for release monitoring.
@@ -145,11 +140,7 @@ class GithubClient:
             >>> print(latest.tag_name)
         """
 
-    async def get_all_releases(
-        self,
-        include_prereleases: bool = False,
-        include_drafts: bool = False
-    ) -> List[GithubRelease]:
+    async def get_all_releases(self, include_prereleases: bool = False, include_drafts: bool = False) -> list[GithubRelease]:
         """Get all releases from GitHub.
 
         Args:
@@ -196,7 +187,6 @@ class GithubClient:
             https://github.com/evildarkarchon/CLASSIC-Fallout4
         """
 
-
 class NexusModInfo:
     """Nexus Mods mod information.
 
@@ -223,11 +213,10 @@ class NexusModInfo:
     version: str
     description: str
     author: str
-    endorsements: Optional[int]
-    downloads: Optional[int]
+    endorsements: int | None
+    downloads: int | None
     last_updated: str
     url: str
-
 
 class NexusClient:
     """Nexus Mods client for mod information.

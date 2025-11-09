@@ -4,8 +4,6 @@ This script tests that the new exception types are properly raised
 and caught by the Python wrapper modules.
 """
 
-from pathlib import Path
-
 from ClassicLib.integration.exceptions import (
     RustConfigError,
     RustDatabaseError,
@@ -64,10 +62,11 @@ def test_file_io_exceptions():
             print("\nTest 3: Verifying Rust module exception types...")
             try:
                 import classic_file_io
-                if hasattr(classic_file_io, 'RustFileIOIOError'):
+
+                if hasattr(classic_file_io, "RustFileIOIOError"):
                     rust_io_error = classic_file_io.RustFileIOIOError
                     print(f"  ✓ RustFileIOIOError is subclass of RustIOError: {issubclass(rust_io_error, RustIOError)}")
-                if hasattr(classic_file_io, 'RustFileIOParseError'):
+                if hasattr(classic_file_io, "RustFileIOParseError"):
                     rust_parse_error = classic_file_io.RustFileIOParseError
                     print(f"  ✓ RustFileIOParseError is subclass of RustParseError: {issubclass(rust_parse_error, RustParseError)}")
             except Exception as e:
@@ -98,12 +97,7 @@ def test_parser_exceptions():
             try:
                 # Minimal test data that won't match expected format
                 crash_data = ["invalid", "crash", "log"]
-                result = parser.find_segments(
-                    crash_data,
-                    crashgen_name="Buffout 4",
-                    xse_acronym="F4SE",
-                    game_root_name="Fallout4"
-                )
+                result = parser.find_segments(crash_data, crashgen_name="Buffout 4", xse_acronym="F4SE", game_root_name="Fallout4")
                 print(f"  ✓ Successfully parsed (or fell back): {len(result[3])} segments")
             except RustParseError as e:
                 print(f"  ✓ Caught RustParseError: {e}")

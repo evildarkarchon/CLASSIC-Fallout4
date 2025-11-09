@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     import argparse
     from argparse import Namespace
 
+
 def parse_arguments() -> "argparse.Namespace":
     """Parse command line arguments.
 

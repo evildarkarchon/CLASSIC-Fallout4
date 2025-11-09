@@ -151,15 +151,20 @@ class XseChecker:
         self.is_vr_mode = is_vr_mode
         self.game_version = game_version
 
-    def check(self) -> ValidationResult:
+    @staticmethod
+    def check() -> ValidationResult:
         """Perform the validation check.
+
+        Note:
+            This implementation uses global state from GlobalRegistry and
+            YamlSettingsCache rather than instance attributes. This is a
+            limitation of the current Python fallback implementation.
 
         Returns:
             ValidationResult indicating the status of the Address Library installation.
 
         Example:
-            >>> checker = XseChecker(Path("/plugins"))
-            >>> result = checker.check()
+            >>> result = XseChecker.check()
             >>> if result == ValidationResult.CorrectVersion:
             ...     print("Address Library is correct")
         """
@@ -184,15 +189,20 @@ class XseChecker:
         # Default to not detected if message format is unexpected
         return ValidationResult.VersionNotDetected
 
-    def validate(self) -> str:
+    @staticmethod
+    def validate() -> str:
         """Perform validation and return formatted message.
+
+        Note:
+            This implementation uses global state from GlobalRegistry and
+            YamlSettingsCache rather than instance attributes. This is a
+            limitation of the current Python fallback implementation.
 
         Returns:
             Formatted message string with validation result.
 
         Example:
-            >>> checker = XseChecker(Path("/plugins"))
-            >>> message = checker.validate()
+            >>> message = XseChecker.validate()
             >>> print(message)
         """
         # Use existing Python implementation

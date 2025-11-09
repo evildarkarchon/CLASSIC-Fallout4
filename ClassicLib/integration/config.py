@@ -132,5 +132,5 @@ COMPONENT_CATEGORIES = {
 
 # Performance thresholds
 PERFORMANCE_THRESHOLD_EXCELLENT = 0.9  # 90% components accelerated
-PERFORMANCE_THRESHOLD_GOOD = 0.7       # 70% components accelerated
-PERFORMANCE_THRESHOLD_PARTIAL = 0.3    # 30% components accelerated
+PERFORMANCE_THRESHOLD_GOOD = 0.7  # 70% components accelerated
+PERFORMANCE_THRESHOLD_PARTIAL = 0.3  # 30% components accelerated

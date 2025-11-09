@@ -19,7 +19,6 @@ Note:
 """
 
 import pytest
-from typing import Any
 
 
 @pytest.mark.rust
@@ -55,14 +54,10 @@ def test_parallel_processor_process_batch_static() -> None:
         result = ParallelReportProcessor.process_batch(reports, None)
 
         # Verify return type is list
-        assert isinstance(result, list), (
-            f"process_batch should return list, got {type(result).__name__}"
-        )
+        assert isinstance(result, list), f"process_batch should return list, got {type(result).__name__}"
 
         # Result should have same number of items as input
-        assert len(result) == len(reports), (
-            f"Expected {len(reports)} results, got {len(result)}"
-        )
+        assert len(result) == len(reports), f"Expected {len(reports)} results, got {len(result)}"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -98,16 +93,12 @@ def test_parallel_processor_combine_fragments_static() -> None:
         combined = ParallelReportProcessor.combine_fragments([frag1, frag2])
 
         # Verify return type is ReportFragment
-        assert isinstance(combined, ReportFragment), (
-            f"combine_fragments should return ReportFragment, got {type(combined).__name__}"
-        )
+        assert isinstance(combined, ReportFragment), f"combine_fragments should return ReportFragment, got {type(combined).__name__}"
 
         # Verify combined content
         lines = combined.to_list()
         assert isinstance(lines, list), "to_list() should return list"
-        assert len(lines) >= 4, (
-            f"Should combine both fragments (>=4 lines), got {len(lines)}"
-        )
+        assert len(lines) >= 4, f"Should combine both fragments (>=4 lines), got {len(lines)}"
 
         # Verify content is preserved
         combined_text = "\n".join(lines)
@@ -139,20 +130,12 @@ def test_parallel_processor_not_instance_methods() -> None:
         from classic_scanlog import ParallelReportProcessor
 
         # Verify methods exist on the class (not requiring instance)
-        assert hasattr(ParallelReportProcessor, "process_batch"), (
-            "process_batch should be accessible on class"
-        )
-        assert hasattr(ParallelReportProcessor, "combine_fragments"), (
-            "combine_fragments should be accessible on class"
-        )
+        assert hasattr(ParallelReportProcessor, "process_batch"), "process_batch should be accessible on class"
+        assert hasattr(ParallelReportProcessor, "combine_fragments"), "combine_fragments should be accessible on class"
 
         # Verify they are callable from the class
-        assert callable(getattr(ParallelReportProcessor, "process_batch")), (
-            "process_batch should be callable from class"
-        )
-        assert callable(getattr(ParallelReportProcessor, "combine_fragments")), (
-            "combine_fragments should be callable from class"
-        )
+        assert callable(ParallelReportProcessor.process_batch), "process_batch should be callable from class"
+        assert callable(ParallelReportProcessor.combine_fragments), "combine_fragments should be callable from class"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -189,12 +172,8 @@ def test_report_processor_wrapper_integration() -> None:
         reports = [["line1", "line2"], ["line3", "line4"]]
         result = processor.process_reports_parallel(reports)
 
-        assert isinstance(result, list), (
-            "process_reports_parallel should return list"
-        )
-        assert len(result) == len(reports), (
-            f"Expected {len(reports)} results, got {len(result)}"
-        )
+        assert isinstance(result, list), "process_reports_parallel should return list"
+        assert len(result) == len(reports), f"Expected {len(reports)} results, got {len(result)}"
 
         # Test combine_fragments_parallel (uses combine_fragments internally at line 640)
         frag1 = RustAcceleratedReportFragment.from_lines(["line1"])
@@ -244,13 +223,9 @@ def test_process_batch_with_processor_function() -> None:
 
         # Verify structure matches API signature: list[list[str]]
         for item in result:
-            assert isinstance(item, list), (
-                f"Each item should be list, got {type(item).__name__}"
-            )
+            assert isinstance(item, list), f"Each item should be list, got {type(item).__name__}"
             for line in item:
-                assert isinstance(line, str), (
-                    f"Each line should be string, got {type(line).__name__}"
-                )
+                assert isinstance(line, str), f"Each line should be string, got {type(line).__name__}"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -315,19 +290,13 @@ def test_combine_fragments_single_fragment() -> None:
 
         result = ParallelReportProcessor.combine_fragments(fragments)
 
-        assert isinstance(result, ReportFragment), (
-            f"Should return ReportFragment, got {type(result).__name__}"
-        )
+        assert isinstance(result, ReportFragment), f"Should return ReportFragment, got {type(result).__name__}"
 
         # Content should be preserved
         lines = result.to_list()
         assert len(lines) >= 2, "Should preserve content"
-        assert "Line 1" in lines or "Line 1" in "\n".join(lines), (
-            "Should preserve line 1"
-        )
-        assert "Line 2" in lines or "Line 2" in "\n".join(lines), (
-            "Should preserve line 2"
-        )
+        assert "Line 1" in lines or "Line 1" in "\n".join(lines), "Should preserve line 1"
+        assert "Line 2" in lines or "Line 2" in "\n".join(lines), "Should preserve line 2"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")
@@ -437,22 +406,14 @@ def test_wrapper_combine_fragments_realistic() -> None:
         processor = RustAcceleratedParallelProcessor()
 
         # Realistic crash log fragments
-        frag1 = RustAcceleratedReportFragment.from_lines(
-            ["Crash Report", "Date: 2025-11-04"]
-        )
-        frag2 = RustAcceleratedReportFragment.from_lines(
-            ["Exception Type: Access Violation", "Fault Module: game.dll"]
-        )
-        frag3 = RustAcceleratedReportFragment.from_lines(
-            ["Stack Trace:", "game.exe+0x12345", "game.dll+0x67890"]
-        )
+        frag1 = RustAcceleratedReportFragment.from_lines(["Crash Report", "Date: 2025-11-04"])
+        frag2 = RustAcceleratedReportFragment.from_lines(["Exception Type: Access Violation", "Fault Module: game.dll"])
+        frag3 = RustAcceleratedReportFragment.from_lines(["Stack Trace:", "game.exe+0x12345", "game.dll+0x67890"])
 
         combined = processor.combine_fragments_parallel([frag1, frag2, frag3])
 
         assert combined is not None, "Should return combined fragment"
-        assert isinstance(combined, RustAcceleratedReportFragment), (
-            "Should return RustAcceleratedReportFragment"
-        )
+        assert isinstance(combined, RustAcceleratedReportFragment), "Should return RustAcceleratedReportFragment"
 
         # Verify content was combined
         lines = combined.to_list()
@@ -460,9 +421,7 @@ def test_wrapper_combine_fragments_realistic() -> None:
 
         # Should contain elements from all fragments
         combined_text = "\n".join(lines)
-        assert "Crash Report" in combined_text or any(
-            "Crash Report" in line for line in lines
-        ), "Should preserve content from fragment 1"
+        assert "Crash Report" in combined_text or any("Crash Report" in line for line in lines), "Should preserve content from fragment 1"
 
     except ImportError as e:
         pytest.skip(f"Rust classic_scanlog not available: {e}")

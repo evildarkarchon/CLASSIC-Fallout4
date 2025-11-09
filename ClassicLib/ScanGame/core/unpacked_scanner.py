@@ -8,6 +8,7 @@ handling directory traversal, file type detection, cleanup operations, and issue
 import asyncio
 import os
 from collections import defaultdict
+from collections.abc import Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -33,9 +34,7 @@ class UnpackedModsScanner:
         dds_processor (DDSProcessor): Component for DDS texture validation.
     """
 
-    def __init__(
-        self, walk_executor: ThreadPoolExecutor, file_operations: FileOperations, dds_processor: DDSProcessor
-    ) -> None:
+    def __init__(self, walk_executor: ThreadPoolExecutor, file_operations: FileOperations, dds_processor: DDSProcessor) -> None:
         """
         Initialize the UnpackedModsScanner.
 
@@ -53,7 +52,7 @@ class UnpackedModsScanner:
         mod_path: Path,
         xse_acronym: str,
         xse_scriptfiles: dict[str, str],
-        dds_check_callback: callable,
+        dds_check_callback: Callable[[list[tuple[Path, Path]], dict[str, set[str]], dict[str, asyncio.Lock]], Awaitable[None]],
     ) -> dict[str, set[str]]:
         """
         Scan unpacked mod files and return detected issues.
@@ -70,7 +69,7 @@ class UnpackedModsScanner:
             mod_path: The mod directory path to scan.
             xse_acronym: XSE acronym (e.g., "F4SE", "SKSE") for script detection.
             xse_scriptfiles: Dictionary of XSE script files to detect.
-            dds_check_callback: Callback function for batch DDS checking.
+            dds_check_callback: Async callback function for batch DDS checking.
 
         Returns:
             Dictionary of detected issues by category.
@@ -126,9 +125,7 @@ class UnpackedModsScanner:
 
         # Create tasks for all directories
         tasks = [
-            self.process_directory_async(
-                root, dirs, files, context, xse_acronym, xse_scriptfiles, filter_names, dds_check_callback
-            )
+            self.process_directory_async(root, dirs, files, context, xse_acronym, xse_scriptfiles, filter_names, dds_check_callback)
             for root, dirs, files in all_dirs_data
         ]
 
@@ -218,10 +215,10 @@ class UnpackedModsScanner:
         dirs: list[str],
         files: list[str],
         context: dict,
-        xse_acronym: str,
+        _xse_acronym: str,
         xse_scriptfiles: dict[str, str],
         filter_names: tuple,
-        dds_check_callback: callable,
+        dds_check_callback: Callable[[list[tuple[Path, Path]], dict[str, set[str]], dict[str, asyncio.Lock]], Awaitable[None]],
     ) -> None:
         """
         Process a single directory for issues and cleanup operations.
@@ -236,10 +233,10 @@ class UnpackedModsScanner:
             dirs: List of subdirectory names in the directory.
             files: List of file names in the directory.
             context: Context dict with mod_path, backup_path, issue_lists, issue_locks.
-            xse_acronym: XSE acronym for script detection.
+            _xse_acronym: XSE acronym for script detection (unused, reserved for future use).
             xse_scriptfiles: Dictionary of XSE script files.
             filter_names: Tuple of strings to match for cleanup files.
-            dds_check_callback: Callback for batch DDS checking.
+            dds_check_callback: Async callback for batch DDS checking.
 
         Raises:
             Any exceptions from async operations are captured via return_exceptions.
@@ -247,7 +244,7 @@ class UnpackedModsScanner:
         Example:
             >>> await scanner.process_directory_async(
             ...     Path("/mods/textures"), ["subdir"], ["file.dds"],
-            ...     context, "F4SE", xse_files, filter_names, check_callback
+            ...     context, "F4SE", xse_scriptfiles, filter_names, dds_check_callback
             ... )
         """
         mod_path = context["mod_path"]

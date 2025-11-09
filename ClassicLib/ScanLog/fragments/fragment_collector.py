@@ -35,9 +35,6 @@ class FragmentCollector:
 
         Args:
             line (str): The line to be appended to the internal pending lines buffer.
-
-        Returns:
-            None
         """
         self._pending_lines.append(line)
 
@@ -51,9 +48,6 @@ class FragmentCollector:
         Args:
             lines (list[str] | tuple[str, ...]): A collection of strings to add
                 to the pending lines.
-
-        Returns:
-            None
         """
         self._pending_lines.extend(lines)
 
@@ -79,9 +73,6 @@ class FragmentCollector:
         This method checks for the existence of any pending lines and converts them
         to a report fragment. The created fragment is appended to the list of
         existing fragments. After processing, the list of pending lines is cleared.
-
-        Returns:
-            None
         """
         if self._pending_lines:
             self._fragments.append(ReportFragment.from_lines(self._pending_lines))

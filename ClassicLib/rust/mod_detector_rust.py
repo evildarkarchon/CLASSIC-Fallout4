@@ -16,8 +16,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Literal
 
-from ClassicLib.integration.exceptions import RustError, RustParseError
 from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.exceptions import RustError, RustParseError
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.fragments import ReportFragment
@@ -29,13 +29,16 @@ _, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
 _, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
 
 
-def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
+def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[type[BaseException], ...]]:
     """Get tuple of Rust exception types to catch.
 
-    Returns tuple of (ParseError types, generic RustError types).
+    Returns:
+        A tuple containing two tuples of exception types:
+            - ParseError types (RustParseError and module-specific parse errors)
+            - Generic RustError types (RustError and module-specific scan log errors)
     """
-    parse_errors = (RustParseError,)
-    rust_errors = (RustError,)
+    parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
+    rust_errors: tuple[type[BaseException], ...] = (RustError,)
 
     # Add module-specific exceptions if available
     if _rust_parse_error:
@@ -47,6 +50,8 @@ def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
 
 
 # Get exception type tuples at module level for use in exception handlers
+parse_errors: tuple[type[BaseException], ...]
+rust_errors: tuple[type[BaseException], ...]
 parse_errors, rust_errors = _get_rust_exception_types()
 
 # Centralized detection of Rust mod detector functions
@@ -98,6 +103,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     # Python fallback implementation
     from ClassicLib.python.mod_detector_py import detect_mods_single as py_detect
+
     return py_detect(yaml_dict, crashlog_plugins)
 
 
@@ -135,6 +141,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     # Python fallback implementation
     from ClassicLib.python.mod_detector_py import detect_mods_double as py_detect
+
     return py_detect(yaml_dict, crashlog_plugins)
 
 
@@ -184,9 +191,8 @@ def detect_mods_important(
 
     # Python fallback implementation
     from ClassicLib.python.mod_detector_py import detect_mods_important as py_detect
+
     return py_detect(yaml_dict, crashlog_plugins, gpu_rival)
-
-
 
 
 def get_mod_detector_status() -> dict[str, Any]:

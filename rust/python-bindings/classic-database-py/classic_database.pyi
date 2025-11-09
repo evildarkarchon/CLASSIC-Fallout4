@@ -67,12 +67,7 @@ class DatabasePool:
     - Query statistics tracking
     """
 
-    def __init__(
-        self,
-        max_connections: int | None = None,
-        cache_ttl_seconds: int | None = 300,
-        game_table: str | None = None
-    ) -> None:
+    def __init__(self, max_connections: int | None = None, cache_ttl_seconds: int | None = 300, game_table: str | None = None) -> None:
         """Create a new database pool.
 
         Initializes the connection pool configuration. Connections are created
@@ -105,12 +100,7 @@ class DatabasePool:
             >>> await pool.initialize(["formids.db", "extra.db"])
         """
 
-    async def get_entry(
-        self,
-        formid: str,
-        plugin: str,
-        table: str | None = None
-    ) -> dict[str, Any] | None:
+    async def get_entry(self, formid: str, plugin: str, table: str | None = None) -> dict[str, Any] | None:
         """Lookup a single FormID in the database.
 
         Queries the database for a FormID entry. Uses caching to avoid
@@ -133,10 +123,7 @@ class DatabasePool:
         """
 
     async def get_entries_batch(
-        self,
-        formid_plugin_pairs: list[tuple[str, str]],
-        table: str | None = None,
-        batch_size: int | None = None
+        self, formid_plugin_pairs: list[tuple[str, str]], table: str | None = None, batch_size: int | None = None
     ) -> dict[str, dict[str, Any]]:
         """Batch lookup multiple FormID-plugin pairs in optimized queries.
 
@@ -162,9 +149,7 @@ class DatabasePool:
         """
 
     async def batch_lookup(
-        self,
-        formid_plugin_pairs: list[tuple[str, str]],
-        table: str | None = None
+        self, formid_plugin_pairs: list[tuple[str, str]], table: str | None = None
     ) -> dict[tuple[str, str], dict[str, Any]]:
         """Alternative batch lookup method (backward compatibility).
 

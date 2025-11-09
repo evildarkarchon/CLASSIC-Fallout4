@@ -51,25 +51,25 @@ class YamlCache:
     def __init__(self) -> None:
         # noinspection PyUnresolvedReferences
         """
-                Represents a caching mechanism for storing and tracking the modification times
-                of files, as well as maintaining paths and settings cache. This class is
-                designed to handle caching required in scenarios where frequent reads or
-                updates may occur to reduce redundant operations.
+        Represents a caching mechanism for storing and tracking the modification times
+        of files, as well as maintaining paths and settings cache. This class is
+        designed to handle caching required in scenarios where frequent reads or
+        updates may occur to reduce redundant operations.
 
-                Attributes:
-                    cache (dict[str, Any]): Stores cached data with string keys and their
-                        respective values of any type.
-                    file_mod_times (dict[str, float]): Tracks the modification times of files
-                        using their file paths as keys and the corresponding modification
-                        times as floating-point values.
-                    path_cache (dict[tuple[YAML, str | None], Path]): Caches relationships
-                        between tuple keys (containing YAML and an optional string) and their
-                        corresponding file paths.
-                    settings_cache (dict[tuple[type, YAML, str], Any]): Caches settings data
-                        mapped by a tuple key containing the type, YAML, and string identifiers.
-                    last_check_time (float): The timestamp of the last file or cache check,
-                        represented as a floating-point value.
-                """
+        Attributes:
+            cache (dict[str, Any]): Stores cached data with string keys and their
+                respective values of any type.
+            file_mod_times (dict[str, float]): Tracks the modification times of files
+                using their file paths as keys and the corresponding modification
+                times as floating-point values.
+            path_cache (dict[tuple[YAML, str | None], Path]): Caches relationships
+                between tuple keys (containing YAML and an optional string) and their
+                corresponding file paths.
+            settings_cache (dict[tuple[type, YAML, str], Any]): Caches settings data
+                mapped by a tuple key containing the type, YAML, and string identifiers.
+            last_check_time (float): The timestamp of the last file or cache check,
+                represented as a floating-point value.
+        """
         self.cache: dict[str, Any] = {}
         self.file_mod_times: dict[str, float] = {}
         self.path_cache: dict[tuple[YAML, str | None], Path] = {}
@@ -192,7 +192,8 @@ class YamlCache:
 
             # Clear related settings cache entries
             settings_keys_to_remove = [
-                k for k in self.settings_cache.keys()  # noqa: SIM118
+                k
+                for k in self.settings_cache.keys()  # noqa: SIM118
                 if str(k[1]) == store
             ]
             for key in settings_keys_to_remove:

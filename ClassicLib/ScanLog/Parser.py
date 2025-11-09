@@ -193,13 +193,13 @@ def find_segments(
               of the crash report. Missing segments are represented as empty lists.
     """
     # Use Rust parser if available for 150x speedup
-    if _rust_available and hasattr(_rust_parser, 'find_segments'):
+    if _rust_available and hasattr(_rust_parser, "find_segments"):
         try:
             return _rust_parser.find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
         except Exception as e:
             logger.warning(f"Rust parser failed, falling back to Python: {e}")
             # Fall through to Python implementation
-    
+
     # Python fallback implementation
     # Define segment boundaries
     segment_boundaries: list[tuple[str, str]] = [

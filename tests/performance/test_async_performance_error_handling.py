@@ -4,6 +4,7 @@ Error handling performance baseline tests for async operations.
 This module establishes baseline performance metrics specifically for error handling patterns,
 including the performance impact of various error scenarios and recovery mechanisms.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import time
 from pathlib import Path

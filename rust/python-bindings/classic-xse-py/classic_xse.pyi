@@ -30,13 +30,10 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 __version__: str
 
 # Type alias for version tuples
-Version = Tuple[int, int, int]
-
+Version = tuple[int, int, int]
 
 class XseType:
     """XSE type enumeration for Python.
@@ -109,7 +106,6 @@ class XseType:
             The XSE type name as a string.
         """
 
-
 class XseInfo:
     """XSE installation information for Python.
 
@@ -135,7 +131,7 @@ class XseInfo:
     def path(self) -> str:
         """Get the installation path."""
 
-    def version(self) -> Optional[Version]:
+    def version(self) -> Version | None:
         """Get the detected version.
 
         Returns:
@@ -165,7 +161,6 @@ class XseInfo:
             A formatted string with type, installation status, and version.
         """
 
-
 def parse_xse_type(type_name: str) -> XseType:
     """Parse an XSE type from a string.
 
@@ -184,7 +179,6 @@ def parse_xse_type(type_name: str) -> XseType:
         >>> xse = parse_xse_type("SKSE64")
         >>> assert xse.as_str() == "SKSE64"
     """
-
 
 def detect_xse_version(loader_path: str, xse_type: XseType) -> Version:
     """Detect XSE version from a loader executable.
@@ -207,7 +201,6 @@ def detect_xse_version(loader_path: str, xse_type: XseType) -> Version:
         ...     print(f"Detection failed: {e}")
     """
 
-
 def is_xse_installed(game_path: str, xse_type: XseType) -> bool:
     """Check if XSE is installed in a directory.
 
@@ -222,7 +215,6 @@ def is_xse_installed(game_path: str, xse_type: XseType) -> bool:
         >>> if is_xse_installed("C:\\Games\\Fallout4", XseType.f4se()):
         ...     print("F4SE is installed")
     """
-
 
 def get_xse_info(game_path: str, xse_type: XseType) -> XseInfo:
     """Get XSE information for a game directory.

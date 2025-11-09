@@ -24,8 +24,10 @@ def create_async_json_mock(return_value):
     This helper is needed because response.json() is an async method that
     must be awaited, so we need to return a coroutine, not a plain value.
     """
+
     async def async_json():
         return return_value
+
     return MagicMock(side_effect=async_json)
 
 
@@ -122,42 +124,28 @@ class TestGetGithubLatestStableVersion:
     async def test_get_stable_version_success(self, mock_session, mock_response):
         """Test successful retrieval of stable version."""
         # Mock response data
-        response_data = {
-            "name": "CLASSIC v2.1.0",
-            "prerelease": False,
-            "tag_name": "v2.1.0"
-        }
+        response_data = {"name": "CLASSIC v2.1.0", "prerelease": False, "tag_name": "v2.1.0"}
 
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        result = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "owner", "repo"
-        )
+        result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
         assert result == Version("2.1.0")
 
         # Verify API call
-        mock_session.get.assert_called_once_with(
-            "https://api.github.com/repos/owner/repo/releases/latest"
-        )
+        mock_session.get.assert_called_once_with("https://api.github.com/repos/owner/repo/releases/latest")
 
     @pytest.mark.asyncio
     async def test_get_stable_version_prerelease(self, mock_session, mock_response):
         """Test handling when latest release is a prerelease."""
-        response_data = {
-            "name": "CLASSIC v3.0.0-beta",
-            "prerelease": True,
-            "tag_name": "v3.0.0-beta"
-        }
+        response_data = {"name": "CLASSIC v3.0.0-beta", "prerelease": True, "tag_name": "v3.0.0-beta"}
 
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
             mock_logger.warning.assert_called_once()
@@ -169,9 +157,7 @@ class TestGetGithubLatestStableVersion:
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
             mock_logger.info.assert_called_once()
@@ -182,17 +168,12 @@ class TestGetGithubLatestStableVersion:
         """Test handling HTTP errors."""
         mock_response.status = 500
         mock_response.raise_for_status.side_effect = aiohttp.ClientResponseError(
-            request_info=MagicMock(),
-            history=(),
-            status=500,
-            message="Server Error"
+            request_info=MagicMock(), history=(), status=500, message="Server Error"
         )
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
             mock_logger.error.assert_called_once()
@@ -203,9 +184,7 @@ class TestGetGithubLatestStableVersion:
         mock_session.get.side_effect = aiohttp.ClientError("Connection failed")
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
             mock_logger.error.assert_called_once()
@@ -217,9 +196,7 @@ class TestGetGithubLatestStableVersion:
         mock_response.json = create_async_json_mock("invalid")
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        result = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "owner", "repo"
-        )
+        result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
         assert result is None
 
@@ -228,34 +205,26 @@ class TestGetGithubLatestStableVersion:
         """Test handling response with missing or invalid name field."""
         response_data = {
             "prerelease": False,
-            "tag_name": "v1.0.0"
+            "tag_name": "v1.0.0",
             # Missing "name" field
         }
 
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        result = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "owner", "repo"
-        )
+        result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
         assert result is None
 
     @pytest.mark.asyncio
     async def test_get_stable_version_unparseable_name(self, mock_session, mock_response):
         """Test handling response with unparseable version name."""
-        response_data = {
-            "name": "Invalid Version Name",
-            "prerelease": False,
-            "tag_name": "v1.0.0"
-        }
+        response_data = {"name": "Invalid Version Name", "prerelease": False, "tag_name": "v1.0.0"}
 
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        result = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "owner", "repo"
-        )
+        result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
         assert result is None
 
@@ -280,61 +249,35 @@ class TestGetGithubLatestPrerelease:
     async def test_get_prerelease_success(self, mock_session, mock_response):
         """Test successful retrieval of latest prerelease version."""
         response_data = [
-            {
-                "name": "CLASSIC v3.0.0-beta.2",
-                "prerelease": True,
-                "published_at": "2023-12-02T10:00:00Z"
-            },
-            {
-                "name": "CLASSIC v3.0.0-beta.1",
-                "prerelease": True,
-                "published_at": "2023-12-01T10:00:00Z"
-            },
-            {
-                "name": "CLASSIC v2.1.0",
-                "prerelease": False,
-                "published_at": "2023-11-15T10:00:00Z"
-            }
+            {"name": "CLASSIC v3.0.0-beta.2", "prerelease": True, "published_at": "2023-12-02T10:00:00Z"},
+            {"name": "CLASSIC v3.0.0-beta.1", "prerelease": True, "published_at": "2023-12-01T10:00:00Z"},
+            {"name": "CLASSIC v2.1.0", "prerelease": False, "published_at": "2023-11-15T10:00:00Z"},
         ]
 
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        result = await get_github_latest_prerelease_version_from_list(
-            mock_session, "owner", "repo"
-        )
+        result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
         # Should return the first (most recent) prerelease
         assert result == Version("3.0.0b2")
 
         # Verify API call
-        mock_session.get.assert_called_once_with(
-            "https://api.github.com/repos/owner/repo/releases"
-        )
+        mock_session.get.assert_called_once_with("https://api.github.com/repos/owner/repo/releases")
 
     @pytest.mark.asyncio
     async def test_get_prerelease_no_prereleases(self, mock_session, mock_response):
         """Test handling when no prereleases are found."""
         response_data = [
-            {
-                "name": "CLASSIC v2.1.0",
-                "prerelease": False,
-                "published_at": "2023-11-15T10:00:00Z"
-            },
-            {
-                "name": "CLASSIC v2.0.0",
-                "prerelease": False,
-                "published_at": "2023-10-15T10:00:00Z"
-            }
+            {"name": "CLASSIC v2.1.0", "prerelease": False, "published_at": "2023-11-15T10:00:00Z"},
+            {"name": "CLASSIC v2.0.0", "prerelease": False, "published_at": "2023-10-15T10:00:00Z"},
         ]
 
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_prerelease_version_from_list(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
             # Note: The actual implementation might not log when no prereleases found
@@ -349,9 +292,7 @@ class TestGetGithubLatestPrerelease:
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_prerelease_version_from_list(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
             # Note: The actual implementation might not log for empty list
@@ -363,17 +304,12 @@ class TestGetGithubLatestPrerelease:
         """Test handling HTTP errors."""
         mock_response.status = 404
         mock_response.raise_for_status.side_effect = aiohttp.ClientResponseError(
-            request_info=MagicMock(),
-            history=(),
-            status=404,
-            message="Not Found"
+            request_info=MagicMock(), history=(), status=404, message="Not Found"
         )
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_prerelease_version_from_list(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
             mock_logger.error.assert_called_once()
@@ -384,9 +320,7 @@ class TestGetGithubLatestPrerelease:
         mock_session.get.side_effect = aiohttp.ClientError("Network error")
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_prerelease_version_from_list(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
             mock_logger.error.assert_called_once()
@@ -397,29 +331,19 @@ class TestGetGithubLatestPrerelease:
         mock_response.json = create_async_json_mock({"error": "invalid"})
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        result = await get_github_latest_prerelease_version_from_list(
-            mock_session, "owner", "repo"
-        )
+        result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
         assert result is None
 
     @pytest.mark.asyncio
     async def test_get_prerelease_unparseable_version(self, mock_session, mock_response):
         """Test handling prerelease with unparseable version."""
-        response_data = [
-            {
-                "name": "Invalid Prerelease Name",
-                "prerelease": True,
-                "published_at": "2023-12-01T10:00:00Z"
-            }
-        ]
+        response_data = [{"name": "Invalid Prerelease Name", "prerelease": True, "published_at": "2023-12-01T10:00:00Z"}]
 
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        result = await get_github_latest_prerelease_version_from_list(
-            mock_session, "owner", "repo"
-        )
+        result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
         assert result is None
 
@@ -429,22 +353,20 @@ class TestGetGithubLatestPrerelease:
         response_data = [
             {
                 "prerelease": True,
-                "published_at": "2023-12-01T10:00:00Z"
+                "published_at": "2023-12-01T10:00:00Z",
                 # Missing "name" field
             },
             {
                 "name": "CLASSIC v3.0.0-beta.1",
-                "published_at": "2023-11-01T10:00:00Z"
+                "published_at": "2023-11-01T10:00:00Z",
                 # Missing "prerelease" field
-            }
+            },
         ]
 
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        result = await get_github_latest_prerelease_version_from_list(
-            mock_session, "owner", "repo"
-        )
+        result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
         assert result is None
 
@@ -463,36 +385,25 @@ class TestUpdateIntegrationScenarios:
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         # Mock stable release response
-        stable_data = {
-            "name": "CLASSIC v2.1.0",
-            "prerelease": False
-        }
+        stable_data = {"name": "CLASSIC v2.1.0", "prerelease": False}
 
         # Mock prerelease list response
-        prerelease_data = [
-            {
-                "name": "CLASSIC v2.2.0-beta.1",
-                "prerelease": True,
-                "published_at": "2023-12-01T10:00:00Z"
-            }
-        ]
+        prerelease_data = [{"name": "CLASSIC v2.2.0-beta.1", "prerelease": True, "published_at": "2023-12-01T10:00:00Z"}]
 
         # Configure responses
         # Configure responses with different data for each call
         call_count = [0]
+
         async def multi_response_json():
             result = [stable_data, prerelease_data][call_count[0]]
             call_count[0] += 1
             return result
+
         mock_response.json = MagicMock(side_effect=multi_response_json)
 
         # Get both versions
-        stable_version = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "owner", "repo"
-        )
-        prerelease_version = await get_github_latest_prerelease_version_from_list(
-            mock_session, "owner", "repo"
-        )
+        stable_version = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
+        prerelease_version = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
         # Verify versions
         assert stable_version == Version("2.1.0")
@@ -531,9 +442,7 @@ class TestUpdateIntegrationScenarios:
         mock_session.get.side_effect = aiohttp.ServerTimeoutError("Request timeout")
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
             mock_logger.error.assert_called_once()
@@ -545,17 +454,12 @@ class TestUpdateIntegrationScenarios:
         mock_response = MagicMock()
         mock_response.status = 403  # Rate limited
         mock_response.raise_for_status.side_effect = aiohttp.ClientResponseError(
-            request_info=MagicMock(),
-            history=(),
-            status=403,
-            message="Rate limit exceeded"
+            request_info=MagicMock(), history=(), status=403, message="Rate limit exceeded"
         )
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "owner", "repo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
             mock_logger.error.assert_called_once()

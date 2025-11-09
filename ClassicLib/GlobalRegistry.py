@@ -34,6 +34,7 @@ class Keys:
         LOCAL_DIR (str): Key for the local directory path.
         IS_PRERELEASE (str): Key indicating whether the application is a prerelease version.
     """
+
     YAML_CACHE = "yaml_cache"
     MANUAL_DOCS_GUI = "manual_docs_gui"
     GAME_PATH_GUI = "game_path_gui"
@@ -101,6 +102,7 @@ def get_yaml_cache() -> Any:
 
     """
     return get(Keys.YAML_CACHE)
+
 
 def set_game(game_name: str) -> None:
     """
@@ -212,12 +214,12 @@ def get_game() -> str:
     """
     if not is_registered(Keys.GAME):
         return "Fallout4"
-    
+
     game_value = get(Keys.GAME)
     # Return default if value is empty/None
     if not game_value:
         return "Fallout4"
-    
+
     return game_value
 
 

@@ -4,6 +4,7 @@ Test suite for file operation utility functions in ClassicLib/Util.py.
 This module contains tests for file encoding detection, hashing,
 and other file-related operations.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841
 import hashlib
 from pathlib import Path

@@ -150,9 +150,10 @@ class TestReportDeletionIntegration:
         integrated_viewer.results_list.get_report_path.return_value = report_path
         integrated_viewer.current_report_path = report_path
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox, \
-             patch.object(integrated_viewer, "refresh_reports_list"):
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox,
+            patch.object(integrated_viewer, "refresh_reports_list"),
+        ):
             # Mock user confirmation
             mock_msgbox.StandardButton = QMessageBox.StandardButton
             mock_msgbox.question.return_value = QMessageBox.StandardButton.Yes

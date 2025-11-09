@@ -4,6 +4,7 @@ Memory usage performance baseline tests for async operations.
 This module establishes baseline performance metrics specifically for memory consumption,
 including sync vs async memory patterns and resource usage monitoring.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import gc
 from pathlib import Path

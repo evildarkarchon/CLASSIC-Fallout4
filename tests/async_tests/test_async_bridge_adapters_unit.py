@@ -35,6 +35,7 @@ class TestAsyncBridgeAdapter:
 
         class AsyncComponent:
             """Example component with async methods."""
+
             async def async_method(self, value):
                 await asyncio.sleep(0.001)
                 return value * 2
@@ -62,6 +63,7 @@ class TestAsyncBridgeAdapter:
 
         class AsyncComponent:
             """Component with failing async method."""
+
             async def failing_method(self):
                 raise ValueError("Async error")
 
@@ -81,6 +83,7 @@ class TestAsyncBridgeAdapter:
 
         class AsyncComponent:
             """Component with parameterized async method."""
+
             async def method_with_args(self, a, b, c=10):
                 return a + b + c
 
@@ -109,6 +112,7 @@ class TestAsyncBridgeAdapter:
             This represents the async core implementation that needs
             to be wrapped for synchronous use.
             """
+
             async def process(self, data):
                 """Async processing method."""
                 await asyncio.sleep(0.001)
@@ -125,6 +129,7 @@ class TestAsyncBridgeAdapter:
             using AsyncBridge. This is the recommended pattern for exposing
             async code to sync callers.
             """
+
             def __init__(self):
                 # Initialize the async component
                 self.async_logic = AsyncBusinessLogic()
@@ -153,6 +158,7 @@ class TestAsyncBridgeAdapter:
 
         class MixedComponent:
             """Component with both sync and async methods."""
+
             def sync_method(self):
                 """Regular synchronous method."""
                 return "sync"
@@ -188,6 +194,7 @@ class TestHybridPattern:
 
         class HybridService:
             """Service with both sync and async interfaces."""
+
             def __init__(self):
                 self.bridge = AsyncBridge.get_instance()
 
@@ -218,6 +225,7 @@ class TestHybridPattern:
 
         class HybridService:
             """Service with async methods."""
+
             async def async_process(self, data):
                 """Async processing method."""
                 await asyncio.sleep(0.001)
@@ -237,6 +245,7 @@ class TestHybridPattern:
 
         class StatefulHybrid:
             """Hybrid service with internal state."""
+
             def __init__(self):
                 self.bridge = AsyncBridge.get_instance()
                 self.counter = 0
@@ -266,6 +275,7 @@ class TestHybridPattern:
 
         class HybridWithErrors:
             """Hybrid service that can raise exceptions."""
+
             def __init__(self):
                 self.bridge = AsyncBridge.get_instance()
 

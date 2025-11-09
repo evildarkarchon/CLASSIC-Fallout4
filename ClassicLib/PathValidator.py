@@ -19,10 +19,10 @@ from pathlib import Path
 
 from ClassicLib import GlobalRegistry, msg_warning
 from ClassicLib.Constants import YAML
-from ClassicLib.Logger import logger
 
 # Import factory for Rust acceleration
 from ClassicLib.integration.factory import get_path_operations
+from ClassicLib.Logger import logger
 
 # Get Rust module if available, None otherwise
 classic_path = get_path_operations()
@@ -67,8 +67,9 @@ class PathValidator:
 
         # Use Rust acceleration when available
         if _HAS_RUST_PATH and classic_path is not None:
+            assert classic_path is not None  # Type narrowing for type checker
             try:
-                return classic_path.PathValidator.is_valid_path(str(path))  # pyright: ignore[reportOptionalMemberAccess]
+                return classic_path.PathValidator.is_valid_path(str(path))
             except (ValueError, OSError, RuntimeError):
                 # Fall through to Python implementation on error
                 pass
@@ -99,8 +100,9 @@ class PathValidator:
         """
         # Use Rust acceleration when available
         if _HAS_RUST_PATH and classic_path is not None:
+            assert classic_path is not None  # Type narrowing for type checker
             try:
-                return classic_path.PathValidator.is_restricted_path(str(path))  # pyright: ignore[reportOptionalMemberAccess]
+                return classic_path.PathValidator.is_restricted_path(str(path))
             except (ValueError, OSError, RuntimeError):
                 # Fall through to Python implementation on error
                 pass

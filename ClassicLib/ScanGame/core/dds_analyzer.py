@@ -8,35 +8,45 @@ Falls back to basic validation if libraries are unavailable.
 from __future__ import annotations
 
 import asyncio
+import logging
 import struct
-import time
 from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar
 
-# Fix for Python 3.8+ compatibility with pyffi
-# time.clock() was removed in Python 3.8, replace with time.perf_counter()
-if not hasattr(time, 'clock'):
-    time.clock = time.perf_counter
+logger = logging.getLogger(__name__)
 
 # Try to import optional DDS libraries
-try:
-    from pyffi.formats.dds import DdsFormat
-    HAS_PYFFI = True
-except ImportError:
-    HAS_PYFFI = False
+if TYPE_CHECKING:
+    # For type checking, assume types exist (guarded by HAS_PYFFI/HAS_PIL_DDS at runtime)
+    DdsFormat: Any = None
+    Image: Any = None
+    HAS_PYFFI: bool = False
+    HAS_PIL_DDS: bool = False
+else:
+    try:
+        from pyffi.formats.dds import DdsFormat
 
-try:
-    from PIL import Image
-    # Check if DDS plugin is available
-    Image.init()
-    HAS_PIL_DDS = "DDS" in Image.registered_extensions().values()
-except ImportError:
-    HAS_PIL_DDS = False
+        HAS_PYFFI = True
+    except ImportError:
+        HAS_PYFFI = False
+        DdsFormat = None
+
+    try:
+        from PIL import Image
+
+        # Check if DDS plugin is available
+        Image.init()
+        HAS_PIL_DDS = "DDS" in Image.registered_extensions().values()
+    except ImportError:
+        HAS_PIL_DDS = False
+        Image = None
 
 
 class DDSFlags(IntEnum):
     """DDS header flags constants."""
+
     CAPS = 0x1
     HEIGHT = 0x2
     WIDTH = 0x4
@@ -49,6 +59,7 @@ class DDSFlags(IntEnum):
 
 class DDSPixelFlags(IntEnum):
     """DDS pixel format flags."""
+
     ALPHAPIXELS = 0x1
     ALPHA = 0x2
     FOURCC = 0x4
@@ -60,6 +71,7 @@ class DDSPixelFlags(IntEnum):
 @dataclass
 class DDSInfo:
     """Comprehensive DDS file information."""
+
     width: int
     height: int
     depth: int = 1
@@ -84,8 +96,10 @@ class DDSInfo:
         Returns:
             bool: True if both `width` and `height` are powers of 2, otherwise False.
         """
+
         def is_pow2(n: int) -> bool:
             return n > 0 and (n & (n - 1)) == 0
+
         return is_pow2(self.width) and is_pow2(self.height)
 
     @property
@@ -143,7 +157,7 @@ class EnhancedDDSAnalyzer:
     """Advanced DDS texture analyzer with multiple backend support."""
 
     # Common BC/DXT format FourCC codes
-    BC_FORMATS = {
+    BC_FORMATS: ClassVar[dict[bytes, str]] = {
         b"DXT1": "BC1/DXT1 (4bpp, 1-bit alpha)",
         b"DXT2": "BC2/DXT2 (8bpp, premult alpha)",
         b"DXT3": "BC2/DXT3 (8bpp, explicit alpha)",
@@ -230,21 +244,21 @@ class EnhancedDDSAnalyzer:
                 dwFlags = struct.unpack("<I", header[4:8])[0]
                 dwHeight = struct.unpack("<I", header[8:12])[0]
                 dwWidth = struct.unpack("<I", header[12:16])[0]
-                dwPitchOrLinearSize = struct.unpack("<I", header[16:20])[0]
+                _dwPitchOrLinearSize = struct.unpack("<I", header[16:20])[0]  # Read but not used
                 dwDepth = struct.unpack("<I", header[20:24])[0] if dwFlags & DDSFlags.DEPTH else 1
                 dwMipMapCount = struct.unpack("<I", header[24:28])[0] if dwFlags & DDSFlags.MIPMAPCOUNT else 1
 
                 # Parse pixel format (32 bytes at offset 76)
                 pf_offset = 72  # 76 - 4 (we already read magic)
-                pf_size = struct.unpack("<I", header[pf_offset:pf_offset + 4])[0]
+                pf_size = struct.unpack("<I", header[pf_offset : pf_offset + 4])[0]
                 if pf_size != 32:
                     return None
 
-                pf_flags = struct.unpack("<I", header[pf_offset + 4:pf_offset + 8])[0]
-                fourcc = header[pf_offset + 8:pf_offset + 12] if pf_flags & DDSPixelFlags.FOURCC else None
+                pf_flags = struct.unpack("<I", header[pf_offset + 4 : pf_offset + 8])[0]
+                fourcc = header[pf_offset + 8 : pf_offset + 12] if pf_flags & DDSPixelFlags.FOURCC else None
 
                 # Parse caps to detect cubemap/volume
-                caps1 = struct.unpack("<I", header[104:108])[0]
+                _caps1 = struct.unpack("<I", header[104:108])[0]
                 caps2 = struct.unpack("<I", header[108:112])[0]
 
                 is_cubemap = bool(caps2 & 0x200)  # DDSCAPS2_CUBEMAP
@@ -266,7 +280,7 @@ class EnhancedDDSAnalyzer:
                     else:
                         pixel_format = f"FourCC: {fourcc.decode('ascii', errors='replace')}"
                 elif pf_flags & DDSPixelFlags.RGB:
-                    rgb_bit_count = struct.unpack("<I", header[pf_offset + 12:pf_offset + 16])[0]
+                    rgb_bit_count = struct.unpack("<I", header[pf_offset + 12 : pf_offset + 16])[0]
                     pixel_format = f"RGB{rgb_bit_count}"
                     if has_alpha:
                         pixel_format = f"RGBA{rgb_bit_count}"
@@ -285,7 +299,7 @@ class EnhancedDDSAnalyzer:
                     is_cubemap=is_cubemap,
                     is_volume=is_volume,
                     pixel_format=pixel_format,
-                    file_size=file_path.stat().st_size
+                    file_size=file_path.stat().st_size,
                 )
 
         except (OSError, struct.error):
@@ -329,12 +343,12 @@ class EnhancedDDSAnalyzer:
                 is_cubemap=bool(header.caps_2 & 0x200),  # DDSCAPS2_CUBEMAP
                 is_volume=bool(header.caps_2 & 0x200000),  # DDSCAPS2_VOLUME
                 pixel_format=self._get_pyffi_format_name(header),
-                file_size=file_path.stat().st_size
+                file_size=file_path.stat().st_size,
             )
         except Exception:
             return None
 
-    def _get_pyffi_format_name(self, header) -> str:
+    def _get_pyffi_format_name(self, header: Any) -> str:
         """
         Determines the PyFFI format name based on the given pixel format header.
 
@@ -387,7 +401,7 @@ class EnhancedDDSAnalyzer:
                 info = self._analyze_manual(file_path)
                 if info:
                     # Enhance with PIL data
-                    info.has_alpha = img.mode in ("RGBA", "LA")
+                    info.has_alpha = img.mode in {"RGBA", "LA"}
                     # PIL can sometimes provide format info
                     if hasattr(img, "format_description"):
                         info.pixel_format = img.format_description
@@ -416,7 +430,8 @@ class EnhancedDDSAnalyzer:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.analyze_file, file_path)
 
-    def validate_for_game(self, info: DDSInfo, game: str = "Fallout4") -> list[str]:
+    @staticmethod
+    def validate_for_game(info: DDSInfo, game: str = "Fallout4") -> list[str]:
         """
         Validates the given DDS texture information against common requirements and game-specific
         criteria. This function ensures that the provided DDS texture meets the compatibility
@@ -479,8 +494,7 @@ def get_analyzer() -> EnhancedDDSAnalyzer:
         available_backends.append("Pillow-DDS")
 
     if available_backends:
-        import logging
-        logging.debug(f"DDS Analyzer using: {', '.join(available_backends)}")
+        logger.debug(f"DDS Analyzer using: {', '.join(available_backends)}")
 
     return analyzer
 

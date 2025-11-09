@@ -20,6 +20,7 @@ import pytest
 
 try:
     from classic_scanlog import RecordScanner, contains_record, scan_records_batch
+
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False
@@ -28,6 +29,7 @@ except ImportError:
 # ============================================================================
 # Test Data Helpers
 # ============================================================================
+
 
 def create_mock_yamldata():
     """Create mock yamldata object for RecordScanner."""
@@ -53,6 +55,7 @@ def create_mock_yamldata():
 # Pure Function Tests (contains_record)
 # ============================================================================
 
+
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust RecordScanner not available")
 class TestContainsRecord:
@@ -64,25 +67,13 @@ class TestContainsRecord:
         ignore_records = ["void*"]
 
         # Should match - contains target and no ignored terms
-        assert contains_record(
-            "0x7FF6F1E52E60    (BSResource::Archive2**)",
-            target_records,
-            ignore_records
-        )
+        assert contains_record("0x7FF6F1E52E60    (BSResource::Archive2**)", target_records, ignore_records)
 
         # Should not match - contains ignored term
-        assert not contains_record(
-            "0x7FF6EF4B2DC8    (void* -> Fallout4.exe+0712DC8)",
-            target_records,
-            ignore_records
-        )
+        assert not contains_record("0x7FF6EF4B2DC8    (void* -> Fallout4.exe+0712DC8)", target_records, ignore_records)
 
         # Should not match - doesn't contain target
-        assert not contains_record(
-            "0x1AC             (size_t)",
-            target_records,
-            ignore_records
-        )
+        assert not contains_record("0x1AC             (size_t)", target_records, ignore_records)
 
     def test_contains_record_case_insensitive(self):
         """Test case-insensitive record detection."""
@@ -90,21 +81,9 @@ class TestContainsRecord:
         ignore_records = []
 
         # Should match regardless of case
-        assert contains_record(
-            "0x123 (BSResource::Archive)",
-            target_records,
-            ignore_records
-        )
-        assert contains_record(
-            "0x123 (bsresource::archive)",
-            target_records,
-            ignore_records
-        )
-        assert contains_record(
-            "0x123 (BSRESOURCE::ARCHIVE)",
-            target_records,
-            ignore_records
-        )
+        assert contains_record("0x123 (BSResource::Archive)", target_records, ignore_records)
+        assert contains_record("0x123 (bsresource::archive)", target_records, ignore_records)
+        assert contains_record("0x123 (BSRESOURCE::ARCHIVE)", target_records, ignore_records)
 
     def test_contains_record_multiple_targets(self):
         """Test matching against multiple target records."""
@@ -116,21 +95,9 @@ class TestContainsRecord:
         ignore_records = []
 
         # Should match any target
-        assert contains_record(
-            "0x123 (BSResource*)",
-            target_records,
-            ignore_records
-        )
-        assert contains_record(
-            "0x456 (TESObjectREFR*)",
-            target_records,
-            ignore_records
-        )
-        assert contains_record(
-            "0x789 (Actor*)",
-            target_records,
-            ignore_records
-        )
+        assert contains_record("0x123 (BSResource*)", target_records, ignore_records)
+        assert contains_record("0x456 (TESObjectREFR*)", target_records, ignore_records)
+        assert contains_record("0x789 (Actor*)", target_records, ignore_records)
 
     def test_contains_record_multiple_ignores(self):
         """Test filtering with multiple ignore terms."""
@@ -142,50 +109,27 @@ class TestContainsRecord:
         ]
 
         # Should not match if any ignore term is present
-        assert not contains_record(
-            "test (void*)",
-            target_records,
-            ignore_records
-        )
-        assert not contains_record(
-            "test (NULL)",
-            target_records,
-            ignore_records
-        )
-        assert not contains_record(
-            'test (char*) "string"',
-            target_records,
-            ignore_records
-        )
+        assert not contains_record("test (void*)", target_records, ignore_records)
+        assert not contains_record("test (NULL)", target_records, ignore_records)
+        assert not contains_record('test (char*) "string"', target_records, ignore_records)
 
         # Should match if no ignore terms present
-        assert contains_record(
-            "test (int)",
-            target_records,
-            ignore_records
-        )
+        assert contains_record("test (int)", target_records, ignore_records)
 
     def test_contains_record_empty_lists(self):
         """Test with empty target or ignore lists."""
         # Empty targets - should never match
-        assert not contains_record(
-            "0x123 (BSResource*)",
-            [],
-            []
-        )
+        assert not contains_record("0x123 (BSResource*)", [], [])
 
         # Empty ignores - should match if target present
         targets = ["BSResource"]
-        assert contains_record(
-            "0x123 (BSResource*)",
-            targets,
-            []
-        )
+        assert contains_record("0x123 (BSResource*)", targets, [])
 
 
 # ============================================================================
 # Batch Processing Tests (scan_records_batch)
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust RecordScanner not available")
@@ -195,13 +139,15 @@ class TestScanRecordsBatch:
     def test_scan_records_batch_single_segment(self):
         """Test scanning a single segment."""
         # Note: RSP format is "[RSP+NN ] 0xADDRESS      " which is 30 chars total
-        segments = [[
-            "[RSP+8  ] 0x80ECFDFA90      (void*)",
-            "[RSP+10 ] 0x1AC             (size_t)",
-            '[RSP+18 ] 0x22FCA037A78     (char*) "WCLINS_PRP_Patch - Main.ba2"',
-            "[RSP+40 ] 0x7FF6F1E52E60      (BSResource::Archive2**)",
-            "[RSP+48 ] 0x2302DDAB040       (BSGeometrySegmentData*)",
-        ]]
+        segments = [
+            [
+                "[RSP+8  ] 0x80ECFDFA90      (void*)",
+                "[RSP+10 ] 0x1AC             (size_t)",
+                '[RSP+18 ] 0x22FCA037A78     (char*) "WCLINS_PRP_Patch - Main.ba2"',
+                "[RSP+40 ] 0x7FF6F1E52E60      (BSResource::Archive2**)",
+                "[RSP+48 ] 0x2302DDAB040       (BSGeometrySegmentData*)",
+            ]
+        ]
 
         target_records = ["BSResource", "BSGeometrySegmentData"]
         ignore_records = ["void*", "char*"]
@@ -244,10 +190,12 @@ class TestScanRecordsBatch:
         """Test RSP marker detection and offset extraction."""
         # Test RSP marker detection and offset extraction
         # RSP format: "[RSP+NN ] 0xADDRESS      " = 30 chars
-        segments = [[
-            "[RSP+8  ] 0x123               (BSResource::Archive*)",
-            "Non-RSP line with BSResource::Archive*",
-        ]]
+        segments = [
+            [
+                "[RSP+8  ] 0x123               (BSResource::Archive*)",
+                "Non-RSP line with BSResource::Archive*",
+            ]
+        ]
 
         target_records = ["BSResource"]
         ignore_records = []
@@ -277,10 +225,12 @@ class TestScanRecordsBatch:
     def test_scan_records_batch_short_rsp_line(self):
         """Test handling of short RSP lines."""
         # Line with RSP marker but shorter than offset
-        segments = [[
-            "[RSP+8  ] short",  # Only 15 chars, offset is 30
-            "[RSP+10 ] 0x123456789ABCDEF0123456789 (BSResource*)",  # Long enough
-        ]]
+        segments = [
+            [
+                "[RSP+8  ] short",  # Only 15 chars, offset is 30
+                "[RSP+10 ] 0x123456789ABCDEF0123456789 (BSResource*)",  # Long enough
+            ]
+        ]
 
         target_records = ["BSResource", "short"]
         ignore_records = []
@@ -296,6 +246,7 @@ class TestScanRecordsBatch:
 # ============================================================================
 # RecordScanner Class Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust RecordScanner not available")
@@ -472,6 +423,7 @@ class TestRecordScanner:
 # Edge Case Tests
 # ============================================================================
 
+
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust RecordScanner not available")
 class TestEdgeCases:
@@ -479,10 +431,12 @@ class TestEdgeCases:
 
     def test_scan_records_batch_special_characters(self):
         """Test with special characters in record types."""
-        segments = [[
-            "[RSP+8  ] 0x123             (BSResource::Archive<T>*)",
-            "[RSP+10 ] 0x456             (TESForm[100])",
-        ]]
+        segments = [
+            [
+                "[RSP+8  ] 0x123             (BSResource::Archive<T>*)",
+                "[RSP+10 ] 0x456             (TESForm[100])",
+            ]
+        ]
 
         target_records = ["BSResource", "TESForm"]
         ignore_records = []
@@ -494,9 +448,11 @@ class TestEdgeCases:
 
     def test_scan_records_batch_unicode(self):
         """Test with unicode characters."""
-        segments = [[
-            "[RSP+8  ] 0x123             (Record with émojis 🎮)",
-        ]]
+        segments = [
+            [
+                "[RSP+8  ] 0x123             (Record with émojis 🎮)",
+            ]
+        ]
 
         target_records = ["Record"]
         ignore_records = []
@@ -509,9 +465,11 @@ class TestEdgeCases:
     def test_scan_records_batch_very_long_lines(self):
         """Test with very long record lines."""
         long_record = f"BSResource{'A' * 10000}"
-        segments = [[
-            f"[RSP+8  ] 0x123             ({long_record})",
-        ]]
+        segments = [
+            [
+                f"[RSP+8  ] 0x123             ({long_record})",
+            ]
+        ]
 
         target_records = ["BSResource"]
         ignore_records = []
@@ -528,16 +486,8 @@ class TestEdgeCases:
         ignore_records = []
 
         # Should match partial substring
-        assert contains_record(
-            "BSResource",
-            target_records,
-            ignore_records
-        )
-        assert contains_record(
-            "ABSTRACT",
-            target_records,
-            ignore_records
-        )
+        assert contains_record("BSResource", target_records, ignore_records)
+        assert contains_record("ABSTRACT", target_records, ignore_records)
 
     def test_contains_record_exact_boundary(self):
         """Test when target and ignore both match."""
@@ -545,16 +495,13 @@ class TestEdgeCases:
         ignore_records = ["test"]
 
         # Target and ignore both match - ignore should win
-        assert not contains_record(
-            "test",
-            target_records,
-            ignore_records
-        )
+        assert not contains_record("test", target_records, ignore_records)
 
 
 # ============================================================================
 # Performance Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust RecordScanner not available")

@@ -1,6 +1,5 @@
 """Shared fixtures and utilities for async resource management tests."""
 
-
 from tests.async_tests.test_async_utils import (
     AsyncResourceTracker,
     async_test_context,

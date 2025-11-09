@@ -46,13 +46,13 @@ class TestYamlBatchOperations:
                 "section2": {
                     "key4": "value4",
                     "key5": "value5",
-                }
+                },
             }
 
             # Test individual loading
             individual_start = time.time()
             for i in range(1, 6):
-                cache.get_setting(str, YAML.TEST, f"section{(i-1)//3 + 1}.key{i}")
+                cache.get_setting(str, YAML.TEST, f"section{(i - 1) // 3 + 1}.key{i}")
             individual_time = time.time() - individual_start
 
             # Clear cache for fair comparison
@@ -91,9 +91,7 @@ class TestYamlBatchOperations:
             batch_keys = []
             for section_num in range(10):
                 for key_num in range(50):
-                    batch_keys.append(
-                        (str, YAML.TEST, f"section_{section_num}.key_{key_num}")
-                    )
+                    batch_keys.append((str, YAML.TEST, f"section_{section_num}.key_{key_num}"))
 
             start = time.time()
             results = cache.batch_get_settings(batch_keys)
@@ -130,10 +128,7 @@ class TestYamlBatchOperations:
         cache = YamlSettingsCache()
 
         with patch.object(cache, "_load_yaml_file") as mock_load:
-            initial_data = {
-                "section1": {"key1": "value1", "key2": "value2"},
-                "section2": {"key3": "value3"}
-            }
+            initial_data = {"section1": {"key1": "value1", "key2": "value2"}, "section2": {"key3": "value3"}}
             mock_load.return_value = initial_data
 
             # Load multiple values
@@ -145,10 +140,7 @@ class TestYamlBatchOperations:
             cache.invalidate_cache(YAML.TEST)
 
             # Update underlying data
-            updated_data = {
-                "section1": {"key1": "new1", "key2": "new2"},
-                "section2": {"key3": "new3"}
-            }
+            updated_data = {"section1": {"key1": "new1", "key2": "new2"}, "section2": {"key3": "new3"}}
             mock_load.return_value = updated_data
 
             # All values should be reloaded
@@ -229,10 +221,7 @@ class TestYamlBatchOperations:
 
             def batch_operation(thread_id):
                 # Each thread requests a different batch
-                batch_keys = [
-                    (str, YAML.TEST, f"section{thread_id}.key{j}")
-                    for j in range(5)
-                ]
+                batch_keys = [(str, YAML.TEST, f"section{thread_id}.key{j}") for j in range(5)]
                 batch_result = cache.batch_get_settings(batch_keys)
                 with lock:
                     results.append((thread_id, batch_result))
@@ -385,9 +374,7 @@ class TestYamlBatchOperations:
 
         def load_versioned():
             v = data_version["v"]
-            return {
-                "section": {f"key{i}": f"value_v{v}_{i}" for i in range(10)}
-            }
+            return {"section": {f"key{i}": f"value_v{v}_{i}" for i in range(10)}}
 
         with patch.object(cache, "_load_yaml_file", side_effect=load_versioned):
             results = []
@@ -395,9 +382,7 @@ class TestYamlBatchOperations:
 
             def batch_loader():
                 try:
-                    batch_keys = [
-                        (str, YAML.TEST, f"section.key{i}") for i in range(10)
-                    ]
+                    batch_keys = [(str, YAML.TEST, f"section.key{i}") for i in range(10)]
                     result = cache.batch_get_settings(batch_keys)
                     results.append(result)
                 except Exception as e:

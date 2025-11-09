@@ -3,6 +3,7 @@ Test suite for path utility functions in ClassicLib/Util.py.
 
 This module contains tests for path validation and related utility functions.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841
 from pathlib import Path
 from unittest.mock import MagicMock, patch

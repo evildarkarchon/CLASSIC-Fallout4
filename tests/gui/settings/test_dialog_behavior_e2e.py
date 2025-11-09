@@ -14,6 +14,7 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 pytestmark = pytest.mark.e2e
 
+
 class TestButtonInteractions:
     """Test button click interactions."""
 
@@ -34,15 +35,16 @@ class TestButtonInteractions:
         settings_dialog.fcx_checkbox.setChecked(True)
         ok_button = settings_dialog.button_box.button(QDialogButtonBox.StandardButton.Ok)
         QTest.mouseClick(ok_button, Qt.MouseButton.LeftButton)
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode')
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
 
     def test_cancel_button_discards_changes(self, settings_dialog, app, reset_settings):
         """Test that Cancel button discards pending changes."""
-        original_fcx = yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode')
+        original_fcx = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         settings_dialog.fcx_checkbox.setChecked(not original_fcx)
         cancel_button = settings_dialog.button_box.button(QDialogButtonBox.StandardButton.Cancel)
         QTest.mouseClick(cancel_button, Qt.MouseButton.LeftButton)
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode') == original_fcx
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode") == original_fcx
+
 
 class TestKeyboardShortcuts:
     """Test keyboard navigation and shortcuts."""
@@ -61,10 +63,10 @@ class TestKeyboardShortcuts:
 
     def test_escape_discards_changes(self, settings_dialog, app, reset_settings):
         """Test that Escape key discards unsaved changes."""
-        original_fcx = yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode')
+        original_fcx = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         settings_dialog.fcx_checkbox.setChecked(not original_fcx)
         QTest.keyClick(settings_dialog, Qt.Key.Key_Escape)
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode') == original_fcx
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode") == original_fcx
 
     def test_tab_key_navigation(self, settings_dialog, app):
         """Test that Tab key works without errors.

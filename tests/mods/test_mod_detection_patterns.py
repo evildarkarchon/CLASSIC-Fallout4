@@ -32,10 +32,7 @@ class SyntheticModGenerator:
 
         # Generate realistic mod names based on patterns seen
         prefixes = ["SS2", "SS2 Addon", "SS2-", "PRP", "ELFX", "NAC", "PACE", "PANPC"]
-        names = [
-            "Settlement_Pack", "Faction_Pack", "City_Plan", "Patch", "Fix",
-            "Overhaul", "Textures", "Sounds", "Animations", "Weapons"
-        ]
+        names = ["Settlement_Pack", "Faction_Pack", "City_Plan", "Patch", "Fix", "Overhaul", "Textures", "Sounds", "Animations", "Weapons"]
 
         prefix = random.choice(prefixes) if random.random() > 0.3 else ""
         name = random.choice(names)
@@ -137,7 +134,7 @@ class TestModDetectionPatterns:
                 "0x7FF6EF4C3512 Fallout4.exe+0733512",
                 "0x7FF6EF4C145E ModA.esp+000145E",  # ModA in stack
                 "0x7FF6EEF11959 ModB.esp+0011959",  # ModB also in stack
-            ]
+            ],
         }
 
         conflicts = detect_conflicts(log_data)

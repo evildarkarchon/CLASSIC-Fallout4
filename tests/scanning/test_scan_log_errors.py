@@ -35,6 +35,7 @@ def mock_settings():
         patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache,
         patch("ClassicLib.ScanGame.ScanGameCore.yaml_settings") as mock_yaml_core,
     ):
+
         def yaml_side_effect(type_, yaml_key, setting_path, default=None):
             settings_map = {
                 "catch_log_errors": ["error", "warning", "critical"],

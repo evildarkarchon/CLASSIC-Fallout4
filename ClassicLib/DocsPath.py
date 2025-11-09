@@ -9,6 +9,7 @@ settings, and optional user input is considered when necessary.
 **Performance**: Core path detection operations automatically use Rust
 acceleration when available, providing 10-50x performance improvements.
 """
+
 import contextlib
 import platform
 from io import StringIO
@@ -20,12 +21,12 @@ from iniparse import configparser
 from ClassicLib import GlobalRegistry, msg_error, msg_info
 from ClassicLib.Constants import YAML
 from ClassicLib.FileIOCore import append_file_sync, read_lines_sync, write_file_sync
-from ClassicLib.Logger import logger
-from ClassicLib.Util import remove_readonly
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 # Import factory for Rust acceleration
 from ClassicLib.integration.factory import get_path_operations
+from ClassicLib.Logger import logger
+from ClassicLib.Util import remove_readonly
+from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 # Get Rust module if available, None otherwise
 classic_path = get_path_operations()
@@ -107,6 +108,7 @@ class DocumentsPathManager:
         # If this is a docs path update, also save to cache for uvx compatibility
         if setting_name == "Root_Folder_Docs":
             from ClassicLib.ResourceLoader import ResourceLoader
+
             ResourceLoader.save_path_to_cache(Path(value), "DocsPath")
 
     def find_docs_path(self) -> None:
@@ -179,10 +181,11 @@ class DocumentsPathManager:
         """
         # Try Rust acceleration first if available
         if _HAS_RUST_PATH:
+            assert classic_path is not None  # Type narrowing for type checker
             try:
                 # DocsPathFinder expects a relative path like "My Games\\Fallout4"
                 relative_path = f"My Games\\{self.docs_name}"
-                finder = classic_path.DocsPathFinder(relative_path)  # pyright: ignore[reportPossiblyUnboundVariable]
+                finder = classic_path.DocsPathFinder(relative_path)
 
                 # Try to find docs path (cached_path=None to use auto-detection)
                 docs_path_str = finder.find_docs_path(cached_path=None)

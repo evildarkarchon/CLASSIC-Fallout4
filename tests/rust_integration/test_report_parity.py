@@ -34,7 +34,6 @@ from ClassicLib.integration.detector import get_available_components
 
 RUST_AVAILABLE = get_available_components()["components"]
 from ClassicLib.ScanLog.fragments import ReportFragment
-
 from tests.rust_integration.parity_fixtures import ParityResult, ParityValidator, normalize_markdown_content, skip_if_rust_unavailable
 
 logger = logging.getLogger(__name__)
@@ -61,6 +60,7 @@ class ReportParityValidator(ParityValidator):
         try:
             # Try to import Rust report generation components
             import classic_scanlog as rust_scanlog
+
             if hasattr(rust_scanlog, "ReportGenerator"):
                 return rust_scanlog.ReportGenerator()
             if hasattr(rust_scanlog, "report"):
@@ -73,10 +73,7 @@ class ReportParityValidator(ParityValidator):
         """Create Python report generation implementation."""
         # Python report generation is typically done through ReportFragment
         # and various report generation utilities
-        return {
-            "fragment_class": ReportFragment,
-            "markdown_utils": self._get_python_markdown_utils()
-        }
+        return {"fragment_class": ReportFragment, "markdown_utils": self._get_python_markdown_utils()}
 
     def _get_python_markdown_utils(self) -> dict[str, Any]:
         """Get Python markdown utilities for comparison."""
@@ -84,7 +81,7 @@ class ReportParityValidator(ParityValidator):
             "format_plugin_list": self._format_plugin_list_python,
             "format_formid_list": self._format_formid_list_python,
             "generate_statistics": self._generate_statistics_python,
-            "format_error_message": self._format_error_message_python
+            "format_error_message": self._format_error_message_python,
         }
 
     def _format_plugin_list_python(self, plugins: dict[str, str]) -> str:
@@ -160,36 +157,30 @@ class TestReportParity:
                 "fragment_name": "Test Fragment",
                 "content": "This is a test fragment with basic content.",
                 "fragment_type": "info",
-                "priority": 1
+                "priority": 1,
             },
             {
                 "name": "markdown_fragment",
                 "fragment_name": "Markdown Fragment",
                 "content": "## Test Header\n\n- Item 1\n- Item 2\n\n**Bold text** and *italic text*.",
                 "fragment_type": "analysis",
-                "priority": 2
+                "priority": 2,
             },
             {
                 "name": "error_fragment",
                 "fragment_name": "Error Fragment",
                 "content": "### ❌ Critical Error\n\n**Message**: Something went wrong.\n\n**Details**: Detailed error information.",
                 "fragment_type": "error",
-                "priority": 5
+                "priority": 5,
             },
-            {
-                "name": "empty_fragment",
-                "fragment_name": "Empty Fragment",
-                "content": "",
-                "fragment_type": "info",
-                "priority": 0
-            },
+            {"name": "empty_fragment", "fragment_name": "Empty Fragment", "content": "", "fragment_type": "info", "priority": 0},
             {
                 "name": "unicode_fragment",
                 "fragment_name": "Unicode Fragment",
                 "content": "Test with unicode: ñáéíóú 日本語 Русский текст 🎯",
                 "fragment_type": "info",
-                "priority": 1
-            }
+                "priority": 1,
+            },
         ]
 
         results = []
@@ -217,9 +208,7 @@ class TestReportParity:
 
                 if rust_impl and hasattr(rust_impl, "create_fragment"):
                     start_time = time.perf_counter()
-                    rust_fragment = rust_impl.create_fragment(
-                        fragment_name, content, fragment_type, priority
-                    )
+                    rust_fragment = rust_impl.create_fragment(fragment_name, content, fragment_type, priority)
                     rust_time = time.perf_counter() - start_time
                 else:
                     # If Rust implementation not available, create equivalent structure
@@ -227,7 +216,7 @@ class TestReportParity:
                         "fragment_name": fragment_name,
                         "fragment_content": content,
                         "fragment_type": fragment_type,
-                        "priority": priority
+                        "priority": priority,
                     }
 
                 # Compare fragment attributes
@@ -281,25 +270,23 @@ class TestReportParity:
                     differences=differences,
                     rust_execution_time=rust_time,
                     python_execution_time=python_time,
-                    metadata={
-                        "fragment_type": fragment_type,
-                        "content_length": len(content),
-                        "priority": priority
-                    }
+                    metadata={"fragment_type": fragment_type, "content_length": len(content), "priority": priority},
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Report fragment creation test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="report_generation",
-                    method_name="create_fragment",
-                    test_case=test_case["name"],
-                    rust_available=False,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="report_generation",
+                        method_name="create_fragment",
+                        test_case=test_case["name"],
+                        rust_available=False,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate results (allow for missing Rust implementation)
         if not any(r.rust_available for r in results):
@@ -323,35 +310,20 @@ class TestReportParity:
             {
                 "name": "plugin_list_formatting",
                 "data_type": "plugins",
-                "data": {
-                    "00": "Fallout4.esm",
-                    "01": "DLCRobot.esm",
-                    "02": "TestMod.esp",
-                    "FE:000": "ESLMod.esl"
-                },
-                "formatter": "format_plugin_list"
+                "data": {"00": "Fallout4.esm", "01": "DLCRobot.esm", "02": "TestMod.esp", "FE:000": "ESLMod.esl"},
+                "formatter": "format_plugin_list",
             },
             {
                 "name": "formid_list_formatting",
                 "data_type": "formids",
-                "data": [
-                    "0x00000014",
-                    "0x01002A34",
-                    "0xFE000801",
-                    "0x12345678"
-                ],
-                "formatter": "format_formid_list"
+                "data": ["0x00000014", "0x01002A34", "0xFE000801", "0x12345678"],
+                "formatter": "format_formid_list",
             },
             {
                 "name": "statistics_formatting",
                 "data_type": "statistics",
-                "data": {
-                    "plugin_count": 150,
-                    "formid_count": 25,
-                    "error_count": 3,
-                    "processing_time": 2.456
-                },
-                "formatter": "generate_statistics"
+                "data": {"plugin_count": 150, "formid_count": 25, "error_count": 3, "processing_time": 2.456},
+                "formatter": "generate_statistics",
             },
             {
                 "name": "error_message_formatting",
@@ -359,10 +331,10 @@ class TestReportParity:
                 "data": {
                     "error_type": "Plugin Limit Exceeded",
                     "message": "More than 255 plugins detected",
-                    "details": "Consider converting some plugins to ESL format"
+                    "details": "Consider converting some plugins to ESL format",
                 },
-                "formatter": "format_error_message"
-            }
+                "formatter": "format_error_message",
+            },
         ]
 
         results = []
@@ -382,11 +354,7 @@ class TestReportParity:
                 # Format with Python
                 start_time = time.perf_counter()
                 if formatter_name == "format_error_message":
-                    python_result = python_formatter(
-                        data["error_type"],
-                        data["message"],
-                        data.get("details", "")
-                    )
+                    python_result = python_formatter(data["error_type"], data["message"], data.get("details", ""))
                 else:
                     python_result = python_formatter(data)
                 python_time = time.perf_counter() - start_time
@@ -400,11 +368,7 @@ class TestReportParity:
                     start_time = time.perf_counter()
                     rust_formatter = getattr(rust_impl, formatter_name)
                     if formatter_name == "format_error_message":
-                        rust_result = rust_formatter(
-                            data["error_type"],
-                            data["message"],
-                            data.get("details", "")
-                        )
+                        rust_result = rust_formatter(data["error_type"], data["message"], data.get("details", ""))
                     else:
                         rust_result = rust_formatter(data)
                     rust_time = time.perf_counter() - start_time
@@ -423,12 +387,12 @@ class TestReportParity:
                     differences.append("Markdown formatting differs between implementations")
 
                     # Generate detailed diff for debugging
-                    rust_lines = rust_normalized.split('\n')
-                    python_lines = python_normalized.split('\n')
+                    rust_lines = rust_normalized.split("\n")
+                    python_lines = python_normalized.split("\n")
 
                     for i, (rust_line, python_line) in enumerate(zip(rust_lines, python_lines)):
                         if rust_line != python_line:
-                            differences.append(f"Line {i+1}: Rust='{rust_line}', Python='{python_line}'")
+                            differences.append(f"Line {i + 1}: Rust='{rust_line}', Python='{python_line}'")
 
                     if len(rust_lines) != len(python_lines):
                         differences.append(f"Line count differs: Rust={len(rust_lines)}, Python={len(python_lines)}")
@@ -444,25 +408,23 @@ class TestReportParity:
                     differences=differences[:5],  # Limit diff output
                     rust_execution_time=rust_time,
                     python_execution_time=python_time,
-                    metadata={
-                        "data_type": data_type,
-                        "formatter": formatter_name,
-                        "data_size": len(str(data))
-                    }
+                    metadata={"data_type": data_type, "formatter": formatter_name, "data_size": len(str(data))},
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Markdown formatting test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="report_generation",
-                    method_name=formatter_name,
-                    test_case=test_case["name"],
-                    rust_available=False,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="report_generation",
+                        method_name=formatter_name,
+                        test_case=test_case["name"],
+                        rust_available=False,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate results
         available_results = [r for r in results if r.rust_available]
@@ -491,7 +453,7 @@ class TestReportParity:
             ReportFragment("Plugin Analysis"),
             ReportFragment("FormID Analysis"),
             ReportFragment("Statistics"),
-            ReportFragment("Errors and Warnings")
+            ReportFragment("Errors and Warnings"),
         ]
 
         # Configure fragments with test content
@@ -531,7 +493,7 @@ class TestReportParity:
                     rust_fragments.append({
                         "name": fragment.fragment_name,
                         "content": fragment.fragment_content,
-                        "priority": fragment.priority
+                        "priority": fragment.priority,
                     })
                 rust_assembled = rust_impl.assemble_report(rust_fragments)
                 rust_time = time.perf_counter() - start_time
@@ -550,8 +512,8 @@ class TestReportParity:
                 differences.append("Assembled report content differs")
 
                 # Check for structural differences
-                rust_lines = rust_normalized.split('\n')
-                python_lines = python_normalized.split('\n')
+                rust_lines = rust_normalized.split("\n")
+                python_lines = python_normalized.split("\n")
 
                 if len(rust_lines) != len(python_lines):
                     differences.append(f"Report length differs: Rust={len(rust_lines)} lines, Python={len(python_lines)} lines")
@@ -559,7 +521,7 @@ class TestReportParity:
                 # Sample line differences for debugging
                 for i, (rust_line, python_line) in enumerate(zip(rust_lines[:20], python_lines[:20])):
                     if rust_line != python_line:
-                        differences.append(f"Line {i+1} differs: '{rust_line[:50]}...' vs '{python_line[:50]}...'")
+                        differences.append(f"Line {i + 1} differs: '{rust_line[:50]}...' vs '{python_line[:50]}...'")
 
             # Validate performance
             performance_gain = 0.0
@@ -581,8 +543,8 @@ class TestReportParity:
                 metadata={
                     "fragment_count": len(test_fragments),
                     "total_content_length": sum(len(f.fragment_content) for f in test_fragments),
-                    "performance_gain": f"{performance_gain:.1f}x" if performance_gain > 0 else "N/A"
-                }
+                    "performance_gain": f"{performance_gain:.1f}x" if performance_gain > 0 else "N/A",
+                },
             )
 
             assert result.passed, f"Complete report assembly parity failed: {result.differences[:3]}"
@@ -624,8 +586,7 @@ class TestReportParity:
         for i in range(100):
             fragment = ReportFragment(f"Fragment {i}")
             fragment.fragment_content = f"## Section {i}\n\n" + "\n".join([
-                f"- Item {j}: Data point {j} for section {i}"
-                for j in range(20)
+                f"- Item {j}: Data point {j} for section {i}" for j in range(20)
             ])
             fragment.priority = i % 10
             large_fragment_set.append(fragment)
@@ -646,11 +607,7 @@ class TestReportParity:
             start_time = time.perf_counter()
             rust_fragments = []
             for fragment in large_fragment_set:
-                rust_fragments.append({
-                    "name": fragment.fragment_name,
-                    "content": fragment.fragment_content,
-                    "priority": fragment.priority
-                })
+                rust_fragments.append({"name": fragment.fragment_name, "content": fragment.fragment_content, "priority": fragment.priority})
             rust_result = rust_impl.assemble_report(rust_fragments)
             rust_time = time.perf_counter() - start_time
 
@@ -668,15 +625,21 @@ class TestReportParity:
 
                 # Expect significant performance improvement
                 expected_min_gain = 10.0  # Report generation should be much faster
-                assert performance_gain >= expected_min_gain, f"Report generation performance gain too low: {performance_gain:.1f}x (expected ≥{expected_min_gain}x)"
+                assert performance_gain >= expected_min_gain, (
+                    f"Report generation performance gain too low: {performance_gain:.1f}x (expected ≥{expected_min_gain}x)"
+                )
 
             # Validate content integrity
             expected_sections = len(large_fragment_set)
             rust_section_count = rust_normalized.count("## Section")
             python_section_count = python_normalized.count("## Section")
 
-            assert rust_section_count == expected_sections, f"Rust section count mismatch: got {rust_section_count}, expected {expected_sections}"
-            assert python_section_count == expected_sections, f"Python section count mismatch: got {python_section_count}, expected {expected_sections}"
+            assert rust_section_count == expected_sections, (
+                f"Rust section count mismatch: got {rust_section_count}, expected {expected_sections}"
+            )
+            assert python_section_count == expected_sections, (
+                f"Python section count mismatch: got {python_section_count}, expected {expected_sections}"
+            )
 
         except Exception as e:
             logger.error(f"Report generation performance test failed: {e}")
@@ -739,8 +702,8 @@ ScrapEverything.esp may cause stability issues.
                     rust_time = time.perf_counter() - start_time
 
                     # Compare file contents
-                    python_content = python_file.read_text(encoding='utf-8')
-                    rust_content = rust_file.read_text(encoding='utf-8')
+                    python_content = python_file.read_text(encoding="utf-8")
+                    rust_content = rust_file.read_text(encoding="utf-8")
 
                     # Normalize content for comparison
                     python_normalized = normalize_markdown_content(python_content)
@@ -772,7 +735,7 @@ ScrapEverything.esp may cause stability issues.
 
     def _save_report_python(self, content: str, file_path: Path) -> None:
         """Python implementation of report file saving."""
-        file_path.write_text(content, encoding='utf-8', newline='\n')
+        file_path.write_text(content, encoding="utf-8", newline="\n")
 
 
 @pytest.mark.integration
@@ -796,8 +759,8 @@ class TestReportGenerationRegression:
                 "data": {
                     "title": "Fallout 4 Crash Analysis",
                     "analysis_content": "Analysis results here",
-                    "statistics": "- Plugins: 150\n- FormIDs: 25"
-                }
+                    "statistics": "- Plugins: 150\n- FormIDs: 25",
+                },
             },
             {
                 "name": "error_report",
@@ -805,9 +768,9 @@ class TestReportGenerationRegression:
                 "data": {
                     "error_type": "Critical Error",
                     "message": "System failure detected",
-                    "details": "Detailed error information and resolution steps."
-                }
-            }
+                    "details": "Detailed error information and resolution steps.",
+                },
+            },
         ]
 
         validator = ReportParityValidator()
@@ -845,18 +808,18 @@ class TestReportGenerationRegression:
             {
                 "name": "plugin_list_pattern",
                 "input": {"00": "Fallout4.esm", "01": "DLCRobot.esm"},
-                "expected_pattern": r"## Plugin Load Order.*\[00\].*Fallout4\.esm.*\[01\].*DLCRobot\.esm"
+                "expected_pattern": r"## Plugin Load Order.*\[00\].*Fallout4\.esm.*\[01\].*DLCRobot\.esm",
             },
             {
                 "name": "formid_pattern",
                 "input": ["0x00000014", "0x01002A34"],
-                "expected_pattern": r"## FormIDs Found.*1\..*0x00000014.*2\..*0x01002A34"
+                "expected_pattern": r"## FormIDs Found.*1\..*0x00000014.*2\..*0x01002A34",
             },
             {
                 "name": "statistics_pattern",
                 "input": {"plugin_count": 150, "formid_count": 25},
-                "expected_pattern": r"## Analysis Statistics.*Total Plugins.*150.*FormIDs Found.*25"
-            }
+                "expected_pattern": r"## Analysis Statistics.*Total Plugins.*150.*FormIDs Found.*25",
+            },
         ]
 
         validator = ReportParityValidator()
@@ -882,4 +845,7 @@ class TestReportGenerationRegression:
 
             # Validate pattern
             import re as regex
-            assert regex.search(expected_pattern, result, regex.DOTALL), f"Pattern regression in {pattern_name}: expected pattern not found in output"
+
+            assert regex.search(expected_pattern, result, regex.DOTALL), (
+                f"Pattern regression in {pattern_name}: expected pattern not found in output"
+            )

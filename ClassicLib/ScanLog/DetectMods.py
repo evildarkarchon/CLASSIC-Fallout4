@@ -16,23 +16,9 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import TYPE_CHECKING, Literal, cast
+from typing import Literal, cast
 
-if TYPE_CHECKING:
-    # Use Rust-accelerated version for type hints
-    from ClassicLib.rust.report_rust import RustAcceleratedReportFragment as ReportFragment
-else:
-    # Lazy import at runtime to avoid circular dependency
-    ReportFragment = None  # type: ignore[misc, assignment]
-
-
-def _get_report_fragment_class() -> type:
-    """Get ReportFragment class with lazy import to avoid circular dependency."""
-    global ReportFragment
-    if ReportFragment is None:
-        from ClassicLib.rust.report_rust import ReportFragment as _ReportFragment
-        ReportFragment = _ReportFragment
-    return ReportFragment  # type: ignore[return-value]
+from ClassicLib.rust.report_rust import ReportFragment
 
 
 def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
@@ -132,7 +118,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     # Extract mod names for pattern compilation
     mod_names = frozenset(name for name, _ in mod_items)
     if not mod_names:
-        return _get_report_fragment_class().empty()
+        return ReportFragment.empty()
 
     # Get cached compiled pattern for all mod names
     combined_pattern = _compile_mod_pattern(mod_names)
@@ -178,7 +164,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
             # Fallback if no warning content
             lines.append(f"**[!] FOUND : {plugin_list}**\n\n")
 
-    return _get_report_fragment_class().from_lines(lines)
+    return ReportFragment.from_lines(lines)
 
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
@@ -213,7 +199,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         mod_pairs_map[mod1, mod2] = mod_warning
 
     if not all_mod_names:
-        return _get_report_fragment_class().empty()
+        return ReportFragment.empty()
 
     # Get cached compiled pattern for all mod names
     combined_pattern = _compile_mod_pattern(frozenset(all_mod_names))
@@ -233,7 +219,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
                 lines.append("\n")
             lines.append("\n")
 
-    return _get_report_fragment_class().from_lines(lines)
+    return ReportFragment.from_lines(lines)
 
 
 def detect_mods_important(
@@ -289,4 +275,4 @@ def detect_mods_important(
             lines.extend((f"\n❌ {mod_display_name} is not installed!\n", mod_warning, "\n\n"))
 
     # For important mods, we return content even if empty as absence is information
-    return _get_report_fragment_class().from_lines(lines, check_content=False) if lines else ReportFragment.empty()
+    return ReportFragment.from_lines(lines, check_content=False) if lines else ReportFragment.empty()

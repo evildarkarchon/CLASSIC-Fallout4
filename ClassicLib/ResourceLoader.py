@@ -555,7 +555,7 @@ class ResourceLoader:
         env_path = os.environ.get(env_var)
         if env_path:
             path = Path(env_path)
-            if path.exists() and path.is_dir():
+            if path.exists() and path.is_dir():  # noqa: ASYNC240
                 logger.debug(f"Found game path from environment variable {env_var}: {path}")
                 return path
 
@@ -617,10 +617,13 @@ class ResourceLoader:
         # Check if we're in an async context (event loop running)
         # If so, skip YAML cache access to avoid async/sync mixing
         import asyncio
+
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             in_async_context = True
-            logger.debug("Skipping YAML cache checks - called from async context. Use environment variable or ensure docs path is set before async operations.")
+            logger.debug(
+                "Skipping YAML cache checks - called from async context. Use environment variable or ensure docs path is set before async operations."
+            )
         except RuntimeError:
             # No running event loop - safe to use sync YAML access
             in_async_context = False

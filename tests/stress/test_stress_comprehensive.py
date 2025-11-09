@@ -89,7 +89,7 @@ class SyntheticWorkloadGenerator:
             elif i < 50:
                 lines.append(f"\t[{i:02X}] Mod_{i}.esp")
             else:
-                lines.append(f"\t[FE:{i-50:03X}] Light_{i}.esl")
+                lines.append(f"\t[FE:{i - 50:03X}] Light_{i}.esl")
 
         # Add stack trace
         lines.append("\nSTACK TRACE:")
@@ -119,9 +119,15 @@ class SyntheticWorkloadGenerator:
         """Generate a sequence of typical user actions."""
         actions = []
         action_types = [
-            "scan_log", "analyze_formids", "check_plugins",
-            "generate_report", "save_settings", "load_settings",
-            "refresh_ui", "search_mods", "validate_game"
+            "scan_log",
+            "analyze_formids",
+            "check_plugins",
+            "generate_report",
+            "save_settings",
+            "load_settings",
+            "refresh_ui",
+            "search_mods",
+            "validate_game",
         ]
 
         # Typical user session has 10-50 actions
@@ -180,15 +186,15 @@ class TestConcurrentOperationsStress:
         print("\nConcurrent Parsing Stress Test:")
         print(f"  Operations: {summary['operations']}")
         print(f"  Throughput: {summary['ops_per_second']:.2f} ops/sec")
-        print(f"  Avg Response: {summary['avg_response_time']*1000:.1f}ms")
+        print(f"  Avg Response: {summary['avg_response_time'] * 1000:.1f}ms")
         print(f"  Peak Memory: {summary['peak_memory_mb']:.1f}MB")
         print(f"  Errors: {summary['errors']}")
 
         # Assertions
-        assert summary['errors'] == 0, f"Errors during concurrent parsing: {metrics.errors_encountered}"
-        assert summary['operations'] == 20
-        assert summary['avg_response_time'] < 2.0, "Parsing too slow under load"
-        assert summary['peak_memory_mb'] < 500, "Excessive memory usage"
+        assert summary["errors"] == 0, f"Errors during concurrent parsing: {metrics.errors_encountered}"
+        assert summary["operations"] == 20
+        assert summary["avg_response_time"] < 2.0, "Parsing too slow under load"
+        assert summary["peak_memory_mb"] < 500, "Excessive memory usage"
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(30)
@@ -203,7 +209,7 @@ class TestConcurrentOperationsStress:
 
         # Generate test data
         log = generator.generate_typical_crash_log()
-        formids = [f"{random.randint(0,255):02X}{random.randint(1,0xFFFFFF):06X}" for _ in range(100)]
+        formids = [f"{random.randint(0, 255):02X}{random.randint(1, 0xFFFFFF):06X}" for _ in range(100)]
 
         async def mixed_operations():
             """Perform mixed operations."""
@@ -211,9 +217,7 @@ class TestConcurrentOperationsStress:
 
             # Parse log
             log_lines = log.splitlines()
-            operations.append(asyncio.to_thread(
-                parser.find_segments, log_lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            ))
+            operations.append(asyncio.to_thread(parser.find_segments, log_lines, "Buffout 4", "F4SE", "Fallout4.exe"))
 
             # Analyze FormIDs - use extract_formids instead of analyze for batch
             operations.append(asyncio.to_thread(analyzer.extract_formids, formids[:10]))
@@ -254,12 +258,12 @@ class TestConcurrentOperationsStress:
         print(f"  Total Operations: {total_successes + total_failures}")
         print(f"  Successes: {total_successes}")
         print(f"  Failures: {total_failures}")
-        print(f"  Success Rate: {total_successes/(total_successes+total_failures)*100:.1f}%")
+        print(f"  Success Rate: {total_successes / (total_successes + total_failures) * 100:.1f}%")
         print(f"  Peak Memory: {summary['peak_memory_mb']:.1f}MB")
 
         # Assertions
         assert total_failures == 0 or total_failures < total_successes * 0.01  # <1% failure rate
-        assert summary['peak_memory_mb'] < 500
+        assert summary["peak_memory_mb"] < 500
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(60)
@@ -277,9 +281,7 @@ class TestConcurrentOperationsStress:
                 start = time.time()
                 try:
                     lines = log.splitlines()
-                    await asyncio.to_thread(
-                        parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                    )
+                    await asyncio.to_thread(parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe")
                     metrics.record_operation(time.time() - start)
                 except Exception as e:
                     metrics.record_error(e)
@@ -298,13 +300,13 @@ class TestConcurrentOperationsStress:
         print("\nSustained Load Stress Test (10 seconds):")
         print(f"  Operations: {summary['operations']}")
         print(f"  Throughput: {summary['ops_per_second']:.2f} ops/sec")
-        print(f"  Error Rate: {summary['error_rate']*100:.2f}%")
+        print(f"  Error Rate: {summary['error_rate'] * 100:.2f}%")
         print(f"  Peak Memory: {summary['peak_memory_mb']:.1f}MB")
 
         # Assertions
-        assert summary['ops_per_second'] > 5, "Throughput too low"
-        assert summary['error_rate'] < 0.01, "Error rate too high"
-        assert summary['peak_memory_mb'] < 500, "Memory usage too high"
+        assert summary["ops_per_second"] > 5, "Throughput too low"
+        assert summary["error_rate"] < 0.01, "Error rate too high"
+        assert summary["peak_memory_mb"] < 500, "Memory usage too high"
 
 
 class TestMemoryLeakDetection:
@@ -330,9 +332,7 @@ class TestMemoryLeakDetection:
         for i in range(100):
             log = generator.generate_typical_crash_log()
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Explicitly delete to encourage cleanup
             del log
@@ -352,7 +352,7 @@ class TestMemoryLeakDetection:
 
         # Get memory allocation stats
         snapshot = tracemalloc.take_snapshot()
-        top_stats = snapshot.statistics('lineno')[:10]
+        top_stats = snapshot.statistics("lineno")[:10]
 
         print("\nMemory Leak Test (Parser):")
         print(f"  Initial Memory: {initial_memory:.1f}MB")
@@ -425,9 +425,7 @@ class TestMemoryLeakDetection:
         for i in range(50):
             log = generator.generate_typical_crash_log()
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Try to track result
             try:
@@ -450,7 +448,7 @@ class TestMemoryLeakDetection:
         print("\nObject Lifecycle Test:")
         print(f"  Tracked: {len(tracked_objects)}")
         print(f"  Still Alive: {alive}")
-        print(f"  Cleanup Rate: {(1 - alive/len(tracked_objects))*100:.1f}%")
+        print(f"  Cleanup Rate: {(1 - alive / len(tracked_objects)) * 100:.1f}%")
 
         # Most objects should be cleaned up
         assert alive < len(tracked_objects) * 0.1, f"Too many objects still alive: {alive}/{len(tracked_objects)}"
@@ -473,10 +471,7 @@ class TestThreadSafetyValidation:
                     pass
             AsyncBridge._instances.clear()
 
-        instances = {
-            "MessageHandler": [],
-            "AsyncBridge": []
-        }
+        instances = {"MessageHandler": [], "AsyncBridge": []}
 
         def get_instances():
             """Get singleton instances from thread."""

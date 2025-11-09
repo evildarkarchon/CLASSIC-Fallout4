@@ -196,6 +196,9 @@ async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:
 
     Returns:
         ScanResult containing scan outcomes and statistics
+
+    Raises:
+        RuntimeError: If YAML data is not initialized after scan execution.
     """
     logger.info("Starting pure async crash log scanning")
 
@@ -206,6 +209,11 @@ async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:
 
     # Execute the scan
     result = await executor.execute_scan()
+
+    # Ensure yamldata is initialized (execute_scan guarantees this)
+    if executor.yamldata is None:
+        msg = "YAML data should be initialized after execute_scan"
+        raise RuntimeError(msg)
 
     # Complete with summary
     complete_scan_with_summary(result, executor.yamldata, executor.statistics.scan_start_time)

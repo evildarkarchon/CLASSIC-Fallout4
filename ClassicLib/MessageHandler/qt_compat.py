@@ -56,6 +56,7 @@ except ImportError:
         configured with custom ranges, text, and behavior properties, making it
         suitable for varied user interface requirements.
         """
+
         def __init__(
             self,
             labelText: str = "",

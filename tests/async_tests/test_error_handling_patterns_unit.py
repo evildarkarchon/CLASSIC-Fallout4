@@ -12,7 +12,6 @@ This file contains unit tests that test individual functions with mocked depende
 # 3. Never use AsyncMock for methods called through AsyncBridge
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
-
 import asyncio
 import logging
 from contextlib import asynccontextmanager
@@ -20,6 +19,7 @@ from contextlib import asynccontextmanager
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 class TestStandardErrorHandling:
     """Test standard Python error handling patterns"""
@@ -29,14 +29,15 @@ class TestStandardErrorHandling:
         """Test basic try/except error handling"""
 
         async def risky_operation():
-            raise ValueError('Something went wrong')
+            raise ValueError("Something went wrong")
 
         async def safe_operation():
             try:
                 return await risky_operation()
             except ValueError as e:
-                logging.error(f'Operation failed: {e}')
+                logging.error(f"Operation failed: {e}")
                 return None
+
         result = await safe_operation()
         assert result is None
 
@@ -45,19 +46,19 @@ class TestStandardErrorHandling:
         """Test error callback pattern"""
 
         class ErrorHandler:
-
             def __init__(self):
                 self.callbacks = []
 
             def register_callback(self, callback):
                 self.callbacks.append(callback)
 
-            async def handle_error(self, error: Exception, context: dict=None):
+            async def handle_error(self, error: Exception, context: dict = None):
                 for callback in self.callbacks:
                     if asyncio.iscoroutinefunction(callback):
                         await callback(error, context)
                     else:
                         callback(error, context)
+
         handler = ErrorHandler()
         callback_called = False
         received_error = None
@@ -66,11 +67,13 @@ class TestStandardErrorHandling:
             nonlocal callback_called, received_error
             callback_called = True
             received_error = error
+
         handler.register_callback(error_callback)
-        test_error = ValueError('Test error')
-        await handler.handle_error(test_error, {'test': 'context'})
+        test_error = ValueError("Test error")
+        await handler.handle_error(test_error, {"test": "context"})
         assert callback_called
         assert received_error == test_error
+
 
 class TestRetryPatterns:
     """Test retry patterns without AsyncCore"""
@@ -96,16 +99,18 @@ class TestRetryPatterns:
                     else:
                         raise
             raise last_error
+
         attempt_count = 0
 
         async def flaky_function():
             nonlocal attempt_count
             attempt_count += 1
             if attempt_count < 3:
-                raise ValueError('Temporary failure')
-            return 'Success'
+                raise ValueError("Temporary failure")
+            return "Success"
+
         result = await retry_async(flaky_function, max_attempts=3, delay=0.01)
-        assert result == 'Success'
+        assert result == "Success"
         assert attempt_count == 3
 
     @pytest.mark.asyncio
@@ -126,8 +131,11 @@ class TestRetryPatterns:
                             if attempt < max_attempts - 1:
                                 await asyncio.sleep(delay)
                     raise last_error
+
                 return wrapper
+
             return decorator
+
         attempt_count = 0
 
         @async_retry(max_attempts=3, delay=0.01)
@@ -135,11 +143,13 @@ class TestRetryPatterns:
             nonlocal attempt_count
             attempt_count += 1
             if attempt_count < 2:
-                raise ValueError('Temporary error')
-            return 'Success'
+                raise ValueError("Temporary error")
+            return "Success"
+
         result = await flaky_operation()
-        assert result == 'Success'
+        assert result == "Success"
         assert attempt_count == 2
+
 
 class TestAsyncContextManagers:
     """Test async context managers for error handling"""
@@ -154,17 +164,18 @@ class TestAsyncContextManagers:
                 yield
             except Exception as e:
                 if log_errors:
-                    logging.error(f'Error in context: {e}')
+                    logging.error(f"Error in context: {e}")
                 if default_value is not None:
                     pass
                 else:
                     raise
+
         async with error_handler():
             result = 1 + 1
             assert result == 2
         with pytest.raises(ValueError):
             async with error_handler():
-                raise ValueError('Test error')
+                raise ValueError("Test error")
 
     @pytest.mark.asyncio
     async def test_resource_cleanup_on_error(self):
@@ -173,18 +184,19 @@ class TestAsyncContextManagers:
 
         @asynccontextmanager
         async def managed_resource():
-            resource = {'active': True}
+            resource = {"active": True}
             try:
                 yield resource
             except Exception as e:
-                logging.error(f'Error with resource: {e}')
+                logging.error(f"Error with resource: {e}")
                 raise
             finally:
                 nonlocal cleanup_called
                 cleanup_called = True
-                resource['active'] = False
+                resource["active"] = False
+
         with pytest.raises(ValueError):
             async with managed_resource() as resource:
-                assert resource['active']
-                raise ValueError('Error during operation')
+                assert resource["active"]
+                raise ValueError("Error during operation")
         assert cleanup_called

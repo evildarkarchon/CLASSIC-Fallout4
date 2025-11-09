@@ -1,3 +1,25 @@
+"""
+Qt stylesheet definitions for the CLASSIC application.
+
+This module provides pre-defined stylesheets for customizing the appearance
+of Qt widgets throughout the application. It currently contains:
+
+- DARK_MODE: A comprehensive dark theme stylesheet with styling for:
+  - Base widgets (QWidget, QLineEdit, QPlainTextEdit, QTextEdit, QSpinBox, QPushButton)
+  - ComboBox controls with hover and focus states
+  - Scrollbars (both vertical and horizontal) with custom handles
+  - Tab widgets and tab bars
+  - Buttons with hover and pressed states
+  - Labels and checkboxes with custom indicators
+
+The stylesheets use a consistent color palette:
+- Background: #2b2b2b (dark gray)
+- Widget background: #3c3c3c (medium gray)
+- Borders: #5c5c5c (light gray)
+- Text: #ffffff (white)
+- Accent: #0078d4 (blue)
+"""
+
 DARK_MODE = """
 QWidget {
     background-color: #2b2b2b;

@@ -1,4 +1,3 @@
-
 """Unit tests for ResultsViewerMixin.
 
 Tests the results viewer functionality in isolation with mocked Qt components.
@@ -24,14 +23,15 @@ from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noq
 @pytest.fixture
 def mock_qt_components():
     """Mock Qt components for testing."""
-    with patch("ClassicLib.Interface.ResultsViewerMixin.QFileSystemWatcher") as mock_watcher, \
-         patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer, \
-         patch("ClassicLib.Interface.ResultsViewerMixin.QHBoxLayout"), \
-         patch("ClassicLib.Interface.ResultsViewerMixin.QVBoxLayout"), \
-         patch("ClassicLib.Interface.ResultsViewerMixin.QSplitter"), \
-         patch("ClassicLib.Interface.ResultsViewerMixin.QPushButton"), \
-         patch("ClassicLib.Interface.ResultsViewerMixin.QWidget"):
-
+    with (
+        patch("ClassicLib.Interface.ResultsViewerMixin.QFileSystemWatcher") as mock_watcher,
+        patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer,
+        patch("ClassicLib.Interface.ResultsViewerMixin.QHBoxLayout"),
+        patch("ClassicLib.Interface.ResultsViewerMixin.QVBoxLayout"),
+        patch("ClassicLib.Interface.ResultsViewerMixin.QSplitter"),
+        patch("ClassicLib.Interface.ResultsViewerMixin.QPushButton"),
+        patch("ClassicLib.Interface.ResultsViewerMixin.QWidget"),
+    ):
         # Setup watcher mock
         watcher_instance = MagicMock(spec=QFileSystemWatcher)
         watcher_instance.directories.return_value = []
@@ -41,12 +41,7 @@ def mock_qt_components():
         timer_instance = MagicMock(spec=QTimer)
         mock_timer.return_value = timer_instance
 
-        yield {
-            "watcher": watcher_instance,
-            "timer": timer_instance,
-            "watcher_class": mock_watcher,
-            "timer_class": mock_timer
-        }
+        yield {"watcher": watcher_instance, "timer": timer_instance, "watcher_class": mock_watcher, "timer_class": mock_timer}
 
 
 @pytest.fixture
@@ -103,11 +98,12 @@ class TestResultsViewerMixinInit:
 
     def test_setup_results_tab_initializes_components(self, viewer_mixin, gui_message_handler):
         """Should initialize all required components."""
-        with patch.object(viewer_mixin, "_create_reports_panel") as mock_reports_panel, \
-             patch.object(viewer_mixin, "_create_viewer_panel") as mock_viewer_panel, \
-             patch.object(viewer_mixin, "refresh_reports_list") as mock_refresh, \
-             patch.object(viewer_mixin, "_setup_auto_refresh") as mock_auto_refresh:
-
+        with (
+            patch.object(viewer_mixin, "_create_reports_panel") as mock_reports_panel,
+            patch.object(viewer_mixin, "_create_viewer_panel") as mock_viewer_panel,
+            patch.object(viewer_mixin, "refresh_reports_list") as mock_refresh,
+            patch.object(viewer_mixin, "_setup_auto_refresh") as mock_auto_refresh,
+        ):
             mock_reports_panel.return_value = MagicMock()
             mock_viewer_panel.return_value = MagicMock()
 
@@ -142,9 +138,10 @@ class TestResultsViewerMixinInit:
 
     def test_create_viewer_panel_sets_up_viewer_components(self, viewer_mixin, gui_message_handler):
         """Should create viewer panel with markdown viewer and metadata."""
-        with patch("ClassicLib.Interface.ResultsViewerWidgets.MarkdownViewer") as mock_markdown, \
-             patch("ClassicLib.Interface.ResultsViewerWidgets.ReportMetadataWidget") as mock_metadata:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerWidgets.MarkdownViewer") as mock_markdown,
+            patch("ClassicLib.Interface.ResultsViewerWidgets.ReportMetadataWidget") as mock_metadata,
+        ):
             mock_markdown_instance = MagicMock()
             mock_metadata_instance = MagicMock()
             mock_markdown.return_value = mock_markdown_instance
@@ -177,9 +174,10 @@ class TestReportScanning:
         report2.write_text("Report 2")
         other_file.write_text("Not a report")
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings") as mock_settings:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings") as mock_settings,
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
             mock_settings.return_value = None  # No custom path
 
@@ -200,9 +198,10 @@ class TestReportScanning:
         custom_report = custom_dir / "custom-AUTOSCAN.md"
         custom_report.write_text("Custom report")
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings") as mock_settings:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings") as mock_settings,
+        ):
             mock_registry.get_local_dir.return_value = None
             mock_settings.return_value = str(custom_dir)
 
@@ -226,9 +225,10 @@ class TestReportScanning:
         new_report = crash_logs_dir / "new-AUTOSCAN.md"
         new_report.write_text("New")
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings") as mock_settings:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings") as mock_settings,
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
             mock_settings.return_value = None
 
@@ -306,13 +306,14 @@ class TestReportManagement:
         viewer_mixin.results_list.get_report_path.return_value = mock_report_path
         viewer_mixin.current_report_path = mock_report_path
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.logger") as mock_logger, \
-             patch.object(viewer_mixin, "refresh_reports_list") as mock_refresh:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
+            patch("ClassicLib.Interface.ResultsViewerMixin.logger") as mock_logger,
+            patch.object(viewer_mixin, "refresh_reports_list") as mock_refresh,
+        ):
             # Set up StandardButton enum on the mock
             mock_msgbox.StandardButton = QMessageBox.StandardButton
             mock_msgbox.question.return_value = QMessageBox.StandardButton.Yes
@@ -353,9 +354,7 @@ class TestReportManagement:
 
         viewer_mixin.current_report_path = report_path
 
-        with patch("PySide6.QtWidgets.QApplication") as mock_app, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info:
-
+        with patch("PySide6.QtWidgets.QApplication") as mock_app, patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info:
             mock_clipboard = MagicMock()
             mock_app.clipboard.return_value = mock_clipboard
 
@@ -378,9 +377,10 @@ class TestReportManagement:
         report_path = tmp_path / "test-AUTOSCAN.md"
         viewer_mixin.current_report_path = report_path
 
-        with patch.object(Path, "read_text", side_effect=OSError("Read error")), \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error:
-
+        with (
+            patch.object(Path, "read_text", side_effect=OSError("Read error")),
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
+        ):
             viewer_mixin._copy_report()
 
             mock_error.assert_called_once()
@@ -390,9 +390,10 @@ class TestReportManagement:
         crash_logs_dir = tmp_path / "Crash Logs"
         crash_logs_dir.mkdir()
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("PySide6.QtGui.QDesktopServices") as mock_desktop:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("PySide6.QtGui.QDesktopServices") as mock_desktop,
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
 
             viewer_mixin._open_reports_folder()
@@ -401,9 +402,10 @@ class TestReportManagement:
 
     def test_open_reports_folder_no_local_dir(self, viewer_mixin, gui_message_handler):
         """Should show warning when local directory not configured."""
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning,
+        ):
             mock_registry.get_local_dir.return_value = None
 
             viewer_mixin._open_reports_folder()
@@ -412,9 +414,10 @@ class TestReportManagement:
 
     def test_open_reports_folder_not_exists(self, viewer_mixin, tmp_path, gui_message_handler):
         """Should show warning when Crash Logs folder doesn't exist."""
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning,
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
             # Crash Logs directory not created
 
@@ -427,10 +430,11 @@ class TestReportManagement:
         crash_logs_dir = tmp_path / "Crash Logs"
         crash_logs_dir.mkdir()
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("PySide6.QtGui.QDesktopServices") as mock_desktop, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("PySide6.QtGui.QDesktopServices") as mock_desktop,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
             mock_desktop.openUrl.side_effect = Exception("Failed to open")
 
@@ -512,9 +516,10 @@ class TestContextMenu:
 
         viewer_mixin.results_list.itemAt.return_value = mock_item
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.QMenu") as mock_menu_class, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.QAction") as mock_action_class:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.QMenu") as mock_menu_class,
+            patch("ClassicLib.Interface.ResultsViewerMixin.QAction") as mock_action_class,
+        ):
             mock_menu = MagicMock()
             mock_menu_class.return_value = mock_menu
 
@@ -596,9 +601,10 @@ class TestFileWatcher:
 
         viewer_mixin.file_watcher.directories.return_value = []
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry, \
-             patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings") as mock_settings:
-
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings") as mock_settings,
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
             mock_settings.return_value = None
 

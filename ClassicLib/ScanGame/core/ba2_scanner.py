@@ -184,7 +184,17 @@ class BA2ArchiveScanner:
 
         # Process all tasks with natural backpressure from the semaphore
         # This is more efficient than artificial batching with delays
-        return await asyncio.gather(*all_tasks, return_exceptions=True)
+        raw_results = await asyncio.gather(*all_tasks, return_exceptions=True)
+
+        # Filter out exceptions and log them, returning only successful results
+        results: list[dict[str, set[str]]] = []
+        for result in raw_results:
+            if isinstance(result, Exception):
+                msg_error(f"BA2 processing task failed with exception: {result}")
+            elif isinstance(result, dict):
+                results.append(result)
+
+        return results
 
     @staticmethod
     async def read_ba2_header_async(file_path: Path, filename: str) -> bytes | None:
@@ -426,7 +436,7 @@ class BA2ArchiveScanner:
     def analyze_general_files(
         files: list[str], filename: str, file_path: Path, xse_scriptfiles: dict[str, str], local_issues: dict[str, set[str]]
     ) -> None:
-        """
+        r"""
         Analyze files in a general-format BA2 for various issues.
 
         Scans through the file list from a GNRL BA2 archive and checks for:

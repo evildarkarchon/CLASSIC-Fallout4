@@ -1,6 +1,5 @@
 """Setup.py for compatibility with setuptools and uv."""
 
-
 from setuptools import find_packages, setup
 
 # Find all packages in root (no src directory)

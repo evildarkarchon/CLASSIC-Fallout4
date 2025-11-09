@@ -180,10 +180,7 @@ class TestAsyncLoading:
     @pytest.mark.asyncio
     async def test_concurrent_async_loads(self, multi_yaml):
         """Test concurrent async loads."""
-        tasks = [
-            classic_settings.load_settings_async(f"concurrent_{i}", path)
-            for i, path in enumerate(multi_yaml)
-        ]
+        tasks = [classic_settings.load_settings_async(f"concurrent_{i}", path) for i, path in enumerate(multi_yaml)]
 
         results = await asyncio.gather(*tasks)
 
@@ -348,10 +345,7 @@ class TestThreadSafety:
             return classic_settings.load_settings_sync(f"thread_{index}", path)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            futures = [
-                executor.submit(load_file, i, path)
-                for i, path in enumerate(multi_yaml)
-            ]
+            futures = [executor.submit(load_file, i, path) for i, path in enumerate(multi_yaml)]
             results = [f.result() for f in concurrent.futures.as_completed(futures)]
 
         assert len(results) == 3

@@ -34,7 +34,7 @@ class HybridOrchestrator:
         fcx_mode: Whether FCX (File Configuration eXtender) mode is enabled.
         show_formid_values: Whether to display FormID values in reports.
         formid_db_exists: Whether the FormID database is available.
-        remove_list: Optional list of items to remove during processing.
+        remove_list: Optional tuple of items to remove during processing.
         _python_orch: Internal Python orchestrator instance.
         _rust_orch: Internal Rust orchestrator instance (None if unavailable).
 
@@ -55,7 +55,7 @@ class HybridOrchestrator:
         fcx_mode: bool,
         show_formid_values: bool,
         formid_db_exists: bool,
-        remove_list: list[str] | None = None,
+        remove_list: tuple[str] | None = None,
     ) -> None:
         """
         Initialize the hybrid orchestrator with Python and optional Rust backends.
@@ -68,7 +68,7 @@ class HybridOrchestrator:
                 in the analysis reports.
             formid_db_exists: Whether the FormID database file exists and can
                 be used for FormID resolution.
-            remove_list: Optional list of strings to filter out during processing.
+            remove_list: Optional tuple of strings to filter out during processing.
                 Defaults to None.
         """
         # Initialize Python orchestrator for single-log processing
@@ -116,9 +116,7 @@ class HybridOrchestrator:
         """
         await self._python_orch.__aexit__(exc_type, exc_val, exc_tb)
 
-    async def process_crash_log(
-        self, crashlog_file: Path
-    ) -> tuple[Path, list[str], bool, Counter[str]]:
+    async def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
         """
         Process a single crash log using Python orchestrator (complex logic).
 
@@ -142,9 +140,7 @@ class HybridOrchestrator:
         """
         return await self._python_orch.process_crash_log(crashlog_file)
 
-    async def process_crash_logs_batch(
-        self, crashlog_files: list[Path]
-    ) -> list[tuple[Path, list[str], bool, Counter[str]]]:
+    async def process_crash_logs_batch(self, crashlog_files: list[Path]) -> list[tuple[Path, list[str], bool, Counter[str]]]:
         """
         Process batch of logs using Rust orchestrator (parallelism) or Python fallback.
 
@@ -171,19 +167,14 @@ class HybridOrchestrator:
             # Use Rust orchestrator for large batches (5+ logs)
             # Small batches (1-4 logs) use Python to avoid overhead
             try:
-                logger.debug(
-                    f"Using Rust orchestrator for batch of {len(crashlog_files)} logs "
-                    f"(unbounded parallelism)"
-                )
+                logger.debug(f"Using Rust orchestrator for batch of {len(crashlog_files)} logs (unbounded parallelism)")
 
                 # Process logs with Rust (blocks but has internal parallelism)
                 # Use asyncio.to_thread() to run blocking Rust code without blocking the event loop
                 import asyncio
 
                 batch_result = await asyncio.to_thread(
-                    self._rust_orch.process_crash_logs_batch,
-                    crashlog_files,
-                    max_concurrent=len(crashlog_files)
+                    self._rust_orch.process_crash_logs_batch, crashlog_files, max_concurrent=len(crashlog_files)
                 )
 
                 # Convert Rust results to Python format
@@ -194,19 +185,15 @@ class HybridOrchestrator:
                 # Fall through to Python fallback
 
         # Fall back to Python orchestrator
-        logger.debug(
-            f"Using Python orchestrator for batch of {len(crashlog_files)} logs "
-            f"(batch_size=10)"
-        )
+        logger.debug(f"Using Python orchestrator for batch of {len(crashlog_files)} logs (batch_size=10)")
         return await self._python_orch.process_crash_logs_batch(crashlog_files)
 
-    def _convert_rust_results(
-        self, batch_result: Any
-    ) -> list[tuple[Path, list[str], bool, Counter[str]]]:
+    @staticmethod
+    def _convert_rust_results(batch_result: Any) -> list[tuple[Path, list[str], bool, Counter[str]]]:
         """
         Convert Rust BatchAnalysisResult to Python orchestrator format.
 
-        This adapter method transforms Rust's AnalysisResult objects into the
+        This static method transforms Rust's AnalysisResult objects into the
         tuple format expected by Python code.
 
         Args:
@@ -243,7 +230,8 @@ class HybridOrchestrator:
 
         return python_results
 
-    async def write_reports_batch(self, reports: list[tuple[Path, list[str], bool]]) -> None:
+    @staticmethod
+    async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:
         """
         Write batch reports to files asynchronously.
 

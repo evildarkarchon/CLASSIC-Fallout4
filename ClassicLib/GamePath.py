@@ -23,13 +23,13 @@ from typing import TYPE_CHECKING, cast
 
 from ClassicLib import GlobalRegistry, msg_error, msg_info
 from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERSION, YAML
+
+# Import factory for Rust acceleration
+from ClassicLib.integration.factory import get_path_operations
 from ClassicLib.Interface.PathDialogMixin import show_game_path_dialog_static
 from ClassicLib.Logger import logger
 from ClassicLib.Util import get_game_version, open_file_with_encoding
 from ClassicLib.YamlSettingsCache import yaml_settings
-
-# Import factory for Rust acceleration
-from ClassicLib.integration.factory import get_path_operations
 
 # Get Rust module if available, None otherwise
 classic_path = get_path_operations()
@@ -60,12 +60,13 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
     """
     # Try Rust acceleration first if available
     if _HAS_RUST_PATH and platform.system() == "Windows":
+        assert classic_path is not None  # Type narrowing for type checker
         try:
-            finder = classic_path.GamePathFinder(  # pyright: ignore[reportPossiblyUnboundVariable]
+            finder = classic_path.GamePathFinder(
                 exe_name,
                 None,  # xse_loader not needed for registry lookup
                 GlobalRegistry.get_game(),
-                bool(GlobalRegistry.get_vr())
+                bool(GlobalRegistry.get_vr()),
             )
             # Try to find via registry (cached_path=None, xse_log_path=None)
             path_str = finder.find_game_path(cached_path=None, xse_log_path=None)
@@ -76,6 +77,7 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
         else:
             game_path = Path(path_str)
             from ClassicLib.ResourceLoader import ResourceLoader
+
             ResourceLoader.save_path_to_cache(game_path, "GamePath")
             GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
             return game_path
@@ -254,8 +256,9 @@ class GamePathFinder:
         """
         # Use Rust acceleration if available
         if _HAS_RUST_PATH:
+            assert classic_path is not None  # Type narrowing for type checker
             try:
-                path_str = classic_path.GamePathFinder.parse_xse_log(str(self.xse_file))  # pyright: ignore[reportPossiblyUnboundVariable]
+                path_str = classic_path.GamePathFinder.parse_xse_log(str(self.xse_file))
                 return Path(path_str)
             except (FileNotFoundError, ValueError) as e:
                 logger.debug(f"Rust XSE log parsing failed: {e}")
@@ -266,10 +269,7 @@ class GamePathFinder:
             for line in log_file:
                 if line.startswith("plugin directory"):
                     path_str = (
-                        line.split("=", maxsplit=1)[1]
-                        .strip()
-                        .replace(f"\\Data\\{self.xse_acronym_base}\\Plugins", "")
-                        .replace("\n", "")
+                        line.split("=", maxsplit=1)[1].strip().replace(f"\\Data\\{self.xse_acronym_base}\\Plugins", "").replace("\n", "")
                     )
                     return Path(path_str)
         return None

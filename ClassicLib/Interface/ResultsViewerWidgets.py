@@ -237,6 +237,9 @@ class ReportListWidget(QListWidget):
         try:
             content = report_path.read_text(encoding="utf-8", errors="ignore")
 
+        except Exception as e:  # noqa: BLE001
+            logger.debug(f"Could not determine status for {report_path.name}: {e}")
+        else:
             # Check for status indicators in content
             if "INCOMPLETE" in content.upper():
                 return "incomplete"
@@ -244,11 +247,8 @@ class ReportListWidget(QListWidget):
                 return "unsolved"
             if "SOLVED" in content.upper() or "RECOMMENDATIONS" in content:
                 return "solved"
-            return "unknown"
 
-        except Exception as e:
-            logger.debug(f"Could not determine status for {report_path.name}: {e}")
-            return "unknown"
+        return "unknown"
 
     @staticmethod
     def _apply_status_styling(item: QListWidgetItem, status: str) -> None:

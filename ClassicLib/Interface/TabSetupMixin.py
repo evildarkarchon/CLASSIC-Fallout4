@@ -91,7 +91,8 @@ class TabSetupMixin:
         def open_backup_folder(self) -> None: ...  # noqa: D102
         def check_existing_backups(self) -> None: ...  # noqa: D102
         def add_main_button(self, layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton: ...  # noqa: D102
-        def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton: ...
+        @staticmethod
+        def _create_button(text: str, tooltip: str, callback: Callable) -> QPushButton: ...
         def add_backup_section(self, layout: QBoxLayout, title: str, backup_type: Literal["XSE", "RESHADE", "VULKAN", "ENB"]) -> None: ...  # noqa: D102
 
     # noinspection PyUnresolvedReferences
@@ -457,7 +458,8 @@ class TabSetupMixin:
             layout.addSpacing(5)  # Small spacing between button rows
             layout.addLayout(main_actions_hbox)
 
-    def _create_button(self, text: str, tooltip: str, callback: Callable) -> QPushButton:
+    @staticmethod
+    def _create_button(text: str, tooltip: str, callback: Callable) -> QPushButton:
         """
         Creates a QPushButton with the specified text, tooltip, and callback functionality.
 

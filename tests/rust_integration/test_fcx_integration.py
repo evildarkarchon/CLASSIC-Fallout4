@@ -54,18 +54,15 @@ class TestRustFCXIntegration:
         # Verify we got Rust implementation
         # (Factory returns best available implementation)
         handler_type = type(handler).__name__
-        assert "Rust" in handler_type or handler_type == "FCXModeHandler", \
-            f"Expected Rust handler, got {handler_type}"
+        assert "Rust" in handler_type or handler_type == "FCXModeHandler", f"Expected Rust handler, got {handler_type}"
 
         # Perform FCX operations
         messages = handler.get_fcx_messages()
 
         # Verify file was NOT modified
-        assert test_ini.stat().st_mtime == initial_mtime, \
-            "Rust FCX handler modified file - read-only contract violated"
+        assert test_ini.stat().st_mtime == initial_mtime, "Rust FCX handler modified file - read-only contract violated"
 
-        assert test_ini.read_text(encoding="utf-8") == initial_content, \
-            "File content was modified by Rust FCX handler"
+        assert test_ini.read_text(encoding="utf-8") == initial_content, "File content was modified by Rust FCX handler"
 
     async def test_rust_python_issue_data_passing(self):
         """
@@ -89,7 +86,7 @@ class TestRustFCXIntegration:
             current_value="bad_value",
             recommended_value="good_value",
             description="Test issue description",
-            severity="warning"
+            severity="warning",
         )
 
         # Verify data structure
@@ -179,8 +176,7 @@ class TestRustFCXIntegration:
 
             # Rust should provide some performance advantage
             # (May be modest for FCX handler due to I/O dominance)
-            assert performance_gain >= 1.0, \
-                f"Rust implementation should not be slower: {performance_gain:.2f}x"
+            assert performance_gain >= 1.0, f"Rust implementation should not be slower: {performance_gain:.2f}x"
 
     async def test_rust_fcx_message_parity(self):
         """
@@ -213,10 +209,11 @@ class TestRustFCXIntegration:
             python_content = python_messages.fragment_content if python_messages else ""
 
             # Verify parity
-            assert rust_content == python_content, \
-                f"Message mismatch for fcx_mode={fcx_mode}:\n" \
-                f"Rust ({len(rust_content)} chars):\n{rust_content[:200]}...\n" \
+            assert rust_content == python_content, (
+                f"Message mismatch for fcx_mode={fcx_mode}:\n"
+                f"Rust ({len(rust_content)} chars):\n{rust_content[:200]}...\n"
                 f"Python ({len(python_content)} chars):\n{python_content[:200]}..."
+            )
 
     async def test_rust_fcx_state_management(self):
         """
@@ -246,8 +243,7 @@ class TestRustFCXIntegration:
         content1 = msg1.fragment_content if msg1 else ""
         content2 = msg2.fragment_content if msg2 else ""
 
-        assert content1 == content2, \
-            "Messages changed after reset - state management issue"
+        assert content1 == content2, "Messages changed after reset - state management issue"
 
     async def test_rust_fcx_thread_safety(self):
         """
@@ -279,8 +275,7 @@ class TestRustFCXIntegration:
         first_content = results[0].fragment_content if results[0] else ""
         for result in results[1:]:
             content = result.fragment_content if result else ""
-            assert content == first_content, \
-                "Thread safety violation - inconsistent results"
+            assert content == first_content, "Thread safety violation - inconsistent results"
 
     async def test_rust_fcx_error_handling(self):
         """
@@ -340,10 +335,8 @@ class TestRustFCXIntegration:
 
         # Verify no changes
         final_files = list(test_dir.rglob("*"))
-        assert set(initial_files) == set(final_files), \
-            "File structure changed - files created or deleted"
+        assert set(initial_files) == set(final_files), "File structure changed - files created or deleted"
 
         for file_path, initial_mtime in initial_mtimes.items():
             final_mtime = file_path.stat().st_mtime
-            assert final_mtime == initial_mtime, \
-                f"File {file_path} was modified"
+            assert final_mtime == initial_mtime, f"File {file_path} was modified"

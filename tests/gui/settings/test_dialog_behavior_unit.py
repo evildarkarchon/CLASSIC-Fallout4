@@ -12,6 +12,7 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 pytestmark = pytest.mark.unit
 
+
 class TestDialogAcceptReject:
     """Test dialog acceptance and rejection behavior."""
 
@@ -20,19 +21,19 @@ class TestDialogAcceptReject:
         settings_dialog.fcx_checkbox.setChecked(True)
         settings_dialog.simplify_checkbox.setChecked(True)
         settings_dialog.accept()
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode')
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.Simplify Logs')
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs")
         assert settings_dialog.result() == QDialog.DialogCode.Accepted
 
     def test_reject_does_not_save(self, settings_dialog, reset_settings):
         """Test that rejecting dialog does not save settings."""
-        original_fcx = yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode')
-        original_simplify = yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.Simplify Logs')
+        original_fcx = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
+        original_simplify = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs")
         settings_dialog.fcx_checkbox.setChecked(not original_fcx)
         settings_dialog.simplify_checkbox.setChecked(not original_simplify)
         settings_dialog.reject()
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode') == original_fcx
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.Simplify Logs') == original_simplify
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode") == original_fcx
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs") == original_simplify
         assert settings_dialog.result() == QDialog.DialogCode.Rejected
 
     def test_accept_multiple_changes(self, settings_dialog, reset_settings):
@@ -40,12 +41,13 @@ class TestDialogAcceptReject:
         settings_dialog.audio_checkbox.setChecked(False)
         settings_dialog.vr_checkbox.setChecked(True)
         settings_dialog.fcx_checkbox.setChecked(True)
-        settings_dialog.update_source_combo.setCurrentText('GitHub')
+        settings_dialog.update_source_combo.setCurrentText("GitHub")
         settings_dialog.accept()
-        assert not yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.Audio Notifications')
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.VR Mode')
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode')
-        assert yaml_settings(str, YAML.TEST, 'CLASSIC_Settings.Update Source') == 'GitHub'
+        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications")
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
+        assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "GitHub"
+
 
 class TestDialogStates:
     """Test different dialog states and transitions."""

@@ -56,7 +56,7 @@ PROBABLE CALL STACK:
 """
     # Add many stack frames
     for i in range(100):
-        medium_content += f"[{i}] 0x7FF6{i:08X}    FormID: 0x{i:08X}    TestMod{i%5}.esp\n"
+        medium_content += f"[{i}] 0x7FF6{i:08X}    FormID: 0x{i:08X}    TestMod{i % 5}.esp\n"
 
     medium_content += "\nPLUGINS:\n"
     for i in range(50):
@@ -77,6 +77,7 @@ PROBABLE CALL STACK:
 @pytest.fixture
 def mock_scanlog_info():
     """Create mock ScanLogInfo for testing."""
+
     class MockScanLogInfo:
         def __init__(self):
             self.crashgen_name = "Buffout"
@@ -115,6 +116,7 @@ def mock_yamldata():
 @pytest.fixture
 def performance_timer():
     """Context manager for timing operations."""
+
     class Timer:
         def __init__(self):
             self.elapsed = 0
@@ -146,6 +148,7 @@ async def initialized_database_pool(tmp_path):
 
     from ClassicLib.integration.factory import get_database_pool
     from ClassicLib.integration.status import is_rust_accelerated
+
     db_path = tmp_path / "test.db"
 
     conn = sqlite3.connect(db_path)
@@ -169,10 +172,7 @@ async def initialized_database_pool(tmp_path):
         ("00045678", "TestMod.esp", "Custom Weapon"),
     ]
 
-    cursor.executemany(
-        "INSERT OR REPLACE INTO Fallout4 (formid, plugin, entry) VALUES (?, ?, ?)",
-        test_data
-    )
+    cursor.executemany("INSERT OR REPLACE INTO Fallout4 (formid, plugin, entry) VALUES (?, ?, ?)", test_data)
 
     conn.commit()
     conn.close()
@@ -181,8 +181,8 @@ async def initialized_database_pool(tmp_path):
     pool = get_database_pool(max_connections=5, cache_ttl_seconds=60)
 
     # Initialize appropriately
-    if hasattr(pool, 'initialize'):
-        if is_rust_accelerated("database_pool") and hasattr(pool, '_rust_pool'):
+    if hasattr(pool, "initialize"):
+        if is_rust_accelerated("database_pool") and hasattr(pool, "_rust_pool"):
             # Rust version can take paths
             await pool.initialize([str(db_path)])
         else:
@@ -204,7 +204,7 @@ async def initialized_database_pool(tmp_path):
     yield pool
 
     # Cleanup
-    if hasattr(pool, 'close'):
+    if hasattr(pool, "close"):
         await pool.close()
 
 
@@ -213,12 +213,7 @@ def mock_orchestrator():
     """Create a mock orchestrator for testing."""
     orchestrator = MagicMock()
     orchestrator.process_crash_log_async = MagicMock(return_value=asyncio.Future())
-    orchestrator.process_crash_log_async.return_value.set_result({
-        "segments": {},
-        "formids": [],
-        "plugins": [],
-        "records": []
-    })
+    orchestrator.process_crash_log_async.return_value.set_result({"segments": {}, "formids": [], "plugins": [], "records": []})
     return orchestrator
 
 
@@ -253,28 +248,8 @@ def mock_formid_dataset():
 def mock_plugin_dataset():
     """Create a comprehensive plugin test dataset."""
     return {
-        "vanilla": [
-            "Fallout4.esm",
-            "DLCRobot.esm",
-            "DLCworkshop01.esm",
-            "DLCCoast.esm",
-            "DLCNukaWorld.esm"
-        ],
-        "creation_club": [
-            "ccBGSFO4001-PipBoy(Camo01).esl",
-            "ccBGSFO4003-PipBoy(Camo02).esl",
-            "ccBGSFO4016-Prey.esl"
-        ],
-        "mods": [
-            "TestMod.esp",
-            "AnotherMod.esp",
-            "BigOverhaul.esm",
-            "Patch.esp"
-        ],
-        "invalid": [
-            "NotAPlugin.txt",
-            "BadExtension.esz",
-            "",
-            None
-        ]
+        "vanilla": ["Fallout4.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCCoast.esm", "DLCNukaWorld.esm"],
+        "creation_club": ["ccBGSFO4001-PipBoy(Camo01).esl", "ccBGSFO4003-PipBoy(Camo02).esl", "ccBGSFO4016-Prey.esl"],
+        "mods": ["TestMod.esp", "AnotherMod.esp", "BigOverhaul.esm", "Patch.esp"],
+        "invalid": ["NotAPlugin.txt", "BadExtension.esz", "", None],
     }

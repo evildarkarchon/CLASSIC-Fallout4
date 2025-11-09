@@ -29,7 +29,7 @@ def clean_database_pool_manager() -> Generator[None, None, None]:
     DatabasePoolManager._lock = None
 
     # Clear any pool if it exists
-    if hasattr(DatabasePoolManager, '_pool'):
+    if hasattr(DatabasePoolManager, "_pool"):
         DatabasePoolManager._pool = None
 
     yield
@@ -37,7 +37,7 @@ def clean_database_pool_manager() -> Generator[None, None, None]:
     # Clean up after test
     if DatabasePoolManager._instance is not None:
         # If there's an active pool, try to close it
-        if hasattr(DatabasePoolManager._instance, '_pool') and DatabasePoolManager._instance._pool is not None:
+        if hasattr(DatabasePoolManager._instance, "_pool") and DatabasePoolManager._instance._pool is not None:
             # We need to handle async cleanup carefully
             try:
                 loop = asyncio.get_event_loop()
@@ -54,14 +54,14 @@ def clean_database_pool_manager() -> Generator[None, None, None]:
     # Reset singleton state
     DatabasePoolManager._instance = None
     DatabasePoolManager._lock = None
-    if hasattr(DatabasePoolManager, '_pool'):
+    if hasattr(DatabasePoolManager, "_pool"):
         DatabasePoolManager._pool = None
 
 
 async def _cleanup_pool_async() -> None:
     """Helper function to clean up the database pool asynchronously."""
     manager = DatabasePoolManager._instance
-    if manager and hasattr(manager, '_pool') and manager._pool is not None:
+    if manager and hasattr(manager, "_pool") and manager._pool is not None:
         try:
             await manager.close_pool()
         except Exception:
@@ -92,7 +92,7 @@ def mock_database_pool_manager():
     mock_manager.get_pool = AsyncMock(return_value=mock_pool)
     mock_manager.close_pool = AsyncMock()
 
-    with patch('ClassicLib.ScanLog.AsyncUtil.DatabasePoolManager', return_value=mock_manager):
+    with patch("ClassicLib.ScanLog.AsyncUtil.DatabasePoolManager", return_value=mock_manager):
         yield mock_manager
 
 
@@ -116,7 +116,7 @@ async def database_pool_manager_with_mock_pool():
     mock_pool.initialize = AsyncMock()
     mock_pool.close = AsyncMock()
 
-    with patch('ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool', return_value=mock_pool):
+    with patch("ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool", return_value=mock_pool):
         manager = DatabasePoolManager()
         yield manager
 
@@ -138,7 +138,6 @@ def database_pool_test_isolation_check():
     # At session start, singleton should be clean
     assert DatabasePoolManager._instance is None, "DatabasePoolManager singleton not clean at session start"
 
-
     # Note: We don't check at session end because the last test's state might persist
     # The important part is that each test starts with a clean slate
 
@@ -152,7 +151,6 @@ def verify_database_pool_isolation():
     """
     # Verify clean state at test start
     assert DatabasePoolManager._instance is None, "DatabasePoolManager not properly isolated"
-    assert not hasattr(DatabasePoolManager, '_lock') or DatabasePoolManager._lock is None
-
+    assert not hasattr(DatabasePoolManager, "_lock") or DatabasePoolManager._lock is None
 
     # The autouse fixture will handle cleanup

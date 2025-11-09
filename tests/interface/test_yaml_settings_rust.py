@@ -16,10 +16,12 @@ import pytest
 
 # Fixtures
 
+
 @pytest.fixture
 def yaml_file_ops():
     """Create YamlFileOperations instance for testing."""
     from ClassicLib.AsyncYamlSettings.file_operations import YamlFileOperations
+
     return YamlFileOperations()
 
 
@@ -27,6 +29,7 @@ def yaml_file_ops():
 def yaml_cache():
     """Create YamlSettingsCache instance for testing."""
     from ClassicLib.YamlSettingsCache import YamlSettingsCache
+
     return YamlSettingsCache()
 
 
@@ -40,12 +43,14 @@ def temp_yaml_file(tmp_path):
 
 # Test Rust availability
 
+
 @pytest.mark.unit
 @pytest.mark.rust
 def test_rust_yaml_available():
     """Test that Rust YAML module is available."""
     try:
         import classic_yaml
+
         assert hasattr(classic_yaml, "RustYamlOperations"), "RustYamlOperations class should be available"
 
         # Verify we can instantiate it
@@ -65,6 +70,7 @@ def test_yaml_operations_detects_rust(yaml_file_ops):
 
 
 # Test static file detection
+
 
 @pytest.mark.unit
 @pytest.mark.rust
@@ -97,16 +103,14 @@ def test_user_editable_files_use_python(yaml_file_ops):
 
 # Test YAML operations
 
+
 @pytest.mark.unit
 @pytest.mark.rust
 @pytest.mark.asyncio
 async def test_rust_yaml_parsing(yaml_file_ops, temp_yaml_file):
     """Test Rust YAML parsing works correctly."""
     # Parse without preserving comments (should use Rust)
-    result = await yaml_file_ops.parse_yaml_content(
-        temp_yaml_file.read_text(),
-        preserve_comments=False
-    )
+    result = await yaml_file_ops.parse_yaml_content(temp_yaml_file.read_text(), preserve_comments=False)
 
     assert isinstance(result, dict), "Should return dict"
     assert result.get("test_key") == "test_value", "Should parse key correctly"
@@ -118,16 +122,14 @@ async def test_rust_yaml_parsing(yaml_file_ops, temp_yaml_file):
 async def test_python_yaml_parsing_preserves_comments(yaml_file_ops, temp_yaml_file):
     """Test Python YAML parsing preserves comments."""
     # Parse with preserving comments (should use Python)
-    result = await yaml_file_ops.parse_yaml_content(
-        temp_yaml_file.read_text(),
-        preserve_comments=True
-    )
+    result = await yaml_file_ops.parse_yaml_content(temp_yaml_file.read_text(), preserve_comments=True)
 
     assert isinstance(result, dict), "Should return dict"
     assert result.get("test_key") == "test_value", "Should parse key correctly"
 
     # Check that result uses CommentedMap (ruamel.yaml type that preserves comments)
     import ruamel.yaml
+
     assert isinstance(result, (dict, ruamel.yaml.comments.CommentedMap)), "Should be dict-like"
 
 
@@ -137,7 +139,7 @@ async def test_python_yaml_parsing_preserves_comments(yaml_file_ops, temp_yaml_f
 async def test_load_yaml_file_with_rust(yaml_file_ops, temp_yaml_file):
     """Test loading YAML file with Rust acceleration."""
     # Mock _should_use_rust_for_file to force Rust usage
-    with patch.object(yaml_file_ops, '_should_use_rust_for_file', return_value=True):
+    with patch.object(yaml_file_ops, "_should_use_rust_for_file", return_value=True):
         result = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=False)
 
         assert isinstance(result, dict), "Should return dict"
@@ -149,7 +151,7 @@ async def test_load_yaml_file_with_rust(yaml_file_ops, temp_yaml_file):
 async def test_load_yaml_file_with_python(yaml_file_ops, temp_yaml_file):
     """Test loading YAML file with Python implementation."""
     # Mock _should_use_rust_for_file to force Python usage
-    with patch.object(yaml_file_ops, '_should_use_rust_for_file', return_value=False):
+    with patch.object(yaml_file_ops, "_should_use_rust_for_file", return_value=False):
         result = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=False)
 
         assert isinstance(result, dict), "Should return dict"
@@ -157,6 +159,7 @@ async def test_load_yaml_file_with_python(yaml_file_ops, temp_yaml_file):
 
 
 # Test fallback behavior
+
 
 @pytest.mark.unit
 @pytest.mark.asyncio
@@ -209,11 +212,12 @@ def test_operations_without_rust():
 
 # Test YamlSettingsCache integration
 
+
 @pytest.mark.unit
 def test_yaml_settings_cache_has_async_core(yaml_cache):
     """Test that YamlSettingsCache has async core initialized."""
-    assert hasattr(yaml_cache, '_async_core'), "Should have async core"
-    assert hasattr(yaml_cache, '_bridge'), "Should have AsyncBridge"
+    assert hasattr(yaml_cache, "_async_core"), "Should have async core"
+    assert hasattr(yaml_cache, "_bridge"), "Should have AsyncBridge"
     assert yaml_cache._async_core is not None, "Async core should be initialized"
 
 
@@ -235,14 +239,15 @@ def test_yaml_cache_file_ops_has_rust():
     from ClassicLib.YamlSettingsCache import yaml_cache
 
     cache = yaml_cache()
-    assert hasattr(cache, '_async_core'), "Should have async core"
-    assert hasattr(cache._async_core, 'file_ops'), "Should have file operations"
+    assert hasattr(cache, "_async_core"), "Should have async core"
+    assert hasattr(cache._async_core, "file_ops"), "Should have file operations"
 
     file_ops = cache._async_core.file_ops
     assert file_ops.rust_yaml is not None, "File ops should have Rust available"
 
 
 # Test performance (basic check)
+
 
 @pytest.mark.unit
 @pytest.mark.rust
@@ -258,13 +263,13 @@ async def test_rust_faster_than_python(yaml_file_ops, tmp_path):
 
     # Time Rust parsing
     start_rust = time.perf_counter()
-    with patch.object(yaml_file_ops, '_should_use_rust_for_file', return_value=True):
+    with patch.object(yaml_file_ops, "_should_use_rust_for_file", return_value=True):
         await yaml_file_ops.load_yaml_file(large_yaml, use_cache=False)
     rust_time = time.perf_counter() - start_rust
 
     # Time Python parsing
     start_python = time.perf_counter()
-    with patch.object(yaml_file_ops, '_should_use_rust_for_file', return_value=False):
+    with patch.object(yaml_file_ops, "_should_use_rust_for_file", return_value=False):
         await yaml_file_ops.load_yaml_file(large_yaml, use_cache=False)
     python_time = time.perf_counter() - start_python
 
@@ -275,6 +280,7 @@ async def test_rust_faster_than_python(yaml_file_ops, tmp_path):
 
 
 # Test environment variable control
+
 
 @pytest.mark.unit
 def test_rust_can_be_disabled_via_env():
@@ -308,6 +314,7 @@ def test_rust_can_be_disabled_via_env():
 
 
 # Test cache behavior
+
 
 @pytest.mark.unit
 @pytest.mark.asyncio

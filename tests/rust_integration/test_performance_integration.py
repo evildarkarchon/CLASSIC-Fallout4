@@ -60,13 +60,7 @@ def memory_monitor():
     initial_rss = initial_memory.rss
     initial_vms = initial_memory.vms
 
-    memory_stats = {
-        "initial_rss": initial_rss,
-        "initial_vms": initial_vms,
-        "peak_rss": initial_rss,
-        "peak_vms": initial_vms,
-        "samples": []
-    }
+    memory_stats = {"initial_rss": initial_rss, "initial_vms": initial_vms, "peak_rss": initial_rss, "peak_vms": initial_vms, "samples": []}
 
     try:
         yield memory_stats
@@ -83,7 +77,7 @@ def memory_monitor():
             "rss_growth": final_rss - initial_rss,
             "vms_growth": final_vms - initial_vms,
             "rss_growth_mb": (final_rss - initial_rss) / 1024 / 1024,
-            "vms_growth_mb": (final_vms - initial_vms) / 1024 / 1024
+            "vms_growth_mb": (final_vms - initial_vms) / 1024 / 1024,
         })
 
 
@@ -212,7 +206,7 @@ class TestPerformanceBenchmarks:
                         crash_data=crash_data,
                         crashgen_name=mock_yamldata.crashgen_name,
                         xse_acronym=mock_yamldata.xse_acronym,
-                        game_root_name=mock_yamldata.game_root_name
+                        game_root_name=mock_yamldata.game_root_name,
                     )
                 times.append(timer.elapsed)
 
@@ -228,26 +222,27 @@ class TestPerformanceBenchmarks:
                 "std_time": std_time,
                 "min_time": min_time,
                 "max_time": max_time,
-                "lines_per_second": data_size_lines / avg_time
+                "lines_per_second": data_size_lines / avg_time,
             }
 
-            logging.info(f"Parser performance - {size_category} ({data_size_lines} lines): "
-                        f"avg={avg_time:.3f}s, std={std_time:.3f}s, "
-                        f"rate={data_size_lines/avg_time:.0f} lines/sec")
+            logging.info(
+                f"Parser performance - {size_category} ({data_size_lines} lines): "
+                f"avg={avg_time:.3f}s, std={std_time:.3f}s, "
+                f"rate={data_size_lines / avg_time:.0f} lines/sec"
+            )
 
         # Validate performance targets
         targets = {
-            "small": 0.01,    # 10ms for small logs
-            "medium": 0.05,   # 50ms for medium logs
-            "large": 0.15,    # 150ms for large logs
-            "xlarge": 0.5     # 500ms for extra large logs
+            "small": 0.01,  # 10ms for small logs
+            "medium": 0.05,  # 50ms for medium logs
+            "large": 0.15,  # 150ms for large logs
+            "xlarge": 0.5,  # 500ms for extra large logs
         }
 
         for size_category, target_time in targets.items():
             if size_category in performance_results:
                 avg_time = performance_results[size_category]["avg_time"]
-                assert avg_time < target_time, \
-                    f"Parser too slow for {size_category}: {avg_time:.3f}s > {target_time}s"
+                assert avg_time < target_time, f"Parser too slow for {size_category}: {avg_time:.3f}s > {target_time}s"
 
         # Validate scaling characteristics (should be roughly linear)
         sizes = [(k, v["data_size"], v["avg_time"]) for k, v in performance_results.items()]
@@ -260,8 +255,7 @@ class TestPerformanceBenchmarks:
 
             # Rate should not degrade more than 50% with larger datasets
             rate_ratio = large_rate / small_rate
-            assert rate_ratio > 0.5, \
-                f"Performance degrades too much with size: {rate_ratio:.2f}"
+            assert rate_ratio > 0.5, f"Performance degrades too much with size: {rate_ratio:.2f}"
 
     def test_formid_analyzer_performance(self, performance_test_data, mock_yamldata):
         """
@@ -304,20 +298,21 @@ class TestPerformanceBenchmarks:
                 "expected_formids": expected_formids,
                 "extracted_formids": avg_formid_count,
                 "avg_time": avg_time,
-                "formids_per_second": formids_per_second
+                "formids_per_second": formids_per_second,
             }
 
-            logging.info(f"FormID analyzer - {size_category}: "
-                        f"extracted {avg_formid_count:.1f} FormIDs in {avg_time:.3f}s "
-                        f"({formids_per_second:.0f} FormIDs/sec)")
+            logging.info(
+                f"FormID analyzer - {size_category}: "
+                f"extracted {avg_formid_count:.1f} FormIDs in {avg_time:.3f}s "
+                f"({formids_per_second:.0f} FormIDs/sec)"
+            )
 
         # Validate performance targets
         for size_category, results in performance_results.items():
             # Should extract FormIDs very quickly
             if results["extracted_formids"] > 10:  # Only test substantial extractions
                 formids_per_second = results["formids_per_second"]
-                assert formids_per_second > 1000, \
-                    f"FormID extraction too slow for {size_category}: {formids_per_second:.0f} FormIDs/sec"
+                assert formids_per_second > 1000, f"FormID extraction too slow for {size_category}: {formids_per_second:.0f} FormIDs/sec"
 
     def test_plugin_analyzer_performance(self, performance_test_data, mock_yamldata):
         """
@@ -360,19 +355,20 @@ class TestPerformanceBenchmarks:
                 "expected_plugins": expected_plugins,
                 "parsed_plugins": avg_plugin_count,
                 "avg_time": avg_time,
-                "plugins_per_second": plugins_per_second
+                "plugins_per_second": plugins_per_second,
             }
 
-            logging.info(f"Plugin analyzer - {size_category}: "
-                        f"parsed {avg_plugin_count:.1f} plugins in {avg_time:.3f}s "
-                        f"({plugins_per_second:.0f} plugins/sec)")
+            logging.info(
+                f"Plugin analyzer - {size_category}: "
+                f"parsed {avg_plugin_count:.1f} plugins in {avg_time:.3f}s "
+                f"({plugins_per_second:.0f} plugins/sec)"
+            )
 
         # Validate performance targets
         for size_category, results in performance_results.items():
             if results["parsed_plugins"] > 10:  # Only test substantial load orders
                 plugins_per_second = results["plugins_per_second"]
-                assert plugins_per_second > 5000, \
-                    f"Plugin analysis too slow for {size_category}: {plugins_per_second:.0f} plugins/sec"
+                assert plugins_per_second > 5000, f"Plugin analysis too slow for {size_category}: {plugins_per_second:.0f} plugins/sec"
 
     def test_integrated_pipeline_performance(self, performance_test_data, mock_yamldata):
         """
@@ -381,8 +377,9 @@ class TestPerformanceBenchmarks:
         This test measures the performance when all components work
         together in the complete processing pipeline.
         """
-        available_components = [comp for comp in ["parser", "formid_analyzer", "plugin_analyzer", "record_scanner"]
-                               if is_rust_accelerated(comp)]
+        available_components = [
+            comp for comp in ["parser", "formid_analyzer", "plugin_analyzer", "record_scanner"] if is_rust_accelerated(comp)
+        ]
 
         if len(available_components) < 2:
             pytest.skip("Need at least 2 Rust components for integrated performance testing")
@@ -403,7 +400,7 @@ class TestPerformanceBenchmarks:
                             crash_data=crash_data,
                             crashgen_name=mock_yamldata.crashgen_name,
                             xse_acronym=mock_yamldata.xse_acronym,
-                            game_root_name=mock_yamldata.game_root_name
+                            game_root_name=mock_yamldata.game_root_name,
                         )
                     else:
                         segments = [[], [], crash_data, [], [], crash_data]  # Mock segments
@@ -441,26 +438,27 @@ class TestPerformanceBenchmarks:
                 "min_time": min_time,
                 "max_time": max_time,
                 "components": len(available_components),
-                "results": results_data[0] if results_data else {}
+                "results": results_data[0] if results_data else {},
             }
 
-            logging.info(f"Integrated pipeline - {size_category}: "
-                        f"{avg_time:.3f}s avg, {len(available_components)} components, "
-                        f"results: {results_data[0] if results_data else 'none'}")
+            logging.info(
+                f"Integrated pipeline - {size_category}: "
+                f"{avg_time:.3f}s avg, {len(available_components)} components, "
+                f"results: {results_data[0] if results_data else 'none'}"
+            )
 
         # Validate integrated performance targets
         targets = {
-            "small": 0.05,    # 50ms for small logs
-            "medium": 0.15,   # 150ms for medium logs
-            "large": 0.5,     # 500ms for large logs
-            "xlarge": 2.0     # 2s for extra large logs
+            "small": 0.05,  # 50ms for small logs
+            "medium": 0.15,  # 150ms for medium logs
+            "large": 0.5,  # 500ms for large logs
+            "xlarge": 2.0,  # 2s for extra large logs
         }
 
         for size_category, target_time in targets.items():
             if size_category in performance_results:
                 avg_time = performance_results[size_category]["avg_time"]
-                assert avg_time < target_time, \
-                    f"Integrated pipeline too slow for {size_category}: {avg_time:.3f}s > {target_time}s"
+                assert avg_time < target_time, f"Integrated pipeline too slow for {size_category}: {avg_time:.3f}s > {target_time}s"
 
 
 @pytest.mark.rust
@@ -518,8 +516,7 @@ class TestMemoryPerformance:
         This test validates that Rust components don't leak memory
         when processing large amounts of data repeatedly.
         """
-        available_components = [comp for comp in ["parser", "formid_analyzer", "plugin_analyzer"]
-                               if is_rust_accelerated(comp)]
+        available_components = [comp for comp in ["parser", "formid_analyzer", "plugin_analyzer"] if is_rust_accelerated(comp)]
 
         if not available_components:
             pytest.skip("No Rust components available for memory testing")
@@ -535,29 +532,25 @@ class TestMemoryPerformance:
                         crash_data=large_test_data,
                         crashgen_name=mock_yamldata.crashgen_name,
                         xse_acronym=mock_yamldata.xse_acronym,
-                        game_root_name=mock_yamldata.game_root_name
+                        game_root_name=mock_yamldata.game_root_name,
                     )
                     segments = result[3]
 
                 if "formid_analyzer" in available_components:
                     formid_analyzer = RustFormIDAnalyzer(mock_yamldata, True, True)
-                    callstack = segments[2] if 'segments' in locals() and len(segments) > 2 else large_test_data
+                    callstack = segments[2] if "segments" in locals() and len(segments) > 2 else large_test_data
                     formids = formid_analyzer.extract_formids(callstack)
 
                 if "plugin_analyzer" in available_components:
                     plugin_analyzer = RustPluginAnalyzer(mock_yamldata)
-                    plugin_data = segments[-1] if 'segments' in locals() and segments else large_test_data
+                    plugin_data = segments[-1] if "segments" in locals() and segments else large_test_data
                     plugins, _, _ = plugin_analyzer.loadorder_scan_log(plugin_data)
 
                 # Sample memory periodically
                 if i % 5 == 0:
                     process = psutil.Process(os.getpid())
                     current_memory = process.memory_info()
-                    memory_stats["samples"].append({
-                        "iteration": i,
-                        "rss": current_memory.rss,
-                        "vms": current_memory.vms
-                    })
+                    memory_stats["samples"].append({"iteration": i, "rss": current_memory.rss, "vms": current_memory.vms})
 
                     # Update peak memory
                     memory_stats["peak_rss"] = max(memory_stats["peak_rss"], current_memory.rss)
@@ -577,13 +570,11 @@ class TestMemoryPerformance:
 
         # Memory growth should be minimal (< 50MB for this test)
         max_acceptable_growth = 50.0  # MB
-        assert growth_mb < max_acceptable_growth, \
-            f"Excessive memory growth: {growth_mb:.1f}MB > {max_acceptable_growth}MB"
+        assert growth_mb < max_acceptable_growth, f"Excessive memory growth: {growth_mb:.1f}MB > {max_acceptable_growth}MB"
 
         # Peak memory should be reasonable
         max_acceptable_peak = initial_rss_mb + 100.0  # MB
-        assert peak_rss_mb < max_acceptable_peak, \
-            f"Excessive peak memory: {peak_rss_mb:.1f}MB > {max_acceptable_peak:.1f}MB"
+        assert peak_rss_mb < max_acceptable_peak, f"Excessive peak memory: {peak_rss_mb:.1f}MB > {max_acceptable_peak:.1f}MB"
 
     def test_memory_efficiency_comparison(self, large_test_data, mock_yamldata):
         """
@@ -615,8 +606,7 @@ class TestMemoryPerformance:
 
         # Should use very little memory per item
         max_bytes_per_item = 100  # Very generous limit
-        assert memory_per_item < max_bytes_per_item, \
-            f"Memory usage per item too high: {memory_per_item:.2f} bytes"
+        assert memory_per_item < max_bytes_per_item, f"Memory usage per item too high: {memory_per_item:.2f} bytes"
 
     def test_concurrent_memory_usage(self, large_test_data, mock_yamldata):
         """
@@ -625,8 +615,7 @@ class TestMemoryPerformance:
         This test validates that concurrent processing doesn't lead to
         excessive memory usage or memory leaks.
         """
-        available_components = [comp for comp in ["parser", "formid_analyzer", "plugin_analyzer"]
-                               if is_rust_accelerated(comp)]
+        available_components = [comp for comp in ["parser", "formid_analyzer", "plugin_analyzer"] if is_rust_accelerated(comp)]
 
         if not available_components:
             pytest.skip("No Rust components available for concurrent memory testing")
@@ -641,7 +630,7 @@ class TestMemoryPerformance:
                     crash_data=large_test_data,
                     crashgen_name=mock_yamldata.crashgen_name,
                     xse_acronym=mock_yamldata.xse_acronym,
-                    game_root_name=mock_yamldata.game_root_name
+                    game_root_name=mock_yamldata.game_root_name,
                 )
                 thread_results["segments"] = len(result[3])
 
@@ -671,8 +660,7 @@ class TestMemoryPerformance:
 
         # Peak memory shouldn't be excessive for concurrent processing
         max_acceptable_peak = initial_mb + (num_threads * 20)  # 20MB per thread max
-        assert peak_mb < max_acceptable_peak, \
-            f"Concurrent peak memory too high: {peak_mb:.1f}MB > {max_acceptable_peak:.1f}MB"
+        assert peak_mb < max_acceptable_peak, f"Concurrent peak memory too high: {peak_mb:.1f}MB > {max_acceptable_peak:.1f}MB"
 
         # Final growth should be minimal
         assert growth_mb < 100, f"Concurrent memory growth too high: {growth_mb:.1f}MB"
@@ -752,7 +740,7 @@ class TestConcurrentPerformance:
                 crash_data=crash_data,
                 crashgen_name=mock_yamldata.crashgen_name,
                 xse_acronym=mock_yamldata.xse_acronym,
-                game_root_name=mock_yamldata.game_root_name
+                game_root_name=mock_yamldata.game_root_name,
             )
             end_time = time.perf_counter()
 
@@ -760,7 +748,7 @@ class TestConcurrentPerformance:
                 "data_index": data_index,
                 "duration": end_time - start_time,
                 "segments_count": len(result[3]),
-                "data_size": len(crash_data)
+                "data_size": len(crash_data),
             }
 
         # Test sequential performance first
@@ -786,7 +774,7 @@ class TestConcurrentPerformance:
         logging.info(f"  Sequential total: {sequential_time:.3f}s (avg: {sequential_avg:.3f}s per task)")
         logging.info(f"  Concurrent total: {concurrent_time:.3f}s (avg: {concurrent_avg:.3f}s per task)")
         logging.info(f"  Speedup: {speedup:.2f}x")
-        logging.info(f"  Efficiency: {efficiency:.2f} ({efficiency*100:.1f}%)")
+        logging.info(f"  Efficiency: {efficiency:.2f} ({efficiency * 100:.1f}%)")
 
         # Should achieve reasonable speedup (at least 2x with 4 threads)
         assert speedup >= 2.0, f"Poor concurrent speedup: {speedup:.2f}x"
@@ -812,12 +800,7 @@ class TestConcurrentPerformance:
             formids = analyzer.extract_formids(crash_data)
             end_time = time.perf_counter()
 
-            return {
-                "data_index": data_index,
-                "duration": end_time - start_time,
-                "formid_count": len(formids),
-                "data_size": len(crash_data)
-            }
+            return {"data_index": data_index, "duration": end_time - start_time, "formid_count": len(formids), "data_size": len(crash_data)}
 
         # Test with varying numbers of concurrent threads
         thread_counts = [1, 2, 4]
@@ -843,12 +826,14 @@ class TestConcurrentPerformance:
                 "total_time": total_time,
                 "avg_task_time": avg_task_time,
                 "total_formids": total_formids,
-                "formids_per_second": total_formids / total_time
+                "formids_per_second": total_formids / total_time,
             }
 
-            logging.info(f"FormID analysis with {num_threads} threads: "
-                        f"total={total_time:.3f}s, avg_task={avg_task_time:.3f}s, "
-                        f"rate={total_formids/total_time:.0f} FormIDs/sec")
+            logging.info(
+                f"FormID analysis with {num_threads} threads: "
+                f"total={total_time:.3f}s, avg_task={avg_task_time:.3f}s, "
+                f"rate={total_formids / total_time:.0f} FormIDs/sec"
+            )
 
         # Validate scaling
         sequential_rate = results[1]["formids_per_second"]
@@ -856,8 +841,7 @@ class TestConcurrentPerformance:
         rate_improvement = concurrent_rate / sequential_rate
 
         # Should see some improvement with concurrency
-        assert rate_improvement >= 1.5, \
-            f"Poor concurrent scaling for FormID analysis: {rate_improvement:.2f}x"
+        assert rate_improvement >= 1.5, f"Poor concurrent scaling for FormID analysis: {rate_improvement:.2f}x"
 
     def test_mixed_concurrent_operations(self, concurrent_test_data, mock_yamldata):
         """
@@ -866,8 +850,7 @@ class TestConcurrentPerformance:
         This test validates that different types of Rust components can
         run concurrently without interfering with each other's performance.
         """
-        available_components = [comp for comp in ["parser", "formid_analyzer", "plugin_analyzer"]
-                               if is_rust_accelerated(comp)]
+        available_components = [comp for comp in ["parser", "formid_analyzer", "plugin_analyzer"] if is_rust_accelerated(comp)]
 
         if len(available_components) < 2:
             pytest.skip("Need at least 2 different Rust components for mixed concurrent testing")
@@ -885,7 +868,7 @@ class TestConcurrentPerformance:
                     crash_data=crash_data,
                     crashgen_name=mock_yamldata.crashgen_name,
                     xse_acronym=mock_yamldata.xse_acronym,
-                    game_root_name=mock_yamldata.game_root_name
+                    game_root_name=mock_yamldata.game_root_name,
                 )
                 results["segments"] = len(parse_result[3])
                 segments = parse_result[3]
@@ -931,8 +914,9 @@ class TestConcurrentPerformance:
         for seq_result, conc_result in zip(sequential_results, concurrent_results):
             for key in ["segments", "formids", "plugins"]:
                 if key in seq_result and key in conc_result:
-                    assert seq_result[key] == conc_result[key], \
+                    assert seq_result[key] == conc_result[key], (
                         f"Inconsistent results for {key}: seq={seq_result[key]}, conc={conc_result[key]}"
+                    )
 
 
 if __name__ == "__main__":

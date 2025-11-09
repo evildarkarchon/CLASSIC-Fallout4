@@ -10,6 +10,7 @@ from PySide6.QtTest import QTest
 
 pytestmark = pytest.mark.e2e
 
+
 class TestTabNavigation:
     """Test tab widget navigation."""
 
@@ -37,6 +38,7 @@ class TestTabNavigation:
         assert tab_widget.currentIndex() == 0
         assert tab_widget.currentWidget() == tab_widget.widget(0)
 
+
 class TestCheckboxInteraction:
     """Test checkbox widget interactions."""
 
@@ -53,7 +55,15 @@ class TestCheckboxInteraction:
 
     def test_all_checkboxes_toggle(self, settings_dialog):
         """Test that all checkboxes can be toggled."""
-        checkboxes = [settings_dialog.audio_checkbox, settings_dialog.vr_checkbox, settings_dialog.fcx_checkbox, settings_dialog.simplify_checkbox, settings_dialog.show_fid_checkbox, settings_dialog.move_invalid_checkbox, settings_dialog.update_check_checkbox]
+        checkboxes = [
+            settings_dialog.audio_checkbox,
+            settings_dialog.vr_checkbox,
+            settings_dialog.fcx_checkbox,
+            settings_dialog.simplify_checkbox,
+            settings_dialog.show_fid_checkbox,
+            settings_dialog.move_invalid_checkbox,
+            settings_dialog.update_check_checkbox,
+        ]
         for checkbox in checkboxes:
             checkbox.setChecked(False)
             assert not checkbox.isChecked()
@@ -62,12 +72,14 @@ class TestCheckboxInteraction:
             checkbox.click()
             assert not checkbox.isChecked()
 
+
 class TestButtonInteraction:
     """Test button interactions."""
 
     def test_check_now_button_click(self, settings_dialog, app):
         """Test that Check Now button can be clicked."""
         from unittest.mock import MagicMock, patch
+
         button = settings_dialog.check_now_button
 
         # The button should exist and be clickable
@@ -75,7 +87,7 @@ class TestButtonInteraction:
         assert button.isEnabled()
 
         # Mock the UpdateCheckWorker that would be created on button click
-        with patch('ClassicLib.Interface.Workers.UpdateCheckWorker') as mock_worker_class:
+        with patch("ClassicLib.Interface.Workers.UpdateCheckWorker") as mock_worker_class:
             mock_worker = MagicMock()
             mock_worker_class.return_value = mock_worker
 
@@ -84,6 +96,7 @@ class TestButtonInteraction:
 
             # The test passes if the button click doesn't raise an exception
             # The actual update check functionality is tested elsewhere
+
 
 class TestWidgetFocus:
     """Test widget focus behavior."""

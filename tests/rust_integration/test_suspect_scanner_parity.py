@@ -293,21 +293,23 @@ class TestSuspectScannerParity:
                     metadata={
                         "error_length": len(crashlog_mainerror),
                         "suspects_count": len(test_case.get("suspects_error_list", {})),
-                    }
+                    },
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Main error scanning test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="suspect_scanner",
-                    method_name="suspect_scan_mainerror",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="suspect_scanner",
+                        method_name="suspect_scan_mainerror",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -360,16 +362,12 @@ class TestSuspectScannerParity:
 
                 # Time Rust scanning
                 start_time = time.perf_counter()
-                rust_result = rust_scanner.suspect_scan_stack(
-                    crashlog_mainerror, segment_callstack_intact, max_warn_length
-                )
+                rust_result = rust_scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, max_warn_length)
                 rust_time = time.perf_counter() - start_time
 
                 # Time Python scanning
                 start_time = time.perf_counter()
-                python_result = python_scanner.suspect_scan_stack(
-                    crashlog_mainerror, segment_callstack_intact, max_warn_length
-                )
+                python_result = python_scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, max_warn_length)
                 python_time = time.perf_counter() - start_time
 
                 # Extract results
@@ -414,21 +412,23 @@ class TestSuspectScannerParity:
                     metadata={
                         "callstack_lines": len(segment_callstack_intact.splitlines()),
                         "suspects_count": len(test_case.get("suspects_stack_list", {})),
-                    }
+                    },
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Stack scanning test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="suspect_scanner",
-                    method_name="suspect_scan_stack",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="suspect_scanner",
+                        method_name="suspect_scan_stack",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -526,14 +526,16 @@ class TestSuspectScannerParity:
 
             except Exception as e:
                 logger.error(f"DLL crash detection test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="suspect_scanner",
-                    method_name="check_dll_crash",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="suspect_scanner",
+                        method_name="check_dll_crash",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -556,9 +558,7 @@ class TestSuspectScannerParity:
         validator = SuspectScannerParityValidator()
 
         # Create large test data
-        large_suspects_error_list = {
-            f"SEVERITY_{i} | Error_{i}": f"ERROR_PATTERN_{i}" for i in range(100)
-        }
+        large_suspects_error_list = {f"SEVERITY_{i} | Error_{i}": f"ERROR_PATTERN_{i}" for i in range(100)}
 
         large_suspects_stack_list = {
             f"SEVERITY_{i} | Stack Error {i}": [

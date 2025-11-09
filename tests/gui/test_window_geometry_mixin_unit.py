@@ -17,6 +17,7 @@ from ClassicLib.Interface.WindowGeometryMixin import WindowGeometryMixin
 @pytest.fixture
 def mock_qt_window():
     """Create a mock window class with WindowGeometryMixin and mocked Qt components."""
+
     # Create test class that includes the mixin with fully mocked Qt dependencies
     class TestWindow(WindowGeometryMixin):
         """Test window class with mocked Qt components."""
@@ -89,6 +90,7 @@ def mock_qt_window():
 @pytest.fixture
 def mock_qt_disabled():
     """Create a window with Qt disabled (Qt = None)."""
+
     class TestWindowNoQt(WindowGeometryMixin):
         def __init__(self):
             self.tab_widget = MagicMock()
@@ -124,6 +126,7 @@ class TestWindowGeometryMixin:
 
     This test class now uses the module-level fixtures defined above.
     """
+
     # The fixtures are now module-level, so this can be empty
 
 
@@ -137,13 +140,11 @@ class TestWindowGeometryInitialization:
 
     def test_setup_window_geometry_success(self, mock_qt_window):
         """Test successful window geometry setup."""
-        with patch.object(mock_qt_window, 'restore_tab_geometry') as mock_restore:
+        with patch.object(mock_qt_window, "restore_tab_geometry") as mock_restore:
             mock_qt_window.setup_window_geometry()
 
             # Verify connection was made to tab change signal
-            mock_qt_window.tab_widget.currentChanged.connect.assert_called_once_with(
-                mock_qt_window.handle_tab_changed
-            )
+            mock_qt_window.tab_widget.currentChanged.connect.assert_called_once_with(mock_qt_window.handle_tab_changed)
 
             # Verify initial geometry was restored
             mock_restore.assert_called_once_with(0)
@@ -161,9 +162,7 @@ class TestWindowGeometryInitialization:
             mock_qt_window.setup_window_geometry()
 
             # Should log warning and return early
-            mock_logger.warning.assert_called_once_with(
-                "Tab widget not found, skipping geometry setup"
-            )
+            mock_logger.warning.assert_called_once_with("Tab widget not found, skipping geometry setup")
 
             # Should not initialize
             assert mock_qt_window._geometry_initialized is False
@@ -171,9 +170,10 @@ class TestWindowGeometryInitialization:
     def test_handle_tab_changed_not_initialized(self, mock_qt_window):
         """Test tab change handling when not initialized."""
         # Should return early if not initialized
-        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save, \
-             patch.object(mock_qt_window, 'restore_tab_geometry') as mock_restore:
-
+        with (
+            patch.object(mock_qt_window, "save_tab_geometry") as mock_save,
+            patch.object(mock_qt_window, "restore_tab_geometry") as mock_restore,
+        ):
             mock_qt_window.handle_tab_changed(1)
 
             # No operations should be performed
@@ -186,10 +186,11 @@ class TestWindowGeometryInitialization:
         mock_qt_window._geometry_initialized = True
         mock_qt_window._last_tab_index = 0
 
-        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save, \
-             patch.object(mock_qt_window, 'restore_tab_geometry') as mock_restore, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch.object(mock_qt_window, "save_tab_geometry") as mock_save,
+            patch.object(mock_qt_window, "restore_tab_geometry") as mock_restore,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             mock_qt_window.handle_tab_changed(2)
 
             # Should save previous tab geometry
@@ -215,10 +216,11 @@ class TestWindowGeometryInitialization:
         # Add mock refresh_reports_list method
         mock_qt_window.refresh_reports_list = MagicMock()
 
-        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save, \
-             patch.object(mock_qt_window, 'restore_tab_geometry') as mock_restore, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch.object(mock_qt_window, "save_tab_geometry") as mock_save,
+            patch.object(mock_qt_window, "restore_tab_geometry") as mock_restore,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             # Switch to results tab (index 3)
             mock_qt_window.handle_tab_changed(3)
 
@@ -243,13 +245,14 @@ class TestWindowGeometryInitialization:
         mock_qt_window._last_tab_index = 0
 
         # Ensure refresh_reports_list doesn't exist
-        if hasattr(mock_qt_window, 'refresh_reports_list'):
-            delattr(mock_qt_window, 'refresh_reports_list')
+        if hasattr(mock_qt_window, "refresh_reports_list"):
+            delattr(mock_qt_window, "refresh_reports_list")
 
-        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save, \
-             patch.object(mock_qt_window, 'restore_tab_geometry') as mock_restore, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch.object(mock_qt_window, "save_tab_geometry") as mock_save,
+            patch.object(mock_qt_window, "restore_tab_geometry") as mock_restore,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             # Switch to results tab (index 3) - should not crash
             mock_qt_window.handle_tab_changed(3)
 
@@ -283,10 +286,11 @@ class TestTabGeometrySaving:
         mock_state.__int__ = MagicMock(return_value=0)
         mock_qt_window._window_state = mock_state  # Normal state
 
-        with patch("ClassicLib.Interface.WindowGeometryMixin.Qt") as mock_qt, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.Qt") as mock_qt,
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             # Set up Qt mock for window state check
             mock_qt.WindowState.WindowMaximized = 2
 
@@ -296,7 +300,7 @@ class TestTabGeometrySaving:
             expected_calls = [
                 call(bool, ANY, "UI.window_geometry.main_tab.maximized", False),
                 call(int, ANY, "UI.window_geometry.main_tab.width", 800),
-                call(int, ANY, "UI.window_geometry.main_tab.height", 600)
+                call(int, ANY, "UI.window_geometry.main_tab.height", 600),
             ]
 
             assert mock_yaml.call_count == 3
@@ -319,16 +323,17 @@ class TestTabGeometrySaving:
             mock_state.__int__ = MagicMock(return_value=2)
             mock_qt_window._window_state = mock_state  # Use mock instead of integer
 
-            with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-                 patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+            with (
+                patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+                patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+            ):
                 mock_qt_window.save_tab_geometry(1)  # Backups tab
 
                 # Should save normal geometry and maximized state
                 expected_calls = [
                     call(bool, ANY, "UI.window_geometry.backups_tab.maximized", True),
                     call(int, ANY, "UI.window_geometry.backups_tab.width", 700),  # Normal geometry
-                    call(int, ANY, "UI.window_geometry.backups_tab.height", 500)
+                    call(int, ANY, "UI.window_geometry.backups_tab.height", 500),
                 ]
 
                 assert mock_yaml.call_count == 3
@@ -342,6 +347,7 @@ class TestTabGeometrySaving:
 
     def test_save_tab_geometry_maximized_window_no_normal_geometry(self):
         """Test saving geometry for maximized window without normal geometry."""
+
         # Create a custom test window without normalGeometry method
         class TestWindowNoNormalGeometry(WindowGeometryMixin):
             def __init__(self):
@@ -374,16 +380,17 @@ class TestTabGeometrySaving:
             mock_qt.WindowState.WindowMaximized = 2
             # Window state is already set in __init__ as maximized
 
-            with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-                 patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+            with (
+                patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+                patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+            ):
                 mock_qt_window.save_tab_geometry(0)
 
                 # Should save current size as fallback
                 expected_calls = [
                     call(bool, ANY, "UI.window_geometry.main_tab.maximized", True),
                     call(int, ANY, "UI.window_geometry.main_tab.width", 800),  # Current size
-                    call(int, ANY, "UI.window_geometry.main_tab.height", 600)
+                    call(int, ANY, "UI.window_geometry.main_tab.height", 600),
                 ]
 
                 assert mock_yaml.call_count == 3
@@ -397,16 +404,17 @@ class TestTabGeometrySaving:
 
     def test_save_tab_geometry_qt_disabled(self, mock_qt_disabled):
         """Test saving geometry when Qt is disabled."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             mock_qt_disabled.save_tab_geometry(0)
 
             # Should still save geometry, treating as normal window
             expected_calls = [
                 call(bool, ANY, "UI.window_geometry.main_tab.maximized", False),
                 call(int, ANY, "UI.window_geometry.main_tab.width", 800),
-                call(int, ANY, "UI.window_geometry.main_tab.height", 600)
+                call(int, ANY, "UI.window_geometry.main_tab.height", 600),
             ]
 
             assert mock_yaml.call_count == 3
@@ -427,9 +435,10 @@ class TestTabGeometryRestoring:
 
     def test_restore_tab_geometry_no_saved_data(self, mock_qt_window):
         """Test restoring geometry when no saved data exists."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             # Mock returning None for all saved settings
             mock_yaml.side_effect = lambda *args: None if len(args) > 3 else args[3]
 
@@ -450,9 +459,10 @@ class TestTabGeometryRestoring:
 
     def test_restore_tab_geometry_with_saved_data(self, mock_qt_window):
         """Test restoring geometry with saved data."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             # Mock saved settings: width=900, height=700, not maximized
             def mock_settings(*args):
                 if len(args) <= 3:  # Default value provided
@@ -490,9 +500,10 @@ class TestTabGeometryRestoring:
 
     def test_restore_tab_geometry_saved_smaller_than_minimum(self, mock_qt_window):
         """Test restoring geometry when saved size is smaller than minimum."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             # Mock saved settings: very small size
             def mock_settings(*args):
                 if len(args) <= 3:
@@ -518,9 +529,10 @@ class TestTabGeometryRestoring:
 
     def test_restore_tab_geometry_maximized_state(self, mock_qt_window):
         """Test restoring geometry for a maximized window."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             # Mock saved settings: maximized
             def mock_settings(*args):
                 if len(args) <= 3:
@@ -561,9 +573,10 @@ class TestTabGeometryRestoring:
         mock_state.__int__ = MagicMock(return_value=2)
         mock_qt_window._window_state = mock_state  # Mock maximized state
 
-        with patch("ClassicLib.Interface.WindowGeometryMixin.Qt") as mock_qt, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml:
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.Qt") as mock_qt,
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+        ):
             mock_qt.WindowState.WindowMaximized = 2
 
             # Mock saved settings: not maximized
@@ -628,12 +641,7 @@ class TestMinimumSizeCalculation:
 
     def test_tab_names_constant(self):
         """Test that TAB_NAMES constant is properly defined."""
-        expected_names = {
-            0: "main_tab",
-            1: "backups_tab",
-            2: "articles_tab",
-            3: "results_tab"
-        }
+        expected_names = {0: "main_tab", 1: "backups_tab", 2: "articles_tab", 3: "results_tab"}
 
         assert expected_names == WindowGeometryMixin.TAB_NAMES
 
@@ -646,9 +654,10 @@ class TestCurrentTabGeometrySaving:
         mock_qt_window._geometry_initialized = True
         mock_qt_window.tab_widget.currentIndex.return_value = 2
 
-        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch.object(mock_qt_window, "save_tab_geometry") as mock_save,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             mock_qt_window.save_current_tab_geometry()
 
             # Should save current tab
@@ -663,7 +672,7 @@ class TestCurrentTabGeometrySaving:
         """Test saving current tab geometry when not initialized."""
         mock_qt_window._geometry_initialized = False
 
-        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save:
+        with patch.object(mock_qt_window, "save_tab_geometry") as mock_save:
             mock_qt_window.save_current_tab_geometry()
 
             # Should not save anything
@@ -674,7 +683,7 @@ class TestCurrentTabGeometrySaving:
         mock_qt_window._geometry_initialized = True
         del mock_qt_window.tab_widget
 
-        with patch.object(mock_qt_window, 'save_tab_geometry') as mock_save:
+        with patch.object(mock_qt_window, "save_tab_geometry") as mock_save:
             mock_qt_window.save_current_tab_geometry()
 
             # Should not save anything
@@ -686,9 +695,10 @@ class TestWindowGeometryIntegration:
 
     def test_complete_geometry_lifecycle(self, mock_qt_window):
         """Test complete lifecycle: setup -> tab change -> save current."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger"):
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger"),
+        ):
             # Mock no saved settings initially
             mock_yaml.side_effect = lambda *args: args[3] if len(args) > 3 else None
 
@@ -709,9 +719,10 @@ class TestWindowGeometryIntegration:
 
     def test_geometry_persistence_across_sessions(self, mock_qt_window):
         """Test that geometry persists across simulated sessions."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger"):
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger"),
+        ):
             saved_geometry = {}
 
             def mock_save_setting(type_cls, yaml_enum, key, value):
@@ -748,9 +759,10 @@ class TestWindowGeometryIntegration:
 
     def test_multi_tab_geometry_independence(self, mock_qt_window):
         """Test that different tabs maintain independent geometry."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger"):
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger"),
+        ):
             # Mock different saved sizes for different tabs
             tab_geometries = {
                 "UI.window_geometry.main_tab.width": 600,
@@ -794,9 +806,10 @@ class TestWindowGeometryIntegration:
         The WindowGeometryMixin doesn't catch exceptions from yaml_settings,
         allowing them to propagate to the caller for proper error handling.
         """
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger:
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+        ):
             # Mock yaml_settings to raise an exception
             mock_yaml.side_effect = Exception("Settings error")
 
@@ -812,18 +825,20 @@ class TestWindowGeometryIntegration:
 
     def test_window_geometry_with_extreme_values(self, mock_qt_window):
         """Test handling of extreme window geometry values."""
-        with patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml, \
-             patch("ClassicLib.Interface.WindowGeometryMixin.logger"):
-
+        with (
+            patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger"),
+        ):
             # Test with extremely large and small values
             extreme_values = [
-                (1, 1),           # Very small
-                (99999, 99999),   # Very large
-                (0, 0),           # Zero values
-                (-100, -100),     # Negative values
+                (1, 1),  # Very small
+                (99999, 99999),  # Very large
+                (0, 0),  # Zero values
+                (-100, -100),  # Negative values
             ]
 
             for width, height in extreme_values:
+
                 def mock_settings(*args):
                     if len(args) <= 3:
                         return args[3] if len(args) > 3 else None

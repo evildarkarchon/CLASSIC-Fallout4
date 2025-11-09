@@ -106,21 +106,14 @@ class TestE2EPipeline:
         mock_yaml.game_root_name = "Fallout 4"
 
         # Mock problematic plugins list
-        mock_yaml.problematic_plugins = {
-            "test_plugin.esp": "Test problematic plugin",
-            "broken_mod.esp": "Known broken mod"
-        }
+        mock_yaml.problematic_plugins = {"test_plugin.esp": "Test problematic plugin", "broken_mod.esp": "Known broken mod"}
 
         # Mock FormID database configuration
         mock_yaml.formid_database_enabled = True
         mock_yaml.show_formid_values = True
 
         # Mock record patterns for scanning
-        mock_yaml.record_patterns = [
-            "TESForm",
-            "BGSKeyword",
-            "TESObjectSTAT"
-        ]
+        mock_yaml.record_patterns = ["TESForm", "BGSKeyword", "TESObjectSTAT"]
 
         return mock_yaml
 
@@ -141,11 +134,7 @@ class TestE2EPipeline:
         bridge = AsyncBridge.get_instance()
 
         # Create orchestrator with test configuration
-        orchestrator = OrchestratorCore(
-            yamldata=mock_yamldata,
-            show_values=True,
-            db_exists=True
-        )
+        orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
 
         return orchestrator
 
@@ -210,8 +199,8 @@ PLUGINS:
             List of strings, each representing a line in the crash log
         """
         try:
-            with Path(log_path).open('r', encoding='utf-8', errors='ignore') as f:
-                return [line.rstrip('\n\r') for line in f]
+            with Path(log_path).open("r", encoding="utf-8", errors="ignore") as f:
+                return [line.rstrip("\n\r") for line in f]
         except Exception as e:
             pytest.skip(f"Could not read crash log {log_path}: {e}")
 
@@ -225,8 +214,7 @@ PLUGINS:
         correctly and produce the expected output structure.
         """
         # Skip if no Rust components available
-        if not any(is_rust_accelerated(component) for component in
-                  ["parser", "formid_analyzer", "plugin_analyzer", "record_scanner"]):
+        if not any(is_rust_accelerated(component) for component in ["parser", "formid_analyzer", "plugin_analyzer", "record_scanner"]):
             pytest.skip("No Rust components available for end-to-end testing")
 
         # Test with each available crash log sample
@@ -241,19 +229,14 @@ PLUGINS:
                     crash_data=crash_data,
                     crashgen_name=mock_yamldata.crashgen_name,
                     xse_acronym=mock_yamldata.xse_acronym,
-                    game_root_name=mock_yamldata.game_root_name
+                    game_root_name=mock_yamldata.game_root_name,
                 )
 
                 # Validate the pipeline produced meaningful output
                 assert report_fragments is not None, f"No output from pipeline: {sample_name}"
 
                 # Validate report structure contains expected sections
-                expected_sections = [
-                    "game_version",
-                    "crashgen_version",
-                    "main_error",
-                    "segments"
-                ]
+                expected_sections = ["game_version", "crashgen_version", "main_error", "segments"]
 
                 # Log performance for analysis
                 logging.info(f"Pipeline processing time for {sample_name}: {timer.elapsed:.3f}s")
@@ -282,16 +265,16 @@ PLUGINS:
             crash_data=crash_data,
             crashgen_name=mock_yamldata.crashgen_name,
             xse_acronym=mock_yamldata.xse_acronym,
-            game_root_name=mock_yamldata.game_root_name
+            game_root_name=mock_yamldata.game_root_name,
         )
 
         # Test Python fallback by forcing it
-        with patch.object(rust_parser, '_use_rust', False):
+        with patch.object(rust_parser, "_use_rust", False):
             python_result = rust_parser.find_segments(
                 crash_data=crash_data,
                 crashgen_name=mock_yamldata.crashgen_name,
                 xse_acronym=mock_yamldata.xse_acronym,
-                game_root_name=mock_yamldata.game_root_name
+                game_root_name=mock_yamldata.game_root_name,
             )
 
         # Compare results structure (allowing for minor differences in processing)
@@ -321,7 +304,7 @@ PLUGINS:
             crash_data=crash_data,
             crashgen_name=mock_yamldata.crashgen_name,
             xse_acronym=mock_yamldata.xse_acronym,
-            game_root_name=mock_yamldata.game_root_name
+            game_root_name=mock_yamldata.game_root_name,
         )
 
         # Extract call stack segment (typically index 2)
@@ -329,11 +312,7 @@ PLUGINS:
             callstack_segment = segments[2]
 
             # Test FormID extraction
-            formid_analyzer = get_formid_analyzer(
-                yamldata=mock_yamldata,
-                show_values=True,
-                db_exists=True
-            )
+            formid_analyzer = get_formid_analyzer(yamldata=mock_yamldata, show_values=True, db_exists=True)
 
             formids = formid_analyzer.extract_formids(callstack_segment)
 
@@ -371,7 +350,7 @@ PLUGINS:
             crash_data=crash_data,
             crashgen_name=mock_yamldata.crashgen_name,
             xse_acronym=mock_yamldata.xse_acronym,
-            game_root_name=mock_yamldata.game_root_name
+            game_root_name=mock_yamldata.game_root_name,
         )
 
         # Test plugin analysis (typically last segment)
@@ -380,9 +359,7 @@ PLUGINS:
 
             plugin_analyzer = get_plugin_analyzer(mock_yamldata)
 
-            plugins_dict, limit_triggered, limit_disabled = plugin_analyzer.loadorder_scan_log(
-                segment_plugins=plugins_segment
-            )
+            plugins_dict, limit_triggered, limit_disabled = plugin_analyzer.loadorder_scan_log(segment_plugins=plugins_segment)
 
             # Validate plugin analysis results
             assert isinstance(plugins_dict, dict), "Plugins should be returned as dict"
@@ -420,7 +397,7 @@ PLUGINS:
             crash_data=crash_data,
             crashgen_name=mock_yamldata.crashgen_name,
             xse_acronym=mock_yamldata.xse_acronym,
-            game_root_name=mock_yamldata.game_root_name
+            game_root_name=mock_yamldata.game_root_name,
         )
 
         # Test record scanning on call stack segment
@@ -434,8 +411,7 @@ PLUGINS:
             # Validate record scanning results
             # Fragment can be None if no records found
             if fragment is not None:
-                assert hasattr(fragment, '__dict__') or isinstance(fragment, dict), \
-                    "Fragment should be an object or dict"
+                assert hasattr(fragment, "__dict__") or isinstance(fragment, dict), "Fragment should be an object or dict"
 
             assert isinstance(matches, list), "Matches should be returned as a list"
 
@@ -459,11 +435,7 @@ PLUGINS:
         corrupted_data = crash_data[:10] + ["CORRUPTED LINE"] * 5 + crash_data[10:]
 
         # Create orchestrator
-        orchestrator = OrchestratorCore(
-            yamldata=mock_yamldata,
-            show_values=True,
-            db_exists=True
-        )
+        orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
 
         # Process should not crash even with corrupted data
         try:
@@ -471,7 +443,7 @@ PLUGINS:
                 crash_data=corrupted_data,
                 crashgen_name=mock_yamldata.crashgen_name,
                 xse_acronym=mock_yamldata.xse_acronym,
-                game_root_name=mock_yamldata.game_root_name
+                game_root_name=mock_yamldata.game_root_name,
             )
 
             # Should still produce some output even with corrupted data
@@ -496,11 +468,7 @@ PLUGINS:
         crash_data_sets = []
 
         for sample_name, log_path in list(crash_log_samples.items())[:3]:  # Limit to 3 for performance
-            orchestrator = OrchestratorCore(
-                yamldata=mock_yamldata,
-                show_values=True,
-                db_exists=True
-            )
+            orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
             crash_data = self._read_crash_log(log_path)
 
             orchestrators.append(orchestrator)
@@ -513,7 +481,7 @@ PLUGINS:
                 crash_data=crash_data,
                 crashgen_name=mock_yamldata.crashgen_name,
                 xse_acronym=mock_yamldata.xse_acronym,
-                game_root_name=mock_yamldata.game_root_name
+                game_root_name=mock_yamldata.game_root_name,
             )
             tasks.append(task)
 
@@ -550,9 +518,16 @@ PLUGINS:
 
         # Validate component tracking
         expected_components = [
-            "parser", "formid_analyzer", "plugin_analyzer",
-            "record_scanner", "report_generation", "database",
-            "database_pool", "file_io", "file_io_core", "mod_detector"
+            "parser",
+            "formid_analyzer",
+            "plugin_analyzer",
+            "record_scanner",
+            "report_generation",
+            "database",
+            "database_pool",
+            "file_io",
+            "file_io_core",
+            "mod_detector",
         ]
 
         for component in expected_components:
@@ -583,23 +558,17 @@ class TestE2EPerformance:
         This test compares the performance of Rust-accelerated components
         against their Python counterparts using real crash log data.
         """
-        if not any(is_rust_accelerated(component) for component in
-                  ["parser", "formid_analyzer", "plugin_analyzer"]):
+        if not any(is_rust_accelerated(component) for component in ["parser", "formid_analyzer", "plugin_analyzer"]):
             pytest.skip("No Rust components available for performance testing")
 
         # Use largest available crash log for performance testing
-        largest_sample = max(crash_log_samples.items(),
-                           key=lambda x: x[1].stat().st_size if x[1].exists() else 0)
+        largest_sample = max(crash_log_samples.items(), key=lambda x: x[1].stat().st_size if x[1].exists() else 0)
         sample_name, log_path = largest_sample
 
         crash_data = self._read_crash_log(log_path)
 
         # Measure Rust performance
-        orchestrator = OrchestratorCore(
-            yamldata=mock_yamldata,
-            show_values=True,
-            db_exists=True
-        )
+        orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
 
         rust_times = []
         for _ in range(3):  # Run multiple times for average
@@ -608,7 +577,7 @@ class TestE2EPerformance:
                     crash_data=crash_data,
                     crashgen_name=mock_yamldata.crashgen_name,
                     xse_acronym=mock_yamldata.xse_acronym,
-                    game_root_name=mock_yamldata.game_root_name
+                    game_root_name=mock_yamldata.game_root_name,
                 )
             rust_times.append(timer.elapsed)
 
@@ -622,8 +591,8 @@ class TestE2EPerformance:
     def _read_crash_log(self, log_path: Path) -> list[str]:
         """Helper method to read crash log files."""
         try:
-            with Path(log_path).open('r', encoding='utf-8', errors='ignore') as f:
-                return [line.rstrip('\n\r') for line in f]
+            with Path(log_path).open("r", encoding="utf-8", errors="ignore") as f:
+                return [line.rstrip("\n\r") for line in f]
         except Exception as e:
             pytest.skip(f"Could not read crash log {log_path}: {e}")
 

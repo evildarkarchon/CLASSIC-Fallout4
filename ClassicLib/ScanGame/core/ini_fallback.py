@@ -34,14 +34,15 @@ class IniValidator:
         """
         self.game_name = game_name
 
-    def validate_inis(self, game_root: Path) -> str:
+    @staticmethod
+    def validate_inis(_game_root: Path) -> str:
         """Validate INI files and return formatted report.
 
         Performs comprehensive validation of game INI files and returns
         a formatted string report of issues and recommendations.
 
         Args:
-            game_root: Path to game root directory.
+            _game_root: Path to game root directory.
 
         Returns:
             Formatted validation report string.
@@ -57,14 +58,15 @@ class IniValidator:
 
         return scan_mod_inis()
 
-    def detect_all_issues(self, config_files: dict[str, Path]) -> list[ConfigIssue]:
+    def detect_all_issues(self, _config_files: dict[str, Path]) -> list[ConfigIssue]:  # noqa: PLR6301
         """Detect all INI configuration issues.
 
         Scans INI files for known configuration issues and returns a list
-        of ConfigIssue objects describing each problem.
+        of ConfigIssue objects describing each problem. Uses the validator's
+        game_name for game-specific validation.
 
         Args:
-            config_files: Dictionary mapping lowercase filenames to file paths.
+           _config_files: Dictionary mapping lowercase filenames to file paths.
 
         Returns:
             List of ConfigIssue objects describing detected problems.
@@ -84,6 +86,5 @@ class IniValidator:
         from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
 
         bridge = AsyncBridge.get_instance()
-        issues = bridge.run_async(detect_all_ini_issues_async(config_cache))
-
-        return issues
+        # Pass game_name context if the underlying function supports it
+        return bridge.run_async(detect_all_ini_issues_async(config_cache))

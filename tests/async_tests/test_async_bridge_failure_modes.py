@@ -236,8 +236,9 @@ class TestAsyncBridgeFailureModes:
 
         # If there are errors, they should be timeout-related (acceptable under heavy load)
         for thread_id, (error_type, error_msg) in errors.items():
-            assert "timeout" in error_msg.lower() or "RuntimeError" in error_type, \
+            assert "timeout" in error_msg.lower() or "RuntimeError" in error_type, (
                 f"Thread {thread_id} failed with unexpected error: {error_type}: {error_msg}"
+            )
 
         # All successful results should be correct
         for thread_id, result in results.items():
@@ -260,6 +261,7 @@ class TestAsyncBridgeFailureModes:
             def make_raiser(exc_class, exc_message):
                 async def raise_specific():
                     raise exc_class(exc_message)
+
                 return raise_specific
 
             raiser = make_raiser(exc_type, message)
@@ -425,10 +427,7 @@ class TestAsyncBridgeFailureModes:
         unique_instances = set(id(inst) for inst in all_instances)
         assert len(unique_instances) == 10, "Each thread should have its own unique AsyncBridge instance"
 
-    @pytest.mark.skipif(
-        not hasattr(asyncio, "eager_task_factory"),
-        reason="Requires Python 3.12+ for eager tasks"
-    )
+    @pytest.mark.skipif(not hasattr(asyncio, "eager_task_factory"), reason="Requires Python 3.12+ for eager tasks")
     def test_eager_task_execution(self) -> None:
         """Test AsyncBridge with eager task execution (Python 3.12+)."""
         bridge = AsyncBridge.get_instance()
@@ -605,6 +604,7 @@ class TestAsyncBridgeFailureModes:
 
         Tests new enhancement: context manager support
         """
+
         async def test_task():
             return "context_result"
 

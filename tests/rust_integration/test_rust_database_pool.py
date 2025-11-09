@@ -20,6 +20,7 @@ from ClassicLib.integration.status import is_rust_accelerated
 # Try to import Rust wrapper classes for type checking
 try:
     from ClassicLib.rust.database_rust import DatabasePoolManager, RustAsyncDatabasePool
+
     RUST_WRAPPER_AVAILABLE = True
 except ImportError:
     RustAsyncDatabasePool = None
@@ -29,6 +30,7 @@ except ImportError:
 # Try to import the Rust core module
 try:
     from classic_database import RustDatabasePool
+
     RUST_CORE_AVAILABLE = True
 except ImportError:
     RustDatabasePool = None
@@ -62,10 +64,7 @@ def create_test_database(db_path: Path, table_name: str = "Fallout4") -> None:
         ("00056789", "AnotherMod.esp", "Custom Armor"),
     ]
 
-    cursor.executemany(
-        f"INSERT OR REPLACE INTO {table_name} (formid, plugin, entry) VALUES (?, ?, ?)",
-        test_data
-    )
+    cursor.executemany(f"INSERT OR REPLACE INTO {table_name} (formid, plugin, entry) VALUES (?, ?, ?)", test_data)
 
     conn.commit()
     conn.close()
@@ -223,10 +222,7 @@ class TestRustDatabasePool:
                 PRIMARY KEY (formid, plugin)
             )
         """)
-        cursor.execute(
-            "INSERT INTO Fallout4 VALUES (?, ?, ?)",
-            ("00067890", "LocalMod.esp", "Local Custom Item")
-        )
+        cursor.execute("INSERT INTO Fallout4 VALUES (?, ?, ?)", ("00067890", "LocalMod.esp", "Local Custom Item"))
         conn.commit()
         conn.close()
 
@@ -308,13 +304,14 @@ class TestRustAsyncDatabasePool:
 
         # Initialize the pool
         # Python implementation uses global DB_PATHS, Rust can take paths
-        if hasattr(pool, 'initialize'):
-            if RUST_AVAILABLE and hasattr(pool, '_rust_pool'):
+        if hasattr(pool, "initialize"):
+            if RUST_AVAILABLE and hasattr(pool, "_rust_pool"):
                 # Rust version can take paths
                 await pool.initialize([str(db_path)])
             else:
                 # Python version uses global DB_PATHS
                 from unittest.mock import patch
+
                 with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
                     await pool.initialize()
 
@@ -330,11 +327,11 @@ class TestRustAsyncDatabasePool:
         pool = get_database_pool()
 
         # Initialize the pool
-        if hasattr(pool, 'initialize'):
+        if hasattr(pool, "initialize"):
             await pool.initialize([str(db_path)])
 
         # Test context manager if available
-        if hasattr(pool, '__aenter__'):
+        if hasattr(pool, "__aenter__"):
             async with pool:
                 # Should be able to query
                 result = await pool.get_entry("00012345", "Fallout4.esm")
@@ -350,7 +347,7 @@ class TestRustAsyncDatabasePool:
         create_test_database(db_path)
 
         pool = get_database_pool()
-        if hasattr(pool, 'initialize'):
+        if hasattr(pool, "initialize"):
             if RUST_WRAPPER_AVAILABLE and isinstance(pool, RustAsyncDatabasePool):
                 await pool.initialize([str(db_path)])
             else:
@@ -513,10 +510,7 @@ class TestDatabasePoolPerformance:
         pool = RustDatabasePool(10, 300, "fallout4")  # Default values
         pool.initialize([str(db_path)])
 
-        pairs = [
-            (f"{i:08}", "TestMod.esp")
-            for i in range(100)
-        ]
+        pairs = [(f"{i:08}", "TestMod.esp") for i in range(100)]
 
         def batch_lookup():
             return pool.get_entries_batch(pairs, "Fallout4", 100)

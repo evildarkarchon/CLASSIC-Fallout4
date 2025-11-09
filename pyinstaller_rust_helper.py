@@ -39,28 +39,28 @@ from pathlib import Path
 # These are the standalone Python extension modules that PyInstaller needs to include
 RUST_MODULES = [
     # Foundation Layer
-    "classic_shared",      # Foundation layer (runtime, errors, utilities)
+    "classic_shared",  # Foundation layer (runtime, errors, utilities)
     # Business Logic - Core Operations
-    "classic_config",      # Configuration (from classic-config-py)
-    "classic_database",    # SQLite operations (from classic-database-py)
-    "classic_file_io",     # File I/O operations (from classic-file-io-py)
-    "classic_message",     # Message handling (from classic-message-py)
-    "classic_path",        # Path management (from classic-path-py) - NEW: 10-20x speedup
-    "classic_perf",        # Performance monitoring (from classic-perf-py)
-    "classic_pybridge",    # Async Python bridge (from classic-pybridge-py)
-    "classic_registry",    # Windows registry (from classic-registry-py)
-    "classic_scangame",    # Game scanning (from classic-scangame-py)
-    "classic_scanlog",     # Log parsing (from classic-scanlog-py)
-    "classic_settings",    # Settings cache (from classic-settings-py)
-    "classic_yaml",        # YAML operations (from classic-yaml-py)
+    "classic_config",  # Configuration (from classic-config-py)
+    "classic_database",  # SQLite operations (from classic-database-py)
+    "classic_file_io",  # File I/O operations (from classic-file-io-py)
+    "classic_message",  # Message handling (from classic-message-py)
+    "classic_path",  # Path management (from classic-path-py) - NEW: 10-20x speedup
+    "classic_perf",  # Performance monitoring (from classic-perf-py)
+    "classic_pybridge",  # Async Python bridge (from classic-pybridge-py)
+    "classic_registry",  # Windows registry (from classic-registry-py)
+    "classic_scangame",  # Game scanning (from classic-scangame-py)
+    "classic_scanlog",  # Log parsing (from classic-scanlog-py)
+    "classic_settings",  # Settings cache (from classic-settings-py)
+    "classic_yaml",  # YAML operations (from classic-yaml-py)
     # Phase 4 - Constants and Utilities
-    "classic_constants",   # Game constants (from classic-constants-py)
-    "classic_version",     # Version parsing (from classic-version-py)
-    "classic_resource",    # Resource detection (from classic-resource-py)
-    "classic_xse",         # Script Extender (from classic-xse-py)
-    "classic_web",         # Web utilities (from classic-web-py)
+    "classic_constants",  # Game constants (from classic-constants-py)
+    "classic_version",  # Version parsing (from classic-version-py)
+    "classic_resource",  # Resource detection (from classic-resource-py)
+    "classic_xse",  # Script Extender (from classic-xse-py)
+    "classic_web",  # Web utilities (from classic-web-py)
     # Phase 5 - Application Coordination
-    "classic_update",      # Auto-update system (from classic-update-py)
+    "classic_update",  # Auto-update system (from classic-update-py)
 ]
 
 
@@ -166,11 +166,7 @@ def _try_local_rust_dir(
 
     print(f"✓ Found Rust extensions in local build directory (flattened): {local_rust_dir}")
 
-    modules_found = [
-        module_name
-        for module_name in RUST_MODULES
-        if _process_local_module(module_name, local_rust_dir, binaries, datas)
-    ]
+    modules_found = [module_name for module_name in RUST_MODULES if _process_local_module(module_name, local_rust_dir, binaries, datas)]
 
     # Add MANIFEST.txt if it exists
     manifest_file = local_rust_dir / "MANIFEST.txt"
@@ -201,9 +197,7 @@ def _try_site_packages(
     print(f"✓ Checking site-packages: {site_packages}")
 
     modules_found = [
-        module_name
-        for module_name in RUST_MODULES
-        if _process_sitepackages_module(module_name, site_packages, binaries, datas)
+        module_name for module_name in RUST_MODULES if _process_sitepackages_module(module_name, site_packages, binaries, datas)
     ]
 
     if modules_found:

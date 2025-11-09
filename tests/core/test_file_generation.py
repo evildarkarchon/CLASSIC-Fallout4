@@ -4,6 +4,7 @@ Test suite for ClassicLib/FileGeneration.py file generation functionality.
 This module contains tests for the FileGenerator class which manages
 generation of CLASSIC configuration files.
 """
+
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 from pathlib import Path
 from unittest.mock import MagicMock, patch

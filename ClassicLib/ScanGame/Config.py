@@ -78,6 +78,45 @@ class ConfigFile(TypedDict):
 
 
 class ConfigFileCache:
+    """Cache and manage configuration files for game integrity scanning.
+
+    This class scans the game's root directory for configuration files (INI, CONF),
+    identifies duplicate files based on content hash and similarity, and provides
+    methods to read and validate configuration settings. It optimizes performance by
+    caching file contents and hashes to avoid redundant I/O operations.
+
+    The cache supports both synchronous and asynchronous operations, with async methods
+    preferred for use in async contexts to avoid blocking the event loop.
+
+    Attributes:
+        _config_files: Mapping of lowercase filenames to their Path objects.
+        _config_file_cache: Cache of parsed ConfigFile objects for loaded files.
+        duplicate_files: Mapping of lowercase filenames to lists of duplicate file paths.
+        _game_root_path: Root directory of the game installation.
+        _duplicate_whitelist: List of directory/filename prefixes to include in duplicate detection.
+        _hash_cache: Cache of file hashes to avoid recalculation.
+
+    Example:
+        >>> cache = ConfigFileCache()
+        >>> # Check if a config exists
+        >>> if "fallout4.ini" in cache:
+        ...     value = await cache.get_async(int, "fallout4.ini", "Display", "iSize W")
+        ...     print(f"Screen width: {value}")
+        >>> # Detect configuration issues
+        >>> issue = await cache.detect_issue(
+        ...     int, "fallout4prefs.ini", "Particles", "iMaxDesired", 5000,
+        ...     "High particle count can cause crashes",
+        ...     lambda val: val > 5000
+        ... )
+        >>> if issue:
+        ...     print(issue.format_report())
+
+    Note:
+        - All file operations use UTF-8 encoding with automatic fallback detection.
+        - Duplicate detection uses file hashes, similarity scores (≥90%), and INI comparison.
+        - Prefer async methods (_load_config_async, get_async, detect_issue) over sync versions.
+    """
+
     _config_files: dict[str, Path]
     _config_file_cache: dict[str, ConfigFile]
     duplicate_files: dict[str, list[Path]]
@@ -255,8 +294,7 @@ class ConfigFileCache:
         import warnings
 
         warnings.warn(
-            "_load_config is deprecated, use _load_config_async instead. "
-            "Blocking I/O degrades async performance.",
+            "_load_config is deprecated, use _load_config_async instead. Blocking I/O degrades async performance.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -381,11 +419,11 @@ class ConfigFileCache:
             if value_type is str:
                 return config.get(section, setting)
             if value_type is bool:
-                return config.getboolean(section, setting)
+                return config.getboolean(section, setting)  # pyright: ignore[reportReturnType]
             if value_type is int:
-                return config.getint(section, setting)
+                return config.getint(section, setting)  # pyright: ignore[reportReturnType]
             if value_type is float:
-                return config.getfloat(section, setting)
+                return config.getfloat(section, setting)  # pyright: ignore[reportReturnType]
             raise NotImplementedError
         except ValueError as e:
             logger.debug(f"Value type error: {e}")

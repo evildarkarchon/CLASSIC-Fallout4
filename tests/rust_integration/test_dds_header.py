@@ -5,12 +5,12 @@ Tests the PyO3-exposed DDSHeader class from classic-file-io-py, which provides
 direct access to DDS texture metadata and validation methods.
 """
 
-
 import pytest
 
 # Try to import DDSHeader class
 try:
     from classic_file_io import DDSHeader
+
     HAS_DDS_HEADER = True
 except ImportError:
     HAS_DDS_HEADER = False
@@ -23,55 +23,55 @@ def minimal_dds_bytes():
     import struct
 
     # DDS magic number
-    data = bytearray(b'DDS ')
+    data = bytearray(b"DDS ")
 
     # dwSize (DDSURFACEDESC2 size - 124 bytes)
-    data += struct.pack('<I', 124)
+    data += struct.pack("<I", 124)
 
     # dwFlags (DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT)
     DDSD_CAPS = 0x1
     DDSD_HEIGHT = 0x2
     DDSD_WIDTH = 0x4
     DDSD_PIXELFORMAT = 0x1000
-    data += struct.pack('<I', DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT)
+    data += struct.pack("<I", DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT)
 
     # dwHeight
-    data += struct.pack('<I', 1024)
+    data += struct.pack("<I", 1024)
 
     # dwWidth
-    data += struct.pack('<I', 2048)
+    data += struct.pack("<I", 2048)
 
     # dwPitchOrLinearSize
-    data += struct.pack('<I', 0)
+    data += struct.pack("<I", 0)
 
     # dwDepth
-    data += struct.pack('<I', 0)
+    data += struct.pack("<I", 0)
 
     # dwMipMapCount
-    data += struct.pack('<I', 11)  # Has mipmaps
+    data += struct.pack("<I", 11)  # Has mipmaps
 
     # dwReserved1 (11 DWORDs)
-    data += b'\x00' * (11 * 4)
+    data += b"\x00" * (11 * 4)
 
     # DDS_PIXELFORMAT (32 bytes)
     # dwSize
-    data += struct.pack('<I', 32)
+    data += struct.pack("<I", 32)
     # dwFlags (DDPF_FOURCC)
     DDPF_FOURCC = 0x4
-    data += struct.pack('<I', DDPF_FOURCC)
+    data += struct.pack("<I", DDPF_FOURCC)
     # dwFourCC ('DXT5')
-    data += b'DXT5'
+    data += b"DXT5"
     # dwRGBBitCount, dwRBitMask, dwGBitMask, dwBBitMask, dwABitMask
-    data += b'\x00' * (5 * 4)
+    data += b"\x00" * (5 * 4)
 
     # dwCaps, dwCaps2, dwCaps3, dwCaps4
     DDSCAPS_TEXTURE = 0x1000
     DDSCAPS_MIPMAP = 0x400000
-    data += struct.pack('<I', DDSCAPS_TEXTURE | DDSCAPS_MIPMAP)
-    data += b'\x00' * (3 * 4)
+    data += struct.pack("<I", DDSCAPS_TEXTURE | DDSCAPS_MIPMAP)
+    data += b"\x00" * (3 * 4)
 
     # dwReserved2
-    data += b'\x00' * 4
+    data += b"\x00" * 4
 
     return bytes(data)
 
@@ -81,26 +81,26 @@ def power_of_2_dds_bytes():
     """Create DDS with power-of-2 dimensions (512x512)."""
     import struct
 
-    data = bytearray(b'DDS ')
-    data += struct.pack('<I', 124)
-    data += struct.pack('<I', 0x1 | 0x2 | 0x4 | 0x1000)
-    data += struct.pack('<I', 512)  # Height
-    data += struct.pack('<I', 512)  # Width
-    data += struct.pack('<I', 0)
-    data += struct.pack('<I', 0)
-    data += struct.pack('<I', 10)  # Mipmaps
-    data += b'\x00' * (11 * 4)
+    data = bytearray(b"DDS ")
+    data += struct.pack("<I", 124)
+    data += struct.pack("<I", 0x1 | 0x2 | 0x4 | 0x1000)
+    data += struct.pack("<I", 512)  # Height
+    data += struct.pack("<I", 512)  # Width
+    data += struct.pack("<I", 0)
+    data += struct.pack("<I", 0)
+    data += struct.pack("<I", 10)  # Mipmaps
+    data += b"\x00" * (11 * 4)
 
     # DDS_PIXELFORMAT
-    data += struct.pack('<I', 32)
-    data += struct.pack('<I', 0x4)  # DDPF_FOURCC
-    data += b'DXT1'
-    data += b'\x00' * (5 * 4)
+    data += struct.pack("<I", 32)
+    data += struct.pack("<I", 0x4)  # DDPF_FOURCC
+    data += b"DXT1"
+    data += b"\x00" * (5 * 4)
 
     # Caps
-    data += struct.pack('<I', 0x1000 | 0x400000)
-    data += b'\x00' * (3 * 4)
-    data += b'\x00' * 4
+    data += struct.pack("<I", 0x1000 | 0x400000)
+    data += b"\x00" * (3 * 4)
+    data += b"\x00" * 4
 
     return bytes(data)
 
@@ -110,25 +110,25 @@ def non_power_of_2_dds_bytes():
     """Create DDS with non-power-of-2 dimensions (1023x1023)."""
     import struct
 
-    data = bytearray(b'DDS ')
-    data += struct.pack('<I', 124)
-    data += struct.pack('<I', 0x1 | 0x2 | 0x4 | 0x1000)
-    data += struct.pack('<I', 1023)  # Odd height
-    data += struct.pack('<I', 1023)  # Odd width
-    data += b'\x00' * (3 * 4)
-    data += struct.pack('<I', 1)  # No mipmaps
-    data += b'\x00' * (11 * 4)
+    data = bytearray(b"DDS ")
+    data += struct.pack("<I", 124)
+    data += struct.pack("<I", 0x1 | 0x2 | 0x4 | 0x1000)
+    data += struct.pack("<I", 1023)  # Odd height
+    data += struct.pack("<I", 1023)  # Odd width
+    data += b"\x00" * (3 * 4)
+    data += struct.pack("<I", 1)  # No mipmaps
+    data += b"\x00" * (11 * 4)
 
     # DDS_PIXELFORMAT
-    data += struct.pack('<I', 32)
-    data += struct.pack('<I', 0x4)
-    data += b'DXT5'
-    data += b'\x00' * (5 * 4)
+    data += struct.pack("<I", 32)
+    data += struct.pack("<I", 0x4)
+    data += b"DXT5"
+    data += b"\x00" * (5 * 4)
 
     # Caps
-    data += struct.pack('<I', 0x1000)
-    data += b'\x00' * (3 * 4)
-    data += b'\x00' * 4
+    data += struct.pack("<I", 0x1000)
+    data += b"\x00" * (3 * 4)
+    data += b"\x00" * 4
 
     return bytes(data)
 
@@ -138,25 +138,25 @@ def invalid_bc_dimensions_dds_bytes():
     """Create DDS with BC-compressed format but invalid dimensions (not multiple of 4)."""
     import struct
 
-    data = bytearray(b'DDS ')
-    data += struct.pack('<I', 124)
-    data += struct.pack('<I', 0x1 | 0x2 | 0x4 | 0x1000)
-    data += struct.pack('<I', 1022)  # Not multiple of 4
-    data += struct.pack('<I', 1022)  # Not multiple of 4
-    data += b'\x00' * (3 * 4)
-    data += struct.pack('<I', 1)
-    data += b'\x00' * (11 * 4)
+    data = bytearray(b"DDS ")
+    data += struct.pack("<I", 124)
+    data += struct.pack("<I", 0x1 | 0x2 | 0x4 | 0x1000)
+    data += struct.pack("<I", 1022)  # Not multiple of 4
+    data += struct.pack("<I", 1022)  # Not multiple of 4
+    data += b"\x00" * (3 * 4)
+    data += struct.pack("<I", 1)
+    data += b"\x00" * (11 * 4)
 
     # DDS_PIXELFORMAT with BC7 format
-    data += struct.pack('<I', 32)
-    data += struct.pack('<I', 0x4)
-    data += b'BC7'
-    data += b'\x00' * (1 + 5 * 4)  # Pad to complete FourCC and rest of fields
+    data += struct.pack("<I", 32)
+    data += struct.pack("<I", 0x4)
+    data += b"BC7"
+    data += b"\x00" * (1 + 5 * 4)  # Pad to complete FourCC and rest of fields
 
     # Caps
-    data += struct.pack('<I', 0x1000)
-    data += b'\x00' * (3 * 4)
-    data += b'\x00' * 4
+    data += struct.pack("<I", 0x1000)
+    data += b"\x00" * (3 * 4)
+    data += b"\x00" * 4
 
     return bytes(data)
 
@@ -168,7 +168,7 @@ class TestDDSHeader:
     def test_dds_header_class_available(self):
         """Test that DDSHeader class is available."""
         assert DDSHeader is not None
-        assert hasattr(DDSHeader, 'from_bytes')
+        assert hasattr(DDSHeader, "from_bytes")
 
     def test_parse_minimal_dds(self, minimal_dds_bytes):
         """Test parsing a minimal valid DDS file."""
@@ -179,20 +179,20 @@ class TestDDSHeader:
         assert header.height == 1024
         # ddsfile crate calculates mipmaps based on dimensions and flags, not just dwMipMapCount
         assert header.mipmap_count >= 1  # At least one mip level
-        assert 'BC3' in header.format or 'DXT5' in header.format or 'Dxt5' in header.format
+        assert "BC3" in header.format or "DXT5" in header.format or "Dxt5" in header.format
 
     def test_parse_invalid_bytes(self):
         """Test that invalid bytes return None."""
         # Too short
-        header = DDSHeader.from_bytes(b'short')
+        header = DDSHeader.from_bytes(b"short")
         assert header is None
 
         # Wrong magic number
-        header = DDSHeader.from_bytes(b'XXXX' + b'\x00' * 124)
+        header = DDSHeader.from_bytes(b"XXXX" + b"\x00" * 124)
         assert header is None
 
         # Not DDS file
-        header = DDSHeader.from_bytes(b'This is not a DDS file' * 10)
+        header = DDSHeader.from_bytes(b"This is not a DDS file" * 10)
         assert header is None
 
     def test_property_access(self, minimal_dds_bytes):
@@ -289,17 +289,17 @@ class TestDDSHeader:
 
         # Test __str__
         str_repr = str(header)
-        assert '2048' in str_repr
-        assert '1024' in str_repr
+        assert "2048" in str_repr
+        assert "1024" in str_repr
         # mipmap count will be whatever ddsfile calculates (typically 1)
-        assert 'mipmaps:' in str_repr
+        assert "mipmaps:" in str_repr
 
         # Test __repr__
         repr_str = repr(header)
-        assert 'DDSHeader' in repr_str
-        assert 'width=2048' in repr_str
-        assert 'height=1024' in repr_str
-        assert 'mipmaps=' in repr_str
+        assert "DDSHeader" in repr_str
+        assert "width=2048" in repr_str
+        assert "height=1024" in repr_str
+        assert "mipmaps=" in repr_str
 
     def test_validation_workflow(self, power_of_2_dds_bytes, non_power_of_2_dds_bytes, minimal_dds_bytes):
         """Test typical validation workflow."""

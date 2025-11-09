@@ -24,8 +24,10 @@ def create_async_json_mock(return_value):
     This helper is needed because response.json() is an async method that
     must be awaited, so we need to return a coroutine, not a plain value.
     """
+
     async def async_json():
         return return_value
+
     return async_json
 
 
@@ -55,20 +57,14 @@ class TestGitHubLatestStableVersion:
         # Configure successful response
         mock_response.status = 200
         mock_response.raise_for_status = MagicMock()
-        mock_response.json = AsyncMock(side_effect=create_async_json_mock({
-            "name": "CLASSIC v2.1.0",
-            "prerelease": False,
-            "tag_name": "v2.1.0"
-        }))
-
-        result = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "testowner", "testrepo"
+        mock_response.json = AsyncMock(
+            side_effect=create_async_json_mock({"name": "CLASSIC v2.1.0", "prerelease": False, "tag_name": "v2.1.0"})
         )
+
+        result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
         # Verify correct API call
-        mock_session.get.assert_called_once_with(
-            "https://api.github.com/repos/testowner/testrepo/releases/latest"
-        )
+        mock_session.get.assert_called_once_with("https://api.github.com/repos/testowner/testrepo/releases/latest")
 
         # Verify version parsing
         assert result == Version("2.1.0")
@@ -84,9 +80,7 @@ class TestGitHubLatestStableVersion:
         mock_response.status = 404
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "testowner", "testrepo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
             assert result is None
             mock_logger.info.assert_called_once()
@@ -104,16 +98,12 @@ class TestGitHubLatestStableVersion:
         # Configure prerelease response
         mock_response.status = 200
         mock_response.raise_for_status = MagicMock()
-        mock_response.json = AsyncMock(side_effect=create_async_json_mock({
-            "name": "CLASSIC v2.1.0-beta",
-            "prerelease": True,
-            "tag_name": "v2.1.0-beta"
-        }))
+        mock_response.json = AsyncMock(
+            side_effect=create_async_json_mock({"name": "CLASSIC v2.1.0-beta", "prerelease": True, "tag_name": "v2.1.0-beta"})
+        )
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "testowner", "testrepo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
             assert result is None
             mock_logger.warning.assert_called_once()
@@ -126,9 +116,7 @@ class TestGitHubLatestStableVersion:
         mock_session.get.side_effect = aiohttp.ClientError("Network error")
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_stable_version_from_endpoint(
-                mock_session, "testowner", "testrepo"
-            )
+            result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
             assert result is None
             mock_logger.error.assert_called_once()
@@ -145,9 +133,7 @@ class TestGitHubLatestStableVersion:
         mock_response.raise_for_status = MagicMock()
         mock_response.json = create_async_json_mock("not a dict")
 
-        result = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
         assert result is None
 
@@ -160,15 +146,15 @@ class TestGitHubLatestStableVersion:
         # Configure response without name
         mock_response.status = 200
         mock_response.raise_for_status = MagicMock()
-        mock_response.json = AsyncMock(side_effect=create_async_json_mock({
-            "prerelease": False,
-            "tag_name": "v2.1.0"
-            # Missing "name" field
-        }))
-
-        result = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "testowner", "testrepo"
+        mock_response.json = AsyncMock(
+            side_effect=create_async_json_mock({
+                "prerelease": False,
+                "tag_name": "v2.1.0",
+                # Missing "name" field
+            })
         )
+
+        result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
         assert result is None
 
@@ -181,14 +167,9 @@ class TestGitHubLatestStableVersion:
         # Configure response with unparseable name
         mock_response.status = 200
         mock_response.raise_for_status = MagicMock()
-        mock_response.json = AsyncMock(side_effect=create_async_json_mock({
-            "name": "Invalid Version Name",
-            "prerelease": False
-        }))
+        mock_response.json = AsyncMock(side_effect=create_async_json_mock({"name": "Invalid Version Name", "prerelease": False}))
 
-        result = await get_github_latest_stable_version_from_endpoint(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
         assert result is None
 
@@ -218,40 +199,20 @@ class TestGitHubLatestPrereleaseVersion:
 
         # Configure successful response with multiple releases
         releases_data = [
-            {
-                "name": "CLASSIC v2.2.0",
-                "prerelease": False,
-                "tag_name": "v2.2.0"
-            },
-            {
-                "name": "CLASSIC v2.2.0-beta.2",
-                "prerelease": True,
-                "tag_name": "v2.2.0-beta.2"
-            },
-            {
-                "name": "CLASSIC v2.1.0",
-                "prerelease": False,
-                "tag_name": "v2.1.0"
-            },
-            {
-                "name": "CLASSIC v2.2.0-beta.1",
-                "prerelease": True,
-                "tag_name": "v2.2.0-beta.1"
-            }
+            {"name": "CLASSIC v2.2.0", "prerelease": False, "tag_name": "v2.2.0"},
+            {"name": "CLASSIC v2.2.0-beta.2", "prerelease": True, "tag_name": "v2.2.0-beta.2"},
+            {"name": "CLASSIC v2.1.0", "prerelease": False, "tag_name": "v2.1.0"},
+            {"name": "CLASSIC v2.2.0-beta.1", "prerelease": True, "tag_name": "v2.2.0-beta.1"},
         ]
 
         mock_response.raise_for_status = MagicMock()
         mock_response.json = create_async_json_mock(releases_data)
 
-        result = await get_github_latest_prerelease_version_from_list(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_github_latest_prerelease_version_from_list(mock_session, "testowner", "testrepo")
 
         # Should return the first prerelease (most recent)
         assert result == Version("2.2.0b2")
-        mock_session.get.assert_called_once_with(
-            "https://api.github.com/repos/testowner/testrepo/releases"
-        )
+        mock_session.get.assert_called_once_with("https://api.github.com/repos/testowner/testrepo/releases")
 
     @pytest.mark.asyncio
     async def test_get_prerelease_no_prereleases_available(self, mock_session, mock_response_context):
@@ -261,24 +222,14 @@ class TestGitHubLatestPrereleaseVersion:
 
         # Configure response with only stable releases
         releases_data = [
-            {
-                "name": "CLASSIC v2.1.0",
-                "prerelease": False,
-                "tag_name": "v2.1.0"
-            },
-            {
-                "name": "CLASSIC v2.0.0",
-                "prerelease": False,
-                "tag_name": "v2.0.0"
-            }
+            {"name": "CLASSIC v2.1.0", "prerelease": False, "tag_name": "v2.1.0"},
+            {"name": "CLASSIC v2.0.0", "prerelease": False, "tag_name": "v2.0.0"},
         ]
 
         mock_response.raise_for_status = MagicMock()
         mock_response.json = create_async_json_mock(releases_data)
 
-        result = await get_github_latest_prerelease_version_from_list(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_github_latest_prerelease_version_from_list(mock_session, "testowner", "testrepo")
 
         assert result is None
 
@@ -289,9 +240,7 @@ class TestGitHubLatestPrereleaseVersion:
         mock_session.get.side_effect = aiohttp.ClientConnectionError("Connection failed")
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_prerelease_version_from_list(
-                mock_session, "testowner", "testrepo"
-            )
+            result = await get_github_latest_prerelease_version_from_list(mock_session, "testowner", "testrepo")
 
             assert result is None
             mock_logger.error.assert_called_once()
@@ -308,9 +257,7 @@ class TestGitHubLatestPrereleaseVersion:
         mock_response.json = AsyncMock(side_effect=create_async_json_mock({"error": "Not Found"}))
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_github_latest_prerelease_version_from_list(
-                mock_session, "testowner", "testrepo"
-            )
+            result = await get_github_latest_prerelease_version_from_list(mock_session, "testowner", "testrepo")
 
             assert result is None
             mock_logger.warning.assert_called_once()
@@ -324,24 +271,14 @@ class TestGitHubLatestPrereleaseVersion:
 
         # Configure response with unparseable prerelease names
         releases_data = [
-            {
-                "name": "Invalid Prerelease Name",
-                "prerelease": True,
-                "tag_name": "invalid"
-            },
-            {
-                "name": "CLASSIC v2.1.0-beta",
-                "prerelease": True,
-                "tag_name": "v2.1.0-beta"
-            }
+            {"name": "Invalid Prerelease Name", "prerelease": True, "tag_name": "invalid"},
+            {"name": "CLASSIC v2.1.0-beta", "prerelease": True, "tag_name": "v2.1.0-beta"},
         ]
 
         mock_response.raise_for_status = MagicMock()
         mock_response.json = create_async_json_mock(releases_data)
 
-        result = await get_github_latest_prerelease_version_from_list(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_github_latest_prerelease_version_from_list(mock_session, "testowner", "testrepo")
 
         # Should skip invalid version and find the valid one
         assert result == Version("2.1.0b0")
@@ -355,9 +292,7 @@ class TestGitHubLatestPrereleaseVersion:
         mock_response.raise_for_status = MagicMock()
         mock_response.json = create_async_json_mock([])
 
-        result = await get_github_latest_prerelease_version_from_list(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_github_latest_prerelease_version_from_list(mock_session, "testowner", "testrepo")
 
         assert result is None
 
@@ -391,12 +326,7 @@ class TestGetLatestAndTopReleaseDetails:
         mock_session.get.side_effect = contexts
 
         # Configure responses for both endpoints
-        latest_release = {
-            "id": 12345,
-            "name": "CLASSIC v2.1.0",
-            "tag_name": "v2.1.0",
-            "prerelease": False
-        }
+        latest_release = {"id": 12345, "name": "CLASSIC v2.1.0", "tag_name": "v2.1.0", "prerelease": False}
 
         releases_list = [latest_release]  # Same release at top of list
 
@@ -409,9 +339,7 @@ class TestGetLatestAndTopReleaseDetails:
         responses[1].raise_for_status = MagicMock()
         responses[1].json = create_async_json_mock(releases_list)
 
-        result = await get_latest_and_top_release_details(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
         assert result is not None
         # The function returns processed results with version objects
@@ -422,12 +350,8 @@ class TestGetLatestAndTopReleaseDetails:
 
         # Verify both API calls were made
         assert mock_session.get.call_count == 2
-        mock_session.get.assert_any_call(
-            "https://api.github.com/repos/testowner/testrepo/releases/latest"
-        )
-        mock_session.get.assert_any_call(
-            "https://api.github.com/repos/testowner/testrepo/releases"
-        )
+        mock_session.get.assert_any_call("https://api.github.com/repos/testowner/testrepo/releases/latest")
+        mock_session.get.assert_any_call("https://api.github.com/repos/testowner/testrepo/releases")
 
     @pytest.mark.asyncio
     async def test_get_release_details_different_releases(self, mock_session, mock_response_contexts):
@@ -436,19 +360,9 @@ class TestGetLatestAndTopReleaseDetails:
         mock_session.get.side_effect = contexts
 
         # Configure different releases
-        latest_release = {
-            "id": 12345,
-            "name": "CLASSIC v2.0.0",
-            "tag_name": "v2.0.0",
-            "prerelease": False
-        }
+        latest_release = {"id": 12345, "name": "CLASSIC v2.0.0", "tag_name": "v2.0.0", "prerelease": False}
 
-        top_release = {
-            "id": 12346,
-            "name": "CLASSIC v2.1.0-beta",
-            "tag_name": "v2.1.0-beta",
-            "prerelease": True
-        }
+        top_release = {"id": 12346, "name": "CLASSIC v2.1.0-beta", "tag_name": "v2.1.0-beta", "prerelease": True}
 
         releases_list = [top_release, latest_release]
 
@@ -461,9 +375,7 @@ class TestGetLatestAndTopReleaseDetails:
         responses[1].raise_for_status = MagicMock()
         responses[1].json = create_async_json_mock(releases_list)
 
-        result = await get_latest_and_top_release_details(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
         assert result is not None
         assert result["latest_endpoint_release"]["id"] == 12345
@@ -476,12 +388,7 @@ class TestGetLatestAndTopReleaseDetails:
         contexts, responses = mock_response_contexts
         mock_session.get.side_effect = contexts
 
-        top_release = {
-            "id": 12346,
-            "name": "CLASSIC v2.1.0",
-            "tag_name": "v2.1.0",
-            "prerelease": False
-        }
+        top_release = {"id": 12346, "name": "CLASSIC v2.1.0", "tag_name": "v2.1.0", "prerelease": False}
 
         # Latest endpoint 404
         responses[0].status = 404
@@ -491,9 +398,7 @@ class TestGetLatestAndTopReleaseDetails:
         responses[1].json = create_async_json_mock([top_release])
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_latest_and_top_release_details(
-                mock_session, "testowner", "testrepo"
-            )
+            result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
             assert result is not None
             assert result["latest_endpoint_release"] is None
@@ -509,19 +414,13 @@ class TestGetLatestAndTopReleaseDetails:
         mock_session.get.side_effect = contexts
 
         # Both endpoints fail
-        responses[0].raise_for_status = MagicMock(
-            side_effect=aiohttp.ClientError("Latest endpoint failed")
-        )
+        responses[0].raise_for_status = MagicMock(side_effect=aiohttp.ClientError("Latest endpoint failed"))
         responses[0].status = 500
 
-        responses[1].raise_for_status = MagicMock(
-            side_effect=aiohttp.ClientError("Releases endpoint failed")
-        )
+        responses[1].raise_for_status = MagicMock(side_effect=aiohttp.ClientError("Releases endpoint failed"))
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_latest_and_top_release_details(
-                mock_session, "testowner", "testrepo"
-            )
+            result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
             # When both endpoints fail, the function returns a structure with None values
             assert result is not None
@@ -538,12 +437,7 @@ class TestGetLatestAndTopReleaseDetails:
         contexts, responses = mock_response_contexts
         mock_session.get.side_effect = contexts
 
-        latest_release = {
-            "id": 12345,
-            "name": "CLASSIC v2.1.0",
-            "tag_name": "v2.1.0",
-            "prerelease": False
-        }
+        latest_release = {"id": 12345, "name": "CLASSIC v2.1.0", "tag_name": "v2.1.0", "prerelease": False}
 
         # Latest endpoint success
         responses[0].status = 200
@@ -554,9 +448,7 @@ class TestGetLatestAndTopReleaseDetails:
         responses[1].raise_for_status = MagicMock()
         responses[1].json = AsyncMock(side_effect=create_async_json_mock([]))
 
-        result = await get_latest_and_top_release_details(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
         assert result is not None
         assert result["latest_endpoint_release"]["id"] == 12345
@@ -569,11 +461,7 @@ class TestGetLatestAndTopReleaseDetails:
         contexts, responses = mock_response_contexts
         mock_session.get.side_effect = contexts
 
-        latest_release = {
-            "id": 12345,
-            "name": "CLASSIC v2.1.0",
-            "prerelease": False
-        }
+        latest_release = {"id": 12345, "name": "CLASSIC v2.1.0", "prerelease": False}
 
         # Latest endpoint success
         responses[0].status = 200
@@ -585,9 +473,7 @@ class TestGetLatestAndTopReleaseDetails:
         responses[1].json = create_async_json_mock({"error": "Not Found"})
 
         with patch("ClassicLib.Update.logger") as mock_logger:
-            result = await get_latest_and_top_release_details(
-                mock_session, "testowner", "testrepo"
-            )
+            result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
             assert result is not None
             assert result["latest_endpoint_release"]["id"] == 12345
@@ -613,9 +499,7 @@ class TestGetLatestAndTopReleaseDetails:
         responses[1].raise_for_status = MagicMock()
         responses[1].json = AsyncMock(side_effect=create_async_json_mock([]))
 
-        result = await get_latest_and_top_release_details(
-            mock_session, "testowner", "testrepo"
-        )
+        result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
         # When API returns invalid data, the function should still return basic structure with None values
         assert result is not None

@@ -13,7 +13,6 @@ concurrent access, error propagation, and resource management.
 # 3. Never use AsyncMock for methods called through AsyncBridge
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
-
 import asyncio
 import threading
 import time
@@ -324,6 +323,7 @@ class TestAsyncBridgeStress:
         ]
 
         for exc_type, exc_msg in exceptions_to_test:
+
             async def failing_task():
                 await asyncio.sleep(0.001)
                 if exc_type == KeyError:

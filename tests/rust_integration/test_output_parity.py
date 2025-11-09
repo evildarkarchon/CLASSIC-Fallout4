@@ -83,9 +83,7 @@ class MainParityValidator(ParityValidator):
         if RUST_AVAILABLE.get("formid_analyzer", False):
             yamldata = kwargs.get("yamldata")
             if yamldata:
-                implementations["formid_analyzer"] = get_formid_analyzer(
-                    yamldata, True, False
-                )
+                implementations["formid_analyzer"] = get_formid_analyzer(yamldata, True, False)
 
         # Plugin Analyzer
         if RUST_AVAILABLE.get("plugin_analyzer", False):
@@ -111,9 +109,7 @@ class MainParityValidator(ParityValidator):
 
         # FormID Analyzer
         if yamldata:
-            implementations["formid_analyzer"] = FormIDAnalyzerCore(
-                yamldata, True, False, None
-            )
+            implementations["formid_analyzer"] = FormIDAnalyzerCore(yamldata, True, False, None)
 
         # Plugin Analyzer
         if yamldata:
@@ -142,9 +138,7 @@ class TestOutputParity:
     performance improvements come with zero functional regression.
     """
 
-    async def test_parser_segment_extraction_parity(self,
-                                                   parity_crash_generator,
-                                                   mock_scanlog_info):
+    async def test_parser_segment_extraction_parity(self, parity_crash_generator, mock_scanlog_info):
         """
         Test that Rust and Python parsers extract identical segments from crash logs.
 
@@ -172,22 +166,12 @@ class TestOutputParity:
             try:
                 # Execute Rust parser
                 start_time = time.perf_counter()
-                rust_result = rust_parser.find_segments(
-                    crash_data,
-                    "Buffout 4",
-                    "F4SE",
-                    "Fallout4"
-                )
+                rust_result = rust_parser.find_segments(crash_data, "Buffout 4", "F4SE", "Fallout4")
                 rust_time = time.perf_counter() - start_time
 
                 # Execute Python parser
                 start_time = time.perf_counter()
-                python_result = find_segments(
-                    crash_data,
-                    "Buffout 4",
-                    "F4SE",
-                    "Fallout4"
-                )
+                python_result = find_segments(crash_data, "Buffout 4", "F4SE", "Fallout4")
                 python_time = time.perf_counter() - start_time
 
                 # Create parity result
@@ -200,7 +184,7 @@ class TestOutputParity:
                     rust_result=rust_result,
                     python_result=python_result,
                     rust_execution_time=rust_time,
-                    python_execution_time=python_time
+                    python_execution_time=python_time,
                 )
 
                 # Detailed validation of segment structures
@@ -233,14 +217,16 @@ class TestOutputParity:
 
             except Exception as e:
                 logger.error(f"Parser parity test failed for {test_case.name}: {e}")
-                results.append(ParityResult(
-                    component_name="parser",
-                    method_name="find_segments",
-                    test_case=test_case.name,
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="parser",
+                        method_name="find_segments",
+                        test_case=test_case.name,
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate results
         passed_tests = sum(1 for r in results if r.passed)
@@ -251,9 +237,7 @@ class TestOutputParity:
 
         # Log performance improvements
         performance_improvements = [
-            r.python_execution_time / r.rust_execution_time
-            for r in results
-            if r.rust_execution_time > 0 and r.python_execution_time > 0
+            r.python_execution_time / r.rust_execution_time for r in results if r.rust_execution_time > 0 and r.python_execution_time > 0
         ]
 
         if performance_improvements:
@@ -263,9 +247,7 @@ class TestOutputParity:
         # Require high success rate for parity validation
         assert success_rate >= 0.9, f"Parser parity success rate too low: {success_rate:.2%} (expected ≥90%)"
 
-    async def test_comprehensive_component_parity(self,
-                                                parity_crash_generator,
-                                                mock_scanlog_info):
+    async def test_comprehensive_component_parity(self, parity_crash_generator, mock_scanlog_info):
         """
         Test comprehensive parity across all available Rust components.
 
@@ -300,23 +282,17 @@ class TestOutputParity:
 
             # Test FormID analyzer if available
             if "formid_analyzer" in available_components:
-                result = await self._test_formid_analyzer_parity(
-                    crash_data, mock_scanlog_info, test_case.name
-                )
+                result = await self._test_formid_analyzer_parity(crash_data, mock_scanlog_info, test_case.name)
                 component_results["formid_analyzer"].append(result)
 
             # Test plugin analyzer if available
             if "plugin_analyzer" in available_components:
-                result = await self._test_plugin_analyzer_parity(
-                    crash_data, mock_scanlog_info, test_case.name
-                )
+                result = await self._test_plugin_analyzer_parity(crash_data, mock_scanlog_info, test_case.name)
                 component_results["plugin_analyzer"].append(result)
 
             # Test record scanner if available
             if "record_scanner" in available_components:
-                result = await self._test_record_scanner_parity(
-                    crash_data, mock_scanlog_info, test_case.name
-                )
+                result = await self._test_record_scanner_parity(crash_data, mock_scanlog_info, test_case.name)
                 component_results["record_scanner"].append(result)
 
         # Validate overall parity results
@@ -338,7 +314,7 @@ class TestOutputParity:
             parity_report = self._generate_parity_report(overall_results)
 
             # Save detailed report for analysis
-            with tempfile.NamedTemporaryFile(mode='w', suffix='_parity_report.json', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode="w", suffix="_parity_report.json", delete=False) as f:
                 json.dump(parity_report, f, indent=2)
                 logger.info(f"Detailed parity report saved to: {f.name}")
 
@@ -373,7 +349,7 @@ class TestOutputParity:
                 rust_result=rust_result,
                 python_result=python_result,
                 rust_execution_time=rust_time,
-                python_execution_time=python_time
+                python_execution_time=python_time,
             )
 
         except Exception as e:
@@ -383,13 +359,10 @@ class TestOutputParity:
                 test_case=test_name,
                 rust_available=True,
                 passed=False,
-                error_messages=[str(e)]
+                error_messages=[str(e)],
             )
 
-    async def _test_formid_analyzer_parity(self,
-                                         crash_data: list[str],
-                                         mock_scanlog_info,
-                                         test_name: str) -> ParityResult:
+    async def _test_formid_analyzer_parity(self, crash_data: list[str], mock_scanlog_info, test_name: str) -> ParityResult:
         """Test FormID analyzer parity for a single crash log."""
         try:
             # Create implementations
@@ -439,7 +412,7 @@ class TestOutputParity:
                 python_result=python_formids,
                 differences=differences,
                 rust_execution_time=rust_time,
-                python_execution_time=python_time
+                python_execution_time=python_time,
             )
 
         except Exception as e:
@@ -449,13 +422,10 @@ class TestOutputParity:
                 test_case=test_name,
                 rust_available=True,
                 passed=False,
-                error_messages=[str(e)]
+                error_messages=[str(e)],
             )
 
-    async def _test_plugin_analyzer_parity(self,
-                                         crash_data: list[str],
-                                         mock_scanlog_info,
-                                         test_name: str) -> ParityResult:
+    async def _test_plugin_analyzer_parity(self, crash_data: list[str], mock_scanlog_info, test_name: str) -> ParityResult:
         """Test plugin analyzer parity for a single crash log."""
         try:
             # Create implementations
@@ -477,11 +447,7 @@ class TestOutputParity:
 
             if not plugins_segment:
                 # Create synthetic plugin data
-                plugins_segment = [
-                    "\t[00] Fallout4.esm",
-                    "\t[01] DLCRobot.esm",
-                    "\t[02] TestPlugin.esp"
-                ]
+                plugins_segment = ["\t[00] Fallout4.esm", "\t[01] DLCRobot.esm", "\t[02] TestPlugin.esp"]
 
             # Test load order scanning
             start_time = time.perf_counter()
@@ -517,7 +483,7 @@ class TestOutputParity:
                 python_result=python_result,
                 differences=differences,
                 rust_execution_time=rust_time,
-                python_execution_time=python_time
+                python_execution_time=python_time,
             )
 
         except Exception as e:
@@ -527,13 +493,10 @@ class TestOutputParity:
                 test_case=test_name,
                 rust_available=True,
                 passed=False,
-                error_messages=[str(e)]
+                error_messages=[str(e)],
             )
 
-    async def _test_record_scanner_parity(self,
-                                        crash_data: list[str],
-                                        mock_scanlog_info,
-                                        test_name: str) -> ParityResult:
+    async def _test_record_scanner_parity(self, crash_data: list[str], mock_scanlog_info, test_name: str) -> ParityResult:
         """Test record scanner parity for a single crash log."""
         try:
             # Create implementations
@@ -591,7 +554,7 @@ class TestOutputParity:
                     python_fragment = python_result[0]
 
                     # Both should have similar structure (ReportFragment or similar)
-                    if hasattr(rust_fragment, 'fragment_content') and hasattr(python_fragment, 'fragment_content'):
+                    if hasattr(rust_fragment, "fragment_content") and hasattr(python_fragment, "fragment_content"):
                         rust_content = normalize_markdown_content(rust_fragment.fragment_content)
                         python_content = normalize_markdown_content(python_fragment.fragment_content)
 
@@ -609,7 +572,7 @@ class TestOutputParity:
                 python_result=python_result,
                 differences=differences,
                 rust_execution_time=rust_time,
-                python_execution_time=python_time
+                python_execution_time=python_time,
             )
 
         except Exception as e:
@@ -619,7 +582,7 @@ class TestOutputParity:
                 test_case=test_name,
                 rust_available=True,
                 passed=False,
-                error_messages=[str(e)]
+                error_messages=[str(e)],
             )
 
     def _generate_parity_report(self, results: list[ParityResult]) -> dict[str, Any]:
@@ -636,11 +599,7 @@ class TestOutputParity:
         by_component = {}
         for result in results:
             if result.component_name not in by_component:
-                by_component[result.component_name] = {
-                    "total": 0, "passed": 0, "failed": 0,
-                    "avg_performance_gain": 0.0,
-                    "results": []
-                }
+                by_component[result.component_name] = {"total": 0, "passed": 0, "failed": 0, "avg_performance_gain": 0.0, "results": []}
 
             comp_data = by_component[result.component_name]
             comp_data["total"] += 1
@@ -651,7 +610,7 @@ class TestOutputParity:
                 "performance_gain": result.performance_gain,
                 "differences_count": len(result.differences),
                 "execution_time_rust": result.rust_execution_time,
-                "execution_time_python": result.python_execution_time
+                "execution_time_python": result.python_execution_time,
             })
 
             if result.passed:
@@ -663,9 +622,7 @@ class TestOutputParity:
         for component, data in by_component.items():
             performance_values = []
             for r in results:
-                if (r.component_name == component and
-                    r.python_execution_time > 0 and
-                    r.rust_execution_time > 0):
+                if r.component_name == component and r.python_execution_time > 0 and r.rust_execution_time > 0:
                     perf_gain = r.python_execution_time / r.rust_execution_time
                     performance_values.append(perf_gain)
 
@@ -679,7 +636,7 @@ class TestOutputParity:
                 "failed_tests": failed_tests,
                 "success_rate_percent": (passed_tests / total_tests * 100) if total_tests > 0 else 0,
                 "components_tested": list(by_component.keys()),
-                "rust_availability": {k: v for k, v in RUST_AVAILABLE.items() if k in by_component}
+                "rust_availability": {k: v for k, v in RUST_AVAILABLE.items() if k in by_component},
             },
             "by_component": by_component,
             "failed_tests": [
@@ -688,10 +645,11 @@ class TestOutputParity:
                     "method": r.method_name,
                     "test": r.test_case,
                     "differences": r.differences[:5],  # Limit diff size
-                    "errors": r.error_messages
+                    "errors": r.error_messages,
                 }
-                for r in results if not r.passed
-            ]
+                for r in results
+                if not r.passed
+            ],
         }
 
     @pytest.mark.performance
@@ -715,14 +673,13 @@ class TestOutputParity:
 
                 # Test parser performance if available
                 if RUST_AVAILABLE.get("parser", False):
-                    result = await self._measure_component_performance(
-                        "parser", crash_data, mock_scanlog_info
-                    )
+                    result = await self._measure_component_performance("parser", crash_data, mock_scanlog_info)
                     performance_results.append(result)
 
         # Validate performance improvements
         significant_improvements = [
-            r for r in performance_results
+            r
+            for r in performance_results
             if r.performance_improvement >= 2.0  # At least 2x improvement
         ]
 
@@ -737,10 +694,7 @@ class TestOutputParity:
         parity_failures = [r for r in performance_results if not r.passed]
         assert len(parity_failures) == 0, f"Performance tests failed parity: {len(parity_failures)} failures"
 
-    async def _measure_component_performance(self,
-                                           component: str,
-                                           crash_data: list[str],
-                                           mock_scanlog_info) -> ParityResult:
+    async def _measure_component_performance(self, component: str, crash_data: list[str], mock_scanlog_info) -> ParityResult:
         """Measure performance for a specific component while validating parity."""
         if component == "parser" and RUST_AVAILABLE.get("parser", False):
             rust_parser = get_parser()
@@ -765,7 +719,7 @@ class TestOutputParity:
                 python_result=python_result,
                 rust_execution_time=rust_time,
                 python_execution_time=python_time,
-                performance_improvement=python_time / rust_time if rust_time > 0 else 0
+                performance_improvement=python_time / rust_time if rust_time > 0 else 0,
             )
 
         # Default empty result for unavailable components
@@ -775,5 +729,5 @@ class TestOutputParity:
             test_case="performance_test",
             rust_available=False,
             passed=False,
-            error_messages=["Component not available"]
+            error_messages=["Component not available"],
         )

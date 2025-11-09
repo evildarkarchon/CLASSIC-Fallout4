@@ -54,6 +54,7 @@ class ClassicScanLogsInfo:
         game_version_new (Version): The new or updated detected version of the game.
         game_version_vr (Version): The detected version of the game in VR mode.
     """
+
     classic_game_hints: list[str] = field(default_factory=list)
     classic_records_list: list[str] = field(default_factory=list)
     classic_version: str = ""

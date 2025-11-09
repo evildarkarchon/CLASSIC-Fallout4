@@ -8,9 +8,9 @@ This module provides high-performance file I/O with:
 """
 
 # Import core class and utilities
-from .core import FileIOCore
-from .path_utils import cached_path_conversion, ensure_path
-from .sync_adapters import (
+from ClassicLib.FileIO.core import FileIOCore
+from ClassicLib.FileIO.path_utils import cached_path_conversion, ensure_path
+from ClassicLib.FileIO.sync_adapters import (
     append_file_sync,
     read_bytes_sync,
     read_crash_log_sync,

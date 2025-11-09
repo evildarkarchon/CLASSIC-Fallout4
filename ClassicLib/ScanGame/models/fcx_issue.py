@@ -48,7 +48,7 @@ class ConfigIssue:
         if not isinstance(self.file_path, Path):
             self.file_path = Path(self.file_path)
 
-        if self.severity not in ("error", "warning", "info"):
+        if self.severity not in {"error", "warning", "info"}:
             raise ValueError(f"Invalid severity: {self.severity}")
 
     def format_report(self) -> str:
@@ -64,7 +64,7 @@ class ConfigIssue:
         severity_icons: dict[ConfigIssueSeverity, str] = {
             "error": "❌",
             "warning": "⚠️",
-            "info": "ℹ️",
+            "info": "ℹ️",  # noqa: RUF001
         }
 
         icon = severity_icons.get(self.severity, "⚠️")

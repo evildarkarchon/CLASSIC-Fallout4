@@ -6,6 +6,7 @@ for selecting paths such as game installation directories or manual documentatio
 directories. These paths can be stored and managed globally for further access
 throughout the application.
 """
+
 import sys
 from pathlib import Path
 
@@ -28,6 +29,7 @@ class PathDialogMixin:
     Methods defined in this mixin should be invoked from a parent class and are
     designed to handle both dialog creation and result processing.
     """
+
     def show_manual_docs_path_dialog(self) -> None:
         """
         Opens a dialog for selecting the manual documentation path.

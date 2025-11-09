@@ -78,6 +78,7 @@ class TestAsyncYamlIntegration:
 
     async def test_yaml_settings_loading(self, async_yaml_core, create_yaml_files: Path) -> None:
         """Test that YAML settings are correctly loaded asynchronously."""
+
         # Mock get_path_for_store to return our test file
         def mock_get_path(store):
             if store == YAML.TEST:
@@ -96,6 +97,7 @@ class TestAsyncYamlIntegration:
 
     async def test_concurrent_yaml_operations(self, async_yaml_core, create_yaml_files: Path) -> None:
         """Test concurrent YAML operations with different stores."""
+
         # Mock get_path_for_store to return appropriate files
         def mock_get_path(store):
             if store == YAML.Settings:
@@ -121,6 +123,7 @@ class TestAsyncYamlIntegration:
 
     async def test_yaml_settings_with_local_override(self, async_yaml_core, create_yaml_files: Path) -> None:
         """Test that local YAML settings work correctly in async context."""
+
         # Setup mock to return different files based on the YAML enum
         def mock_get_path(yaml_store: YAML) -> Path:
             if yaml_store == YAML.TEST:
@@ -172,6 +175,7 @@ class TestAsyncYamlIntegration:
 
     async def test_prefetch_all_settings(self, async_yaml_core, create_yaml_files: Path) -> None:
         """Test prefetching all settings for performance."""
+
         # Setup paths
         def mock_get_path(store):
             if store == YAML.Settings:
@@ -183,8 +187,7 @@ class TestAsyncYamlIntegration:
         async_yaml_core.file_ops.get_path_for_store = mock_get_path
 
         # Load multiple stores to populate cache
-        stores_to_load = [(str, YAML.Settings, "Game_Info.CRASHGEN_LogName"),
-                          (list, YAML.Game_Local, "catch_log_records")]
+        stores_to_load = [(str, YAML.Settings, "Game_Info.CRASHGEN_LogName"), (list, YAML.Game_Local, "catch_log_records")]
         await async_yaml_core.batch_get_settings(stores_to_load)
 
         # Check that settings are cached
@@ -192,6 +195,7 @@ class TestAsyncYamlIntegration:
 
         # Accessing settings should now be from cache (fast)
         import time
+
         start = time.time()
         result = await async_yaml_core.async_yaml_settings(str, YAML.Settings, "Game_Info.CRASHGEN_LogName")
         elapsed = time.time() - start

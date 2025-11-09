@@ -38,7 +38,7 @@ try:
     from ClassicLib.rust.parser_rust import RustLogParser
     from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
     from ClassicLib.rust.record_rust import RustRecordScanner
-    from ClassicLib.rust.report_rust import RUST_AVAILABLE as REPORT_RUST_AVAILABLE
+    from ClassicLib.rust.report_rust import RUST_AVAILABLE as REPORT_RUST_AVAILABLE  # noqa: F401
     from ClassicLib.rust.report_rust import (
         ParallelReportProcessor,
         ReportComposer,
@@ -93,33 +93,26 @@ except ImportError as e:
 __all__ = [
     # Parser
     "RustLogParser",
-
     # FormID Analyzer
     "FormIDAnalyzer",
-
     # Plugin Analyzer
     "RustPluginAnalyzer",
-
     # Record Scanner
     "RustRecordScanner",
-
     # File I/O
     "FileIOCore",
     "get_rust_file_io",
     "create_file_io_sync",
-
     # Database
     "RustAsyncDatabasePool",
     "AsyncDatabasePool",
     "DatabasePoolManager",
     "get_database_pool_implementation",
-
     # Mod Detector
     "detect_mods_single",
     "detect_mods_double",
     "detect_mods_important",
     "get_mod_detector_status",
-
     # Report Generation
     "RustAcceleratedReportFragment",
     "RustAcceleratedReportComposer",
@@ -129,24 +122,19 @@ __all__ = [
     "ReportComposer",
     "ReportGenerator",
     "StringPool",
-
     # Suspect Scanner
     "RustAcceleratedSuspectScanner",
     "SuspectScanner",
-
     # FCX Mode Handler
     "FCXModeHandler",
     "FcxModeHandler",
     "RustAcceleratedFcxModeHandler",
-
     # Settings Validator
     "RustAcceleratedSettingsValidator",
     "SettingsValidator",
     "SettingsScannerFragments",
-
     # GPU Detector
     "gpu_rust",
-
     # Status
     "RUST_MODULES_AVAILABLE",
 ]

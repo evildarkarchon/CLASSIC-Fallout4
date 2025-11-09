@@ -16,6 +16,7 @@ try:
     from hypothesis import assume, example, given, settings
     from hypothesis import strategies as st
     from hypothesis.strategies import composite
+
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
     HYPOTHESIS_AVAILABLE = False
@@ -78,16 +79,16 @@ def mock_game_file_structure(draw):
     for i in range(draw(st.integers(min_value=0, max_value=3))):
         mods_dict[f"Mod_{i}"] = {
             "main.ba2": draw(st.integers(min_value=100000, max_value=10000000)),
-            "textures.ba2": draw(st.integers(min_value=100000, max_value=50000000))
+            "textures.ba2": draw(st.integers(min_value=100000, max_value=50000000)),
         }
 
     return {
         "Data": data_dict,
         "F4SE": {
             "f4se_loader.exe": draw(st.integers(min_value=50000, max_value=500000)),
-            "f4se_1_10_163.dll": draw(st.integers(min_value=100000, max_value=1000000))
+            "f4se_1_10_163.dll": draw(st.integers(min_value=100000, max_value=1000000)),
         },
-        "Mods": mods_dict
+        "Mods": mods_dict,
     }
 
 
@@ -101,6 +102,7 @@ class TestRustFFIPropertyBased:
         self.rust_available = False
         try:
             import classic_scanlog
+
             self.rust_available = True
         except ImportError:
             pass
@@ -118,9 +120,7 @@ class TestRustFFIPropertyBased:
         # Should not crash regardless of input
         try:
             lines = text_input.splitlines() if isinstance(text_input, str) else []
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             # Result should be a valid structure even for invalid input
             assert segments is not None
             assert isinstance(segments, (dict, type(None)))
@@ -128,9 +128,7 @@ class TestRustFFIPropertyBased:
             # Should only raise known exception types
             assert isinstance(e, (ValueError, TypeError, RuntimeError, AttributeError))
 
-    @given(
-        st.lists(mock_crash_log_line(), min_size=0, max_size=1000)
-    )
+    @given(st.lists(mock_crash_log_line(), min_size=0, max_size=1000))
     @settings(max_examples=50)
     def test_rust_parser_with_mock_crash_logs(self, log_lines: list[str]):
         """Test Rust parser with various mock crash log formats."""
@@ -142,9 +140,7 @@ class TestRustFFIPropertyBased:
         parser = get_parser()
 
         try:
-            game_ver, crashgen_ver, error, segments = parser.find_segments(
-                log_lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
+            game_ver, crashgen_ver, error, segments = parser.find_segments(log_lines, "Buffout 4", "F4SE", "Fallout4.exe")
             # Verify basic structure
             if segments:
                 assert isinstance(segments, dict)
@@ -158,7 +154,7 @@ class TestRustFFIPropertyBased:
     @given(
         st.lists(mock_formid(), min_size=0, max_size=1000),
         st.booleans(),  # show_values
-        st.booleans()   # db_exists
+        st.booleans(),  # db_exists
     )
     @settings(max_examples=50)
     def test_formid_analyzer_with_synthetic_ids(self, formids: list[str], show_values: bool, db_exists: bool):
@@ -185,7 +181,7 @@ class TestRustFFIPropertyBased:
             st.text(min_size=1, max_size=50),  # filenames
             st.integers(min_value=0, max_value=100000000),  # file sizes
             min_size=0,
-            max_size=100
+            max_size=100,
         )
     )
     @settings(max_examples=50)
@@ -214,7 +210,7 @@ class TestRustFFIPropertyBased:
 
     @given(
         st.binary(min_size=0, max_size=10000),  # Random binary data
-        st.sampled_from(["utf-8", "cp1252", "latin-1", "ascii"])  # Encodings
+        st.sampled_from(["utf-8", "cp1252", "latin-1", "ascii"]),  # Encodings
     )
     @settings(max_examples=100)
     def test_encoding_edge_cases(self, binary_data: bytes, encoding: str):
@@ -226,7 +222,7 @@ class TestRustFFIPropertyBased:
         # Try to decode binary as text with different encodings
         try:
             # Attempt to decode
-            text = binary_data.decode(encoding, errors='ignore')
+            text = binary_data.decode(encoding, errors="ignore")
 
             # Rust should handle any valid UTF-8 or fallback gracefully
             with patch("builtins.open", create=True) as mock_open:
@@ -266,9 +262,7 @@ class TestRustFFIPropertyBased:
             try:
                 for _ in range(min(operations_per_thread, 10)):  # Limit operations
                     lines = ["test data"]
-                    game_ver, crashgen_ver, error, segments = parser.find_segments(
-                        lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                    )
+                    game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                     results.append(segments)
                     time.sleep(0.001)  # Small delay to prevent overwhelming
             except Exception as e:
@@ -290,10 +284,10 @@ class TestRustFFIPropertyBased:
         st.lists(
             st.tuples(
                 mock_plugin_name(),  # plugin name
-                st.lists(mock_formid(), min_size=0, max_size=100)  # FormIDs in plugin
+                st.lists(mock_formid(), min_size=0, max_size=100),  # FormIDs in plugin
             ),
             min_size=0,
-            max_size=50
+            max_size=50,
         )
     )
     @settings(max_examples=30)
@@ -304,11 +298,7 @@ class TestRustFFIPropertyBased:
         # Create mock plugin structure
         mock_plugins = {}
         for plugin_name, formids in plugin_data:
-            mock_plugins[plugin_name] = {
-                "formids": formids,
-                "masters": [],
-                "size": len(formids) * 1000
-            }
+            mock_plugins[plugin_name] = {"formids": formids, "masters": [], "size": len(formids) * 1000}
 
         with patch("ClassicLib.integration.plugin_analyzer.load_plugins", return_value=mock_plugins):
             analyzer = get_plugin_analyzer()
@@ -330,14 +320,10 @@ class TestRustFFIPropertyBased:
         st.dictionaries(
             st.text(alphabet=string.ascii_letters, min_size=1, max_size=20),  # keys
             st.one_of(
-                st.integers(),
-                st.floats(allow_nan=False, allow_infinity=False),
-                st.text(max_size=100),
-                st.booleans(),
-                st.none()
+                st.integers(), st.floats(allow_nan=False, allow_infinity=False), st.text(max_size=100), st.booleans(), st.none()
             ),  # values
             min_size=0,
-            max_size=100
+            max_size=100,
         )
     )
     @settings(max_examples=50)

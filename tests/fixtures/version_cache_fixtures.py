@@ -41,7 +41,6 @@ def verify_version_cache_empty():
     assert cache_info.currsize == 0, f"Version cache not empty: size {cache_info.currsize}"
 
 
-
 @pytest.fixture
 def mock_version_parsing():
     """
@@ -65,7 +64,7 @@ def mock_version_parsing():
             return Version("1.2.72")
         return Version("0.0.0")
 
-    with patch('ClassicLib.Utils.version_utils.crashgen_version_gen', side_effect=mock_crashgen_version):
+    with patch("ClassicLib.Utils.version_utils.crashgen_version_gen", side_effect=mock_crashgen_version):
         yield mock_crashgen_version
 
 
@@ -81,11 +80,11 @@ def track_version_cache_usage():
         """Get current cache statistics."""
         info = crashgen_version_gen.cache_info()
         return {
-            'hits': info.hits,
-            'misses': info.misses,
-            'size': info.currsize,
-            'maxsize': info.maxsize,
-            'hit_rate': info.hits / (info.hits + info.misses) if (info.hits + info.misses) > 0 else 0
+            "hits": info.hits,
+            "misses": info.misses,
+            "size": info.currsize,
+            "maxsize": info.maxsize,
+            "hit_rate": info.hits / (info.hits + info.misses) if (info.hits + info.misses) > 0 else 0,
         }
 
     # Clear cache to start fresh

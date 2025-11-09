@@ -64,7 +64,7 @@ class TestMassiveFormIDProcessing:
 
         for i in range(0, len(formids), chunk_size):
             chunk_start = time.time()
-            chunk = formids[i:i + chunk_size]
+            chunk = formids[i : i + chunk_size]
 
             # Process chunk
             results = processor.process_batch(chunk)
@@ -77,20 +77,16 @@ class TestMassiveFormIDProcessing:
             total_valid_formids += valid_count
 
             processing_results.append({
-                'chunk_index': i // chunk_size,
-                'chunk_size': len(chunk),
-                'valid_formids': valid_count,
-                'processing_time': chunk_duration,
-                'formids_per_second': len(chunk) / chunk_duration
+                "chunk_index": i // chunk_size,
+                "chunk_size": len(chunk),
+                "valid_formids": valid_count,
+                "processing_time": chunk_duration,
+                "formids_per_second": len(chunk) / chunk_duration,
             })
 
-            performance_profiler.record_operation(
-                f"formid_chunk_{i//chunk_size}",
-                chunk_duration,
-                0
-            )
+            performance_profiler.record_operation(f"formid_chunk_{i // chunk_size}", chunk_duration, 0)
 
-            fresh_memory_tracker.take_measurement(f"chunk_{i//chunk_size}_processed")
+            fresh_memory_tracker.take_measurement(f"chunk_{i // chunk_size}_processed")
 
         total_time = time.time() - start_time
 
@@ -98,11 +94,10 @@ class TestMassiveFormIDProcessing:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze massive FormID processing
-        assert total_valid_formids > massive_formid_count * 0.8, \
-            f"Too few valid FormIDs: {total_valid_formids}/{massive_formid_count}"
+        assert total_valid_formids > massive_formid_count * 0.8, f"Too few valid FormIDs: {total_valid_formids}/{massive_formid_count}"
 
         # Performance should remain consistent across chunks
-        processing_times = [r['processing_time'] for r in processing_results]
+        processing_times = [r["processing_time"] for r in processing_results]
         if len(processing_times) > 1:
             time_variance = max(processing_times) / min(processing_times)
             assert time_variance < 3.0, f"High processing time variance: {time_variance:.2f}x"
@@ -147,7 +142,7 @@ class TestMassiveFormIDProcessing:
 
         for i in range(0, len(massive_formid_list), batch_size):
             batch_start = time.time()
-            batch = massive_formid_list[i:i + batch_size]
+            batch = massive_formid_list[i : i + batch_size]
 
             # Process batch
             results = processor.process_batch(batch)
@@ -160,11 +155,7 @@ class TestMassiveFormIDProcessing:
             batch_time = time.time() - batch_start
             processing_times.append(batch_time)
 
-            performance_profiler.record_operation(
-                f"dedup_batch_{i//batch_size}",
-                batch_time,
-                0
-            )
+            performance_profiler.record_operation(f"dedup_batch_{i // batch_size}", batch_time, 0)
 
         total_time = time.time() - start_time
 
@@ -173,17 +164,17 @@ class TestMassiveFormIDProcessing:
         # Analyze deduplication performance
         # Should find approximately 5000 unique FormIDs (accounting for invalid ones)
         expected_unique = len(base_formids) * 0.8  # Account for some invalid FormIDs
-        assert len(unique_formids_found) >= expected_unique, \
+        assert len(unique_formids_found) >= expected_unique, (
             f"Too few unique FormIDs found: {len(unique_formids_found)}/{expected_unique:.0f}"
+        )
 
         # Processing time should remain consistent (no degradation due to duplicates)
         if len(processing_times) > 1:
-            early_avg = mean(processing_times[:len(processing_times)//3])
-            late_avg = mean(processing_times[-len(processing_times)//3:])
+            early_avg = mean(processing_times[: len(processing_times) // 3])
+            late_avg = mean(processing_times[-len(processing_times) // 3 :])
             degradation_factor = late_avg / early_avg
 
-            assert degradation_factor < 1.5, \
-                f"Performance degradation with duplicates: {degradation_factor:.2f}x"
+            assert degradation_factor < 1.5, f"Performance degradation with duplicates: {degradation_factor:.2f}x"
 
         # Overall throughput should remain high
         throughput = total_formids / total_time
@@ -208,11 +199,7 @@ class TestMassiveFormIDProcessing:
         cross_reference_data = []
         for i, formid in enumerate(formid_dataset):
             plugin_index = i % len(plugin_list)
-            cross_reference_data.append({
-                'formid': formid,
-                'plugin': plugin_list[plugin_index],
-                'plugin_index': plugin_index
-            })
+            cross_reference_data.append({"formid": formid, "plugin": plugin_list[plugin_index], "plugin_index": plugin_index})
 
         # Process cross-referencing operations
         cross_ref_results = []
@@ -222,10 +209,10 @@ class TestMassiveFormIDProcessing:
         batch_size = 2000
         for i in range(0, len(cross_reference_data), batch_size):
             batch_start = time.time()
-            batch = cross_reference_data[i:i + batch_size]
+            batch = cross_reference_data[i : i + batch_size]
 
             # Extract FormIDs and process
-            batch_formids = [item['formid'] for item in batch]
+            batch_formids = [item["formid"] for item in batch]
             processed_formids = processor.process_batch(batch_formids)
 
             # Simulate cross-referencing logic
@@ -237,28 +224,23 @@ class TestMassiveFormIDProcessing:
             batch_time = time.time() - batch_start
 
             cross_ref_results.append({
-                'batch_index': i // batch_size,
-                'formids_processed': len(batch_formids),
-                'valid_cross_refs': valid_cross_refs,
-                'processing_time': batch_time
+                "batch_index": i // batch_size,
+                "formids_processed": len(batch_formids),
+                "valid_cross_refs": valid_cross_refs,
+                "processing_time": batch_time,
             })
 
-            performance_profiler.record_operation(
-                f"cross_ref_batch_{i//batch_size}",
-                batch_time,
-                0
-            )
+            performance_profiler.record_operation(f"cross_ref_batch_{i // batch_size}", batch_time, 0)
 
         total_time = time.time() - start_time
 
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze cross-referencing performance
-        total_processed = sum(r['formids_processed'] for r in cross_ref_results)
-        total_valid = sum(r['valid_cross_refs'] for r in cross_ref_results)
+        total_processed = sum(r["formids_processed"] for r in cross_ref_results)
+        total_valid = sum(r["valid_cross_refs"] for r in cross_ref_results)
 
-        assert total_processed == len(formid_dataset), \
-            f"Not all FormIDs processed: {total_processed}/{len(formid_dataset)}"
+        assert total_processed == len(formid_dataset), f"Not all FormIDs processed: {total_processed}/{len(formid_dataset)}"
 
         # Should have high success rate for cross-referencing
         success_rate = total_valid / total_processed
@@ -269,7 +251,7 @@ class TestMassiveFormIDProcessing:
         assert throughput > 8000, f"Cross-referencing throughput too low: {throughput:.0f} refs/sec"
 
         # Performance should remain consistent across batches
-        processing_times = [r['processing_time'] for r in cross_ref_results]
+        processing_times = [r["processing_time"] for r in cross_ref_results]
         if len(processing_times) > 1:
             time_std = (max(processing_times) - min(processing_times)) / mean(processing_times)
             assert time_std < 0.5, f"High cross-referencing time variance: {time_std:.2f}"
@@ -303,12 +285,7 @@ class TestMassivePluginLoadOrders:
         plugin_list = stress_data_generator.generate_plugin_load_order(count=massive_plugin_count)
 
         # Create crash log content with massive plugin list
-        log_lines = [
-            "Fallout 4 v1.10.163",
-            "Buffout 4 v1.28.6",
-            "",
-            "PLUGINS:"
-        ]
+        log_lines = ["Fallout 4 v1.10.163", "Buffout 4 v1.28.6", "", "PLUGINS:"]
 
         # Add all plugins to the log
         for i, plugin in enumerate(plugin_list):
@@ -361,18 +338,16 @@ class TestMassivePluginLoadOrders:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze massive plugin processing
-        assert len(extracted_plugins) >= massive_plugin_count * 0.9, \
+        assert len(extracted_plugins) >= massive_plugin_count * 0.9, (
             f"Too few plugins extracted: {len(extracted_plugins)}/{massive_plugin_count}"
+        )
 
-        assert len(extracted_formids) >= 4000, \
-            f"Too few FormIDs extracted: {len(extracted_formids)}"
+        assert len(extracted_formids) >= 4000, f"Too few FormIDs extracted: {len(extracted_formids)}"
 
         # Performance should be reasonable even with massive datasets
-        assert plugin_extraction_time < 10.0, \
-            f"Plugin extraction too slow: {plugin_extraction_time:.2f}s"
+        assert plugin_extraction_time < 10.0, f"Plugin extraction too slow: {plugin_extraction_time:.2f}s"
 
-        assert formid_extraction_time < 15.0, \
-            f"FormID extraction too slow: {formid_extraction_time:.2f}s"
+        assert formid_extraction_time < 15.0, f"FormID extraction too slow: {formid_extraction_time:.2f}s"
 
         # Memory usage should be efficient
         memory_per_plugin = memory_stats["peak_mb"] * 1024 / massive_plugin_count  # KB per plugin
@@ -397,17 +372,17 @@ class TestMassivePluginLoadOrders:
             dependencies = []
 
             # Master files depend on each other
-            if plugin.endswith('.esm'):
+            if plugin.endswith(".esm"):
                 # ESM files might depend on other ESM files
-                for j in range(max(0, i-5), i):
-                    if base_plugins[j].endswith('.esm'):
+                for j in range(max(0, i - 5), i):
+                    if base_plugins[j].endswith(".esm"):
                         dependencies.append(base_plugins[j])
 
             # ESP files depend on ESM files and some other ESP files
-            elif plugin.endswith('.esp'):
+            elif plugin.endswith(".esp"):
                 # Depend on all ESM files loaded before this
                 for j in range(i):
-                    if base_plugins[j].endswith('.esm'):
+                    if base_plugins[j].endswith(".esm"):
                         dependencies.append(base_plugins[j])
 
                 # Some ESP files depend on other ESP files (patches, etc.)
@@ -415,7 +390,7 @@ class TestMassivePluginLoadOrders:
                     dependency_count = min(3, (i - 50) // 10)  # Up to 3 ESP dependencies
                     for k in range(dependency_count):
                         dep_index = 50 + (i - 50) // (k + 2)
-                        if dep_index < i and base_plugins[dep_index].endswith('.esp'):
+                        if dep_index < i and base_plugins[dep_index].endswith(".esp"):
                             dependencies.append(base_plugins[dep_index])
 
             dependency_map[plugin] = dependencies
@@ -426,7 +401,7 @@ class TestMassivePluginLoadOrders:
 
         # Process dependencies in batches
         batch_size = 50
-        plugin_batches = [base_plugins[i:i + batch_size] for i in range(0, len(base_plugins), batch_size)]
+        plugin_batches = [base_plugins[i : i + batch_size] for i in range(0, len(base_plugins), batch_size)]
 
         for batch_index, plugin_batch in enumerate(plugin_batches):
             batch_start = time.time()
@@ -441,7 +416,7 @@ class TestMassivePluginLoadOrders:
                 # Simulate dependency resolution logic
                 resolved_deps = []
                 for dep in dependencies:
-                    if dep in base_plugins[:base_plugins.index(plugin)]:
+                    if dep in base_plugins[: base_plugins.index(plugin)]:
                         resolved_deps.append(dep)
                     else:
                         missing_dependencies += 1
@@ -455,43 +430,38 @@ class TestMassivePluginLoadOrders:
             batch_time = time.time() - batch_start
 
             resolution_results.append({
-                'batch_index': batch_index,
-                'plugins_in_batch': len(plugin_batch),
-                'resolved_count': resolved_count,
-                'circular_dependencies': circular_dependencies,
-                'missing_dependencies': missing_dependencies,
-                'processing_time': batch_time
+                "batch_index": batch_index,
+                "plugins_in_batch": len(plugin_batch),
+                "resolved_count": resolved_count,
+                "circular_dependencies": circular_dependencies,
+                "missing_dependencies": missing_dependencies,
+                "processing_time": batch_time,
             })
 
-            performance_profiler.record_operation(
-                f"dependency_batch_{batch_index}",
-                batch_time,
-                0
-            )
+            performance_profiler.record_operation(f"dependency_batch_{batch_index}", batch_time, 0)
 
         total_time = time.time() - start_time
 
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze dependency resolution performance
-        total_resolved = sum(r['resolved_count'] for r in resolution_results)
-        total_circular = sum(r['circular_dependencies'] for r in resolution_results)
-        total_missing = sum(r['missing_dependencies'] for r in resolution_results)
+        total_resolved = sum(r["resolved_count"] for r in resolution_results)
+        total_circular = sum(r["circular_dependencies"] for r in resolution_results)
+        total_missing = sum(r["missing_dependencies"] for r in resolution_results)
 
         # Most plugins should resolve successfully
         resolution_rate = total_resolved / plugin_count
         assert resolution_rate > 0.9, f"Dependency resolution rate too low: {resolution_rate:.1%}"
 
         # Should detect circular dependencies (if any)
-        assert total_circular < plugin_count * 0.05, \
-            f"Too many circular dependencies detected: {total_circular}"
+        assert total_circular < plugin_count * 0.05, f"Too many circular dependencies detected: {total_circular}"
 
         # Processing should be efficient
         throughput = plugin_count / total_time
         assert throughput > 50, f"Dependency resolution too slow: {throughput:.1f} plugins/sec"
 
         # Performance should remain consistent
-        processing_times = [r['processing_time'] for r in resolution_results]
+        processing_times = [r["processing_time"] for r in resolution_results]
         if len(processing_times) > 1:
             time_variance = max(processing_times) / min(processing_times)
             assert time_variance < 5.0, f"High dependency resolution variance: {time_variance:.2f}x"
@@ -527,24 +497,17 @@ class TestMassivePluginLoadOrders:
             conflicting_plugins = []
 
             for j in range(conflict_count):
-                plugin_index = (hash(formid + str(j)) % len(base_plugins))
+                plugin_index = hash(formid + str(j)) % len(base_plugins)
                 conflicting_plugins.append(base_plugins[plugin_index])
 
-            conflict_log_sections.append({
-                'formid': formid,
-                'plugins': conflicting_plugins
-            })
+            conflict_log_sections.append({"formid": formid, "plugins": conflicting_plugins})
 
         # Create massive log content with conflict information
-        log_lines = [
-            "Fallout 4 v1.10.163",
-            "Plugin Conflict Analysis:",
-            ""
-        ]
+        log_lines = ["Fallout 4 v1.10.163", "Plugin Conflict Analysis:", ""]
 
         for conflict in conflict_log_sections:
             log_lines.append(f"FormID: {conflict['formid']} conflicts:")
-            for plugin in conflict['plugins']:
+            for plugin in conflict["plugins"]:
                 log_lines.append(f"\t- Modified by: {plugin}")
             log_lines.append("")
 
@@ -571,16 +534,13 @@ class TestMassivePluginLoadOrders:
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze conflict detection performance
-        assert len(detected_formids) >= 800, \
-            f"Too few FormIDs detected in conflicts: {len(detected_formids)}"
+        assert len(detected_formids) >= 800, f"Too few FormIDs detected in conflicts: {len(detected_formids)}"
 
-        assert len(detected_plugins) >= 200, \
-            f"Too few plugins detected in conflicts: {len(detected_plugins)}"
+        assert len(detected_plugins) >= 200, f"Too few plugins detected in conflicts: {len(detected_plugins)}"
 
         # Should find conflict pattern matches
         conflict_pattern_count = sum(len(matches) for pattern, matches in conflict_matches)
-        assert conflict_pattern_count >= 1000, \
-            f"Too few conflict patterns detected: {conflict_pattern_count}"
+        assert conflict_pattern_count >= 1000, f"Too few conflict patterns detected: {conflict_pattern_count}"
 
         # Performance should be reasonable for massive conflict analysis
         assert total_time < 30.0, f"Conflict detection too slow: {total_time:.2f}s"
@@ -620,14 +580,7 @@ class TestMassiveCallStackProcessing:
         plugin_list = stress_data_generator.generate_plugin_load_order(count=200)
 
         # Create massive call stack log
-        log_lines = [
-            "Fallout 4 v1.10.163",
-            "Buffout 4 v1.28.6",
-            "",
-            'Unhandled exception "EXCEPTION_ACCESS_VIOLATION"',
-            "",
-            "STACK TRACE:"
-        ]
+        log_lines = ["Fallout 4 v1.10.163", "Buffout 4 v1.28.6", "", 'Unhandled exception "EXCEPTION_ACCESS_VIOLATION"', "", "STACK TRACE:"]
 
         # Generate deep call stack
         for i in range(stack_depth):
@@ -636,7 +589,7 @@ class TestMassiveCallStackProcessing:
             memory_addr = f"0x{(0x140000000 + i * 0x1000):012X}"
 
             log_lines.extend([
-                f"\t{i:05d} Fallout4.exe+{0x500000 + i*16:07X}",
+                f"\t{i:05d} Fallout4.exe+{0x500000 + i * 16:07X}",
                 f"\t      FormID: {formid} ({plugin})",
                 f"\t      Memory: {memory_addr}",
                 f"\t      Function: deep_function_level_{i % 100}()",
@@ -644,13 +597,13 @@ class TestMassiveCallStackProcessing:
 
             # Add some recursion patterns
             if i > 0 and i % 500 == 0:
-                log_lines.append(f"\t      [RECURSION DETECTED - Level {i//500}]")
+                log_lines.append(f"\t      [RECURSION DETECTED - Level {i // 500}]")
 
         massive_stack_log = "\n".join(log_lines)
 
         # Write to file for realistic I/O testing
         log_file = tmp_path / "deep_stack.log"
-        log_file.write_text(massive_stack_log, encoding='utf-8')
+        log_file.write_text(massive_stack_log, encoding="utf-8")
 
         fresh_memory_tracker.take_measurement("deep_stack_created")
 
@@ -699,11 +652,11 @@ class TestMassiveCallStackProcessing:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze deep call stack processing
-        assert len(extracted_formids) >= stack_depth * 0.8, \
+        assert len(extracted_formids) >= stack_depth * 0.8, (
             f"Too few FormIDs extracted from deep stack: {len(extracted_formids)}/{stack_depth}"
+        )
 
-        assert len(extracted_plugins) >= 150, \
-            f"Too few plugins extracted from deep stack: {len(extracted_plugins)}"
+        assert len(extracted_plugins) >= 150, f"Too few plugins extracted from deep stack: {len(extracted_plugins)}"
 
         # Performance should be reasonable even with deep stacks
         assert formid_time < 20.0, f"FormID extraction from deep stack too slow: {formid_time:.2f}s"
@@ -716,8 +669,9 @@ class TestMassiveCallStackProcessing:
         # Should detect recursion patterns
         recursion_matches = sum(len(matches) for pattern, matches in stack_matches if "RECURSION" in pattern)
         expected_recursion = stack_depth // 500  # One recursion marker every 500 frames
-        assert recursion_matches >= expected_recursion * 0.8, \
+        assert recursion_matches >= expected_recursion * 0.8, (
             f"Too few recursion patterns detected: {recursion_matches}/{expected_recursion}"
+        )
 
     def test_massive_memory_dump_analysis(self, performance_profiler, fresh_memory_tracker, stress_data_generator):
         """
@@ -736,12 +690,7 @@ class TestMassiveCallStackProcessing:
         formid_dataset = stress_data_generator.generate_formid_dataset(count=memory_region_count)
 
         # Create massive memory dump log
-        log_sections = [
-            "Fallout 4 v1.10.163",
-            "Memory Dump Analysis",
-            "",
-            "MEMORY REGIONS:"
-        ]
+        log_sections = ["Fallout 4 v1.10.163", "Memory Dump Analysis", "", "MEMORY REGIONS:"]
 
         for i in range(memory_region_count):
             base_addr = 0x7FF000000000 + (i * 0x10000)  # 64KB regions
@@ -756,17 +705,17 @@ class TestMassiveCallStackProcessing:
                 f"\tProtection: {protection}",
                 f"\tState: {state}",
                 f"\tFormID Reference: {formid_dataset[i]}",
-                ""
+                "",
             ])
 
             # Add some heap allocation information
             if i % 100 == 0:
                 log_sections.extend([
                     "\tHEAP ALLOCATIONS:",
-                    f"\t  Active Allocations: {(i//100 + 1) * 50}",
-                    f"\t  Total Allocated: {(i//100 + 1) * 1024 * 1024:,} bytes",
+                    f"\t  Active Allocations: {(i // 100 + 1) * 50}",
+                    f"\t  Total Allocated: {(i // 100 + 1) * 1024 * 1024:,} bytes",
                     f"\t  Fragmentation: {(i % 10) * 10}%",
-                    ""
+                    "",
                 ])
 
         massive_memory_dump = "\n".join(log_sections)
@@ -794,7 +743,7 @@ class TestMassiveCallStackProcessing:
 
         # Process lines for memory statistics
         lines_start = time.time()
-        lines = massive_memory_dump.split('\n')
+        lines = massive_memory_dump.split("\n")
         processed_lines = processor.process_lines_parallel(lines[:10000], "trim")  # Process subset
         lines_time = time.time() - lines_start
 
@@ -810,13 +759,13 @@ class TestMassiveCallStackProcessing:
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze memory dump processing
-        assert len(extracted_formids) >= memory_region_count * 0.8, \
+        assert len(extracted_formids) >= memory_region_count * 0.8, (
             f"Too few FormIDs extracted from memory dump: {len(extracted_formids)}/{memory_region_count}"
+        )
 
         # Should find memory-related patterns
         total_memory_matches = sum(len(matches) for pattern, matches in memory_matches)
-        assert total_memory_matches >= memory_region_count, \
-            f"Too few memory patterns found: {total_memory_matches}"
+        assert total_memory_matches >= memory_region_count, f"Too few memory patterns found: {total_memory_matches}"
 
         # Performance should be reasonable for massive memory dump
         assert formid_time < 15.0, f"Memory dump FormID extraction too slow: {formid_time:.2f}s"
@@ -824,7 +773,7 @@ class TestMassiveCallStackProcessing:
 
         # Memory efficiency should be maintained
         processing_memory_mb = memory_stats["peak_mb"]
-        memory_dump_size_mb = len(massive_memory_dump.encode('utf-8')) / (1024 * 1024)
+        memory_dump_size_mb = len(massive_memory_dump.encode("utf-8")) / (1024 * 1024)
         memory_ratio = processing_memory_mb / memory_dump_size_mb
 
         assert memory_ratio < 3.0, f"Excessive memory usage ratio: {memory_ratio:.2f}x"
@@ -859,11 +808,11 @@ class TestBatchProcessingAtScale:
             content = stress_data_generator.generate_large_crash_log(
                 size_mb=2,  # 2MB per log
                 plugin_count=50,
-                formid_count=500
+                formid_count=500,
             )
 
             file_path = tmp_path / f"batch_crash_{i:03d}.log"
-            file_path.write_text(content, encoding='utf-8')
+            file_path.write_text(content, encoding="utf-8")
             crash_log_files.append(file_path)
 
         fresh_memory_tracker.take_measurement("batch_files_created")
@@ -885,10 +834,10 @@ class TestBatchProcessingAtScale:
                 file_time = time.time() - file_start
 
                 sequential_results.append({
-                    'file_index': i,
-                    'filename': log_file.name,
-                    'processing_time': file_time,
-                    'success': result is not None
+                    "file_index": i,
+                    "filename": log_file.name,
+                    "processing_time": file_time,
+                    "success": result is not None,
                 })
 
                 performance_profiler.record_operation(f"batch_sequential_{i}", file_time)
@@ -910,18 +859,13 @@ class TestBatchProcessingAtScale:
                 try:
                     result = bridge.run_async(orchestrator.process_single_log(file_path))
                     return {
-                        'filename': file_path.name,
-                        'processing_time': time.time() - start,
-                        'success': result is not None,
-                        'error': None
+                        "filename": file_path.name,
+                        "processing_time": time.time() - start,
+                        "success": result is not None,
+                        "error": None,
                     }
                 except Exception as e:
-                    return {
-                        'filename': file_path.name,
-                        'processing_time': time.time() - start,
-                        'success': False,
-                        'error': str(e)
-                    }
+                    return {"filename": file_path.name, "processing_time": time.time() - start, "success": False, "error": str(e)}
 
             # Use ThreadPoolExecutor for concurrent processing
             with ThreadPoolExecutor(max_workers=10) as executor:
@@ -939,22 +883,20 @@ class TestBatchProcessingAtScale:
             memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze batch processing performance
-        sequential_successes = sum(1 for r in sequential_results if r['success'])
-        concurrent_successes = sum(1 for r in concurrent_results if r['success'])
+        sequential_successes = sum(1 for r in sequential_results if r["success"])
+        concurrent_successes = sum(1 for r in concurrent_results if r["success"])
 
-        assert sequential_successes >= batch_size * 0.9, \
-            f"Sequential batch success rate too low: {sequential_successes}/{batch_size}"
+        assert sequential_successes >= batch_size * 0.9, f"Sequential batch success rate too low: {sequential_successes}/{batch_size}"
 
-        assert concurrent_successes >= batch_size * 0.9, \
-            f"Concurrent batch success rate too low: {concurrent_successes}/{batch_size}"
+        assert concurrent_successes >= batch_size * 0.9, f"Concurrent batch success rate too low: {concurrent_successes}/{batch_size}"
 
         # Concurrent processing should be faster
         speedup = sequential_total_time / concurrent_total_time
         assert speedup > 2.0, f"Insufficient concurrent speedup: {speedup:.2f}x"
 
         # Individual file processing times should be reasonable
-        sequential_times = [r['processing_time'] for r in sequential_results if r['success']]
-        concurrent_times = [r['processing_time'] for r in concurrent_results if r['success']]
+        sequential_times = [r["processing_time"] for r in sequential_results if r["success"]]
+        concurrent_times = [r["processing_time"] for r in concurrent_results if r["success"]]
 
         if sequential_times:
             seq_avg = mean(sequential_times)
@@ -990,11 +932,11 @@ class TestBatchProcessingAtScale:
             content = stress_data_generator.generate_large_crash_log(
                 size_mb=1,  # 1MB per log for streaming test
                 plugin_count=30,
-                formid_count=300
+                formid_count=300,
             )
 
             file_path = tmp_path / f"stream_log_{i:03d}.log"
-            file_path.write_text(content, encoding='utf-8')
+            file_path.write_text(content, encoding="utf-8")
             log_files.append(file_path)
 
         # Process files in streaming fashion (small batches)
@@ -1009,14 +951,14 @@ class TestBatchProcessingAtScale:
 
         for i in range(0, len(log_files), stream_batch_size):
             batch_start = time.time()
-            batch_files = log_files[i:i + stream_batch_size]
+            batch_files = log_files[i : i + stream_batch_size]
 
             batch_formids = 0
             batch_plugins = 0
 
             for file_path in batch_files:
                 # Read and process file
-                content = file_path.read_text(encoding='utf-8')
+                content = file_path.read_text(encoding="utf-8")
 
                 # Extract data
                 formids = processor.extract_formids(content)
@@ -1035,14 +977,14 @@ class TestBatchProcessingAtScale:
             total_plugins += batch_plugins
 
             streaming_results.append({
-                'batch_index': i // stream_batch_size,
-                'files_processed': len(batch_files),
-                'formids_found': batch_formids,
-                'plugins_found': batch_plugins,
-                'processing_time': batch_time
+                "batch_index": i // stream_batch_size,
+                "files_processed": len(batch_files),
+                "formids_found": batch_formids,
+                "plugins_found": batch_plugins,
+                "processing_time": batch_time,
             })
 
-            performance_profiler.record_operation(f"streaming_batch_{i//stream_batch_size}", batch_time)
+            performance_profiler.record_operation(f"streaming_batch_{i // stream_batch_size}", batch_time)
 
         total_time = time.time() - start_time
 
@@ -1051,23 +993,20 @@ class TestBatchProcessingAtScale:
         performance_stats = performance_profiler.stop_profiling()
 
         # Analyze streaming batch processing
-        assert total_formids > file_count * 200, \
-            f"Too few FormIDs from streaming processing: {total_formids}"
+        assert total_formids > file_count * 200, f"Too few FormIDs from streaming processing: {total_formids}"
 
-        assert total_plugins > file_count * 20, \
-            f"Too few plugins from streaming processing: {total_plugins}"
+        assert total_plugins > file_count * 20, f"Too few plugins from streaming processing: {total_plugins}"
 
         # Processing times should remain consistent (no memory accumulation)
         if len(processing_times) > 10:
-            early_batches = processing_times[:len(processing_times)//3]
-            late_batches = processing_times[-len(processing_times)//3:]
+            early_batches = processing_times[: len(processing_times) // 3]
+            late_batches = processing_times[-len(processing_times) // 3 :]
 
             early_avg = mean(early_batches)
             late_avg = mean(late_batches)
             degradation = late_avg / early_avg
 
-            assert degradation < 1.5, \
-                f"Performance degradation in streaming: {degradation:.2f}x"
+            assert degradation < 1.5, f"Performance degradation in streaming: {degradation:.2f}x"
 
         # Overall throughput should be reasonable
         throughput = file_count / total_time

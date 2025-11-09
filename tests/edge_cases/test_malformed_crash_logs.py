@@ -52,10 +52,10 @@ STACK TRACE:
         # Mix UTF-8, CP1252, and invalid sequences
         parts = [
             b"Fallout 4 v1.10.163\n",
-            "Exception à l'adresse ".encode('cp1252'),  # French with CP1252
-            b"\xFF\xFE\xFD\xFC",  # Invalid UTF-8 bytes
+            "Exception à l'adresse ".encode("cp1252"),  # French with CP1252
+            b"\xff\xfe\xfd\xfc",  # Invalid UTF-8 bytes
             "\nКрах игры\n".encode(),  # Russian in UTF-8
-            "PLUGINS:\n".encode('ascii'),
+            "PLUGINS:\n".encode("ascii"),
         ]
         return b"".join(parts)
 
@@ -159,6 +159,7 @@ class TestMalformedCrashLogHandling:
     def setup_parser(self):
         """Setup parser with proper error handling."""
         from ClassicLib.integration.factory import get_parser
+
         return get_parser()
 
     def test_truncated_log_handling(self, generator, setup_parser):
@@ -168,9 +169,7 @@ class TestMalformedCrashLogHandling:
         # Should handle truncation gracefully - use find_segments
         # Convert string to list of lines for find_segments
         crash_lines = truncated_log.splitlines() if isinstance(truncated_log, str) else truncated_log
-        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout4.exe"
-        )
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
         # Should still extract what it can
         assert game_ver is not None or crashgen_ver is not None or error is not None
@@ -185,11 +184,9 @@ class TestMalformedCrashLogHandling:
 
         # Try to parse as text with error handling
         try:
-            text_log = corrupted_log.decode('utf-8', errors='ignore')
+            text_log = corrupted_log.decode("utf-8", errors="ignore")
             crash_lines = text_log.splitlines()
-            game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-                crash_lines, "Buffout 4", "F4SE", "Fallout4"
-            )
+            game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4")
 
             # Should handle corruption without crashing
             assert game_ver is not None or crashgen_ver is not None or segments is not None
@@ -202,13 +199,11 @@ class TestMalformedCrashLogHandling:
         mixed_log = generator.generate_mixed_encoding_log()
 
         # Should handle mixed encodings
-        for encoding in ['utf-8', 'cp1252', 'latin-1']:
+        for encoding in ["utf-8", "cp1252", "latin-1"]:
             try:
-                text_log = mixed_log.decode(encoding, errors='ignore')
+                text_log = mixed_log.decode(encoding, errors="ignore")
                 crash_lines = text_log.splitlines()
-                game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-                    crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-                )
+                game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
 
                 # Should parse something even with encoding issues
                 assert game_ver is not None or crashgen_ver is not None or segments is not None
@@ -221,9 +216,7 @@ class TestMalformedCrashLogHandling:
         circular_log = generator.generate_circular_reference_log()
 
         crash_lines = circular_log.splitlines()
-        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
 
         # Should detect and handle circular references
         assert game_ver is not None or crashgen_ver is not None or segments is not None
@@ -239,7 +232,8 @@ class TestMalformedCrashLogHandling:
 
         # Extract FormID-like patterns from the log lines
         import re
-        formid_pattern = re.compile(r'FormID:\s*([^\s\n]+)')
+
+        formid_pattern = re.compile(r"FormID:\s*([^\s\n]+)")
         matches = formid_pattern.findall(malformed_log)
 
         # Create a fake callstack from the matches to test extraction
@@ -265,9 +259,7 @@ class TestMalformedCrashLogHandling:
         # Should handle deep nesting without stack overflow
         try:
             crash_lines = nested_log.splitlines()
-            game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-                crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-            )
+            game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
             assert game_ver is not None or crashgen_ver is not None or segments is not None
         except RecursionError:
             # Acceptable to limit recursion depth
@@ -278,11 +270,9 @@ class TestMalformedCrashLogHandling:
         null_log = generator.generate_null_byte_log()
 
         # Remove null bytes or handle them
-        cleaned_log = null_log.replace(b'\x00', b'').decode('utf-8', errors='ignore')
+        cleaned_log = null_log.replace(b"\x00", b"").decode("utf-8", errors="ignore")
         crash_lines = cleaned_log.splitlines()
-        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
 
         # Should parse after cleaning
         assert game_ver is not None or crashgen_ver is not None or segments is not None
@@ -296,9 +286,7 @@ class TestMalformedCrashLogHandling:
         # Should handle efficiently without hanging
         start_time = time.time()
         crash_lines = infinite_log.splitlines()
-        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
         elapsed = time.time() - start_time
 
         # Should complete in reasonable time for 2MB
@@ -310,9 +298,7 @@ class TestMalformedCrashLogHandling:
         incomplete_log = generator.generate_missing_critical_sections()
 
         crash_lines = incomplete_log.splitlines()
-        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
 
         # Should return result even without standard sections
         assert game_ver is not None or crashgen_ver is not None or segments is not None
@@ -324,9 +310,7 @@ class TestMalformedCrashLogHandling:
         conflicting_log = generator.generate_conflicting_data()
 
         crash_lines = conflicting_log.splitlines()
-        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = setup_parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
 
         # Should handle conflicts (usually takes first or last occurrence)
         assert game_ver is not None or crashgen_ver is not None or segments is not None
@@ -342,7 +326,7 @@ class TestEdgeCaseFileOperations:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             # Write nothing - zero byte file
             temp_path = Path(f.name)
 
@@ -362,7 +346,7 @@ class TestEdgeCaseFileOperations:
         # Create 10MB single line
         massive_line = "x" * (10 * 1024 * 1024)
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             f.write(massive_line)
             temp_path = Path(f.name)
 
@@ -379,7 +363,7 @@ class TestEdgeCaseFileOperations:
 
         io_core = FileIOCore()
 
-        temp_path = Path(tempfile.mktemp(suffix='.log'))
+        temp_path = Path(tempfile.mktemp(suffix=".log"))
         temp_path.write_text("Test content")
 
         async def delete_file_soon():
@@ -426,9 +410,7 @@ PLUGINS 📁:
 🔥🔥🔥 Stack Trace 🔥🔥🔥"""
 
         crash_lines = emoji_log.splitlines()
-        game_ver, crashgen_ver, error, segments = parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
         assert game_ver is not None or crashgen_ver is not None or segments is not None
 
     def test_mixed_line_endings(self):
@@ -441,9 +423,7 @@ PLUGINS 📁:
         mixed_log = "Line 1\r\nLine 2\nLine 3\rLine 4\r\n\nLine 6"
 
         crash_lines = mixed_log.splitlines()
-        game_ver, crashgen_ver, error, segments = parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
         assert game_ver is not None or crashgen_ver is not None or segments is not None
 
     def test_bom_markers(self):
@@ -456,9 +436,7 @@ PLUGINS 📁:
         bom_log = "\ufeffFallout 4 v1.10.163\nBuffout 4 v1.28.6"
 
         crash_lines = bom_log.splitlines()
-        game_ver, crashgen_ver, error, segments = parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
         assert game_ver is not None or crashgen_ver is not None or segments is not None
 
     def test_control_characters(self):
@@ -471,9 +449,7 @@ PLUGINS 📁:
         control_log = "Fallout 4\x00v1.10.163\x01\x02\nException\x1b[31m colored \x1b[0m"
 
         crash_lines = control_log.splitlines()
-        game_ver, crashgen_ver, error, segments = parser.find_segments(
-            crash_lines, "Buffout 4", "F4SE", "Fallout 4"
-        )
+        game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout 4")
         assert game_ver is not None or crashgen_ver is not None or segments is not None
 
 
@@ -566,16 +542,13 @@ class TestConcurrencyEdgeCases:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             f.write("shared content\n" * 1000)
             temp_path = Path(f.name)
 
         try:
             # Launch 20 simultaneous reads
-            tasks = [
-                io_core.read_file(str(temp_path))
-                for _ in range(20)
-            ]
+            tasks = [io_core.read_file(str(temp_path)) for _ in range(20)]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -609,9 +582,7 @@ FormID: FE000800
         # Parse same log 50 times concurrently
         tasks = []
         for _ in range(50):
-            tasks.append(
-                asyncio.to_thread(parser.parse, test_log)
-            )
+            tasks.append(asyncio.to_thread(parser.parse, test_log))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 

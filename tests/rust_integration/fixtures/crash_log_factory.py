@@ -18,6 +18,7 @@ class CrashLogType(Enum):
     Each type represents a different crash log generator or scenario
     commonly encountered in real-world usage.
     """
+
     BUFFOUT4_BASIC = "buffout4_basic"
     BUFFOUT4_LARGE = "buffout4_large"
     BUFFOUT4_MANY_MODS = "buffout4_many_mods"
@@ -45,7 +46,7 @@ class CrashLogFactory:
         "DLCCoast.esm",
         "DLCworkshop02.esm",
         "DLCworkshop03.esm",
-        "DLCNukaWorld.esm"
+        "DLCNukaWorld.esm",
     ]
 
     # Common community fixes and frameworks
@@ -56,7 +57,7 @@ class CrashLogFactory:
         "HUDFramework.esm",
         "WorkshopFramework.esm",
         "SettlementKeywords.esm",
-        "XDI.esm"
+        "XDI.esm",
     ]
 
     # Common problematic plugins for testing
@@ -66,15 +67,27 @@ class CrashLogFactory:
         "CompanionsGoneWild.esp",
         "EveryonesBestFriend.esp",
         "ScrapEverything.esp",
-        "PlaceEverywhere.esp"
+        "PlaceEverywhere.esp",
     ]
 
     # Common record types found in crash logs
     RECORD_TYPES = [
-        "TESForm", "BGSKeyword", "TESObjectSTAT", "TESObjectREFR",
-        "BGSConstructibleObject", "TESQuest", "BGSScene", "TESFaction",
-        "TESRace", "TESNPC", "TESObjectWEAP", "TESObjectARMO",
-        "TESObjectMISC", "AlchemyItem", "BGSPerk", "ActorValueInfo"
+        "TESForm",
+        "BGSKeyword",
+        "TESObjectSTAT",
+        "TESObjectREFR",
+        "BGSConstructibleObject",
+        "TESQuest",
+        "BGSScene",
+        "TESFaction",
+        "TESRace",
+        "TESNPC",
+        "TESObjectWEAP",
+        "TESObjectARMO",
+        "TESObjectMISC",
+        "AlchemyItem",
+        "BGSPerk",
+        "ActorValueInfo",
     ]
 
     def __init__(self, seed: int | None = None):
@@ -119,10 +132,7 @@ class CrashLogFactory:
             return self._generate_stress_test(**kwargs)
         raise ValueError(f"Unsupported crash log type: {log_type}")
 
-    def _generate_buffout4_basic(self,
-                                formid_count: int = 20,
-                                plugin_count: int = 50,
-                                **kwargs) -> list[str]:
+    def _generate_buffout4_basic(self, formid_count: int = 20, plugin_count: int = 50, **kwargs) -> list[str]:
         """Generate a basic Buffout 4 crash log."""
         lines = [
             "Fallout 4 v1.10.163",
@@ -146,7 +156,7 @@ class CrashLogFactory:
             "\tGPU #1: Nvidia GeForce RTX 3060 Ti",
             "\tPHYSICAL MEMORY: 16.00 GB/32.00 GB",
             "",
-            "PROBABLE CALL STACK:"
+            "PROBABLE CALL STACK:",
         ]
 
         # Generate call stack with FormIDs
@@ -162,7 +172,7 @@ class CrashLogFactory:
             "F4SE PLUGINS:",
             "\tBuffout4 v1.28.6",
             "",
-            "PLUGINS:"
+            "PLUGINS:",
         ])
 
         # Generate plugin list
@@ -170,10 +180,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_buffout4_large(self,
-                                formid_count: int = 100,
-                                plugin_count: int = 200,
-                                **kwargs) -> list[str]:
+    def _generate_buffout4_large(self, formid_count: int = 100, plugin_count: int = 200, **kwargs) -> list[str]:
         """Generate a large Buffout 4 crash log."""
         # Start with basic structure
         lines = self._generate_buffout4_basic(formid_count=formid_count, plugin_count=plugin_count)
@@ -191,11 +198,7 @@ class CrashLogFactory:
 
         return lines
 
-    def _generate_buffout4_many_mods(self,
-                                    formid_count: int = 200,
-                                    plugin_count: int = 300,
-                                    esl_count: int = 50,
-                                    **kwargs) -> list[str]:
+    def _generate_buffout4_many_mods(self, formid_count: int = 200, plugin_count: int = 300, esl_count: int = 50, **kwargs) -> list[str]:
         """Generate a crash log with many mods (typical heavy load order)."""
         lines = self._generate_buffout4_basic(formid_count=formid_count, plugin_count=plugin_count)
 
@@ -256,16 +259,10 @@ class CrashLogFactory:
         ]
 
         # Generate .NET-style call stack
-        methods = [
-            "ProcessCrash",
-            "HandleException",
-            "ExecuteScript",
-            "UpdateGame",
-            "MainLoop"
-        ]
+        methods = ["ProcessCrash", "HandleException", "ExecuteScript", "UpdateGame", "MainLoop"]
 
         for i, method in enumerate(methods):
-            lines.append(f"\tat GameFramework.{method}() +0x{i*16:03X}")
+            lines.append(f"\tat GameFramework.{method}() +0x{i * 16:03X}")
 
         return lines
 
@@ -285,7 +282,7 @@ class CrashLogFactory:
             "PLUGINS:",
             "\t[XX] InvalidPlugin.INVALID",
             "\t[256] OutOfRange.esp",  # Invalid hex index
-            "UNEXPECTED_EOF_MARKER"
+            "UNEXPECTED_EOF_MARKER",
         ]
 
         return lines
@@ -300,13 +297,10 @@ class CrashLogFactory:
             "\t[0] 0x7FF66DF19300 -> FormID: 0x00000014 (Fallout4.esm)",
             "",
             "PLUGINS:",
-            "\t[00] Fallout4.esm"
+            "\t[00] Fallout4.esm",
         ]
 
-    def _generate_stress_test(self,
-                            formid_count: int = 5000,
-                            plugin_count: int = 500,
-                            **kwargs) -> list[str]:
+    def _generate_stress_test(self, formid_count: int = 5000, plugin_count: int = 500, **kwargs) -> list[str]:
         """Generate an extremely large crash log for stress testing."""
         lines = [
             "Fallout 4 v1.10.163",
@@ -314,16 +308,13 @@ class CrashLogFactory:
             "",
             'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF66DF19300 Fallout4.exe+0DB9300',
             "",
-            "PROBABLE CALL STACK:"
+            "PROBABLE CALL STACK:",
         ]
 
         # Generate massive call stack
         lines.extend(self._generate_call_stack(formid_count))
 
-        lines.extend([
-            "",
-            "PLUGINS:"
-        ])
+        lines.extend(["", "PLUGINS:"])
 
         # Generate massive plugin list
         lines.extend(self._generate_plugin_list(plugin_count))
@@ -345,11 +336,11 @@ class CrashLogFactory:
             # Occasionally add record type information
             if random.random() < 0.3:  # 30% chance
                 record_type = random.choice(self.RECORD_TYPES)
-                lines.append(f"\t[{i}] {addr:#018X} Fallout4.exe+{addr-0x7FF66C000000:#08X} -> {record_type} at {addr:#018X}")
+                lines.append(f"\t[{i}] {addr:#018X} Fallout4.exe+{addr - 0x7FF66C000000:#08X} -> {record_type} at {addr:#018X}")
             else:
                 # Regular FormID entry
                 plugin_name = self._get_plugin_for_formid(formid)
-                lines.append(f"\t[{i}] {addr:#018X} Fallout4.exe+{addr-0x7FF66C000000:#08X} -> FormID: {formid} ({plugin_name})")
+                lines.append(f"\t[{i}] {addr:#018X} Fallout4.exe+{addr - 0x7FF66C000000:#08X} -> FormID: {formid} ({plugin_name})")
 
         return lines
 
@@ -439,25 +430,62 @@ class CrashLogFactory:
         if mod_index == 0x06:
             return "DLCNukaWorld.esm"
         if mod_index == 0xFE:
-            return random.choice([f"ESLPlugin{random.randint(1,100):03d}.esl"])
+            return random.choice([f"ESLPlugin{random.randint(1, 100):03d}.esl"])
         return self._generate_plugin_name()
 
     def _generate_plugin_name(self, extension: str = ".esp") -> str:
         """Generate a realistic plugin name."""
         prefixes = [
-            "Sim", "Better", "Improved", "Enhanced", "More", "Super", "Ultra",
-            "Realistic", "Immersive", "Advanced", "Ultimate", "Modern", "Classic"
+            "Sim",
+            "Better",
+            "Improved",
+            "Enhanced",
+            "More",
+            "Super",
+            "Ultra",
+            "Realistic",
+            "Immersive",
+            "Advanced",
+            "Ultimate",
+            "Modern",
+            "Classic",
         ]
 
         topics = [
-            "Weapons", "Armor", "Settlements", "Graphics", "Weather", "NPCs",
-            "Companions", "Quests", "Textures", "Lighting", "Combat", "Workshop",
-            "Interface", "Sound", "Animation", "Dialogue", "Factions", "Creatures"
+            "Weapons",
+            "Armor",
+            "Settlements",
+            "Graphics",
+            "Weather",
+            "NPCs",
+            "Companions",
+            "Quests",
+            "Textures",
+            "Lighting",
+            "Combat",
+            "Workshop",
+            "Interface",
+            "Sound",
+            "Animation",
+            "Dialogue",
+            "Factions",
+            "Creatures",
         ]
 
         suffixes = [
-            "", "Redux", "Overhaul", "Pack", "Collection", "Mod", "Plus",
-            "Extended", "Expansion", "Patch", "Fix", "Update", "Remastered"
+            "",
+            "Redux",
+            "Overhaul",
+            "Pack",
+            "Collection",
+            "Mod",
+            "Plus",
+            "Extended",
+            "Expansion",
+            "Patch",
+            "Fix",
+            "Update",
+            "Remastered",
         ]
 
         prefix = random.choice(prefixes)
@@ -471,10 +499,7 @@ class CrashLogFactory:
 
         return f"{name}{extension}"
 
-    def create_crash_log_file(self,
-                             log_type: CrashLogType,
-                             output_path: Path,
-                             **kwargs) -> Path:
+    def create_crash_log_file(self, log_type: CrashLogType, output_path: Path, **kwargs) -> Path:
         """
         Create a crash log file on disk for testing.
 
@@ -490,8 +515,8 @@ class CrashLogFactory:
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with Path(output_path).open('w', encoding='utf-8') as f:
-            f.writelines(line + '\n' for line in crash_data)
+        with Path(output_path).open("w", encoding="utf-8") as f:
+            f.writelines(line + "\n" for line in crash_data)
 
         return output_path
 
@@ -507,20 +532,20 @@ class CrashLogFactory:
             Dictionary with expected counts for FormIDs, plugins, etc.
         """
         if log_type == CrashLogType.BUFFOUT4_BASIC:
-            formid_count = kwargs.get('formid_count', 20)
-            plugin_count = kwargs.get('plugin_count', 50)
+            formid_count = kwargs.get("formid_count", 20)
+            plugin_count = kwargs.get("plugin_count", 50)
         elif log_type == CrashLogType.BUFFOUT4_LARGE:
-            formid_count = kwargs.get('formid_count', 100)
-            plugin_count = kwargs.get('plugin_count', 200)
+            formid_count = kwargs.get("formid_count", 100)
+            plugin_count = kwargs.get("plugin_count", 200)
         elif log_type == CrashLogType.BUFFOUT4_MANY_MODS:
-            formid_count = kwargs.get('formid_count', 200)
-            plugin_count = kwargs.get('plugin_count', 300) + kwargs.get('esl_count', 50)
+            formid_count = kwargs.get("formid_count", 200)
+            plugin_count = kwargs.get("plugin_count", 300) + kwargs.get("esl_count", 50)
         elif log_type == CrashLogType.MINIMAL:
             formid_count = 1
             plugin_count = 1
         elif log_type == CrashLogType.STRESS_TEST:
-            formid_count = kwargs.get('formid_count', 5000)
-            plugin_count = kwargs.get('plugin_count', 500)
+            formid_count = kwargs.get("formid_count", 5000)
+            plugin_count = kwargs.get("plugin_count", 500)
         else:
             # Default estimates for other types
             formid_count = 10

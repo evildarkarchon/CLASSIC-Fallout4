@@ -166,10 +166,7 @@ class PythonDatabasePool:
         try:
             # Execute query in thread pool
             return await asyncio.to_thread(
-                self._execute_query_single,
-                conn,
-                "SELECT description FROM formids WHERE formid = ? AND plugin = ?",
-                (formid, plugin)
+                self._execute_query_single, conn, "SELECT description FROM formids WHERE formid = ? AND plugin = ?", (formid, plugin)
             )
         finally:
             await self._return_connection(conn)
@@ -215,12 +212,7 @@ class PythonDatabasePool:
             params = [item for pair in formid_plugin_pairs for item in pair]
 
             # Execute batch query
-            results = await asyncio.to_thread(
-                self._execute_query_batch,
-                conn,
-                query,
-                params
-            )
+            results = await asyncio.to_thread(self._execute_query_batch, conn, query, params)
 
             # Convert to dictionary
             return {(row["formid"], row["plugin"]): row["description"] for row in results}
@@ -306,12 +298,7 @@ class PythonDatabasePool:
         await self.initialize()
         return self
 
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None
-    ) -> None:
+    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
         """
         Handles the asynchronous exit of an async context manager by performing necessary cleanup actions,
         such as closing connections or resources.
@@ -322,6 +309,7 @@ class PythonDatabasePool:
             exc_tb: The traceback object if an exception was raised.
         """
         await self.close()
+
 
 # Alias for compatibility
 AsyncDatabasePool = PythonDatabasePool

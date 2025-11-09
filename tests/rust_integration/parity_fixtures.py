@@ -42,6 +42,7 @@ class ParityResult:
     detailed comparison data, performance metrics, and diagnostic information
     for comprehensive Phase 6 validation reporting.
     """
+
     component_name: str
     method_name: str
     test_case: str
@@ -79,7 +80,7 @@ class ParityResult:
             "python_execution_time": self.python_execution_time,
             "differences_count": len(self.differences),
             "error_count": len(self.error_messages),
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -91,6 +92,7 @@ class ParityTestCase:
     Contains all necessary information to execute both Rust and Python
     implementations with identical inputs and compare outputs.
     """
+
     name: str
     description: str
     inputs: dict[str, Any]
@@ -166,10 +168,7 @@ class ParityValidator(ABC):
 
         # Type comparison
         if type(rust_result) != type(python_result):
-            differences.append(
-                f"Type mismatch: Rust={type(rust_result).__name__}, "
-                f"Python={type(python_result).__name__}"
-            )
+            differences.append(f"Type mismatch: Rust={type(rust_result).__name__}, Python={type(python_result).__name__}")
             return False, differences
 
         # None comparison
@@ -196,7 +195,7 @@ class ParityValidator(ABC):
             return self._compare_dictionaries(rust_result, python_result)
 
         # ReportFragment comparison (special case)
-        if hasattr(rust_result, '__class__') and 'ReportFragment' in rust_result.__class__.__name__:
+        if hasattr(rust_result, "__class__") and "ReportFragment" in rust_result.__class__.__name__:
             return self._compare_report_fragments(rust_result, python_result)
 
         # Numeric comparison with tolerance
@@ -218,13 +217,7 @@ class ParityValidator(ABC):
         rust_lines = rust_str.splitlines(keepends=True)
         python_lines = python_str.splitlines(keepends=True)
 
-        diff_lines = list(unified_diff(
-            python_lines,
-            rust_lines,
-            fromfile="Python",
-            tofile="Rust",
-            lineterm=""
-        ))
+        diff_lines = list(unified_diff(python_lines, rust_lines, fromfile="Python", tofile="Rust", lineterm=""))
 
         return [f"String diff: {line.rstrip()}" for line in diff_lines[:20]]  # Limit diff size
 
@@ -233,9 +226,7 @@ class ParityValidator(ABC):
         differences = []
 
         if len(rust_seq) != len(python_seq):
-            differences.append(
-                f"Length mismatch: Rust={len(rust_seq)}, Python={len(python_seq)}"
-            )
+            differences.append(f"Length mismatch: Rust={len(rust_seq)}, Python={len(python_seq)}")
             return False, differences
 
         for i, (rust_item, python_item) in enumerate(zip(rust_seq, python_seq)):
@@ -265,9 +256,7 @@ class ParityValidator(ABC):
         # Compare common keys
         common_keys = rust_keys & python_keys
         for key in common_keys:
-            value_identical, value_diffs = self._default_output_comparison(
-                rust_dict[key], python_dict[key]
-            )
+            value_identical, value_diffs = self._default_output_comparison(rust_dict[key], python_dict[key])
             if not value_identical:
                 differences.append(f"Key '{key}' differs:")
                 differences.extend(f"  {diff}" for diff in value_diffs)
@@ -284,10 +273,7 @@ class ParityValidator(ABC):
         differences = []
 
         # Compare fragment attributes that should be identical
-        fragment_attrs = [
-            'fragment_name', 'fragment_content', 'fragment_type',
-            'priority', 'markdown_content', 'raw_data'
-        ]
+        fragment_attrs = ["fragment_name", "fragment_content", "fragment_type", "priority", "markdown_content", "raw_data"]
 
         for attr in fragment_attrs:
             rust_val = getattr(rust_fragment, attr, None)
@@ -336,18 +322,20 @@ class CrashLogParityGenerator:
             (CrashLogType.BUFFOUT4_BASIC, "standard buffout4 crash log"),
             (CrashLogType.BUFFOUT4_LARGE, "large buffout4 crash log"),
             (CrashLogType.BUFFOUT4_MANY_MODS, "heavy mod list crash log"),
-            (CrashLogType.CORRUPTED, "malformed crash log data")
+            (CrashLogType.CORRUPTED, "malformed crash log data"),
         ]
 
         for log_type, description in basic_types:
             crash_data = self.factory.generate_crash_log(log_type)
-            test_cases.append(ParityTestCase(
-                name=f"crash_log_{log_type.value}",
-                description=f"Validate parity with {description}",
-                inputs={"crash_data": crash_data},
-                expected_output_type=tuple,  # (segments, metadata)
-                metadata={"log_type": log_type.value, "line_count": len(crash_data)}
-            ))
+            test_cases.append(
+                ParityTestCase(
+                    name=f"crash_log_{log_type.value}",
+                    description=f"Validate parity with {description}",
+                    inputs={"crash_data": crash_data},
+                    expected_output_type=tuple,  # (segments, metadata)
+                    metadata={"log_type": log_type.value, "line_count": len(crash_data)},
+                )
+            )
 
         # Edge cases
         edge_cases = [
@@ -359,27 +347,27 @@ class CrashLogParityGenerator:
         ]
 
         for name, crash_data, description in edge_cases:
-            test_cases.append(ParityTestCase(
-                name=f"edge_case_{name}",
-                description=f"Validate parity with {description}",
-                inputs={"crash_data": crash_data},
-                expected_output_type=tuple,
-                metadata={"edge_case": True, "line_count": len(crash_data)}
-            ))
+            test_cases.append(
+                ParityTestCase(
+                    name=f"edge_case_{name}",
+                    description=f"Validate parity with {description}",
+                    inputs={"crash_data": crash_data},
+                    expected_output_type=tuple,
+                    metadata={"edge_case": True, "line_count": len(crash_data)},
+                )
+            )
 
         # Performance stress tests
-        test_cases.append(ParityTestCase(
-            name="stress_test_large",
-            description="Validate parity with stress test crash log",
-            inputs={"crash_data": self.factory.generate_crash_log(
-                CrashLogType.STRESS_TEST,
-                formid_count=1000,
-                plugin_count=300
-            )},
-            expected_output_type=tuple,
-            timeout_seconds=120.0,
-            metadata={"stress_test": True, "performance_critical": True}
-        ))
+        test_cases.append(
+            ParityTestCase(
+                name="stress_test_large",
+                description="Validate parity with stress test crash log",
+                inputs={"crash_data": self.factory.generate_crash_log(CrashLogType.STRESS_TEST, formid_count=1000, plugin_count=300)},
+                expected_output_type=tuple,
+                timeout_seconds=120.0,
+                metadata={"stress_test": True, "performance_critical": True},
+            )
+        )
 
         # Real crash logs from disk if available
         if self.crash_logs_dir and self.crash_logs_dir.exists():
@@ -407,22 +395,24 @@ class CrashLogParityGenerator:
 
         for crash_file in crash_files:
             try:
-                with Path(crash_file).open('r', encoding='utf-8', errors='ignore') as f:
+                with Path(crash_file).open("r", encoding="utf-8", errors="ignore") as f:
                     crash_data = f.read().splitlines()
 
-                test_cases.append(ParityTestCase(
-                    name=f"real_crash_log_{crash_file.stem}",
-                    description=f"Validate parity with real crash log: {crash_file.name}",
-                    inputs={"crash_data": crash_data},
-                    expected_output_type=tuple,
-                    timeout_seconds=60.0,
-                    metadata={
-                        "real_crash_log": True,
-                        "file_path": str(crash_file),
-                        "file_size": crash_file.stat().st_size,
-                        "line_count": len(crash_data)
-                    }
-                ))
+                test_cases.append(
+                    ParityTestCase(
+                        name=f"real_crash_log_{crash_file.stem}",
+                        description=f"Validate parity with real crash log: {crash_file.name}",
+                        inputs={"crash_data": crash_data},
+                        expected_output_type=tuple,
+                        timeout_seconds=60.0,
+                        metadata={
+                            "real_crash_log": True,
+                            "file_path": str(crash_file),
+                            "file_size": crash_file.stat().st_size,
+                            "line_count": len(crash_data),
+                        },
+                    )
+                )
 
             except Exception as e:
                 logger.warning(f"Failed to load crash log {crash_file}: {e}")
@@ -448,7 +438,7 @@ class MockYamlSettingsCache:
             "record_scanning_enabled": True,
             "report_generation_enabled": True,
             "debug_mode": False,
-            "performance_monitoring": True
+            "performance_monitoring": True,
         }
 
     def batch_get_settings(self, setting_requests: list[tuple]) -> list[Any]:
@@ -540,10 +530,7 @@ def skip_if_rust_unavailable(component: str):
     Returns:
         Pytest skipif marker
     """
-    return pytest.mark.skipif(
-        not RUST_AVAILABLE.get(component, False),
-        reason=f"Rust {component} component not available"
-    )
+    return pytest.mark.skipif(not RUST_AVAILABLE.get(component, False), reason=f"Rust {component} component not available")
 
 
 def requires_crash_logs_directory():
@@ -553,10 +540,7 @@ def requires_crash_logs_directory():
     Returns:
         Pytest skipif marker
     """
-    return pytest.mark.skipif(
-        not Path("D:/Crash Logs").exists(),
-        reason="Real crash logs directory not available"
-    )
+    return pytest.mark.skipif(not Path("D:/Crash Logs").exists(), reason="Real crash logs directory not available")
 
 
 class ParityTestRunner:
@@ -579,9 +563,7 @@ class ParityTestRunner:
         self.bridge = AsyncBridge.get_instance()
         self.logger = logging.getLogger("parity_runner")
 
-    async def run_parity_test(self,
-                            validator: ParityValidator,
-                            test_case: ParityTestCase) -> ParityResult:
+    async def run_parity_test(self, validator: ParityValidator, test_case: ParityTestCase) -> ParityResult:
         """
         Run a single parity test case.
 
@@ -596,7 +578,7 @@ class ParityTestRunner:
             component_name=validator.component_name,
             method_name=test_case.name,
             test_case=test_case.description,
-            rust_available=RUST_AVAILABLE.get(validator.component_name.lower(), False)
+            rust_available=RUST_AVAILABLE.get(validator.component_name.lower(), False),
         )
 
         try:
@@ -610,17 +592,14 @@ class ParityTestRunner:
 
             # Time Rust execution
             import time
+
             start_time = time.perf_counter()
-            rust_result = await self._execute_with_timeout(
-                rust_impl, test_case.inputs, test_case.timeout_seconds
-            )
+            rust_result = await self._execute_with_timeout(rust_impl, test_case.inputs, test_case.timeout_seconds)
             result.rust_execution_time = time.perf_counter() - start_time
 
             # Time Python execution
             start_time = time.perf_counter()
-            python_result = await self._execute_with_timeout(
-                python_impl, test_case.inputs, test_case.timeout_seconds
-            )
+            python_result = await self._execute_with_timeout(python_impl, test_case.inputs, test_case.timeout_seconds)
             result.python_execution_time = time.perf_counter() - start_time
 
             # Store results
@@ -629,14 +608,10 @@ class ParityTestRunner:
 
             # Calculate performance improvement
             if result.python_execution_time > 0 and result.rust_execution_time > 0:
-                result.performance_improvement = (
-                    result.python_execution_time / result.rust_execution_time
-                )
+                result.performance_improvement = result.python_execution_time / result.rust_execution_time
 
             # Validate outputs
-            is_identical, differences = validator.validate_outputs(
-                rust_result, python_result, test_case
-            )
+            is_identical, differences = validator.validate_outputs(rust_result, python_result, test_case)
             result.passed = is_identical
             result.differences = differences
 
@@ -660,9 +635,9 @@ class ParityTestRunner:
         """Execute implementation with timeout protection."""
         # This is a placeholder - actual implementation would depend on
         # the specific interface of each component
-        if asyncio.iscoroutinefunction(getattr(impl, 'execute', None)):
+        if asyncio.iscoroutinefunction(getattr(impl, "execute", None)):
             return await asyncio.wait_for(impl.execute(**inputs), timeout=timeout)
-        if hasattr(impl, 'execute'):
+        if hasattr(impl, "execute"):
             return impl.execute(**inputs)
         return impl  # If impl is the result itself
 
@@ -681,23 +656,15 @@ class ParityTestRunner:
         failed_tests = total_tests - passed_tests
 
         # Calculate performance statistics
-        performance_improvements = [
-            r.performance_improvement for r in self.results
-            if r.performance_improvement > 0
-        ]
+        performance_improvements = [r.performance_improvement for r in self.results if r.performance_improvement > 0]
 
-        avg_improvement = (
-            sum(performance_improvements) / len(performance_improvements)
-            if performance_improvements else 0
-        )
+        avg_improvement = sum(performance_improvements) / len(performance_improvements) if performance_improvements else 0
 
         # Group results by component
         by_component = {}
         for result in self.results:
             if result.component_name not in by_component:
-                by_component[result.component_name] = {
-                    "total": 0, "passed": 0, "failed": 0, "results": []
-                }
+                by_component[result.component_name] = {"total": 0, "passed": 0, "failed": 0, "results": []}
 
             by_component[result.component_name]["total"] += 1
             by_component[result.component_name]["results"].append(result.to_dict())
@@ -714,27 +681,20 @@ class ParityTestRunner:
                 "failed_tests": failed_tests,
                 "success_rate": (passed_tests / total_tests * 100) if total_tests > 0 else 0,
                 "average_performance_improvement": f"{avg_improvement:.1f}x",
-                "rust_availability": {
-                    component: RUST_AVAILABLE.get(component, False)
-                    for component in by_component
-                }
+                "rust_availability": {component: RUST_AVAILABLE.get(component, False) for component in by_component},
             },
             "by_component": by_component,
             "failed_tests_details": [
-                {
-                    "component": r.component_name,
-                    "test": r.method_name,
-                    "differences": r.differences,
-                    "errors": r.error_messages
-                }
-                for r in self.results if not r.passed
-            ]
+                {"component": r.component_name, "test": r.method_name, "differences": r.differences, "errors": r.error_messages}
+                for r in self.results
+                if not r.passed
+            ],
         }
 
         # Write detailed report to file if specified
         if self.output_file:
             try:
-                with Path(self.output_file).open('w', encoding='utf-8') as f:
+                with Path(self.output_file).open("w", encoding="utf-8") as f:
                     json.dump(report, f, indent=2, ensure_ascii=False)
                 self.logger.info(f"Detailed parity report written to {self.output_file}")
             except Exception as e:
@@ -758,9 +718,7 @@ def validate_formid_lists(rust_formids: list[str], python_formids: list[str]) ->
     differences = []
 
     if len(rust_formids) != len(python_formids):
-        differences.append(
-            f"FormID count mismatch: Rust={len(rust_formids)}, Python={len(python_formids)}"
-        )
+        differences.append(f"FormID count mismatch: Rust={len(rust_formids)}, Python={len(python_formids)}")
 
     # Compare as sets for order-independent comparison
     rust_set = set(rust_formids)
@@ -781,8 +739,7 @@ def validate_formid_lists(rust_formids: list[str], python_formids: list[str]) ->
     return len(differences) == 0, differences
 
 
-def validate_plugin_dictionaries(rust_plugins: dict[str, str],
-                                python_plugins: dict[str, str]) -> tuple[bool, list[str]]:
+def validate_plugin_dictionaries(rust_plugins: dict[str, str], python_plugins: dict[str, str]) -> tuple[bool, list[str]]:
     """
     Validate that plugin dictionaries are identical.
 
@@ -811,10 +768,7 @@ def validate_plugin_dictionaries(rust_plugins: dict[str, str],
     common_keys = rust_keys & python_keys
     for key in common_keys:
         if rust_plugins[key] != python_plugins[key]:
-            differences.append(
-                f"Plugin mismatch at index {key}: "
-                f"Rust='{rust_plugins[key]}', Python='{python_plugins[key]}'"
-            )
+            differences.append(f"Plugin mismatch at index {key}: Rust='{rust_plugins[key]}', Python='{python_plugins[key]}'")
 
     return len(differences) == 0, differences
 
@@ -833,13 +787,13 @@ def normalize_markdown_content(content: str) -> str:
         return ""
 
     # Normalize line endings
-    content = content.replace('\r\n', '\n').replace('\r', '\n')
+    content = content.replace("\r\n", "\n").replace("\r", "\n")
 
     # Remove trailing whitespace from lines
-    lines = [line.rstrip() for line in content.split('\n')]
+    lines = [line.rstrip() for line in content.split("\n")]
 
     # Remove empty lines at the end
     while lines and not lines[-1]:
         lines.pop()
 
-    return '\n'.join(lines)
+    return "\n".join(lines)

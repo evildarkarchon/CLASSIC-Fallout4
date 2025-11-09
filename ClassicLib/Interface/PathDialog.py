@@ -9,6 +9,7 @@ via a file dialog, and an OK button to confirm the choice.
 Primarily, the `ManualPathDialog` class is designed for use in GUI applications
 where users may need to configure paths manually.
 """
+
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout
 
 from ClassicLib import GlobalRegistry
@@ -53,7 +54,8 @@ class ManualPathDialog(QDialog):
 
         # Add a label
         info_label: QLabel = QLabel(
-            label or f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
+            label
+            or f"Enter the path for the {self._game} INI files directory (Example: c:\\users\\<name>\\Documents\\My Games\\{self._game})",
             self,
         )
         layout.addWidget(info_label)

@@ -56,6 +56,7 @@ class GpuDetectorParityValidator(ParityValidator):
 
     def create_python_implementation(self, **kwargs) -> Any:
         """Create Python GPU detector implementation."""
+
         # Python implementation is a module-level function
         class GpuDetectorWrapper:
             """Wrapper for Python GPU detector function."""
@@ -321,21 +322,23 @@ class TestGpuDetectorParity:
                     metadata={
                         "segment_lines": len(segment_system),
                         "expected_manufacturer": expected_result.get("manufacturer"),
-                    }
+                    },
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"GPU detection test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="gpu_detector",
-                    method_name="get_gpu_info",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="gpu_detector",
+                        method_name="get_gpu_info",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -370,14 +373,14 @@ class TestGpuDetectorParity:
         validator = GpuDetectorParityValidator()
 
         # Create large test data (stress test)
-        large_segment = [
-            f"System line {i}: Some data" for i in range(1000)
-        ] + [
-            "GPU #1: AMD Radeon RX 6950 XT",
-            "GPU #2: Nvidia GeForce RTX 3060",
-        ] + [
-            f"More system data {i}" for i in range(1000)
-        ]
+        large_segment = (
+            [f"System line {i}: Some data" for i in range(1000)]
+            + [
+                "GPU #1: AMD Radeon RX 6950 XT",
+                "GPU #2: Nvidia GeForce RTX 3060",
+            ]
+            + [f"More system data {i}" for i in range(1000)]
+        )
 
         # Create detectors
         rust_detector = validator.create_rust_implementation()

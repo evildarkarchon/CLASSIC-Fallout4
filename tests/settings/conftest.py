@@ -32,12 +32,12 @@ def temp_yaml_file(tmp_path: Path) -> Path:
             "int_value": 42,
             "float_value": math.pi,
             "list_value": [1, 2, 3],
-            "dict_value": {"nested": "value"}
+            "dict_value": {"nested": "value"},
         }
     }
 
     yaml = ruamel.yaml.YAML()
-    with Path(yaml_file).open('w') as f:
+    with Path(yaml_file).open("w") as f:
         yaml.dump(data, f)
 
     return yaml_file

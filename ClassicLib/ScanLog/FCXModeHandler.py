@@ -71,7 +71,14 @@ class FCXModeHandlerFragments:
 
             # Define sync function to run in thread pool
             def run_fcx_checks() -> tuple[str, str, list]:
-                """Run FCX checks synchronously in thread pool."""
+                """Run FCX checks synchronously in thread pool.
+
+                Returns:
+                    A tuple containing (main_result, game_result, detected_issues) where:
+                        - main_result: String containing the main files check result
+                        - game_result: String containing the game files check result
+                        - detected_issues: List of ConfigIssue objects detected during scan
+                """
                 coordinator = SetupCoordinator()
                 main_result = coordinator.generate_combined_results()
                 game_result, detected_issues = scan_game_files()
@@ -148,9 +155,6 @@ class FCXModeHandlerFragments:
         checks. It ensures that the checks can start from a clean state by acquiring
         a lock to prevent race conditions in a multi-threaded environment. All internal
         tracking variables such as results and detected issues are cleared and reset.
-
-        Returns:
-            None
         """
         with cls._fcx_lock:
             cls._fcx_checks_run = False
@@ -188,9 +192,8 @@ class FCXModeHandlerFragments:
             # Add detected configuration issues section if any issues were found
             if FCXModeHandlerFragments._detected_issues:
                 lines.append("\n--- DETECTED CONFIGURATION ISSUES ---\n\n")
-                for issue in FCXModeHandlerFragments._detected_issues:
-                    # Each ConfigIssue has a format_report() method that returns formatted text
-                    lines.append(issue.format_report())
+                # Each ConfigIssue has a format_report() method that returns formatted text
+                lines.extend(issue.format_report() for issue in FCXModeHandlerFragments._detected_issues)
         else:
             lines.extend([
                 "* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n\n",

@@ -208,11 +208,13 @@ class SetupCoordinator:
         MessageHandler calls only execute when Debug Messages setting is enabled.
         """
         from ClassicLib.YamlSettingsCache import classic_settings
+
         debug_enabled = bool(classic_settings(bool, "Debug Messages"))
         is_gui = GlobalRegistry.is_gui_mode()
 
         try:
             from ClassicLib.integration.status import get_rust_component_status
+
             status = get_rust_component_status()
 
             # Handle different acceleration states
@@ -243,7 +245,9 @@ class SetupCoordinator:
     @staticmethod
     def _log_active_acceleration(status: dict[str, Any], debug_enabled: bool, is_gui: bool) -> None:
         """Log status when Rust acceleration is active."""
-        status_msg = f"🚀 Rust Acceleration: {status['active_count']}/{status['total_count']} components active ({status['percentage']:.0f}%)"
+        status_msg = (
+            f"🚀 Rust Acceleration: {status['active_count']}/{status['total_count']} components active ({status['percentage']:.0f}%)"
+        )
         if debug_enabled:
             SetupCoordinator._display_status_message(status_msg, "INFO", is_gui)
 
@@ -305,7 +309,9 @@ class SetupCoordinator:
             msg_info(message)
         elif level == "WARNING":
             from ClassicLib import msg_warning
+
             msg_warning(message)
         elif level == "ERROR":
             from ClassicLib import msg_error
+
             msg_error(message)

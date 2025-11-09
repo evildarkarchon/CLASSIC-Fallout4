@@ -70,7 +70,7 @@ def _get_components() -> dict[str, bool]:
         dict[str, bool]: A dictionary where keys represent Rust components as
         strings and values are booleans indicating the presence of those components.
     """
-    global _components_cache
+    global _components_cache  # noqa: PLW0603
     if _components_cache is None:
         _components_cache = detect_rust_components()
     return _components_cache
@@ -115,7 +115,7 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
         ImportError: If the Rust-based file I/O implementation fails to load, though the Python
         implementation is used as a fallback.
     """
-    global _file_io_instance
+    global _file_io_instance  # noqa: PLW0603
 
     # Fast path - instance already exists
     if _file_io_instance is not None:
@@ -132,14 +132,17 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
         if not _is_rust_disabled() and components.get("file_io_core", False):
             try:
                 from ClassicLib.rust.file_io_rust import FileIOCore
+
                 logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
                 _file_io_instance = FileIOCore(encoding, errors)
-                return _file_io_instance
             except ImportError as e:
                 logger.warning(f"Failed to import Rust FileIOCore: {e}")
+            else:
+                return _file_io_instance
 
         # Fall back to Python implementation
         from ClassicLib.python.file_io_py import FileIOCore
+
         logger.debug("Using Python FileIOCore implementation")
         _file_io_instance = FileIOCore(encoding, errors)
         return _file_io_instance
@@ -166,6 +169,7 @@ def get_parser() -> Any:
         try:
             # Import the wrapper that handles both Rust and Python
             from ClassicLib.rust.parser_rust import RustLogParser
+
             logger.debug("Using RustLogParser wrapper (150x speedup potential)")
             return RustLogParser()
         except ImportError as e:
@@ -178,8 +182,8 @@ def get_parser() -> Any:
     class PythonParserWrapper:
         """Wrapper for Python parser functions to match RustLogParser interface."""
 
+        @staticmethod
         def find_segments(
-            self,
             crash_data: list[str],
             crashgen_name: str,
             xse_acronym: str,
@@ -204,10 +208,11 @@ def get_parser() -> Any:
                 crashgen_version, main_error, and processed_segments.
             """
             from ClassicLib.python.parser_py import find_segments
+
             return find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
 
+        @staticmethod
         def extract_section(
-            self,
             crash_data: list[str],
             start_marker: str,
             end_marker: str,
@@ -248,11 +253,7 @@ def get_parser() -> Any:
     return PythonParserWrapper()
 
 
-def get_formid_analyzer(
-    yamldata: ClassicScanLogsInfo,
-    show_values: bool,
-    db_exists: bool
-) -> Any:
+def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exists: bool) -> Any:
     """
     Gets an appropriate FormIDAnalyzer instance based on available components and runtime configuration.
 
@@ -277,6 +278,7 @@ def get_formid_analyzer(
     if not _is_rust_disabled() and components.get("formid_analyzer", False):
         try:
             from ClassicLib.rust.formid_rust import FormIDAnalyzer
+
             logger.debug("Using Rust FormIDAnalyzer wrapper (50x speedup potential)")
             return FormIDAnalyzer(yamldata, show_values, db_exists)
         except ImportError as e:
@@ -284,6 +286,7 @@ def get_formid_analyzer(
 
     # Fall back to Python implementation
     from ClassicLib.python.formid_py import FormIDAnalyzer
+
     logger.debug("Using Python FormIDAnalyzer implementation")
     return FormIDAnalyzer(yamldata, show_values, db_exists)
 
@@ -311,6 +314,7 @@ def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> Any:
     if not _is_rust_disabled() and components.get("plugin_analyzer", False):
         try:
             from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+
             logger.debug("Using RustPluginAnalyzer wrapper (30x speedup potential)")
             return RustPluginAnalyzer(yamldata)
         except ImportError as e:
@@ -318,6 +322,7 @@ def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> Any:
 
     # Fall back to Python implementation
     from ClassicLib.python.plugin_py import PluginAnalyzer
+
     logger.debug("Using Python PluginAnalyzer implementation")
     return PluginAnalyzer(yamldata)
 
@@ -346,6 +351,7 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> Any:
     if not _is_rust_disabled() and components.get("record_scanner", False):
         try:
             from ClassicLib.rust.record_rust import RustRecordScanner
+
             logger.debug("Using RustRecordScanner wrapper (40x speedup potential)")
             return RustRecordScanner(yamldata)
         except ImportError as e:
@@ -353,6 +359,7 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> Any:
 
     # Fall back to Python implementation
     from ClassicLib.python.record_py import RecordScanner
+
     logger.debug("Using Python RecordScanner implementation")
     return RecordScanner(yamldata)
 
@@ -381,6 +388,7 @@ def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> Any:
         try:
             # Try to import Rust report generator wrapper
             from ClassicLib.rust.report_rust import RustAcceleratedReportGenerator
+
             logger.debug("Using Rust ReportGenerator (75x speedup potential)")
             return RustAcceleratedReportGenerator(yamldata)
         except (ImportError, AttributeError) as e:
@@ -388,6 +396,7 @@ def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> Any:
 
     # Fall back to Python implementation
     from ClassicLib.python.report_py import ReportGenerator
+
     logger.debug("Using Python report generator implementation")
     return ReportGenerator(yamldata)  # type: ignore[arg-type]
 
@@ -412,6 +421,7 @@ def get_yaml_operations() -> Any:
     if not _is_rust_disabled() and components.get("yaml_operations", False):
         try:
             import classic_yaml
+
             if hasattr(classic_yaml, "YamlOperations"):
                 logger.debug("Using Rust YAML Operations (15-30x parsing, 10-20x writing speedup)")
                 return classic_yaml.YamlOperations()
@@ -447,6 +457,7 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
     if not _is_rust_disabled() and components.get("database_pool", False):
         try:
             from ClassicLib.rust.database_rust import RustAsyncDatabasePool
+
             logger.debug("Using Rust DatabasePool (25x speedup)")
             return RustAsyncDatabasePool(max_connections, cache_ttl_seconds)
         except ImportError as e:
@@ -454,6 +465,7 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
 
     # Fall back to Python implementation
     from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+
     logger.debug("Using Python AsyncDatabasePool implementation")
     return AsyncDatabasePool(max_connections)
 
@@ -485,21 +497,22 @@ def get_mod_detector() -> dict[str, Any]:
                 detect_mods_important,
                 detect_mods_single,
             )
+        except (ImportError, AttributeError) as e:
+            logger.warning(f"Failed to get Rust mod detector: {e}")
+        else:
             logger.debug("Using Rust mod detector functions (35x speedup)")
             return {
                 "detect_mods_single": detect_mods_single,
                 "detect_mods_double": detect_mods_double,
                 "detect_mods_important": detect_mods_important,
             }
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Failed to get Rust mod detector: {e}")
-
     # Fall back to Python implementation
     from ClassicLib.python.mod_detector_py import (
         detect_mods_double,
         detect_mods_important,
         detect_mods_single,
     )
+
     logger.debug("Using Python mod detector implementation")
     return {
         "detect_mods_single": detect_mods_single,
@@ -534,6 +547,7 @@ def get_yamldata(yaml_dirs: list | None = None, game: str | None = None, is_vr: 
     if not _is_rust_disabled() and components.get("yamldata", False):
         try:
             from classic_config import YamlData
+
             from ClassicLib import GlobalRegistry
             from ClassicLib.ResourceLoader import ResourceLoader
 
@@ -559,6 +573,7 @@ def get_yamldata(yaml_dirs: list | None = None, game: str | None = None, is_vr: 
 
     # Fall back to Python implementation
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+
     logger.debug("Using Python ClassicScanLogsInfo implementation")
     return ClassicScanLogsInfo()
 
@@ -680,7 +695,7 @@ def reset_cache() -> None:
     Raises:
         None
     """
-    global _components_cache
+    global _components_cache  # noqa: PLW0603
     _components_cache = None
     logger.debug("Component cache reset")
 
@@ -713,10 +728,11 @@ def get_constants() -> Any | None:
     if not _is_rust_disabled() and components.get("constants", False):
         try:
             import classic_constants
-            logger.debug("Using Rust constants module")
-            return classic_constants
         except ImportError as e:
             logger.warning(f"Failed to import classic_constants: {e}")
+        else:
+            logger.debug("Using Rust constants module")
+            return classic_constants
 
     logger.debug("Constants module not available")
     return None
@@ -744,10 +760,11 @@ def get_version_utils() -> Any | None:
     if not _is_rust_disabled() and components.get("version_utils", False):
         try:
             import classic_version
-            logger.debug("Using Rust version utilities module")
-            return classic_version
         except ImportError as e:
             logger.warning(f"Failed to import classic_version: {e}")
+        else:
+            logger.debug("Using Rust version utilities module")
+            return classic_version
 
     logger.debug("Version utilities module not available")
     return None
@@ -775,10 +792,11 @@ def get_resource_mgmt() -> Any | None:
     if not _is_rust_disabled() and components.get("resource_mgmt", False):
         try:
             import classic_resource
-            logger.debug("Using Rust resource management module")
-            return classic_resource
         except ImportError as e:
             logger.warning(f"Failed to import classic_resource: {e}")
+        else:
+            logger.debug("Using Rust resource management module")
+            return classic_resource
 
     logger.debug("Resource management module not available")
     return None
@@ -807,10 +825,11 @@ def get_xse_utils() -> Any | None:
     if not _is_rust_disabled() and components.get("xse_utils", False):
         try:
             import classic_xse
-            logger.debug("Using Rust XSE utilities module")
-            return classic_xse
         except ImportError as e:
             logger.warning(f"Failed to import classic_xse: {e}")
+        else:
+            logger.debug("Using Rust XSE utilities module")
+            return classic_xse
 
     logger.debug("XSE utilities module not available")
     return None
@@ -841,10 +860,11 @@ def get_web_utils() -> Any | None:
     if not _is_rust_disabled() and components.get("web_utils", False):
         try:
             import classic_web
-            logger.debug("Using Rust web utilities module")
-            return classic_web
         except ImportError as e:
             logger.warning(f"Failed to import classic_web: {e}")
+        else:
+            logger.debug("Using Rust web utilities module")
+            return classic_web
 
     logger.debug("Web utilities module not available")
     return None
@@ -885,10 +905,12 @@ def get_path_operations() -> Any | None:
     if not _is_rust_disabled() and components.get("path_operations", False):
         try:
             import classic_path
-            logger.debug("Using Rust path operations module (10-50x speedup)")
-            return classic_path
+
         except ImportError as e:
             logger.warning(f"Failed to import classic_path: {e}")
+        else:
+            logger.debug("Using Rust path operations module (10-50x speedup)")
+            return classic_path
 
     logger.debug("Path operations module not available, using Python fallback")
     return None
@@ -899,7 +921,7 @@ def get_orchestrator(
     fcx_mode: bool,
     show_formid_values: bool,
     formid_db_exists: bool,
-    remove_list: list[str] | None = None,
+    remove_list: tuple[str] | None = None,
 ) -> Any:
     """
     Returns an orchestrator instance for crash log processing and analysis.
@@ -921,7 +943,7 @@ def get_orchestrator(
             generated analysis reports.
         formid_db_exists: Whether the FormID database file exists and can be
             used for FormID-to-plugin resolution.
-        remove_list: Optional list of strings to filter out during processing.
+        remove_list: Optional tuple of strings to filter out during processing.
             Defaults to None.
 
     Returns:

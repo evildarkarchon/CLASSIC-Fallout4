@@ -8,16 +8,16 @@ This module provides high-performance YAML settings access with:
 """
 
 # Import all public APIs for backwards compatibility
-from .cache import YamlCache
-from .core import (
+from ClassicLib.AsyncYamlSettings.cache import YamlCache
+from ClassicLib.AsyncYamlSettings.core import (
     AsyncYamlSettingsCore,
     classic_settings_async,
     get_async_yaml_core,
     yaml_settings_async,
 )
-from .file_operations import YamlFileOperations
-from .types import T, YAMLLiteral, YAMLMapping, YAMLSequence, YAMLValue, YAMLValueOptional
-from .validators import coerce_setting_value, validate_setting_value, validate_settings_structure
+from ClassicLib.AsyncYamlSettings.file_operations import YamlFileOperations
+from ClassicLib.AsyncYamlSettings.types import T, YAMLLiteral, YAMLMapping, YAMLSequence, YAMLValue, YAMLValueOptional
+from ClassicLib.AsyncYamlSettings.validators import coerce_setting_value, validate_setting_value, validate_settings_structure
 
 __all__ = [
     # Core classes

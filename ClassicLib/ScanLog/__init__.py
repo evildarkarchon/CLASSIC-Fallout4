@@ -40,10 +40,12 @@ from ClassicLib.ScanLog.AsyncReformat import (
     reformat_single_log_async,
 )
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, write_file_async
+from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments as FCXModeHandler
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
+from ClassicLib.ScanLog.fragments import ReportFragment
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 
 # New modular components
@@ -58,9 +60,6 @@ from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 # Backward compatibility imports for tests
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo as ScanLogInfo  # For test imports
-from ClassicLib.ScanLog.fragments import ReportFragment
-from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
-
 from ClassicLib.ScanLog.ScanLogsExecutor import ClassicScanLogs, ScanLogsExecutor
 from ClassicLib.ScanLog.ScanLogsUtils import (
     complete_scan_with_summary,

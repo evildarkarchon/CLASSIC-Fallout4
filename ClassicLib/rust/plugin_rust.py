@@ -17,21 +17,24 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.exceptions import RustError, RustParseError
 from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.exceptions import RustError, RustParseError
 
 # Detect Rust-specific exception types for classic_scanlog
 _, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
 _, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
 
 
-def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
+def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[type[BaseException], ...]]:
     """Get tuple of Rust exception types to catch.
 
-    Returns tuple of (ParseError types, generic RustError types).
+    Returns:
+        A tuple containing two tuples of exception types:
+            - ParseError types (RustParseError and module-specific parse errors)
+            - Generic RustError types (RustError and module-specific scan log errors)
     """
-    parse_errors = (RustParseError,)
-    rust_errors = (RustError,)
+    parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
+    rust_errors: tuple[type[BaseException], ...] = (RustError,)
 
     # Add module-specific exceptions if available
     if _rust_parse_error:
@@ -43,6 +46,8 @@ def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
 
 
 # Get exception type tuples at module level for use in exception handlers
+parse_errors: tuple[type[BaseException], ...]
+rust_errors: tuple[type[BaseException], ...]
 parse_errors, rust_errors = _get_rust_exception_types()
 
 if TYPE_CHECKING:
@@ -81,6 +86,7 @@ class RustPluginAnalyzer:
 
         try:
             import classic_scanlog
+
             if hasattr(classic_scanlog, "PluginAnalyzer"):
                 RustPluginAnalyzerImpl = classic_scanlog.PluginAnalyzer
 
@@ -94,12 +100,7 @@ class RustPluginAnalyzer:
                 game_version_new = str(getattr(yamldata, "game_version_new", ""))
 
                 self._rust_analyzer = RustPluginAnalyzerImpl(
-                    game_ignore_plugins,
-                    ignore_list,
-                    crashgen_name,
-                    game_version,
-                    game_version_vr,
-                    game_version_new
+                    game_ignore_plugins, ignore_list, crashgen_name, game_version, game_version_vr, game_version_new
                 )
                 self._use_rust = True
                 logger.debug("🚀 RustPluginAnalyzer: Using RUST implementation (30x faster)")
@@ -114,13 +115,11 @@ class RustPluginAnalyzer:
         if not self._use_rust:
             logger.debug("⚠️  RustPluginAnalyzer: Falling back to Python implementation")
             from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
+
             self._python_analyzer = PluginAnalyzer(yamldata)
 
     def loadorder_scan_log(
-        self,
-        segment_plugins: list[str],
-        game_version: Any = None,
-        version_current: Any = None
+        self, segment_plugins: list[str], game_version: Any = None, version_current: Any = None
     ) -> tuple[dict[str, str], bool, bool]:
         """
         Scans the load order log from the provided plugins segment. The function processes
@@ -151,9 +150,7 @@ class RustPluginAnalyzer:
                 version_cur_str = str(version_current) if version_current else None
 
                 plugins_dict, plugin_limit_triggered, limit_check_disabled = self._rust_analyzer.loadorder_scan_log(
-                    segment_plugins,
-                    game_version=game_ver_str,
-                    version_current=version_cur_str
+                    segment_plugins, game_version=game_ver_str, version_current=version_cur_str
                 )
             except parse_errors as e:
                 logger.warning(f"Rust parse error in loadorder scan: {e}")
@@ -168,15 +165,11 @@ class RustPluginAnalyzer:
         if self._python_analyzer:
             return self._python_analyzer.loadorder_scan_log(segment_plugins, game_version, version_current)
         from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
+
         analyzer = PluginAnalyzer(self.yamldata)
         return analyzer.loadorder_scan_log(segment_plugins, game_version, version_current)
 
-    def check_plugin_limit(
-        self,
-        segment_plugins: list[str],
-        game_version: Any = None,
-        version_current: Any = None
-    ) -> tuple[bool, bool]:
+    def check_plugin_limit(self, segment_plugins: list[str], game_version: Any = None, version_current: Any = None) -> tuple[bool, bool]:
         """
         This function checks if the plugin count has exceeded the allowed limit for a specified configuration. It uses
         either a pre-configured analyzer or creates an instance of `PluginAnalyzer` to perform the verification.
@@ -193,6 +186,7 @@ class RustPluginAnalyzer:
         if self._python_analyzer:
             return self._python_analyzer.check_plugin_limit(segment_plugins, game_version, version_current)
         from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
+
         analyzer = PluginAnalyzer(self.yamldata)
         return analyzer.check_plugin_limit(segment_plugins, game_version, version_current)
 
@@ -226,6 +220,7 @@ class RustPluginAnalyzer:
             return self._python_analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
 
         from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
+
         analyzer = PluginAnalyzer(self.yamldata)
         return analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
 
@@ -254,6 +249,7 @@ class RustPluginAnalyzer:
             return self._python_analyzer.filter_ignored_plugins(crashlog_plugins)
 
         from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
+
         analyzer = PluginAnalyzer(self.yamldata)
         return analyzer.filter_ignored_plugins(crashlog_plugins)
 
@@ -278,6 +274,7 @@ class RustPluginAnalyzer:
         """
         # Python implementation (Rust doesn't provide parse_plugin_line)
         import re
+
         match = re.match(r"\s*\[([0-9A-Fa-f]+)\]\s+(.+)", line)
         if match:
             return match.group(1).upper(), match.group(2).strip()

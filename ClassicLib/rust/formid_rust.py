@@ -50,8 +50,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.exceptions import RustDatabaseError, RustError, RustParseError
 from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.exceptions import RustDatabaseError, RustError, RustParseError
 
 # Detect Rust-specific exception types
 _, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
@@ -59,14 +59,18 @@ _, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
 _, _rust_db_error = detect_component("classic_database", "RustDatabaseError")
 
 
-def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...], tuple[type, ...]]:
+def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[type[BaseException], ...], tuple[type[BaseException], ...]]:
     """Get tuple of Rust exception types to catch.
 
-    Returns tuple of (ParseError types, DatabaseError types, generic RustError types).
+    Returns:
+        A tuple containing three tuples of exception types:
+            - ParseError types (RustParseError and module-specific parse errors)
+            - DatabaseError types (RustDatabaseError and module-specific DB errors)
+            - Generic RustError types (RustError and module-specific scan log errors)
     """
-    parse_errors = (RustParseError,)
-    db_errors = (RustDatabaseError,)
-    rust_errors = (RustError,)
+    parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
+    db_errors: tuple[type[BaseException], ...] = (RustDatabaseError,)
+    rust_errors: tuple[type[BaseException], ...] = (RustError,)
 
     # Add module-specific exceptions if available
     if _rust_parse_error:
@@ -80,6 +84,9 @@ def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...], tup
 
 
 # Get exception type tuples at module level for use in exception handlers
+parse_errors: tuple[type[BaseException], ...]
+db_errors: tuple[type[BaseException], ...]
+rust_errors: tuple[type[BaseException], ...]
 parse_errors, db_errors, rust_errors = _get_rust_exception_types()
 
 if TYPE_CHECKING:
@@ -121,6 +128,7 @@ class FormIDAnalyzer:
 
         try:
             import classic_scanlog
+
             # Try to use FormIDAnalyzerCore (optimized version) first
             if hasattr(classic_scanlog, "FormIDAnalyzerCore"):
                 FormIDAnalyzerCore = classic_scanlog.FormIDAnalyzerCore
@@ -131,13 +139,7 @@ class FormIDAnalyzer:
                 mods_single = getattr(yamldata, "mods_single", {})
                 mods_double = getattr(yamldata, "mods_double", {})
 
-                self._rust_core_analyzer = FormIDAnalyzerCore(
-                    show_formid_values,
-                    crashgen_name,
-                    important_mods,
-                    mods_single,
-                    mods_double
-                )
+                self._rust_core_analyzer = FormIDAnalyzerCore(show_formid_values, crashgen_name, important_mods, mods_single, mods_double)
                 self._use_rust_core = True
                 logger.debug("🚀 FormIDAnalyzer: Using RUST FormIDAnalyzerCore (zero-copy optimizations)")
             elif hasattr(classic_scanlog, "FormIDAnalyzer"):
@@ -157,6 +159,7 @@ class FormIDAnalyzer:
         if not self._use_rust and not self._use_rust_core:
             logger.debug("⚠️  FormIDAnalyzer: Falling back to Python implementation")
             from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
+
             self._python_analyzer = FormIDAnalyzer(yamldata, show_formid_values, formid_db_exists)
 
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
@@ -190,6 +193,7 @@ class FormIDAnalyzer:
             try:
                 # Use simple Rust analyzer
                 import classic_scanlog
+
                 if hasattr(classic_scanlog, "extract_formids_batch"):
                     extract_formids_batch = classic_scanlog.extract_formids_batch
                     formids = extract_formids_batch([segment_callstack])
@@ -209,6 +213,7 @@ class FormIDAnalyzer:
             return self._python_analyzer.extract_formids(segment_callstack)
         # Create Python analyzer on demand
         from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
+
         analyzer = FormIDAnalyzer(self.yamldata, self.show_formid_values, self.formid_db_exists)
         return analyzer.extract_formids(segment_callstack)
 
@@ -233,6 +238,7 @@ class FormIDAnalyzer:
             try:
                 # Cache plugins once per session for efficiency
                 import hashlib
+
                 cache_key = hashlib.md5(str(sorted(plugins.items())).encode()).hexdigest()
 
                 if cache_key != self._plugin_cache_key and hasattr(self._rust_core_analyzer, "cache_plugins"):
@@ -248,6 +254,7 @@ class FormIDAnalyzer:
                     # Create ReportFragment from the result lines
                     if result_lines:
                         from ClassicLib.ScanLog.fragments import ReportFragment
+
                         fragment = ReportFragment.from_lines(result_lines)
                         report.add_fragment(fragment)
                 else:
@@ -268,6 +275,7 @@ class FormIDAnalyzer:
         else:
             # Create Python analyzer on demand for formid_match
             from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
+
             analyzer = FormIDAnalyzer(self.yamldata, self.show_formid_values, self.formid_db_exists)
             fragment = analyzer.formid_match(formids, plugins)
             report.add_fragment(fragment)
@@ -291,6 +299,7 @@ class FormIDAnalyzer:
         if self._use_rust:
             try:
                 import classic_scanlog
+
                 if hasattr(classic_scanlog, "extract_formids_batch"):
                     extract_formids_batch = classic_scanlog.extract_formids_batch
                     return extract_formids_batch(segments)

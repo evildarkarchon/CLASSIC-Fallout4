@@ -20,38 +20,36 @@ class ValidationUtilities:
 
     # FormID validation patterns
     FORMID_PATTERNS = {
-        "hex_formid": re.compile(r'0x[0-9A-Fa-f]{8}'),
-        "decimal_formid": re.compile(r'\b\d{1,10}\b'),
-        "formid_with_plugin": re.compile(r'0x[0-9A-Fa-f]{8}\s*\([^)]+\)'),
-        "base_game_formid": re.compile(r'0x00[0-9A-Fa-f]{6}'),
-        "dlc_formid": re.compile(r'0x0[1-6][0-9A-Fa-f]{6}'),
-        "esl_formid": re.compile(r'0xFE[0-9A-Fa-f]{6}'),
-        "mod_formid": re.compile(r'0x[0-9A-Fa-f][7-9A-F][0-9A-Fa-f]{6}')
+        "hex_formid": re.compile(r"0x[0-9A-Fa-f]{8}"),
+        "decimal_formid": re.compile(r"\b\d{1,10}\b"),
+        "formid_with_plugin": re.compile(r"0x[0-9A-Fa-f]{8}\s*\([^)]+\)"),
+        "base_game_formid": re.compile(r"0x00[0-9A-Fa-f]{6}"),
+        "dlc_formid": re.compile(r"0x0[1-6][0-9A-Fa-f]{6}"),
+        "esl_formid": re.compile(r"0xFE[0-9A-Fa-f]{6}"),
+        "mod_formid": re.compile(r"0x[0-9A-Fa-f][7-9A-F][0-9A-Fa-f]{6}"),
     }
 
     # Plugin validation patterns
     PLUGIN_PATTERNS = {
-        "esm_file": re.compile(r'\.esm$', re.IGNORECASE),
-        "esp_file": re.compile(r'\.esp$', re.IGNORECASE),
-        "esl_file": re.compile(r'\.esl$', re.IGNORECASE),
+        "esm_file": re.compile(r"\.esm$", re.IGNORECASE),
+        "esp_file": re.compile(r"\.esp$", re.IGNORECASE),
+        "esl_file": re.compile(r"\.esl$", re.IGNORECASE),
         "valid_plugin": re.compile(r'^[^<>:"/\\|?*]+\.(esm|esp|esl)$', re.IGNORECASE),
-        "load_order_entry": re.compile(r'^\s*\[([0-9A-F]{2}|FE:[0-9A-F]{3})\]\s*(.+)$', re.IGNORECASE),
-        "master_file": re.compile(r'^(Fallout4|DLC\w+)\.esm$', re.IGNORECASE)
+        "load_order_entry": re.compile(r"^\s*\[([0-9A-F]{2}|FE:[0-9A-F]{3})\]\s*(.+)$", re.IGNORECASE),
+        "master_file": re.compile(r"^(Fallout4|DLC\w+)\.esm$", re.IGNORECASE),
     }
 
     # Record type patterns
     RECORD_PATTERNS = {
-        "tes_form": re.compile(r'\bTESForm\b'),
-        "bgs_keyword": re.compile(r'\bBGSKeyword\b'),
-        "tes_object": re.compile(r'\bTESObject\w+\b'),
-        "bgs_object": re.compile(r'\bBGS\w+\b'),
-        "memory_address": re.compile(r'\b0x[0-9A-Fa-f]{8,16}\b')
+        "tes_form": re.compile(r"\bTESForm\b"),
+        "bgs_keyword": re.compile(r"\bBGSKeyword\b"),
+        "tes_object": re.compile(r"\bTESObject\w+\b"),
+        "bgs_object": re.compile(r"\bBGS\w+\b"),
+        "memory_address": re.compile(r"\b0x[0-9A-Fa-f]{8,16}\b"),
     }
 
     @staticmethod
-    def validate_formids(formids: list[str],
-                        strict: bool = True,
-                        allow_decimal: bool = False) -> dict[str, Any]:
+    def validate_formids(formids: list[str], strict: bool = True, allow_decimal: bool = False) -> dict[str, Any]:
         """
         Validate a list of extracted FormIDs for correctness.
 
@@ -76,7 +74,7 @@ class ValidationUtilities:
             "formids_with_plugins": 0,
             "validation_errors": [],
             "formid_distribution": {},
-            "validity_ratio": 0.0
+            "validity_ratio": 0.0,
         }
 
         if not formids:
@@ -143,8 +141,7 @@ class ValidationUtilities:
         return results
 
     @staticmethod
-    def validate_plugins(plugins: list[str] | dict[str, str],
-                        check_load_order: bool = True) -> dict[str, Any]:
+    def validate_plugins(plugins: list[str] | dict[str, str], check_load_order: bool = True) -> dict[str, Any]:
         """
         Validate a list or dictionary of plugins for correctness.
 
@@ -174,11 +171,10 @@ class ValidationUtilities:
             "plugin_errors": [],
             "validity_ratio": 0.0,
             "has_essential_masters": False,
-            "load_order_indices": []
+            "load_order_indices": [],
         }
 
-        essential_masters = {"Fallout4.esm", "DLCRobot.esm", "DLCworkshop01.esm",
-                           "DLCCoast.esm", "DLCNukaWorld.esm"}
+        essential_masters = {"Fallout4.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCCoast.esm", "DLCNukaWorld.esm"}
         found_masters = set()
 
         for i, plugin_name in enumerate(plugin_names):
@@ -220,7 +216,7 @@ class ValidationUtilities:
             for i, index in enumerate(plugin_indices):
                 if isinstance(index, str):
                     # Check hex format
-                    if not re.match(r'^([0-9A-F]{2}|FE:[0-9A-F]{3})$', index, re.IGNORECASE):
+                    if not re.match(r"^([0-9A-F]{2}|FE:[0-9A-F]{3})$", index, re.IGNORECASE):
                         results["load_order_errors"].append(f"Invalid load order index: {index}")
                     # Check for valid range
                     elif index.startswith("FE:"):
@@ -260,7 +256,7 @@ class ValidationUtilities:
             "memory_addresses": 0,
             "match_errors": [],
             "record_types": set(),
-            "validity_ratio": 0.0
+            "validity_ratio": 0.0,
         }
 
         for i, match in enumerate(record_matches):
@@ -311,9 +307,7 @@ class ValidationUtilities:
         return results
 
     @staticmethod
-    def compare_extraction_results(rust_results: dict[str, Any],
-                                 python_results: dict[str, Any],
-                                 tolerance: float = 0.1) -> dict[str, Any]:
+    def compare_extraction_results(rust_results: dict[str, Any], python_results: dict[str, Any], tolerance: float = 0.1) -> dict[str, Any]:
         """
         Compare extraction results between Rust and Python implementations.
 
@@ -325,14 +319,7 @@ class ValidationUtilities:
         Returns:
             Dictionary containing comparison results
         """
-        comparison = {
-            "overall_match": True,
-            "differences": [],
-            "statistics": {},
-            "rust_stats": {},
-            "python_stats": {},
-            "match_ratio": 1.0
-        }
+        comparison = {"overall_match": True, "differences": [], "statistics": {}, "rust_stats": {}, "python_stats": {}, "match_ratio": 1.0}
 
         # Compare common keys
         common_keys = set(rust_results.keys()) & set(python_results.keys())
@@ -368,9 +355,7 @@ class ValidationUtilities:
                     if similarity >= (1.0 - tolerance):
                         matches += 1
                     else:
-                        comparison["differences"].append(
-                            f"{key}: similarity {similarity:.2f} < threshold {1.0-tolerance:.2f}"
-                        )
+                        comparison["differences"].append(f"{key}: similarity {similarity:.2f} < threshold {1.0 - tolerance:.2f}")
                         comparison["overall_match"] = False
                 else:
                     matches += 1  # Both empty
@@ -379,7 +364,7 @@ class ValidationUtilities:
                     "rust_count": len(rust_value),
                     "python_count": len(python_value),
                     "common_items": len(intersection),
-                    "similarity": similarity if union else 1.0
+                    "similarity": similarity if union else 1.0,
                 }
 
             elif isinstance(rust_value, (int, float)) and isinstance(python_value, (int, float)):
@@ -391,9 +376,7 @@ class ValidationUtilities:
                     if relative_diff <= tolerance:
                         matches += 1
                     else:
-                        comparison["differences"].append(
-                            f"{key}: relative difference {relative_diff:.2f} > tolerance {tolerance}"
-                        )
+                        comparison["differences"].append(f"{key}: relative difference {relative_diff:.2f} > tolerance {tolerance}")
                         comparison["overall_match"] = False
                 else:
                     # rust_value is 0 but python_value is not
@@ -404,16 +387,14 @@ class ValidationUtilities:
                     "rust_value": rust_value,
                     "python_value": python_value,
                     "absolute_diff": abs(rust_value - python_value),
-                    "relative_diff": relative_diff if rust_value != 0 else float('inf')
+                    "relative_diff": relative_diff if rust_value != 0 else float("inf"),
                 }
 
             # Direct comparison
             elif rust_value == python_value:
                 matches += 1
             else:
-                comparison["differences"].append(
-                    f"{key}: rust={rust_value}, python={python_value}"
-                )
+                comparison["differences"].append(f"{key}: rust={rust_value}, python={python_value}")
                 comparison["overall_match"] = False
 
         if total_comparisons > 0:
@@ -422,9 +403,9 @@ class ValidationUtilities:
         return comparison
 
     @staticmethod
-    def validate_performance_results(benchmark_results: dict[str, Any],
-                                   expected_targets: dict[str, float],
-                                   performance_multipliers: dict[str, str] = None) -> dict[str, Any]:
+    def validate_performance_results(
+        benchmark_results: dict[str, Any], expected_targets: dict[str, float], performance_multipliers: dict[str, str] = None
+    ) -> dict[str, Any]:
         """
         Validate performance benchmark results against expected targets.
 
@@ -441,7 +422,7 @@ class ValidationUtilities:
             "target_violations": [],
             "performance_summary": {},
             "multiplier_validation": {},
-            "overall_grade": "A"
+            "overall_grade": "A",
         }
 
         violations = 0
@@ -452,21 +433,19 @@ class ValidationUtilities:
                 actual_time = benchmark_results[component]["statistics"]["avg_time"]
 
                 meets_target = actual_time <= target_time
-                performance_ratio = actual_time / target_time if target_time > 0 else float('inf')
+                performance_ratio = actual_time / target_time if target_time > 0 else float("inf")
 
                 validation["performance_summary"][component] = {
                     "target_time": target_time,
                     "actual_time": actual_time,
                     "meets_target": meets_target,
                     "performance_ratio": performance_ratio,
-                    "margin": (target_time - actual_time) / target_time if target_time > 0 else 0.0
+                    "margin": (target_time - actual_time) / target_time if target_time > 0 else 0.0,
                 }
 
                 if not meets_target:
                     violations += 1
-                    validation["target_violations"].append(
-                        f"{component}: {actual_time:.3f}s > {target_time:.3f}s target"
-                    )
+                    validation["target_violations"].append(f"{component}: {actual_time:.3f}s > {target_time:.3f}s target")
                     validation["meets_targets"] = False
 
         # Validate performance multipliers if provided
@@ -477,7 +456,7 @@ class ValidationUtilities:
                     # For now, just record the expected multiplier
                     validation["multiplier_validation"][component] = {
                         "expected_multiplier": expected_multiplier,
-                        "validation_status": "requires_baseline_comparison"
+                        "validation_status": "requires_baseline_comparison",
                     }
 
         # Calculate overall grade
@@ -507,12 +486,7 @@ class ValidationUtilities:
         Returns:
             Formatted validation report as string
         """
-        report_lines = [
-            "=" * 80,
-            "RUST INTEGRATION VALIDATION REPORT",
-            "=" * 80,
-            ""
-        ]
+        report_lines = ["=" * 80, "RUST INTEGRATION VALIDATION REPORT", "=" * 80, ""]
 
         # Summary section
         report_lines.append("VALIDATION SUMMARY:")
@@ -554,12 +528,18 @@ class ValidationUtilities:
 
             if "validity_ratio" in results:
                 # Data validation results
-                report_lines.append(f"  Total Items: {results.get('total_formids', results.get('total_plugins', results.get('total_matches', 0)))}")
-                report_lines.append(f"  Valid Items: {results.get('valid_formids', results.get('valid_plugins', results.get('valid_matches', 0)))}")
-                report_lines.append(f"  Invalid Items: {results.get('invalid_formids', results.get('invalid_plugins', results.get('invalid_matches', 0)))}")
+                report_lines.append(
+                    f"  Total Items: {results.get('total_formids', results.get('total_plugins', results.get('total_matches', 0)))}"
+                )
+                report_lines.append(
+                    f"  Valid Items: {results.get('valid_formids', results.get('valid_plugins', results.get('valid_matches', 0)))}"
+                )
+                report_lines.append(
+                    f"  Invalid Items: {results.get('invalid_formids', results.get('invalid_plugins', results.get('invalid_matches', 0)))}"
+                )
                 report_lines.append(f"  Validity Ratio: {results['validity_ratio']:.1%}")
 
-                errors = results.get('validation_errors', results.get('plugin_errors', results.get('match_errors', [])))
+                errors = results.get("validation_errors", results.get("plugin_errors", results.get("match_errors", [])))
                 if errors:
                     report_lines.append("  Errors:")
                     for error in errors[:5]:  # Show first 5 errors
@@ -572,11 +552,11 @@ class ValidationUtilities:
                 report_lines.append(f"  Overall Match: {results['overall_match']}")
                 report_lines.append(f"  Match Ratio: {results.get('match_ratio', 0.0):.1%}")
 
-                if results.get('differences'):
+                if results.get("differences"):
                     report_lines.append("  Differences:")
-                    for diff in results['differences'][:5]:
+                    for diff in results["differences"][:5]:
                         report_lines.append(f"    - {diff}")
-                    if len(results['differences']) > 5:
+                    if len(results["differences"]) > 5:
                         report_lines.append(f"    ... and {len(results['differences']) - 5} more differences")
 
             elif "meets_targets" in results:
@@ -584,16 +564,11 @@ class ValidationUtilities:
                 report_lines.append(f"  Meets Targets: {results['meets_targets']}")
                 report_lines.append(f"  Overall Grade: {results.get('overall_grade', 'N/A')}")
 
-                if results.get('target_violations'):
+                if results.get("target_violations"):
                     report_lines.append("  Target Violations:")
-                    for violation in results['target_violations']:
+                    for violation in results["target_violations"]:
                         report_lines.append(f"    - {violation}")
 
-        report_lines.extend([
-            "",
-            "=" * 80,
-            f"Report generated at {__import__('datetime').datetime.now().isoformat()}",
-            "=" * 80
-        ])
+        report_lines.extend(["", "=" * 80, f"Report generated at {__import__('datetime').datetime.now().isoformat()}", "=" * 80])
 
         return "\n".join(report_lines)

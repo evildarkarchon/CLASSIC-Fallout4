@@ -46,6 +46,7 @@ class TestAsyncResourceTracker:
 
         # Force garbage collection
         import gc
+
         gc.collect()
 
         # Check that tracker detects the leak

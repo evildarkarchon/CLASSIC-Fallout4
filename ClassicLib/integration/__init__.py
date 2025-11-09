@@ -13,22 +13,11 @@ The integration layer handles:
 
 from __future__ import annotations
 
-# Exception types for Rust integration errors
-from ClassicLib.integration.exceptions import (
-    RustError,
-    RustIOError,
-    RustParseError,
-    RustConfigError,
-    RustDatabaseError,
-    RustMemoryError,
-    RustConcurrencyError,
-)
-
 # Centralized component detection (Phase 3)
 from ClassicLib.integration.detector import (
     detect_component,
-    is_component_available,
     get_component,
+    is_component_available,
 )
 
 # Runtime diagnostics (Phase 3)
@@ -36,6 +25,17 @@ from ClassicLib.integration.diagnostics import (
     get_runtime_stats,
     is_runtime_healthy,
     print_runtime_status,
+)
+
+# Exception types for Rust integration errors
+from ClassicLib.integration.exceptions import (
+    RustConcurrencyError,
+    RustConfigError,
+    RustDatabaseError,
+    RustError,
+    RustIOError,
+    RustMemoryError,
+    RustParseError,
 )
 
 # Note: We don't import other submodules here to avoid circular dependencies.

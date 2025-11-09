@@ -21,7 +21,7 @@ def sample_text_file(tmp_path: Path) -> Path:
 def sample_binary_file(tmp_path: Path) -> Path:
     """Create a sample binary file for testing."""
     file_path = tmp_path / "sample.bin"
-    file_path.write_bytes(b"\x00\x01\x02\x03\xFF\xFE\xFD")
+    file_path.write_bytes(b"\x00\x01\x02\x03\xff\xfe\xfd")
     return file_path
 
 

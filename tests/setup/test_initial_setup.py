@@ -55,9 +55,9 @@ class TestInitialSetup:
         """Test initial setup when no game path is configured."""
         # Mock batch_get_settings to return values for initial setup
         mock_batch_get.return_value = [
-            "7.31.0",     # classic_ver
-            "Fallout4",   # game_name
-            None,         # game_path (not configured)
+            "7.31.0",  # classic_ver
+            "Fallout4",  # game_name
+            None,  # game_path (not configured)
         ]
 
         # Run initial setup
@@ -104,9 +104,9 @@ class TestInitialSetup:
         """Test initial setup when game path is already configured."""
         # Mock batch_get_settings to return values with game path configured
         mock_batch_get.return_value = [
-            "7.31.0",              # classic_ver
-            "Fallout4",            # game_name
-            "C:/Games/Fallout4",   # game_path (configured)
+            "7.31.0",  # classic_ver
+            "Fallout4",  # game_name
+            "C:/Games/Fallout4",  # game_path (configured)
         ]
 
         # Run initial setup
@@ -128,16 +128,22 @@ class TestInitialSetup:
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_version(
-        self, mock_get_vr: MagicMock, mock_msg_info: MagicMock, mock_batch_get: MagicMock, mock_file_gen: MagicMock, mock_configure: MagicMock, coordinator: SetupCoordinator
+        self,
+        mock_get_vr: MagicMock,
+        mock_msg_info: MagicMock,
+        mock_batch_get: MagicMock,
+        mock_file_gen: MagicMock,
+        mock_configure: MagicMock,
+        coordinator: SetupCoordinator,
     ) -> None:
         """Test that TypeError is raised when classic_ver is not a string."""
         mock_file_gen.return_value = None
 
         # Mock batch_get_settings to return non-string for version
         mock_batch_get.return_value = [
-            123,         # classic_ver (not a string)
+            123,  # classic_ver (not a string)
             "Fallout4",  # game_name
-            None,        # game_path
+            None,  # game_path
         ]
 
         # Should raise TypeError
@@ -150,7 +156,13 @@ class TestInitialSetup:
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_game_name(
-        self, mock_get_vr: MagicMock, mock_msg_info: MagicMock, mock_batch_get: MagicMock, mock_file_gen: MagicMock, mock_configure: MagicMock, coordinator: SetupCoordinator
+        self,
+        mock_get_vr: MagicMock,
+        mock_msg_info: MagicMock,
+        mock_batch_get: MagicMock,
+        mock_file_gen: MagicMock,
+        mock_configure: MagicMock,
+        coordinator: SetupCoordinator,
     ) -> None:
         """Test that TypeError is raised when game_name is not a string."""
         mock_file_gen.return_value = None
@@ -158,8 +170,8 @@ class TestInitialSetup:
         # Mock batch_get_settings to return non-string for game name
         mock_batch_get.return_value = [
             "7.31.0",  # classic_ver
-            None,      # game_name (not a string)
-            None,      # game_path
+            None,  # game_name (not a string)
+            None,  # game_path
         ]
 
         # Should raise TypeError

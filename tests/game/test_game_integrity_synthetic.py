@@ -78,7 +78,7 @@ class SyntheticGameFileGenerator:
         # Mock file entries
         entries = []
         for i in range(num_files):
-            entry = f"file_{i}.dds:offset:{i*1000}:size:1000\n".encode()
+            entry = f"file_{i}.dds:offset:{i * 1000}:size:1000\n".encode()
             entries.append(entry)
         return header + b"".join(entries)
 
@@ -247,17 +247,22 @@ class TestGameIntegritySynthetic:
         # Create synthetic FormID conflicts using proper hex format
         plugin_formids = {
             "SyntheticMod_0.esp": [
-                "03001000", "03001001", "03001002",  # Plugin index 03
-                "00000014"  # Override from base game
+                "03001000",
+                "03001001",
+                "03001002",  # Plugin index 03
+                "00000014",  # Override from base game
             ],
             "SyntheticMod_1.esp": [
-                "04001000", "04001001",  # Plugin index 04
+                "04001000",
+                "04001001",  # Plugin index 04
                 "03001000",  # Conflict! Same FormID as Mod_0
-                "00000014"  # Another base game override
+                "00000014",  # Another base game override
             ],
             "SyntheticLight.esl": [
-                "FE000800", "FE000801", "FE000802"  # Light plugin FormIDs
-            ]
+                "FE000800",
+                "FE000801",
+                "FE000802",  # Light plugin FormIDs
+            ],
         }
 
         # Detect conflicts
@@ -335,12 +340,12 @@ class TestGameIntegritySynthetic:
         light_plugin_data = {
             "SyntheticLight.esl": {
                 "formids": ["FE000800", "FE000801", "FE000900", "FE000FFF"],  # Valid range
-                "type": "light"
+                "type": "light",
             },
             "InvalidLight.esl": {
                 "formids": ["FE001000", "FE002000"],  # Outside valid range!
-                "type": "light"
-            }
+                "type": "light",
+            },
         }
 
         # Validate light plugins
@@ -411,10 +416,7 @@ class TestGameIntegritySynthetic:
 
         # Should detect our synthetic archives
         assert len(archive_results) > 0
-        assert all(
-            result["valid"] or result["reason"] == "synthetic"
-            for result in archive_results.values()
-        )
+        assert all(result["valid"] or result["reason"] == "synthetic" for result in archive_results.values())
 
     def test_performance_with_many_formids(self, synthetic_game_dir):
         """Test performance with many synthetic FormIDs."""
@@ -439,6 +441,7 @@ class TestGameIntegritySynthetic:
         plugin_path.write_bytes(content)
 
         import time
+
         start = time.time()
 
         checker = GameIntegrityChecker(str(synthetic_game_dir))

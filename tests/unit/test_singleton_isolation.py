@@ -42,7 +42,7 @@ class TestSingletonIsolation:
         manager = DatabasePoolManager()
 
         # Should not have the marker from previous test
-        assert not hasattr(manager, '_test_marker'), "Singleton not properly isolated between tests"
+        assert not hasattr(manager, "_test_marker"), "Singleton not properly isolated between tests"
 
         # Set a different marker
         manager._test_marker = "test_2"
@@ -122,9 +122,9 @@ class TestSingletonIsolation:
         """Test that track_version_cache_usage fixture works correctly."""
         # Get initial stats (should be empty)
         stats = track_version_cache_usage()
-        assert stats['size'] == 0
-        assert stats['hits'] == 0
-        assert stats['misses'] == 0
+        assert stats["size"] == 0
+        assert stats["hits"] == 0
+        assert stats["misses"] == 0
 
         # Parse some versions
         crashgen_version_gen("1.28.6")
@@ -133,10 +133,10 @@ class TestSingletonIsolation:
 
         # Check stats
         stats = track_version_cache_usage()
-        assert stats['size'] == 2
-        assert stats['hits'] == 1
-        assert stats['misses'] == 2
-        assert stats['hit_rate'] == 1/3
+        assert stats["size"] == 2
+        assert stats["hits"] == 1
+        assert stats["misses"] == 2
+        assert stats["hit_rate"] == 1 / 3
 
 
 class TestParallelIsolation:

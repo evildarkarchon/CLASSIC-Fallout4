@@ -37,8 +37,6 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Dict
-
 __version__: str
 
 class MetricsSummary:
@@ -81,7 +79,6 @@ class MetricsSummary:
             >>> print(repr(stats))
             MetricsSummary(count=2, total=0.300s, average=0.150s, min=0.100s, max=0.200s)
         """
-
 
 class Timer:
     """RAII timer that automatically records timing on drop.
@@ -150,7 +147,6 @@ class Timer:
             A string representation suitable for debugging.
         """
 
-
 def record_timing(name: str, duration_secs: float) -> None:
     """Record a timing measurement.
 
@@ -171,8 +167,7 @@ def record_timing(name: str, duration_secs: float) -> None:
         2
     """
 
-
-def get_summary() -> Dict[str, MetricsSummary]:
+def get_summary() -> dict[str, MetricsSummary]:
     """Get summary statistics for all recorded metrics.
 
     Returns a dictionary mapping operation names to MetricsSummary objects
@@ -193,7 +188,6 @@ def get_summary() -> Dict[str, MetricsSummary]:
         Count: 2
     """
 
-
 def clear_metrics() -> None:
     """Clear all recorded metrics.
 
@@ -209,7 +203,6 @@ def clear_metrics() -> None:
         0
     """
 
-
 def reset_metrics() -> None:
     """Alias for clear_metrics() for API compatibility.
 
@@ -223,7 +216,6 @@ def reset_metrics() -> None:
         >>> print(len(summary))
         0
     """
-
 
 def start_timer(name: str) -> Timer:
     """Start a new timer.

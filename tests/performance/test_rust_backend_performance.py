@@ -60,17 +60,11 @@ class TestSingleLogPerformance:
     ):
         """Benchmark single log processing speed"""
 
-        result = benchmark(
-            orchestrator.process_crash_log,
-            single_crash_log
-        )
+        result = benchmark(orchestrator.process_crash_log, single_crash_log)
 
         # Target: < 100ms for typical logs (Rust-accelerated)
         # We allow up to 200ms for larger/complex logs
-        assert result.processing_time_ms < 200, (
-            f"Single log processing too slow: {result.processing_time_ms}ms "
-            f"(target: < 200ms)"
-        )
+        assert result.processing_time_ms < 200, f"Single log processing too slow: {result.processing_time_ms}ms (target: < 200ms)"
 
     def test_single_log_consistency(
         self,
@@ -95,8 +89,7 @@ class TestSingleLogPerformance:
         # Performance should be consistent (low variation)
         # Allow up to 30% variation due to system load
         assert coefficient_of_variation < 0.3, (
-            f"Performance too inconsistent: CV={coefficient_of_variation:.2f} "
-            f"(mean={mean_time:.1f}ms, std={std_dev:.1f}ms)"
+            f"Performance too inconsistent: CV={coefficient_of_variation:.2f} (mean={mean_time:.1f}ms, std={std_dev:.1f}ms)"
         )
 
 
@@ -126,10 +119,7 @@ class TestBatchPerformance:
         avg_time = result.total_time_ms / len(logs)
 
         # Target: < 150ms per log in batch
-        assert avg_time < 150, (
-            f"Batch processing too slow: {avg_time:.1f}ms per log "
-            f"(target: < 150ms)"
-        )
+        assert avg_time < 150, f"Batch processing too slow: {avg_time:.1f}ms per log (target: < 150ms)"
 
     def test_batch_throughput_medium(
         self,
@@ -152,10 +142,7 @@ class TestBatchPerformance:
         avg_time = result.total_time_ms / len(logs)
 
         # Target: < 100ms per log (better efficiency with larger batch)
-        assert avg_time < 100, (
-            f"Batch processing too slow: {avg_time:.1f}ms per log "
-            f"(target: < 100ms)"
-        )
+        assert avg_time < 100, f"Batch processing too slow: {avg_time:.1f}ms per log (target: < 100ms)"
 
     @pytest.mark.slow
     def test_batch_throughput_large(
@@ -180,16 +167,10 @@ class TestBatchPerformance:
         total_seconds = result.total_time_ms / 1000
 
         # Target: < 50ms per log average (parallel efficiency)
-        assert avg_time < 50, (
-            f"Large batch processing too slow: {avg_time:.1f}ms per log "
-            f"(target: < 50ms)"
-        )
+        assert avg_time < 50, f"Large batch processing too slow: {avg_time:.1f}ms per log (target: < 50ms)"
 
         # Target: Complete 20 logs in < 2 seconds
-        assert total_seconds < 2.0, (
-            f"Total batch time too high: {total_seconds:.2f}s "
-            f"(target: < 2s for 20 logs)"
-        )
+        assert total_seconds < 2.0, f"Total batch time too high: {total_seconds:.2f}s (target: < 2s for 20 logs)"
 
 
 @pytest.mark.performance
@@ -215,10 +196,7 @@ class TestParallelismEfficiency:
         # Parallelism factor should be > 1 (indicating speedup)
         # For perfect parallelism on 10 cores, factor would be ~10
         # We expect at least 2x due to GIL and overhead
-        assert result.parallelism_factor > 2.0, (
-            f"Parallelism factor too low: {result.parallelism_factor:.2f}x "
-            f"(target: > 2.0x)"
-        )
+        assert result.parallelism_factor > 2.0, f"Parallelism factor too low: {result.parallelism_factor:.2f}x (target: > 2.0x)"
 
     def test_scaling_with_concurrency(
         self,
@@ -242,10 +220,7 @@ class TestParallelismEfficiency:
 
         # Higher concurrency should be faster (or at least not slower)
         # Allow some tolerance for overhead
-        assert times[10] <= times[1] * 1.2, (
-            f"Concurrency not improving performance: "
-            f"1 worker={times[1]}ms, 10 workers={times[10]}ms"
-        )
+        assert times[10] <= times[1] * 1.2, f"Concurrency not improving performance: 1 worker={times[1]}ms, 10 workers={times[10]}ms"
 
     def test_concurrent_overhead(
         self,
@@ -315,10 +290,7 @@ class TestMemoryEfficiency:
         memory_increase_mb = (final_memory - baseline_memory) / 1024 / 1024
 
         # Single log should use < 50MB
-        assert memory_increase_mb < 50, (
-            f"Single log memory usage too high: {memory_increase_mb:.1f}MB "
-            f"(target: < 50MB)"
-        )
+        assert memory_increase_mb < 50, f"Single log memory usage too high: {memory_increase_mb:.1f}MB (target: < 50MB)"
 
     @pytest.mark.slow
     def test_memory_usage_batch(
@@ -357,16 +329,11 @@ class TestMemoryEfficiency:
         memory_increase_mb = (final_memory - baseline_memory) / 1024 / 1024
 
         # Batch should use < 200MB
-        assert memory_increase_mb < 200, (
-            f"Batch memory usage too high: {memory_increase_mb:.1f}MB "
-            f"(target: < 200MB for {len(logs)} logs)"
-        )
+        assert memory_increase_mb < 200, f"Batch memory usage too high: {memory_increase_mb:.1f}MB (target: < 200MB for {len(logs)} logs)"
 
         # Memory per log should be reasonable
         memory_per_log = memory_increase_mb / len(logs)
-        assert memory_per_log < 10, (
-            f"Memory per log too high: {memory_per_log:.1f}MB/log"
-        )
+        assert memory_per_log < 10, f"Memory per log too high: {memory_per_log:.1f}MB/log"
 
     @pytest.mark.slow
     def test_no_memory_leaks(
@@ -415,8 +382,7 @@ class TestMemoryEfficiency:
 
         # Allow up to 20MB growth over 5 iterations (caching, etc.)
         assert growth < 20, (
-            f"Memory leak detected: grew {growth:.1f}MB over 5 iterations "
-            f"(first={first_iteration:.1f}MB, last={last_iteration:.1f}MB)"
+            f"Memory leak detected: grew {growth:.1f}MB over 5 iterations (first={first_iteration:.1f}MB, last={last_iteration:.1f}MB)"
         )
 
 
@@ -444,10 +410,7 @@ class TestPerformanceTargets:
         avg_time = statistics.mean(times)
 
         # Target: 15-20ms average (allow up to 50ms for complex logs)
-        assert avg_time < 50, (
-            f"Single log processing target not met: {avg_time:.1f}ms average "
-            f"(target: < 50ms)"
-        )
+        assert avg_time < 50, f"Single log processing target not met: {avg_time:.1f}ms average (target: < 50ms)"
 
     def test_batch_10_logs_target_150_200ms(
         self,
@@ -469,10 +432,7 @@ class TestPerformanceTargets:
         )
 
         # Target: < 200ms for 10 logs
-        assert result.total_time_ms < 200, (
-            f"10-log batch target not met: {result.total_time_ms}ms "
-            f"(target: < 200ms)"
-        )
+        assert result.total_time_ms < 200, f"10-log batch target not met: {result.total_time_ms}ms (target: < 200ms)"
 
     @pytest.mark.slow
     def test_batch_100_logs_target_1_5_2s(
@@ -503,10 +463,7 @@ class TestPerformanceTargets:
         total_seconds = result.total_time_ms / 1000
 
         # Target: < 2s for 100 logs
-        assert total_seconds < 2.0, (
-            f"100-log batch target not met: {total_seconds:.2f}s "
-            f"(target: < 2.0s)"
-        )
+        assert total_seconds < 2.0, f"100-log batch target not met: {total_seconds:.2f}s (target: < 2.0s)"
 
     def test_parallelism_factor_target(
         self,
@@ -528,7 +485,4 @@ class TestPerformanceTargets:
         )
 
         # Target: > 2.0x parallelism factor
-        assert result.parallelism_factor > 2.0, (
-            f"Parallelism factor target not met: {result.parallelism_factor:.2f}x "
-            f"(target: > 2.0x)"
-        )
+        assert result.parallelism_factor > 2.0, f"Parallelism factor target not met: {result.parallelism_factor:.2f}x (target: > 2.0x)"

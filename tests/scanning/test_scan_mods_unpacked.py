@@ -27,6 +27,7 @@ def mock_settings():
         patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache,
         patch("ClassicLib.ScanGame.ScanGameCore.yaml_settings") as mock_yaml_core,
     ):
+
         def yaml_side_effect(type_, yaml_key, setting_path, default=None):
             settings_map = {
                 "catch_log_errors": ["error", "warning", "critical"],
@@ -112,8 +113,8 @@ class TestScanModsUnpacked:
 
     @pytest.mark.asyncio
     async def test_scan_mods_unpacked_basic(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test basic scanning of unpacked mod files."""
         # Create test file structure
         mod1_dir = mock_paths["mods"] / "TestMod1"
@@ -147,8 +148,8 @@ class TestScanModsUnpacked:
 
     @pytest.mark.asyncio
     async def test_scan_mods_unpacked_dds_dimensions(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test detection of invalid DDS dimensions."""
         # Create DDS files with odd dimensions
         mod_dir = mock_paths["mods"] / "DDSTestMod"
@@ -172,8 +173,8 @@ class TestScanModsUnpacked:
 
     @pytest.mark.asyncio
     async def test_scan_mods_unpacked_concurrent_dds_processing(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test concurrent DDS file processing with semaphore limits."""
         # Create many DDS files
         mod_dir = mock_paths["mods"] / "ManyDDSMod"
@@ -213,8 +214,8 @@ class TestScanModsUnpacked:
 
     @pytest.mark.asyncio
     async def test_scan_mods_unpacked_xse_and_previs_detection(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test detection of XSE files and previs files."""
         # Create mod with XSE scripts (using exact filename from mock)
         xse_mod = mock_paths["mods"] / "XSEMod" / "Scripts"
@@ -236,8 +237,8 @@ class TestScanModsUnpacked:
 
     @pytest.mark.asyncio
     async def test_scan_mods_unpacked_cleanup_operations(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test file cleanup operations (moving files to backup)."""
         # Create files to be cleaned up
         mod_dir = mock_paths["mods"] / "CleanupTestMod"

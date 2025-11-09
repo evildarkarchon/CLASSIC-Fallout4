@@ -37,7 +37,6 @@ Usage:
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Optional
 
 __version__: str
 
@@ -97,7 +96,6 @@ class MessageType(IntEnum):
         Returns:
             The name of the message type.
         """
-
 
 class MessageTarget(IntEnum):
     """Message target enumeration for routing messages.
@@ -180,7 +178,6 @@ class MessageTarget(IntEnum):
         Returns:
             The name of the message target.
         """
-
 
 class Message:
     """Message data structure with content, type, target, and optional metadata.
@@ -292,14 +289,14 @@ class Message:
             The message target.
         """
 
-    def title(self) -> Optional[str]:
+    def title(self) -> str | None:
         """Gets the optional message title.
 
         Returns:
             The title if set, None otherwise.
         """
 
-    def details(self) -> Optional[str]:
+    def details(self) -> str | None:
         """Gets the optional message details.
 
         Returns:
@@ -327,14 +324,14 @@ class Message:
             target: The new target for the message.
         """
 
-    def set_title(self, title: Optional[str]) -> None:
+    def set_title(self, title: str | None) -> None:
         """Sets the message title.
 
         Args:
             title: The new title for the message, or None to clear it.
         """
 
-    def set_details(self, details: Optional[str]) -> None:
+    def set_details(self, details: str | None) -> None:
         """Sets the message details.
 
         Args:
@@ -354,7 +351,6 @@ class Message:
         Returns:
             The message content.
         """
-
 
 class Logger:
     """Centralized logging facility that integrates with Rust's log crate.
@@ -536,7 +532,6 @@ class Logger:
             ...     logger.trace("Trace logging is enabled")
         """
 
-
 def strip_emoji(text: str) -> str:
     """Strips emojis from the given text.
 
@@ -557,8 +552,7 @@ def strip_emoji(text: str) -> str:
         'Hello  World !'
     """
 
-
-def format_log_message(content: str, details: Optional[str]) -> str:
+def format_log_message(content: str, details: str | None) -> str:
     """Formats a message for logging by stripping emojis from content and details.
 
     Args:

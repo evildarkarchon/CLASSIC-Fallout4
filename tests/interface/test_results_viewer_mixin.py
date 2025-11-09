@@ -27,6 +27,7 @@ def init_message_handler():
     yield
     # Cleanup after test
     from ClassicLib.MessageHandler.handler import _message_handler
+
     _message_handler._instance = None
 
 
@@ -34,6 +35,7 @@ def init_message_handler():
 
 
 # Test mixin initialization
+
 
 @pytest.mark.unit
 def test_results_viewer_mixin_exists():
@@ -56,6 +58,7 @@ def test_mixin_signals():
 
 
 # Test Rust acceleration detection
+
 
 @pytest.mark.unit
 @pytest.mark.rust
@@ -117,6 +120,7 @@ def test_rust_status_logging_on_setup():
 
 
 # Test file I/O operations
+
 
 @pytest.mark.unit
 def test_load_report_uses_rust_file_io():
@@ -213,6 +217,7 @@ def test_copy_report_uses_rust_file_io():
 
 # Test error handling
 
+
 @pytest.mark.unit
 def test_load_report_handles_missing_file():
     """Test that load_report handles missing files gracefully."""
@@ -288,6 +293,7 @@ def test_load_report_handles_read_errors():
 
 # Test signal emissions
 
+
 @pytest.mark.unit
 def test_report_loaded_signal_emission():
     """Test that report_loaded signal is emitted on successful load."""
@@ -349,6 +355,7 @@ def test_reports_refreshed_signal_emission():
 
 
 # Test integration patterns
+
 
 @pytest.mark.unit
 def test_rust_file_io_available():

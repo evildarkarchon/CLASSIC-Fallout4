@@ -13,6 +13,7 @@ from ClassicLib import GlobalRegistry
 
 pytestmark = pytest.mark.unit
 
+
 class TestConvenienceFunctions:
     """Tests for GlobalRegistry convenience functions."""
 
@@ -55,28 +56,28 @@ class TestConvenienceFunctions:
 
     def test_convenience_function_get_vr(self) -> None:
         """Test the get_vr convenience function."""
-        assert GlobalRegistry.get_vr() == ''
-        GlobalRegistry.register(GlobalRegistry.Keys.VR, 'VR')
-        assert GlobalRegistry.get_vr() == 'VR'
-        GlobalRegistry.register(GlobalRegistry.Keys.VR, '')
-        assert GlobalRegistry.get_vr() == ''
+        assert GlobalRegistry.get_vr() == ""
+        GlobalRegistry.register(GlobalRegistry.Keys.VR, "VR")
+        assert GlobalRegistry.get_vr() == "VR"
+        GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
+        assert GlobalRegistry.get_vr() == ""
         GlobalRegistry.register(GlobalRegistry.Keys.VR, None)
         result = GlobalRegistry.get_vr()
-        assert result == '' or result is None
+        assert result == "" or result is None
 
     def test_convenience_function_get_game(self) -> None:
         """Test the get_game convenience function."""
-        assert GlobalRegistry.get_game() == 'Fallout4'
-        GlobalRegistry.register(GlobalRegistry.Keys.GAME, 'Skyrim')
-        assert GlobalRegistry.get_game() == 'Skyrim'
-        GlobalRegistry.register(GlobalRegistry.Keys.GAME, 'SkyrimSE')
-        assert GlobalRegistry.get_game() == 'SkyrimSE'
-        GlobalRegistry.register(GlobalRegistry.Keys.GAME, '')
+        assert GlobalRegistry.get_game() == "Fallout4"
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Skyrim")
+        assert GlobalRegistry.get_game() == "Skyrim"
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME, "SkyrimSE")
+        assert GlobalRegistry.get_game() == "SkyrimSE"
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME, "")
         result = GlobalRegistry.get_game()
-        assert result == 'Fallout4' or result == ''
+        assert result == "Fallout4" or result == ""
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, None)
         result = GlobalRegistry.get_game()
-        assert result == 'Fallout4' or result is None
+        assert result == "Fallout4" or result is None
 
     def test_convenience_function_get_local_dir_default(self) -> None:
         """Test get_local_dir returns current directory when not set."""
@@ -89,7 +90,7 @@ class TestConvenienceFunctions:
         GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, tmp_path)
         result = GlobalRegistry.get_local_dir()
         assert result == tmp_path
-        str_path = str(tmp_path / 'subdir')
+        str_path = str(tmp_path / "subdir")
         GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, str_path)
         result = GlobalRegistry.get_local_dir()
         assert result == str_path or result == Path(str_path)
@@ -102,17 +103,17 @@ class TestConvenienceFunctions:
 
     def test_open_file_with_encoding_function_not_registered(self) -> None:
         """Test open_file_with_encoding when function is not registered."""
-        with pytest.raises(RuntimeError, match='open_file_with_encoding function not registered'):
-            with GlobalRegistry.open_file_with_encoding(Path('dummy.txt')):
+        with pytest.raises(RuntimeError, match="open_file_with_encoding function not registered"):
+            with GlobalRegistry.open_file_with_encoding(Path("dummy.txt")):
                 pass
 
     def test_open_file_with_encoding_function_with_custom_params(self, tmp_path: Path) -> None:
         """Test open_file_with_encoding with custom parameters."""
-        test_file = tmp_path / 'test.txt'
+        test_file = tmp_path / "test.txt"
         mock_func = MagicMock()
         mock_func.return_value.__enter__ = MagicMock(return_value=MagicMock())
         mock_func.return_value.__exit__ = MagicMock(return_value=None)
         GlobalRegistry.register(GlobalRegistry.Keys.OPEN_FILE_FUNC, mock_func)
-        with GlobalRegistry.open_file_with_encoding(test_file, encoding='latin-1', errors='strict'):
+        with GlobalRegistry.open_file_with_encoding(test_file, encoding="latin-1", errors="strict"):
             pass
-        mock_func.assert_called_once_with(test_file, 'latin-1', 'strict')
+        mock_func.assert_called_once_with(test_file, "latin-1", "strict")

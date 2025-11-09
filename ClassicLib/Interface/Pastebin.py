@@ -1,3 +1,15 @@
+"""
+Pastebin URL fetching functionality for the CLASSIC interface.
+
+This module provides a QObject-based worker class for asynchronously fetching
+data from Pastebin URLs. It uses Qt signals for thread-safe communication and
+handles various error conditions including network errors, import failures, and
+file system issues.
+
+The worker is designed to run in a separate thread to avoid blocking the GUI
+during network operations.
+"""
+
 from PySide6.QtCore import QObject, Signal, Slot
 
 

@@ -16,6 +16,7 @@ import pytest
 
 try:
     import classic_config
+
     YamlData = classic_config.YamlData
     RUST_AVAILABLE = True
 except ImportError:
@@ -36,7 +37,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
 
         # Ensure files exist
@@ -57,7 +58,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -106,7 +107,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -142,7 +143,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -167,7 +168,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -187,7 +188,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -209,7 +210,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -242,7 +243,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -272,8 +273,7 @@ class TestYamlDataIntegration:
 
         # Verify error message is meaningful
         error_msg = str(exc_info.value)
-        assert ("Failed" in error_msg or "not found" in error_msg.lower() or
-                "No such file" in error_msg), f"Got error: {error_msg}"
+        assert "Failed" in error_msg or "not found" in error_msg.lower() or "No such file" in error_msg, f"Got error: {error_msg}"
 
     def test_yamldata_suspects_error_list_content(self):
         """Test suspects_error_list contains expected patterns."""
@@ -281,7 +281,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -302,7 +302,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -323,7 +323,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
@@ -348,7 +348,7 @@ class TestYamlDataIntegration:
         yaml_dirs = [
             data_dir / "databases",  # Main YAML
             data_dir / "databases",  # Game YAML
-            Path("."),  # Ignore YAML (project root)
+            Path(),  # Ignore YAML (project root)
         ]
         main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 

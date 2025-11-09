@@ -385,10 +385,7 @@ class TestWebUtilsIntegration:
         assert "fallout4/mods" in url
 
         # Build with query parameters
-        url = web.build_url_with_query(
-            "https://www.nexusmods.com/fallout4/mods",
-            [("game_id", "1151"), ("adult", "false")]
-        )
+        url = web.build_url_with_query("https://www.nexusmods.com/fallout4/mods", [("game_id", "1151"), ("adult", "false")])
         assert "game_id=1151" in url
         assert "adult=false" in url
 

@@ -17,6 +17,7 @@ import pytest
 
 try:
     import classic_scanlog
+
     detect_mods_single = classic_scanlog.detect_mods_single
     detect_mods_double = classic_scanlog.detect_mods_double
     detect_mods_important = classic_scanlog.detect_mods_important
@@ -29,6 +30,7 @@ except (ImportError, AttributeError):
 # ============================================================================
 # Test Data Helpers
 # ============================================================================
+
 
 def create_single_mods_db():
     """Create sample YAML dictionary for single mod detection."""
@@ -64,20 +66,16 @@ def create_double_mods_db():
     """Create sample YAML dictionary for mod conflict detection."""
     return {
         "classicholstered | weaponsmithextended": (
-            "CONFLICT: Classic Holstered Weapons and Weaponsmith Extended are incompatible\n"
-            "    Use patches or choose one mod\n"
+            "CONFLICT: Classic Holstered Weapons and Weaponsmith Extended are incompatible\n    Use patches or choose one mod\n"
         ),
         "simsettlements | placeeverywhere": (
-            "CAUTION: Sim Settlements and Place Everywhere may conflict\n"
-            "    Avoid using both in same settlement\n"
+            "CAUTION: Sim Settlements and Place Everywhere may conflict\n    Avoid using both in same settlement\n"
         ),
         "bakascrapheap | buffout4": (
-            "CONFLICT: Baka ScrapHeap conflicts with Buffout 4 memory manager\n"
-            "    Disable MemoryManager in Buffout4.toml\n"
+            "CONFLICT: Baka ScrapHeap conflicts with Buffout 4 memory manager\n    Disable MemoryManager in Buffout4.toml\n"
         ),
         "achievements | unlimitedsurvival": (
-            "CONFLICT: Achievements mod conflicts with Unlimited Survival Mode\n"
-            "    Disable Achievements parameter in Buffout4.toml\n"
+            "CONFLICT: Achievements mod conflicts with Unlimited Survival Mode\n    Disable Achievements parameter in Buffout4.toml\n"
         ),
     }
 
@@ -95,27 +93,12 @@ def create_conflicting_crashlog():
 def create_important_mods_db():
     """Create sample YAML dictionary for important mods."""
     return {
-        "f4se | Fallout 4 Script Extender": (
-            "Essential for most mods\n"
-            "    Download from https://f4se.silverlock.org"
-        ),
-        "buffout4 | Buffout 4": (
-            "Crash logging utility\n"
-            "    Download from Nexus Mods"
-        ),
-        "address library | Address Library": (
-            "Required for many F4SE plugins\n"
-            "    Download from Nexus Mods"
-        ),
+        "f4se | Fallout 4 Script Extender": ("Essential for most mods\n    Download from https://f4se.silverlock.org"),
+        "buffout4 | Buffout 4": ("Crash logging utility\n    Download from Nexus Mods"),
+        "address library | Address Library": ("Required for many F4SE plugins\n    Download from Nexus Mods"),
         # Note: Patterns must match actual plugin names (use underscore or no space)
-        "nvidia_reflex | NVIDIA Reflex": (
-            "nvidia\n"
-            "    NVIDIA GPU optimization plugin"
-        ),
-        "amd_fsr | AMD FidelityFX": (
-            "amd\n"
-            "    AMD GPU optimization plugin"
-        ),
+        "nvidia_reflex | NVIDIA Reflex": ("nvidia\n    NVIDIA GPU optimization plugin"),
+        "amd_fsr | AMD FidelityFX": ("amd\n    AMD GPU optimization plugin"),
     }
 
 
@@ -133,6 +116,7 @@ def create_xse_modules():
 # ============================================================================
 # Single Mod Detection Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust mod detector not available")
@@ -216,13 +200,7 @@ class TestDetectModsSingle:
     def test_detect_mods_single_formatting(self):
         """Test output formatting."""
         yaml_dict = {
-            "testmod": (
-                "Test Mod Name\n"
-                "    First description line\n"
-                "    Second description line\n"
-                "\n"
-                "    Third line after blank"
-            ),
+            "testmod": ("Test Mod Name\n    First description line\n    Second description line\n\n    Third line after blank"),
         }
         crashlog_plugins = {
             "TestMod.esp": "42",
@@ -239,6 +217,7 @@ class TestDetectModsSingle:
 # ============================================================================
 # Double Mod Detection (Conflicts) Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust mod detector not available")
@@ -259,10 +238,7 @@ class TestDetectModsDouble:
         assert any("[!] CAUTION" in line for line in result)
 
         # Should mention the specific conflicts
-        assert any(
-            "Classic Holstered" in line or "Baka ScrapHeap" in line
-            for line in result
-        )
+        assert any("Classic Holstered" in line or "Baka ScrapHeap" in line for line in result)
 
     def test_detect_mods_double_no_conflicts(self):
         """Test with no conflicts present."""
@@ -325,6 +301,7 @@ class TestDetectModsDouble:
 # Important Mod Detection Tests
 # ============================================================================
 
+
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust mod detector not available")
 class TestDetectModsImportant:
@@ -377,7 +354,7 @@ class TestDetectModsImportant:
             yaml_dict,
             crashlog_plugins,
             "nvidia",  # Rival is NVIDIA (user has AMD)
-            xse_modules
+            xse_modules,
         )
 
         # Should warn about GPU mismatch
@@ -398,7 +375,7 @@ class TestDetectModsImportant:
             yaml_dict,
             crashlog_plugins,
             "amd",  # Rival is AMD (user has NVIDIA)
-            xse_modules
+            xse_modules,
         )
 
         # Should warn about GPU mismatch
@@ -419,7 +396,7 @@ class TestDetectModsImportant:
             yaml_dict,
             crashlog_plugins,
             "amd",  # Rival is AMD (user has NVIDIA)
-            xse_modules
+            xse_modules,
         )
 
         # Should show as correctly installed
@@ -458,6 +435,7 @@ class TestDetectModsImportant:
 # ============================================================================
 # Batch Processing Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust mod detector not available")
@@ -561,6 +539,7 @@ class TestDetectModsBatch:
 # ============================================================================
 # Edge Cases and Error Handling Tests
 # ============================================================================
+
 
 @pytest.mark.rust
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust mod detector not available")

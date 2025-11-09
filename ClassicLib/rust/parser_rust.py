@@ -51,8 +51,8 @@ from __future__ import annotations
 
 import logging
 
-from ClassicLib.integration.exceptions import RustError, RustParseError
 from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.exceptions import RustError, RustParseError
 
 logger = logging.getLogger(__name__)
 
@@ -61,13 +61,16 @@ _, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
 _, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
 
 
-def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
+def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[type[BaseException], ...]]:
     """Get tuple of Rust exception types to catch.
 
-    Returns tuple of (ParseError types, generic RustError types).
+    Returns:
+        A tuple containing two tuples of exception types:
+            - ParseError types (RustParseError and module-specific parse errors)
+            - Generic RustError types (RustError and module-specific scan log errors)
     """
-    parse_errors = (RustParseError,)
-    rust_errors = (RustError,)
+    parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
+    rust_errors: tuple[type[BaseException], ...] = (RustError,)
 
     # Add module-specific exceptions if available
     if _rust_parse_error:
@@ -79,6 +82,8 @@ def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
 
 
 # Get exception type tuples at module level for use in exception handlers
+parse_errors: tuple[type[BaseException], ...]
+rust_errors: tuple[type[BaseException], ...]
 parse_errors, rust_errors = _get_rust_exception_types()
 
 
@@ -128,11 +133,7 @@ class RustLogParser:
             logger.debug("⚠️  RustLogParser: Falling back to Python implementation")
 
     def find_segments(
-        self,
-        crash_data: list[str],
-        crashgen_name: str,
-        xse_acronym: str,
-        game_root_name: str
+        self, crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
     ) -> tuple[str, str, str, list[list[str]]]:
         """
         Finds and processes segments from provided crash data using either a Rust-based
@@ -180,9 +181,7 @@ class RustLogParser:
                 else:
                     # Fallback to multiple calls if new method not available
                     # Extract metadata (Rust parser doesn't have this, use Python)
-                    game_version, crashgen_version, main_error = self._parse_crash_header(
-                        crash_data, crashgen_name, game_root_name
-                    )
+                    game_version, crashgen_version, main_error = self._parse_crash_header(crash_data, crashgen_name, game_root_name)
 
                     # Define segment boundaries
                     segment_boundaries = [
@@ -223,6 +222,7 @@ class RustLogParser:
 
         # Use Python fallback
         from ClassicLib.ScanLog.Parser import find_segments
+
         return find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
 
     def extract_section(self, crash_data: list[str], start_marker: str, end_marker: str) -> list[str] | None:

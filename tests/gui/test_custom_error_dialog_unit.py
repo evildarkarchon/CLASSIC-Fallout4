@@ -24,7 +24,7 @@ class TestCustomErrorDialog:
         return {
             "title": "Test Error",
             "message": "An error occurred during testing",
-            "details": "Traceback (most recent call last):\n  File 'test.py', line 10\n    raise ValueError('test')\nValueError: test"
+            "details": "Traceback (most recent call last):\n  File 'test.py', line 10\n    raise ValueError('test')\nValueError: test",
         }
 
     def test_dialog_creation_with_all_parameters(self, qtbot, sample_error_data):
@@ -39,10 +39,7 @@ class TestCustomErrorDialog:
 
     def test_dialog_creation_without_details(self, qtbot):
         """Test dialog creation without details section."""
-        dialog = CustomErrorDialog(
-            title="Simple Error",
-            message="This is a simple error message"
-        )
+        dialog = CustomErrorDialog(title="Simple Error", message="This is a simple error message")
         qtbot.addWidget(dialog)
 
         assert dialog.title == "Simple Error"
@@ -60,10 +57,7 @@ class TestCustomErrorDialog:
 
     def test_copy_button_not_exists_without_details(self, qtbot):
         """Test that Copy to Clipboard button doesn't exist when no details."""
-        dialog = CustomErrorDialog(
-            title="Simple Error",
-            message="No details here"
-        )
+        dialog = CustomErrorDialog(title="Simple Error", message="No details here")
         qtbot.addWidget(dialog)
 
         # Find copy button
@@ -162,6 +156,7 @@ class TestCustomErrorDialog:
 
         # Find message label (should be a QLabel)
         from PySide6.QtWidgets import QLabel
+
         labels = dialog.findChildren(QLabel)
         message_labels = [lbl for lbl in labels if sample_error_data["message"] in lbl.text()]
 
@@ -184,7 +179,7 @@ class TestCustomErrorDialog:
         dialog = CustomErrorDialog(
             title="Error",
             message="Message",
-            details="   "  # Whitespace only
+            details="   ",  # Whitespace only
         )
         qtbot.addWidget(dialog)
 
@@ -195,13 +190,11 @@ class TestCustomErrorDialog:
     def test_multiline_message_wrapping(self, qtbot):
         """Test that multiline messages wrap correctly."""
         long_message = "This is a very long error message " * 20
-        dialog = CustomErrorDialog(
-            title="Error",
-            message=long_message
-        )
+        dialog = CustomErrorDialog(title="Error", message=long_message)
         qtbot.addWidget(dialog)
 
         from PySide6.QtWidgets import QLabel
+
         labels = dialog.findChildren(QLabel)
         message_labels = [lbl for lbl in labels if long_message in lbl.text()]
 

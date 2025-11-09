@@ -31,6 +31,7 @@ class TestFolderManagementMixin:
         yield
         # Clean up the handler after test
         import ClassicLib.MessageHandler
+
         ClassicLib.MessageHandler._message_handler = None
 
     @pytest.fixture
@@ -68,9 +69,10 @@ class TestFolderManagementMixin:
         monkeypatch.setattr(QFileDialog, "getExistingDirectory", lambda *args: test_path)
 
         # Mock validation function
-        with patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", return_value=True), \
-             patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings:
-
+        with (
+            patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", return_value=True),
+            patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings,
+        ):
             mock_widget.select_folder_scan()
 
             # Verify the path was set in the edit field
@@ -93,6 +95,7 @@ class TestFolderManagementMixin:
 
         # Mock validation - invalid first, then valid
         validations = [False, True]
+
         def mock_validation(path):
             if path:
                 return validations.pop(0)
@@ -102,9 +105,10 @@ class TestFolderManagementMixin:
         mock_warning = Mock(return_value=QMessageBox.StandardButton.Ok)
         monkeypatch.setattr(QMessageBox, "warning", mock_warning)
 
-        with patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", side_effect=mock_validation), \
-             patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings:
-
+        with (
+            patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", side_effect=mock_validation),
+            patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings,
+        ):
             mock_widget.select_folder_scan()
 
             # Verify warning was shown for invalid path
@@ -115,9 +119,7 @@ class TestFolderManagementMixin:
 
             # Verify valid path was eventually set
             assert mock_widget.scan_folder_edit.text() == valid_path
-            mock_yaml_settings.assert_called_with(
-                str, ANY, "CLASSIC_Settings.SCAN Custom Path", valid_path
-            )
+            mock_yaml_settings.assert_called_with(str, ANY, "CLASSIC_Settings.SCAN Custom Path", valid_path)
 
     def test_select_folder_scan_cancelled(self, mock_widget, monkeypatch):
         """Test cancelling folder selection dialog."""
@@ -137,11 +139,12 @@ class TestFolderManagementMixin:
         mock_widget.scan_folder_edit.setText(test_path)
 
         # Mock the helper functions directly to avoid Path mocking complexity
-        with patch("ClassicLib.Interface.FolderManagement._is_valid_directory", return_value=True), \
-             patch("ClassicLib.Interface.FolderManagement._normalize_path", return_value=Path(test_path)), \
-             patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", return_value=True), \
-             patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings:
-
+        with (
+            patch("ClassicLib.Interface.FolderManagement._is_valid_directory", return_value=True),
+            patch("ClassicLib.Interface.FolderManagement._normalize_path", return_value=Path(test_path)),
+            patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", return_value=True),
+            patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings,
+        ):
             mock_widget.validate_scan_folder_text()
 
             # Verify settings were saved with normalized path
@@ -149,7 +152,7 @@ class TestFolderManagementMixin:
             call_args = mock_yaml_settings.call_args[0]
             assert call_args[2] == "CLASSIC_Settings.SCAN Custom Path"
             # Verify saved path matches test path (normalize path separators for comparison)
-            saved_path = str(call_args[3]).replace('\\', '/')
+            saved_path = str(call_args[3]).replace("\\", "/")
             assert test_path in saved_path
 
     def test_validate_scan_folder_text_empty(self, mock_widget):
@@ -160,9 +163,7 @@ class TestFolderManagementMixin:
             mock_widget.validate_scan_folder_text()
 
             # Verify setting was cleared with space
-            mock_yaml_settings.assert_called_once_with(
-                str, ANY, "CLASSIC_Settings.SCAN Custom Path", " "
-            )
+            mock_yaml_settings.assert_called_once_with(str, ANY, "CLASSIC_Settings.SCAN Custom Path", " ")
 
     def test_validate_scan_folder_text_nonexistent(self, mock_widget, monkeypatch):
         """Test validating non-existent path shows warning and clears field."""
@@ -173,9 +174,10 @@ class TestFolderManagementMixin:
         monkeypatch.setattr(QMessageBox, "warning", mock_warning)
 
         # Mock helper function to return False (path doesn't exist)
-        with patch("ClassicLib.Interface.FolderManagement._is_valid_directory", return_value=False), \
-             patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings:
-
+        with (
+            patch("ClassicLib.Interface.FolderManagement._is_valid_directory", return_value=False),
+            patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings,
+        ):
             mock_widget.validate_scan_folder_text()
 
             # Verify warning was shown
@@ -188,9 +190,7 @@ class TestFolderManagementMixin:
             assert mock_widget.scan_folder_edit.text() == ""
 
             # Verify setting was cleared
-            mock_yaml_settings.assert_called_with(
-                str, ANY, "CLASSIC_Settings.SCAN Custom Path", ""
-            )
+            mock_yaml_settings.assert_called_with(str, ANY, "CLASSIC_Settings.SCAN Custom Path", "")
 
     def test_validate_scan_folder_text_restricted(self, mock_widget, monkeypatch):
         """Test validating restricted path shows warning and clears field."""
@@ -201,10 +201,11 @@ class TestFolderManagementMixin:
         monkeypatch.setattr(QMessageBox, "warning", mock_warning)
 
         # Mock the helper functions directly - path exists but is restricted
-        with patch("ClassicLib.Interface.FolderManagement._is_valid_directory", return_value=True), \
-             patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", return_value=False), \
-             patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings:
-
+        with (
+            patch("ClassicLib.Interface.FolderManagement._is_valid_directory", return_value=True),
+            patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", return_value=False),
+            patch("ClassicLib.Interface.FolderManagement.yaml_settings") as mock_yaml_settings,
+        ):
             mock_widget.validate_scan_folder_text()
 
             # Verify warning about restricted path
@@ -215,9 +216,7 @@ class TestFolderManagementMixin:
 
             # Verify field and setting were cleared
             assert mock_widget.scan_folder_edit.text() == ""
-            mock_yaml_settings.assert_called_with(
-                str, ANY, "CLASSIC_Settings.SCAN Custom Path", ""
-            )
+            mock_yaml_settings.assert_called_with(str, ANY, "CLASSIC_Settings.SCAN Custom Path", "")
 
     def test_validate_scan_folder_text_no_edit(self, mock_widget_no_edits):
         """Test validate_scan_folder_text when edit field is None."""
@@ -238,9 +237,7 @@ class TestFolderManagementMixin:
             assert mock_widget.mods_folder_edit.text() == test_path
 
             # Verify settings were saved
-            mock_yaml_settings.assert_called_once_with(
-                str, ANY, "CLASSIC_Settings.MODS Folder Path", test_path
-            )
+            mock_yaml_settings.assert_called_once_with(str, ANY, "CLASSIC_Settings.MODS Folder Path", test_path)
 
     def test_select_folder_mods_cancelled(self, mock_widget, monkeypatch):
         """Test cancelling mods folder selection."""
@@ -302,9 +299,7 @@ class TestFolderManagementMixin:
             mock_widget.select_folder_ini()
 
             # Verify settings were saved
-            mock_yaml_settings.assert_called_once_with(
-                str, ANY, "CLASSIC_Settings.INI Folder Path", test_path
-            )
+            mock_yaml_settings.assert_called_once_with(str, ANY, "CLASSIC_Settings.INI Folder Path", test_path)
 
             # Verify confirmation dialog
             mock_info.assert_called_once()
@@ -319,9 +314,10 @@ class TestFolderManagementMixin:
         settings_file = settings_dir / "CLASSIC Settings.yaml"
         settings_file.write_text("test settings")
 
-        with patch("ClassicLib.Interface.FolderManagement.GlobalRegistry.get_local_dir", return_value=settings_dir), \
-             patch.object(mock_widget, "_open_file_with_notepadpp") as mock_open:
-
+        with (
+            patch("ClassicLib.Interface.FolderManagement.GlobalRegistry.get_local_dir", return_value=settings_dir),
+            patch.object(mock_widget, "_open_file_with_notepadpp") as mock_open,
+        ):
             mock_widget.open_settings()
 
             # Verify file was opened
@@ -360,15 +356,16 @@ class TestFolderManagementMixin:
             url = mock_open_url.call_args[0][0]
             assert isinstance(url, QUrl)
             # Convert paths to use consistent separators for comparison
-            url_path = url.toLocalFile().replace('/', '\\')
-            expected_path = str(backup_dir).replace('/', '\\')
+            url_path = url.toLocalFile().replace("/", "\\")
+            expected_path = str(backup_dir).replace("/", "\\")
             assert expected_path in url_path
 
     def test_open_backup_folder_not_exists(self, mock_widget, tmp_path):
         """Test opening backup folder when it doesn't exist shows error."""
-        with patch("ClassicLib.Interface.FolderManagement.GlobalRegistry.get_local_dir", return_value=tmp_path), \
-             patch("ClassicLib.Interface.FolderManagement.msg_error") as mock_error:
-
+        with (
+            patch("ClassicLib.Interface.FolderManagement.GlobalRegistry.get_local_dir", return_value=tmp_path),
+            patch("ClassicLib.Interface.FolderManagement.msg_error") as mock_error,
+        ):
             mock_widget.open_backup_folder()
 
             # Verify error message
@@ -476,6 +473,7 @@ class TestFolderManagementMixin:
         monkeypatch.setattr("ClassicLib.Interface.FolderManagement.QDesktopServices.openUrl", mock_open_url)
 
         with patch("pathlib.Path") as mock_path_class:
+
             def path_side_effect(path_str):
                 if "Notepad++" in str(path_str):
                     return mock_notepadpp

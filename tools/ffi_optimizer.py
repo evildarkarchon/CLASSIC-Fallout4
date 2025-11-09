@@ -51,8 +51,9 @@ from tools.ffi_profiler import FFIProfiler
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
-R = TypeVar('R')
+T = TypeVar("T")
+R = TypeVar("R")
+
 
 @dataclass
 class OptimizationResult:
@@ -80,6 +81,7 @@ class OptimizationResult:
     warnings: list[str] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
 
+
 class BatchCache:
     """
     Intelligent caching system for FFI calls to reduce redundant operations.
@@ -92,10 +94,12 @@ class BatchCache:
     - Memory pressure awareness
     """
 
-    def __init__(self,
-                 max_size: int = 1000,
-                 default_ttl: float = 300.0,  # 5 minutes
-                 enable_memory_pressure: bool = True):
+    def __init__(
+        self,
+        max_size: int = 1000,
+        default_ttl: float = 300.0,  # 5 minutes
+        enable_memory_pressure: bool = True,
+    ):
         self.max_size = max_size
         self.default_ttl = default_ttl
         self.enable_memory_pressure = enable_memory_pressure
@@ -196,6 +200,7 @@ class BatchCache:
 
     def cache_function(self, ttl: float | None = None):
         """Decorator to cache function results."""
+
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
@@ -212,6 +217,7 @@ class BatchCache:
                 return result
 
             return wrapper
+
         return decorator
 
     def get_stats(self) -> dict[str, Any]:
@@ -220,13 +226,14 @@ class BatchCache:
         hit_rate = (self.hits / total_requests * 100) if total_requests > 0 else 0
 
         return {
-            'size': len(self._cache),
-            'max_size': self.max_size,
-            'hits': self.hits,
-            'misses': self.misses,
-            'evictions': self.evictions,
-            'hit_rate_pct': hit_rate
+            "size": len(self._cache),
+            "max_size": self.max_size,
+            "hits": self.hits,
+            "misses": self.misses,
+            "evictions": self.evictions,
+            "hit_rate_pct": hit_rate,
         }
+
 
 class BatchProcessor:
     """
@@ -236,11 +243,13 @@ class BatchProcessor:
     and maximizes data transfer efficiency.
     """
 
-    def __init__(self,
-                 default_batch_size: int = 100,
-                 max_batch_size: int = 1000,
-                 batch_timeout: float = 0.1,  # 100ms
-                 enable_adaptive_sizing: bool = True):
+    def __init__(
+        self,
+        default_batch_size: int = 100,
+        max_batch_size: int = 1000,
+        batch_timeout: float = 0.1,  # 100ms
+        enable_adaptive_sizing: bool = True,
+    ):
         self.default_batch_size = default_batch_size
         self.max_batch_size = max_batch_size
         self.batch_timeout = batch_timeout
@@ -266,7 +275,7 @@ class BatchProcessor:
 
         # Find batch size with lowest time per item
         best_size = self.default_batch_size
-        best_time_per_item = float('inf')
+        best_time_per_item = float("inf")
 
         for batch_size, time_per_item in history[-10:]:  # Use last 10 measurements
             if time_per_item < best_time_per_item:
@@ -370,8 +379,7 @@ class BatchProcessor:
 
             # Check if we should flush the batch
             should_flush = (
-                len(self._batch_queues[operation_key]) >= batch_size or
-                len(self._batch_queues[operation_key]) >= self.max_batch_size
+                len(self._batch_queues[operation_key]) >= batch_size or len(self._batch_queues[operation_key]) >= self.max_batch_size
             )
 
             if should_flush:
@@ -379,19 +387,13 @@ class BatchProcessor:
                 self._flush_batch(operation_key, batch_func)
             # Set up timer to flush after timeout
             elif operation_key not in self._batch_timers or self._batch_timers[operation_key] is None:
-                timer = threading.Timer(
-                    self.batch_timeout,
-                    lambda: self._flush_batch(operation_key, batch_func)
-                )
+                timer = threading.Timer(self.batch_timeout, lambda: self._flush_batch(operation_key, batch_func))
                 timer.start()
                 self._batch_timers[operation_key] = timer
 
         return future
 
-    def batch_operation(self,
-                       operation_key: str | None = None,
-                       batch_size: int | None = None,
-                       timeout: float | None = None):
+    def batch_operation(self, operation_key: str | None = None, batch_size: int | None = None, timeout: float | None = None):
         """
         Decorator to automatically batch function calls.
 
@@ -400,6 +402,7 @@ class BatchProcessor:
             def parse_log_batch(log_entries: List[str]) -> List[Dict]:
                 return rust_parser.parse_batch(log_entries)
         """
+
         def decorator(batch_func: Callable[[list[T]], list[R]]) -> Callable[[T], asyncio.Future[R]]:
             nonlocal operation_key
             if operation_key is None:
@@ -422,6 +425,7 @@ class BatchProcessor:
             return wrapper
 
         return decorator
+
 
 class DataOptimizer:
     """
@@ -448,37 +452,38 @@ class DataOptimizer:
             information needed to reverse the optimization.
         """
         original_size = sys.getsizeof(data)
-        metadata = {'original_type': type(data).__name__, 'optimizations': []}
+        metadata = {"original_type": type(data).__name__, "optimizations": []}
 
         # Strategy 1: Convert lists to arrays for numeric data
         if isinstance(data, list) and data and all(isinstance(x, (int, float)) for x in data):
             try:
                 import array
+
                 # Determine appropriate array type
-                if all(isinstance(x, int) and -2**31 <= x < 2**31 for x in data):
-                    optimized = array.array('i', data)  # 32-bit signed int
-                    metadata['optimizations'].append('int_array')
+                if all(isinstance(x, int) and -(2**31) <= x < 2**31 for x in data):
+                    optimized = array.array("i", data)  # 32-bit signed int
+                    metadata["optimizations"].append("int_array")
                 elif all(isinstance(x, int) and 0 <= x < 2**32 for x in data):
-                    optimized = array.array('I', data)  # 32-bit unsigned int
-                    metadata['optimizations'].append('uint_array')
+                    optimized = array.array("I", data)  # 32-bit unsigned int
+                    metadata["optimizations"].append("uint_array")
                 else:
-                    optimized = array.array('d', data)  # double precision float
-                    metadata['optimizations'].append('double_array')
+                    optimized = array.array("d", data)  # double precision float
+                    metadata["optimizations"].append("double_array")
 
                 data = optimized
-                self.optimization_stats['array_conversion'] += 1
+                self.optimization_stats["array_conversion"] += 1
             except (ImportError, OverflowError, ValueError):
                 pass
 
         # Strategy 2: Use bytes for string data when appropriate
         elif isinstance(data, str) and len(data) > 1000:
             try:
-                encoded = data.encode('utf-8')
+                encoded = data.encode("utf-8")
                 if len(encoded) < len(data) * 2:  # Only if significantly smaller
                     data = encoded
-                    metadata['optimizations'].append('string_to_bytes')
-                    metadata['encoding'] = 'utf-8'
-                    self.optimization_stats['string_encoding'] += 1
+                    metadata["optimizations"].append("string_to_bytes")
+                    metadata["encoding"] = "utf-8"
+                    self.optimization_stats["string_encoding"] += 1
             except UnicodeError:
                 pass
 
@@ -488,26 +493,27 @@ class DataOptimizer:
                 # Convert to parallel arrays for better cache locality
                 keys = list(data.keys())
                 values = list(data.values())
-                data = {'__optimized_dict__': True, 'keys': keys, 'values': values}
-                metadata['optimizations'].append('dict_to_arrays')
-                self.optimization_stats['dict_optimization'] += 1
+                data = {"__optimized_dict__": True, "keys": keys, "values": values}
+                metadata["optimizations"].append("dict_to_arrays")
+                self.optimization_stats["dict_optimization"] += 1
 
         # Strategy 4: Use tuple for small lists (immutable, more efficient)
         elif isinstance(data, list) and len(data) < 100:
             data = tuple(data)
-            metadata['optimizations'].append('list_to_tuple')
-            self.optimization_stats['tuple_conversion'] += 1
+            metadata["optimizations"].append("list_to_tuple")
+            self.optimization_stats["tuple_conversion"] += 1
 
         # Strategy 5: Compress large text data
         elif isinstance(data, str) and len(data) > 10000:
             try:
                 import zlib
-                compressed = zlib.compress(data.encode('utf-8'))
+
+                compressed = zlib.compress(data.encode("utf-8"))
                 if len(compressed) < len(data) * 0.8:  # Only if 20%+ reduction
                     data = compressed
-                    metadata['optimizations'].append('zlib_compression')
-                    metadata['encoding'] = 'utf-8'
-                    self.optimization_stats['compression'] += 1
+                    metadata["optimizations"].append("zlib_compression")
+                    metadata["encoding"] = "utf-8"
+                    self.optimization_stats["compression"] += 1
             except Exception:
                 pass
 
@@ -520,32 +526,33 @@ class DataOptimizer:
         if len(self._size_reduction_history) > 1000:
             self._size_reduction_history = self._size_reduction_history[-500:]
 
-        metadata['original_size'] = original_size
-        metadata['optimized_size'] = optimized_size
-        metadata['size_reduction_pct'] = size_reduction * 100
+        metadata["original_size"] = original_size
+        metadata["optimized_size"] = optimized_size
+        metadata["size_reduction_pct"] = size_reduction * 100
 
         return data, metadata
 
     def reverse_optimization(self, data: Any, metadata: dict[str, Any]) -> Any:
         """Reverse the optimization to get back the original data structure."""
-        optimizations = metadata.get('optimizations', [])
+        optimizations = metadata.get("optimizations", [])
 
         for opt in reversed(optimizations):  # Reverse in opposite order
-            if opt == 'int_array' or opt == 'uint_array' or opt == 'double_array':
+            if opt == "int_array" or opt == "uint_array" or opt == "double_array":
                 data = list(data)
-            elif opt == 'string_to_bytes':
-                encoding = metadata.get('encoding', 'utf-8')
+            elif opt == "string_to_bytes":
+                encoding = metadata.get("encoding", "utf-8")
                 data = data.decode(encoding)
-            elif opt == 'dict_to_arrays':
-                if isinstance(data, dict) and data.get('__optimized_dict__'):
-                    keys = data['keys']
-                    values = data['values']
+            elif opt == "dict_to_arrays":
+                if isinstance(data, dict) and data.get("__optimized_dict__"):
+                    keys = data["keys"]
+                    values = data["values"]
                     data = dict(zip(keys, values))
-            elif opt == 'list_to_tuple':
+            elif opt == "list_to_tuple":
                 data = list(data)
-            elif opt == 'zlib_compression':
+            elif opt == "zlib_compression":
                 import zlib
-                encoding = metadata.get('encoding', 'utf-8')
+
+                encoding = metadata.get("encoding", "utf-8")
                 data = zlib.decompress(data).decode(encoding)
 
         return data
@@ -555,10 +562,11 @@ class DataOptimizer:
         avg_reduction = sum(self._size_reduction_history) / len(self._size_reduction_history) if self._size_reduction_history else 0
 
         return {
-            'optimizations_applied': dict(self.optimization_stats),
-            'average_size_reduction_pct': avg_reduction * 100,
-            'total_optimizations': sum(self.optimization_stats.values())
+            "optimizations_applied": dict(self.optimization_stats),
+            "average_size_reduction_pct": avg_reduction * 100,
+            "total_optimizations": sum(self.optimization_stats.values()),
         }
+
 
 class FFIOptimizer:
     """
@@ -571,12 +579,14 @@ class FFIOptimizer:
     - Generating optimization recommendations
     """
 
-    def __init__(self,
-                 enable_caching: bool = True,
-                 enable_batching: bool = True,
-                 enable_data_optimization: bool = True,
-                 cache_size: int = 1000,
-                 default_batch_size: int = 100):
+    def __init__(
+        self,
+        enable_caching: bool = True,
+        enable_batching: bool = True,
+        enable_data_optimization: bool = True,
+        cache_size: int = 1000,
+        default_batch_size: int = 100,
+    ):
 
         # Initialize optimization components
         self.cache = BatchCache(max_size=cache_size) if enable_caching else None
@@ -593,11 +603,9 @@ class FFIOptimizer:
         self._baseline_profiler: FFIProfiler | None = None
         self._optimized_profiler: FFIProfiler | None = None
 
-    def analyze_ffi_performance(self,
-                               target_function: Callable,
-                               test_data: list[Any],
-                               warmup_runs: int = 3,
-                               measurement_runs: int = 10) -> tuple[FFIProfiler, FFIProfiler]:
+    def analyze_ffi_performance(
+        self, target_function: Callable, test_data: list[Any], warmup_runs: int = 3, measurement_runs: int = 10
+    ) -> tuple[FFIProfiler, FFIProfiler]:
         """
         Analyze FFI performance before and after optimization.
 
@@ -665,10 +673,9 @@ class FFIOptimizer:
 
         return baseline_profiler, optimized_profiler
 
-    def optimize_function(self, func: Callable,
-                         cache_ttl: float | None = None,
-                         batch_key: str | None = None,
-                         enable_data_opt: bool = None) -> Callable:
+    def optimize_function(
+        self, func: Callable, cache_ttl: float | None = None, batch_key: str | None = None, enable_data_opt: bool = None
+    ) -> Callable:
         """
         Apply all available optimizations to a function.
 
@@ -688,6 +695,7 @@ class FFIOptimizer:
 
         # Apply data optimization wrapper
         if enable_data_opt and self.data_optimizer:
+
             def data_optimized_func(*args, **kwargs):
                 # Optimize input arguments
                 optimized_args = []
@@ -739,26 +747,35 @@ class FFIOptimizer:
         optimized_stats = self._optimized_profiler.analyze_performance()
 
         # Calculate improvements
-        call_reduction = ((baseline_stats.total_calls - optimized_stats.total_calls) /
-                         baseline_stats.total_calls * 100) if baseline_stats.total_calls > 0 else 0
+        call_reduction = (
+            ((baseline_stats.total_calls - optimized_stats.total_calls) / baseline_stats.total_calls * 100)
+            if baseline_stats.total_calls > 0
+            else 0
+        )
 
-        time_savings = ((baseline_stats.total_wall_time - optimized_stats.total_wall_time) /
-                       baseline_stats.total_wall_time * 100) if baseline_stats.total_wall_time > 0 else 0
+        time_savings = (
+            ((baseline_stats.total_wall_time - optimized_stats.total_wall_time) / baseline_stats.total_wall_time * 100)
+            if baseline_stats.total_wall_time > 0
+            else 0
+        )
 
-        data_reduction = ((baseline_stats.total_data_transferred - optimized_stats.total_data_transferred) /
-                         baseline_stats.total_data_transferred * 100) if baseline_stats.total_data_transferred > 0 else 0
+        data_reduction = (
+            ((baseline_stats.total_data_transferred - optimized_stats.total_data_transferred) / baseline_stats.total_data_transferred * 100)
+            if baseline_stats.total_data_transferred > 0
+            else 0
+        )
 
         # Determine applied techniques
         techniques = []
         if self.enable_caching and self.cache and self.cache.hits > 0:
-            techniques.append(f"Caching (Hit rate: {self.cache.hits/(self.cache.hits + self.cache.misses)*100:.1f}%)")
+            techniques.append(f"Caching (Hit rate: {self.cache.hits / (self.cache.hits + self.cache.misses) * 100:.1f}%)")
 
         if self.enable_batching and optimized_stats.total_calls < baseline_stats.total_calls:
             techniques.append(f"Batching (Call reduction: {call_reduction:.1f}%)")
 
         if self.enable_data_optimization and self.data_optimizer:
             opt_stats = self.data_optimizer.get_optimization_stats()
-            if opt_stats['total_optimizations'] > 0:
+            if opt_stats["total_optimizations"] > 0:
                 techniques.append(f"Data optimization ({opt_stats['total_optimizations']} optimizations)")
 
         # Generate warnings and recommendations
@@ -789,7 +806,7 @@ class FFIOptimizer:
             data_reduction_pct=data_reduction,
             techniques_applied=techniques,
             warnings=warnings,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
         self.optimization_history.append(result)
@@ -802,12 +819,9 @@ class FFIOptimizer:
         print("=" * 80)
 
         print("\n📊 PERFORMANCE IMPROVEMENTS:")
-        print(f"  FFI Calls         : {result.original_calls:,} → {result.optimized_calls:,} "
-              f"({result.call_reduction_pct:+.1f}%)")
-        print(f"  Execution Time    : {result.original_time:.3f}s → {result.optimized_time:.3f}s "
-              f"({result.time_savings_pct:+.1f}%)")
-        print(f"  Data Transfer     : {result.original_data_size:,}B → {result.optimized_data_size:,}B "
-              f"({result.data_reduction_pct:+.1f}%)")
+        print(f"  FFI Calls         : {result.original_calls:,} → {result.optimized_calls:,} ({result.call_reduction_pct:+.1f}%)")
+        print(f"  Execution Time    : {result.original_time:.3f}s → {result.optimized_time:.3f}s ({result.time_savings_pct:+.1f}%)")
+        print(f"  Data Transfer     : {result.original_data_size:,}B → {result.optimized_data_size:,}B ({result.data_reduction_pct:+.1f}%)")
 
         if result.techniques_applied:
             print("\n🛠️ OPTIMIZATION TECHNIQUES APPLIED:")
@@ -836,6 +850,7 @@ class FFIOptimizer:
 
         print("=" * 80)
 
+
 # Convenience decorators and functions
 def batch_operation(batch_size: int = 100, timeout: float = 0.1, operation_key: str | None = None):
     """
@@ -849,6 +864,7 @@ def batch_operation(batch_size: int = 100, timeout: float = 0.1, operation_key: 
     processor = BatchProcessor(default_batch_size=batch_size, batch_timeout=timeout)
     return processor.batch_operation(operation_key, batch_size, timeout)
 
+
 def cache_ffi_calls(ttl: float = 300.0, max_size: int = 1000):
     """
     Decorator for caching FFI call results.
@@ -861,6 +877,7 @@ def cache_ffi_calls(ttl: float = 300.0, max_size: int = 1000):
     cache = BatchCache(max_size=max_size, default_ttl=ttl)
     return cache.cache_function(ttl)
 
+
 def optimize_data_for_ffi(data: Any) -> Any:
     """
     Quick function to optimize data for FFI transfer.
@@ -872,6 +889,7 @@ def optimize_data_for_ffi(data: Any) -> Any:
     optimizer = DataOptimizer()
     optimized_data, metadata = optimizer.optimize_for_rust_transfer(data)
     return optimized_data
+
 
 # Example usage and testing
 if __name__ == "__main__":

@@ -218,7 +218,7 @@ async def _run_awaitable(coro: Awaitable[T] | Callable[[], Awaitable[T]]) -> T:
         awaitable = coro()
         return await awaitable
     # coro is already an awaitable
-    return await coro # pyright: ignore[reportGeneralTypeIssues]
+    return await coro  # pyright: ignore[reportGeneralTypeIssues]
 
 
 def run_with_timeout(

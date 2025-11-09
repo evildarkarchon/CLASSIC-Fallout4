@@ -37,8 +37,6 @@ Usage:
 
 from __future__ import annotations
 
-from typing import List
-
 __version__: str
 
 # Version Constants
@@ -50,11 +48,11 @@ F4SE_OG_VERSION: str
 F4SE_NG_VERSION: str
 
 # Version Arrays
-FALLOUT4_VERSIONS: List[str]
-F4SE_VERSIONS: List[str]
+FALLOUT4_VERSIONS: list[str]
+F4SE_VERSIONS: list[str]
 
 # Settings Constants
-SETTINGS_IGNORE_NONE: List[str]
+SETTINGS_IGNORE_NONE: list[str]
 
 class YamlFile:
     """YAML file enumeration for type-safe file references.
@@ -150,7 +148,6 @@ class YamlFile:
         Returns:
             The variant name as a string.
         """
-
 
 class GameId:
     """Game identifiers for supported Bethesda games.
@@ -251,7 +248,6 @@ class GameId:
         Returns:
             The game identifier as a string.
         """
-
 
 def must_not_be_none(key: str) -> bool:
     """Check if a settings key should not allow None values.

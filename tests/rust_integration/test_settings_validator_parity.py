@@ -260,21 +260,23 @@ class TestSettingsValidatorParity:
                     metadata={
                         "xsemodules_count": len(xsemodules),
                         "achievements_enabled": crashgen.get("Achievements", False),
-                    }
+                    },
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Achievements validation test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="settings_validator",
-                    method_name="scan_buffout_achievements_setting",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="settings_validator",
+                        method_name="scan_buffout_achievements_setting",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -381,21 +383,23 @@ class TestSettingsValidatorParity:
                         "has_xcell": has_xcell,
                         "has_old_xcell": has_old_xcell,
                         "has_baka_scrapheap": has_baka_scrapheap,
-                    }
+                    },
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Memory management validation test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="settings_validator",
-                    method_name="scan_buffout_memorymanagement_settings",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="settings_validator",
+                        method_name="scan_buffout_memorymanagement_settings",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate overall results
         passed_tests = sum(1 for r in results if r.passed)
@@ -492,21 +496,23 @@ class TestSettingsValidatorParity:
                     metadata={
                         "ba2_archive_count": ba2_archive_count,
                         "crashgen_version": crashgen_version,
-                    }
+                    },
                 )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Archive limit validation test failed for {test_case['name']}: {e}")
-                results.append(ParityResult(
-                    component_name="settings_validator",
-                    method_name="scan_buffout_archivelimit_settings",
-                    test_case=test_case["name"],
-                    rust_available=True,
-                    passed=False,
-                    error_messages=[str(e)]
-                ))
+                results.append(
+                    ParityResult(
+                        component_name="settings_validator",
+                        method_name="scan_buffout_archivelimit_settings",
+                        test_case=test_case["name"],
+                        rust_available=True,
+                        passed=False,
+                        error_messages=[str(e)],
+                    )
+                )
 
         # Validate results
         passed_tests = sum(1 for r in results if r.passed)
@@ -556,8 +562,7 @@ class TestSettingsValidatorParity:
         rust_final = rust_validator.scan_buffout_achievements_setting(xsemodules, crashgen)
         python_final = python_validator.scan_buffout_achievements_setting(xsemodules, crashgen)
 
-        assert rust_final.fragment_content == python_final.fragment_content, \
-            "Results differ in performance test"
+        assert rust_final.fragment_content == python_final.fragment_content, "Results differ in performance test"
 
         # Validate performance improvement
         if python_time > 0 and rust_time > 0:

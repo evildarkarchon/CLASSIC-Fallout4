@@ -29,6 +29,7 @@ def mock_settings():
         patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache,
         patch("ClassicLib.ScanGame.ScanGameCore.yaml_settings") as mock_yaml_core,
     ):
+
         def yaml_side_effect(type_, yaml_key, setting_path, default=None):
             settings_map = {
                 "catch_log_errors": ["error", "warning", "critical"],
@@ -112,8 +113,8 @@ class TestScanGameCoreIntegration:
     @pytest.mark.asyncio
     @pytest.mark.performance
     async def test_scan_game_core_performance_improvement(
-        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry,
-        message_handler):
+        self, mock_settings, mock_paths, mock_scan_settings, mock_issue_messages, mock_global_registry, message_handler
+    ):
         """Test that ScanGameCore async methods are faster than sequential processing."""
         # Create multiple BA2 files
         for i in range(5):

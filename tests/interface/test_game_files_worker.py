@@ -16,6 +16,7 @@ from PySide6.QtCore import QObject, QThread
 
 # Test worker initialization
 
+
 @pytest.mark.unit
 def test_game_files_worker_exists():
     """Test that GameFilesScanWorker can be imported."""
@@ -42,6 +43,7 @@ def test_worker_signals():
 
 
 # Test AsyncBridge integration
+
 
 @pytest.mark.unit
 def test_worker_uses_async_bridge():
@@ -107,6 +109,7 @@ def test_no_manual_event_loop_creation():
 
 # Test Rust acceleration detection
 
+
 @pytest.mark.unit
 @pytest.mark.rust
 def test_rust_acceleration_detection():
@@ -150,6 +153,7 @@ def test_rust_status_logging():
 
 
 # Test signal emissions
+
 
 @pytest.mark.unit
 def test_success_signal_emission():
@@ -208,6 +212,7 @@ def test_error_signal_emission():
 
 # Test error handling
 
+
 @pytest.mark.unit
 def test_error_handling_with_audio_disabled():
     """Test that errors are re-raised when audio notifications are disabled."""
@@ -249,6 +254,7 @@ def test_finished_signal_always_emitted():
 
 # Test performance logging
 
+
 @pytest.mark.unit
 def test_performance_metrics_logged():
     """Test that performance metrics are logged."""
@@ -282,6 +288,7 @@ def test_performance_metrics_logged():
 
 
 # Test thread safety
+
 
 @pytest.mark.unit
 def test_worker_is_qobject():

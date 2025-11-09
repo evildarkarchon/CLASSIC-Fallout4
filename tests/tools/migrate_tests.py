@@ -38,7 +38,7 @@ class TestExtractor(ast.NodeVisitor):
         class_has_target_tests = False
         for child in ast.walk(node):
             if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                if child.name.startswith('test_'):
+                if child.name.startswith("test_"):
                     test_name = f"{self.current_class}.{child.name}"
                     if test_name in self.test_names_to_extract:
                         class_has_target_tests = True
@@ -53,17 +53,17 @@ class TestExtractor(ast.NodeVisitor):
                 decorator_list=node.decorator_list,
                 body=[],
                 lineno=node.lineno,
-                col_offset=node.col_offset
+                col_offset=node.col_offset,
             )
 
             # Extract only the methods we want
             for child in node.body:
                 if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    if child.name.startswith('test_'):
+                    if child.name.startswith("test_"):
                         test_name = f"{self.current_class}.{child.name}"
                         if test_name in self.test_names_to_extract:
                             new_class.body.append(child)
-                    elif not child.name.startswith('test_'):
+                    elif not child.name.startswith("test_"):
                         # Include helper methods
                         new_class.body.append(child)
                 else:
@@ -77,11 +77,11 @@ class TestExtractor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
         """Handle standalone test functions."""
-        if node.name.startswith('test_'):
+        if node.name.startswith("test_"):
             test_name = node.name
             if test_name in self.test_names_to_extract:
                 self.extracted_nodes.append(node)
-        elif not node.name.startswith('_'):
+        elif not node.name.startswith("_"):
             # Potential helper function
             self.helper_functions.append(node)
 
@@ -110,23 +110,18 @@ def extract_imports_and_constants(file_content: str) -> tuple[list[str], list[st
 
 
 def create_file_content(
-    tests: list[TestInfo],
-    test_type: str,
-    original_file_path: Path,
-    imports: list[str],
-    constants: list[str],
-    extracted_code: list[ast.AST]
+    tests: list[TestInfo], test_type: str, original_file_path: Path, imports: list[str], constants: list[str], extracted_code: list[ast.AST]
 ) -> str:
     """Create the content for a new test file."""
 
     # Determine component name from file path
-    component_name = original_file_path.stem.replace('test_', '')
+    component_name = original_file_path.stem.replace("test_", "")
 
     # Create file header
     header = f'''"""
 {test_type.title()} tests for {component_name} - {test_type} logic testing.
 
-This file contains {test_type} tests that {'test individual functions with mocked dependencies' if test_type == 'unit' else 'test interactions between components' if test_type == 'integration' else 'test complete workflows from entry to output'}.
+This file contains {test_type} tests that {"test individual functions with mocked dependencies" if test_type == "unit" else "test interactions between components" if test_type == "integration" else "test complete workflows from entry to output"}.
 """
 
 '''
@@ -135,29 +130,29 @@ This file contains {test_type} tests that {'test individual functions with mocke
     content_parts = [header]
 
     if imports:
-        content_parts.append('\n'.join(imports))
-        content_parts.append('\n')
+        content_parts.append("\n".join(imports))
+        content_parts.append("\n")
 
     # Add pytest import if not present
-    if not any('pytest' in imp for imp in imports):
-        content_parts.append('import pytest\n')
+    if not any("pytest" in imp for imp in imports):
+        content_parts.append("import pytest\n")
 
     # Add constants
     if constants:
-        content_parts.append('\n')
-        content_parts.append('\n'.join(constants))
-        content_parts.append('\n')
+        content_parts.append("\n")
+        content_parts.append("\n".join(constants))
+        content_parts.append("\n")
 
     # Add marker for the test type
-    content_parts.append(f'\npytestmark = pytest.mark.{test_type}\n\n')
+    content_parts.append(f"\npytestmark = pytest.mark.{test_type}\n\n")
 
     # Add extracted test code
     if extracted_code:
         for node in extracted_code:
             content_parts.append(ast.unparse(node))
-            content_parts.append('\n\n')
+            content_parts.append("\n\n")
 
-    return ''.join(content_parts)
+    return "".join(content_parts)
 
 
 def _print_migration_header(file_path: Path) -> None:
@@ -183,14 +178,14 @@ def _handle_performance_file() -> dict[str, Path]:
 def _get_component_name(file_path: Path) -> str:
     """Extract component name from file path."""
     base_name = file_path.stem
-    if base_name.startswith('test_'):
+    if base_name.startswith("test_"):
         return base_name[5:]  # Remove 'test_' prefix
     return base_name
 
 
-def _create_test_file(file_path: Path, test_type: str, tests: list[TestInfo],
-                     imports: list[str], constants: list[str], original_content: str,
-                     dry_run: bool) -> Path | None:
+def _create_test_file(
+    file_path: Path, test_type: str, tests: list[TestInfo], imports: list[str], constants: list[str], original_content: str, dry_run: bool
+) -> Path | None:
     """Create a single test file for a specific test type."""
     component_name = _get_component_name(file_path)
     new_filename = f"test_{component_name}_{test_type}.py"
@@ -206,23 +201,22 @@ def _create_test_file(file_path: Path, test_type: str, tests: list[TestInfo],
     extractor.visit(tree)
 
     # Create file content
-    content = create_file_content(
-        tests, test_type, file_path, imports, constants, extractor.extracted_nodes
-    )
+    content = create_file_content(tests, test_type, file_path, imports, constants, extractor.extracted_nodes)
 
     if not dry_run:
-        new_file_path.write_text(content, encoding='utf-8')
+        new_file_path.write_text(content, encoding="utf-8")
         return new_file_path
     return None
 
 
-def _handle_post_migration(file_path: Path, original_content: str, created_files: dict[str, Path],
-                         create_backup: bool, dry_run: bool, test_groups: dict[str, list]) -> None:
+def _handle_post_migration(
+    file_path: Path, original_content: str, created_files: dict[str, Path], create_backup: bool, dry_run: bool, test_groups: dict[str, list]
+) -> None:
     """Handle post-migration tasks."""
     if not dry_run and created_files:
         if create_backup:
-            backup_path = file_path.with_suffix('.py.backup')
-            backup_path.write_text(original_content, encoding='utf-8')
+            backup_path = file_path.with_suffix(".py.backup")
+            backup_path.write_text(original_content, encoding="utf-8")
             print(f"   💾 Backup created: {backup_path.name}")
 
         # Remove original file
@@ -237,11 +231,7 @@ def _handle_post_migration(file_path: Path, original_content: str, created_files
             print(f"   📝 Would create: {new_filename}")
 
 
-def migrate_test_file(
-    file_path: Path,
-    dry_run: bool = False,
-    create_backup: bool = True
-) -> dict[str, Path]:
+def migrate_test_file(file_path: Path, dry_run: bool = False, create_backup: bool = True) -> dict[str, Path]:
     """Migrate a test file by splitting it into separate files by test type."""
     _print_migration_header(file_path)
 
@@ -257,15 +247,11 @@ def migrate_test_file(
         return _handle_performance_file()
 
     # Read original content
-    original_content = file_path.read_text(encoding='utf-8')
+    original_content = file_path.read_text(encoding="utf-8")
     imports, constants = extract_imports_and_constants(original_content)
 
     # Group tests by type
-    test_groups = {
-        'unit': analysis.unit_tests,
-        'integration': analysis.integration_tests,
-        'e2e': analysis.e2e_tests
-    }
+    test_groups = {"unit": analysis.unit_tests, "integration": analysis.integration_tests, "e2e": analysis.e2e_tests}
 
     # Remove empty groups
     test_groups = {k: v for k, v in test_groups.items() if v}
@@ -279,9 +265,7 @@ def migrate_test_file(
     # Create new files for each test type
     for test_type, tests in test_groups.items():
         if tests:
-            new_file = _create_test_file(
-                file_path, test_type, tests, imports, constants, original_content, dry_run
-            )
+            new_file = _create_test_file(file_path, test_type, tests, imports, constants, original_content, dry_run)
             if new_file:
                 created_files[test_type] = new_file
 
@@ -297,14 +281,14 @@ def update_imports_in_other_files(original_file: Path, created_files: dict[str, 
 
     # Find files that might import from the original file
     module_name = original_file.stem
-    import_pattern = re.compile(rf'from\s+.*{re.escape(module_name)}\s+import|import\s+.*{re.escape(module_name)}')
+    import_pattern = re.compile(rf"from\s+.*{re.escape(module_name)}\s+import|import\s+.*{re.escape(module_name)}")
 
-    for test_file in test_dir.rglob('test_*.py'):
+    for test_file in test_dir.rglob("test_*.py"):
         if test_file == original_file or test_file in created_files.values():
             continue
 
         try:
-            content = test_file.read_text(encoding='utf-8')
+            content = test_file.read_text(encoding="utf-8")
             if import_pattern.search(content):
                 print(f"   ⚠️  {test_file.name} may need import updates")
         except Exception:
@@ -313,10 +297,10 @@ def update_imports_in_other_files(original_file: Path, created_files: dict[str, 
 
 def main():
     """Main script entry point."""
-    parser = argparse.ArgumentParser(description='Migrate mixed test files into separate type-specific files')
-    parser.add_argument('file_path', help='Path to the test file to migrate')
-    parser.add_argument('--dry-run', action='store_true', help='Show what would be done without making changes')
-    parser.add_argument('--no-backup', action='store_true', help='Do not create backup of original file')
+    parser = argparse.ArgumentParser(description="Migrate mixed test files into separate type-specific files")
+    parser.add_argument("file_path", help="Path to the test file to migrate")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be done without making changes")
+    parser.add_argument("--no-backup", action="store_true", help="Do not create backup of original file")
 
     args = parser.parse_args()
 
@@ -326,18 +310,14 @@ def main():
         print(f"Error: {file_path} does not exist")
         sys.exit(1)
 
-    if not file_path.name.startswith('test_') or file_path.suffix != '.py':
+    if not file_path.name.startswith("test_") or file_path.suffix != ".py":
         print(f"Error: {file_path} is not a test file")
         sys.exit(1)
 
     print("Test Migration Assistant")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
-    created_files = migrate_test_file(
-        file_path,
-        dry_run=args.dry_run,
-        create_backup=not args.no_backup
-    )
+    created_files = migrate_test_file(file_path, dry_run=args.dry_run, create_backup=not args.no_backup)
 
     if created_files and not args.dry_run:
         print("\n✅ Migration completed!")

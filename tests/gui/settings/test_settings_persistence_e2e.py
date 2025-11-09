@@ -12,6 +12,7 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 pytestmark = pytest.mark.e2e
 
+
 class TestPersistenceAcrossInstances:
     """Test that settings persist across dialog instances."""
 
@@ -40,6 +41,7 @@ class TestPersistenceAcrossInstances:
         assert dialog.simplify_checkbox.isChecked()
         dialog.close()
 
+
 class TestDefaultValues:
     """Test default value handling."""
 
@@ -49,12 +51,12 @@ class TestDefaultValues:
         dialog.load_settings()
         assert isinstance(dialog.audio_checkbox.isChecked(), bool)
         assert isinstance(dialog.vr_checkbox.isChecked(), bool)
-        assert dialog.update_source_combo.currentText() in ['Nexus', 'GitHub', 'Both']
+        assert dialog.update_source_combo.currentText() in ["Nexus", "GitHub", "Both"]
         dialog.close()
 
     def test_invalid_combo_value_uses_default(self, app, reset_settings):
         """Test that invalid combo box values use defaults."""
-        yaml_settings(str, YAML.TEST, 'CLASSIC_Settings.Update Source', 'InvalidSource')
+        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", "InvalidSource")
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        assert dialog.update_source_combo.currentText() == 'Both'
+        assert dialog.update_source_combo.currentText() == "Both"
         dialog.close()

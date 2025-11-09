@@ -30,66 +30,24 @@ from tests.stress.stress_test_fixtures import *  # noqa: F403
 def pytest_configure(config):
     """Register custom markers for test types."""
     # Test type markers for selective execution
-    config.addinivalue_line(
-        "markers",
-        "unit: Fast unit tests with mocked dependencies (< 100ms)"
-    )
-    config.addinivalue_line(
-        "markers",
-        "integration: Tests with real I/O and multiple components"
-    )
-    config.addinivalue_line(
-        "markers",
-        "e2e: Full workflow tests from entry point to output"
-    )
+    config.addinivalue_line("markers", "unit: Fast unit tests with mocked dependencies (< 100ms)")
+    config.addinivalue_line("markers", "integration: Tests with real I/O and multiple components")
+    config.addinivalue_line("markers", "e2e: Full workflow tests from entry point to output")
 
     # Component-specific markers
-    config.addinivalue_line(
-        "markers",
-        "async_test: Tests that use async/await patterns"
-    )
-    config.addinivalue_line(
-        "markers",
-        "gui: Tests that require Qt/PySide6 GUI components"
-    )
-    config.addinivalue_line(
-        "markers",
-        "performance: Performance benchmarks and regression tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "slow: Tests that take > 1 second to run"
-    )
-    config.addinivalue_line(
-        "markers",
-        "network: Tests that require network access"
-    )
-    config.addinivalue_line(
-        "markers",
-        "database: Tests that interact with databases"
-    )
+    config.addinivalue_line("markers", "async_test: Tests that use async/await patterns")
+    config.addinivalue_line("markers", "gui: Tests that require Qt/PySide6 GUI components")
+    config.addinivalue_line("markers", "performance: Performance benchmarks and regression tests")
+    config.addinivalue_line("markers", "slow: Tests that take > 1 second to run")
+    config.addinivalue_line("markers", "network: Tests that require network access")
+    config.addinivalue_line("markers", "database: Tests that interact with databases")
 
     # Stress testing markers
-    config.addinivalue_line(
-        "markers",
-        "stress: Comprehensive stress tests for production validation"
-    )
-    config.addinivalue_line(
-        "markers",
-        "memory: Memory usage, leak detection, and pressure tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "concurrency: Thread safety and race condition tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "error_recovery: Error handling and recovery tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "data_volume: Large dataset and scalability tests"
-    )
+    config.addinivalue_line("markers", "stress: Comprehensive stress tests for production validation")
+    config.addinivalue_line("markers", "memory: Memory usage, leak detection, and pressure tests")
+    config.addinivalue_line("markers", "concurrency: Thread safety and race condition tests")
+    config.addinivalue_line("markers", "error_recovery: Error handling and recovery tests")
+    config.addinivalue_line("markers", "data_volume: Large dataset and scalability tests")
 
 
 # Test collection configuration
@@ -126,18 +84,8 @@ def pytest_collection_modifyitems(config, items):
 # Pytest configuration options
 def pytest_addoption(parser):
     """Add custom command line options."""
-    parser.addoption(
-        "--run-slow",
-        action="store_true",
-        default=False,
-        help="Run slow tests"
-    )
-    parser.addoption(
-        "--run-network",
-        action="store_true",
-        default=False,
-        help="Run tests that require network access"
-    )
+    parser.addoption("--run-slow", action="store_true", default=False, help="Run slow tests")
+    parser.addoption("--run-network", action="store_true", default=False, help="Run tests that require network access")
 
 
 def pytest_runtest_setup(item):

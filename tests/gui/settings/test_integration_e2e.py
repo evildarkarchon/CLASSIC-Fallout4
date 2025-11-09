@@ -18,6 +18,7 @@ from ClassicLib.YamlSettingsCache import yaml_settings
 
 pytestmark = pytest.mark.e2e
 
+
 class TestSettingsApplication:
     """Test how settings affect application behavior."""
 
@@ -27,20 +28,21 @@ class TestSettingsApplication:
         dialog.vr_checkbox.setChecked(True)
         dialog.save_settings()
         dialog.close()
-        vr_enabled = yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.VR Mode')
+        vr_enabled = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
         assert vr_enabled is True
 
     def test_update_settings_propagation(self, app, reset_settings, gui_message_handler, async_bridge):
         """Test that update settings propagate correctly."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
         dialog.update_check_checkbox.setChecked(True)
-        dialog.update_source_combo.setCurrentText('GitHub')
+        dialog.update_source_combo.setCurrentText("GitHub")
         dialog.save_settings()
         dialog.close()
-        update_enabled = yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.Update Check')
-        update_source = yaml_settings(str, YAML.TEST, 'CLASSIC_Settings.Update Source')
+        update_enabled = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Update Check")
+        update_source = yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source")
         assert update_enabled is True
-        assert update_source == 'GitHub'
+        assert update_source == "GitHub"
+
 
 class TestMultipleDialogs:
     """Test behavior with multiple dialog instances."""
@@ -50,7 +52,7 @@ class TestMultipleDialogs:
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
         dialog1.fcx_checkbox.setChecked(True)
         dialog1.accept()
-        assert yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.FCX Mode')
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
         assert dialog2.fcx_checkbox.isChecked()
         dialog2.close()
@@ -72,6 +74,7 @@ class TestMultipleDialogs:
         dialog1.close()
         dialog2.close()
 
+
 class TestSettingsImpact:
     """Test the impact of settings on application functionality."""
 
@@ -80,7 +83,7 @@ class TestSettingsImpact:
         dialog = SettingsDialog(yaml_store=YAML.TEST)
         dialog.simplify_checkbox.setChecked(True)
         dialog.save_settings()
-        simplify_enabled = yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.Simplify Logs')
+        simplify_enabled = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs")
         assert simplify_enabled is True
         dialog.close()
 
@@ -90,9 +93,10 @@ class TestSettingsImpact:
         original = dialog.audio_checkbox.isChecked()
         dialog.audio_checkbox.setChecked(not original)
         dialog.save_settings()
-        new_value = yaml_settings(bool, YAML.TEST, 'CLASSIC_Settings.Audio Notifications')
+        new_value = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications")
         assert new_value != original
         dialog.close()
+
 
 class TestErrorHandling:
     """Test error handling in integration scenarios."""

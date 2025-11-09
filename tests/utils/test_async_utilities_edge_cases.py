@@ -30,6 +30,7 @@ class TestGatherWithConcurrencyEdgeCases:
     @pytest.mark.asyncio
     async def test_with_zero_concurrency(self):
         """Should handle zero concurrency (though not recommended)."""
+
         # Zero concurrency would create a Semaphore(0) which blocks everything
         # This is an edge case that causes deadlock
         async def simple_coro(x):
@@ -37,14 +38,12 @@ class TestGatherWithConcurrencyEdgeCases:
 
         # This would deadlock, so we set a timeout
         with pytest.raises(asyncio.TimeoutError):
-            await asyncio.wait_for(
-                gather_with_concurrency(0, simple_coro(1)),
-                timeout=0.1
-            )
+            await asyncio.wait_for(gather_with_concurrency(0, simple_coro(1)), timeout=0.1)
 
     @pytest.mark.asyncio
     async def test_with_negative_concurrency(self):
         """Should handle negative concurrency gracefully."""
+
         async def simple_coro(x):
             return x
 
@@ -55,6 +54,7 @@ class TestGatherWithConcurrencyEdgeCases:
     @pytest.mark.asyncio
     async def test_with_single_coroutine(self):
         """Should handle a single coroutine."""
+
         async def single_coro():
             return "single"
 
@@ -64,6 +64,7 @@ class TestGatherWithConcurrencyEdgeCases:
     @pytest.mark.asyncio
     async def test_with_exception_in_coroutine(self):
         """Should propagate exceptions from coroutines."""
+
         async def failing_coro():
             raise RuntimeError("Test error")
 
@@ -76,13 +77,12 @@ class TestGatherWithConcurrencyEdgeCases:
     @pytest.mark.asyncio
     async def test_with_cancelled_coroutine(self):
         """Should handle cancelled coroutines."""
+
         async def long_running():
             await asyncio.sleep(10)
             return "completed"
 
-        task = asyncio.create_task(
-            gather_with_concurrency(1, long_running())
-        )
+        task = asyncio.create_task(gather_with_concurrency(1, long_running()))
 
         # Cancel after a short delay
         await asyncio.sleep(0.01)
@@ -98,6 +98,7 @@ class TestBatchProcessEdgeCases:
     @pytest.mark.asyncio
     async def test_with_empty_items(self):
         """Should handle empty item list."""
+
         async def processor(item):
             return item * 2
 
@@ -115,6 +116,7 @@ class TestBatchProcessEdgeCases:
     @pytest.mark.asyncio
     async def test_with_zero_batch_size(self):
         """Should handle zero batch size."""
+
         async def processor(item):
             return item
 
@@ -127,6 +129,7 @@ class TestBatchProcessEdgeCases:
     @pytest.mark.asyncio
     async def test_with_negative_batch_size(self):
         """Should handle negative batch size."""
+
         async def processor(item):
             return item
 
@@ -140,6 +143,7 @@ class TestBatchProcessEdgeCases:
     @pytest.mark.asyncio
     async def test_processor_raises_exception(self):
         """Should propagate exceptions from processor."""
+
         def failing_processor(item):
             if item == 2:
                 raise ValueError(f"Cannot process {item}")
@@ -153,6 +157,7 @@ class TestBatchProcessEdgeCases:
     @pytest.mark.asyncio
     async def test_with_generator_items(self):
         """Should handle generator as items input."""
+
         async def processor(item):
             return item * 2
 
@@ -161,9 +166,7 @@ class TestBatchProcessEdgeCases:
                 yield i
 
         # Generators need to be converted to list
-        results = await batch_process(
-            list(item_generator()), processor, batch_size=2
-        )
+        results = await batch_process(list(item_generator()), processor, batch_size=2)
         assert results == [0, 2, 4, 6, 8]
 
 
@@ -227,6 +230,7 @@ class TestAsyncRetryEdgeCases:
     @pytest.mark.asyncio
     async def test_with_custom_exception_not_in_tuple(self):
         """Should not retry exceptions not in the exceptions tuple."""
+
         @async_retry(max_attempts=3, exceptions=(ValueError,))
         async def specific_exception():
             raise TypeError("Wrong type")
@@ -259,6 +263,7 @@ class TestAsyncTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_with_zero_timeout(self):
         """Should handle zero timeout."""
+
         @async_timeout(0.0)
         async def instant_timeout():
             return "instant"
@@ -270,6 +275,7 @@ class TestAsyncTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_with_negative_timeout(self):
         """Should handle negative timeout."""
+
         @async_timeout(-1.0)
         async def negative_timeout():
             return "negative"
@@ -281,7 +287,8 @@ class TestAsyncTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_with_infinite_timeout(self):
         """Should handle very large timeout values."""
-        @async_timeout(float('inf'))
+
+        @async_timeout(float("inf"))
         async def infinite_timeout():
             await asyncio.sleep(0.01)
             return "completed"
@@ -293,6 +300,7 @@ class TestAsyncTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_timeout_with_exception(self):
         """Should propagate exceptions even with timeout."""
+
         @async_timeout(1.0)
         async def raises_error():
             raise ValueError("Function error")
@@ -315,6 +323,7 @@ class TestRunWithTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_with_sync_function(self):
         """Should handle sync function (not coroutine)."""
+
         def sync_func():
             return "sync_result"
 
@@ -326,6 +335,7 @@ class TestRunWithTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_with_already_completed_coroutine(self):
         """Should handle already awaited coroutine."""
+
         async def coro():
             return "result"
 
@@ -343,6 +353,7 @@ class TestRunWithTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_default_value_types(self):
         """Test various default value types."""
+
         async def slow():
             await asyncio.sleep(1.0)
 
@@ -369,6 +380,7 @@ class TestAsyncMapEdgeCases:
     @pytest.mark.asyncio
     async def test_with_empty_items(self):
         """Should handle empty items list."""
+
         async def func(x):
             return x * 2
 
@@ -384,6 +396,7 @@ class TestAsyncMapEdgeCases:
     @pytest.mark.asyncio
     async def test_with_generator_items(self):
         """Should handle generator as items."""
+
         async def double(x):
             return x * 2
 
@@ -394,6 +407,7 @@ class TestAsyncMapEdgeCases:
     @pytest.mark.asyncio
     async def test_function_raises_exception(self):
         """Should propagate exceptions from mapped function."""
+
         async def failing_func(x):
             if x == 2:
                 raise ValueError(f"Cannot process {x}")
@@ -405,6 +419,7 @@ class TestAsyncMapEdgeCases:
     @pytest.mark.asyncio
     async def test_with_mixed_types(self):
         """Should handle items of mixed types."""
+
         async def stringify(x):
             return str(x)
 
@@ -419,6 +434,7 @@ class TestAsyncFilterEdgeCases:
     @pytest.mark.asyncio
     async def test_with_empty_items(self):
         """Should handle empty items list."""
+
         async def predicate(x):
             return True
 
@@ -434,6 +450,7 @@ class TestAsyncFilterEdgeCases:
     @pytest.mark.asyncio
     async def test_predicate_returns_non_boolean(self):
         """Should handle non-boolean return values from predicate."""
+
         async def truthy_predicate(x):
             # Return truthy/falsy values instead of bool
             return x if x % 2 == 0 else 0
@@ -445,6 +462,7 @@ class TestAsyncFilterEdgeCases:
     @pytest.mark.asyncio
     async def test_predicate_raises_exception(self):
         """Should propagate exceptions from predicate."""
+
         async def failing_predicate(x):
             if x == 3:
                 raise ValueError(f"Cannot check {x}")
@@ -456,6 +474,7 @@ class TestAsyncFilterEdgeCases:
     @pytest.mark.asyncio
     async def test_with_set_input(self):
         """Should handle set as input."""
+
         async def is_even(x):
             return x % 2 == 0
 
@@ -522,6 +541,7 @@ class TestThrottleEdgeCases:
     async def cleanup_throttlers(self):
         """Clean up throttlers before and after each test."""
         from ClassicLib.AsyncUtilities import _throttler_registry, reset_throttlers
+
         reset_throttlers()
         yield
         # Clean up any background tasks
@@ -586,6 +606,7 @@ class TestRunInExecutorEdgeCases:
     @pytest.mark.asyncio
     async def test_with_exception_in_function(self):
         """Should propagate exceptions from executed function."""
+
         def failing_func(x):
             raise RuntimeError(f"Error with {x}")
 
@@ -595,6 +616,7 @@ class TestRunInExecutorEdgeCases:
     @pytest.mark.asyncio
     async def test_with_custom_executor(self):
         """Should work with custom executor."""
+
         def cpu_bound(n):
             # Simulate CPU-bound work
             result = sum(i * i for i in range(n))
@@ -607,6 +629,7 @@ class TestRunInExecutorEdgeCases:
     @pytest.mark.asyncio
     async def test_with_no_args(self):
         """Should handle function with no arguments."""
+
         def no_args_func():
             return "no args"
 
@@ -616,6 +639,7 @@ class TestRunInExecutorEdgeCases:
     @pytest.mark.asyncio
     async def test_with_mixed_args_kwargs(self):
         """Should handle mix of args and kwargs."""
+
         def mixed_func(a, b, c=10, d=20):
             return a + b + c + d
 
@@ -637,6 +661,7 @@ class TestAsyncLazyLoaderEdgeCases:
     @pytest.mark.asyncio
     async def test_loader_raises_exception(self):
         """Should propagate exceptions from loader."""
+
         async def failing_loader():
             raise OSError("Cannot load data")
 
@@ -717,6 +742,7 @@ class TestAsyncLazyLoaderEdgeCases:
     @pytest.mark.asyncio
     async def test_loader_returns_none(self):
         """Should handle loader returning None."""
+
         async def none_loader():
             return None
 
@@ -729,6 +755,7 @@ class TestAsyncLazyLoaderEdgeCases:
     @pytest.mark.asyncio
     async def test_sync_loader_raises_exception(self):
         """Should handle exceptions from sync loader."""
+
         def failing_sync_loader():
             raise ValueError("Sync loader error")
 

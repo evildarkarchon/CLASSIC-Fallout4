@@ -6,17 +6,17 @@ All functions are re-exported from their new locations.
 
 # String utilities
 # File utilities
-from .file_utils import calculate_file_hash, calculate_similarity, open_file_with_encoding
+from ClassicLib.Utils.file_utils import calculate_file_hash, calculate_similarity, open_file_with_encoding
 
 # Logging utilities
-from .logging_utils import configure_logging
+from ClassicLib.Utils.logging_utils import configure_logging
 
 # Path utilities
-from .path_utils import remove_readonly, validate_path
-from .string_utils import append_or_extend, normalize_list
+from ClassicLib.Utils.path_utils import remove_readonly, validate_path
+from ClassicLib.Utils.string_utils import append_or_extend, normalize_list
 
 # Version utilities
-from .version_utils import (
+from ClassicLib.Utils.version_utils import (
     VERSION_PATTERNS,
     crashgen_version_gen,
     create_version_from_info,
@@ -30,7 +30,7 @@ from .version_utils import (
 )
 
 # Web utilities
-from .web_utils import async_pastebin_fetch, pastebin_fetch
+from ClassicLib.Utils.web_utils import async_pastebin_fetch, pastebin_fetch
 
 __all__ = [
     # String utilities

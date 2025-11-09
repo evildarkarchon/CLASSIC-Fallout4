@@ -6,9 +6,9 @@ for crash log scanning operations, providing a clean interface between
 the CLI and business logic components.
 """
 
-from .scan_config import ScanConfig, ScanConfigDict
-from .scan_result import ScanResult, ScanResultDict
-from .scan_statistics import ScanStatistics
+from ClassicLib.ScanLog.models.scan_config import ScanConfig, ScanConfigDict
+from ClassicLib.ScanLog.models.scan_result import ScanResult, ScanResultDict
+from ClassicLib.ScanLog.models.scan_statistics import ScanStatistics
 
 __all__ = [
     "ScanConfig",

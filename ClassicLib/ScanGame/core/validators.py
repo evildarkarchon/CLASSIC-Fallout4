@@ -24,9 +24,7 @@ class ScanValidators:
     """
 
     def __init__(self) -> None:
-        """
-        Initializes an instance of the class.
-        """
+        """Initializes an instance of the class."""
         self._scan_settings_cache: tuple[str, dict[str, str], Path | None] | None = None
         self._issue_messages_cache: dict[tuple[str, str], dict[str, list[str]]] = {}
 

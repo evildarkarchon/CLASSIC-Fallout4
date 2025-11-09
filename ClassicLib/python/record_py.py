@@ -78,9 +78,7 @@ class PythonRecordScanner:
 
         return fragment, records_matches
 
-    def _find_matching_records(
-        self, segment_callstack: list[str], records_matches: list[str], rsp_marker: str, rsp_offset: int
-    ) -> None:
+    def _find_matching_records(self, segment_callstack: list[str], records_matches: list[str], rsp_marker: str, rsp_offset: int) -> None:
         """
         Finds and collects matching records from a call stack segment.
 
@@ -98,9 +96,7 @@ class PythonRecordScanner:
             lower_line = line.lower()
 
             # Check if line contains any target record and doesn't contain any ignored terms
-            if any(item in lower_line for item in self.lower_records) and all(
-                record not in lower_line for record in self.lower_ignore
-            ):
+            if any(item in lower_line for item in self.lower_records) and all(record not in lower_line for record in self.lower_ignore):
                 # Extract the relevant part of the line based on format
                 if rsp_marker in line:
                     records_matches.append(line[rsp_offset:].strip())
@@ -162,6 +158,7 @@ class PythonRecordScanner:
         self._find_matching_records(segment_callstack, records_matches, rsp_marker, rsp_offset)
 
         return records_matches
+
 
 # Alias for compatibility
 RecordScanner = PythonRecordScanner

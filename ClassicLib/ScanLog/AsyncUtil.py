@@ -54,7 +54,11 @@ class DatabasePoolManager:
         if self._lock is None:
             self.__class__._lock = asyncio.Lock()
 
-        async with self._lock:
+        # Store in local variable for type checker
+        lock = self._lock
+        assert lock is not None, "Lock should be initialized"
+
+        async with lock:
             if self._pool is None:
                 # Try to use Rust DatabasePool first
                 try:
@@ -90,7 +94,11 @@ class DatabasePoolManager:
         if self._lock is None:
             return
 
-        async with self._lock:
+        # Store in local variable for type checker
+        lock = self._lock
+        assert lock is not None, "Lock should exist after None check"
+
+        async with lock:
             if self._pool is not None:
                 await self._pool.close()
                 self._pool = None

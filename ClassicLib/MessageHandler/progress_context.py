@@ -185,6 +185,7 @@ class ProgressContext:
         if self._using_qt_signals:
             # Throttle Qt signals to reduce overhead - only emit at most every 50ms
             import time
+
             current_time = time.time()
             time_since_last = current_time - self._last_update_time
 

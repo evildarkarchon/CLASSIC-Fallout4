@@ -20,6 +20,7 @@ import psutil
 @dataclass
 class TestMetric:
     """Individual test metric data structure."""
+
     name: str
     value: float
     unit: str
@@ -32,6 +33,7 @@ class TestMetric:
 @dataclass
 class TestSectionResult:
     """Results for a complete test section."""
+
     section_name: str
     test_count: int
     passed: int
@@ -45,6 +47,7 @@ class TestSectionResult:
 @dataclass
 class SystemSpecs:
     """System specifications for the test environment."""
+
     cpu_model: str
     cpu_cores: int
     memory_gb: float
@@ -91,7 +94,7 @@ class StressTestReporter:
         # CPU information
         cpu_info = "Unknown CPU"
         try:
-            if hasattr(psutil, 'cpu_freq'):
+            if hasattr(psutil, "cpu_freq"):
                 cpu_freq = psutil.cpu_freq()
                 cpu_info = f"{platform.processor()} @ {cpu_freq.max:.1f}MHz"
             else:
@@ -125,7 +128,7 @@ class StressTestReporter:
             os_version=platform.platform(),
             python_version=sys.version.split()[0],
             rust_available=rust_available,
-            classic_version=classic_version
+            classic_version=classic_version,
         )
 
     def generate_comprehensive_report(self) -> dict[str, Any]:
@@ -154,7 +157,7 @@ class StressTestReporter:
                 "generated_at": report_time.isoformat(),
                 "total_duration_minutes": total_duration / 60,
                 "report_version": "1.0",
-                "test_phase": "Phase 6 Rust Migration Validation"
+                "test_phase": "Phase 6 Rust Migration Validation",
             },
             "system_specifications": asdict(self.system_specs),
             "test_summary": {
@@ -163,17 +166,14 @@ class StressTestReporter:
                 "failed": total_failed,
                 "warnings": total_warnings,
                 "success_rate": (total_passed / total_tests * 100) if total_tests > 0 else 0,
-                "sections_tested": len(self.test_results)
+                "sections_tested": len(self.test_results),
             },
-            "section_results": {
-                name: self._format_section_result(result)
-                for name, result in self.test_results.items()
-            },
+            "section_results": {name: self._format_section_result(result) for name, result in self.test_results.items()},
             "performance_analysis": performance_analysis,
             "stability_assessment": stability_assessment,
             "production_readiness": production_readiness,
             "detailed_metrics": self._compile_detailed_metrics(),
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
         return report
@@ -193,16 +193,16 @@ class StressTestReporter:
                 "total_performance_tests": len(performance_metrics),
                 "average_response_time_ms": self._safe_mean([m.value for m in performance_metrics if "time" in m.unit]),
                 "peak_throughput": max([m.value for m in throughput_metrics], default=0),
-                "performance_degradation_detected": any(m.status == "warning" for m in performance_metrics)
+                "performance_degradation_detected": any(m.status == "warning" for m in performance_metrics),
             },
             "memory_analysis": {
                 "total_memory_tests": len(memory_metrics),
                 "peak_memory_usage_mb": max([m.value for m in memory_metrics if "mb" in m.unit.lower()], default=0),
                 "memory_leaks_detected": any(m.status == "fail" and "leak" in m.name.lower() for m in memory_metrics),
-                "memory_efficiency_rating": self._calculate_memory_efficiency(memory_metrics)
+                "memory_efficiency_rating": self._calculate_memory_efficiency(memory_metrics),
             },
             "rust_vs_python_comparison": self._compare_rust_python_performance(),
-            "scalability_assessment": self._assess_scalability(performance_metrics)
+            "scalability_assessment": self._assess_scalability(performance_metrics),
         }
 
         return analysis
@@ -237,7 +237,7 @@ class StressTestReporter:
             "error_distribution": error_counts,
             "recovery_success_rate": recovery_successes / len(self.test_results) * 100 if self.test_results else 0,
             "stress_resilience": self._evaluate_stress_resilience(),
-            "concurrency_stability": self._evaluate_concurrency_stability()
+            "concurrency_stability": self._evaluate_concurrency_stability(),
         }
 
     def _evaluate_production_readiness(self) -> dict[str, Any]:
@@ -249,7 +249,7 @@ class StressTestReporter:
             "error_handling": self._check_error_handling(),
             "concurrency_safety": self._check_concurrency_safety(),
             "data_volume_handling": self._check_data_volume_handling(),
-            "stability_under_load": self._check_stability_under_load()
+            "stability_under_load": self._check_stability_under_load(),
         }
 
         # Calculate overall readiness score
@@ -274,7 +274,7 @@ class StressTestReporter:
             "readiness_level": readiness_level,
             "criteria_scores": criteria,
             "blocking_issues": self._identify_blocking_issues(criteria),
-            "recommended_actions": self._recommend_actions(criteria, overall_score)
+            "recommended_actions": self._recommend_actions(criteria, overall_score),
         }
 
     def _compile_detailed_metrics(self) -> dict[str, list[dict]]:
@@ -293,7 +293,7 @@ class StressTestReporter:
                     "status": metric.status,
                     "threshold": metric.threshold,
                     "description": metric.description,
-                    "section": section.section_name
+                    "section": section.section_name,
                 })
 
         return metrics_by_category
@@ -310,7 +310,7 @@ class StressTestReporter:
                 "priority": "High",
                 "issue": "Memory usage patterns need optimization",
                 "recommendation": "Implement more aggressive garbage collection and optimize data structures",
-                "details": str(memory_issues)
+                "details": str(memory_issues),
             })
 
         # Performance recommendations
@@ -321,7 +321,7 @@ class StressTestReporter:
                 "priority": "Medium",
                 "issue": "Performance bottlenecks detected",
                 "recommendation": "Profile and optimize critical code paths",
-                "details": str(performance_issues)
+                "details": str(performance_issues),
             })
 
         # Concurrency recommendations
@@ -332,7 +332,7 @@ class StressTestReporter:
                 "priority": "High",
                 "issue": "Thread safety concerns identified",
                 "recommendation": "Review and strengthen synchronization mechanisms",
-                "details": str(concurrency_issues)
+                "details": str(concurrency_issues),
             })
 
         # Error handling recommendations
@@ -343,7 +343,7 @@ class StressTestReporter:
                 "priority": "Medium",
                 "issue": "Error recovery needs improvement",
                 "recommendation": "Implement more robust error recovery mechanisms",
-                "details": str(error_handling_issues)
+                "details": str(error_handling_issues),
             })
 
         return recommendations
@@ -363,19 +363,19 @@ class StressTestReporter:
 
         if format_type == "json":
             report_file = self.output_dir / f"stress_test_report_{timestamp}.json"
-            with Path(report_file).open('w', encoding='utf-8') as f:
+            with Path(report_file).open("w", encoding="utf-8") as f:
                 json.dump(report_data, f, indent=2, default=str)
 
         elif format_type == "html":
             report_file = self.output_dir / f"stress_test_report_{timestamp}.html"
             html_content = self._generate_html_report(report_data)
-            with Path(report_file).open('w', encoding='utf-8') as f:
+            with Path(report_file).open("w", encoding="utf-8") as f:
                 f.write(html_content)
 
         elif format_type == "markdown":
             report_file = self.output_dir / f"stress_test_report_{timestamp}.md"
             markdown_content = self._generate_markdown_report(report_data)
-            with Path(report_file).open('w', encoding='utf-8') as f:
+            with Path(report_file).open("w", encoding="utf-8") as f:
                 f.write(markdown_content)
 
         else:
@@ -399,7 +399,7 @@ class StressTestReporter:
             "success_rate": (result.passed / result.test_count * 100) if result.test_count > 0 else 0,
             "metrics_count": len(result.metrics),
             "error_count": len(result.error_summary),
-            "top_errors": result.error_summary[:5]  # Top 5 errors
+            "top_errors": result.error_summary[:5],  # Top 5 errors
         }
 
     def _calculate_memory_efficiency(self, memory_metrics: list[TestMetric]) -> str:
@@ -426,7 +426,7 @@ class StressTestReporter:
             "rust_average_performance": "Excellent",
             "python_fallback_performance": "Good",
             "rust_adoption_rate": "95%",
-            "performance_improvement": "3.5x average speedup"
+            "performance_improvement": "3.5x average speedup",
         }
 
     def _assess_scalability(self, performance_metrics: list[TestMetric]) -> dict[str, str]:
@@ -451,7 +451,7 @@ class StressTestReporter:
         return {
             "scalability_rating": rating,
             "average_degradation_factor": f"{avg_degradation:.2f}x",
-            "details": f"Based on {len(degradation_metrics)} scalability tests"
+            "details": f"Based on {len(degradation_metrics)} scalability tests",
         }
 
     def _calculate_stability_score(self, error_counts: dict, crash_indicators: int) -> float:
@@ -531,7 +531,7 @@ class StressTestReporter:
         return {
             "score": score,
             "details": f"{memory_failures}/{memory_tests} memory tests failed",
-            "status": "Pass" if score >= 90 else "Needs Improvement"
+            "status": "Pass" if score >= 90 else "Needs Improvement",
         }
 
     def _check_performance_consistency(self) -> dict[str, Any]:
@@ -550,7 +550,7 @@ class StressTestReporter:
         return {
             "score": score,
             "details": f"{perf_warnings}/{perf_tests} performance tests had warnings",
-            "status": "Pass" if score >= 85 else "Needs Improvement"
+            "status": "Pass" if score >= 85 else "Needs Improvement",
         }
 
     def _check_error_handling(self) -> dict[str, Any]:
@@ -568,7 +568,7 @@ class StressTestReporter:
         return {
             "score": score,
             "details": f"{error_failures}/{error_tests} error handling tests failed",
-            "status": "Pass" if score >= 80 else "Needs Improvement"
+            "status": "Pass" if score >= 80 else "Needs Improvement",
         }
 
     def _check_concurrency_safety(self) -> dict[str, Any]:
@@ -586,7 +586,7 @@ class StressTestReporter:
         return {
             "score": score,
             "details": f"{conc_failures}/{conc_tests} concurrency tests failed",
-            "status": "Pass" if score >= 95 else "Critical Issue"
+            "status": "Pass" if score >= 95 else "Critical Issue",
         }
 
     def _check_data_volume_handling(self) -> dict[str, Any]:
@@ -604,14 +604,17 @@ class StressTestReporter:
         return {
             "score": score,
             "details": f"{volume_failures}/{volume_tests} data volume tests failed",
-            "status": "Pass" if score >= 85 else "Needs Improvement"
+            "status": "Pass" if score >= 85 else "Needs Improvement",
         }
 
     def _check_stability_under_load(self) -> dict[str, Any]:
         """Check stability under load criteria."""
         # Combine results from stress, performance, and concurrency tests
-        load_sections = [name for name in self.test_results.keys()
-                        if any(keyword in name.lower() for keyword in ["stress", "performance", "concurrency"])]
+        load_sections = [
+            name
+            for name in self.test_results.keys()
+            if any(keyword in name.lower() for keyword in ["stress", "performance", "concurrency"])
+        ]
 
         if not load_sections:
             return {"score": 0, "details": "No load testing found"}
@@ -624,7 +627,7 @@ class StressTestReporter:
         return {
             "score": score,
             "details": f"{total_failures}/{total_tests} load tests failed",
-            "status": "Pass" if score >= 90 else "Needs Improvement"
+            "status": "Pass" if score >= 90 else "Needs Improvement",
         }
 
     def _identify_blocking_issues(self, criteria: dict) -> list[str]:
@@ -769,7 +772,7 @@ class StressTestReporter:
             cpu_cores=report_data["system_specifications"]["cpu_cores"],
             memory_gb=report_data["system_specifications"]["memory_gb"],
             os_version=report_data["system_specifications"]["os_version"],
-            rust_available=report_data["system_specifications"]["rust_available"]
+            rust_available=report_data["system_specifications"]["rust_available"],
         )
 
         return html_template
@@ -799,23 +802,23 @@ class StressTestReporter:
             f"- **Rust Available:** {report_data['system_specifications']['rust_available']}",
             "",
             "## Production Readiness Assessment",
-            ""
+            "",
         ]
 
         # Add criteria scores
-        for criterion, details in report_data['production_readiness']['criteria_scores'].items():
-            status_icon = "✅" if details['score'] >= 80 else "⚠️" if details['score'] >= 60 else "❌"
+        for criterion, details in report_data["production_readiness"]["criteria_scores"].items():
+            status_icon = "✅" if details["score"] >= 80 else "⚠️" if details["score"] >= 60 else "❌"
             markdown_lines.append(f"- **{criterion.replace('_', ' ').title()}:** {status_icon} {details['score']:.1f}/100")
 
         markdown_lines.extend(["", "## Recommendations", ""])
 
-        for rec in report_data['recommendations']:
-            priority_icon = "🔴" if rec['priority'] == "High" else "🟡" if rec['priority'] == "Medium" else "🟢"
+        for rec in report_data["recommendations"]:
+            priority_icon = "🔴" if rec["priority"] == "High" else "🟡" if rec["priority"] == "Medium" else "🟢"
             markdown_lines.extend([
                 f"### {priority_icon} {rec['category']} ({rec['priority']} Priority)",
                 f"**Issue:** {rec['issue']}",
                 f"**Recommendation:** {rec['recommendation']}",
-                ""
+                "",
             ])
 
         return "\n".join(markdown_lines)
@@ -854,9 +857,9 @@ if __name__ == "__main__":
         metrics=[
             TestMetric("memory_usage_peak", 256.7, "MB", "memory", "pass"),
             TestMetric("memory_leak_detected", 0, "bool", "memory", "pass"),
-            TestMetric("processing_time", 45.2, "seconds", "performance", "pass")
+            TestMetric("processing_time", 45.2, "seconds", "performance", "pass"),
         ],
-        error_summary=["Memory allocation failed in test_massive_dataset"]
+        error_summary=["Memory allocation failed in test_massive_dataset"],
     )
 
     reporter.add_test_section(example_section)

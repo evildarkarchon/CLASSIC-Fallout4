@@ -12,6 +12,7 @@ import ruamel.yaml
 
 pytestmark = pytest.mark.integration
 
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 class TestAsyncYamlBatchOperations:
@@ -22,14 +23,14 @@ class TestAsyncYamlBatchOperations:
         """Test concurrent YAML loading."""
         files = []
         for i in range(5):
-            yaml_file = tmp_path / f'test_{i}.yaml'
-            data = {'index': i, 'value': f'test_{i}'}
+            yaml_file = tmp_path / f"test_{i}.yaml"
+            data = {"index": i, "value": f"test_{i}"}
             yaml = ruamel.yaml.YAML()
-            with Path(yaml_file).open('w') as f:
+            with Path(yaml_file).open("w") as f:
                 yaml.dump(data, f)
             files.append(yaml_file)
         tasks = [async_yaml_core.file_ops.load_yaml_file(f) for f in files]
         results = await asyncio.gather(*tasks)
         for i, result in enumerate(results):
-            assert result['index'] == i
-            assert result['value'] == f'test_{i}'
+            assert result["index"] == i
+            assert result["value"] == f"test_{i}"

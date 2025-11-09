@@ -35,10 +35,7 @@ Usage:
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
-
 __version__: str
-
 
 class ResourceType:
     """Resource type enumeration for game files.
@@ -94,7 +91,7 @@ class ResourceType:
     def as_str(self) -> str:
         """Get the resource type name as a string."""
 
-    def extensions(self) -> List[str]:
+    def extensions(self) -> list[str]:
         """Get all file extensions for this resource type."""
 
     def __eq__(self, other: object) -> bool:
@@ -113,7 +110,6 @@ class ResourceType:
         Returns:
             The resource type name as a string.
         """
-
 
 class ResourceInfo:
     """Resource file information.
@@ -148,7 +144,6 @@ class ResourceInfo:
             A formatted string with path, type, and size.
         """
 
-
 def detect_resource_type(path: str) -> ResourceType:
     """Detect the resource type from a file path.
 
@@ -162,7 +157,6 @@ def detect_resource_type(path: str) -> ResourceType:
         >>> rt = detect_resource_type("textures/armor.dds")
         >>> assert rt.as_str() == "texture"
     """
-
 
 def is_supported_resource(path: str) -> bool:
     """Check if a file is a supported resource type.
@@ -178,7 +172,6 @@ def is_supported_resource(path: str) -> bool:
         >>> assert not is_supported_resource("readme.txt")
     """
 
-
 def parse_resource_type(type_name: str) -> ResourceType:
     """Parse a resource type from a string.
 
@@ -193,11 +186,7 @@ def parse_resource_type(type_name: str) -> ResourceType:
         >>> assert rt.as_str() == "texture"
     """
 
-
-def enumerate_resources(
-    root: str,
-    filter_type: Optional[ResourceType] = None
-) -> List[ResourceInfo]:
+def enumerate_resources(root: str, filter_type: ResourceType | None = None) -> list[ResourceInfo]:
     """Enumerate resources in a directory.
 
     Recursively walks the directory tree and collects information about
@@ -218,8 +207,7 @@ def enumerate_resources(
         >>> print(f"Found {len(resources)} resources")
     """
 
-
-def count_resources_by_type(root: str) -> List[Tuple[ResourceType, int]]:
+def count_resources_by_type(root: str) -> list[tuple[ResourceType, int]]:
     """Count resources in a directory by type.
 
     Args:
@@ -236,7 +224,6 @@ def count_resources_by_type(root: str) -> List[Tuple[ResourceType, int]]:
         >>> for resource_type, count in counts:
         ...     print(f"{resource_type.as_str()}: {count} files")
     """
-
 
 def validate_resource(path: str) -> None:
     """Check if a resource file exists and is readable.

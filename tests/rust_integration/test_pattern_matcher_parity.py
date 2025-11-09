@@ -18,6 +18,7 @@ import pytest
 
 try:
     from classic_scanlog import PatternMatcher
+
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False
