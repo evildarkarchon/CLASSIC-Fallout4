@@ -301,8 +301,8 @@ class TestFactoryPattern:
         )
 
         assert orch is not None
-        # FCX mode should be passed to Python orchestrator
-        assert orch._python_orch.fcx_mode is True
+        # FCX mode should be passed to Python orchestrator's FCX handler
+        assert orch._python_orch.fcx_handler.fcx_mode is True
 
     async def test_factory_with_remove_list(self, yamldata: Any) -> None:
         """Test factory with custom remove list."""
@@ -317,8 +317,8 @@ class TestFactoryPattern:
         )
 
         assert orch is not None
-        # Remove list should be passed through
-        assert orch._python_orch.remove_list == remove_list
+        # Remove list parameter should be stored (actual remove_list is initialized in __aenter__)
+        assert orch._python_orch._remove_list_param == remove_list
 
     async def test_multiple_orchestrator_instances(self, yamldata: Any) -> None:
         """Test creating multiple orchestrator instances."""
