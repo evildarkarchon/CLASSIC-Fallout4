@@ -7,6 +7,7 @@ application-level initiation sequences. It also manages YAML settings and ensure
 application state across components of the system.
 """
 
+import asyncio
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -71,6 +72,8 @@ class SetupCoordinator:
             self.file_generator.generate_all_files()
 
         # Batch load version, game information, and game path
+        # Use asyncio.run() during initialization (before Qt event loop)
+        # AsyncBridge is ONLY for Qt worker threads, NOT for initialization
         with TimedBlock("Initial Settings Load", log_level="debug"):
             requests = [
                 (str, YAML.Main, "CLASSIC_Info.version"),
@@ -78,7 +81,7 @@ class SetupCoordinator:
                 (str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game"),
             ]
 
-            classic_ver, game_name, game_path = yaml_cache.batch_get_settings(requests)
+            classic_ver, game_name, game_path = asyncio.run(yaml_cache.batch_get_settings_async(requests))
 
         if not (isinstance(classic_ver, str) and isinstance(game_name, str)):
             raise TypeError("Classic version and game name must be strings")
@@ -156,18 +159,21 @@ class SetupCoordinator:
         # Ensure data files exist (extracts bundled resources if needed)
         ResourceLoader.ensure_data_files_exist()
 
-        # Prefetch all common settings at startup for better performance
-        # This loads Main, Settings, and Game YAML files concurrently
-        yaml_cache.prefetch_all_settings()
+        # NOTE: Prefetching removed from initialization
+        # AsyncBridge should NOT be used during initialization (before Qt event loop starts)
+        # Settings will load lazily on first access, which is fine for startup performance
+        # If prefetching is needed, it should be done async with asyncio.run() or after Qt starts
 
         # Batch load all application settings
+        # Use asyncio.run() during initialization (before Qt event loop)
+        # AsyncBridge is ONLY for Qt worker threads, NOT for initialization
         requests = [
             (bool, YAML.Settings, "CLASSIC_Settings.VR Mode"),
             (str, YAML.Settings, "CLASSIC_Settings.Managed Game"),
             (bool, YAML.Main, "CLASSIC_Info.is_prerelease"),
         ]
 
-        vr_mode, managed_game_setting, is_prerelease = yaml_cache.batch_get_settings(requests)
+        vr_mode, managed_game_setting, is_prerelease = asyncio.run(yaml_cache.batch_get_settings_async(requests))
 
         # Register application settings
         # noinspection PyTypedDict
